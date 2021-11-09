@@ -2,13 +2,17 @@
 #include "allocator_forge.h"
 #include <stdlib.h>
 
+#define MIMALLOC
 #ifdef MIMALLOC
-extern void* mi_malloc(size_t size);
-extern void* mi_malloc_aligned(size_t size, size_t alignment);
-extern void mi_free(void* p);
-#define core_malloc mi_malloc
-#define core_memalign mi_malloc_aligned
-#define core_free mi_free
+extern "C"
+{
+	extern void* mi_malloc(size_t size);
+	extern void* mi_malloc_aligned(size_t size, size_t alignment);
+	extern void mi_free(void* p);
+}
+#define core_malloc ::mi_malloc
+#define core_memalign ::mi_malloc_aligned
+#define core_free ::mi_free
 #else
 #define core_malloc malloc
 #ifdef _WINDOWS

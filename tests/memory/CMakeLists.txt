@@ -1,0 +1,2 @@
+add_executable(MemoryTest memory.cpp)
+target_link_libraries(MemoryTest SakuraRuntime)
