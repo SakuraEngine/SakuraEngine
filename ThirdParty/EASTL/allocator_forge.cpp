@@ -2,6 +2,14 @@
 #include "allocator_forge.h"
 #include <stdlib.h>
 
+#ifdef MIMALLOC
+extern void* mi_malloc(size_t size);
+extern void* mi_malloc_aligned(size_t size, size_t alignment);
+extern void mi_free(void* p);
+#define core_malloc mi_malloc
+#define core_memalign mi_malloc_aligned
+#define core_free mi_free
+#else
 #define core_malloc malloc
 #ifdef _WINDOWS
 #define core_memalign _aligned_malloc
@@ -9,6 +17,7 @@
 #define core_memalign aligned_alloc
 #endif
 #define core_free free
+#endif
 
 #if EASTL_ALLOCATOR_FORGE
 	namespace eastl

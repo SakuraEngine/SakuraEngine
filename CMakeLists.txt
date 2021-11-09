@@ -39,12 +39,15 @@ endif(UNIX)
 project(SakuraRuntime)
 
 include(EASTL) # Fetch EASTL SOURCES
+include(mimalloc) # Fetch mimalloc SOURCES
 
 add_library(SakuraRuntime)
 target_sources(SakuraRuntime
     PRIVATE
     ${EASTL_SOURCES}
+    ${MIMALLOC_SOURCES}
 )
 target_include_directories(SakuraRuntime
     PUBLIC
+    ${MIMALLOC_INCLUDES_DIR}
 )
