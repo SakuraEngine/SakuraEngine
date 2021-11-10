@@ -6,16 +6,17 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(RUNTIME_SHARED TRUE)
 
-set(OPEN_GUI_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(OPENGUI_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/Binaries) 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OPENGUI_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OPENGUI_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OPENGUI_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
-link_directories(${OPENGUI_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
+set(SAKURA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(SAKURA_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/Binaries) 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SAKURA_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SAKURA_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SAKURA_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
+link_directories(${SAKURA_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
 
 project(SakuraRuntime)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+include(Extract)
 include(PlatformConfigure)
 # Build
 include(mimalloc) # Fetch mimalloc SOURCES
