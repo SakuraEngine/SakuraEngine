@@ -62,10 +62,12 @@ public:
             printf("Initialize Vulkan Device Failed!");
         }
     }
+    [[nodiscard]] nvrhi::IDevice *GetDevice() const override;
     void BeginFrame(int SwapChainIndex) override;
     void Present(int SwapChainIndex) override;    
-    void ResizeSwapChain(int SwapChainIndex) override;
-    nvrhi::IFramebuffer* GetCurrentBackBuffer(int SwapChainIndex) override;
+    void ResizeSwapChain(int SwapChainIndex, const Render::SwapChainParams& Params) override;
+    void ResizeSwapChain(int SwapChainIndex, uint32_t backBufferWidth, uint32_t backBufferHeight) override;
+    nvrhi::ITexture* GetCurrentBackBuffer(int SwapChainIndex) override;
 private:
     bool createDeviceAndSwapChain(const PlatformWindow window);
     bool createInstance();
@@ -125,7 +127,7 @@ protected:
         }
     };
     std::unordered_map<int, SwapChain> m_SwapChains;
-    int m_LatestChainIndex = 0;
+    int m_SwapChainCount = 0;
 
     nvrhi::vulkan::DeviceHandle m_NvrhiDevice;
     nvrhi::DeviceHandle m_ValidationLayer;
@@ -186,6 +188,11 @@ protected:
         },
     };
 };
+
+nvrhi::IDevice* RenderDeviceVK::GetDevice() const
+{
+    return m_NvrhiDevice;
+}
 
 #ifdef max
 #undef max
@@ -261,19 +268,29 @@ void RenderDeviceVK::Present(int SwapChainIndex)
         m_FramesInFlight.push(query);
     }
 }
-void RenderDeviceVK::ResizeSwapChain(int SwapChainIndex) 
+void RenderDeviceVK::ResizeSwapChain(int SwapChainIndex, const Render::SwapChainParams& Params) 
 {
     auto&& chain = m_SwapChains[SwapChainIndex];
     if (m_VulkanDevice)
     {
         auto surf = chain.m_WindowSurface;
         destroySwapChain(SwapChainIndex);
-        createSwapChain(surf, m_DeviceParams.swapChainParams);
+        auto idx = createSwapChain(surf, Params);
+        m_SwapChains[SwapChainIndex] = m_SwapChains[idx];
+        m_SwapChains.erase(idx);
+        m_SwapChainCount--;
     }
 }
-nvrhi::IFramebuffer* RenderDeviceVK::GetCurrentBackBuffer(int SwapChainIndex) 
+void RenderDeviceVK::ResizeSwapChain(int SwapChainIndex, uint32_t backBufferWidth, uint32_t backBufferHeight) 
 {
-    return nullptr;
+    Render::SwapChainParams Params = m_DeviceParams.swapChainParams;
+    Params.backBufferWidth = backBufferWidth;
+    Params.backBufferHeight = backBufferHeight;
+    ResizeSwapChain(SwapChainIndex, Params);
+}
+nvrhi::ITexture* RenderDeviceVK::GetCurrentBackBuffer(int SwapChainIndex) 
+{
+    return m_SwapChains[SwapChainIndex].GetCurrentBackBuffer();
 }
 
 bool RenderDeviceVK::createInstance()
@@ -550,9 +567,9 @@ int32_t RenderDeviceVK::createSwapChain(vk::SurfaceKHR SurfaceKHR, const Render:
         NewSwapChain.m_SwapChainImages.push_back(sci);
     }
     NewSwapChain.m_SwapChainIndex = 0;
-    m_SwapChains[m_LatestChainIndex] = NewSwapChain;
-    m_LatestChainIndex += 1;
-    return m_LatestChainIndex - 1;
+    m_SwapChains[m_SwapChainCount] = NewSwapChain;
+    m_SwapChainCount += 1;
+    return m_SwapChainCount - 1;
 }
 
 bool RenderDeviceVK::pickPhysicalDevice(vk::SurfaceKHR surface)

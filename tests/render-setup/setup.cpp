@@ -17,14 +17,19 @@
 #define BACK_BUFFER_WIDTH 1280
 #define BACK_BUFFER_HEIGHT 720
 
+#include <EASTL/unique_ptr.h>
+eastl::unique_ptr<Render::RenderDevice> RenderDevice;
+
 inline static bool SDLEventHandler(const SDL_Event& event, SDL_Window* window)
 {
     switch (event.type)
     {
         case SDL_WINDOWEVENT:
-			if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+			if(event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 			{
-
+                const auto ResizeWidth = event.window.data1;
+                const auto ResizeHeight = event.window.data2;
+                RenderDevice->ResizeSwapChain(0, ResizeWidth, ResizeHeight);
             }
 			else if(event.window.event == SDL_WINDOWEVENT_CLOSE)
             	return false;
@@ -42,7 +47,8 @@ int main(int , char* [])
 	SDL_SysWMinfo wmInfo;
     auto sdl_window = SDL_CreateWindow("title",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT, SDL_WINDOW_VULKAN
+        BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT, 
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
     );
     SDL_VERSION(&wmInfo.version);
 	SDL_GetWindowWMInfo(sdl_window, &wmInfo);
@@ -58,8 +64,9 @@ int main(int , char* [])
     params.swapChainParams.backBufferWidth = BACK_BUFFER_WIDTH;
     params.swapChainParams.backBufferHeight = BACK_BUFFER_HEIGHT;
 
-    auto RD = Render::RenderDevice::CreateVulkan(pw, params);
-
+    RenderDevice = eastl::unique_ptr<Render::RenderDevice>(Render::RenderDevice::CreateVulkan(pw, params));
+    auto m_CommandList = RenderDevice->GetDevice()->createCommandList();
+    m_CommandList->setEnableAutomaticBarriers(false);
     while(sdl_window)
     {
         SDL_Event event;
@@ -74,13 +81,18 @@ int main(int , char* [])
 				}
 			}
             const auto SwapChainIndex = 0;
+            {
+            // Begin
+                RenderDevice->BeginFrame(SwapChainIndex);
             // Render
-            {
-                RD->BeginFrame(SwapChainIndex);
-            }
+                m_CommandList->open();
+                auto BackBuffer = RenderDevice->GetCurrentBackBuffer(SwapChainIndex);
+                nvrhi::TextureSubresourceSet SubresSet;
+                m_CommandList->setTextureState(BackBuffer, SubresSet, nvrhi::ResourceStates::Present);
+                m_CommandList->close();
             // Present
-            {
-                RD->Present(SwapChainIndex);
+                RenderDevice->GetDevice()->executeCommandList(m_CommandList);
+                RenderDevice->Present(SwapChainIndex);
             }
 		}
     }
