@@ -37,7 +37,7 @@ namespace Render
         nvrhi::Format swapChainFormat = nvrhi::Format::SRGBA8_UNORM;
         uint32_t backBufferWidth;
         uint32_t backBufferHeight;
-        uint32_t swapChainBufferCount = 2;
+        uint32_t swapChainBufferCount = 3;
         bool vsyncEnabled = true;
     };
 
