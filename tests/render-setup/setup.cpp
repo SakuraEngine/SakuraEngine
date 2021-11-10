@@ -80,21 +80,22 @@ int main(int , char* [])
                     sdl_window = nullptr;
 				}
 			}
-            const auto SwapChainIndex = 0;
-            {
-            // Begin
-                RenderDevice->BeginFrame(SwapChainIndex);
-            // Render
-                m_CommandList->open();
-                auto BackBuffer = RenderDevice->GetCurrentBackBuffer(SwapChainIndex);
-                nvrhi::TextureSubresourceSet SubresSet;
-                m_CommandList->setTextureState(BackBuffer, SubresSet, nvrhi::ResourceStates::Present);
-                m_CommandList->close();
-            // Present
-                RenderDevice->GetDevice()->executeCommandList(m_CommandList);
-                RenderDevice->Present(SwapChainIndex);
-            }
 		}
+        
+        const auto SwapChainIndex = 0;
+        {
+        // Begin
+            RenderDevice->BeginFrame(SwapChainIndex);
+        // Render
+            m_CommandList->open();
+            auto BackBuffer = RenderDevice->GetCurrentBackBuffer(SwapChainIndex);
+            nvrhi::TextureSubresourceSet SubresSet;
+            m_CommandList->setTextureState(BackBuffer, SubresSet, nvrhi::ResourceStates::Present);
+            m_CommandList->close();
+        // Present
+            RenderDevice->GetDevice()->executeCommandList(m_CommandList);
+            RenderDevice->Present(SwapChainIndex);
+        }
     }
 	SDL_Quit();
     return 0;
