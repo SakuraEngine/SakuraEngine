@@ -22,11 +22,12 @@ namespace Render
     struct RenderDevice
     {
         //virtual int CreateSwapChain(const PlatformWindow& window) = 0;
-        
+        [[nodiscard]] virtual nvrhi::IDevice *GetDevice() const = 0;
         virtual void BeginFrame(int SwapChainIndex) = 0;
         virtual void Present(int SwapChainIndex) = 0;    
-        virtual void ResizeSwapChain(int SwapChainIndex) = 0;
-        virtual nvrhi::IFramebuffer* GetCurrentBackBuffer(int SwapChainIndex) = 0;
+        virtual void ResizeSwapChain(int SwapChainIndex, uint32_t backBufferWidth, uint32_t backBufferHeight) = 0;
+        virtual void ResizeSwapChain(int SwapChainIndex, const struct SwapChainParams& Params) = 0;
+        virtual nvrhi::ITexture* GetCurrentBackBuffer(int SwapChainIndex) = 0;
 
         static RenderDevice* CreateVulkan(const PlatformWindow window, const struct DeviceCreationParameters& params);
     };
