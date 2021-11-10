@@ -1,0 +1,20 @@
+if(TARGET_MAC OR TARGET_WIN)
+    set(CAN_USE_SDL2 TRUE)
+endif()
+
+if(CAN_USE_SDL2)
+
+if(UNIX)
+    set(SDL2_SYSTEM_PACKAGE TRUE)
+else()
+    set(SDL2_SYSTEM_PACKAGE FALSE)
+endif(UNIX)
+
+if(SDL2_SYSTEM_PACKAGE)
+    find_package(SDL2 REQUIRED)
+elseif(TARGET_WIN)
+
+    set(SDL2_LIBRARIES SDL2 SDL2main)
+endif()
+
+endif(CAN_USE_SDL2)

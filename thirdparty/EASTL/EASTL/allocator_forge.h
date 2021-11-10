@@ -21,7 +21,7 @@ namespace eastl
 	// Example usage:
 	//      vector<int, allocator_forge> intVector;
 	//
-	class allocator_forge
+	class EASTL_API allocator_forge
 	{
 	public:
 		allocator_forge(const char* = NULL) {}
