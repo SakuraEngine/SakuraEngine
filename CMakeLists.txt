@@ -28,7 +28,7 @@ if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)
     target_compile_definitions(SakuraRuntime PUBLIC -DRUNTIME_SHARED)
     # EASTL
-    target_compile_definitions(SakuraRuntime PUBLIC -DEASTL_API=EA_EXPORT)
+    target_compile_definitions(SakuraRuntime PRIVATE -DEASTL_API=EA_EXPORT)
     # NVRHI
     target_compile_definitions(SakuraRuntime PRIVATE NVRHI_SHARED_LIBRARY_BUILD=1)
     target_compile_definitions(SakuraRuntime PRIVATE VULKAN_HPP_STORAGE_SHARED VULKAN_HPP_STORAGE_SHARED_EXPORT)
