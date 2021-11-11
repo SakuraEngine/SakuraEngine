@@ -27,6 +27,8 @@ include(NVRHI) # Fetch EASTL SOURCES
 if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)
     target_compile_definitions(SakuraRuntime PUBLIC -DRUNTIME_SHARED)
+    # DLL
+    target_compile_definitions(SakuraRuntime PRIVATE -DRUNTIME_API=RUNTIME_EXPORT)
     # EASTL
     target_compile_definitions(SakuraRuntime PRIVATE -DEASTL_API=EA_EXPORT)
     # NVRHI
@@ -37,8 +39,13 @@ else()
     target_compile_definitions(SakuraRuntime PUBLIC -DRUNTIME_STATIC)
 endif(RUNTIME_SHARED)
 
+set(RUNTIME_SOURCES
+    src/platform/unitybuild.cpp
+)
+
 target_sources(SakuraRuntime
     PRIVATE
+    ${RUNTIME_SOURCES}
     ${EASTL_SOURCES}
     ${MIMALLOC_SOURCES}
     ${NVRHI_SOURCES}

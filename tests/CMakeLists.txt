@@ -6,3 +6,4 @@ file(GLOB_RECURSE SAMPLE_SHARED_SOURCE
 
 add_subdirectory(memory)
 add_subdirectory(render-setup)
+add_subdirectory(window-exts)

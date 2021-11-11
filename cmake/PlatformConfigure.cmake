@@ -24,6 +24,8 @@ elseif(WIN32)
     set(SAKURA_TARGET_PLATFORM "windows")
     set(TARGET_WIN 1)   #Web
     add_definitions(-D "_CRT_SECURE_NO_WARNINGS")
+    add_definitions(-D "UNICODE")
+    add_definitions(-D "_UNICODE")
 elseif(__COMPILER_PS5)
     message(STATUS "Platform PS5")
     set(SAKURA_TARGET_PLATFORM "prospero")
