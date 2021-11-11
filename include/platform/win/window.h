@@ -18,8 +18,8 @@ using unique_handle = eastl::unique_ptr<HWND, hwnd_deleter>;
 
 class RUNTIME_API BorderlessWindow {
 public:
-    BorderlessWindow(bool borderless = true, bool borderless_resize = true,
-        bool borderless_drag = true, bool borderless_shadow = true);
+    BorderlessWindow(bool borderless = true, bool resizable = true,
+        bool dragable = true, bool with_shadow = true);
     auto set_borderless(bool enabled) -> void;
     auto set_borderless_shadow(bool enabled) -> void;
     inline HWND get_hwnd() {return handle.get();}
@@ -28,9 +28,9 @@ private:
     auto hit_test(POINT cursor) const -> LRESULT;
 
     bool borderless        = true; // is the window currently borderless
-    bool borderless_resize = true; // should the window allow resizing by dragging the borders while borderless
-    bool borderless_drag   = true; // should the window allow moving my dragging the client area
-    bool borderless_shadow = true; // should the window display a native aero shadow while borderless
+    bool resizable = true; // should the window allow resizing by dragging the borders while borderless
+    bool dragable   = true; // should the window allow moving my dragging the client area
+    bool with_shadow = true; // should the window display a native aero shadow while borderless
 
     unique_handle handle;
 };
