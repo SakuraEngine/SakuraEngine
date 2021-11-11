@@ -1,6 +1,9 @@
 #include "common/common.h"
-#include <unordered_set>
-#include <queue>
+#include <EASTL/unordered_map.h>
+#include <EASTL/unordered_set.h>
+#include <EASTL/vector.h>
+#include <EASTL/string.h>
+#include <EASTL/queue.h>
 #ifdef USE_VK
 #include <nvrhi/vulkan.h>
 #include <nvrhi/validation.h>
@@ -29,9 +32,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     return VK_FALSE;
 }
 
-static std::vector<const char *> stringSetToVector(const std::unordered_set<std::string>& set)
+static eastl::vector<const char *> stringSetToVector(const eastl::unordered_set<eastl::string>& set)
 {
-    std::vector<const char *> ret;
+    eastl::vector<const char *> ret;
     for(const auto& s : set)
     {
         ret.push_back(s.c_str());
@@ -40,9 +43,9 @@ static std::vector<const char *> stringSetToVector(const std::unordered_set<std:
 }
 
 template <typename T>
-static std::vector<T> setToVector(const std::unordered_set<T>& set)
+static eastl::vector<T> setToVector(const eastl::unordered_set<T>& set)
 {
-    std::vector<T> ret;
+    eastl::vector<T> ret;
     for(const auto& s : set)
     {
         ret.push_back(s);
@@ -104,7 +107,7 @@ protected:
         vk::SurfaceKHR m_WindowSurface;
         vk::SurfaceFormatKHR m_SwapChainFormat;
         vk::SwapchainKHR m_SwapChain;
-        std::vector<SwapChainImage> m_SwapChainImages;
+        eastl::vector<SwapChainImage> m_SwapChainImages;
         uint32_t m_SwapChainIndex = uint32_t(-1);
 
         inline uint32_t GetCurrentBackBufferIndex() 
@@ -126,7 +129,7 @@ protected:
             return nullptr;
         }
     };
-    std::unordered_map<int, SwapChain> m_SwapChains;
+    eastl::unordered_map<int, SwapChain> m_SwapChains;
     int m_SwapChainCount = 0;
 
     nvrhi::vulkan::DeviceHandle m_NvrhiDevice;
@@ -135,20 +138,20 @@ protected:
     nvrhi::CommandListHandle m_BarrierCommandList;
     vk::Semaphore m_PresentSemaphore;
 
-    std::queue<nvrhi::EventQueryHandle> m_FramesInFlight;
-    std::vector<nvrhi::EventQueryHandle> m_QueryPool;
+    eastl::queue<nvrhi::EventQueryHandle> m_FramesInFlight;
+    eastl::vector<nvrhi::EventQueryHandle> m_QueryPool;
 
     Render::DeviceCreationParameters m_DeviceParams;
-    std::string m_DeviceName;
+    eastl::string m_DeviceName;
 
     struct VulkanExtensionSet
     {
-        std::unordered_set<std::string> instance;
-        std::unordered_set<std::string> layers;
-        std::unordered_set<std::string> device;
+        eastl::unordered_set<eastl::string> instance;
+        eastl::unordered_set<eastl::string> layers;
+        eastl::unordered_set<eastl::string> device;
     };
     
-    std::unordered_set<std::string> m_RayTracingExtensions = {
+    eastl::unordered_set<eastl::string> m_RayTracingExtensions = {
         VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
         VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
         VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
@@ -159,13 +162,14 @@ protected:
     VulkanExtensionSet optionalExtensions = {
         // instance
         { 
-            "VK_KHR_portability_subset",
             VK_EXT_SAMPLER_FILTER_MINMAX_EXTENSION_NAME
         },
         // layers
-        { },
+        eastl::unordered_set<eastl::string>(),
         // device
         { 
+            "VK_KHR_portability_subset",
+
             VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
             VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
             VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
@@ -180,9 +184,13 @@ protected:
             VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
         },
         // layers
-        { },
+        eastl::unordered_set<eastl::string>(),
         // device
         { 
+#ifdef __APPLE__
+            "VK_KHR_create_renderpass2",
+            "VK_KHR_timeline_semaphore",
+#endif
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_MAINTENANCE1_EXTENSION_NAME
         },
@@ -201,7 +209,7 @@ void RenderDeviceVK::BeginFrame(int SwapChainIndex)
 {
     auto&& swapchain = m_SwapChains[SwapChainIndex];
     const vk::Result res = m_VulkanDevice.acquireNextImageKHR(
-        swapchain.m_SwapChain, std::numeric_limits<uint64_t>::max(), // timeout
+        swapchain.m_SwapChain, eastl::numeric_limits<uint64_t>::max(), // timeout
         m_PresentSemaphore, vk::Fence(), &swapchain.m_SwapChainIndex);
 
     assert(res == vk::Result::eSuccess);
@@ -236,7 +244,7 @@ void RenderDeviceVK::Present(int SwapChainIndex)
     else
     {
 #ifndef _WIN32
-        if (m_DeviceParams.vsyncEnabled)
+        if (m_DeviceParams.swapChainParams.vsyncEnabled)
         {
             m_PresentQueue.waitIdle();
         }
@@ -298,7 +306,7 @@ bool RenderDeviceVK::createInstance()
     // figure out which optional extensions are supported
     for(const auto& instanceExt : vk::enumerateInstanceExtensionProperties())
     {
-        const std::string name = instanceExt.extensionName;
+        const eastl::string name = instanceExt.extensionName.data();
         if (optionalExtensions.instance.find(name) != optionalExtensions.instance.end())
         {
             enabledExtensions.instance.insert(name);
@@ -313,7 +321,7 @@ bool RenderDeviceVK::createInstance()
 
     for(const auto& layer : vk::enumerateInstanceLayerProperties())
     {
-        const std::string name = layer.layerName;
+        const eastl::string name = layer.layerName.data();
         if (optionalExtensions.layers.find(name) != optionalExtensions.layers.end())
         {
             enabledExtensions.layers.insert(name);
@@ -377,14 +385,14 @@ bool RenderDeviceVK::createDeviceAndSwapChain(const PlatformWindow window)
     {
         unsigned int sdl_exts_count;
         auto get_sdl_ext_res = SDL_Vulkan_GetInstanceExtensions(window.sdl.window, &sdl_exts_count, nullptr);
-        std::vector<const char*> sdl_exts(sdl_exts_count);
+        eastl::vector<const char*> sdl_exts(sdl_exts_count);
 
         get_sdl_ext_res = SDL_Vulkan_GetInstanceExtensions(window.sdl.window, &sdl_exts_count, sdl_exts.data());
         if(get_sdl_ext_res)
         {
             for(uint32_t i = 0; i < sdl_exts_count; i++)
             {
-                enabledExtensions.instance.insert(std::string(sdl_exts[i]));
+                enabledExtensions.instance.insert(eastl::string(sdl_exts[i]));
             }
         }
     }
@@ -514,11 +522,11 @@ int32_t RenderDeviceVK::createSwapChain(vk::SurfaceKHR SurfaceKHR, const Render:
 
     vk::Extent2D extent = vk::Extent2D(Params.backBufferWidth, Params.backBufferHeight);
 
-    std::unordered_set<uint32_t> uniqueQueues = {
+    eastl::unordered_set<uint32_t> uniqueQueues = {
         uint32_t(m_GraphicsQueueFamily),
         uint32_t(m_PresentQueueFamily) };
     
-    std::vector<uint32_t> queues = setToVector(uniqueQueues);
+    eastl::vector<uint32_t> queues = setToVector(uniqueQueues);
 
     const bool enableSwapChainSharing = queues.size() > 1;
 
@@ -580,18 +588,18 @@ bool RenderDeviceVK::pickPhysicalDevice(vk::SurfaceKHR surface)
     auto devices = m_VulkanInstance.enumeratePhysicalDevices();
 
     // build a list of GPUs
-    std::vector<vk::PhysicalDevice> discreteGPUs;
-    std::vector<vk::PhysicalDevice> otherGPUs;
+    eastl::vector<vk::PhysicalDevice> discreteGPUs;
+    eastl::vector<vk::PhysicalDevice> otherGPUs;
     for(const auto& dev : devices)
     {
         auto prop = dev.getProperties();
 
         // check that all required device extensions are present
-        std::unordered_set<std::string> requiredExtensions = enabledExtensions.device;
+        eastl::unordered_set<eastl::string> requiredExtensions = enabledExtensions.device;
         auto deviceExtensions = dev.enumerateDeviceExtensionProperties();
         for(const auto& ext : deviceExtensions)
         {
-            requiredExtensions.erase(std::string(ext.extensionName.data()));
+            requiredExtensions.erase(eastl::string(ext.extensionName.data()));
         }
 
         if (!requiredExtensions.empty())
@@ -744,7 +752,7 @@ bool RenderDeviceVK::createDevice()
     auto deviceExtensions = m_VulkanPhysicalDevice.enumerateDeviceExtensionProperties();
     for(const auto& ext : deviceExtensions)
     {
-        const std::string name = ext.extensionName;
+        const eastl::string name = ext.extensionName.data();
         if (optionalExtensions.device.find(name) != optionalExtensions.device.end())
         {
             enabledExtensions.device.insert(name);
@@ -783,7 +791,7 @@ bool RenderDeviceVK::createDevice()
             vrsSupported = true;
     }
 
-    std::unordered_set<int> uniqueQueueFamilies = {
+    eastl::unordered_set<int> uniqueQueueFamilies = {
         m_GraphicsQueueFamily,
         m_PresentQueueFamily };
 
@@ -794,7 +802,7 @@ bool RenderDeviceVK::createDevice()
         uniqueQueueFamilies.insert(m_TransferQueueFamily);
 
     float priority = 1.f;
-    std::vector<vk::DeviceQueueCreateInfo> queueDesc;
+    eastl::vector<vk::DeviceQueueCreateInfo> queueDesc;
     for(int queueFamily : uniqueQueueFamilies)
     {
         queueDesc.push_back(vk::DeviceQueueCreateInfo()
@@ -882,7 +890,7 @@ bool RenderDeviceVK::createDevice()
 
     // stash the renderer string
     auto prop = m_VulkanPhysicalDevice.getProperties();
-    m_DeviceName = std::string(prop.deviceName.data());
+    m_DeviceName = eastl::string(prop.deviceName.data());
 
     printf("Created Vulkan device: %s\n", m_DeviceName.c_str());
 
