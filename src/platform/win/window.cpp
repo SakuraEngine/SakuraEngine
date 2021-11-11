@@ -112,13 +112,13 @@ namespace {
 }
 
 BorderlessWindow::BorderlessWindow(
-    bool borderless, bool borderless_resize, bool borderless_drag, bool borderless_shadow)
-    : borderless(borderless), borderless_resize(borderless_resize),
-      borderless_drag(borderless_drag), borderless_shadow(borderless_shadow),
+    bool borderless, bool resizable, bool dragable, bool with_shadow)
+    : borderless(borderless), resizable(resizable),
+      dragable(dragable), with_shadow(with_shadow),
       handle{create_window(&BorderlessWindow::WndProc, this)}
 {
     set_borderless(borderless);
-    set_borderless_shadow(borderless_shadow);
+    set_borderless_shadow(with_shadow);
     ::ShowWindow(handle.get(), SW_SHOW);
 }
 
@@ -132,7 +132,7 @@ void BorderlessWindow::set_borderless(bool enabled) {
         ::SetWindowLongPtrW(handle.get(), GWL_STYLE, static_cast<LONG>(new_style));
 
         // when switching between borderless and windowed, restore appropriate shadow state
-        set_shadow(handle.get(), borderless_shadow && (new_style != Style::windowed));
+        set_shadow(handle.get(), with_shadow && (new_style != Style::windowed));
 
         // redraw frame
         ::SetWindowPos(handle.get(), nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
@@ -142,7 +142,7 @@ void BorderlessWindow::set_borderless(bool enabled) {
 
 void BorderlessWindow::set_borderless_shadow(bool enabled) {
     if (borderless) {
-        borderless_shadow = enabled;
+        with_shadow = enabled;
         set_shadow(handle.get(), enabled);
     }
 }
@@ -198,10 +198,10 @@ auto CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN: {
                 switch (wparam) {
-                    case VK_F8 : { window.borderless_drag = !window.borderless_drag;        return 0; }
-                    case VK_F9 : { window.borderless_resize = !window.borderless_resize;    return 0; }
+                    case VK_F8 : { window.dragable = !window.dragable;        return 0; }
+                    case VK_F9 : { window.resizable = !window.resizable;    return 0; }
                     case VK_F10: { window.set_borderless(!window.borderless);               return 0; }
-                    case VK_F11: { window.set_borderless_shadow(!window.borderless_shadow); return 0; }
+                    case VK_F11: { window.set_borderless_shadow(!window.with_shadow); return 0; }
                 }
                 break;
             }
@@ -225,7 +225,7 @@ auto BorderlessWindow::hit_test(POINT cursor) const -> LRESULT {
         return HTNOWHERE;
     }
 
-    const auto drag = borderless_drag ? HTCAPTION : HTCLIENT;
+    const auto drag = dragable ? HTCAPTION : HTCLIENT;
 
     enum region_mask {
         client = 0b0000,
@@ -242,14 +242,14 @@ auto BorderlessWindow::hit_test(POINT cursor) const -> LRESULT {
         bottom  * (cursor.y >= (window.bottom - border.y));
 
     switch (result) {
-        case left          : return borderless_resize ? HTLEFT        : drag;
-        case right         : return borderless_resize ? HTRIGHT       : drag;
-        case top           : return borderless_resize ? HTTOP         : drag;
-        case bottom        : return borderless_resize ? HTBOTTOM      : drag;
-        case top | left    : return borderless_resize ? HTTOPLEFT     : drag;
-        case top | right   : return borderless_resize ? HTTOPRIGHT    : drag;
-        case bottom | left : return borderless_resize ? HTBOTTOMLEFT  : drag;
-        case bottom | right: return borderless_resize ? HTBOTTOMRIGHT : drag;
+        case left          : return resizable ? HTLEFT        : drag;
+        case right         : return resizable ? HTRIGHT       : drag;
+        case top           : return resizable ? HTTOP         : drag;
+        case bottom        : return resizable ? HTBOTTOM      : drag;
+        case top | left    : return resizable ? HTTOPLEFT     : drag;
+        case top | right   : return resizable ? HTTOPRIGHT    : drag;
+        case bottom | left : return resizable ? HTBOTTOMLEFT  : drag;
+        case bottom | right: return resizable ? HTBOTTOMRIGHT : drag;
         case client        : return drag;
         default            : return HTNOWHERE;
     }
