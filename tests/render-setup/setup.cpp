@@ -63,6 +63,8 @@ int main(int , char* [])
     params.enableRayTracingExtensions = false;
     params.swapChainParams.backBufferWidth = BACK_BUFFER_WIDTH;
     params.swapChainParams.backBufferHeight = BACK_BUFFER_HEIGHT;
+    params.enableDebugRuntime = true;
+    params.enableNvrhiValidationLayer = true;
 
     RenderDevice = eastl::unique_ptr<Render::RenderDevice>(Render::RenderDevice::CreateVulkan(pw, params));
     auto m_CommandList = RenderDevice->GetDevice()->createCommandList();
@@ -85,16 +87,15 @@ int main(int , char* [])
         const auto SwapChainIndex = 0;
         {
         // Begin
-            RenderDevice->BeginFrame(SwapChainIndex);
         // Render
             m_CommandList->open();
             auto BackBuffer = RenderDevice->GetCurrentBackBuffer(SwapChainIndex);
             nvrhi::TextureSubresourceSet SubresSet;
-            m_CommandList->setTextureState(BackBuffer, SubresSet, nvrhi::ResourceStates::Present);
+            m_CommandList->setTextureState(
+                BackBuffer, SubresSet, nvrhi::ResourceStates::Present);
             m_CommandList->close();
         // Present
             RenderDevice->GetDevice()->executeCommandList(m_CommandList);
-            RenderDevice->Present(SwapChainIndex);
         }
     }
 	SDL_Quit();

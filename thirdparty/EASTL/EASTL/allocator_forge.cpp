@@ -35,7 +35,7 @@ extern "C"
 		{
 		    if ((alignmentOffset % alignment) == 0) // We check for (offset % alignmnent == 0) instead of (offset == 0) because any block which is
 													// aligned on e.g. 64 also is aligned at an offset of 64 by definition.
-			    return core_memalign(alignment, n);
+			    return core_memalign(n, alignment);
 
 		    return NULL;
 		}
