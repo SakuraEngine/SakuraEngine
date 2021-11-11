@@ -16,6 +16,7 @@ struct hwnd_deleter {
 
 using unique_handle = eastl::unique_ptr<HWND, hwnd_deleter>;
 
+// based on https://github.com/melak47/BorderlessWindow
 class RUNTIME_API BorderlessWindow {
 public:
     BorderlessWindow(bool borderless = true, bool resizable = true,
