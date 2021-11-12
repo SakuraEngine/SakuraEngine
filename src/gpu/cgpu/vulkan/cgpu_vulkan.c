@@ -279,13 +279,13 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 	}
 	VkPresentModeKHR preferredModeList[] = {
 		VK_PRESENT_MODE_IMMEDIATE_KHR,
-		VK_PRESENT_MODE_MAILBOX_KHR,
-		VK_PRESENT_MODE_FIFO_RELAXED_KHR,
-		VK_PRESENT_MODE_FIFO_KHR
+		VK_PRESENT_MODE_MAILBOX_KHR,      // low latency
+		VK_PRESENT_MODE_FIFO_RELAXED_KHR, // minimize stuttering
+		VK_PRESENT_MODE_FIFO_KHR          // low power consumption
 	};
 	const uint32_t preferredModeCount = CGPU_ARRAY_LEN(preferredModeList);
 
-	uint32_t preferredModeStartIndex = desc->enableVsync ? 2 : 0;
+	uint32_t preferredModeStartIndex = desc->enableVsync ? 1 : 0;
 	for (uint32_t j = preferredModeStartIndex; j < preferredModeCount; ++j)
 	{
 		VkPresentModeKHR mode = preferredModeList[j];

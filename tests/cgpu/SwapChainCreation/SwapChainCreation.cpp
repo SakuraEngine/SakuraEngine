@@ -72,8 +72,9 @@ TEST_P(SwapChainCreation, CreateFromHWND)
     descriptor.presentQueues = &mainQueue;
     descriptor.presentQueuesCount = 1;
     descriptor.surface = surface;
-    descriptor.imageCount = 2;
+    descriptor.imageCount = 3;
     descriptor.format = PF_R8G8B8A8_UNORM;
+    descriptor.enableVsync = true;
     
     auto swapchain = cgpu_create_swapchain(device, &descriptor);
     EXPECT_NE(swapchain, CGPU_NULLPTR);
