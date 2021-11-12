@@ -1,5 +1,4 @@
 #include "platform/adaptive_types.h"
-#include "common/common.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
@@ -18,7 +17,6 @@
 #define BACK_BUFFER_HEIGHT 720
 
 #include <EASTL/unique_ptr.h>
-eastl::unique_ptr<Render::RenderDevice> RenderDevice;
 
 inline static bool SDLEventHandler(const SDL_Event& event, SDL_Window* window)
 {
@@ -29,7 +27,6 @@ inline static bool SDLEventHandler(const SDL_Event& event, SDL_Window* window)
 			{
                 const auto ResizeWidth = event.window.data1;
                 const auto ResizeHeight = event.window.data2;
-                RenderDevice->ResizeSwapChain(0, ResizeWidth, ResizeHeight);
             }
 			else if(event.window.event == SDL_WINDOWEVENT_CLOSE)
             	return false;
@@ -58,17 +55,7 @@ int main(int , char* [])
     pw.win.hWnd = wmInfo.info.win.window;
     pw.win.hInstance = wmInfo.info.win.hinstance;
 #endif
-    //
-    Render::DeviceCreationParameters params = {};
-    params.enableRayTracingExtensions = false;
-    params.swapChainParams.backBufferWidth = BACK_BUFFER_WIDTH;
-    params.swapChainParams.backBufferHeight = BACK_BUFFER_HEIGHT;
-    params.enableDebugRuntime = true;
-    params.enableNvrhiValidationLayer = true;
 
-    RenderDevice = eastl::unique_ptr<Render::RenderDevice>(Render::RenderDevice::CreateVulkan(pw, params));
-    auto m_CommandList = RenderDevice->GetDevice()->createCommandList();
-    m_CommandList->setEnableAutomaticBarriers(false);
     while(sdl_window)
     {
         SDL_Event event;
@@ -83,20 +70,6 @@ int main(int , char* [])
 				}
 			}
 		}
-        
-        const auto SwapChainIndex = 0;
-        {
-        // Begin
-        // Render
-            m_CommandList->open();
-            auto BackBuffer = RenderDevice->GetCurrentBackBuffer(SwapChainIndex);
-            nvrhi::TextureSubresourceSet SubresSet;
-            m_CommandList->setTextureState(
-                BackBuffer, SubresSet, nvrhi::ResourceStates::Present);
-            m_CommandList->close();
-        // Present
-            RenderDevice->GetDevice()->executeCommandList(m_CommandList);
-        }
     }
 	SDL_Quit();
     return 0;
