@@ -2,20 +2,7 @@ set(MIMALLOC_SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/mimalloc CACHE S
 set(MIMALLOC_INCLUDES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/mimalloc/include CACHE STRING INTERNAL FORCE)
 
 set(MIMALLOC_sources
-    ${MIMALLOC_SOURCES_DIR}/stats.c
-    ${MIMALLOC_SOURCES_DIR}/random.c
-    ${MIMALLOC_SOURCES_DIR}/os.c
-    ${MIMALLOC_SOURCES_DIR}/bitmap.c
-    ${MIMALLOC_SOURCES_DIR}/arena.c
-    ${MIMALLOC_SOURCES_DIR}/segment-cache.c
-    ${MIMALLOC_SOURCES_DIR}/segment.c
-    ${MIMALLOC_SOURCES_DIR}/page.c
-    ${MIMALLOC_SOURCES_DIR}/alloc.c
-    ${MIMALLOC_SOURCES_DIR}/alloc-aligned.c
-    ${MIMALLOC_SOURCES_DIR}/alloc-posix.c
-    ${MIMALLOC_SOURCES_DIR}/heap.c
-    ${MIMALLOC_SOURCES_DIR}/options.c
-    ${MIMALLOC_SOURCES_DIR}/init.c
+    ${MIMALLOC_SOURCES_DIR}/unitybuild.c
 )
 file(GLOB_RECURSE MIMALLOC_headers ${MIMALLOC_INCLUDES_DIR}/*.h ${MIMALLOC_INCLUDES_DIR}/*.hpp)
 
