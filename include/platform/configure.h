@@ -9,7 +9,7 @@
 #endif
 
 #ifndef RUNTIME_API // If the build file hasn't already defined this to be dllexport...
-	#if RUNTIME_DLL
+	#ifdef RUNTIME_DLL
 		#if defined(_MSC_VER)
 			#define RUNTIME_API      __declspec(dllimport)
 			#define RUNTIME_LOCAL
@@ -23,6 +23,9 @@
 			#define RUNTIME_API
 			#define RUNTIME_LOCAL
 		#endif
+
+		#define EA_DLL
+
 	#else
 		#define RUNTIME_API
 		#define RUNTIME_LOCAL

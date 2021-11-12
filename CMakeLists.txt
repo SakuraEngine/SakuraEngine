@@ -22,6 +22,7 @@ include(PlatformConfigure)
 include(mimalloc) # Fetch mimalloc SOURCES
 include(EASTL) # Fetch EASTL SOURCES
 include(SDL2) # Fetch EASTL SOURCES
+include(vulkan)
 
 if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)
@@ -37,6 +38,8 @@ endif(RUNTIME_SHARED)
 
 set(RUNTIME_SOURCES
     src/platform/unitybuild.cpp
+    src/gpu/cgpu/unitybuild.cpp
+    src/gpu/cgpu/unitybuild.c
 )
 
 target_sources(SakuraRuntime
@@ -51,4 +54,12 @@ target_include_directories(SakuraRuntime
     ${EASTL_INCLUDES_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-add_subdirectory(tests)
+
+set(BUILD_TEST TRUE)
+set(USE_TEST_FRAMEWORK TRUE)
+if(BUILD_TEST)
+    enable_testing()
+    include(CTest)
+    include(GoogleTest)
+    add_subdirectory(tests)
+endif()

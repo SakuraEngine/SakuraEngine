@@ -1,6 +1,6 @@
-#include "platform/adaptive_types.h"
-#include "common/common.h"
+#define RUNTIME_DLL
 
+#include "platform/adaptive_types.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 #ifndef __APPLE__

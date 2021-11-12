@@ -1,6 +1,4 @@
-#ifdef RUNTIME_SHARED
-#define EA_DLL
-#endif
+#define RUNTIME_DLL
 
 #include <EASTL/string.h>
 #include <EASTL/vector.h>

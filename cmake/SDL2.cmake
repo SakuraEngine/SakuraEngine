@@ -19,6 +19,5 @@ elseif(TARGET_WIN)
 endif()
 set(SDL2_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/SDL2)
 
-link_libraries(${SDL2_LIBRARIES})
-include_directories(${SDL2_INCLUDES})
+
 endif(CAN_USE_SDL2)
