@@ -145,13 +145,24 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 			for(uint32_t j = 0; j < VkAdapter.mQueueFamilyPropertiesCount; j++)
 			{
 				const VkQueueFamilyProperties& prop =  VkAdapter.pQueueFamilyProperties[j];
-				if(prop.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+				if( (VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Graphics] == -1) 
+					&&
+					(prop.queueFlags & VK_QUEUE_GRAPHICS_BIT) )
+				{
 					assert(VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Graphics] == -1 && "???");
 					VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Graphics] = j;
-				} else if(prop.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+				} 
+				else if( (VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Compute] == -1) 
+					&&
+					(prop.queueFlags & VK_QUEUE_COMPUTE_BIT) )
+				{
 					assert(VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Compute] == -1 && "???");
 					VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Compute] = j;
-				} else if(prop.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+				} 
+				else if( (VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Transfer] == -1) 
+					&&
+					(prop.queueFlags & VK_QUEUE_TRANSFER_BIT) )
+				{
 					assert(VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Transfer] == -1 && "???");
 					VkAdapter.mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
 				}

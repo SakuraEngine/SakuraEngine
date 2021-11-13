@@ -54,8 +54,8 @@ typedef CGpuInstanceId (*CGPUProcCreateInstance)(const struct CGpuInstanceDescri
 RUNTIME_API void cgpu_free_instance(CGpuInstanceId instance);
 typedef void (*CGPUProcFreeInstance)(CGpuInstanceId instance);
 
-RUNTIME_API void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, size_t* adapters_num);
-typedef void (*CGPUProcEnumAdapters)(CGpuInstanceId instance, CGpuAdapterId* const adapters, size_t* adapters_num);
+RUNTIME_API void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
+typedef void (*CGPUProcEnumAdapters)(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 
 RUNTIME_API CGpuAdapterDetail cgpu_query_adapter_detail(const CGpuAdapterId adapter);
 typedef CGpuAdapterDetail (*CGPUProcQueryAdapterDetail)(const CGpuAdapterId instance);
@@ -130,19 +130,19 @@ RUNTIME_API CGpuSurfaceId cgpu_surface_from_hwnd(CGpuDeviceId device, HWND windo
 typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromHWND)(CGpuDeviceId device, HWND window);
 #endif
 #ifdef __APPLE__
-RUNTIME_API CGpuSurfaceId cgpu_surface_from_ui_view(CGpuDeviceId device, UIView* window);
-typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromUIView)(CGpuDeviceId device, UIView* window);
+//RUNTIME_API CGpuSurfaceId cgpu_surface_from_ui_view(CGpuDeviceId device, UIView* window);
+//typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromUIView)(CGpuDeviceId device, UIView* window);
 
-RUNTIME_API CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, NSView* window);
-typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromNSView)(CGpuDeviceId device, NSView* window);
+//RUNTIME_API CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, NSView* window);
+//typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromNSView)(CGpuDeviceId device, NSView* window);
 #endif
 typedef struct CGpuSurfacesProcTable {
 #if defined(_WIN32) || defined(_WIN64)
     const CGPUSurfaceProc_CreateFromHWND from_hwnd;
 #endif
 #ifdef __APPLE__
-    const CGPUSurfaceProc_CreateFromUIView from_ui_view;
-    const CGPUSurfaceProc_CreateFromNSView from_ns_view;
+    //const CGPUSurfaceProc_CreateFromUIView from_ui_view;
+    //const CGPUSurfaceProc_CreateFromNSView from_ns_view;
 #endif
     const CGPUSurfaceProc_Free free_surface;
 } CGpuSurfacesProcTable;

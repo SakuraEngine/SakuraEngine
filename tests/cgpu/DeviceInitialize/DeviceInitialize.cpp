@@ -25,7 +25,7 @@ CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool e
 int enum_adapters(CGpuInstanceId instance)
 {
     // enum adapters
-    size_t adapters_count = 0;
+    uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
     std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
@@ -42,7 +42,7 @@ int enum_adapters(CGpuInstanceId instance)
 void test_create_device(CGpuInstanceId instance, bool enableDebugLayer, bool enableGPUValidation)
 {
     // enum adapters
-    size_t adapters_count = 0;
+    uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
     std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
@@ -127,7 +127,7 @@ TEST_P(CGpuTest, QueryQueueCount)
     ECGPUBackEnd backend = GetParam();
     auto instance = init_instance(backend, true, true);
     EXPECT_GT(enum_adapters(instance), 0);
-    size_t adapters_count = 0;
+    uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
     std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);

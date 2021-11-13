@@ -5,9 +5,10 @@
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
 #endif
-#if defined(__linux__) || defined(__linux) || defined(__EMSCRIPTEN__)
+#if defined(__linux__) || defined(__linux) || defined(__EMSCRIPTEN__) 
 #include <alloca.h>
 #endif
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef CGPU_USE_VULKAN
@@ -40,7 +41,7 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* descrip
 	return cgpu_vulkan_create_instance(descriptor, CGPU_NULLPTR);
 }
 
-void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const adapters, size_t* adapters_num)
+void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
 {
 	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)instance;
 	if (adapters == CGPU_NULLPTR)
