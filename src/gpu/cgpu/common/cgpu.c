@@ -191,6 +191,17 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
 
         return device->adapter->instance->surfaces_table->from_hwnd(device, window);
     }
+#elif defined(_MACOS)
+    CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, NSView* window)
+    {
+        assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+        assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
+        assert(device->adapter->instance != CGPU_NULLPTR && "fatal: call on NULL instnace!");
+        assert(device->adapter->instance->surfaces_table != CGPU_NULLPTR && "surfaces_table Missing!");
+        assert(device->adapter->instance->surfaces_table->from_ns_view != CGPU_NULLPTR && "free_instance Proc Missing!");
+
+        return device->adapter->instance->surfaces_table->from_ns_view(device, window);
+    }
 #endif
 
 void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
