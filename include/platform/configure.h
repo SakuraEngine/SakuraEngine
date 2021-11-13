@@ -31,3 +31,11 @@
 		#define RUNTIME_LOCAL
 	#endif
 #endif
+
+#ifdef __APPLE__
+    #include "TargetConditionals.h"
+    #ifdef TARGET_OS_MAC
+        #define _MACOS
+    #endif
+#elif defined _WIN32 || defined _WIN64
+#endif 

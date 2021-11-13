@@ -56,6 +56,8 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	std::vector<const char*> exts = {
 #if defined(_WIN32) || defined(_WIN64)
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#elif defined (_MACOS)
+		VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
 #endif
 		VK_KHR_SURFACE_EXTENSION_NAME
 	};
