@@ -20,7 +20,7 @@ const CGpuSurfacesProcTable* CGPU_VulkanSurfacesProcTable();
 
 CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* descriptor);
 void cgpu_free_instance_vulkan(CGpuInstanceId instance);
-void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const adapters, size_t* adapters_num);
+void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 CGpuAdapterDetail cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter);
 uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQueueType type);
 CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc);

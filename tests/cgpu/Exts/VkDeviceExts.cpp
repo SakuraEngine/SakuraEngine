@@ -30,7 +30,9 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     CGpuVulkanInstanceDescriptor vkDesc = {};
     const char* exts[] = 
     {
+#ifdef __WINDOWS__
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#endif
 		VK_KHR_SURFACE_EXTENSION_NAME
     };
     vkDesc.mInstanceExtensionCount = 2;

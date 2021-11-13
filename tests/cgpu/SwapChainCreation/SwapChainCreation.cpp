@@ -26,7 +26,7 @@ protected:
         EXPECT_NE(instance, CGPU_NULLPTR);
         EXPECT_NE(instance, nullptr);
 
-        size_t adapters_count = 0;
+        uint32_t adapters_count = 0;
         cgpu_enum_adapters(instance, nullptr, &adapters_count);
         std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
@@ -82,6 +82,10 @@ TEST_P(SwapChainCreation, CreateFromHWND)
 
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
+}
+#elif defined (__APPLE__) 
+TEST_P(SwapChainCreation, CreateFromNSView)
+{
 }
 #endif
 

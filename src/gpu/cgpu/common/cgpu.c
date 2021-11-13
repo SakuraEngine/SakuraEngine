@@ -53,7 +53,7 @@ void cgpu_free_instance(CGpuInstanceId instance)
     instance->proc_table->free_instance(instance);
 }
 
-void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, size_t* adapters_num)
+void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
 {
     assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     assert(instance->proc_table->enum_adapters && "enum_adapters Proc Missing!");
@@ -199,7 +199,7 @@ void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
     assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     assert(device->adapter->instance != CGPU_NULLPTR && "fatal: call on NULL instnace!");
     assert(device->adapter->instance->surfaces_table != CGPU_NULLPTR && "surfaces_table Missing!");
-    assert(device->adapter->instance->surfaces_table->from_hwnd != CGPU_NULLPTR && "free_instance Proc Missing!");
+    assert(device->adapter->instance->surfaces_table->free_surface != CGPU_NULLPTR && "free_instance Proc Missing!");
 
     return device->adapter->instance->surfaces_table->free_surface(device, surface);
 }

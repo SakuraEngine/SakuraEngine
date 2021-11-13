@@ -17,7 +17,7 @@ protected:
         EXPECT_NE(instance, CGPU_NULLPTR);
         EXPECT_NE(instance, nullptr);
 
-        size_t adapters_count = 0;
+        uint32_t adapters_count = 0;
         cgpu_enum_adapters(instance, nullptr, &adapters_count);
         std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);

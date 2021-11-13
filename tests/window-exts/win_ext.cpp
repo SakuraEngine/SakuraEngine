@@ -42,8 +42,10 @@ int main(int , char* [])
 #ifdef _WINDOWS
     BorderlessWindow window;
     auto platform_child = window.get_hwnd();
-#endif
     auto sdl_child = SDL_CreateWindowFrom(platform_child);
+#else
+    auto sdl_child = sdl_window;
+#endif
     while(sdl_window && sdl_child)
     {
 		SDL_Event event;
