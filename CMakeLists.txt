@@ -41,6 +41,12 @@ set(RUNTIME_SOURCES
     src/gpu/cgpu/unitybuild.cpp
     src/gpu/cgpu/unitybuild.c
 )
+if(APPLE)
+    set(RUNTIME_SOURCES
+        ${RUNTIME_SOURCES}
+        src/platform/unitybuild.mm
+    )
+endif()
 
 target_sources(SakuraRuntime
     PRIVATE
@@ -54,6 +60,15 @@ target_include_directories(SakuraRuntime
     ${EASTL_INCLUDES_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+if(APPLE)
+    find_library(FoundationLib CoreFoundation)
+    find_library(CocoaLib Cocoa)
+    target_link_libraries(SakuraRuntime 
+        PUBLIC
+        ${FoundationLib}
+        ${CocoaLib}
+    )
+endif()
 
 set(BUILD_TEST TRUE)
 set(USE_TEST_FRAMEWORK TRUE)

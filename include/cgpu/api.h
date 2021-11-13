@@ -132,9 +132,9 @@ typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromHWND)(CGpuDeviceId device, HWN
 #ifdef __APPLE__
 //RUNTIME_API CGpuSurfaceId cgpu_surface_from_ui_view(CGpuDeviceId device, UIView* window);
 //typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromUIView)(CGpuDeviceId device, UIView* window);
-
-//RUNTIME_API CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, NSView* window);
-//typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromNSView)(CGpuDeviceId device, NSView* window);
+typedef struct NSView NSView;
+RUNTIME_API CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, NSView* window);
+typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromNSView)(CGpuDeviceId device, NSView* window);
 #endif
 typedef struct CGpuSurfacesProcTable {
 #if defined(_WIN32) || defined(_WIN64)
@@ -142,7 +142,7 @@ typedef struct CGpuSurfacesProcTable {
 #endif
 #ifdef __APPLE__
     //const CGPUSurfaceProc_CreateFromUIView from_ui_view;
-    //const CGPUSurfaceProc_CreateFromNSView from_ns_view;
+    const CGPUSurfaceProc_CreateFromNSView from_ns_view;
 #endif
     const CGPUSurfaceProc_Free free_surface;
 } CGpuSurfacesProcTable;

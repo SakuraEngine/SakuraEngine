@@ -3,12 +3,14 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
 #if defined(_WIN32) || defined(_WIN64)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
 #include "windows.h"
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND createWin32Window();
+#elif defined(_MACOS)
+#include "platform/macos/window.h"
 #endif
 
 class SwapChainCreation : public::testing::TestWithParam<ECGPUBackEnd>
@@ -42,7 +44,24 @@ protected:
 
 #ifdef _WIN32 
         hwnd = createWin32Window();
+#elif defined (_MACOS)
+        nswin = nswindow_create();
 #endif
+    }
+
+    CGpuSwapChainId CreateSwapChainWithSurface(CGpuSurfaceId surface)
+    {
+        auto mainQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        CGpuSwapChainDescriptor descriptor = {};
+        descriptor.presentQueues = &mainQueue;
+        descriptor.presentQueuesCount = 1;
+        descriptor.surface = surface;
+        descriptor.imageCount = 3;
+        descriptor.format = PF_R8G8B8A8_UNORM;
+        descriptor.enableVsync = true;
+        
+        auto swapchain = cgpu_create_swapchain(device, &descriptor);
+        return swapchain;
     }
 
     void TearDown() override
@@ -56,6 +75,8 @@ protected:
     CGpuDeviceId device;
 #ifdef _WIN32 
     HWND hwnd;
+#elif defined (_MACOS)
+    void* nswin;
 #endif
 };
 
@@ -67,16 +88,8 @@ TEST_P(SwapChainCreation, CreateFromHWND)
     EXPECT_NE(surface, CGPU_NULLPTR);
     EXPECT_NE(surface, nullptr);
 
-    auto mainQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
-    CGpuSwapChainDescriptor descriptor = {};
-    descriptor.presentQueues = &mainQueue;
-    descriptor.presentQueuesCount = 1;
-    descriptor.surface = surface;
-    descriptor.imageCount = 3;
-    descriptor.format = PF_R8G8B8A8_UNORM;
-    descriptor.enableVsync = true;
-    
-    auto swapchain = cgpu_create_swapchain(device, &descriptor);
+    auto swapchain = CreateSwapChainWithSurface(surface);
+
     EXPECT_NE(swapchain, CGPU_NULLPTR);
     EXPECT_NE(swapchain, nullptr);
 
@@ -84,8 +97,26 @@ TEST_P(SwapChainCreation, CreateFromHWND)
     cgpu_free_surface(device, surface);
 }
 #elif defined (__APPLE__) 
+#define BACK_BUFFER_WIDTH 1280
+#define BACK_BUFFER_HEIGHT 720
+
 TEST_P(SwapChainCreation, CreateFromNSView)
 {
+    auto ns_view = (struct NSView*)nswindow_get_content_view(
+        nswin
+    );
+    auto surface = cgpu_surface_from_ns_view(device, ns_view);
+
+    EXPECT_NE(surface, CGPU_NULLPTR);
+    EXPECT_NE(surface, nullptr);
+
+    auto swapchain = CreateSwapChainWithSurface(surface);
+
+    EXPECT_NE(swapchain, CGPU_NULLPTR);
+    EXPECT_NE(swapchain, nullptr);
+
+    cgpu_free_swapchain(swapchain);
+    cgpu_free_surface(device, surface);
 }
 #endif
 
@@ -101,8 +132,6 @@ static const auto allPlatforms = testing::Values(
 );
 
 INSTANTIATE_TEST_SUITE_P(SwapChainCreation, SwapChainCreation, allPlatforms);
-
-
 
 
 #if defined(_WIN32) || defined(_WIN64)
