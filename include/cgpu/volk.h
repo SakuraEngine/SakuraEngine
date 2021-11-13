@@ -51,6 +51,10 @@
 #	endif
 #endif
 
+#ifdef _MACOS
+    #include "vulkan/vulkan_macos.h"
+#endif
+
 /* Disable several extensions on earlier SDKs because later SDKs introduce a backwards incompatible change to function signatures */
 #if VK_HEADER_VERSION < 140
 #	undef VK_NVX_image_view_handle
