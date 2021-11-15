@@ -41,12 +41,13 @@ void cgpu_free_surface_vulkan(CGpuDeviceId device, CGpuSurfaceId surface)
 
 		CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
 		CGpuSurfaceId surface;
-		VkWin32SurfaceCreateInfoKHR create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		create_info.pNext = NULL;
-		create_info.flags = 0;
-		create_info.hinstance = GetModuleHandle(NULL);
-		create_info.hwnd = window;
+		VkWin32SurfaceCreateInfoKHR create_info = {
+			.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+			.pNext = NULL,
+			.flags = 0,
+			.hinstance = GetModuleHandle(NULL),
+			.hwnd = window
+		};
 		if(VK_SUCCESS != vkCreateWin32SurfaceKHR(I->pVkInstance, &create_info, 
 			GLOBAL_VkAllocationCallbacks, (VkSurfaceKHR*)&surface))
 		{

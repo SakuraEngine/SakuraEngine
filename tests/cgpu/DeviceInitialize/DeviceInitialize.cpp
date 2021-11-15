@@ -31,7 +31,8 @@ int enum_adapters(CGpuInstanceId instance)
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for(auto adapter : adapters)
     {
-        auto prop = cgpu_query_adapter_detail(adapter);
+        CGpuAdapterDetail prop = {};
+        cgpu_query_adapter_detail(adapter, &prop);
         std::cout << "device id: " << prop.deviceId << "  vendor id: " << prop.vendorId << "\n";
         std::cout << "    name: " << prop.name << "\n";
     }
@@ -58,7 +59,7 @@ void test_create_device(CGpuInstanceId instance, bool enableDebugLayer, bool ena
         if(tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Transfer, 1});
         CGpuDeviceDescriptor descriptor = {};
         descriptor.queueGroups = queueGroup.data();
-        descriptor.queueGroupCount = queueGroup.size();
+        descriptor.queueGroupCount = (uint32_t)queueGroup.size();
 
         auto device = cgpu_create_device(adapter, &descriptor);
         EXPECT_NE(device, nullptr);
@@ -133,7 +134,8 @@ TEST_P(CGpuTest, QueryQueueCount)
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for(auto adapter : adapters)
     {
-        auto prop = cgpu_query_adapter_detail(adapter);
+        CGpuAdapterDetail prop = {};
+        cgpu_query_adapter_detail(adapter, &prop);
         auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
         auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);
         auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);

@@ -56,15 +56,12 @@ void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const ada
 	}
 }
 
-CGpuAdapterDetail cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter)
+void cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail)
 {
     CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
-    CGpuAdapterDetail d = {
-		.deviceId = a->mPhysicalDeviceProps.deviceID,
-		.vendorId = a->mPhysicalDeviceProps.vendorID,
-		.name = a->mPhysicalDeviceProps.deviceName
-	};
-    return d;
+	detail->deviceId = a->mPhysicalDeviceProps.deviceID;
+	detail->vendorId = a->mPhysicalDeviceProps.vendorID;
+	detail->name = a->mPhysicalDeviceProps.deviceName;
 }
 
 uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQueueType type)
@@ -127,8 +124,8 @@ CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint
 			.type = type
 		}
 	};
-	D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
-	Q.mVkQueueFamilyIndex = A->mQueueFamilyIndices[type];
+	D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, (uint32_t)A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
+	Q.mVkQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[type];
 	
 	CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)malloc(sizeof(CGpuQueue_Vulkan));
 	memcpy(RQ, &Q, sizeof(Q));
@@ -151,7 +148,7 @@ VkCommandPool allocate_transient_command_pool(CGpuDevice_Vulkan* D, CGpuQueueId 
 		.pNext = NULL,
 		// transient.
 		.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-		.queueFamilyIndex = A->mQueueFamilyIndices[queue->type]
+		.queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[queue->type]
 	};
 
 	if( VK_SUCCESS != 
