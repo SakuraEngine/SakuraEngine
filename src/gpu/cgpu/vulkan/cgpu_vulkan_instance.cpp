@@ -47,9 +47,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_1;
 
-    // cn: 创建VkInstance.
 	// en: Create VkInstance.
-	// jp: VkInstanceを作る.
 	VkInstanceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
@@ -69,7 +67,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	{
 		exts.insert(exts.end(), exts_desc->ppInstanceExtensions, exts_desc->ppInstanceExtensions + exts_desc->mInstanceExtensionCount);
 	}
-	createInfo.enabledExtensionCount = exts.size();
+	createInfo.enabledExtensionCount = (uint32_t)exts.size();
 	createInfo.ppEnabledExtensionNames = exts.data();
 	
 	if(desc->enableGpuBasedValidation)
@@ -104,7 +102,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
             layers.push_back(validation_layer_name);
 		
 	}
-	createInfo.enabledLayerCount = layers.size();
+	createInfo.enabledLayerCount = (uint32_t)layers.size();
 	createInfo.ppEnabledLayerNames = layers.data();
 	if (vkCreateInstance(&createInfo, VK_NULL_HANDLE, &result->pVkInstance) != VK_SUCCESS)
 	{
@@ -242,7 +240,7 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 		CGpuQueueGroupDescriptor& descriptor = desc->queueGroups[i];
 		info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		info.queueCount = descriptor.queueCount;
-		info.queueFamilyIndex = a->mQueueFamilyIndices[descriptor.queueType];
+		info.queueFamilyIndex = (uint32_t)a->mQueueFamilyIndices[descriptor.queueType];
         info.pQueuePriorities = queuePriorities;
 
 		assert(cgpu_query_queue_count_vulkan(adapter, descriptor.queueType) >= descriptor.queueCount 
@@ -253,10 +251,10 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
-	createInfo.queueCreateInfoCount = queueCreateInfos.size();
+	createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	createInfo.ppEnabledExtensionNames = deviceExtensionNames.data();
-	createInfo.enabledExtensionCount = deviceExtensionNames.size();
+	createInfo.enabledExtensionCount = (uint32_t)deviceExtensionNames.size();
 
 	if (vkInstance->pVkDebugUtilsMessenger) {
 		createInfo.enabledLayerCount = 1;

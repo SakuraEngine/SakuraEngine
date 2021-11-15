@@ -61,13 +61,14 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
     instance->proc_table->enum_adapters(instance, adapters, adapters_num);
 }
 
-CGpuAdapterDetail cgpu_query_adapter_detail(const CGpuAdapterId adapter)
+void cgpu_query_adapter_detail(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail)
 {
     assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     assert(adapter->instance != CGPU_NULLPTR && "fatal: Missing instance of adapter!");
     assert(adapter->instance->proc_table->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
-    return adapter->instance->proc_table->query_adapter_detail(adapter);
+    adapter->instance->proc_table->query_adapter_detail(adapter, detail);
+    return;
 }
 
 uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueType type)
@@ -95,7 +96,8 @@ void cgpu_free_device(CGpuDeviceId device)
     assert(device->adapter->instance != CGPU_NULLPTR && "fatal: Missing instance of adapter!");
     assert(device->adapter->instance->proc_table->free_device && "free_device Proc Missing!");
 
-    return device->adapter->instance->proc_table->free_device(device);
+    device->adapter->instance->proc_table->free_device(device);
+    return;
 }
 
 CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
@@ -118,7 +120,8 @@ void cgpu_free_queue(CGpuQueueId queue)
     assert(queue->device->adapter->instance != CGPU_NULLPTR && "fatal: Missing instance of adapter!");
     assert(queue->device->adapter->instance->proc_table->free_device && "free_device Proc Missing!");
 
-    return queue->device->adapter->instance->proc_table->free_queue(queue);
+    queue->device->adapter->instance->proc_table->free_queue(queue);
+    return;
 }
 
 RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder(CGpuQueueId queue,
@@ -144,7 +147,8 @@ RUNTIME_API void cgpu_free_command_encoder(CGpuCommandEncoderId encoder)
     assert(encoder->queue->device->adapter->instance != CGPU_NULLPTR && "fatal: Missing instance of adapter!");
     assert(encoder->queue->device->adapter->instance->proc_table->free_device && "free_device Proc Missing!");
 
-    return encoder->queue->device->adapter->instance->proc_table->free_command_encoder(encoder);
+    encoder->queue->device->adapter->instance->proc_table->free_command_encoder(encoder);
+    return;
 }
 
 CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
@@ -175,7 +179,8 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
     assert(swapchain->device->adapter->instance != CGPU_NULLPTR && "fatal: Missing instance of adapter!");
     assert(swapchain->device->adapter->instance->proc_table->create_swapchain && "create_swapchain Proc Missing!");
 
-    return swapchain->device->adapter->instance->proc_table->free_swapchain(swapchain);
+    swapchain->device->adapter->instance->proc_table->free_swapchain(swapchain);
+    return;
 }
 
 
@@ -212,6 +217,7 @@ void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
     assert(device->adapter->instance->surfaces_table != CGPU_NULLPTR && "surfaces_table Missing!");
     assert(device->adapter->instance->surfaces_table->free_surface != CGPU_NULLPTR && "free_instance Proc Missing!");
 
-    return device->adapter->instance->surfaces_table->free_surface(device, surface);
+    device->adapter->instance->surfaces_table->free_surface(device, surface);
+    return;
 }
 //

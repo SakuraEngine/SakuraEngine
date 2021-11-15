@@ -50,6 +50,7 @@ namespace eastl
 	/// the eastl containers are compatible with such allocators (i.e. nothing unexpected
 	/// will happen).
 	///
+#ifndef EASTL_USER_DEFINED_ALLOCATOR // If the user hasn't declared that he has defined a different allocator implementation elsewhere...
 	class EASTL_API allocator
 	{
 	public:
@@ -74,7 +75,6 @@ namespace eastl
 
 	bool operator==(const allocator& a, const allocator& b);
 	bool operator!=(const allocator& a, const allocator& b);
-
 
 
 	/// dummy_allocator
@@ -153,7 +153,7 @@ namespace eastl
 	///
 	template <typename Allocator>
 	void* allocate_memory(Allocator& a, size_t n, size_t alignment, size_t alignmentOffset);
-
+#endif //EASTL_USER_DEFINED_ALLOCATOR
 
 } // namespace eastl
 

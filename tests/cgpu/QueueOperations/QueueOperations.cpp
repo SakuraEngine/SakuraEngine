@@ -33,7 +33,7 @@ protected:
             if(tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Transfer, 1});
             CGpuDeviceDescriptor descriptor = {};
             descriptor.queueGroups = queueGroup.data();
-            descriptor.queueGroupCount = queueGroup.size();
+            descriptor.queueGroupCount = (uint32_t)queueGroup.size();
 
             device = cgpu_create_device(a, &descriptor);
             adapter = a;

@@ -17,12 +17,13 @@ struct hwnd_deleter {
 using unique_handle = eastl::unique_ptr<HWND, hwnd_deleter>;
 
 // based on https://github.com/melak47/BorderlessWindow
-class RUNTIME_API BorderlessWindow {
+class BorderlessWindow 
+{
 public:
-    BorderlessWindow(bool borderless = true, bool resizable = true,
+    RUNTIME_API BorderlessWindow(bool borderless = true, bool resizable = true,
         bool dragable = true, bool with_shadow = true);
-    auto set_borderless(bool enabled) -> void;
-    auto set_borderless_shadow(bool enabled) -> void;
+    RUNTIME_API auto set_borderless(bool enabled) -> void;
+    RUNTIME_API auto set_borderless_shadow(bool enabled) -> void;
     inline HWND get_hwnd() {return handle.get();}
 private:
     static auto CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) noexcept -> LRESULT;
