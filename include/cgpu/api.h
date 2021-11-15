@@ -94,7 +94,9 @@ typedef void (*CGPUProcFreeCommandEncoder)(CGpuCommandEncoderId encoder);
 
 // Shader APIs
 RUNTIME_API CGpuShaderModuleId cgpu_create_shader_module(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor* desc);
-typedef CGpuShaderModuleId (*CGPUProcCreateShaderModule)(CGpuQueueId device, const struct CGpuShaderModuleDescriptor* desc);
+typedef CGpuShaderModuleId (*CGPUProcCreateShaderModule)(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor* desc);
+RUNTIME_API void cgpu_free_shader_module(CGpuShaderModuleId shader_module);
+typedef void (*CGPUProcFreeShaderModule)(CGpuShaderModuleId shader_module);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
@@ -134,7 +136,8 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeCommandEncoder    free_command_encoder;
 
 	const CGPUProcCreateShaderModule create_shader_module;
-
+	const CGPUProcFreeShaderModule   free_shader_module;
+	
     const CGPUProcCreateSwapChain    create_swapchain;
     const CGPUProcFreeSwapChain      free_swapchain;
 
@@ -321,6 +324,7 @@ typedef struct CGpuCommandBuffer {
 } CGpuCommandBuffer;
 
 typedef struct CGpuShaderModule {
+	CGpuDeviceId device;
 	const char8_t* name;
 } CGpuShaderModule;
 

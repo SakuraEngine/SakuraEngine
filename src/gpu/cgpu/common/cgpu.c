@@ -170,7 +170,20 @@ CGpuShaderModuleId cgpu_create_shader_module(CGpuDeviceId device, const struct C
     CGPUProcCreateShaderModule fn_create_shader_module = device->adapter->instance->proc_table->create_shader_module;
     CGpuShaderModule* shader = (CGpuShaderModule*)fn_create_shader_module(device, desc);
     shader->name = desc->name;
+    shader->device = device;
     return shader;
+}
+
+void cgpu_free_shader_module(CGpuShaderModuleId shader_module)
+{
+    assert(shader_module != CGPU_NULLPTR && "fatal: call on NULL shader_module!");
+    const CGpuDeviceId device = shader_module->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
+    assert(device->adapter->instance != CGPU_NULLPTR && "fatal: Missing instance of adapter!");
+    CGPUProcFreeShaderModule fn_free_shader_module = device->adapter->instance->proc_table->free_shader_module;
+    assert(fn_free_shader_module && "free_shader_module Proc Missing!");
+    fn_free_shader_module(shader_module);
 }
 
 // SwapChain APIs

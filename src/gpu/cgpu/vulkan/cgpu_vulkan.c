@@ -2,13 +2,6 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include <assert.h>
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#include <malloc.h>
-#endif
-#if defined(__linux__) || defined(__linux) || defined(__EMSCRIPTEN__) 
-#include <alloca.h>
-#endif
-#include <stdlib.h>
 #include <string.h>
 
 #ifdef CGPU_USE_VULKAN
@@ -33,6 +26,7 @@ const CGpuProcTable tbl_vk =
 	.free_command_encoder = &cgpu_free_command_encoder_vulkan,
 	
 	.create_shader_module = &cgpu_create_shader_module_vulkan,
+	.free_shader_module = &cgpu_free_shader_module_vulkan,
 
 	.create_swapchain = &cgpu_create_swapchain_vulkan,
 	.free_swapchain = &cgpu_free_swapchain_vulkan
@@ -140,14 +134,14 @@ CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint
 	D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, (uint32_t)A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
 	Q.mVkQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[type];
 	
-	CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)malloc(sizeof(CGpuQueue_Vulkan));
+	CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)cgpu_malloc(sizeof(CGpuQueue_Vulkan));
 	memcpy(RQ, &Q, sizeof(Q));
 	return &RQ->super;
 }
 
 void cgpu_free_queue_vulkan(CGpuQueueId queue)
 {
-	free((void*)queue);
+	cgpu_free((void*)queue);
 }
 
 VkCommandPool allocate_transient_command_pool(CGpuDevice_Vulkan* D, CGpuQueueId queue)
@@ -186,7 +180,7 @@ void free_transient_command_pool(CGpuDevice_Vulkan* D, VkCommandPool pool)
 CGpuCommandEncoderId cgpu_create_command_encoder_vulkan(CGpuQueueId queue, const CGpuCommandEncoderDescriptor* desc)
 {
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)queue->device;
-	CGpuCommandEncoder_Vulkan* E = (CGpuCommandEncoder_Vulkan*)malloc(sizeof(CGpuCommandEncoder_Vulkan));
+	CGpuCommandEncoder_Vulkan* E = (CGpuCommandEncoder_Vulkan*)cgpu_malloc(sizeof(CGpuCommandEncoder_Vulkan));
 	E->pVkCmdPool = allocate_transient_command_pool(D, queue);
 	return &E->super;
 }
@@ -196,11 +190,12 @@ void cgpu_free_command_encoder_vulkan(CGpuCommandEncoderId encoder)
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->queue->device;
 	CGpuCommandEncoder_Vulkan* E  = (CGpuCommandEncoder_Vulkan*)encoder;
 	free_transient_command_pool(D, E->pVkCmdPool);
-	free((void*)encoder);
+	cgpu_free((void*)encoder);
 }
 
 #define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
 
+// Shader APIs
 CGpuShaderModuleId cgpu_create_shader_module_vulkan(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor* desc)
 {
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
@@ -209,11 +204,20 @@ CGpuShaderModuleId cgpu_create_shader_module_vulkan(CGpuDeviceId device, const s
 		.codeSize = desc->code_size,
 		.pCode = desc->code
 	};
-	CGpuShaderModule_Vulkan* S = (CGpuShaderModule_Vulkan*)malloc(sizeof(CGpuSwapChain_Vulkan));
+	CGpuShaderModule_Vulkan* S = (CGpuShaderModule_Vulkan*)cgpu_malloc(sizeof(CGpuSwapChain_Vulkan));
 	D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
 	return &S->super;
 }
 
+void cgpu_free_shader_module_vulkan(CGpuShaderModuleId module)
+{
+	CGpuShaderModule_Vulkan* S = (CGpuShaderModule_Vulkan*)module;
+	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
+	D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
+	cgpu_free(S);
+}
+
+// SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
@@ -247,7 +251,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 	}
 	// Allocate and get surface formats
 	VkSurfaceFormatKHR* formats = NULL;
-	formats = (VkSurfaceFormatKHR*)calloc(surfaceFormatCount, sizeof(VkSurfaceFormatKHR));
+	formats = (VkSurfaceFormatKHR*)cgpu_calloc(surfaceFormatCount, sizeof(VkSurfaceFormatKHR));
 	if (VK_SUCCESS != vkGetPhysicalDeviceSurfaceFormatsKHR(
 		A->pPhysicalDevice, vkSurface, &surfaceFormatCount, formats))
 	{
@@ -280,7 +284,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 		}
 	}
 	assert(VK_FORMAT_UNDEFINED != surface_format.format);
-	free(formats);
+	cgpu_free(formats);
 
 	// The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
 	// This mode waits for the vertical blank ("v-sync")
@@ -416,7 +420,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 	}
 	assert(composite_alpha != VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR);
 
-	CGpuSwapChain_Vulkan* S = (CGpuSwapChain_Vulkan*)malloc(sizeof(CGpuSwapChain_Vulkan));
+	CGpuSwapChain_Vulkan* S = (CGpuSwapChain_Vulkan*)cgpu_malloc(sizeof(CGpuSwapChain_Vulkan));
 	S->super.device = device;
 	VkSwapchainCreateInfoKHR swapChainCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -455,7 +459,7 @@ void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain)
 
 	D->mVkDeviceTable.vkDestroySwapchainKHR(D->pVkDevice, S->pVkSwapChain, GLOBAL_VkAllocationCallbacks);
 
-	free((void*)swapchain);
+	cgpu_free((void*)swapchain);
 }
 
 // exts

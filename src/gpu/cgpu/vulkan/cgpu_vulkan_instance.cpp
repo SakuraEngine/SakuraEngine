@@ -227,7 +227,7 @@ const std::vector<const char*> deviceExtensionNames = { VK_KHR_SWAPCHAIN_EXTENSI
 CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
 {
 	CGpuInstance_Vulkan* vkInstance = (CGpuInstance_Vulkan*)adapter->instance;
-	CGpuDevice_Vulkan* vkDevice = (CGpuDevice_Vulkan*)malloc(sizeof(CGpuDevice_Vulkan));
+	CGpuDevice_Vulkan* vkDevice = (CGpuDevice_Vulkan*)cgpu_malloc(sizeof(CGpuDevice_Vulkan));
 	CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
 
 	*const_cast<CGpuAdapterId*>(&vkDevice->super.adapter) = adapter;
@@ -275,8 +275,9 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 
 void cgpu_free_device_vulkan(CGpuDeviceId device)
 {
-	CGpuDevice_Vulkan* vkDevice = (CGpuDevice_Vulkan*)device;
-	vkDestroyDevice(vkDevice->pVkDevice, nullptr);
+	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+	vkDestroyDevice(D->pVkDevice, nullptr);
+	cgpu_free(D);
 }
 
 #endif
