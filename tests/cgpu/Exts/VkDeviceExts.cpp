@@ -30,7 +30,7 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     CGpuVulkanInstanceDescriptor vkDesc = {};
     const char* exts[] = 
     {
-#ifdef __WINDOWS__
+#ifdef _WINDOWS
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined (__APPLE__)
         VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
