@@ -19,6 +19,12 @@ CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool e
     desc.enableDebugLayer = enableDebugLayer;
     desc.enableGpuBasedValidation = enableGPUValidation;
     CGpuInstanceId instance = cgpu_create_instance(&desc);
+    CGpuInstanceFeatures instance_features = {};
+    cgpu_query_instance_features(instance, &instance_features);
+    if(backend == ECGPUBackEnd::ECGPUBackEnd_VULKAN)
+    {
+        EXPECT_TRUE(instance_features.specialization_constant);
+    }
     return instance;
 }
 
