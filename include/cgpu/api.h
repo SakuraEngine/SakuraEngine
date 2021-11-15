@@ -300,10 +300,12 @@ typedef enum ECGpuPixelFormat {
 
 typedef struct CGpuAdapter {
 	const struct CGpuInstance* instance;
+    const CGpuProcTable* proc_table_cache;
 } CGpuAdapter;
 
 typedef struct CGpuDevice {
 	const CGpuAdapterId adapter;
+    const CGpuProcTable* proc_table_cache;
 #ifdef __cplusplus
 	CGpuDevice() :adapter(CGPU_NULLPTR) {}
 #endif
