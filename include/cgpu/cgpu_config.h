@@ -166,3 +166,21 @@
 #ifndef INTERNAL_CALL
 #define INTERNAL_CALL
 #endif 
+
+#include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+extern void* mi_malloc(size_t size);
+extern void* mi_calloc(size_t count, size_t size);
+extern void* mi_malloc_aligned(size_t size, size_t alignment);
+extern void mi_free(void* p);
+#ifdef __cplusplus
+}
+#endif
+#define cgpu_malloc mi_malloc
+#define cgpu_calloc mi_calloc
+#define cgpu_memalign mi_malloc_aligned
+#define cgpu_free mi_free
