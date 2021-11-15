@@ -39,3 +39,12 @@
     #endif
 #elif defined _WIN32 || defined _WIN64
 #endif 
+
+#ifndef CHAR8_T_DEFINED // If the user hasn't already defined these...
+	#define CHAR8_T_DEFINED
+	#if defined(EA_PLATFORM_APPLE)
+		#define char8_t char    // The Apple debugger is too stupid to realize char8_t is typedef'd to char, so we #define it.
+	#else
+		typedef char char8_t;
+	#endif
+#endif

@@ -12,6 +12,8 @@ extern "C" {
 struct CGpuInstanceDescriptor;
 struct CGpuDeviceDescriptor;
 struct CGpuCommandEncoderDescriptor;
+struct CGpuShaderModuleDescriptor;
+struct CGpuShaderDescriptor;
 struct CGpuSwapChainDescriptor;
 
 typedef uint32_t CGpuQueueIndex;
@@ -24,6 +26,8 @@ typedef const struct CGpuQueue* CGpuQueueId;
 typedef const struct CGpuCommandEncoder* CGpuCommandEncoderId;
 typedef const struct CGpuCommandBuffer* CGpuCommandBufferId;
 typedef const struct CGpuSwapChain* CGpuSwapChainId;
+typedef const struct CGpuShaderModule* CGpuShaderModuleId;
+typedef const struct CGpuShader* CGpuShaderId;
 
 typedef enum ECGPUBackEnd
 {
@@ -48,12 +52,20 @@ typedef struct CGpuAdapterDetail {
 	const char* name;
 } CGpuAdapterDetail;
 
-// Device APIs
+typedef struct CGpuInstanceFeatures {
+	bool specialization_constant;
+
+} CGpuInstanceFeatures;
+
+// Instance APIs
 RUNTIME_API CGpuInstanceId cgpu_create_instance(const struct CGpuInstanceDescriptor* desc);
 typedef CGpuInstanceId (*CGPUProcCreateInstance)(const struct CGpuInstanceDescriptor * descriptor);
+RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CGpuInstanceFeatures* features);
+typedef void (*CGPUProcQueryInstanceFeatures)(CGpuInstanceId instance, struct CGpuInstanceFeatures* features);
 RUNTIME_API void cgpu_free_instance(CGpuInstanceId instance);
 typedef void (*CGPUProcFreeInstance)(CGpuInstanceId instance);
 
+// Adapter APIs
 RUNTIME_API void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 typedef void (*CGPUProcEnumAdapters)(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 
@@ -62,42 +74,51 @@ typedef void (*CGPUProcQueryAdapterDetail)(const CGpuAdapterId instance, struct 
 RUNTIME_API uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueType type);
 typedef uint32_t (*CGPUProcQueryQueueCount)(const CGpuAdapterId adapter, const ECGpuQueueType type);
 
+// Device APIs
 RUNTIME_API CGpuDeviceId cgpu_create_device(CGpuAdapterId adapter, const struct CGpuDeviceDescriptor* desc);
 typedef CGpuDeviceId (*CGPUProcCreateDevice)(CGpuAdapterId adapter, const struct CGpuDeviceDescriptor* desc);
 RUNTIME_API void cgpu_free_device(CGpuDeviceId device);
 typedef void (*CGPUProcFreeDevice)(CGpuDeviceId device);
 
+// Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 typedef CGpuQueueId (*CGPUProcGetQueue)(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_free_queue(CGpuQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGpuQueueId queue);
 
+// Command APIs
 RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder(CGpuQueueId queue, const struct CGpuCommandEncoderDescriptor* desc);
-typedef CGpuCommandEncoderId (*CGPUProcCreateCommandEncoder)(CGpuQueueId queue, const struct  CGpuCommandEncoderDescriptor* desc);
+typedef CGpuCommandEncoderId (*CGPUProcCreateCommandEncoder)(CGpuQueueId queue, const struct CGpuCommandEncoderDescriptor* desc);
 RUNTIME_API void cgpu_free_command_encoder(CGpuCommandEncoderId encoder);
 typedef void (*CGPUProcFreeCommandEncoder)(CGpuCommandEncoderId encoder);
 
+// Shader APIs
+RUNTIME_API CGpuShaderModuleId cgpu_create_shader_module(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor* desc);
+typedef CGpuShaderModuleId (*CGPUProcCreateShaderModule)(CGpuQueueId device, const struct CGpuShaderModuleDescriptor* desc);
+
+// Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
 typedef CGpuSwapChainId (*CGPUProcCreateSwapChain)(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain(CGpuSwapChainId swapchain);
 typedef void (*CGPUProcFreeSwapChain)(CGpuSwapChainId swapchain);
 
 // CMDs 
-RUNTIME_API void cgpu_cmd_set_viewport(CGpuCommandBufferId cmd, float x, float y, float width, float height,
-    float min_depth, float max_depth);
-typedef void (*CGPUProcCmdSetViewport)(CGpuCommandBufferId cmd, float x, float y, float width, float height,
-    float min_depth, float max_depth);
+RUNTIME_API void cgpu_cmd_set_viewport(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
+typedef void (*CGPUProcCmdSetViewport)(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
 
 RUNTIME_API void cgpu_cmd_set_scissor(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 typedef void (*CGPUProcCmdSetScissor)(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
+
+// Types
 typedef struct CGpuBuffer {const CGpuDeviceId device;} CGpuBuffer;
 typedef CGpuBuffer* CGpuBufferId;
 
 
 typedef struct CGpuProcTable {
-    const CGPUProcCreateInstance     create_instance;
-    const CGPUProcFreeInstance       free_instance;
+    const CGPUProcCreateInstance        create_instance;
+	const CGPUProcQueryInstanceFeatures query_instance_features;
+    const CGPUProcFreeInstance          free_instance;
 
     const CGPUProcEnumAdapters       enum_adapters;
     const CGPUProcQueryAdapterDetail query_adapter_detail;
@@ -111,6 +132,8 @@ typedef struct CGpuProcTable {
 
     const CGPUProcCreateCommandEncoder  create_command_encoder;
     const CGPUProcFreeCommandEncoder    free_command_encoder;
+
+	const CGPUProcCreateShaderModule create_shader_module;
 
     const CGPUProcCreateSwapChain    create_swapchain;
     const CGPUProcFreeSwapChain      free_swapchain;
@@ -272,9 +295,6 @@ typedef enum ECGpuPixelFormat {
 	PF_Count = PF_BC7_UNORM_SRGB + 1
 } ECGpuPixelFormat;
 
-
-
-
 typedef struct CGpuAdapter {
 	const struct CGpuInstance* instance;
 } CGpuAdapter;
@@ -300,6 +320,10 @@ typedef struct CGpuCommandBuffer {
 	CGpuCommandEncoderId pool;
 } CGpuCommandBuffer;
 
+typedef struct CGpuShaderModule {
+	const char8_t* name;
+} CGpuShaderModule;
+
 typedef struct CGpuSwapChain {
 	CGpuDeviceId device;
 } CGpuSwapChain;
@@ -323,6 +347,12 @@ typedef struct CGpuDeviceDescriptor {
 typedef struct CGpuCommandEncoderDescriptor {
 	uint32_t ___nothing_and_useless__;
 } CGpuCommandEncoderDescriptor;
+
+typedef struct CGpuShaderModuleDescriptor {
+	const char8_t* name;
+	const uint32_t* code;
+	size_t code_size;
+} CGpuShaderModuleDescriptor;
 
 typedef struct CGpuSwapChainDescriptor {
 	/// Present Queues

@@ -16,16 +16,24 @@
 const CGpuProcTable tbl_vk = 
 {
     .create_instance = &cgpu_create_instance_vulkan,
+	.query_instance_features = &cgpu_query_instance_features_vulkan,
     .free_instance = &cgpu_free_instance_vulkan,
+
 	.enum_adapters = &cgpu_enum_adapters_vulkan,
 	.query_adapter_detail = &cgpu_query_adapter_detail_vulkan,
 	.query_queue_count = &cgpu_query_queue_count_vulkan,
+
 	.create_device = &cgpu_create_device_vulkan,
 	.free_device = &cgpu_free_device_vulkan,
+
 	.get_queue = &cgpu_get_queue_vulkan,
 	.free_queue = &cgpu_free_queue_vulkan,
+
 	.create_command_encoder = &cgpu_create_command_encoder_vulkan,
 	.free_command_encoder = &cgpu_free_command_encoder_vulkan,
+	
+	.create_shader_module = &cgpu_create_shader_module_vulkan,
+
 	.create_swapchain = &cgpu_create_swapchain_vulkan,
 	.free_swapchain = &cgpu_free_swapchain_vulkan
 };
@@ -39,6 +47,11 @@ const CGpuProcTable* CGPU_VulkanProcTable()
 CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* descriptor)
 {
 	return cgpu_vulkan_create_instance(descriptor, CGPU_NULLPTR);
+}
+
+void cgpu_query_instance_features_vulkan(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
+{
+	features->specialization_constant = true;
 }
 
 void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
@@ -187,6 +200,19 @@ void cgpu_free_command_encoder_vulkan(CGpuCommandEncoderId encoder)
 }
 
 #define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
+
+CGpuShaderModuleId cgpu_create_shader_module_vulkan(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor* desc)
+{
+	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+	VkShaderModuleCreateInfo info = {
+		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+		.codeSize = desc->code_size,
+		.pCode = desc->code
+	};
+	CGpuShaderModule_Vulkan* S = (CGpuShaderModule_Vulkan*)malloc(sizeof(CGpuSwapChain_Vulkan));
+	D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
+	return &S->super;
+}
 
 CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {

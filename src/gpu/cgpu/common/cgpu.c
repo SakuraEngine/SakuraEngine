@@ -45,6 +45,14 @@ CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
     return instance;
 }
 
+RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
+{
+    assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
+    assert(instance->proc_table->query_instance_features && "query_instance_features Proc Missing!");
+    
+    instance->proc_table->query_instance_features(instance, features);
+}
+
 void cgpu_free_instance(CGpuInstanceId instance)
 {
     assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
@@ -151,6 +159,21 @@ RUNTIME_API void cgpu_free_command_encoder(CGpuCommandEncoderId encoder)
     return;
 }
 
+// Shader APIs
+CGpuShaderModuleId cgpu_create_shader_module(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor *desc)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
+    assert(device->adapter->instance != CGPU_NULLPTR && "fatal: Missing instance of adapter!");
+    assert(device->adapter->instance->proc_table->create_shader_module && "create_shader_module Proc Missing!");
+
+    CGPUProcCreateShaderModule fn_create_shader_module = device->adapter->instance->proc_table->create_shader_module;
+    CGpuShaderModule* shader = (CGpuShaderModule*)fn_create_shader_module(device, desc);
+    shader->name = desc->name;
+    return shader;
+}
+
+// SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
