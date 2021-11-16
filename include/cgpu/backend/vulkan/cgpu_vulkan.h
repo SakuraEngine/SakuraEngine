@@ -98,9 +98,7 @@ typedef struct CGpuSwapChain_Vulkan {
 extern "C" {
 #endif
 
-VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat format);
-
-
+inline static VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat format);
 
 #include "cgpu_vulkan.inl"
 #ifdef __cplusplus

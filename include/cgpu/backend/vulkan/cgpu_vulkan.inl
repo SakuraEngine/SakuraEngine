@@ -1,7 +1,7 @@
 #define trans_case2(_format, _vkformat) case PF_##_format: return VK_FORMAT_##_vkformat
 #define trans_case(_format) case PF_##_format: return VK_FORMAT_##_format
 
-inline VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat format)
+inline static VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat format)
 {
     switch (format)
     {
