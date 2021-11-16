@@ -3,6 +3,7 @@
 #include <EASTL/string.h>
 #include "cgpu/api.h"
 #include "spirv.h"
+#include "dxil.h"
 
 class ShaderCreation : public::testing::TestWithParam<ECGPUBackEnd>
 {
@@ -32,6 +33,16 @@ protected:
         device = cgpu_create_device(adapter, &descriptor);
         EXPECT_NE(device, nullptr);
         EXPECT_NE(device, CGPU_NULLPTR);
+
+        vertex_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)triangle_vert_spirv;
+        vertex_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_vert_spirv);
+        frag_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)triangle_frag_spirv;
+        frag_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_frag_spirv);
+
+        vertex_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_vert_dxil;
+        vertex_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_vert_dxil);
+        frag_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_frag_dxil;
+        frag_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_frag_dxil);
     }
 
     void TearDown() override
@@ -43,21 +54,26 @@ protected:
     CGpuInstanceId instance;
     CGpuAdapterId adapter;
     CGpuDeviceId device;
+    const uint32_t* vertex_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
+    uint32_t vertex_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
+    const uint32_t* frag_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
+    uint32_t frag_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
 };
+
 
 TEST_P(ShaderCreation, CreateModules)
 {
     ECGPUBackEnd backend = GetParam();
     CGpuShaderLibraryDescriptor vdesc = {};
-    vdesc.code = (const uint32_t*)triangle_vert_spirv;
-    vdesc.code_size = sizeof(triangle_vert_spirv);
+    vdesc.code = vertex_shaders[backend];
+    vdesc.code_size = vertex_shader_sizes[backend];
     vdesc.name = "VertexShaderLibrary";
     vdesc.stage = ECGpuShaderStage::SS_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
     
     CGpuShaderLibraryDescriptor fdesc = {};
-    fdesc.code = (const uint32_t*)triangle_frag_spirv;
-    fdesc.code_size = sizeof(triangle_frag_spirv);
+    fdesc.code = frag_shaders[backend];
+    fdesc.code_size = frag_shader_sizes[backend];
     fdesc.name = "FragmentShaderLibrary";
     fdesc.stage = ECGpuShaderStage::SS_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
@@ -65,8 +81,8 @@ TEST_P(ShaderCreation, CreateModules)
     EXPECT_NE(vertex_shader, CGPU_NULLPTR);
     EXPECT_NE(fragment_shader, CGPU_NULLPTR);
 
-    cgpu_free_shader_module(vertex_shader);
-    cgpu_free_shader_module(fragment_shader);
+    cgpu_free_shader_library(vertex_shader);
+    cgpu_free_shader_library(fragment_shader);
 }
 
 static const auto allPlatforms = testing::Values(
@@ -75,7 +91,7 @@ static const auto allPlatforms = testing::Values(
         ECGPUBackEnd_VULKAN
     #endif
     #ifdef CGPU_USE_D3D12
-        //,ECGPUBackEnd_D3D12
+        ,ECGPUBackEnd_D3D12
     #endif
 #endif
 );

@@ -29,7 +29,7 @@ const CGpuProcTable tbl_vk =
 	.free_command_encoder = &cgpu_free_command_encoder_vulkan,
 	
 	.create_shader_library = &cgpu_create_shader_library_vulkan,
-	.free_shader_module = &cgpu_free_shader_module_vulkan,
+	.free_shader_library = &cgpu_free_shader_library_vulkan,
 
 	.create_swapchain = &cgpu_create_swapchain_vulkan,
 	.free_swapchain = &cgpu_free_swapchain_vulkan
@@ -212,7 +212,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(CGpuDeviceId device, const
 	return &S->super;
 }
 
-void cgpu_free_shader_module_vulkan(CGpuShaderLibraryId module)
+void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
 {
 	CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)module;
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;

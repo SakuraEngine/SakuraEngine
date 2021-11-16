@@ -170,19 +170,26 @@ CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct
 
     CGPUProcCreateShaderLibrary fn_create_shader_library = device->proc_table_cache->create_shader_library;
     CGpuShaderLibrary* shader = (CGpuShaderLibrary*)fn_create_shader_library(device, desc);
-    shader->name = desc->name;
     shader->device = device;
+    // handle name string
+    const size_t str_len = strlen(desc->name);
+    const size_t str_size = str_len + 1;
+    *(void**)&shader->name = cgpu_malloc(str_size);
+    memcpy((void*)shader->name, desc->name, str_size);
     return shader;
 }
 
-void cgpu_free_shader_module(CGpuShaderLibraryId shader_module)
+void cgpu_free_shader_library(CGpuShaderLibraryId library)
 {
-    assert(shader_module != CGPU_NULLPTR && "fatal: call on NULL shader_module!");
-    const CGpuDeviceId device = shader_module->device;
+    assert(library != CGPU_NULLPTR && "fatal: call on NULL shader_module!");
+    const CGpuDeviceId device = library->device;
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    CGPUProcFreeShaderLibrary fn_free_shader_module = device->proc_table_cache->free_shader_module;
-    assert(fn_free_shader_module && "free_shader_module Proc Missing!");
-    fn_free_shader_module(shader_module);
+    // handle name string
+    cgpu_free((void*)library->name);
+
+    CGPUProcFreeShaderLibrary fn_free_shader_library = device->proc_table_cache->free_shader_library;
+    assert(fn_free_shader_library && "free_shader_library Proc Missing!");
+    fn_free_shader_library(library);
 }
 
 // SwapChain APIs
