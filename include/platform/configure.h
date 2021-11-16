@@ -1,4 +1,8 @@
 #pragma once
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+#include <stdint.h>
 
 #ifndef RUNTIME_EXPORT
     #if defined(_MSC_VER)

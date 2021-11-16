@@ -292,6 +292,8 @@ typedef struct CGpuShaderLibraryDescriptor {
 typedef struct CGpuBufferDescriptor {
 	/// Size of the buffer (in bytes)
 	uint64_t size;
+	/// Debug name used in gpu profile
+	const char8_t* name;
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS

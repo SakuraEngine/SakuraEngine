@@ -1,6 +1,5 @@
 #pragma once
-#include <stdbool.h>
-#include <stdint.h>
+#include "platform/configure.h"
 
 #define CGPU_USE_VULKAN
 #define CGPU_USE_D3D12
@@ -168,8 +167,8 @@
 #define INTERNAL_CALL
 #endif 
 
-#include <stdlib.h>
 
+#include <stdlib.h>
 #ifdef __cplusplus
 extern "C"
 {
