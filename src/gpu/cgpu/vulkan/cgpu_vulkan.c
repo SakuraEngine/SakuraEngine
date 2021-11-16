@@ -72,6 +72,13 @@ void cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter, struct CGpuAd
 	detail->deviceId = a->mPhysicalDeviceProps.deviceID;
 	detail->vendorId = a->mPhysicalDeviceProps.vendorID;
 	detail->name = a->mPhysicalDeviceProps.deviceName;
+
+	detail->uniform_buffer_alignment = a->mPhysicalDeviceProps.limits.minUniformBufferOffsetAlignment;
+	detail->upload_buffer_texture_alignment = a->mPhysicalDeviceProps.limits.optimalBufferCopyOffsetAlignment;
+	detail->upload_buffer_texture_row_alignment = a->mPhysicalDeviceProps.limits.optimalBufferCopyRowPitchAlignment;
+	detail->max_vertex_input_bindings = a->mPhysicalDeviceProps.limits.maxVertexInputBindings;
+	detail->multidraw_indirect = a->mPhysicalDeviceProps.limits.maxDrawIndirectCount > 1;
+	//detail->wave_lane_count = 0;
 }
 
 uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQueueType type)
