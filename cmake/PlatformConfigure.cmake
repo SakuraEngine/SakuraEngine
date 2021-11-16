@@ -34,6 +34,7 @@ endif(UNIX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CLANG_DISABLED_WARNINGS "${CLANG_DISABLED_WARNINGS} -Wno-ignored-attributes -Wno-logical-op-parentheses")
+    set(CLANG_DISABLED_WARNINGS "${CLANG_DISABLED_WARNINGS} -Wno-nullability-completeness")
     set(CLANG_PROMOTED_WARNINGS "${CLANG_PROMOTED_WARNINGS} -Werror=return-type -Werror=incompatible-function-pointer-types")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_DISABLED_WARNINGS} ${CLANG_PROMOTED_WARNINGS}")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CLANG_DISABLED_WARNINGS} ${CLANG_PROMOTED_WARNINGS}")

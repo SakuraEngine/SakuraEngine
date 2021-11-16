@@ -3,7 +3,7 @@
 #if defined(_WIN32) || defined(_WIN64)
     #define VK_USE_PLATFORM_WIN32_KHR
 #endif
-#include "cgpu/volk.h"
+#include "cgpu/backend/vulkan/volk.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -139,6 +139,21 @@ typedef enum ECGpuShaderStage {
 } ECGpuShaderStage;
 typedef uint32_t ECGpuShaderStages;
 
+typedef enum CGPUMemoryUsage {
+	/// No intended memory usage specified.
+	MU_UNKNOWN = 0,
+	/// Memory will be used on device only, no need to be mapped on host.
+	MU_GPU_ONLY = 1,
+	/// Memory will be mapped on host. Could be used for transfer to device.
+	MU_CPU_ONLY = 2,
+	/// Memory will be used for frequent (dynamic) updates from host and reads on device.
+	MU_CPU_TO_GPU = 3,
+	/// Memory will be used for writing on device and readback on host.
+	MU_GPU_TO_CPU = 4,
+	MU_COUNT,
+	MU_MAX_ENUM = 0x7FFFFFFF
+} CGPUMemoryUsage;
+
 #ifdef __cplusplus
 } // end extern "C"
 #endif
