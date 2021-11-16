@@ -47,16 +47,17 @@ protected:
 
 TEST_P(ShaderCreation, CreateModules)
 {
+    ECGPUBackEnd backend = GetParam();
     CGpuShaderLibraryDescriptor vdesc = {};
-    vdesc.code = triangle_vert_spirv;
-    vdesc.code_size = sizeof(triangle_vert_spirv) / sizeof(uint32_t);
+    vdesc.code = (const uint32_t*)triangle_vert_spirv;
+    vdesc.code_size = sizeof(triangle_vert_spirv);
     vdesc.name = "VertexShaderLibrary";
     vdesc.stage = ECGpuShaderStage::SS_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
     
     CGpuShaderLibraryDescriptor fdesc = {};
-    fdesc.code = triangle_frag_spirv;
-    fdesc.code_size = sizeof(triangle_frag_spirv) / sizeof(uint32_t);
+    fdesc.code = (const uint32_t*)triangle_frag_spirv;
+    fdesc.code_size = sizeof(triangle_frag_spirv);
     fdesc.name = "FragmentShaderLibrary";
     fdesc.stage = ECGpuShaderStage::SS_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
@@ -74,7 +75,7 @@ static const auto allPlatforms = testing::Values(
         ECGPUBackEnd_VULKAN
     #endif
     #ifdef CGPU_USE_D3D12
-        ,ECGPUBackEnd_D3D12
+        //,ECGPUBackEnd_D3D12
     #endif
 #endif
 );
