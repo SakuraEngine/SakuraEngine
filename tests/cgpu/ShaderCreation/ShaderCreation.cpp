@@ -27,7 +27,7 @@ protected:
         adapter = adapters[0];
 
         CGpuQueueGroupDescriptor G = {ECGpuQueueType_Graphics, 1};
-        CGpuDeviceDescriptor descriptor = {};
+	    DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
         device = cgpu_create_device(adapter, &descriptor);
@@ -64,14 +64,14 @@ protected:
 TEST_P(ShaderCreation, CreateModules)
 {
     ECGPUBackEnd backend = GetParam();
-    CGpuShaderLibraryDescriptor vdesc = {};
+    DECLARE_ZERO(CGpuShaderLibraryDescriptor, vdesc)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
     vdesc.name = "VertexShaderLibrary";
     vdesc.stage = ECGpuShaderStage::SS_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
     
-    CGpuShaderLibraryDescriptor fdesc = {};
+    DECLARE_ZERO(CGpuShaderLibraryDescriptor, fdesc)
     fdesc.code = frag_shaders[backend];
     fdesc.code_size = frag_shader_sizes[backend];
     fdesc.name = "FragmentShaderLibrary";

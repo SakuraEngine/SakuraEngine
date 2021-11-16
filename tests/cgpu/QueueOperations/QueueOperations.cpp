@@ -31,7 +31,7 @@ protected:
             if(gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Graphics, 1});
             if(cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Compute, 1});
             if(tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Transfer, 1});
-            CGpuDeviceDescriptor descriptor = {};
+            DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
             descriptor.queueGroups = queueGroup.data();
             descriptor.queueGroupCount = (uint32_t)queueGroup.size();
 

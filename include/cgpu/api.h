@@ -226,6 +226,8 @@ typedef struct CGpuSwapChain {
 } CGpuSwapChain;
 
 // Descriptors (on Stack)
+#pragma region DESCRIPTORS
+// Device & Pipeline
 typedef struct CGpuInstanceDescriptor {
 	ECGPUBackEnd backend;
 	bool         enableDebugLayer;
@@ -246,13 +248,6 @@ typedef struct CGpuDeviceDescriptor {
 typedef struct CGpuCommandEncoderDescriptor {
 	uint32_t ___nothing_and_useless__;
 } CGpuCommandEncoderDescriptor;
-
-typedef struct CGpuShaderLibraryDescriptor {
-	const char8_t*     name;
-	const uint32_t*    code;
-	size_t             code_size;
-	ECGpuShaderStage   stage;
-} CGpuShaderLibraryDescriptor;
 
 typedef struct CGpuPipelineShaderDescriptor {
 	CGpuShaderLibraryId library;
@@ -285,6 +280,21 @@ typedef struct CGpuSwapChainDescriptor {
 	/// format
 	ECGpuPixelFormat format;
 } CGpuSwapChainDescriptor;
+
+// Resources
+typedef struct CGpuShaderLibraryDescriptor {
+	const char8_t*     name;
+	const uint32_t*    code;
+	size_t             code_size;
+	ECGpuShaderStage   stage;
+} CGpuShaderLibraryDescriptor;
+
+typedef struct CGpuBufferDescriptor {
+	/// Size of the buffer (in bytes)
+	uint64_t size;
+} CGpuBufferDescriptor;
+
+#pragma endregion DESCRIPTORS
 
 
 #ifdef __cplusplus
