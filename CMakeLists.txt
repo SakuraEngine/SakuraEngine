@@ -39,7 +39,9 @@ endif(RUNTIME_SHARED)
 set(RUNTIME_SOURCES
     src/platform/unitybuild.cpp
     src/gpu/cgpu/unitybuild.cpp
+    src/gpu/cgpu/unitybuild2.cpp
     src/gpu/cgpu/unitybuild.c
+    src/gpu/cgpu/unitybuild2.c
 )
 if(APPLE)
     set(RUNTIME_SOURCES
