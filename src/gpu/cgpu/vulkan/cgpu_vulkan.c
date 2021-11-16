@@ -28,7 +28,7 @@ const CGpuProcTable tbl_vk =
 	.create_command_encoder = &cgpu_create_command_encoder_vulkan,
 	.free_command_encoder = &cgpu_free_command_encoder_vulkan,
 	
-	.create_shader_module = &cgpu_create_shader_module_vulkan,
+	.create_shader_library = &cgpu_create_shader_library_vulkan,
 	.free_shader_module = &cgpu_free_shader_module_vulkan,
 
 	.create_swapchain = &cgpu_create_swapchain_vulkan,
@@ -199,7 +199,7 @@ void cgpu_free_command_encoder_vulkan(CGpuCommandEncoderId encoder)
 #define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
 
 // Shader APIs
-CGpuShaderModuleId cgpu_create_shader_module_vulkan(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor* desc)
+CGpuShaderLibraryId cgpu_create_shader_library_vulkan(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
 {
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
 	VkShaderModuleCreateInfo info = {
@@ -207,14 +207,14 @@ CGpuShaderModuleId cgpu_create_shader_module_vulkan(CGpuDeviceId device, const s
 		.codeSize = desc->code_size,
 		.pCode = desc->code
 	};
-	CGpuShaderModule_Vulkan* S = (CGpuShaderModule_Vulkan*)cgpu_malloc(sizeof(CGpuSwapChain_Vulkan));
+	CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_malloc(sizeof(CGpuSwapChain_Vulkan));
 	D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
 	return &S->super;
 }
 
-void cgpu_free_shader_module_vulkan(CGpuShaderModuleId module)
+void cgpu_free_shader_module_vulkan(CGpuShaderLibraryId module)
 {
-	CGpuShaderModule_Vulkan* S = (CGpuShaderModule_Vulkan*)module;
+	CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)module;
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
 	D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
 	cgpu_free(S);

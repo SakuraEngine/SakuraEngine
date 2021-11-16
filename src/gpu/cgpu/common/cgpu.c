@@ -163,24 +163,24 @@ RUNTIME_API void cgpu_free_command_encoder(CGpuCommandEncoderId encoder)
 }
 
 // Shader APIs
-CGpuShaderModuleId cgpu_create_shader_module(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor *desc)
+CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor *desc)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    assert(device->proc_table_cache->create_shader_module && "create_shader_module Proc Missing!");
+    assert(device->proc_table_cache->create_shader_library && "create_shader_library Proc Missing!");
 
-    CGPUProcCreateShaderModule fn_create_shader_module = device->proc_table_cache->create_shader_module;
-    CGpuShaderModule* shader = (CGpuShaderModule*)fn_create_shader_module(device, desc);
+    CGPUProcCreateShaderLibrary fn_create_shader_library = device->proc_table_cache->create_shader_library;
+    CGpuShaderLibrary* shader = (CGpuShaderLibrary*)fn_create_shader_library(device, desc);
     shader->name = desc->name;
     shader->device = device;
     return shader;
 }
 
-void cgpu_free_shader_module(CGpuShaderModuleId shader_module)
+void cgpu_free_shader_module(CGpuShaderLibraryId shader_module)
 {
     assert(shader_module != CGPU_NULLPTR && "fatal: call on NULL shader_module!");
     const CGpuDeviceId device = shader_module->device;
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    CGPUProcFreeShaderModule fn_free_shader_module = device->proc_table_cache->free_shader_module;
+    CGPUProcFreeShaderLibrary fn_free_shader_module = device->proc_table_cache->free_shader_module;
     assert(fn_free_shader_module && "free_shader_module Proc Missing!");
     fn_free_shader_module(shader_module);
 }
