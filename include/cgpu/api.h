@@ -50,6 +50,12 @@ typedef struct CGpuAdapterDetail {
 	uint32_t deviceId;
 	uint32_t vendorId;
 	const char* name;
+	uint32_t uniform_buffer_alignment;
+	uint32_t upload_buffer_texture_alignment;
+	uint32_t upload_buffer_texture_row_alignment;
+	uint32_t max_vertex_input_bindings;
+	//uint32_t wave_lane_count;
+	uint32_t multidraw_indirect : 1;
 } CGpuAdapterDetail;
 
 typedef struct CGpuInstanceFeatures {
