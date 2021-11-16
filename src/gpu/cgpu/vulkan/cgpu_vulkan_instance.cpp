@@ -132,7 +132,11 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 			}
 			VkAdapter.super.instance = &result->super;
 			VkAdapter.pPhysicalDevice = pysicalDevices[i];
-			vkGetPhysicalDeviceProperties(pysicalDevices[i], &VkAdapter.mPhysicalDeviceProps);
+			VkAdapter.mSubgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
+			VkAdapter.mSubgroupProperties.pNext = NULL;
+			VkAdapter.mPhysicalDeviceProps.pNext = &VkAdapter.mSubgroupProperties;
+			VkAdapter.mPhysicalDeviceProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
+			vkGetPhysicalDeviceProperties2(pysicalDevices[i], &VkAdapter.mPhysicalDeviceProps);
 			vkGetPhysicalDeviceFeatures(pysicalDevices[i], &VkAdapter.mPhysicalDeviceFeatures);
 
 			// Query Queue Information.

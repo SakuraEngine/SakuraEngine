@@ -52,8 +52,9 @@ typedef struct CGpuInstance_Vulkan {
 typedef struct CGpuAdapter_Vulkan {
     CGpuAdapter super;
     VkPhysicalDevice pPhysicalDevice;
-    VkPhysicalDeviceProperties mPhysicalDeviceProps;
+    VkPhysicalDeviceProperties2 mPhysicalDeviceProps;
     VkPhysicalDeviceFeatures mPhysicalDeviceFeatures;
+    VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
     struct VkQueueFamilyProperties* pQueueFamilyProperties;
     uint32_t mQueueFamilyPropertiesCount;
     int64_t mQueueFamilyIndices[ECGpuQueueType_Count];
