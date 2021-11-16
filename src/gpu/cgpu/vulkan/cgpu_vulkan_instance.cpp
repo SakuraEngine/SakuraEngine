@@ -39,7 +39,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 
 	CGpuInstance_Vulkan* result = (CGpuInstance_Vulkan*)malloc(sizeof(CGpuInstance_Vulkan));
 	::memset(result, 0, sizeof(CGpuInstance_Vulkan));
-    VkApplicationInfo appInfo = {};
+    DECLARE_ZERO(VkApplicationInfo, appInfo)
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "CGPU";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -47,8 +47,8 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_1;
 
-	// en: Create VkInstance.
-	VkInstanceCreateInfo createInfo = {};
+	// Create VkInstance.
+    DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
 	std::vector<const char*> exts = {
@@ -177,7 +177,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
     if(desc->enableDebugLayer)
     {
         const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr = nullptr;
-        VkDebugUtilsMessengerCreateInfoEXT messengerInfo = {};
+	    DECLARE_ZERO(VkDebugUtilsMessengerCreateInfoEXT, messengerInfo)
         if(exts_desc && exts_desc->pDebugUtilsMessenger) {
             messengerInfoPtr = exts_desc->pDebugUtilsMessenger;
         } else {
@@ -277,7 +277,7 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 	}
 	else
 	{
-		VkPipelineCacheCreateInfo info = {};
+	    DECLARE_ZERO(VkPipelineCacheCreateInfo, info)
 		info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		info.pNext = NULL;
 		// ++TODO: Serde

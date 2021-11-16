@@ -48,3 +48,9 @@
 		typedef char char8_t;
 	#endif
 #endif
+
+#if defined(__cplusplus)
+#define DECLARE_ZERO(type, var) type var = {};
+#else
+#define DECLARE_ZERO(type, var) type var = { 0 };
+#endif

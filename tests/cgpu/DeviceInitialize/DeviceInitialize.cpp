@@ -19,7 +19,7 @@ CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool e
     desc.enableDebugLayer = enableDebugLayer;
     desc.enableGpuBasedValidation = enableGPUValidation;
     CGpuInstanceId instance = cgpu_create_instance(&desc);
-    CGpuInstanceFeatures instance_features = {};
+	DECLARE_ZERO(CGpuInstanceFeatures, instance_features)
     cgpu_query_instance_features(instance, &instance_features);
     if(backend == ECGPUBackEnd::ECGPUBackEnd_VULKAN)
     {
@@ -41,7 +41,7 @@ int enum_adapters(CGpuInstanceId instance)
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for(auto adapter : adapters)
     {
-        CGpuAdapterDetail prop = {};
+	    DECLARE_ZERO(CGpuAdapterDetail, prop)
         cgpu_query_adapter_detail(adapter, &prop);
         std::cout << "device id: " << prop.deviceId << "  vendor id: " << prop.vendorId << "\n";
         std::cout << "    name: " << prop.name << "\n";
@@ -67,7 +67,7 @@ void test_create_device(CGpuInstanceId instance, bool enableDebugLayer, bool ena
         if(gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Graphics, 1});
         if(cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Compute, 1});
         if(tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Transfer, 1});
-        CGpuDeviceDescriptor descriptor = {};
+        DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = queueGroup.data();
         descriptor.queueGroupCount = (uint32_t)queueGroup.size();
 
@@ -144,7 +144,7 @@ TEST_P(CGpuTest, QueryQueueCount)
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for(auto adapter : adapters)
     {
-        CGpuAdapterDetail prop = {};
+        DECLARE_ZERO(CGpuAdapterDetail, prop)
         cgpu_query_adapter_detail(adapter, &prop);
         auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
         auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);

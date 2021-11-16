@@ -63,7 +63,7 @@ void cgpu_free_surface_vulkan(CGpuDeviceId device, CGpuSurfaceId surface)
 
 		CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
 		CGpuSurfaceId surface;
-		VkMacOSSurfaceCreateInfoMVK create_info = {};
+        DECLARE_ZERO(VkMacOSSurfaceCreateInfoMVK, create_info)
 		create_info.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
 		create_info.pNext = NULL;
 		create_info.flags = 0;

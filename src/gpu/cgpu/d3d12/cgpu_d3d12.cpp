@@ -83,7 +83,7 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
         DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
         IID_PPV_ARGS(&adapter)); ++i)
     {
-        DXGI_ADAPTER_DESC3 desc = {};
+        DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapter->GetDesc3(&desc);
         // Ignore Microsoft Driver
         if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
@@ -94,7 +94,7 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
                 // Make sure the adapter can support a D3D12 device
                 if (SUCCEEDED(D3D12CreateDevice(adapter, feature_levels[level], __uuidof(ID3D12Device), NULL)))
                 {
-                    CGpuAdapter_D3D12 cgpuAdapter = {};
+                    DECLARE_ZERO(CGpuAdapter_D3D12, cgpuAdapter)
                     HRESULT hres = adapter->QueryInterface(IID_PPV_ARGS(&cgpuAdapter.pDxActiveGPU));
                     if (SUCCEEDED(hres))
                     {
@@ -121,7 +121,7 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
     {
         instance->pAdapters[i].pDxActiveGPU = adapters[i];
         instance->pAdapters[i].mFeatureLevel = adapter_levels[i];
-        DXGI_ADAPTER_DESC3 desc = {};
+        DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapters[i]->GetDesc3(&desc);
 
         instance->pAdapters[i].mDeviceId = desc.DeviceId;
@@ -166,6 +166,7 @@ CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descript
 void cgpu_query_instance_features_d3d12(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
 {
     CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)instance;
+    (void)I;
     features->specialization_constant = false;
 }
 
@@ -261,7 +262,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
 
         for(uint32_t j = 0u; j < queueGroup.queueCount; j++)
         {
-            D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+            DECLARE_ZERO(D3D12_COMMAND_QUEUE_DESC, queueDesc)
             switch (queueType)
             {
             case ECGpuQueueType_Graphics:
@@ -378,7 +379,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     CGpuSwapChain_D3D12* S = new CGpuSwapChain_D3D12();
 
     S->mDxSyncInterval = desc->enableVsync ? 1 : 0;
-    DXGI_SWAP_CHAIN_DESC1 desc1 = {};
+    DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, desc1)
     desc1.Width = desc->width;
     desc1.Height = desc->height;
     desc1.Format = pf_translate_to_d3d12(desc->format);

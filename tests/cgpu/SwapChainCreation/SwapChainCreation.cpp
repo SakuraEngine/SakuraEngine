@@ -35,7 +35,7 @@ protected:
         adapter = adapters[0];
 
         CGpuQueueGroupDescriptor G = {ECGpuQueueType_Graphics, 1};
-        CGpuDeviceDescriptor descriptor = {};
+        DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
         device = cgpu_create_device(adapter, &descriptor);
@@ -52,7 +52,7 @@ protected:
     CGpuSwapChainId CreateSwapChainWithSurface(CGpuSurfaceId surface)
     {
         auto mainQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
-        CGpuSwapChainDescriptor descriptor = {};
+        DECLARE_ZERO(CGpuSwapChainDescriptor, descriptor)
         descriptor.presentQueues = &mainQueue;
         descriptor.presentQueuesCount = 1;
         descriptor.surface = surface;
