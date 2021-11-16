@@ -155,6 +155,12 @@ CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descript
     return &result->super;
 }
 
+void cgpu_query_instance_features_d3d12(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
+{
+    CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)instance;
+    features->specialization_constant = false;
+}
+
 void cgpu_free_instance_d3d12(CGpuInstanceId instance)
 {
     CGpuInstance_D3D12* result = (CGpuInstance_D3D12*)instance;
@@ -184,7 +190,7 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
     delete result;
 }
 
-void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, size_t* adapters_num)
+void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
 {
     assert(instance != nullptr && "fatal: null instance!");
     CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)instance;
@@ -363,10 +369,9 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
 
     CGpuQueue_D3D12* Q = CGPU_NULLPTR;
     if (desc->presentQueues == CGPU_NULLPTR) {
-        Q = reinterpret_cast<CGpuQueue_D3D12*>(
-            cgpu_get_queue_d3d12(device, ECGpuQueueType_Graphics, 0));
+        Q = (CGpuQueue_D3D12*)cgpu_get_queue_d3d12(device, ECGpuQueueType_Graphics, 0);
     } else {
-        Q = reinterpret_cast<CGpuQueue_D3D12*>(desc->presentQueues[0]);
+        Q = (CGpuQueue_D3D12*)desc->presentQueues[0];
     }
     auto bCreated = SUCCEEDED(I->pDXGIFactory->CreateSwapChainForHwnd(
         Q->pCommandQueue, hwnd, &desc1, NULL, NULL, &swapchain));
@@ -385,7 +390,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
 
 void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain)
 {
-    CGpuSwapChain_D3D12* S = reinterpret_cast<CGpuSwapChain_D3D12*>(swapchain);
+    CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)swapchain;
     S->pDxSwapChain->Release();
     delete S;
 }

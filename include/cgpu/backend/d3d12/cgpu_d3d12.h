@@ -8,22 +8,23 @@
 extern "C" {
 #endif
 
-const CGpuProcTable* CGPU_D3D12ProcTable();
-const CGpuSurfacesProcTable* CGPU_D3D12SurfacesProcTable();
+RUNTIME_API const CGpuProcTable* CGPU_D3D12ProcTable();
+RUNTIME_API const CGpuSurfacesProcTable* CGPU_D3D12SurfacesProcTable();
 
-CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descriptor);
-void cgpu_free_instance_d3d12(CGpuInstanceId instance);
-void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, size_t* adapters_num);
-void cgpu_query_adapter_detail_d3d12(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail);
-uint32_t cgpu_query_queue_count_d3d12(const CGpuAdapterId adapter, const ECGpuQueueType type);
-CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc);
-void cgpu_free_device_d3d12(CGpuDeviceId device);
-CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
-void cgpu_free_queue_d3d12(CGpuQueueId queue);
-CGpuCommandEncoderId cgpu_create_command_encoder_d3d12(CGpuQueueId queue, const CGpuCommandEncoderDescriptor* desc);
-void cgpu_free_command_encoder_d3d12(CGpuCommandEncoderId pool);
-CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
-void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
+RUNTIME_API CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descriptor);
+RUNTIME_API void cgpu_query_instance_features_d3d12(CGpuInstanceId instance, struct CGpuInstanceFeatures* features);
+RUNTIME_API void cgpu_free_instance_d3d12(CGpuInstanceId instance);
+RUNTIME_API void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
+RUNTIME_API void cgpu_query_adapter_detail_d3d12(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail);
+RUNTIME_API uint32_t cgpu_query_queue_count_d3d12(const CGpuAdapterId adapter, const ECGpuQueueType type);
+RUNTIME_API CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc);
+RUNTIME_API void cgpu_free_device_d3d12(CGpuDeviceId device);
+RUNTIME_API CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
+RUNTIME_API void cgpu_free_queue_d3d12(CGpuQueueId queue);
+RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder_d3d12(CGpuQueueId queue, const CGpuCommandEncoderDescriptor* desc);
+RUNTIME_API void cgpu_free_command_encoder_d3d12(CGpuCommandEncoderId pool);
+RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
+RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 
 typedef struct CGpuInstance_D3D12 {
     CGpuInstance super;

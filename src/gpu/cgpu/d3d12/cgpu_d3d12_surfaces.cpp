@@ -8,6 +8,6 @@ void cgpu_free_surface_d3d12(CGpuDeviceId device, CGpuSurfaceId surface)
 
 CGpuSurfaceId cgpu_surface_from_hwnd_d3d12(CGpuDeviceId device, HWND window)
 {
-    CGpuSurfaceId res = *reinterpret_cast<CGpuSurfaceId*>(&window);
+    CGpuSurfaceId res = *(CGpuSurfaceId*)&window;
     return res;
 }
