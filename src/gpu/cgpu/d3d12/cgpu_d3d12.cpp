@@ -2,6 +2,8 @@
 
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/backend/d3d12/d3d12_bridge.h"
+#include <dxcapi.h>
+
 #include <assert.h>
 #include <stdlib.h>
 #ifdef CGPU_USE_D3D12
@@ -66,6 +68,12 @@ void optionalEnableDebugLayer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor
 // Call this only once.
 void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foundSoftwareAdapter)
 {
+    static bool Called = false;
+    assert(!Called && "getProperGpuCount should be called for only once!");
+    if(!Called)
+    {
+        Called = true;
+    }
     IDXGIAdapter4* adapter = NULL;
     std::vector<IDXGIAdapter4*> adapters;
     std::vector<D3D_FEATURE_LEVEL> adapter_levels;
@@ -338,6 +346,31 @@ void cgpu_free_command_encoder_d3d12(CGpuCommandEncoderId encoder)
     delete E;
 }
 
+// Shader APIs
+#ifndef DXC_CP_ACP
+#define DXC_CP_ACP 0
+#endif
+CGpuShaderLibraryId cgpu_create_shader_library_d3d12(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
+{
+    CGpuShaderLibrary_D3D12* S = new CGpuShaderLibrary_D3D12();
+    IDxcLibrary* pUtils;
+	DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&pUtils));
+    pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
+    pUtils->Release();
+    return &S->super;
+}
+
+void cgpu_free_shader_library_d3d12(CGpuShaderLibraryId shader_library)
+{
+    CGpuShaderLibrary_D3D12* S = (CGpuShaderLibrary_D3D12*)shader_library;
+    if(S->pShaderBlob != CGPU_NULLPTR)
+    {
+        S->pShaderBlob->Release();
+    }
+    delete S;
+}
+
+// SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
     CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)device->adapter->instance;

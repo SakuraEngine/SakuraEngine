@@ -36,7 +36,7 @@ RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder_vulkan(CGpuQueueId 
 RUNTIME_API void cgpu_free_command_encoder_vulkan(CGpuCommandEncoderId pool);
 
 RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library_vulkan(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
-RUNTIME_API void cgpu_free_shader_module_vulkan(CGpuShaderLibraryId shader_module);
+RUNTIME_API void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId shader_module);
 
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);

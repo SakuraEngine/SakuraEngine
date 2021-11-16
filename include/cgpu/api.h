@@ -105,7 +105,7 @@ typedef void (*CGPUProcFreeCommandEncoder)(CGpuCommandEncoderId encoder);
 // Shader APIs
 RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
 typedef CGpuShaderLibraryId (*CGPUProcCreateShaderLibrary)(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
-RUNTIME_API void cgpu_free_shader_module(CGpuShaderLibraryId shader_module);
+RUNTIME_API void cgpu_free_shader_library(CGpuShaderLibraryId shader_module);
 typedef void (*CGPUProcFreeShaderLibrary)(CGpuShaderLibraryId shader_module);
 
 // Swapchain APIs
@@ -146,7 +146,7 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeCommandEncoder    free_command_encoder;
 
 	const CGPUProcCreateShaderLibrary   create_shader_library;
-	const CGPUProcFreeShaderLibrary     free_shader_module;
+	const CGPUProcFreeShaderLibrary     free_shader_library;
 	
     const CGPUProcCreateSwapChain    create_swapchain;
     const CGPUProcFreeSwapChain      free_swapchain;
@@ -183,7 +183,7 @@ typedef struct CGpuSurfacesProcTable {
     const CGPUSurfaceProc_Free free_surface;
 } CGpuSurfacesProcTable;
 
-//Objects
+//Objects (Heap Safety)
 typedef struct CGpuInstance {
     const CGpuProcTable* proc_table;
     const CGpuSurfacesProcTable* surfaces_table;
@@ -225,7 +225,7 @@ typedef struct CGpuSwapChain {
 	CGpuDeviceId device;
 } CGpuSwapChain;
 
-// Descriptors
+// Descriptors (on Stack)
 typedef struct CGpuInstanceDescriptor {
 	ECGPUBackEnd backend;
 	bool         enableDebugLayer;
