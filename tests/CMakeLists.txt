@@ -39,6 +39,7 @@ if(BUILD_TEST)
         ${CMAKE_CURRENT_SOURCE_DIR}/shared/*.c ${CMAKE_CURRENT_SOURCE_DIR}/shared/*.cpp
     )
 
+    add_subdirectory(math)
     add_subdirectory(memory)
     add_subdirectory(render-setup)
     add_subdirectory(window-exts)

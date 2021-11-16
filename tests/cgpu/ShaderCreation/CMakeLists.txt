@@ -1,7 +1,7 @@
 enable_testing()
 
 add_executable(ShaderCreation 
-ShaderCreation.cpp 
+   ShaderCreation.cpp 
 )
 target_link_libraries(ShaderCreation 
    gtest_main
