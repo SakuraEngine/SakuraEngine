@@ -2,7 +2,7 @@
 #define RUNTIME_DLL
 #include "platform/configure.h"
 #include "cgpu_config.h"
-#include "format.h"
+#include "flags.h"
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
 
 #ifdef __cplusplus
@@ -294,6 +294,8 @@ typedef struct CGpuBufferDescriptor {
 	uint64_t size;
 	/// Debug name used in gpu profile
 	const char8_t* name;
+	/// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
+	CGpuDescriptorTypes descriptors;
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS
