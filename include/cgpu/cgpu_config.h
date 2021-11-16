@@ -1,5 +1,6 @@
 #pragma once
-#include "stdbool.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #define CGPU_USE_VULKAN
 //#define CGPU_USE_D3D12

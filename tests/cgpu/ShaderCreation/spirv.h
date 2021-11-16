@@ -1,6 +1,28 @@
 #pragma once
 #include <stdint.h>
 
+/**
+ * Vertex shader SPIR-V.
+ * \code
+ *	// glslc -Os -mfmt=num -o - -c in.vert
+ *	#version 450
+ *	layout(set = 0, binding = 0) uniform Rotation {
+ *		float uRot;
+ *	};
+ *	layout(location = 0) in  vec2 aPos;
+ *	layout(location = 1) in  vec3 aCol;
+ *	layout(location = 0) out vec3 vCol;
+ *	void main() {
+ *		float cosA = cos(radians(uRot));
+ *		float sinA = sin(radians(uRot));
+ *		mat3 rot = mat3(cosA, sinA, 0.0,
+ *					   -sinA, cosA, 0.0,
+ *						0.0,  0.0,  1.0);
+ *		gl_Position = vec4(rot * vec3(aPos, 1.0), 1.0);
+ *		vCol = aCol;
+ *	}
+ * \endcode
+ */
 static uint32_t const triangle_vert_spirv[] = {
 	0x07230203, 0x00010000, 0x000d0008, 0x00000043, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
 	0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,
@@ -43,6 +65,18 @@ static uint32_t const triangle_vert_spirv[] = {
 	0x00000041, 0x00000040, 0x0003003e, 0x0000003e, 0x00000041, 0x000100fd, 0x00010038
 };
 
+/**
+ * Fragment shader SPIR-V.
+ * \code
+ *	// glslc -Os -mfmt=num -o - -c in.frag
+ *	#version 450
+ *	layout(location = 0) in  vec3 vCol;
+ *	layout(location = 0) out vec4 fragColor;
+ *	void main() {
+ *		fragColor = vec4(vCol, 1.0);
+ *	}
+ * \endcode
+ */
 static uint32_t const triangle_frag_spirv[] = {
 	0x07230203, 0x00010000, 0x000d0007, 0x00000013, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
 	0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,

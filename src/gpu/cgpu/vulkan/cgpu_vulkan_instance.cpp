@@ -263,13 +263,30 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 		createInfo.enabledLayerCount = 0;
 	}
 
-	if (vkCreateDevice(a->pPhysicalDevice, &createInfo, nullptr, &vkDevice->pVkDevice) != VK_SUCCESS) {
+	if (vkCreateDevice(a->pPhysicalDevice, &createInfo, CGPU_NULLPTR, &vkDevice->pVkDevice) != VK_SUCCESS) {
 		assert(0 && "failed to create logical device!");
 	}
 
 	// Single Device Only.
 	volkLoadDeviceTable(&vkDevice->mVkDeviceTable, vkDevice->pVkDevice);
-
+	
+	if(desc->disable_pipeline_cache)
+	{
+		vkDevice->pPipelineCache = CGPU_NULLPTR;
+	}
+	else
+	{
+		VkPipelineCacheCreateInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		info.pNext = NULL;
+		// ++TODO: Serde
+		info.initialDataSize = 0;
+		info.pInitialData = NULL;
+		// --TODO
+		info.flags = 0;
+		vkDevice->mVkDeviceTable.vkCreatePipelineCache(vkDevice->pVkDevice,
+			&info, GLOBAL_VkAllocationCallbacks, &vkDevice->pPipelineCache);
+	}
 	return &vkDevice->super;
 }
 

@@ -35,8 +35,8 @@ RUNTIME_API void cgpu_free_queue_vulkan(CGpuQueueId queue);
 RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder_vulkan(CGpuQueueId queue, const CGpuCommandEncoderDescriptor* desc);
 RUNTIME_API void cgpu_free_command_encoder_vulkan(CGpuCommandEncoderId pool);
 
-RUNTIME_API CGpuShaderModuleId cgpu_create_shader_module_vulkan(CGpuDeviceId device, const struct CGpuShaderModuleDescriptor* desc);
-RUNTIME_API void cgpu_free_shader_module_vulkan(CGpuShaderModuleId shader_module);
+RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library_vulkan(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
+RUNTIME_API void cgpu_free_shader_module_vulkan(CGpuShaderLibraryId shader_module);
 
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
@@ -62,6 +62,7 @@ typedef struct CGpuAdapter_Vulkan {
 typedef struct CGpuDevice_Vulkan {
     const CGpuDevice super;
     VkDevice pVkDevice;
+    VkPipelineCache pPipelineCache;
     struct VolkDeviceTable mVkDeviceTable;
 } CGpuDevice_Vulkan;
 
@@ -76,10 +77,10 @@ typedef struct CGpuCommandEncoder_Vulkan {
     VkCommandPool pVkCmdPool;
 } CGpuCommandEncoder_Vulkan;
 
-typedef struct CGpuShaderModule_Vulkan {
-    CGpuShaderModule super;
+typedef struct CGpuShaderLibrary_Vulkan {
+    CGpuShaderLibrary super;
     VkShaderModule mShaderModule;
-} CGpuShaderModule_Vulkan;
+} CGpuShaderLibrary_Vulkan;
 
 typedef struct CGpuSwapChain_Vulkan {
     CGpuSwapChain  super;
