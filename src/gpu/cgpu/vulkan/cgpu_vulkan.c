@@ -3,6 +3,9 @@
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include <assert.h>
 #include <string.h>
+#ifdef _WINDOWS
+#include <malloc.h> 
+#endif
 
 #ifdef CGPU_USE_VULKAN
 
