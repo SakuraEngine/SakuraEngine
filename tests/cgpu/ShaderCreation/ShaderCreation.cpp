@@ -51,7 +51,6 @@ TEST_P(ShaderCreation, CreateModules)
     vdesc.code = triangle_vert_spirv;
     vdesc.code_size = sizeof(triangle_vert_spirv) / sizeof(uint32_t);
     vdesc.name = "VertexShaderLibrary";
-    vdesc.entry = "main";
     vdesc.stage = ECGpuShaderStage::SS_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
     
@@ -59,7 +58,6 @@ TEST_P(ShaderCreation, CreateModules)
     fdesc.code = triangle_frag_spirv;
     fdesc.code_size = sizeof(triangle_frag_spirv) / sizeof(uint32_t);
     fdesc.name = "FragmentShaderLibrary";
-    fdesc.entry = "main";
     fdesc.stage = ECGpuShaderStage::SS_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 

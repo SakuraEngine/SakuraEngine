@@ -249,14 +249,14 @@ typedef struct CGpuCommandEncoderDescriptor {
 
 typedef struct CGpuShaderLibraryDescriptor {
 	const char8_t*     name;
-	const char8_t*     entry;
 	const uint32_t*    code;
 	size_t             code_size;
 	ECGpuShaderStage   stage;
 } CGpuShaderLibraryDescriptor;
 
 typedef struct CGpuPipelineShaderDescriptor {
-	CGpuShaderLibraryId module;
+	CGpuShaderLibraryId library;
+	const char8_t*      entry;
 	// ++ constant_specialization
 	const CGpuConstantSpecialization* constants;
 	size_t num_constants;
