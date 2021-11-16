@@ -93,7 +93,7 @@ static const auto allPlatforms = testing::Values(
         ECGPUBackEnd_VULKAN
     #endif
     #ifdef CGPU_USE_D3D12
-        ECGPUBackEnd_D3D12
+        ,ECGPUBackEnd_D3D12
     #endif
 #endif
 );

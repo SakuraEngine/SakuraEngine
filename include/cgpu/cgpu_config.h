@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #define CGPU_USE_VULKAN
-//#define CGPU_USE_D3D12
+#define CGPU_USE_D3D12
 
 #ifdef __cplusplus
 #ifndef CGPU_NULLPTR
