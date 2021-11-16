@@ -139,7 +139,7 @@ typedef enum ECGpuShaderStage {
 } ECGpuShaderStage;
 typedef uint32_t ECGpuShaderStages;
 
-typedef enum CGPUMemoryUsage {
+typedef enum CGpuMemoryUsage {
 	/// No intended memory usage specified.
 	MU_UNKNOWN = 0,
 	/// Memory will be used on device only, no need to be mapped on host.
@@ -152,7 +152,53 @@ typedef enum CGPUMemoryUsage {
 	MU_GPU_TO_CPU = 4,
 	MU_COUNT,
 	MU_MAX_ENUM = 0x7FFFFFFF
-} CGPUMemoryUsage;
+} CGpuMemoryUsage;
+
+typedef enum CGpuDescriptorType
+{
+	DT_UNDEFINED = 0,
+	DT_SAMPLER = 0x01,
+	// SRV Read only texture
+	DT_TEXTURE = (DT_SAMPLER << 1),
+	/// UAV Texture
+	DT_RW_TEXTURE = (DT_TEXTURE << 1),
+	// SRV Read only buffer
+	DT_BUFFER = (DT_RW_TEXTURE << 1),
+	DT_BUFFER_RAW = (DT_BUFFER | (DT_BUFFER << 1)),
+	/// UAV Buffer
+	DT_RW_BUFFER = (DT_BUFFER << 2),
+	DT_RW_BUFFER_RAW = (DT_RW_BUFFER | (DT_RW_BUFFER << 1)),
+	/// Uniform buffer
+	DT_UNIFORM_BUFFER = (DT_RW_BUFFER << 2),
+	/// Push constant / Root constant
+	DT_ROOT_CONSTANT = (DT_UNIFORM_BUFFER << 1),
+	/// IA
+	DT_VERTEX_BUFFER = (DT_ROOT_CONSTANT << 1),
+	DT_INDEX_BUFFER = (DT_VERTEX_BUFFER << 1),
+	DT_INDIRECT_BUFFER = (DT_INDEX_BUFFER << 1),
+	/// Cubemap SRV
+	DT_TEXTURE_CUBE = (DT_TEXTURE | (DT_INDIRECT_BUFFER << 1)),
+	/// RTV / DSV per mip slice
+	DT_RENDER_TARGET_MIP_SLICES = (DT_INDIRECT_BUFFER << 2),
+	/// RTV / DSV per array slice
+	DT_RENDER_TARGET_ARRAY_SLICES = (DT_RENDER_TARGET_MIP_SLICES << 1),
+	/// RTV / DSV per depth slice
+	DT_RENDER_TARGET_DEPTH_SLICES = (DT_RENDER_TARGET_ARRAY_SLICES << 1),
+	DT_RAY_TRACING = (DT_RENDER_TARGET_DEPTH_SLICES << 1),
+#if defined(CGPU_USE_VULKAN)
+	/// Subpass input (descriptor type only available in Vulkan)
+	DT_INPUT_ATTACHMENT = (DT_RAY_TRACING << 1),
+	DT_TEXEL_BUFFER = (DT_INPUT_ATTACHMENT << 1),
+	DT_RW_TEXEL_BUFFER = (DT_TEXEL_BUFFER << 1),
+	DT_COMBINED_IMAGE_SAMPLER = (DT_RW_TEXEL_BUFFER << 1),
+#endif
+#if defined(CGPU_USE_METAL)
+	DT_ARGUMENT_BUFFER = (DT_RAY_TRACING << 1),
+	DT_INDIRECT_COMMAND_BUFFER = (DT_ARGUMENT_BUFFER << 1),
+	DT_RENDER_PIPELINE_STATE = (DT_INDIRECT_COMMAND_BUFFER << 1),
+#endif
+} CGpuDescriptorType;
+typedef uint32_t CGpuDescriptorTypes;
 
 #ifdef __cplusplus
 } // end extern "C"
