@@ -37,18 +37,18 @@ else()
 endif(RUNTIME_SHARED)
 
 set(RUNTIME_SOURCES
-    src/platform/unitybuild.cpp
-    src/gpu/cgpu/unitybuild.cpp
-    src/gpu/cgpu/unitybuild2.cpp
-    src/gpu/cgpu/unitybuild.c
-    src/gpu/cgpu/unitybuild2.c
+    src/platform/build.0.cpp
+    src/gpu/cgpu/build.0.cpp
+    src/gpu/cgpu/build.1.cpp
+    src/gpu/cgpu/build.0.c
+    src/gpu/cgpu/build.1.c
 )
 if(APPLE)
     set(RUNTIME_SOURCES
         ${RUNTIME_SOURCES}
-        src/platform/unitybuild.mm
-        src/gpu/cgpu/unitybuild.m
-        src/gpu/cgpu/unitybuild.mm
+        src/platform/build.0.mm
+        src/gpu/cgpu/build.0.m
+        src/gpu/cgpu/build.0.mm
     )
 endif()
 
