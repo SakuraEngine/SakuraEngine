@@ -181,9 +181,9 @@ typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromHWND)(CGpuDeviceId device, HWN
 #ifdef __APPLE__
 //RUNTIME_API CGpuSurfaceId cgpu_surface_from_ui_view(CGpuDeviceId device, UIView* window);
 //typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromUIView)(CGpuDeviceId device, UIView* window);
-typedef struct NSView NSView;
-RUNTIME_API CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, NSView* window);
-typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromNSView)(CGpuDeviceId device, NSView* window);
+typedef struct CGpuNSView CGpuNSView;
+RUNTIME_API CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window);
+typedef CGpuSurfaceId (*CGPUSurfaceProc_CreateFromNSView)(CGpuDeviceId device, CGpuNSView* window);
 #endif
 typedef struct CGpuSurfacesProcTable {
 #if defined(_WIN32) || defined(_WIN64)

@@ -102,7 +102,7 @@ TEST_P(SwapChainCreation, CreateFromHWND)
 
 TEST_P(SwapChainCreation, CreateFromNSView)
 {
-    auto ns_view = (struct NSView*)nswindow_get_content_view(
+    auto ns_view = (struct CGpuNSView*)nswindow_get_content_view(
         nswin
     );
     auto surface = cgpu_surface_from_ns_view(device, ns_view);

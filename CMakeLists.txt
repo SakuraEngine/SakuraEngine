@@ -67,10 +67,12 @@ target_include_directories(SakuraRuntime
 if(APPLE)
     find_library(FoundationLib CoreFoundation)
     find_library(CocoaLib Cocoa)
+    find_library(MetalLib Metal)
     target_link_libraries(SakuraRuntime 
         PUBLIC
         ${FoundationLib}
         ${CocoaLib}
+        ${MetalLib}
     )
 endif()
 

@@ -57,7 +57,7 @@ void cgpu_free_surface_vulkan(CGpuDeviceId device, CGpuSurfaceId surface)
 		return surface;
 	}
 #elif defined (_MACOS)
-	CGpuSurfaceId cgpu_surface_from_ns_view_vulkan(CGpuDeviceId device, NSView* window)
+	CGpuSurfaceId cgpu_surface_from_ns_view_vulkan(CGpuDeviceId device, CGpuNSView* window)
 	{
 		assert(window && "CGPU VULKAN ERROR: NULL NSVIEW!");
 

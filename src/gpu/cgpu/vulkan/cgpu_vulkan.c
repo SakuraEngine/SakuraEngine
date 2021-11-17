@@ -57,11 +57,9 @@ void cgpu_query_instance_features_vulkan(CGpuInstanceId instance, struct CGpuIns
 void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
 {
 	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)instance;
-	if (adapters == CGPU_NULLPTR)
+	*adapters_num = I->mPhysicalDeviceCount;
+	if (adapters != CGPU_NULLPTR)
 	{
-		*adapters_num = I->mPhysicalDeviceCount;
-		return;
-	} else {
 		for(uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
 		{
 			adapters[i] = &I->pVulkanAdapters[i].super;
