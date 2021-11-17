@@ -2,7 +2,7 @@
 #include "platform/configure.h"
 
 #define CGPU_USE_VULKAN
-#ifdef _WINODWS
+#ifdef _WINDOWS
 #define CGPU_USE_D3D12
 #endif
 

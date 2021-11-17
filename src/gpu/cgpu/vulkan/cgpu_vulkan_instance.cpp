@@ -104,7 +104,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	}
 	createInfo.enabledLayerCount = (uint32_t)layers.size();
 	createInfo.ppEnabledLayerNames = layers.data();
-	if (vkCreateInstance(&createInfo, VK_NULL_HANDLE, &result->pVkInstance) != VK_SUCCESS)
+	if (vkCreateInstance(&createInfo, GLOBAL_VkAllocationCallbacks, &result->pVkInstance) != VK_SUCCESS)
 	{
 		assert(0 && "Vulkan: failed to create instance!");
 	}
