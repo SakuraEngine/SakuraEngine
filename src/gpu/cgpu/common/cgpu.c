@@ -139,26 +139,26 @@ void cgpu_free_queue(CGpuQueueId queue)
     return;
 }
 
-RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder(CGpuQueueId queue,
-    const CGpuCommandEncoderDescriptor* desc)
+RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool(CGpuQueueId queue,
+    const CGpuCommandPoolDescriptor* desc)
 {
     assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(queue->device->proc_table_cache->free_device && "free_device Proc Missing!");
 
-    CGpuCommandEncoder* encoder = (CGpuCommandEncoder*)queue->device->proc_table_cache->create_command_encoder(queue, desc);
+    CGpuCommandPool* encoder = (CGpuCommandPool*)queue->device->proc_table_cache->create_command_pool(queue, desc);
     encoder->queue = queue;
     return encoder;
 }
 
-RUNTIME_API void cgpu_free_command_encoder(CGpuCommandEncoderId encoder)
+RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId encoder)
 {
     assert(encoder != CGPU_NULLPTR && "fatal: call on NULL encoder!");
     assert(encoder->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     assert(encoder->queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(encoder->queue->device->proc_table_cache->free_device && "free_device Proc Missing!");
 
-    encoder->queue->device->proc_table_cache->free_command_encoder(encoder);
+    encoder->queue->device->proc_table_cache->free_command_pool(encoder);
     return;
 }
 

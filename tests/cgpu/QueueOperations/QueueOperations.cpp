@@ -68,7 +68,7 @@ TEST_P(QueueOperations, GetGraphicsQueue)
     }
 }
 
-TEST_P(QueueOperations, CreateCommandEncoder)
+TEST_P(QueueOperations, CreateCommandPool)
 {
     CGpuQueueId graphicsQueue;
     auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics); 
@@ -78,11 +78,11 @@ TEST_P(QueueOperations, CreateCommandEncoder)
         EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
         EXPECT_NE(graphicsQueue, nullptr);
 
-        auto encoder = cgpu_create_command_encoder(graphicsQueue, nullptr);
+        auto encoder = cgpu_create_command_pool(graphicsQueue, nullptr);
         EXPECT_NE(encoder, CGPU_NULLPTR);
         EXPECT_NE(encoder, nullptr);
 
-        cgpu_free_command_encoder(encoder);
+        cgpu_free_command_pool(encoder);
         cgpu_free_queue(graphicsQueue);
     }
 }

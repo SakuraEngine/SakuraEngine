@@ -25,8 +25,8 @@ RUNTIME_API void cgpu_free_device_d3d12(CGpuDeviceId device);
 RUNTIME_API CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_free_queue_d3d12(CGpuQueueId queue);
 
-RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder_d3d12(CGpuQueueId queue, const CGpuCommandEncoderDescriptor* desc);
-RUNTIME_API void cgpu_free_command_encoder_d3d12(CGpuCommandEncoderId pool);
+RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc);
+RUNTIME_API void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool);
 
 RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library_d3d12(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
 RUNTIME_API void cgpu_free_shader_library_d3d12(CGpuShaderLibraryId shader_module);
@@ -84,10 +84,10 @@ typedef struct CGpuQueue_D3D12 {
     ID3D12CommandQueue* pCommandQueue; 
 } CGpuQueue_D3D12;
 
-typedef struct CGpuCommandEncoder_D3D12 {
-    CGpuCommandEncoder super;
+typedef struct CGpuCommandPool_D3D12 {
+    CGpuCommandPool super;
     ID3D12CommandAllocator* pCommandAllocator;
-} CGpuCommandEncoder_D3D12;
+} CGpuCommandPool_D3D12;
 
 typedef struct CGpuShaderLibrary_D3D12 {
     CGpuShaderLibrary super;

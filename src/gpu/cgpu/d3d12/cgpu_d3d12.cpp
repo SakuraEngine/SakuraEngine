@@ -310,7 +310,7 @@ void cgpu_free_queue_d3d12(CGpuQueueId queue)
 }
 
 // allocate_transient_command_allocator
-ID3D12CommandAllocator* allocate_transient_command_allocator(CGpuCommandEncoder_D3D12* E, CGpuQueueId queue)
+ID3D12CommandAllocator* allocate_transient_command_allocator(CGpuCommandPool_D3D12* E, CGpuQueueId queue)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)queue->device;
     D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -326,16 +326,16 @@ void free_transient_command_allocator(ID3D12CommandAllocator* allocator)
     allocator->Release();
 }
 
-CGpuCommandEncoderId cgpu_create_command_encoder_d3d12(CGpuQueueId queue, const CGpuCommandEncoderDescriptor* desc)
+CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
 {
-    CGpuCommandEncoder_D3D12* E = new CGpuCommandEncoder_D3D12();
+    CGpuCommandPool_D3D12* E = new CGpuCommandPool_D3D12();
     E->pCommandAllocator = allocate_transient_command_allocator(E, queue);
     return &E->super;
 }
 
-void cgpu_free_command_encoder_d3d12(CGpuCommandEncoderId encoder)
+void cgpu_free_command_pool_d3d12(CGpuCommandPoolId encoder)
 {
-    CGpuCommandEncoder_D3D12* E = (CGpuCommandEncoder_D3D12*)encoder;
+    CGpuCommandPool_D3D12* E = (CGpuCommandPool_D3D12*)encoder;
     assert(encoder && "D3D12 ERROR: FREE NULL COMMAND ENCODER!");
     assert(E->pCommandAllocator && "D3D12 ERROR: FREE NULL pCommandAllocator!");
 

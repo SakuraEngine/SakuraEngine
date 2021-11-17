@@ -25,8 +25,8 @@ const CGpuProcTable tbl_vk =
 	.get_queue = &cgpu_get_queue_vulkan,
 	.free_queue = &cgpu_free_queue_vulkan,
 
-	.create_command_encoder = &cgpu_create_command_encoder_vulkan,
-	.free_command_encoder = &cgpu_free_command_encoder_vulkan,
+	.create_command_pool = &cgpu_create_command_pool_vulkan,
+	.free_command_pool = &cgpu_free_command_pool_vulkan,
 	
 	.create_shader_library = &cgpu_create_shader_library_vulkan,
 	.free_shader_library = &cgpu_free_shader_library_vulkan,
@@ -187,18 +187,18 @@ void free_transient_command_pool(CGpuDevice_Vulkan* D, VkCommandPool pool)
 		vkDestroyCommandPool(D->pVkDevice, pool, GLOBAL_VkAllocationCallbacks);
 }
 
-CGpuCommandEncoderId cgpu_create_command_encoder_vulkan(CGpuQueueId queue, const CGpuCommandEncoderDescriptor* desc)
+CGpuCommandPoolId cgpu_create_command_pool_vulkan(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
 {
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)queue->device;
-	CGpuCommandEncoder_Vulkan* E = (CGpuCommandEncoder_Vulkan*)cgpu_malloc(sizeof(CGpuCommandEncoder_Vulkan));
+	CGpuCommandPool_Vulkan* E = (CGpuCommandPool_Vulkan*)cgpu_malloc(sizeof(CGpuCommandPool_Vulkan));
 	E->pVkCmdPool = allocate_transient_command_pool(D, queue);
 	return &E->super;
 }
 
-void cgpu_free_command_encoder_vulkan(CGpuCommandEncoderId encoder)
+void cgpu_free_command_pool_vulkan(CGpuCommandPoolId encoder)
 {
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->queue->device;
-	CGpuCommandEncoder_Vulkan* E  = (CGpuCommandEncoder_Vulkan*)encoder;
+	CGpuCommandPool_Vulkan* E  = (CGpuCommandPool_Vulkan*)encoder;
 	free_transient_command_pool(D, E->pVkCmdPool);
 	cgpu_free((void*)encoder);
 }
