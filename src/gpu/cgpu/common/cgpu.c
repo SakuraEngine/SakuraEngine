@@ -87,12 +87,17 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
     // -- proc_table_cache
 }
 
+const char* unknownAdapterName = "UNKNOWN";
 void cgpu_query_adapter_detail(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail)
 {
     assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     assert(adapter->proc_table_cache->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
     adapter->proc_table_cache->query_adapter_detail(adapter, detail);
+    if(detail->name == CGPU_NULLPTR)
+    {
+        detail->name = unknownAdapterName;
+    }
     return;
 }
 
@@ -244,7 +249,7 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
         return device->adapter->instance->surfaces_table->from_hwnd(device, window);
     }
 #elif defined(_MACOS)
-    CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, NSView* window)
+    CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window)
     {
         assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
         assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");

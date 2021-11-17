@@ -3,6 +3,7 @@
 #include <cassert>
 #include <stdlib.h>
 #include <vector>
+
 #ifdef CGPU_USE_VULKAN
 
 const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
