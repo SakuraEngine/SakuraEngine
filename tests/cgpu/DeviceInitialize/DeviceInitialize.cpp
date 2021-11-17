@@ -29,6 +29,10 @@ CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool e
     {
         EXPECT_FALSE(instance_features.specialization_constant);
     }
+    else if(backend == ECGPUBackEnd::ECGPUBackEnd_METAL)
+    {
+        EXPECT_TRUE(instance_features.specialization_constant);
+    }
     return instance;
 }
 
@@ -163,6 +167,9 @@ static const auto allPlatforms = testing::Values(
 #endif
 #ifdef CGPU_USE_D3D12
     ,ECGPUBackEnd_D3D12
+#endif
+#ifdef CGPU_USE_METAL
+    ,ECGPUBackEnd_METAL
 #endif
 );
 

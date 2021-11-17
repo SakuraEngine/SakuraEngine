@@ -47,6 +47,8 @@ if(APPLE)
     set(RUNTIME_SOURCES
         ${RUNTIME_SOURCES}
         src/platform/unitybuild.mm
+        src/gpu/cgpu/unitybuild.m
+        src/gpu/cgpu/unitybuild.mm
     )
 endif()
 

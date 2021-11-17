@@ -5,7 +5,9 @@
 #ifdef CGPU_USE_D3D12
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #endif
-
+#ifdef CGPU_USE_VULKAN
+#include "cgpu/backend/metal/cgpu_metal.h"
+#endif
 #ifdef __APPLE__
     #include "TargetConditionals.h"
     #ifdef TARGET_OS_MAC
@@ -18,7 +20,8 @@
 CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
 {
     assert((desc->backend == ECGPUBackEnd_VULKAN
-          || desc->backend == ECGPUBackEnd_D3D12) 
+          || desc->backend == ECGPUBackEnd_D3D12
+          || desc->backend == ECGPUBackEnd_METAL) 
         && "cgpu support only vulkan & d3d12 currently!");
     const CGpuProcTable* tbl = CGPU_NULLPTR;
     const CGpuSurfacesProcTable* s_tbl = CGPU_NULLPTR;
@@ -31,6 +34,12 @@ CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
     else if (desc->backend == ECGPUBackEnd_VULKAN) {
         tbl = CGPU_VulkanProcTable();
         s_tbl = CGPU_VulkanSurfacesProcTable();
+    } 
+#endif
+#ifdef CGPU_USE_METAL
+    else if (desc->backend == ECGPUBackEnd_METAL) {
+        tbl = CGPU_MetalProcTable();
+        s_tbl = CGPU_MetalSurfacesProcTable();
     } 
 #endif
 #ifdef CGPU_USE_D3D12
@@ -56,7 +65,7 @@ RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CG
 void cgpu_free_instance(CGpuInstanceId instance)
 {
     assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
-    assert(instance->proc_table->enum_adapters && "free_instance Proc Missing!");
+    assert(instance->proc_table->free_instance && "free_instance Proc Missing!");
 
     instance->proc_table->free_instance(instance);
 }
