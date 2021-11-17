@@ -373,7 +373,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 		assert(0 && "fatal: vkGetPhysicalDeviceSurfacePresentModesKHR failed!");
 	}
 	VkPresentModeKHR preferredModeList[] = {
-		VK_PRESENT_MODE_IMMEDIATE_KHR,
+		VK_PRESENT_MODE_IMMEDIATE_KHR,    // normal
 		VK_PRESENT_MODE_MAILBOX_KHR,      // low latency
 		VK_PRESENT_MODE_FIFO_RELAXED_KHR, // minimize stuttering
 		VK_PRESENT_MODE_FIFO_KHR          // low power consumption

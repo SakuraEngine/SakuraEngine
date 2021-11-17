@@ -5,6 +5,9 @@
 #ifdef _WINDOWS
 #define CGPU_USE_D3D12
 #endif
+#ifdef __APPLE__
+#define CGPU_USE_METAL
+#endif
 
 #ifdef __cplusplus
 #ifndef CGPU_NULLPTR
