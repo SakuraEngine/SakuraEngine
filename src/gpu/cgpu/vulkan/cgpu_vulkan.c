@@ -272,6 +272,8 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
 		assert(0);
 		return NULL;
 	}
+	B->super.cpu_mapped_address = alloc_info.pMappedData;
+	
 	return &B->super;
 }
 
