@@ -14,7 +14,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	(void)volkInit;
 	assert((volkInit == VK_SUCCESS) && "Volk Initialize Failed!");
 
-	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cgpu_malloc(sizeof(CGpuInstance_Vulkan));
+	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cgpu_calloc(1, sizeof(CGpuInstance_Vulkan));
 	::memset(I, 0, sizeof(CGpuInstance_Vulkan));
     DECLARE_ZERO(VkApplicationInfo, appInfo)
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -125,7 +125,7 @@ const std::vector<const char*> deviceExtensionNames = { VK_KHR_SWAPCHAIN_EXTENSI
 CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
 {
 	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)adapter->instance;
-	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cgpu_malloc(sizeof(CGpuDevice_Vulkan));
+	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cgpu_calloc(1, sizeof(CGpuDevice_Vulkan));
 	CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)adapter;
 
 	*const_cast<CGpuAdapterId*>(&D->super.adapter) = adapter;
