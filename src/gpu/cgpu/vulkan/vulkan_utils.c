@@ -1,5 +1,5 @@
 #include "vulkan_utils.h"
-#include <cassert>
+#include <assert.h>
 #include <stdio.h>
 
 // Debug Callback
@@ -62,8 +62,8 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I)
     vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount, CGPU_NULLPTR);
 	if(I->mPhysicalDeviceCount != 0)
 	{
-		I->pVulkanAdapters = (CGpuAdapter_Vulkan*)cgpu_malloc(sizeof(CGpuAdapter_Vulkan) * I->mPhysicalDeviceCount);
-		VkPhysicalDevice* pysicalDevices = (VkPhysicalDevice*)cgpu_malloc(sizeof(VkPhysicalDevice) * I->mPhysicalDeviceCount);
+		I->pVulkanAdapters = (CGpuAdapter_Vulkan*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(CGpuAdapter_Vulkan));
+		VkPhysicalDevice* pysicalDevices = (VkPhysicalDevice*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(VkPhysicalDevice));
 		vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount, pysicalDevices);
 		for(uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
 		{

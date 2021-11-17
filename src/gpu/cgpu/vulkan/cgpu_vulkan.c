@@ -147,7 +147,7 @@ CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint
 	D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, (uint32_t)A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
 	Q.mVkQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[type];
 	
-	CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)cgpu_malloc(sizeof(CGpuQueue_Vulkan));
+	CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)cgpu_calloc(1, sizeof(CGpuQueue_Vulkan));
 	memcpy(RQ, &Q, sizeof(Q));
 	return &RQ->super;
 }
@@ -193,7 +193,7 @@ void free_transient_command_pool(CGpuDevice_Vulkan* D, VkCommandPool pool)
 CGpuCommandPoolId cgpu_create_command_pool_vulkan(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
 {
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)queue->device;
-	CGpuCommandPool_Vulkan* E = (CGpuCommandPool_Vulkan*)cgpu_malloc(sizeof(CGpuCommandPool_Vulkan));
+	CGpuCommandPool_Vulkan* E = (CGpuCommandPool_Vulkan*)cgpu_calloc(1, sizeof(CGpuCommandPool_Vulkan));
 	E->pVkCmdPool = allocate_transient_command_pool(D, queue);
 	return &E->super;
 }
@@ -217,7 +217,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(CGpuDeviceId device, const
 		.codeSize = desc->code_size,
 		.pCode = desc->code
 	};
-	CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_malloc(sizeof(CGpuSwapChain_Vulkan));
+	CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
 	D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
 	return &S->super;
 }
@@ -487,7 +487,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 	}
 	assert(composite_alpha != VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR);
 
-	CGpuSwapChain_Vulkan* S = (CGpuSwapChain_Vulkan*)cgpu_malloc(sizeof(CGpuSwapChain_Vulkan));
+	CGpuSwapChain_Vulkan* S = (CGpuSwapChain_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
 	S->super.device = device;
 	VkSwapchainCreateInfoKHR swapChainCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
