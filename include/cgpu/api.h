@@ -14,6 +14,7 @@ struct CGpuDeviceDescriptor;
 struct CGpuCommandPoolDescriptor;
 struct CGpuShaderLibraryDescriptor;
 struct CGpuPipelineShaderDescriptor;
+struct CGpuBufferDescriptor;
 struct CGpuSwapChainDescriptor;
 
 typedef uint32_t CGpuQueueIndex;
@@ -27,6 +28,7 @@ typedef const struct CGpuCommandPool* CGpuCommandPoolId;
 typedef const struct CGpuCommandBuffer* CGpuCommandBufferId;
 typedef const struct CGpuSwapChain* CGpuSwapChainId;
 typedef const struct CGpuShaderLibrary* CGpuShaderLibraryId;
+typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuPipelineShader* CGpuPipelineShaderId;
 
 typedef enum ECGPUBackEnd
@@ -114,6 +116,12 @@ typedef CGpuShaderLibraryId (*CGPUProcCreateShaderLibrary)(CGpuDeviceId device, 
 RUNTIME_API void cgpu_free_shader_library(CGpuShaderLibraryId shader_module);
 typedef void (*CGPUProcFreeShaderLibrary)(CGpuShaderLibraryId shader_module);
 
+// Buffer APIs
+RUNTIME_API CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc);
+typedef CGpuBufferId (*CGPUProcCreateBuffer)(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc);
+RUNTIME_API void cgpu_free_buffer(CGpuBufferId buffer);
+typedef void (*CGPUProcFreeBuffer)(CGpuBufferId buffer);
+
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
 typedef CGpuSwapChainId (*CGPUProcCreateSwapChain)(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
@@ -129,10 +137,6 @@ typedef void (*CGPUProcCmdSetScissor)(CGpuCommandBufferId cmd, uint32_t x, uint3
 
 
 // Types
-typedef struct CGpuBuffer {const CGpuDeviceId device;} CGpuBuffer;
-typedef CGpuBuffer* CGpuBufferId;
-
-
 typedef struct CGpuProcTable {
     const CGPUProcCreateInstance        create_instance;
 	const CGPUProcQueryInstanceFeatures query_instance_features;
@@ -153,7 +157,10 @@ typedef struct CGpuProcTable {
 
 	const CGPUProcCreateShaderLibrary   create_shader_library;
 	const CGPUProcFreeShaderLibrary     free_shader_library;
-	
+
+	const CGPUProcCreateBuffer       create_buffer;
+	const CGPUProcFreeBuffer         free_buffer;
+
     const CGPUProcCreateSwapChain    create_swapchain;
     const CGPUProcFreeSwapChain      free_swapchain;
 
@@ -226,6 +233,10 @@ typedef struct CGpuShaderLibrary {
 	CGpuDeviceId device;
 	const char8_t* name;
 } CGpuShaderLibrary;
+
+typedef struct CGpuBuffer {
+	const CGpuDeviceId device;
+} CGpuBuffer;
 
 typedef struct CGpuSwapChain {
 	CGpuDeviceId device;
@@ -302,6 +313,10 @@ typedef struct CGpuBufferDescriptor {
 	const char8_t* name;
 	/// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
 	CGpuDescriptorTypes descriptors;
+	/// Decides which memory heap buffer will use (default, upload, readback)
+	CGpuMemoryUsage memory_usage;
+	/// Image format
+	ECGpuPixelFormat format;
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS

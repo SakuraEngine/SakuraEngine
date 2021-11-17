@@ -405,12 +405,15 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     }
     auto bCreated = SUCCEEDED(I->pDXGIFactory->CreateSwapChainForHwnd(
         Q->pCommandQueue, hwnd, &desc1, NULL, NULL, &swapchain));
+    (void)bCreated;
     assert(bCreated && "Failed to Try to Create SwapChain!");
 
     auto bAssociation = SUCCEEDED(I->pDXGIFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+    (void)bAssociation;
     assert(bAssociation && "Failed to Try to Associate SwapChain With Window!");
 
     auto bQueryChain3 = SUCCEEDED(swapchain->QueryInterface(IID_PPV_ARGS(&S->pDxSwapChain)));
+    (void)bQueryChain3;
     assert(bQueryChain3 && "Failed to Query IDXGISwapChain3 from Created SwapChain!");
 
     swapchain->Release();
