@@ -1,6 +1,6 @@
 #define DLL_IMPLEMENTATION
-#include "cgpu/backend/vulkan/cgpu_vulkan.h"
-#include "cgpu/extensions/cgpu_vulkan_exts.h"
+#include "vulkan_utils.h"
+#include "math/common.h"
 #include <assert.h>
 #include <string.h>
 #ifdef _WINDOWS
@@ -28,6 +28,9 @@ const CGpuProcTable tbl_vk =
 	.create_command_pool = &cgpu_create_command_pool_vulkan,
 	.free_command_pool = &cgpu_free_command_pool_vulkan,
 	
+	.create_buffer = &cgpu_create_buffer_vulkan,
+	.free_buffer = &cgpu_free_buffer_vulkan,
+
 	.create_shader_library = &cgpu_create_shader_library_vulkan,
 	.free_shader_library = &cgpu_free_shader_library_vulkan,
 
@@ -225,6 +228,58 @@ void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
 	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
 	D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
 	cgpu_free(S);
+}
+
+// Buffer APIs
+CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
+{
+	CGpuBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGpuBuffer_Vulkan), _Alignof(CGpuBuffer_Vulkan));
+	CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+	CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
+	uint64_t allocationSize = desc->size;
+	// Align the buffer size to multiples of the dynamic uniform buffer minimum size
+	if (desc->descriptors & DT_UNIFORM_BUFFER)
+	{
+		uint64_t minAlignment = A->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
+		allocationSize = smath_round_up_64(allocationSize, minAlignment);
+	}
+	DECLARE_ZERO(VkBufferCreateInfo, add_info);
+	add_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	add_info.pNext = NULL;
+	add_info.flags = 0;
+	add_info.size = allocationSize;
+	add_info.usage = VkUtil_DescriptorTypesToBufferUsage(desc->descriptors, desc->format != PF_UNDEFINED);
+	add_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	add_info.queueFamilyIndexCount = 0;
+	add_info.pQueueFamilyIndices = NULL;
+	// Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
+	if (desc->memory_usage == MU_GPU_ONLY || desc->memory_usage == MU_GPU_TO_CPU)
+		add_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	
+	VmaAllocationCreateInfo vma_mem_reqs = {};
+	vma_mem_reqs.usage = (VmaMemoryUsage)desc->memory_usage;
+	//if (desc->mFlags & BUFFER_CREATION_FLAG_OWN_MEMORY_BIT)
+	//	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+	//if (desc->mFlags & BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT)
+	//	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+	VmaAllocationInfo alloc_info = {};
+	VkResult bufferResult = vmaCreateBuffer(
+		D->pVmaAllocator, &add_info, &vma_mem_reqs, &B->pVkBuffer, &B->pVkAllocation,
+		&alloc_info);
+	if (bufferResult != VK_SUCCESS)
+	{
+		assert(0);
+		return NULL;
+	}
+	return &B->super;
+}
+
+void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
+{
+	CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
+	
+	cgpu_free(B);
 }
 
 // SwapChain APIs

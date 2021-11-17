@@ -177,6 +177,7 @@ extern "C"
 #endif
 extern void* mi_malloc(size_t size);
 extern void* mi_calloc(size_t count, size_t size);
+extern void* mi_calloc_aligned(size_t count, size_t size, size_t alignment);
 extern void* mi_malloc_aligned(size_t size, size_t alignment);
 extern void mi_free(void* p);
 #ifdef __cplusplus
@@ -184,5 +185,6 @@ extern void mi_free(void* p);
 #endif
 #define cgpu_malloc mi_malloc
 #define cgpu_calloc mi_calloc
+#define cgpu_calloc_aligned mi_calloc_aligned
 #define cgpu_memalign mi_malloc_aligned
 #define cgpu_free mi_free

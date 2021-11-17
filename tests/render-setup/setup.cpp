@@ -27,6 +27,8 @@ inline static bool SDLEventHandler(const SDL_Event& event, SDL_Window* window)
 			{
                 const auto ResizeWidth = event.window.data1;
                 const auto ResizeHeight = event.window.data2;
+                (void)ResizeWidth;
+                (void)ResizeHeight;
             }
 			else if(event.window.event == SDL_WINDOWEVENT_CLOSE)
             	return false;

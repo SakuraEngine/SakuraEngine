@@ -1,5 +1,6 @@
 #include "cgpu/cgpu_config.h"
 #ifdef CGPU_USE_VULKAN
+#include "vulkan/vulkan_utils.c"
 #include "vulkan/cgpu_vulkan.c"
 #include "vulkan/cgpu_vulkan_surfaces.c"
 #endif
