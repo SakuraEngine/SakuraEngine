@@ -68,12 +68,8 @@ void optionalEnableDebugLayer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor
 // Call this only once.
 void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foundSoftwareAdapter)
 {
-    static bool Called = false;
-    assert(!Called && "getProperGpuCount should be called for only once!");
-    if(!Called)
-    {
-        Called = true;
-    }
+    assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
+    assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
     IDXGIAdapter4* adapter = NULL;
     std::vector<IDXGIAdapter4*> adapters;
     std::vector<D3D_FEATURE_LEVEL> adapter_levels;
