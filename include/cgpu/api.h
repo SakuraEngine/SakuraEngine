@@ -11,7 +11,7 @@ extern "C" {
 
 struct CGpuInstanceDescriptor;
 struct CGpuDeviceDescriptor;
-struct CGpuCommandEncoderDescriptor;
+struct CGpuCommandPoolDescriptor;
 struct CGpuShaderLibraryDescriptor;
 struct CGpuPipelineShaderDescriptor;
 struct CGpuSwapChainDescriptor;
@@ -23,7 +23,7 @@ typedef const struct CGpuInstance* CGpuInstanceId;
 typedef const struct CGpuAdapter* CGpuAdapterId;
 typedef const struct CGpuDevice* CGpuDeviceId;
 typedef const struct CGpuQueue* CGpuQueueId;
-typedef const struct CGpuCommandEncoder* CGpuCommandEncoderId;
+typedef const struct CGpuCommandPool* CGpuCommandPoolId;
 typedef const struct CGpuCommandBuffer* CGpuCommandBufferId;
 typedef const struct CGpuSwapChain* CGpuSwapChainId;
 typedef const struct CGpuShaderLibrary* CGpuShaderLibraryId;
@@ -103,10 +103,10 @@ RUNTIME_API void cgpu_free_queue(CGpuQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGpuQueueId queue);
 
 // Command APIs
-RUNTIME_API CGpuCommandEncoderId cgpu_create_command_encoder(CGpuQueueId queue, const struct CGpuCommandEncoderDescriptor* desc);
-typedef CGpuCommandEncoderId (*CGPUProcCreateCommandEncoder)(CGpuQueueId queue, const struct CGpuCommandEncoderDescriptor* desc);
-RUNTIME_API void cgpu_free_command_encoder(CGpuCommandEncoderId encoder);
-typedef void (*CGPUProcFreeCommandEncoder)(CGpuCommandEncoderId encoder);
+RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool(CGpuQueueId queue, const struct CGpuCommandPoolDescriptor* desc);
+typedef CGpuCommandPoolId (*CGPUProcCreateCommandPool)(CGpuQueueId queue, const struct CGpuCommandPoolDescriptor* desc);
+RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId encoder);
+typedef void (*CGPUProcFreeCommandPool)(CGpuCommandPoolId encoder);
 
 // Shader APIs
 RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
@@ -148,8 +148,8 @@ typedef struct CGpuProcTable {
     const CGPUProcGetQueue           get_queue;
     const CGPUProcFreeQueue          free_queue;
 
-    const CGPUProcCreateCommandEncoder  create_command_encoder;
-    const CGPUProcFreeCommandEncoder    free_command_encoder;
+    const CGPUProcCreateCommandPool  create_command_pool;
+    const CGPUProcFreeCommandPool    free_command_pool;
 
 	const CGPUProcCreateShaderLibrary   create_shader_library;
 	const CGPUProcFreeShaderLibrary     free_shader_library;
@@ -214,12 +214,12 @@ typedef struct CGpuQueue {
 	CGpuQueueIndex index;
 } CGpuQueue;
 
-typedef struct CGpuCommandEncoder {
+typedef struct CGpuCommandPool {
 	CGpuQueueId queue;
-} CGpuCommandEncoder;
+} CGpuCommandPool;
 
 typedef struct CGpuCommandBuffer {
-	CGpuCommandEncoderId pool;
+	CGpuCommandPoolId pool;
 } CGpuCommandBuffer;
 
 typedef struct CGpuShaderLibrary {
@@ -251,9 +251,9 @@ typedef struct CGpuDeviceDescriptor {
 	uint32_t                  queueGroupCount;
 } CGpuDeviceDescriptor;
 
-typedef struct CGpuCommandEncoderDescriptor {
+typedef struct CGpuCommandPoolDescriptor {
 	uint32_t ___nothing_and_useless__;
-} CGpuCommandEncoderDescriptor;
+} CGpuCommandPoolDescriptor;
 
 typedef struct CGpuPipelineShaderDescriptor {
 	CGpuShaderLibraryId library;
