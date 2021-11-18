@@ -1,5 +1,4 @@
 #pragma once
-
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include "cgpu/backend/vulkan/vk_mem_alloc.h"
@@ -14,6 +13,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData);
 
+bool VkUtil_InitializeEnvironment();
 // Instance Helpers
 void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, CGpuVulkanInstanceDescriptor const* exts_desc);
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I);

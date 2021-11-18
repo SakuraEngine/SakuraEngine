@@ -1,4 +1,6 @@
 #include "vulkan_utils.h"
+#include "cgpu/drivers/cgpu_ags.h"
+#include "cgpu/drivers/cgpu_nvapi.h"
 #include <assert.h>
 #include <stdio.h>
 
@@ -24,6 +26,28 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
 	}
 	printf(" validation layer: %s\n", pCallbackData->pMessage); 
     return VK_FALSE;
+}
+
+bool VkUtil_InitializeEnvironment()
+{
+    // AGS
+    bool AGS_started = false;
+	AGS_started = (cgpu_ags_init() == CGPU_AGS_SUCCESS);
+    (void)AGS_started;
+    // NVAPI
+#if defined(NVAPI)
+	return NvAPI_Initialize();
+#endif
+    // VOLK
+#if !defined(NX64)
+	VkResult volkInit = volkInitialize();
+    if (volkInit != VK_SUCCESS)
+	{
+    	assert((volkInit == VK_SUCCESS) && "Volk Initialize Failed!");
+		return false;
+	}
+#endif
+    return true;
 }
 
 // Instance APIs

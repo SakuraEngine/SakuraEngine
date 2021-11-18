@@ -22,6 +22,7 @@ include(PlatformConfigure)
 include(mimalloc) # Fetch mimalloc SOURCES
 include(EASTL) # Fetch EASTL SOURCES
 include(SDL2) # Fetch EASTL SOURCES
+include(GPU)
 include(vulkan)
 
 if(RUNTIME_SHARED)

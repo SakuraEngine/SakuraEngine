@@ -6,3 +6,4 @@
 #include "d3d12/cgpu_d3d12_surfaces.cpp"
 #include "d3d12/cgpu_d3d12.cpp"
 #endif
+#include "common/cgpu.cpp"
