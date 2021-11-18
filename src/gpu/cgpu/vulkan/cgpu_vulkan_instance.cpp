@@ -7,14 +7,13 @@
 #ifdef CGPU_USE_VULKAN
 
 const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
-
 CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	CGpuVulkanInstanceDescriptor const* exts_desc)
 {	
-	static auto volkInit = volkInitialize();
-	(void)volkInit;
-	assert((volkInit == VK_SUCCESS) && "Volk Initialize Failed!");
+	// Initialize Environment
+	VkUtil_InitializeEnvironment();
 
+	// Create VkInstance.
 	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cgpu_calloc(1, sizeof(CGpuInstance_Vulkan));
 	::memset(I, 0, sizeof(CGpuInstance_Vulkan));
     DECLARE_ZERO(VkApplicationInfo, appInfo)
@@ -25,7 +24,6 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_1;
 
-	// Create VkInstance.
     DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
@@ -67,18 +65,18 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 #endif
 	}
 
-    std::vector<const char*> layers;
+    std::vector<const char*> instance_layers;
 	if (exts_desc != CGPU_NULLPTR) // Layers
 	{
-        layers.insert(layers.end(), 
+        instance_layers.insert(instance_layers.end(), 
             exts_desc->ppInstanceLayers, exts_desc->ppInstanceLayers + exts_desc->mInstanceLayerCount);
 
         if(desc->enableDebugLayer) 
-            layers.push_back(validation_layer_name);
+            instance_layers.push_back(validation_layer_name);
 		
 	}
-	createInfo.enabledLayerCount = (uint32_t)layers.size();
-	createInfo.ppEnabledLayerNames = layers.data();
+	createInfo.enabledLayerCount = (uint32_t)instance_layers.size();
+	createInfo.ppEnabledLayerNames = instance_layers.data();
 	if (vkCreateInstance(&createInfo, GLOBAL_VkAllocationCallbacks, &I->pVkInstance) != VK_SUCCESS)
 	{
 		assert(0 && "Vulkan: failed to create instance!");
