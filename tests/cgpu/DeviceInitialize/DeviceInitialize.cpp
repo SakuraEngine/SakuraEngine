@@ -14,7 +14,7 @@ protected:
 
 CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool enableGPUValidation)
 {
-    CGpuInstanceDescriptor desc;
+    DECLARE_ZERO(CGpuInstanceDescriptor, desc)
     desc.backend = backend;
     desc.enableDebugLayer = enableDebugLayer;
     desc.enableGpuBasedValidation = enableGPUValidation;

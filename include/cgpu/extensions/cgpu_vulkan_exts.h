@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 typedef struct CGpuVulkanInstanceDescriptor {
+	CGPU_CHAINED_DESCRIPTOR_HEADER
+
     const char**                 ppInstanceLayers;
 	const char**                 ppInstanceExtensions;
 	const char**                 ppDeviceExtensions;
@@ -14,9 +16,6 @@ typedef struct CGpuVulkanInstanceDescriptor {
 	uint32_t                     mDeviceExtensionCount;
 	const VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessenger;
 } CGpuVulkanInstanceDescriptor;
-
-// api extentions.
-RUNTIME_API CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc, CGpuVulkanInstanceDescriptor const* exts);
 
 #ifdef __cplusplus
 } // end extern "C"

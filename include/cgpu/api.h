@@ -251,8 +251,14 @@ typedef struct CGpuSwapChain {
 
 // Descriptors (on Stack)
 #pragma region DESCRIPTORS
+typedef struct CGpuChainedDescriptor {
+	ECGPUBackEnd backend;
+} CGpuChainedDescriptor;
+#define CGPU_CHAINED_DESCRIPTOR_HEADER ECGPUBackEnd backend;
+
 // Device & Pipeline
 typedef struct CGpuInstanceDescriptor {
+	const CGpuChainedDescriptor* chained;
 	ECGPUBackEnd backend;
 	bool         enableDebugLayer;
 	bool         enableGpuBasedValidation;
