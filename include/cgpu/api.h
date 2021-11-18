@@ -200,6 +200,8 @@ typedef struct CGpuSurfacesProcTable {
 typedef struct CGpuInstance {
     const CGpuProcTable* proc_table;
     const CGpuSurfacesProcTable* surfaces_table;
+	ECGpuNvAPI_Status nvapi_status;
+	ECGpuAGSReturnCode ags_status;
 } CGpuInstance;
 
 typedef struct CGpuAdapter {

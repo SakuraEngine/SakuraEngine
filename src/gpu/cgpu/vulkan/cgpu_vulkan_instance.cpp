@@ -10,12 +10,14 @@ const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	CGpuVulkanInstanceDescriptor const* exts_desc)
 {	
-	// Initialize Environment
-	VkUtil_InitializeEnvironment();
-
-	// Create VkInstance.
+	// Memory Alloc
 	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cgpu_calloc(1, sizeof(CGpuInstance_Vulkan));
 	::memset(I, 0, sizeof(CGpuInstance_Vulkan));
+
+	// Initialize Environment
+	VkUtil_InitializeEnvironment(&I->super);
+
+	// Create VkInstance.
     DECLARE_ZERO(VkApplicationInfo, appInfo)
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "CGPU";
@@ -27,6 +29,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
     DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
+	// List Instance Extensions
 	std::vector<const char*> exts = {
 #if defined(_WIN32) || defined(_WIN64)
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
@@ -46,6 +49,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	createInfo.enabledExtensionCount = (uint32_t)exts.size();
 	createInfo.ppEnabledExtensionNames = exts.data();
 	
+	// List Validation Features
 	DECLARE_ZERO(VkValidationFeaturesEXT, validationFeaturesExt)
 	VkValidationFeatureEnableEXT enabledValidationFeatures[] =
 	{
@@ -65,6 +69,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 #endif
 	}
 
+	// List Instance Layers
     std::vector<const char*> instance_layers;
 	if (exts_desc != CGPU_NULLPTR) // Layers
 	{
@@ -104,6 +109,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 void cgpu_free_instance_vulkan(CGpuInstanceId instance)
 {
     CGpuInstance_Vulkan* to_destroy = (CGpuInstance_Vulkan*)instance;
+	VkUtil_DeInitializeEnvironment(&to_destroy->super);
 	if(to_destroy->pVkDebugUtilsMessenger) {
 		assert(vkDestroyDebugUtilsMessengerEXT && "Load vkDestroyDebugUtilsMessengerEXT failed!");
 		vkDestroyDebugUtilsMessengerEXT(to_destroy->pVkInstance, to_destroy->pVkDebugUtilsMessenger, nullptr);

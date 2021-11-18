@@ -28,15 +28,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
     return VK_FALSE;
 }
 
-bool VkUtil_InitializeEnvironment()
+bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
 {
     // AGS
     bool AGS_started = false;
-	AGS_started = (cgpu_ags_init() == CGPU_AGS_SUCCESS);
+	AGS_started = (cgpu_ags_init(Inst) == CGPU_AGS_SUCCESS);
     (void)AGS_started;
     // NVAPI
 	bool NVAPI_started = false;
-	NVAPI_started = (cgpu_nvapi_init() == CGPU_NVAPI_OK);
+	NVAPI_started = (cgpu_nvapi_init(Inst) == CGPU_NVAPI_OK);
     (void)NVAPI_started;
     // VOLK
 #if !defined(NX64)
@@ -48,6 +48,14 @@ bool VkUtil_InitializeEnvironment()
 	}
 #endif
     return true;
+}
+
+void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst)
+{
+	cgpu_ags_exit();
+	Inst->ags_status = CGPU_AGS_NONE;
+	cgpu_nvapi_exit();
+	Inst->nvapi_status = CGPU_NVAPI_NONE;
 }
 
 // Instance APIs

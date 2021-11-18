@@ -23,15 +23,16 @@ static AGSGPUInfo  gAgsGpuInfo = {};
     #endif
 #endif
 
-ECGpuAGSReturnCode cgpu_ags_init()
+ECGpuAGSReturnCode cgpu_ags_init(struct CGpuInstance* Inst)
 {
 #if defined(AMDAGS)
     AGSConfiguration config = {};
     int apiVersion = AGS_MAKE_VERSION(6, 0, 1);
-    auto Result = agsInitialize(apiVersion, &config, &pAgsContext, &gAgsGpuInfo);
-	return (ECGpuAGSReturnCode)Result;
+    auto Status = agsInitialize(apiVersion, &config, &pAgsContext, &gAgsGpuInfo);
+    Inst->ags_status = (ECGpuAGSReturnCode)Status;
+	return Inst->ags_status;
 #else
-    return AGS_NO_AMD_DRIVER_INSTALLED;
+    return CGPU_AGS_NONE;
 #endif
 }
 
@@ -50,11 +51,12 @@ void cgpu_ags_exit()
         #pragma comment(lib, "nvapi_x86.lib")
     #endif
 #endif
-ECGpuNvAPI_Status cgpu_nvapi_init()
+ECGpuNvAPI_Status cgpu_nvapi_init(struct CGpuInstance* Inst)
 {
 #if defined(NVAPI)
     auto Status = NvAPI_Initialize();
-    return (ECGpuNvAPI_Status)Status;
+    Inst->nvapi_status = (ECGpuNvAPI_Status)Status;
+    return Inst->nvapi_status;
 #else
 	return ECGpuNvAPI_Status::CGPU_NVAPI_NONE;
 #endif

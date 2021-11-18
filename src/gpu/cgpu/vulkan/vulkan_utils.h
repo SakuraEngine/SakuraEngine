@@ -13,7 +13,10 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData);
 
-bool VkUtil_InitializeEnvironment();
+// Environment Setup
+bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst);
+void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst);
+
 // Instance Helpers
 void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, CGpuVulkanInstanceDescriptor const* exts_desc);
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I);
