@@ -11,6 +11,7 @@
 #include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 
+// AGS
 #if defined(AMDAGS)
 static AGSContext* pAgsContext = NULL;
 static AGSGPUInfo  gAgsGpuInfo = {};
@@ -38,5 +39,29 @@ void cgpu_ags_exit()
 {
 #if defined(AMDAGS)
 	agsDeInitialize(pAgsContext);
+#endif
+}
+
+// NVAPI
+#if defined(NVAPI)
+    #if defined(_WIN64)
+        #pragma comment(lib, "nvapi_x64.lib")
+    #elif defined(_WIN32) 
+        #pragma comment(lib, "nvapi_x86.lib")
+    #endif
+#endif
+ECGpuNvAPI_Status cgpu_nvapi_init()
+{
+#if defined(NVAPI)
+    auto Status = NvAPI_Initialize();
+    return (ECGpuNvAPI_Status)Status;
+#else
+	return ECGpuNvAPI_Status::CGPU_NVAPI_NONE;
+#endif
+}
+void cgpu_nvapi_exit()
+{
+#if defined(NVAPI)
+	NvAPI_Unload();
 #endif
 }

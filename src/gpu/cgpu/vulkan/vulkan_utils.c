@@ -35,9 +35,9 @@ bool VkUtil_InitializeEnvironment()
 	AGS_started = (cgpu_ags_init() == CGPU_AGS_SUCCESS);
     (void)AGS_started;
     // NVAPI
-#if defined(NVAPI)
-	return NvAPI_Initialize();
-#endif
+	bool NVAPI_started = false;
+	NVAPI_started = (cgpu_nvapi_init() == CGPU_NVAPI_OK);
+    (void)NVAPI_started;
     // VOLK
 #if !defined(NX64)
 	VkResult volkInit = volkInitialize();
