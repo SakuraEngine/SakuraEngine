@@ -8,11 +8,11 @@
 const CGpuSurfacesProcTable s_tbl_vk = 
 {
 #if defined(_WIN32) || defined(_WIN64)
-    .from_hwnd = cgpu_surface_from_hwnd_vulkan,
+	.from_hwnd = cgpu_surface_from_hwnd_vulkan,
 #elif defined (_MACOS)
 	.from_ns_view = cgpu_surface_from_ns_view_vulkan,
 #endif
-    .free_surface = cgpu_free_surface_vulkan
+	.free_surface = cgpu_free_surface_vulkan
 };
 
 const CGpuSurfacesProcTable* CGPU_VulkanSurfacesProcTable()
@@ -25,7 +25,7 @@ void cgpu_free_surface_vulkan(CGpuDeviceId device, CGpuSurfaceId surface)
 	assert(surface && "CGPU VULKAN ERROR: NULL surface!");
 
 	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
-    VkSurfaceKHR vkSurface = (VkSurfaceKHR)surface;
+	VkSurfaceKHR vkSurface = (VkSurfaceKHR)surface;
 	vkDestroySurfaceKHR(I->pVkInstance, vkSurface, GLOBAL_VkAllocationCallbacks);
 }
 
@@ -63,7 +63,7 @@ void cgpu_free_surface_vulkan(CGpuDeviceId device, CGpuSurfaceId surface)
 
 		CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
 		CGpuSurfaceId surface;
-        DECLARE_ZERO(VkMacOSSurfaceCreateInfoMVK, create_info)
+		DECLARE_ZERO(VkMacOSSurfaceCreateInfoMVK, create_info)
 		create_info.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
 		create_info.pNext = NULL;
 		create_info.flags = 0;

@@ -6,10 +6,10 @@
 
 // Debug Callback
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData) 
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData) 
 {
 	switch(messageSeverity)
 	{
@@ -25,29 +25,29 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
 			return VK_TRUE;
 	}
 	printf(" validation layer: %s\n", pCallbackData->pMessage); 
-    return VK_FALSE;
+	return VK_FALSE;
 }
 
 bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
 {
-    // AGS
-    bool AGS_started = false;
+	// AGS
+	bool AGS_started = false;
 	AGS_started = (cgpu_ags_init(Inst) == CGPU_AGS_SUCCESS);
-    (void)AGS_started;
-    // NVAPI
+	(void)AGS_started;
+	// NVAPI
 	bool NVAPI_started = false;
 	NVAPI_started = (cgpu_nvapi_init(Inst) == CGPU_NVAPI_OK);
-    (void)NVAPI_started;
-    // VOLK
+	(void)NVAPI_started;
+	// VOLK
 #if !defined(NX64)
 	VkResult volkInit = volkInitialize();
-    if (volkInit != VK_SUCCESS)
+	if (volkInit != VK_SUCCESS)
 	{
-    	assert((volkInit == VK_SUCCESS) && "Volk Initialize Failed!");
+		assert((volkInit == VK_SUCCESS) && "Volk Initialize Failed!");
 		return false;
 	}
 #endif
-    return true;
+	return true;
 }
 
 void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst)
@@ -61,30 +61,30 @@ void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst)
 // Instance APIs
 void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, CGpuVulkanInstanceDescriptor const* exts_desc)
 {
-    const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr = CGPU_NULLPTR;
-    DECLARE_ZERO(VkDebugUtilsMessengerCreateInfoEXT, messengerInfo)
-    if(exts_desc && exts_desc->pDebugUtilsMessenger) {
-        messengerInfoPtr = exts_desc->pDebugUtilsMessenger;
-    } else {
-        messengerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        messengerInfo.pfnUserCallback = VkUtil_DebugCallback;
-        messengerInfo.messageSeverity = 
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        messengerInfo.messageType = 
-            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        messengerInfo.flags = 0;
-        messengerInfo.pUserData = NULL;
-        messengerInfoPtr = &messengerInfo;
-    }
-    assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
-    VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
-        messengerInfoPtr, CGPU_NULLPTR, &(I->pVkDebugUtilsMessenger));
-    if (VK_SUCCESS != res)
-    {
-        assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
-    }
+	const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr = CGPU_NULLPTR;
+	DECLARE_ZERO(VkDebugUtilsMessengerCreateInfoEXT, messengerInfo)
+	if(exts_desc && exts_desc->pDebugUtilsMessenger) {
+		messengerInfoPtr = exts_desc->pDebugUtilsMessenger;
+	} else {
+		messengerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		messengerInfo.pfnUserCallback = VkUtil_DebugCallback;
+		messengerInfo.messageSeverity = 
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		messengerInfo.messageType = 
+			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		messengerInfo.flags = 0;
+		messengerInfo.pUserData = NULL;
+		messengerInfoPtr = &messengerInfo;
+	}
+	assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
+	VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
+		messengerInfoPtr, CGPU_NULLPTR, &(I->pVkDebugUtilsMessenger));
+	if (VK_SUCCESS != res)
+	{
+		assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
+	}
 }
 
 inline static void __VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
@@ -123,9 +123,9 @@ inline static void __VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I)
 {
-    assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
+	assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
 
-    vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount, CGPU_NULLPTR);
+	vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount, CGPU_NULLPTR);
 	if(I->mPhysicalDeviceCount != 0)
 	{
 		I->pVulkanAdapters = (CGpuAdapter_Vulkan*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(CGpuAdapter_Vulkan));
@@ -162,18 +162,18 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I)
 // Device APIs
 void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D)
 {
-    assert((D->pPipelineCache == VK_NULL_HANDLE) && "VkUtil_CreatePipelineCache should be called only once!");
+	assert((D->pPipelineCache == VK_NULL_HANDLE) && "VkUtil_CreatePipelineCache should be called only once!");
 
-    DECLARE_ZERO(VkPipelineCacheCreateInfo, info)
-    info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    info.pNext = NULL;
-    // ++TODO: Serde
-    info.initialDataSize = 0;
-    info.pInitialData = NULL;
-    // --TODO
-    info.flags = 0;
-    D->mVkDeviceTable.vkCreatePipelineCache(D->pVkDevice,
-        &info, GLOBAL_VkAllocationCallbacks, &D->pPipelineCache);
+	DECLARE_ZERO(VkPipelineCacheCreateInfo, info)
+	info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	info.pNext = NULL;
+	// ++TODO: Serde
+	info.initialDataSize = 0;
+	info.pInitialData = NULL;
+	// --TODO
+	info.flags = 0;
+	D->mVkDeviceTable.vkCreatePipelineCache(D->pVkDevice,
+		&info, GLOBAL_VkAllocationCallbacks, &D->pPipelineCache);
 }
 
 void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D)
@@ -200,7 +200,7 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CG
 		.vkCmdCopyBuffer = vkCmdCopyBuffer
 	};
 
-    DECLARE_ZERO(VmaAllocatorCreateInfo, vmaInfo)
+	DECLARE_ZERO(VmaAllocatorCreateInfo, vmaInfo)
 	vmaInfo.device = D->pVkDevice;
 	vmaInfo.physicalDevice = A->pPhysicalDevice;
 	vmaInfo.instance = I->pVkInstance;

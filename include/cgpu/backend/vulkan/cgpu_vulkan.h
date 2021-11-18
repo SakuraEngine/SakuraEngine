@@ -1,7 +1,7 @@
 #pragma once
 #include "cgpu/api.h"
 #if defined(_WIN32) || defined(_WIN64)
-    #define VK_USE_PLATFORM_WIN32_KHR
+	#define VK_USE_PLATFORM_WIN32_KHR
 #endif
 #include "cgpu/backend/vulkan/volk.h"
 
@@ -53,60 +53,60 @@ RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, co
 RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
 
 typedef struct CGpuInstance_Vulkan {
-    CGpuInstance super;
-    VkInstance pVkInstance;
-    VkDebugUtilsMessengerEXT pVkDebugUtilsMessenger;
-    struct CGpuAdapter_Vulkan* pVulkanAdapters;
-    uint32_t mPhysicalDeviceCount;
+	CGpuInstance super;
+	VkInstance pVkInstance;
+	VkDebugUtilsMessengerEXT pVkDebugUtilsMessenger;
+	struct CGpuAdapter_Vulkan* pVulkanAdapters;
+	uint32_t mPhysicalDeviceCount;
 } CGpuInstance_Vulkan;
 
 typedef struct CGpuAdapter_Vulkan {
-    CGpuAdapter super;
-    VkPhysicalDevice pPhysicalDevice;
-    VkPhysicalDeviceProperties2 mPhysicalDeviceProps;
-    VkPhysicalDeviceFeatures mPhysicalDeviceFeatures;
-    VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
-    struct VkQueueFamilyProperties* pQueueFamilyProperties;
-    uint32_t mQueueFamilyPropertiesCount;
-    int64_t mQueueFamilyIndices[ECGpuQueueType_Count];
-    // Some Extension Queries
+	CGpuAdapter super;
+	VkPhysicalDevice pPhysicalDevice;
+	VkPhysicalDeviceProperties2 mPhysicalDeviceProps;
+	VkPhysicalDeviceFeatures mPhysicalDeviceFeatures;
+	VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
+	struct VkQueueFamilyProperties* pQueueFamilyProperties;
+	uint32_t mQueueFamilyPropertiesCount;
+	int64_t mQueueFamilyIndices[ECGpuQueueType_Count];
+	// Some Extension Queries
 	uint32_t dedicated_allocation : 1;
 } CGpuAdapter_Vulkan;
 
 typedef struct CGpuDevice_Vulkan {
-    const CGpuDevice super;
-    VkDevice pVkDevice;
-    VkPipelineCache pPipelineCache;
-    struct VmaAllocator_T* pVmaAllocator;
-    struct VolkDeviceTable mVkDeviceTable;
+	const CGpuDevice super;
+	VkDevice pVkDevice;
+	VkPipelineCache pPipelineCache;
+	struct VmaAllocator_T* pVmaAllocator;
+	struct VolkDeviceTable mVkDeviceTable;
 } CGpuDevice_Vulkan;
 
 typedef struct CGpuQueue_Vulkan {
-    const CGpuQueue super;
-    VkQueue pVkQueue;
-    uint32_t mVkQueueFamilyIndex;
+	const CGpuQueue super;
+	VkQueue pVkQueue;
+	uint32_t mVkQueueFamilyIndex;
 } CGpuQueue_Vulkan;
 
 typedef struct CGpuCommandPool_Vulkan {
-    CGpuCommandPool super;
-    VkCommandPool pVkCmdPool;
+	CGpuCommandPool super;
+	VkCommandPool pVkCmdPool;
 } CGpuCommandPool_Vulkan;
 
 typedef struct CGpuBuffer_Vulkan {
-    CGpuBuffer super;
-    VkBuffer   pVkBuffer;
-    struct VmaAllocation_T* pVkAllocation;
+	CGpuBuffer super;
+	VkBuffer   pVkBuffer;
+	struct VmaAllocation_T* pVkAllocation;
 } CGpuBuffer_Vulkan;
 
 typedef struct CGpuShaderLibrary_Vulkan {
-    CGpuShaderLibrary super;
-    VkShaderModule mShaderModule;
+	CGpuShaderLibrary super;
+	VkShaderModule mShaderModule;
 } CGpuShaderLibrary_Vulkan;
 
 typedef struct CGpuSwapChain_Vulkan {
-    CGpuSwapChain  super;
-    VkSurfaceKHR   pVkSurface;
-    VkSwapchainKHR pVkSwapChain;
+	CGpuSwapChain  super;
+	VkSurfaceKHR   pVkSurface;
+	VkSwapchainKHR pVkSwapChain;
 } CGpuSwapChain_Vulkan;
 
 #ifdef __cplusplus
