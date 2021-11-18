@@ -178,37 +178,36 @@ void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D)
 
 void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D)
 {
+	VmaVulkanFunctions vulkanFunctions = {
+		.vkAllocateMemory = vkAllocateMemory,
+		.vkBindBufferMemory = vkBindBufferMemory,
+		.vkBindImageMemory = vkBindImageMemory,
+		.vkCreateBuffer = vkCreateBuffer,
+		.vkCreateImage = vkCreateImage,
+		.vkDestroyBuffer = vkDestroyBuffer,
+		.vkDestroyImage = vkDestroyImage,
+		.vkFreeMemory = vkFreeMemory,
+		.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements,
+		.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2KHR,
+		.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements,
+		.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2KHR,
+		.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties,
+		.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties,
+		.vkMapMemory = vkMapMemory,
+		.vkUnmapMemory = vkUnmapMemory,
+		.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges,
+		.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges,
+		.vkCmdCopyBuffer = vkCmdCopyBuffer
+	};
+
     DECLARE_ZERO(VmaAllocatorCreateInfo, vmaInfo)
 	vmaInfo.device = D->pVkDevice;
 	vmaInfo.physicalDevice = A->pPhysicalDevice;
 	vmaInfo.instance = I->pVkInstance;
-
 	//if (pRenderer->mVulkan.mDedicatedAllocationExtension)
 	//{
 	//	vmaInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT;
 	//}
-
-	VmaVulkanFunctions vulkanFunctions = {};
-	vulkanFunctions.vkAllocateMemory = vkAllocateMemory;
-	vulkanFunctions.vkBindBufferMemory = vkBindBufferMemory;
-	vulkanFunctions.vkBindImageMemory = vkBindImageMemory;
-	vulkanFunctions.vkCreateBuffer = vkCreateBuffer;
-	vulkanFunctions.vkCreateImage = vkCreateImage;
-	vulkanFunctions.vkDestroyBuffer = vkDestroyBuffer;
-	vulkanFunctions.vkDestroyImage = vkDestroyImage;
-	vulkanFunctions.vkFreeMemory = vkFreeMemory;
-	vulkanFunctions.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
-	vulkanFunctions.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2KHR;
-	vulkanFunctions.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
-	vulkanFunctions.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2KHR;
-	vulkanFunctions.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
-	vulkanFunctions.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
-	vulkanFunctions.vkMapMemory = vkMapMemory;
-	vulkanFunctions.vkUnmapMemory = vkUnmapMemory;
-	vulkanFunctions.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
-	vulkanFunctions.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
-	vulkanFunctions.vkCmdCopyBuffer = vkCmdCopyBuffer;
-
 	vmaInfo.pVulkanFunctions = &vulkanFunctions;
 	vmaInfo.pAllocationCallbacks = GLOBAL_VkAllocationCallbacks;
 	if(vmaCreateAllocator(&vmaInfo, &D->pVmaAllocator) != VK_SUCCESS)
