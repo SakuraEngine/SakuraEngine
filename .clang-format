@@ -34,7 +34,6 @@ AlignOperands: Align
 BinPackArguments: true
 BinPackParameters: true
 AlignAfterOpenBracket: DontAlign 
-
 IndentPPDirectives: BeforeHash
 
 BreakBeforeBraces: Custom
@@ -49,5 +48,6 @@ BraceWrapping:
   IndentBraces: false
   AfterExternBlock: false
   AfterControlStatement: true
+Cpp11BracedListStyle: false
 
 SortIncludes: false

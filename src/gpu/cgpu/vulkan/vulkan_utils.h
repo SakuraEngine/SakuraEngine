@@ -18,8 +18,8 @@ bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst);
 void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst);
 
 // Instance Helpers
-void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, CGpuVulkanInstanceDescriptor const* exts_desc);
-void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I);
+void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr);
+void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I, const char** device_extensions, uint32_t device_extension_count);
 
 // Device Helpers
 void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D);
