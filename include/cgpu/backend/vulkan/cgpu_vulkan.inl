@@ -1,5 +1,9 @@
-#define trans_case2(_format, _vkformat) case PF_##_format: return VK_FORMAT_##_vkformat
-#define trans_case(_format) case PF_##_format: return VK_FORMAT_##_format
+#define trans_case2(_format, _vkformat) \
+    case PF_##_format:                  \
+        return VK_FORMAT_##_vkformat
+#define trans_case(_format) \
+    case PF_##_format:      \
+        return VK_FORMAT_##_format
 
 inline static VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat format)
 {
@@ -70,8 +74,8 @@ inline static VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat format)
         trans_case2(BC6H_SF16, BC6H_SFLOAT_BLOCK);
         trans_case2(BC7_UNORM, BC7_UNORM_BLOCK);
         trans_case2(BC7_UNORM_SRGB, BC7_SRGB_BLOCK);
-    default:
-        return VK_FORMAT_UNDEFINED;
+        default:
+            return VK_FORMAT_UNDEFINED;
     }
     return VK_FORMAT_UNDEFINED;
 }

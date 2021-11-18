@@ -1,6 +1,6 @@
 #pragma once
-#ifndef  __OBJC__
-#include <assert.h>
+#ifndef __OBJC__
+    #include <assert.h>
 static_assert(0, "This Header Should Only Be Included By OBJC SOURCES!!!!!");
 #endif
 #import <MetalKit/MetalKit.h>

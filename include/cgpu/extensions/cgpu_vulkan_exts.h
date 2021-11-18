@@ -6,15 +6,15 @@ extern "C" {
 #endif
 
 typedef struct CGpuVulkanInstanceDescriptor {
-	CGPU_CHAINED_DESCRIPTOR_HEADER
+    CGPU_CHAINED_DESCRIPTOR_HEADER
 
-    const char**                 ppInstanceLayers;
-	const char**                 ppInstanceExtensions;
-	const char**                 ppDeviceExtensions;
-	uint32_t                     mInstanceLayerCount;
-	uint32_t                     mInstanceExtensionCount;
-	uint32_t                     mDeviceExtensionCount;
-	const VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessenger;
+    const char** ppInstanceLayers;
+    const char** ppInstanceExtensions;
+    const char** ppDeviceExtensions;
+    uint32_t mInstanceLayerCount;
+    uint32_t mInstanceExtensionCount;
+    uint32_t mDeviceExtensionCount;
+    const VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessenger;
 } CGpuVulkanInstanceDescriptor;
 
 #ifdef __cplusplus

@@ -1,6 +1,6 @@
 /************************************************************************************************************************************\
 |*                                                                                                                                    *|
-|*     Copyright © 2012 NVIDIA Corporation.  All rights reserved.                                                                     *|
+|*     Copyright ï¿½ 2012 NVIDIA Corporation.  All rights reserved.                                                                     *|
 |*                                                                                                                                    *|
 |*  NOTICE TO USER:                                                                                                                   *|
 |*                                                                                                                                    *|
@@ -31,6 +31,7 @@
 |*  the above Disclaimer (as applicable) and U.S. Government End Users Notice.                                                        *|
 |*                                                                                                                                    *|
  \************************************************************************************************************************************/
+/* clang-format off */
 #pragma once
 #include"nvapi_lite_salstart.h"
 #pragma pack(push,8)

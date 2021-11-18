@@ -1,12 +1,12 @@
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
-#include "cgpu/backend/vulkan/cgpu_vulkan.h"
+    #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #endif
 #ifdef CGPU_USE_D3D12
-#include "cgpu/backend/d3d12/cgpu_d3d12.h"
+    #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #endif
 #ifdef CGPU_USE_VULKAN
-#include "cgpu/backend/metal/cgpu_metal.h"
+    #include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #ifdef __APPLE__
     #include "TargetConditionals.h"
@@ -14,36 +14,35 @@
         #define _MACOS
     #endif
 #elif defined _WIN32 || defined _WIN64
-#endif 
+#endif
 #include "assert.h"
 
 CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
 {
-    assert((desc->backend == ECGPUBackEnd_VULKAN
-          || desc->backend == ECGPUBackEnd_D3D12
-          || desc->backend == ECGPUBackEnd_METAL) 
-        && "cgpu support only vulkan & d3d12 currently!");
+    assert((desc->backend == ECGPUBackEnd_VULKAN || desc->backend == ECGPUBackEnd_D3D12 || desc->backend == ECGPUBackEnd_METAL) && "cgpu support only vulkan & d3d12 currently!");
     const CGpuProcTable* tbl = CGPU_NULLPTR;
     const CGpuSurfacesProcTable* s_tbl = CGPU_NULLPTR;
 
     if (desc->backend == ECGPUBackEnd_COUNT)
     {
-
     }
 #ifdef CGPU_USE_VULKAN
-    else if (desc->backend == ECGPUBackEnd_VULKAN) {
+    else if (desc->backend == ECGPUBackEnd_VULKAN)
+    {
         tbl = CGPU_VulkanProcTable();
         s_tbl = CGPU_VulkanSurfacesProcTable();
-    } 
+    }
 #endif
 #ifdef CGPU_USE_METAL
-    else if (desc->backend == ECGPUBackEnd_METAL) {
+    else if (desc->backend == ECGPUBackEnd_METAL)
+    {
         tbl = CGPU_MetalProcTable();
         s_tbl = CGPU_MetalSurfacesProcTable();
-    } 
+    }
 #endif
 #ifdef CGPU_USE_D3D12
-    else if (desc->backend == ECGPUBackEnd_D3D12) {
+    else if (desc->backend == ECGPUBackEnd_D3D12)
+    {
         tbl = CGPU_D3D12ProcTable();
         s_tbl = CGPU_D3D12SurfacesProcTable();
     }
@@ -58,7 +57,7 @@ RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CG
 {
     assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     assert(instance->proc_table->query_instance_features && "query_instance_features Proc Missing!");
-    
+
     instance->proc_table->query_instance_features(instance, features);
 }
 
@@ -77,9 +76,9 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
 
     instance->proc_table->enum_adapters(instance, adapters, adapters_num);
     // ++ proc_table_cache
-    if(adapters != CGPU_NULLPTR)
+    if (adapters != CGPU_NULLPTR)
     {
-        for(uint32_t i = 0; i < *adapters_num; i++)
+        for (uint32_t i = 0; i < *adapters_num; i++)
         {
             *(const CGpuProcTable**)&adapters[i]->proc_table_cache = instance->proc_table;
         }
@@ -94,7 +93,7 @@ void cgpu_query_adapter_detail(const CGpuAdapterId adapter, struct CGpuAdapterDe
     assert(adapter->proc_table_cache->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
     adapter->proc_table_cache->query_adapter_detail(adapter, detail);
-    if(detail->name == CGPU_NULLPTR)
+    if (detail->name == CGPU_NULLPTR)
     {
         detail->name = unknownAdapterName;
     }
@@ -105,7 +104,7 @@ uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueTyp
 {
     assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     assert(adapter->proc_table_cache->query_queue_count && "query_queue_count Proc Missing!");
-    
+
     return adapter->proc_table_cache->query_queue_count(adapter, type);
 }
 
@@ -116,7 +115,7 @@ CGpuDeviceId cgpu_create_device(CGpuAdapterId adapter, const CGpuDeviceDescripto
 
     CGpuDeviceId device = adapter->proc_table_cache->create_device(adapter, desc);
     // ++ proc_table_cache
-    if(device != CGPU_NULLPTR)
+    if (device != CGPU_NULLPTR)
     {
         *(const CGpuProcTable**)&device->proc_table_cache = adapter->proc_table_cache;
     }
@@ -139,7 +138,9 @@ CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t in
     assert(device->proc_table_cache->free_device && "free_device Proc Missing!");
 
     CGpuQueue* queue = (CGpuQueue*)device->proc_table_cache->get_queue(device, type, index);
-    queue->index = index; queue->type = type; queue->device = device;
+    queue->index = index;
+    queue->type = type;
+    queue->device = device;
     return queue;
 }
 
@@ -177,7 +178,7 @@ RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId encoder)
 }
 
 // Shader APIs
-CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor *desc)
+CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(device->proc_table_cache->create_shader_library && "create_shader_library Proc Missing!");
@@ -212,12 +213,15 @@ CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDe
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(device->proc_table_cache->create_swapchain && "create_swapchain Proc Missing!");
 
-    if (desc->presentQueues == CGPU_NULLPTR) {
+    if (desc->presentQueues == CGPU_NULLPTR)
+    {
         assert(desc->presentQueuesCount <= 0 &&
-            "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
-    } else {
-        assert(desc->presentQueuesCount > 0 && 
-            "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
+               "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
+    }
+    else
+    {
+        assert(desc->presentQueuesCount > 0 &&
+               "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
     }
     CGpuSwapChain* swapchain = (CGpuSwapChain*)device->proc_table_cache->create_swapchain(device, desc);
     assert(swapchain && "fatal cgpu_create_swapchain: NULL swapchain id returned from backend.");
@@ -235,30 +239,29 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
     return;
 }
 
-
 // surfaces
 #if defined(_WIN32) || defined(_WIN64)
-    CGpuSurfaceId cgpu_surface_from_hwnd(CGpuDeviceId device, HWND window)
-    {
-        assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-        assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
-        assert(device->adapter->instance != CGPU_NULLPTR && "fatal: call on NULL instnace!");
-        assert(device->adapter->instance->surfaces_table != CGPU_NULLPTR && "surfaces_table Missing!");
-        assert(device->adapter->instance->surfaces_table->from_hwnd != CGPU_NULLPTR && "free_instance Proc Missing!");
+CGpuSurfaceId cgpu_surface_from_hwnd(CGpuDeviceId device, HWND window)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
+    assert(device->adapter->instance != CGPU_NULLPTR && "fatal: call on NULL instnace!");
+    assert(device->adapter->instance->surfaces_table != CGPU_NULLPTR && "surfaces_table Missing!");
+    assert(device->adapter->instance->surfaces_table->from_hwnd != CGPU_NULLPTR && "free_instance Proc Missing!");
 
-        return device->adapter->instance->surfaces_table->from_hwnd(device, window);
-    }
+    return device->adapter->instance->surfaces_table->from_hwnd(device, window);
+}
 #elif defined(_MACOS)
-    CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window)
-    {
-        assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-        assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
-        assert(device->adapter->instance != CGPU_NULLPTR && "fatal: call on NULL instnace!");
-        assert(device->adapter->instance->surfaces_table != CGPU_NULLPTR && "surfaces_table Missing!");
-        assert(device->adapter->instance->surfaces_table->from_ns_view != CGPU_NULLPTR && "free_instance Proc Missing!");
+CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
+    assert(device->adapter->instance != CGPU_NULLPTR && "fatal: call on NULL instnace!");
+    assert(device->adapter->instance->surfaces_table != CGPU_NULLPTR && "surfaces_table Missing!");
+    assert(device->adapter->instance->surfaces_table->from_ns_view != CGPU_NULLPTR && "free_instance Proc Missing!");
 
-        return device->adapter->instance->surfaces_table->from_ns_view(device, window);
-    }
+    return device->adapter->instance->surfaces_table->from_ns_view(device, window);
+}
 #endif
 
 void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)

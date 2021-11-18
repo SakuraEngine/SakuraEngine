@@ -1,6 +1,7 @@
+/* clang-format off */
  /************************************************************************************************************************************\
 |*                                                                                                                                    *|
-|*     Copyright © 2012 NVIDIA Corporation.  All rights reserved.                                                                     *|
+|*     Copyright ï¿½ 2012 NVIDIA Corporation.  All rights reserved.                                                                     *|
 |*                                                                                                                                    *|
 |*  NOTICE TO USER:                                                                                                                   *|
 |*                                                                                                                                    *|

@@ -3,12 +3,11 @@
 #include "assert.h"
 #include "dxgiformat.h"
 
+/* clang-format off */
 #ifdef __cplusplus
 extern "C" {
 #endif
 DXGI_FORMAT pf_translate_to_d3d12(const ECGpuPixelFormat form);
-
-
 
 #define trans_case(_format) case PF_##_format: return DXGI_FORMAT_##_format;
 

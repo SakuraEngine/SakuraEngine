@@ -3,20 +3,20 @@
 
 #define CGPU_USE_VULKAN
 #ifdef _WINDOWS
-#define CGPU_USE_D3D12
+    #define CGPU_USE_D3D12
 #endif
 #ifdef __APPLE__
-#define CGPU_USE_METAL
+    #define CGPU_USE_METAL
 #endif
 
 #ifdef __cplusplus
-#ifndef CGPU_NULLPTR
-#define CGPU_NULLPTR nullptr
-#endif
+    #ifndef CGPU_NULLPTR
+        #define CGPU_NULLPTR nullptr
+    #endif
 #else
-#ifndef CGPU_NULLPTR
-#define CGPU_NULLPTR NULL
-#endif
+    #ifndef CGPU_NULLPTR
+        #define CGPU_NULLPTR NULL
+    #endif
 #endif
 
 #ifndef CGPU_MANUAL_CONFIG_CPU_ARCHITECTURE
@@ -109,74 +109,70 @@
 
 #ifndef CGPU_MANUAL_CONFIG_CPP_STANDARD
     #if (defined(CGPU_COMPILER_CLANG) || defined(CGPU_COMPILER_GCC))
-		#if __cplusplus >= 201703L
-			#define CGPU_COMPILER_CPP17
-		#endif
-		#if __cplusplus >= 201402L
-			#define  CGPU_COMPILER_CPP14
-		#endif
-    #elif defined(CGPU_COMPILER_MSVC)
-        #if (CGPU_COMPILER_VERSION >= 1920)    // VS 2019
+        #if __cplusplus >= 201703L
             #define CGPU_COMPILER_CPP17
         #endif
-		#if (CGPU_COMPILER_VERSION >= 1910)    // VS 2017
-			#define CGPU_COMPILER_CPP14
-		#endif
+        #if __cplusplus >= 201402L
+            #define CGPU_COMPILER_CPP14
+        #endif
+    #elif defined(CGPU_COMPILER_MSVC)
+        #if (CGPU_COMPILER_VERSION >= 1920) // VS 2019
+            #define CGPU_COMPILER_CPP17
+        #endif
+        #if (CGPU_COMPILER_VERSION >= 1910) // VS 2017
+            #define CGPU_COMPILER_CPP14
+        #endif
     #else
         #error "Failed to delect C++ standard version."
     #endif
 #endif // CGPU_MANUAL_CONFIG_CPP_STANDARD_VERSION
 
-
-
 // no vtable
 #ifdef _MSC_VER
-#define CGPU_NOVTABLE __declspec(novtable)
+    #define CGPU_NOVTABLE __declspec(novtable)
 #else
-#define CGPU_NOVTABLE
+    #define CGPU_NOVTABLE
 #endif
 
 // inline defs
 #ifndef CGPU_FORCEINLINE
-#ifdef CGPU_COMPILER_MSVC
-#define CGPU_FORCEINLINE __forceinline
-#else
-#define CGPU_FORCEINLINE inline
-#endif
+    #ifdef CGPU_COMPILER_MSVC
+        #define CGPU_FORCEINLINE __forceinline
+    #else
+        #define CGPU_FORCEINLINE inline
+    #endif
 #endif
 #define CGPU_INLINE inline
 // By Default we use cpp-standard above 2011XXL
 #define CGPU_NOEXCEPT noexcept
 
 #ifdef __cplusplus
-#define CGPU_EXTERN_C extern "C"
-#define CGPU_NULL nullptr
+    #define CGPU_EXTERN_C extern "C"
+    #define CGPU_NULL nullptr
 #else
-#define CGPU_EXTERN_C
-#define CGPU_NULL 0
-#endif 
+    #define CGPU_EXTERN_C
+    #define CGPU_NULL 0
+#endif
 
 #ifndef CGPU_IL_FUNC
-#define CGPU_IL_FUNC CGPU_FORCEINLINE
+    #define CGPU_IL_FUNC CGPU_FORCEINLINE
 #endif
 
 #ifndef CGPU_ZERO_LEN_ARRAY
-#ifdef __GNUC__
-#define CGPU_ZERO_LEN_ARRAY 0
-#else
-#define CGPU_ZERO_LEN_ARRAY 1
-#endif
+    #ifdef __GNUC__
+        #define CGPU_ZERO_LEN_ARRAY 0
+    #else
+        #define CGPU_ZERO_LEN_ARRAY 1
+    #endif
 #endif
 
 #ifndef INTERNAL_CALL
-#define INTERNAL_CALL
-#endif 
-
+    #define INTERNAL_CALL
+#endif
 
 #include <stdlib.h>
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 extern void* mi_malloc(size_t size);
 extern void* mi_calloc(size_t count, size_t size);
