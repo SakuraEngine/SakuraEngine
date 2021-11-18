@@ -1,7 +1,7 @@
 #pragma once
 #ifdef __cplusplus
     #if defined(_WINDOWS) && !defined(DURANGO)
-    #include "amd_ags.h"
+    #include "ags/amd_ags.h"
     #define AMDAGS
     #endif
 extern "C" {
