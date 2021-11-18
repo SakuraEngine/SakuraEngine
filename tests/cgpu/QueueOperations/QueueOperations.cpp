@@ -9,7 +9,7 @@ protected:
 	void SetUp() override
 	{
         ECGPUBackEnd backend = GetParam();
-        CGpuInstanceDescriptor desc;
+        DECLARE_ZERO(CGpuInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enableDebugLayer = true;
         desc.enableGpuBasedValidation = true;

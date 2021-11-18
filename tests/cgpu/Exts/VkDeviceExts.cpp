@@ -46,13 +46,15 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     debugCreateInfo.pfnUserCallback = VkUtil_DebugCallback;
     vkDesc.pDebugUtilsMessenger = &debugCreateInfo;
+    vkDesc.backend = ECGPUBackEnd_VULKAN;
 
     CGpuInstanceDescriptor desc;
     desc.backend = ECGPUBackEnd_VULKAN;
     desc.enableGpuBasedValidation = true;
     desc.enableDebugLayer = true;
+    desc.chained = (const CGpuChainedDescriptor*)&vkDesc;
 
-    auto vulkan_instance = cgpu_vulkan_create_instance(&desc, &vkDesc);
+    auto vulkan_instance = cgpu_create_instance(&desc);
     EXPECT_TRUE( vulkan_instance != nullptr );
 }
 

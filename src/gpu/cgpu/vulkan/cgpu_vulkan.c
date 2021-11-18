@@ -44,11 +44,6 @@ const CGpuProcTable* CGPU_VulkanProcTable()
     return &tbl_vk;
 }
 
-CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* descriptor)
-{
-	return cgpu_vulkan_create_instance(descriptor, CGPU_NULLPTR);
-}
-
 void cgpu_query_instance_features_vulkan(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
 {
 	features->specialization_constant = true;

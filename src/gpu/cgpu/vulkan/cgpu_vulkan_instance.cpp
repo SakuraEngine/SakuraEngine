@@ -7,9 +7,19 @@
 #ifdef CGPU_USE_VULKAN
 
 const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
-CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
-	CGpuVulkanInstanceDescriptor const* exts_desc)
+
+CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
 {	
+	// Validate Chained Structure
+	const CGpuVulkanInstanceDescriptor* exts_desc = (const CGpuVulkanInstanceDescriptor*)desc->chained;
+	if(exts_desc != CGPU_NULLPTR) // Extensions
+	{
+		if(exts_desc->backend != ECGPUBackEnd_VULKAN)
+		{
+			assert(exts_desc->backend == ECGPUBackEnd_VULKAN && "Chained Instance Descriptor must have a vulkan backend!");
+			exts_desc = CGPU_NULLPTR;
+		}
+	}
 	// Memory Alloc
 	CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cgpu_calloc(1, sizeof(CGpuInstance_Vulkan));
 	::memset(I, 0, sizeof(CGpuInstance_Vulkan));
@@ -42,6 +52,7 @@ CGpuInstanceId cgpu_vulkan_create_instance(CGpuInstanceDescriptor const* desc,
 	{
 		exts.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
+
 	if(exts_desc != CGPU_NULLPTR) // Extensions
 	{
 		exts.insert(exts.end(), exts_desc->ppInstanceExtensions, exts_desc->ppInstanceExtensions + exts_desc->mInstanceExtensionCount);
