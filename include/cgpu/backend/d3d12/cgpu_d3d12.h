@@ -37,14 +37,14 @@ RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 typedef struct CGpuInstance_D3D12 {
     CGpuInstance super;
 #if defined(XBOX)
-    IDXGIFactory2*                  pDXGIFactory;
+    IDXGIFactory2* pDXGIFactory;
 #elif defined(_WIN32)
-    IDXGIFactory6*                  pDXGIFactory;
+    IDXGIFactory6* pDXGIFactory;
 #endif
-    ID3D12Debug*                    pDXDebug;
+    ID3D12Debug* pDXDebug;
 
-    struct CGpuAdapter_D3D12*       pAdapters;
-    uint32_t                        mAdaptersCount;
+    struct CGpuAdapter_D3D12* pAdapters;
+    uint32_t mAdaptersCount;
 #if defined(__cplusplus)
 
 #endif
@@ -54,34 +54,34 @@ typedef struct CGpuInstance_D3D12 {
 typedef struct CGpuAdapter_D3D12 {
     CGpuAdapter super;
 #if defined(XBOX)
-	IDXGIAdapter*                   pDxActiveGPU;
+    IDXGIAdapter* pDxActiveGPU;
 #elif defined(_WIN32)
-	IDXGIAdapter4*                  pDxActiveGPU;
+    IDXGIAdapter4* pDxActiveGPU;
 #endif
-    D3D_FEATURE_LEVEL               mFeatureLevel;
-    uint32_t                        mDeviceId;
-    uint32_t                        mVendorId;
-    char                            mDescription[128];
+    D3D_FEATURE_LEVEL mFeatureLevel;
+    uint32_t mDeviceId;
+    uint32_t mVendorId;
+    char mDescription[128];
 } CGpuAdapter_D3D12;
 
 typedef struct CGpuDevice_D3D12 {
     CGpuDevice super;
-    ID3D12Device* pDxDevice; 
+    ID3D12Device* pDxDevice;
     ID3D12CommandQueue** const ppCommandQueues[ECGpuQueueType_Count]
 #ifdef __cplusplus
-    = {}
+        = {}
 #endif
     ;
     const uint32_t pCommandQueueCounts[ECGpuQueueType_Count]
 #ifdef __cplusplus
-    = {}
+        = {}
 #endif
     ;
 } CGpuDevice_D3D12;
 
 typedef struct CGpuQueue_D3D12 {
     CGpuQueue super;
-    ID3D12CommandQueue* pCommandQueue; 
+    ID3D12CommandQueue* pCommandQueue;
 } CGpuQueue_D3D12;
 
 typedef struct CGpuCommandPool_D3D12 {
@@ -95,12 +95,12 @@ typedef struct CGpuShaderLibrary_D3D12 {
 } CGpuShaderLibrary_D3D12;
 
 typedef struct CGpuSwapChain_D3D12 {
-    CGpuSwapChain            super;
-    IDXGISwapChain3*         pDxSwapChain;
-    uint32_t                 mDxSyncInterval : 3;
-    uint32_t                 mFlags : 10;
-    uint32_t                 mImageCount : 3;
-    uint32_t                 mEnableVsync : 1;
+    CGpuSwapChain super;
+    IDXGISwapChain3* pDxSwapChain;
+    uint32_t mDxSyncInterval : 3;
+    uint32_t mFlags : 10;
+    uint32_t mImageCount : 3;
+    uint32_t mEnableVsync : 1;
 } CGpuSwapChain_D3D12;
 
 #ifdef __cplusplus

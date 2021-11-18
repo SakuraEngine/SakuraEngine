@@ -1,14 +1,13 @@
 #pragma once
 
 #ifdef _WINDOWS
-#define WIN_MEAN_AND_LEAN
-#include "windows.h"
-#include <ShellScalingApi.h>
-#pragma comment(lib, "shcore.lib")
+    #define WIN_MEAN_AND_LEAN
+    #include "windows.h"
+    #include <ShellScalingApi.h>
+    #pragma comment(lib, "shcore.lib")
 #endif
 
-struct PlatformWindow
-{
+struct PlatformWindow {
 #ifdef _WIN32
     struct
     {

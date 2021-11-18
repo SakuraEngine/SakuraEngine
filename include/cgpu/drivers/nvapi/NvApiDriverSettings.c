@@ -1,3 +1,4 @@
+/* clang-format off */
 /***************************************************************************\
 |*                                                                           *|
 |*      Copyright NVIDIA Corporation.  All rights reserved.                  *|

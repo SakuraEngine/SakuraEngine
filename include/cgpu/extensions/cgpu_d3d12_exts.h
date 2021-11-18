@@ -11,11 +11,11 @@ typedef struct CGpuDREDSettings {
 } CGpuDREDSettings;
 typedef CGpuDREDSettings* CGpuDREDSettingsId;
 
-// Modifications to DRED settings have no effect on devices already created. 
+// Modifications to DRED settings have no effect on devices already created.
 // But subsequent calls to D3D12CreateDevice use the most recent DRED settings.
 RUNTIME_API CGpuDREDSettingsId cgpu_d3d12_enable_DRED();
 
-// Modifications to DRED settings have no effect on devices already created. 
+// Modifications to DRED settings have no effect on devices already created.
 // But subsequent calls to D3D12CreateDevice use the most recent DRED settings.
 RUNTIME_API void cgpu_d3d12_disable_DRED(CGpuDREDSettingsId settings);
 

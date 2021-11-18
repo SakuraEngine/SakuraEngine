@@ -1,0 +1,53 @@
+UseTab: Never
+TabWidth: 4
+AccessModifierOffset: -4
+IndentWidth: 4
+ObjCBlockIndentWidth: 4
+ContinuationIndentWidth: 4
+MaxEmptyLinesToKeep: 1
+
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine: true
+
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 1
+SpacesInSquareBrackets: false
+IndentCaseLabels: true
+SpaceBeforeAssignmentOperators: true
+AlignAfterOpenBracket: true
+BreakConstructorInitializersBeforeComma: true
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+BreakBeforeBraces: Allman
+
+ColumnLimit: 0
+PointerAlignment: Left
+AllowAllParametersOfDeclarationOnNextLine: true
+AlignEscapedNewlinesLeft: true
+
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: false
+AlignOperands: Align
+
+BinPackArguments: true
+BinPackParameters: true
+AlignAfterOpenBracket: DontAlign 
+
+IndentPPDirectives: BeforeHash
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterStruct: false
+  AfterEnum: true
+  AfterNamespace: true
+  AfterUnion: true
+  AfterFunction: true
+  BeforeElse: true
+  IndentBraces: false
+  AfterExternBlock: false
+  AfterControlStatement: true
+
+SortIncludes: false

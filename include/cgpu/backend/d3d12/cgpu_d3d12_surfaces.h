@@ -8,7 +8,6 @@
 extern "C" {
 #endif
 
-
 void cgpu_free_surface_d3d12(CGpuDeviceId device, CGpuSurfaceId surface);
 
 #if defined(_WIN32) || defined(_WIN64)
