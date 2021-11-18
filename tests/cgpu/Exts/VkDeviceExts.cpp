@@ -2,20 +2,19 @@
 
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
-#include "cgpu/extensions/cgpu_vulkan_exts.h"
-#include "gtest/gtest.h"
-#include <vector>
+    #include "cgpu/extensions/cgpu_vulkan_exts.h"
+    #include "gtest/gtest.h"
+    #include <vector>
 
-class VkDeviceExtsTest : public testing::Test 
+class VkDeviceExtsTest : public testing::Test
 {
 protected:
-  static void SetUpTestCase() {
-    
-  }
-  static void TearDownTestCase() {
-
-  }
-
+    static void SetUpTestCase()
+    {
+    }
+    static void TearDownTestCase()
+    {
+    }
 };
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
@@ -24,21 +23,27 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData);
 
-
 TEST_F(VkDeviceExtsTest, CreateVkInstance)
 {
     DECLARE_ZERO(CGpuVulkanInstanceDescriptor, vkDesc)
-    const char* exts[] = 
-    {
-#ifdef _WINDOWS
+    const char* exts[] = {
+    #ifdef _WINDOWS
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
-#elif defined (__APPLE__)
+    #elif defined(__APPLE__)
         VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
-#endif
-		VK_KHR_SURFACE_EXTENSION_NAME
+    #endif
+        VK_KHR_SURFACE_EXTENSION_NAME
     };
     vkDesc.mInstanceExtensionCount = 2;
     vkDesc.ppInstanceExtensions = exts;
+    #ifdef _WINDOWS
+    const char* dexts[] = {
+        VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME
+    };
+    vkDesc.ppDeviceExtensions = dexts;
+    vkDesc.mDeviceExtensionCount = 1;
+    #endif
+
     // Messenger Enable.
     DECLARE_ZERO(VkDebugUtilsMessengerCreateInfoEXT, debugCreateInfo)
     debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -55,30 +60,32 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     desc.chained = (const CGpuChainedDescriptor*)&vkDesc;
 
     auto vulkan_instance = cgpu_create_instance(&desc);
-    EXPECT_TRUE( vulkan_instance != nullptr );
+    EXPECT_TRUE(vulkan_instance != nullptr);
 }
-
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData) 
+    void* pUserData)
 {
-	switch(messageSeverity)
-	{
-		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-			return VK_TRUE;//printf("[verbose]");break; 
-		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: 
-			printf("[info]");break;
-		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-			printf("[warning]"); break;
-		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT :
-			printf("[error]"); break;
-		default:
-			return VK_TRUE;
-	}
-	printf(" validation layer: %s\n", pCallbackData->pMessage); 
+    switch (messageSeverity)
+    {
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            return VK_TRUE; // printf("[verbose]");break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            printf("[info]");
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            printf("[warning]");
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            printf("[error]");
+            break;
+        default:
+            return VK_TRUE;
+    }
+    printf(" validation layer: %s\n", pCallbackData->pMessage);
     return VK_FALSE;
 }
 #endif
