@@ -3,12 +3,11 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
 
-class CGpuTest : public::testing::TestWithParam<ECGPUBackEnd>
+class CGpuTest : public ::testing::TestWithParam<ECGPUBackEnd>
 {
 protected:
-	void SetUp() override
-	{
-
+    void SetUp() override
+    {
     }
 };
 
@@ -19,17 +18,17 @@ CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool e
     desc.enableDebugLayer = enableDebugLayer;
     desc.enableGpuBasedValidation = enableGPUValidation;
     CGpuInstanceId instance = cgpu_create_instance(&desc);
-	DECLARE_ZERO(CGpuInstanceFeatures, instance_features)
+    DECLARE_ZERO(CGpuInstanceFeatures, instance_features)
     cgpu_query_instance_features(instance, &instance_features);
-    if(backend == ECGPUBackEnd::ECGPUBackEnd_VULKAN)
+    if (backend == ECGPUBackEnd::ECGPUBackEnd_VULKAN)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
-    else if(backend == ECGPUBackEnd::ECGPUBackEnd_D3D12)
+    else if (backend == ECGPUBackEnd::ECGPUBackEnd_D3D12)
     {
         EXPECT_FALSE(instance_features.specialization_constant);
     }
-    else if(backend == ECGPUBackEnd::ECGPUBackEnd_METAL)
+    else if (backend == ECGPUBackEnd::ECGPUBackEnd_METAL)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
@@ -41,16 +40,17 @@ int enum_adapters(CGpuInstanceId instance)
     // enum adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
+    std::vector<CGpuAdapterId> adapters;
+    adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
-    for(auto adapter : adapters)
+    for (auto adapter : adapters)
     {
-	    DECLARE_ZERO(CGpuAdapterDetail, prop)
+        DECLARE_ZERO(CGpuAdapterDetail, prop)
         cgpu_query_adapter_detail(adapter, &prop);
         std::cout << "device id: " << prop.deviceId << "  vendor id: " << prop.vendorId << "\n";
         std::cout << "    name: " << prop.name << "\n";
     }
-    //cgpu_free_instance(instance);
+    // cgpu_free_instance(instance);
     return adapters_count;
 }
 
@@ -59,18 +59,19 @@ void test_create_device(CGpuInstanceId instance, bool enableDebugLayer, bool ena
     // enum adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
+    std::vector<CGpuAdapterId> adapters;
+    adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
-    for(auto adapter : adapters)
+    for (auto adapter : adapters)
     {
-        auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics); 
-        auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute); 
-        auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer); 
+        auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
+        auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);
+        auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
 
-        std::vector<CGpuQueueGroupDescriptor> queueGroup; 
-        if(gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Graphics, 1});
-        if(cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Compute, 1});
-        if(tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ECGpuQueueType_Transfer, 1});
+        std::vector<CGpuQueueGroupDescriptor> queueGroup;
+        if (gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Graphics, 1 });
+        if (cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Compute, 1 });
+        if (tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Transfer, 1 });
         DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = queueGroup.data();
         descriptor.queueGroupCount = (uint32_t)queueGroup.size();
@@ -112,6 +113,14 @@ TEST_P(CGpuTest, AdapterEnum)
     cgpu_free_instance(instance);
 }
 
+TEST_P(CGpuTest, CreateDeviceDbgGpu)
+{
+    ECGPUBackEnd backend = GetParam();
+    auto inst = init_instance(backend, true, true);
+    EXPECT_NE(inst, CGPU_NULLPTR);
+    test_create_device(inst, false, false);
+    cgpu_free_instance(inst);
+}
 TEST_P(CGpuTest, CreateDevice)
 {
     ECGPUBackEnd backend = GetParam();
@@ -128,14 +137,6 @@ TEST_P(CGpuTest, CreateDeviceDbg)
     test_create_device(inst, false, false);
     cgpu_free_instance(inst);
 }
-TEST_P(CGpuTest, CreateDeviceDbgGpu)
-{
-    ECGPUBackEnd backend = GetParam();
-    auto inst = init_instance(backend, true, true);
-    EXPECT_NE(inst, CGPU_NULLPTR);
-    test_create_device(inst, false, false);
-    cgpu_free_instance(inst);
-}
 
 TEST_P(CGpuTest, QueryQueueCount)
 {
@@ -144,9 +145,10 @@ TEST_P(CGpuTest, QueryQueueCount)
     EXPECT_GT(enum_adapters(instance), 0);
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
+    std::vector<CGpuAdapterId> adapters;
+    adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
-    for(auto adapter : adapters)
+    for (auto adapter : adapters)
     {
         DECLARE_ZERO(CGpuAdapterDetail, prop)
         cgpu_query_adapter_detail(adapter, &prop);
@@ -154,9 +156,9 @@ TEST_P(CGpuTest, QueryQueueCount)
         auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);
         auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
         std::cout << prop.name << " of " << backend << "  "
-            << "GraphicsQueue: " << gQueue << "  "
-            << "ComputeQueue: " << cQueue << "  "
-            << "TransferQueue: " << tQueue << std::endl;
+                  << "GraphicsQueue: " << gQueue << "  "
+                  << "ComputeQueue: " << cQueue << "  "
+                  << "TransferQueue: " << tQueue << std::endl;
     }
     cgpu_free_instance(instance);
 }
@@ -166,10 +168,12 @@ static const auto allPlatforms = testing::Values(
     ECGPUBackEnd_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
-    ,ECGPUBackEnd_D3D12
+    ,
+    ECGPUBackEnd_D3D12
 #endif
 #ifdef CGPU_USE_METAL
-    ,ECGPUBackEnd_METAL
+    ,
+    ECGPUBackEnd_METAL
 #endif
 );
 

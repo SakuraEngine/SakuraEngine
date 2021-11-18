@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <EASTL/vector.h>
+#include <EASTL/unordered_map.h>
+#include <EASTL/string.h>
 
 #ifdef CGPU_USE_VULKAN
 
@@ -142,9 +144,6 @@ public:
     #endif
     #if VK_KHR_sampler_ycbcr_conversion
         VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME,
-        #if VK_KHR_bind_memory2 // ycbcr conversion depends on this
-        VK_KHR_BIND_MEMORY_2_EXTENSION_NAME,
-        #endif
     #endif
     /************************************************************************/
     // Nsight Aftermath
@@ -156,6 +155,31 @@ public:
         /************************************************************************/
         /************************************************************************/
     };
+};
+
+struct CGpuVkDeviceExtensionsTable : public eastl::unordered_map<eastl::string, bool> //
+{
+    static void ConstructForAllAdapters(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    {
+        // enum physical devices & store informations.
+        auto wanted_device_extensions = blackboard.device_extensions.data();
+        const auto wanted_device_extensions_count = (uint32_t)blackboard.device_extensions.size();
+        // construct extensions table
+        for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
+        {
+            auto& Adapter = I->pVulkanAdapters[i];
+            Adapter.pExtensionTable = new CGpuVkDeviceExtensionsTable();
+            auto& Table = *Adapter.pExtensionTable;
+            for (uint32_t j = 0; j < wanted_device_extensions_count; j++)
+            {
+                Table[wanted_device_extensions[j]] = false;
+            }
+            for (uint32_t j = 0; j < Adapter.mExtensionPropertiesCount; j++)
+            {
+                Table[Adapter.pExtensionPropertyNames[j]] = true;
+            }
+        }
+    }
 };
 
 CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
@@ -178,6 +202,10 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     appInfo.pEngineName = "No Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_1;
+
+    // TODO: Check & Validate Instance Layers
+    // TODO: Check & Validate Instance Layer Extensions
+    // TODO: Check & Validate Instance Extensions
 
     DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -220,7 +248,11 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     #endif
 
     // enum physical devices & store informations.
-    VkUtil_QueryAllAdapters(I, blackboard.device_extensions.data(), (uint32_t)blackboard.device_extensions.size());
+    const auto** wanted_device_extensions = blackboard.device_extensions.data();
+    const auto wanted_device_extensions_count = (uint32_t)blackboard.device_extensions.size();
+    VkUtil_QueryAllAdapters(I, wanted_device_extensions, wanted_device_extensions_count);
+    // construct extensions table
+    CGpuVkDeviceExtensionsTable::ConstructForAllAdapters(I, blackboard);
 
     // Open validation layer.
     if (desc->enableDebugLayer)
@@ -244,7 +276,11 @@ void cgpu_free_instance_vulkan(CGpuInstanceId instance)
     vkDestroyInstance(to_destroy->pVkInstance, VK_NULL_HANDLE);
     for (uint32_t i = 0; i < to_destroy->mPhysicalDeviceCount; i++)
     {
-        cgpu_free(to_destroy->pVulkanAdapters[i].pQueueFamilyProperties);
+        auto& Adapter = to_destroy->pVulkanAdapters[i];
+        cgpu_free(Adapter.pQueueFamilyProperties);
+        cgpu_free(Adapter.pExtensionProperties);
+        cgpu_free(Adapter.pExtensionPropertyNames);
+        delete Adapter.pExtensionTable;
     }
     cgpu_free(to_destroy->pVulkanAdapters);
     cgpu_free(to_destroy);
@@ -256,7 +292,6 @@ const float queuePriorities[] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, //
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, //
 };
-const eastl::vector<const char*> deviceExtensionNames = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
 {
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)adapter->instance;
@@ -280,24 +315,16 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
         assert(cgpu_query_queue_count_vulkan(adapter, descriptor.queueType) >= descriptor.queueCount && "allocated too many queues!");
     }
     // Create Device
-    DECLARE_ZERO(VkPhysicalDeviceFeatures, deviceFeatures)
     DECLARE_ZERO(VkDeviceCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
-    createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.ppEnabledExtensionNames = deviceExtensionNames.data();
-    createInfo.enabledExtensionCount = (uint32_t)deviceExtensionNames.size();
-    // Enable Validation Layer
-    if (I->pVkDebugUtilsMessenger)
-    {
-        createInfo.enabledLayerCount = 1;
-        createInfo.ppEnabledLayerNames = &validation_layer_name;
-    }
-    else
-    {
-        createInfo.enabledLayerCount = 0;
-    }
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
+    createInfo.pEnabledFeatures = &A->mPhysicalDeviceFeatures;
+    createInfo.enabledExtensionCount = A->mExtensionPropertiesCount;
+    createInfo.ppEnabledExtensionNames = A->pExtensionPropertyNames;
+    createInfo.enabledLayerCount = 0;
+    createInfo.ppEnabledLayerNames = &validation_layer_name;
+
     if (vkCreateDevice(A->pPhysicalDevice, &createInfo, CGPU_NULLPTR, &D->pVkDevice) != VK_SUCCESS)
     {
         assert(0 && "failed to create logical device!");
@@ -307,11 +334,8 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
     volkLoadDeviceTable(&D->mVkDeviceTable, D->pVkDevice);
 
     // Create Pipeline Cache
-    if (desc->disable_pipeline_cache)
-    {
-        D->pPipelineCache = CGPU_NULLPTR;
-    }
-    else
+    D->pPipelineCache = CGPU_NULLPTR;
+    if (!desc->disable_pipeline_cache)
     {
         VkUtil_CreatePipelineCache(D);
     }

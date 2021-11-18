@@ -62,7 +62,6 @@ CGpuSurfaceId cgpu_surface_from_ns_view_vulkan(CGpuDeviceId device, CGpuNSView* 
 
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
     CGpuSurfaceId surface;
-    DECLARE_ZERO(VkMacOSSurfaceCreateInfoMVK, create_info)
     VkMacOSSurfaceCreateInfoMVK create_info = {
         //
         .sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK,
