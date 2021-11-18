@@ -11,9 +11,9 @@
 
 const CGpuProcTable tbl_vk = 
 {
-    .create_instance = &cgpu_create_instance_vulkan,
+	.create_instance = &cgpu_create_instance_vulkan,
 	.query_instance_features = &cgpu_query_instance_features_vulkan,
-    .free_instance = &cgpu_free_instance_vulkan,
+	.free_instance = &cgpu_free_instance_vulkan,
 
 	.enum_adapters = &cgpu_enum_adapters_vulkan,
 	.query_adapter_detail = &cgpu_query_adapter_detail_vulkan,
@@ -41,7 +41,7 @@ const CGpuProcTable tbl_vk =
 
 const CGpuProcTable* CGPU_VulkanProcTable()
 {
-    return &tbl_vk;
+	return &tbl_vk;
 }
 
 void cgpu_query_instance_features_vulkan(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
@@ -64,7 +64,7 @@ void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const ada
 
 void cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail)
 {
-    CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
+	CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
 	detail->deviceId = a->mPhysicalDeviceProps.properties.deviceID;
 	detail->vendorId = a->mPhysicalDeviceProps.properties.vendorID;
 	detail->name = a->mPhysicalDeviceProps.properties.deviceName;
