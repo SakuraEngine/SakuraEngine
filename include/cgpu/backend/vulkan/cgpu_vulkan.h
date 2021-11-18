@@ -63,16 +63,18 @@ typedef struct CGpuInstance_Vulkan {
 typedef struct CGpuAdapter_Vulkan {
     CGpuAdapter super;
     VkPhysicalDevice pPhysicalDevice;
+    /// Physical Device Props & Features
     VkPhysicalDeviceProperties2 mPhysicalDeviceProps;
     VkPhysicalDeviceFeatures mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
-    struct VkQueueFamilyProperties* pQueueFamilyProperties;
-    uint32_t mQueueFamilyPropertiesCount;
+    /// Queue Families
+    uint32_t mQueueFamiliesCount;
     int64_t mQueueFamilyIndices[ECGpuQueueType_Count];
+    struct VkQueueFamilyProperties* pQueueFamilyProperties;
     // Extension Properties of Physical Device
+    uint32_t mExtensionsCount;
+    const char** pExtensionNames;
     struct VkExtensionProperties* pExtensionProperties;
-    const char** pExtensionPropertyNames;
-    uint32_t mExtensionPropertiesCount;
     // Enabled Device Extensions Table
     struct CGpuVkDeviceExtensionsTable* pExtensionTable;
     // Some Extension Queries
