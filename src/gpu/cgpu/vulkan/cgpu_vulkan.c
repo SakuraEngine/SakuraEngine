@@ -81,7 +81,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
     switch (type)
     {
         case ECGpuQueueType_Graphics: {
-            for (uint32_t i = 0; i < a->mQueueFamilyPropertiesCount; i++)
+            for (uint32_t i = 0; i < a->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &a->pQueueFamilyProperties[i];
                 if (prop->queueFlags & VK_QUEUE_GRAPHICS_BIT)
@@ -92,7 +92,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
         }
         break;
         case ECGpuQueueType_Compute: {
-            for (uint32_t i = 0; i < a->mQueueFamilyPropertiesCount; i++)
+            for (uint32_t i = 0; i < a->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &a->pQueueFamilyProperties[i];
                 if (prop->queueFlags & VK_QUEUE_COMPUTE_BIT)
@@ -106,7 +106,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
         }
         break;
         case ECGpuQueueType_Transfer: {
-            for (uint32_t i = 0; i < a->mQueueFamilyPropertiesCount; i++)
+            for (uint32_t i = 0; i < a->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &a->pQueueFamilyProperties[i];
                 if (prop->queueFlags & VK_QUEUE_TRANSFER_BIT)
@@ -134,7 +134,7 @@ CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
 
-    CGpuQueue_Vulkan Q = {.super = {.device = &D->super, .index = index, .type = type}};
+    CGpuQueue_Vulkan Q = { .super = { .device = &D->super, .index = index, .type = type } };
     D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, (uint32_t)A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
     Q.mVkQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[type];
 
@@ -253,7 +253,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
     if (desc->memory_usage == MU_GPU_ONLY || desc->memory_usage == MU_GPU_TO_CPU)
         add_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-    VmaAllocationCreateInfo vma_mem_reqs = {.usage = (VmaMemoryUsage)desc->memory_usage};
+    VmaAllocationCreateInfo vma_mem_reqs = { .usage = (VmaMemoryUsage)desc->memory_usage };
     // if (desc->mFlags & BUFFER_CREATION_FLAG_OWN_MEMORY_BIT)
     //	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     // if (desc->mFlags & BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT)
@@ -287,7 +287,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     // CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
     VkSurfaceKHR vkSurface = (VkSurfaceKHR)desc->surface;
 
-    VkSurfaceCapabilitiesKHR caps = {0};
+    VkSurfaceCapabilitiesKHR caps = { 0 };
     if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(A->pPhysicalDevice, vkSurface, &caps) != VK_SUCCESS)
     {
         assert(0 && "vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed!");

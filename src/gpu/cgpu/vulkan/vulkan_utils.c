@@ -101,70 +101,6 @@ void VkUtil_EnableValidationLayer(
     }
 }
 
-inline static void __VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
-{
-    // Query Queue Information.
-    vkGetPhysicalDeviceQueueFamilyProperties(
-        VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamilyPropertiesCount,
-        CGPU_NULLPTR);
-    VkAdapter->pQueueFamilyProperties = (VkQueueFamilyProperties*)cgpu_calloc(
-        VkAdapter->mQueueFamilyPropertiesCount, sizeof(VkQueueFamilyProperties));
-    vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
-        &VkAdapter->mQueueFamilyPropertiesCount, VkAdapter->pQueueFamilyProperties);
-
-    for (uint32_t j = 0; j < VkAdapter->mQueueFamilyPropertiesCount; j++)
-    {
-        const VkQueueFamilyProperties* prop = &VkAdapter->pQueueFamilyProperties[j];
-        if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] == -1) &&
-            (prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
-        {
-            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] = j;
-        }
-        else if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] == -1) &&
-                 (prop->queueFlags & VK_QUEUE_COMPUTE_BIT))
-        {
-            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] = j;
-        }
-        else if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] == -1) &&
-                 (prop->queueFlags & VK_QUEUE_TRANSFER_BIT))
-        {
-            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
-        }
-    }
-}
-
-inline static void __VkUtil_QueryPhysicalDeviceExtensionProperties(struct CGpuAdapter_Vulkan* VkAdapter,
-    const char* const* device_extensions, uint32_t device_extension_count)
-{
-    const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
-    uint32_t count = 0;
-    vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, NULL);
-    if (count > 0)
-    {
-        VkExtensionProperties* ext_props = cgpu_calloc(count, sizeof(VkExtensionProperties));
-        VkAdapter->pExtensionProperties = cgpu_calloc(device_extension_count, sizeof(VkExtensionProperties));
-        VkAdapter->pExtensionPropertyNames = cgpu_calloc(device_extension_count, sizeof(const char*));
-        vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, ext_props);
-        uint32_t filled_exts = 0;
-        for (uint32_t i = 0; i < count; i++)
-        {
-            for (uint32_t j = 0; j < device_extension_count; j++)
-            {
-                if (strcmp(ext_props[i].extensionName, device_extensions[j]) == 0)
-                {
-                    VkAdapter->pExtensionProperties[filled_exts] = ext_props[i];
-                    VkAdapter->pExtensionPropertyNames[filled_exts] = VkAdapter->pExtensionProperties[filled_exts].extensionName;
-                    filled_exts++;
-                    continue;
-                }
-            }
-        }
-        VkAdapter->mExtensionPropertiesCount = filled_exts;
-        cgpu_free(ext_props);
-    }
-    return;
-}
-
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     const char* const* device_extensions, uint32_t device_extension_count)
 {
@@ -198,10 +134,9 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
             // Query Physical Device Features
             vkGetPhysicalDeviceFeatures(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
             // Query Physical Device Extension Properties
-            __VkUtil_QueryPhysicalDeviceExtensionProperties(
-                VkAdapter, device_extensions, device_extension_count);
+            VkUtil_SelectPhysicalDeviceExtensions(VkAdapter, device_extensions, device_extension_count);
             // Select Queue Indices
-            __VkUtil_SelectQueueIndices(VkAdapter);
+            VkUtil_SelectQueueIndices(VkAdapter);
         }
         cgpu_free(pysicalDevices);
     }
@@ -306,4 +241,83 @@ VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descr
     }
 #endif
     return result;
+}
+
+// Select Helpers
+void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* VkInstance,
+    const char* const* instance_layers, uint32_t instance_layers_count)
+{
+    // TODO
+    return;
+}
+
+void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
+    const char* const* instance_extensions, uint32_t instance_extension_count)
+{
+    // TODO
+    return;
+}
+
+void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
+{
+    // Query Queue Information.
+    vkGetPhysicalDeviceQueueFamilyProperties(
+        VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamiliesCount,
+        CGPU_NULLPTR);
+    VkAdapter->pQueueFamilyProperties = (VkQueueFamilyProperties*)cgpu_calloc(
+        VkAdapter->mQueueFamiliesCount, sizeof(VkQueueFamilyProperties));
+    vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
+        &VkAdapter->mQueueFamiliesCount, VkAdapter->pQueueFamilyProperties);
+
+    for (uint32_t j = 0; j < VkAdapter->mQueueFamiliesCount; j++)
+    {
+        const VkQueueFamilyProperties* prop = &VkAdapter->pQueueFamilyProperties[j];
+        if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] == -1) &&
+            (prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
+        {
+            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] = j;
+        }
+        else if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] == -1) &&
+                 (prop->queueFlags & VK_QUEUE_COMPUTE_BIT))
+        {
+            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] = j;
+        }
+        else if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] == -1) &&
+                 (prop->queueFlags & VK_QUEUE_TRANSFER_BIT))
+        {
+            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
+        }
+    }
+}
+
+void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
+    const char* const* device_extensions, uint32_t device_extension_count)
+{
+    const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
+    uint32_t count = 0;
+    vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, NULL);
+    if (count > 0)
+    {
+        VkExtensionProperties* ext_props = cgpu_calloc(count, sizeof(VkExtensionProperties));
+        VkAdapter->pExtensionProperties = cgpu_calloc(device_extension_count, sizeof(VkExtensionProperties));
+        VkAdapter->pExtensionNames = cgpu_calloc(device_extension_count, sizeof(const char*));
+        vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, ext_props);
+        uint32_t filled_exts = 0;
+        for (uint32_t i = 0; i < count; i++)
+        {
+            for (uint32_t j = 0; j < device_extension_count; j++)
+            {
+                if (strcmp(ext_props[i].extensionName, device_extensions[j]) == 0)
+                {
+                    VkAdapter->pExtensionProperties[filled_exts] = ext_props[i];
+                    VkAdapter->pExtensionNames[filled_exts] = VkAdapter->pExtensionProperties[filled_exts].extensionName;
+                    filled_exts++;
+                    continue;
+                }
+            }
+        }
+        VkAdapter->mExtensionsCount = filled_exts;
+        cgpu_free(ext_props);
+    }
+    return;
 }
