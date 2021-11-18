@@ -236,27 +236,30 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
 		uint64_t minAlignment = A->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
 		allocationSize = smath_round_up_64(allocationSize, minAlignment);
 	}
-	DECLARE_ZERO(VkBufferCreateInfo, add_info);
-	add_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	add_info.pNext = NULL;
-	add_info.flags = 0;
-	add_info.size = allocationSize;
+	VkBufferCreateInfo add_info = {
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = NULL,
+		.flags = 0,
+		.size = allocationSize,
+		// Queues Props
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.queueFamilyIndexCount = 0,
+		.pQueueFamilyIndices = NULL
+	};
 	add_info.usage = VkUtil_DescriptorTypesToBufferUsage(desc->descriptors, desc->format != PF_UNDEFINED);
-	add_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	add_info.queueFamilyIndexCount = 0;
-	add_info.pQueueFamilyIndices = NULL;
 	// Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
 	if (desc->memory_usage == MU_GPU_ONLY || desc->memory_usage == MU_GPU_TO_CPU)
 		add_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 	
-	VmaAllocationCreateInfo vma_mem_reqs = {};
-	vma_mem_reqs.usage = (VmaMemoryUsage)desc->memory_usage;
+	VmaAllocationCreateInfo vma_mem_reqs = {
+		.usage = (VmaMemoryUsage)desc->memory_usage
+	};
 	//if (desc->mFlags & BUFFER_CREATION_FLAG_OWN_MEMORY_BIT)
 	//	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 	//if (desc->mFlags & BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT)
 	//	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-	VmaAllocationInfo alloc_info = {};
+	DECLARE_ZERO(VmaAllocationInfo, alloc_info)
 	VkResult bufferResult = vmaCreateBuffer(
 		D->pVmaAllocator, &add_info, &vma_mem_reqs, &B->pVkBuffer, &B->pVkAllocation,
 		&alloc_info);
@@ -301,7 +304,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 
 	// Surface format
 	// Select a surface format, depending on whether HDR is available.
-	VkSurfaceFormatKHR surface_format = {0};
+	DECLARE_ZERO(VkSurfaceFormatKHR, surface_format) 
 	surface_format.format = VK_FORMAT_UNDEFINED;
 	uint32_t            surfaceFormatCount = 0;
 	if (VK_SUCCESS != vkGetPhysicalDeviceSurfaceFormatsKHR(
