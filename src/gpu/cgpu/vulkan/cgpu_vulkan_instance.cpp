@@ -127,6 +127,10 @@ void cgpu_free_instance_vulkan(CGpuInstanceId instance)
 	}
 
 	vkDestroyInstance(to_destroy->pVkInstance, VK_NULL_HANDLE);
+	for(uint32_t i = 0; i < to_destroy->mPhysicalDeviceCount; i++)
+	{
+		cgpu_free(to_destroy->pVulkanAdapters[i].pQueueFamilyProperties);
+	}
 	cgpu_free(to_destroy->pVulkanAdapters);
 	cgpu_free(to_destroy);
 }

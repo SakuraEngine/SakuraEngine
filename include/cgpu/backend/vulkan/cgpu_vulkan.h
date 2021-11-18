@@ -69,6 +69,8 @@ typedef struct CGpuAdapter_Vulkan {
     struct VkQueueFamilyProperties* pQueueFamilyProperties;
     uint32_t mQueueFamilyPropertiesCount;
     int64_t mQueueFamilyIndices[ECGpuQueueType_Count];
+    // Some Extension Queries
+	uint32_t dedicated_allocation : 1;
 } CGpuAdapter_Vulkan;
 
 typedef struct CGpuDevice_Vulkan {

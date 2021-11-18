@@ -58,6 +58,7 @@ typedef struct CGpuAdapterDetail {
 	uint32_t max_vertex_input_bindings;
 	uint32_t wave_lane_count;
 	uint32_t multidraw_indirect : 1;
+	uint32_t dedicated_allocation : 1;
 } CGpuAdapterDetail;
 
 typedef struct CGpuInstanceFeatures {
@@ -251,11 +252,12 @@ typedef struct CGpuSwapChain {
 
 // Descriptors (on Stack)
 #pragma region DESCRIPTORS
-typedef struct CGpuChainedDescriptor {
-	ECGPUBackEnd backend;
-} CGpuChainedDescriptor;
+
 #define CGPU_CHAINED_DESCRIPTOR_HEADER ECGPUBackEnd backend;
 
+typedef struct CGpuChainedDescriptor {
+	CGPU_CHAINED_DESCRIPTOR_HEADER
+} CGpuChainedDescriptor;
 // Device & Pipeline
 typedef struct CGpuInstanceDescriptor {
 	const CGpuChainedDescriptor* chained;

@@ -87,6 +87,40 @@ void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, CGpuVulkanInstanceDesc
     }
 }
 
+inline static void __VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
+{
+	// Query Queue Information.
+	vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
+		&VkAdapter->mQueueFamilyPropertiesCount, CGPU_NULLPTR);
+	VkAdapter->pQueueFamilyProperties = (VkQueueFamilyProperties*)cgpu_calloc(
+		VkAdapter->mQueueFamilyPropertiesCount, sizeof(VkQueueFamilyProperties));
+	vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
+		&VkAdapter->mQueueFamilyPropertiesCount, VkAdapter->pQueueFamilyProperties);
+
+	for(uint32_t j = 0; j < VkAdapter->mQueueFamilyPropertiesCount; j++)
+	{
+		const VkQueueFamilyProperties* prop = &VkAdapter->pQueueFamilyProperties[j];
+		if( (VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] == -1) 
+			&&
+			(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT) )
+		{
+			VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] = j;
+		} 
+		else if( (VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] == -1) 
+			&&
+			(prop->queueFlags & VK_QUEUE_COMPUTE_BIT) )
+		{
+			VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] = j;
+		} 
+		else if( (VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] == -1) 
+			&&
+			(prop->queueFlags & VK_QUEUE_TRANSFER_BIT) )
+		{
+			VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
+		}
+	}
+}
+
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I)
 {
     assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
@@ -99,7 +133,7 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I)
 		vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount, pysicalDevices);
 		for(uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
 		{
-			// Initialize Adapter
+			// Alloc & Zero Adapter
 			CGpuAdapter_Vulkan* VkAdapter = &I->pVulkanAdapters[i];
 			for(uint32_t q = 0; q < ECGpuQueueType_Count; q++)
 			{
@@ -107,43 +141,17 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I)
 			}
 			VkAdapter->super.instance = &I->super;
 			VkAdapter->pPhysicalDevice = pysicalDevices[i];
+			// Query Adapter Properties
 			VkAdapter->mSubgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
 			VkAdapter->mSubgroupProperties.pNext = NULL;
 			VkAdapter->mPhysicalDeviceProps.pNext = &VkAdapter->mSubgroupProperties;
 			VkAdapter->mPhysicalDeviceProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
 			vkGetPhysicalDeviceProperties2(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
+			// Query Adapter Features
 			vkGetPhysicalDeviceFeatures(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
 
-			// Query Queue Information.
-			vkGetPhysicalDeviceQueueFamilyProperties(pysicalDevices[i],
-				&VkAdapter->mQueueFamilyPropertiesCount, CGPU_NULLPTR);
-			VkAdapter->pQueueFamilyProperties = (VkQueueFamilyProperties*)malloc(
-				sizeof(VkQueueFamilyProperties) * VkAdapter->mQueueFamilyPropertiesCount);
-			vkGetPhysicalDeviceQueueFamilyProperties(pysicalDevices[i],
-				&VkAdapter->mQueueFamilyPropertiesCount, VkAdapter->pQueueFamilyProperties);
 			// Select Queue Indices
-			for(uint32_t j = 0; j < VkAdapter->mQueueFamilyPropertiesCount; j++)
-			{
-				const VkQueueFamilyProperties* prop = &VkAdapter->pQueueFamilyProperties[j];
-				if( (VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] == -1) 
-					&&
-					(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT) )
-				{
-					VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] = j;
-				} 
-				else if( (VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] == -1) 
-					&&
-					(prop->queueFlags & VK_QUEUE_COMPUTE_BIT) )
-				{
-					VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] = j;
-				} 
-				else if( (VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] == -1) 
-					&&
-					(prop->queueFlags & VK_QUEUE_TRANSFER_BIT) )
-				{
-					VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
-				}
-			}
+			__VkUtil_SelectQueueIndices(VkAdapter);
 		}
 		cgpu_free(pysicalDevices);
 	} else {
