@@ -19,7 +19,7 @@ void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst);
 
 // Instance Helpers
 void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr);
-void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I, const char** device_extensions, uint32_t device_extension_count);
+void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I, const char* const* device_extensions, uint32_t device_extension_count);
 
 // Device Helpers
 void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D);
@@ -27,6 +27,8 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CG
 
 // API Helpers
 VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors, bool texel);
+
+// Record Helpers
 
 #ifdef __cplusplus
 }

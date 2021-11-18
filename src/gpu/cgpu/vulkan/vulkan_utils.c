@@ -3,6 +3,7 @@
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 // Debug Callback
 VKAPI_ATTR VkBool32 VKAPI_CALL
@@ -133,25 +134,39 @@ inline static void __VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 }
 
 inline static void __VkUtil_QueryPhysicalDeviceExtensionProperties(struct CGpuAdapter_Vulkan* VkAdapter,
-    const char** device_extensions, uint32_t device_extension_count)
+    const char* const* device_extensions, uint32_t device_extension_count)
 {
     const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
     uint32_t count = 0;
     vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, NULL);
     if (count > 0)
     {
+        VkExtensionProperties* ext_props = cgpu_calloc(count, sizeof(VkExtensionProperties));
+        VkAdapter->pExtensionProperties = cgpu_calloc(device_extension_count, sizeof(VkExtensionProperties));
+        VkAdapter->pExtensionPropertyNames = cgpu_calloc(device_extension_count, sizeof(const char*));
+        vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, ext_props);
+        uint32_t filled_exts = 0;
         for (uint32_t i = 0; i < count; i++)
         {
             for (uint32_t j = 0; j < device_extension_count; j++)
             {
+                if (strcmp(ext_props[i].extensionName, device_extensions[j]) == 0)
+                {
+                    VkAdapter->pExtensionProperties[filled_exts] = ext_props[i];
+                    VkAdapter->pExtensionPropertyNames[filled_exts] = VkAdapter->pExtensionProperties[filled_exts].extensionName;
+                    filled_exts++;
+                    continue;
+                }
             }
         }
+        VkAdapter->mExtensionPropertiesCount = filled_exts;
+        cgpu_free(ext_props);
     }
     return;
 }
 
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
-    const char** device_extensions, uint32_t device_extension_count)
+    const char* const* device_extensions, uint32_t device_extension_count)
 {
     assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
 
@@ -255,9 +270,7 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A,
 }
 
 // API Helpers
-VkBufferUsageFlags
-VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors,
-    bool texel)
+VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors, bool texel)
 {
     VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     if (descriptors & DT_UNIFORM_BUFFER)
