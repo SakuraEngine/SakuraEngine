@@ -34,11 +34,12 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CG
 VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors, bool texel);
 
 // Feature Select Helpers
+void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);
+void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter);
 void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* VkInstance,
     const char* const* instance_layers, uint32_t instance_layers_count);
 void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
     const char* const* instance_extensions, uint32_t instance_extension_count);
-void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);
 void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
     const char* const* device_layers, uint32_t device_layers_count);
 void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,

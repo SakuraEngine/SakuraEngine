@@ -248,6 +248,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         .pQueueFamilyIndices = NULL
         //
     };
+
     add_info.usage = VkUtil_DescriptorTypesToBufferUsage(desc->descriptors, desc->format != PF_UNDEFINED);
     // Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
     if (desc->memory_usage == MU_GPU_ONLY || desc->memory_usage == MU_GPU_TO_CPU)
