@@ -182,6 +182,8 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
 #else
             vkGetPhysicalDeviceFeatures2(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
 #endif
+            // Enumerate Format Supports
+            VkUtil_EnumFormatSupports(VkAdapter);
             // Query Physical Device Layers Properties
             VkUtil_SelectPhysicalDeviceLayers(VkAdapter, device_layers, device_layers_count);
             // Query Physical Device Extension Properties
@@ -325,6 +327,29 @@ void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
             VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
         }
     }
+}
+
+void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter)
+{
+    for (uint32_t i = 0; i < PF_Count; ++i)
+    {
+        VkFormatProperties formatSupport;
+        VkAdapter->super.format_supports[i].shader_read = 0;
+        VkAdapter->super.format_supports[i].shader_write = 0;
+        VkAdapter->super.format_supports[i].render_target_write = 0;
+        VkFormat fmt = (VkFormat)pf_translate_to_vulkan((ECGpuPixelFormat)i);
+        if (fmt == VK_FORMAT_UNDEFINED) continue;
+
+        vkGetPhysicalDeviceFormatProperties(VkAdapter->pPhysicalDevice, fmt, &formatSupport);
+        VkAdapter->super.format_supports[i].shader_read =
+            (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0;
+        VkAdapter->super.format_supports[i].shader_write =
+            (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) != 0;
+        VkAdapter->super.format_supports[i].render_target_write =
+            (formatSupport.optimalTilingFeatures &
+                (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) != 0;
+    }
+    return;
 }
 
 void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* vkInstance,

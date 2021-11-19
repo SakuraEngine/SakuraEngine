@@ -49,6 +49,12 @@ typedef enum ECGpuQueueType
     ECGpuQueueType_Count
 } ECGpuQueueType;
 
+typedef struct CGpuFormatSupport {
+    uint8_t shader_read : 1;
+    uint8_t shader_write : 1;
+    uint8_t render_target_write : 1;
+} CGpuFormatSupport;
+
 typedef struct CGpuAdapterDetail {
     uint32_t deviceId;
     uint32_t vendorId;
@@ -206,6 +212,7 @@ typedef struct CGpuInstance {
 typedef struct CGpuAdapter {
     const struct CGpuInstance* instance;
     const CGpuProcTable* proc_table_cache;
+    CGpuFormatSupport format_supports[PF_Count];
 } CGpuAdapter;
 
 typedef struct CGpuDevice {
