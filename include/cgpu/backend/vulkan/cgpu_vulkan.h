@@ -58,6 +58,10 @@ typedef struct CGpuInstance_Vulkan {
     VkDebugUtilsMessengerEXT pVkDebugUtilsMessenger;
     struct CGpuAdapter_Vulkan* pVulkanAdapters;
     uint32_t mPhysicalDeviceCount;
+    // Extension Properties of Instance
+    uint32_t mExtensionsCount;
+    const char** pExtensionNames;
+    struct VkExtensionProperties* pExtensionProperties;
 } CGpuInstance_Vulkan;
 
 typedef struct CGpuAdapter_Vulkan {

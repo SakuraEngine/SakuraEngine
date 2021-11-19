@@ -1,3 +1,4 @@
+/* clang-format off */
 //
 // Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
 //

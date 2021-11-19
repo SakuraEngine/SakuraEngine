@@ -251,13 +251,6 @@ void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* VkInstance,
     return;
 }
 
-void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
-    const char* const* instance_extensions, uint32_t instance_extension_count)
-{
-    // TODO
-    return;
-}
-
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 {
     // Query Queue Information.
@@ -288,6 +281,38 @@ void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
             VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
         }
     }
+}
+
+void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
+    const char* const* instance_extensions, uint32_t instance_extension_count)
+{
+    const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
+    uint32_t count = 0;
+    vkEnumerateInstanceExtensionProperties(layer_name, &count, NULL);
+    if (count > 0)
+    {
+        VkExtensionProperties* ext_props = cgpu_calloc(count, sizeof(VkExtensionProperties));
+        VkInstance->pExtensionProperties = cgpu_calloc(instance_extension_count, sizeof(VkExtensionProperties));
+        VkInstance->pExtensionNames = cgpu_calloc(instance_extension_count, sizeof(const char*));
+        vkEnumerateInstanceExtensionProperties(layer_name, &count, ext_props);
+        uint32_t filled_exts = 0;
+        for (uint32_t i = 0; i < count; i++)
+        {
+            for (uint32_t j = 0; j < instance_extension_count; j++)
+            {
+                if (strcmp(ext_props[i].extensionName, instance_extensions[j]) == 0)
+                {
+                    VkInstance->pExtensionProperties[filled_exts] = ext_props[i];
+                    VkInstance->pExtensionNames[filled_exts] = VkInstance->pExtensionProperties[filled_exts].extensionName;
+                    filled_exts++;
+                    break;
+                }
+            }
+        }
+        VkInstance->mExtensionsCount = filled_exts;
+        cgpu_free(ext_props);
+    }
+    return;
 }
 
 void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
