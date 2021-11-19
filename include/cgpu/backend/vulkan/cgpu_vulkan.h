@@ -85,7 +85,7 @@ typedef struct CGpuAdapter_Vulkan {
     VkPhysicalDevice pPhysicalDevice;
     /// Physical Device Props & Features
     VkPhysicalDeviceProperties2 mPhysicalDeviceProps;
-    VkPhysicalDeviceFeatures mPhysicalDeviceFeatures;
+    VkPhysicalDeviceFeatures2 mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
     /// Queue Families
     uint32_t mQueueFamiliesCount;

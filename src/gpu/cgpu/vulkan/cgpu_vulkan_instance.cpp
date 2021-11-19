@@ -337,9 +337,10 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
     // Create Device
     DECLARE_ZERO(VkDeviceCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pNext = &A->mPhysicalDeviceFeatures;
     createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
-    createInfo.pEnabledFeatures = &A->mPhysicalDeviceFeatures;
+    createInfo.pEnabledFeatures = NULL;
     createInfo.enabledExtensionCount = A->mExtensionsCount;
     createInfo.ppEnabledExtensionNames = A->pExtensionNames;
     createInfo.enabledLayerCount = A->mLayersCount;
