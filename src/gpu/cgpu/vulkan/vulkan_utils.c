@@ -32,7 +32,31 @@ VkUtil_DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     printf(" validation layer: %s\n", pCallbackData->pMessage);
     return VK_FALSE;
 }
-
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+VkUtil_DebugReportCallback(
+    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode,
+    const char* pLayerPrefix, const char* pMessage, void* pUserData)
+{
+    switch (flags)
+    {
+        case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
+            printf("[perf-warn]");
+            break;
+        case VK_DEBUG_REPORT_WARNING_BIT_EXT:
+            printf("[warning]");
+            break;
+        case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
+            printf("[debug]");
+            break;
+        case VK_DEBUG_REPORT_ERROR_BIT_EXT:
+            printf("[error]");
+            break;
+        default:
+            return VK_TRUE;
+    }
+    printf(" validation layer: %s\n", pMessage);
+    return VK_FALSE;
+}
 bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
 {
     // AGS
@@ -65,31 +89,59 @@ void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst)
 
 // Instance APIs
 void VkUtil_EnableValidationLayer(
-    CGpuInstance_Vulkan* I, const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr)
+    CGpuInstance_Vulkan* I,
+    const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
+    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
 {
-    VkDebugUtilsMessengerCreateInfoEXT messengerInfo = {
-        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-        .pfnUserCallback = VkUtil_DebugCallback,
-        .messageSeverity =
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-        .messageType =
-            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-        .flags = 0,
-        .pUserData = NULL
-    };
-    const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr =
-        (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
-
-    assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
-    VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
-        messengerInfoPtr, CGPU_NULLPTR,
-        &(I->pVkDebugUtilsMessenger));
-    if (VK_SUCCESS != res)
+    if (I->debug_utils)
     {
-        assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
+        VkDebugUtilsMessengerCreateInfoEXT messengerInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            .pfnUserCallback = VkUtil_DebugCallback,
+            .messageSeverity =
+                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+            .messageType =
+                VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+            .flags = 0,
+            .pUserData = NULL
+        };
+        const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr =
+            (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
+
+        assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
+        VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
+            messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
+            &(I->pVkDebugUtilsMessenger));
+        if (VK_SUCCESS != res)
+        {
+            assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
+        }
+    }
+    else if (I->debug_report)
+    {
+        VkDebugReportCallbackCreateInfoEXT reportInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT,
+            .pNext = NULL,
+            .pfnCallback = VkUtil_DebugReportCallback,
+            .flags =
+#if defined(NX64) || defined(__ANDROID__)
+                VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // Performance warnings are not very vaild on desktop
+#endif
+                VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT /* | VK_DEBUG_REPORT_INFORMATION_BIT_EXT*/
+        };
+        const VkDebugReportCallbackCreateInfoEXT* reportInfoPtr =
+            (report_info_ptr != CGPU_NULLPTR) ? report_info_ptr : &reportInfo;
+        VkResult res = vkCreateDebugReportCallbackEXT(I->pVkInstance,
+            reportInfoPtr, GLOBAL_VkAllocationCallbacks,
+            &(I->pVkDebugReport));
+        assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugReportCallbackEXT failed!");
+        if (VK_SUCCESS != res)
+        {
+            assert(0 && "vkCreateDebugReportCallbackEXT failed - disabling Vulkan debug callbacks");
+        }
     }
 }
 

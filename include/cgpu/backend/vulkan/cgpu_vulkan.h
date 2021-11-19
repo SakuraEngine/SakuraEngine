@@ -56,6 +56,7 @@ typedef struct CGpuInstance_Vulkan {
     CGpuInstance super;
     VkInstance pVkInstance;
     VkDebugUtilsMessengerEXT pVkDebugUtilsMessenger;
+    VkDebugReportCallbackEXT pVkDebugReport;
     struct CGpuAdapter_Vulkan* pVulkanAdapters;
     uint32_t mPhysicalDeviceCount;
 
@@ -72,6 +73,11 @@ typedef struct CGpuInstance_Vulkan {
     struct VkExtensionProperties* pExtensionProperties;
     // Enabled Extensions Table
     struct CGpuVkExtensionsTable* pExtensionsTable;
+
+    // Some Extension Queries
+    uint32_t device_group_creation : 1;
+    uint32_t debug_utils : 1;
+    uint32_t debug_report : 1;
 } CGpuInstance_Vulkan;
 
 typedef struct CGpuAdapter_Vulkan {
@@ -101,7 +107,18 @@ typedef struct CGpuAdapter_Vulkan {
     struct CGpuVkExtensionsTable* pExtensionsTable;
 
     // Some Extension Queries
+    uint32_t debug_marker : 1;
     uint32_t dedicated_allocation : 1;
+    uint32_t memory_req2 : 1;
+    uint32_t external_memory : 1;
+    uint32_t external_memory_win32 : 1;
+    uint32_t draw_indirect_count : 1;
+    uint32_t amd_draw_indirect_count : 1;
+    uint32_t amd_gcn_shader : 1;
+    uint32_t descriptor_indexing : 1;
+    uint32_t sampler_ycbcr : 1;
+    uint32_t nv_diagnostic_checkpoints : 1;
+    uint32_t nv_diagnostic_config : 1;
 } CGpuAdapter_Vulkan;
 
 typedef struct CGpuDevice_Vulkan {

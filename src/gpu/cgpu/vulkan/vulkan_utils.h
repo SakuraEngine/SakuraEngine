@@ -18,7 +18,10 @@ bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst);
 void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst);
 
 // Instance Helpers
-void VkUtil_EnableValidationLayer(CGpuInstance_Vulkan* I, const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr);
+void VkUtil_EnableValidationLayer(
+    CGpuInstance_Vulkan* I,
+    const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
+    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr);
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     const char* const* device_layers, uint32_t device_layers_count,
     const char* const* device_extensions, uint32_t device_extension_count);
@@ -43,13 +46,44 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
 
 static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 static const char* cgpu_wanted_instance_exts[] = {
-#if defined(_WIN32) || defined(_WIN64)
+    VK_KHR_SURFACE_EXTENSION_NAME,
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined(_MACOS)
     VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
+#elif defined(VK_USE_PLATFORM_XLIB_KHR)
+    VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
+#elif defined(VK_USE_PLATFORM_XCB_KHR)
+    VK_KHR_XCB_SURFACE_EXTENSION_NAME,
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
+    VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
+#elif defined(VK_USE_PLATFORM_GGP)
+    VK_GGP_STREAM_DESCRIPTOR_SURFACE_EXTENSION_NAME,
+#elif defined(VK_USE_PLATFORM_VI_NN)
+    VK_NN_VI_SURFACE_EXTENSION_NAME,
 #endif
-    VK_KHR_SURFACE_EXTENSION_NAME
+    VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
+    // To legally use HDR formats
+    VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME,
+    /************************************************************************/
+    // VR Extensions
+    /************************************************************************/
+    VK_KHR_DISPLAY_EXTENSION_NAME,
+    VK_EXT_DIRECT_MODE_DISPLAY_EXTENSION_NAME,
+/************************************************************************/
+// Multi GPU Extensions
+/************************************************************************/
+#if VK_KHR_device_group_creation
+    VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME,
+#endif
+#ifndef NX64
+    /************************************************************************/
+    // Property querying extensions
+    /************************************************************************/
+    VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+#endif
 };
+
 static const char* cgpu_wanted_device_exts[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,

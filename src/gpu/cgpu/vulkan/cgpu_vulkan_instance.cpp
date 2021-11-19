@@ -23,6 +23,7 @@ public:
         {
             instance_layers.push_back(validation_layer_name);
             instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            instance_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         }
         // Merge All Parameters into one blackboard
         if (exts_desc != CGPU_NULLPTR) // Extensions
@@ -35,6 +36,7 @@ public:
             else
             {
                 messenger_info_ptr = exts_desc->pDebugUtilsMessenger;
+                report_info_ptr = exts_desc->pDebugReportMessenger;
                 // Merge Instance Extension Names
                 if (exts_desc->ppInstanceExtensions != NULL && exts_desc->mInstanceExtensionCount != 0)
                 {
@@ -58,6 +60,7 @@ public:
         }
     }
     const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr = CGPU_NULLPTR;
+    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr = CGPU_NULLPTR;
     eastl::vector<const char*> instance_extensions;
     eastl::vector<const char*> instance_layers;
     eastl::vector<const char*> device_extensions;
@@ -85,6 +88,23 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
             {
                 Table[Adapter.pExtensionNames[j]] = true;
             }
+            // Cache
+            {
+                Adapter.debug_marker = Table[VK_EXT_DEBUG_MARKER_EXTENSION_NAME];
+                Adapter.dedicated_allocation = Table[VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME];
+                Adapter.memory_req2 = Table[VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME];
+                Adapter.external_memory = Table[VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME];
+#ifdef _WINDOWS
+                Adapter.external_memory_win32 = Table[VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME];
+#endif
+                Adapter.draw_indirect_count = Table[VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME];
+                Adapter.amd_draw_indirect_count = Table[VK_AMD_DRAW_INDIRECT_COUNT_EXTENSION_NAME];
+                Adapter.amd_gcn_shader = Table[VK_AMD_GCN_SHADER_EXTENSION_NAME];
+                Adapter.descriptor_indexing = Table[VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME];
+                Adapter.sampler_ycbcr = Table[VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME];
+                Adapter.nv_diagnostic_checkpoints = Table[VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME];
+                Adapter.nv_diagnostic_config = Table[VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME];
+            }
         }
     }
     static void ConstructForInstance(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
@@ -102,6 +122,12 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
         for (uint32_t j = 0; j < I->mExtensionsCount; j++)
         {
             Table[I->pExtensionNames[j]] = true;
+        }
+        // Cache
+        {
+            I->device_group_creation = Table[VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME]; // Linked GPU
+            I->debug_utils = Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
+            I->debug_report = Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
         }
     }
 };
@@ -236,7 +262,7 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     // Open validation layer.
     if (desc->enableDebugLayer)
     {
-        VkUtil_EnableValidationLayer(I, blackboard.messenger_info_ptr);
+        VkUtil_EnableValidationLayer(I, blackboard.messenger_info_ptr, blackboard.report_info_ptr);
     }
 
     return &(I->super);
