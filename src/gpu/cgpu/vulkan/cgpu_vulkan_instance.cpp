@@ -61,9 +61,10 @@ public:
     eastl::vector<const char*> instance_extensions;
     eastl::vector<const char*> instance_layers;
     eastl::vector<const char*> device_extensions;
+    eastl::vector<const char*> device_layers;
 };
 
-struct CGpuVkDeviceExtensionsTable : public eastl::unordered_map<eastl::string, bool> //
+struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> //
 {
     static void ConstructForAllAdapters(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -74,8 +75,8 @@ struct CGpuVkDeviceExtensionsTable : public eastl::unordered_map<eastl::string, 
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
         {
             auto& Adapter = I->pVulkanAdapters[i];
-            Adapter.pExtensionTable = new CGpuVkDeviceExtensionsTable();
-            auto& Table = *Adapter.pExtensionTable;
+            Adapter.pExtensionsTable = new CGpuVkExtensionsTable();
+            auto& Table = *Adapter.pExtensionsTable;
             for (uint32_t j = 0; j < wanted_device_extensions_count; j++)
             {
                 Table[wanted_device_extensions[j]] = false;
@@ -84,6 +85,65 @@ struct CGpuVkDeviceExtensionsTable : public eastl::unordered_map<eastl::string, 
             {
                 Table[Adapter.pExtensionNames[j]] = true;
             }
+        }
+    }
+    static void ConstructForInstance(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    {
+        // enum physical devices & store informations.
+        auto wanted_instance_extensions = blackboard.instance_extensions.data();
+        const auto wanted_instance_extensions_count = (uint32_t)blackboard.instance_extensions.size();
+        // construct extensions table
+        I->pExtensionsTable = new CGpuVkExtensionsTable();
+        auto& Table = *I->pExtensionsTable;
+        for (uint32_t j = 0; j < wanted_instance_extensions_count; j++)
+        {
+            Table[wanted_instance_extensions[j]] = false;
+        }
+        for (uint32_t j = 0; j < I->mExtensionsCount; j++)
+        {
+            Table[I->pExtensionNames[j]] = true;
+        }
+    }
+};
+
+struct CGpuVkLayersTable : public eastl::unordered_map<eastl::string, bool> //
+{
+    static void ConstructForAllAdapters(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    {
+        // enum physical devices & store informations.
+        auto wanted_device_layers = blackboard.device_layers.data();
+        const auto wanted_device_layers_count = (uint32_t)blackboard.device_layers.size();
+        // construct layers table
+        for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
+        {
+            auto& Adapter = I->pVulkanAdapters[i];
+            Adapter.pLayersTable = new CGpuVkLayersTable();
+            auto& Table = *Adapter.pLayersTable;
+            for (uint32_t j = 0; j < wanted_device_layers_count; j++)
+            {
+                Table[wanted_device_layers[j]] = false;
+            }
+            for (uint32_t j = 0; j < Adapter.mLayersCount; j++)
+            {
+                Table[Adapter.pLayerNames[j]] = true;
+            }
+        }
+    }
+    static void ConstructForInstance(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    {
+        // enum physical devices & store informations.
+        auto wanted_instance_layers = blackboard.instance_layers.data();
+        const auto wanted_instance_layers_count = (uint32_t)blackboard.instance_layers.size();
+        // construct layers table
+        I->pLayersTable = new CGpuVkLayersTable();
+        auto& Table = *I->pLayersTable;
+        for (uint32_t j = 0; j < wanted_instance_layers_count; j++)
+        {
+            Table[wanted_instance_layers[j]] = false;
+        }
+        for (uint32_t j = 0; j < I->mLayersCount; j++)
+        {
+            Table[I->pLayerNames[j]] = true;
         }
     }
 };
@@ -109,11 +169,11 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_1;
 
-    // TODO: Select Instance Layers & Layer Extensions
+    // Select Instance Layers & Layer Extensions
     VkUtil_SelectInstanceLayers(I,
         blackboard.instance_layers.data(),
         (uint32_t)blackboard.instance_layers.size());
-    // TODO: Select Instance Extensions
+    // Select Instance Extensions
     VkUtil_SelectInstanceExtensions(I,
         blackboard.instance_extensions.data(),
         (uint32_t)blackboard.instance_extensions.size());
@@ -121,6 +181,9 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
+    // Instance Layers
+    createInfo.enabledLayerCount = (uint32_t)blackboard.instance_layers.size();
+    createInfo.ppEnabledLayerNames = blackboard.instance_layers.data();
     // Instance Extensions
     createInfo.enabledExtensionCount = I->mExtensionsCount;
     createInfo.ppEnabledExtensionNames = I->pExtensionNames;
@@ -136,7 +199,7 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
             printf("[Vulkan Warning]: GpuBasedValidation enabled while ValidationLayer is closed, there'll be no effect.");
 #if VK_HEADER_VERSION >= 108
         validationFeaturesExt.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
-        validationFeaturesExt.enabledValidationFeatureCount = 1u;
+        validationFeaturesExt.enabledValidationFeatureCount = sizeof(enabledValidationFeatures) / sizeof(VkValidationFeatureEnableEXT);
         validationFeaturesExt.pEnabledValidationFeatures = enabledValidationFeatures;
         createInfo.pNext = &validationFeaturesExt;
 #else
@@ -144,12 +207,12 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
 #endif
     }
 
-    createInfo.enabledLayerCount = (uint32_t)blackboard.instance_layers.size();
-    createInfo.ppEnabledLayerNames = blackboard.instance_layers.data();
     if (vkCreateInstance(&createInfo, GLOBAL_VkAllocationCallbacks, &I->pVkInstance) != VK_SUCCESS)
     {
         assert(0 && "Vulkan: failed to create instance!");
     }
+    CGpuVkLayersTable::ConstructForInstance(I, blackboard);
+    CGpuVkExtensionsTable::ConstructForInstance(I, blackboard);
 
 #if defined(NX64)
     loadExtensionsNX(result->pVkInstance);
@@ -161,9 +224,14 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     // enum physical devices & store informations.
     const char* const* wanted_device_extensions = blackboard.device_extensions.data();
     const auto wanted_device_extensions_count = (uint32_t)blackboard.device_extensions.size();
-    VkUtil_QueryAllAdapters(I, wanted_device_extensions, wanted_device_extensions_count);
+    const char* const* wanted_device_layers = blackboard.device_layers.data();
+    const auto wanted_device_layers_count = (uint32_t)blackboard.device_layers.size();
+    VkUtil_QueryAllAdapters(I,
+        wanted_device_layers, wanted_device_layers_count,
+        wanted_device_extensions, wanted_device_extensions_count);
     // construct extensions table
-    CGpuVkDeviceExtensionsTable::ConstructForAllAdapters(I, blackboard);
+    CGpuVkLayersTable::ConstructForAllAdapters(I, blackboard);
+    CGpuVkExtensionsTable::ConstructForAllAdapters(I, blackboard);
 
     // Open validation layer.
     if (desc->enableDebugLayer)
@@ -189,10 +257,25 @@ void cgpu_free_instance_vulkan(CGpuInstanceId instance)
     {
         auto& Adapter = to_destroy->pVulkanAdapters[i];
         cgpu_free(Adapter.pQueueFamilyProperties);
-        cgpu_free(Adapter.pExtensionProperties);
+        // free extensions cache
+        delete Adapter.pExtensionsTable;
         cgpu_free(Adapter.pExtensionNames);
-        delete Adapter.pExtensionTable;
+        cgpu_free(Adapter.pExtensionProperties);
+
+        // free layers cache
+        delete Adapter.pLayersTable;
+        cgpu_free(Adapter.pLayerNames);
+        cgpu_free(Adapter.pLayerProperties);
     }
+    // free extensions cache
+    delete to_destroy->pExtensionsTable;
+    cgpu_free(to_destroy->pExtensionNames);
+    cgpu_free(to_destroy->pExtensionProperties);
+    // free layers cache
+    delete to_destroy->pLayersTable;
+    cgpu_free(to_destroy->pLayerNames);
+    cgpu_free(to_destroy->pLayerProperties);
+
     cgpu_free(to_destroy->pVulkanAdapters);
     cgpu_free(to_destroy);
 }
@@ -233,8 +316,8 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
     createInfo.pEnabledFeatures = &A->mPhysicalDeviceFeatures;
     createInfo.enabledExtensionCount = A->mExtensionsCount;
     createInfo.ppEnabledExtensionNames = A->pExtensionNames;
-    createInfo.enabledLayerCount = 0;
-    createInfo.ppEnabledLayerNames = &validation_layer_name;
+    createInfo.enabledLayerCount = A->mLayersCount;
+    createInfo.ppEnabledLayerNames = A->pLayerNames;
 
     if (vkCreateDevice(A->pPhysicalDevice, &createInfo, CGPU_NULLPTR, &D->pVkDevice) != VK_SUCCESS)
     {

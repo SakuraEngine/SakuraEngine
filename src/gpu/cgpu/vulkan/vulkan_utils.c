@@ -102,6 +102,7 @@ void VkUtil_EnableValidationLayer(
 }
 
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
+    const char* const* device_layers, uint32_t device_layers_count,
     const char* const* device_extensions, uint32_t device_extension_count)
 {
     assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
@@ -133,6 +134,8 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
             vkGetPhysicalDeviceProperties2(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
             // Query Physical Device Features
             vkGetPhysicalDeviceFeatures(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
+            // Query Physical Device Layers Properties
+            VkUtil_SelectPhysicalDeviceLayers(VkAdapter, device_layers, device_layers_count);
             // Query Physical Device Extension Properties
             VkUtil_SelectPhysicalDeviceExtensions(VkAdapter, device_extensions, device_extension_count);
             // Select Queue Indices
@@ -244,13 +247,6 @@ VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descr
 }
 
 // Select Helpers
-void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* VkInstance,
-    const char* const* instance_layers, uint32_t instance_layers_count)
-{
-    // TODO
-    return;
-}
-
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 {
     // Query Queue Information.
@@ -283,6 +279,37 @@ void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
     }
 }
 
+void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* vkInstance,
+    const char* const* instance_layers, uint32_t instance_layers_count)
+{
+    uint32_t count = 0;
+    vkEnumerateInstanceLayerProperties(&count, NULL);
+    if (count != 0)
+    {
+        VkLayerProperties* layer_props = cgpu_calloc(count, sizeof(VkLayerProperties));
+        vkInstance->pLayerNames = cgpu_calloc(instance_layers_count, sizeof(const char*));
+        vkInstance->pLayerProperties = cgpu_calloc(instance_layers_count, sizeof(VkLayerProperties));
+        vkEnumerateInstanceLayerProperties(&count, layer_props);
+        uint32_t filled_exts = 0;
+        for (uint32_t i = 0; i < count; i++)
+        {
+            for (uint32_t j = 0; j < instance_layers_count; j++)
+            {
+                if (strcmp(layer_props[i].layerName, instance_layers[j]) == 0)
+                {
+                    vkInstance->pLayerProperties[filled_exts] = layer_props[i];
+                    vkInstance->pLayerNames[filled_exts] = vkInstance->pLayerProperties[filled_exts].layerName;
+                    filled_exts++;
+                    break;
+                }
+            }
+        }
+        vkInstance->mLayersCount = filled_exts;
+        cgpu_free(layer_props);
+    }
+    return;
+}
+
 void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
     const char* const* instance_extensions, uint32_t instance_extension_count)
 {
@@ -311,6 +338,37 @@ void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
         }
         VkInstance->mExtensionsCount = filled_exts;
         cgpu_free(ext_props);
+    }
+    return;
+}
+
+void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
+    const char* const* device_layers, uint32_t device_layers_count)
+{
+    uint32_t count;
+    vkEnumerateDeviceLayerProperties(VkAdapter->pPhysicalDevice, &count, NULL);
+    if (count != 0)
+    {
+        VkLayerProperties* layer_props = cgpu_calloc(count, sizeof(VkLayerProperties));
+        VkAdapter->pLayerNames = cgpu_calloc(device_layers_count, sizeof(const char*));
+        VkAdapter->pLayerProperties = cgpu_calloc(device_layers_count, sizeof(VkLayerProperties));
+        vkEnumerateInstanceLayerProperties(&count, layer_props);
+        uint32_t filled_exts = 0;
+        for (uint32_t i = 0; i < count; i++)
+        {
+            for (uint32_t j = 0; j < device_layers_count; j++)
+            {
+                if (strcmp(layer_props[i].layerName, device_layers[j]) == 0)
+                {
+                    VkAdapter->pLayerProperties[filled_exts] = layer_props[i];
+                    VkAdapter->pLayerNames[filled_exts] = VkAdapter->pLayerProperties[filled_exts].layerName;
+                    filled_exts++;
+                    break;
+                }
+            }
+        }
+        VkAdapter->mLayersCount = filled_exts;
+        cgpu_free(layer_props);
     }
     return;
 }

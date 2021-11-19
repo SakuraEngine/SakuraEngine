@@ -58,10 +58,20 @@ typedef struct CGpuInstance_Vulkan {
     VkDebugUtilsMessengerEXT pVkDebugUtilsMessenger;
     struct CGpuAdapter_Vulkan* pVulkanAdapters;
     uint32_t mPhysicalDeviceCount;
+
+    // Layers of Instance
+    uint32_t mLayersCount;
+    struct VkLayerProperties* pLayerProperties;
+    const char** pLayerNames;
+    // Enabled Layers Table
+    struct CGpuVkLayersTable* pLayersTable;
+
     // Extension Properties of Instance
     uint32_t mExtensionsCount;
     const char** pExtensionNames;
     struct VkExtensionProperties* pExtensionProperties;
+    // Enabled Extensions Table
+    struct CGpuVkExtensionsTable* pExtensionsTable;
 } CGpuInstance_Vulkan;
 
 typedef struct CGpuAdapter_Vulkan {
@@ -75,12 +85,21 @@ typedef struct CGpuAdapter_Vulkan {
     uint32_t mQueueFamiliesCount;
     int64_t mQueueFamilyIndices[ECGpuQueueType_Count];
     struct VkQueueFamilyProperties* pQueueFamilyProperties;
+
+    // Layers of Physical Device
+    uint32_t mLayersCount;
+    struct VkLayerProperties* pLayerProperties;
+    const char** pLayerNames;
+    // Enabled Layers Table
+    struct CGpuVkLayersTable* pLayersTable;
+
     // Extension Properties of Physical Device
     uint32_t mExtensionsCount;
     const char** pExtensionNames;
     struct VkExtensionProperties* pExtensionProperties;
     // Enabled Device Extensions Table
-    struct CGpuVkDeviceExtensionsTable* pExtensionTable;
+    struct CGpuVkExtensionsTable* pExtensionsTable;
+
     // Some Extension Queries
     uint32_t dedicated_allocation : 1;
 } CGpuAdapter_Vulkan;
