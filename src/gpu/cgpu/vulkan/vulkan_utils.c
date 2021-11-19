@@ -67,37 +67,29 @@ void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst)
 void VkUtil_EnableValidationLayer(
     CGpuInstance_Vulkan* I, const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr)
 {
-    const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr = CGPU_NULLPTR;
-    DECLARE_ZERO(VkDebugUtilsMessengerCreateInfoEXT, messengerInfo)
-    if (messenger_info_ptr != CGPU_NULLPTR)
-    {
-        messengerInfoPtr = messenger_info_ptr;
-    }
-    else
-    {
-        messengerInfo.sType =
-            VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        messengerInfo.pfnUserCallback = VkUtil_DebugCallback;
-        messengerInfo.messageSeverity =
+    VkDebugUtilsMessengerCreateInfoEXT messengerInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+        .pfnUserCallback = VkUtil_DebugCallback,
+        .messageSeverity =
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        messengerInfo.messageType =
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+        .messageType =
             VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        messengerInfo.flags = 0;
-        messengerInfo.pUserData = NULL;
-        messengerInfoPtr = &messengerInfo;
-    }
-    assert(vkCreateDebugUtilsMessengerEXT &&
-           "Load vkCreateDebugUtilsMessengerEXT failed!");
+            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+        .flags = 0,
+        .pUserData = NULL
+    };
+    const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr =
+        (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
+
+    assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
     VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
         messengerInfoPtr, CGPU_NULLPTR,
         &(I->pVkDebugUtilsMessenger));
     if (VK_SUCCESS != res)
     {
-        assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan "
-                    "debug callbacks");
+        assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
     }
 }
 
