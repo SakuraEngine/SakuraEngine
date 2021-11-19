@@ -177,7 +177,11 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
             VkAdapter->mPhysicalDeviceProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
             vkGetPhysicalDeviceProperties2(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
             // Query Physical Device Features
-            vkGetPhysicalDeviceFeatures(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
+#ifndef NX64
+            vkGetPhysicalDeviceFeatures2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
+#else
+            vkGetPhysicalDeviceFeatures2(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
+#endif
             // Query Physical Device Layers Properties
             VkUtil_SelectPhysicalDeviceLayers(VkAdapter, device_layers, device_layers_count);
             // Query Physical Device Extension Properties
