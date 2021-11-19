@@ -20,6 +20,7 @@ typedef struct CGpuVulkanInstanceDescriptor {
     // Count of Addition Physical Device Extensions
     uint32_t mDeviceExtensionCount;
     const VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessenger;
+    const VkDebugReportCallbackCreateInfoEXT* pDebugReportMessenger;
 } CGpuVulkanInstanceDescriptor;
 
 #ifdef __cplusplus
