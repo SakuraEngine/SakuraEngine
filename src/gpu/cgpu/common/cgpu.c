@@ -10,8 +10,17 @@
 #endif
 #ifdef __APPLE__
     #include "TargetConditionals.h"
-    #ifdef TARGET_OS_MAC
+    #if TARGET_OS_MAC
         #define _MACOS
+        #if defined(ARCH_ARM64)
+            #define TARGET_APPLE_ARM64
+        #endif
+    #endif
+    #if TARGET_OS_IPHONE
+        #define TARGET_IOS
+    #endif
+    #if TARGET_IPHONE_SIMULATOR
+        #define TARGET_IOS_SIMULATOR
     #endif
 #elif defined _WIN32 || defined _WIN64
 #endif
