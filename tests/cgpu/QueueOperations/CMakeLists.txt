@@ -5,6 +5,6 @@ add_executable(QueueOperations
 )
 
 target_link_libraries(QueueOperations 
-   gtest_main
+   ${TEST_LIBRARIES}
 )
 gtest_discover_tests(QueueOperations)

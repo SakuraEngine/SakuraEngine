@@ -5,6 +5,6 @@ add_executable(DeviceInitialize
 )
 
 target_link_libraries(DeviceInitialize 
-   gtest_main
+   ${TEST_LIBRARIES}
 )
 gtest_discover_tests(DeviceInitialize)

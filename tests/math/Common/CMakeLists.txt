@@ -4,7 +4,7 @@ add_executable(CommonMath
     CommonMath.cpp 
 )
 target_link_libraries(CommonMath 
-    gtest_main
+    ${TEST_LIBRARIES}
 )
 
 gtest_discover_tests(CommonMath)
