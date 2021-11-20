@@ -177,6 +177,7 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
             VkAdapter->mPhysicalDeviceProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
             vkGetPhysicalDeviceProperties2(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
             // Query Physical Device Features
+            VkAdapter->mPhysicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 #ifndef NX64
             vkGetPhysicalDeviceFeatures2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
 #else
@@ -190,6 +191,8 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
             VkUtil_SelectPhysicalDeviceExtensions(VkAdapter, device_extensions, device_extension_count);
             // Select Queue Indices
             VkUtil_SelectQueueIndices(VkAdapter);
+            // Record Adapter Detail
+            VkUtil_RecordAdapterDetail(VkAdapter);
         }
         cgpu_free(pysicalDevices);
     }
@@ -257,6 +260,20 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A,
     }
 }
 
+void VkUtil_FreeVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D)
+{
+    vmaDestroyAllocator(D->pVmaAllocator);
+}
+
+void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D)
+{
+    if (D->pPipelineCache != VK_NULL_HANDLE)
+    {
+        D->mVkDeviceTable.vkDestroyPipelineCache(
+            D->pVkDevice, D->pPipelineCache, GLOBAL_VkAllocationCallbacks);
+    }
+}
+
 // API Helpers
 VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors, bool texel)
 {
@@ -297,6 +314,26 @@ VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descr
 }
 
 // Select Helpers
+void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
+{
+    CGpuAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
+    adapter_detail->deviceId = VkAdapter->mPhysicalDeviceProps.properties.deviceID;
+    adapter_detail->vendorId = VkAdapter->mPhysicalDeviceProps.properties.vendorID;
+    adapter_detail->name = VkAdapter->mPhysicalDeviceProps.properties.deviceName;
+
+    adapter_detail->uniform_buffer_alignment =
+        VkAdapter->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
+    adapter_detail->upload_buffer_texture_alignment =
+        VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyOffsetAlignment;
+    adapter_detail->upload_buffer_texture_row_alignment =
+        VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyRowPitchAlignment;
+    adapter_detail->max_vertex_input_bindings =
+        VkAdapter->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings;
+    adapter_detail->multidraw_indirect =
+        VkAdapter->mPhysicalDeviceProps.properties.limits.maxDrawIndirectCount > 1;
+    adapter_detail->wave_lane_count =
+        VkAdapter->mSubgroupProperties.subgroupSize;
+}
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 {
     // Query Queue Information.
@@ -334,18 +371,19 @@ void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter)
     for (uint32_t i = 0; i < PF_Count; ++i)
     {
         VkFormatProperties formatSupport;
-        VkAdapter->super.format_supports[i].shader_read = 0;
-        VkAdapter->super.format_supports[i].shader_write = 0;
-        VkAdapter->super.format_supports[i].render_target_write = 0;
+        CGpuAdapterDetail* adapter_detail = (CGpuAdapterDetail*)&VkAdapter->adapter_detail;
+        adapter_detail->format_supports[i].shader_read = 0;
+        adapter_detail->format_supports[i].shader_write = 0;
+        adapter_detail->format_supports[i].render_target_write = 0;
         VkFormat fmt = (VkFormat)pf_translate_to_vulkan((ECGpuPixelFormat)i);
         if (fmt == VK_FORMAT_UNDEFINED) continue;
 
         vkGetPhysicalDeviceFormatProperties(VkAdapter->pPhysicalDevice, fmt, &formatSupport);
-        VkAdapter->super.format_supports[i].shader_read =
+        adapter_detail->format_supports[i].shader_read =
             (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0;
-        VkAdapter->super.format_supports[i].shader_write =
+        adapter_detail->format_supports[i].shader_write =
             (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) != 0;
-        VkAdapter->super.format_supports[i].render_target_write =
+        adapter_detail->format_supports[i].render_target_write =
             (formatSupport.optimalTilingFeatures &
                 (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) != 0;
     }

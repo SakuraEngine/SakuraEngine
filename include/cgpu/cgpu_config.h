@@ -187,3 +187,5 @@ extern void mi_free(void* p);
 #define cgpu_calloc_aligned mi_calloc_aligned
 #define cgpu_memalign mi_malloc_aligned
 #define cgpu_free mi_free
+
+#define MAX_GPU_VENDOR_STRING_LENGTH 64

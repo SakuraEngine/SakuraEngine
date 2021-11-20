@@ -29,12 +29,15 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
 // Device Helpers
 void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D);
 void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
+void VkUtil_FreeVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
+void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
 
 // API Helpers
 VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors, bool texel);
 
 // Feature Select Helpers
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);
+void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter);
 void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter);
 void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* VkInstance,
     const char* const* instance_layers, uint32_t instance_layers_count);
@@ -86,6 +89,7 @@ static const char* cgpu_wanted_instance_exts[] = {
 };
 
 static const char* cgpu_wanted_device_exts[] = {
+    "VK_KHR_portability_subset",
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,
     VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,

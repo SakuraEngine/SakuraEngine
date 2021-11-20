@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 struct CGpuInstanceDescriptor;
+struct CGpuAdapterDetail;
 struct CGpuDeviceDescriptor;
 struct CGpuCommandPoolDescriptor;
 struct CGpuShaderLibraryDescriptor;
@@ -55,18 +56,6 @@ typedef struct CGpuFormatSupport {
     uint8_t render_target_write : 1;
 } CGpuFormatSupport;
 
-typedef struct CGpuAdapterDetail {
-    uint32_t deviceId;
-    uint32_t vendorId;
-    const char* name;
-    uint32_t uniform_buffer_alignment;
-    uint32_t upload_buffer_texture_alignment;
-    uint32_t upload_buffer_texture_row_alignment;
-    uint32_t max_vertex_input_bindings;
-    uint32_t wave_lane_count;
-    uint32_t multidraw_indirect : 1;
-} CGpuAdapterDetail;
-
 typedef struct CGpuInstanceFeatures {
     bool specialization_constant;
 
@@ -82,6 +71,15 @@ typedef struct CGpuConstantSpecialization {
     };
 } CGpuConstantSpecialization;
 
+typedef struct GPUVendorPreset {
+    char vendor_id[MAX_GPU_VENDOR_STRING_LENGTH];
+    char model_id[MAX_GPU_VENDOR_STRING_LENGTH];
+    char revision_id[MAX_GPU_VENDOR_STRING_LENGTH]; // Optional as not all gpu's have that. Default is : 0x00
+    char gpu_name[MAX_GPU_VENDOR_STRING_LENGTH];    // If GPU Name is missing then value will be empty string
+    char driver_version[MAX_GPU_VENDOR_STRING_LENGTH];
+    char driver_date[MAX_GPU_VENDOR_STRING_LENGTH];
+} GPUVendorPreset;
+
 // Instance APIs
 RUNTIME_API CGpuInstanceId cgpu_create_instance(const struct CGpuInstanceDescriptor* desc);
 typedef CGpuInstanceId (*CGPUProcCreateInstance)(const struct CGpuInstanceDescriptor* descriptor);
@@ -94,8 +92,8 @@ typedef void (*CGPUProcFreeInstance)(CGpuInstanceId instance);
 RUNTIME_API void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 typedef void (*CGPUProcEnumAdapters)(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 
-RUNTIME_API void cgpu_query_adapter_detail(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail);
-typedef void (*CGPUProcQueryAdapterDetail)(const CGpuAdapterId instance, struct CGpuAdapterDetail* detail);
+RUNTIME_API struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter);
+typedef struct CGpuAdapterDetail* (*CGPUProcQueryAdapterDetail)(const CGpuAdapterId adapter);
 RUNTIME_API uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueType type);
 typedef uint32_t (*CGPUProcQueryQueueCount)(const CGpuAdapterId adapter, const ECGpuQueueType type);
 
@@ -201,6 +199,20 @@ typedef struct CGpuSurfacesProcTable {
     const CGPUSurfaceProc_Free free_surface;
 } CGpuSurfacesProcTable;
 
+typedef struct CGpuAdapterDetail {
+    uint32_t deviceId;
+    uint32_t vendorId;
+    const char* name;
+    uint32_t uniform_buffer_alignment;
+    uint32_t upload_buffer_texture_alignment;
+    uint32_t upload_buffer_texture_row_alignment;
+    uint32_t max_vertex_input_bindings;
+    uint32_t wave_lane_count;
+    uint32_t multidraw_indirect : 1;
+    CGpuFormatSupport format_supports[PF_Count];
+    GPUVendorPreset vendor_preset;
+} CGpuAdapterDetail;
+
 // Objects (Heap Safety)
 typedef struct CGpuInstance {
     const CGpuProcTable* proc_table;
@@ -212,7 +224,6 @@ typedef struct CGpuInstance {
 typedef struct CGpuAdapter {
     const struct CGpuInstance* instance;
     const CGpuProcTable* proc_table_cache;
-    CGpuFormatSupport format_supports[PF_Count];
 } CGpuAdapter;
 
 typedef struct CGpuDevice {

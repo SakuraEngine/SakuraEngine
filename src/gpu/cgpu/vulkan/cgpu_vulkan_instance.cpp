@@ -370,6 +370,11 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 void cgpu_free_device_vulkan(CGpuDeviceId device)
 {
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
+    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
+
+    VkUtil_FreeVMAAllocator(I, A, D);
+    VkUtil_FreePipelineCache(I, A, D);
     vkDestroyDevice(D->pVkDevice, nullptr);
     cgpu_free(D);
 }

@@ -57,8 +57,10 @@ void cgpu_enum_adapters_metal(CGpuInstanceId instance, CGpuAdapterId* const adap
     }
 }
 
-void cgpu_query_adapter_detail_metal(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail)
+CGpuAdapterDetail* cgpu_query_adapter_detail_metal(const CGpuAdapterId adapter)
 {
+    CGpuAdapter_Metal* MA = (CGpuAdapter_Metal*)adapter;
+    return &MA->adapter_detail;
 }
 
 uint32_t cgpu_query_queue_count_metal(const CGpuAdapterId adapter, const ECGpuQueueType type)
@@ -69,8 +71,8 @@ uint32_t cgpu_query_queue_count_metal(const CGpuAdapterId adapter, const ECGpuQu
 // Device APIs
 CGpuDeviceId cgpu_create_device_metal(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
 {
-    CGpuAdapter_Metal* AI = (CGpuAdapter_Metal*)adapter;
-    return &AI->device.super;
+    CGpuAdapter_Metal* MA = (CGpuAdapter_Metal*)adapter;
+    return &MA->device.super;
 }
 
 void cgpu_free_device_metal(CGpuDeviceId device)
