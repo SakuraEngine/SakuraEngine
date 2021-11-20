@@ -25,7 +25,7 @@ RUNTIME_API void cgpu_free_instance_vulkan(CGpuInstanceId instance);
 
 // Adapter APIs
 RUNTIME_API void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
-RUNTIME_API void cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail);
+RUNTIME_API CGpuAdapterDetail* cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter);
 RUNTIME_API uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQueueType type);
 
 // Device APIs
@@ -119,6 +119,8 @@ typedef struct CGpuAdapter_Vulkan {
     uint32_t sampler_ycbcr : 1;
     uint32_t nv_diagnostic_checkpoints : 1;
     uint32_t nv_diagnostic_config : 1;
+
+    CGpuAdapterDetail adapter_detail;
 } CGpuAdapter_Vulkan;
 
 typedef struct CGpuDevice_Vulkan {

@@ -96,17 +96,17 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
 }
 
 const char* unknownAdapterName = "UNKNOWN";
-void cgpu_query_adapter_detail(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail)
+struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter)
 {
     assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     assert(adapter->proc_table_cache->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
-    adapter->proc_table_cache->query_adapter_detail(adapter, detail);
+    CGpuAdapterDetail* detail = adapter->proc_table_cache->query_adapter_detail(adapter);
     if (detail->name == CGPU_NULLPTR)
     {
         detail->name = unknownAdapterName;
     }
-    return;
+    return detail;
 }
 
 uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueType type)

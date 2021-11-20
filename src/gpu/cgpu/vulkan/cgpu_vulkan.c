@@ -57,21 +57,10 @@ void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const ada
     }
 }
 
-void cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail)
+CGpuAdapterDetail* cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter)
 {
     CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
-    detail->deviceId = a->mPhysicalDeviceProps.properties.deviceID;
-    detail->vendorId = a->mPhysicalDeviceProps.properties.vendorID;
-    detail->name = a->mPhysicalDeviceProps.properties.deviceName;
-
-    detail->uniform_buffer_alignment = a->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
-    detail->upload_buffer_texture_alignment =
-        a->mPhysicalDeviceProps.properties.limits.optimalBufferCopyOffsetAlignment;
-    detail->upload_buffer_texture_row_alignment =
-        a->mPhysicalDeviceProps.properties.limits.optimalBufferCopyRowPitchAlignment;
-    detail->max_vertex_input_bindings = a->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings;
-    detail->multidraw_indirect = a->mPhysicalDeviceProps.properties.limits.maxDrawIndirectCount > 1;
-    detail->wave_lane_count = a->mSubgroupProperties.subgroupSize;
+    return &a->adapter_detail;
 }
 
 uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQueueType type)

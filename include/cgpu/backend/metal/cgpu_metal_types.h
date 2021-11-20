@@ -15,6 +15,8 @@ typedef struct CGpuDevice_Metal {
 typedef struct CGpuAdapter_Metal {
     CGpuAdapter super;
     CGpuDevice_Metal device;
+
+    CGpuAdapterDetail adapter_detail;
 } CGpuAdapter_Metal;
 
 typedef struct CGpuInstance_Metal {

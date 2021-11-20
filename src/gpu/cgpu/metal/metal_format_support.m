@@ -6,13 +6,19 @@ void MetalUtilInner_EnumFormatShaderWriteSupports(struct CGpuAdapter_Metal* MAda
 void MetalUtilInner_EnumFormatShaderReadSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier);
 void MetalUtilInner_EnumFormatRenderTargetWriteSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier);
 
+#define CAN_SHADER_READ(x) MAdapter->adapter_detail.format_supports[PF_##x].shader_read = true;
+#define SET_SHADER_READ(x, opt) MAdapter->adapter_detail.format_supports[PF_##x].shader_read = (opt);
+#define CAN_SHADER_WRITE(x) MAdapter->adapter_detail.format_supports[PF_##x].shader_write = true;
+#define SET_SHADER_WRITE(x, opt) MAdapter->adapter_detail.format_supports[PF_##x].shader_write = (opt);
+#define CAN_RENDER_TARGET_WRITE(x) MAdapter->adapter_detail.format_supports[PF_##x].render_target_write = true;
+#define SET_RENDER_TARGET_WRITE(x, opt) MAdapter->adapter_detail.format_supports[PF_##x].render_target_write = (opt);
 void MetalUtil_EnumFormatSupports(struct CGpuAdapter_Metal* MAdapter)
 {
     for (uint32_t i = 0; i < PF_Count; ++i)
     {
-        MAdapter->super.format_supports[i].shader_read = 0;
-        MAdapter->super.format_supports[i].shader_write = 0;
-        MAdapter->super.format_supports[i].render_target_write = 0;
+        MAdapter->adapter_detail.format_supports[i].shader_read = 0;
+        MAdapter->adapter_detail.format_supports[i].shader_write = 0;
+        MAdapter->adapter_detail.format_supports[i].render_target_write = 0;
     }
     uint32_t familyTier = MetalUtilInner_GetGPUFamilyTier(MAdapter);
     MetalUtilInner_EnumFormatShaderReadSupports(MAdapter, familyTier);
@@ -22,12 +28,6 @@ void MetalUtil_EnumFormatSupports(struct CGpuAdapter_Metal* MAdapter)
 }
 
 // Inner Utils
-#define CAN_SHADER_READ(x) MAdapter->super.format_supports[PF_##x].shader_read = true;
-#define SET_SHADER_READ(x, opt) MAdapter->super.format_supports[PF_##x].shader_read = (opt);
-#define CAN_SHADER_WRITE(x) MAdapter->super.format_supports[PF_##x].shader_write = true;
-#define SET_SHADER_WRITE(x, opt) MAdapter->super.format_supports[PF_##x].shader_write = (opt);
-#define CAN_RENDER_TARGET_WRITE(x) MAdapter->super.format_supports[PF_##x].render_target_write = true;
-#define SET_RENDER_TARGET_WRITE(x, opt) MAdapter->super.format_supports[PF_##x].render_target_write = (opt);
 uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGpuAdapter_Metal* MAdapter)
 {
     uint32_t familyTier = 0;
@@ -84,9 +84,9 @@ void MetalUtilInner_EnumFormatShaderReadSupports(struct CGpuAdapter_Metal* MAdap
         if (mformat != MTLPixelFormatInvalid)
         {
 #ifndef TARGET_IOS
-            MAdapter->super.format_supports[i].shader_read = MetalFormatOkayOnMac(mformat);
+            MAdapter->adapter_detail.format_supports[i].shader_read = MetalFormatOkayOnMac(mformat);
 #else
-            MAdapter->super.format_supports[i].shader_read = MetalFormatOkayOnIOS(mformat);
+            MAdapter->adapter_detail.format_supports[i].shader_read = MetalFormatOkayOnIOS(mformat);
 #endif
         }
     }

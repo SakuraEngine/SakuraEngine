@@ -16,7 +16,7 @@ RUNTIME_API void cgpu_free_instance_metal(CGpuInstanceId instance);
 
 // Adapter APIs
 RUNTIME_API void cgpu_enum_adapters_metal(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
-RUNTIME_API void cgpu_query_adapter_detail_metal(const CGpuAdapterId adapter, struct CGpuAdapterDetail* detail);
+RUNTIME_API CGpuAdapterDetail* cgpu_query_adapter_detail_metal(const CGpuAdapterId adapter);
 RUNTIME_API uint32_t cgpu_query_queue_count_metal(const CGpuAdapterId adapter, const ECGpuQueueType type);
 
 // Device APIs
