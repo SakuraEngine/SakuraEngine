@@ -78,7 +78,6 @@ if(APPLE)
 endif()
 
 set(BUILD_TEST TRUE)
-set(USE_TEST_FRAMEWORK TRUE)
 if(BUILD_TEST)
     enable_testing()
     include(GoogleTest)

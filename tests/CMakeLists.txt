@@ -1,4 +1,8 @@
-if(USE_TEST_FRAMEWORK)
+find_package(GTest)
+
+if(GTest_FOUND)
+  set(TEST_LIBRARIES GTest::Main)
+else()
     configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
     message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
     execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -30,7 +34,8 @@ if(USE_TEST_FRAMEWORK)
     if (CMAKE_VERSION VERSION_LESS 2.8.11)
       include_directories("${gtest_SOURCE_DIR}/include")
     endif()
-endif(USE_TEST_FRAMEWORK)
+  set(TEST_LIBRARIES gtest_main)
+endif(GTest_FOUND)
 
 if(BUILD_TEST)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/shared)

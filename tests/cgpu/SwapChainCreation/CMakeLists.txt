@@ -4,7 +4,7 @@ add_executable(SwapChainCreation
     SwapChainCreation.cpp 
 )
 target_link_libraries(SwapChainCreation 
-   gtest_main
+   ${TEST_LIBRARIES}
 )
 
 gtest_discover_tests(SwapChainCreation)

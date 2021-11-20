@@ -6,6 +6,6 @@ add_executable(CGPUExts
 )
 
 target_link_libraries(CGPUExts 
-   gtest_main
+   ${TEST_LIBRARIES}
 )
 gtest_discover_tests(CGPUExts)
