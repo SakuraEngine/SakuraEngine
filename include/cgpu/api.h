@@ -204,6 +204,9 @@ typedef struct CGpuAdapterDetail {
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
     uint32_t multidraw_indirect : 1;
+    bool is_uma : 1;
+    bool is_virtual : 1;
+    bool is_cpu : 1;
     CGpuFormatSupport format_supports[PF_Count];
     GPUVendorPreset vendor_preset;
 } CGpuAdapterDetail;
