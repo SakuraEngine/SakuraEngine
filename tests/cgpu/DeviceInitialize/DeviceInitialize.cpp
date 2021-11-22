@@ -196,6 +196,7 @@ TEST_P(CGpuTest, QueryVendorInfo)
         const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
         std::cout << prop->vendor_preset.gpu_name << " Vendor Information (" << GetBackendName() << ")  \n"
                   << "    GPU Name: " << prop->vendor_preset.gpu_name << "\n"
+                  << "    Is UMA: " << prop->is_uma << "\n"
                   << "    Device ID: " << prop->vendor_preset.device_id << "\n"
                   << "    Vendor ID: " << prop->vendor_preset.vendor_id << "\n"
                   << "    Driver Version: " << prop->vendor_preset.driver_version << "\n"

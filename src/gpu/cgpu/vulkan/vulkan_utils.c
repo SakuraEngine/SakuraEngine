@@ -279,6 +279,11 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
 {
     CGpuAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
     VkPhysicalDeviceProperties* prop = &VkAdapter->mPhysicalDeviceProps.properties;
+    adapter_detail->is_cpu = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
+    adapter_detail->is_virtual = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
+    adapter_detail->is_uma = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
+    assert(prop->deviceType != VK_PHYSICAL_DEVICE_TYPE_OTHER && "VK_PHYSICAL_DEVICE_TYPE_OTHER not supported!");
+
     // Vendor Info
     adapter_detail->vendor_preset.device_id = prop->deviceID;
     adapter_detail->vendor_preset.vendor_id = prop->vendorID;
