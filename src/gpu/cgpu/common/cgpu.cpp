@@ -5,7 +5,7 @@
 #ifdef CGPU_USE_D3D12
     #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #endif
-#ifdef CGPU_USE_VULKAN
+#ifdef CGPU_USE_METAL
     #include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #include "cgpu/drivers/cgpu_ags.h"

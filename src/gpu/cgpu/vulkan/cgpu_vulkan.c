@@ -1,14 +1,6 @@
-#define DLL_IMPLEMENTATION
 #include "vulkan_utils.h"
-#include "math/common.h"
-#include <assert.h>
-#include <string.h>
-#ifdef _WINDOWS
-    #include <malloc.h>
-#endif
 
 const CGpuProcTable tbl_vk = {
-    //
     .create_instance = &cgpu_create_instance_vulkan,
     .query_instance_features = &cgpu_query_instance_features_vulkan,
     .free_instance = &cgpu_free_instance_vulkan,
@@ -34,7 +26,6 @@ const CGpuProcTable tbl_vk = {
 
     .create_swapchain = &cgpu_create_swapchain_vulkan,
     .free_swapchain = &cgpu_free_swapchain_vulkan
-    //
 };
 
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
@@ -57,7 +48,7 @@ void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const ada
     }
 }
 
-CGpuAdapterDetail* cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter)
+const CGpuAdapterDetail* cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter)
 {
     CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
     return &a->adapter_detail;
@@ -187,88 +178,6 @@ void cgpu_free_command_pool_vulkan(CGpuCommandPoolId encoder)
 
 #define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
 
-// Shader APIs
-CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
-    CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
-{
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    VkShaderModuleCreateInfo info = {
-        //
-        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-        .codeSize = desc->code_size,
-        .pCode = desc->code
-        //
-    };
-    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
-    D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
-    return &S->super;
-}
-
-void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
-{
-    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)module;
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
-    D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
-    cgpu_free(S);
-}
-
-// Buffer APIs
-CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
-{
-    CGpuBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGpuBuffer_Vulkan), _Alignof(CGpuBuffer_Vulkan));
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
-    uint64_t allocationSize = desc->size;
-    // Align the buffer size to multiples of the dynamic uniform buffer minimum size
-    if (desc->descriptors & DT_UNIFORM_BUFFER)
-    {
-        uint64_t minAlignment = A->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
-        allocationSize = smath_round_up_64(allocationSize, minAlignment);
-    }
-    VkBufferCreateInfo add_info = {
-        //
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = NULL,
-        .flags = 0,
-        .size = allocationSize,
-        // Queues Props
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 0,
-        .pQueueFamilyIndices = NULL
-        //
-    };
-
-    add_info.usage = VkUtil_DescriptorTypesToBufferUsage(desc->descriptors, desc->format != PF_UNDEFINED);
-    // Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
-    if (desc->memory_usage == MU_GPU_ONLY || desc->memory_usage == MU_GPU_TO_CPU)
-        add_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-    VmaAllocationCreateInfo vma_mem_reqs = { .usage = (VmaMemoryUsage)desc->memory_usage };
-    // if (desc->mFlags & BUFFER_CREATION_FLAG_OWN_MEMORY_BIT)
-    //	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-    // if (desc->mFlags & BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT)
-    //	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-    DECLARE_ZERO(VmaAllocationInfo, alloc_info)
-    VkResult bufferResult =
-        vmaCreateBuffer(D->pVmaAllocator, &add_info, &vma_mem_reqs, &B->pVkBuffer, &B->pVkAllocation, &alloc_info);
-    if (bufferResult != VK_SUCCESS)
-    {
-        assert(0);
-        return NULL;
-    }
-    B->super.cpu_mapped_address = alloc_info.pMappedData;
-
-    return &B->super;
-}
-
-void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
-{
-    CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
-
-    cgpu_free(B);
-}
-
 // SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
@@ -302,8 +211,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         assert(0 && "fatal: vkGetPhysicalDeviceSurfaceFormatsKHR failed!");
     }
     // Allocate and get surface formats
-    VkSurfaceFormatKHR* formats = NULL;
-    formats = (VkSurfaceFormatKHR*)cgpu_calloc(surfaceFormatCount, sizeof(VkSurfaceFormatKHR));
+    DECLARE_ZERO_VLA(VkSurfaceFormatKHR, formats, surfaceFormatCount)
     if (vkGetPhysicalDeviceSurfaceFormatsKHR(A->pPhysicalDevice,
             vkSurface, &surfaceFormatCount, formats) != VK_SUCCESS)
     {
@@ -342,21 +250,18 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         }
     }
     assert(VK_FORMAT_UNDEFINED != surface_format.format);
-    cgpu_free(formats);
 
     // The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
     // This mode waits for the vertical blank ("v-sync")
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
     uint32_t swapChainImageCount = 0;
-    VkPresentModeKHR* modes = NULL;
     // Get present mode count
     if (VK_SUCCESS != vkGetPhysicalDeviceSurfacePresentModesKHR(A->pPhysicalDevice, vkSurface, &swapChainImageCount, NULL))
     {
         assert(0 && "fatal: vkGetPhysicalDeviceSurfacePresentModesKHR failed!");
     }
-
     // Allocate and get present modes
-    modes = (VkPresentModeKHR*)alloca(swapChainImageCount * sizeof(*modes));
+    DECLARE_ZERO_VLA(VkPresentModeKHR, modes, swapChainImageCount)
     if (VK_SUCCESS != vkGetPhysicalDeviceSurfacePresentModesKHR(A->pPhysicalDevice, vkSurface, &swapChainImageCount, modes))
     {
         assert(0 && "fatal: vkGetPhysicalDeviceSurfacePresentModesKHR failed!");
@@ -409,10 +314,8 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         {
             // Get queue family properties
             uint32_t queueFamilyPropertyCount = 0;
-            VkQueueFamilyProperties* queueFamilyProperties = NULL;
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, NULL);
-            queueFamilyProperties =
-                (VkQueueFamilyProperties*)alloca(queueFamilyPropertyCount * sizeof(VkQueueFamilyProperties));
+            DECLARE_ZERO_VLA(VkQueueFamilyProperties, queueFamilyProperties, queueFamilyPropertyCount)
             vkGetPhysicalDeviceQueueFamilyProperties(
                 A->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
 
@@ -486,7 +389,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     CGpuSwapChain_Vulkan* S = (CGpuSwapChain_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
     S->super.device = device;
     VkSwapchainCreateInfoKHR swapChainCreateInfo = {
-        //
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = NULL,
         .flags = 0,
@@ -505,7 +407,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         .presentMode = present_mode,
         .clipped = VK_TRUE,
         .oldSwapchain = VK_NULL_HANDLE
-        //
     };
     VkResult res = D->mVkDeviceTable.vkCreateSwapchainKHR(
         D->pVkDevice, &swapChainCreateInfo, GLOBAL_VkAllocationCallbacks, &S->pVkSwapChain);

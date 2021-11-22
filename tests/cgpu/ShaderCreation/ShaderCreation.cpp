@@ -5,11 +5,11 @@
 #include "spirv.h"
 #include "dxil.h"
 
-class ShaderCreation : public::testing::TestWithParam<ECGPUBackEnd>
+class ShaderCreation : public ::testing::TestWithParam<ECGPUBackEnd>
 {
 protected:
-	void SetUp() override
-	{
+    void SetUp() override
+    {
         ECGPUBackEnd backend = GetParam();
         DECLARE_ZERO(CGpuInstanceDescriptor, desc)
         desc.backend = backend;
@@ -22,12 +22,13 @@ protected:
 
         uint32_t adapters_count = 0;
         cgpu_enum_adapters(instance, nullptr, &adapters_count);
-        std::vector<CGpuAdapterId> adapters; adapters.resize(adapters_count);
+        std::vector<CGpuAdapterId> adapters;
+        adapters.resize(adapters_count);
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         adapter = adapters[0];
 
-        CGpuQueueGroupDescriptor G = {ECGpuQueueType_Graphics, 1};
-	    DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
+        CGpuQueueGroupDescriptor G = { ECGpuQueueType_Graphics, 1 };
+        DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
         device = cgpu_create_device(adapter, &descriptor);
@@ -50,7 +51,7 @@ protected:
         cgpu_free_device(device);
         cgpu_free_instance(instance);
     }
-    
+
     CGpuInstanceId instance;
     CGpuAdapterId adapter;
     CGpuDeviceId device;
@@ -60,6 +61,19 @@ protected:
     uint32_t frag_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
 };
 
+TEST_P(ShaderCreation, CreateBuffer)
+{
+    DECLARE_ZERO(CGpuBufferDescriptor, desc)
+    desc.flags = BCF_OWN_MEMORY_BIT | BCF_NO_DESCRIPTOR_VIEW_CREATION;
+    desc.descriptors = RT_INDEX_BUFFER;
+    desc.memory_usage = MU_GPU_ONLY;
+    desc.element_stride = sizeof(uint16_t);
+    desc.elemet_count = 3;
+    desc.size = sizeof(uint16_t) * 3;
+    auto buffer = cgpu_create_buffer(device, &desc);
+    EXPECT_NE(buffer, CGPU_NULLPTR);
+    cgpu_free_buffer(buffer);
+}
 
 TEST_P(ShaderCreation, CreateModules)
 {
@@ -70,7 +84,7 @@ TEST_P(ShaderCreation, CreateModules)
     vdesc.name = "VertexShaderLibrary";
     vdesc.stage = ECGpuShaderStage::SS_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
-    
+
     DECLARE_ZERO(CGpuShaderLibraryDescriptor, fdesc)
     fdesc.code = frag_shaders[backend];
     fdesc.code_size = frag_shader_sizes[backend];
@@ -86,12 +100,11 @@ TEST_P(ShaderCreation, CreateModules)
 }
 
 static const auto allPlatforms = testing::Values(
-#ifndef TEST_WEBGPU    
+#ifndef TEST_WEBGPU
     #ifdef CGPU_USE_VULKAN
-        ECGPUBackEnd_VULKAN
+    ECGPUBackEnd_VULKAN
     #endif
     #ifdef CGPU_USE_D3D12
-        ,ECGPUBackEnd_D3D12
     #endif
 #endif
 );

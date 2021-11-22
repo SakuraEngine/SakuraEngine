@@ -33,7 +33,7 @@ void VkUtil_FreeVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpu
 void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
 
 // API Helpers
-VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors, bool texel);
+VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuResourceTypes descriptors, bool texel);
 
 // Feature Select Helpers
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);
@@ -181,3 +181,5 @@ static const char* cgpu_wanted_device_exts[] = {
 #ifdef __cplusplus
 }
 #endif
+
+#include "vulkan_utils.inl"
