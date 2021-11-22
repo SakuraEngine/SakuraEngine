@@ -349,7 +349,7 @@ typedef struct CGpuBufferDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
-    CGpuDescriptorTypes descriptors;
+    CGpuResourceTypes descriptors;
     /// Decides which memory heap buffer will use (default, upload, readback)
     ECGpuMemoryUsage memory_usage;
     /// Image format

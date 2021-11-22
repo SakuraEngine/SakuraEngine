@@ -5,7 +5,7 @@ inline static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulka
 {
     uint64_t allocationSize = desc->size;
     // Align the buffer size to multiples of the dynamic uniform buffer minimum size
-    if (desc->descriptors & DT_UNIFORM_BUFFER)
+    if (desc->descriptors & RT_UNIFORM_BUFFER)
     {
         uint64_t minAlignment = A->adapter_detail.uniform_buffer_alignment;
         allocationSize = smath_round_up_64(allocationSize, minAlignment);
@@ -54,10 +54,10 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
     B->super.cpu_mapped_address = alloc_info.pMappedData;
 
     // Setup Descriptors
-    if ((desc->descriptors & DT_UNIFORM_BUFFER) || (desc->descriptors & DT_BUFFER) ||
-        (desc->descriptors & DT_RW_BUFFER))
+    if ((desc->descriptors & RT_UNIFORM_BUFFER) || (desc->descriptors & RT_BUFFER) ||
+        (desc->descriptors & RT_RW_BUFFER))
     {
-        if ((desc->descriptors & DT_BUFFER) || (desc->descriptors & DT_RW_BUFFER))
+        if ((desc->descriptors & RT_BUFFER) || (desc->descriptors & RT_RW_BUFFER))
         {
             B->mOffset = desc->element_stride * desc->first_element;
         }
