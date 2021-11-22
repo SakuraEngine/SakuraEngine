@@ -57,7 +57,7 @@ void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const ada
     }
 }
 
-CGpuAdapterDetail* cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter)
+const CGpuAdapterDetail* cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter)
 {
     CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
     return &a->adapter_detail;
