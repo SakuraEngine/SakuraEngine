@@ -79,11 +79,13 @@ if(APPLE)
     find_library(FoundationLib CoreFoundation)
     find_library(CocoaLib Cocoa)
     find_library(MetalLib Metal)
+    find_library(IOKitLib IOKit)
     target_link_libraries(SakuraRuntime 
         PUBLIC
         ${FoundationLib}
         ${CocoaLib}
         ${MetalLib}
+        ${IOKitLib}
     )
 endif()
 

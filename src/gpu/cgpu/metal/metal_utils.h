@@ -8,6 +8,7 @@ typedef struct CGpuAdapter_Metal CGpuAdapter_Metal;
 
 // Feature Select Helpers
 void MetalUtil_EnumFormatSupports(struct CGpuAdapter_Metal* MAdapter);
+void MetalUtil_RecordAdapterDetail(struct CGpuAdapter_Metal* MAdapter);
 
 #ifdef __cplusplus
 }

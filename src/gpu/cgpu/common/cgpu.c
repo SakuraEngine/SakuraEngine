@@ -102,10 +102,6 @@ const struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId ad
     assert(adapter->proc_table_cache->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
     CGpuAdapterDetail* detail = (CGpuAdapterDetail*)adapter->proc_table_cache->query_adapter_detail(adapter);
-    if (detail->name == CGPU_NULLPTR)
-    {
-        detail->name = unknownAdapterName;
-    }
     return detail;
 }
 

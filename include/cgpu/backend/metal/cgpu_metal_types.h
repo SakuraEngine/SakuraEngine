@@ -21,8 +21,24 @@ typedef struct CGpuAdapter_Metal {
 
 typedef struct CGpuInstance_Metal {
     CGpuInstance super;
-    CGpuAdapter_Metal adapter;
+    CGpuAdapter_Metal* adapters;
+    uint32_t adapters_count;
 } CGpuInstance_Metal;
+
+// Mac Catalyst does not support feature sets, so we redefine them to GPU families in MVKDevice.h.
+#if TARGET_MACCAT
+    #define supportsMTLFeatureSet(device, MFS) [device supportsFamily:MTLFeatureSet_##MFS]
+#else
+    #define supportsMTLFeatureSet(device, MFS) [device supportsFeatureSet:MTLFeatureSet_##MFS]
+#endif
+
+#define supportsMTLGPUFamily(device, GPUF) ([device respondsToSelector:@selector(supportsFamily:)] && [device supportsFamily:MTLGPUFamily##GPUF])
+
+#if TARGET_IOS_OR_TVOS
+    #define isMTLDeviceUMA(device) true
+#else
+    #define isMTLDeviceUMA(device) [device respondsToSelector:@selector(hasUnifiedMemory)] ? device.hasUnifiedMemory : device.isLowPower;
+#endif
 
 /* clang-format off */
 inline static MTLPixelFormat pf_translate_to_metal(const ECGpuPixelFormat fmt)

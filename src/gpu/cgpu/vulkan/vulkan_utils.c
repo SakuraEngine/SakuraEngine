@@ -1,7 +1,9 @@
 #include "vulkan_utils.h"
 #include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
+#include "vulkan/vulkan_core.h"
 #include <stdio.h>
+#include <string.h>
 
 // Debug Callback
 VKAPI_ATTR VkBool32 VKAPI_CALL
@@ -276,23 +278,26 @@ void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGp
 void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
 {
     CGpuAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
-    adapter_detail->deviceId = VkAdapter->mPhysicalDeviceProps.properties.deviceID;
-    adapter_detail->vendorId = VkAdapter->mPhysicalDeviceProps.properties.vendorID;
-    adapter_detail->name = VkAdapter->mPhysicalDeviceProps.properties.deviceName;
+    VkPhysicalDeviceProperties* prop = &VkAdapter->mPhysicalDeviceProps.properties;
+    // Vendor Info
+    adapter_detail->vendor_preset.device_id = prop->deviceID;
+    adapter_detail->vendor_preset.vendor_id = prop->vendorID;
+    adapter_detail->vendor_preset.driver_version = prop->driverVersion;
+    const char* device_name = prop->deviceName;
+    memcpy(adapter_detail->vendor_preset.gpu_name, device_name, strlen(device_name));
 
+    // Some Features
     adapter_detail->uniform_buffer_alignment =
-        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
+        (uint32_t)prop->limits.minUniformBufferOffsetAlignment;
     adapter_detail->upload_buffer_texture_alignment =
-        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyOffsetAlignment;
+        (uint32_t)prop->limits.optimalBufferCopyOffsetAlignment;
     adapter_detail->upload_buffer_texture_row_alignment =
-        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyRowPitchAlignment;
-    adapter_detail->max_vertex_input_bindings =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings;
-    adapter_detail->multidraw_indirect =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.maxDrawIndirectCount > 1;
-    adapter_detail->wave_lane_count =
-        VkAdapter->mSubgroupProperties.subgroupSize;
+        (uint32_t)prop->limits.optimalBufferCopyRowPitchAlignment;
+    adapter_detail->max_vertex_input_bindings = prop->limits.maxVertexInputBindings;
+    adapter_detail->multidraw_indirect = prop->limits.maxDrawIndirectCount > 1;
+    adapter_detail->wave_lane_count = VkAdapter->mSubgroupProperties.subgroupSize;
 }
+
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 {
     // Query Queue Information.
