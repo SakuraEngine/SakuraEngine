@@ -361,7 +361,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
     CGpuShaderLibrary_D3D12* S = new CGpuShaderLibrary_D3D12();
     IDxcLibrary* pUtils;
     DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&pUtils));
-    pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
+    pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
     pUtils->Release();
     return &S->super;
 }

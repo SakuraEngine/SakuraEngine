@@ -39,13 +39,11 @@ CGpuSurfaceId cgpu_surface_from_hwnd_vulkan(CGpuDeviceId device, HWND window)
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
     CGpuSurfaceId surface;
     VkWin32SurfaceCreateInfoKHR create_info = {
-        //
         .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
         .pNext = NULL,
         .flags = 0,
         .hinstance = GetModuleHandle(NULL),
         .hwnd = window
-        //
     };
     if (vkCreateWin32SurfaceKHR(I->pVkInstance, &create_info, GLOBAL_VkAllocationCallbacks,
             (VkSurfaceKHR*)&surface) != VK_SUCCESS)
@@ -63,12 +61,10 @@ CGpuSurfaceId cgpu_surface_from_ns_view_vulkan(CGpuDeviceId device, CGpuNSView* 
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
     CGpuSurfaceId surface;
     VkMacOSSurfaceCreateInfoMVK create_info = {
-        //
         .sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK,
         .pNext = NULL,
         .flags = 0,
         .pView = window
-        //
     };
     if (vkCreateMacOSSurfaceMVK(I->pVkInstance, &create_info, GLOBAL_VkAllocationCallbacks,
             (VkSurfaceKHR*)&surface) != VK_SUCCESS)

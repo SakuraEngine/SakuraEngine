@@ -55,6 +55,7 @@ VkUtil_DebugReportCallback(
     printf(" validation layer: %s\n", pMessage);
     return VK_FALSE;
 }
+
 bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
 {
     // AGS
@@ -142,7 +143,8 @@ void VkUtil_EnableValidationLayer(
         }
     }
 }
-
+#ifdef __clang__
+#endif
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     const char* const* device_layers, uint32_t device_layers_count,
     const char* const* device_extensions, uint32_t device_extension_count)
@@ -279,11 +281,11 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     adapter_detail->name = VkAdapter->mPhysicalDeviceProps.properties.deviceName;
 
     adapter_detail->uniform_buffer_alignment =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
+        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
     adapter_detail->upload_buffer_texture_alignment =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyOffsetAlignment;
+        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyOffsetAlignment;
     adapter_detail->upload_buffer_texture_row_alignment =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyRowPitchAlignment;
+        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyRowPitchAlignment;
     adapter_detail->max_vertex_input_bindings =
         VkAdapter->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings;
     adapter_detail->multidraw_indirect =

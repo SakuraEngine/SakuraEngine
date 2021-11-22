@@ -145,7 +145,10 @@ typedef struct CGpuCommandPool_Vulkan {
 typedef struct CGpuBuffer_Vulkan {
     CGpuBuffer super;
     VkBuffer pVkBuffer;
+    VkBufferView pVkStorageTexelView;
+    VkBufferView pVkUniformTexelView;
     struct VmaAllocation_T* pVkAllocation;
+    uint64_t mOffset;
 } CGpuBuffer_Vulkan;
 
 typedef struct CGpuShaderLibrary_Vulkan {
