@@ -96,7 +96,7 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
         adapters[i]->GetDesc3(&desc);
 
         instance->pAdapters[i].adapter_detail.deviceId = desc.DeviceId;
-        instance->pAdapters[i].adapter_detail.vendorId = desc.VendorId;
+        instance->pAdapters[i].adapter_detail.vendor_id = desc.vendor_id;
         _bstr_t b(desc.Description);
         char* str = b;
         memcpy(instance->pAdapters[i].mDescription, str, b.length());

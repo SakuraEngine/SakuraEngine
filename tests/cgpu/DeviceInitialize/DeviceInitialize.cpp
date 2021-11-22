@@ -9,6 +9,24 @@ protected:
     void SetUp() override
     {
     }
+
+    const char* GetBackendName()
+    {
+        ECGPUBackEnd backend = GetParam();
+        switch (backend)
+        {
+            case ECGPUBackEnd::ECGPUBackEnd_D3D12:
+                return "D3D12";
+            case ECGPUBackEnd::ECGPUBackEnd_METAL:
+                return "Metal";
+            case ECGPUBackEnd::ECGPUBackEnd_VULKAN:
+                return "Vulkan";
+            case ECGPUBackEnd::ECGPUBackEnd_AGC:
+                return "AGC";
+            default:
+                return "UNKNOWN";
+        }
+    }
 };
 
 CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool enableGPUValidation)
@@ -46,8 +64,11 @@ int enum_adapters(CGpuInstanceId instance)
     for (auto adapter : adapters)
     {
         const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
-        std::cout << "device id: " << prop->deviceId << "  vendor id: " << prop->vendorId << "\n";
-        std::cout << "    name: " << prop->name << "\n";
+        const auto& VendorInfo = prop->vendor_preset;
+        std::cout << " device id: " << VendorInfo.device_id
+                  << " vendor id: " << VendorInfo.vendor_id << "\n"
+                  << " name: " << VendorInfo.gpu_name << "\n"
+                  << std::endl;
     }
     // cgpu_free_instance(instance);
     return adapters_count;
@@ -141,7 +162,6 @@ TEST_P(CGpuTest, QueryQueueCount)
 {
     ECGPUBackEnd backend = GetParam();
     auto instance = init_instance(backend, true, true);
-    EXPECT_GT(enum_adapters(instance), 0);
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
     std::vector<CGpuAdapterId> adapters;
@@ -153,10 +173,33 @@ TEST_P(CGpuTest, QueryQueueCount)
         auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
         auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);
         auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
-        std::cout << prop->name << " of " << backend << "  "
-                  << "GraphicsQueue: " << gQueue << "  "
-                  << "ComputeQueue: " << cQueue << "  "
-                  << "TransferQueue: " << tQueue << std::endl;
+        std::cout << prop->vendor_preset.gpu_name
+                  << " of backend " << GetBackendName() << "  \n"
+                  << "    GraphicsQueue: " << gQueue << "  \n"
+                  << "    ComputeQueue: " << cQueue << "  \n"
+                  << "    TransferQueue: " << tQueue << std::endl;
+    }
+    cgpu_free_instance(instance);
+}
+
+TEST_P(CGpuTest, QueryVendorInfo)
+{
+    ECGPUBackEnd backend = GetParam();
+    auto instance = init_instance(backend, true, true);
+    uint32_t adapters_count = 0;
+    cgpu_enum_adapters(instance, nullptr, &adapters_count);
+    std::vector<CGpuAdapterId> adapters;
+    adapters.resize(adapters_count);
+    cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
+    for (auto adapter : adapters)
+    {
+        const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+        std::cout << prop->vendor_preset.gpu_name << " Vendor Information (" << GetBackendName() << ")  \n"
+                  << "    GPU Name: " << prop->vendor_preset.gpu_name << "\n"
+                  << "    Device ID: " << prop->vendor_preset.device_id << "\n"
+                  << "    Vendor ID: " << prop->vendor_preset.vendor_id << "\n"
+                  << "    Driver Version: " << prop->vendor_preset.driver_version << "\n"
+                  << std::endl;
     }
     cgpu_free_instance(instance);
 }

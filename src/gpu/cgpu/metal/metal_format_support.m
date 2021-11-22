@@ -31,7 +31,7 @@ void MetalUtil_EnumFormatSupports(struct CGpuAdapter_Metal* MAdapter)
 uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGpuAdapter_Metal* MAdapter)
 {
     uint32_t familyTier = 0;
-#ifndef TARGET_IOS
+#ifdef TARGET_MACOS
     familyTier = [MAdapter->device.pDevice supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v1] ? 1 : familyTier;
     #if defined(ENABLE_GPU_FAMILY_1_V2)
     if (@available(macOS 10.12, *))
@@ -51,7 +51,7 @@ uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGpuAdapter_Metal* MAdapter)
         familyTier = [MAdapter->device.pDevice supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v4] ? 1 : familyTier;
     }
     #endif
-#else
+#elif defined(TARGET_IOS)
     // Tier 1
     familyTier = [MAdapter->device.pDevice supportsFeatureSet:MTLFeatureSet_iOS_GPUFamily1_v1] ? 1 : familyTier;
 

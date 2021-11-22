@@ -71,15 +71,6 @@ typedef struct CGpuConstantSpecialization {
     };
 } CGpuConstantSpecialization;
 
-typedef struct GPUVendorPreset {
-    char vendor_id[MAX_GPU_VENDOR_STRING_LENGTH];
-    char model_id[MAX_GPU_VENDOR_STRING_LENGTH];
-    char revision_id[MAX_GPU_VENDOR_STRING_LENGTH]; // Optional as not all gpu's have that. Default is : 0x00
-    char gpu_name[MAX_GPU_VENDOR_STRING_LENGTH];    // If GPU Name is missing then value will be empty string
-    char driver_version[MAX_GPU_VENDOR_STRING_LENGTH];
-    char driver_date[MAX_GPU_VENDOR_STRING_LENGTH];
-} GPUVendorPreset;
-
 // Instance APIs
 RUNTIME_API CGpuInstanceId cgpu_create_instance(const struct CGpuInstanceDescriptor* desc);
 typedef CGpuInstanceId (*CGPUProcCreateInstance)(const struct CGpuInstanceDescriptor* descriptor);
@@ -199,10 +190,14 @@ typedef struct CGpuSurfacesProcTable {
     const CGPUSurfaceProc_Free free_surface;
 } CGpuSurfacesProcTable;
 
+typedef struct GPUVendorPreset {
+    uint32_t device_id;
+    uint32_t vendor_id;
+    uint32_t driver_version;
+    char gpu_name[MAX_GPU_VENDOR_STRING_LENGTH]; // If GPU Name is missing then value will be empty string
+} GPUVendorPreset;
+
 typedef struct CGpuAdapterDetail {
-    uint32_t deviceId;
-    uint32_t vendorId;
-    const char* name;
     uint32_t uniform_buffer_alignment;
     uint32_t upload_buffer_texture_alignment;
     uint32_t upload_buffer_texture_row_alignment;

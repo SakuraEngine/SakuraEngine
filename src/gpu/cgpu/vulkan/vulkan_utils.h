@@ -32,9 +32,6 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CG
 void VkUtil_FreeVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
 void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
 
-// API Helpers
-VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuResourceTypes descriptors, bool texel);
-
 // Feature Select Helpers
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);
 void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter);

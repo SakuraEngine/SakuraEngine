@@ -14498,7 +14498,7 @@ void VmaRecorder::WriteConfiguration(
 
     fprintf(m_File, "PhysicalDevice,apiVersion,%u\n", devProps.apiVersion);
     fprintf(m_File, "PhysicalDevice,driverVersion,%u\n", devProps.driverVersion);
-    fprintf(m_File, "PhysicalDevice,vendorID,%u\n", devProps.vendorID);
+    fprintf(m_File, "PhysicalDevice,vendor_id,%u\n", devProps.vendor_id);
     fprintf(m_File, "PhysicalDevice,deviceID,%u\n", devProps.deviceID);
     fprintf(m_File, "PhysicalDevice,deviceType,%u\n", devProps.deviceType);
     fprintf(m_File, "PhysicalDevice,deviceName,%s\n", devProps.deviceName);

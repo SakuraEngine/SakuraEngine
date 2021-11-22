@@ -23,13 +23,28 @@ const CGpuProcTable* CGPU_MetalProcTable()
     return &tbl_metal;
 }
 
+NSArray<id<MTLDevice>>* MetalUtil_GetAvailableMTLDeviceArray();
+
 // Instance APIs
 CGpuInstanceId cgpu_create_instance_metal(CGpuInstanceDescriptor const* descriptor)
 {
     CGpuInstance_Metal* MI = (CGpuInstance_Metal*)cgpu_calloc(1, sizeof(CGpuInstance_Metal));
-    MI->adapter.device.pDevice = MTLCreateSystemDefaultDevice();
-    // Query Adapter Informations
-    MetalUtil_EnumFormatSupports(&MI->adapter);
+    @autoreleasepool
+    {
+        NSArray<id<MTLDevice>>* mtlDevices = MetalUtil_GetAvailableMTLDeviceArray();
+        MI->adapters = cgpu_calloc(mtlDevices.count, sizeof(CGpuAdapter_Metal));
+        MI->adapters_count = mtlDevices.count;
+        for (uint32_t i = 0; i < MI->adapters_count; i++)
+        {
+            MI->adapters[i].device.pDevice = mtlDevices[i];
+        }
+    }
+    for (uint32_t i = 0; i < MI->adapters_count; i++)
+    {
+        // Query Adapter Informations
+        MetalUtil_EnumFormatSupports(&MI->adapters[i]);
+        MetalUtil_RecordAdapterDetail(&MI->adapters[i]);
+    }
     return &MI->super;
 }
 
@@ -41,7 +56,11 @@ void cgpu_query_instance_features_metal(CGpuInstanceId instance, struct CGpuInst
 void cgpu_free_instance_metal(CGpuInstanceId instance)
 {
     CGpuInstance_Metal* MI = (CGpuInstance_Metal*)instance;
-    MI->adapter.device.pDevice = nil;
+    for (uint32_t i = 0; i < MI->adapters_count; i++)
+    {
+        MI->adapters[i].device.pDevice = nil;
+    }
+    cgpu_free(MI->adapters);
     cgpu_free(MI);
 }
 
@@ -50,14 +69,17 @@ void cgpu_enum_adapters_metal(CGpuInstanceId instance, CGpuAdapterId* const adap
 {
     CGpuInstance_Metal* MI = (CGpuInstance_Metal*)instance;
 
-    *adapters_num = 1;
+    *adapters_num = MI->adapters_count;
     if (adapters != CGPU_NULLPTR)
     {
-        adapters[0] = &MI->adapter.super;
+        for (uint32_t i = 0; i < MI->adapters_count; i++)
+        {
+            adapters[i] = &MI->adapters[i].super;
+        }
     }
 }
 
-CGpuAdapterDetail* cgpu_query_adapter_detail_metal(const CGpuAdapterId adapter)
+const CGpuAdapterDetail* cgpu_query_adapter_detail_metal(const CGpuAdapterId adapter)
 {
     CGpuAdapter_Metal* MA = (CGpuAdapter_Metal*)adapter;
     return &MA->adapter_detail;
@@ -78,4 +100,49 @@ CGpuDeviceId cgpu_create_device_metal(CGpuAdapterId adapter, const CGpuDeviceDes
 void cgpu_free_device_metal(CGpuDeviceId device)
 {
     return;
+}
+
+// Helpers
+NSArray<id<MTLDevice>>* MetalUtil_GetAvailableMTLDeviceArray()
+{
+    NSMutableArray* mtlDevs = [NSMutableArray array];
+#ifndef TARGET_IOS
+    NSArray* rawMTLDevs = [MTLCopyAllDevices() autorelease];
+    if (rawMTLDevs)
+    {
+        const bool forceLowPower = false;
+
+        // Populate the array of appropriate MTLDevices
+        for (id<MTLDevice> md in rawMTLDevs)
+        {
+            if (!forceLowPower || md.isLowPower) { [mtlDevs addObject:md]; }
+        }
+
+        // Sort by power
+        [mtlDevs sortUsingComparator:^(id<MTLDevice> md1, id<MTLDevice> md2) {
+            BOOL md1IsLP = md1.isLowPower;
+            BOOL md2IsLP = md2.isLowPower;
+
+            if (md1IsLP == md2IsLP)
+            {
+                // If one device is headless and the other one is not, select the
+                // one that is not headless first.
+                BOOL md1IsHeadless = md1.isHeadless;
+                BOOL md2IsHeadless = md2.isHeadless;
+                if (md1IsHeadless == md2IsHeadless)
+                {
+                    return NSOrderedSame;
+                }
+                return md2IsHeadless ? NSOrderedAscending : NSOrderedDescending;
+            }
+
+            return md2IsLP ? NSOrderedAscending : NSOrderedDescending;
+        }];
+    }
+#else  // _IOS_OR_TVOS
+    id<MTLDevice> md = [MTLCreateSystemDefaultDevice() autorelease];
+    if (md) { [mtlDevs addObject:md]; }
+#endif // TARGET_IOS
+
+    return mtlDevs; // retained
 }
