@@ -56,5 +56,12 @@ typedef char char8_t;
 #if defined(__cplusplus)
     #define DECLARE_ZERO(type, var) type var = {};
 #else
-    #define DECLARE_ZERO(type, var) type var = {0};
+    #define DECLARE_ZERO(type, var) type var = { 0 };
+#endif
+
+// VLA
+#ifndef __cplusplus
+    #define DECLARE_ZERO_VLA(type, var, num) \
+        type var[(num)];                     \
+        memset((var), 0, sizeof(type) * (num));
 #endif
