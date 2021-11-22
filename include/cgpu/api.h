@@ -348,9 +348,11 @@ typedef struct CGpuBufferDescriptor {
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
     CGpuDescriptorTypes descriptors;
     /// Decides which memory heap buffer will use (default, upload, readback)
-    CGpuMemoryUsage memory_usage;
+    ECGpuMemoryUsage memory_usage;
     /// Image format
     ECGpuPixelFormat format;
+    /// Creation flags
+    ECGpuBufferCreationFlags flags;
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS

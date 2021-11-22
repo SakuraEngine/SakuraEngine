@@ -181,3 +181,5 @@ static const char* cgpu_wanted_device_exts[] = {
 #ifdef __cplusplus
 }
 #endif
+
+#include "vulkan_utils.inl"
