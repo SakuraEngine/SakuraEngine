@@ -1,5 +1,6 @@
 #pragma once
 #include "cgpu_config.h"
+#include "assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +29,7 @@ typedef enum ECGpuAGSReturnCode
     CGPU_AGS_NONE
 } ECGpuAGSReturnCode;
 
+// Format
 typedef enum ECGpuVertexFormat
 {
     VF_UNDEFINED,
@@ -339,7 +341,7 @@ typedef enum ECGpuShaderStage
 } ECGpuShaderStage;
 typedef uint32_t ECGpuShaderStages;
 
-typedef enum CGpuMemoryUsage
+typedef enum ECGpuMemoryUsage
 {
     /// No intended memory usage specified.
     MU_UNKNOWN = 0,
@@ -353,53 +355,75 @@ typedef enum CGpuMemoryUsage
     MU_GPU_TO_CPU = 4,
     MU_COUNT,
     MU_MAX_ENUM = 0x7FFFFFFF
-} CGpuMemoryUsage;
+} ECGpuMemoryUsage;
 
-typedef enum CGpuDescriptorType
+typedef enum ECGpuBufferCreationFlag
 {
-    DT_UNDEFINED = 0,
-    DT_SAMPLER = 0x01,
+    /// Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
+    BCF_NONE = 0x01,
+    /// Buffer will allocate its own memory (COMMITTED resource)
+    BCF_OWN_MEMORY_BIT = 0x02,
+    /// Buffer will be persistently mapped
+    BCF_PERSISTENT_MAP_BIT = 0x04,
+    /// Use ESRAM to store this buffer
+    BCF_ESRAM = 0x08,
+    /// Flag to specify not to allocate descriptors for the resource
+    BCF_NO_DESCRIPTOR_VIEW_CREATION = 0x10,
+#ifdef CGPU_USE_METAL
+    /* ICB Flags */
+    /// Inherit pipeline in ICB
+    BCF_ICB_INHERIT_PIPELINE = 0x100,
+    /// Inherit pipeline in ICB
+    BCF_ICB_INHERIT_BUFFERS = 0x200,
+#endif
+} ECGpuBufferCreationFlag;
+typedef uint32_t ECGpuBufferCreationFlags;
+
+typedef enum ECGpuResourceType
+{
+    RT_UNDEFINED = 0,
+    RT_SAMPLER = 0x01,
     // SRV Read only texture
-    DT_TEXTURE = (DT_SAMPLER << 1),
+    RT_TEXTURE = (RT_SAMPLER << 1),
     /// UAV Texture
-    DT_RW_TEXTURE = (DT_TEXTURE << 1),
+    RT_RW_TEXTURE = (RT_TEXTURE << 1),
     // SRV Read only buffer
-    DT_BUFFER = (DT_RW_TEXTURE << 1),
-    DT_BUFFER_RAW = (DT_BUFFER | (DT_BUFFER << 1)),
+    RT_BUFFER = (RT_RW_TEXTURE << 1),
+    RT_BUFFER_RAW = (RT_BUFFER | (RT_BUFFER << 1)),
     /// UAV Buffer
-    DT_RW_BUFFER = (DT_BUFFER << 2),
-    DT_RW_BUFFER_RAW = (DT_RW_BUFFER | (DT_RW_BUFFER << 1)),
+    RT_RW_BUFFER = (RT_BUFFER << 2),
+    RT_RW_BUFFER_RAW = (RT_RW_BUFFER | (RT_RW_BUFFER << 1)),
     /// Uniform buffer
-    DT_UNIFORM_BUFFER = (DT_RW_BUFFER << 2),
+    RT_UNIFORM_BUFFER = (RT_RW_BUFFER << 2),
     /// Push constant / Root constant
-    DT_ROOT_CONSTANT = (DT_UNIFORM_BUFFER << 1),
+    RT_ROOT_CONSTANT = (RT_UNIFORM_BUFFER << 1),
     /// IA
-    DT_VERTEX_BUFFER = (DT_ROOT_CONSTANT << 1),
-    DT_INDEX_BUFFER = (DT_VERTEX_BUFFER << 1),
-    DT_INDIRECT_BUFFER = (DT_INDEX_BUFFER << 1),
+    RT_VERTEX_BUFFER = (RT_ROOT_CONSTANT << 1),
+    RT_INDEX_BUFFER = (RT_VERTEX_BUFFER << 1),
+    RT_INDIRECT_BUFFER = (RT_INDEX_BUFFER << 1),
     /// Cubemap SRV
-    DT_TEXTURE_CUBE = (DT_TEXTURE | (DT_INDIRECT_BUFFER << 1)),
+    RT_TEXTURE_CUBE = (RT_TEXTURE | (RT_INDIRECT_BUFFER << 1)),
     /// RTV / DSV per mip slice
-    DT_RENDER_TARGET_MIP_SLICES = (DT_INDIRECT_BUFFER << 2),
+    RT_RENDER_TARGET_MIP_SLICES = (RT_INDIRECT_BUFFER << 2),
     /// RTV / DSV per array slice
-    DT_RENDER_TARGET_ARRAY_SLICES = (DT_RENDER_TARGET_MIP_SLICES << 1),
+    RT_RENDER_TARGET_ARRAY_SLICES = (RT_RENDER_TARGET_MIP_SLICES << 1),
     /// RTV / DSV per depth slice
-    DT_RENDER_TARGET_DEPTH_SLICES = (DT_RENDER_TARGET_ARRAY_SLICES << 1),
-    DT_RAY_TRACING = (DT_RENDER_TARGET_DEPTH_SLICES << 1),
+    RT_RENDER_TARGET_DEPTH_SLICES = (RT_RENDER_TARGET_ARRAY_SLICES << 1),
+    RT_RAY_TRACING = (RT_RENDER_TARGET_DEPTH_SLICES << 1),
 #if defined(CGPU_USE_VULKAN)
     /// Subpass input (descriptor type only available in Vulkan)
-    DT_INPUT_ATTACHMENT = (DT_RAY_TRACING << 1),
-    DT_TEXEL_BUFFER = (DT_INPUT_ATTACHMENT << 1),
-    DT_RW_TEXEL_BUFFER = (DT_TEXEL_BUFFER << 1),
-    DT_COMBINED_IMAGE_SAMPLER = (DT_RW_TEXEL_BUFFER << 1),
+    RT_INPUT_ATTACHMENT = (RT_RAY_TRACING << 1),
+    RT_TEXEL_BUFFER = (RT_INPUT_ATTACHMENT << 1),
+    RT_RW_TEXEL_BUFFER = (RT_TEXEL_BUFFER << 1),
+    RT_COMBINED_IMAGE_SAMPLER = (RT_RW_TEXEL_BUFFER << 1),
 #endif
 #if defined(CGPU_USE_METAL)
-    DT_ARGUMENT_BUFFER = (DT_RAY_TRACING << 1),
-    DT_INDIRECT_COMMAND_BUFFER = (DT_ARGUMENT_BUFFER << 1),
-    DT_RENDER_PIPELINE_STATE = (DT_INDIRECT_COMMAND_BUFFER << 1),
+    RT_ARGUMENT_BUFFER = (RT_RAY_TRACING << 1),
+    RT_INDIRECT_COMMAND_BUFFER = (RT_ARGUMENT_BUFFER << 1),
+    RT_RENDER_PIPELINE_STATE = (RT_INDIRECT_COMMAND_BUFFER << 1),
 #endif
-} CGpuDescriptorType;
-typedef uint32_t CGpuDescriptorTypes;
+} ECGpuResourceType;
+typedef uint32_t CGpuResourceTypes;
 
 #ifdef __cplusplus
 } // end extern "C"

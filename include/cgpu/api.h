@@ -92,8 +92,8 @@ typedef void (*CGPUProcFreeInstance)(CGpuInstanceId instance);
 RUNTIME_API void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 typedef void (*CGPUProcEnumAdapters)(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num);
 
-RUNTIME_API struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter);
-typedef struct CGpuAdapterDetail* (*CGPUProcQueryAdapterDetail)(const CGpuAdapterId adapter);
+RUNTIME_API const struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter);
+typedef const struct CGpuAdapterDetail* (*CGPUProcQueryAdapterDetail)(const CGpuAdapterId adapter);
 RUNTIME_API uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueType type);
 typedef uint32_t (*CGPUProcQueryQueueCount)(const CGpuAdapterId adapter, const ECGpuQueueType type);
 
@@ -257,12 +257,15 @@ typedef struct CGpuShaderLibrary {
 } CGpuShaderLibrary;
 
 typedef struct CGpuBuffer {
-    const CGpuDeviceId device;
+    CGpuDeviceId device;
     /**
      * CPU address of the mapped buffer.
      * Applicable to buffers created in CPU accessible heaps (CPU, CPU_TO_GPU, GPU_TO_CPU)
      */
     void* cpu_mapped_address;
+    uint64_t size : 32;
+    uint64_t descriptors : 20;
+    uint64_t memory_usage : 3;
 } CGpuBuffer;
 
 typedef struct CGpuSwapChain {
@@ -346,11 +349,19 @@ typedef struct CGpuBufferDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
-    CGpuDescriptorTypes descriptors;
+    CGpuResourceTypes descriptors;
     /// Decides which memory heap buffer will use (default, upload, readback)
-    CGpuMemoryUsage memory_usage;
+    ECGpuMemoryUsage memory_usage;
     /// Image format
     ECGpuPixelFormat format;
+    /// Creation flags
+    ECGpuBufferCreationFlags flags;
+    /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    uint64_t first_element;
+    /// Number of elements in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    uint64_t elemet_count;
+    /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    uint64_t element_stride;
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS

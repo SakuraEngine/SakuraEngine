@@ -1,46 +1,16 @@
-#define DLL_IMPLEMENTATION
-
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/backend/d3d12/d3d12_bridge.h"
-#include <dxcapi.h>
+#include <EASTL/vector.h>
 
 #include <assert.h>
-#include <stdlib.h>
-#ifdef CGPU_USE_D3D12
-    //
-    // C++ is the only language supported by D3D12:
-    //   https://msdn.microsoft.com/en-us/library/windows/desktop/dn899120(v=vs.85).aspx
-    //
-    #if !defined(__cplusplus)
-        #error "D3D12 requires C++! Sorry!"
-    #endif
-    #include <stdio.h>
-    #include <vector>
+#include <stdio.h>
 
-    #if !defined(XBOX)
-        #pragma comment(lib, "d3d12.lib")
-        #pragma comment(lib, "dxgi.lib")
-        #pragma comment(lib, "dxguid.lib")
-        #pragma comment(lib, "dxcompiler.lib")
-    #endif
-
-    #ifndef SAFE_RELEASE
-        #define SAFE_RELEASE(p_var) \
-            if (p_var)              \
-            {                       \
-                p_var->Release();   \
-                p_var = NULL;       \
-            }
-    #endif
-
-D3D_FEATURE_LEVEL feature_levels[] = {
-    //
-    D3D_FEATURE_LEVEL_12_1,
-    D3D_FEATURE_LEVEL_12_0,
-    D3D_FEATURE_LEVEL_11_1,
-    D3D_FEATURE_LEVEL_11_0
-    //
-};
+#if !defined(XBOX)
+    #pragma comment(lib, "d3d12.lib")
+    #pragma comment(lib, "dxgi.lib")
+    #pragma comment(lib, "dxguid.lib")
+    #pragma comment(lib, "dxcompiler.lib")
+#endif
 
 void optionalEnableDebugLayer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor)
 {
@@ -66,7 +36,7 @@ void optionalEnableDebugLayer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor
     }
 }
 
-    #include <comdef.h>
+#include <comdef.h>
 
 // Call this only once.
 void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foundSoftwareAdapter)
@@ -74,8 +44,8 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
     assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
     assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
     IDXGIAdapter4* adapter = NULL;
-    std::vector<IDXGIAdapter4*> adapters;
-    std::vector<D3D_FEATURE_LEVEL> adapter_levels;
+    eastl::vector<IDXGIAdapter4*> adapters;
+    eastl::vector<D3D_FEATURE_LEVEL> adapter_levels;
     // Find number of usable GPUs
     // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress
     // exports
@@ -88,11 +58,11 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
         // Ignore Microsoft Driver
         if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
         {
-            uint32_t level_c = CGPU_ARRAY_LEN(feature_levels);
+            uint32_t level_c = CGPU_ARRAY_LEN(d3d_feature_levels);
             for (uint32_t level = 0; level < level_c; ++level)
             {
                 // Make sure the adapter can support a D3D12 device
-                if (SUCCEEDED(D3D12CreateDevice(adapter, feature_levels[level], __uuidof(ID3D12Device), NULL)))
+                if (SUCCEEDED(D3D12CreateDevice(adapter, d3d_feature_levels[level], __uuidof(ID3D12Device), NULL)))
                 {
                     DECLARE_ZERO(CGpuAdapter_D3D12, cgpuAdapter)
                     HRESULT hres = adapter->QueryInterface(IID_PPV_ARGS(&cgpuAdapter.pDxActiveGPU));
@@ -103,7 +73,7 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
                         // Add ref
                         {
                             adapters.push_back(adapter);
-                            adapter_levels.push_back(feature_levels[level]);
+                            adapter_levels.push_back(d3d_feature_levels[level]);
                         }
                         break;
                     }
@@ -125,13 +95,13 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
         DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapters[i]->GetDesc3(&desc);
 
-        instance->pAdapters[i].adapter_detail.device_id = desc.DeviceId;
-        instance->pAdapters[i].adapter_detail.vendor_id = desc.VendorId;
+        instance->pAdapters[i].adapter_detail.deviceId = desc.DeviceId;
+        instance->pAdapters[i].adapter_detail.vendorId = desc.VendorId;
         _bstr_t b(desc.Description);
         char* str = b;
         memcpy(instance->pAdapters[i].mDescription, str, b.length());
         instance->pAdapters[i].mDescription[b.length()] = '\0';
-        instance->pAdapters[i].adapter_detail.name = A->mDescription;
+        instance->pAdapters[i].adapter_detail.name = instance->pAdapters[i].mDescription;
 
         instance->pAdapters[i].super.instance = &instance->super;
     }
@@ -144,8 +114,8 @@ CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descript
 
     UINT flags = 0;
     if (descriptor->enableDebugLayer) flags = DXGI_CREATE_FACTORY_DEBUG;
-    #if defined(XBOX)
-    #else
+#if defined(XBOX)
+#else
     if (SUCCEEDED(CreateDXGIFactory2(flags, IID_PPV_ARGS(&result->pDXGIFactory))))
     {
         uint32_t gpuCount = 0;
@@ -162,7 +132,7 @@ CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descript
     {
         assert("[D3D12 Fatal]: Create DXGIFactory2 Failed!");
     }
-    #endif
+#endif
     return &result->super;
 }
 
@@ -188,7 +158,7 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
     {
         result->pDXDebug->Release();
     }
-    #ifdef _DEBUG
+#ifdef _DEBUG
     {
         IDXGIDebug1* dxgiDebug;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug))))
@@ -198,7 +168,7 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
         }
         dxgiDebug->Release();
     }
-    #endif
+#endif
     delete result;
 }
 
@@ -218,7 +188,7 @@ void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adap
     }
 }
 
-CGpuAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGpuAdapterId adapter)
+const CGpuAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGpuAdapterId adapter)
 {
     const CGpuAdapter_D3D12* A = (CGpuAdapter_D3D12*)adapter;
     return &A->adapter_detail;
@@ -351,31 +321,6 @@ void cgpu_free_command_pool_d3d12(CGpuCommandPoolId encoder)
     delete E;
 }
 
-    // Shader APIs
-    #ifndef DXC_CP_ACP
-        #define DXC_CP_ACP 0
-    #endif
-CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
-    CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
-{
-    CGpuShaderLibrary_D3D12* S = new CGpuShaderLibrary_D3D12();
-    IDxcLibrary* pUtils;
-    DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&pUtils));
-    pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
-    pUtils->Release();
-    return &S->super;
-}
-
-void cgpu_free_shader_library_d3d12(CGpuShaderLibraryId shader_library)
-{
-    CGpuShaderLibrary_D3D12* S = (CGpuShaderLibrary_D3D12*)shader_library;
-    if (S->pShaderBlob != CGPU_NULLPTR)
-    {
-        S->pShaderBlob->Release();
-    }
-    delete S;
-}
-
 // SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
@@ -439,7 +384,7 @@ void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain)
     delete S;
 }
 
-    #include "cgpu/extensions/cgpu_d3d12_exts.h"
+#include "cgpu/extensions/cgpu_d3d12_exts.h"
 // extentions
 CGpuDREDSettingsId cgpu_d3d12_enable_DRED()
 {
@@ -459,4 +404,10 @@ void cgpu_d3d12_disable_DRED(CGpuDREDSettingsId settings)
     delete settings;
 }
 
+//
+// C++ is the only language supported by D3D12:
+//   https://msdn.microsoft.com/en-us/library/windows/desktop/dn899120(v=vs.85).aspx
+//
+#if !defined(__cplusplus)
+    #error "D3D12 requires C++! Sorry!"
 #endif

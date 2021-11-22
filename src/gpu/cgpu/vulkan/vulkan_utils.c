@@ -1,9 +1,7 @@
 #include "vulkan_utils.h"
 #include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
-#include <assert.h>
 #include <stdio.h>
-#include <string.h>
 
 // Debug Callback
 VKAPI_ATTR VkBool32 VKAPI_CALL
@@ -57,6 +55,7 @@ VkUtil_DebugReportCallback(
     printf(" validation layer: %s\n", pMessage);
     return VK_FALSE;
 }
+
 bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
 {
     // AGS
@@ -144,7 +143,8 @@ void VkUtil_EnableValidationLayer(
         }
     }
 }
-
+#ifdef __clang__
+#endif
 void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     const char* const* device_layers, uint32_t device_layers_count,
     const char* const* device_extensions, uint32_t device_extension_count)
@@ -156,8 +156,7 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     {
         I->pVulkanAdapters =
             (CGpuAdapter_Vulkan*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(CGpuAdapter_Vulkan));
-        VkPhysicalDevice* pysicalDevices =
-            (VkPhysicalDevice*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(VkPhysicalDevice));
+        DECLARE_ZERO_VLA(VkPhysicalDevice, pysicalDevices, I->mPhysicalDeviceCount)
         vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount,
             pysicalDevices);
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
@@ -194,7 +193,6 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
             // Record Adapter Detail
             VkUtil_RecordAdapterDetail(VkAdapter);
         }
-        cgpu_free(pysicalDevices);
     }
     else
     {
@@ -274,45 +272,6 @@ void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGp
     }
 }
 
-// API Helpers
-VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuDescriptorTypes descriptors, bool texel)
-{
-    VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    if (descriptors & DT_UNIFORM_BUFFER)
-    {
-        result |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    }
-    if (descriptors & DT_RW_BUFFER)
-    {
-        result |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-        if (texel) result |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
-    }
-    if (descriptors & DT_BUFFER)
-    {
-        result |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-        if (texel) result |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
-    }
-    if (descriptors & DT_INDEX_BUFFER)
-    {
-        result |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-    }
-    if (descriptors & DT_VERTEX_BUFFER)
-    {
-        result |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    }
-    if (descriptors & DT_INDIRECT_BUFFER)
-    {
-        result |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
-    }
-#ifdef ENABLE_RAYTRACING
-    if (descriptors & DT_RAY_TRACING)
-    {
-        result |= VK_BUFFER_USAGE_RAY_TRACING_BIT_NV;
-    }
-#endif
-    return result;
-}
-
 // Select Helpers
 void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
 {
@@ -322,11 +281,11 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     adapter_detail->name = VkAdapter->mPhysicalDeviceProps.properties.deviceName;
 
     adapter_detail->uniform_buffer_alignment =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
+        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
     adapter_detail->upload_buffer_texture_alignment =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyOffsetAlignment;
+        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyOffsetAlignment;
     adapter_detail->upload_buffer_texture_row_alignment =
-        VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyRowPitchAlignment;
+        (uint32_t)VkAdapter->mPhysicalDeviceProps.properties.limits.optimalBufferCopyRowPitchAlignment;
     adapter_detail->max_vertex_input_bindings =
         VkAdapter->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings;
     adapter_detail->multidraw_indirect =
@@ -397,9 +356,10 @@ void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* vkInstance,
     vkEnumerateInstanceLayerProperties(&count, NULL);
     if (count != 0)
     {
-        VkLayerProperties* layer_props = cgpu_calloc(count, sizeof(VkLayerProperties));
         vkInstance->pLayerNames = cgpu_calloc(instance_layers_count, sizeof(const char*));
         vkInstance->pLayerProperties = cgpu_calloc(instance_layers_count, sizeof(VkLayerProperties));
+
+        DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
         vkEnumerateInstanceLayerProperties(&count, layer_props);
         uint32_t filled_exts = 0;
         for (uint32_t i = 0; i < count; i++)
@@ -416,7 +376,6 @@ void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* vkInstance,
             }
         }
         vkInstance->mLayersCount = filled_exts;
-        cgpu_free(layer_props);
     }
     return;
 }
@@ -429,9 +388,10 @@ void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
     vkEnumerateInstanceExtensionProperties(layer_name, &count, NULL);
     if (count > 0)
     {
-        VkExtensionProperties* ext_props = cgpu_calloc(count, sizeof(VkExtensionProperties));
         VkInstance->pExtensionProperties = cgpu_calloc(instance_extension_count, sizeof(VkExtensionProperties));
         VkInstance->pExtensionNames = cgpu_calloc(instance_extension_count, sizeof(const char*));
+
+        DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateInstanceExtensionProperties(layer_name, &count, ext_props);
         uint32_t filled_exts = 0;
         for (uint32_t i = 0; i < count; i++)
@@ -448,7 +408,6 @@ void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
             }
         }
         VkInstance->mExtensionsCount = filled_exts;
-        cgpu_free(ext_props);
     }
     return;
 }
@@ -460,9 +419,10 @@ void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
     vkEnumerateDeviceLayerProperties(VkAdapter->pPhysicalDevice, &count, NULL);
     if (count != 0)
     {
-        VkLayerProperties* layer_props = cgpu_calloc(count, sizeof(VkLayerProperties));
         VkAdapter->pLayerNames = cgpu_calloc(device_layers_count, sizeof(const char*));
         VkAdapter->pLayerProperties = cgpu_calloc(device_layers_count, sizeof(VkLayerProperties));
+
+        DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
         vkEnumerateInstanceLayerProperties(&count, layer_props);
         uint32_t filled_exts = 0;
         for (uint32_t i = 0; i < count; i++)
@@ -479,7 +439,6 @@ void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
             }
         }
         VkAdapter->mLayersCount = filled_exts;
-        cgpu_free(layer_props);
     }
     return;
 }
@@ -492,9 +451,10 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
     vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, NULL);
     if (count > 0)
     {
-        VkExtensionProperties* ext_props = cgpu_calloc(count, sizeof(VkExtensionProperties));
         VkAdapter->pExtensionProperties = cgpu_calloc(device_extension_count, sizeof(VkExtensionProperties));
         VkAdapter->pExtensionNames = cgpu_calloc(device_extension_count, sizeof(const char*));
+
+        DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, ext_props);
         uint32_t filled_exts = 0;
         for (uint32_t i = 0; i < count; i++)
@@ -511,7 +471,6 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
             }
         }
         VkAdapter->mExtensionsCount = filled_exts;
-        cgpu_free(ext_props);
     }
     return;
 }

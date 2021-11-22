@@ -5,7 +5,7 @@
 #ifdef CGPU_USE_D3D12
     #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #endif
-#ifdef CGPU_USE_VULKAN
+#ifdef CGPU_USE_METAL
     #include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #ifdef __APPLE__
@@ -96,12 +96,12 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
 }
 
 const char* unknownAdapterName = "UNKNOWN";
-struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter)
+const struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter)
 {
     assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     assert(adapter->proc_table_cache->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
-    CGpuAdapterDetail* detail = adapter->proc_table_cache->query_adapter_detail(adapter);
+    CGpuAdapterDetail* detail = (CGpuAdapterDetail*)adapter->proc_table_cache->query_adapter_detail(adapter);
     if (detail->name == CGPU_NULLPTR)
     {
         detail->name = unknownAdapterName;
@@ -214,6 +214,28 @@ void cgpu_free_shader_library(CGpuShaderLibraryId library)
     CGPUProcFreeShaderLibrary fn_free_shader_library = device->proc_table_cache->free_shader_library;
     assert(fn_free_shader_library && "free_shader_library Proc Missing!");
     fn_free_shader_library(library);
+}
+
+CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_buffer && "create_buffer Proc Missing!");
+
+    CGPUProcCreateBuffer fn_create_buffer = device->proc_table_cache->create_buffer;
+    CGpuBuffer* buffer = (CGpuBuffer*)fn_create_buffer(device, desc);
+    buffer->device = device;
+    return buffer;
+}
+
+void cgpu_free_buffer(CGpuBufferId buffer)
+{
+    assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
+    const CGpuDeviceId device = buffer->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+
+    CGPUProcFreeBuffer fn_free_buffer = device->proc_table_cache->free_buffer;
+    assert(fn_free_buffer && "free_buffer Proc Missing!");
+    fn_free_buffer(buffer);
 }
 
 // SwapChain APIs
