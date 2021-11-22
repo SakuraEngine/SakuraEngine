@@ -111,6 +111,16 @@ void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
     assert(B->pVkAllocation && "pVkAllocation must not be null!");
+    if (B->pVkUniformTexelView)
+    {
+        vkDestroyBufferView(D->pVkDevice, B->pVkUniformTexelView, GLOBAL_VkAllocationCallbacks);
+        B->pVkUniformTexelView = VK_NULL_HANDLE;
+    }
+    if (B->pVkStorageTexelView)
+    {
+        vkDestroyBufferView(D->pVkDevice, B->pVkUniformTexelView, GLOBAL_VkAllocationCallbacks);
+        B->pVkStorageTexelView = VK_NULL_HANDLE;
+    }
     vmaDestroyBuffer(D->pVmaAllocator, B->pVkBuffer, B->pVkAllocation);
     cgpu_free(B);
 }
