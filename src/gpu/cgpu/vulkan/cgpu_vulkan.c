@@ -238,8 +238,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         assert(0 && "fatal: vkGetPhysicalDeviceSurfaceFormatsKHR failed!");
     }
     // Allocate and get surface formats
-    VkSurfaceFormatKHR* formats = NULL;
-    formats = (VkSurfaceFormatKHR*)cgpu_calloc(surfaceFormatCount, sizeof(VkSurfaceFormatKHR));
+    DECLARE_ZERO_VLA(VkSurfaceFormatKHR, formats, surfaceFormatCount)
     if (vkGetPhysicalDeviceSurfaceFormatsKHR(A->pPhysicalDevice,
             vkSurface, &surfaceFormatCount, formats) != VK_SUCCESS)
     {
@@ -278,7 +277,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         }
     }
     assert(VK_FORMAT_UNDEFINED != surface_format.format);
-    cgpu_free(formats);
 
     // The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
     // This mode waits for the vertical blank ("v-sync")
@@ -291,7 +289,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     }
 
     // Allocate and get present modes
-    VkPresentModeKHR modes[swapChainImageCount];
+    DECLARE_ZERO_VLA(VkPresentModeKHR, modes, swapChainImageCount)
     if (VK_SUCCESS != vkGetPhysicalDeviceSurfacePresentModesKHR(A->pPhysicalDevice, vkSurface, &swapChainImageCount, modes))
     {
         assert(0 && "fatal: vkGetPhysicalDeviceSurfacePresentModesKHR failed!");
@@ -345,7 +343,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
             // Get queue family properties
             uint32_t queueFamilyPropertyCount = 0;
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, NULL);
-            VkQueueFamilyProperties queueFamilyProperties[queueFamilyPropertyCount];
+            DECLARE_ZERO_VLA(VkQueueFamilyProperties, queueFamilyProperties, queueFamilyPropertyCount)
             vkGetPhysicalDeviceQueueFamilyProperties(
                 A->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
 
