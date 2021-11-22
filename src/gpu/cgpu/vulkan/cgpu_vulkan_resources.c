@@ -11,7 +11,6 @@ inline static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulka
         allocationSize = smath_round_up_64(allocationSize, minAlignment);
     }
     VkBufferCreateInfo add_info = {
-        //
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
@@ -20,7 +19,6 @@ inline static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulka
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0,
         .pQueueFamilyIndices = NULL
-        //
     };
     add_info.usage = VkUtil_DescriptorTypesToBufferUsage(desc->descriptors, desc->format != PF_UNDEFINED);
     // Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
@@ -30,6 +28,7 @@ inline static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulka
 }
 
 // Buffer APIs
+static_assert(sizeof(CGpuBuffer_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
 {
     CGpuBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGpuBuffer_Vulkan), _Alignof(CGpuBuffer_Vulkan));
@@ -55,10 +54,58 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
     B->super.cpu_mapped_address = alloc_info.pMappedData;
 
     // Setup Descriptors
-
+    if ((desc->descriptors & DT_UNIFORM_BUFFER) || (desc->descriptors & DT_BUFFER) ||
+        (desc->descriptors & DT_RW_BUFFER))
+    {
+        if ((desc->descriptors & DT_BUFFER) || (desc->descriptors & DT_RW_BUFFER))
+        {
+            B->mOffset = desc->element_stride * desc->first_element;
+        }
+    }
+    // Setup Uniform Texel View
+    const VkFormat texel_format = pf_translate_to_vulkan(desc->format);
+    DECLARE_ZERO(VkFormatProperties, formatProps)
+    vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, texel_format, &formatProps);
+    // Now We Use The Same View Info for Uniform & Storage BufferView on Vulkan Backend.
+    VkBufferViewCreateInfo viewInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
+        .pNext = NULL,
+        .buffer = B->pVkBuffer,
+        .flags = 0,
+        .format = texel_format,
+        .offset = desc->first_element * desc->element_stride,
+        .range = desc->elemet_count * desc->element_stride
+    };
+    if (add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT)
+    {
+        if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT))
+        {
+            // LOGF(LogLevel::eWARNING, "Failed to create uniform texel buffer view for format %u", (uint32_t)pDesc->mFormat);
+        }
+        else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
+                     GLOBAL_VkAllocationCallbacks, &B->pVkUniformTexelView) != VK_SUCCESS)
+        {
+        }
+    }
+    // Setup Storage Texel View
+    if (add_info.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)
+    {
+        if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT))
+        {
+            // LOGF(LogLevel::eWARNING, "Failed to create storage texel buffer view for format %u", (uint32_t)pDesc->mFormat);
+        }
+        else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
+                     GLOBAL_VkAllocationCallbacks, &B->pVkStorageTexelView) != VK_SUCCESS)
+        {
+        }
+    }
+    // TODO: Set Buffer Name
+    //
+    B->super.size = (uint32_t)desc->size;
+    B->super.memory_usage = desc->memory_usage;
+    B->super.descriptors = desc->descriptors;
     return &B->super;
 }
-
 void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
@@ -66,4 +113,27 @@ void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
     assert(B->pVkAllocation && "pVkAllocation must not be null!");
     vmaDestroyBuffer(D->pVmaAllocator, B->pVkBuffer, B->pVkAllocation);
     cgpu_free(B);
+}
+
+// Shader APIs
+CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
+    CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    VkShaderModuleCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .codeSize = desc->code_size,
+        .pCode = desc->code
+    };
+    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
+    D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
+    return &S->super;
+}
+
+void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
+{
+    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)module;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
+    D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(S);
 }

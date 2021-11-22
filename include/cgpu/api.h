@@ -263,6 +263,9 @@ typedef struct CGpuBuffer {
      * Applicable to buffers created in CPU accessible heaps (CPU, CPU_TO_GPU, GPU_TO_CPU)
      */
     void* cpu_mapped_address;
+    uint64_t size : 32;
+    uint64_t descriptors : 20;
+    uint64_t memory_usage : 3;
 } CGpuBuffer;
 
 typedef struct CGpuSwapChain {
@@ -353,6 +356,12 @@ typedef struct CGpuBufferDescriptor {
     ECGpuPixelFormat format;
     /// Creation flags
     ECGpuBufferCreationFlags flags;
+    /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    uint64_t first_element;
+    /// Number of elements in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    uint64_t elemet_count;
+    /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    uint64_t element_stride;
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS
