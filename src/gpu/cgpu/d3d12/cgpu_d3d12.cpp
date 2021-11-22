@@ -125,13 +125,13 @@ void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foun
         DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         adapters[i]->GetDesc3(&desc);
 
-        instance->pAdapters[i].adapter_detail.device_id = desc.DeviceId;
-        instance->pAdapters[i].adapter_detail.vendor_id = desc.VendorId;
+        instance->pAdapters[i].adapter_detail.deviceId = desc.DeviceId;
+        instance->pAdapters[i].adapter_detail.vendorId = desc.VendorId;
         _bstr_t b(desc.Description);
         char* str = b;
         memcpy(instance->pAdapters[i].mDescription, str, b.length());
         instance->pAdapters[i].mDescription[b.length()] = '\0';
-        instance->pAdapters[i].adapter_detail.name = A->mDescription;
+        instance->pAdapters[i].adapter_detail.name = instance->pAdapters[i].mDescription;
 
         instance->pAdapters[i].super.instance = &instance->super;
     }
@@ -218,7 +218,7 @@ void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adap
     }
 }
 
-CGpuAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGpuAdapterId adapter)
+const CGpuAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGpuAdapterId adapter)
 {
     const CGpuAdapter_D3D12* A = (CGpuAdapter_D3D12*)adapter;
     return &A->adapter_detail;

@@ -5,7 +5,7 @@
 #ifdef CGPU_USE_D3D12
     #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #endif
-#ifdef CGPU_USE_VULKAN
+#ifdef CGPU_USE_METAL
     #include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #ifdef __APPLE__
@@ -96,12 +96,12 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
 }
 
 const char* unknownAdapterName = "UNKNOWN";
-struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter)
+const struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter)
 {
     assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     assert(adapter->proc_table_cache->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
-    CGpuAdapterDetail* detail = adapter->proc_table_cache->query_adapter_detail(adapter);
+    CGpuAdapterDetail* detail = (CGpuAdapterDetail*)adapter->proc_table_cache->query_adapter_detail(adapter);
     if (detail->name == CGPU_NULLPTR)
     {
         detail->name = unknownAdapterName;

@@ -45,7 +45,7 @@ int enum_adapters(CGpuInstanceId instance)
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
     {
-        CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+        const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
         std::cout << "device id: " << prop->deviceId << "  vendor id: " << prop->vendorId << "\n";
         std::cout << "    name: " << prop->name << "\n";
     }
@@ -149,7 +149,7 @@ TEST_P(CGpuTest, QueryQueueCount)
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
     {
-        CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+        const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
         auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
         auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);
         auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
