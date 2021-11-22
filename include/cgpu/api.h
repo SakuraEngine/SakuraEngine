@@ -257,7 +257,7 @@ typedef struct CGpuShaderLibrary {
 } CGpuShaderLibrary;
 
 typedef struct CGpuBuffer {
-    const CGpuDeviceId device;
+    CGpuDeviceId device;
     /**
      * CPU address of the mapped buffer.
      * Applicable to buffers created in CPU accessible heaps (CPU, CPU_TO_GPU, GPU_TO_CPU)

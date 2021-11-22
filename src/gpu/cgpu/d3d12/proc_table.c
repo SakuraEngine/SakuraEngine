@@ -23,9 +23,11 @@ const CGpuProcTable tbl_d3d12 = {
     .create_shader_library = &cgpu_create_shader_library_d3d12,
     .free_shader_library = &cgpu_free_shader_library_d3d12,
 
+    .create_buffer = &cgpu_create_buffer_d3d12,
+    .free_buffer = &cgpu_free_buffer_d3d12,
+
     .create_swapchain = &cgpu_create_swapchain_d3d12,
     .free_swapchain = &cgpu_free_swapchain_d3d12
-    //
 };
 
 const CGpuProcTable* CGPU_D3D12ProcTable()

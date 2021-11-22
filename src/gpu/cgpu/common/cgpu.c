@@ -216,6 +216,28 @@ void cgpu_free_shader_library(CGpuShaderLibraryId library)
     fn_free_shader_library(library);
 }
 
+CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_buffer && "create_buffer Proc Missing!");
+
+    CGPUProcCreateBuffer fn_create_buffer = device->proc_table_cache->create_buffer;
+    CGpuBuffer* buffer = (CGpuBuffer*)fn_create_buffer(device, desc);
+    buffer->device = device;
+    return buffer;
+}
+
+void cgpu_free_buffer(CGpuBufferId buffer)
+{
+    assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
+    const CGpuDeviceId device = buffer->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+
+    CGPUProcFreeBuffer fn_free_buffer = device->proc_table_cache->free_buffer;
+    assert(fn_free_buffer && "free_buffer Proc Missing!");
+    fn_free_buffer(buffer);
+}
+
 // SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
