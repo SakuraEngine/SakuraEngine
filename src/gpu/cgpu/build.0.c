@@ -2,6 +2,7 @@
 #ifdef CGPU_USE_VULKAN
     #include "vulkan/vulkan_utils.c"
     #include "vulkan/cgpu_vulkan.c"
+    #include "vulkan/cgpu_vulkan_resources.c"
     #include "vulkan/cgpu_vulkan_surfaces.c"
 #endif
 #ifdef CGPU_USE_D3D12

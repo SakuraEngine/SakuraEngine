@@ -1,5 +1,6 @@
 #pragma once
 #include "cgpu_config.h"
+#include "assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +29,7 @@ typedef enum ECGpuAGSReturnCode
     CGPU_AGS_NONE
 } ECGpuAGSReturnCode;
 
+// Format
 typedef enum ECGpuVertexFormat
 {
     VF_UNDEFINED,
@@ -339,7 +341,7 @@ typedef enum ECGpuShaderStage
 } ECGpuShaderStage;
 typedef uint32_t ECGpuShaderStages;
 
-typedef enum CGpuMemoryUsage
+typedef enum ECGpuMemoryUsage
 {
     /// No intended memory usage specified.
     MU_UNKNOWN = 0,
@@ -353,9 +355,31 @@ typedef enum CGpuMemoryUsage
     MU_GPU_TO_CPU = 4,
     MU_COUNT,
     MU_MAX_ENUM = 0x7FFFFFFF
-} CGpuMemoryUsage;
+} ECGpuMemoryUsage;
 
-typedef enum CGpuDescriptorType
+typedef enum ECGpuBufferCreationFlag
+{
+    /// Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
+    BCF_NONE = 0x01,
+    /// Buffer will allocate its own memory (COMMITTED resource)
+    BCF_OWN_MEMORY_BIT = 0x02,
+    /// Buffer will be persistently mapped
+    BCF_PERSISTENT_MAP_BIT = 0x04,
+    /// Use ESRAM to store this buffer
+    BCF_ESRAM = 0x08,
+    /// Flag to specify not to allocate descriptors for the resource
+    BCF_NO_DESCRIPTOR_VIEW_CREATION = 0x10,
+#ifdef CGPU_USE_METAL
+    /* ICB Flags */
+    /// Inherit pipeline in ICB
+    BCF_ICB_INHERIT_PIPELINE = 0x100,
+    /// Inherit pipeline in ICB
+    BCF_ICB_INHERIT_BUFFERS = 0x200,
+#endif
+} ECGpuBufferCreationFlag;
+typedef uint32_t ECGpuBufferCreationFlags;
+
+typedef enum ECGpuDescriptorType
 {
     DT_UNDEFINED = 0,
     DT_SAMPLER = 0x01,
@@ -398,7 +422,7 @@ typedef enum CGpuDescriptorType
     DT_INDIRECT_COMMAND_BUFFER = (DT_ARGUMENT_BUFFER << 1),
     DT_RENDER_PIPELINE_STATE = (DT_INDIRECT_COMMAND_BUFFER << 1),
 #endif
-} CGpuDescriptorType;
+} ECGpuDescriptorType;
 typedef uint32_t CGpuDescriptorTypes;
 
 #ifdef __cplusplus

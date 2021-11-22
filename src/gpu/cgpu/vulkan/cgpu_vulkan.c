@@ -1,11 +1,4 @@
-#define DLL_IMPLEMENTATION
 #include "vulkan_utils.h"
-#include "math/common.h"
-#include <assert.h>
-#include <string.h>
-#ifdef _WINDOWS
-    #include <malloc.h>
-#endif
 
 const CGpuProcTable tbl_vk = {
     //
@@ -212,63 +205,6 @@ void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
     cgpu_free(S);
 }
 
-// Buffer APIs
-CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
-{
-    CGpuBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGpuBuffer_Vulkan), _Alignof(CGpuBuffer_Vulkan));
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
-    uint64_t allocationSize = desc->size;
-    // Align the buffer size to multiples of the dynamic uniform buffer minimum size
-    if (desc->descriptors & DT_UNIFORM_BUFFER)
-    {
-        uint64_t minAlignment = A->mPhysicalDeviceProps.properties.limits.minUniformBufferOffsetAlignment;
-        allocationSize = smath_round_up_64(allocationSize, minAlignment);
-    }
-    VkBufferCreateInfo add_info = {
-        //
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = NULL,
-        .flags = 0,
-        .size = allocationSize,
-        // Queues Props
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 0,
-        .pQueueFamilyIndices = NULL
-        //
-    };
-
-    add_info.usage = VkUtil_DescriptorTypesToBufferUsage(desc->descriptors, desc->format != PF_UNDEFINED);
-    // Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
-    if (desc->memory_usage == MU_GPU_ONLY || desc->memory_usage == MU_GPU_TO_CPU)
-        add_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-    VmaAllocationCreateInfo vma_mem_reqs = { .usage = (VmaMemoryUsage)desc->memory_usage };
-    // if (desc->mFlags & BUFFER_CREATION_FLAG_OWN_MEMORY_BIT)
-    //	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-    // if (desc->mFlags & BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT)
-    //	vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-    DECLARE_ZERO(VmaAllocationInfo, alloc_info)
-    VkResult bufferResult =
-        vmaCreateBuffer(D->pVmaAllocator, &add_info, &vma_mem_reqs, &B->pVkBuffer, &B->pVkAllocation, &alloc_info);
-    if (bufferResult != VK_SUCCESS)
-    {
-        assert(0);
-        return NULL;
-    }
-    B->super.cpu_mapped_address = alloc_info.pMappedData;
-
-    return &B->super;
-}
-
-void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
-{
-    CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
-
-    cgpu_free(B);
-}
-
 // SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
@@ -348,7 +284,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     // This mode waits for the vertical blank ("v-sync")
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
     uint32_t swapChainImageCount = 0;
-    VkPresentModeKHR* modes = NULL;
     // Get present mode count
     if (VK_SUCCESS != vkGetPhysicalDeviceSurfacePresentModesKHR(A->pPhysicalDevice, vkSurface, &swapChainImageCount, NULL))
     {
@@ -356,7 +291,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     }
 
     // Allocate and get present modes
-    modes = (VkPresentModeKHR*)alloca(swapChainImageCount * sizeof(*modes));
+    VkPresentModeKHR modes[swapChainImageCount];
     if (VK_SUCCESS != vkGetPhysicalDeviceSurfacePresentModesKHR(A->pPhysicalDevice, vkSurface, &swapChainImageCount, modes))
     {
         assert(0 && "fatal: vkGetPhysicalDeviceSurfacePresentModesKHR failed!");
@@ -409,10 +344,8 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         {
             // Get queue family properties
             uint32_t queueFamilyPropertyCount = 0;
-            VkQueueFamilyProperties* queueFamilyProperties = NULL;
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, NULL);
-            queueFamilyProperties =
-                (VkQueueFamilyProperties*)alloca(queueFamilyPropertyCount * sizeof(VkQueueFamilyProperties));
+            VkQueueFamilyProperties queueFamilyProperties[queueFamilyPropertyCount];
             vkGetPhysicalDeviceQueueFamilyProperties(
                 A->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
 
