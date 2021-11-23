@@ -339,7 +339,31 @@ typedef enum ECGpuShaderStage
     SS_ALL_GRAPHICS = (uint32_t)SS_VERT | (uint32_t)SS_TESC | (uint32_t)SS_TESE | (uint32_t)SS_GEOM | (uint32_t)SS_FRAG,
     SS_COUNT = 6
 } ECGpuShaderStage;
-typedef uint32_t ECGpuShaderStages;
+typedef uint32_t CGpuShaderStages;
+
+typedef enum ECGpuResourceState
+{
+    RS_UNDEFINED = 0,
+    RS_VERTEX_AND_CONSTANT_BUFFER = 0x1,
+    RS_INDEX_BUFFER = 0x2,
+    RS_RENDER_TARGET = 0x4,
+    RS_UNORDERED_ACCESS = 0x8,
+    RS_DEPTH_WRITE = 0x10,
+    RS_DEPTH_READ = 0x20,
+    RS_NON_PIXEL_SHADER_RESOURCE = 0x40,
+    RS_PIXEL_SHADER_RESOURCE = 0x80,
+    RS_SHADER_RESOURCE = 0x40 | 0x80,
+    RS_STREAM_OUT = 0x100,
+    RS_INDIRECT_ARGUMENT = 0x200,
+    RS_COPY_DEST = 0x400,
+    RS_COPY_SOURCE = 0x800,
+    RS_GENERIC_READ = (((((0x1 | 0x2) | 0x40) | 0x80) | 0x200) | 0x800),
+    RS_PRESENT = 0x1000,
+    RS_COMMON = 0x2000,
+    RS_RAYTRACING_ACCELERATION_STRUCTURE = 0x4000,
+    RS_SHADING_RATE_SOURCE = 0x8000,
+} ECGpuResourceState;
+typedef uint32_t ECGpuResourceStates;
 
 typedef enum ECGpuMemoryUsage
 {

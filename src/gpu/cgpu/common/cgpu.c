@@ -90,6 +90,7 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
         for (uint32_t i = 0; i < *adapters_num; i++)
         {
             *(const CGpuProcTable**)&adapters[i]->proc_table_cache = instance->proc_table;
+            *(CGpuInstanceId*)&adapters[i]->instance = instance;
         }
     }
     // -- proc_table_cache

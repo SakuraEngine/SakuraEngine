@@ -169,7 +169,6 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
             {
                 VkAdapter->mQueueFamilyIndices[q] = -1;
             }
-            VkAdapter->super.instance = &I->super;
             VkAdapter->pPhysicalDevice = pysicalDevices[i];
             // Query Physical Device Properties
             VkAdapter->mSubgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;

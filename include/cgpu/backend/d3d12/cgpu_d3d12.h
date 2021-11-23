@@ -8,6 +8,9 @@
 extern "C" {
 #endif
 
+struct DMA_Allocator;
+struct DMA_Allocation;
+
 RUNTIME_API const CGpuProcTable* CGPU_D3D12ProcTable();
 RUNTIME_API const CGpuSurfacesProcTable* CGPU_D3D12SurfacesProcTable();
 
@@ -45,6 +48,15 @@ RUNTIME_API void cgpu_free_buffer_d3d12(CGpuBufferId buffer);
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 
+#ifdef __cplusplus
+} // end extern "C"
+namespace D3D12MA
+{
+class Allocator;
+class Allocation;
+} // namespace D3D12MA
+#endif
+
 typedef struct CGpuInstance_D3D12 {
     CGpuInstance super;
 #if defined(XBOX)
@@ -70,7 +82,6 @@ typedef struct CGpuAdapter_D3D12 {
     IDXGIAdapter4* pDxActiveGPU;
 #endif
     D3D_FEATURE_LEVEL mFeatureLevel;
-    char mDescription[128];
 
     CGpuAdapterDetail adapter_detail;
 } CGpuAdapter_D3D12;
@@ -88,6 +99,11 @@ typedef struct CGpuDevice_D3D12 {
         = {}
 #endif
     ;
+#ifdef __cplusplus
+    class D3D12MA::Allocator* pResourceAllocator;
+#else
+    struct DMA_Allocator* pResourceAllocator;
+#endif
 } CGpuDevice_D3D12;
 
 typedef struct CGpuQueue_D3D12 {
@@ -107,6 +123,16 @@ typedef struct CGpuShaderLibrary_D3D12 {
 
 typedef struct CGpuBuffer_D3D12 {
     CGpuBuffer super;
+    /// GPU Address - Cache to avoid calls to ID3D12Resource::GetGpuVirtualAddress
+    D3D12_GPU_VIRTUAL_ADDRESS mDxGpuAddress;
+    /// Native handle of the underlying resource
+    ID3D12Resource* pDxResource;
+    /// Contains resource allocation info such as parent heap, offset in heap
+#ifdef __cplusplus
+    D3D12MA::Allocation* pDxAllocation;
+#else
+    struct DMA_Allocation* pDxAllocation;
+#endif
 } CGpuBuffer_D3D12;
 
 typedef struct CGpuSwapChain_D3D12 {
@@ -134,6 +160,4 @@ static const D3D_FEATURE_LEVEL d3d_feature_levels[] = {
     D3D_FEATURE_LEVEL_11_0
 };
 
-#ifdef __cplusplus
-} // end extern "C"
-#endif
+#define IID_ARGS IID_PPV_ARGS

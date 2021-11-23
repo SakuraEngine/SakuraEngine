@@ -220,7 +220,7 @@ typedef struct CGpuInstance {
 } CGpuInstance;
 
 typedef struct CGpuAdapter {
-    const struct CGpuInstance* instance;
+    const CGpuInstanceId instance;
     const CGpuProcTable* proc_table_cache;
 } CGpuAdapter;
 
@@ -360,6 +360,8 @@ typedef struct CGpuBufferDescriptor {
     uint64_t elemet_count;
     /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
     uint64_t element_stride;
+    /// What state will the texture get created in
+    ECGpuResourceState start_state;
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS
