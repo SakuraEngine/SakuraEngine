@@ -217,6 +217,7 @@ typedef struct CGpuInstance {
     const CGpuSurfacesProcTable* surfaces_table;
     ECGpuNvAPI_Status nvapi_status;
     ECGpuAGSReturnCode ags_status;
+    bool enable_set_name;
 } CGpuInstance;
 
 typedef struct CGpuAdapter {
@@ -282,8 +283,9 @@ typedef struct CGpuChainedDescriptor {
 typedef struct CGpuInstanceDescriptor {
     const CGpuChainedDescriptor* chained;
     ECGPUBackEnd backend;
-    bool enableDebugLayer;
-    bool enableGpuBasedValidation;
+    bool enable_debug_layer;
+    bool enable_gpu_based_validation;
+    bool enable_set_name;
 } CGpuInstanceDescriptor;
 
 typedef struct CGpuQueueGroupDescriptor {

@@ -57,6 +57,7 @@ CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
     }
 #endif
     CGpuInstance* instance = (CGpuInstance*)tbl->create_instance(desc);
+    *(bool*)&instance->enable_set_name = desc->enable_set_name;
     instance->proc_table = tbl;
     instance->surfaces_table = s_tbl;
     return instance;

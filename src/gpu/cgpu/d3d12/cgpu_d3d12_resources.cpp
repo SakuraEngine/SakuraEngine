@@ -27,13 +27,6 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
     }
     D3D12_RESOURCE_STATES res_states = D3D12Util_ResourceStateBridge(start_state);
 
-#if defined(ENABLE_GRAPHICS_DEBUG)
-    wchar_t debugName[MAX_DEBUG_NAME_LENGTH] = {};
-    if (pDesc->pName)
-    {
-        mbstowcs(debugName, pDesc->pName, MAX_DEBUG_NAME_LENGTH);
-    }
-#endif
     // Do Allocation
     D3D12MA::ALLOCATION_DESC alloc_desc = D3D12Util_CreateAllocationDesc(desc);
     if (D3D12_HEAP_TYPE_DEFAULT != alloc_desc.HeapType &&
@@ -52,10 +45,6 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
     {
         CHECK_HRESULT(D->pResourceAllocator->CreateResource(
             &alloc_desc, &bufDesc, res_states, NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
-        // Set name
-#if defined(ENABLE_GRAPHICS_DEBUG)
-        pBuffer->mD3D12.pDxAllocation->SetName(debugName);
-#endif
     }
     if (desc->memory_usage != MU_GPU_ONLY && desc->flags & BCF_PERSISTENT_MAP_BIT)
         B->pDxResource->Map(0, NULL, &B->super.cpu_mapped_address);
@@ -65,7 +54,19 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
     B->super.cpu_mapped_address->pCpuMappedAddress = (void*)pBuffer->mD3D12.mDxGpuAddress;
 #endif
     // TODO: Create Descriptors
-    // TODO: Set Buffer Name
+    // Set Debug Name
+    if (device->adapter->instance->enable_set_name && desc->name)
+    {
+        wchar_t debugName[MAX_GPU_DEBUG_NAME_LENGTH] = {};
+        mbstowcs(debugName, desc->name, MAX_GPU_DEBUG_NAME_LENGTH);
+        if (B->pDxAllocation)
+        {
+            B->pDxAllocation->SetName(debugName);
+        }
+        B->pDxResource->SetName(debugName);
+    }
+
+    // Set Buffer Object Props
     B->super.size = (uint32_t)desc->size;
     B->super.memory_usage = desc->memory_usage;
     B->super.descriptors = desc->descriptors;

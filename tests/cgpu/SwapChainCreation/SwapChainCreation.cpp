@@ -21,8 +21,8 @@ protected:
         ECGPUBackEnd backend = GetParam();
         DECLARE_ZERO(CGpuInstanceDescriptor, desc)
         desc.backend = backend;
-        desc.enableDebugLayer = true;
-        desc.enableGpuBasedValidation = true;
+        desc.enable_debug_layer = true;
+        desc.enable_gpu_based_validation = true;
         instance = cgpu_create_instance(&desc);
 
         EXPECT_NE(instance, CGPU_NULLPTR);

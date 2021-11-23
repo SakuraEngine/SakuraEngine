@@ -5,59 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// Debug Callback
-VKAPI_ATTR VkBool32 VKAPI_CALL
-VkUtil_DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData)
-{
-    switch (messageSeverity)
-    {
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            printf("[verbose]");
-            break;
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            printf("[info]");
-            break;
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            printf("[warning]");
-            break;
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            printf("[error]");
-            break;
-        default:
-            return VK_TRUE;
-    }
-    printf(" validation layer: %s\n", pCallbackData->pMessage);
-    return VK_FALSE;
-}
-static VKAPI_ATTR VkBool32 VKAPI_CALL
-VkUtil_DebugReportCallback(
-    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode,
-    const char* pLayerPrefix, const char* pMessage, void* pUserData)
-{
-    switch (flags)
-    {
-        case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
-            printf("[perf-warn]");
-            break;
-        case VK_DEBUG_REPORT_WARNING_BIT_EXT:
-            printf("[warning]");
-            break;
-        case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
-            printf("[debug]");
-            break;
-        case VK_DEBUG_REPORT_ERROR_BIT_EXT:
-            printf("[error]");
-            break;
-        default:
-            return VK_TRUE;
-    }
-    printf(" validation layer: %s\n", pMessage);
-    return VK_FALSE;
-}
-
 bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
 {
     // AGS
@@ -98,7 +45,7 @@ void VkUtil_EnableValidationLayer(
     {
         VkDebugUtilsMessengerCreateInfoEXT messengerInfo = {
             .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-            .pfnUserCallback = VkUtil_DebugCallback,
+            .pfnUserCallback = VkUtil_DebugUtilsCallback,
             .messageSeverity =
                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
@@ -482,4 +429,98 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
         VkAdapter->mExtensionsCount = filled_exts;
     }
     return;
+}
+
+// Debug Callback
+inline void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
+    VkObjectType type, const char* pName)
+{
+    VkDebugUtilsObjectNameInfoEXT nameInfo = {};
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    nameInfo.objectType = type;
+    nameInfo.objectHandle = handle;
+    nameInfo.pObjectName = pName;
+    vkSetDebugUtilsObjectNameEXT(pDevice, &nameInfo);
+}
+
+inline void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
+    VkDebugReportObjectTypeEXT type, const char* pName)
+{
+    VkDebugMarkerObjectNameInfoEXT nameInfo = {};
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT;
+    nameInfo.objectType = type;
+    nameInfo.object = (uint64_t)handle;
+    nameInfo.pObjectName = pName;
+    vkDebugMarkerSetObjectNameEXT(pDevice, &nameInfo);
+}
+
+void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name)
+{
+    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->super.adapter->instance;
+    if (I->super.enable_set_name && name)
+    {
+        if (I->debug_report)
+        {
+            VkDebugReportObjectTypeEXT exttype = VkUtil_ObjectTypeToDebugReportType(type);
+            VkUtil_DebugReportSetObjectName(device->pVkDevice, handle, exttype, name);
+        }
+        if (I->debug_utils)
+        {
+            VkUtil_DebugUtilsSetObjectName(device->pVkDevice, handle, type, name);
+        }
+    }
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL
+VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData)
+{
+    switch (messageSeverity)
+    {
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            printf("[verbose]");
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            printf("[info]");
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            printf("[warning]");
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            printf("[error]");
+            break;
+        default:
+            return VK_TRUE;
+    }
+    printf(" validation layer: %s\n", pCallbackData->pMessage);
+    return VK_FALSE;
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL
+VkUtil_DebugReportCallback(
+    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+    uint64_t object, size_t location, int32_t messageCode,
+    const char* pLayerPrefix, const char* pMessage, void* pUserData)
+{
+    switch (flags)
+    {
+        case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
+            printf("[perf-warn]");
+            break;
+        case VK_DEBUG_REPORT_WARNING_BIT_EXT:
+            printf("[warning]");
+            break;
+        case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
+            printf("[debug]");
+            break;
+        case VK_DEBUG_REPORT_ERROR_BIT_EXT:
+            printf("[error]");
+            break;
+        default:
+            return VK_TRUE;
+    }
+    printf(" validation layer: %s\n", pMessage);
+    return VK_FALSE;
 }

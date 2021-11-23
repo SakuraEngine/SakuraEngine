@@ -20,10 +20,10 @@
 CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descriptor)
 {
     CGpuInstance_D3D12* result = new CGpuInstance_D3D12();
-    D3D12Util_OptionalEnableDebugLayer(result, descriptor);
+    D3D12Util_Optionalenable_debug_layer(result, descriptor);
 
     UINT flags = 0;
-    if (descriptor->enableDebugLayer) flags = DXGI_CREATE_FACTORY_DEBUG;
+    if (descriptor->enable_debug_layer) flags = DXGI_CREATE_FACTORY_DEBUG;
 #if defined(XBOX)
 #else
     if (SUCCEEDED(CreateDXGIFactory2(flags, IID_PPV_ARGS(&result->pDXGIFactory))))
