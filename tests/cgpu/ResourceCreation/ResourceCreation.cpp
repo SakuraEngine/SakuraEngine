@@ -5,7 +5,7 @@
 #include "spirv.h"
 #include "dxil.h"
 
-class ShaderCreation : public ::testing::TestWithParam<ECGPUBackEnd>
+class ResourceCreation : public ::testing::TestWithParam<ECGPUBackEnd>
 {
 protected:
     void SetUp() override
@@ -62,7 +62,7 @@ protected:
     uint32_t frag_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
 };
 
-TEST_P(ShaderCreation, CreateBuffer)
+TEST_P(ResourceCreation, CreateBuffer)
 {
     DECLARE_ZERO(CGpuBufferDescriptor, desc)
     desc.flags = BCF_OWN_MEMORY_BIT | BCF_NO_DESCRIPTOR_VIEW_CREATION;
@@ -77,7 +77,7 @@ TEST_P(ShaderCreation, CreateBuffer)
     cgpu_free_buffer(buffer);
 }
 
-TEST_P(ShaderCreation, CreateModules)
+TEST_P(ResourceCreation, CreateModules)
 {
     ECGPUBackEnd backend = GetParam();
     DECLARE_ZERO(CGpuShaderLibraryDescriptor, vdesc)
@@ -113,4 +113,4 @@ static const auto allPlatforms = testing::Values(
 #endif
 );
 
-INSTANTIATE_TEST_SUITE_P(ShaderCreation, ShaderCreation, allPlatforms);
+INSTANTIATE_TEST_SUITE_P(ResourceCreation, ResourceCreation, allPlatforms);
