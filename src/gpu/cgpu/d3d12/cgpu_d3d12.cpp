@@ -1,6 +1,7 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/backend/d3d12/d3d12_bridge.h"
-#include <EASTL/vector.h>
+#include "D3D12MemAlloc.h"
+#include "d3d12_utils.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -12,105 +13,14 @@
     #pragma comment(lib, "dxcompiler.lib")
 #endif
 
-void optionalEnableDebugLayer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor)
-{
-    if (descriptor->enableDebugLayer)
-    {
-        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&result->pDXDebug))))
-        {
-            result->pDXDebug->EnableDebugLayer();
-            if (descriptor->enableGpuBasedValidation)
-            {
-                ID3D12Debug1* pDebug1 = NULL;
-                if (SUCCEEDED(result->pDXDebug->QueryInterface(IID_PPV_ARGS(&pDebug1))))
-                {
-                    pDebug1->SetEnableGPUBasedValidation(descriptor->enableGpuBasedValidation);
-                    pDebug1->Release();
-                }
-            }
-        }
-    }
-    else if (descriptor->enableGpuBasedValidation)
-    {
-        printf("[D3D12 Warning]: GpuBasedValidation enabled while DebugLayer is closed, there'll be no effect.");
-    }
-}
-
 #include <comdef.h>
 
 // Call this only once.
-void getProperGpuCount(CGpuInstance_D3D12* instance, uint32_t* count, bool* foundSoftwareAdapter)
-{
-    assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
-    assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
-    IDXGIAdapter4* adapter = NULL;
-    eastl::vector<IDXGIAdapter4*> adapters;
-    eastl::vector<D3D_FEATURE_LEVEL> adapter_levels;
-    // Find number of usable GPUs
-    // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress
-    // exports
-    for (UINT i = 0; DXGI_ERROR_NOT_FOUND != instance->pDXGIFactory->EnumAdapterByGpuPreference(
-                                                 i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter));
-         ++i)
-    {
-        DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
-        adapter->GetDesc3(&desc);
-        // Ignore Microsoft Driver
-        if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
-        {
-            uint32_t level_c = CGPU_ARRAY_LEN(d3d_feature_levels);
-            for (uint32_t level = 0; level < level_c; ++level)
-            {
-                // Make sure the adapter can support a D3D12 device
-                if (SUCCEEDED(D3D12CreateDevice(adapter, d3d_feature_levels[level], __uuidof(ID3D12Device), NULL)))
-                {
-                    DECLARE_ZERO(CGpuAdapter_D3D12, cgpuAdapter)
-                    HRESULT hres = adapter->QueryInterface(IID_PPV_ARGS(&cgpuAdapter.pDxActiveGPU));
-                    if (SUCCEEDED(hres))
-                    {
-                        SAFE_RELEASE(cgpuAdapter.pDxActiveGPU);
-                        instance->mAdaptersCount++;
-                        // Add ref
-                        {
-                            adapters.push_back(adapter);
-                            adapter_levels.push_back(d3d_feature_levels[level]);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            *foundSoftwareAdapter = true;
-            adapter->Release();
-        }
-    }
-    *count = instance->mAdaptersCount;
-    instance->pAdapters = (CGpuAdapter_D3D12*)malloc(sizeof(CGpuAdapter_D3D12) * instance->mAdaptersCount);
-    for (uint32_t i = 0; i < *count; i++)
-    {
-        instance->pAdapters[i].pDxActiveGPU = adapters[i];
-        instance->pAdapters[i].mFeatureLevel = adapter_levels[i];
-        DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
-        adapters[i]->GetDesc3(&desc);
-
-        instance->pAdapters[i].adapter_detail.deviceId = desc.DeviceId;
-        instance->pAdapters[i].adapter_detail.vendor_id = desc.vendor_id;
-        _bstr_t b(desc.Description);
-        char* str = b;
-        memcpy(instance->pAdapters[i].mDescription, str, b.length());
-        instance->pAdapters[i].mDescription[b.length()] = '\0';
-        instance->pAdapters[i].adapter_detail.name = instance->pAdapters[i].mDescription;
-
-        instance->pAdapters[i].super.instance = &instance->super;
-    }
-}
 
 CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descriptor)
 {
     CGpuInstance_D3D12* result = new CGpuInstance_D3D12();
-    optionalEnableDebugLayer(result, descriptor);
+    D3D12Util_OptionalEnableDebugLayer(result, descriptor);
 
     UINT flags = 0;
     if (descriptor->enableDebugLayer) flags = DXGI_CREATE_FACTORY_DEBUG;
@@ -120,7 +30,7 @@ CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descript
     {
         uint32_t gpuCount = 0;
         bool foundSoftwareAdapter = false;
-        getProperGpuCount(result, &gpuCount, &foundSoftwareAdapter);
+        D3D12Util_QueryAllAdapters(result, &gpuCount, &foundSoftwareAdapter);
         // If the only adapter we found is a software adapter, log error message for QA
         if (!gpuCount && foundSoftwareAdapter)
         {
@@ -145,18 +55,19 @@ void cgpu_query_instance_features_d3d12(CGpuInstanceId instance, struct CGpuInst
 
 void cgpu_free_instance_d3d12(CGpuInstanceId instance)
 {
-    CGpuInstance_D3D12* result = (CGpuInstance_D3D12*)instance;
-    if (result->mAdaptersCount > 0)
+    CGpuInstance_D3D12* to_destroy = (CGpuInstance_D3D12*)instance;
+    if (to_destroy->mAdaptersCount > 0)
     {
-        for (uint32_t i = 0; i < result->mAdaptersCount; i++)
+        for (uint32_t i = 0; i < to_destroy->mAdaptersCount; i++)
         {
-            result->pAdapters[i].pDxActiveGPU->Release();
+            SAFE_RELEASE(to_destroy->pAdapters[i].pDxActiveGPU);
         }
     }
-    result->pDXGIFactory->Release();
-    if (result->pDXDebug)
+    cgpu_free(to_destroy->pAdapters);
+    SAFE_RELEASE(to_destroy->pDXGIFactory);
+    if (to_destroy->pDXDebug)
     {
-        result->pDXDebug->Release();
+        SAFE_RELEASE(to_destroy->pDXDebug);
     }
 #ifdef _DEBUG
     {
@@ -166,10 +77,10 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
             dxgiDebug->ReportLiveObjects(
                 DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
         }
-        dxgiDebug->Release();
+        SAFE_RELEASE(dxgiDebug);
     }
 #endif
-    delete result;
+    delete to_destroy;
 }
 
 void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
@@ -211,12 +122,13 @@ uint32_t cgpu_query_queue_count_d3d12(const CGpuAdapterId adapter, const ECGpuQu
 
 CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
 {
-    const CGpuAdapter_D3D12* A = (CGpuAdapter_D3D12*)adapter;
-    CGpuDevice_D3D12* cgpuD3D12Device = new CGpuDevice_D3D12();
-    *const_cast<CGpuAdapterId*>(&cgpuD3D12Device->super.adapter) = adapter;
+    CGpuAdapter_D3D12* A = (CGpuAdapter_D3D12*)adapter;
+    CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)A->super.instance;
+    CGpuDevice_D3D12* D = new CGpuDevice_D3D12();
+    *const_cast<CGpuAdapterId*>(&D->super.adapter) = adapter;
 
     if (!SUCCEEDED(D3D12CreateDevice(A->pDxActiveGPU, // default adapter
-            A->mFeatureLevel, IID_PPV_ARGS(&cgpuD3D12Device->pDxDevice))))
+            A->mFeatureLevel, IID_PPV_ARGS(&D->pDxDevice))))
     {
         assert("[D3D12 Fatal]: Create D3D12Device Failed!");
     }
@@ -227,8 +139,8 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
         const auto& queueGroup = desc->queueGroups[i];
         const auto queueType = queueGroup.queueType;
 
-        *const_cast<uint32_t*>(&cgpuD3D12Device->pCommandQueueCounts[i]) = queueGroup.queueCount;
-        *const_cast<ID3D12CommandQueue***>(&cgpuD3D12Device->ppCommandQueues[queueType]) =
+        *const_cast<uint32_t*>(&D->pCommandQueueCounts[i]) = queueGroup.queueCount;
+        *const_cast<ID3D12CommandQueue***>(&D->ppCommandQueues[queueType]) =
             (ID3D12CommandQueue**)malloc(sizeof(ID3D12CommandQueue*) * queueGroup.queueCount);
 
         for (uint32_t j = 0u; j < queueGroup.queueCount; j++)
@@ -250,14 +162,16 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
                     return CGPU_NULLPTR;
             }
             queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-            if (!SUCCEEDED(cgpuD3D12Device->pDxDevice->CreateCommandQueue(
-                    &queueDesc, IID_PPV_ARGS(&cgpuD3D12Device->ppCommandQueues[queueType][j]))))
+            if (!SUCCEEDED(D->pDxDevice->CreateCommandQueue(
+                    &queueDesc, IID_PPV_ARGS(&D->ppCommandQueues[queueType][j]))))
             {
                 assert("[D3D12 Fatal]: Create D3D12CommandQueue Failed!");
             }
         }
     }
-    return &cgpuD3D12Device->super;
+    D3D12Util_CreateDMAAllocator(I, A, D);
+    assert(D->pResourceAllocator && "DMA Allocator Must be Created!");
+    return &D->super;
 }
 
 void cgpu_free_device_d3d12(CGpuDeviceId device)
@@ -267,10 +181,11 @@ void cgpu_free_device_d3d12(CGpuDeviceId device)
     {
         for (uint32_t i = 0; i < cgpuD3D12Device->pCommandQueueCounts[t]; i++)
         {
-            cgpuD3D12Device->ppCommandQueues[t][i]->Release();
+            SAFE_RELEASE(cgpuD3D12Device->ppCommandQueues[t][i]);
         }
     }
-    cgpuD3D12Device->pDxDevice->Release();
+    SAFE_RELEASE(cgpuD3D12Device->pResourceAllocator);
+    SAFE_RELEASE(cgpuD3D12Device->pDxDevice);
 }
 
 CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
@@ -302,7 +217,7 @@ ID3D12CommandAllocator* allocate_transient_command_allocator(CGpuCommandPool_D3D
     return CGPU_NULLPTR;
 }
 
-void free_transient_command_allocator(ID3D12CommandAllocator* allocator) { allocator->Release(); }
+void free_transient_command_allocator(ID3D12CommandAllocator* allocator) { SAFE_RELEASE(allocator); }
 
 CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
 {
@@ -372,7 +287,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     (void)bQueryChain3;
     assert(bQueryChain3 && "Failed to Query IDXGISwapChain3 from Created SwapChain!");
 
-    swapchain->Release();
+    SAFE_RELEASE(swapchain);
 
     return &S->super;
 }
@@ -380,7 +295,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
 void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain)
 {
     CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)swapchain;
-    S->pDxSwapChain->Release();
+    SAFE_RELEASE(S->pDxSwapChain);
     delete S;
 }
 
@@ -400,7 +315,7 @@ void cgpu_d3d12_disable_DRED(CGpuDREDSettingsId settings)
 {
     settings->pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_OFF);
     settings->pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_OFF);
-    settings->pDredSettings->Release();
+    SAFE_RELEASE(settings->pDredSettings);
     delete settings;
 }
 

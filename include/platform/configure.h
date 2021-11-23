@@ -68,3 +68,6 @@ typedef char char8_t;
 #ifdef __APPLE__
     #include "apple/configure.h"
 #endif
+#ifdef _WINDOWS
+    #include "win/configure.h"
+#endif
