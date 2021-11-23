@@ -19,7 +19,7 @@ public:
         instance_extensions.insert(instance_extensions.end(),
             eastl::begin(cgpu_wanted_instance_exts), eastl::end(cgpu_wanted_instance_exts));
         // from desc
-        if (desc->enableDebugLayer)
+        if (desc->enable_debug_layer)
         {
             instance_layers.push_back(validation_layer_name);
             instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -127,7 +127,7 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
         {
             I->device_group_creation = Table[VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME]; // Linked GPU
             I->debug_utils = Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
-            I->debug_report = Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
+            I->debug_report = !I->debug_utils && Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
         }
     }
 };
@@ -219,9 +219,9 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     VkValidationFeatureEnableEXT enabledValidationFeatures[] = {
         VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
     };
-    if (desc->enableGpuBasedValidation)
+    if (desc->enable_gpu_based_validation)
     {
-        if (!desc->enableDebugLayer)
+        if (!desc->enable_debug_layer)
             printf("[Vulkan Warning]: GpuBasedValidation enabled while ValidationLayer is closed, there'll be no effect.");
 #if VK_HEADER_VERSION >= 108
         validationFeaturesExt.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
@@ -260,7 +260,7 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     CGpuVkExtensionsTable::ConstructForAllAdapters(I, blackboard);
 
     // Open validation layer.
-    if (desc->enableDebugLayer)
+    if (desc->enable_debug_layer)
     {
         VkUtil_EnableValidationLayer(I, blackboard.messenger_info_ptr, blackboard.report_info_ptr);
     }

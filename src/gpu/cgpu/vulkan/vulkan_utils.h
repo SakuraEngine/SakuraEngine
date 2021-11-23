@@ -7,12 +7,6 @@
 extern "C" {
 #endif
 
-VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData);
-
 // Environment Setup
 bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst);
 void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst);
@@ -44,6 +38,18 @@ void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
     const char* const* device_layers, uint32_t device_layers_count);
 void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
     const char* const* device_extensions, uint32_t device_extension_count);
+
+// Debug Helpers
+VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData);
+VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
+    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+    uint64_t object, size_t location, int32_t messageCode,
+    const char* pLayerPrefix, const char* pMessage, void* pUserData);
+void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
 
 static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 static const char* cgpu_wanted_instance_exts[] = {

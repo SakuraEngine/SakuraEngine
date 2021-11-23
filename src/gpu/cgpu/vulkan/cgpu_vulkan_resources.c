@@ -99,8 +99,9 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         {
         }
     }
-    // TODO: Set Buffer Name
-    //
+    // Set Buffer Name
+    VkUtil_OptionalSetObjectName(D, (uint64_t)B->pVkBuffer, VK_OBJECT_TYPE_BUFFER, desc->name);
+    // Set Buffer Object Props
     B->super.size = (uint32_t)desc->size;
     B->super.memory_usage = desc->memory_usage;
     B->super.descriptors = desc->descriptors;

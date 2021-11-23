@@ -17,7 +17,7 @@ protected:
     }
 };
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
+static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
@@ -49,21 +49,21 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    debugCreateInfo.pfnUserCallback = VkUtil_DebugCallback;
+    debugCreateInfo.pfnUserCallback = VkUtil_DebugUtilsCallback;
     vkDesc.pDebugUtilsMessenger = &debugCreateInfo;
     vkDesc.backend = ECGPUBackEnd_VULKAN;
 
     CGpuInstanceDescriptor desc;
     desc.backend = ECGPUBackEnd_VULKAN;
-    desc.enableGpuBasedValidation = true;
-    desc.enableDebugLayer = true;
+    desc.enable_gpu_based_validation = true;
+    desc.enable_debug_layer = true;
     desc.chained = (const CGpuChainedDescriptor*)&vkDesc;
 
     auto vulkan_instance = cgpu_create_instance(&desc);
     EXPECT_TRUE(vulkan_instance != nullptr);
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugCallback(
+static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,

@@ -189,3 +189,4 @@ extern void mi_free(void* p);
 #define cgpu_free mi_free
 
 #define MAX_GPU_VENDOR_STRING_LENGTH 64
+#define MAX_GPU_DEBUG_NAME_LENGTH 128

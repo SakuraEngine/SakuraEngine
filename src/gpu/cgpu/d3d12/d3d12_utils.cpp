@@ -4,25 +4,25 @@
 #include "D3D12MemAlloc.h"
 #include <EASTL/vector.h>
 
-void D3D12Util_OptionalEnableDebugLayer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor)
+void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor)
 {
-    if (descriptor->enableDebugLayer)
+    if (descriptor->enable_debug_layer)
     {
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&result->pDXDebug))))
         {
             result->pDXDebug->EnableDebugLayer();
-            if (descriptor->enableGpuBasedValidation)
+            if (descriptor->enable_gpu_based_validation)
             {
                 ID3D12Debug1* pDebug1 = NULL;
                 if (SUCCEEDED(result->pDXDebug->QueryInterface(IID_PPV_ARGS(&pDebug1))))
                 {
-                    pDebug1->SetEnableGPUBasedValidation(descriptor->enableGpuBasedValidation);
+                    pDebug1->SetEnableGPUBasedValidation(descriptor->enable_gpu_based_validation);
                     pDebug1->Release();
                 }
             }
         }
     }
-    else if (descriptor->enableGpuBasedValidation)
+    else if (descriptor->enable_gpu_based_validation)
     {
         printf("[D3D12 Warning]: GpuBasedValidation enabled while DebugLayer is closed, there'll be no effect.");
     }

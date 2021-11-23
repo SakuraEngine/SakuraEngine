@@ -13,8 +13,9 @@ protected:
         ECGPUBackEnd backend = GetParam();
         DECLARE_ZERO(CGpuInstanceDescriptor, desc)
         desc.backend = backend;
-        desc.enableDebugLayer = true;
-        desc.enableGpuBasedValidation = true;
+        desc.enable_debug_layer = true;
+        desc.enable_gpu_based_validation = true;
+        desc.enable_set_name = true;
         instance = cgpu_create_instance(&desc);
 
         EXPECT_NE(instance, CGPU_NULLPTR);
@@ -70,6 +71,7 @@ TEST_P(ShaderCreation, CreateBuffer)
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
+    desc.name = "IndexBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);

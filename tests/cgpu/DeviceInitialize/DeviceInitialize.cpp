@@ -29,12 +29,12 @@ protected:
     }
 };
 
-CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enableDebugLayer, bool enableGPUValidation)
+CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enable_debug_layer, bool enableGPUValidation)
 {
     DECLARE_ZERO(CGpuInstanceDescriptor, desc)
     desc.backend = backend;
-    desc.enableDebugLayer = enableDebugLayer;
-    desc.enableGpuBasedValidation = enableGPUValidation;
+    desc.enable_debug_layer = enable_debug_layer;
+    desc.enable_gpu_based_validation = enableGPUValidation;
     CGpuInstanceId instance = cgpu_create_instance(&desc);
     DECLARE_ZERO(CGpuInstanceFeatures, instance_features)
     cgpu_query_instance_features(instance, &instance_features);
@@ -74,7 +74,7 @@ int enum_adapters(CGpuInstanceId instance)
     return adapters_count;
 }
 
-void test_create_device(CGpuInstanceId instance, bool enableDebugLayer, bool enableGPUValidation)
+void test_create_device(CGpuInstanceId instance, bool enable_debug_layer, bool enableGPUValidation)
 {
     // enum adapters
     uint32_t adapters_count = 0;
