@@ -63,40 +63,43 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         }
     }
     // Setup Uniform Texel View
-    const VkFormat texel_format = pf_translate_to_vulkan(desc->format);
-    DECLARE_ZERO(VkFormatProperties, formatProps)
-    vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, texel_format, &formatProps);
-    // Now We Use The Same View Info for Uniform & Storage BufferView on Vulkan Backend.
-    VkBufferViewCreateInfo viewInfo = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
-        .pNext = NULL,
-        .buffer = B->pVkBuffer,
-        .flags = 0,
-        .format = texel_format,
-        .offset = desc->first_element * desc->element_stride,
-        .range = desc->elemet_count * desc->element_stride
-    };
-    if (add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT)
+    if ((add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT) || (add_info.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT))
     {
-        if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT))
+        const VkFormat texel_format = pf_translate_to_vulkan(desc->format);
+        DECLARE_ZERO(VkFormatProperties, formatProps)
+        vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, texel_format, &formatProps);
+        // Now We Use The Same View Info for Uniform & Storage BufferView on Vulkan Backend.
+        VkBufferViewCreateInfo viewInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
+            .pNext = NULL,
+            .buffer = B->pVkBuffer,
+            .flags = 0,
+            .format = texel_format,
+            .offset = desc->first_element * desc->element_stride,
+            .range = desc->elemet_count * desc->element_stride
+        };
+        if (add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT)
         {
-            // LOGF(LogLevel::eWARNING, "Failed to create uniform texel buffer view for format %u", (uint32_t)pDesc->mFormat);
+            if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT))
+            {
+                // LOGF(LogLevel::eWARNING, "Failed to create uniform texel buffer view for format %u", (uint32_t)pDesc->mFormat);
+            }
+            else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
+                         GLOBAL_VkAllocationCallbacks, &B->pVkUniformTexelView) != VK_SUCCESS)
+            {
+            }
         }
-        else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
-                     GLOBAL_VkAllocationCallbacks, &B->pVkUniformTexelView) != VK_SUCCESS)
+        // Setup Storage Texel View
+        if (add_info.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)
         {
-        }
-    }
-    // Setup Storage Texel View
-    if (add_info.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)
-    {
-        if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT))
-        {
-            // LOGF(LogLevel::eWARNING, "Failed to create storage texel buffer view for format %u", (uint32_t)pDesc->mFormat);
-        }
-        else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
-                     GLOBAL_VkAllocationCallbacks, &B->pVkStorageTexelView) != VK_SUCCESS)
-        {
+            if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT))
+            {
+                // LOGF(LogLevel::eWARNING, "Failed to create storage texel buffer view for format %u", (uint32_t)pDesc->mFormat);
+            }
+            else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
+                         GLOBAL_VkAllocationCallbacks, &B->pVkStorageTexelView) != VK_SUCCESS)
+            {
+            }
         }
     }
     // Set Buffer Name
