@@ -46,6 +46,8 @@ RUNTIME_API void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId shader_modu
 
 // Buffer APIs
 RUNTIME_API CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc);
+RUNTIME_API void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBufferRange* range);
+RUNTIME_API void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer_vulkan(CGpuBufferId buffer);
 
 // Swapchain APIs

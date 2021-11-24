@@ -19,6 +19,8 @@ const CGpuProcTable tbl_vk = {
     .free_command_pool = &cgpu_free_command_pool_vulkan,
 
     .create_buffer = &cgpu_create_buffer_vulkan,
+    .map_buffer = &cgpu_map_buffer_vulkan,
+    .unmap_buffer = &cgpu_unmap_buffer_vulkan,
     .free_buffer = &cgpu_free_buffer_vulkan,
 
     .create_shader_library = &cgpu_create_shader_library_vulkan,

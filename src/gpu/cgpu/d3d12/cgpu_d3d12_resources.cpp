@@ -165,6 +165,29 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
     return &B->super;
 }
 
+void cgpu_map_buffer_d3d12(CGpuBufferId buffer, const struct CGpuBufferRange* range)
+{
+    CGpuBuffer_D3D12* B = (CGpuBuffer_D3D12*)buffer;
+    assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to map non-cpu accessible resource");
+
+    D3D12_RANGE dxrange = { 0, B->super.size };
+    if (range)
+    {
+        dxrange.Begin += range->offset;
+        dxrange.End = dxrange.Begin + range->size;
+    }
+    CHECK_HRESULT(B->pDxResource->Map(0, &dxrange, &B->super.cpu_mapped_address));
+}
+
+void cgpu_unmap_buffer_d3d12(CGpuBufferId buffer)
+{
+    CGpuBuffer_D3D12* B = (CGpuBuffer_D3D12*)buffer;
+    assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
+
+    B->pDxResource->Unmap(0, NULL);
+    B->super.cpu_mapped_address = NULL;
+}
+
 void cgpu_free_buffer_d3d12(CGpuBufferId buffer)
 {
     CGpuBuffer_D3D12* B = (CGpuBuffer_D3D12*)buffer;

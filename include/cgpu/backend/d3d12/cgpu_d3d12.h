@@ -47,6 +47,8 @@ RUNTIME_API void cgpu_free_shader_library_d3d12(CGpuShaderLibraryId shader_modul
 
 // Buffer APIs
 RUNTIME_API CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc);
+RUNTIME_API void cgpu_map_buffer_d3d12(CGpuBufferId buffer, const struct CGpuBufferRange* range);
+RUNTIME_API void cgpu_unmap_buffer_d3d12(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer_d3d12(CGpuBufferId buffer);
 
 // Swapchain APIs

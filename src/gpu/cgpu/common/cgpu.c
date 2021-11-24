@@ -225,6 +225,28 @@ CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDesc
     return buffer;
 }
 
+void cgpu_map_buffer(CGpuBufferId buffer, const struct CGpuBufferRange* range)
+{
+    assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
+    const CGpuDeviceId device = buffer->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->map_buffer && "map_buffer Proc Missing!");
+
+    CGPUProcMapBuffer fn_map_buffer = device->proc_table_cache->map_buffer;
+    fn_map_buffer(buffer, range);
+}
+
+void cgpu_unmap_buffer(CGpuBufferId buffer)
+{
+    assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
+    const CGpuDeviceId device = buffer->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->unmap_buffer && "unmap_buffer Proc Missing!");
+
+    CGPUProcUnmapBuffer fn_unmap_buffer = device->proc_table_cache->unmap_buffer;
+    fn_unmap_buffer(buffer);
+}
+
 void cgpu_free_buffer(CGpuBufferId buffer)
 {
     assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
