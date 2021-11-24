@@ -4,6 +4,9 @@
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
 
+#define D3D12_GPU_VIRTUAL_ADDRESS_NULL ((D3D12_GPU_VIRTUAL_ADDRESS)0)
+#define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN ((D3D12_GPU_VIRTUAL_ADDRESS)-1)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,7 +94,7 @@ typedef struct CGpuDevice_D3D12 {
     struct D3D12Util_DescriptorHeap** pCPUDescriptorHeaps;
     struct D3D12Util_DescriptorHeap** pCbvSrvUavHeaps;
     struct D3D12Util_DescriptorHeap** pSamplerHeaps;
-    struct ID3D12Device* pDxDevice;
+    ID3D12Device* pDxDevice;
     struct ID3D12CommandQueue** const ppCommandQueues[ECGpuQueueType_Count]
 #ifdef __cplusplus
         = {}
@@ -128,6 +131,12 @@ typedef struct CGpuBuffer_D3D12 {
     CGpuBuffer super;
     /// GPU Address - Cache to avoid calls to ID3D12Resource::GetGpuVirtualAddress
     D3D12_GPU_VIRTUAL_ADDRESS mDxGpuAddress;
+    /// Descriptor handle of the CBV in a CPU visible descriptor heap (applicable to BUFFER_USAGE_UNIFORM)
+    D3D12_CPU_DESCRIPTOR_HANDLE mDxDescriptorHandles;
+    /// Offset from mDxDescriptors for srv descriptor handle
+    uint64_t mDxSrvOffset : 8;
+    /// Offset from mDxDescriptors for uav descriptor handle
+    uint64_t mDxUavOffset : 8;
     /// Native handle of the underlying resource
     struct ID3D12Resource* pDxResource;
     /// Contains resource allocation info such as parent heap, offset in heap

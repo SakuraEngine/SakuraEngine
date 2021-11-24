@@ -346,6 +346,8 @@ typedef struct CGpuShaderLibraryDescriptor {
 typedef struct CGpuBufferDescriptor {
     /// Size of the buffer (in bytes)
     uint64_t size;
+    /// Set this to specify a counter buffer for this buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    struct Buffer* count_buffer;
     /// Debug name used in gpu profile
     const char8_t* name;
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
