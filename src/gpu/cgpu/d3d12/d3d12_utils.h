@@ -1,6 +1,5 @@
 #pragma once
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/backend/d3d12/d3d12_bridge.h"
 #include "D3D12MemAlloc.h"
 #include "platform/thread.h"
@@ -20,17 +19,31 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
 // Feature Select Helpers
 void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter);
 
-// Helper Structures
-void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
-    const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap);
-void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
-void D3D12Util_FreeDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
+// Descriptor Heap Helpers
 
 /// CPU Visible Heap to store all the resources needing CPU read / write operations - Textures/Buffers/RTV
 typedef struct D3D12Util_DescriptorHandle {
     D3D12_CPU_DESCRIPTOR_HANDLE mCpu;
     D3D12_GPU_DESCRIPTOR_HANDLE mGpu;
 } D3D12Util_DescriptorHandle;
+
+void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
+    const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap);
+void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
+void D3D12Util_FreeDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
+// Consume & Return
+D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(
+    struct D3D12Util_DescriptorHeap* pHeap, uint32_t count);
+void D3D12Util_ReturnDescriptorHandles(
+    struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count);
+// Use Views
+void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+    const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+    ID3D12Resource* pCounterResource,
+    const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
+    const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 
 typedef struct D3D12Util_DescriptorHeap {
     /// DX Heap
@@ -62,6 +75,38 @@ static const DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIP
     { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // RTV
     { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
 };
+
+FORCEINLINE void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+    const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
+    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
+        *pHandle = hdl.mCpu;
+    D->pDxDevice->CreateShaderResourceView(pResource, pSrvDesc, *pHandle);
+}
+
+FORCEINLINE void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+    ID3D12Resource* pCounterResource,
+    const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
+    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
+        *pHandle = hdl.mCpu;
+    D->pDxDevice->CreateUnorderedAccessView(pResource, pCounterResource, pSrvDesc, *pHandle);
+}
+
+FORCEINLINE void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
+    const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
+    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
+        *pHandle = hdl.mCpu;
+    D->pDxDevice->CreateConstantBufferView(pSrvDesc, *pHandle);
+}
+
 //
 // C++ is the only language supported by D3D12:
 //   https://msdn.microsoft.com/en-us/library/windows/desktop/dn899120(v=vs.85).aspx

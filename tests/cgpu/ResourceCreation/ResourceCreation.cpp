@@ -65,8 +65,8 @@ protected:
 TEST_P(ResourceCreation, CreateBuffer)
 {
     DECLARE_ZERO(CGpuBufferDescriptor, desc)
-    desc.flags = BCF_OWN_MEMORY_BIT | BCF_NO_DESCRIPTOR_VIEW_CREATION;
-    desc.descriptors = RT_INDEX_BUFFER;
+    desc.flags = BCF_OWN_MEMORY_BIT;
+    desc.descriptors = RT_INDEX_BUFFER | RT_BUFFER;
     desc.memory_usage = MU_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
