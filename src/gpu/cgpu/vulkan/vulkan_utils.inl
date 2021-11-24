@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 // API Helpers
-inline static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuResourceTypes descriptors, bool texel)
+FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuResourceTypes descriptors, bool texel)
 {
     VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     if (descriptors & RT_UNIFORM_BUFFER)
@@ -42,7 +42,7 @@ inline static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuResourc
 
 /* clang-format off */
 #define VK_OBJ_TYPE_CASE(object) case VK_OBJECT_TYPE_##object: return VK_DEBUG_REPORT_OBJECT_TYPE_##object##_EXT;
-inline static VkDebugReportObjectTypeEXT VkUtil_ObjectTypeToDebugReportType(VkObjectType type)
+FORCEINLINE static VkDebugReportObjectTypeEXT VkUtil_ObjectTypeToDebugReportType(VkObjectType type)
 {
     switch (type)
     {

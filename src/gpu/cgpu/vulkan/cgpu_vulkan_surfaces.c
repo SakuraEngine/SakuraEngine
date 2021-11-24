@@ -1,4 +1,3 @@
-#define DLL_IMPLEMENTATION
 #include "cgpu/backend/vulkan/cgpu_vulkan_surfaces.h"
 #include "assert.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"

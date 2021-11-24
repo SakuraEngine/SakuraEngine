@@ -1,14 +1,43 @@
 #include "math/common.h"
+#include "platform/thread.h"
+#include "platform/atomic.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/backend/d3d12/d3d12_bridge.h"
 #include "D3D12MemAlloc.h"
+#include <EASTL/vector.h>
 #include <dxcapi.h>
+
+/// CPU Visible Heap to store all the resources needing CPU read / write operations - Textures/Buffers/RTV
+typedef struct D3D12Util_DescriptorHandle {
+    D3D12_CPU_DESCRIPTOR_HANDLE mCpu;
+    D3D12_GPU_DESCRIPTOR_HANDLE mGpu;
+} D3D12Util_DescriptorHandle;
+
+typedef struct D3D12Util_DescriptorHeap {
+    /// DX Heap
+    ID3D12DescriptorHeap* pCurrentHeap;
+    /// Lock for multi-threaded descriptor allocations
+    struct SMutex* pMutex;
+    ID3D12Device* pDevice;
+    D3D12_CPU_DESCRIPTOR_HANDLE* pHandles;
+    /// Start position in the heap
+    D3D12Util_DescriptorHandle mStartHandle;
+    /// Free List used for CPU only descriptor heaps
+    eastl::vector<D3D12Util_DescriptorHandle> mFreeList;
+    /// Description
+    D3D12_DESCRIPTOR_HEAP_DESC mDesc;
+    /// DescriptorInfo Increment Size
+    uint32_t mDescriptorSize;
+    /// Used
+    SAtomic32 mUsedDescriptors;
+} D3D12Util_DescriptorHeap;
 
 // Inline Utils
 D3D12_RESOURCE_STATES D3D12Util_ResourceStateBridge(ECGpuResourceState state);
 D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGpuAdapter_D3D12* A, CGpuDevice_D3D12* D, const struct CGpuBufferDescriptor* desc);
 D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGpuBufferDescriptor* desc);
 // Buffer APIs
+static_assert(sizeof(CGpuBuffer_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
 {
     CGpuBuffer_D3D12* B = new CGpuBuffer_D3D12();

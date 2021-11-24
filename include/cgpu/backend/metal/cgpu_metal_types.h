@@ -41,7 +41,7 @@ typedef struct CGpuInstance_Metal {
 #endif
 
 /* clang-format off */
-inline static MTLPixelFormat pf_translate_to_metal(const ECGpuPixelFormat fmt)
+FORCEINLINE static MTLPixelFormat pf_translate_to_metal(const ECGpuPixelFormat fmt)
 {
     switch (fmt) {
 	case PF_A8_UNORM: 		return MTLPixelFormatA8Unorm;
@@ -166,7 +166,7 @@ inline static MTLPixelFormat pf_translate_to_metal(const ECGpuPixelFormat fmt)
 	return MTLPixelFormatInvalid;
 }
 
-inline static bool MetalFormatOkayOnMac(MTLPixelFormat fmt)
+FORCEINLINE static bool MetalFormatOkayOnMac(MTLPixelFormat fmt)
 {
     switch (fmt)
     {
@@ -303,7 +303,7 @@ inline static bool MetalFormatOkayOnMac(MTLPixelFormat fmt)
     return false;
 }
 
-inline static bool MetalFormatOkayOnIOS(MTLPixelFormat fmt) {
+FORCEINLINE static bool MetalFormatOkayOnIOS(MTLPixelFormat fmt) {
 	switch(fmt) 
     {
 	    case MTLPixelFormatA8Unorm:
