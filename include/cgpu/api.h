@@ -61,6 +61,11 @@ typedef struct CGpuInstanceFeatures {
 
 } CGpuInstanceFeatures;
 
+typedef struct CGpuBufferRange {
+    uint64_t offset;
+    uint64_t size;
+} CGpuBufferRange;
+
 typedef struct CGpuConstantSpecialization {
     uint32_t constantID;
     union
@@ -115,6 +120,10 @@ typedef void (*CGPUProcFreeShaderLibrary)(CGpuShaderLibraryId shader_module);
 // Buffer APIs
 RUNTIME_API CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc);
 typedef CGpuBufferId (*CGPUProcCreateBuffer)(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc);
+RUNTIME_API void cgpu_map_buffer(CGpuBufferId buffer, const struct CGpuBufferRange* range);
+typedef void (*CGPUProcMapBuffer)(CGpuBufferId buffer, const struct CGpuBufferRange* range);
+RUNTIME_API void cgpu_unmap_buffer(CGpuBufferId buffer);
+typedef void (*CGPUProcUnmapBuffer)(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer(CGpuBufferId buffer);
 typedef void (*CGPUProcFreeBuffer)(CGpuBufferId buffer);
 
@@ -154,6 +163,8 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeShaderLibrary free_shader_library;
 
     const CGPUProcCreateBuffer create_buffer;
+    const CGPUProcMapBuffer map_buffer;
+    const CGPUProcUnmapBuffer unmap_buffer;
     const CGPUProcFreeBuffer free_buffer;
 
     const CGPUProcCreateSwapChain create_swapchain;

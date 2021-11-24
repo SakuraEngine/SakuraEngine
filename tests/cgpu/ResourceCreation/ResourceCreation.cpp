@@ -62,11 +62,11 @@ protected:
     uint32_t frag_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
 };
 
-TEST_P(ResourceCreation, CreateBuffer)
+TEST_P(ResourceCreation, CreateIndexBuffer)
 {
     DECLARE_ZERO(CGpuBufferDescriptor, desc)
     desc.flags = BCF_OWN_MEMORY_BIT;
-    desc.descriptors = RT_INDEX_BUFFER | RT_BUFFER;
+    desc.descriptors = RT_INDEX_BUFFER;
     desc.memory_usage = MU_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
@@ -74,6 +74,57 @@ TEST_P(ResourceCreation, CreateBuffer)
     desc.name = "IndexBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
+    EXPECT_EQ(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    cgpu_free_buffer(buffer);
+}
+
+TEST_P(ResourceCreation, CreateUploadBuffer)
+{
+    DECLARE_ZERO(CGpuBufferDescriptor, desc)
+    desc.flags = BCF_OWN_MEMORY_BIT;
+    desc.descriptors = RT_INDEX_BUFFER | RT_BUFFER;
+    desc.memory_usage = MU_CPU_TO_GPU;
+    desc.element_stride = sizeof(uint16_t);
+    desc.elemet_count = 3;
+    desc.size = sizeof(uint16_t) * 3;
+    desc.name = "UploadBuffer";
+    auto buffer = cgpu_create_buffer(device, &desc);
+    EXPECT_NE(buffer, CGPU_NULLPTR);
+    DECLARE_ZERO(CGpuBufferRange, range);
+    range.offset = 0;
+    range.size = desc.size;
+    {
+        cgpu_map_buffer(buffer, &range);
+        uint16_t* indices = (uint16_t*)buffer->cpu_mapped_address;
+        indices[0] = 2;
+        indices[1] = 3;
+        indices[2] = 3;
+        cgpu_unmap_buffer(buffer);
+    }
+    {
+        cgpu_map_buffer(buffer, &range);
+        uint16_t* read_indices = (uint16_t*)buffer->cpu_mapped_address;
+        EXPECT_EQ(read_indices[0], 2);
+        EXPECT_EQ(read_indices[1], 3);
+        EXPECT_EQ(read_indices[2], 3);
+        cgpu_unmap_buffer(buffer);
+    }
+    cgpu_free_buffer(buffer);
+}
+
+TEST_P(ResourceCreation, CreateUploadBufferPersistent)
+{
+    DECLARE_ZERO(CGpuBufferDescriptor, desc)
+    desc.flags = BCF_PERSISTENT_MAP_BIT;
+    desc.descriptors = RT_BUFFER;
+    desc.memory_usage = MU_CPU_TO_GPU;
+    desc.element_stride = sizeof(uint16_t);
+    desc.elemet_count = 3;
+    desc.size = sizeof(uint16_t) * 3;
+    desc.name = "UploadBuffer";
+    auto buffer = cgpu_create_buffer(device, &desc);
+    EXPECT_NE(buffer, CGPU_NULLPTR);
+    EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
 }
 
