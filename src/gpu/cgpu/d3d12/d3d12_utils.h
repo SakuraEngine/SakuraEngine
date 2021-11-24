@@ -10,3 +10,5 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
 
 // Feature Select Helpers
 void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter);
+
+// Helper Structures

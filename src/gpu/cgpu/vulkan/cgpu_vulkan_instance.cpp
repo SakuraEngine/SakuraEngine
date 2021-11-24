@@ -1,4 +1,3 @@
-#define DLL_IMPLEMENTATION
 #include "vulkan_utils.h"
 #include <assert.h>
 #include <stdlib.h>

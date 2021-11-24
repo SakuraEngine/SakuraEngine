@@ -7,7 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-inline static DXGI_FORMAT pf_translate_to_d3d12(const ECGpuPixelFormat fmt)
+FORCEINLINE static DXGI_FORMAT pf_translate_to_d3d12(const ECGpuPixelFormat fmt)
 {
 	switch (fmt) {
 	case PF_R1_UNORM: return DXGI_FORMAT_R1_UNORM;
