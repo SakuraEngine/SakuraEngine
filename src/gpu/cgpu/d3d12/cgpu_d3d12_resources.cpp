@@ -1,36 +1,6 @@
+#include "d3d12_utils.h"
 #include "math/common.h"
-#include "platform/thread.h"
-#include "platform/atomic.h"
-#include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "cgpu/backend/d3d12/d3d12_bridge.h"
-#include "D3D12MemAlloc.h"
-#include <EASTL/vector.h>
 #include <dxcapi.h>
-
-/// CPU Visible Heap to store all the resources needing CPU read / write operations - Textures/Buffers/RTV
-typedef struct D3D12Util_DescriptorHandle {
-    D3D12_CPU_DESCRIPTOR_HANDLE mCpu;
-    D3D12_GPU_DESCRIPTOR_HANDLE mGpu;
-} D3D12Util_DescriptorHandle;
-
-typedef struct D3D12Util_DescriptorHeap {
-    /// DX Heap
-    ID3D12DescriptorHeap* pCurrentHeap;
-    /// Lock for multi-threaded descriptor allocations
-    struct SMutex* pMutex;
-    ID3D12Device* pDevice;
-    D3D12_CPU_DESCRIPTOR_HANDLE* pHandles;
-    /// Start position in the heap
-    D3D12Util_DescriptorHandle mStartHandle;
-    /// Free List used for CPU only descriptor heaps
-    eastl::vector<D3D12Util_DescriptorHandle> mFreeList;
-    /// Description
-    D3D12_DESCRIPTOR_HEAP_DESC mDesc;
-    /// DescriptorInfo Increment Size
-    uint32_t mDescriptorSize;
-    /// Used
-    SAtomic32 mUsedDescriptors;
-} D3D12Util_DescriptorHeap;
 
 // Inline Utils
 D3D12_RESOURCE_STATES D3D12Util_ResourceStateBridge(ECGpuResourceState state);
@@ -65,8 +35,8 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
         heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
         heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-        heapProps.VisibleNodeMask = 1;
-        heapProps.CreationNodeMask = 1;
+        heapProps.VisibleNodeMask = SINGLE_GPU_NODE_MASK;
+        heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
         CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
             &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
     }
@@ -238,4 +208,57 @@ inline D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGpu
     if (desc->flags & BCF_OWN_MEMORY_BIT)
         alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
     return alloc_desc;
+}
+
+// Descriptor Heap
+void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
+    const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap)
+{
+    uint32_t numDescriptors = pDesc->NumDescriptors;
+    D3D12Util_DescriptorHeap* pHeap = (D3D12Util_DescriptorHeap*)cgpu_calloc(1, sizeof(*pHeap));
+
+    pHeap->pMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
+    skr_init_mutex(pHeap->pMutex);
+    pHeap->pDevice = pDevice;
+
+    // Keep 32 aligned for easy remove
+    numDescriptors = smath_round_up(numDescriptors, 32);
+
+    D3D12_DESCRIPTOR_HEAP_DESC Desc = *pDesc;
+    Desc.NumDescriptors = numDescriptors;
+    pHeap->mDesc = Desc;
+
+    CHECK_HRESULT(pDevice->CreateDescriptorHeap(&Desc, IID_ARGS(&pHeap->pCurrentHeap)));
+
+    pHeap->mStartHandle.mCpu = pHeap->pCurrentHeap->GetCPUDescriptorHandleForHeapStart();
+    if (pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
+    {
+        pHeap->mStartHandle.mGpu = pHeap->pCurrentHeap->GetGPUDescriptorHandleForHeapStart();
+    }
+    pHeap->mDescriptorSize = pDevice->GetDescriptorHandleIncrementSize(pHeap->mDesc.Type);
+    if (Desc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
+        pHeap->pHandles = (D3D12_CPU_DESCRIPTOR_HANDLE*)cgpu_calloc(Desc.NumDescriptors, sizeof(D3D12_CPU_DESCRIPTOR_HANDLE));
+
+    *ppDescHeap = pHeap;
+}
+
+void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap)
+{
+    pHeap->mUsedDescriptors = 0;
+    pHeap->mFreeList.clear();
+}
+
+static void D3D12Util_FreeDescriptorHeap(D3D12Util_DescriptorHeap* pHeap)
+{
+    if (pHeap == nullptr) return;
+    SAFE_RELEASE(pHeap->pCurrentHeap);
+
+    // Need delete since object frees allocated memory in destructor
+    skr_destroy_mutex(pHeap->pMutex);
+    cgpu_free(pHeap->pMutex);
+
+    pHeap->mFreeList.~vector();
+
+    cgpu_free(pHeap->pHandles);
+    cgpu_free(pHeap);
 }

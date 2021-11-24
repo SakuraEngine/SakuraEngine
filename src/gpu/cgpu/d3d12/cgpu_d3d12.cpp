@@ -1,8 +1,4 @@
-#include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "cgpu/backend/d3d12/d3d12_bridge.h"
-#include "D3D12MemAlloc.h"
 #include "d3d12_utils.h"
-
 #include <assert.h>
 #include <stdio.h>
 
@@ -169,23 +165,64 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
             }
         }
     }
+    // Create D3D12MA Allocator
     D3D12Util_CreateDMAAllocator(I, A, D);
     assert(D->pResourceAllocator && "DMA Allocator Must be Created!");
+    // Create Descriptor Heaps
+    D->pCPUDescriptorHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES * sizeof(D3D12Util_DescriptorHeap*));
+    D->pCbvSrvUavHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
+    D->pSamplerHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
+    for (uint32_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i)
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+        desc.Flags = gCpuDescriptorHeapProperties[i].mFlags;
+        desc.NodeMask = 0; // CPU Descriptor Heap - Node mask is irrelevant
+        desc.NumDescriptors = gCpuDescriptorHeapProperties[i].mMaxDescriptors;
+        desc.Type = (D3D12_DESCRIPTOR_HEAP_TYPE)i;
+        D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pCPUDescriptorHeaps[i]);
+    }
+    // One shader visible heap for each linked node
+    for (uint32_t i = 0; i < SINGLE_GPU_NODE_COUNT; ++i)
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        desc.NodeMask = SINGLE_GPU_NODE_MASK;
+
+        desc.NumDescriptors = 1 << 16;
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pCbvSrvUavHeaps[i]);
+
+        desc.NumDescriptors = 1 << 11;
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+        D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pSamplerHeaps[i]);
+    }
     return &D->super;
 }
 
 void cgpu_free_device_d3d12(CGpuDeviceId device)
 {
-    CGpuDevice_D3D12* cgpuD3D12Device = (CGpuDevice_D3D12*)device;
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     for (uint32_t t = 0u; t < ECGpuQueueType_Count; t++)
     {
-        for (uint32_t i = 0; i < cgpuD3D12Device->pCommandQueueCounts[t]; i++)
+        for (uint32_t i = 0; i < D->pCommandQueueCounts[t]; i++)
         {
-            SAFE_RELEASE(cgpuD3D12Device->ppCommandQueues[t][i]);
+            SAFE_RELEASE(D->ppCommandQueues[t][i]);
         }
     }
-    SAFE_RELEASE(cgpuD3D12Device->pResourceAllocator);
-    SAFE_RELEASE(cgpuD3D12Device->pDxDevice);
+    // Free D3D12MA Allocator
+    SAFE_RELEASE(D->pResourceAllocator);
+    // Free Descriptor Heaps
+    for (uint32_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; i++)
+    {
+        D3D12Util_FreeDescriptorHeap(D->pCPUDescriptorHeaps[i]);
+    }
+    D3D12Util_FreeDescriptorHeap(D->pCbvSrvUavHeaps[0]);
+    D3D12Util_FreeDescriptorHeap(D->pSamplerHeaps[0]);
+    cgpu_free(D->pCPUDescriptorHeaps);
+    cgpu_free(D->pCbvSrvUavHeaps);
+    cgpu_free(D->pSamplerHeaps);
+    // Release D3D12 Device
+    SAFE_RELEASE(D->pDxDevice);
 }
 
 CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
@@ -318,11 +355,3 @@ void cgpu_d3d12_disable_DRED(CGpuDREDSettingsId settings)
     SAFE_RELEASE(settings->pDredSettings);
     delete settings;
 }
-
-//
-// C++ is the only language supported by D3D12:
-//   https://msdn.microsoft.com/en-us/library/windows/desktop/dn899120(v=vs.85).aspx
-//
-#if !defined(__cplusplus)
-    #error "D3D12 requires C++! Sorry!"
-#endif

@@ -10,6 +10,8 @@ extern "C" {
 
 struct DMA_Allocator;
 struct DMA_Allocation;
+struct D3D12Util_DescriptorHandle;
+struct D3D12Util_DescriptorHeap;
 
 RUNTIME_API const CGpuProcTable* CGPU_D3D12ProcTable();
 RUNTIME_API const CGpuSurfacesProcTable* CGPU_D3D12SurfacesProcTable();
@@ -62,10 +64,9 @@ typedef struct CGpuInstance_D3D12 {
 #if defined(XBOX)
     IDXGIFactory2* pDXGIFactory;
 #elif defined(_WIN32)
-    IDXGIFactory6* pDXGIFactory;
+    struct IDXGIFactory6* pDXGIFactory;
 #endif
-    ID3D12Debug* pDXDebug;
-
+    struct ID3D12Debug* pDXDebug;
     struct CGpuAdapter_D3D12* pAdapters;
     uint32_t mAdaptersCount;
 #if defined(__cplusplus)
@@ -79,17 +80,19 @@ typedef struct CGpuAdapter_D3D12 {
 #if defined(XBOX)
     IDXGIAdapter* pDxActiveGPU;
 #elif defined(_WIN32)
-    IDXGIAdapter4* pDxActiveGPU;
+    struct IDXGIAdapter4* pDxActiveGPU;
 #endif
     D3D_FEATURE_LEVEL mFeatureLevel;
-
     CGpuAdapterDetail adapter_detail;
 } CGpuAdapter_D3D12;
 
 typedef struct CGpuDevice_D3D12 {
     CGpuDevice super;
-    ID3D12Device* pDxDevice;
-    ID3D12CommandQueue** const ppCommandQueues[ECGpuQueueType_Count]
+    struct D3D12Util_DescriptorHeap** pCPUDescriptorHeaps;
+    struct D3D12Util_DescriptorHeap** pCbvSrvUavHeaps;
+    struct D3D12Util_DescriptorHeap** pSamplerHeaps;
+    struct ID3D12Device* pDxDevice;
+    struct ID3D12CommandQueue** const ppCommandQueues[ECGpuQueueType_Count]
 #ifdef __cplusplus
         = {}
 #endif
@@ -108,12 +111,12 @@ typedef struct CGpuDevice_D3D12 {
 
 typedef struct CGpuQueue_D3D12 {
     CGpuQueue super;
-    ID3D12CommandQueue* pCommandQueue;
+    struct ID3D12CommandQueue* pCommandQueue;
 } CGpuQueue_D3D12;
 
 typedef struct CGpuCommandPool_D3D12 {
     CGpuCommandPool super;
-    ID3D12CommandAllocator* pCommandAllocator;
+    struct ID3D12CommandAllocator* pCommandAllocator;
 } CGpuCommandPool_D3D12;
 
 typedef struct CGpuShaderLibrary_D3D12 {
@@ -126,7 +129,7 @@ typedef struct CGpuBuffer_D3D12 {
     /// GPU Address - Cache to avoid calls to ID3D12Resource::GetGpuVirtualAddress
     D3D12_GPU_VIRTUAL_ADDRESS mDxGpuAddress;
     /// Native handle of the underlying resource
-    ID3D12Resource* pDxResource;
+    struct ID3D12Resource* pDxResource;
     /// Contains resource allocation info such as parent heap, offset in heap
 #ifdef __cplusplus
     D3D12MA::Allocation* pDxAllocation;
@@ -137,7 +140,7 @@ typedef struct CGpuBuffer_D3D12 {
 
 typedef struct CGpuSwapChain_D3D12 {
     CGpuSwapChain super;
-    IDXGISwapChain3* pDxSwapChain;
+    struct IDXGISwapChain3* pDxSwapChain;
     uint32_t mDxSyncInterval : 3;
     uint32_t mFlags : 10;
     uint32_t mImageCount : 3;
