@@ -137,7 +137,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
 
         *const_cast<uint32_t*>(&D->pCommandQueueCounts[i]) = queueGroup.queueCount;
         *const_cast<ID3D12CommandQueue***>(&D->ppCommandQueues[queueType]) =
-            (ID3D12CommandQueue**)malloc(sizeof(ID3D12CommandQueue*) * queueGroup.queueCount);
+            (ID3D12CommandQueue**)cgpu_malloc(sizeof(ID3D12CommandQueue*) * queueGroup.queueCount);
 
         for (uint32_t j = 0u; j < queueGroup.queueCount; j++)
         {
@@ -208,6 +208,7 @@ void cgpu_free_device_d3d12(CGpuDeviceId device)
         {
             SAFE_RELEASE(D->ppCommandQueues[t][i]);
         }
+        cgpu_free((ID3D12CommandQueue**)D->ppCommandQueues[t]);
     }
     // Free D3D12MA Allocator
     SAFE_RELEASE(D->pResourceAllocator);
@@ -225,26 +226,98 @@ void cgpu_free_device_d3d12(CGpuDeviceId device)
     SAFE_RELEASE(D->pDxDevice);
 }
 
+// API Objects APIs
+CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device)
+{
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
+    // create a Fence and ASSERT that it is valid
+    CGpuFence_D3D12* F = new CGpuFence_D3D12();
+    assert(F);
+
+    CHECK_HRESULT(D->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_ARGS(&F->pDxFence)));
+    F->mFenceValue = 1;
+
+    F->pDxWaitIdleFenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    return &F->super;
+}
+
+void cgpu_free_fence_d3d12(CGpuFenceId fence)
+{
+    CGpuFence_D3D12* F = (CGpuFence_D3D12*)fence;
+    SAFE_RELEASE(F->pDxFence);
+    CloseHandle(F->pDxWaitIdleFenceEvent);
+    delete F;
+}
+
+// Queue APIs
 CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     CGpuQueue_D3D12* Q = new CGpuQueue_D3D12();
     Q->pCommandQueue = D->ppCommandQueues[type][index];
+    Q->pFence = (CGpuFence_D3D12*)cgpu_create_fence_d3d12(device);
     return &Q->super;
+}
+
+void cgpu_submit_queue_d3d12(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
+{
+    // TODO: Add Necessary Semaphores
+    uint32_t CmdCount = desc->cmds_count;
+    CGpuCommandBuffer_D3D12** Cmds = (CGpuCommandBuffer_D3D12**)desc->cmds;
+    CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
+    CGpuFence_D3D12* F = (CGpuFence_D3D12*)desc->signal_fence;
+
+    // ASSERT that given cmd list and given params are valid
+    assert(CmdCount > 0);
+    assert(Cmds);
+    // execute given command list
+    assert(Q->pCommandQueue);
+
+    ID3D12CommandList** cmds = (ID3D12CommandList**)alloca(CmdCount * sizeof(ID3D12CommandList*));
+    for (uint32_t i = 0; i < CmdCount; ++i)
+    {
+        cmds[i] = Cmds[i]->pDxCmdList;
+    }
+    Q->pCommandQueue->ExecuteCommandLists(CmdCount, cmds);
+
+    if (F)
+        D3D12Util_SignalFence(Q, F->pDxFence, F->mFenceValue++);
+}
+
+void cgpu_wait_queue_idle_d3d12(CGpuQueueId queue)
+{
+    CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
+    D3D12Util_SignalFence(Q, Q->pFence->pDxFence, Q->pFence->mFenceValue++);
+
+    uint64_t fenceValue = Q->pFence->mFenceValue - 1;
+    if (Q->pFence->pDxFence->GetCompletedValue() < Q->pFence->mFenceValue - 1)
+    {
+        Q->pFence->pDxFence->SetEventOnCompletion(fenceValue, Q->pFence->pDxWaitIdleFenceEvent);
+        WaitForSingleObject(Q->pFence->pDxWaitIdleFenceEvent, INFINITE);
+    }
 }
 
 void cgpu_free_queue_d3d12(CGpuQueueId queue)
 {
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
     assert(queue && "D3D12 ERROR: FREE NULL QUEUE!");
+    cgpu_free_fence_d3d12(&Q->pFence->super);
     delete Q;
 }
+
+// Command Objects
 
 // allocate_transient_command_allocator
 ID3D12CommandAllocator* allocate_transient_command_allocator(CGpuCommandPool_D3D12* E, CGpuQueueId queue)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)queue->device;
-    D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+
+    D3D12_COMMAND_LIST_TYPE type =
+        queue->type == ECGpuQueueType_Transfer ?
+            D3D12_COMMAND_LIST_TYPE_COPY :
+        queue->type == ECGpuQueueType_Compute ?
+            D3D12_COMMAND_LIST_TYPE_COMPUTE :
+            D3D12_COMMAND_LIST_TYPE_DIRECT;
 
     bool res = SUCCEEDED(D->pDxDevice->CreateCommandAllocator(type, IID_PPV_ARGS(&E->pDxCmdAlloc)));
     if (res)
@@ -308,6 +381,36 @@ void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool)
 
     free_transient_command_allocator(P->pDxCmdAlloc);
     delete P;
+}
+
+// CMDs
+void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)Cmd->pCmdPool;
+    CHECK_HRESULT(Cmd->pDxCmdList->Reset(P->pDxCmdAlloc, NULL));
+
+    if (Cmd->mType != ECGpuQueueType_Transfer)
+    {
+        ID3D12DescriptorHeap* heaps[] = {
+            Cmd->pBoundHeaps[0]->pCurrentHeap,
+            Cmd->pBoundHeaps[1]->pCurrentHeap,
+        };
+        Cmd->pDxCmdList->SetDescriptorHeaps(2, heaps);
+
+        Cmd->mBoundHeapStartHandles[0] = Cmd->pBoundHeaps[0]->pCurrentHeap->GetGPUDescriptorHandleForHeapStart();
+        Cmd->mBoundHeapStartHandles[1] = Cmd->pBoundHeaps[1]->pCurrentHeap->GetGPUDescriptorHandleForHeapStart();
+    }
+    // Reset CPU side data
+    Cmd->pBoundRootSignature = NULL;
+}
+
+void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    assert(Cmd->pDxCmdList);
+
+    CHECK_HRESULT(Cmd->pDxCmdList->Close());
 }
 
 // SwapChain APIs

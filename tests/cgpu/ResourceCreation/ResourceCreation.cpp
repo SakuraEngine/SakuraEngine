@@ -153,14 +153,12 @@ TEST_P(ResourceCreation, CreateModules)
 }
 
 static const auto allPlatforms = testing::Values(
-#ifndef TEST_WEBGPU
-    #ifdef CGPU_USE_VULKAN
+#ifdef CGPU_USE_VULKAN
     ECGPUBackEnd_VULKAN
-    #endif
-    #ifdef CGPU_USE_D3D12
+#endif
+#ifdef CGPU_USE_D3D12
     ,
     ECGPUBackEnd_D3D12
-    #endif
 #endif
 );
 

@@ -188,6 +188,18 @@ void cgpu_unmap_buffer_d3d12(CGpuBufferId buffer)
     B->super.cpu_mapped_address = NULL;
 }
 
+void cgpu_cmd_update_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    CGpuBuffer_D3D12* Src = (CGpuBuffer_D3D12*)desc->src;
+    CGpuBuffer_D3D12* Dst = (CGpuBuffer_D3D12*)desc->dst;
+#if defined(XBOX)
+    Cmd->mDma.pDxCmdList->CopyBufferRegion(Dst->pDxResource, desc->dst_offset, Src->pDxResource, desc->src_offset, desc->size);
+#else
+    Cmd->pDxCmdList->CopyBufferRegion(Dst->pDxResource, desc->dst_offset, Src->pDxResource, desc->src_offset, desc->size);
+#endif
+}
+
 void cgpu_free_buffer_d3d12(CGpuBufferId buffer)
 {
     CGpuBuffer_D3D12* B = (CGpuBuffer_D3D12*)buffer;

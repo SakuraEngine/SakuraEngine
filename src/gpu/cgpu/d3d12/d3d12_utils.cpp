@@ -136,3 +136,8 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
         assert(0 && "DMA Allocator Create Failed!");
     }
 }
+
+void D3D12Util_SignalFence(CGpuQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue)
+{
+    Q->pCommandQueue->Signal(DxF, fenceValue);
+}

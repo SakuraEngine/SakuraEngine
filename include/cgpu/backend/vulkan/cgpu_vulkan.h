@@ -32,8 +32,14 @@ RUNTIME_API uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, 
 RUNTIME_API CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc);
 RUNTIME_API void cgpu_free_device_vulkan(CGpuDeviceId device);
 
+// API Object APIs
+RUNTIME_API CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device);
+RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
+
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
+RUNTIME_API void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
+RUNTIME_API void cgpu_wait_queue_idle_vulkan(CGpuQueueId queue);
 RUNTIME_API void cgpu_free_queue_vulkan(CGpuQueueId queue);
 
 // Command APIs
@@ -55,6 +61,11 @@ RUNTIME_API void cgpu_free_buffer_vulkan(CGpuBufferId buffer);
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
+
+// CMDs
+RUNTIME_API void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd);
+RUNTIME_API void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
 
 typedef struct CGpuInstance_Vulkan {
     CGpuInstance super;
@@ -135,10 +146,17 @@ typedef struct CGpuDevice_Vulkan {
     struct VolkDeviceTable mVkDeviceTable;
 } CGpuDevice_Vulkan;
 
+typedef struct CGpuFence_Vulkan {
+    CGpuFence super;
+    VkFence pVkFence;
+    uint32_t mSubmitted : 1;
+} CGpuFence_Vulkan;
+
 typedef struct CGpuQueue_Vulkan {
     const CGpuQueue super;
     VkQueue pVkQueue;
-    uint32_t mVkQueueFamilyIndex;
+    float mTimestampPeriod;
+    uint32_t mVkQueueFamilyIndex : 5;
 } CGpuQueue_Vulkan;
 
 typedef struct CGpuCommandPool_Vulkan {

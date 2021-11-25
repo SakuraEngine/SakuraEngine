@@ -130,6 +130,24 @@ CGpuDeviceId cgpu_create_device(CGpuAdapterId adapter, const CGpuDeviceDescripto
     return device;
 }
 
+CGpuFenceId cgpu_create_fence(CGpuDeviceId device)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_fence && "create_fence Proc Missing!");
+    CGpuFence* fence = (CGpuFence*)device->proc_table_cache->create_fence(device);
+    fence->device = device;
+    return fence;
+}
+
+void cgpu_free_fence(CGpuFenceId fence)
+{
+    assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
+    assert(fence->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcFreeFence fn_free_fence = fence->device->proc_table_cache->free_fence;
+    assert(fn_free_fence && "free_fence Proc Missing!");
+    fn_free_fence(fence);
+}
+
 void cgpu_free_device(CGpuDeviceId device)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -149,6 +167,27 @@ CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t in
     queue->type = type;
     queue->device = device;
     return queue;
+}
+
+void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
+{
+    assert(desc != CGPU_NULLPTR && "fatal: call on NULL desc!");
+    assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcSubmitQueue submit_queue = queue->device->proc_table_cache->submit_queue;
+    assert(submit_queue && "submit_queue Proc Missing!");
+
+    submit_queue(queue, desc);
+}
+
+void cgpu_wait_queue_idle(CGpuQueueId queue)
+{
+    assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcWaitQueueIdle wait_queue_idle = queue->device->proc_table_cache->wait_queue_idle;
+    assert(wait_queue_idle && "wait_queue_idle Proc Missing!");
+
+    wait_queue_idle(queue);
 }
 
 void cgpu_free_queue(CGpuQueueId queue)
@@ -184,6 +223,7 @@ RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer(CGpuCommandPoolId poo
 
     CGpuCommandBuffer* cmd = (CGpuCommandBuffer*)fn_create_cmd(pool, desc);
     cmd->pool = pool;
+    cmd->device = device;
     return cmd;
 }
 
@@ -210,6 +250,34 @@ RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId pool)
 
     pool->queue->device->proc_table_cache->free_command_pool(pool);
     return;
+}
+
+// CMDs
+void cgpu_cmd_begin(CGpuCommandBufferId cmd)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdBegin fn_cmd_begin = cmd->device->proc_table_cache->cmd_begin;
+    assert(fn_cmd_begin && "cmd_begin Proc Missing!");
+    fn_cmd_begin(cmd);
+}
+
+void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdUpdateBuffer fn_cmd_update_buffer = cmd->device->proc_table_cache->cmd_update_buffer;
+    assert(fn_cmd_update_buffer && "cmd_update_buffer Proc Missing!");
+    fn_cmd_update_buffer(cmd, desc);
+}
+
+void cgpu_cmd_end(CGpuCommandBufferId cmd)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdEnd fn_cmd_end = cmd->device->proc_table_cache->cmd_end;
+    assert(fn_cmd_end && "cmd_end Proc Missing!");
+    fn_cmd_end(cmd);
 }
 
 // Shader APIs

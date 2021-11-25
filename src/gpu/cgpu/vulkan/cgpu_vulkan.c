@@ -1,35 +1,50 @@
 #include "vulkan_utils.h"
 
 const CGpuProcTable tbl_vk = {
+    // Instance APIs
     .create_instance = &cgpu_create_instance_vulkan,
     .query_instance_features = &cgpu_query_instance_features_vulkan,
     .free_instance = &cgpu_free_instance_vulkan,
 
+    // Adapter APIs
     .enum_adapters = &cgpu_enum_adapters_vulkan,
     .query_adapter_detail = &cgpu_query_adapter_detail_vulkan,
     .query_queue_count = &cgpu_query_queue_count_vulkan,
 
+    // Device APIs
     .create_device = &cgpu_create_device_vulkan,
     .free_device = &cgpu_free_device_vulkan,
 
+    // Queue APIs
     .get_queue = &cgpu_get_queue_vulkan,
+    .submit_queue = &cgpu_submit_queue_vulkan,
+    .wait_queue_idle = &cgpu_wait_queue_idle_vulkan,
     .free_queue = &cgpu_free_queue_vulkan,
 
+    // Command APIs
     .create_command_pool = &cgpu_create_command_pool_vulkan,
     .create_command_buffer = &cgpu_create_command_buffer_vulkan,
     .free_command_buffer = &cgpu_free_command_buffer_vulkan,
     .free_command_pool = &cgpu_free_command_pool_vulkan,
 
+    // Shader APIs
+    .create_shader_library = &cgpu_create_shader_library_vulkan,
+    .free_shader_library = &cgpu_free_shader_library_vulkan,
+
+    // Buffer APIs
     .create_buffer = &cgpu_create_buffer_vulkan,
     .map_buffer = &cgpu_map_buffer_vulkan,
     .unmap_buffer = &cgpu_unmap_buffer_vulkan,
     .free_buffer = &cgpu_free_buffer_vulkan,
 
-    .create_shader_library = &cgpu_create_shader_library_vulkan,
-    .free_shader_library = &cgpu_free_shader_library_vulkan,
-
+    // Swapchain APIs
     .create_swapchain = &cgpu_create_swapchain_vulkan,
-    .free_swapchain = &cgpu_free_swapchain_vulkan
+    .free_swapchain = &cgpu_free_swapchain_vulkan,
+
+    // CMDs
+    .cmd_begin = &cgpu_cmd_begin_vulkan,
+    .cmd_update_buffer = &cgpu_cmd_update_buffer_vulkan,
+    .cmd_end = &cgpu_cmd_end_vulkan
 };
 
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
@@ -112,6 +127,33 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
     return count;
 }
 
+// API Objects APIs
+CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuFence_Vulkan* F = (CGpuFence_Vulkan*)cgpu_calloc(1, sizeof(CGpuFence_Vulkan));
+    assert(F);
+    VkFenceCreateInfo add_info = {
+        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+    };
+
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateFence(
+        D->pVkDevice, &add_info, GLOBAL_VkAllocationCallbacks, &F->pVkFence));
+    F->mSubmitted = false;
+    return &F->super;
+}
+
+void cgpu_free_fence_vulkan(CGpuFenceId fence)
+{
+    CGpuFence_Vulkan* F = (CGpuFence_Vulkan*)fence;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)fence->device;
+    D->mVkDeviceTable.vkDestroyFence(D->pVkDevice, F->pVkFence, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(F);
+}
+
+// Queue APIs
 CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
 {
     assert(device && "CGPU VULKAN: NULL DEVICE!");
@@ -121,13 +163,63 @@ CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint
     CGpuQueue_Vulkan Q = { .super = { .device = &D->super, .index = index, .type = type } };
     D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, (uint32_t)A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
     Q.mVkQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[type];
+    Q.mTimestampPeriod = A->mPhysicalDeviceProps.properties.limits.timestampPeriod;
 
     CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)cgpu_calloc(1, sizeof(CGpuQueue_Vulkan));
     memcpy(RQ, &Q, sizeof(Q));
     return &RQ->super;
 }
 
-void cgpu_free_queue_vulkan(CGpuQueueId queue) { cgpu_free((void*)queue); }
+void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
+{
+    uint32_t CmdCount = desc->cmds_count;
+    CGpuCommandBuffer_Vulkan** Cmds = (CGpuCommandBuffer_Vulkan**)desc->cmds;
+    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)queue;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)queue->device;
+    CGpuFence_Vulkan* F = (CGpuFence_Vulkan*)desc->signal_fence;
+
+    // ASSERT that given cmd list and given params are valid
+    assert(CmdCount > 0);
+    assert(Cmds);
+    // execute given command list
+    assert(Q->pVkQueue != VK_NULL_HANDLE);
+
+    DECLARE_ZERO_VLA(VkCommandBuffer, vkcmds, CmdCount);
+    for (uint32_t i = 0; i < CmdCount; ++i)
+    {
+        vkcmds[i] = Cmds[i]->pVkCmdBuf;
+    }
+
+    // TODO: Add Necessary Semaphores
+    VkSubmitInfo submit_info = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = NULL,
+        .waitSemaphoreCount = 0,
+        .pWaitSemaphores = NULL,
+        .pWaitDstStageMask = 0,
+        .commandBufferCount = CmdCount,
+        .pCommandBuffers = vkcmds,
+        .signalSemaphoreCount = 0,
+        .pSignalSemaphores = NULL,
+    };
+    // TODO: Thread Safety ?
+    CHECK_VKRESULT(D->mVkDeviceTable.vkQueueSubmit(
+        Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE));
+    if (F)
+        F->mSubmitted = true;
+}
+
+void cgpu_wait_queue_idle_vulkan(CGpuQueueId queue)
+{
+    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)queue;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)queue->device;
+    D->mVkDeviceTable.vkQueueWaitIdle(Q->pVkQueue);
+}
+
+void cgpu_free_queue_vulkan(CGpuQueueId queue)
+{
+    cgpu_free((void*)queue);
+}
 
 VkCommandPool allocate_transient_command_pool(CGpuDevice_Vulkan* D, CGpuQueueId queue)
 {
@@ -203,8 +295,34 @@ void cgpu_free_command_pool_vulkan(CGpuCommandPoolId pool)
     cgpu_free(P);
 }
 
-#define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
+// CMDs
+void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    VkCommandBufferBeginInfo begin_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = NULL
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkBeginCommandBuffer(Cmd->pVkCmdBuf, &begin_info));
+    Cmd->pBoundPipelineLayout = CGPU_NULL;
+}
 
+void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    if (Cmd->pVkActiveRenderPass)
+    {
+        vkCmdEndRenderPass(Cmd->pVkCmdBuf);
+    }
+    Cmd->pVkActiveRenderPass = VK_NULL_HANDLE;
+    CHECK_VKRESULT(D->mVkDeviceTable.vkEndCommandBuffer(Cmd->pVkCmdBuf));
+}
+
+#define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
 // SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
