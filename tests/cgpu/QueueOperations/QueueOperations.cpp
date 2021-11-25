@@ -130,10 +130,15 @@ TEST_P(QueueOperations, TransferCmdReadback)
     }
     // Transfer
     CGpuQueueId transferQueue;
+    auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
     auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
-    if (gQueue > 0)
+    if (tQueue > 0 || gQueue > 0)
     {
-        transferQueue = cgpu_get_queue(device, ECGpuQueueType_Transfer, 0);
+        if (tQueue > 0)
+            transferQueue = cgpu_get_queue(device, ECGpuQueueType_Transfer, 0);
+        else if (gQueue > 0)
+            transferQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+
         EXPECT_NE(transferQueue, CGPU_NULLPTR);
         EXPECT_NE(transferQueue, nullptr);
 

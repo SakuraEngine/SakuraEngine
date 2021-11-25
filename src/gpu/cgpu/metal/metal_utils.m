@@ -69,12 +69,12 @@ void MetalUtil_QueryVendorIdAndDeviceId(id<MTLDevice> device, uint32_t* outVende
         // This is an Apple GPU. It won't have a 'device-id' property, so fill it in
         // like on iOS/tvOS.
         vendorID = kAppleVendorId;
-    #if TARGET_MACOS_APPLE_SILICON
-        if (supportsMTLGPUFamily(Apple7))
+    #ifdef TARGET_MACOS_APPLE_SILICON
+        if (supportsMTLGPUFamily(device, Apple7))
         {
             deviceID = 0xa140;
         }
-        else if (supportsMTLGPUFamily(Apple6))
+        else if (supportsMTLGPUFamily(device, Apple6))
         {
             deviceID = 0xa130;
         }
