@@ -18,7 +18,7 @@
 
 #include <EASTL/unique_ptr.h>
 
-FORCEINLINE static bool SDLEventHandler(const SDL_Event& event, SDL_Window* window)
+inline static bool SDLEventHandler(const SDL_Event& event, SDL_Window* window)
 {
     switch (event.type)
     {

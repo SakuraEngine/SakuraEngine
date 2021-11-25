@@ -432,7 +432,7 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
 }
 
 // Debug Callback
-inline void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
+FORCEINLINE static void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
     VkObjectType type, const char* pName)
 {
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
@@ -444,7 +444,7 @@ inline void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
     vkSetDebugUtilsObjectNameEXT(pDevice, &nameInfo);
 }
 
-inline void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
+FORCEINLINE static void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
     VkDebugReportObjectTypeEXT type, const char* pName)
 {
     VkDebugMarkerObjectNameInfoEXT nameInfo = {
