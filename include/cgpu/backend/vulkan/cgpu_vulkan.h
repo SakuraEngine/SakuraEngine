@@ -38,6 +38,8 @@ RUNTIME_API void cgpu_free_queue_vulkan(CGpuQueueId queue);
 
 // Command APIs
 RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool_vulkan(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc);
+RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer_vulkan(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
+RUNTIME_API void cgpu_free_command_buffer_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_free_command_pool_vulkan(CGpuCommandPoolId pool);
 
 // Shader APIs
@@ -143,6 +145,18 @@ typedef struct CGpuCommandPool_Vulkan {
     CGpuCommandPool super;
     VkCommandPool pVkCmdPool;
 } CGpuCommandPool_Vulkan;
+
+typedef struct CGpuCommandBuffer_Vulkan {
+    CGpuCommandBuffer super;
+    VkCommandBuffer pVkCmdBuf;
+    VkRenderPass pVkActiveRenderPass;
+    VkPipelineLayout pBoundPipelineLayout;
+    uint32_t mNodeIndex : 4;
+    uint32_t mType : 3;
+    uint32_t mPadA;
+    struct CGpuCommandPool_Vulkan* pCmdPool;
+    uint64_t mPadB[9];
+} CGpuCommandBuffer_Vulkan;
 
 typedef struct CGpuBuffer_Vulkan {
     CGpuBuffer super;

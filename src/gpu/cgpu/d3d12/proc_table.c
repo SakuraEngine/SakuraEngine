@@ -17,6 +17,8 @@ const CGpuProcTable tbl_d3d12 = {
     .free_queue = &cgpu_free_queue_d3d12,
 
     .create_command_pool = &cgpu_create_command_pool_d3d12,
+    .create_command_buffer = &cgpu_create_command_buffer_d3d12,
+    .free_command_buffer = &cgpu_free_command_buffer_d3d12,
     .free_command_pool = &cgpu_free_command_pool_d3d12,
 
     .create_shader_library = &cgpu_create_shader_library_d3d12,

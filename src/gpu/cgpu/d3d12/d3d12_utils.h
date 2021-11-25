@@ -6,9 +6,6 @@
 #include "platform/atomic.h"
 #include <EASTL/vector.h>
 
-#define SINGLE_GPU_NODE_COUNT 1
-#define SINGLE_GPU_NODE_MASK 1
-
 // Instance Helpers
 void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* I, uint32_t* count, bool* foundSoftwareAdapter);
 void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor);
