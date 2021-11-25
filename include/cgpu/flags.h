@@ -405,7 +405,7 @@ typedef uint32_t ECGpuBufferCreationFlags;
 
 typedef enum ECGpuResourceType
 {
-    RT_UNDEFINED = 0,
+    RT_NONE = 0,
     RT_SAMPLER = 0x01,
     // SRV Read only texture
     RT_TEXTURE = (RT_SAMPLER << 1),

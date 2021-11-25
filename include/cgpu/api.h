@@ -18,6 +18,8 @@ struct CGpuShaderLibraryDescriptor;
 struct CGpuPipelineShaderDescriptor;
 struct CGpuBufferDescriptor;
 struct CGpuSwapChainDescriptor;
+struct CGpuQueueSubmitDescriptor;
+struct CGpuBufferUpdateDescriptor;
 struct CGpuDescriptorSet;
 
 typedef uint32_t CGpuQueueIndex;
@@ -27,6 +29,8 @@ typedef const struct CGpuInstance* CGpuInstanceId;
 typedef const struct CGpuAdapter* CGpuAdapterId;
 typedef const struct CGpuDevice* CGpuDeviceId;
 typedef const struct CGpuQueue* CGpuQueueId;
+typedef const struct CGpuSemaphore* CGpuSemaphoreId;
+typedef const struct CGpuFence* CGpuFenceId;
 typedef const struct CGpuCommandPool* CGpuCommandPoolId;
 typedef const struct CGpuCommandBuffer* CGpuCommandBufferId;
 typedef const struct CGpuSwapChain* CGpuSwapChainId;
@@ -101,9 +105,19 @@ typedef CGpuDeviceId (*CGPUProcCreateDevice)(CGpuAdapterId adapter, const struct
 RUNTIME_API void cgpu_free_device(CGpuDeviceId device);
 typedef void (*CGPUProcFreeDevice)(CGpuDeviceId device);
 
+// API Objects APIs
+RUNTIME_API CGpuFenceId cgpu_create_fence(CGpuDeviceId device);
+typedef CGpuFenceId (*CGPUProcCreateFence)(CGpuDeviceId device);
+RUNTIME_API void cgpu_free_fence(CGpuFenceId fence);
+typedef void (*CGPUProcFreeFence)(CGpuFenceId fence);
+
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 typedef CGpuQueueId (*CGPUProcGetQueue)(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
+RUNTIME_API void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
+typedef void (*CGPUProcSubmitQueue)(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
+RUNTIME_API void cgpu_wait_queue_idle(CGpuQueueId queue);
+typedef void (*CGPUProcWaitQueueIdle)(CGpuQueueId queue);
 RUNTIME_API void cgpu_free_queue(CGpuQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGpuQueueId queue);
 
@@ -140,11 +154,16 @@ RUNTIME_API void cgpu_free_swapchain(CGpuSwapChainId swapchain);
 typedef void (*CGPUProcFreeSwapChain)(CGpuSwapChainId swapchain);
 
 // CMDs
+RUNTIME_API void cgpu_cmd_begin(CGpuCommandBufferId cmd);
+typedef void (*CGPUProcCmdBegin)(CGpuCommandBufferId cmd);
+RUNTIME_API void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+typedef void (*CGPUProcCmdUpdateBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 RUNTIME_API void cgpu_cmd_set_viewport(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
 typedef void (*CGPUProcCmdSetViewport)(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
-
 RUNTIME_API void cgpu_cmd_set_scissor(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 typedef void (*CGPUProcCmdSetScissor)(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+RUNTIME_API void cgpu_cmd_end(CGpuCommandBufferId cmd);
+typedef void (*CGPUProcCmdEnd)(CGpuCommandBufferId cmd);
 
 // Types
 typedef struct CGpuProcTable {
@@ -159,7 +178,12 @@ typedef struct CGpuProcTable {
     const CGPUProcCreateDevice create_device;
     const CGPUProcFreeDevice free_device;
 
+    const CGPUProcCreateFence create_fence;
+    const CGPUProcFreeFence free_fence;
+
     const CGPUProcGetQueue get_queue;
+    const CGPUProcSubmitQueue submit_queue;
+    const CGPUProcWaitQueueIdle wait_queue_idle;
     const CGPUProcFreeQueue free_queue;
 
     const CGPUProcCreateCommandPool create_command_pool;
@@ -178,8 +202,11 @@ typedef struct CGpuProcTable {
     const CGPUProcCreateSwapChain create_swapchain;
     const CGPUProcFreeSwapChain free_swapchain;
 
+    const CGPUProcCmdBegin cmd_begin;
+    const CGPUProcCmdUpdateBuffer cmd_update_buffer;
     const CGPUProcCmdSetViewport cmd_set_viewport;
     const CGPUProcCmdSetScissor cmd_set_scissor;
+    const CGPUProcCmdEnd cmd_end;
 } CGpuProcTable;
 
 // surfaces
@@ -261,11 +288,20 @@ typedef struct CGpuQueue {
     CGpuQueueIndex index;
 } CGpuQueue;
 
+typedef struct CGpuFence {
+    CGpuDeviceId device;
+} CGpuFence; // Empty struct so we dont need to def it
+
+typedef struct CGpuSemaphore {
+    CGpuDeviceId device;
+} CGpuSemaphore; // Empty struct so we dont need to def it
+
 typedef struct CGpuCommandPool {
     CGpuQueueId queue;
 } CGpuCommandPool;
 
 typedef struct CGpuCommandBuffer {
+    CGpuDeviceId device;
     CGpuCommandPoolId pool;
 } CGpuCommandBuffer;
 
@@ -311,6 +347,24 @@ typedef struct CGpuQueueGroupDescriptor {
     ECGpuQueueType queueType;
     uint32_t queueCount;
 } CGpuQueueGroupDescriptor;
+
+typedef struct CGpuQueueSubmitDescriptor {
+    CGpuCommandBufferId* cmds;
+    CGpuFenceId signal_fence;
+    CGpuSemaphoreId* wait_semaphores;
+    CGpuSemaphoreId* signal_semaphores;
+    uint32_t cmds_count;
+    uint32_t wait_semaphores_count;
+    uint32_t signal_semaphores_count;
+} CGpuQueueSubmitDescriptor;
+
+typedef struct CGpuBufferUpdateDescriptor {
+    CGpuBufferId dst;
+    uint64_t dst_offset;
+    CGpuBufferId src;
+    uint64_t src_offset;
+    uint64_t size;
+} CGpuBufferUpdateDescriptor;
 
 typedef struct CGpuDeviceDescriptor {
     bool disable_pipeline_cache;

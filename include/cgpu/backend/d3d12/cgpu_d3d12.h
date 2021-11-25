@@ -33,8 +33,14 @@ RUNTIME_API uint32_t cgpu_query_queue_count_d3d12(const CGpuAdapterId adapter, c
 RUNTIME_API CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc);
 RUNTIME_API void cgpu_free_device_d3d12(CGpuDeviceId device);
 
+// API Object APIs
+RUNTIME_API CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device);
+RUNTIME_API void cgpu_free_fence_d3d12(CGpuFenceId fence);
+
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
+RUNTIME_API void cgpu_submit_queue_d3d12(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
+RUNTIME_API void cgpu_wait_queue_idle_d3d12(CGpuQueueId queue);
 RUNTIME_API void cgpu_free_queue_d3d12(CGpuQueueId queue);
 
 // Command APIs
@@ -56,6 +62,11 @@ RUNTIME_API void cgpu_free_buffer_d3d12(CGpuBufferId buffer);
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
+
+// CMDs
+RUNTIME_API void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd);
+RUNTIME_API void cgpu_cmd_update_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd);
 
 #ifdef __cplusplus
 } // end extern "C"
@@ -116,9 +127,18 @@ typedef struct CGpuDevice_D3D12 {
 #endif
 } CGpuDevice_D3D12;
 
+typedef struct CGpuFence_D3D12 {
+    CGpuFence super;
+    ID3D12Fence* pDxFence;
+    HANDLE pDxWaitIdleFenceEvent;
+    uint64_t mFenceValue;
+    uint64_t mPadA;
+} CGpuFence_D3D12;
+
 typedef struct CGpuQueue_D3D12 {
     CGpuQueue super;
     struct ID3D12CommandQueue* pCommandQueue;
+    struct CGpuFence_D3D12* pFence;
 } CGpuQueue_D3D12;
 
 typedef struct CGpuCommandPool_D3D12 {

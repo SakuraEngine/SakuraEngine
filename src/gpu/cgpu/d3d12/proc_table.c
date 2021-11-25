@@ -14,6 +14,8 @@ const CGpuProcTable tbl_d3d12 = {
     .free_device = &cgpu_free_device_d3d12,
 
     .get_queue = &cgpu_get_queue_d3d12,
+    .submit_queue = &cgpu_submit_queue_d3d12,
+    .wait_queue_idle = &cgpu_wait_queue_idle_d3d12,
     .free_queue = &cgpu_free_queue_d3d12,
 
     .create_command_pool = &cgpu_create_command_pool_d3d12,
@@ -30,7 +32,11 @@ const CGpuProcTable tbl_d3d12 = {
     .free_buffer = &cgpu_free_buffer_d3d12,
 
     .create_swapchain = &cgpu_create_swapchain_d3d12,
-    .free_swapchain = &cgpu_free_swapchain_d3d12
+    .free_swapchain = &cgpu_free_swapchain_d3d12,
+
+    .cmd_begin = &cgpu_cmd_begin_d3d12,
+    .cmd_update_buffer = &cgpu_cmd_update_buffer_d3d12,
+    .cmd_end = &cgpu_cmd_end_d3d12
 };
 
 const CGpuProcTable* CGPU_D3D12ProcTable()

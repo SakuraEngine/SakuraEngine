@@ -13,6 +13,7 @@ protected:
         desc.backend = backend;
         desc.enable_debug_layer = true;
         desc.enable_gpu_based_validation = true;
+        desc.enable_set_name = true;
         instance = cgpu_create_instance(&desc);
         EXPECT_NE(instance, CGPU_NULLPTR);
         EXPECT_NE(instance, nullptr);
@@ -92,15 +93,100 @@ TEST_P(QueueOperations, CreateCommands)
     }
 }
 
+TEST_P(QueueOperations, TransferCmdReadback)
+{
+    // Create Upload Buffer
+    CGpuBufferId upload_buffer, index_buffer;
+    {
+        DECLARE_ZERO(CGpuBufferDescriptor, desc)
+        desc.flags = BCF_PERSISTENT_MAP_BIT;
+        desc.descriptors = RT_BUFFER;
+        desc.memory_usage = MU_CPU_ONLY;
+        desc.element_stride = sizeof(uint16_t);
+        desc.elemet_count = 3;
+        desc.size = sizeof(uint16_t) * 3;
+        desc.name = "UploadBuffer";
+        upload_buffer = cgpu_create_buffer(device, &desc);
+        EXPECT_NE(upload_buffer, CGPU_NULLPTR);
+        EXPECT_NE(upload_buffer->cpu_mapped_address, CGPU_NULLPTR);
+        uint16_t* indices = (uint16_t*)upload_buffer->cpu_mapped_address;
+        indices[0] = 2;
+        indices[1] = 3;
+        indices[2] = 3;
+    }
+    {
+        DECLARE_ZERO(CGpuBufferDescriptor, desc)
+        desc.flags = BCF_OWN_MEMORY_BIT;
+        desc.descriptors = RT_NONE;
+        desc.start_state = RS_COPY_DEST;
+        desc.memory_usage = MU_GPU_TO_CPU;
+        desc.element_stride = sizeof(uint16_t);
+        desc.elemet_count = 3;
+        desc.size = sizeof(uint16_t) * 3;
+        desc.name = "ReadbackBuffer";
+        index_buffer = cgpu_create_buffer(device, &desc);
+        EXPECT_NE(index_buffer, CGPU_NULLPTR);
+        EXPECT_EQ(index_buffer->cpu_mapped_address, CGPU_NULLPTR);
+    }
+    // Transfer
+    CGpuQueueId transferQueue;
+    auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
+    if (gQueue > 0)
+    {
+        transferQueue = cgpu_get_queue(device, ECGpuQueueType_Transfer, 0);
+        EXPECT_NE(transferQueue, CGPU_NULLPTR);
+        EXPECT_NE(transferQueue, nullptr);
+
+        auto pool = cgpu_create_command_pool(transferQueue, nullptr);
+        EXPECT_NE(pool, CGPU_NULLPTR);
+        {
+            DECLARE_ZERO(CGpuCommandBufferDescriptor, desc);
+            desc.is_secondary = false;
+            auto cmd = cgpu_create_command_buffer(pool, &desc);
+            EXPECT_NE(cmd, CGPU_NULLPTR);
+            {
+                cgpu_cmd_begin(cmd);
+                DECLARE_ZERO(CGpuBufferUpdateDescriptor, cpy_desc);
+                cpy_desc.src = upload_buffer;
+                cpy_desc.src_offset = 0;
+                cpy_desc.dst = index_buffer;
+                cpy_desc.dst_offset = 0;
+                cpy_desc.size = sizeof(uint16_t) * 3;
+                cgpu_cmd_update_buffer(cmd, &cpy_desc);
+                cgpu_cmd_end(cmd);
+            }
+            CGpuQueueSubmitDescriptor submit_desc = {};
+            submit_desc.cmds = &cmd;
+            submit_desc.cmds_count = 1;
+            cgpu_submit_queue(transferQueue, &submit_desc);
+            cgpu_wait_queue_idle(transferQueue);
+            {
+                DECLARE_ZERO(CGpuBufferRange, range);
+                range.offset = 0;
+                range.size = sizeof(uint16_t) * 3;
+                cgpu_map_buffer(index_buffer, &range);
+                uint16_t* read_indices = (uint16_t*)index_buffer->cpu_mapped_address;
+                EXPECT_EQ(read_indices[0], 2);
+                EXPECT_EQ(read_indices[1], 3);
+                EXPECT_EQ(read_indices[2], 3);
+                cgpu_unmap_buffer(index_buffer);
+            }
+            cgpu_free_command_buffer(cmd);
+        }
+        cgpu_free_command_pool(pool);
+        cgpu_free_queue(transferQueue);
+    }
+    cgpu_free_buffer(upload_buffer);
+    cgpu_free_buffer(index_buffer);
+}
+
 static const auto allPlatforms = testing::Values(
-#ifndef TEST_WEBGPU
-    #ifdef CGPU_USE_VULKAN
+#ifdef CGPU_USE_VULKAN
     ECGPUBackEnd_VULKAN
-    #endif
-    #ifdef CGPU_USE_D3D12
+#endif
+#ifdef CGPU_USE_D3D12
     ,
     ECGPUBackEnd_D3D12
-    #endif
 #endif
 );
 

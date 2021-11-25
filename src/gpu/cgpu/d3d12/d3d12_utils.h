@@ -13,6 +13,9 @@ void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstan
 // Device Helpers
 void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, CGpuDevice_D3D12* D);
 
+// API Objects Helpers
+void D3D12Util_SignalFence(CGpuQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue);
+
 // Feature Select Helpers
 void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter);
 

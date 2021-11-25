@@ -136,6 +136,20 @@ void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer)
     B->super.cpu_mapped_address = CGPU_NULLPTR;
 }
 
+void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuBuffer_Vulkan* Dst = (CGpuBuffer_Vulkan*)desc->dst;
+    CGpuBuffer_Vulkan* Src = (CGpuBuffer_Vulkan*)desc->src;
+    VkBufferCopy region = {
+        .srcOffset = desc->src_offset,
+        .dstOffset = desc->dst_offset,
+        .size = desc->size
+    };
+    D->mVkDeviceTable.vkCmdCopyBuffer(Cmd->pVkCmdBuf, Src->pVkBuffer, Dst->pVkBuffer, 1, &region);
+}
+
 void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
