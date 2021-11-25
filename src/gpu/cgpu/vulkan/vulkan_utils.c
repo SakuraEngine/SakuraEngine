@@ -435,22 +435,24 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
 inline void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
     VkObjectType type, const char* pName)
 {
-    VkDebugUtilsObjectNameInfoEXT nameInfo = {};
-    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-    nameInfo.objectType = type;
-    nameInfo.objectHandle = handle;
-    nameInfo.pObjectName = pName;
+    VkDebugUtilsObjectNameInfoEXT nameInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .objectType = type,
+        .objectHandle = handle,
+        .pObjectName = pName
+    };
     vkSetDebugUtilsObjectNameEXT(pDevice, &nameInfo);
 }
 
 inline void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
     VkDebugReportObjectTypeEXT type, const char* pName)
 {
-    VkDebugMarkerObjectNameInfoEXT nameInfo = {};
-    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT;
-    nameInfo.objectType = type;
-    nameInfo.object = (uint64_t)handle;
-    nameInfo.pObjectName = pName;
+    VkDebugMarkerObjectNameInfoEXT nameInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
+        .objectType = type,
+        .object = (uint64_t)handle,
+        .pObjectName = pName
+    };
     vkDebugMarkerSetObjectNameEXT(pDevice, &nameInfo);
 }
 
