@@ -246,10 +246,10 @@ ID3D12CommandAllocator* allocate_transient_command_allocator(CGpuCommandPool_D3D
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)queue->device;
     D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-    bool res = SUCCEEDED(D->pDxDevice->CreateCommandAllocator(type, IID_PPV_ARGS(&E->pCommandAllocator)));
+    bool res = SUCCEEDED(D->pDxDevice->CreateCommandAllocator(type, IID_PPV_ARGS(&E->pDxCmdAlloc)));
     if (res)
     {
-        return E->pCommandAllocator;
+        return E->pDxCmdAlloc;
     }
     return CGPU_NULLPTR;
 }
@@ -258,19 +258,56 @@ void free_transient_command_allocator(ID3D12CommandAllocator* allocator) { SAFE_
 
 CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
 {
-    CGpuCommandPool_D3D12* E = new CGpuCommandPool_D3D12();
-    E->pCommandAllocator = allocate_transient_command_allocator(E, queue);
-    return &E->super;
+    CGpuCommandPool_D3D12* P = new CGpuCommandPool_D3D12();
+    P->pDxCmdAlloc = allocate_transient_command_allocator(P, queue);
+    return &P->super;
 }
 
-void cgpu_free_command_pool_d3d12(CGpuCommandPoolId encoder)
+CGpuCommandBufferId cgpu_create_command_buffer_d3d12(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
 {
-    CGpuCommandPool_D3D12* E = (CGpuCommandPool_D3D12*)encoder;
-    assert(encoder && "D3D12 ERROR: FREE NULL COMMAND ENCODER!");
-    assert(E->pCommandAllocator && "D3D12 ERROR: FREE NULL pCommandAllocator!");
+    // initialize to zero
+    CGpuCommandBuffer_D3D12* Cmd = new CGpuCommandBuffer_D3D12();
+    CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)pool;
+    CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)P->super.queue;
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)Q->super.device;
+    assert(Cmd);
 
-    free_transient_command_allocator(E->pCommandAllocator);
-    delete E;
+    // set command pool of new command
+    Cmd->mNodeIndex = SINGLE_GPU_NODE_MASK;
+    Cmd->mType = Q->super.type;
+
+    Cmd->pBoundHeaps[0] = D->pCbvSrvUavHeaps[Cmd->mNodeIndex];
+    Cmd->pBoundHeaps[1] = D->pSamplerHeaps[Cmd->mNodeIndex];
+    Cmd->pCmdPool = P;
+
+    uint32_t nodeMask = Cmd->mNodeIndex;
+
+    ID3D12PipelineState* initialState = NULL;
+    CHECK_HRESULT(D->pDxDevice->CreateCommandList(
+        nodeMask, gDx12CmdTypeTranslator[Cmd->mType], P->pDxCmdAlloc, initialState,
+        __uuidof(Cmd->pDxCmdList), (void**)&(Cmd->pDxCmdList)));
+
+    // Command lists are addd in the recording state, but there is nothing
+    // to record yet. The main loop expects it to be closed, so close it now.
+    CHECK_HRESULT(Cmd->pDxCmdList->Close());
+    return &Cmd->super;
+}
+
+void cgpu_free_command_buffer_d3d12(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    SAFE_RELEASE(Cmd->pDxCmdList);
+    delete Cmd;
+}
+
+void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool)
+{
+    CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)pool;
+    assert(pool && "D3D12 ERROR: FREE NULL COMMAND POOL!");
+    assert(P->pDxCmdAlloc && "D3D12 ERROR: FREE NULL pDxCmdAlloc!");
+
+    free_transient_command_allocator(P->pDxCmdAlloc);
+    delete P;
 }
 
 // SwapChain APIs

@@ -39,6 +39,8 @@ RUNTIME_API void cgpu_free_queue_d3d12(CGpuQueueId queue);
 
 // Command APIs
 RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc);
+RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer_d3d12(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
+RUNTIME_API void cgpu_free_command_buffer_d3d12(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool);
 
 // Shader APIs
@@ -121,8 +123,28 @@ typedef struct CGpuQueue_D3D12 {
 
 typedef struct CGpuCommandPool_D3D12 {
     CGpuCommandPool super;
-    struct ID3D12CommandAllocator* pCommandAllocator;
+    struct ID3D12CommandAllocator* pDxCmdAlloc;
 } CGpuCommandPool_D3D12;
+
+typedef struct CGpuCommandBuffer_D3D12 {
+    CGpuCommandBuffer super;
+#if defined(XBOX)
+    DmaCmd mDma;
+#endif
+    ID3D12GraphicsCommandList* pDxCmdList;
+    // Cached in beginCmd to avoid fetching them during rendering
+    struct D3D12Util_DescriptorHeap* pBoundHeaps[2];
+    D3D12_GPU_DESCRIPTOR_HANDLE mBoundHeapStartHandles[2];
+    // Command buffer state
+    const ID3D12RootSignature* pBoundRootSignature;
+    uint32_t mNodeIndex : 4;
+    uint32_t mType : 3;
+    CGpuCommandPool_D3D12* pCmdPool;
+    uint32_t mPadA;
+#if !defined(XBOX)
+    uint64_t mPadB;
+#endif
+} CGpuCommandBuffer_D3D12;
 
 typedef struct CGpuShaderLibrary_D3D12 {
     CGpuShaderLibrary super;
@@ -172,6 +194,12 @@ static const D3D_FEATURE_LEVEL d3d_feature_levels[] = {
     D3D_FEATURE_LEVEL_12_0,
     D3D_FEATURE_LEVEL_11_1,
     D3D_FEATURE_LEVEL_11_0
+};
+
+static const D3D12_COMMAND_LIST_TYPE gDx12CmdTypeTranslator[ECGpuQueueType_Count] = {
+    D3D12_COMMAND_LIST_TYPE_DIRECT,
+    D3D12_COMMAND_LIST_TYPE_COPY,
+    D3D12_COMMAND_LIST_TYPE_COMPUTE
 };
 
 #define IID_ARGS IID_PPV_ARGS

@@ -51,6 +51,16 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
     const char* pLayerPrefix, const char* pMessage, void* pUserData);
 void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
 
+#define CHECK_VKRESULT(exp)                                                        \
+    {                                                                              \
+        VkResult vkres = (exp);                                                    \
+        if (VK_SUCCESS != vkres)                                                   \
+        {                                                                          \
+            printf("[Error] %s: FAILED with VkResult: %u", #exp, (uint32_t)vkres); \
+            assert(0);                                                             \
+        }                                                                          \
+    }
+
 static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 static const char* cgpu_wanted_instance_exts[] = {
     VK_KHR_SURFACE_EXTENSION_NAME,

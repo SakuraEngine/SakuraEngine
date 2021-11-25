@@ -16,6 +16,8 @@ const CGpuProcTable tbl_vk = {
     .free_queue = &cgpu_free_queue_vulkan,
 
     .create_command_pool = &cgpu_create_command_pool_vulkan,
+    .create_command_buffer = &cgpu_create_command_buffer_vulkan,
+    .free_command_buffer = &cgpu_free_command_buffer_vulkan,
     .free_command_pool = &cgpu_free_command_pool_vulkan,
 
     .create_buffer = &cgpu_create_buffer_vulkan,
@@ -134,48 +136,71 @@ VkCommandPool allocate_transient_command_pool(CGpuDevice_Vulkan* D, CGpuQueueId 
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)queue->device->adapter;
 
     VkCommandPoolCreateInfo create_info = {
-        //
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext = NULL,
         // transient.
         .flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
         .queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[queue->type]
-        //
     };
-
-    if (VK_SUCCESS !=
-#ifdef VK_USE_VOLK_DEVICE_TABLE
-        D->mVkDeviceTable.
-#endif
-        vkCreateCommandPool(D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, &P))
-    {
-        assert(0 && "CGPU VULKAN: CREATE COMMAND POOL FAILED!");
-    }
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateCommandPool(
+        D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, &P));
     return P;
 }
 
 void free_transient_command_pool(CGpuDevice_Vulkan* D, VkCommandPool pool)
 {
-#ifdef VK_USE_VOLK_DEVICE_TABLE
-    D->mVkDeviceTable.
-#endif
-        vkDestroyCommandPool(D->pVkDevice, pool, GLOBAL_VkAllocationCallbacks);
+    D->mVkDeviceTable.vkDestroyCommandPool(D->pVkDevice, pool, GLOBAL_VkAllocationCallbacks);
 }
 
 CGpuCommandPoolId cgpu_create_command_pool_vulkan(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
 {
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)queue->device;
-    CGpuCommandPool_Vulkan* E = (CGpuCommandPool_Vulkan*)cgpu_calloc(1, sizeof(CGpuCommandPool_Vulkan));
-    E->pVkCmdPool = allocate_transient_command_pool(D, queue);
-    return &E->super;
+    CGpuCommandPool_Vulkan* P = (CGpuCommandPool_Vulkan*)cgpu_calloc(1, sizeof(CGpuCommandPool_Vulkan));
+    P->pVkCmdPool = allocate_transient_command_pool(D, queue);
+    return &P->super;
 }
 
-void cgpu_free_command_pool_vulkan(CGpuCommandPoolId encoder)
+CGpuCommandBufferId cgpu_create_command_buffer_vulkan(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
 {
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->queue->device;
-    CGpuCommandPool_Vulkan* E = (CGpuCommandPool_Vulkan*)encoder;
-    free_transient_command_pool(D, E->pVkCmdPool);
-    cgpu_free((void*)encoder);
+    assert(pool);
+    CGpuCommandPool_Vulkan* P = (CGpuCommandPool_Vulkan*)pool;
+    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)P->super.queue;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)Q->super.device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cgpu_calloc_aligned(
+        1, sizeof(CGpuCommandBuffer_Vulkan), _Alignof(CGpuCommandBuffer_Vulkan));
+    assert(Cmd);
+
+    Cmd->pCmdPool = P;
+    Cmd->mType = Q->super.type;
+    Cmd->mNodeIndex = SINGLE_GPU_NODE_MASK;
+
+    VkCommandBufferAllocateInfo alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = NULL,
+        .commandPool = P->pVkCmdPool,
+        .level = desc->is_secondary ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = 1
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkAllocateCommandBuffers(D->pVkDevice, &alloc_info, &(Cmd->pVkCmdBuf)));
+    return &Cmd->super;
+}
+
+void cgpu_free_command_buffer_vulkan(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuCommandPool_Vulkan* P = (CGpuCommandPool_Vulkan*)cmd->pool;
+    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)P->super.queue;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)Q->super.device;
+    D->mVkDeviceTable.vkFreeCommandBuffers(D->pVkDevice, P->pVkCmdPool, 1, &(Cmd->pVkCmdBuf));
+    cgpu_free(Cmd);
+}
+
+void cgpu_free_command_pool_vulkan(CGpuCommandPoolId pool)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pool->queue->device;
+    CGpuCommandPool_Vulkan* P = (CGpuCommandPool_Vulkan*)pool;
+    free_transient_command_pool(D, P->pVkCmdPool);
+    cgpu_free(P);
 }
 
 #define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
@@ -189,10 +214,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     VkSurfaceKHR vkSurface = (VkSurfaceKHR)desc->surface;
 
     VkSurfaceCapabilitiesKHR caps = { 0 };
-    if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(A->pPhysicalDevice, vkSurface, &caps) != VK_SUCCESS)
-    {
-        assert(0 && "vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed!");
-    }
+    CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(A->pPhysicalDevice, vkSurface, &caps));
     if ((caps.maxImageCount > 0) && (desc->imageCount > caps.maxImageCount))
     {
         ((CGpuSwapChainDescriptor*)desc)->imageCount = caps.maxImageCount;
@@ -207,18 +229,12 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     DECLARE_ZERO(VkSurfaceFormatKHR, surface_format)
     surface_format.format = VK_FORMAT_UNDEFINED;
     uint32_t surfaceFormatCount = 0;
-    if (vkGetPhysicalDeviceSurfaceFormatsKHR(A->pPhysicalDevice,
-            vkSurface, &surfaceFormatCount, CGPU_NULLPTR) != VK_SUCCESS)
-    {
-        assert(0 && "fatal: vkGetPhysicalDeviceSurfaceFormatsKHR failed!");
-    }
+    CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
+        A->pPhysicalDevice, vkSurface, &surfaceFormatCount, CGPU_NULLPTR));
     // Allocate and get surface formats
     DECLARE_ZERO_VLA(VkSurfaceFormatKHR, formats, surfaceFormatCount)
-    if (vkGetPhysicalDeviceSurfaceFormatsKHR(A->pPhysicalDevice,
-            vkSurface, &surfaceFormatCount, formats) != VK_SUCCESS)
-    {
-        assert(0 && "fatal: vkGetPhysicalDeviceSurfaceFormatsKHR failed!");
-    }
+    CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
+        A->pPhysicalDevice, vkSurface, &surfaceFormatCount, formats))
 
     const VkSurfaceFormatKHR hdrSurfaceFormat = {
         //
@@ -258,16 +274,13 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
     uint32_t swapChainImageCount = 0;
     // Get present mode count
-    if (VK_SUCCESS != vkGetPhysicalDeviceSurfacePresentModesKHR(A->pPhysicalDevice, vkSurface, &swapChainImageCount, NULL))
-    {
-        assert(0 && "fatal: vkGetPhysicalDeviceSurfacePresentModesKHR failed!");
-    }
+    CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
+        A->pPhysicalDevice, vkSurface, &swapChainImageCount, NULL));
     // Allocate and get present modes
     DECLARE_ZERO_VLA(VkPresentModeKHR, modes, swapChainImageCount)
-    if (VK_SUCCESS != vkGetPhysicalDeviceSurfacePresentModesKHR(A->pPhysicalDevice, vkSurface, &swapChainImageCount, modes))
-    {
-        assert(0 && "fatal: vkGetPhysicalDeviceSurfacePresentModesKHR failed!");
-    }
+    CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
+        A->pPhysicalDevice, vkSurface, &swapChainImageCount, modes));
+    // Select Preferred Present Mode
     VkPresentModeKHR preferredModeList[] = {
         VK_PRESENT_MODE_IMMEDIATE_KHR,    // normal
         VK_PRESENT_MODE_MAILBOX_KHR,      // low latency
@@ -275,7 +288,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         VK_PRESENT_MODE_FIFO_KHR          // low power consumption
     };
     const uint32_t preferredModeCount = CGPU_ARRAY_LEN(preferredModeList);
-
     uint32_t preferredModeStartIndex = desc->enableVsync ? 1 : 0;
     for (uint32_t j = preferredModeStartIndex; j < preferredModeCount; ++j)
     {
@@ -294,7 +306,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
             break;
         }
     }
-
     // Swapchain
     VkExtent2D extent;
     extent.width = clamp(desc->width, caps.minImageExtent.width, caps.maxImageExtent.width);

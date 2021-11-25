@@ -13,10 +13,12 @@ struct CGpuInstanceDescriptor;
 struct CGpuAdapterDetail;
 struct CGpuDeviceDescriptor;
 struct CGpuCommandPoolDescriptor;
+struct CGpuCommandBufferDescriptor;
 struct CGpuShaderLibraryDescriptor;
 struct CGpuPipelineShaderDescriptor;
 struct CGpuBufferDescriptor;
 struct CGpuSwapChainDescriptor;
+struct CGpuDescriptorSet;
 
 typedef uint32_t CGpuQueueIndex;
 typedef const struct CGpuSurface_Dummy* CGpuSurfaceId;
@@ -108,8 +110,12 @@ typedef void (*CGPUProcFreeQueue)(CGpuQueueId queue);
 // Command APIs
 RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool(CGpuQueueId queue, const struct CGpuCommandPoolDescriptor* desc);
 typedef CGpuCommandPoolId (*CGPUProcCreateCommandPool)(CGpuQueueId queue, const struct CGpuCommandPoolDescriptor* desc);
-RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId encoder);
-typedef void (*CGPUProcFreeCommandPool)(CGpuCommandPoolId encoder);
+RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
+typedef CGpuCommandBufferId (*CGPUProcCreateCommandBuffer)(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
+RUNTIME_API void cgpu_free_command_buffer(CGpuCommandBufferId cmd);
+typedef void (*CGPUProcFreeCommandBuffer)(CGpuCommandBufferId cmd);
+RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId pool);
+typedef void (*CGPUProcFreeCommandPool)(CGpuCommandPoolId pool);
 
 // Shader APIs
 RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
@@ -157,6 +163,8 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeQueue free_queue;
 
     const CGPUProcCreateCommandPool create_command_pool;
+    const CGPUProcCreateCommandBuffer create_command_buffer;
+    const CGPUProcFreeCommandBuffer free_command_buffer;
     const CGPUProcFreeCommandPool free_command_pool;
 
     const CGPUProcCreateShaderLibrary create_shader_library;
@@ -314,6 +322,13 @@ typedef struct CGpuCommandPoolDescriptor {
     uint32_t ___nothing_and_useless__;
 } CGpuCommandPoolDescriptor;
 
+typedef struct CGpuCommandBufferDescriptor {
+#if defined(PROSPERO) || defined(ORBIS)
+    uint32_t max_size; // AGC CommandBuffer Size
+#endif
+    bool is_secondary;
+} CGpuCommandBufferDescriptor;
+
 typedef struct CGpuPipelineShaderDescriptor {
     CGpuShaderLibraryId library;
     const char8_t* entry;
@@ -380,6 +395,9 @@ typedef struct CGpuBufferDescriptor {
 } CGpuBufferDescriptor;
 
 #pragma endregion DESCRIPTORS
+
+#define SINGLE_GPU_NODE_COUNT 1
+#define SINGLE_GPU_NODE_MASK 1
 
 #ifdef __cplusplus
 } // end extern "C"

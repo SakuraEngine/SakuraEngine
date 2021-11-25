@@ -155,7 +155,7 @@ void cgpu_free_queue(CGpuQueueId queue)
 {
     assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    assert(queue->device->proc_table_cache->free_device && "free_device Proc Missing!");
+    assert(queue->device->proc_table_cache->free_queue && "free_queue Proc Missing!");
 
     queue->device->proc_table_cache->free_queue(queue);
     return;
@@ -166,21 +166,49 @@ RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool(CGpuQueueId queue,
 {
     assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    assert(queue->device->proc_table_cache->free_device && "free_device Proc Missing!");
+    assert(queue->device->proc_table_cache->create_command_pool && "create_command_pool Proc Missing!");
 
-    CGpuCommandPool* encoder = (CGpuCommandPool*)queue->device->proc_table_cache->create_command_pool(queue, desc);
-    encoder->queue = queue;
-    return encoder;
+    CGpuCommandPool* pool = (CGpuCommandPool*)queue->device->proc_table_cache->create_command_pool(queue, desc);
+    pool->queue = queue;
+    return pool;
 }
 
-RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId encoder)
+RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
 {
-    assert(encoder != CGPU_NULLPTR && "fatal: call on NULL encoder!");
-    assert(encoder->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
-    assert(encoder->queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    assert(encoder->queue->device->proc_table_cache->free_device && "free_device Proc Missing!");
+    assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
+    assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    const CGpuDeviceId device = pool->queue->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCreateCommandBuffer fn_create_cmd = device->proc_table_cache->create_command_buffer;
+    assert(fn_create_cmd && "create_command_buffer Proc Missing!");
 
-    encoder->queue->device->proc_table_cache->free_command_pool(encoder);
+    CGpuCommandBuffer* cmd = (CGpuCommandBuffer*)fn_create_cmd(pool, desc);
+    cmd->pool = pool;
+    return cmd;
+}
+
+RUNTIME_API void cgpu_free_command_buffer(CGpuCommandBufferId cmd)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    CGpuCommandPoolId pool = cmd->pool;
+    assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
+    assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    const CGpuDeviceId device = pool->queue->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcFreeCommandBuffer fn_free_cmd = device->proc_table_cache->free_command_buffer;
+    assert(fn_free_cmd && "free_command_buffer Proc Missing!");
+
+    fn_free_cmd(cmd);
+}
+
+RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId pool)
+{
+    assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
+    assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    assert(pool->queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(pool->queue->device->proc_table_cache->free_command_pool && "free_command_pool Proc Missing!");
+
+    pool->queue->device->proc_table_cache->free_command_pool(pool);
     return;
 }
 
