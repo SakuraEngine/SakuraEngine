@@ -69,6 +69,21 @@ TEST_P(QueueOperations, GetGraphicsQueue)
     }
 }
 
+TEST_P(QueueOperations, GetSameQueue)
+{
+    CGpuQueueId graphicsQueue;
+    CGpuQueueId graphicsQueueSame;
+    auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
+    if (gQueue > 0)
+    {
+        graphicsQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
+        graphicsQueueSame = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        EXPECT_EQ(graphicsQueue, graphicsQueueSame);
+        cgpu_free_queue(graphicsQueue);
+    }
+}
+
 TEST_P(QueueOperations, CreateCommands)
 {
     CGpuQueueId graphicsQueue;
