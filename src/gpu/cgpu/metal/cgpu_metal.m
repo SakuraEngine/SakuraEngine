@@ -96,14 +96,35 @@ uint32_t cgpu_query_queue_count_metal(const CGpuAdapterId adapter, const ECGpuQu
 CGpuDeviceId cgpu_create_device_metal(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
 {
     CGpuAdapter_Metal* MA = (CGpuAdapter_Metal*)adapter;
+    // Create Requested Queues
     for (uint32_t i = 0; i < desc->queueGroupCount; i++)
     {
+        const CGpuQueueGroupDescriptor* queueGroup = desc->queueGroups + i;
+        const ECGpuQueueType type = queueGroup->queueType;
+        MA->device.ppMtlQueues[type] = cgpu_calloc(queueGroup->queueCount, sizeof(id<MTLCommandQueue>));
+        MA->device.pMtlQueueCounts[type] = queueGroup->queueCount;
+        for (uint32_t j = 0u; j < queueGroup->queueCount; j++)
+        {
+            MA->device.ppMtlQueues[type][j] = [MA->device.pDevice newCommandQueueWithMaxCommandBufferCount:512];
+        }
     }
     return &MA->device.super;
 }
 
 void cgpu_free_device_metal(CGpuDeviceId device)
 {
+    CGpuDevice_Metal* MD = (CGpuDevice_Metal*)device;
+    for (uint32_t i = 0; i < ECGpuQueueType_Count; i++)
+    {
+        if (MD->ppMtlQueues[i] != NULL && MD->pMtlQueueCounts[i] != 0)
+        {
+            for (uint32_t j = 0; j < MD->pMtlQueueCounts[i]; j++)
+            {
+                MD->ppMtlQueues[i][j] = nil;
+            }
+            cgpu_free(MD->ppMtlQueues[i]);
+        }
+    }
     return;
 }
 
