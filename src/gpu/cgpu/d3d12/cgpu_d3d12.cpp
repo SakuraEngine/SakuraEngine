@@ -133,10 +133,10 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
     for (uint32_t i = 0u; i < desc->queueGroupCount; i++)
     {
         const auto& queueGroup = desc->queueGroups[i];
-        const auto queueType = queueGroup.queueType;
+        const auto type = queueGroup.queueType;
 
-        *const_cast<uint32_t*>(&D->pCommandQueueCounts[i]) = queueGroup.queueCount;
-        *const_cast<ID3D12CommandQueue***>(&D->ppCommandQueues[queueType]) =
+        *const_cast<uint32_t*>(&D->pCommandQueueCounts[type]) = queueGroup.queueCount;
+        *const_cast<ID3D12CommandQueue***>(&D->ppCommandQueues[type]) =
             (ID3D12CommandQueue**)cgpu_malloc(sizeof(ID3D12CommandQueue*) * queueGroup.queueCount);
 
         for (uint32_t j = 0u; j < queueGroup.queueCount; j++)
@@ -159,7 +159,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
             }
             queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
             if (!SUCCEEDED(D->pDxDevice->CreateCommandQueue(
-                    &queueDesc, IID_PPV_ARGS(&D->ppCommandQueues[queueType][j]))))
+                    &queueDesc, IID_PPV_ARGS(&D->ppCommandQueues[type][j]))))
             {
                 assert("[D3D12 Fatal]: Create D3D12CommandQueue Failed!");
             }

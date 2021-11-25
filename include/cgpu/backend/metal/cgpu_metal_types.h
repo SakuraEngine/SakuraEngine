@@ -10,7 +10,8 @@ static_assert(0, "This Header Should Only Be Included By OBJC SOURCES!!!!!");
 typedef struct CGpuDevice_Metal {
     CGpuDevice super;
     id<MTLDevice> pDevice;
-    id<MTLCommandQueue> ppMtlQueues[ECGpuQueueType_Count];
+    id<MTLCommandQueue>* __strong ppMtlQueues[ECGpuQueueType_Count];
+    uint32_t pMtlQueueCounts[ECGpuQueueType_Count]
 } CGpuDevice_Metal;
 
 typedef struct CGpuAdapter_Metal {
@@ -30,6 +31,7 @@ typedef struct CGpuQueue_Metal {
     CGpuQueue super;
     id<MTLCommandQueue> mtlCommandQueue;
     id<MTLFence> mtlQueueFence API_AVAILABLE(macos(10.13), ios(10.0));
+    uint32_t mBarrierFlags;
 } CGpuQueue_Metal;
 
 // Mac Catalyst does not support feature sets, so we redefine them to GPU families in MVKDevice.h.
