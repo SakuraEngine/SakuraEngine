@@ -10,6 +10,8 @@
 #endif
 #include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
+#include "runtime_table.h"
+#include <EASTL/vector.h>
 
 // AGS
 #if defined(AMDAGS)
@@ -66,4 +68,71 @@ void cgpu_nvapi_exit()
 #if defined(NVAPI)
     NvAPI_Unload();
 #endif
+}
+
+// Runtime Table
+class CGpuRuntimeTable
+{
+public:
+    struct CreatedQueue {
+        CGpuDeviceId device;
+        union
+        {
+            uint64_t type_index;
+            struct
+            {
+                ECGpuQueueType type;
+                uint32_t index;
+            };
+        };
+        CGpuQueueId queue;
+        bool operator==(const CreatedQueue& rhs)
+        {
+            return device == rhs.device && type_index == rhs.type_index;
+        }
+    };
+    CGpuQueueId TryFindQueue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
+    {
+        CreatedQueue to_find = {};
+        to_find.device = device;
+        to_find.type = type;
+        to_find.index = index;
+        const auto& found = eastl::find(
+            created_queues.begin(), created_queues.end(), to_find);
+        if (found != created_queues.end())
+        {
+            return found->queue;
+        }
+        return nullptr;
+    }
+    void AddNewQueue(CGpuQueueId queue, ECGpuQueueType type, uint32_t index)
+    {
+        CreatedQueue new_queue = {};
+        new_queue.device = queue->device;
+        new_queue.type = type;
+        new_queue.index = index;
+        new_queue.queue = queue;
+        created_queues.push_back(new_queue);
+    }
+    eastl::vector<CreatedQueue> created_queues;
+};
+
+struct CGpuRuntimeTable* cgpu_create_runtime_table()
+{
+    return new CGpuRuntimeTable();
+}
+
+void cgpu_free_runtime_table(struct CGpuRuntimeTable* table)
+{
+    delete table;
+}
+
+void cgpu_runtime_table_add_queue(CGpuQueueId queue, ECGpuQueueType type, uint32_t index)
+{
+    queue->device->adapter->instance->runtime_table->AddNewQueue(queue, type, index);
+}
+
+CGpuQueueId cgpu_runtime_table_try_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
+{
+    return device->adapter->instance->runtime_table->TryFindQueue(device, type, index);
 }

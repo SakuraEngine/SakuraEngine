@@ -1,4 +1,5 @@
 #include "cgpu/api.h"
+#include "runtime_table.h"
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #endif
@@ -60,6 +61,7 @@ CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
     *(bool*)&instance->enable_set_name = desc->enable_set_name;
     instance->proc_table = tbl;
     instance->surfaces_table = s_tbl;
+    instance->runtime_table = cgpu_create_runtime_table();
     return instance;
 }
 
@@ -76,6 +78,7 @@ void cgpu_free_instance(CGpuInstanceId instance)
     assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     assert(instance->proc_table->free_instance && "free_instance Proc Missing!");
 
+    cgpu_free_runtime_table(instance->runtime_table);
     instance->proc_table->free_instance(instance);
 }
 
@@ -162,10 +165,19 @@ CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t in
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(device->proc_table_cache->free_device && "free_device Proc Missing!");
 
+    CGpuQueueId created = cgpu_runtime_table_try_get_queue(device, type, index);
+    if (created != NULL)
+    {
+        printf("[Warn] You should not call cgpu_get_queue "
+               "with a specific index & type for multiple times!\n"
+               "       Please get for only once and reuse the handle!\n");
+        return created;
+    }
     CGpuQueue* queue = (CGpuQueue*)device->proc_table_cache->get_queue(device, type, index);
     queue->index = index;
     queue->type = type;
     queue->device = device;
+    cgpu_runtime_table_add_queue(queue, type, index);
     return queue;
 }
 

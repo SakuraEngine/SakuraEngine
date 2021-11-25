@@ -112,6 +112,7 @@ RUNTIME_API void cgpu_free_fence(CGpuFenceId fence);
 typedef void (*CGPUProcFreeFence)(CGpuFenceId fence);
 
 // Queue APIs
+// Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
 RUNTIME_API CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 typedef CGpuQueueId (*CGPUProcGetQueue)(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
@@ -261,6 +262,8 @@ typedef struct CGpuAdapterDetail {
 typedef struct CGpuInstance {
     const CGpuProcTable* proc_table;
     const CGpuSurfacesProcTable* surfaces_table;
+    // Some Cached Data
+    struct CGpuRuntimeTable* runtime_table;
     ECGpuNvAPI_Status nvapi_status;
     ECGpuAGSReturnCode ags_status;
     bool enable_set_name;

@@ -16,6 +16,8 @@ const CGpuProcTable tbl_metal = {
     // Device APIs
     .create_device = &cgpu_create_device_metal,
     .free_device = &cgpu_free_device_metal
+
+    // Queue APIs
 };
 
 const CGpuProcTable* CGPU_MetalProcTable()
@@ -87,13 +89,16 @@ const CGpuAdapterDetail* cgpu_query_adapter_detail_metal(const CGpuAdapterId ada
 
 uint32_t cgpu_query_queue_count_metal(const CGpuAdapterId adapter, const ECGpuQueueType type)
 {
-    return 0;
+    return UINT32_MAX;
 }
 
 // Device APIs
 CGpuDeviceId cgpu_create_device_metal(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
 {
     CGpuAdapter_Metal* MA = (CGpuAdapter_Metal*)adapter;
+    for (uint32_t i = 0; i < desc->queueGroupCount; i++)
+    {
+    }
     return &MA->device.super;
 }
 
