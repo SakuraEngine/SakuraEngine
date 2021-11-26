@@ -87,7 +87,7 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
             srvDesc.Buffer.NumElements = (UINT)(desc->elemet_count);
             srvDesc.Buffer.StructureByteStride = (UINT)(desc->element_stride);
             srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-            srvDesc.Format = (DXGI_FORMAT)pf_translate_to_d3d12(desc->format);
+            srvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
             if (RT_BUFFER_RAW == (desc->descriptors & RT_BUFFER_RAW))
             {
                 if (desc->format != PF_UNDEFINED)
@@ -124,7 +124,7 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
             }
             else if (desc->format != PF_UNDEFINED)
             {
-                uavDesc.Format = (DXGI_FORMAT)pf_translate_to_d3d12(desc->format);
+                uavDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
                 D3D12_FEATURE_DATA_FORMAT_SUPPORT FormatSupport = { uavDesc.Format, D3D12_FORMAT_SUPPORT1_NONE,
                     D3D12_FORMAT_SUPPORT2_NONE };
                 HRESULT hr =

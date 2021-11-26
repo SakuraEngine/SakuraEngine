@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+struct VkUtil_DescriptorPool;
+
 // Environment Setup
 bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst);
 void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst);
@@ -25,6 +27,10 @@ void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D);
 void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
 void VkUtil_FreeVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
 void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
+
+// API Objects Helpers
+struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D);
+void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool);
 
 // Feature Select Helpers
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);
@@ -50,6 +56,26 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
     uint64_t object, size_t location, int32_t messageCode,
     const char* pLayerPrefix, const char* pMessage, void* pUserData);
 void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
+
+#define CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 2)
+static const VkDescriptorPoolSize gDescriptorPoolSizes[CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE] = {
+    { VK_DESCRIPTOR_TYPE_SAMPLER, 1024 },
+    { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+    { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 8192 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1024 },
+    { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1024 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1024 },
+    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8192 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1024 },
+    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1024 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 },
+    { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 },
+};
+typedef struct VkUtil_DescriptorPool {
+    CGpuDevice_Vulkan* Device;
+    VkDescriptorPool pVkDescPool;
+    VkDescriptorPoolCreateFlags mFlags;
+} VkUtil_DescriptorPool;
 
 #define CHECK_VKRESULT(exp)                                                        \
     {                                                                              \

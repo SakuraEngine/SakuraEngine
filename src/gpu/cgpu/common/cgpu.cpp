@@ -71,9 +71,7 @@ void cgpu_nvapi_exit()
 }
 
 // Runtime Table
-class CGpuRuntimeTable
-{
-public:
+struct CGpuRuntimeTable {
     struct CreatedQueue {
         CGpuDeviceId device;
         union

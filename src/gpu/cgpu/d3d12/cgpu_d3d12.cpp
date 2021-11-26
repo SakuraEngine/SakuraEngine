@@ -142,7 +142,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
         for (uint32_t j = 0u; j < queueGroup.queueCount; j++)
         {
             DECLARE_ZERO(D3D12_COMMAND_QUEUE_DESC, queueDesc)
-            switch (queueType)
+            switch (type)
             {
                 case ECGpuQueueType_Graphics:
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -424,7 +424,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, desc1)
     desc1.Width = desc->width;
     desc1.Height = desc->height;
-    desc1.Format = pf_translate_to_d3d12(desc->format);
+    desc1.Format = DXGIUtil_TranslatePixelFormat(desc->format);
     desc1.Stereo = false;
     desc1.SampleDesc.Count = 1; // If multisampling is needed, we'll resolve it later
     desc1.SampleDesc.Quality = 0;
