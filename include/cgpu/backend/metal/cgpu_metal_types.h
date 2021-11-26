@@ -50,7 +50,7 @@ typedef struct CGpuQueue_Metal {
 #endif
 
 /* clang-format off */
-FORCEINLINE static MTLPixelFormat pf_translate_to_metal(const ECGpuPixelFormat fmt)
+FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGpuPixelFormat fmt)
 {
     switch (fmt) {
 	case PF_A8_UNORM: 		return MTLPixelFormatA8Unorm;

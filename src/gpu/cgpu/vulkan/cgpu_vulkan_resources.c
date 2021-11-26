@@ -65,7 +65,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
     // Setup Uniform Texel View
     if ((add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT) || (add_info.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT))
     {
-        const VkFormat texel_format = pf_translate_to_vulkan(desc->format);
+        const VkFormat texel_format = VkUtil_TranslatePixelFormat(desc->format);
         DECLARE_ZERO(VkFormatProperties, formatProps)
         vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, texel_format, &formatProps);
         // Now We Use The Same View Info for Uniform & Storage BufferView on Vulkan Backend.
@@ -82,11 +82,11 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         {
             if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT))
             {
-                // LOGF(LogLevel::eWARNING, "Failed to create uniform texel buffer view for format %u", (uint32_t)pDesc->mFormat);
+                printf("[Warning] Failed to create uniform texel buffer view for format %u", (uint32_t)desc->format);
             }
-            else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
-                         GLOBAL_VkAllocationCallbacks, &B->pVkUniformTexelView) != VK_SUCCESS)
+            else
             {
+                CHECK_VKRESULT(vkCreateBufferView(D->pVkDevice, &viewInfo, GLOBAL_VkAllocationCallbacks, &B->pVkUniformTexelView));
             }
         }
         // Setup Storage Texel View
@@ -94,11 +94,11 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         {
             if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT))
             {
-                // LOGF(LogLevel::eWARNING, "Failed to create storage texel buffer view for format %u", (uint32_t)pDesc->mFormat);
+                printf("[Warning] Failed to create storage texel buffer view for format %u", (uint32_t)desc->format);
             }
-            else if (vkCreateBufferView(D->pVkDevice, &viewInfo,
-                         GLOBAL_VkAllocationCallbacks, &B->pVkStorageTexelView) != VK_SUCCESS)
+            else
             {
+                CHECK_VKRESULT(vkCreateBufferView(D->pVkDevice, &viewInfo, GLOBAL_VkAllocationCallbacks, &B->pVkStorageTexelView));
             }
         }
     }

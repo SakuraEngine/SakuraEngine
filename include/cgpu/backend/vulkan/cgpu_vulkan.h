@@ -142,6 +142,7 @@ typedef struct CGpuDevice_Vulkan {
     const CGpuDevice super;
     VkDevice pVkDevice;
     VkPipelineCache pPipelineCache;
+    struct VkUtil_DescriptorPool* pDescriptorPool;
     struct VmaAllocator_T* pVmaAllocator;
     struct VolkDeviceTable mVkDeviceTable;
 } CGpuDevice_Vulkan;
@@ -204,7 +205,7 @@ typedef struct CGpuSwapChain_Vulkan {
 extern "C" {
 #endif
 
-FORCEINLINE static VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat format);
+FORCEINLINE static VkFormat VkUtil_TranslatePixelFormat(const ECGpuPixelFormat format);
 
 #include "cgpu_vulkan.inl"
 #ifdef __cplusplus

@@ -220,6 +220,33 @@ void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGp
     }
 }
 
+// API Objects Helpers
+struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D)
+{
+    VkUtil_DescriptorPool* Pool = (VkUtil_DescriptorPool*)cgpu_calloc(1, sizeof(VkUtil_DescriptorPool));
+    VkDescriptorPoolCreateFlags flags = (VkDescriptorPoolCreateFlags)0;
+    Pool->Device = D;
+    Pool->mFlags = flags;
+    VkDescriptorPoolCreateInfo poolCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .pNext = NULL,
+        .poolSizeCount = CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE,
+        .pPoolSizes = gDescriptorPoolSizes,
+        .flags = Pool->mFlags,
+        .maxSets = 8192
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorPool(
+        D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
+    return Pool;
+}
+
+void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool)
+{
+    CGpuDevice_Vulkan* D = DescPool->Device;
+    D->mVkDeviceTable.vkDestroyDescriptorPool(D->pVkDevice, DescPool->pVkDescPool, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(DescPool);
+}
+
 // Select Helpers
 void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
 {
@@ -290,7 +317,7 @@ void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter)
         adapter_detail->format_supports[i].shader_read = 0;
         adapter_detail->format_supports[i].shader_write = 0;
         adapter_detail->format_supports[i].render_target_write = 0;
-        VkFormat fmt = (VkFormat)pf_translate_to_vulkan((ECGpuPixelFormat)i);
+        VkFormat fmt = (VkFormat)VkUtil_TranslatePixelFormat((ECGpuPixelFormat)i);
         if (fmt == VK_FORMAT_UNDEFINED) continue;
 
         vkGetPhysicalDeviceFormatProperties(VkAdapter->pPhysicalDevice, fmt, &formatSupport);

@@ -1,6 +1,6 @@
 /* clang-format off */
 
-FORCEINLINE static VkFormat pf_translate_to_vulkan(const ECGpuPixelFormat fmt)
+FORCEINLINE static VkFormat VkUtil_TranslatePixelFormat(const ECGpuPixelFormat fmt)
 {
 switch (fmt) {
 

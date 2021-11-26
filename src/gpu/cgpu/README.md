@@ -11,6 +11,11 @@
 - 所以vkSetPass+vkSetPipelineState/SetPSO是一种Flush的行为
 - 而一些平台进一步地提供SubPass等细粒度控制管线状态的API
 
+# 寄存器組
+- ShRegisters：Shader状态，对应VkPipelineShaderStageCreateInfo
+- CxRegisters: 调度管线状态
+- UcRegisters：
+
 # API
 综上我们认为：
 - 直接将Pass归类为一种Flush行为, 它有自己的RootSignature/Binder，并在开始时对GPU状态进行Flush

@@ -362,7 +362,8 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 
     // Create VMA Allocator
     VkUtil_CreateVMAAllocator(I, A, D);
-
+    // Create Descriptor Heap
+    D->pDescriptorPool = VkUtil_CreateDescriptorPool(D);
     return &D->super;
 }
 
@@ -373,6 +374,7 @@ void cgpu_free_device_vulkan(CGpuDeviceId device)
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
 
     VkUtil_FreeVMAAllocator(I, A, D);
+    VkUtil_FreeDescriptorPool(D->pDescriptorPool);
     VkUtil_FreePipelineCache(I, A, D);
     vkDestroyDevice(D->pVkDevice, nullptr);
     cgpu_free(D);
