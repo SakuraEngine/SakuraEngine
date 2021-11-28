@@ -15,9 +15,23 @@ const CGpuProcTable tbl_metal = {
 
     // Device APIs
     .create_device = &cgpu_create_device_metal,
-    .free_device = &cgpu_free_device_metal
+    .free_device = &cgpu_free_device_metal,
+
+    // API Objects APIs
+    .create_fence = &cgpu_create_fence_metal,
+    .free_fence = &cgpu_free_fence_metal,
 
     // Queue APIs
+    .get_queue = &cgpu_get_queue_metal,
+    .submit_queue = &cgpu_submit_queue_metal,
+    .wait_queue_idle = &cgpu_wait_queue_idle_metal,
+    .free_queue = &cgpu_free_queue_metal,
+
+    // Command APIs
+    .create_command_pool = &cgpu_create_command_pool_metal,
+    .create_command_buffer = &cgpu_create_command_buffer_metal,
+    .free_command_buffer = &cgpu_free_command_buffer_metal,
+    .free_command_pool = &cgpu_free_command_pool_metal
 };
 
 const CGpuProcTable* CGPU_MetalProcTable()
@@ -126,6 +140,97 @@ void cgpu_free_device_metal(CGpuDeviceId device)
         }
     }
     return;
+}
+
+// API Objects APIs
+CGpuFenceId cgpu_create_fence_metal(CGpuDeviceId device)
+{
+    CGpuFence_Metal* MF = (CGpuFence_Metal*)cgpu_calloc(1, sizeof(CGpuFence_Metal));
+    MF->pMtlSemaphore = dispatch_semaphore_create(0);
+    MF->mSubmitted = false;
+    return &MF->super;
+}
+
+RUNTIME_API void cgpu_free_fence_metal(CGpuFenceId fence)
+{
+    CGpuFence_Metal* MF = (CGpuFence_Metal*)fence;
+    MF->pMtlSemaphore = nil;
+    cgpu_free(MF);
+}
+
+// Queue APIs
+CGpuQueueId cgpu_get_queue_metal(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
+{
+    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)cgpu_calloc(1, sizeof(CGpuQueue_Metal));
+    CGpuDevice_Metal* MD = (CGpuDevice_Metal*)cgpu_calloc(1, sizeof(CGpuDevice_Metal));
+    MQ->mtlCommandQueue = MD->ppMtlQueues[type][index];
+#if defined(ENABLE_FENCES)
+    if (@available(macOS 10.13, iOS 10.0, *))
+    {
+        MQ->mtlQueueFence = [MD->pDevice newFence];
+    }
+#endif
+    MQ->mBarrierFlags = 0;
+    return &MQ->super;
+}
+
+void cgpu_submit_queue_metal(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
+{
+    assert(0 && "No impl!");
+}
+
+void cgpu_wait_queue_idle_metal(CGpuQueueId queue)
+{
+    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)queue;
+    id<MTLCommandBuffer> waitCmdBuf =
+        [MQ->mtlCommandQueue commandBufferWithUnretainedReferences];
+
+    [waitCmdBuf commit];
+    [waitCmdBuf waitUntilCompleted];
+    waitCmdBuf = nil;
+}
+
+void cgpu_free_queue_metal(CGpuQueueId queue)
+{
+    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)queue;
+    MQ->mtlCommandQueue = nil;
+#if defined(ENABLE_FENCES)
+    if (@available(macOS 10.13, iOS 10.0, *))
+    {
+        MQ->mtlQueueFence = nil;
+    }
+#endif
+}
+
+// Command APIs
+CGpuCommandPoolId cgpu_create_command_pool_metal(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
+{
+    CGpuCommandPool_Metal* PQ = (CGpuCommandPool_Metal*)cgpu_calloc(1, sizeof(CGpuCommandPool_Metal));
+    return &PQ->super;
+}
+
+CGpuCommandBufferId cgpu_create_command_buffer_metal(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
+{
+    CGpuCommandBuffer_Metal* MB = (CGpuCommandBuffer_Metal*)cgpu_calloc(1, sizeof(CGpuCommandBuffer_Metal));
+    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)pool->queue;
+    MB->mtlCommandBuffer = [MQ->mtlCommandQueue commandBuffer];
+    return &MB->super;
+}
+
+void cgpu_free_command_buffer_metal(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_Metal* MB = (CGpuCommandBuffer_Metal*)cmd;
+    MB->mtlCommandBuffer = nil;
+    MB->mtlBlitEncoder = nil;
+    MB->cmptEncoder.mtlComputeEncoder = nil;
+    MB->renderEncoder.mtlRenderEncoder = nil;
+    cgpu_free(MB);
+}
+
+void cgpu_free_command_pool_metal(CGpuCommandPoolId pool)
+{
+    CGpuCommandPool_Metal* PQ = (CGpuCommandPool_Metal*)pool;
+    cgpu_free(PQ);
 }
 
 // Helpers

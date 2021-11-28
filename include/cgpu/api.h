@@ -21,6 +21,8 @@ struct CGpuSwapChainDescriptor;
 struct CGpuQueueSubmitDescriptor;
 struct CGpuBufferUpdateDescriptor;
 struct CGpuDescriptorSet;
+struct CGpuRenderPassEncoder;
+struct CGpuComputePassEncoder;
 
 typedef uint32_t CGpuQueueIndex;
 typedef const struct CGpuSurface_Dummy* CGpuSurfaceId;
@@ -37,6 +39,8 @@ typedef const struct CGpuSwapChain* CGpuSwapChainId;
 typedef const struct CGpuShaderLibrary* CGpuShaderLibraryId;
 typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuPipelineShader* CGpuPipelineShaderId;
+typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
+typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
 
 typedef enum ECGPUBackEnd
 {

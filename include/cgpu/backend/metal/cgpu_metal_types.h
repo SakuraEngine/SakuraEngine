@@ -11,8 +11,14 @@ typedef struct CGpuDevice_Metal {
     CGpuDevice super;
     id<MTLDevice> pDevice;
     id<MTLCommandQueue>* __strong ppMtlQueues[ECGpuQueueType_Count];
-    uint32_t pMtlQueueCounts[ECGpuQueueType_Count]
+    uint32_t pMtlQueueCounts[ECGpuQueueType_Count];
 } CGpuDevice_Metal;
+
+typedef struct CGpuFence_Metal {
+    CGpuFence super;
+    dispatch_semaphore_t pMtlSemaphore;
+    uint32_t mSubmitted : 1;
+} CGpuFence_Metal;
 
 typedef struct CGpuAdapter_Metal {
     CGpuAdapter super;
@@ -33,6 +39,28 @@ typedef struct CGpuQueue_Metal {
     id<MTLFence> mtlQueueFence API_AVAILABLE(macos(10.13), ios(10.0));
     uint32_t mBarrierFlags;
 } CGpuQueue_Metal;
+
+typedef struct CGpuCommandPool_Metal {
+    CGpuCommandPool super;
+} CGpuCommandPool_Metal;
+
+typedef struct CGpuRenderPassEncoder_Metal {
+    struct CGpuCommandBuffer_Metal* cmdBuffer;
+    id<MTLRenderCommandEncoder> mtlRenderEncoder;
+} CGpuRenderPassEncoder_Metal;
+
+typedef struct CGpuComputePassEncoder_Metal {
+    struct CGpuCommandBuffer_Metal* cmdBuffer;
+    id<MTLComputeCommandEncoder> mtlComputeEncoder;
+} CGpuComputePassEncoder_Metal;
+
+typedef struct CGpuCommandBuffer_Metal {
+    CGpuCommandBuffer super;
+    id<MTLCommandBuffer> mtlCommandBuffer;
+    id<MTLBlitCommandEncoder> mtlBlitEncoder;
+    CGpuRenderPassEncoder_Metal renderEncoder;
+    CGpuComputePassEncoder_Metal cmptEncoder;
+} CGpuCommandBuffer_Metal;
 
 // Mac Catalyst does not support feature sets, so we redefine them to GPU families in MVKDevice.h.
 #if TARGET_MACCAT
