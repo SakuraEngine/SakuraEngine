@@ -189,6 +189,7 @@ typedef struct CGpuBuffer_Vulkan {
 typedef struct CGpuShaderLibrary_Vulkan {
     CGpuShaderLibrary super;
     VkShaderModule mShaderModule;
+    struct SpvReflectShaderModule* pReflect;
 } CGpuShaderLibrary_Vulkan;
 
 typedef struct CGpuSwapChain_Vulkan {
