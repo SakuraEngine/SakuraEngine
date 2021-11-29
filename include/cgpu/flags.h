@@ -30,58 +30,7 @@ typedef enum ECGpuAGSReturnCode
 } ECGpuAGSReturnCode;
 
 // Format
-typedef enum ECGpuVertexFormat
-{
-    VF_UNDEFINED,
-    VF_UCHAR2,
-    VF_UCHAR4,
-    VF_CHAR2,
-    VF_CHAR4,
-    VF_UCHAR2_NORM,
-    VF_UCHAR4_NORM,
-    VF_CHAR2_NORM,
-    VF_CHAR4_NORM,
-    VF_USHORT2,
-    VF_USHORT4,
-    VF_SHORT2,
-    VF_SHORT4,
-    VF_USHORT2_NORM,
-    VF_USHORT4_NORM,
-    VF_SHORT2_NORM,
-    VF_SHORT4_NORM,
-    VF_HALF2,
-    VF_HALF4,
-    VF_FLOAT,
-    VF_FLOAT2,
-    VF_FLOAT3,
-    VF_FLOAT4,
-    VF_UINT,
-    VF_UINT2,
-    VF_UINT3,
-    VF_UINT4,
-    VF_INT,
-    VF_INT2,
-    VF_INT3,
-    VF_INT4,
-    VF_COUNT,
-
-    VF_R8G8_UNORM = VF_UCHAR2_NORM,
-    VF_R8G8_NORM = VF_CHAR2_NORM,
-    VF_R8G8B8A8_UNORM = VF_UCHAR4_NORM,
-    VF_R8G8B8A8_NORM = VF_CHAR4_NORM,
-    VF_R16G16_UNORM = VF_USHORT2_NORM,
-    VF_R16G16_NORM = VF_SHORT2_NORM,
-    VF_R16G16B16A16_UNORM = VF_USHORT4_NORM,
-    VF_R16G16B16A16_NORM = VF_SHORT4_NORM,
-    VF_R32G32B32A32_UINT = VF_UINT4,
-    VF_R32G32B32A32_INT = VF_INT4,
-    VF_R32G32B32A32_SINT = VF_INT4,
-    VF_R32G32_UINT = VF_UINT2,
-    VF_R32G32_INT = VF_INT2,
-    VF_R32G32_SINT = VF_INT2,
-} ECGpuVertexFormat;
-
-typedef enum ECGpuPixelFormat
+typedef enum ECGpuFormat
 {
     PF_UNDEFINED = 0,
     PF_R1_UNORM = 1,
@@ -323,7 +272,7 @@ typedef enum ECGpuPixelFormat
     PF_G16_B16R16_2PLANE_420_UNORM = 237,
     PF_G16_B16R16_2PLANE_422_UNORM = 238,
     PF_Count = PF_G16_B16R16_2PLANE_422_UNORM + 1
-} ECGpuPixelFormat;
+} ECGpuFormat;
 
 typedef enum ECGpuTextureDimension
 {

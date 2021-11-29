@@ -78,7 +78,7 @@ typedef struct CGpuCommandBuffer_Metal {
 #endif
 
 /* clang-format off */
-FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGpuPixelFormat fmt)
+FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGpuFormat fmt)
 {
     switch (fmt) {
 	case PF_A8_UNORM: 		return MTLPixelFormatA8Unorm;

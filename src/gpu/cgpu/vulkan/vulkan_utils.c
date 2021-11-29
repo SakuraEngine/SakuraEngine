@@ -247,6 +247,27 @@ void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool)
     cgpu_free(DescPool);
 }
 
+VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGpuDevice_Vulkan* D,
+    const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count)
+{
+    VkDescriptorSetLayout out_layout = VK_NULL_HANDLE;
+    VkDescriptorSetLayoutCreateInfo layout_info = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext = NULL,
+        .bindingCount = bindings_count,
+        .pBindings = bindings,
+        .flags = 0
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(
+        D->pVkDevice, &layout_info, GLOBAL_VkAllocationCallbacks, &out_layout));
+    return out_layout;
+}
+
+void VkUtil_FreeDescriptorSetLayout(CGpuDevice_Vulkan* D, VkDescriptorSetLayout layout)
+{
+    D->mVkDeviceTable.vkDestroyDescriptorSetLayout(D->pVkDevice, layout, GLOBAL_VkAllocationCallbacks);
+}
+
 // Select Helpers
 void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
 {
@@ -317,7 +338,7 @@ void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter)
         adapter_detail->format_supports[i].shader_read = 0;
         adapter_detail->format_supports[i].shader_write = 0;
         adapter_detail->format_supports[i].render_target_write = 0;
-        VkFormat fmt = (VkFormat)VkUtil_TranslatePixelFormat((ECGpuPixelFormat)i);
+        VkFormat fmt = (VkFormat)VkUtil_FormatTranslateToVk((ECGpuFormat)i);
         if (fmt == VK_FORMAT_UNDEFINED) continue;
 
         vkGetPhysicalDeviceFormatProperties(VkAdapter->pPhysicalDevice, fmt, &formatSupport);

@@ -80,7 +80,7 @@ void MetalUtilInner_EnumFormatShaderReadSupports(struct CGpuAdapter_Metal* MAdap
 {
     for (uint32_t i = 0; i < PF_Count; ++i)
     {
-        MTLPixelFormat mformat = MetalUtil_TranslatePixelFormat((ECGpuPixelFormat)i);
+        MTLPixelFormat mformat = MetalUtil_TranslatePixelFormat((ECGpuFormat)i);
         if (mformat != MTLPixelFormatInvalid)
         {
 #ifndef TARGET_IOS
