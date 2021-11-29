@@ -325,6 +325,21 @@ typedef enum ECGpuPixelFormat
     PF_Count = PF_G16_B16R16_2PLANE_422_UNORM + 1
 } ECGpuPixelFormat;
 
+typedef enum ECGpuTextureDimension
+{
+    TD_1D,
+    TD_2D,
+    TD_2DMS,
+    TD_3D,
+    TD_CUBE,
+    TD_1D_ARRAY,
+    TD_2D_ARRAY,
+    TD_2DMS_ARRAY,
+    TD_CUBE_ARRAY,
+    TD_COUNT,
+    TD_UNDEFINED,
+} ECGpuTextureDimension;
+
 typedef enum ECGpuShaderStage
 {
     SS_NONE = 0,

@@ -304,7 +304,7 @@ CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct
     // handle name string
     const size_t str_len = strlen(desc->name);
     const size_t str_size = str_len + 1;
-    *(void**)&shader->name = cgpu_calloc(str_size, sizeof(char8_t));
+    shader->name = (char8_t*)cgpu_calloc(1, str_size * sizeof(char8_t));
     memcpy((void*)shader->name, desc->name, str_size);
     return shader;
 }

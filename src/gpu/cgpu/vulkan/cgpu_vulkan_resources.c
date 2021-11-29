@@ -1,5 +1,6 @@
 #include "math/common.h"
 #include "vulkan_utils.h"
+#include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 
 FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulkan* A, const struct CGpuBufferDescriptor* desc)
 {
@@ -179,8 +180,13 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
         .codeSize = desc->code_size,
         .pCode = desc->code
     };
-    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
+    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_calloc(1, sizeof(CGpuShaderLibrary_Vulkan));
     D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
+    // Create Shader Reflection
+    // Shader Reflections
+    S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
+    SpvReflectResult spvRes = spvReflectCreateShaderModule(info.codeSize, info.pCode, S->pReflect);
+    assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
     return &S->super;
 }
 
@@ -189,5 +195,7 @@ void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
     CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)module;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
     D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
+    spvReflectDestroyShaderModule(S->pReflect);
+    cgpu_free(S->pReflect);
     cgpu_free(S);
 }

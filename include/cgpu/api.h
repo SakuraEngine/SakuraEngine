@@ -314,7 +314,7 @@ typedef struct CGpuCommandBuffer {
 
 typedef struct CGpuShaderLibrary {
     CGpuDeviceId device;
-    const char8_t* name;
+    char8_t* name;
 } CGpuShaderLibrary;
 
 typedef struct CGpuBuffer {
@@ -341,6 +341,7 @@ typedef struct CGpuSwapChain {
 typedef struct CGpuChainedDescriptor {
     CGPU_CHAINED_DESCRIPTOR_HEADER
 } CGpuChainedDescriptor;
+
 // Device & Pipeline
 typedef struct CGpuInstanceDescriptor {
     const CGpuChainedDescriptor* chained;
@@ -422,12 +423,41 @@ typedef struct CGpuSwapChainDescriptor {
     ECGpuPixelFormat format;
 } CGpuSwapChainDescriptor;
 
+typedef struct CGpuRootSignatureDescriptor {
+    struct CGpuPipelineShaderDescriptor* shaders;
+    uint32_t shaders_count;
+} CGpuRootSignatureDescriptor;
+
+// Shaders
+typedef struct CGpuShaderResource {
+    ECGpuResourceType type;
+    uint32_t set;
+    uint32_t binding;
+    uint32_t size;
+    CGpuShaderStages stages;
+} CGpuShaderResource;
+
+typedef struct CGpuVertexAttribute {
+    const char8_t* name;
+    uint32_t size;
+    uint32_t name_size;
+} CGpuVertexAttribute;
+
+typedef struct CGpuShaderReflection {
+    CGpuShaderResource* shader_resources;
+    uint32_t shader_resources_count;
+    CGpuVertexAttribute* vertex_attrs;
+    uint32_t vertex_attrs_count;
+} CGpuShaderReflection;
+
 // Resources
 typedef struct CGpuShaderLibraryDescriptor {
     const char8_t* name;
+    uint32_t name_size;
     const uint32_t* code;
     size_t code_size;
     ECGpuShaderStage stage;
+    ECGpuTextureDimension dimension;
 } CGpuShaderLibraryDescriptor;
 
 typedef struct CGpuBufferDescriptor {
