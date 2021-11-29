@@ -289,6 +289,7 @@ typedef enum ECGpuTextureDimension
     TD_UNDEFINED,
 } ECGpuTextureDimension;
 
+// Same Value As Vulkan Enumeration Bits.
 typedef enum ECGpuShaderStage
 {
     SS_NONE = 0,
