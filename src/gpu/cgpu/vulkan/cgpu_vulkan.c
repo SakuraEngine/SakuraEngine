@@ -367,7 +367,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     }
     else
     {
-        VkFormat requested_format = VkUtil_TranslatePixelFormat(desc->format);
+        VkFormat requested_format = VkUtil_FormatTranslateToVk(desc->format);
         VkColorSpaceKHR requested_color_space = requested_format == hdrSurfaceFormat.format ? hdrSurfaceFormat.colorSpace : VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         for (uint32_t i = 0; i < surfaceFormatCount; ++i)
         {

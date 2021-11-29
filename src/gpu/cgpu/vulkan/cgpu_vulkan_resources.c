@@ -66,7 +66,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
     // Setup Uniform Texel View
     if ((add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT) || (add_info.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT))
     {
-        const VkFormat texel_format = VkUtil_TranslatePixelFormat(desc->format);
+        const VkFormat texel_format = VkUtil_FormatTranslateToVk(desc->format);
         DECLARE_ZERO(VkFormatProperties, formatProps)
         vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, texel_format, &formatProps);
         // Now We Use The Same View Info for Uniform & Storage BufferView on Vulkan Backend.
@@ -187,6 +187,33 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
     S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
     SpvReflectResult spvRes = spvReflectCreateShaderModule(info.codeSize, info.pCode, S->pReflect);
     assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
+    // Initialize Common Reflection Data
+    CGpuShaderReflection* reflection = &S->super.reflection;
+    {
+        // ATTENTION: We have only one entry point now
+        const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[0].name);
+        const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
+        const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
+        uint32_t icount;
+        spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
+        reflection->vertex_inputs_count = icount;
+        DECLARE_ZERO_VLA(SpvReflectInterfaceVariable*, input_vars, icount)
+        spvReflectEnumerateInputVariables(S->pReflect, &icount, input_vars);
+        if (entry->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
+        {
+            reflection->vertex_inputs_count = icount;
+            reflection->vertex_inputs = cgpu_calloc(icount, sizeof(CGpuVertexInput));
+            // Handle Vertex Inputs
+            for (uint32_t i = 0; i < icount; i++)
+            {
+                // We use semantic for HLSL sources because DXC is a piece of shit.
+                reflection->vertex_inputs[i].name =
+                    bHLSL ? input_vars[i]->semantic : input_vars[i]->name;
+                reflection->vertex_inputs[i].format =
+                    VkUtil_FormatTranslateToCGPU((VkFormat)input_vars[i]->format);
+            }
+        }
+    }
     return &S->super;
 }
 
@@ -194,8 +221,10 @@ void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
 {
     CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)module;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
-    D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
     spvReflectDestroyShaderModule(S->pReflect);
+    D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
+    if (S->super.reflection.vertex_inputs) cgpu_free(S->super.reflection.vertex_inputs);
+    if (S->super.reflection.shader_resources) cgpu_free(S->super.reflection.shader_resources);
     cgpu_free(S->pReflect);
     cgpu_free(S);
 }

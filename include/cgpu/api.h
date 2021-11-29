@@ -20,9 +20,11 @@ struct CGpuBufferDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuQueueSubmitDescriptor;
 struct CGpuBufferUpdateDescriptor;
+struct CGpuRootSignatureDescriptor;
 struct CGpuDescriptorSet;
 struct CGpuRenderPassEncoder;
 struct CGpuComputePassEncoder;
+struct CGpuShaderReflection;
 
 typedef uint32_t CGpuQueueIndex;
 typedef const struct CGpuSurface_Dummy* CGpuSurfaceId;
@@ -37,6 +39,7 @@ typedef const struct CGpuCommandPool* CGpuCommandPoolId;
 typedef const struct CGpuCommandBuffer* CGpuCommandBufferId;
 typedef const struct CGpuSwapChain* CGpuSwapChainId;
 typedef const struct CGpuShaderLibrary* CGpuShaderLibraryId;
+typedef const struct CGpuRootSignature* CGpuRootSignatureId;
 typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuPipelineShader* CGpuPipelineShaderId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
@@ -114,6 +117,10 @@ RUNTIME_API CGpuFenceId cgpu_create_fence(CGpuDeviceId device);
 typedef CGpuFenceId (*CGPUProcCreateFence)(CGpuDeviceId device);
 RUNTIME_API void cgpu_free_fence(CGpuFenceId fence);
 typedef void (*CGPUProcFreeFence)(CGpuFenceId fence);
+RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
+typedef CGpuRootSignatureId (*CGPUProcCreateRootSignature)(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
+RUNTIME_API void cgpu_free_root_signature(CGpuRootSignatureId signature);
+typedef void (*CGPUProcFreeRootSignature)(CGpuRootSignatureId signature);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
@@ -139,8 +146,8 @@ typedef void (*CGPUProcFreeCommandPool)(CGpuCommandPoolId pool);
 // Shader APIs
 RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
 typedef CGpuShaderLibraryId (*CGPUProcCreateShaderLibrary)(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
-RUNTIME_API void cgpu_free_shader_library(CGpuShaderLibraryId shader_module);
-typedef void (*CGPUProcFreeShaderLibrary)(CGpuShaderLibraryId shader_module);
+RUNTIME_API void cgpu_free_shader_library(CGpuShaderLibraryId library);
+typedef void (*CGPUProcFreeShaderLibrary)(CGpuShaderLibraryId library);
 
 // Buffer APIs
 RUNTIME_API CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc);
@@ -185,6 +192,8 @@ typedef struct CGpuProcTable {
 
     const CGPUProcCreateFence create_fence;
     const CGPUProcFreeFence free_fence;
+    const CGPUProcCreateRootSignature create_root_signature;
+    const CGPUProcFreeRootSignature free_root_signature;
 
     const CGPUProcGetQueue get_queue;
     const CGPUProcSubmitQueue submit_queue;
@@ -312,9 +321,31 @@ typedef struct CGpuCommandBuffer {
     CGpuCommandPoolId pool;
 } CGpuCommandBuffer;
 
+// Shaders
+typedef struct CGpuShaderResource {
+    ECGpuResourceType type;
+    uint32_t set;
+    uint32_t binding;
+    uint32_t size;
+    CGpuShaderStages stages;
+} CGpuShaderResource;
+
+typedef struct CGpuVertexInput {
+    const char8_t* name;
+    ECGpuFormat format;
+} CGpuVertexInput;
+
+typedef struct CGpuShaderReflection {
+    CGpuVertexInput* vertex_inputs;
+    uint32_t vertex_inputs_count;
+    CGpuShaderResource* shader_resources;
+    uint32_t shader_resources_count;
+} CGpuShaderReflection;
+
 typedef struct CGpuShaderLibrary {
     CGpuDeviceId device;
     char8_t* name;
+    CGpuShaderReflection reflection;
 } CGpuShaderLibrary;
 
 typedef struct CGpuBuffer {
@@ -420,7 +451,7 @@ typedef struct CGpuSwapChainDescriptor {
     /// Clear Value.
     float clearValue[4];
     /// format
-    ECGpuPixelFormat format;
+    ECGpuFormat format;
 } CGpuSwapChainDescriptor;
 
 typedef struct CGpuRootSignatureDescriptor {
@@ -428,27 +459,9 @@ typedef struct CGpuRootSignatureDescriptor {
     uint32_t shaders_count;
 } CGpuRootSignatureDescriptor;
 
-// Shaders
-typedef struct CGpuShaderResource {
-    ECGpuResourceType type;
-    uint32_t set;
-    uint32_t binding;
-    uint32_t size;
-    CGpuShaderStages stages;
-} CGpuShaderResource;
-
-typedef struct CGpuVertexAttribute {
-    const char8_t* name;
-    uint32_t size;
-    uint32_t name_size;
-} CGpuVertexAttribute;
-
-typedef struct CGpuShaderReflection {
-    CGpuShaderResource* shader_resources;
-    uint32_t shader_resources_count;
-    CGpuVertexAttribute* vertex_attrs;
-    uint32_t vertex_attrs_count;
-} CGpuShaderReflection;
+typedef struct CGpuRootSignature {
+    CGpuDeviceId device;
+} CGpuRootSignature;
 
 // Resources
 typedef struct CGpuShaderLibraryDescriptor {
@@ -472,7 +485,7 @@ typedef struct CGpuBufferDescriptor {
     /// Decides which memory heap buffer will use (default, upload, readback)
     ECGpuMemoryUsage memory_usage;
     /// Image format
-    ECGpuPixelFormat format;
+    ECGpuFormat format;
     /// Creation flags
     ECGpuBufferCreationFlags flags;
     /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)

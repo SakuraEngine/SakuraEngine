@@ -151,6 +151,23 @@ void cgpu_free_fence(CGpuFenceId fence)
     fn_free_fence(fence);
 }
 
+CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_root_signature && "create_root_signature Proc Missing!");
+    CGpuRootSignature* signature = (CGpuRootSignature*)device->proc_table_cache->create_root_signature(device, desc);
+    return signature;
+}
+
+void cgpu_free_root_signature(CGpuRootSignatureId signature)
+{
+    assert(signature != CGPU_NULLPTR && "fatal: call on NULL signature!");
+    const CGpuDeviceId device = signature->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_root_signature && "free_root_signature Proc Missing!");
+    device->proc_table_cache->free_root_signature(signature);
+}
+
 void cgpu_free_device(CGpuDeviceId device)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -311,7 +328,7 @@ CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct
 
 void cgpu_free_shader_library(CGpuShaderLibraryId library)
 {
-    assert(library != CGPU_NULLPTR && "fatal: call on NULL shader_module!");
+    assert(library != CGPU_NULLPTR && "fatal: call on NULL shader library!");
     const CGpuDeviceId device = library->device;
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     // handle name string

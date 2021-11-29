@@ -198,6 +198,16 @@ typedef struct CGpuSwapChain_Vulkan {
     VkSwapchainKHR pVkSwapChain;
 } CGpuSwapChain_Vulkan;
 
+typedef struct CGpuRootSignature_Vulkan {
+    CGpuRootSignature super;
+    uint32_t set_count;
+    VkPipelineLayout pipeline_layout;
+    struct ParameterSet {
+        VkDescriptorSetLayout layout;
+        VkDescriptorUpdateTemplate update_template;
+    } * parameter_sets;
+} CGpuRootSignature_Vulkan;
+
 #ifdef __cplusplus
 } // end extern "C"
 #endif
@@ -206,7 +216,7 @@ typedef struct CGpuSwapChain_Vulkan {
 extern "C" {
 #endif
 
-FORCEINLINE static VkFormat VkUtil_TranslatePixelFormat(const ECGpuPixelFormat format);
+FORCEINLINE static VkFormat VkUtil_FormatTranslateToVk(const ECGpuFormat format);
 
 #include "cgpu_vulkan.inl"
 #ifdef __cplusplus

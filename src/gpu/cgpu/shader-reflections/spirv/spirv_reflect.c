@@ -3843,8 +3843,7 @@ static SpvReflectResult ParseEntrypointDescriptorSets(SpvReflectShaderModule* p_
             }
             SpvReflectDescriptorSet* p_entry_set = &p_entry->descriptor_sets[p_entry->descriptor_set_count++];
             p_entry_set->set = p_set->set;
-            p_entry_set->bindings = (SpvReflectDescriptorBinding**)cgpu_calloc(count,
-                sizeof(*p_entry_set->bindings));
+            p_entry_set->bindings = (SpvReflectDescriptorBinding**)cgpu_calloc(count, sizeof(*p_entry_set->bindings));
             if (IsNull(p_entry_set->bindings))
             {
                 return SPV_REFLECT_RESULT_ERROR_ALLOC_FAILED;
@@ -4245,7 +4244,7 @@ void spvReflectDestroyShaderModule(SpvReflectShaderModule* p_module)
     for (size_t i = 0; i < p_module->descriptor_set_count; ++i)
     {
         SpvReflectDescriptorSet* p_set = &p_module->descriptor_sets[i];
-        free(p_set->bindings);
+        SafeFree(p_set->bindings);
     }
 
     // Descriptor binding blocks
