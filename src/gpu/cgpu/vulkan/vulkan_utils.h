@@ -59,7 +59,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
     const char* pLayerPrefix, const char* pMessage, void* pUserData);
 void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
 
-#define CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 2)
+#define CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1)
 static const VkDescriptorPoolSize gDescriptorPoolSizes[CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE] = {
     { VK_DESCRIPTOR_TYPE_SAMPLER, 1024 },
     { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },

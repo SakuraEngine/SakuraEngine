@@ -323,6 +323,7 @@ typedef struct CGpuCommandBuffer {
 
 // Shaders
 typedef struct CGpuShaderResource {
+    const char8_t* name;
     ECGpuResourceType type;
     uint32_t set;
     uint32_t binding;
