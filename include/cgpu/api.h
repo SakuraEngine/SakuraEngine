@@ -25,6 +25,7 @@ struct CGpuDescriptorSet;
 struct CGpuRenderPassEncoder;
 struct CGpuComputePassEncoder;
 struct CGpuShaderReflection;
+struct CGpuPipelineReflection;
 
 typedef uint32_t CGpuQueueIndex;
 typedef const struct CGpuSurface_Dummy* CGpuSurfaceId;
@@ -44,6 +45,8 @@ typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuPipelineShader* CGpuPipelineShaderId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
 typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
+typedef const struct CGpuShaderReflection* CGpuShaderReflectionId;
+typedef const struct CGpuPipelineReflection* CGpuPipelineReflectionId;
 
 typedef enum ECGPUBackEnd
 {
@@ -166,7 +169,8 @@ RUNTIME_API void cgpu_free_swapchain(CGpuSwapChainId swapchain);
 typedef void (*CGPUProcFreeSwapChain)(CGpuSwapChainId swapchain);
 
 // CMDs
-RUNTIME_API void cgpu_cmd_begin(CGpuCommandBufferId cmd);
+RUNTIME_API void
+cgpu_cmd_begin(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdBegin)(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 typedef void (*CGPUProcCmdUpdateBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
@@ -348,6 +352,13 @@ typedef struct CGpuShaderLibrary {
     char8_t* name;
     CGpuShaderReflection reflection;
 } CGpuShaderLibrary;
+
+typedef struct CGpuPipelineReflection {
+    CGpuShaderReflection* stages[SS_COUNT];
+    // descriptor sets / root tables
+    CGpuShaderResource* shader_resources;
+    uint32_t shader_resources_count;
+} CGpuPipelineReflection;
 
 typedef struct CGpuBuffer {
     CGpuDeviceId device;
