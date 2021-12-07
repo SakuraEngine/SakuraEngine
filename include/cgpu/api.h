@@ -348,6 +348,7 @@ typedef struct CGpuShaderReflection {
     CGpuShaderResource* shader_resources;
     uint32_t shader_resources_count;
     const char8_t* entry_name;
+    ECGpuShaderStage stage;
 } CGpuShaderReflection;
 
 typedef struct CGpuShaderLibrary {

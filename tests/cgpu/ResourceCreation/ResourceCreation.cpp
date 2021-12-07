@@ -1,3 +1,4 @@
+#include "cgpu/flags.h"
 #define RUNTIME_DLL
 #include "gtest/gtest.h"
 #include <EASTL/string.h>
@@ -145,12 +146,50 @@ TEST_P(ResourceCreation, CreateModules)
     fdesc.stage = ECGpuShaderStage::SS_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
-    eastl::string cbName = vertex_shader->entry_reflections[0].shader_resources[0].name;
-    EXPECT_EQ(cbName, "AssholeDXC");
+    eastl::string cbName = fragment_shader->entry_reflections[0].shader_resources[0].name;
+    EXPECT_EQ(cbName, "perDrawCBuffer");
 
     EXPECT_NE(vertex_shader, CGPU_NULLPTR);
     EXPECT_NE(fragment_shader, CGPU_NULLPTR);
 
+    cgpu_free_shader_library(vertex_shader);
+    cgpu_free_shader_library(fragment_shader);
+}
+
+TEST_P(ResourceCreation, CreateRootSignature)
+{
+    ECGPUBackEnd backend = GetParam();
+    DECLARE_ZERO(CGpuShaderLibraryDescriptor, vdesc)
+    vdesc.code = vertex_shaders[backend];
+    vdesc.code_size = vertex_shader_sizes[backend];
+    vdesc.name = "VertexShaderLibrary";
+    vdesc.stage = ECGpuShaderStage::SS_VERT;
+    auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
+
+    DECLARE_ZERO(CGpuShaderLibraryDescriptor, fdesc)
+    fdesc.code = frag_shaders[backend];
+    fdesc.code_size = frag_shader_sizes[backend];
+    fdesc.name = "FragmentShaderLibrary";
+    fdesc.stage = ECGpuShaderStage::SS_FRAG;
+    auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
+
+    CGpuPipelineShaderDescriptor vertex_shader_entry = {};
+    vertex_shader_entry.entry = "main";
+    vertex_shader_entry.stage = ECGpuShaderStage::SS_TESE;
+    vertex_shader_entry.library = vertex_shader;
+    CGpuPipelineShaderDescriptor fragment_shader_entry = {};
+    fragment_shader_entry.entry = "main";
+    fragment_shader_entry.stage = ECGpuShaderStage::SS_FRAG;
+    fragment_shader_entry.library = fragment_shader;
+    CGpuPipelineShaderDescriptor shaders[] = { vertex_shader_entry, fragment_shader_entry };
+    CGpuRootSignatureDescriptor root_desc = {};
+    root_desc.shaders = shaders;
+    root_desc.shaders_count = 2;
+    auto signature = cgpu_create_root_signature(device, &root_desc);
+
+    EXPECT_NE(signature, CGPU_NULLPTR);
+
+    cgpu_free_root_signature(signature);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
 }
