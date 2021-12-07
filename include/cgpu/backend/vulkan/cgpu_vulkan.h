@@ -200,16 +200,35 @@ typedef struct CGpuSwapChain_Vulkan {
     VkSwapchainKHR pVkSwapChain;
 } CGpuSwapChain_Vulkan;
 
+typedef struct ParameterSet_Vulkan {
+    VkDescriptorSetLayout layout;
+    VkDescriptorUpdateTemplate update_template;
+    CGpuShaderResource* resources; // This should be stored here because shader
+    uint32_t resources_count;
+} ParameterSet_Vulkan;
+
 typedef struct CGpuRootSignature_Vulkan {
     CGpuRootSignature super;
     uint32_t set_count;
     VkPipelineLayout pipeline_layout;
-    struct ParameterSet {
-        VkDescriptorSetLayout layout;
-        VkDescriptorUpdateTemplate update_template;
-        CGpuShaderResource* resources;
-    } * parameter_sets;
+    ParameterSet_Vulkan* parameter_sets;
 } CGpuRootSignature_Vulkan;
+
+typedef union VkDescriptorUpdateData
+{
+    VkDescriptorImageInfo mImageInfo;
+    VkDescriptorBufferInfo mBufferInfo;
+    VkBufferView mBuferView;
+} VkDescriptorUpdateData;
+
+static const VkPipelineBindPoint gPipelineBindPoint[PT_COUNT] = {
+    VK_PIPELINE_BIND_POINT_MAX_ENUM,
+    VK_PIPELINE_BIND_POINT_COMPUTE,
+    VK_PIPELINE_BIND_POINT_GRAPHICS,
+#ifdef ENABLE_RAYTRACING
+    VK_PIPELINE_BIND_POINT_RAY_TRACING_NV
+#endif
+};
 
 #ifdef __cplusplus
 } // end extern "C"

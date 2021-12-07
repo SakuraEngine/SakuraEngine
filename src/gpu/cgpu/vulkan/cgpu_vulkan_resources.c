@@ -1,4 +1,6 @@
+#include "cgpu/flags.h"
 #include "math/common.h"
+#include "platform/configure.h"
 #include "vulkan_utils.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 
@@ -202,6 +204,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
     SpvReflectResult spvRes = spvReflectCreateShaderModule(info.codeSize, info.pCode, S->pReflect);
     assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
     uint32_t entry_count = S->pReflect->entry_point_count;
+    S->super.entrys_count = entry_count;
     S->super.entry_reflections = cgpu_calloc(entry_count, sizeof(CGpuShaderReflection));
     for (uint32_t i = 0; i < entry_count; i++)
     {
@@ -209,7 +212,8 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
         CGpuShaderReflection* reflection = &S->super.entry_reflections[i];
         // ATTENTION: We have only one entry point now
         const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[i].name);
-        reflection->entry_name = entry->name;
+        reflection->entry_name = (const char8_t*)entry->name;
+        reflection->stage = (ECGpuShaderStage)entry->shader_stage;
         const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
         const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
         uint32_t icount;
