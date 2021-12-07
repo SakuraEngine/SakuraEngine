@@ -29,6 +29,8 @@ const CGpuProcTable tbl_vk = {
     .free_fence = &cgpu_free_fence_vulkan,
     .create_root_signature = &cgpu_create_root_signature_vulkan,
     .free_root_signature = &cgpu_free_root_signature_vulkan,
+    .create_compute_pipeline = &cgpu_create_compute_pipeline_vulkan,
+    .free_compute_pipeline = &cgpu_free_compute_pipeline_vulkan,
 
     // Queue APIs
     .get_queue = &cgpu_get_queue_vulkan,
@@ -59,7 +61,9 @@ const CGpuProcTable tbl_vk = {
     // CMDs
     .cmd_begin = &cgpu_cmd_begin_vulkan,
     .cmd_update_buffer = &cgpu_cmd_update_buffer_vulkan,
-    .cmd_end = &cgpu_cmd_end_vulkan
+    .cmd_end = &cgpu_cmd_end_vulkan,
+    .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_vulkan,
+    .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_vulkan
 };
 
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
@@ -197,7 +201,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     // Count Sets and Binding Slots
     uint32_t set_count = 0;
     uint32_t max_binding = 0;
-    ECGpuPipelineType pipelineType = PT_UNDEFINED;
+    ECGpuPipelineType pipelineType = PT_NONE;
     for (uint32_t i = 0; i < desc->shaders_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
@@ -371,6 +375,43 @@ void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature)
     cgpu_free(RS);
 }
 
+CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuComputePipeline_Vulkan* PPL = (CGpuComputePipeline_Vulkan*)cgpu_calloc(1, sizeof(CGpuComputePipeline_Vulkan));
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)desc->root_signature;
+    CGpuShaderLibrary_Vulkan* SL = (CGpuShaderLibrary_Vulkan*)desc->compute_shader->library;
+    VkPipelineShaderStageCreateInfo cs_stage_info = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .stage = VK_SHADER_STAGE_COMPUTE_BIT,
+        .module = SL->mShaderModule,
+        .pName = desc->compute_shader->entry,
+        .pSpecializationInfo = NULL
+    };
+    VkComputePipelineCreateInfo pipeline_info = {
+        .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .stage = cs_stage_info,
+        .layout = RS->pipeline_layout,
+        .basePipelineHandle = 0,
+        .basePipelineIndex = 0
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateComputePipelines(D->pVkDevice,
+        D->pPipelineCache, 1, &pipeline_info, GLOBAL_VkAllocationCallbacks, &PPL->pVkPipeline));
+    return &PPL->super;
+}
+
+void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline)
+{
+    CGpuComputePipeline_Vulkan* PPL = (CGpuComputePipeline_Vulkan*)pipeline;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
+    D->mVkDeviceTable.vkDestroyPipeline(D->pVkDevice, PPL->pVkPipeline, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(PPL);
+}
+
 // Queue APIs
 CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
 {
@@ -540,8 +581,19 @@ void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd)
     CHECK_VKRESULT(D->mVkDeviceTable.vkEndCommandBuffer(Cmd->pVkCmdBuf));
 }
 
-#define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
+CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc)
+{
+    // DO NOTHING NOW
+    return (CGpuComputePassEncoderId)cmd;
+}
+
+void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)
+{
+    // DO NOTHING NOW
+}
+
 // SwapChain APIs
+#define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
 CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;

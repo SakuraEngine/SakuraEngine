@@ -214,18 +214,26 @@ TEST_P(ResourceCreation, CreateComputePipeline)
         auto compute_shader = cgpu_create_shader_library(device, &cdesc);
         EXPECT_NE(compute_shader, CGPU_NULLPTR);
 
-        CGpuPipelineShaderDescriptor compute_shader_entry = {};
+        DECLARE_ZERO(CGpuPipelineShaderDescriptor, compute_shader_entry)
         compute_shader_entry.entry = "main";
         compute_shader_entry.stage = ECGpuShaderStage::SS_COMPUTE;
         compute_shader_entry.library = compute_shader;
 
-        CGpuRootSignatureDescriptor root_desc = {};
+        DECLARE_ZERO(CGpuRootSignatureDescriptor, root_desc)
         root_desc.shaders = &compute_shader_entry;
         root_desc.shaders_count = 1;
         auto signature = cgpu_create_root_signature(device, &root_desc);
-
         EXPECT_NE(signature, CGPU_NULLPTR);
+
+        DECLARE_ZERO(CGpuComputePipelineDescriptor, pipeline_desc)
+        pipeline_desc.compute_shader = &compute_shader_entry;
+        pipeline_desc.root_signature = signature;
+        auto pipeline = cgpu_create_compute_pipeline(device, &pipeline_desc);
+        EXPECT_NE(pipeline, CGPU_NULLPTR);
+
+        cgpu_free_shader_library(compute_shader);
         cgpu_free_root_signature(signature);
+        cgpu_free_compute_pipeline(pipeline);
     }
 }
 

@@ -370,7 +370,7 @@ typedef uint32_t ECGpuBufferCreationFlags;
 
 typedef enum ECGpuPipelineType
 {
-    PT_UNDEFINED = 0,
+    PT_NONE = 0,
     PT_COMPUTE,
     PT_GRAPHICS,
     PT_RAYTRACING,
