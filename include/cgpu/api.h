@@ -16,11 +16,15 @@ struct CGpuCommandPoolDescriptor;
 struct CGpuCommandBufferDescriptor;
 struct CGpuShaderLibraryDescriptor;
 struct CGpuPipelineShaderDescriptor;
+struct CGpuComputePipelineDescriptor;
+struct CGpuRenderPipelineDescriptor;
 struct CGpuBufferDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuQueueSubmitDescriptor;
 struct CGpuBufferUpdateDescriptor;
 struct CGpuRootSignatureDescriptor;
+struct CGpuRenderPassDescriptor;
+struct CGpuComputePassDescriptor;
 struct CGpuDescriptorSet;
 struct CGpuRenderPassEncoder;
 struct CGpuComputePassEncoder;
@@ -47,6 +51,8 @@ typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuPipelineShader* CGpuPipelineShaderId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
 typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
+typedef const struct CGpuRenderPipeline* CGpuRenderPipelineId;
+typedef const struct CGpuComputePipeline* CGpuComputePipelineId;
 typedef const struct CGpuShaderReflection* CGpuShaderReflectionId;
 typedef const struct CGpuPipelineReflection* CGpuPipelineReflectionId;
 
@@ -126,10 +132,19 @@ RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, 
 typedef CGpuRootSignatureId (*CGPUProcCreateRootSignature)(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature(CGpuRootSignatureId signature);
 typedef void (*CGPUProcFreeRootSignature)(CGpuRootSignatureId signature);
+RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
+typedef CGpuComputePipelineId (*CGPUProcCreateComputePipeline)(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
+RUNTIME_API void cgpu_free_compute_pipeline(CGpuComputePipelineId pipeline);
+typedef void (*CGPUProcFreeComputePipeline)(CGpuComputePipelineId pipeline);
+RUNTIME_API CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc);
+typedef CGpuRenderPipelineId (*CGPUProcCreateRenderPipeline)(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc);
+RUNTIME_API void cgpu_free_render_pipeline(CGpuRenderPipelineId pipeline);
+typedef void (*CGPUProcFreeRenderPipeline)(CGpuRenderPipelineId pipeline);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
-RUNTIME_API CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
+RUNTIME_API CGpuQueueId
+cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 typedef CGpuQueueId (*CGPUProcGetQueue)(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
 typedef void (*CGPUProcSubmitQueue)(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
@@ -171,8 +186,7 @@ RUNTIME_API void cgpu_free_swapchain(CGpuSwapChainId swapchain);
 typedef void (*CGPUProcFreeSwapChain)(CGpuSwapChainId swapchain);
 
 // CMDs
-RUNTIME_API void
-cgpu_cmd_begin(CGpuCommandBufferId cmd);
+RUNTIME_API void cgpu_cmd_begin(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdBegin)(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 typedef void (*CGPUProcCmdUpdateBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
@@ -182,6 +196,12 @@ RUNTIME_API void cgpu_cmd_set_scissor(CGpuCommandBufferId cmd, uint32_t x, uint3
 typedef void (*CGPUProcCmdSetScissor)(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 RUNTIME_API void cgpu_cmd_end(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdEnd)(CGpuCommandBufferId cmd);
+
+// Compute Pass
+RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
+typedef CGpuComputePassEncoderId (*CGPUProcCmdBeginComputePass)(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_compute_pass(CGpuComputePassEncoderId encoder);
+typedef void (*CGPUProcCmdEndComputePass)(CGpuComputePassEncoderId encoder);
 
 // Types
 typedef struct CGpuProcTable {
@@ -200,6 +220,10 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeFence free_fence;
     const CGPUProcCreateRootSignature create_root_signature;
     const CGPUProcFreeRootSignature free_root_signature;
+    const CGPUProcCreateComputePipeline create_compute_pipeline;
+    const CGPUProcFreeComputePipeline free_compute_pipeline;
+    const CGPUProcCreateRenderPipeline create_render_pipeline;
+    const CGPUProcFreeRenderPipeline free_render_pipeline;
 
     const CGPUProcGetQueue get_queue;
     const CGPUProcSubmitQueue submit_queue;
@@ -227,6 +251,9 @@ typedef struct CGpuProcTable {
     const CGPUProcCmdSetViewport cmd_set_viewport;
     const CGPUProcCmdSetScissor cmd_set_scissor;
     const CGPUProcCmdEnd cmd_end;
+
+    const CGPUProcCmdBeginComputePass cmd_begin_compute_pass;
+    const CGPUProcCmdEndComputePass cmd_end_compute_pass;
 } CGpuProcTable;
 
 // surfaces
@@ -472,6 +499,14 @@ typedef struct CGpuSwapChainDescriptor {
     ECGpuFormat format;
 } CGpuSwapChainDescriptor;
 
+typedef struct CGpuComputePassDescriptor {
+    const char8_t* name;
+} CGpuComputePassDescriptor;
+
+typedef struct CGpuRenderPassDescriptor {
+    const char8_t* name;
+} CGpuRenderPassDescriptor;
+
 typedef struct CGpuRootSignatureDescriptor {
     struct CGpuPipelineShaderDescriptor* shaders;
     uint32_t shaders_count;
@@ -480,6 +515,14 @@ typedef struct CGpuRootSignatureDescriptor {
 typedef struct CGpuRootSignature {
     CGpuDeviceId device;
 } CGpuRootSignature;
+
+typedef struct CGpuComputePipeline {
+    CGpuDeviceId device;
+} CGpuComputePipeline;
+
+typedef struct CGpuRenderPipeline {
+    CGpuDeviceId device;
+} CGpuRenderPipeline;
 
 // Resources
 typedef struct CGpuShaderLibraryDescriptor {

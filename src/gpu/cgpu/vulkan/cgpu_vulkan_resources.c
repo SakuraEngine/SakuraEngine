@@ -215,6 +215,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
         reflection->entry_name = (const char8_t*)entry->name;
         reflection->stage = (ECGpuShaderStage)entry->shader_stage;
         const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
+        (void)bGLSL;
         const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
         uint32_t icount;
         spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
