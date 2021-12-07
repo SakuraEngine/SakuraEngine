@@ -15,6 +15,12 @@ const CGpuProcTable tbl_vk = {
     .create_device = &cgpu_create_device_vulkan,
     .free_device = &cgpu_free_device_vulkan,
 
+    // API Object APIs
+    .create_fence = &cgpu_create_fence_vulkan,
+    .free_fence = &cgpu_free_fence_vulkan,
+    .create_root_signature = &cgpu_create_root_signature_vulkan,
+    .free_root_signature = &cgpu_free_root_signature_vulkan,
+
     // Queue APIs
     .get_queue = &cgpu_get_queue_vulkan,
     .submit_queue = &cgpu_submit_queue_vulkan,
@@ -151,6 +157,75 @@ void cgpu_free_fence_vulkan(CGpuFenceId fence)
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)fence->device;
     D->mVkDeviceTable.vkDestroyFence(D->pVkDevice, F->pVkFence, GLOBAL_VkAllocationCallbacks);
     cgpu_free(F);
+}
+
+CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
+    const struct CGpuRootSignatureDescriptor* desc)
+{
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGpuRootSignature_Vulkan));
+    DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shaders_count)
+    // pick shader reflection data
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    {
+        const CGpuPipelineShaderDescriptor* shader_desc = &desc->shaders[i];
+        // find shader refl
+        for (uint32_t j = 0; j < shader_desc->library->entrys_count; j++)
+        {
+            CGpuShaderReflection* temp_entry_reflcetion = &shader_desc->library->entry_reflections[j];
+            if (strcmp(shader_desc->entry, temp_entry_reflcetion->entry_name) == 0)
+            {
+                entry_reflections[i] = temp_entry_reflcetion;
+                break;
+            }
+        }
+    }
+    // pick binder infos
+    uint32_t max_sets = 0;
+    uint32_t max_binding = 0;
+    // Collect Shader Resources
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    {
+        for (uint32_t j = 0; j < entry_reflections[i]->shader_resources_count; j++)
+        {
+            CGpuShaderResource* resource = &entry_reflections[i]->shader_resources[j];
+            max_sets = max_sets > resource->set ? max_sets : resource->set;
+            max_binding = max_binding > resource->binding ? max_binding : resource->binding;
+        }
+    }
+    DECLARE_ZERO_VLA(uint32_t, valid_bindings, max_sets)
+    DECLARE_ZERO_VLA(CGpuShaderResource, sig_reflections, max_sets * max_binding)
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    {
+        for (uint32_t j = 0; j < entry_reflections[i]->shader_resources_count; j++)
+        {
+            CGpuShaderResource* resource = &entry_reflections[i]->shader_resources[j];
+            memcpy(&sig_reflections[resource->set * resource->binding], resource, sizeof(CGpuShaderResource));
+            valid_bindings[resource->set] = valid_bindings[resource->set] > resource->binding ? valid_bindings[resource->set] : resource->binding;
+        }
+    }
+    // Collect Secure Set Count
+    // Create Pipeline Layout
+    VkPipelineLayoutCreateInfo pipeline_info = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .setLayoutCount = 0,
+        .pSetLayouts = NULL,
+        .pushConstantRangeCount = 0,
+        .pPushConstantRanges = NULL
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice,
+        &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pipeline_layout));
+    return &RS->super;
+}
+
+void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature)
+{
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)signature;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)signature->device;
+    D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pipeline_layout, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(RS);
 }
 
 // Queue APIs

@@ -201,60 +201,66 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
     S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
     SpvReflectResult spvRes = spvReflectCreateShaderModule(info.codeSize, info.pCode, S->pReflect);
     assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
-    // Initialize Common Reflection Data
-    CGpuShaderReflection* reflection = &S->super.reflection;
-    // ATTENTION: We have only one entry point now
-    const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[0].name);
-    const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
-    const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
-    uint32_t icount;
-    spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
-    reflection->vertex_inputs_count = icount;
-    if (icount > 0)
+    uint32_t entry_count = S->pReflect->entry_point_count;
+    S->super.entry_reflections = cgpu_calloc(entry_count, sizeof(CGpuShaderReflection));
+    for (uint32_t i = 0; i < entry_count; i++)
     {
-        DECLARE_ZERO_VLA(SpvReflectInterfaceVariable*, input_vars, icount)
-        spvReflectEnumerateInputVariables(S->pReflect, &icount, input_vars);
-        if ((entry->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT))
+        // Initialize Common Reflection Data
+        CGpuShaderReflection* reflection = &S->super.entry_reflections[i];
+        // ATTENTION: We have only one entry point now
+        const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[i].name);
+        reflection->entry_name = entry->name;
+        const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
+        const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
+        uint32_t icount;
+        spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
+        reflection->vertex_inputs_count = icount;
+        if (icount > 0)
         {
-            reflection->vertex_inputs_count = icount;
-            reflection->vertex_inputs = cgpu_calloc(icount, sizeof(CGpuVertexInput));
-            // Handle Vertex Inputs
-            for (uint32_t i = 0; i < icount; i++)
+            DECLARE_ZERO_VLA(SpvReflectInterfaceVariable*, input_vars, icount)
+            spvReflectEnumerateInputVariables(S->pReflect, &icount, input_vars);
+            if ((entry->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT))
             {
-                // We use semantic for HLSL sources because DXC is a piece of shit.
-                reflection->vertex_inputs[i].name =
-                    bHLSL ? input_vars[i]->semantic : input_vars[i]->name;
-                reflection->vertex_inputs[i].format =
-                    VkUtil_FormatTranslateToCGPU((VkFormat)input_vars[i]->format);
+                reflection->vertex_inputs_count = icount;
+                reflection->vertex_inputs = cgpu_calloc(icount, sizeof(CGpuVertexInput));
+                // Handle Vertex Inputs
+                for (uint32_t i = 0; i < icount; i++)
+                {
+                    // We use semantic for HLSL sources because DXC is a piece of shit.
+                    reflection->vertex_inputs[i].name =
+                        bHLSL ? input_vars[i]->semantic : input_vars[i]->name;
+                    reflection->vertex_inputs[i].format =
+                        VkUtil_FormatTranslateToCGPU((VkFormat)input_vars[i]->format);
+                }
             }
         }
-    }
-    // Handle Descriptor Sets
-    uint32_t scount;
-    spvReflectEnumerateDescriptorSets(S->pReflect, &scount, NULL);
-    reflection->shader_resources_count = scount;
-    if (scount > 0)
-    {
-        DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount)
-        spvReflectEnumerateDescriptorSets(S->pReflect, &scount, descriptros_sets);
-        uint32_t bcount = 0;
-        for (uint32_t i = 0; i < scount; i++)
+        // Handle Descriptor Sets
+        uint32_t scount;
+        spvReflectEnumerateDescriptorSets(S->pReflect, &scount, NULL);
+        reflection->shader_resources_count = scount;
+        if (scount > 0)
         {
-            bcount += descriptros_sets[i]->binding_count;
-        }
-        reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGpuShaderResource));
-        for (uint32_t i_set = 0, i_res = 0; i_set < scount; i_set++)
-        {
-            SpvReflectDescriptorSet* current_set = descriptros_sets[i_set];
-            for (uint32_t i_binding = 0; i_binding < current_set->binding_count; i_binding++, i_res++)
+            DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount)
+            spvReflectEnumerateDescriptorSets(S->pReflect, &scount, descriptros_sets);
+            uint32_t bcount = 0;
+            for (uint32_t i = 0; i < scount; i++)
             {
-                SpvReflectDescriptorBinding* current_binding = current_set->bindings[i_binding];
-                CGpuShaderResource* current_res = &reflection->shader_resources[i_res];
-                current_res->set = current_binding->set;
-                current_res->binding = current_binding->binding;
-                current_res->stages = S->pReflect->shader_stage;
-                current_res->type = RTLut[current_binding->descriptor_type];
-                current_res->name = current_binding->name;
+                bcount += descriptros_sets[i]->binding_count;
+            }
+            reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGpuShaderResource));
+            for (uint32_t i_set = 0, i_res = 0; i_set < scount; i_set++)
+            {
+                SpvReflectDescriptorSet* current_set = descriptros_sets[i_set];
+                for (uint32_t i_binding = 0; i_binding < current_set->binding_count; i_binding++, i_res++)
+                {
+                    SpvReflectDescriptorBinding* current_binding = current_set->bindings[i_binding];
+                    CGpuShaderResource* current_res = &reflection->shader_resources[i_res];
+                    current_res->set = current_binding->set;
+                    current_res->binding = current_binding->binding;
+                    current_res->stages = S->pReflect->shader_stage;
+                    current_res->type = RTLut[current_binding->descriptor_type];
+                    current_res->name = current_binding->name;
+                }
             }
         }
     }
@@ -267,8 +273,16 @@ void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
     spvReflectDestroyShaderModule(S->pReflect);
     D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
-    if (S->super.reflection.vertex_inputs) cgpu_free(S->super.reflection.vertex_inputs);
-    if (S->super.reflection.shader_resources) cgpu_free(S->super.reflection.shader_resources);
+    if (S->super.entry_reflections)
+    {
+        for (uint32_t i = 0; i < S->super.entrys_count; i++)
+        {
+            CGpuShaderReflection* reflection = S->super.entry_reflections + i;
+            if (reflection->vertex_inputs) cgpu_free(reflection->vertex_inputs);
+            if (reflection->shader_resources) cgpu_free(reflection->shader_resources);
+        }
+    }
+    cgpu_free(S->super.entry_reflections);
     cgpu_free(S->pReflect);
     cgpu_free(S);
 }

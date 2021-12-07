@@ -145,7 +145,7 @@ TEST_P(ResourceCreation, CreateModules)
     fdesc.stage = ECGpuShaderStage::SS_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
-    eastl::string cbName = vertex_shader->reflection.shader_resources[0].name;
+    eastl::string cbName = vertex_shader->entry_reflections[0].shader_resources[0].name;
     EXPECT_EQ(cbName, "AssholeDXC");
 
     EXPECT_NE(vertex_shader, CGPU_NULLPTR);
