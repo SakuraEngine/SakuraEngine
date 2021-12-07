@@ -143,8 +143,7 @@ typedef void (*CGPUProcFreeRenderPipeline)(CGpuRenderPipelineId pipeline);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
-RUNTIME_API CGpuQueueId
-cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
+RUNTIME_API CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 typedef CGpuQueueId (*CGPUProcGetQueue)(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
 typedef void (*CGPUProcSubmitQueue)(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
@@ -200,8 +199,8 @@ typedef void (*CGPUProcCmdEnd)(CGpuCommandBufferId cmd);
 // Compute Pass
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 typedef CGpuComputePassEncoderId (*CGPUProcCmdBeginComputePass)(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
-RUNTIME_API void cgpu_cmd_end_compute_pass(CGpuComputePassEncoderId encoder);
-typedef void (*CGPUProcCmdEndComputePass)(CGpuComputePassEncoderId encoder);
+RUNTIME_API void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
+typedef void (*CGPUProcCmdEndComputePass)(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 
 // Types
 typedef struct CGpuProcTable {
@@ -352,6 +351,7 @@ typedef struct CGpuCommandPool {
 typedef struct CGpuCommandBuffer {
     CGpuDeviceId device;
     CGpuCommandPoolId pool;
+    ECGpuPipelineType current_dispatch;
 } CGpuCommandBuffer;
 
 // Shaders
@@ -511,6 +511,11 @@ typedef struct CGpuRootSignatureDescriptor {
     struct CGpuPipelineShaderDescriptor* shaders;
     uint32_t shaders_count;
 } CGpuRootSignatureDescriptor;
+
+typedef struct CGpuComputePipelineDescriptor {
+    CGpuRootSignatureId root_signature;
+    CGpuPipelineShaderDescriptor* compute_shader;
+} CGpuComputePipelineDescriptor;
 
 typedef struct CGpuRootSignature {
     CGpuDeviceId device;

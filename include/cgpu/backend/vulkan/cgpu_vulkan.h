@@ -37,6 +37,8 @@ RUNTIME_API CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device);
 RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature);
+RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
+RUNTIME_API void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline);
 
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
@@ -68,6 +70,8 @@ RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
 RUNTIME_API void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
+RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 
 typedef struct CGpuInstance_Vulkan {
     CGpuInstance super;
@@ -213,6 +217,16 @@ typedef struct CGpuRootSignature_Vulkan {
     VkPipelineLayout pipeline_layout;
     ParameterSet_Vulkan* parameter_sets;
 } CGpuRootSignature_Vulkan;
+
+typedef struct CGpuComputePipeline_Vulkan {
+    CGpuComputePipeline super;
+    VkPipeline pVkPipeline;
+} CGpuComputePipeline_Vulkan;
+
+typedef struct CGpuRenderPipeline_Vulkan {
+    CGpuRenderPipeline super;
+    VkPipeline pVkPipeline;
+} CGpuRenderPipeline_Vulkan;
 
 typedef union VkDescriptorUpdateData
 {

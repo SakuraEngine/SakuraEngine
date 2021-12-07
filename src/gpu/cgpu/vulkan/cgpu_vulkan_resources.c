@@ -265,6 +265,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
                     current_res->stages = S->pReflect->shader_stage;
                     current_res->type = RTLut[current_binding->descriptor_type];
                     current_res->name = current_binding->name;
+                    current_res->size = current_binding->count;
                 }
             }
         }

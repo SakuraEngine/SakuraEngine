@@ -1,4 +1,5 @@
 #include "cgpu/api.h"
+#include "cgpu/flags.h"
 #include "runtime_table.h"
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/backend/vulkan/cgpu_vulkan.h"
@@ -331,6 +332,7 @@ void cgpu_cmd_begin(CGpuCommandBufferId cmd)
 void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc)
 {
     assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->current_dispatch == PT_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCmdUpdateBuffer fn_cmd_update_buffer = cmd->device->proc_table_cache->cmd_update_buffer;
     assert(fn_cmd_update_buffer && "cmd_update_buffer Proc Missing!");
@@ -352,8 +354,22 @@ CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, co
     assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCmdBeginComputePass fn_begin_compute_pass = cmd->device->proc_table_cache->cmd_begin_compute_pass;
     assert(fn_begin_compute_pass && "cmd_begin_compute_pass Proc Missing!");
-    CGpuComputePassEncoderId ecd = (CGpuComputePassEncoderId)fn_begin_compute_pass(cmd);
+    CGpuComputePassEncoderId ecd = (CGpuComputePassEncoderId)fn_begin_compute_pass(cmd, desc);
+    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
+    Cmd->current_dispatch = PT_COMPUTE;
     return ecd;
+}
+
+void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(cmd->current_dispatch == PT_COMPUTE && "fatal: can't call end command pass on commdn buffer while not dispatching compute!");
+    const CGPUProcCmdEndComputePass fn_end_compute_pass = cmd->device->proc_table_cache->cmd_end_compute_pass;
+    assert(fn_end_compute_pass && "cmd_end_compute_pass Proc Missing!");
+    fn_end_compute_pass(cmd, encoder);
+    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
+    Cmd->current_dispatch = PT_NONE;
 }
 
 // Shader APIs
