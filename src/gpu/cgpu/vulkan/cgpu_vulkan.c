@@ -211,7 +211,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         if (reflection->stage & SS_COMPUTE)
             pipelineType = PT_COMPUTE;
 #ifdef ENABLE_RAYTRACING
-        else if (reflection->stage & SHADER_STAGE_RAYTRACING)
+        else if (reflection->stage & SS_RAYTRACING)
             pipelineType = PT_RAYTRACING;
 #endif
         else

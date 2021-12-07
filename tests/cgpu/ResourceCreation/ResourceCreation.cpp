@@ -41,11 +41,15 @@ protected:
         vertex_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_vert_spirv);
         frag_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)triangle_frag_spirv;
         frag_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_frag_spirv);
+        compute_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)mandelbrot_comp_spirv;
+        compute_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(mandelbrot_comp_spirv);
 
         vertex_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_vert_dxil;
         vertex_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_vert_dxil);
         frag_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_frag_dxil;
         frag_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_frag_dxil);
+        compute_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
+        compute_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(mandelbrot_comp_dxil);
     }
 
     void TearDown() override
@@ -61,6 +65,8 @@ protected:
     uint32_t vertex_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
     const uint32_t* frag_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
     uint32_t frag_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
+    const uint32_t* compute_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
+    uint32_t compute_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
 };
 
 TEST_P(ResourceCreation, CreateIndexBuffer)
@@ -188,10 +194,39 @@ TEST_P(ResourceCreation, CreateRootSignature)
     auto signature = cgpu_create_root_signature(device, &root_desc);
 
     EXPECT_NE(signature, CGPU_NULLPTR);
-
     cgpu_free_root_signature(signature);
+
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
+}
+
+TEST_P(ResourceCreation, CreateComputePipeline)
+{
+    ECGPUBackEnd backend = GetParam();
+    // When we support more add them here
+    if (backend == ECGPUBackEnd::ECGPUBackEnd_VULKAN)
+    {
+        DECLARE_ZERO(CGpuShaderLibraryDescriptor, cdesc)
+        cdesc.code = compute_shaders[backend];
+        cdesc.code_size = compute_shader_sizes[backend];
+        cdesc.name = "ComputeShaderLibrary";
+        cdesc.stage = ECGpuShaderStage::SS_COMPUTE;
+        auto compute_shader = cgpu_create_shader_library(device, &cdesc);
+        EXPECT_NE(compute_shader, CGPU_NULLPTR);
+
+        CGpuPipelineShaderDescriptor compute_shader_entry = {};
+        compute_shader_entry.entry = "main";
+        compute_shader_entry.stage = ECGpuShaderStage::SS_COMPUTE;
+        compute_shader_entry.library = compute_shader;
+
+        CGpuRootSignatureDescriptor root_desc = {};
+        root_desc.shaders = &compute_shader_entry;
+        root_desc.shaders_count = 1;
+        auto signature = cgpu_create_root_signature(device, &root_desc);
+
+        EXPECT_NE(signature, CGPU_NULLPTR);
+        cgpu_free_root_signature(signature);
+    }
 }
 
 static const auto allPlatforms = testing::Values(
@@ -199,8 +234,8 @@ static const auto allPlatforms = testing::Values(
     ECGPUBackEnd_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
-    ,
-    ECGPUBackEnd_D3D12
+//,
+// ECGPUBackEnd_D3D12
 #endif
 );
 
