@@ -24,6 +24,8 @@ struct CGpuRootSignatureDescriptor;
 struct CGpuDescriptorSet;
 struct CGpuRenderPassEncoder;
 struct CGpuComputePassEncoder;
+struct CGpuGraphicsPipeline;
+struct CGpuComputePipeline;
 struct CGpuShaderReflection;
 struct CGpuPipelineReflection;
 
@@ -345,12 +347,14 @@ typedef struct CGpuShaderReflection {
     uint32_t vertex_inputs_count;
     CGpuShaderResource* shader_resources;
     uint32_t shader_resources_count;
+    const char8_t* entry_name;
 } CGpuShaderReflection;
 
 typedef struct CGpuShaderLibrary {
     CGpuDeviceId device;
     char8_t* name;
-    CGpuShaderReflection reflection;
+    CGpuShaderReflection* entry_reflections;
+    uint32_t entrys_count;
 } CGpuShaderLibrary;
 
 typedef struct CGpuPipelineReflection {
@@ -437,6 +441,7 @@ typedef struct CGpuCommandBufferDescriptor {
 typedef struct CGpuPipelineShaderDescriptor {
     CGpuShaderLibraryId library;
     const char8_t* entry;
+    ECGpuShaderStage stage;
     // ++ constant_specialization
     const CGpuConstantSpecialization* constants;
     size_t num_constants;

@@ -35,6 +35,8 @@ RUNTIME_API void cgpu_free_device_vulkan(CGpuDeviceId device);
 // API Object APIs
 RUNTIME_API CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device);
 RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
+RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
+RUNTIME_API void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature);
 
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
@@ -205,6 +207,7 @@ typedef struct CGpuRootSignature_Vulkan {
     struct ParameterSet {
         VkDescriptorSetLayout layout;
         VkDescriptorUpdateTemplate update_template;
+        CGpuShaderResource* resources;
     } * parameter_sets;
 } CGpuRootSignature_Vulkan;
 

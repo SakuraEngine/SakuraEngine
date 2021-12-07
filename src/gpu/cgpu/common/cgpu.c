@@ -156,6 +156,7 @@ CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, const struct
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(device->proc_table_cache->create_root_signature && "create_root_signature Proc Missing!");
     CGpuRootSignature* signature = (CGpuRootSignature*)device->proc_table_cache->create_root_signature(device, desc);
+    signature->device = device;
     return signature;
 }
 
