@@ -447,9 +447,9 @@ typedef struct CGpuDescriptorData {
     };
     uint32_t count;
     // Update Via Slot Index (i)
-    // -> [[vk::binding(n, i)]]
-    // -> register(bi)
-    // -> register(tn, spacei)
+    // -> [[vk::binding(n, i)]] set( n) + index(i)
+    // -> register(tn, spacei)  set( n) + index(i)
+    // -> register(bi)          set(-1) + index(i)
     uint32_t index;
 } CGpuDescriptorData;
 

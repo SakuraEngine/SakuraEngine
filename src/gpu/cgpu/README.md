@@ -25,6 +25,40 @@
 # Shader反射和管线反射
 由于每个API的管线绑定部分天差地别，这部分我们必须借助运行时反射来辅助创建这些对象。
 
+# 关于资源表和绑定
+- D3D12的寄存器类似占位符，实际上DescriptorTable完全是在运行时映射的
+- Vulkan的set和binding则严格对应运行时生成的表
+
+因此
+
+- 对于D3D12，要点是指示运行时生成与[[vk::binding]]一致的表结构。可以将space index映射到set index上去来实现
+
+即
+
+        [[vk::binding(1, 0)]]
+        RWByteAddressBuffer buf : register(u0, space1);
+        =>
+        SHADER_RESOURCE(RWByteAddressBuffer, buf, 1/*set or space*/, u0, 1/*register or binding*/)
+
+
+# 关于推送描述符
+推送描述符是直接将描述符内联到表槽位的更新方法。
+- 比一个表占用的DWORD更多，在AMD硬件上占用2DWORD，而表只占用1DWORD
+- NV表示在PS Stage访问Root CBV非常快，估计和RootConstant/PushConstant类似
+- VK的Push系列API由于实际Storage位置和D3D的不同，支持vkCmdPushDescriptorSetKHR扩展的设备极少
+
+考虑到如上几点，我们认为此特性更适合显式指定开启。
+
+考虑对推送描述符进行单独支持。在D3D中直接设置寄存器，在VK后端则是退化到表结构。
+    
+        [[vk::binding(0, 0)]]
+        RWByteAddressBuffer buf : register(u0);
+        =>
+        ROOT_DESCRIPTOR(RWByteAddressBuffer, buf, 1/*set*/, u0, 1/*binding*/)
+
+虽然在VK后端使用表结构，但要注意并不能再使用这些set index来创建CGPUDescriptorSet，因为会产生相对D3D12的语义差。
+
+使用cgpu_push_root_descriptor进行更新, 后端会使用Shader反射来对此错误操作进行Validate。
 
 # 关于推送常量
 推送常量是一种将小变量直接嵌入到管线布局的数据更新方法。
