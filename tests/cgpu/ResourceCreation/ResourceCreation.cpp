@@ -1,4 +1,6 @@
+#include "cgpu/cgpu_config.h"
 #include "cgpu/flags.h"
+#include "platform/configure.h"
 #define RUNTIME_DLL
 #include "gtest/gtest.h"
 #include <EASTL/string.h>
@@ -200,6 +202,9 @@ TEST_P(ResourceCreation, CreateRootSignature)
     cgpu_free_shader_library(fragment_shader);
 }
 
+struct Pixel {
+    float r, g, b, a;
+};
 TEST_P(ResourceCreation, CreateComputePipeline)
 {
     ECGPUBackEnd backend = GetParam();
@@ -231,6 +236,33 @@ TEST_P(ResourceCreation, CreateComputePipeline)
         auto pipeline = cgpu_create_compute_pipeline(device, &pipeline_desc);
         EXPECT_NE(pipeline, CGPU_NULLPTR);
 
+        DECLARE_ZERO(CGpuDescriptorSetDescriptor, set_desc)
+        set_desc.root_signature = signature;
+        set_desc.set_index = 0;
+        auto set = cgpu_create_descriptor_set(device, &set_desc);
+        EXPECT_NE(set, CGPU_NULLPTR);
+
+        // Create Buffer
+        DECLARE_ZERO(CGpuBufferDescriptor, buffer_desc)
+        buffer_desc.flags = BCF_NONE;
+        buffer_desc.descriptors = RT_RW_BUFFER;
+        buffer_desc.memory_usage = MU_GPU_ONLY;
+        buffer_desc.element_stride = sizeof(Pixel);
+        buffer_desc.elemet_count = MANDELBROT_WIDTH * MANDELBROT_HEIGHT;
+        buffer_desc.size = sizeof(Pixel) * MANDELBROT_WIDTH * MANDELBROT_HEIGHT;
+        buffer_desc.name = "DataBuffer";
+        auto data_buffer = cgpu_create_buffer(device, &buffer_desc);
+
+        // Update Descriptor Set
+
+        // Dispatch
+        auto gfx_queue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        EXPECT_NE(gfx_queue, CGPU_NULLPTR);
+
+        // clean up
+        cgpu_free_buffer(data_buffer);
+        cgpu_free_queue(gfx_queue);
+        cgpu_free_descriptor_set(set);
         cgpu_free_shader_library(compute_shader);
         cgpu_free_root_signature(signature);
         cgpu_free_compute_pipeline(pipeline);

@@ -1,7 +1,10 @@
 #include "vulkan_utils.h"
+#include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "vulkan/vulkan_core.h"
+#include "platform/thread.h"
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -224,7 +227,11 @@ void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGp
 struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D)
 {
     VkUtil_DescriptorPool* Pool = (VkUtil_DescriptorPool*)cgpu_calloc(1, sizeof(VkUtil_DescriptorPool));
+    Pool->pMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
+    skr_init_mutex(Pool->pMutex);
     VkDescriptorPoolCreateFlags flags = (VkDescriptorPoolCreateFlags)0;
+    // TODO: It is possible to avoid using that flag by updating descriptor sets instead of deleting them.
+    flags |= VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     Pool->Device = D;
     Pool->mFlags = flags;
     VkDescriptorPoolCreateInfo poolCreateInfo = {
@@ -238,6 +245,41 @@ struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D)
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorPool(
         D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
     return Pool;
+}
+
+void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool,
+    const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
+{
+    skr_acquire_mutex(pPool->pMutex);
+    {
+        CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pPool->Device;
+        VkDescriptorSetAllocateInfo alloc_info = {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+            .pNext = NULL,
+            .descriptorPool = pPool->pVkDescPool,
+            .descriptorSetCount = numDescriptorSets,
+            .pSetLayouts = pLayouts
+        };
+        VkResult vk_res = D->mVkDeviceTable.vkAllocateDescriptorSets(D->pVkDevice, &alloc_info, pSets);
+        if (vk_res != VK_SUCCESS)
+        {
+            assert(0 && "Descriptor Set used out, vk descriptor pool expansion not implemented!");
+        }
+    }
+    skr_release_mutex(pPool->pMutex);
+}
+
+void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
+{
+    skr_acquire_mutex(pPool->pMutex);
+    {
+        // TODO: It is possible to avoid using that flag by updating descriptor sets instead of deleting them.
+        // The application can keep track of recycled descriptor sets and re-use one of them when a new one is requested.
+        // Reference: https://arm-software.github.io/vulkan_best_practice_for_mobile_developers/samples/performance/descriptor_management/descriptor_management_tutorial.html
+        CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pPool->Device;
+        D->mVkDeviceTable.vkFreeDescriptorSets(D->pVkDevice, pPool->pVkDescPool, numDescriptorSets, pSets);
+    }
+    skr_release_mutex(pPool->pMutex);
 }
 
 void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool)

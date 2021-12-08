@@ -37,6 +37,8 @@ RUNTIME_API CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device);
 RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature);
+RUNTIME_API CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc);
+RUNTIME_API void cgpu_free_descriptor_set_vulkan(CGpuDescriptorSetId set);
 RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline);
 
@@ -218,6 +220,19 @@ typedef struct CGpuRootSignature_Vulkan {
     ParameterSet_Vulkan* parameter_sets;
 } CGpuRootSignature_Vulkan;
 
+typedef union VkDescriptorUpdateData
+{
+    VkDescriptorImageInfo mImageInfo;
+    VkDescriptorBufferInfo mBufferInfo;
+    VkBufferView mBuferView;
+} VkDescriptorUpdateData;
+
+typedef struct CGpuDescriptorSet_Vulkan {
+    CGpuDescriptorSet super;
+    VkDescriptorSet pVkDescriptorSet;
+    union VkDescriptorUpdateData* pUpdateData;
+} CGpuDescriptorSet_Vulkan;
+
 typedef struct CGpuComputePipeline_Vulkan {
     CGpuComputePipeline super;
     VkPipeline pVkPipeline;
@@ -227,13 +242,6 @@ typedef struct CGpuRenderPipeline_Vulkan {
     CGpuRenderPipeline super;
     VkPipeline pVkPipeline;
 } CGpuRenderPipeline_Vulkan;
-
-typedef union VkDescriptorUpdateData
-{
-    VkDescriptorImageInfo mImageInfo;
-    VkDescriptorBufferInfo mBufferInfo;
-    VkBufferView mBuferView;
-} VkDescriptorUpdateData;
 
 static const VkPipelineBindPoint gPipelineBindPoint[PT_COUNT] = {
     VK_PIPELINE_BIND_POINT_MAX_ENUM,
