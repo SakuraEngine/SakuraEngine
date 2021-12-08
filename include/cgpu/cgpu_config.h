@@ -176,6 +176,9 @@
 #define cgpu_memalign sakura_malloc_aligned
 #define cgpu_free sakura_free
 
+#include "utils/hash.h"
+#define cgpu_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
+
 #define MAX_GPU_VENDOR_STRING_LENGTH 64
 #define MAX_GPU_DEBUG_NAME_LENGTH 128
 

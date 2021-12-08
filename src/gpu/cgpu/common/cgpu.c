@@ -176,6 +176,7 @@ CGpuDescriptorSetId cgpu_create_descriptor_set(CGpuDeviceId device, const struct
     assert(device->proc_table_cache->create_descriptor_set && "create_descriptor_set Proc Missing!");
     CGpuDescriptorSet* set = (CGpuDescriptorSet*)device->proc_table_cache->create_descriptor_set(device, desc);
     set->root_signature = desc->root_signature;
+    set->index = desc->set_index;
     return set;
 }
 

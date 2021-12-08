@@ -264,6 +264,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 set_to_record->resources[i_binding].binding = sig_reflections[i_set * i_binding + i_binding].binding;
                 set_to_record->resources[i_binding].size = sig_reflections[i_set * i_binding + i_binding].size;
                 set_to_record->resources[i_binding].stages = sig_reflections[i_set * i_binding + i_binding].stages;
+                set_to_record->resources[i_binding].name_hash = sig_reflections[i_set * i_binding + i_binding].name_hash;
             }
         }
         // Create Vk Objects
@@ -399,22 +400,38 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
 {
     CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
     VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
     bool dirty = false;
+    ParameterSet_Vulkan* SetLayout = RS->parameter_sets + set->index;
     for (uint32_t i = 0; i < count; i++)
     {
         // Descriptor Info
-
+        CGpuDescriptorData* ArgData = datas + i;
+        CGpuShaderResource* ResData = CGPU_NULLPTR;
+        size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), (size_t)D);
+        for (uint32_t p = 0; p < SetLayout->resources_count; p++)
+        {
+            if (SetLayout->resources[p].name_hash == argNameHash)
+            {
+                ResData = SetLayout->resources + p;
+            }
+        }
         // Update Info
         const CGpuDescriptorData* pParam = datas + i;
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
+        switch (ResData->type)
+        {
+            default:
+                break;
+        }
     }
 }
 
 void cgpu_free_descriptor_set_vulkan(CGpuDescriptorSetId set)
 {
     CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
-    CGpuDevice_Vulkan* D = set->root_signature->device;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
     VkUtil_ReturnDescriptorSets(D->pDescriptorPool, &Set->pVkDescriptorSet, 1);
     cgpu_free(Set);
 }

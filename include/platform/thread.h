@@ -8,13 +8,10 @@ typedef unsigned long SThreadID;
 #else
     #include <pthread.h>
     #if !defined(NX64)
-        #if !defined(__APPLE__) || defined(TARGET_IOS)
 typedef uint32_t SThreadID;
-        #endif
         #define THREAD_ID_MAX UINT32_MAX
         #define THREAD_ID_MIN ((uint32_t)0)
     #endif // !NX64
-
 #endif
 
 #define INVALID_THREAD_ID 0
@@ -48,15 +45,7 @@ typedef pthread_once_t SCallOnceGuard;
 extern "C" {
 #endif
 typedef void (*SCallOnceFn)(void);
-/*
- * Brief:
- *   Guaranties that SCallOnceFn will be called once in a thread-safe way.
- * Notes:
- *   SCallOnceGuard has to be a pointer to a global variable initialized with INIT_CALL_ONCE_GUARD
- */
-void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn);
 
-/// Operating system mutual exclusion primitive.
 typedef struct SMutex {
 #if defined(_WINDOWS) || defined(XBOX)
     CRITICAL_SECTION mHandle;
@@ -68,14 +57,6 @@ typedef struct SMutex {
     uint32_t mSpinCount;
 #endif
 } SMutex;
-#define MUTEX_DEFAULT_SPIN_COUNT 1500
-
-bool skr_init_mutex(SMutex* pMutex);
-void skr_destroy_mutex(SMutex* pMutex);
-
-void skr_acquire_mutex(SMutex* pMutex);
-bool skr_try_acquire_mutex(SMutex* pMutex);
-void skr_release_mutex(SMutex* pMutex);
 
 typedef struct SConditionVariable {
 #if defined(_WINDOWS) || defined(XBOX)
@@ -87,16 +68,7 @@ typedef struct SConditionVariable {
 #endif
 } SConditionVariable;
 
-bool skr_init_condition_var(SConditionVariable* cv);
-void skr_destroy_condition_var(SConditionVariable* cv);
-
-void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
-void skr_wake_all_condition_vars(SConditionVariable* cv);
-void skr_wake_condition_var(SConditionVariable* cv);
-
 typedef void (*SThreadFunction)(void*);
-
-/// Work queue item.
 typedef struct SThreadDesc {
 #if defined(NX64)
     SThreadHandle hThread;
@@ -116,6 +88,38 @@ typedef void* SThreadHandle;
 typedef pthread_t SThreadHandle;
 #endif
 
+#define MUTEX_DEFAULT_SPIN_COUNT 1500
+#if defined(_WINDOWS)
+    #include "win/thread.inl"
+#elif defined(__APPLE__)
+    #include "apple/thread.inl"
+#endif
+
+/*
+ * Brief:
+ *   Guaranties that SCallOnceFn will be called once in a thread-safe way.
+ * Notes:
+ *   SCallOnceGuard has to be a pointer to a global variable initialized with INIT_CALL_ONCE_GUARD
+ */
+void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn);
+
+/// Operating system mutual exclusion primitive.
+
+bool skr_init_mutex(SMutex* pMutex);
+void skr_destroy_mutex(SMutex* pMutex);
+
+void skr_acquire_mutex(SMutex* pMutex);
+bool skr_try_acquire_mutex(SMutex* pMutex);
+void skr_release_mutex(SMutex* pMutex);
+
+bool skr_init_condition_var(SConditionVariable* cv);
+void skr_destroy_condition_var(SConditionVariable* cv);
+
+void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
+void skr_wake_all_condition_vars(SConditionVariable* cv);
+void skr_wake_condition_var(SConditionVariable* cv);
+
+///
 void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
 void skr_destroy_thread(SThreadHandle handle);
 void skr_join_thread(SThreadHandle handle);
@@ -141,8 +145,4 @@ struct SMutexLock {
 
     SMutex& mMutex;
 };
-#endif
-
-#if defined(_WINDOWS)
-    #include "win/thread.inl"
 #endif

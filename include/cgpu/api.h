@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 #define RUNTIME_DLL
 #include "platform/configure.h"
 #include "cgpu_config.h"
@@ -368,6 +369,7 @@ typedef struct CGpuCommandBuffer {
 // Shaders
 typedef struct CGpuShaderResource {
     const char8_t* name;
+    size_t name_hash;
     ECGpuResourceType type;
     uint32_t set;
     uint32_t binding;
@@ -446,11 +448,6 @@ typedef struct CGpuDescriptorData {
         // CGpuAccelerationStructureId* acceleration_structures;
     };
     uint32_t count;
-    // Update Via Slot Index (i)
-    // -> [[vk::binding(n, i)]] set( n) + index(i)
-    // -> register(tn, spacei)  set( n) + index(i)
-    // -> register(bi)          set(-1) + index(i)
-    uint32_t index;
 } CGpuDescriptorData;
 
 typedef struct CGpuBuffer {
@@ -589,6 +586,7 @@ typedef struct CGpuRootSignature {
 
 typedef struct CGpuDescriptorSet {
     CGpuRootSignatureId root_signature;
+    uint32_t index;
 } CGpuDescriptorSet;
 
 typedef struct CGpuComputePipeline {

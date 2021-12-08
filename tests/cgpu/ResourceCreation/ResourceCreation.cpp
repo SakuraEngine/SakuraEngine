@@ -205,6 +205,7 @@ TEST_P(ResourceCreation, CreateRootSignature)
 struct Pixel {
     float r, g, b, a;
 };
+
 TEST_P(ResourceCreation, CreateComputePipeline)
 {
     ECGPUBackEnd backend = GetParam();
@@ -254,6 +255,11 @@ TEST_P(ResourceCreation, CreateComputePipeline)
         auto data_buffer = cgpu_create_buffer(device, &buffer_desc);
 
         // Update Descriptor Set
+        DECLARE_ZERO(CGpuDescriptorData, data)
+        data.name = "buf";
+        data.buffers = &data_buffer;
+        data.count = 1;
+        cgpu_update_descriptor_set(set, &data, 1);
 
         // Dispatch
         auto gfx_queue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
