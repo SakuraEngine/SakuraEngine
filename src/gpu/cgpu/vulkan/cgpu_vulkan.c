@@ -30,6 +30,7 @@ const CGpuProcTable tbl_vk = {
     .create_root_signature = &cgpu_create_root_signature_vulkan,
     .free_root_signature = &cgpu_free_root_signature_vulkan,
     .create_descriptor_set = &cgpu_create_descriptor_set_vulkan,
+    .update_descriptor_set = &cgpu_update_descriptor_set_vulkan,
     .free_descriptor_set = &cgpu_free_descriptor_set_vulkan,
     .create_compute_pipeline = &cgpu_create_compute_pipeline_vulkan,
     .free_compute_pipeline = &cgpu_free_compute_pipeline_vulkan,
@@ -392,6 +393,22 @@ CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const
     Set->pUpdateData = (VkDescriptorUpdateData*)pMem;
     memset(Set->pUpdateData, 0, UpdateTemplateSize);
     return &Set->super;
+}
+
+void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count)
+{
+    CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
+    VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
+    bool dirty = false;
+    for (uint32_t i = 0; i < count; i++)
+    {
+        // Descriptor Info
+
+        // Update Info
+        const CGpuDescriptorData* pParam = datas + i;
+        const uint32_t arrayCount = cgpu_max(1U, pParam->count);
+    }
 }
 
 void cgpu_free_descriptor_set_vulkan(CGpuDescriptorSetId set)

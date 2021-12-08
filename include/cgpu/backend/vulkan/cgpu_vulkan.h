@@ -38,6 +38,7 @@ RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature);
 RUNTIME_API CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc);
+RUNTIME_API void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count);
 RUNTIME_API void cgpu_free_descriptor_set_vulkan(CGpuDescriptorSetId set);
 RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline);

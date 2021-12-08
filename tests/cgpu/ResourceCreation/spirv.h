@@ -162,7 +162,7 @@ static const uint8_t triangle_frag_spirv[964] = {
     };
 
     [[vk::binding(0, 0)]]
-    RWByteAddressBuffer buf : register(u0);
+    RWByteAddressBuffer buf : register(u0, space0);
 
     [numthreads(32, 32, 1)]
     void main(uint3 ThreadID : SV_DispatchThreadID)

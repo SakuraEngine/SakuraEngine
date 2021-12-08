@@ -178,3 +178,11 @@
 
 #define MAX_GPU_VENDOR_STRING_LENGTH 64
 #define MAX_GPU_DEBUG_NAME_LENGTH 128
+
+#ifndef cgpu_max
+    #define cgpu_max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef cgpu_min
+    #define cgpu_min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
