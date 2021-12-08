@@ -23,9 +23,11 @@ struct CGpuSwapChainDescriptor;
 struct CGpuQueueSubmitDescriptor;
 struct CGpuBufferUpdateDescriptor;
 struct CGpuRootSignatureDescriptor;
+struct CGpuDescriptorSetDescriptor;
 struct CGpuRenderPassDescriptor;
 struct CGpuComputePassDescriptor;
 struct CGpuDescriptorSet;
+struct CGpuDescriptorData;
 struct CGpuRenderPassEncoder;
 struct CGpuComputePassEncoder;
 struct CGpuGraphicsPipeline;
@@ -47,8 +49,8 @@ typedef const struct CGpuCommandBuffer* CGpuCommandBufferId;
 typedef const struct CGpuSwapChain* CGpuSwapChainId;
 typedef const struct CGpuShaderLibrary* CGpuShaderLibraryId;
 typedef const struct CGpuRootSignature* CGpuRootSignatureId;
+typedef const struct CGpuDescriptorSet* CGpuDescriptorSetId;
 typedef const struct CGpuBuffer* CGpuBufferId;
-typedef const struct CGpuPipelineShader* CGpuPipelineShaderId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
 typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
 typedef const struct CGpuRenderPipeline* CGpuRenderPipelineId;
@@ -132,6 +134,12 @@ RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, 
 typedef CGpuRootSignatureId (*CGPUProcCreateRootSignature)(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature(CGpuRootSignatureId signature);
 typedef void (*CGPUProcFreeRootSignature)(CGpuRootSignatureId signature);
+RUNTIME_API CGpuDescriptorSetId cgpu_create_descriptor_set(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc);
+typedef CGpuDescriptorSetId (*CGPUProcCreateDescriptorSet)(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc);
+RUNTIME_API void cgpu_update_descriptor_set(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count);
+typedef void (*CGPUProcUpdateDescriptorSet)(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count);
+RUNTIME_API void cgpu_free_descriptor_set(CGpuDescriptorSetId set);
+typedef void (*CGPUProcFreeDescriptorSet)(CGpuDescriptorSetId set);
 RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
 typedef CGpuComputePipelineId (*CGPUProcCreateComputePipeline)(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_compute_pipeline(CGpuComputePipelineId pipeline);
@@ -219,6 +227,9 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeFence free_fence;
     const CGPUProcCreateRootSignature create_root_signature;
     const CGPUProcFreeRootSignature free_root_signature;
+    const CGPUProcCreateDescriptorSet create_descriptor_set;
+    const CGPUProcFreeDescriptorSet free_descriptor_set;
+    const CGPUProcUpdateDescriptorSet update_descriptor_set;
     const CGPUProcCreateComputePipeline create_compute_pipeline;
     const CGPUProcFreeComputePipeline free_compute_pipeline;
     const CGPUProcCreateRenderPipeline create_render_pipeline;
@@ -392,6 +403,56 @@ typedef struct CGpuPipelineReflection {
     uint32_t shader_resources_count;
 } CGpuPipelineReflection;
 
+typedef struct CGpuDescriptorData {
+    // Update Via Shader Reflection.
+    const char8_t* name;
+    union
+    {
+        struct
+        {
+            /// Offset to bind the buffer descriptor
+            const uint64_t* offsets;
+            const uint64_t* sizes;
+        } buffers_params;
+        // Descriptor set buffer extraction options
+        struct
+        {
+            struct CGpuPipelineShaderDescriptor* shader;
+            uint32_t buffer_index;
+            ECGpuShaderStage shader_stage;
+        } extraction_params;
+        struct
+        {
+            uint32_t uav_mip_slice;
+            bool blend_mip_chain;
+        } uav_params;
+        bool enable_stencil_resource;
+    };
+    union
+    {
+        /// Array of texture descriptors (srv and uav textures)
+        // CGpuTextureId* textures;
+        /// Array of sampler descriptors
+        // CGpuSamplerId* samplers;
+        /// Array of buffer descriptors (srv, uav and cbv buffers)
+        CGpuBufferId* buffers;
+        /// Array of pipeline descriptors
+        CGpuRenderPipelineId* render_pipelines;
+        /// Array of pipeline descriptors
+        CGpuComputePipelineId* compute_pipelines;
+        /// DescriptorSet buffer extraction
+        CGpuDescriptorSetId* descriptor_sets;
+        /// Custom binding (raytracing acceleration structure ...)
+        // CGpuAccelerationStructureId* acceleration_structures;
+    };
+    uint32_t count;
+    // Update Via Slot Index (i)
+    // -> [[vk::binding(n, i)]]
+    // -> register(bi)
+    // -> register(tn, spacei)
+    uint32_t index;
+} CGpuDescriptorData;
+
 typedef struct CGpuBuffer {
     CGpuDeviceId device;
     /**
@@ -512,6 +573,11 @@ typedef struct CGpuRootSignatureDescriptor {
     uint32_t shaders_count;
 } CGpuRootSignatureDescriptor;
 
+typedef struct CGpuDescriptorSetDescriptor {
+    CGpuRootSignatureId root_signature;
+    uint32_t set_index;
+} CGpuDescriptorSetDescriptor;
+
 typedef struct CGpuComputePipelineDescriptor {
     CGpuRootSignatureId root_signature;
     CGpuPipelineShaderDescriptor* compute_shader;
@@ -520,6 +586,10 @@ typedef struct CGpuComputePipelineDescriptor {
 typedef struct CGpuRootSignature {
     CGpuDeviceId device;
 } CGpuRootSignature;
+
+typedef struct CGpuDescriptorSet {
+    CGpuRootSignatureId root_signature;
+} CGpuDescriptorSet;
 
 typedef struct CGpuComputePipeline {
     CGpuDeviceId device;

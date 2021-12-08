@@ -29,6 +29,8 @@ const CGpuProcTable tbl_vk = {
     .free_fence = &cgpu_free_fence_vulkan,
     .create_root_signature = &cgpu_create_root_signature_vulkan,
     .free_root_signature = &cgpu_free_root_signature_vulkan,
+    .create_descriptor_set = &cgpu_create_descriptor_set_vulkan,
+    .free_descriptor_set = &cgpu_free_descriptor_set_vulkan,
     .create_compute_pipeline = &cgpu_create_compute_pipeline_vulkan,
     .free_compute_pipeline = &cgpu_free_compute_pipeline_vulkan,
 
@@ -370,9 +372,34 @@ void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature)
         }
         cgpu_free(RS->parameter_sets);
     }
-    //
     D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pipeline_layout, GLOBAL_VkAllocationCallbacks);
     cgpu_free(RS);
+}
+
+CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc)
+{
+    size_t totalSize = sizeof(CGpuDescriptorSet_Vulkan);
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)desc->root_signature;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+
+    const size_t UpdateTemplateSize = RS->set_count * sizeof(VkDescriptorUpdateData);
+    totalSize += UpdateTemplateSize;
+    CGpuDescriptorSet_Vulkan* Set = cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuDescriptorSet_Vulkan));
+    char8_t* pMem = (char8_t*)(Set + 1);
+    // Allocate Descriptor Set
+    VkUtil_ConsumeDescriptorSets(D->pDescriptorPool, &RS->parameter_sets[desc->set_index].layout, &Set->pVkDescriptorSet, 1);
+    // Fill Update Template Data
+    Set->pUpdateData = (VkDescriptorUpdateData*)pMem;
+    memset(Set->pUpdateData, 0, UpdateTemplateSize);
+    return &Set->super;
+}
+
+void cgpu_free_descriptor_set_vulkan(CGpuDescriptorSetId set)
+{
+    CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
+    CGpuDevice_Vulkan* D = set->root_signature->device;
+    VkUtil_ReturnDescriptorSets(D->pDescriptorPool, &Set->pVkDescriptorSet, 1);
+    cgpu_free(Set);
 }
 
 CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc)

@@ -166,8 +166,26 @@ void cgpu_free_root_signature(CGpuRootSignatureId signature)
     assert(signature != CGPU_NULLPTR && "fatal: call on NULL signature!");
     const CGpuDeviceId device = signature->device;
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    assert(device->proc_table_cache->create_root_signature && "free_root_signature Proc Missing!");
+    assert(device->proc_table_cache->free_root_signature && "free_root_signature Proc Missing!");
     device->proc_table_cache->free_root_signature(signature);
+}
+
+CGpuDescriptorSetId cgpu_create_descriptor_set(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_descriptor_set && "create_descriptor_set Proc Missing!");
+    CGpuDescriptorSet* set = (CGpuDescriptorSet*)device->proc_table_cache->create_descriptor_set(device, desc);
+    set->root_signature = desc->root_signature;
+    return set;
+}
+
+void cgpu_free_descriptor_set(CGpuDescriptorSetId set)
+{
+    assert(set != CGPU_NULLPTR && "fatal: call on NULL signature!");
+    const CGpuDeviceId device = set->root_signature->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->free_descriptor_set && "free_descriptor_set Proc Missing!");
+    device->proc_table_cache->free_descriptor_set(set);
 }
 
 CGpuComputePipelineId cgpu_create_compute_pipeline(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc)
@@ -406,7 +424,11 @@ CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDesc
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(device->proc_table_cache->create_buffer && "create_buffer Proc Missing!");
-
+    if (desc->flags == 0)
+    {
+        CGpuBufferDescriptor* wdesc = (CGpuBufferDescriptor*)desc;
+        wdesc->flags |= BCF_NONE;
+    }
     CGPUProcCreateBuffer fn_create_buffer = device->proc_table_cache->create_buffer;
     CGpuBuffer* buffer = (CGpuBuffer*)fn_create_buffer(device, desc);
     buffer->device = device;

@@ -30,6 +30,8 @@ void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGp
 
 // API Objects Helpers
 struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D);
+void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool, const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets);
+void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescriptorSet* pSets, uint32_t numDescriptorSets);
 void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool);
 VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGpuDevice_Vulkan* D, const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count);
 void VkUtil_FreeDescriptorSetLayout(CGpuDevice_Vulkan* D, VkDescriptorSetLayout layout);
@@ -77,6 +79,8 @@ typedef struct VkUtil_DescriptorPool {
     CGpuDevice_Vulkan* Device;
     VkDescriptorPool pVkDescPool;
     VkDescriptorPoolCreateFlags mFlags;
+    /// Lock for multi-threaded descriptor allocations
+    struct SMutex* pMutex;
 } VkUtil_DescriptorPool;
 
 #define CHECK_VKRESULT(exp)                                                        \
