@@ -41,7 +41,24 @@
         SHADER_RESOURCE(RWByteAddressBuffer, buf, 1/*set or space*/, u0, 1/*register or binding*/)
 
 
+# 关于推送常量
+推送常量是一种将小变量直接嵌入到管线布局的数据更新方法。
+- 推常量使用非常方便，对uber shader的多分支很有用
+- NVIDIA硬件下像素着色器访问根常量非常快
+- AMD也在GPUOpen表示RDNA架构下改变绘制的常量可以放在根常量下
+- 要减少根签名/管线布局的状态设置次数，NV和AMD都推荐按根状态对draw进行排序
+
+暂时不对推送常量进行支持，但是方法如下：
+- D3D12实际上要使用RootConstant来进行内联绑定，常量值实际上是在寄存器组bx上的，在shader中它和常规的cbuffer无二致
+- VK的推送常量只需要着色器中写明attribute [[vk::push_constant]]
+- 我认为着色器中应当采取vulkan的写法，在编译shader的时候对HLSL文件进行修补，自动生成寄存器bx，来弥补D3D12的失败设计
+- 退而求其次的方案是使用宏：ROOT_CONSTANT(type, variable, register)
+
+
 # 关于推送描述符
+
+短期内不考虑实现此特性，写此文档时VK实现要配合VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT，并且需要很复杂的异步逻辑，且最终性能毫无疑问会更差。
+
 推送描述符是直接将描述符内联到表槽位的更新方法。
 - 比一个表占用的DWORD更多，在AMD硬件上占用2DWORD，而表只占用1DWORD
 - NV表示在PS Stage访问Root CBV非常快，估计和RootConstant/PushConstant类似
@@ -59,16 +76,3 @@
 虽然在VK后端使用表结构，但要注意并不能再使用这些set index来创建CGPUDescriptorSet，因为会产生相对D3D12的语义差。
 
 使用cgpu_push_root_descriptor进行更新, 后端会使用Shader反射来对此错误操作进行Validate。
-
-# 关于推送常量
-推送常量是一种将小变量直接嵌入到管线布局的数据更新方法。
-- 推常量使用非常方便，对uber shader的多分支很有用
-- NVIDIA硬件下像素着色器访问根常量非常快
-- AMD也在GPUOpen表示RDNA架构下改变绘制的常量可以放在根常量下
-- 要减少根签名/管线布局的状态设置次数，NV和AMD都推荐按根状态对draw进行排序
-
-暂时不对推送常量进行支持，但是方法如下：
-- D3D12实际上要使用RootConstant来进行内联绑定，常量值实际上是在寄存器组bx上的，在shader中它和常规的cbuffer无二致
-- VK的推送常量只需要着色器中写明attribute [[vk::push_constant]]
-- 我认为着色器中应当采取vulkan的写法，在编译shader的时候对HLSL文件进行修补，自动生成寄存器bx，来弥补D3D12的失败设计
-- 退而求其次的方案是使用宏：ROOT_CONSTANT(type, variable, register)
