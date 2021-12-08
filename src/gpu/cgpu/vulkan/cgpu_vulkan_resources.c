@@ -3,6 +3,7 @@
 #include "platform/configure.h"
 #include "vulkan_utils.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
+#include <string.h>
 
 FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulkan* A, const struct CGpuBufferDescriptor* desc)
 {
@@ -265,6 +266,8 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
                     current_res->stages = S->pReflect->shader_stage;
                     current_res->type = RTLut[current_binding->descriptor_type];
                     current_res->name = current_binding->name;
+                    current_res->name_hash =
+                        cgpu_hash(current_binding->name, strlen(current_binding->name), (size_t)device);
                     current_res->size = current_binding->count;
                 }
             }
