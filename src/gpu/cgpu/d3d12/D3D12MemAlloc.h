@@ -1,5 +1,4 @@
-/* clang-format off */
-//
+/* clang-format off *///
 // Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -119,9 +118,17 @@ If providing your own implementation, you need to implement a subset of std::ato
     #define D3D12MA_ATOMIC_UINT64 std::atomic<UINT64>
 #endif
 
+#ifdef D3D12MA_EXPORTS
+    #define D3D12MA_API __declspec(dllexport)
+#elif defined(D3D12MA_IMPORTS)
+    #define D3D12MA_API __declspec(dllimport)
+#else
+    #define D3D12MA_API
+#endif
+
 namespace D3D12MA
 {
-class IUnknownImpl : public IUnknown
+class D3D12MA_API IUnknownImpl : public IUnknown
 {
 public:
     virtual ~IUnknownImpl() = default;
@@ -254,7 +261,7 @@ To retrieve this information, use methods of this class.
 The object also remembers `ID3D12Resource` and "owns" a reference to it,
 so it calls `%Release()` on the resource when destroyed.
 */
-class Allocation : public IUnknownImpl
+class D3D12MA_API Allocation : public IUnknownImpl
 {
 public:
     /** \brief Returns offset in bytes from the start of memory heap.
@@ -471,7 +478,7 @@ pools - creating resources in default pool is sufficient.
 
 To create custom pool, fill D3D12MA::POOL_DESC and call D3D12MA::Allocator::CreatePool.
 */
-class Pool : public IUnknownImpl
+class D3D12MA_API Pool : public IUnknownImpl
 {
 public:
     /** \brief Returns copy of parameters of the pool.
@@ -659,7 +666,7 @@ Call method `Release()` to destroy it.
 It is recommended to create just one object of this type per `ID3D12Device` object,
 right after Direct3D 12 is initialized and keep it alive until before Direct3D device is destroyed.
 */
-class Allocator : public IUnknownImpl
+class D3D12MA_API Allocator : public IUnknownImpl
 {
 public:
     /// Returns cached options retrieved from D3D12 device.
@@ -867,7 +874,7 @@ protected:
     virtual void ReleaseThis();
 
 private:
-    friend HRESULT CreateAllocator(const ALLOCATOR_DESC*, Allocator**);
+    friend D3D12MA_API HRESULT CreateAllocator(const ALLOCATOR_DESC*, Allocator**);
     template<typename T> friend void D3D12MA_DELETE(const ALLOCATION_CALLBACKS&, T*);
     friend class Pool;
 
@@ -938,8 +945,10 @@ sub-allocation regions inside a single GPU buffer.
 To create this object, fill in D3D12MA::VIRTUAL_BLOCK_DESC and call CreateVirtualBlock().
 To destroy it, call its method `VirtualBlock::Release()`.
 You need to free all the allocations within this block or call Clear() before destroying it.
+
+This object is not thread-safe - should not be used from multiple threads simultaneously, must be synchronized externally.
 */
-class VirtualBlock : public IUnknownImpl
+class D3D12MA_API VirtualBlock : public IUnknownImpl
 {
 public:
     /** \brief Returns true if the block is empty - contains 0 allocations.
@@ -982,7 +991,7 @@ protected:
     virtual void ReleaseThis();
 
 private:
-    friend HRESULT CreateVirtualBlock(const VIRTUAL_BLOCK_DESC*, VirtualBlock**);
+    friend D3D12MA_API HRESULT CreateVirtualBlock(const VIRTUAL_BLOCK_DESC*, VirtualBlock**);
     template<typename T> friend void D3D12MA_DELETE(const ALLOCATION_CALLBACKS&, T*);
 
     VirtualBlockPimpl* m_Pimpl;
@@ -997,13 +1006,13 @@ private:
 
 You normally only need to call it once and keep a single Allocator object for your `ID3D12Device`.
 */
-HRESULT CreateAllocator(const ALLOCATOR_DESC* pDesc, Allocator** ppAllocator);
+D3D12MA_API HRESULT CreateAllocator(const ALLOCATOR_DESC* pDesc, Allocator** ppAllocator);
 
 /** \brief Creates new D3D12MA::VirtualBlock object and returns it through `ppVirtualBlock`.
 
 Note you don't need to create D3D12MA::Allocator to use virtual blocks.
 */
-HRESULT CreateVirtualBlock(const VIRTUAL_BLOCK_DESC* pDesc, VirtualBlock** ppVirtualBlock);
+D3D12MA_API HRESULT CreateVirtualBlock(const VIRTUAL_BLOCK_DESC* pDesc, VirtualBlock** ppVirtualBlock);
 
 } // namespace D3D12MA
 
@@ -1606,6 +1615,7 @@ HRESULT hr = D3D12MA::CreateAllocator(&allocatorDesc, &allocator);
 - When the allocator is created with D3D12MA::ALLOCATOR_FLAG_SINGLETHREADED,
   calls to methods of D3D12MA::Allocator class must be made from a single thread or synchronized by the user.
   Using this flag may improve performance.
+- D3D12MA::VirtualBlock is not safe to be used from multiple threads simultaneously.
 
 \section general_considerations_future_plans Future plans
 
