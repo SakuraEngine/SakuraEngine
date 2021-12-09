@@ -44,6 +44,7 @@ const CGpuProcTable tbl_vk = {
     // Command APIs
     .create_command_pool = &cgpu_create_command_pool_vulkan,
     .create_command_buffer = &cgpu_create_command_buffer_vulkan,
+    .reset_command_pool = &cgpu_reset_command_pool_vulkan,
     .free_command_buffer = &cgpu_free_command_buffer_vulkan,
     .free_command_pool = &cgpu_free_command_pool_vulkan,
 
@@ -624,6 +625,13 @@ CGpuCommandBufferId cgpu_create_command_buffer_vulkan(CGpuCommandPoolId pool, co
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkAllocateCommandBuffers(D->pVkDevice, &alloc_info, &(Cmd->pVkCmdBuf)));
     return &Cmd->super;
+}
+
+void cgpu_reset_command_pool_vulkan(CGpuCommandPoolId pool)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pool->queue->device;
+    CGpuCommandPool_Vulkan* P = (CGpuCommandPool_Vulkan*)pool;
+    CHECK_VKRESULT(D->mVkDeviceTable.vkResetCommandPool(D->pVkDevice, P->pVkCmdPool, 0));
 }
 
 void cgpu_free_command_buffer_vulkan(CGpuCommandBufferId cmd)
