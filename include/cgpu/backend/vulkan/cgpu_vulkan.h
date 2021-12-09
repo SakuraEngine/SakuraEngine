@@ -52,6 +52,7 @@ RUNTIME_API void cgpu_free_queue_vulkan(CGpuQueueId queue);
 // Command APIs
 RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool_vulkan(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc);
 RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer_vulkan(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
+RUNTIME_API void cgpu_reset_command_pool_vulkan(CGpuCommandPoolId pool);
 RUNTIME_API void cgpu_free_command_buffer_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_free_command_pool_vulkan(CGpuCommandPoolId pool);
 

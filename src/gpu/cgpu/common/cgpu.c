@@ -322,6 +322,17 @@ RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer(CGpuCommandPoolId poo
     return cmd;
 }
 
+RUNTIME_API void cgpu_reset_command_pool(CGpuCommandPoolId pool)
+{
+    assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
+    assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    assert(pool->queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(pool->queue->device->proc_table_cache->reset_command_pool && "reset_command_pool Proc Missing!");
+
+    pool->queue->device->proc_table_cache->reset_command_pool(pool);
+    return;
+}
+
 RUNTIME_API void cgpu_free_command_buffer(CGpuCommandBufferId cmd)
 {
     assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");

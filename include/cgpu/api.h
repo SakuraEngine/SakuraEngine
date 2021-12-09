@@ -173,6 +173,8 @@ RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool(CGpuQueueId queue, const 
 typedef CGpuCommandPoolId (*CGPUProcCreateCommandPool)(CGpuQueueId queue, const struct CGpuCommandPoolDescriptor* desc);
 RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
 typedef CGpuCommandBufferId (*CGPUProcCreateCommandBuffer)(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
+RUNTIME_API void cgpu_reset_command_pool(CGpuCommandPoolId pool);
+typedef void (*CGPUProcResetCommandPool)(CGpuCommandPoolId pool);
 RUNTIME_API void cgpu_free_command_buffer(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcFreeCommandBuffer)(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId pool);
@@ -256,6 +258,7 @@ typedef struct CGpuProcTable {
 
     const CGPUProcCreateCommandPool create_command_pool;
     const CGPUProcCreateCommandBuffer create_command_buffer;
+    const CGPUProcResetCommandPool reset_command_pool;
     const CGPUProcFreeCommandBuffer free_command_buffer;
     const CGPUProcFreeCommandPool free_command_pool;
 

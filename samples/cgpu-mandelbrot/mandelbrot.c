@@ -138,6 +138,7 @@ int main(void)
             cgpu_submit_queue(gfx_queue, &submit_desc);
             cgpu_wait_queue_idle(gfx_queue);
         }
+        cgpu_reset_command_pool(pool);
 
         // Create readback buffer
         CGpuBufferDescriptor rb_desc = {
@@ -152,11 +153,9 @@ int main(void)
         };
         CGpuBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);
 
-        // CGpuCommandBufferId cmd2 = cgpu_create_command_buffer(pool, &cmd_desc);
-        CGpuCommandBufferId cmd2 = cmd;
         // Copy back
         {
-            cgpu_cmd_begin(cmd2);
+            cgpu_cmd_begin(cmd);
             CGpuBufferUpdateDescriptor cpy_desc = {
                 .src = data_buffer,
                 .src_offset = 0,
@@ -164,10 +163,10 @@ int main(void)
                 .dst_offset = 0,
                 .size = buffer_desc.size
             };
-            cgpu_cmd_update_buffer(cmd2, &cpy_desc);
-            cgpu_cmd_end(cmd2);
+            cgpu_cmd_update_buffer(cmd, &cpy_desc);
+            cgpu_cmd_end(cmd);
             CGpuQueueSubmitDescriptor submit_desc2 = {
-                .cmds = &cmd2,
+                .cmds = &cmd,
                 .cmds_count = 1
             };
             cgpu_submit_queue(gfx_queue, &submit_desc2);
