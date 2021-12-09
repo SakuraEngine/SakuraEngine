@@ -337,6 +337,8 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     adapter_detail->max_vertex_input_bindings = prop->limits.maxVertexInputBindings;
     adapter_detail->multidraw_indirect = prop->limits.maxDrawIndirectCount > 1;
     adapter_detail->wave_lane_count = VkAdapter->mSubgroupProperties.subgroupSize;
+    adapter_detail->support_geom_shader = VkAdapter->mPhysicalDeviceFeatures.features.geometryShader;
+    adapter_detail->support_tessellation = VkAdapter->mPhysicalDeviceFeatures.features.tessellationShader;
 }
 
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)

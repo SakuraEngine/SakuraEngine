@@ -16,6 +16,7 @@ struct CGpuCommandPoolDescriptor;
 struct CGpuCommandBufferDescriptor;
 struct CGpuShaderLibraryDescriptor;
 struct CGpuPipelineShaderDescriptor;
+struct CGpuResourceBarrierDescriptor;
 struct CGpuComputePipelineDescriptor;
 struct CGpuRenderPipelineDescriptor;
 struct CGpuBufferDescriptor;
@@ -207,6 +208,8 @@ RUNTIME_API void cgpu_cmd_begin(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdBegin)(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 typedef void (*CGPUProcCmdUpdateBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+RUNTIME_API void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
+typedef void (*CGPUProcCmdResourceBarrier)(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_set_viewport(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
 typedef void (*CGPUProcCmdSetViewport)(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
 RUNTIME_API void cgpu_cmd_set_scissor(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
@@ -275,6 +278,7 @@ typedef struct CGpuProcTable {
 
     const CGPUProcCmdBegin cmd_begin;
     const CGPUProcCmdUpdateBuffer cmd_update_buffer;
+    const CGPUProcCmdResourceBarrier cmd_resource_barrier;
     const CGPUProcCmdSetViewport cmd_set_viewport;
     const CGPUProcCmdSetScissor cmd_set_scissor;
     const CGPUProcCmdEnd cmd_end;
@@ -326,7 +330,9 @@ typedef struct CGpuAdapterDetail {
     uint32_t upload_buffer_texture_row_alignment;
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
-    uint32_t multidraw_indirect : 1;
+    bool multidraw_indirect : 1;
+    bool support_geom_shader : 1;
+    bool support_tessellation : 1;
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
@@ -531,6 +537,24 @@ typedef struct CGpuBufferUpdateDescriptor {
     uint64_t src_offset;
     uint64_t size;
 } CGpuBufferUpdateDescriptor;
+
+typedef struct CGpuBufferBarrier {
+    CGpuBufferId buffer;
+    ECGpuResourceState src_state;
+    ECGpuResourceState dst_state;
+    uint8_t queue_acquire : 1;
+    uint8_t queue_release : 1;
+    ECGpuQueueType queue_type : 5;
+    struct {
+        uint8_t begin_ony : 1;
+        uint8_t end_only : 1;
+    } d3d12;
+} CGpuBufferBarrier;
+
+typedef struct CGpuResourceBarrierDescriptor {
+    const CGpuBufferBarrier* buffer_barriers;
+    uint32_t buffer_barriers_count;
+} CGpuResourceBarrierDescriptor;
 
 typedef struct CGpuDeviceDescriptor {
     bool disable_pipeline_cache;

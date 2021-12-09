@@ -378,6 +378,16 @@ void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpda
     fn_cmd_update_buffer(cmd, desc);
 }
 
+void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->current_dispatch == PT_NONE && "fatal: can't call resource barriers in render/dispatch passes!");
+    assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdResourceBarrier fn_cmd_resource_barrier = cmd->device->proc_table_cache->cmd_resource_barrier;
+    assert(fn_cmd_resource_barrier && "cmd_resource_barrier Proc Missing!");
+    fn_cmd_resource_barrier(cmd, desc);
+}
+
 void cgpu_cmd_end(CGpuCommandBufferId cmd)
 {
     assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");

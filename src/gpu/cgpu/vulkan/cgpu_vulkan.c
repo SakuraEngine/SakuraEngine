@@ -65,6 +65,7 @@ const CGpuProcTable tbl_vk = {
     // CMDs
     .cmd_begin = &cgpu_cmd_begin_vulkan,
     .cmd_update_buffer = &cgpu_cmd_update_buffer_vulkan,
+    .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_end = &cgpu_cmd_end_vulkan,
     .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_vulkan,
     .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_vulkan,
@@ -665,6 +666,81 @@ void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd)
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkBeginCommandBuffer(Cmd->pVkCmdBuf, &begin_info));
     Cmd->pBoundPipelineLayout = CGPU_NULL;
+}
+
+void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)cmd->device->adapter;
+    DECLARE_ZERO_VLA(VkBufferMemoryBarrier, BBs, desc->buffer_barriers_count)
+    VkAccessFlags srcAccessFlags = 0;
+    VkAccessFlags dstAccessFlags = 0;
+    uint32_t bufferBarrierCount = 0;
+    for (uint32_t i = 0; i < desc->buffer_barriers_count; i++)
+    {
+        const CGpuBufferBarrier* buffer_barrier = &desc->buffer_barriers[i];
+        CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer_barrier->buffer;
+        VkBufferMemoryBarrier* pBufferBarrier = NULL;
+
+        if (RS_UNORDERED_ACCESS == buffer_barrier->src_state && RS_UNORDERED_ACCESS == buffer_barrier->dst_state)
+        {
+            pBufferBarrier = &BBs[bufferBarrierCount++];                     //-V522
+            pBufferBarrier->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER; //-V522
+            pBufferBarrier->pNext = NULL;
+
+            pBufferBarrier->srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+            pBufferBarrier->dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
+        }
+        else
+        {
+            pBufferBarrier = &BBs[bufferBarrierCount++];
+            pBufferBarrier->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            pBufferBarrier->pNext = NULL;
+
+            pBufferBarrier->srcAccessMask = VkUtil_ResourceStateToVkAccessFlags(buffer_barrier->src_state);
+            pBufferBarrier->dstAccessMask = VkUtil_ResourceStateToVkAccessFlags(buffer_barrier->dst_state);
+        }
+
+        if (pBufferBarrier)
+        {
+            pBufferBarrier->buffer = B->pVkBuffer;
+            pBufferBarrier->size = VK_WHOLE_SIZE;
+            pBufferBarrier->offset = 0;
+
+            if (buffer_barrier->queue_acquire)
+            {
+                pBufferBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[buffer_barrier->queue_type];
+                pBufferBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
+            }
+            else if (buffer_barrier->queue_release)
+            {
+                pBufferBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
+                pBufferBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[buffer_barrier->queue_type];
+            }
+            else
+            {
+                pBufferBarrier->srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                pBufferBarrier->dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            }
+            srcAccessFlags |= pBufferBarrier->srcAccessMask;
+            dstAccessFlags |= pBufferBarrier->dstAccessMask;
+        }
+
+        VkPipelineStageFlags srcStageMask =
+            VkUtil_DeterminePipelineStageFlags(A, srcAccessFlags, (ECGpuQueueType)Cmd->mType);
+        VkPipelineStageFlags dstStageMask =
+            VkUtil_DeterminePipelineStageFlags(A, dstAccessFlags, (ECGpuQueueType)Cmd->mType);
+
+        if (bufferBarrierCount)
+        {
+            D->mVkDeviceTable.vkCmdPipelineBarrier(Cmd->pVkCmdBuf,
+                srcStageMask, dstStageMask, 0,
+                0, NULL,
+                bufferBarrierCount, BBs,
+                0 /*TODO*/, NULL);
+        }
+    }
 }
 
 void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd)

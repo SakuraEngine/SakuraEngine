@@ -4,6 +4,7 @@
 #include "lodepng.h"
 #include "platform/configure.h"
 #include "cgpu/api.h"
+#include "stdio.h"
 
 const uint32_t* compute_shaders[ECGpuBackend_COUNT];
 uint32_t compute_shader_sizes[ECGpuBackend_COUNT];
@@ -97,12 +98,26 @@ int main(void)
             .name = "DataBuffer",
             .flags = BCF_NONE,
             .descriptors = RT_RW_BUFFER,
+            .start_state = RS_UNORDERED_ACCESS,
             .memory_usage = MU_GPU_ONLY,
             .element_stride = sizeof(Pixel),
             .elemet_count = MANDELBROT_WIDTH * MANDELBROT_HEIGHT,
             .size = sizeof(Pixel) * MANDELBROT_WIDTH * MANDELBROT_HEIGHT
         };
         CGpuBufferId data_buffer = cgpu_create_buffer(device, &buffer_desc);
+
+        // Create readback buffer
+        CGpuBufferDescriptor rb_desc = {
+            .name = "ReadbackBuffer",
+            .flags = BCF_OWN_MEMORY_BIT,
+            .descriptors = RT_NONE,
+            .start_state = RS_COPY_DEST,
+            .memory_usage = MU_GPU_TO_CPU,
+            .element_stride = buffer_desc.element_stride,
+            .elemet_count = buffer_desc.elemet_count,
+            .size = buffer_desc.size
+        };
+        CGpuBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);
 
         // Update descriptor set
         CGpuDescriptorData descriptor_data = {
@@ -121,6 +136,7 @@ int main(void)
         // Dispatch
         {
             cgpu_cmd_begin(cmd);
+            // Begin dispatch compute pass
             CGpuComputePassDescriptor pass_desc = { .name = "ComputePass" };
             CGpuComputePassEncoderId encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
             cgpu_compute_encoder_bind_descriptor_set(encoder, set);
@@ -130,32 +146,18 @@ int main(void)
                 (uint32_t)ceil(MANDELBROT_HEIGHT / (float)WORKGROUP_SIZE),
                 1);
             cgpu_cmd_end_compute_pass(cmd, encoder);
-            cgpu_cmd_end(cmd);
-            CGpuQueueSubmitDescriptor submit_desc = {
-                .cmds = &cmd,
-                .cmds_count = 1
+            // Barrier UAV buffer to transfer source
+            CGpuBufferBarrier buffer_barriers = {
+                .buffer = data_buffer,
+                .src_state = RS_UNORDERED_ACCESS,
+                .dst_state = RS_COPY_SOURCE
             };
-            cgpu_submit_queue(gfx_queue, &submit_desc);
-            cgpu_wait_queue_idle(gfx_queue);
-        }
-        cgpu_reset_command_pool(pool);
-
-        // Create readback buffer
-        CGpuBufferDescriptor rb_desc = {
-            .name = "ReadbackBuffer",
-            .flags = BCF_OWN_MEMORY_BIT,
-            .descriptors = RT_NONE,
-            .start_state = RS_COPY_DEST,
-            .memory_usage = MU_GPU_TO_CPU,
-            .element_stride = buffer_desc.element_stride,
-            .elemet_count = buffer_desc.elemet_count,
-            .size = buffer_desc.size
-        };
-        CGpuBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);
-
-        // Copy back
-        {
-            cgpu_cmd_begin(cmd);
+            CGpuResourceBarrierDescriptor barriers_desc = {
+                .buffer_barriers = &buffer_barriers,
+                .buffer_barriers_count = 1
+            };
+            cgpu_cmd_resource_barrier(cmd, &barriers_desc);
+            // Copy buffer to readback
             CGpuBufferUpdateDescriptor cpy_desc = {
                 .src = data_buffer,
                 .src_offset = 0,
@@ -165,11 +167,11 @@ int main(void)
             };
             cgpu_cmd_update_buffer(cmd, &cpy_desc);
             cgpu_cmd_end(cmd);
-            CGpuQueueSubmitDescriptor submit_desc2 = {
+            CGpuQueueSubmitDescriptor submit_desc = {
                 .cmds = &cmd,
                 .cmds_count = 1
             };
-            cgpu_submit_queue(gfx_queue, &submit_desc2);
+            cgpu_submit_queue(gfx_queue, &submit_desc);
             cgpu_wait_queue_idle(gfx_queue);
         }
 
@@ -212,5 +214,6 @@ int main(void)
         cgpu_free_compute_pipeline(pipeline);
         cgpu_free_device(device);
         cgpu_free_instance(instance);
+        sakura_free(image);
     }
 }
