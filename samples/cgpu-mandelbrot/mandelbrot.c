@@ -5,9 +5,9 @@
 #include "platform/configure.h"
 #include "cgpu/api.h"
 
-const uint32_t* compute_shaders[ECGPUBackEnd_COUNT];
-uint32_t compute_shader_sizes[ECGPUBackEnd_COUNT];
-static const char8_t* gPNGNames[ECGPUBackEnd_COUNT] = {
+const uint32_t* compute_shaders[ECGpuBackend_COUNT];
+uint32_t compute_shader_sizes[ECGpuBackend_COUNT];
+static const char8_t* gPNGNames[ECGpuBackend_COUNT] = {
     "mandelbrot-vulkan.png",
     "mandelbrot-d3d12.png",
     "mandelbrot-d3d12(xbox).png",
@@ -21,15 +21,15 @@ typedef struct Pixel {
 
 int main(void)
 {
-    compute_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)mandelbrot_comp_spirv;
-    compute_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(mandelbrot_comp_spirv);
+    compute_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)mandelbrot_comp_spirv;
+    compute_shader_sizes[ECGpuBackend_VULKAN] = sizeof(mandelbrot_comp_spirv);
 
-    compute_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
-    compute_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(mandelbrot_comp_dxil);
+    compute_shaders[ECGpuBackend_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
+    compute_shader_sizes[ECGpuBackend_D3D12] = sizeof(mandelbrot_comp_dxil);
 
-    ECGPUBackEnd backend = ECGPUBackEnd_VULKAN;
+    ECGpuBackend backend = ECGpuBackend_VULKAN;
     // When we support more add them here
-    if (backend == ECGPUBackEnd_VULKAN)
+    if (backend == ECGpuBackend_VULKAN)
     {
         // Create instance
         CGpuInstanceDescriptor instance_desc = {
@@ -117,7 +117,6 @@ int main(void)
         CGpuCommandPoolId pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
         CGpuCommandBufferDescriptor cmd_desc = { .is_secondary = false };
         CGpuCommandBufferId cmd = cgpu_create_command_buffer(pool, &cmd_desc);
-        CGpuCommandBufferId cmd2 = cgpu_create_command_buffer(pool, &cmd_desc);
 
         // Dispatch
         {
@@ -153,6 +152,8 @@ int main(void)
         };
         CGpuBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);
 
+        // CGpuCommandBufferId cmd2 = cgpu_create_command_buffer(pool, &cmd_desc);
+        CGpuCommandBufferId cmd2 = cmd;
         // Copy back
         {
             cgpu_cmd_begin(cmd2);
@@ -202,7 +203,6 @@ int main(void)
 
         // Clean up
         cgpu_free_command_buffer(cmd);
-        cgpu_free_command_buffer(cmd2);
         cgpu_free_command_pool(pool);
         cgpu_free_buffer(data_buffer);
         cgpu_free_buffer(readback_buffer);

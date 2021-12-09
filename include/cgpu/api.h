@@ -58,17 +58,17 @@ typedef const struct CGpuComputePipeline* CGpuComputePipelineId;
 typedef const struct CGpuShaderReflection* CGpuShaderReflectionId;
 typedef const struct CGpuPipelineReflection* CGpuPipelineReflectionId;
 
-typedef enum ECGPUBackEnd
+typedef enum ECGpuBackend
 {
-    ECGPUBackEnd_VULKAN = 0,
-    ECGPUBackEnd_D3D12 = 1,
-    ECGPUBackEnd_XBOX_D3D12 = 2,
-    ECGPUBackEnd_AGC = 3,
-    ECGPUBackEnd_METAL = 4,
-    ECGPUBackEnd_COUNT
-} ECGPUBackEnd;
+    ECGpuBackend_VULKAN = 0,
+    ECGpuBackend_D3D12 = 1,
+    ECGpuBackend_XBOX_D3D12 = 2,
+    ECGpuBackend_AGC = 3,
+    ECGpuBackend_METAL = 4,
+    ECGpuBackend_COUNT
+} ECGpuBackend;
 
-static const char8_t* gCGpuBackendNames[ECGPUBackEnd_COUNT] = {
+static const char8_t* gCGpuBackendNames[ECGpuBackend_COUNT] = {
     "vulkan",
     "d3d12",
     "d3d12(xbox)",
@@ -491,7 +491,7 @@ typedef struct CGpuSwapChain {
 // Descriptors (on Stack)
 #pragma region DESCRIPTORS
 
-#define CGPU_CHAINED_DESCRIPTOR_HEADER ECGPUBackEnd backend;
+#define CGPU_CHAINED_DESCRIPTOR_HEADER ECGpuBackend backend;
 
 typedef struct CGpuChainedDescriptor {
     CGPU_CHAINED_DESCRIPTOR_HEADER
@@ -500,7 +500,7 @@ typedef struct CGpuChainedDescriptor {
 // Device & Pipeline
 typedef struct CGpuInstanceDescriptor {
     const CGpuChainedDescriptor* chained;
-    ECGPUBackEnd backend;
+    ECGpuBackend backend;
     bool enable_debug_layer;
     bool enable_gpu_based_validation;
     bool enable_set_name;
@@ -543,7 +543,7 @@ typedef struct CGpuCommandBufferDescriptor {
 #if defined(PROSPERO) || defined(ORBIS)
     uint32_t max_size; // AGC CommandBuffer Size
 #endif
-    bool is_secondary;
+    bool is_secondary : 1;
 } CGpuCommandBufferDescriptor;
 
 typedef struct CGpuPipelineShaderDescriptor {

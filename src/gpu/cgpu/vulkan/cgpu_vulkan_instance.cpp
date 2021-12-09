@@ -27,9 +27,9 @@ public:
         // Merge All Parameters into one blackboard
         if (exts_desc != CGPU_NULLPTR) // Extensions
         {
-            if (exts_desc->backend != ECGPUBackEnd_VULKAN)
+            if (exts_desc->backend != ECGpuBackend_VULKAN)
             {
-                assert(exts_desc->backend == ECGPUBackEnd_VULKAN && "Chained Instance Descriptor must have a vulkan backend!");
+                assert(exts_desc->backend == ECGpuBackend_VULKAN && "Chained Instance Descriptor must have a vulkan backend!");
                 exts_desc = CGPU_NULLPTR;
             }
             else

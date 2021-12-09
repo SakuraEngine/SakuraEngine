@@ -30,29 +30,29 @@
 
 CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
 {
-    assert((desc->backend == ECGPUBackEnd_VULKAN || desc->backend == ECGPUBackEnd_D3D12 || desc->backend == ECGPUBackEnd_METAL) && "cgpu support only vulkan & d3d12 currently!");
+    assert((desc->backend == ECGpuBackend_VULKAN || desc->backend == ECGpuBackend_D3D12 || desc->backend == ECGpuBackend_METAL) && "cgpu support only vulkan & d3d12 currently!");
     const CGpuProcTable* tbl = CGPU_NULLPTR;
     const CGpuSurfacesProcTable* s_tbl = CGPU_NULLPTR;
 
-    if (desc->backend == ECGPUBackEnd_COUNT)
+    if (desc->backend == ECGpuBackend_COUNT)
     {
     }
 #ifdef CGPU_USE_VULKAN
-    else if (desc->backend == ECGPUBackEnd_VULKAN)
+    else if (desc->backend == ECGpuBackend_VULKAN)
     {
         tbl = CGPU_VulkanProcTable();
         s_tbl = CGPU_VulkanSurfacesProcTable();
     }
 #endif
 #ifdef CGPU_USE_METAL
-    else if (desc->backend == ECGPUBackEnd_METAL)
+    else if (desc->backend == ECGpuBackend_METAL)
     {
         tbl = CGPU_MetalProcTable();
         s_tbl = CGPU_MetalSurfacesProcTable();
     }
 #endif
 #ifdef CGPU_USE_D3D12
-    else if (desc->backend == ECGPUBackEnd_D3D12)
+    else if (desc->backend == ECGpuBackend_D3D12)
     {
         tbl = CGPU_D3D12ProcTable();
         s_tbl = CGPU_D3D12SurfacesProcTable();
