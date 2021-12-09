@@ -156,11 +156,11 @@ typedef SSIZE_T ssize_t;
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern void* mi_malloc(size_t size);
-extern void* mi_calloc(size_t count, size_t size);
-extern void* mi_calloc_aligned(size_t count, size_t size, size_t alignment);
-extern void* mi_malloc_aligned(size_t size, size_t alignment);
-extern void mi_free(void* p);
+RUNTIME_API void* mi_malloc(size_t size);
+RUNTIME_API void* mi_calloc(size_t count, size_t size);
+RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment);
+RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment);
+RUNTIME_API void mi_free(void* p);
 #ifdef __cplusplus
 }
 #endif

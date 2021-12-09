@@ -1,5 +1,3 @@
-#define RUNTIME_DLL
-
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
 

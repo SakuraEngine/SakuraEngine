@@ -1,6 +1,5 @@
 #pragma once
 #include <stdint.h>
-#define RUNTIME_DLL
 #include "platform/configure.h"
 #include "cgpu_config.h"
 #include "flags.h"
@@ -68,6 +67,14 @@ typedef enum ECGPUBackEnd
     ECGPUBackEnd_METAL = 4,
     ECGPUBackEnd_COUNT
 } ECGPUBackEnd;
+
+static const char8_t* gCGpuBackendNames[ECGPUBackEnd_COUNT] = {
+    "vulkan",
+    "d3d12",
+    "d3d12(xbox)",
+    "agc",
+    "metal"
+};
 
 typedef enum ECGpuQueueType
 {

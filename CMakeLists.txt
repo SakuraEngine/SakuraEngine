@@ -5,6 +5,8 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 set(RUNTIME_SHARED TRUE)
+set(BUILD_SAMPLES TRUE)
+set(BUILD_TEST TRUE)
 
 set(SAKURA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(SAKURA_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/Binaries) 
@@ -28,6 +30,9 @@ include(vulkan)
 if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)
     target_compile_definitions(SakuraRuntime PUBLIC -DRUNTIME_SHARED)
+    # mimalloc
+    target_compile_definitions(SakuraRuntime PUBLIC -DMI_SHARED_LIB)
+    target_compile_definitions(SakuraRuntime PRIVATE -DMI_SHARED_LIB_EXPORT)
     # DLL
     target_compile_definitions(SakuraRuntime PRIVATE -DRUNTIME_API=RUNTIME_EXPORT)
     # EASTL
@@ -89,7 +94,12 @@ if(APPLE)
     )
 endif()
 
-set(BUILD_TEST TRUE)
+if(RUNTIME_SHARED)
+    add_definitions(-DRUNTIME_DLL)
+endif()
+if(BUILD_SAMPLES)
+    add_subdirectory(samples)
+endif()
 if(BUILD_TEST)
     enable_testing()
     include(GoogleTest)

@@ -1,9 +1,9 @@
 #include "cgpu/cgpu_config.h"
 #include "cgpu/flags.h"
 #include "platform/configure.h"
-#define RUNTIME_DLL
 #include "gtest/gtest.h"
 #include <EASTL/string.h>
+#include <EASTL/vector.h>
 #include "cgpu/api.h"
 #include "spirv.h"
 #include "dxil.h"
@@ -43,15 +43,11 @@ protected:
         vertex_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_vert_spirv);
         frag_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)triangle_frag_spirv;
         frag_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_frag_spirv);
-        compute_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)mandelbrot_comp_spirv;
-        compute_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(mandelbrot_comp_spirv);
 
         vertex_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_vert_dxil;
         vertex_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_vert_dxil);
         frag_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_frag_dxil;
         frag_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_frag_dxil);
-        compute_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
-        compute_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(mandelbrot_comp_dxil);
     }
 
     void TearDown() override
@@ -67,8 +63,6 @@ protected:
     uint32_t vertex_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
     const uint32_t* frag_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
     uint32_t frag_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
-    const uint32_t* compute_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
-    uint32_t compute_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
 };
 
 TEST_P(ResourceCreation, CreateIndexBuffer)
@@ -200,100 +194,6 @@ TEST_P(ResourceCreation, CreateRootSignature)
 
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
-}
-
-struct Pixel {
-    float r, g, b, a;
-};
-
-TEST_P(ResourceCreation, CreateComputePipeline)
-{
-    ECGPUBackEnd backend = GetParam();
-    // When we support more add them here
-    if (backend == ECGPUBackEnd::ECGPUBackEnd_VULKAN)
-    {
-        DECLARE_ZERO(CGpuShaderLibraryDescriptor, cdesc)
-        cdesc.code = compute_shaders[backend];
-        cdesc.code_size = compute_shader_sizes[backend];
-        cdesc.name = "ComputeShaderLibrary";
-        cdesc.stage = ECGpuShaderStage::SS_COMPUTE;
-        auto compute_shader = cgpu_create_shader_library(device, &cdesc);
-        EXPECT_NE(compute_shader, CGPU_NULLPTR);
-
-        DECLARE_ZERO(CGpuPipelineShaderDescriptor, compute_shader_entry)
-        compute_shader_entry.entry = "main";
-        compute_shader_entry.stage = ECGpuShaderStage::SS_COMPUTE;
-        compute_shader_entry.library = compute_shader;
-
-        DECLARE_ZERO(CGpuRootSignatureDescriptor, root_desc)
-        root_desc.shaders = &compute_shader_entry;
-        root_desc.shaders_count = 1;
-        auto signature = cgpu_create_root_signature(device, &root_desc);
-        EXPECT_NE(signature, CGPU_NULLPTR);
-
-        DECLARE_ZERO(CGpuComputePipelineDescriptor, pipeline_desc)
-        pipeline_desc.compute_shader = &compute_shader_entry;
-        pipeline_desc.root_signature = signature;
-        auto pipeline = cgpu_create_compute_pipeline(device, &pipeline_desc);
-        EXPECT_NE(pipeline, CGPU_NULLPTR);
-
-        DECLARE_ZERO(CGpuDescriptorSetDescriptor, set_desc)
-        set_desc.root_signature = signature;
-        set_desc.set_index = 0;
-        auto set = cgpu_create_descriptor_set(device, &set_desc);
-        EXPECT_NE(set, CGPU_NULLPTR);
-
-        // Create Buffer
-        DECLARE_ZERO(CGpuBufferDescriptor, buffer_desc)
-        buffer_desc.flags = BCF_NONE;
-        buffer_desc.descriptors = RT_RW_BUFFER;
-        buffer_desc.memory_usage = MU_GPU_ONLY;
-        buffer_desc.element_stride = sizeof(Pixel);
-        buffer_desc.elemet_count = MANDELBROT_WIDTH * MANDELBROT_HEIGHT;
-        buffer_desc.size = sizeof(Pixel) * MANDELBROT_WIDTH * MANDELBROT_HEIGHT;
-        buffer_desc.name = "DataBuffer";
-        auto data_buffer = cgpu_create_buffer(device, &buffer_desc);
-
-        // Update Descriptor Set
-        DECLARE_ZERO(CGpuDescriptorData, data)
-        data.name = "buf";
-        data.buffers = &data_buffer;
-        data.count = 1;
-        cgpu_update_descriptor_set(set, &data, 1);
-
-        // Dispatch
-        auto gfx_queue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
-        EXPECT_NE(gfx_queue, CGPU_NULLPTR);
-        auto pool = cgpu_create_command_pool(gfx_queue, nullptr);
-
-        DECLARE_ZERO(CGpuCommandBufferDescriptor, cmd_desc);
-        cmd_desc.is_secondary = false;
-        auto cmd = cgpu_create_command_buffer(pool, &cmd_desc);
-        cgpu_cmd_begin(cmd);
-        DECLARE_ZERO(CGpuComputePassDescriptor, pass_desc);
-        pass_desc.name = "ComputePass";
-        auto encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
-        cgpu_compute_encoder_bind_descriptor_set(encoder, set);
-        cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
-        cgpu_compute_encoder_dispatch(encoder, 32, 32, 1);
-        cgpu_cmd_end_compute_pass(cmd, encoder);
-        cgpu_cmd_end(cmd);
-        DECLARE_ZERO(CGpuQueueSubmitDescriptor, submit_desc);
-        submit_desc.cmds = &cmd;
-        submit_desc.cmds_count = 1;
-        cgpu_submit_queue(gfx_queue, &submit_desc);
-        cgpu_wait_queue_idle(gfx_queue);
-
-        // clean up
-        cgpu_free_command_buffer(cmd);
-        cgpu_free_command_pool(pool);
-        cgpu_free_buffer(data_buffer);
-        cgpu_free_queue(gfx_queue);
-        cgpu_free_descriptor_set(set);
-        cgpu_free_shader_library(compute_shader);
-        cgpu_free_root_signature(signature);
-        cgpu_free_compute_pipeline(pipeline);
-    }
 }
 
 static const auto allPlatforms = testing::Values(

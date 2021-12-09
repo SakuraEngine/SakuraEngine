@@ -124,7 +124,7 @@ void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBufferRange* r
     VkResult vk_res = vmaMapMemory(D->pVmaAllocator, B->pVkAllocation, &B->super.cpu_mapped_address);
     assert(vk_res == VK_SUCCESS);
 
-    if (range)
+    if (range && (vk_res == VK_SUCCESS))
     {
         B->super.cpu_mapped_address = ((uint8_t*)B->super.cpu_mapped_address + range->offset);
     }
@@ -203,6 +203,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
     // Shader Reflections
     S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
     SpvReflectResult spvRes = spvReflectCreateShaderModule(info.codeSize, info.pCode, S->pReflect);
+    (void)spvRes;
     assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
     uint32_t entry_count = S->pReflect->entry_point_count;
     S->super.entrys_count = entry_count;
