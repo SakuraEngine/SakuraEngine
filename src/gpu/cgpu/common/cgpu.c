@@ -388,16 +388,33 @@ CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, co
     return ecd;
 }
 
-void cgpu_compute_encoder_bind_descriptor_set(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor)
+void cgpu_compute_encoder_bind_descriptor_set(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set)
 {
     assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
-    assert(descriptor != CGPU_NULLPTR && "fatal: call on NULL descriptor!");
-    assert(descriptor->root_signature != CGPU_NULLPTR && "fatal: call on NULL root_signature!");
-    CGpuDeviceId device = descriptor->root_signature->device;
-    assert(descriptor->root_signature->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(set != CGPU_NULLPTR && "fatal: call on NULL descriptor!");
+    CGpuDeviceId device = encoder->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcComputeEncoderBindDescriptorSet fn_bind_descriptor_set = device->proc_table_cache->compute_encoder_bind_descriptor_set;
     assert(fn_bind_descriptor_set && "compute_encoder_bind_descriptor_set Proc Missing!");
-    fn_bind_descriptor_set(encoder, descriptor);
+    fn_bind_descriptor_set(encoder, set);
+}
+
+void cgpu_compute_encoder_bind_pipeline(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline)
+{
+    CGpuDeviceId device = encoder->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcComputeEncoderBindPipeline fn_compute_bind_pipeline = device->proc_table_cache->compute_encoder_bind_pipeline;
+    assert(fn_compute_bind_pipeline && "compute_encoder_bind_pipeline Proc Missing!");
+    fn_compute_bind_pipeline(encoder, pipeline);
+}
+
+void cgpu_compute_encoder_dispatch(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
+{
+    CGpuDeviceId device = encoder->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcComputeEncoderDispatch fn_compute_dispatch = device->proc_table_cache->compute_encoder_dispatch;
+    assert(fn_compute_dispatch && "compute_encoder_dispatch Proc Missing!");
+    fn_compute_dispatch(encoder, X, Y, Z);
 }
 
 void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)

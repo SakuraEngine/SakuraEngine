@@ -208,8 +208,12 @@ typedef void (*CGPUProcCmdEnd)(CGpuCommandBufferId cmd);
 // Compute Pass
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 typedef CGpuComputePassEncoderId (*CGPUProcCmdBeginComputePass)(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
-RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
-typedef void (*CGPUProcComputeEncoderBindDescriptorSet)(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
+RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set);
+typedef void (*CGPUProcComputeEncoderBindDescriptorSet)(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set);
+RUNTIME_API void cgpu_compute_encoder_bind_pipeline(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
+typedef void (*CGPUProcComputeEncoderBindPipeline)(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
+RUNTIME_API void cgpu_compute_encoder_dispatch(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
+typedef void (*CGPUProcComputeEncoderDispatch)(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 RUNTIME_API void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 typedef void (*CGPUProcCmdEndComputePass)(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 
@@ -267,6 +271,8 @@ typedef struct CGpuProcTable {
 
     const CGPUProcCmdBeginComputePass cmd_begin_compute_pass;
     const CGPUProcComputeEncoderBindDescriptorSet compute_encoder_bind_descriptor_set;
+    const CGPUProcComputeEncoderBindPipeline compute_encoder_bind_pipeline;
+    const CGPUProcComputeEncoderDispatch compute_encoder_dispatch;
     const CGPUProcCmdEndComputePass cmd_end_compute_pass;
 } CGpuProcTable;
 
@@ -368,6 +374,12 @@ typedef struct CGpuCommandBuffer {
     CGpuCommandPoolId pool;
     ECGpuPipelineType current_dispatch;
 } CGpuCommandBuffer;
+
+// Notice that we must keep this header same with CGpuCommandBuffer
+// because Vulkan & D3D12 Backend simply use command buffer handle as encoder handle
+typedef struct CGpuComputePassEncoder {
+    CGpuDeviceId device;
+} CGpuComputePassEncoder;
 
 // Shaders
 typedef struct CGpuShaderResource {

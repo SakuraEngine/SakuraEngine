@@ -66,6 +66,9 @@ const CGpuProcTable tbl_vk = {
     .cmd_update_buffer = &cgpu_cmd_update_buffer_vulkan,
     .cmd_end = &cgpu_cmd_end_vulkan,
     .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_vulkan,
+    .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_vulkan,
+    .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_vulkan,
+    .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_vulkan,
     .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_vulkan
 };
 
@@ -672,6 +675,37 @@ CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId 
 {
     // DO NOTHING NOW
     return (CGpuComputePassEncoderId)cmd;
+}
+
+void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    const CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
+    const CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
+
+    // TODO: VK Must Fill All DescriptorSetLayouts at first dispach/draw.
+    // Example: If shader uses only set 2, we still have to bind empty sets for set=0 and set=1
+
+    D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, RS->pipeline_layout,
+        Set->super.index, 1, &Set->pVkDescriptorSet,
+        // TODO: Dynamic Offset
+        0, NULL);
+}
+
+void cgpu_compute_encoder_bind_pipeline_vulkan(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    CGpuComputePipeline_Vulkan* PPL = (CGpuComputePipeline_Vulkan*)pipeline;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
+    D->mVkDeviceTable.vkCmdBindPipeline(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, PPL->pVkPipeline);
+}
+
+void cgpu_compute_encoder_dispatch_vulkan(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)Cmd->super.device;
+    D->mVkDeviceTable.vkCmdDispatch(Cmd->pVkCmdBuf, X, Y, Z);
 }
 
 void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)

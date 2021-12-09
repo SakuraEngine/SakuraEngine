@@ -74,6 +74,9 @@ RUNTIME_API void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
+RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
+RUNTIME_API void cgpu_compute_encoder_bind_pipeline_vulkan(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
+RUNTIME_API void cgpu_compute_encoder_dispatch_vulkan(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 RUNTIME_API void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 
 typedef struct CGpuInstance_Vulkan {

@@ -274,6 +274,8 @@ TEST_P(ResourceCreation, CreateComputePipeline)
         pass_desc.name = "ComputePass";
         auto encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
         cgpu_compute_encoder_bind_descriptor_set(encoder, set);
+        cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
+        cgpu_compute_encoder_dispatch(encoder, 32, 32, 1);
         cgpu_cmd_end_compute_pass(cmd, encoder);
         cgpu_cmd_end(cmd);
         DECLARE_ZERO(CGpuQueueSubmitDescriptor, submit_desc);
