@@ -407,7 +407,7 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     for (uint32_t i = 0; i < count; i++)
     {
         // Descriptor Info
-        CGpuDescriptorData* ArgData = datas + i;
+        const CGpuDescriptorData* ArgData = datas + i;
         CGpuShaderResource* ResData = CGPU_NULLPTR;
         size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), (size_t)D);
         for (uint32_t p = 0; p < SetLayout->resources_count; p++)
@@ -422,8 +422,34 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
         switch (ResData->type)
         {
+            case RT_BUFFER:
+            case RT_BUFFER_RAW:
+            case RT_RW_BUFFER:
+            case RT_RW_BUFFER_RAW: {
+                assert(ArgData->buffers && "ASSERT: Binding NULL Buffer(s)!");
+                CGpuBuffer_Vulkan** Buffers = (CGpuBuffer_Vulkan**)ArgData->buffers;
+                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                {
+                    assert(ArgData->buffers[arr] && "ASSERT: Binding NULL Buffer!");
+                    VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
+                    Data->mBufferInfo.buffer = Buffers[arr]->pVkBuffer;
+                    Data->mBufferInfo.offset = Buffers[arr]->mOffset;
+                    Data->mBufferInfo.range = VK_WHOLE_SIZE;
+                    if (ArgData->buffers_params.offsets)
+                    {
+                        Data->mBufferInfo.offset = ArgData->buffers_params.offsets[arr];
+                        Data->mBufferInfo.range = ArgData->buffers_params.sizes[arr];
+                    }
+                    dirty = true;
+                }
+                break;
+            }
             default:
                 break;
+        }
+        if (dirty)
+        {
+            D->mVkDeviceTable.vkUpdateDescriptorSetWithTemplateKHR(D->pVkDevice, Set->pVkDescriptorSet, SetLayout->update_template, pUpdateData);
         }
     }
 }

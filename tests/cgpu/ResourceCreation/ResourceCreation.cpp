@@ -264,8 +264,27 @@ TEST_P(ResourceCreation, CreateComputePipeline)
         // Dispatch
         auto gfx_queue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
         EXPECT_NE(gfx_queue, CGPU_NULLPTR);
+        auto pool = cgpu_create_command_pool(gfx_queue, nullptr);
+
+        DECLARE_ZERO(CGpuCommandBufferDescriptor, cmd_desc);
+        cmd_desc.is_secondary = false;
+        auto cmd = cgpu_create_command_buffer(pool, &cmd_desc);
+        cgpu_cmd_begin(cmd);
+        DECLARE_ZERO(CGpuComputePassDescriptor, pass_desc);
+        pass_desc.name = "ComputePass";
+        auto encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
+        cgpu_compute_encoder_bind_descriptor_set(encoder, set);
+        cgpu_cmd_end_compute_pass(cmd, encoder);
+        cgpu_cmd_end(cmd);
+        DECLARE_ZERO(CGpuQueueSubmitDescriptor, submit_desc);
+        submit_desc.cmds = &cmd;
+        submit_desc.cmds_count = 1;
+        cgpu_submit_queue(gfx_queue, &submit_desc);
+        cgpu_wait_queue_idle(gfx_queue);
 
         // clean up
+        cgpu_free_command_buffer(cmd);
+        cgpu_free_command_pool(pool);
         cgpu_free_buffer(data_buffer);
         cgpu_free_queue(gfx_queue);
         cgpu_free_descriptor_set(set);

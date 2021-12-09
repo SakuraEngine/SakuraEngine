@@ -1,7 +1,8 @@
 find_package(GTest)
 
 if(GTest_FOUND)
-  set(TEST_LIBRARIES GTest::Main)
+  message(STATUS "Found GTest")
+  set(TEST_LIBRARIES GTest::gtest_main)
 else()
     configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
     message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
