@@ -1,3 +1,4 @@
+#include "platform/configure.h"
 #ifdef _WINDOWS
     #include "win/window.cpp"
 #endif

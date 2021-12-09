@@ -73,6 +73,7 @@ RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
 // CMDs
 RUNTIME_API void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+RUNTIME_API void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
