@@ -1,17 +1,15 @@
-#define RUNTIME_DLL
 #include "gtest/gtest.h"
 #include "math/common.h"
 
-class CommonMath : public::testing::Test
+class CommonMath : public ::testing::Test
 {
 protected:
-	void SetUp() override
-	{
+    void SetUp() override
+    {
     }
-    
+
     void TearDown() override
     {
-
     }
 };
 

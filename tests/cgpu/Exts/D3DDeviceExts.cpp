@@ -1,21 +1,18 @@
-#define RUNTIME_DLL
-
 #include "cgpu/api.h"
 #ifdef CGPU_USE_D3D12
-#include "cgpu/extensions/cgpu_d3d12_exts.h"
-#include "gtest/gtest.h"
-#include <vector>
+    #include "cgpu/extensions/cgpu_d3d12_exts.h"
+    #include "gtest/gtest.h"
+    #include <vector>
 
-class D3D12DeviceExtsTest : public testing::Test 
+class D3D12DeviceExtsTest : public testing::Test
 {
 protected:
-  static void SetUpTestCase() {
-    
-  }
-  static void TearDownTestCase() {
-
-  }
-
+    static void SetUpTestCase()
+    {
+    }
+    static void TearDownTestCase()
+    {
+    }
 };
 
 TEST_F(D3D12DeviceExtsTest, EnableAndDisableDRED)
@@ -26,5 +23,5 @@ TEST_F(D3D12DeviceExtsTest, EnableAndDisableDRED)
     cgpu_d3d12_disable_DRED(DRED);
 }
 #else
-int main() {return 0;}
+int main() { return 0; }
 #endif

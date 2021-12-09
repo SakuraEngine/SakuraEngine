@@ -1,5 +1,3 @@
-#define RUNTIME_DLL
-
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/extensions/cgpu_vulkan_exts.h"
