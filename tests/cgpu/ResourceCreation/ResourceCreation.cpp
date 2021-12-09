@@ -8,12 +8,12 @@
 #include "spirv.h"
 #include "dxil.h"
 
-class ResourceCreation : public ::testing::TestWithParam<ECGPUBackEnd>
+class ResourceCreation : public ::testing::TestWithParam<ECGpuBackend>
 {
 protected:
     void SetUp() override
     {
-        ECGPUBackEnd backend = GetParam();
+        ECGpuBackend backend = GetParam();
         DECLARE_ZERO(CGpuInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
@@ -39,15 +39,15 @@ protected:
         EXPECT_NE(device, nullptr);
         EXPECT_NE(device, CGPU_NULLPTR);
 
-        vertex_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)triangle_vert_spirv;
-        vertex_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_vert_spirv);
-        frag_shaders[ECGPUBackEnd_VULKAN] = (const uint32_t*)triangle_frag_spirv;
-        frag_shader_sizes[ECGPUBackEnd_VULKAN] = sizeof(triangle_frag_spirv);
+        vertex_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)triangle_vert_spirv;
+        vertex_shader_sizes[ECGpuBackend_VULKAN] = sizeof(triangle_vert_spirv);
+        frag_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)triangle_frag_spirv;
+        frag_shader_sizes[ECGpuBackend_VULKAN] = sizeof(triangle_frag_spirv);
 
-        vertex_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_vert_dxil;
-        vertex_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_vert_dxil);
-        frag_shaders[ECGPUBackEnd_D3D12] = (const uint32_t*)triangle_frag_dxil;
-        frag_shader_sizes[ECGPUBackEnd_D3D12] = sizeof(triangle_frag_dxil);
+        vertex_shaders[ECGpuBackend_D3D12] = (const uint32_t*)triangle_vert_dxil;
+        vertex_shader_sizes[ECGpuBackend_D3D12] = sizeof(triangle_vert_dxil);
+        frag_shaders[ECGpuBackend_D3D12] = (const uint32_t*)triangle_frag_dxil;
+        frag_shader_sizes[ECGpuBackend_D3D12] = sizeof(triangle_frag_dxil);
     }
 
     void TearDown() override
@@ -59,10 +59,10 @@ protected:
     CGpuInstanceId instance;
     CGpuAdapterId adapter;
     CGpuDeviceId device;
-    const uint32_t* vertex_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
-    uint32_t vertex_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
-    const uint32_t* frag_shaders[ECGPUBackEnd::ECGPUBackEnd_COUNT];
-    uint32_t frag_shader_sizes[ECGPUBackEnd::ECGPUBackEnd_COUNT];
+    const uint32_t* vertex_shaders[ECGpuBackend::ECGpuBackend_COUNT];
+    uint32_t vertex_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
+    const uint32_t* frag_shaders[ECGpuBackend::ECGpuBackend_COUNT];
+    uint32_t frag_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
 };
 
 TEST_P(ResourceCreation, CreateIndexBuffer)
@@ -133,7 +133,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
 
 TEST_P(ResourceCreation, CreateModules)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     DECLARE_ZERO(CGpuShaderLibraryDescriptor, vdesc)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
@@ -160,7 +160,7 @@ TEST_P(ResourceCreation, CreateModules)
 
 TEST_P(ResourceCreation, CreateRootSignature)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     DECLARE_ZERO(CGpuShaderLibraryDescriptor, vdesc)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
@@ -198,11 +198,11 @@ TEST_P(ResourceCreation, CreateRootSignature)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    ECGPUBackEnd_VULKAN
+    ECGpuBackend_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
 //,
-// ECGPUBackEnd_D3D12
+// ECGpuBackend_D3D12
 #endif
 );
 

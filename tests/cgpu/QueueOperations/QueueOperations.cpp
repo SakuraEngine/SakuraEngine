@@ -1,12 +1,12 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
 
-class QueueOperations : public ::testing::TestWithParam<ECGPUBackEnd>
+class QueueOperations : public ::testing::TestWithParam<ECGpuBackend>
 {
 protected:
     void SetUp() override
     {
-        ECGPUBackEnd backend = GetParam();
+        ECGpuBackend backend = GetParam();
         DECLARE_ZERO(CGpuInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
@@ -200,11 +200,11 @@ TEST_P(QueueOperations, TransferCmdReadback)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    ECGPUBackEnd_VULKAN
+    ECGpuBackend_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
     ,
-    ECGPUBackEnd_D3D12
+    ECGpuBackend_D3D12
 #endif
 );
 

@@ -182,11 +182,9 @@ typedef struct CGpuCommandBuffer_Vulkan {
     VkCommandBuffer pVkCmdBuf;
     VkRenderPass pVkActiveRenderPass;
     VkPipelineLayout pBoundPipelineLayout;
+    struct CGpuCommandPool_Vulkan* pCmdPool;
     uint32_t mNodeIndex : 4;
     uint32_t mType : 3;
-    uint32_t mPadA;
-    struct CGpuCommandPool_Vulkan* pCmdPool;
-    uint64_t mPadB[9];
 } CGpuCommandBuffer_Vulkan;
 
 typedef struct CGpuBuffer_Vulkan {

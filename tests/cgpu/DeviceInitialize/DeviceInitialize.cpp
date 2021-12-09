@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
 
-class CGpuTest : public ::testing::TestWithParam<ECGPUBackEnd>
+class CGpuTest : public ::testing::TestWithParam<ECGpuBackend>
 {
 protected:
     void SetUp() override
@@ -10,16 +10,16 @@ protected:
 
     const char* GetBackendName()
     {
-        ECGPUBackEnd backend = GetParam();
+        ECGpuBackend backend = GetParam();
         switch (backend)
         {
-            case ECGPUBackEnd::ECGPUBackEnd_D3D12:
+            case ECGpuBackend::ECGpuBackend_D3D12:
                 return "D3D12";
-            case ECGPUBackEnd::ECGPUBackEnd_METAL:
+            case ECGpuBackend::ECGpuBackend_METAL:
                 return "Metal";
-            case ECGPUBackEnd::ECGPUBackEnd_VULKAN:
+            case ECGpuBackend::ECGpuBackend_VULKAN:
                 return "Vulkan";
-            case ECGPUBackEnd::ECGPUBackEnd_AGC:
+            case ECGpuBackend::ECGpuBackend_AGC:
                 return "AGC";
             default:
                 return "UNKNOWN";
@@ -27,7 +27,7 @@ protected:
     }
 };
 
-CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enable_debug_layer, bool enableGPUValidation)
+CGpuInstanceId init_instance(ECGpuBackend backend, bool enable_debug_layer, bool enableGPUValidation)
 {
     DECLARE_ZERO(CGpuInstanceDescriptor, desc)
     desc.backend = backend;
@@ -36,15 +36,15 @@ CGpuInstanceId init_instance(ECGPUBackEnd backend, bool enable_debug_layer, bool
     CGpuInstanceId instance = cgpu_create_instance(&desc);
     DECLARE_ZERO(CGpuInstanceFeatures, instance_features)
     cgpu_query_instance_features(instance, &instance_features);
-    if (backend == ECGPUBackEnd::ECGPUBackEnd_VULKAN)
+    if (backend == ECGpuBackend::ECGpuBackend_VULKAN)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
-    else if (backend == ECGPUBackEnd::ECGPUBackEnd_D3D12)
+    else if (backend == ECGpuBackend::ECGpuBackend_D3D12)
     {
         EXPECT_FALSE(instance_features.specialization_constant);
     }
-    else if (backend == ECGPUBackEnd::ECGPUBackEnd_METAL)
+    else if (backend == ECGpuBackend::ECGpuBackend_METAL)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
@@ -103,21 +103,21 @@ void test_create_device(CGpuInstanceId instance, bool enable_debug_layer, bool e
 
 TEST_P(CGpuTest, InstanceCreationDbgGpu)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto inst = init_instance(backend, true, true);
     EXPECT_NE(inst, CGPU_NULLPTR);
     cgpu_free_instance(inst);
 }
 TEST_P(CGpuTest, InstanceCreationDbg)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto inst = init_instance(backend, true, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     cgpu_free_instance(inst);
 }
 TEST_P(CGpuTest, InstanceCreation)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto inst = init_instance(backend, false, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     cgpu_free_instance(inst);
@@ -125,7 +125,7 @@ TEST_P(CGpuTest, InstanceCreation)
 
 TEST_P(CGpuTest, AdapterEnum)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto instance = init_instance(backend, true, true);
     EXPECT_GT(enum_adapters(instance), 0);
     cgpu_free_instance(instance);
@@ -133,7 +133,7 @@ TEST_P(CGpuTest, AdapterEnum)
 
 TEST_P(CGpuTest, CreateDeviceDbgGpu)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto inst = init_instance(backend, true, true);
     EXPECT_NE(inst, CGPU_NULLPTR);
     test_create_device(inst, false, false);
@@ -141,7 +141,7 @@ TEST_P(CGpuTest, CreateDeviceDbgGpu)
 }
 TEST_P(CGpuTest, CreateDevice)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto inst = init_instance(backend, false, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     test_create_device(inst, false, false);
@@ -149,7 +149,7 @@ TEST_P(CGpuTest, CreateDevice)
 }
 TEST_P(CGpuTest, CreateDeviceDbg)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto inst = init_instance(backend, true, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     test_create_device(inst, false, false);
@@ -158,7 +158,7 @@ TEST_P(CGpuTest, CreateDeviceDbg)
 
 TEST_P(CGpuTest, QueryQueueCount)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto instance = init_instance(backend, true, true);
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
@@ -182,7 +182,7 @@ TEST_P(CGpuTest, QueryQueueCount)
 
 TEST_P(CGpuTest, QueryVendorInfo)
 {
-    ECGPUBackEnd backend = GetParam();
+    ECGpuBackend backend = GetParam();
     auto instance = init_instance(backend, true, true);
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
@@ -205,15 +205,15 @@ TEST_P(CGpuTest, QueryVendorInfo)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    ECGPUBackEnd_VULKAN
+    ECGpuBackend_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
     ,
-    ECGPUBackEnd_D3D12
+    ECGpuBackend_D3D12
 #endif
 #ifdef CGPU_USE_METAL
     ,
-    ECGPUBackEnd_METAL
+    ECGpuBackend_METAL
 #endif
 );
 
