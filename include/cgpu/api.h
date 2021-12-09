@@ -208,6 +208,8 @@ typedef void (*CGPUProcCmdEnd)(CGpuCommandBufferId cmd);
 // Compute Pass
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 typedef CGpuComputePassEncoderId (*CGPUProcCmdBeginComputePass)(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
+RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
+typedef void (*CGPUProcComputeEncoderBindDescriptorSet)(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
 RUNTIME_API void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 typedef void (*CGPUProcCmdEndComputePass)(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 
@@ -264,6 +266,7 @@ typedef struct CGpuProcTable {
     const CGPUProcCmdEnd cmd_end;
 
     const CGPUProcCmdBeginComputePass cmd_begin_compute_pass;
+    const CGPUProcComputeEncoderBindDescriptorSet compute_encoder_bind_descriptor_set;
     const CGPUProcCmdEndComputePass cmd_end_compute_pass;
 } CGpuProcTable;
 

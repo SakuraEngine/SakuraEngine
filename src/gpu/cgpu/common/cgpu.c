@@ -388,6 +388,18 @@ CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, co
     return ecd;
 }
 
+void cgpu_compute_encoder_bind_descriptor_set(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor)
+{
+    assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
+    assert(descriptor != CGPU_NULLPTR && "fatal: call on NULL descriptor!");
+    assert(descriptor->root_signature != CGPU_NULLPTR && "fatal: call on NULL root_signature!");
+    CGpuDeviceId device = descriptor->root_signature->device;
+    assert(descriptor->root_signature->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcComputeEncoderBindDescriptorSet fn_bind_descriptor_set = device->proc_table_cache->compute_encoder_bind_descriptor_set;
+    assert(fn_bind_descriptor_set && "compute_encoder_bind_descriptor_set Proc Missing!");
+    fn_bind_descriptor_set(encoder, descriptor);
+}
+
 void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)
 {
     assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
