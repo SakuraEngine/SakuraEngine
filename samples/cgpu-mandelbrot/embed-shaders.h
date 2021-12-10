@@ -2,7 +2,6 @@
 #include <stdint.h>
 #define MANDELBROT_WIDTH 3200
 #define MANDELBROT_HEIGHT 2400
-#define WORKGROUP_SIZE 32
 
 /**
  * Compute shader HLSL

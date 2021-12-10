@@ -1,5 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
+#include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
@@ -36,6 +37,8 @@ RUNTIME_API void cgpu_free_device_d3d12(CGpuDeviceId device);
 // API Object APIs
 RUNTIME_API CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device);
 RUNTIME_API void cgpu_free_fence_d3d12(CGpuFenceId fence);
+RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
+RUNTIME_API void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature);
 
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
@@ -170,6 +173,11 @@ typedef struct CGpuShaderLibrary_D3D12 {
     CGpuShaderLibrary super;
     struct IDxcBlobEncoding* pShaderBlob;
 } CGpuShaderLibrary_D3D12;
+
+typedef struct CGpuRootSignature_D3D12 {
+    CGpuRootSignature super;
+    ID3D12RootSignature* pDxRootSignature;
+} CGpuRootSignature_D3D12;
 
 typedef struct CGpuBuffer_D3D12 {
     CGpuBuffer super;

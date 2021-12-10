@@ -272,8 +272,8 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
     {
         d3d12reflection->GetThreadGroupSize(
             &Reflection->thread_group_sizes[0],
-            &Reflection->thread_group_sizes[0],
-            &Reflection->thread_group_sizes[0]);
+            &Reflection->thread_group_sizes[1],
+            &Reflection->thread_group_sizes[2]);
     }
 }
 

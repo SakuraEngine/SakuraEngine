@@ -1,3 +1,5 @@
+#include "cgpu/backend/d3d12/cgpu_d3d12.h"
+#include "cgpu/cgpu_config.h"
 #include "d3d12_utils.h"
 #include <assert.h>
 #include <stdio.h>
@@ -15,7 +17,7 @@
 
 CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descriptor)
 {
-    CGpuInstance_D3D12* result = new CGpuInstance_D3D12();
+    CGpuInstance_D3D12* result = cgpu_new<CGpuInstance_D3D12>();
     D3D12Util_Optionalenable_debug_layer(result, descriptor);
 
     UINT flags = 0;
@@ -76,7 +78,7 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
         SAFE_RELEASE(dxgiDebug);
     }
 #endif
-    delete to_destroy;
+    cgpu_delete(to_destroy);
 }
 
 void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
@@ -120,7 +122,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
 {
     CGpuAdapter_D3D12* A = (CGpuAdapter_D3D12*)adapter;
     CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)A->super.instance;
-    CGpuDevice_D3D12* D = new CGpuDevice_D3D12();
+    CGpuDevice_D3D12* D = cgpu_new<CGpuDevice_D3D12>();
     *const_cast<CGpuAdapterId*>(&D->super.adapter) = adapter;
 
     if (!SUCCEEDED(D3D12CreateDevice(A->pDxActiveGPU, // default adapter
@@ -224,6 +226,7 @@ void cgpu_free_device_d3d12(CGpuDeviceId device)
     cgpu_free(D->pSamplerHeaps);
     // Release D3D12 Device
     SAFE_RELEASE(D->pDxDevice);
+    cgpu_delete(D);
 }
 
 // API Objects APIs
@@ -231,7 +234,7 @@ CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     // create a Fence and ASSERT that it is valid
-    CGpuFence_D3D12* F = new CGpuFence_D3D12();
+    CGpuFence_D3D12* F = cgpu_new<CGpuFence_D3D12>();
     assert(F);
 
     CHECK_HRESULT(D->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_ARGS(&F->pDxFence)));
@@ -246,14 +249,28 @@ void cgpu_free_fence_d3d12(CGpuFenceId fence)
     CGpuFence_D3D12* F = (CGpuFence_D3D12*)fence;
     SAFE_RELEASE(F->pDxFence);
     CloseHandle(F->pDxWaitIdleFenceEvent);
-    delete F;
+    cgpu_delete(F);
+}
+
+CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc)
+{
+    CGpuRootSignature_D3D12* RS = cgpu_new<CGpuRootSignature_D3D12>();
+
+    return &RS->super;
+}
+
+void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature)
+{
+    CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)signature;
+    SAFE_RELEASE(RS->pDxRootSignature);
+    cgpu_delete(RS);
 }
 
 // Queue APIs
 CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
-    CGpuQueue_D3D12* Q = new CGpuQueue_D3D12();
+    CGpuQueue_D3D12* Q = cgpu_new<CGpuQueue_D3D12>();
     Q->pCommandQueue = D->ppCommandQueues[type][index];
     Q->pFence = (CGpuFence_D3D12*)cgpu_create_fence_d3d12(device);
     return &Q->super;
@@ -302,7 +319,7 @@ void cgpu_free_queue_d3d12(CGpuQueueId queue)
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
     assert(queue && "D3D12 ERROR: FREE NULL QUEUE!");
     cgpu_free_fence_d3d12(&Q->pFence->super);
-    delete Q;
+    cgpu_delete(Q);
 }
 
 // Command Objects
@@ -331,7 +348,7 @@ void free_transient_command_allocator(ID3D12CommandAllocator* allocator) { SAFE_
 
 CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
 {
-    CGpuCommandPool_D3D12* P = new CGpuCommandPool_D3D12();
+    CGpuCommandPool_D3D12* P = cgpu_new<CGpuCommandPool_D3D12>();
     P->pDxCmdAlloc = allocate_transient_command_allocator(P, queue);
     return &P->super;
 }
@@ -339,7 +356,7 @@ CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCo
 CGpuCommandBufferId cgpu_create_command_buffer_d3d12(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
 {
     // initialize to zero
-    CGpuCommandBuffer_D3D12* Cmd = new CGpuCommandBuffer_D3D12();
+    CGpuCommandBuffer_D3D12* Cmd = cgpu_new<CGpuCommandBuffer_D3D12>();
     CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)pool;
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)P->super.queue;
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)Q->super.device;
@@ -370,7 +387,7 @@ void cgpu_free_command_buffer_d3d12(CGpuCommandBufferId cmd)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
     SAFE_RELEASE(Cmd->pDxCmdList);
-    delete Cmd;
+    cgpu_delete(Cmd);
 }
 
 void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool)
@@ -380,7 +397,7 @@ void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool)
     assert(P->pDxCmdAlloc && "D3D12 ERROR: FREE NULL pDxCmdAlloc!");
 
     free_transient_command_allocator(P->pDxCmdAlloc);
-    delete P;
+    cgpu_delete(P);
 }
 
 // CMDs
@@ -418,25 +435,25 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
 {
     CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)device->adapter->instance;
     // CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
-    CGpuSwapChain_D3D12* S = new CGpuSwapChain_D3D12();
+    CGpuSwapChain_D3D12* S = cgpu_new<CGpuSwapChain_D3D12>();
 
     S->mDxSyncInterval = desc->enableVsync ? 1 : 0;
-    DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, desc1)
-    desc1.Width = desc->width;
-    desc1.Height = desc->height;
-    desc1.Format = DXGIUtil_TranslatePixelFormat(desc->format);
-    desc1.Stereo = false;
-    desc1.SampleDesc.Count = 1; // If multisampling is needed, we'll resolve it later
-    desc1.SampleDesc.Quality = 0;
-    desc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    desc1.BufferCount = desc->imageCount;
-    desc1.Scaling = DXGI_SCALING_STRETCH;
-    desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // for better performance.
-    desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-    desc1.Flags = 0;
+    DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, chain_desc1)
+    chain_desc1.Width = desc->width;
+    chain_desc1.Height = desc->height;
+    chain_desc1.Format = DXGIUtil_TranslatePixelFormat(desc->format);
+    chain_desc1.Stereo = false;
+    chain_desc1.SampleDesc.Count = 1; // If multisampling is needed, we'll resolve it later
+    chain_desc1.SampleDesc.Quality = 0;
+    chain_desc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    chain_desc1.BufferCount = desc->imageCount;
+    chain_desc1.Scaling = DXGI_SCALING_STRETCH;
+    chain_desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // for better performance.
+    chain_desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+    chain_desc1.Flags = 0;
     BOOL allowTearing = FALSE;
     I->pDXGIFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
-    desc1.Flags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+    chain_desc1.Flags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
     S->mFlags |= (!desc->enableVsync && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
     IDXGISwapChain1* swapchain;
@@ -452,7 +469,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
         Q = (CGpuQueue_D3D12*)desc->presentQueues[0];
     }
     auto bCreated =
-        SUCCEEDED(I->pDXGIFactory->CreateSwapChainForHwnd(Q->pCommandQueue, hwnd, &desc1, NULL, NULL, &swapchain));
+        SUCCEEDED(I->pDXGIFactory->CreateSwapChainForHwnd(Q->pCommandQueue, hwnd, &chain_desc1, NULL, NULL, &swapchain));
     (void)bCreated;
     assert(bCreated && "Failed to Try to Create SwapChain!");
 
@@ -473,14 +490,14 @@ void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain)
 {
     CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)swapchain;
     SAFE_RELEASE(S->pDxSwapChain);
-    delete S;
+    cgpu_delete(S);
 }
 
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
 // extentions
 CGpuDREDSettingsId cgpu_d3d12_enable_DRED()
 {
-    CGpuDREDSettingsId settings = new CGpuDREDSettings();
+    CGpuDREDSettingsId settings = cgpu_new<CGpuDREDSettings>();
     SUCCEEDED(D3D12GetDebugInterface(__uuidof(settings->pDredSettings), (void**)&(settings->pDredSettings)));
     // Turn on auto-breadcrumbs and page fault reporting.
     settings->pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
@@ -493,5 +510,5 @@ void cgpu_d3d12_disable_DRED(CGpuDREDSettingsId settings)
     settings->pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_OFF);
     settings->pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_OFF);
     SAFE_RELEASE(settings->pDredSettings);
-    delete settings;
+    cgpu_delete(settings);
 }

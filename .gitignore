@@ -14,3 +14,4 @@ _deps
 /.vscode
 /.cache
 /out
+/.VSCodeCounter
