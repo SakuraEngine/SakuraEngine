@@ -1,6 +1,8 @@
+#include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.h"
 #include "math/common.h"
 #include <dxcapi.h>
+#include <type_traits>
 
 // Inline Utils
 D3D12_RESOURCE_STATES D3D12Util_ResourceStateBridge(ECGpuResourceState state);
@@ -224,13 +226,29 @@ void cgpu_free_buffer_d3d12(CGpuBufferId buffer)
 #ifndef DXC_CP_ACP
     #define DXC_CP_ACP 0
 #endif
+
+template <typename T, typename... Args>
+auto try_invoke_pinned_api(T* loader, Args&&... args)
+    -> decltype(loader->CreateBlobWithEncodingFromPinned(std::forward<Args>(args)...), bool())
+{
+    loader->CreateBlobWithEncodingFromPinned(std::forward<Args>(args)...);
+    return true;
+};
+template <typename T>
+bool try_invoke_pinned_api(T* loader, ...) { return false; }
+
 CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
     CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
 {
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     CGpuShaderLibrary_D3D12* S = new CGpuShaderLibrary_D3D12();
     IDxcLibrary* pUtils;
     DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&pUtils));
-    pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
+    if (!try_invoke_pinned_api(pUtils, desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob))
+    {
+        pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
+    }
+    D3D12Util_InitializeShaderReflection(D, S, desc);
     pUtils->Release();
     return &S->super;
 }

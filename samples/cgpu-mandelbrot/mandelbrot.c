@@ -147,13 +147,13 @@ int main(void)
                 1);
             cgpu_cmd_end_compute_pass(cmd, encoder);
             // Barrier UAV buffer to transfer source
-            CGpuBufferBarrier buffer_barriers = {
+            CGpuBufferBarrier buffer_barrier = {
                 .buffer = data_buffer,
                 .src_state = RS_UNORDERED_ACCESS,
                 .dst_state = RS_COPY_SOURCE
             };
             CGpuResourceBarrierDescriptor barriers_desc = {
-                .buffer_barriers = &buffer_barriers,
+                .buffer_barriers = &buffer_barrier,
                 .buffer_barriers_count = 1
             };
             cgpu_cmd_resource_barrier(cmd, &barriers_desc);

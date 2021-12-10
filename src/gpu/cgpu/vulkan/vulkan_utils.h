@@ -1,4 +1,5 @@
 #pragma once
+#include "cgpu/api.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include "cgpu/backend/vulkan/vk_mem_alloc.h"
@@ -35,6 +36,8 @@ void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescript
 void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool);
 VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGpuDevice_Vulkan* D, const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count);
 void VkUtil_FreeDescriptorSetLayout(CGpuDevice_Vulkan* D, VkDescriptorSetLayout layout);
+void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vulkan* library, const struct CGpuShaderLibraryDescriptor* desc);
+void VkUtil_FreeShaderReflection(CGpuShaderLibrary_Vulkan* library);
 
 // Feature Select Helpers
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);

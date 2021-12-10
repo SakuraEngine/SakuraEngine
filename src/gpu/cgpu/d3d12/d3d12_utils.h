@@ -1,4 +1,5 @@
 #pragma once
+#include "cgpu/api.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/backend/d3d12/d3d12_bridge.h"
 #include "D3D12MemAlloc.h"
@@ -15,6 +16,8 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
 
 // API Objects Helpers
 void D3D12Util_SignalFence(CGpuQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue);
+void D3D12Util_InitializeShaderReflection(CGpuDevice_D3D12* device, CGpuShaderLibrary_D3D12* library, const struct CGpuShaderLibraryDescriptor* desc);
+void D3D12Util_FreeShaderReflection(CGpuShaderLibrary_D3D12* library);
 
 // Feature Select Helpers
 void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter);
@@ -36,6 +39,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(
     struct D3D12Util_DescriptorHeap* pHeap, uint32_t count);
 void D3D12Util_ReturnDescriptorHandles(
     struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count);
+
 // Use Views
 void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
     const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
@@ -76,7 +80,7 @@ static const DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIP
     { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
 };
 
-FORCEINLINE void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+FORCEINLINE static void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
     const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
     const auto hdl = D3D12Util_ConsumeDescriptorHandles(
@@ -86,7 +90,7 @@ FORCEINLINE void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResou
     D->pDxDevice->CreateShaderResourceView(pResource, pSrvDesc, *pHandle);
 }
 
-FORCEINLINE void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+FORCEINLINE static void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
     ID3D12Resource* pCounterResource,
     const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
@@ -97,7 +101,7 @@ FORCEINLINE void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResou
     D->pDxDevice->CreateUnorderedAccessView(pResource, pCounterResource, pSrvDesc, *pHandle);
 }
 
-FORCEINLINE void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
+FORCEINLINE static void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
     const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
     const auto hdl = D3D12Util_ConsumeDescriptorHandles(

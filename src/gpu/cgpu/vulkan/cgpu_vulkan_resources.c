@@ -2,7 +2,6 @@
 #include "math/common.h"
 #include "platform/configure.h"
 #include "vulkan_utils.h"
-#include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include <string.h>
 
 FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulkan* A, const struct CGpuBufferDescriptor* desc)
@@ -174,20 +173,6 @@ void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
 }
 
 // Shader APIs
-static const ECGpuResourceType RTLut[] = {
-    RT_SAMPLER,                // SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
-    RT_COMBINED_IMAGE_SAMPLER, // SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-    RT_TEXTURE,                // SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
-    RT_RW_TEXTURE,             // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
-    RT_TEXEL_BUFFER,           // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER
-    RT_RW_TEXEL_BUFFER,        // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
-    RT_UNIFORM_BUFFER,         // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-    RT_RW_BUFFER,              // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER
-    RT_UNIFORM_BUFFER,         // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
-    RT_RW_BUFFER,              // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
-    RT_INPUT_ATTACHMENT,       // SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
-    RT_RAY_TRACING             // SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
-};
 CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
     CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
 {
@@ -199,100 +184,15 @@ CGpuShaderLibraryId cgpu_create_shader_library_vulkan(
     };
     CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)cgpu_calloc(1, sizeof(CGpuShaderLibrary_Vulkan));
     D->mVkDeviceTable.vkCreateShaderModule(D->pVkDevice, &info, GLOBAL_VkAllocationCallbacks, &S->mShaderModule);
-    // Create Shader Reflection
-    // Shader Reflections
-    S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
-    SpvReflectResult spvRes = spvReflectCreateShaderModule(info.codeSize, info.pCode, S->pReflect);
-    (void)spvRes;
-    assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
-    uint32_t entry_count = S->pReflect->entry_point_count;
-    S->super.entrys_count = entry_count;
-    S->super.entry_reflections = cgpu_calloc(entry_count, sizeof(CGpuShaderReflection));
-    for (uint32_t i = 0; i < entry_count; i++)
-    {
-        // Initialize Common Reflection Data
-        CGpuShaderReflection* reflection = &S->super.entry_reflections[i];
-        // ATTENTION: We have only one entry point now
-        const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[i].name);
-        reflection->entry_name = (const char8_t*)entry->name;
-        reflection->stage = (ECGpuShaderStage)entry->shader_stage;
-        const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
-        (void)bGLSL;
-        const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
-        uint32_t icount;
-        spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
-        reflection->vertex_inputs_count = icount;
-        if (icount > 0)
-        {
-            DECLARE_ZERO_VLA(SpvReflectInterfaceVariable*, input_vars, icount)
-            spvReflectEnumerateInputVariables(S->pReflect, &icount, input_vars);
-            if ((entry->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT))
-            {
-                reflection->vertex_inputs_count = icount;
-                reflection->vertex_inputs = cgpu_calloc(icount, sizeof(CGpuVertexInput));
-                // Handle Vertex Inputs
-                for (uint32_t i = 0; i < icount; i++)
-                {
-                    // We use semantic for HLSL sources because DXC is a piece of shit.
-                    reflection->vertex_inputs[i].name =
-                        bHLSL ? input_vars[i]->semantic : input_vars[i]->name;
-                    reflection->vertex_inputs[i].format =
-                        VkUtil_FormatTranslateToCGPU((VkFormat)input_vars[i]->format);
-                }
-            }
-        }
-        // Handle Descriptor Sets
-        uint32_t scount;
-        spvReflectEnumerateDescriptorSets(S->pReflect, &scount, NULL);
-        reflection->shader_resources_count = scount;
-        if (scount > 0)
-        {
-            DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount)
-            spvReflectEnumerateDescriptorSets(S->pReflect, &scount, descriptros_sets);
-            uint32_t bcount = 0;
-            for (uint32_t i = 0; i < scount; i++)
-            {
-                bcount += descriptros_sets[i]->binding_count;
-            }
-            reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGpuShaderResource));
-            for (uint32_t i_set = 0, i_res = 0; i_set < scount; i_set++)
-            {
-                SpvReflectDescriptorSet* current_set = descriptros_sets[i_set];
-                for (uint32_t i_binding = 0; i_binding < current_set->binding_count; i_binding++, i_res++)
-                {
-                    SpvReflectDescriptorBinding* current_binding = current_set->bindings[i_binding];
-                    CGpuShaderResource* current_res = &reflection->shader_resources[i_res];
-                    current_res->set = current_binding->set;
-                    current_res->binding = current_binding->binding;
-                    current_res->stages = S->pReflect->shader_stage;
-                    current_res->type = RTLut[current_binding->descriptor_type];
-                    current_res->name = current_binding->name;
-                    current_res->name_hash =
-                        cgpu_hash(current_binding->name, strlen(current_binding->name), (size_t)device);
-                    current_res->size = current_binding->count;
-                }
-            }
-        }
-    }
+    VkUtil_InitializeShaderReflection(device, S, desc);
     return &S->super;
 }
 
-void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId module)
+void cgpu_free_shader_library_vulkan(CGpuShaderLibraryId library)
 {
-    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)module;
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)module->device;
-    spvReflectDestroyShaderModule(S->pReflect);
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)library->device;
+    CGpuShaderLibrary_Vulkan* S = (CGpuShaderLibrary_Vulkan*)library;
+    VkUtil_FreeShaderReflection(S);
     D->mVkDeviceTable.vkDestroyShaderModule(D->pVkDevice, S->mShaderModule, GLOBAL_VkAllocationCallbacks);
-    if (S->super.entry_reflections)
-    {
-        for (uint32_t i = 0; i < S->super.entrys_count; i++)
-        {
-            CGpuShaderReflection* reflection = S->super.entry_reflections + i;
-            if (reflection->vertex_inputs) cgpu_free(reflection->vertex_inputs);
-            if (reflection->shader_resources) cgpu_free(reflection->shader_resources);
-        }
-    }
-    cgpu_free(S->super.entry_reflections);
-    cgpu_free(S->pReflect);
     cgpu_free(S);
 }
