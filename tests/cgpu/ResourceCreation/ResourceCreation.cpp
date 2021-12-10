@@ -43,11 +43,15 @@ protected:
         vertex_shader_sizes[ECGpuBackend_VULKAN] = sizeof(triangle_vert_spirv);
         frag_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)triangle_frag_spirv;
         frag_shader_sizes[ECGpuBackend_VULKAN] = sizeof(triangle_frag_spirv);
+        compute_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)simple_compute_spirv;
+        compute_shader_sizes[ECGpuBackend_VULKAN] = sizeof(simple_compute_spirv);
 
         vertex_shaders[ECGpuBackend_D3D12] = (const uint32_t*)triangle_vert_dxil;
         vertex_shader_sizes[ECGpuBackend_D3D12] = sizeof(triangle_vert_dxil);
         frag_shaders[ECGpuBackend_D3D12] = (const uint32_t*)triangle_frag_dxil;
         frag_shader_sizes[ECGpuBackend_D3D12] = sizeof(triangle_frag_dxil);
+        compute_shaders[ECGpuBackend_D3D12] = (const uint32_t*)simple_compute_dxil;
+        compute_shader_sizes[ECGpuBackend_D3D12] = sizeof(simple_compute_dxil);
     }
 
     void TearDown() override
@@ -63,6 +67,8 @@ protected:
     uint32_t vertex_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
     const uint32_t* frag_shaders[ECGpuBackend::ECGpuBackend_COUNT];
     uint32_t frag_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
+    const uint32_t* compute_shaders[ECGpuBackend::ECGpuBackend_COUNT];
+    uint32_t compute_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
 };
 
 TEST_P(ResourceCreation, CreateIndexBuffer)
@@ -196,13 +202,37 @@ TEST_P(ResourceCreation, CreateRootSignature)
     cgpu_free_shader_library(fragment_shader);
 }
 
+TEST_P(ResourceCreation, CreateComputePipeline)
+{
+    // Create compute shader
+    ECGpuBackend backend = GetParam();
+    DECLARE_ZERO(CGpuShaderLibraryDescriptor, csdesc)
+    csdesc.code = compute_shaders[backend];
+    csdesc.code_size = compute_shader_sizes[backend];
+    csdesc.name = "ComputeShaderLibrary";
+    csdesc.stage = ECGpuShaderStage::SS_COMPUTE;
+    auto compute_shader = cgpu_create_shader_library(device, &csdesc);
+    EXPECT_NE(compute_shader, CGPU_NULLPTR);
+
+    // Create root signature
+    DECLARE_ZERO(CGpuPipelineShaderDescriptor, compute_shader_entry)
+    compute_shader_entry.entry = "main";
+    compute_shader_entry.stage = SS_COMPUTE;
+    compute_shader_entry.library = compute_shader;
+    DECLARE_ZERO(CGpuRootSignatureDescriptor, root_desc)
+    root_desc.shaders = &compute_shader_entry;
+    root_desc.shaders_count = 1;
+    CGpuRootSignatureId signature = cgpu_create_root_signature(device, &root_desc);
+    EXPECT_NE(signature, CGPU_NULLPTR);
+}
+
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
     ECGpuBackend_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
-//,
-// ECGpuBackend_D3D12
+    ,
+    ECGpuBackend_D3D12
 #endif
 );
 

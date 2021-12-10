@@ -402,6 +402,7 @@ typedef struct CGpuShaderResource {
     const char8_t* name;
     size_t name_hash;
     ECGpuResourceType type;
+    ECGpuTextureDimension dim;
     uint32_t set;
     uint32_t binding;
     uint32_t size;
@@ -414,12 +415,13 @@ typedef struct CGpuVertexInput {
 } CGpuVertexInput;
 
 typedef struct CGpuShaderReflection {
-    CGpuVertexInput* vertex_inputs;
-    uint32_t vertex_inputs_count;
-    CGpuShaderResource* shader_resources;
-    uint32_t shader_resources_count;
     const char8_t* entry_name;
     ECGpuShaderStage stage;
+    CGpuVertexInput* vertex_inputs;
+    CGpuShaderResource* shader_resources;
+    uint32_t vertex_inputs_count;
+    uint32_t shader_resources_count;
+    uint32_t thread_group_sizes[3];
 } CGpuShaderReflection;
 
 typedef struct CGpuShaderLibrary {

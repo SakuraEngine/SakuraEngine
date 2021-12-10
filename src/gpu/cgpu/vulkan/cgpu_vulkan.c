@@ -96,20 +96,20 @@ void cgpu_enum_adapters_vulkan(CGpuInstanceId instance, CGpuAdapterId* const ada
 
 const CGpuAdapterDetail* cgpu_query_adapter_detail_vulkan(const CGpuAdapterId adapter)
 {
-    CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
-    return &a->adapter_detail;
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)adapter;
+    return &A->adapter_detail;
 }
 
 uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQueueType type)
 {
-    CGpuAdapter_Vulkan* a = (CGpuAdapter_Vulkan*)adapter;
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)adapter;
     uint32_t count = 0;
     switch (type)
     {
         case ECGpuQueueType_Graphics: {
-            for (uint32_t i = 0; i < a->mQueueFamiliesCount; i++)
+            for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
-                const VkQueueFamilyProperties* prop = &a->pQueueFamilyProperties[i];
+                const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
                 if (prop->queueFlags & VK_QUEUE_GRAPHICS_BIT)
                 {
                     count += prop->queueCount;
@@ -118,9 +118,9 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
         }
         break;
         case ECGpuQueueType_Compute: {
-            for (uint32_t i = 0; i < a->mQueueFamiliesCount; i++)
+            for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
-                const VkQueueFamilyProperties* prop = &a->pQueueFamilyProperties[i];
+                const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
                 if (prop->queueFlags & VK_QUEUE_COMPUTE_BIT)
                 {
                     if (!(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
@@ -132,9 +132,9 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
         }
         break;
         case ECGpuQueueType_Transfer: {
-            for (uint32_t i = 0; i < a->mQueueFamiliesCount; i++)
+            for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
-                const VkQueueFamilyProperties* prop = &a->pQueueFamilyProperties[i];
+                const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
                 if (prop->queueFlags & VK_QUEUE_TRANSFER_BIT)
                 {
                     if (!(prop->queueFlags & VK_QUEUE_COMPUTE_BIT))
@@ -535,10 +535,10 @@ void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDes
     // execute given command list
     assert(Q->pVkQueue != VK_NULL_HANDLE);
 
-    DECLARE_ZERO_VLA(VkCommandBuffer, vkcmds, CmdCount);
+    DECLARE_ZERO_VLA(VkCommandBuffer, vkCmds, CmdCount);
     for (uint32_t i = 0; i < CmdCount; ++i)
     {
-        vkcmds[i] = Cmds[i]->pVkCmdBuf;
+        vkCmds[i] = Cmds[i]->pVkCmdBuf;
     }
 
     // TODO: Add Necessary Semaphores
@@ -549,7 +549,7 @@ void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDes
         .pWaitSemaphores = NULL,
         .pWaitDstStageMask = 0,
         .commandBufferCount = CmdCount,
-        .pCommandBuffers = vkcmds,
+        .pCommandBuffers = vkCmds,
         .signalSemaphoreCount = 0,
         .pSignalSemaphores = NULL,
     };
@@ -575,7 +575,6 @@ void cgpu_free_queue_vulkan(CGpuQueueId queue)
 VkCommandPool allocate_transient_command_pool(CGpuDevice_Vulkan* D, CGpuQueueId queue)
 {
     VkCommandPool P = VK_NULL_HANDLE;
-    // CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)queue;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)queue->device->adapter;
 
     VkCommandPoolCreateInfo create_info = {
@@ -801,9 +800,12 @@ void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEn
 #define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
 CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     // CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)desc->presentQueues[0];
+    CGpuSwapChain_Vulkan* S = (CGpuSwapChain_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
+    S->super.device = device;
     VkSurfaceKHR vkSurface = (VkSurfaceKHR)desc->surface;
 
     VkSurfaceCapabilitiesKHR caps = { 0 };
@@ -829,12 +831,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
         A->pPhysicalDevice, vkSurface, &surfaceFormatCount, formats))
 
-    const VkSurfaceFormatKHR hdrSurfaceFormat = {
-        //
-        VK_FORMAT_A2B10G10R10_UNORM_PACK32,
-        VK_COLOR_SPACE_HDR10_ST2084_EXT
-        //
-    };
+    // Only undefined format support found, force use B8G8R8A8
     if ((1 == surfaceFormatCount) && (VK_FORMAT_UNDEFINED == formats[0].format))
     {
         surface_format.format = VK_FORMAT_B8G8R8A8_UNORM;
@@ -843,6 +840,11 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     else
     {
         VkFormat requested_format = VkUtil_FormatTranslateToVk(desc->format);
+        // Handle hdr surface
+        const VkSurfaceFormatKHR hdrSurfaceFormat = {
+            VK_FORMAT_A2B10G10R10_UNORM_PACK32,
+            VK_COLOR_SPACE_HDR10_ST2084_EXT
+        };
         VkColorSpaceKHR requested_color_space = requested_format == hdrSurfaceFormat.format ? hdrSurfaceFormat.colorSpace : VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         for (uint32_t i = 0; i < surfaceFormatCount; ++i)
         {
@@ -888,10 +890,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         uint32_t i = 0;
         for (i = 0; i < swapChainImageCount; ++i)
         {
-            if (modes[i] == mode)
-            {
-                break;
-            }
+            if (modes[i] == mode) break;
         }
         if (i < swapChainImageCount)
         {
@@ -904,7 +903,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     extent.width = clamp(desc->width, caps.minImageExtent.width, caps.maxImageExtent.width);
     extent.height = clamp(desc->height, caps.minImageExtent.height, caps.maxImageExtent.height);
 
-    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)desc->presentQueues[0];
     VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
     uint32_t presentQueueFamilyIndex = -1;
     // Check Queue Present Support.
@@ -967,15 +965,11 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     VkSurfaceTransformFlagBitsKHR pre_transform;
     // #TODO: Add more if necessary but identity should be enough for now
     if (caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
-    {
         pre_transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-    }
     else
-    {
         pre_transform = caps.currentTransform;
-    }
 
-    VkCompositeAlphaFlagBitsKHR compositeAlphaFlags[] = {
+    const VkCompositeAlphaFlagBitsKHR compositeAlphaFlags[] = {
         VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
         VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -992,8 +986,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     }
     assert(composite_alpha != VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR);
 
-    CGpuSwapChain_Vulkan* S = (CGpuSwapChain_Vulkan*)cgpu_calloc(1, sizeof(CGpuSwapChain_Vulkan));
-    S->super.device = device;
     VkSwapchainCreateInfoKHR swapChainCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = NULL,
