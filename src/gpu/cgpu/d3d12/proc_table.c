@@ -13,6 +13,11 @@ const CGpuProcTable tbl_d3d12 = {
     .create_device = &cgpu_create_device_d3d12,
     .free_device = &cgpu_free_device_d3d12,
 
+    .create_fence = &cgpu_create_fence_d3d12,
+    .free_fence = &cgpu_free_fence_d3d12,
+    .create_root_signature = &cgpu_create_root_signature_d3d12,
+    .free_root_signature = &cgpu_free_root_signature_d3d12,
+
     .get_queue = &cgpu_get_queue_d3d12,
     .submit_queue = &cgpu_submit_queue_d3d12,
     .wait_queue_idle = &cgpu_wait_queue_idle_d3d12,

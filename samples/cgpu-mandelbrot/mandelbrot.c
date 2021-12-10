@@ -74,6 +74,7 @@ int main(void)
             .stage = SS_COMPUTE,
             .library = compute_shader
         };
+        CGpuShaderReflection* entry_reflection = &compute_shader->entry_reflections[0];
         CGpuRootSignatureDescriptor root_desc = {
             .shaders = &compute_shader_entry,
             .shaders_count = 1
@@ -142,8 +143,8 @@ int main(void)
             cgpu_compute_encoder_bind_descriptor_set(encoder, set);
             cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
             cgpu_compute_encoder_dispatch(encoder,
-                (uint32_t)ceil(MANDELBROT_WIDTH / (float)WORKGROUP_SIZE),
-                (uint32_t)ceil(MANDELBROT_HEIGHT / (float)WORKGROUP_SIZE),
+                (uint32_t)ceil(MANDELBROT_WIDTH / (float)entry_reflection->thread_group_sizes[0]),
+                (uint32_t)ceil(MANDELBROT_HEIGHT / (float)entry_reflection->thread_group_sizes[1]),
                 1);
             cgpu_cmd_end_compute_pass(cmd, encoder);
             // Barrier UAV buffer to transfer source

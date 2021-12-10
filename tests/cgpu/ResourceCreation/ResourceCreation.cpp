@@ -224,6 +224,9 @@ TEST_P(ResourceCreation, CreateComputePipeline)
     root_desc.shaders_count = 1;
     CGpuRootSignatureId signature = cgpu_create_root_signature(device, &root_desc);
     EXPECT_NE(signature, CGPU_NULLPTR);
+
+    cgpu_free_shader_library(compute_shader);
+    cgpu_free_root_signature(signature);
 }
 
 static const auto allPlatforms = testing::Values(

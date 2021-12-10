@@ -219,6 +219,12 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
         const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[i].name);
         reflection->entry_name = (const char8_t*)entry->name;
         reflection->stage = (ECGpuShaderStage)entry->shader_stage;
+        if (reflection->stage == SS_COMPUTE)
+        {
+            reflection->thread_group_sizes[0] = entry->local_size.x;
+            reflection->thread_group_sizes[1] = entry->local_size.y;
+            reflection->thread_group_sizes[2] = entry->local_size.z;
+        }
         const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
         (void)bGLSL;
         const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;

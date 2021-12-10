@@ -171,6 +171,7 @@
 #endif
 
 #define cgpu_malloc sakura_malloc
+#define cgpu_malloc_aligned sakura_malloc_aligned
 #define cgpu_calloc sakura_calloc
 #define cgpu_calloc_aligned sakura_calloc_aligned
 #define cgpu_memalign sakura_malloc_aligned
@@ -188,4 +189,19 @@
 
 #ifndef cgpu_min
     #define cgpu_min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+#ifdef __cplusplus
+template <typename T, typename... Args>
+T* cgpu_new(Args&&... args)
+{
+    void* memory = sakura_malloc_aligned(sizeof(T), alignof(T));
+    return new (memory) T(std::forward<Args>(args)...);
+}
+template <typename T>
+void cgpu_delete(T* object)
+{
+    object->~T();
+    cgpu_free(object);
+}
 #endif
