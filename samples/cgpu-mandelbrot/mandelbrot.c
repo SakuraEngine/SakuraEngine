@@ -200,7 +200,7 @@ int main(void)
         {
             unsigned error = lodepng_encode32_file(gPNGNames[backend], image, MANDELBROT_WIDTH, MANDELBROT_HEIGHT);
             if (error)
-                printf("encoder error %d: %s", error, lodepng_error_text(error));
+                log_fatal("encoder error %d: %s", error, lodepng_error_text(error));
         }
 
         // Clean up

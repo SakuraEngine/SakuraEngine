@@ -29,7 +29,7 @@ void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstan
     }
     else if (descriptor->enable_gpu_based_validation)
     {
-        printf("[D3D12 Warning]: GpuBasedValidation enabled while DebugLayer is closed, there'll be no effect.");
+        cgpu_warn("D3D12 GpuBasedValidation enabled while DebugLayer is closed, there'll be no effect.");
     }
 }
 

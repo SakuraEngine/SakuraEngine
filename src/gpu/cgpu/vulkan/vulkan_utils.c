@@ -724,21 +724,20 @@ VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
     switch (messageSeverity)
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            printf("[verbose]");
+            cgpu_trace("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            printf("[info]");
+            cgpu_info("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            printf("[warning]");
+            cgpu_warn("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            printf("[error]");
+            cgpu_error("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         default:
             return VK_TRUE;
     }
-    printf(" validation layer: %s\n", pCallbackData->pMessage);
     return VK_FALSE;
 }
 
@@ -750,21 +749,22 @@ VkUtil_DebugReportCallback(
 {
     switch (flags)
     {
+        case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
+            cgpu_info("Vulkan validation layer: %s\n", pMessage);
         case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
-            printf("[perf-warn]");
+            cgpu_warn("Vulkan validation layer: %s\n", pMessage);
             break;
         case VK_DEBUG_REPORT_WARNING_BIT_EXT:
-            printf("[warning]");
+            cgpu_warn("Vulkan validation layer: %s\n", pMessage);
             break;
         case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
-            printf("[debug]");
+            cgpu_debug("Vulkan validation layer: %s\n", pMessage);
             break;
         case VK_DEBUG_REPORT_ERROR_BIT_EXT:
-            printf("[error]");
+            cgpu_error("Vulkan validation layer: %s\n", pMessage);
             break;
         default:
             return VK_TRUE;
     }
-    printf(" validation layer: %s\n", pMessage);
     return VK_FALSE;
 }

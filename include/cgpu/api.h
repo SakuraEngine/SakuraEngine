@@ -20,6 +20,7 @@ struct CGpuResourceBarrierDescriptor;
 struct CGpuComputePipelineDescriptor;
 struct CGpuRenderPipelineDescriptor;
 struct CGpuBufferDescriptor;
+struct CGpuRenderTargetDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuQueueSubmitDescriptor;
 struct CGpuBufferUpdateDescriptor;
@@ -52,6 +53,8 @@ typedef const struct CGpuShaderLibrary* CGpuShaderLibraryId;
 typedef const struct CGpuRootSignature* CGpuRootSignatureId;
 typedef const struct CGpuDescriptorSet* CGpuDescriptorSetId;
 typedef const struct CGpuBuffer* CGpuBufferId;
+typedef const struct CGpuTexture* CGpuTextureId;
+typedef const struct CGpuRenderTarget* CGpuRenderTargetId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
 typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
 typedef const struct CGpuRenderPipeline* CGpuRenderPipelineId;
@@ -197,6 +200,12 @@ typedef void (*CGPUProcUnmapBuffer)(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer(CGpuBufferId buffer);
 typedef void (*CGPUProcFreeBuffer)(CGpuBufferId buffer);
 
+// Texture/RenderTarget APIs
+RUNTIME_API CGpuRenderTargetId cgpu_create_render_target(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
+typedef CGpuRenderTargetId (*CGPUProcCreateRenderTarget)(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
+RUNTIME_API void cgpu_free_render_target(CGpuRenderTargetId render_target);
+typedef void (*CGPUProcFreeRenderTarget)(CGpuRenderTargetId render_target);
+
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
 typedef CGpuSwapChainId (*CGPUProcCreateSwapChain)(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
@@ -229,19 +238,29 @@ typedef void (*CGPUProcComputeEncoderDispatch)(CGpuComputePassEncoderId encoder,
 RUNTIME_API void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 typedef void (*CGPUProcCmdEndComputePass)(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 
+// Render Pass
+RUNTIME_API CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+typedef CGpuRenderPassEncoderId (*CGPUProcCmdBeginRenderPass)(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
+typedef void (*CGPUProcCmdEndRenderPass)(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
+
 // Types
 typedef struct CGpuProcTable {
+    // Instance APIs
     const CGPUProcCreateInstance create_instance;
     const CGPUProcQueryInstanceFeatures query_instance_features;
     const CGPUProcFreeInstance free_instance;
 
+    // Adapter APIs
     const CGPUProcEnumAdapters enum_adapters;
     const CGPUProcQueryAdapterDetail query_adapter_detail;
     const CGPUProcQueryQueueCount query_queue_count;
 
+    // Device APIs
     const CGPUProcCreateDevice create_device;
     const CGPUProcFreeDevice free_device;
 
+    // API Objects
     const CGPUProcCreateFence create_fence;
     const CGPUProcFreeFence free_fence;
     const CGPUProcCreateRootSignature create_root_signature;
@@ -254,28 +273,38 @@ typedef struct CGpuProcTable {
     const CGPUProcCreateRenderPipeline create_render_pipeline;
     const CGPUProcFreeRenderPipeline free_render_pipeline;
 
+    // Queue APIs
     const CGPUProcGetQueue get_queue;
     const CGPUProcSubmitQueue submit_queue;
     const CGPUProcWaitQueueIdle wait_queue_idle;
     const CGPUProcFreeQueue free_queue;
 
+    // Command APIs
     const CGPUProcCreateCommandPool create_command_pool;
     const CGPUProcCreateCommandBuffer create_command_buffer;
     const CGPUProcResetCommandPool reset_command_pool;
     const CGPUProcFreeCommandBuffer free_command_buffer;
     const CGPUProcFreeCommandPool free_command_pool;
 
+    // Shader APIs
     const CGPUProcCreateShaderLibrary create_shader_library;
     const CGPUProcFreeShaderLibrary free_shader_library;
 
+    // Buffer APIs
     const CGPUProcCreateBuffer create_buffer;
     const CGPUProcMapBuffer map_buffer;
     const CGPUProcUnmapBuffer unmap_buffer;
     const CGPUProcFreeBuffer free_buffer;
 
+    // Texture/RenderTarget APIs
+    const CGPUProcCreateRenderTarget create_render_target;
+    const CGPUProcFreeRenderTarget free_render_target;
+
+    // Swapchain APIs
     const CGPUProcCreateSwapChain create_swapchain;
     const CGPUProcFreeSwapChain free_swapchain;
 
+    // CMDs
     const CGPUProcCmdBegin cmd_begin;
     const CGPUProcCmdUpdateBuffer cmd_update_buffer;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
@@ -283,11 +312,16 @@ typedef struct CGpuProcTable {
     const CGPUProcCmdSetScissor cmd_set_scissor;
     const CGPUProcCmdEnd cmd_end;
 
+    // Compute CMDs
     const CGPUProcCmdBeginComputePass cmd_begin_compute_pass;
     const CGPUProcComputeEncoderBindDescriptorSet compute_encoder_bind_descriptor_set;
     const CGPUProcComputeEncoderBindPipeline compute_encoder_bind_pipeline;
     const CGPUProcComputeEncoderDispatch compute_encoder_dispatch;
     const CGPUProcCmdEndComputePass cmd_end_compute_pass;
+
+    // Render CMDs
+    const CGPUProcCmdBeginRenderPass cmd_begin_render_pass;
+    const CGPUProcCmdEndRenderPass cmd_end_render_pass;
 } CGpuProcTable;
 
 // surfaces
@@ -495,6 +529,10 @@ typedef struct CGpuBuffer {
     uint64_t memory_usage : 3;
 } CGpuBuffer;
 
+typedef struct CGpuRenderTarget {
+    CGpuDeviceId device;
+} CGpuRenderTarget;
+
 typedef struct CGpuSwapChain {
     CGpuDeviceId device;
 } CGpuSwapChain;
@@ -614,6 +652,9 @@ typedef struct CGpuComputePassDescriptor {
 
 typedef struct CGpuRenderPassDescriptor {
     const char8_t* name;
+    const CGpuRenderTargetId* render_targets;
+    const CGpuRenderTargetId depth_stencil;
+    uint32_t render_target_count;
 } CGpuRenderPassDescriptor;
 
 typedef struct CGpuRootSignatureDescriptor {

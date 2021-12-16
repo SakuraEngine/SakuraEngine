@@ -170,28 +170,8 @@
     #define INTERNAL_CALL
 #endif
 
-#define cgpu_malloc sakura_malloc
-#define cgpu_malloc_aligned sakura_malloc_aligned
-#define cgpu_calloc sakura_calloc
-#define cgpu_calloc_aligned sakura_calloc_aligned
-#define cgpu_memalign sakura_malloc_aligned
-#define cgpu_free sakura_free
-
-#include "utils/hash.h"
-#define cgpu_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
-
-#define MAX_GPU_VENDOR_STRING_LENGTH 64
-#define MAX_GPU_DEBUG_NAME_LENGTH 128
-
-#ifndef cgpu_max
-    #define cgpu_max(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef cgpu_min
-    #define cgpu_min(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
 #ifdef __cplusplus
+    #include <type_traits>
 template <typename T, typename... Args>
 T* cgpu_new(Args&&... args)
 {
@@ -205,3 +185,32 @@ void cgpu_delete(T* object)
     cgpu_free(object);
 }
 #endif
+
+#define MAX_GPU_VENDOR_STRING_LENGTH 64
+#define MAX_GPU_DEBUG_NAME_LENGTH 128
+
+#ifndef cgpu_max
+    #define cgpu_max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef cgpu_min
+    #define cgpu_min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+// ...
+#define cgpu_malloc sakura_malloc
+#define cgpu_malloc_aligned sakura_malloc_aligned
+#define cgpu_calloc sakura_calloc
+#define cgpu_calloc_aligned sakura_calloc_aligned
+#define cgpu_memalign sakura_malloc_aligned
+#define cgpu_free sakura_free
+
+#include "utils/hash.h"
+#define cgpu_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
+#include "utils/log.h"
+#define cgpu_trace(...) log_log(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define cgpu_debug(...) log_log(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define cgpu_info(...) log_log(LOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define cgpu_warn(...) log_log(LOG_WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define cgpu_error(...) log_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define cgpu_fatal(...) log_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
