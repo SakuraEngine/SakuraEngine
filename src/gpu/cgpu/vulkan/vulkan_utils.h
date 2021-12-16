@@ -86,14 +86,14 @@ typedef struct VkUtil_DescriptorPool {
     struct SMutex* pMutex;
 } VkUtil_DescriptorPool;
 
-#define CHECK_VKRESULT(exp)                                                        \
-    {                                                                              \
-        VkResult vkres = (exp);                                                    \
-        if (VK_SUCCESS != vkres)                                                   \
-        {                                                                          \
-            printf("[Error] %s: FAILED with VkResult: %u", #exp, (uint32_t)vkres); \
-            assert(0);                                                             \
-        }                                                                          \
+#define CHECK_VKRESULT(exp)                                                             \
+    {                                                                                   \
+        VkResult vkres = (exp);                                                         \
+        if (VK_SUCCESS != vkres)                                                        \
+        {                                                                               \
+            cgpu_error("VKRESULT %s: FAILED with VkResult: %u", #exp, (uint32_t)vkres); \
+            assert(0);                                                                  \
+        }                                                                               \
     }
 
 static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";

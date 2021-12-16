@@ -251,9 +251,9 @@ CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t in
     CGpuQueueId created = cgpu_runtime_table_try_get_queue(device, type, index);
     if (created != NULL)
     {
-        printf("[Warn] You should not call cgpu_get_queue "
-               "with a specific index & type for multiple times!\n"
-               "       Please get for only once and reuse the handle!\n");
+        cgpu_warn("You should not call cgpu_get_queue "
+                  "with a specific index & type for multiple times!\n"
+                  "       Please get for only once and reuse the handle!\n");
         return created;
     }
     CGpuQueue* queue = (CGpuQueue*)device->proc_table_cache->get_queue(device, type, index);
@@ -397,6 +397,7 @@ void cgpu_cmd_end(CGpuCommandBufferId cmd)
     fn_cmd_end(cmd);
 }
 
+// Compute CMDs
 CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc)
 {
     assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
@@ -442,10 +443,35 @@ void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId
 {
     assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    assert(cmd->current_dispatch == PT_COMPUTE && "fatal: can't call end command pass on commdn buffer while not dispatching compute!");
+    assert(cmd->current_dispatch == PT_COMPUTE && "fatal: can't call end command pass on commnd buffer while not dispatching compute!");
     const CGPUProcCmdEndComputePass fn_end_compute_pass = cmd->device->proc_table_cache->cmd_end_compute_pass;
     assert(fn_end_compute_pass && "cmd_end_compute_pass Proc Missing!");
     fn_end_compute_pass(cmd, encoder);
+    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
+    Cmd->current_dispatch = PT_NONE;
+}
+
+// Render CMDs
+CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdBeginRenderPass fn_begin_render_pass = cmd->device->proc_table_cache->cmd_begin_render_pass;
+    assert(fn_begin_render_pass && "cmd_begin_render_pass Proc Missing!");
+    CGpuRenderPassEncoderId ecd = (CGpuRenderPassEncoderId)fn_begin_render_pass(cmd, desc);
+    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
+    Cmd->current_dispatch = PT_GRAPHICS;
+    return ecd;
+}
+
+void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
+{
+    assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(cmd->current_dispatch == PT_GRAPHICS && "fatal: can't call end command pass on commnd buffer while not dispatching graphics!");
+    const CGPUProcCmdEndRenderPass fn_end_render_pass = cmd->device->proc_table_cache->cmd_end_render_pass;
+    assert(fn_end_render_pass && "cmd_end_render_pass Proc Missing!");
+    fn_end_render_pass(cmd, encoder);
     CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
     Cmd->current_dispatch = PT_NONE;
 }
@@ -480,6 +506,7 @@ void cgpu_free_shader_library(CGpuShaderLibraryId library)
     fn_free_shader_library(library);
 }
 
+// Buffer APIs
 CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -526,6 +553,28 @@ void cgpu_free_buffer(CGpuBufferId buffer)
     CGPUProcFreeBuffer fn_free_buffer = device->proc_table_cache->free_buffer;
     assert(fn_free_buffer && "free_buffer Proc Missing!");
     fn_free_buffer(buffer);
+}
+
+// Texture/RenderTarget APIs
+CGpuRenderTargetId cgpu_create_render_target(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_render_target && "create_render_target Proc Missing!");
+    CGPUProcCreateRenderTarget fn_create_render_target = device->proc_table_cache->create_render_target;
+    CGpuRenderTarget* render_target = (CGpuRenderTarget*)fn_create_render_target(device, desc);
+    render_target->device = device;
+    return render_target;
+}
+
+void cgpu_free_render_target(CGpuRenderTargetId render_target)
+{
+    assert(render_target != CGPU_NULLPTR && "fatal: call on NULL buffer!");
+    const CGpuDeviceId device = render_target->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+
+    CGPUProcFreeRenderTarget fn_free_render_target = device->proc_table_cache->free_render_target;
+    assert(fn_free_render_target && "free_render_target Proc Missing!");
+    fn_free_render_target(render_target);
 }
 
 // SwapChain APIs

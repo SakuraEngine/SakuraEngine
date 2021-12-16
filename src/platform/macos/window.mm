@@ -4,6 +4,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "stdio.h"
+#include "utils/log.h"
 
 @interface DemoView : NSView // interface of DemoView class
 {                            // (subclass of NSView class)
@@ -51,7 +52,7 @@ void* nswindow_get_content_view(void* window)
     NSBundle* bundle = [NSBundle bundleWithPath:@"/System/Library/Frameworks/QuartzCore.framework"];
     if (!bundle)
     {
-        printf("Cocoa: Failed to find QuartzCore.framework\n");
+        log_fatal("Cocoa: Failed to find QuartzCore.framework\n");
         return nullptr;
     }
 
@@ -59,7 +60,7 @@ void* nswindow_get_content_view(void* window)
     nsview.layer = [[bundle classNamed:@"CAMetalLayer"] layer];
     if (!nsview.layer)
     {
-        printf("Cocoa: Failed to create layer for view\n");
+        log_fatal("Cocoa: Failed to create layer for view\n");
         return nullptr;
     }
     [nsview setWantsLayer:YES];

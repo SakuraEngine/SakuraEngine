@@ -85,7 +85,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         {
             if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT))
             {
-                printf("[Warning] Failed to create uniform texel buffer view for format %u", (uint32_t)desc->format);
+                cgpu_warn("Failed to create uniform texel buffer view for format %u", (uint32_t)desc->format);
             }
             else
             {
@@ -97,7 +97,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         {
             if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT))
             {
-                printf("[Warning] Failed to create storage texel buffer view for format %u", (uint32_t)desc->format);
+                cgpu_warn("Failed to create storage texel buffer view for format %u", (uint32_t)desc->format);
             }
             else
             {

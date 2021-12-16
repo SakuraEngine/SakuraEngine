@@ -61,8 +61,8 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     EXPECT_TRUE(vulkan_instance != nullptr);
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+VKAPI_ATTR VkBool32 VKAPI_CALL
+VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData)
@@ -70,20 +70,20 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
     switch (messageSeverity)
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            return VK_TRUE; // printf("[verbose]");break;
+            cgpu_trace("Vulkan validation layer: %s\n", pCallbackData->pMessage);
+            break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            printf("[info]");
+            cgpu_info("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            printf("[warning]");
+            cgpu_warn("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            printf("[error]");
+            cgpu_error("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         default:
             return VK_TRUE;
     }
-    printf(" validation layer: %s\n", pCallbackData->pMessage);
     return VK_FALSE;
 }
 #endif

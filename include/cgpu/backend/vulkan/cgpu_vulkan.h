@@ -75,11 +75,17 @@ RUNTIME_API void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
+
+// Compute CMDs
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
 RUNTIME_API void cgpu_compute_encoder_bind_pipeline_vulkan(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
 RUNTIME_API void cgpu_compute_encoder_dispatch_vulkan(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 RUNTIME_API void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
+
+// Render CMDs
+RUNTIME_API CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
 typedef struct CGpuInstance_Vulkan {
     CGpuInstance super;
@@ -182,9 +188,8 @@ typedef struct CGpuCommandPool_Vulkan {
 typedef struct CGpuCommandBuffer_Vulkan {
     CGpuCommandBuffer super;
     VkCommandBuffer pVkCmdBuf;
-    VkRenderPass pVkActiveRenderPass;
     VkPipelineLayout pBoundPipelineLayout;
-    struct CGpuCommandPool_Vulkan* pCmdPool;
+    VkRenderPass pRenderPass;
     uint32_t mNodeIndex : 4;
     uint32_t mType : 3;
 } CGpuCommandBuffer_Vulkan;

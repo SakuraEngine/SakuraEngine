@@ -67,11 +67,17 @@ const CGpuProcTable tbl_vk = {
     .cmd_update_buffer = &cgpu_cmd_update_buffer_vulkan,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_end = &cgpu_cmd_end_vulkan,
+
+    // Compute CMDs
     .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_vulkan,
     .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_vulkan,
     .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_vulkan,
     .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_vulkan,
-    .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_vulkan
+    .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_vulkan,
+
+    // Render CMDs
+    .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_vulkan,
+    .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan
 };
 
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
@@ -612,7 +618,6 @@ CGpuCommandBufferId cgpu_create_command_buffer_vulkan(CGpuCommandPoolId pool, co
         1, sizeof(CGpuCommandBuffer_Vulkan), _Alignof(CGpuCommandBuffer_Vulkan));
     assert(Cmd);
 
-    Cmd->pCmdPool = P;
     Cmd->mType = Q->super.type;
     Cmd->mNodeIndex = SINGLE_GPU_NODE_MASK;
 
@@ -746,14 +751,10 @@ void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
-    if (Cmd->pVkActiveRenderPass)
-    {
-        vkCmdEndRenderPass(Cmd->pVkCmdBuf);
-    }
-    Cmd->pVkActiveRenderPass = VK_NULL_HANDLE;
     CHECK_VKRESULT(D->mVkDeviceTable.vkEndCommandBuffer(Cmd->pVkCmdBuf));
 }
 
+// Compute CMDs
 CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc)
 {
     // DO NOTHING NOW
@@ -794,6 +795,28 @@ void cgpu_compute_encoder_dispatch_vulkan(CGpuComputePassEncoderId encoder, uint
 void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)
 {
     // DO NOTHING NOW
+}
+
+// Render CMDs
+CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    VkRenderPassBeginInfo begin_info = {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+        .pNext = NULL,
+        .renderPass = Cmd->pRenderPass,
+        .framebuffer = NULL // pFrameBuffer->pFramebuffer,
+        //.renderArea = render_area,
+        //.clearValueCount = clearValueCount,
+        //.pClearValues = clearValues
+    };
+    D->mVkDeviceTable.vkCmdBeginRenderPass(Cmd->pVkCmdBuf, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    return NULL;
+}
+
+void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
+{
 }
 
 // SwapChain APIs

@@ -93,7 +93,7 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
             if (RT_BUFFER_RAW == (desc->descriptors & RT_BUFFER_RAW))
             {
                 if (desc->format != PF_UNDEFINED)
-                    printf("[Warning] Raw buffers use R32 typeless format. Format will be ignored");
+                    cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
                 srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 srvDesc.Buffer.Flags |= D3D12_BUFFER_SRV_FLAG_RAW;
             }
@@ -120,7 +120,7 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
             if (RT_RW_BUFFER_RAW == (desc->descriptors & RT_RW_BUFFER_RAW))
             {
                 if (desc->format != PF_UNDEFINED)
-                    printf("[Warning] Raw buffers use R32 typeless format. Format will be ignored");
+                    cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
                 uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 uavDesc.Buffer.Flags |= D3D12_BUFFER_UAV_FLAG_RAW;
             }
@@ -135,7 +135,7 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
                     !(FormatSupport.Support2 & D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE))
                 {
                     // Format does not support UAV Typed Load
-                    printf("Cannot use Typed UAV for buffer format %u", (uint32_t)desc->format);
+                    cgpu_warn("Cannot use Typed UAV for buffer format %u", (uint32_t)desc->format);
                     uavDesc.Format = DXGI_FORMAT_UNKNOWN;
                 }
             }
