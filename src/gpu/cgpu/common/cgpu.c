@@ -556,6 +556,30 @@ void cgpu_free_buffer(CGpuBufferId buffer)
 }
 
 // Texture/RenderTarget APIs
+CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc)
+{
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(device->proc_table_cache->create_texture && "create_texture Proc Missing!");
+    CGpuTextureDescriptor* wdesc = (CGpuTextureDescriptor*)desc;
+    if (desc->array_size == 0) wdesc->array_size = 1;
+    if (desc->mip_levels == 0) wdesc->mip_levels = 1;
+    CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
+    CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, desc);
+    texture->device = device;
+    return texture;
+}
+
+void cgpu_free_texture(CGpuTextureId texture)
+{
+    assert(texture != CGPU_NULLPTR && "fatal: call on NULL texture!");
+    const CGpuDeviceId device = texture->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+
+    CGPUProcFreeTexture fn_free_texture = device->proc_table_cache->free_texture;
+    assert(fn_free_texture && "free_texture Proc Missing!");
+    fn_free_texture(texture);
+}
+
 CGpuRenderTargetId cgpu_create_render_target(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -568,7 +592,7 @@ CGpuRenderTargetId cgpu_create_render_target(CGpuDeviceId device, const struct C
 
 void cgpu_free_render_target(CGpuRenderTargetId render_target)
 {
-    assert(render_target != CGPU_NULLPTR && "fatal: call on NULL buffer!");
+    assert(render_target != CGPU_NULLPTR && "fatal: call on NULL render_target!");
     const CGpuDeviceId device = render_target->device;
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
 

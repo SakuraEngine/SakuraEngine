@@ -87,6 +87,22 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
     cgpu_free_buffer(buffer);
 }
 
+TEST_P(ResourceCreation, CreateTexture)
+{
+    DECLARE_ZERO(CGpuTextureDescriptor, desc)
+    desc.name = "Texture";
+    desc.flags = TCF_OWN_MEMORY_BIT;
+    desc.format = PF_R8G8B8A8_UNORM;
+    desc.start_state = RS_COMMON;
+    desc.descriptors = RT_TEXTURE;
+    desc.width = 512;
+    desc.height = 512;
+    desc.depth = 1;
+    auto texture = cgpu_create_texture(device, &desc);
+    EXPECT_NE(texture, CGPU_NULLPTR);
+    cgpu_free_texture(texture);
+}
+
 TEST_P(ResourceCreation, CreateUploadBuffer)
 {
     DECLARE_ZERO(CGpuBufferDescriptor, desc)

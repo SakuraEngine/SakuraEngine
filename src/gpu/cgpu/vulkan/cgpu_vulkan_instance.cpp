@@ -95,6 +95,7 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
                 Adapter.external_memory = Table[VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME];
 #ifdef _WINDOWS
                 Adapter.external_memory_win32 = Table[VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME];
+                Adapter.external_memory &= Adapter.external_memory_win32;
 #endif
                 Adapter.draw_indirect_count = Table[VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME];
                 Adapter.amd_draw_indirect_count = Table[VK_AMD_DRAW_INDIRECT_COUNT_EXTENSION_NAME];

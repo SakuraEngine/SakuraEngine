@@ -20,6 +20,7 @@ struct CGpuResourceBarrierDescriptor;
 struct CGpuComputePipelineDescriptor;
 struct CGpuRenderPipelineDescriptor;
 struct CGpuBufferDescriptor;
+struct CGpuTextureDescriptor;
 struct CGpuRenderTargetDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuQueueSubmitDescriptor;
@@ -201,6 +202,10 @@ RUNTIME_API void cgpu_free_buffer(CGpuBufferId buffer);
 typedef void (*CGPUProcFreeBuffer)(CGpuBufferId buffer);
 
 // Texture/RenderTarget APIs
+RUNTIME_API CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
+typedef CGpuTextureId (*CGPUProcCreateTexture)(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
+RUNTIME_API void cgpu_free_texture(CGpuTextureId texture);
+typedef void (*CGPUProcFreeTexture)(CGpuTextureId texture);
 RUNTIME_API CGpuRenderTargetId cgpu_create_render_target(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
 typedef CGpuRenderTargetId (*CGPUProcCreateRenderTarget)(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
 RUNTIME_API void cgpu_free_render_target(CGpuRenderTargetId render_target);
@@ -297,6 +302,8 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeBuffer free_buffer;
 
     // Texture/RenderTarget APIs
+    const CGPUProcCreateTexture create_texture;
+    const CGPUProcFreeTexture free_texture;
     const CGPUProcCreateRenderTarget create_render_target;
     const CGPUProcFreeRenderTarget free_render_target;
 
@@ -529,8 +536,52 @@ typedef struct CGpuBuffer {
     uint64_t memory_usage : 3;
 } CGpuBuffer;
 
+typedef union CGpuClearValue
+{
+    struct
+    {
+        float r;
+        float g;
+        float b;
+        float a;
+    };
+    struct
+    {
+        float depth;
+        uint32_t stencil;
+    };
+} CGpuClearValue;
+
+typedef struct CGpuTexture {
+    CGpuDeviceId device;
+    /// Current state of the buffer
+    uint32_t width : 16;
+    uint32_t height : 16;
+    uint32_t depth : 16;
+    uint32_t mip_levels : 5;
+    uint32_t array_size_minus_one : 11;
+    uint32_t format : 8;
+    /// Flags specifying which aspects (COLOR,DEPTH,STENCIL) are included in the pVkImageView
+    uint32_t aspect_mask : 4;
+    uint32_t node_index : 4;
+    uint32_t uav : 1;
+    /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
+    uint32_t owns_image : 1;
+} CGpuTexture;
+
 typedef struct CGpuRenderTarget {
     CGpuDeviceId device;
+    CGpuTextureId texture;
+    CGpuClearValue clear_value;
+    uint32_t array_size : 16;
+    uint32_t depth : 16;
+    uint32_t width : 16;
+    uint32_t height : 16;
+    uint32_t descriptors : 20;
+    uint32_t mip_levels : 10;
+    uint32_t sample_quality : 5;
+    ECGpuFormat format;
+    ECGpuSampleCount sample_count;
 } CGpuRenderTarget;
 
 typedef struct CGpuSwapChain {
@@ -713,7 +764,7 @@ typedef struct CGpuBufferDescriptor {
     /// Image format
     ECGpuFormat format;
     /// Creation flags
-    ECGpuBufferCreationFlags flags;
+    CGpuBufferCreationFlags flags;
     /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
     uint64_t first_element;
     /// Number of elements in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
@@ -723,6 +774,68 @@ typedef struct CGpuBufferDescriptor {
     /// What state will the texture get created in
     ECGpuResourceState start_state;
 } CGpuBufferDescriptor;
+
+typedef struct CGpuRenderTargetDescriptor {
+    /// Debug name used in gpu profile
+    const char8_t* name;
+    /// Imported native image handle
+    const void* native_handle;
+    /// Texture creation flags (decides memory allocation strategy, sharing access,...)
+    CGpuTextureCreationFlags flags;
+    /// Optimized clear value (recommended to use this same value when clearing the rendertarget)
+    CGpuClearValue clear_value;
+    /// Width
+    uint32_t width;
+    /// Height
+    uint32_t height;
+    /// Depth (Should be 1 if not a mType is not TEXTURE_TYPE_3D)
+    uint32_t depth;
+    /// Texture array size (Should be 1 if texture is not a texture array or cubemap)
+    uint32_t array_size;
+    ///  image format
+    ECGpuFormat format;
+    /// Number of mip levels
+    uint32_t mip_levels;
+    /// Number of multisamples per pixel (currently Textures created with mUsage TEXTURE_USAGE_SAMPLED_IMAGE only support SAMPLE_COUNT_1)
+    ECGpuSampleCount sample_count;
+    /// The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for mSampleCount
+    uint32_t sample_quality;
+    /// What state will the texture get created in
+    ECGpuResourceState start_state;
+    /// Descriptor creation
+    CGpuResourceTypes descriptors;
+} CGpuRenderTargetDescriptor;
+
+typedef struct CGpuTextureDescriptor {
+    /// Debug name used in gpu profile
+    const char8_t* name;
+    /// Imported native image handle
+    const void* native_handle;
+    /// Texture creation flags (decides memory allocation strategy, sharing access,...)
+    CGpuTextureCreationFlags flags;
+    /// Optimized clear value (recommended to use this same value when clearing the rendertarget)
+    CGpuClearValue clear_value;
+    /// Width
+    uint32_t width;
+    /// Height
+    uint32_t height;
+    /// Depth (Should be 1 if not a mType is not TEXTURE_TYPE_3D)
+    uint32_t depth;
+    /// Texture array size (Should be 1 if texture is not a texture array or cubemap)
+    uint32_t array_size;
+    ///  image format
+    ECGpuFormat format;
+    /// Number of mip levels
+    uint32_t mip_levels;
+    /// Number of multisamples per pixel (currently Textures created with mUsage TEXTURE_USAGE_SAMPLED_IMAGE only support SAMPLE_COUNT_1)
+    ECGpuSampleCount sample_count;
+    /// The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for mSampleCount
+    uint32_t sample_quality;
+    /// What state will the texture get created in
+    ECGpuResourceState start_state;
+    /// Descriptor creation
+    CGpuResourceTypes descriptors;
+} CGpuTextureDescriptor;
 
 #pragma endregion DESCRIPTORS
 

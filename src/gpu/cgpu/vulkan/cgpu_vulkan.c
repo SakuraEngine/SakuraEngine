@@ -58,6 +58,12 @@ const CGpuProcTable tbl_vk = {
     .unmap_buffer = &cgpu_unmap_buffer_vulkan,
     .free_buffer = &cgpu_free_buffer_vulkan,
 
+    // Texture/RenderTarget APIs
+    .create_texture = &cgpu_create_texture_vulkan,
+    .free_texture = &cgpu_free_texture_vulkan,
+    .create_render_target = &cgpu_create_render_target_vulkan,
+    .free_render_target = &cgpu_free_render_target_vulkan,
+
     // Swapchain APIs
     .create_swapchain = &cgpu_create_swapchain_vulkan,
     .free_swapchain = &cgpu_free_swapchain_vulkan,
