@@ -366,7 +366,51 @@ typedef enum ECGpuBufferCreationFlag
     BCF_ICB_INHERIT_BUFFERS = 0x200,
 #endif
 } ECGpuBufferCreationFlag;
-typedef uint32_t ECGpuBufferCreationFlags;
+typedef uint32_t CGpuBufferCreationFlags;
+
+typedef enum ECGpuTextureCreationFlag
+{
+    /// Default flag (Texture will use default allocation strategy decided by the api specific allocator)
+    TCF_NONE = 0,
+    /// Texture will allocate its own memory (COMMITTED resource)
+    TCF_OWN_MEMORY_BIT = 0x01,
+    /// Texture will be allocated in memory which can be shared among multiple processes
+    TCF_EXPORT_BIT = 0x02,
+    /// Texture will be allocated in memory which can be shared among multiple gpus
+    TCF_EXPORT_ADAPTER_BIT = 0x04,
+    /// Texture will be imported from a handle created in another process
+    TCF_IMPORT_BIT = 0x08,
+    /// Use ESRAM to store this texture
+    TCF_ESRAM = 0x10,
+    /// Use on-tile memory to store this texture
+    TCF_ON_TILE = 0x20,
+    /// Prevent compression meta data from generating (XBox)
+    TCF_NO_COMPRESSION = 0x40,
+    /// Force 2D instead of automatically determining dimension based on width, height, depth
+    TCF_FORCE_2D = 0x80,
+    /// Force 3D instead of automatically determining dimension based on width, height, depth
+    TCF_FORCE_3D = 0x100,
+    /// Display target
+    TCF_ALLOW_DISPLAY_TARGET = 0x200,
+    /// Create an sRGB texture.
+    TCF_SRGB = 0x400,
+    /// Create a normal map texture
+    TCF_NORMAL_MAP = 0x800,
+    /// Fast clear
+    TCF_FAST_CLEAR = 0x1000,
+    /// Fragment mask
+    TCF_FRAG_MASK = 0x2000
+} ECGpuTextureCreationFlag;
+typedef uint32_t CGpuTextureCreationFlags;
+
+typedef enum ECGpuSampleCount
+{
+    SC_1 = 1,
+    SC_2 = 2,
+    SC_4 = 4,
+    SC_8 = 8,
+    SC_16 = 16,
+} ECGpuSampleCount;
 
 typedef enum ECGpuPipelineType
 {

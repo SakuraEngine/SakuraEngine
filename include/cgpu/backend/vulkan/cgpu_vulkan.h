@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 #define GLOBAL_VkAllocationCallbacks CGPU_NULLPTR
+#define MAX_PLANE_COUNT 3
 
 #ifndef VK_USE_VOLK_DEVICE_TABLE
     #define VK_USE_VOLK_DEVICE_TABLE
@@ -65,6 +66,12 @@ RUNTIME_API CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const st
 RUNTIME_API void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBufferRange* range);
 RUNTIME_API void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer_vulkan(CGpuBufferId buffer);
+
+// Texture/RenderTarget APIs
+RUNTIME_API CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
+RUNTIME_API void cgpu_free_texture_vulkan(CGpuTextureId texture);
+RUNTIME_API CGpuRenderTargetId cgpu_create_render_target_vulkan(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
+RUNTIME_API void cgpu_free_render_target_vulkan(CGpuRenderTargetId render_target);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
@@ -202,6 +209,31 @@ typedef struct CGpuBuffer_Vulkan {
     struct VmaAllocation_T* pVkAllocation;
     uint64_t mOffset;
 } CGpuBuffer_Vulkan;
+
+typedef struct CGpuTexture_Vulkan {
+    CGpuTexture super;
+    /// Opaque handle used by shaders for doing read/write operations on the texture
+    VkImageView pVkSRVDescriptor;
+    /// Opaque handle used by shaders for doing read/write operations on the texture
+    VkImageView* pVkUAVDescriptors;
+    /// Opaque handle used by shaders for doing read/write operations on the texture
+    VkImageView pVkSRVStencilDescriptor;
+    /// Native handle of the underlying resource
+    VkImage pVkImage;
+    union
+    {
+        /// Contains resource allocation info such as parent heap, offset in heap
+        struct VmaAllocation_T* pVkAllocation;
+        VkDeviceMemory pVkDeviceMemory;
+    };
+} CGpuTexture_Vulkan;
+
+typedef struct CGpuRenderTarget_Vulkan {
+    CGpuRenderTarget super;
+    VkImageView pVkDescriptor;
+    VkImageView* pVkSliceDescriptors;
+    uint32_t mId;
+} CGpuRenderTarget_Vulkan;
 
 typedef struct CGpuShaderLibrary_Vulkan {
     CGpuShaderLibrary super;

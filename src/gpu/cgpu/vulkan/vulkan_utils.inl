@@ -3,6 +3,16 @@
 extern "C" {
 #endif
 // API Helpers
+FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGpuResourceTypes descriptors)
+{
+    VkImageUsageFlags result = 0;
+    if (RT_TEXTURE == (descriptors & RT_TEXTURE))
+        result |= VK_IMAGE_USAGE_SAMPLED_BIT;
+    if (RT_RW_TEXTURE == (descriptors & RT_RW_TEXTURE))
+        result |= VK_IMAGE_USAGE_STORAGE_BIT;
+    return result;
+}
+
 FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuResourceTypes descriptors, bool texel)
 {
     VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
