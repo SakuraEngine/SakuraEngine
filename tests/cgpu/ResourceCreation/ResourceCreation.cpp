@@ -245,6 +245,10 @@ TEST_P(ResourceCreation, CreateComputePipeline)
     cgpu_free_root_signature(signature);
 }
 
+TEST_P(ResourceCreation, CreateRenderPipeline)
+{
+}
+
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
     ECGpuBackend_VULKAN

@@ -535,6 +535,8 @@ CGpuRenderTargetId cgpu_create_render_target_vulkan(CGpuDeviceId device, const s
 
 void cgpu_free_render_target_vulkan(CGpuRenderTargetId render_target)
 {
+    CGpuRenderTarget_Vulkan* RT = (CGpuRenderTarget_Vulkan*)render_target;
+    cgpu_free(RT);
 }
 
 // Shader APIs

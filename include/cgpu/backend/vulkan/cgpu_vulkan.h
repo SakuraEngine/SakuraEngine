@@ -43,6 +43,8 @@ RUNTIME_API void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, cons
 RUNTIME_API void cgpu_free_descriptor_set_vulkan(CGpuDescriptorSetId set);
 RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline);
+RUNTIME_API CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc);
+RUNTIME_API void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline);
 
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
@@ -282,6 +284,7 @@ typedef struct CGpuComputePipeline_Vulkan {
 typedef struct CGpuRenderPipeline_Vulkan {
     CGpuRenderPipeline super;
     VkPipeline pVkPipeline;
+    VkRenderPass pRenderPass;
 } CGpuRenderPipeline_Vulkan;
 
 static const VkPipelineBindPoint gPipelineBindPoint[PT_COUNT] = {

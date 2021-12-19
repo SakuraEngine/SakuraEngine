@@ -274,6 +274,108 @@ typedef enum ECGpuFormat
     PF_Count = PF_G16_B16R16_2PLANE_422_UNORM + 1
 } ECGpuFormat;
 
+typedef enum ECGpuLoadAction
+{
+    LA_DONTCARE,
+    LA_LOAD,
+    LA_CLEAR,
+    LA_COUNT
+} ECGpuLoadAction;
+
+typedef enum ECGpuPrimitiveTopology
+{
+    TOPO_POINT_LIST = 0,
+    TOPO_LINE_LIST,
+    TOPO_LINE_STRIP,
+    TOPO_TRI_LIST,
+    TOPO_TRI_STRIP,
+    TOPO_PATCH_LIST,
+    TOPO_COUNT,
+} ECGpuPrimitiveTopology;
+
+typedef enum ECGpuBlendConstant
+{
+    BC_ZERO = 0,
+    BC_ONE,
+    BC_SRC_COLOR,
+    BC_ONE_MINUS_SRC_COLOR,
+    BC_DST_COLOR,
+    BC_ONE_MINUS_DST_COLOR,
+    BC_SRC_ALPHA,
+    BC_ONE_MINUS_SRC_ALPHA,
+    BC_DST_ALPHA,
+    BC_ONE_MINUS_DST_ALPHA,
+    BC_SRC_ALPHA_SATURATE,
+    BC_BLEND_FACTOR,
+    BC_ONE_MINUS_BLEND_FACTOR,
+    MAX_BLEND_CONSTANTS
+} ECGpuBlendConstant;
+
+typedef enum ECGpuCullMode
+{
+    CM_NONE = 0,
+    CM_BACK,
+    CM_FRONT,
+    CM_BOTH,
+    CM_COUNT
+} ECGpuCullMode;
+
+typedef enum ECGpuFrontFace
+{
+    FF_CCW = 0,
+    FF_CW
+} ECGpuFrontFace;
+
+typedef enum ECGpuFillMode
+{
+    FM_SOLID,
+    FM_WIREFRAME,
+    FM_COUNT
+} ECGpuFillMode;
+
+typedef enum ECGpuVertexAttribRate
+{
+    VAR_VERTEX = 0,
+    VAR_INSTANCE = 1,
+    VAR_COUNT,
+} ECGpuVertexAttribRate;
+
+typedef enum ECGpuCompareMode
+{
+    CMP_NEVER,
+    CMP_LESS,
+    CMP_EQUAL,
+    CMP_LEQUAL,
+    CMP_GREATER,
+    CMP_NOTEQUAL,
+    CMP_GEQUAL,
+    CMP_ALWAYS,
+    MAX_COMPARE_MODES,
+} ECGpuCompareMode;
+
+typedef enum ECGpuStencilOp
+{
+    STENCIL_OP_KEEP,
+    STENCIL_OP_SET_ZERO,
+    STENCIL_OP_REPLACE,
+    STENCIL_OP_INVERT,
+    STENCIL_OP_INCR,
+    STENCIL_OP_DECR,
+    STENCIL_OP_INCR_SAT,
+    STENCIL_OP_DECR_SAT,
+    MAX_STENCIL_OPS,
+} ECGpuStencilOp;
+
+typedef enum ECGpuBlendMode
+{
+    BM_ADD,
+    BM_SUBTRACT,
+    BM_REVERSE_SUBTRACT,
+    BM_MIN,
+    BM_MAX,
+    MAX_BLEND_MODES,
+} ECGpuBlendMode;
+
 typedef enum ECGpuTextureDimension
 {
     TD_1D,
