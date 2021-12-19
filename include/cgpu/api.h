@@ -4,6 +4,8 @@
 #include "cgpu_config.h"
 #include "flags.h"
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
+#define MAX_MRT_COUNT 8
+#define MAX_VERTEX_ATTRIBS 15
 
 #ifdef __cplusplus
 extern "C" {
@@ -703,6 +705,7 @@ typedef struct CGpuComputePassDescriptor {
 
 typedef struct CGpuRenderPassDescriptor {
     const char8_t* name;
+    ECGpuSampleCount sample_count;
     const CGpuRenderTargetId* render_targets;
     const CGpuRenderTargetId depth_stencil;
     uint32_t render_target_count;
@@ -722,6 +725,86 @@ typedef struct CGpuComputePipelineDescriptor {
     CGpuRootSignatureId root_signature;
     CGpuPipelineShaderDescriptor* compute_shader;
 } CGpuComputePipelineDescriptor;
+
+typedef struct CGpuBlendStateDescriptor {
+    /// Source blend factor per render target.
+    ECGpuBlendConstant src_factors[MAX_MRT_COUNT];
+    /// Destination blend factor per render target.
+    ECGpuBlendConstant dst_factors[MAX_MRT_COUNT];
+    /// Source alpha blend factor per render target.
+    ECGpuBlendConstant src_alpha_factors[MAX_MRT_COUNT];
+    /// Destination alpha blend factor per render target.
+    ECGpuBlendConstant dst_alpha_factors[MAX_MRT_COUNT];
+    /// Blend mode per render target.
+    ECGpuBlendMode blend_modes[MAX_MRT_COUNT];
+    /// Alpha blend mode per render target.
+    ECGpuBlendMode blend_alpha_modes[MAX_MRT_COUNT];
+    /// Write mask per render target.
+    int32_t masks[MAX_MRT_COUNT];
+    /// Set whether alpha to coverage should be enabled.
+    bool alpha_to_coverage;
+    /// Set whether each render target has an unique blend function. When false the blend function in slot 0 will be used for all render targets.
+    bool independent_blend;
+} CGpuBlendStateDescriptor;
+
+typedef struct CGpuDepthStateDesc {
+    bool depth_test;
+    bool depth_write;
+    ECGpuCompareMode depth_func;
+    bool stencil_test;
+    uint8_t stencil_read_mask;
+    uint8_t stencil_write_mask;
+    ECGpuCompareMode stencil_front_func;
+    ECGpuStencilOp stencil_front_fail;
+    ECGpuStencilOp depth_front_fail;
+    ECGpuStencilOp stencil_front_pass;
+    ECGpuCompareMode stencil_back_func;
+    ECGpuStencilOp stencil_back_fail;
+    ECGpuStencilOp depth_back_fail;
+    ECGpuStencilOp stencil_back_pass;
+} CGpuDepthStateDescriptor;
+
+typedef struct CGpuRasterizerStateDescriptor {
+    ECGpuCullMode cull_mode;
+    int32_t depth_bias;
+    float slope_scaled_depth_bias;
+    ECGpuFillMode fill_mode;
+    ECGpuFrontFace front_face;
+    bool enable_multi_sample;
+    bool enable_scissor;
+    bool enable_depth_clamp;
+} CGpuRasterizerStateDescriptor;
+
+typedef struct CGpuVertexAttribute {
+    char8_t semantic_name[64];
+    ECGpuFormat format;
+    uint32_t binding;
+    uint32_t location;
+    uint32_t offset;
+    ECGpuVertexAttribRate rate;
+} CGpuVertexAttribute;
+
+typedef struct CGpuVertexLayout {
+    uint32_t mAttribCount;
+    CGpuVertexAttribute mAttribs[MAX_VERTEX_ATTRIBS];
+} CGpuVertexLayout;
+
+typedef struct CGpuRenderPipelineDescriptor {
+    CGpuRootSignatureId root_signature;
+    CGpuPipelineShaderDescriptor* vertex_shader;
+    CGpuPipelineShaderDescriptor* fragment_shader;
+    CGpuVertexLayout* vertex_layout;
+    CGpuBlendStateDescriptor* blend_state;
+    CGpuDepthStateDescriptor* depth_state;
+    CGpuRasterizerStateDescriptor* rasterizer_state;
+    ECGpuFormat* color_formats;
+    uint32_t render_target_count;
+    ECGpuSampleCount sample_count;
+    uint32_t sample_quality;
+    ECGpuFormat depth_stencil_format;
+    ECGpuPrimitiveTopology prim_topology;
+    bool enable_indirect_command;
+} CGpuRenderPipelineDescriptor;
 
 typedef struct CGpuRootSignature {
     CGpuDeviceId device;

@@ -34,6 +34,8 @@ const CGpuProcTable tbl_vk = {
     .free_descriptor_set = &cgpu_free_descriptor_set_vulkan,
     .create_compute_pipeline = &cgpu_create_compute_pipeline_vulkan,
     .free_compute_pipeline = &cgpu_free_compute_pipeline_vulkan,
+    .create_render_pipeline = &cgpu_create_render_pipeline_vulkan,
+    .free_render_pipeline = &cgpu_free_render_pipeline_vulkan,
 
     // Queue APIs
     .get_queue = &cgpu_get_queue_vulkan,
@@ -85,8 +87,113 @@ const CGpuProcTable tbl_vk = {
     .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_vulkan,
     .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan
 };
-
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
+
+// Render Pass Utils
+typedef struct RenderPassDesc {
+    ECGpuFormat* pColorFormats;
+    const ECGpuLoadAction* pLoadActionsColor;
+    bool* pSrgbValues;
+    uint32_t mRenderTargetCount;
+    ECGpuSampleCount mSampleCount;
+    ECGpuFormat mDepthStencilFormat;
+    ECGpuLoadAction mLoadActionDepth;
+    ECGpuLoadAction mLoadActionStencil;
+} RenderPassDesc;
+
+VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LA_COUNT] = {
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+};
+
+FORCEINLINE static void VkUtil_FreeRenderPass(CGpuDevice_Vulkan* D, VkRenderPass pRenderPass)
+{
+    D->mVkDeviceTable.vkDestroyRenderPass(D->pVkDevice, pRenderPass, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(pRenderPass);
+}
+
+FORCEINLINE static void VkUtil_CreateRenderPass(CGpuDevice_Vulkan* D, const RenderPassDesc* pDesc, VkRenderPass* ppRenderPass)
+{
+    /************************************************************************/
+    // Add render pass
+    /************************************************************************/
+    assert(VK_NULL_HANDLE != D->pVkDevice);
+    uint32_t colorAttachmentCount = pDesc->mRenderTargetCount;
+    uint32_t depthAttachmentCount = (pDesc->mDepthStencilFormat != PF_UNDEFINED) ? 1 : 0;
+    VkAttachmentDescription attachments[MAX_MRT_COUNT + 1] = { 0 };
+    VkAttachmentReference color_attachment_refs[MAX_MRT_COUNT] = { 0 };
+    VkAttachmentReference depth_stencil_attachment_ref[1] = { 0 };
+    VkSampleCountFlagBits sample_count = VkUtil_SampleCountTranslateToVk(pDesc->mSampleCount);
+    // Fill out attachment descriptions and references
+    {
+        // Color
+        for (uint32_t i = 0; i < colorAttachmentCount; ++i)
+        {
+            const uint32_t ssidx = i;
+
+            // descriptions
+            attachments[ssidx].flags = 0;
+            attachments[ssidx].format = (VkFormat)VkUtil_FormatTranslateToVk(pDesc->pColorFormats[i]);
+            attachments[ssidx].samples = sample_count;
+            attachments[ssidx].loadOp =
+                pDesc->pLoadActionsColor ? gVkAttachmentLoadOpTranslator[pDesc->pLoadActionsColor[i]] : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachments[ssidx].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachments[ssidx].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachments[ssidx].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachments[ssidx].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            attachments[ssidx].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+            // references
+            color_attachment_refs[i].attachment = ssidx; //-V522
+            color_attachment_refs[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
+    }
+    // Depth stencil
+    if (depthAttachmentCount > 0)
+    {
+        uint32_t idx = colorAttachmentCount;
+        attachments[idx].flags = 0;
+        attachments[idx].format = (VkFormat)VkUtil_FormatTranslateToVk(pDesc->mDepthStencilFormat);
+        attachments[idx].samples = sample_count;
+        attachments[idx].loadOp = gVkAttachmentLoadOpTranslator[pDesc->mLoadActionDepth];
+        attachments[idx].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[idx].stencilLoadOp = gVkAttachmentLoadOpTranslator[pDesc->mLoadActionStencil];
+        attachments[idx].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[idx].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachments[idx].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_stencil_attachment_ref[0].attachment = idx; //-V522
+        depth_stencil_attachment_ref[0].layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    }
+    uint32_t attachment_count = colorAttachmentCount;
+    attachment_count += depthAttachmentCount;
+    void* render_pass_next = NULL;
+    // Fill Description
+    VkSubpassDescription subpass = {
+        .flags = 0,
+        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .inputAttachmentCount = 0,
+        .pInputAttachments = NULL,
+        .colorAttachmentCount = colorAttachmentCount,
+        .pColorAttachments = color_attachment_refs,
+        .pResolveAttachments = NULL,
+        .pDepthStencilAttachment = depth_stencil_attachment_ref,
+        .preserveAttachmentCount = 0,
+        .pPreserveAttachments = NULL
+    };
+    VkRenderPassCreateInfo create_info = {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+        .pNext = render_pass_next,
+        .flags = 0,
+        .attachmentCount = attachment_count,
+        .pAttachments = attachments,
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 0,
+        .pDependencies = NULL
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateRenderPass(D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, ppRenderPass));
+}
 
 void cgpu_query_instance_features_vulkan(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
 {
@@ -426,7 +533,7 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
         // Descriptor Info
         const CGpuDescriptorData* ArgData = datas + i;
         CGpuShaderResource* ResData = CGPU_NULLPTR;
-        size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), (size_t)D);
+        size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), *(size_t*)&D);
         for (uint32_t p = 0; p < SetLayout->resources_count; p++)
         {
             if (SetLayout->resources[p].name_hash == argNameHash)
@@ -514,6 +621,27 @@ void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline)
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
     D->mVkDeviceTable.vkDestroyPipeline(D->pVkDevice, PPL->pVkPipeline, GLOBAL_VkAllocationCallbacks);
     cgpu_free(PPL);
+}
+
+CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuRenderPipeline_Vulkan* RP = (CGpuRenderPipeline_Vulkan*)cgpu_calloc(1, sizeof(CGpuRenderPipeline_Vulkan));
+    RenderPassDesc rpdesc = {
+        .mRenderTargetCount = desc->render_target_count,
+        .mDepthStencilFormat = desc->depth_stencil_format,
+
+    };
+    VkUtil_CreateRenderPass(D, &rpdesc, &RP->pRenderPass);
+    return &RP->super;
+}
+
+void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
+    CGpuRenderPipeline_Vulkan* RP = (CGpuRenderPipeline_Vulkan*)pipeline;
+    VkUtil_FreeRenderPass(D, RP->pRenderPass);
+    cgpu_free(RP);
 }
 
 // Queue APIs
@@ -808,6 +936,9 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    VkRenderPass render_pass = VK_NULL_HANDLE;
+    // Cmd begin render pass
+    Cmd->pRenderPass = render_pass;
     VkRenderPassBeginInfo begin_info = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .pNext = NULL,
@@ -823,6 +954,8 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
 
 void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
 {
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    Cmd->pRenderPass = VK_NULL_HANDLE;
 }
 
 // SwapChain APIs
