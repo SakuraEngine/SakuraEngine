@@ -1,8 +1,12 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
+#include "cgpu/api.h"
 #include "cgpu/cgpu_config.h"
+#include "cgpu/flags.h"
 #include "d3d12_utils.h"
+#include "../common/common_utils.h"
 #include <assert.h>
 #include <stdio.h>
+#include <dxcapi.h>
 
 #if !defined(XBOX)
     #pragma comment(lib, "d3d12.lib")
@@ -254,8 +258,103 @@ void cgpu_free_fence_d3d12(CGpuFenceId fence)
 
 CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc)
 {
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     CGpuRootSignature_D3D12* RS = cgpu_new<CGpuRootSignature_D3D12>();
-
+    // Pick root parameters from desc data
+    CGpuShaderStages shaderStages = 0;
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    {
+        CGpuPipelineShaderDescriptor* shader_desc = desc->shaders + i;
+        shaderStages |= shader_desc->stage;
+    }
+    // Pick shader reflection data
+    DECLARE_ZERO(CGpuUtil_RSBlackboard, bb)
+    CGpuUtil_InitRSBlackboard(&bb, desc);
+    // Fill resource slots
+    // Only support descriptor tables now
+    // TODO: Support root CBVs
+    //       Add backend sort for better performance
+    const UINT tableCount = bb.set_count;
+    UINT descRangeCount = 0;
+    for (uint32_t i = 0; i < bb.set_count; i++)
+    {
+        descRangeCount += bb.valid_bindings[i];
+    }
+    D3D12_ROOT_PARAMETER1* rootParams = (D3D12_ROOT_PARAMETER1*)cgpu_calloc(tableCount, sizeof(D3D12_ROOT_PARAMETER1));
+    D3D12_DESCRIPTOR_RANGE1* cbvSrvUavRanges = (D3D12_DESCRIPTOR_RANGE1*)cgpu_calloc(descRangeCount, sizeof(D3D12_DESCRIPTOR_RANGE1));
+    uint32_t i_table = 0;
+    uint32_t i_range = 0;
+    // Create descriptor tables
+    for (uint32_t i_set = 0; i_set < bb.set_count; i_set++)
+    {
+        D3D12_ROOT_PARAMETER1* rootParam = &rootParams[i_table];
+        rootParam->ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        CGpuShaderStages visStages = SS_NONE;
+        const D3D12_DESCRIPTOR_RANGE1* descRangeCursor = &cbvSrvUavRanges[i_range];
+        for (uint32_t i_binding = 0; i_binding < bb.valid_bindings[i_set]; i_binding++)
+        {
+            D3D12_DESCRIPTOR_RANGE1* descRange = &cbvSrvUavRanges[i_range];
+            CGpuShaderResource* reflSlot = &bb.sig_reflections[i_set * i_binding + i_binding];
+            descRange->RegisterSpace = reflSlot->set;
+            descRange->BaseShaderRegister = reflSlot->binding;
+            descRange->Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+            descRange->NumDescriptors = reflSlot->size;
+            descRange->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+            descRange->RangeType = D3D12Util_ResourceTypeToDescriptorRangeType(reflSlot->type);
+            visStages |= reflSlot->stages;
+            i_range++;
+        }
+        rootParam->ShaderVisibility = D3D12Util_TranslateShaderStages(visStages);
+        rootParam->DescriptorTable.NumDescriptorRanges = bb.valid_bindings[i_set];
+        rootParam->DescriptorTable.pDescriptorRanges = descRangeCursor;
+        i_table++;
+    }
+    // End create descriptor tables
+    // TODO: Support static samplers
+    UINT staticSamplerCount = 0;
+    D3D12_STATIC_SAMPLER_DESC* staticSamplerDescs = CGPU_NULLPTR;
+    bool useInputLayout = shaderStages & SS_VERT; // VertexStage uses input layout
+    // Fill RS flags
+    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+    if (useInputLayout)
+        rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    if (!(shaderStages & SS_VERT))
+        rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
+    if (!(shaderStages & SS_HULL))
+        rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+    if (!(shaderStages & SS_DOMN))
+        rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
+    if (!(shaderStages & SS_GEOM))
+        rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+    if (!(shaderStages & SS_FRAG))
+        rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+    // Serialize versioned RS
+    const UINT paramCount = tableCount - staticSamplerCount;
+    ID3DBlob* error = NULL;
+    ID3DBlob* rootSignatureString = NULL;
+    DECLARE_ZERO(D3D12_VERSIONED_ROOT_SIGNATURE_DESC, sig_desc);
+    sig_desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
+    sig_desc.Desc_1_1.NumParameters = paramCount;
+    sig_desc.Desc_1_1.pParameters = rootParams;
+    sig_desc.Desc_1_1.NumStaticSamplers = staticSamplerCount;
+    sig_desc.Desc_1_1.pStaticSamplers = staticSamplerDescs;
+    sig_desc.Desc_1_1.Flags = rootSignatureFlags;
+    HRESULT hres = D3D12SerializeVersionedRootSignature(&sig_desc, &rootSignatureString, &error);
+    if (!SUCCEEDED(hres))
+    {
+        cgpu_error("Failed to serialize root signature with error (%s)", (char*)error->GetBufferPointer());
+    }
+    // If running Linked Mode (SLI) create root signature for all nodes
+    // #NOTE : In non SLI mode, mNodeCount will be 0 which sets nodeMask to
+    // default value
+    CHECK_HRESULT(D->pDxDevice->CreateRootSignature(
+        SINGLE_GPU_NODE_MASK,
+        rootSignatureString->GetBufferPointer(),
+        rootSignatureString->GetBufferSize(),
+        IID_ARGS(&RS->pDxRootSignature)));
+    CGpuUtil_FreeRSBlackboard(&bb);
+    cgpu_free(rootParams);
+    cgpu_free(cbvSrvUavRanges);
     return &RS->super;
 }
 
@@ -264,6 +363,58 @@ void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature)
     CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)signature;
     SAFE_RELEASE(RS->pDxRootSignature);
     cgpu_delete(RS);
+}
+
+CGpuDescriptorSetId cgpu_create_descriptor_set_d3d12(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc)
+{
+    return CGPU_NULLPTR;
+}
+
+void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count)
+{
+}
+
+void cgpu_free_descriptor_set_d3d12(CGpuDescriptorSetId set)
+{
+}
+
+CGpuComputePipelineId cgpu_create_compute_pipeline_d3d12(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc)
+{
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
+    CGpuComputePipeline_D3D12* PPL = cgpu_new<CGpuComputePipeline_D3D12>();
+    CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)desc->root_signature;
+    CGpuShaderLibrary_D3D12* SL = (CGpuShaderLibrary_D3D12*)desc->compute_shader->library;
+    PPL->pRootSignature = RS->pDxRootSignature;
+    // Add pipeline specifying its for compute purposes
+    DECLARE_ZERO(D3D12_SHADER_BYTECODE, CS);
+    CS.BytecodeLength = SL->pShaderBlob->GetBufferSize();
+    CS.pShaderBytecode = SL->pShaderBlob->GetBufferPointer();
+    DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
+    cached_pso_desc.pCachedBlob = NULL;
+    cached_pso_desc.CachedBlobSizeInBytes = 0;
+    DECLARE_ZERO(D3D12_COMPUTE_PIPELINE_STATE_DESC, pipeline_state_desc);
+    pipeline_state_desc.pRootSignature = RS->pDxRootSignature;
+    pipeline_state_desc.CS = CS;
+    pipeline_state_desc.CachedPSO = cached_pso_desc;
+    pipeline_state_desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+    pipeline_state_desc.NodeMask = SINGLE_GPU_NODE_MASK;
+    // TODO: Pipeline cache
+    HRESULT result = E_FAIL;
+    ID3D12PipelineLibrary* psoCache = CGPU_NULLPTR;
+    (void)psoCache;
+    if (!SUCCEEDED(result))
+    {
+        // TODO: Support PSO extensions
+        CHECK_HRESULT(D->pDxDevice->CreateComputePipelineState(&pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
+    }
+    return &PPL->super;
+}
+
+void cgpu_free_compute_pipeline_d3d12(CGpuComputePipelineId pipeline)
+{
+    CGpuComputePipeline_D3D12* PPL = (CGpuComputePipeline_D3D12*)pipeline;
+    SAFE_RELEASE(PPL->pDxPipelineState);
+    cgpu_delete(PPL);
 }
 
 // Queue APIs

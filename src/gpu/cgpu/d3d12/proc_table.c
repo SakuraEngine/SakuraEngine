@@ -17,6 +17,11 @@ const CGpuProcTable tbl_d3d12 = {
     .free_fence = &cgpu_free_fence_d3d12,
     .create_root_signature = &cgpu_create_root_signature_d3d12,
     .free_root_signature = &cgpu_free_root_signature_d3d12,
+    .create_descriptor_set = &cgpu_create_descriptor_set_d3d12,
+    .update_descriptor_set = &cgpu_update_descriptor_set_d3d12,
+    .free_descriptor_set = &cgpu_free_descriptor_set_d3d12,
+    .create_compute_pipeline = &cgpu_create_compute_pipeline_d3d12,
+    .free_compute_pipeline = &cgpu_free_compute_pipeline_d3d12,
 
     .get_queue = &cgpu_get_queue_d3d12,
     .submit_queue = &cgpu_submit_queue_d3d12,

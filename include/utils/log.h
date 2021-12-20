@@ -10,7 +10,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "platform/configure.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -48,14 +48,14 @@ enum
 #define log_error(...) log_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define log_fatal(...) log_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
-const char* log_level_string(int level);
-void log_set_lock(log_LockFn fn, void* udata);
-void log_set_level(int level);
-void log_set_quiet(bool enable);
-int log_add_callback(log_LogFn fn, void* udata, int level);
-int log_add_fp(FILE* fp, int level);
+RUNTIME_API const char* log_level_string(int level);
+RUNTIME_API void log_set_lock(log_LockFn fn, void* udata);
+RUNTIME_API void log_set_level(int level);
+RUNTIME_API void log_set_quiet(bool enable);
+RUNTIME_API int log_add_callback(log_LogFn fn, void* udata, int level);
+RUNTIME_API int log_add_fp(FILE* fp, int level);
 
-void log_log(int level, const char* file, int line, const char* fmt, ...);
+RUNTIME_API void log_log(int level, const char* file, int line, const char* fmt, ...);
 
 #ifdef __cplusplus
 }

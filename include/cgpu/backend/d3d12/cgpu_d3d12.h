@@ -39,6 +39,11 @@ RUNTIME_API CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device);
 RUNTIME_API void cgpu_free_fence_d3d12(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature);
+RUNTIME_API CGpuDescriptorSetId cgpu_create_descriptor_set_d3d12(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc);
+RUNTIME_API void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count);
+RUNTIME_API void cgpu_free_descriptor_set_d3d12(CGpuDescriptorSetId set);
+RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline_d3d12(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
+RUNTIME_API void cgpu_free_compute_pipeline_d3d12(CGpuComputePipelineId pipeline);
 
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
@@ -70,6 +75,13 @@ RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 RUNTIME_API void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd);
+
+// Compute Pass
+RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_d3d12(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
+RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set);
+RUNTIME_API void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
+RUNTIME_API void cgpu_compute_encoder_dispatch_d3d12(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
+RUNTIME_API void cgpu_cmd_end_compute_pass_d3d12(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
 
 #ifdef __cplusplus
 } // end extern "C"
@@ -178,6 +190,12 @@ typedef struct CGpuRootSignature_D3D12 {
     CGpuRootSignature super;
     ID3D12RootSignature* pDxRootSignature;
 } CGpuRootSignature_D3D12;
+
+typedef struct CGpuComputePipeline_D3D12 {
+    CGpuComputePipeline super;
+    ID3D12PipelineState* pDxPipelineState;
+    ID3D12RootSignature* pRootSignature;
+} CGpuComputePipeline_D3D12;
 
 typedef struct CGpuBuffer_D3D12 {
     CGpuBuffer super;

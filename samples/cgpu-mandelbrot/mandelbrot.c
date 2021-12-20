@@ -28,9 +28,9 @@ int main(void)
     compute_shaders[ECGpuBackend_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
     compute_shader_sizes[ECGpuBackend_D3D12] = sizeof(mandelbrot_comp_dxil);
 
-    ECGpuBackend backend = ECGpuBackend_VULKAN;
+    ECGpuBackend backend = ECGpuBackend_D3D12;
     // When we support more add them here
-    if (backend == ECGpuBackend_VULKAN)
+    if (backend == ECGpuBackend_D3D12)
     {
         // Create instance
         CGpuInstanceDescriptor instance_desc = {

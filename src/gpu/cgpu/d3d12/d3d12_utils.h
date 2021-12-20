@@ -1,7 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "cgpu/backend/d3d12/d3d12_bridge.h"
 #include "D3D12MemAlloc.h"
 #include "platform/thread.h"
 #include "platform/atomic.h"
@@ -80,37 +79,7 @@ static const DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIP
     { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
 };
 
-FORCEINLINE static void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
-    const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
-{
-    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
-        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
-    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
-        *pHandle = hdl.mCpu;
-    D->pDxDevice->CreateShaderResourceView(pResource, pSrvDesc, *pHandle);
-}
-
-FORCEINLINE static void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
-    ID3D12Resource* pCounterResource,
-    const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
-{
-    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
-        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
-    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
-        *pHandle = hdl.mCpu;
-    D->pDxDevice->CreateUnorderedAccessView(pResource, pCounterResource, pSrvDesc, *pHandle);
-}
-
-FORCEINLINE static void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
-    const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
-{
-    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
-        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
-    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
-        *pHandle = hdl.mCpu;
-    D->pDxDevice->CreateConstantBufferView(pSrvDesc, *pHandle);
-}
-
+#include "d3d12_utils.inl"
 //
 // C++ is the only language supported by D3D12:
 //   https://msdn.microsoft.com/en-us/library/windows/desktop/dn899120(v=vs.85).aspx

@@ -402,8 +402,11 @@ typedef enum ECGpuShaderStage
     SS_GEOM = 0X00000008,
     SS_FRAG = 0X00000010,
     SS_COMPUTE = 0X00000020,
+    SS_RAYTRACING = 0X00000040,
 
     SS_ALL_GRAPHICS = (uint32_t)SS_VERT | (uint32_t)SS_TESC | (uint32_t)SS_TESE | (uint32_t)SS_GEOM | (uint32_t)SS_FRAG,
+    SS_HULL = SS_TESC,
+    SS_DOMN = SS_TESE,
     SS_COUNT = 6
 } ECGpuShaderStage;
 typedef uint32_t CGpuShaderStages;

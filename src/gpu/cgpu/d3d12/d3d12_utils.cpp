@@ -1,5 +1,4 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "cgpu/backend/d3d12/d3d12_bridge.h"
 #include "cgpu/cgpu_config.h"
 #include "cgpu/flags.h"
 #include "d3d12_utils.h"
