@@ -61,7 +61,7 @@ FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescripto
   }
 }
 
-FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_ResourceStateBridge(ECGpuResourceState state)
+FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_TranslateResourceState(ECGpuResourceState state)
 {
     D3D12_RESOURCE_STATES ret = D3D12_RESOURCE_STATE_COMMON;
 

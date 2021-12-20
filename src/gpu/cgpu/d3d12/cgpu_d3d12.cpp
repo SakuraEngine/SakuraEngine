@@ -668,8 +668,8 @@ void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuR
                 pBarrier->Transition.pResource = pBuffer->pDxResource;
                 pBarrier->Transition.Subresource =
                     D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                pBarrier->Transition.StateBefore = D3D12Util_ResourceStateBridge(pTransBarrier->src_state);
-                pBarrier->Transition.StateAfter = D3D12Util_ResourceStateBridge(pTransBarrier->dst_state);
+                pBarrier->Transition.StateBefore = D3D12Util_TranslateResourceState(pTransBarrier->src_state);
+                pBarrier->Transition.StateAfter = D3D12Util_TranslateResourceState(pTransBarrier->dst_state);
                 ++transitionCount;
             }
         }

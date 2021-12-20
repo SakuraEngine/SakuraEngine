@@ -109,16 +109,25 @@ void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter)
     // TODO: Driver Version
     vendor_preset.driver_version = 0;
     // Create a device for feature query
-    DECLARE_ZERO(D3D12_FEATURE_DATA_ARCHITECTURE1, dxgi_feature)
     ID3D12Device* pCheckDevice = nullptr;
     if (!SUCCEEDED(D3D12CreateDevice(adapter.pDxActiveGPU, adapter.mFeatureLevel, IID_PPV_ARGS(&pCheckDevice))))
     {
         assert("[D3D12 Fatal]: Create D3D12Device Failed When Query Adapter Features!");
     }
+    // Architecture features
+    DECLARE_ZERO(D3D12_FEATURE_DATA_ARCHITECTURE1, dxgi_feature)
     pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_ARCHITECTURE1, &dxgi_feature, sizeof(dxgi_feature));
     adapter_detail.is_uma = dxgi_feature.UMA;
     adapter_detail.is_cpu = desc3.Flags & DXGI_ADAPTER_FLAG_SOFTWARE;
     adapter_detail.is_virtual = false;
+#ifdef CGPU_USE_D3D12_ENHANCED_BARRIERS
+    // Enhanced barriers features
+    D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12 = {};
+    if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12))))
+    {
+        D3D12Adapter->mEnhancedBarriersSupported = options12.EnhancedBarriersSupported;
+    }
+#endif
     SAFE_RELEASE(pCheckDevice);
 }
 
