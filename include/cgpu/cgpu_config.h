@@ -170,22 +170,6 @@
     #define INTERNAL_CALL
 #endif
 
-#ifdef __cplusplus
-    #include <type_traits>
-template <typename T, typename... Args>
-T* cgpu_new(Args&&... args)
-{
-    void* memory = sakura_malloc_aligned(sizeof(T), alignof(T));
-    return new (memory) T(std::forward<Args>(args)...);
-}
-template <typename T>
-void cgpu_delete(T* object)
-{
-    object->~T();
-    cgpu_free(object);
-}
-#endif
-
 #define MAX_GPU_VENDOR_STRING_LENGTH 64
 #define MAX_GPU_DEBUG_NAME_LENGTH 128
 
@@ -204,6 +188,22 @@ void cgpu_delete(T* object)
 #define cgpu_calloc_aligned sakura_calloc_aligned
 #define cgpu_memalign sakura_malloc_aligned
 #define cgpu_free sakura_free
+
+#ifdef __cplusplus
+    #include <type_traits>
+template <typename T, typename... Args>
+T* cgpu_new(Args&&... args)
+{
+    void* memory = sakura_malloc_aligned(sizeof(T), alignof(T));
+    return new (memory) T(std::forward<Args>(args)...);
+}
+template <typename T>
+void cgpu_delete(T* object)
+{
+    object->~T();
+    cgpu_free(object);
+}
+#endif
 
 #include "utils/hash.h"
 #define cgpu_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))

@@ -6,6 +6,7 @@
 #include "vulkan/vulkan_core.h"
 #include "vulkan_utils.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
+#include "../common/common_utils.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -304,91 +305,35 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
 {
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGpuRootSignature_Vulkan));
-    DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shaders_count)
-    // pick shader reflection data
-    for (uint32_t i = 0; i < desc->shaders_count; i++)
-    {
-        const CGpuPipelineShaderDescriptor* shader_desc = &desc->shaders[i];
-        // find shader refl
-        for (uint32_t j = 0; j < shader_desc->library->entrys_count; j++)
-        {
-            CGpuShaderReflection* temp_entry_reflcetion = &shader_desc->library->entry_reflections[j];
-            if (strcmp(shader_desc->entry, temp_entry_reflcetion->entry_name) == 0)
-            {
-                entry_reflections[i] = temp_entry_reflcetion;
-                break;
-            }
-        }
-        if (entry_reflections[i] == CGPU_NULLPTR)
-        {
-            assert(0 && "Shader Entry Not Found!");
-        }
-    }
-
-    // Count Sets and Binding Slots
-    uint32_t set_count = 0;
-    uint32_t max_binding = 0;
-    ECGpuPipelineType pipelineType = PT_NONE;
-    for (uint32_t i = 0; i < desc->shaders_count; i++)
-    {
-        CGpuShaderReflection* reflection = entry_reflections[i];
-        for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
-        {
-            CGpuShaderResource* resource = &reflection->shader_resources[j];
-            set_count = set_count > resource->set + 1 ? set_count : resource->set + 1;
-            max_binding = max_binding > resource->binding + 1 ? max_binding : resource->binding + 1;
-        }
-        // Pipeline Type
-        if (reflection->stage & SS_COMPUTE)
-            pipelineType = PT_COMPUTE;
-#ifdef ENABLE_RAYTRACING
-        else if (reflection->stage & SS_RAYTRACING)
-            pipelineType = PT_RAYTRACING;
-#endif
-        else
-            pipelineType = PT_GRAPHICS;
-    }
-    RS->set_count = set_count;
-
+    DECLARE_ZERO(CGpuUtil_RSBlackboard, bb)
+    CGpuUtil_InitRSBlackboard(&bb, desc);
+    RS->set_count = bb.set_count;
     // Collect Shader Resources
-    if (set_count * max_binding > 0)
+    if (bb.set_count * bb.max_binding > 0)
     {
-        // Record On Temporal Memory
-        CGpuShaderResource* sig_reflections = (CGpuShaderResource*)cgpu_calloc(set_count * max_binding, sizeof(CGpuShaderResource));
-        uint32_t* valid_bindings = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
-        for (uint32_t i = 0; i < desc->shaders_count; i++)
-        {
-            CGpuShaderReflection* reflection = entry_reflections[i];
-            for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
-            {
-                CGpuShaderResource* resource = &reflection->shader_resources[j];
-                memcpy(&sig_reflections[resource->set * resource->binding], resource, sizeof(CGpuShaderResource));
-                valid_bindings[resource->set] =
-                    valid_bindings[resource->set] > resource->binding + 1 ? valid_bindings[resource->set] : resource->binding + 1;
-            }
-        }
         // Collect Secure Set Count
-        RS->parameter_sets = (ParameterSet_Vulkan*)cgpu_calloc(set_count, sizeof(ParameterSet_Vulkan));
+        RS->parameter_sets = (ParameterSet_Vulkan*)cgpu_calloc(bb.set_count, sizeof(ParameterSet_Vulkan));
         for (uint32_t i_set = 0; i_set < RS->set_count; i_set++)
         {
             ParameterSet_Vulkan* set_to_record = &RS->parameter_sets[i_set];
-            set_to_record->resources_count = valid_bindings[i_set];
-            set_to_record->resources = cgpu_calloc(valid_bindings[i_set], sizeof(CGpuShaderResource));
-            for (uint32_t i_binding = 0; i_binding < valid_bindings[i_set]; i_binding++)
+            set_to_record->resources_count = bb.valid_bindings[i_set];
+            set_to_record->resources = cgpu_calloc(bb.valid_bindings[i_set], sizeof(CGpuShaderResource));
+            for (uint32_t i_binding = 0; i_binding < bb.valid_bindings[i_set]; i_binding++)
             {
-                const size_t source_len = strlen(sig_reflections[i_set * i_binding + i_binding].name);
+                CGpuShaderResource* reflSlot = &bb.sig_reflections[i_set * i_binding + i_binding];
+                const size_t source_len = strlen(reflSlot->name);
                 set_to_record->resources[i_binding].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
 #ifdef _WIN32
-                strcpy_s((char8_t*)set_to_record->resources[i_binding].name, source_len + 1, sig_reflections[i_set * i_binding + i_binding].name);
+                strcpy_s((char8_t*)set_to_record->resources[i_binding].name, source_len + 1, reflSlot->name);
 #else
                 strcpy((char8_t*)set_to_record->resources[i_binding].name, sig_reflections[i_set * i_binding + i_binding].name);
 #endif
-                set_to_record->resources[i_binding].type = sig_reflections[i_set * i_binding + i_binding].type;
-                set_to_record->resources[i_binding].set = sig_reflections[i_set * i_binding + i_binding].set;
-                set_to_record->resources[i_binding].binding = sig_reflections[i_set * i_binding + i_binding].binding;
-                set_to_record->resources[i_binding].size = sig_reflections[i_set * i_binding + i_binding].size;
-                set_to_record->resources[i_binding].stages = sig_reflections[i_set * i_binding + i_binding].stages;
-                set_to_record->resources[i_binding].name_hash = sig_reflections[i_set * i_binding + i_binding].name_hash;
+                set_to_record->resources[i_binding].type = reflSlot->type;
+                set_to_record->resources[i_binding].set = reflSlot->set;
+                set_to_record->resources[i_binding].binding = reflSlot->binding;
+                set_to_record->resources[i_binding].size = reflSlot->size;
+                set_to_record->resources[i_binding].stages = reflSlot->stages;
+                set_to_record->resources[i_binding].name_hash = reflSlot->name_hash;
             }
         }
         // Create Vk Objects
@@ -402,6 +347,8 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 vkbindings[i_binding].stageFlags = VkUtil_TranslateShaderUsages(set_to_record->resources[i_binding].stages);
                 vkbindings[i_binding].descriptorType = VkUtil_TranslateResourceType(set_to_record->resources[i_binding].type);
                 vkbindings[i_binding].descriptorCount = set_to_record->resources[i_binding].size;
+                // TODO: Support static samplers
+                vkbindings[i_binding].pImmutableSamplers = CGPU_NULL;
             }
             VkDescriptorSetLayoutCreateInfo set_info = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
@@ -413,9 +360,6 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice, &set_info, GLOBAL_VkAllocationCallbacks, &set_to_record->layout));
             cgpu_free(vkbindings);
         }
-        // Free Temporal Memory
-        cgpu_free(sig_reflections);
-        cgpu_free(valid_bindings);
     }
     // Record Descriptor Sets
     VkDescriptorSetLayout* set_layouts = cgpu_calloc(RS->set_count + 1, sizeof(VkDescriptorSetLayout));
@@ -434,9 +378,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         .pushConstantRangeCount = 0,
         .pPushConstantRanges = NULL
     };
-    CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice,
-        &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pipeline_layout));
-
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice, &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pipeline_layout));
     // Create Update Templates
     for (uint32_t i_set = 0; i_set < RS->set_count; i_set++)
     {
@@ -455,7 +397,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             .pNext = NULL,
             .templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET_KHR,
             .pipelineLayout = RS->pipeline_layout,
-            .pipelineBindPoint = gPipelineBindPoint[pipelineType],
+            .pipelineBindPoint = gPipelineBindPoint[bb.pipelineType],
             .descriptorSetLayout = set_to_record->layout,
             .set = i_set,
             .pDescriptorUpdateEntries = template_entries,
@@ -465,6 +407,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->update_template));
     }
     // Free Temporal Memory
+    CGpuUtil_FreeRSBlackboard(&bb);
     cgpu_free(set_layouts);
     return &RS->super;
 }

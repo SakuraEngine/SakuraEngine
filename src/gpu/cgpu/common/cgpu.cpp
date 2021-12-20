@@ -10,7 +10,7 @@
 #endif
 #include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
-#include "runtime_table.h"
+#include "common_utils.h"
 #include <EASTL/vector.h>
 
 // AGS

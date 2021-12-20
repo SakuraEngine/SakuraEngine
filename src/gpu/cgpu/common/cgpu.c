@@ -1,6 +1,6 @@
 #include "cgpu/api.h"
 #include "cgpu/flags.h"
-#include "runtime_table.h"
+#include "common_utils.h"
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #endif
@@ -669,4 +669,75 @@ void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
     device->adapter->instance->surfaces_table->free_surface(device, surface);
     return;
 }
-//
+
+// Common Utils
+void CGpuUtil_InitRSBlackboard(CGpuUtil_RSBlackboard* bb, const struct CGpuRootSignatureDescriptor* desc)
+{
+    DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shaders_count)
+    // Pick shader reflection data
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    {
+        const CGpuPipelineShaderDescriptor* shader_desc = &desc->shaders[i];
+        // find shader refl
+        for (uint32_t j = 0; j < shader_desc->library->entrys_count; j++)
+        {
+            CGpuShaderReflection* temp_entry_reflcetion = &shader_desc->library->entry_reflections[j];
+            if (strcmp(shader_desc->entry, temp_entry_reflcetion->entry_name) == 0)
+            {
+                entry_reflections[i] = temp_entry_reflcetion;
+                break;
+            }
+        }
+        if (entry_reflections[i] == CGPU_NULLPTR)
+        {
+            entry_reflections[i] = &shader_desc->library->entry_reflections[0];
+        }
+    }
+    // Count Sets and Binding Slots
+    bb->pipelineType = PT_NONE;
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    {
+        CGpuShaderReflection* reflection = entry_reflections[i];
+        for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
+        {
+            CGpuShaderResource* resource = &reflection->shader_resources[j];
+            bb->set_count = bb->set_count > resource->set + 1 ? bb->set_count : resource->set + 1;
+            bb->max_binding = bb->max_binding > resource->binding + 1 ? bb->max_binding : resource->binding + 1;
+        }
+        // Pipeline Type
+        if (reflection->stage & SS_COMPUTE)
+            bb->pipelineType = PT_COMPUTE;
+        else if (reflection->stage & SS_RAYTRACING)
+            bb->pipelineType = PT_RAYTRACING;
+        else
+            bb->pipelineType = PT_GRAPHICS;
+    }
+    // Collect Shader Resources
+    if (bb->set_count * bb->max_binding > 0)
+    {
+        // Record On Temporal Memory
+        bb->sig_reflections = (CGpuShaderResource*)cgpu_calloc(bb->set_count * bb->max_binding, sizeof(CGpuShaderResource));
+        bb->valid_bindings = (uint32_t*)cgpu_calloc(bb->set_count, sizeof(uint32_t));
+        for (uint32_t i = 0; i < desc->shaders_count; i++)
+        {
+            CGpuShaderReflection* reflection = entry_reflections[i];
+            for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
+            {
+                CGpuShaderResource* resource = &reflection->shader_resources[j];
+                CGpuShaderStages prev_stages = bb->sig_reflections[resource->set * resource->binding].stages;
+                memcpy(&bb->sig_reflections[resource->set * resource->binding], resource, sizeof(CGpuShaderResource));
+                // Merge stage masks
+                bb->sig_reflections[resource->set * resource->binding].stages |= prev_stages;
+                bb->valid_bindings[resource->set] =
+                    bb->valid_bindings[resource->set] > resource->binding + 1 ? bb->valid_bindings[resource->set] : resource->binding + 1;
+            }
+        }
+    }
+}
+
+void CGpuUtil_FreeRSBlackboard(CGpuUtil_RSBlackboard* bb)
+{
+    // Free Temporal Memory
+    cgpu_free(bb->sig_reflections);
+    cgpu_free(bb->valid_bindings);
+}

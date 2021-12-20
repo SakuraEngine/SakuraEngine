@@ -264,7 +264,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     else if (desc->start_state & RS_DEPTH_WRITE)
         additionalFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    uint arraySize = desc->array_size;
+    uint32_t arraySize = desc->array_size;
     // Image type
     VkImageType image_type = VK_IMAGE_TYPE_MAX_ENUM;
     if (desc->flags & TCF_FORCE_2D)
@@ -486,6 +486,7 @@ void cgpu_free_texture_vulkan(CGpuTextureId texture)
     if (T->super.owns_image)
     {
         const ECGpuFormat fmt = texture->format;
+        (void)fmt;
         // TODO: Support planar formats
         const bool isSinglePlane = true;
         if (isSinglePlane)
@@ -517,6 +518,7 @@ CGpuRenderTargetId cgpu_create_render_target_vulkan(CGpuDeviceId device, const s
 {
     // TODO: Support Depth Format
     bool isDepth = false;
+    (void)isDepth;
     uint32_t arraySize = desc->array_size;
     uint32_t depthOrArraySize = arraySize * desc->depth;
     uint32_t numRTVs = desc->mip_levels;

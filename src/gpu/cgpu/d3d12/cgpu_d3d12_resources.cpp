@@ -237,6 +237,22 @@ auto try_invoke_pinned_api(T* loader, Args&&... args)
 template <typename T>
 bool try_invoke_pinned_api(T* loader, ...) { return false; }
 
+struct DxilMinimalHeader {
+    UINT32 four_cc;
+    UINT32 hash_digest[4];
+};
+
+inline bool is_dxil_signed(const void* buffer)
+{
+    const DxilMinimalHeader* header = reinterpret_cast<const DxilMinimalHeader*>(buffer);
+    bool has_digest = false;
+    has_digest |= header->hash_digest[0] != 0x0;
+    has_digest |= header->hash_digest[1] != 0x0;
+    has_digest |= header->hash_digest[2] != 0x0;
+    has_digest |= header->hash_digest[3] != 0x0;
+    return has_digest;
+}
+
 CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
     CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
 {
@@ -248,6 +264,9 @@ CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
     {
         pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
     }
+    // Validate & Signing
+    if (!is_dxil_signed(desc->code)) assert(0 && "The dxil shader is not signed!");
+    // Reflection
     D3D12Util_InitializeShaderReflection(D, S, desc);
     pUtils->Release();
     return &S->super;

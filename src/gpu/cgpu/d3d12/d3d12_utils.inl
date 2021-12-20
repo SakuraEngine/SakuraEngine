@@ -1,12 +1,89 @@
-#pragma once
-#include "cgpu/api.h"
-#include "assert.h"
-#include "dxgiformat.h"
-
 /* clang-format off */
-#ifdef __cplusplus
-extern "C" {
-#endif
+FORCEINLINE static void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+    const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
+    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
+        *pHandle = hdl.mCpu;
+    D->pDxDevice->CreateShaderResourceView(pResource, pSrvDesc, *pHandle);
+}
+
+FORCEINLINE static void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+    ID3D12Resource* pCounterResource,
+    const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
+    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
+        *pHandle = hdl.mCpu;
+    D->pDxDevice->CreateUnorderedAccessView(pResource, pCounterResource, pSrvDesc, *pHandle);
+}
+
+FORCEINLINE static void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
+    const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+    const auto hdl = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
+    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
+        *pHandle = hdl.mCpu;
+    D->pDxDevice->CreateConstantBufferView(pSrvDesc, *pHandle);
+}
+
+FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescriptorRangeType(ECGpuResourceType type) {
+  switch (type) {
+  case RT_UNIFORM_BUFFER:
+  case RT_ROOT_CONSTANT:
+    return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+  case RT_RW_BUFFER:
+  case RT_RW_TEXTURE:
+    return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+  case RT_SAMPLER:
+    return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+  case RT_RAY_TRACING:
+  case RT_TEXTURE:
+  case RT_BUFFER:
+    return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+  default:
+    assert(false && "Invalid DescriptorInfo Type");
+    return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+  }
+}
+
+FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGpuShaderStages stages) {
+  D3D12_SHADER_VISIBILITY res = D3D12_SHADER_VISIBILITY_ALL;
+  uint32_t stageCount = 0;
+  if (stages == SS_COMPUTE) {
+    return D3D12_SHADER_VISIBILITY_ALL;
+  }
+  if (stages & SS_VERT) {
+    res = D3D12_SHADER_VISIBILITY_VERTEX;
+    ++stageCount;
+  }
+  if (stages & SS_GEOM) {
+    res = D3D12_SHADER_VISIBILITY_GEOMETRY;
+    ++stageCount;
+  }
+  if (stages & SS_HULL) {
+    res = D3D12_SHADER_VISIBILITY_HULL;
+    ++stageCount;
+  }
+  if (stages & SS_DOMN) {
+    res = D3D12_SHADER_VISIBILITY_DOMAIN;
+    ++stageCount;
+  }
+  if (stages & SS_FRAG) {
+    res = D3D12_SHADER_VISIBILITY_PIXEL;
+    ++stageCount;
+  }
+  if (stages == SS_RAYTRACING) {
+    return D3D12_SHADER_VISIBILITY_ALL;
+  }
+  assert(stageCount > 0);
+  return stageCount > 1 ? D3D12_SHADER_VISIBILITY_ALL : res;
+}
+
+
 FORCEINLINE static DXGI_FORMAT DXGIUtil_TranslatePixelFormat(const ECGpuFormat fmt)
 {
 	switch (fmt) {
@@ -94,9 +171,3 @@ FORCEINLINE static DXGI_FORMAT DXGIUtil_TranslatePixelFormat(const ECGpuFormat f
 	}
 	return DXGI_FORMAT_UNKNOWN;
 }
-
-#undef trans_case
-
-#ifdef __cplusplus
-} // end extern "C"
-#endif
