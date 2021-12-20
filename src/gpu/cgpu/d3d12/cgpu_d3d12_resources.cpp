@@ -26,7 +26,7 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
     {
         start_state = RS_COPY_DEST;
     }
-    D3D12_RESOURCE_STATES res_states = D3D12Util_ResourceStateBridge(start_state);
+    D3D12_RESOURCE_STATES res_states = D3D12Util_TranslateResourceState(start_state);
 
     // Do Allocation
     D3D12MA::ALLOCATION_DESC alloc_desc = D3D12Util_CreateAllocationDesc(desc);

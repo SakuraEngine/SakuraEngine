@@ -106,7 +106,6 @@ typedef struct CGpuInstance_D3D12 {
 #if defined(__cplusplus)
 
 #endif
-
 } CGpuInstance_D3D12;
 
 typedef struct CGpuAdapter_D3D12 {
@@ -118,6 +117,7 @@ typedef struct CGpuAdapter_D3D12 {
 #endif
     D3D_FEATURE_LEVEL mFeatureLevel;
     CGpuAdapterDetail adapter_detail;
+    bool mEnhancedBarriersSupported : 1;
 } CGpuAdapter_D3D12;
 
 typedef struct CGpuDevice_D3D12 {
