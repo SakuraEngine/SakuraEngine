@@ -69,11 +69,11 @@ RUNTIME_API void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBu
 RUNTIME_API void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer_vulkan(CGpuBufferId buffer);
 
-// Texture/RenderTarget APIs
+// Texture/TextureView APIs
 RUNTIME_API CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
 RUNTIME_API void cgpu_free_texture_vulkan(CGpuTextureId texture);
-RUNTIME_API CGpuRenderTargetId cgpu_create_render_target_vulkan(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
-RUNTIME_API void cgpu_free_render_target_vulkan(CGpuRenderTargetId render_target);
+RUNTIME_API CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc);
+RUNTIME_API void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
@@ -230,12 +230,12 @@ typedef struct CGpuTexture_Vulkan {
     };
 } CGpuTexture_Vulkan;
 
-typedef struct CGpuRenderTarget_Vulkan {
-    CGpuRenderTarget super;
+typedef struct CGpuTextureView_Vulkan {
+    CGpuTextureView super;
     VkImageView pVkDescriptor;
     VkImageView* pVkSliceDescriptors;
     uint32_t mId;
-} CGpuRenderTarget_Vulkan;
+} CGpuTextureView_Vulkan;
 
 typedef struct CGpuShaderLibrary_Vulkan {
     CGpuShaderLibrary super;

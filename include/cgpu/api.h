@@ -23,7 +23,7 @@ struct CGpuComputePipelineDescriptor;
 struct CGpuRenderPipelineDescriptor;
 struct CGpuBufferDescriptor;
 struct CGpuTextureDescriptor;
-struct CGpuRenderTargetDescriptor;
+struct CGpuTextureViewDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuQueueSubmitDescriptor;
 struct CGpuBufferUpdateDescriptor;
@@ -57,7 +57,7 @@ typedef const struct CGpuRootSignature* CGpuRootSignatureId;
 typedef const struct CGpuDescriptorSet* CGpuDescriptorSetId;
 typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuTexture* CGpuTextureId;
-typedef const struct CGpuRenderTarget* CGpuRenderTargetId;
+typedef const struct CGpuTextureView* CGpuTextureViewId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
 typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
 typedef const struct CGpuRenderPipeline* CGpuRenderPipelineId;
@@ -203,15 +203,15 @@ typedef void (*CGPUProcUnmapBuffer)(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer(CGpuBufferId buffer);
 typedef void (*CGPUProcFreeBuffer)(CGpuBufferId buffer);
 
-// Texture/RenderTarget APIs
+// Texture/TextureView APIs
 RUNTIME_API CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
 typedef CGpuTextureId (*CGPUProcCreateTexture)(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
 RUNTIME_API void cgpu_free_texture(CGpuTextureId texture);
 typedef void (*CGPUProcFreeTexture)(CGpuTextureId texture);
-RUNTIME_API CGpuRenderTargetId cgpu_create_render_target(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
-typedef CGpuRenderTargetId (*CGPUProcCreateRenderTarget)(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc);
-RUNTIME_API void cgpu_free_render_target(CGpuRenderTargetId render_target);
-typedef void (*CGPUProcFreeRenderTarget)(CGpuRenderTargetId render_target);
+RUNTIME_API CGpuTextureViewId cgpu_create_texture_view(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc);
+typedef CGpuTextureViewId (*CGPUProcCreateTextureView)(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc);
+RUNTIME_API void cgpu_free_texture_view(CGpuTextureViewId render_target);
+typedef void (*CGPUProcFreeTextureView)(CGpuTextureViewId render_target);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
@@ -303,11 +303,11 @@ typedef struct CGpuProcTable {
     const CGPUProcUnmapBuffer unmap_buffer;
     const CGPUProcFreeBuffer free_buffer;
 
-    // Texture/RenderTarget APIs
+    // Texture/TextureView APIs
     const CGPUProcCreateTexture create_texture;
     const CGPUProcFreeTexture free_texture;
-    const CGPUProcCreateRenderTarget create_render_target;
-    const CGPUProcFreeRenderTarget free_render_target;
+    const CGPUProcCreateTextureView create_texture_view;
+    const CGPUProcFreeTextureView free_texture_view;
 
     // Swapchain APIs
     const CGPUProcCreateSwapChain create_swapchain;
@@ -571,7 +571,7 @@ typedef struct CGpuTexture {
     uint32_t owns_image : 1;
 } CGpuTexture;
 
-typedef struct CGpuRenderTarget {
+typedef struct CGpuTextureView {
     CGpuDeviceId device;
     CGpuTextureId texture;
     CGpuClearValue clear_value;
@@ -584,7 +584,7 @@ typedef struct CGpuRenderTarget {
     uint32_t sample_quality : 5;
     ECGpuFormat format;
     ECGpuSampleCount sample_count;
-} CGpuRenderTarget;
+} CGpuTextureView;
 
 typedef struct CGpuSwapChain {
     CGpuDeviceId device;
@@ -706,8 +706,8 @@ typedef struct CGpuComputePassDescriptor {
 typedef struct CGpuRenderPassDescriptor {
     const char8_t* name;
     ECGpuSampleCount sample_count;
-    const CGpuRenderTargetId* render_targets;
-    const CGpuRenderTargetId depth_stencil;
+    const CGpuTextureViewId* render_targets;
+    const CGpuTextureViewId depth_stencil;
     uint32_t render_target_count;
 } CGpuRenderPassDescriptor;
 
@@ -866,36 +866,11 @@ typedef struct CGpuBufferDescriptor {
     ECGpuResourceState start_state;
 } CGpuBufferDescriptor;
 
-typedef struct CGpuRenderTargetDescriptor {
+typedef struct CGpuTextureViewDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
-    /// Imported native image handle
-    const void* native_handle;
-    /// Texture creation flags (decides memory allocation strategy, sharing access,...)
-    CGpuTextureCreationFlags flags;
-    /// Optimized clear value (recommended to use this same value when clearing the rendertarget)
-    CGpuClearValue clear_value;
-    /// Width
-    uint32_t width;
-    /// Height
-    uint32_t height;
-    /// Depth (Should be 1 if not a mType is not TEXTURE_TYPE_3D)
-    uint32_t depth;
-    /// Texture array size (Should be 1 if texture is not a texture array or cubemap)
-    uint32_t array_size;
-    ///  image format
-    ECGpuFormat format;
-    /// Number of mip levels
-    uint32_t mip_levels;
-    /// Number of multisamples per pixel (currently Textures created with mUsage TEXTURE_USAGE_SAMPLED_IMAGE only support SAMPLE_COUNT_1)
-    ECGpuSampleCount sample_count;
-    /// The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for mSampleCount
-    uint32_t sample_quality;
-    /// What state will the texture get created in
-    ECGpuResourceState start_state;
-    /// Descriptor creation
-    CGpuResourceTypes descriptors;
-} CGpuRenderTargetDescriptor;
+
+} CGpuTextureViewDescriptor;
 
 typedef struct CGpuTextureDescriptor {
     /// Debug name used in gpu profile
