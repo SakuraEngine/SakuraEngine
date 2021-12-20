@@ -16,19 +16,20 @@ terms of the MIT license. A copy of the license can be found in the file
 
 #include "bitmap.h"  // atomic bitmap
 
-//#define MI_CACHE_DISABLE 1  
+//#define MI_CACHE_DISABLE 1    // define to completely disable the segment cache
 
 #define MI_CACHE_FIELDS     (16)
 #define MI_CACHE_MAX        (MI_BITMAP_FIELD_BITS*MI_CACHE_FIELDS)       // 1024 on 64-bit
 
 #define BITS_SET()          ATOMIC_VAR_INIT(UINTPTR_MAX)
-#define MI_CACHE_BITS_SET   MI_INIT16(BITS_SET)
+#define MI_CACHE_BITS_SET   MI_INIT16(BITS_SET)                          // note: update if MI_CACHE_FIELDS changes
 
 typedef struct mi_cache_slot_s {
   void*               p;
   size_t              memid;
   bool                is_pinned;
   mi_commit_mask_t    commit_mask;
+  mi_commit_mask_t    decommit_mask;
   _Atomic(mi_msecs_t) expire;
 } mi_cache_slot_t;
 
@@ -39,7 +40,7 @@ static mi_decl_cache_align mi_bitmap_field_t cache_available_large[MI_CACHE_FIEL
 static mi_decl_cache_align mi_bitmap_field_t cache_inuse[MI_CACHE_FIELDS];   // zero bit = free
 
 
-mi_decl_noinline void* _mi_segment_cache_pop(size_t size, mi_commit_mask_t* commit_mask, bool* large, bool* is_pinned, bool* is_zero, size_t* memid, mi_os_tld_t* tld)
+mi_decl_noinline void* _mi_segment_cache_pop(size_t size, mi_commit_mask_t* commit_mask, mi_commit_mask_t* decommit_mask, bool* large, bool* is_pinned, bool* is_zero, size_t* memid, mi_os_tld_t* tld)
 {
 #ifdef MI_CACHE_DISABLE
   return NULL;
@@ -76,11 +77,11 @@ mi_decl_noinline void* _mi_segment_cache_pop(size_t size, mi_commit_mask_t* comm
   *memid = slot->memid;
   *is_pinned = slot->is_pinned;
   *is_zero = false;
-  mi_commit_mask_t cmask = slot->commit_mask;  // copy
+  *commit_mask = slot->commit_mask;     
+  *decommit_mask = slot->decommit_mask;
   slot->p = NULL;
   mi_atomic_storei64_release(&slot->expire,(mi_msecs_t)0);
-  *commit_mask = cmask;
-
+  
   // mark the slot as free again
   mi_assert_internal(_mi_bitmap_is_claimed(cache_inuse, MI_CACHE_FIELDS, 1, bitidx));
   _mi_bitmap_unclaim(cache_inuse, MI_CACHE_FIELDS, 1, bitidx);
@@ -90,34 +91,33 @@ mi_decl_noinline void* _mi_segment_cache_pop(size_t size, mi_commit_mask_t* comm
 
 static mi_decl_noinline void mi_commit_mask_decommit(mi_commit_mask_t* cmask, void* p, size_t total, mi_stats_t* stats)
 {
-  if (mi_commit_mask_is_empty(*cmask)) {
+  if (mi_commit_mask_is_empty(cmask)) {
     // nothing
   }
-  else if (mi_commit_mask_is_full(*cmask)) {
+  else if (mi_commit_mask_is_full(cmask)) {
     _mi_os_decommit(p, total, stats);
   }
   else {
     // todo: one call to decommit the whole at once?
     mi_assert_internal((total%MI_COMMIT_MASK_BITS)==0);
-    size_t    part = total/MI_COMMIT_MASK_BITS;
-    uintptr_t idx;
-    uintptr_t count;
-    mi_commit_mask_t mask = *cmask;
-    mi_commit_mask_foreach(mask, idx, count) {
+    size_t part = total/MI_COMMIT_MASK_BITS;
+    size_t idx;
+    size_t count;    
+    mi_commit_mask_foreach(cmask, idx, count) {
       void*  start = (uint8_t*)p + (idx*part);
       size_t size = count*part;
       _mi_os_decommit(start, size, stats);
     }
     mi_commit_mask_foreach_end()
   }
-  *cmask = mi_commit_mask_empty();
+  mi_commit_mask_create_empty(cmask);
 }
 
 #define MI_MAX_PURGE_PER_PUSH  (4)
 
 static mi_decl_noinline void mi_segment_cache_purge(mi_os_tld_t* tld)
 {
-  UNUSED(tld);
+  MI_UNUSED(tld);
   mi_msecs_t now = _mi_clock_now();
   size_t idx = (_mi_random_shuffle((uintptr_t)now) % MI_CACHE_MAX);            // random start
   size_t purged = 0;
@@ -135,11 +135,12 @@ static mi_decl_noinline void mi_segment_cache_purge(mi_os_tld_t* tld)
         if (expire != 0 && now >= expire) {  // safe read
           // still expired, decommit it
           mi_atomic_storei64_relaxed(&slot->expire,(mi_msecs_t)0);
-          mi_assert_internal(!mi_commit_mask_is_empty(slot->commit_mask) && _mi_bitmap_is_claimed(cache_available_large, MI_CACHE_FIELDS, 1, bitidx));
+          mi_assert_internal(!mi_commit_mask_is_empty(&slot->commit_mask) && _mi_bitmap_is_claimed(cache_available_large, MI_CACHE_FIELDS, 1, bitidx));
           _mi_abandoned_await_readers();  // wait until safe to decommit
           // decommit committed parts
           // TODO: instead of decommit, we could also free to the OS?
           mi_commit_mask_decommit(&slot->commit_mask, slot->p, MI_SEGMENT_SIZE, tld->stats);
+          mi_commit_mask_create_empty(&slot->decommit_mask);
         }
         _mi_bitmap_unclaim(cache_available, MI_CACHE_FIELDS, 1, bitidx); // make it available again for a pop
       }
@@ -148,7 +149,7 @@ static mi_decl_noinline void mi_segment_cache_purge(mi_os_tld_t* tld)
   }
 }
 
-mi_decl_noinline bool _mi_segment_cache_push(void* start, size_t size, size_t memid, mi_commit_mask_t commit_mask, bool is_large, bool is_pinned, mi_os_tld_t* tld)
+mi_decl_noinline bool _mi_segment_cache_push(void* start, size_t size, size_t memid, const mi_commit_mask_t* commit_mask, const mi_commit_mask_t* decommit_mask, bool is_large, bool is_pinned, mi_os_tld_t* tld)
 {
 #ifdef MI_CACHE_DISABLE
   return false;
@@ -187,12 +188,14 @@ mi_decl_noinline bool _mi_segment_cache_push(void* start, size_t size, size_t me
   slot->memid = memid;
   slot->is_pinned = is_pinned;
   mi_atomic_storei64_relaxed(&slot->expire,(mi_msecs_t)0);
-  slot->commit_mask = commit_mask;
+  slot->commit_mask = *commit_mask;
+  slot->decommit_mask = *decommit_mask;
   if (!mi_commit_mask_is_empty(commit_mask) && !is_large && !is_pinned && mi_option_is_enabled(mi_option_allow_decommit)) {
     long delay = mi_option_get(mi_option_segment_decommit_delay);
     if (delay == 0) {
       _mi_abandoned_await_readers(); // wait until safe to decommit
       mi_commit_mask_decommit(&slot->commit_mask, start, MI_SEGMENT_SIZE, tld->stats);
+      mi_commit_mask_create_empty(&slot->decommit_mask);
     }
     else {
       mi_atomic_storei64_release(&slot->expire, _mi_clock_now() + delay);
@@ -225,26 +228,28 @@ mi_decl_noinline bool _mi_segment_cache_push(void* start, size_t size, size_t me
 #define MI_SEGMENT_MAP_SIZE  (MI_SEGMENT_MAP_BITS / 8)
 #define MI_SEGMENT_MAP_WSIZE (MI_SEGMENT_MAP_SIZE / MI_INTPTR_SIZE)
 
-static _Atomic(uintptr_t)mi_segment_map[MI_SEGMENT_MAP_WSIZE];  // 2KiB per TB with 64MiB segments
+static _Atomic(uintptr_t) mi_segment_map[MI_SEGMENT_MAP_WSIZE + 1];  // 2KiB per TB with 64MiB segments
 
 static size_t mi_segment_map_index_of(const mi_segment_t* segment, size_t* bitidx) {
   mi_assert_internal(_mi_ptr_segment(segment) == segment); // is it aligned on MI_SEGMENT_SIZE?
   if ((uintptr_t)segment >= MI_MAX_ADDRESS) {
     *bitidx = 0;
-    return 0;
+    return MI_SEGMENT_MAP_WSIZE;
   }
   else {
-    uintptr_t segindex = ((uintptr_t)segment) / MI_SEGMENT_SIZE;
+    const uintptr_t segindex = ((uintptr_t)segment) / MI_SEGMENT_SIZE;
     *bitidx = segindex % MI_INTPTR_BITS;
-    return (segindex / MI_INTPTR_BITS);
+    const size_t mapindex = segindex / MI_INTPTR_BITS;
+    mi_assert_internal(mapindex < MI_SEGMENT_MAP_WSIZE);
+    return mapindex;
   }
 }
 
 void _mi_segment_map_allocated_at(const mi_segment_t* segment) {
   size_t bitidx;
   size_t index = mi_segment_map_index_of(segment, &bitidx);
-  mi_assert_internal(index < MI_SEGMENT_MAP_WSIZE);
-  if (index==0) return;
+  mi_assert_internal(index <= MI_SEGMENT_MAP_WSIZE);
+  if (index==MI_SEGMENT_MAP_WSIZE) return;
   uintptr_t mask = mi_atomic_load_relaxed(&mi_segment_map[index]);
   uintptr_t newmask;
   do {
@@ -255,8 +260,8 @@ void _mi_segment_map_allocated_at(const mi_segment_t* segment) {
 void _mi_segment_map_freed_at(const mi_segment_t* segment) {
   size_t bitidx;
   size_t index = mi_segment_map_index_of(segment, &bitidx);
-  mi_assert_internal(index < MI_SEGMENT_MAP_WSIZE);
-  if (index == 0) return;
+  mi_assert_internal(index <= MI_SEGMENT_MAP_WSIZE);
+  if (index == MI_SEGMENT_MAP_WSIZE) return;
   uintptr_t mask = mi_atomic_load_relaxed(&mi_segment_map[index]);
   uintptr_t newmask;
   do {
@@ -267,6 +272,7 @@ void _mi_segment_map_freed_at(const mi_segment_t* segment) {
 // Determine the segment belonging to a pointer or NULL if it is not in a valid segment.
 static mi_segment_t* _mi_segment_of(const void* p) {
   mi_segment_t* segment = _mi_ptr_segment(p);
+  if (segment == NULL) return NULL; 
   size_t bitidx;
   size_t index = mi_segment_map_index_of(segment, &bitidx);
   // fast path: for any pointer to valid small/medium/large object or first MI_SEGMENT_SIZE in huge
@@ -274,7 +280,7 @@ static mi_segment_t* _mi_segment_of(const void* p) {
   if (mi_likely((mask & ((uintptr_t)1 << bitidx)) != 0)) {
     return segment; // yes, allocated by us
   }
-  if (index==0) return NULL;
+  if (index==MI_SEGMENT_MAP_WSIZE) return NULL;
 
   // TODO: maintain max/min allocated range for efficiency for more efficient rejection of invalid pointers?
 
@@ -289,13 +295,21 @@ static mi_segment_t* _mi_segment_of(const void* p) {
     loindex = index;
     lobitidx = mi_bsr(lobits);    // lobits != 0
   }
+  else if (index == 0) {
+    return NULL;
+  }
   else {
+    mi_assert_internal(index > 0);
     uintptr_t lomask = mask;
-    loindex = index - 1;
-    while (loindex > 0 && (lomask = mi_atomic_load_relaxed(&mi_segment_map[loindex])) == 0) loindex--;
-    if (loindex==0) return NULL;
+    loindex = index;
+    do {
+      loindex--;  
+      lomask = mi_atomic_load_relaxed(&mi_segment_map[loindex]);      
+    } while (lomask != 0 && loindex > 0);
+    if (lomask == 0) return NULL;
     lobitidx = mi_bsr(lomask);    // lomask != 0
   }
+  mi_assert_internal(loindex < MI_SEGMENT_MAP_WSIZE);
   // take difference as the addresses could be larger than the MAX_ADDRESS space.
   size_t diff = (((index - loindex) * (8*MI_INTPTR_SIZE)) + bitidx - lobitidx) * MI_SEGMENT_SIZE;
   segment = (mi_segment_t*)((uint8_t*)segment - diff);

@@ -269,7 +269,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     }
     // Pick shader reflection data
     DECLARE_ZERO(CGpuUtil_RSBlackboard, bb)
-    CGpuUtil_InitRSBlackboard(&bb, desc);
+    CGpuUtil_InitRSBlackboardAndParamTables((CGpuRootSignature*)RS, &bb, desc);
     // Fill resource slots
     // Only support descriptor tables now
     // TODO: Support root CBVs
@@ -367,15 +367,77 @@ void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature)
 
 CGpuDescriptorSetId cgpu_create_descriptor_set_d3d12(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc)
 {
-    return CGPU_NULLPTR;
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
+    const CGpuRootSignature_D3D12* RS = (const CGpuRootSignature_D3D12*)desc->root_signature;
+    CGpuDescriptorSet_D3D12* Set = cgpu_new<CGpuDescriptorSet_D3D12>();
+    const uint32_t nodeIndex = SINGLE_GPU_NODE_INDEX;
+    struct D3D12Util_DescriptorHeap* pCbvSrvUavHeap = D->pCbvSrvUavHeaps[nodeIndex];
+    struct D3D12Util_DescriptorHeap* pSamplerHeap = D->pSamplerHeaps[nodeIndex];
+    (void)pSamplerHeap;
+    CGpuParameterTable* param_table = &RS->super.tables[desc->set_index];
+    // CBV/SRV/UAV
+    auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pCbvSrvUavHeap, param_table->resources_count);
+    Set->mCbvSrvUavHandle = StartHandle.mGpu.ptr - pCbvSrvUavHeap->mStartHandle.mGpu.ptr;
+    Set->mCbvSrvUavStride = param_table->resources_count * pCbvSrvUavHeap->mDescriptorSize;
+    // TODO: Static samplers
+    // TODO: Support root descriptors
+    return &Set->super;
 }
 
 void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count)
 {
+    CGpuDescriptorSet_D3D12* Set = (CGpuDescriptorSet_D3D12*)set;
+    const CGpuRootSignature_D3D12* RS = (const CGpuRootSignature_D3D12*)set->root_signature;
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)set->root_signature->device;
+    CGpuParameterTable* ParamTable = &RS->super.tables[set->index];
+    const uint32_t nodeIndex = SINGLE_GPU_NODE_INDEX;
+    struct D3D12Util_DescriptorHeap* pCbvSrvUavHeap = D->pCbvSrvUavHeaps[nodeIndex];
+    for (uint32_t i = 0; i < count; i++)
+    {
+        // Descriptor Info
+        const CGpuDescriptorData* ArgData = datas + i;
+        CGpuShaderResource* ResData = CGPU_NULLPTR;
+        size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), *(size_t*)&D);
+        for (uint32_t p = 0; p < ParamTable->resources_count; p++)
+        {
+            if (ParamTable->resources[p].name_hash == argNameHash)
+            {
+                ResData = ParamTable->resources + p;
+            }
+        }
+        // Update Info
+        const CGpuDescriptorData* pParam = datas + i;
+        const uint32_t arrayCount = cgpu_max(1U, pParam->count);
+        switch (ResData->type)
+        {
+            case RT_BUFFER:
+            case RT_BUFFER_RAW: {
+            }
+            case RT_RW_BUFFER:
+            case RT_RW_BUFFER_RAW: {
+                assert(ArgData->buffers && "ASSERT: Binding NULL Buffer(s)!");
+                CGpuBuffer_D3D12** Buffers = (CGpuBuffer_D3D12**)ArgData->buffers;
+                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                {
+                    assert(ArgData->buffers[arr] && "ASSERT: Binding NULL Buffer!");
+                    D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
+                        { Buffers[arr]->mDxDescriptorHandles.ptr + Buffers[arr]->mDxUavOffset },
+                        Set->mCbvSrvUavHandle, arr);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 void cgpu_free_descriptor_set_d3d12(CGpuDescriptorSetId set)
 {
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)set->root_signature->device;
+    CGpuDescriptorSet_D3D12* Set = (CGpuDescriptorSet_D3D12*)set;
+    (void)D; // TODO: recycle of descriptor set heap handles
+    cgpu_delete(Set);
 }
 
 CGpuComputePipelineId cgpu_create_compute_pipeline_d3d12(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc)
@@ -514,7 +576,7 @@ CGpuCommandBufferId cgpu_create_command_buffer_d3d12(CGpuCommandPoolId pool, con
     assert(Cmd);
 
     // set command pool of new command
-    Cmd->mNodeIndex = SINGLE_GPU_NODE_MASK;
+    Cmd->mNodeIndex = SINGLE_GPU_NODE_INDEX;
     Cmd->mType = Q->super.type;
 
     Cmd->pBoundHeaps[0] = D->pCbvSrvUavHeaps[Cmd->mNodeIndex];
@@ -573,12 +635,103 @@ void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd)
     Cmd->pBoundRootSignature = NULL;
 }
 
+// TODO: https://microsoft.github.io/DirectX-Specs/d3d/D3D12EnhancedBarriers.html#introduction
+// Enhanced Barriers is not currently a hardware or driver requirement
+void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    const uint32_t barriers_count = desc->buffer_barriers_count;
+    D3D12_RESOURCE_BARRIER* barriers = (D3D12_RESOURCE_BARRIER*)alloca(barriers_count * sizeof(D3D12_RESOURCE_BARRIER));
+    uint32_t transitionCount = 0;
+    for (uint32_t i = 0; i < desc->buffer_barriers_count; ++i)
+    {
+        const CGpuBufferBarrier* pTransBarrier = &desc->buffer_barriers[i];
+        D3D12_RESOURCE_BARRIER* pBarrier = &barriers[transitionCount];
+        CGpuBuffer_D3D12* pBuffer = (CGpuBuffer_D3D12*)pTransBarrier->buffer;
+        if (pBuffer->super.memory_usage == MU_GPU_ONLY ||
+            pBuffer->super.memory_usage == MU_GPU_TO_CPU ||
+            (pBuffer->super.memory_usage == MU_CPU_TO_GPU && (pBuffer->super.descriptors & RT_RW_BUFFER)))
+        {
+            if (RS_UNORDERED_ACCESS == pTransBarrier->src_state &&
+                RS_UNORDERED_ACCESS == pTransBarrier->dst_state)
+            {
+                pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+                pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+                pBarrier->UAV.pResource = pBuffer->pDxResource;
+                ++transitionCount;
+            }
+            else
+            {
+                pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                // TODO: BeginOnly/EndOnly
+                pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+                pBarrier->Transition.pResource = pBuffer->pDxResource;
+                pBarrier->Transition.Subresource =
+                    D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                pBarrier->Transition.StateBefore = D3D12Util_ResourceStateBridge(pTransBarrier->src_state);
+                pBarrier->Transition.StateAfter = D3D12Util_ResourceStateBridge(pTransBarrier->dst_state);
+                ++transitionCount;
+            }
+        }
+    }
+    if (transitionCount)
+        Cmd->pDxCmdList->ResourceBarrier(transitionCount, barriers);
+}
+
 void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
     assert(Cmd->pDxCmdList);
 
     CHECK_HRESULT(Cmd->pDxCmdList->Close());
+}
+
+// Compute CMDs
+CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_d3d12(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc)
+{
+    // DO NOTHING NOW
+    return (CGpuComputePassEncoderId)cmd;
+}
+
+void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    const CGpuDescriptorSet_D3D12* Set = (CGpuDescriptorSet_D3D12*)set;
+    Cmd->pDxCmdList->SetComputeRootDescriptorTable(set->index, { Cmd->mBoundHeapStartHandles[0].ptr + Set->mCbvSrvUavHandle });
+}
+
+bool reset_root_signature(CGpuCommandBuffer_D3D12* pCmd, ECGpuPipelineType type,
+    ID3D12RootSignature* pRootSignature)
+{
+    // Set root signature if the current one differs from pRootSignature
+    if (pCmd->pBoundRootSignature != pRootSignature)
+    {
+        pCmd->pBoundRootSignature = pRootSignature;
+        if (type == PT_GRAPHICS)
+            pCmd->pDxCmdList->SetGraphicsRootSignature(pRootSignature);
+        else
+            pCmd->pDxCmdList->SetComputeRootSignature(pRootSignature);
+    }
+    return false;
+}
+
+void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    CGpuComputePipeline_D3D12* PPL = (CGpuComputePipeline_D3D12*)pipeline;
+    reset_root_signature(Cmd, PT_COMPUTE, PPL->pRootSignature);
+    Cmd->pDxCmdList->SetPipelineState(PPL->pDxPipelineState);
+}
+
+void cgpu_compute_encoder_dispatch_d3d12(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    Cmd->pDxCmdList->Dispatch(X, Y, Z);
+}
+
+void cgpu_cmd_end_compute_pass_d3d12(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)
+{
+    // DO NOTHING NOW
 }
 
 // SwapChain APIs

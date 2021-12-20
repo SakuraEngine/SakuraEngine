@@ -18,8 +18,9 @@ typedef struct CGpuUtil_RSBlackboard {
     ECGpuPipelineType pipelineType;
 } CGpuUtil_RSBlackboard;
 
-void CGpuUtil_InitRSBlackboard(struct CGpuUtil_RSBlackboard* bb, const struct CGpuRootSignatureDescriptor* desc);
+void CGpuUtil_InitRSBlackboardAndParamTables(CGpuRootSignature* RS, struct CGpuUtil_RSBlackboard* bb, const struct CGpuRootSignatureDescriptor* desc);
 void CGpuUtil_FreeRSBlackboard(struct CGpuUtil_RSBlackboard* bb);
+void CGpuUtil_FreeRSParamTables(CGpuRootSignature* RS);
 
 #ifdef __cplusplus
 } // end extern "C"

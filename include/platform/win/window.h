@@ -2,8 +2,8 @@
 #include "platform/configure.h"
 #include "EASTL/unique_ptr.h"
 
-#ifndef WIN_MEAN_AND_LEAN
-    #define WIN_MEAN_AND_LEAN
+#ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
 #endif
 #include "windows.h"
 

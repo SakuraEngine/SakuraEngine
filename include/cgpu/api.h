@@ -806,8 +806,16 @@ typedef struct CGpuRenderPipelineDescriptor {
     bool enable_indirect_command;
 } CGpuRenderPipelineDescriptor;
 
+typedef struct CGpuParameterTable {
+    // This should be stored here because shader could be destoryed after RS creation
+    CGpuShaderResource* resources;
+    uint32_t resources_count;
+} CGpuParameterTable;
+
 typedef struct CGpuRootSignature {
     CGpuDeviceId device;
+    CGpuParameterTable* tables;
+    uint32_t table_count;
 } CGpuRootSignature;
 
 typedef struct CGpuDescriptorSet {
@@ -924,6 +932,7 @@ typedef struct CGpuTextureDescriptor {
 
 #define SINGLE_GPU_NODE_COUNT 1
 #define SINGLE_GPU_NODE_MASK 1
+#define SINGLE_GPU_NODE_INDEX 0
 
 #ifdef __cplusplus
 } // end extern "C"

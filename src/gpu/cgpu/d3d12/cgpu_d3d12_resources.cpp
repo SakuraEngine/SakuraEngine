@@ -5,7 +5,6 @@
 #include <type_traits>
 
 // Inline Utils
-D3D12_RESOURCE_STATES D3D12Util_ResourceStateBridge(ECGpuResourceState state);
 D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGpuAdapter_D3D12* A, CGpuDevice_D3D12* D, const struct CGpuBufferDescriptor* desc);
 D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGpuBufferDescriptor* desc);
 // Buffer APIs
@@ -265,7 +264,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
         pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
     }
     // Validate & Signing
-    if (!is_dxil_signed(desc->code)) assert(0 && "The dxil shader is not signed!");
+    // if (!is_dxil_signed(desc->code)) assert(0 && "The dxil shader is not signed!");
     // Reflection
     D3D12Util_InitializeShaderReflection(D, S, desc);
     pUtils->Release();
@@ -322,53 +321,6 @@ inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(
         bufDesc.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
     }
     return bufDesc;
-}
-
-inline D3D12_RESOURCE_STATES D3D12Util_ResourceStateBridge(ECGpuResourceState state)
-{
-    D3D12_RESOURCE_STATES ret = D3D12_RESOURCE_STATE_COMMON;
-
-    // These states cannot be combined with other states so we just do an == check
-    if (state == RS_GENERIC_READ)
-        return D3D12_RESOURCE_STATE_GENERIC_READ;
-    if (state == RS_COMMON)
-        return D3D12_RESOURCE_STATE_COMMON;
-    if (state == RS_PRESENT)
-        return D3D12_RESOURCE_STATE_PRESENT;
-
-    if (state & RS_VERTEX_AND_CONSTANT_BUFFER)
-        ret |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-    if (state & RS_INDEX_BUFFER)
-        ret |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
-    if (state & RS_RENDER_TARGET)
-        ret |= D3D12_RESOURCE_STATE_RENDER_TARGET;
-    if (state & RS_UNORDERED_ACCESS)
-        ret |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    if (state & RS_DEPTH_WRITE)
-        ret |= D3D12_RESOURCE_STATE_DEPTH_WRITE;
-    if (state & RS_DEPTH_READ)
-        ret |= D3D12_RESOURCE_STATE_DEPTH_READ;
-    if (state & RS_STREAM_OUT)
-        ret |= D3D12_RESOURCE_STATE_STREAM_OUT;
-    if (state & RS_INDIRECT_ARGUMENT)
-        ret |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
-    if (state & RS_COPY_DEST)
-        ret |= D3D12_RESOURCE_STATE_COPY_DEST;
-    if (state & RS_COPY_SOURCE)
-        ret |= D3D12_RESOURCE_STATE_COPY_SOURCE;
-    if (state & RS_NON_PIXEL_SHADER_RESOURCE)
-        ret |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-    if (state & RS_PIXEL_SHADER_RESOURCE)
-        ret |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-#ifdef ENABLE_RAYTRACING
-    if (state & RS_RAYTRACING_ACCELERATION_STRUCTURE)
-        ret |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-#endif
-#ifdef ENABLE_VRS
-    if (state & RS_SHADING_RATE_SOURCE)
-        ret |= D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE;
-#endif
-    return ret;
 }
 
 inline D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGpuBufferDescriptor* desc)
