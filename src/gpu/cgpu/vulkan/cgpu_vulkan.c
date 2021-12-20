@@ -61,11 +61,11 @@ const CGpuProcTable tbl_vk = {
     .unmap_buffer = &cgpu_unmap_buffer_vulkan,
     .free_buffer = &cgpu_free_buffer_vulkan,
 
-    // Texture/RenderTarget APIs
+    // Texture/TextureView APIs
     .create_texture = &cgpu_create_texture_vulkan,
     .free_texture = &cgpu_free_texture_vulkan,
-    .create_render_target = &cgpu_create_render_target_vulkan,
-    .free_render_target = &cgpu_free_render_target_vulkan,
+    .create_texture_view = &cgpu_create_texture_view_vulkan,
+    .free_texture_view = &cgpu_free_texture_view_vulkan,
 
     // Swapchain APIs
     .create_swapchain = &cgpu_create_swapchain_vulkan,
@@ -95,7 +95,7 @@ typedef struct RenderPassDesc {
     ECGpuFormat* pColorFormats;
     const ECGpuLoadAction* pLoadActionsColor;
     bool* pSrgbValues;
-    uint32_t mRenderTargetCount;
+    uint32_t mColorAttachmentCount;
     ECGpuSampleCount mSampleCount;
     ECGpuFormat mDepthStencilFormat;
     ECGpuLoadAction mLoadActionDepth;
@@ -120,7 +120,7 @@ FORCEINLINE static void VkUtil_CreateRenderPass(CGpuDevice_Vulkan* D, const Rend
     // Add render pass
     /************************************************************************/
     assert(VK_NULL_HANDLE != D->pVkDevice);
-    uint32_t colorAttachmentCount = pDesc->mRenderTargetCount;
+    uint32_t colorAttachmentCount = pDesc->mColorAttachmentCount;
     uint32_t depthAttachmentCount = (pDesc->mDepthStencilFormat != PF_UNDEFINED) ? 1 : 0;
     VkAttachmentDescription attachments[MAX_MRT_COUNT + 1] = { 0 };
     VkAttachmentReference color_attachment_refs[MAX_MRT_COUNT] = { 0 };
@@ -536,7 +536,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuRenderPipeline_Vulkan* RP = (CGpuRenderPipeline_Vulkan*)cgpu_calloc(1, sizeof(CGpuRenderPipeline_Vulkan));
     RenderPassDesc rpdesc = {
-        .mRenderTargetCount = desc->render_target_count,
+        .mColorAttachmentCount = desc->render_target_count,
         .mDepthStencilFormat = desc->depth_stencil_format,
 
     };

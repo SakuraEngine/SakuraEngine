@@ -556,7 +556,7 @@ void cgpu_free_buffer(CGpuBufferId buffer)
     fn_free_buffer(buffer);
 }
 
-// Texture/RenderTarget APIs
+// Texture/TextureView APIs
 CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -581,25 +581,25 @@ void cgpu_free_texture(CGpuTextureId texture)
     fn_free_texture(texture);
 }
 
-CGpuRenderTargetId cgpu_create_render_target(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc)
+CGpuTextureViewId cgpu_create_texture_view(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    assert(device->proc_table_cache->create_render_target && "create_render_target Proc Missing!");
-    CGPUProcCreateRenderTarget fn_create_render_target = device->proc_table_cache->create_render_target;
-    CGpuRenderTarget* render_target = (CGpuRenderTarget*)fn_create_render_target(device, desc);
+    assert(device->proc_table_cache->create_texture_view && "create_texture_view Proc Missing!");
+    CGPUProcCreateTextureView fn_create_texture_view = device->proc_table_cache->create_texture_view;
+    CGpuTextureView* render_target = (CGpuTextureView*)fn_create_texture_view(device, desc);
     render_target->device = device;
     return render_target;
 }
 
-void cgpu_free_render_target(CGpuRenderTargetId render_target)
+void cgpu_free_texture_view(CGpuTextureViewId render_target)
 {
     assert(render_target != CGPU_NULLPTR && "fatal: call on NULL render_target!");
     const CGpuDeviceId device = render_target->device;
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
 
-    CGPUProcFreeRenderTarget fn_free_render_target = device->proc_table_cache->free_render_target;
-    assert(fn_free_render_target && "free_render_target Proc Missing!");
-    fn_free_render_target(render_target);
+    CGPUProcFreeTextureView fn_free_texture_view = device->proc_table_cache->free_texture_view;
+    assert(fn_free_texture_view && "free_texture_view Proc Missing!");
+    fn_free_texture_view(render_target);
 }
 
 // SwapChain APIs

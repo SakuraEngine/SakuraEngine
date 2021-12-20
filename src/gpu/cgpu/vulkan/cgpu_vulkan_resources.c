@@ -1,3 +1,4 @@
+#include "cgpu/cgpu_config.h"
 #include "cgpu/flags.h"
 #include "math/common.h"
 #include "platform/configure.h"
@@ -225,7 +226,7 @@ void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
     cgpu_free(B);
 }
 
-// Texture/RenderTarget APIs
+// Texture/TextureView APIs
 static_assert(sizeof(CGpuTexture_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 typedef struct ImportHandleInfo {
     void* pHandle;
@@ -514,11 +515,12 @@ void cgpu_free_texture_vulkan(CGpuTextureId texture)
     cgpu_free(T);
 }
 
-CGpuRenderTargetId cgpu_create_render_target_vulkan(CGpuDeviceId device, const struct CGpuRenderTargetDescriptor* desc)
+CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)
 {
     // TODO: Support Depth Format
     bool isDepth = false;
     (void)isDepth;
+    /*
     uint32_t arraySize = desc->array_size;
     uint32_t depthOrArraySize = arraySize * desc->depth;
     uint32_t numRTVs = desc->mip_levels;
@@ -527,17 +529,19 @@ CGpuRenderTargetId cgpu_create_render_target_vulkan(CGpuDeviceId device, const s
     {
         numRTVs *= depthOrArraySize;
     }
-    size_t totalSize = sizeof(CGpuRenderTarget_Vulkan);
+    size_t totalSize = sizeof(CGpuTextureView_Vulkan);
     totalSize += numRTVs * sizeof(VkImageView);
-    CGpuRenderTarget_Vulkan* pRenderTarget = (CGpuRenderTarget_Vulkan*)
-        cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuRenderTarget_Vulkan));
+    CGpuTextureView_Vulkan* pTextureView = (CGpuTextureView_Vulkan*)
+        cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuTextureView_Vulkan));
 
-    return &pRenderTarget->super;
+    return &pTextureView->super;
+    */
+    return CGPU_NULLPTR;
 }
 
-void cgpu_free_render_target_vulkan(CGpuRenderTargetId render_target)
+void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target)
 {
-    CGpuRenderTarget_Vulkan* RT = (CGpuRenderTarget_Vulkan*)render_target;
+    CGpuTextureView_Vulkan* RT = (CGpuTextureView_Vulkan*)render_target;
     cgpu_free(RT);
 }
 
