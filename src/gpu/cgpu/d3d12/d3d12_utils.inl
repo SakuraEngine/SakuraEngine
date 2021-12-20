@@ -1,4 +1,15 @@
 /* clang-format off */
+FORCEINLINE static void D3D12Util_CopyDescriptorHandle(D3D12Util_DescriptorHeap *pHeap,
+                                   const D3D12_CPU_DESCRIPTOR_HANDLE &srcHandle,
+                                   const uint64_t &dstHandle, uint32_t index) {
+  pHeap->pHandles[(dstHandle / pHeap->mDescriptorSize) + index] = srcHandle;
+  pHeap->pDevice->CopyDescriptorsSimple(1,
+                                        {pHeap->mStartHandle.mCpu.ptr +
+                                         dstHandle +
+                                         (index * pHeap->mDescriptorSize)},
+                                        srcHandle, pHeap->mDesc.Type);
+}
+
 FORCEINLINE static void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
     const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
@@ -48,6 +59,53 @@ FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescripto
     assert(false && "Invalid DescriptorInfo Type");
     return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
   }
+}
+
+FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_ResourceStateBridge(ECGpuResourceState state)
+{
+    D3D12_RESOURCE_STATES ret = D3D12_RESOURCE_STATE_COMMON;
+
+    // These states cannot be combined with other states so we just do an == check
+    if (state == RS_GENERIC_READ)
+        return D3D12_RESOURCE_STATE_GENERIC_READ;
+    if (state == RS_COMMON)
+        return D3D12_RESOURCE_STATE_COMMON;
+    if (state == RS_PRESENT)
+        return D3D12_RESOURCE_STATE_PRESENT;
+
+    if (state & RS_VERTEX_AND_CONSTANT_BUFFER)
+        ret |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    if (state & RS_INDEX_BUFFER)
+        ret |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
+    if (state & RS_RENDER_TARGET)
+        ret |= D3D12_RESOURCE_STATE_RENDER_TARGET;
+    if (state & RS_UNORDERED_ACCESS)
+        ret |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    if (state & RS_DEPTH_WRITE)
+        ret |= D3D12_RESOURCE_STATE_DEPTH_WRITE;
+    if (state & RS_DEPTH_READ)
+        ret |= D3D12_RESOURCE_STATE_DEPTH_READ;
+    if (state & RS_STREAM_OUT)
+        ret |= D3D12_RESOURCE_STATE_STREAM_OUT;
+    if (state & RS_INDIRECT_ARGUMENT)
+        ret |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+    if (state & RS_COPY_DEST)
+        ret |= D3D12_RESOURCE_STATE_COPY_DEST;
+    if (state & RS_COPY_SOURCE)
+        ret |= D3D12_RESOURCE_STATE_COPY_SOURCE;
+    if (state & RS_NON_PIXEL_SHADER_RESOURCE)
+        ret |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+    if (state & RS_PIXEL_SHADER_RESOURCE)
+        ret |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+#ifdef ENABLE_RAYTRACING
+    if (state & RS_RAYTRACING_ACCELERATION_STRUCTURE)
+        ret |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+#endif
+#ifdef ENABLE_VRS
+    if (state & RS_SHADING_RATE_SOURCE)
+        ret |= D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE;
+#endif
+    return ret;
 }
 
 FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGpuShaderStages stages) {

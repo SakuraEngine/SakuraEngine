@@ -1,6 +1,7 @@
 #include "cgpu/api.h"
 #include "cgpu/flags.h"
 #include "common_utils.h"
+#include <stdint.h>
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #endif
@@ -671,7 +672,7 @@ void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
 }
 
 // Common Utils
-void CGpuUtil_InitRSBlackboard(CGpuUtil_RSBlackboard* bb, const struct CGpuRootSignatureDescriptor* desc)
+void CGpuUtil_InitRSBlackboardAndParamTables(CGpuRootSignature* RS, CGpuUtil_RSBlackboard* bb, const struct CGpuRootSignatureDescriptor* desc)
 {
     DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shaders_count)
     // Pick shader reflection data
@@ -724,14 +725,69 @@ void CGpuUtil_InitRSBlackboard(CGpuUtil_RSBlackboard* bb, const struct CGpuRootS
             for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
             {
                 CGpuShaderResource* resource = &reflection->shader_resources[j];
-                CGpuShaderStages prev_stages = bb->sig_reflections[resource->set * resource->binding].stages;
-                memcpy(&bb->sig_reflections[resource->set * resource->binding], resource, sizeof(CGpuShaderResource));
+                const uint32_t slot = bb->max_binding * resource->set + resource->binding;
+                CGpuShaderStages prev_stages = bb->sig_reflections[slot].stages;
+                memcpy(&bb->sig_reflections[slot], resource, sizeof(CGpuShaderResource));
                 // Merge stage masks
-                bb->sig_reflections[resource->set * resource->binding].stages |= prev_stages;
+                bb->sig_reflections[slot].stages |= prev_stages;
                 bb->valid_bindings[resource->set] =
                     bb->valid_bindings[resource->set] > resource->binding + 1 ? bb->valid_bindings[resource->set] : resource->binding + 1;
             }
         }
+    }
+    // Initailize CGpuRootSignature::tables
+    RS->table_count = bb->set_count;
+    if (bb->set_count * bb->max_binding > 0)
+    {
+        RS->tables = (CGpuParameterTable*)cgpu_calloc(bb->set_count, sizeof(CGpuParameterTable));
+        for (uint32_t i_set = 0; i_set < bb->set_count; i_set++)
+        {
+            CGpuParameterTable* set_to_record = &RS->tables[i_set];
+            set_to_record->resources_count = bb->valid_bindings[i_set];
+            set_to_record->resources = cgpu_calloc(set_to_record->resources_count, sizeof(CGpuShaderResource));
+            for (uint32_t i_binding = 0; i_binding < set_to_record->resources_count; i_binding++)
+            {
+                CGpuShaderResource* reflSlot = &bb->sig_reflections[i_set * bb->max_binding + i_binding];
+                const size_t source_len = strlen(reflSlot->name);
+                set_to_record->resources[i_binding].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
+#ifdef _WIN32
+                strcpy_s((char8_t*)set_to_record->resources[i_binding].name, source_len + 1, reflSlot->name);
+#else
+                strcpy((char8_t*)set_to_record->resources[i_binding].name, sig_reflections[i_set * i_binding + i_binding].name);
+#endif
+                set_to_record->resources[i_binding].type = reflSlot->type;
+                set_to_record->resources[i_binding].set = reflSlot->set;
+                set_to_record->resources[i_binding].binding = reflSlot->binding;
+                set_to_record->resources[i_binding].size = reflSlot->size;
+                set_to_record->resources[i_binding].stages = reflSlot->stages;
+                set_to_record->resources[i_binding].name_hash = reflSlot->name_hash;
+            }
+        }
+    }
+}
+
+void CGpuUtil_FreeRSParamTables(CGpuRootSignature* RS)
+{
+    if (RS->tables != CGPU_NULLPTR)
+    {
+        for (uint32_t i_set = 0; i_set < RS->table_count; i_set++)
+        {
+            CGpuParameterTable* param_table = &RS->tables[i_set];
+            if (param_table->resources != CGPU_NULLPTR)
+            {
+                for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
+                {
+                    CGpuShaderResource* binding_to_free = &param_table->resources[i_binding];
+                    if (binding_to_free->name != CGPU_NULLPTR)
+                    {
+                        cgpu_free((char8_t*)binding_to_free->name);
+                    }
+                }
+
+                cgpu_free(param_table->resources);
+            }
+        }
+        cgpu_free(RS->tables);
     }
 }
 

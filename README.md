@@ -19,7 +19,7 @@
 - cgpu: [[api]](include/cgpu/api.h) [[design]](src/gpu/cgpu/README.md)
 
 ## 嵌入源码的开源库和版本
-- mimalloc v2.0.2 (MIT)
+- mimalloc v2.0.3 (MIT)
 - xxhash 0.8.1 (BSD)
 - VulkanMemoryAllocator 5c8b3ba, org.fork (MIT)
 - D3D12MemoryAllocator 23e4d91, org.fork (MIT)

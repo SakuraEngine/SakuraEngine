@@ -216,6 +216,7 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGpuSh
         d3d12reflection->GetResourceBindingDesc(i, &bindDesc);
         const size_t source_len = strlen(bindDesc.Name);
         Reflection->shader_resources[i].name = (char8_t*)malloc(sizeof(char8_t) * (source_len + 1));
+        Reflection->shader_resources[i].name_hash = cgpu_hash(bindDesc.Name, strlen(bindDesc.Name), *(size_t*)&S->super.device);
         // We are very sure it's windows platform
         strcpy_s((char8_t*)Reflection->shader_resources[i].name, source_len + 1, bindDesc.Name);
         Reflection->shader_resources[i].type = gD3D12_TO_DESCRIPTOR[bindDesc.Type];
@@ -278,6 +279,7 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
 
 void D3D12Util_InitializeShaderReflection(CGpuDevice_D3D12* D, CGpuShaderLibrary_D3D12* S, const struct CGpuShaderLibraryDescriptor* desc)
 {
+    S->super.device = &D->super;
     ID3D12ShaderReflection* d3d12reflection = nullptr;
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) \
     ((uint32_t)(uint8_t)(ch0) | (uint32_t)(uint8_t)(ch1) << 8 | (uint32_t)(uint8_t)(ch2) << 16 | (uint32_t)(uint8_t)(ch3) << 24)

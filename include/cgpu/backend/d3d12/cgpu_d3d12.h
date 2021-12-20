@@ -74,6 +74,7 @@ RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 // CMDs
 RUNTIME_API void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_update_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+RUNTIME_API void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd);
 
 // Compute Pass
@@ -186,10 +187,25 @@ typedef struct CGpuShaderLibrary_D3D12 {
     struct IDxcBlobEncoding* pShaderBlob;
 } CGpuShaderLibrary_D3D12;
 
+typedef struct ParameterTable_D3D12 {
+    CGpuShaderResource* resources; // This should be stored here because shader could be destoryed after RS creation
+    uint32_t resources_count;
+} ParameterTable_D3D12;
+
 typedef struct CGpuRootSignature_D3D12 {
     CGpuRootSignature super;
     ID3D12RootSignature* pDxRootSignature;
 } CGpuRootSignature_D3D12;
+
+typedef struct CGpuDescriptorSet_D3D12 {
+    CGpuDescriptorSet super;
+    /// Start handle to cbv srv uav descriptor table
+    uint64_t mCbvSrvUavHandle;
+    /// Stride of the cbv srv uav descriptor table (number of descriptors * descriptor size)
+    uint32_t mCbvSrvUavStride;
+    // TODO: Support root descriptors
+    // D3D12_GPU_VIRTUAL_ADDRESS* pRootAddresses;
+} CGpuDescriptorSet_D3D12;
 
 typedef struct CGpuComputePipeline_D3D12 {
     CGpuComputePipeline super;

@@ -12,6 +12,8 @@ typedef volatile ALIGNAS(PTR_SIZE) uintptr_t SAtomicPtr;
 #endif
 
 #if defined(_MSC_VER) && !defined(NX64)
+    #define WIN32_LEAN_AND_MEAN
+    #include "windows.h"
 	#include <intrin.h>
 
 	#define skr_memorybarrier_acquire() _ReadWriteBarrier()

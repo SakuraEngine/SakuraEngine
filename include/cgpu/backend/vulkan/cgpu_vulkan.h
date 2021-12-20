@@ -249,18 +249,15 @@ typedef struct CGpuSwapChain_Vulkan {
     VkSwapchainKHR pVkSwapChain;
 } CGpuSwapChain_Vulkan;
 
-typedef struct ParameterSet_Vulkan {
+typedef struct SetLayout_Vulkan {
     VkDescriptorSetLayout layout;
     VkDescriptorUpdateTemplate update_template;
-    CGpuShaderResource* resources; // This should be stored here because shader
-    uint32_t resources_count;
-} ParameterSet_Vulkan;
+} SetLayout_Vulkan;
 
 typedef struct CGpuRootSignature_Vulkan {
     CGpuRootSignature super;
-    uint32_t set_count;
     VkPipelineLayout pipeline_layout;
-    ParameterSet_Vulkan* parameter_sets;
+    SetLayout_Vulkan* set_layouts;
 } CGpuRootSignature_Vulkan;
 
 typedef union VkDescriptorUpdateData

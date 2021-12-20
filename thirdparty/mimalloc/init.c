@@ -165,7 +165,7 @@ mi_stats_t _mi_stats_main = { MI_STATS_NULL };
 static void mi_heap_main_init(void) {
   if (_mi_heap_main.cookie == 0) {
     _mi_heap_main.thread_id = _mi_thread_id();
-    _mi_heap_main.cookie = _os_random_weak((uintptr_t)&mi_heap_main_init);
+    _mi_heap_main.cookie = _mi_os_random_weak((uintptr_t)&mi_heap_main_init);
     _mi_random_init(&_mi_heap_main.random);
     _mi_heap_main.keys[0] = _mi_heap_random_next(&_mi_heap_main);
     _mi_heap_main.keys[1] = _mi_heap_random_next(&_mi_heap_main);
@@ -359,6 +359,12 @@ bool _mi_is_main_thread(void) {
   return (_mi_heap_main.thread_id==0 || _mi_heap_main.thread_id == _mi_thread_id());
 }
 
+static _Atomic(size_t) thread_count = ATOMIC_VAR_INIT(1);
+
+size_t  _mi_current_thread_count(void) {
+  return mi_atomic_load_relaxed(&thread_count);
+}
+
 // This is called from the `mi_malloc_generic`
 void mi_thread_init(void) mi_attr_noexcept
 {
@@ -371,6 +377,7 @@ void mi_thread_init(void) mi_attr_noexcept
   if (_mi_heap_init()) return;  // returns true if already initialized
 
   _mi_stat_increase(&_mi_stats_main.threads, 1);
+  mi_atomic_increment_relaxed(&thread_count);
   //_mi_verbose_message("thread init: 0x%zx\n", _mi_thread_id());
 }
 
@@ -379,6 +386,7 @@ void mi_thread_done(void) mi_attr_noexcept {
 }
 
 static void _mi_thread_done(mi_heap_t* heap) {
+  mi_atomic_decrement_relaxed(&thread_count);
   _mi_stat_decrease(&_mi_stats_main.threads, 1);
 
   // check thread-id as on Windows shutdown with FLS the main (exit) thread may call this on thread-local heaps...
@@ -469,7 +477,7 @@ static void mi_process_load(void) {
   mi_heap_main_init();
   #if defined(MI_TLS_RECURSE_GUARD)
   volatile mi_heap_t* dummy = _mi_heap_default; // access TLS to allocate it before setting tls_initialized to true;
-  UNUSED(dummy);
+  MI_UNUSED(dummy);
   #endif
   os_preloading = false;
   atexit(&mi_process_done);
@@ -506,10 +514,11 @@ static void mi_detect_cpu_features(void) {
 void mi_process_init(void) mi_attr_noexcept {
   // ensure we are called once
   if (_mi_process_is_initialized) return;
+  _mi_verbose_message("process init: 0x%zx\n", _mi_thread_id());
   _mi_process_is_initialized = true;
   mi_process_setup_auto_thread_done();
 
-  _mi_verbose_message("process init: 0x%zx\n", _mi_thread_id());
+  
   mi_detect_cpu_features();
   _mi_os_init();
   mi_heap_main_init();
@@ -522,11 +531,18 @@ void mi_process_init(void) mi_attr_noexcept {
 
   if (mi_option_is_enabled(mi_option_reserve_huge_os_pages)) {
     size_t pages = mi_option_get(mi_option_reserve_huge_os_pages);
-    mi_reserve_huge_os_pages_interleave(pages, 0, pages*500);
+    long reserve_at = mi_option_get(mi_option_reserve_huge_os_pages_at);
+    if (reserve_at != -1) {
+      mi_reserve_huge_os_pages_at(pages, reserve_at, pages*500);
+    } else {
+      mi_reserve_huge_os_pages_interleave(pages, 0, pages*500);
+    }
   } 
   if (mi_option_is_enabled(mi_option_reserve_os_memory)) {
     long ksize = mi_option_get(mi_option_reserve_os_memory);
-    if (ksize > 0) mi_reserve_os_memory((size_t)ksize*KiB, true, true);
+    if (ksize > 0) {
+      mi_reserve_os_memory((size_t)ksize*MI_KiB, true /* commit? */, true /* allow large pages? */);
+    }
   }
 }
 
@@ -564,8 +580,8 @@ static void mi_process_done(void) {
 #if defined(_WIN32) && defined(MI_SHARED_LIB)
   // Windows DLL: easy to hook into process_init and thread_done
   __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
-    UNUSED(reserved);
-    UNUSED(inst);
+    MI_UNUSED(reserved);
+    MI_UNUSED(inst);
     if (reason==DLL_PROCESS_ATTACH) {
       mi_process_load();
     }
@@ -597,7 +613,7 @@ static void mi_process_done(void) {
     return 0;
   }
   typedef int(*_crt_cb)(void);
-  #ifdef _M_X64
+  #if defined(_M_X64) || defined(_M_ARM64)
     __pragma(comment(linker, "/include:" "_mi_msvc_initu"))
     #pragma section(".CRT$XIU", long, read)
   #else

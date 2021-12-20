@@ -17,6 +17,8 @@ typedef uint32_t SThreadID;
 #define INVALID_THREAD_ID 0
 
 #if defined(_WINDOWS) || defined(XBOX)
+    #define WIN32_LEAN_AND_MEAN
+    #include "windows.h"
     #include "synchapi.h"
     #define THREAD_LOCAL __declspec(thread)
     #define INIT_CALL_ONCE_GUARD INIT_ONCE_STATIC_INIT

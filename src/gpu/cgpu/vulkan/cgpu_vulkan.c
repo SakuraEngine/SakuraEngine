@@ -306,47 +306,23 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGpuRootSignature_Vulkan));
     DECLARE_ZERO(CGpuUtil_RSBlackboard, bb)
-    CGpuUtil_InitRSBlackboard(&bb, desc);
-    RS->set_count = bb.set_count;
+    CGpuUtil_InitRSBlackboardAndParamTables((CGpuRootSignature*)RS, &bb, desc);
     // Collect Shader Resources
     if (bb.set_count * bb.max_binding > 0)
     {
-        // Collect Secure Set Count
-        RS->parameter_sets = (ParameterSet_Vulkan*)cgpu_calloc(bb.set_count, sizeof(ParameterSet_Vulkan));
-        for (uint32_t i_set = 0; i_set < RS->set_count; i_set++)
-        {
-            ParameterSet_Vulkan* set_to_record = &RS->parameter_sets[i_set];
-            set_to_record->resources_count = bb.valid_bindings[i_set];
-            set_to_record->resources = cgpu_calloc(bb.valid_bindings[i_set], sizeof(CGpuShaderResource));
-            for (uint32_t i_binding = 0; i_binding < bb.valid_bindings[i_set]; i_binding++)
-            {
-                CGpuShaderResource* reflSlot = &bb.sig_reflections[i_set * i_binding + i_binding];
-                const size_t source_len = strlen(reflSlot->name);
-                set_to_record->resources[i_binding].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
-#ifdef _WIN32
-                strcpy_s((char8_t*)set_to_record->resources[i_binding].name, source_len + 1, reflSlot->name);
-#else
-                strcpy((char8_t*)set_to_record->resources[i_binding].name, sig_reflections[i_set * i_binding + i_binding].name);
-#endif
-                set_to_record->resources[i_binding].type = reflSlot->type;
-                set_to_record->resources[i_binding].set = reflSlot->set;
-                set_to_record->resources[i_binding].binding = reflSlot->binding;
-                set_to_record->resources[i_binding].size = reflSlot->size;
-                set_to_record->resources[i_binding].stages = reflSlot->stages;
-                set_to_record->resources[i_binding].name_hash = reflSlot->name_hash;
-            }
-        }
+        RS->set_layouts = (SetLayout_Vulkan*)cgpu_calloc(bb.set_count, sizeof(SetLayout_Vulkan));
         // Create Vk Objects
-        for (uint32_t i_set = 0; i_set < RS->set_count; i_set++)
+        for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
         {
-            ParameterSet_Vulkan* set_to_record = &RS->parameter_sets[i_set];
-            VkDescriptorSetLayoutBinding* vkbindings = (VkDescriptorSetLayoutBinding*)cgpu_calloc(set_to_record->resources_count, sizeof(VkDescriptorSetLayoutBinding));
-            for (uint32_t i_binding = 0; i_binding < set_to_record->resources_count; i_binding++)
+            SetLayout_Vulkan* set_to_record = &RS->set_layouts[i_set];
+            CGpuParameterTable* param_table = &RS->super.tables[i_set];
+            VkDescriptorSetLayoutBinding* vkbindings = (VkDescriptorSetLayoutBinding*)cgpu_calloc(param_table->resources_count, sizeof(VkDescriptorSetLayoutBinding));
+            for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
             {
-                vkbindings[i_binding].binding = set_to_record->resources[i_binding].binding;
-                vkbindings[i_binding].stageFlags = VkUtil_TranslateShaderUsages(set_to_record->resources[i_binding].stages);
-                vkbindings[i_binding].descriptorType = VkUtil_TranslateResourceType(set_to_record->resources[i_binding].type);
-                vkbindings[i_binding].descriptorCount = set_to_record->resources[i_binding].size;
+                vkbindings[i_binding].binding = param_table->resources[i_binding].binding;
+                vkbindings[i_binding].stageFlags = VkUtil_TranslateShaderUsages(param_table->resources[i_binding].stages);
+                vkbindings[i_binding].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
+                vkbindings[i_binding].descriptorCount = param_table->resources[i_binding].size;
                 // TODO: Support static samplers
                 vkbindings[i_binding].pImmutableSamplers = CGPU_NULL;
             }
@@ -355,17 +331,17 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 .pNext = NULL,
                 .flags = 0,
                 .pBindings = vkbindings,
-                .bindingCount = set_to_record->resources_count
+                .bindingCount = param_table->resources_count
             };
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice, &set_info, GLOBAL_VkAllocationCallbacks, &set_to_record->layout));
             cgpu_free(vkbindings);
         }
     }
     // Record Descriptor Sets
-    VkDescriptorSetLayout* set_layouts = cgpu_calloc(RS->set_count + 1, sizeof(VkDescriptorSetLayout));
-    for (uint32_t i_set = 0; i_set < RS->set_count; i_set++)
+    VkDescriptorSetLayout* set_layouts = cgpu_calloc(RS->super.table_count + 1, sizeof(VkDescriptorSetLayout));
+    for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
     {
-        ParameterSet_Vulkan* set_to_record = &RS->parameter_sets[i_set];
+        SetLayout_Vulkan* set_to_record = (SetLayout_Vulkan*)&RS->set_layouts[i_set];
         set_layouts[i_set] = set_to_record->layout;
     }
     // Create Pipeline Layout
@@ -373,24 +349,25 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
-        .setLayoutCount = RS->set_count,
+        .setLayoutCount = RS->super.table_count,
         .pSetLayouts = set_layouts,
         .pushConstantRangeCount = 0,
         .pPushConstantRanges = NULL
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice, &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pipeline_layout));
     // Create Update Templates
-    for (uint32_t i_set = 0; i_set < RS->set_count; i_set++)
+    for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
     {
-        ParameterSet_Vulkan* set_to_record = &RS->parameter_sets[i_set];
+        CGpuParameterTable* param_table = &RS->super.tables[i_set];
+        SetLayout_Vulkan* set_to_record = &RS->set_layouts[i_set];
         VkDescriptorUpdateTemplateEntry* template_entries = (VkDescriptorUpdateTemplateEntry*)cgpu_calloc(
-            set_to_record->resources_count, sizeof(VkDescriptorUpdateTemplateEntry));
-        for (uint32_t i_binding = 0; i_binding < set_to_record->resources_count; i_binding++)
+            param_table->resources_count, sizeof(VkDescriptorUpdateTemplateEntry));
+        for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
         {
-            template_entries[i_binding].descriptorCount = set_to_record->resources[i_binding].size;
-            template_entries[i_binding].descriptorType = VkUtil_TranslateResourceType(set_to_record->resources[i_binding].type);
+            template_entries[i_binding].descriptorCount = param_table->resources[i_binding].size;
+            template_entries[i_binding].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
             template_entries[i_binding].dstArrayElement = 0;
-            template_entries[i_binding].dstBinding = set_to_record->resources[i_binding].binding;
+            template_entries[i_binding].dstBinding = param_table->resources[i_binding].binding;
         }
         VkDescriptorUpdateTemplateCreateInfo template_info = {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
@@ -401,7 +378,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             .descriptorSetLayout = set_to_record->layout,
             .set = i_set,
             .pDescriptorUpdateEntries = template_entries,
-            .descriptorUpdateEntryCount = set_to_record->resources_count
+            .descriptorUpdateEntryCount = param_table->resources_count
         };
         CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorUpdateTemplate(D->pVkDevice,
             &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->update_template));
@@ -417,30 +394,17 @@ void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature)
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)signature;
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)signature->device;
     // Free Reflection Data
-    if (RS->parameter_sets != CGPU_NULLPTR)
+    CGpuUtil_FreeRSParamTables((CGpuRootSignature*)signature);
+    // Free Vk Objects
+    for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
     {
-        for (uint32_t i_set = 0; i_set < RS->set_count; i_set++)
-        {
-            ParameterSet_Vulkan* set_to_free = &RS->parameter_sets[i_set];
-            if (set_to_free->resources != CGPU_NULLPTR)
-            {
-                for (uint32_t i_binding = 0; i_binding < set_to_free->resources_count; i_binding++)
-                {
-                    CGpuShaderResource* binding_to_free = &set_to_free->resources[i_binding];
-                    if (binding_to_free->name != CGPU_NULLPTR)
-                    {
-                        cgpu_free((char8_t*)binding_to_free->name);
-                    }
-                }
-                if (set_to_free->layout != VK_NULL_HANDLE)
-                    D->mVkDeviceTable.vkDestroyDescriptorSetLayout(D->pVkDevice, set_to_free->layout, GLOBAL_VkAllocationCallbacks);
-                if (set_to_free->update_template != VK_NULL_HANDLE)
-                    D->mVkDeviceTable.vkDestroyDescriptorUpdateTemplate(D->pVkDevice, set_to_free->update_template, GLOBAL_VkAllocationCallbacks);
-                cgpu_free(RS->parameter_sets[i_set].resources);
-            }
-        }
-        cgpu_free(RS->parameter_sets);
+        SetLayout_Vulkan* set_to_free = &RS->set_layouts[i_set];
+        if (set_to_free->layout != VK_NULL_HANDLE)
+            D->mVkDeviceTable.vkDestroyDescriptorSetLayout(D->pVkDevice, set_to_free->layout, GLOBAL_VkAllocationCallbacks);
+        if (set_to_free->update_template != VK_NULL_HANDLE)
+            D->mVkDeviceTable.vkDestroyDescriptorUpdateTemplate(D->pVkDevice, set_to_free->update_template, GLOBAL_VkAllocationCallbacks);
     }
+    cgpu_free(RS->set_layouts);
     D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pipeline_layout, GLOBAL_VkAllocationCallbacks);
     cgpu_free(RS);
 }
@@ -449,14 +413,14 @@ CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const
 {
     size_t totalSize = sizeof(CGpuDescriptorSet_Vulkan);
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)desc->root_signature;
+    SetLayout_Vulkan* SetLayout = &RS->set_layouts[desc->set_index];
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-
-    const size_t UpdateTemplateSize = RS->set_count * sizeof(VkDescriptorUpdateData);
+    const size_t UpdateTemplateSize = RS->super.table_count * sizeof(VkDescriptorUpdateData);
     totalSize += UpdateTemplateSize;
     CGpuDescriptorSet_Vulkan* Set = cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuDescriptorSet_Vulkan));
     char8_t* pMem = (char8_t*)(Set + 1);
     // Allocate Descriptor Set
-    VkUtil_ConsumeDescriptorSets(D->pDescriptorPool, &RS->parameter_sets[desc->set_index].layout, &Set->pVkDescriptorSet, 1);
+    VkUtil_ConsumeDescriptorSets(D->pDescriptorPool, &SetLayout->layout, &Set->pVkDescriptorSet, 1);
     // Fill Update Template Data
     Set->pUpdateData = (VkDescriptorUpdateData*)pMem;
     memset(Set->pUpdateData, 0, UpdateTemplateSize);
@@ -470,18 +434,19 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
     VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
     bool dirty = false;
-    ParameterSet_Vulkan* SetLayout = RS->parameter_sets + set->index;
+    SetLayout_Vulkan* SetLayout = &RS->set_layouts[set->index];
+    CGpuParameterTable* ParamTable = &RS->super.tables[set->index];
     for (uint32_t i = 0; i < count; i++)
     {
         // Descriptor Info
         const CGpuDescriptorData* ArgData = datas + i;
         CGpuShaderResource* ResData = CGPU_NULLPTR;
         size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), *(size_t*)&D);
-        for (uint32_t p = 0; p < SetLayout->resources_count; p++)
+        for (uint32_t p = 0; p < ParamTable->resources_count; p++)
         {
-            if (SetLayout->resources[p].name_hash == argNameHash)
+            if (ParamTable->resources[p].name_hash == argNameHash)
             {
-                ResData = SetLayout->resources + p;
+                ResData = ParamTable->resources + p;
             }
         }
         // Update Info
