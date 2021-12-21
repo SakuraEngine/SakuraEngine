@@ -1,4 +1,7 @@
 #include "platform/configure.h"
+#if __has_include("emmintrin.h")
+    #include <emmintrin.h>
+#endif
 #define XXH_INLINE_ALL
 #include "xxhash3/xxhash.h"
 

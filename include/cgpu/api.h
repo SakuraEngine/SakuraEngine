@@ -25,7 +25,9 @@ struct CGpuBufferDescriptor;
 struct CGpuTextureDescriptor;
 struct CGpuTextureViewDescriptor;
 struct CGpuSwapChainDescriptor;
+struct CGpuAcquireNextDescriptor;
 struct CGpuQueueSubmitDescriptor;
+struct CGpuQueuePresentDescriptor;
 struct CGpuBufferUpdateDescriptor;
 struct CGpuRootSignatureDescriptor;
 struct CGpuDescriptorSetDescriptor;
@@ -143,6 +145,8 @@ typedef void (*CGPUProcFreeDevice)(CGpuDeviceId device);
 // API Objects APIs
 RUNTIME_API CGpuFenceId cgpu_create_fence(CGpuDeviceId device);
 typedef CGpuFenceId (*CGPUProcCreateFence)(CGpuDeviceId device);
+RUNTIME_API void cgpu_wait_fences(const CGpuFenceId* fences, uint32_t fence_count);
+typedef void (*CGPUProcWaitFences)(const CGpuFenceId* fences, uint32_t fence_count);
 RUNTIME_API void cgpu_free_fence(CGpuFenceId fence);
 typedef void (*CGPUProcFreeFence)(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
@@ -170,6 +174,8 @@ RUNTIME_API CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type,
 typedef CGpuQueueId (*CGPUProcGetQueue)(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
 typedef void (*CGPUProcSubmitQueue)(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
+RUNTIME_API void cgpu_queue_present(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc);
+typedef void (*CGPUProcQueuePresent)(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc);
 RUNTIME_API void cgpu_wait_queue_idle(CGpuQueueId queue);
 typedef void (*CGPUProcWaitQueueIdle)(CGpuQueueId queue);
 RUNTIME_API void cgpu_free_queue(CGpuQueueId queue);
@@ -216,6 +222,8 @@ typedef void (*CGPUProcFreeTextureView)(CGpuTextureViewId render_target);
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
 typedef CGpuSwapChainId (*CGPUProcCreateSwapChain)(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
+RUNTIME_API uint32_t cgpu_acquire_next_image(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc);
+typedef uint32_t (*CGPUProcAcquireNext)(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain(CGpuSwapChainId swapchain);
 typedef void (*CGPUProcFreeSwapChain)(CGpuSwapChainId swapchain);
 
@@ -269,6 +277,7 @@ typedef struct CGpuProcTable {
 
     // API Objects
     const CGPUProcCreateFence create_fence;
+    const CGPUProcWaitFences wait_fences;
     const CGPUProcFreeFence free_fence;
     const CGPUProcCreateRootSignature create_root_signature;
     const CGPUProcFreeRootSignature free_root_signature;
@@ -284,6 +293,7 @@ typedef struct CGpuProcTable {
     const CGPUProcGetQueue get_queue;
     const CGPUProcSubmitQueue submit_queue;
     const CGPUProcWaitQueueIdle wait_queue_idle;
+    const CGPUProcQueuePresent queue_present;
     const CGPUProcFreeQueue free_queue;
 
     // Command APIs
@@ -311,6 +321,7 @@ typedef struct CGpuProcTable {
 
     // Swapchain APIs
     const CGPUProcCreateSwapChain create_swapchain;
+    const CGPUProcAcquireNext acquire_next_image;
     const CGPUProcFreeSwapChain free_swapchain;
 
     // CMDs
@@ -588,6 +599,8 @@ typedef struct CGpuTextureView {
 
 typedef struct CGpuSwapChain {
     CGpuDeviceId device;
+    const CGpuTextureId* views;
+    uint32_t buffer_count;
 } CGpuSwapChain;
 
 // Descriptors (on Stack)
@@ -623,6 +636,18 @@ typedef struct CGpuQueueSubmitDescriptor {
     uint32_t signal_semaphores_count;
 } CGpuQueueSubmitDescriptor;
 
+typedef struct CGpuQueuePresentDescriptor {
+    CGpuSwapChainId swapchain;
+    CGpuSemaphoreId* wait_semaphores;
+    uint32_t wait_semaphore_count;
+    uint8_t index;
+} CGpuQueuePresentDescriptor;
+
+typedef struct CGpuAcquireNextDescriptor {
+    CGpuSemaphoreId signal_semaphore;
+    CGpuFenceId fence;
+} CGpuAcquireNextDescriptor;
+
 typedef struct CGpuBufferUpdateDescriptor {
     CGpuBufferId dst;
     uint64_t dst_offset;
@@ -644,9 +669,29 @@ typedef struct CGpuBufferBarrier {
     } d3d12;
 } CGpuBufferBarrier;
 
+typedef struct CGpuTextureBarrier {
+    CGpuTextureId texture;
+    ECGpuResourceState src_state;
+    ECGpuResourceState dst_state;
+    uint8_t queue_acquire : 1;
+    uint8_t queue_release : 1;
+    ECGpuQueueType queue_type : 5;
+    /// Specifiy whether following barrier targets particular subresource
+    uint8_t subresource_barrier : 1;
+    /// Following values are ignored if subresource_barrier is false
+    uint8_t mip_level : 7;
+    uint16_t array_layer;
+    struct {
+        uint8_t begin_ony : 1;
+        uint8_t end_only : 1;
+    } d3d12;
+} CGpuTextureBarrier;
+
 typedef struct CGpuResourceBarrierDescriptor {
     const CGpuBufferBarrier* buffer_barriers;
     uint32_t buffer_barriers_count;
+    const CGpuTextureBarrier* texture_barriers;
+    uint32_t texture_barriers_count;
 } CGpuResourceBarrierDescriptor;
 
 typedef struct CGpuDeviceDescriptor {
@@ -888,7 +933,13 @@ typedef struct CGpuBufferDescriptor {
 typedef struct CGpuTextureViewDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
-
+    CGpuTextureId texture;
+    ECGpuFormat format;
+    ECGpuTextureDimension dims;
+    uint32_t base_mip_level;
+    uint32_t mip_level_count;
+    uint32_t base_array_layer;
+    uint32_t array_layer_count;
 } CGpuTextureViewDescriptor;
 
 typedef struct CGpuTextureDescriptor {
