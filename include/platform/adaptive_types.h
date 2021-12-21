@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/configure.h"
 
 #ifdef _WINDOWS
     #define WIN32_LEAN_AND_MEAN

@@ -1,5 +1,4 @@
 #include "window_helper.h"
-#include "cgpu/cgpu_config.h"
 #include "math.h"
 #include "cgpu/api.h"
 
@@ -60,7 +59,7 @@ void initialize(void* usrdata)
 #if defined(_WIN32) || defined(_WIN64)
     surface = cgpu_surface_from_hwnd(device, wmInfo.info.win.window);
 #elif defined(__APPLE__)
-    struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(nswin);
+    struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(wmInfo.info.cocoa.window);
     surface = cgpu_surface_from_ns_view(device, wmInfo.info.cocoa.window);
 #endif
     DECLARE_ZERO(CGpuSwapChainDescriptor, descriptor)

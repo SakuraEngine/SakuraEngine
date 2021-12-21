@@ -1,6 +1,9 @@
 #pragma once
 #include "platform/adaptive_types.h"
 #include "stdbool.h"
+#ifdef TARGET_MACOS
+    #include "platform/apple/macos/window.h"
+#endif
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 
