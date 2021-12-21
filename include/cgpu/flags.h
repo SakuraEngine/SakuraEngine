@@ -313,11 +313,11 @@ typedef enum ECGpuBlendConstant
 
 typedef enum ECGpuCullMode
 {
-    CM_NONE = 0,
-    CM_BACK,
-    CM_FRONT,
-    CM_BOTH,
-    CM_COUNT
+    CULL_MODE_NONE = 0,
+    CULL_MODE_BACK,
+    CULL_MODE_FRONT,
+    CULL_MODE_BOTH,
+    CULL_MODE_COUNT
 } ECGpuCullMode;
 
 typedef enum ECGpuFrontFace
