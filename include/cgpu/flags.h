@@ -282,6 +282,13 @@ typedef enum ECGpuLoadAction
     LA_COUNT
 } ECGpuLoadAction;
 
+typedef enum ECGpuStoreAction
+{
+    SA_Store,
+    SA_Discard,
+    SA_COUNT
+} ECGpuStoreAction;
+
 typedef enum ECGpuPrimitiveTopology
 {
     TOPO_POINT_LIST = 0,

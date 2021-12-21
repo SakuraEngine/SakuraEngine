@@ -91,17 +91,6 @@ const CGpuProcTable tbl_vk = {
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
 
 // Render Pass Utils
-typedef struct RenderPassDesc {
-    ECGpuFormat* pColorFormats;
-    const ECGpuLoadAction* pLoadActionsColor;
-    bool* pSrgbValues;
-    uint32_t mColorAttachmentCount;
-    ECGpuSampleCount mSampleCount;
-    ECGpuFormat mDepthStencilFormat;
-    ECGpuLoadAction mLoadActionDepth;
-    ECGpuLoadAction mLoadActionStencil;
-} RenderPassDesc;
-
 VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LA_COUNT] = {
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_LOAD_OP_LOAD,
@@ -114,8 +103,14 @@ FORCEINLINE static void VkUtil_FreeRenderPass(CGpuDevice_Vulkan* D, VkRenderPass
     cgpu_free(pRenderPass);
 }
 
-FORCEINLINE static void VkUtil_CreateRenderPass(CGpuDevice_Vulkan* D, const RenderPassDesc* pDesc, VkRenderPass* ppRenderPass)
+FORCEINLINE static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUtil_RenderPassDesc* pDesc, VkRenderPass* ppRenderPass)
 {
+    VkRenderPass found = VkUtil_RenderPassTableTryFind(D->pPassTable, pDesc);
+    if (found != VK_NULL_HANDLE)
+    {
+        *ppRenderPass = found;
+        return;
+    }
     /************************************************************************/
     // Add render pass
     /************************************************************************/
@@ -132,19 +127,16 @@ FORCEINLINE static void VkUtil_CreateRenderPass(CGpuDevice_Vulkan* D, const Rend
         for (uint32_t i = 0; i < colorAttachmentCount; ++i)
         {
             const uint32_t ssidx = i;
-
             // descriptions
             attachments[ssidx].flags = 0;
             attachments[ssidx].format = (VkFormat)VkUtil_FormatTranslateToVk(pDesc->pColorFormats[i]);
             attachments[ssidx].samples = sample_count;
-            attachments[ssidx].loadOp =
-                pDesc->pLoadActionsColor ? gVkAttachmentLoadOpTranslator[pDesc->pLoadActionsColor[i]] : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachments[ssidx].loadOp = gVkAttachmentLoadOpTranslator[pDesc->pLoadActionsColor[i]];
             attachments[ssidx].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             attachments[ssidx].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachments[ssidx].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
             attachments[ssidx].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             attachments[ssidx].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
             // references
             color_attachment_refs[i].attachment = ssidx; //-V522
             color_attachment_refs[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -194,6 +186,7 @@ FORCEINLINE static void VkUtil_CreateRenderPass(CGpuDevice_Vulkan* D, const Rend
         .pDependencies = NULL
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateRenderPass(D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, ppRenderPass));
+    VkUtil_RenderPassTableAdd(D->pPassTable, pDesc, *ppRenderPass);
 }
 
 void cgpu_query_instance_features_vulkan(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
@@ -533,22 +526,16 @@ void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline)
 
 CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
 {
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    // CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuRenderPipeline_Vulkan* RP = (CGpuRenderPipeline_Vulkan*)cgpu_calloc(1, sizeof(CGpuRenderPipeline_Vulkan));
-    RenderPassDesc rpdesc = {
-        .mColorAttachmentCount = desc->render_target_count,
-        .mDepthStencilFormat = desc->depth_stencil_format,
 
-    };
-    VkUtil_CreateRenderPass(D, &rpdesc, &RP->pRenderPass);
     return &RP->super;
 }
 
 void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
 {
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
+    // CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
     CGpuRenderPipeline_Vulkan* RP = (CGpuRenderPipeline_Vulkan*)pipeline;
-    VkUtil_FreeRenderPass(D, RP->pRenderPass);
     cgpu_free(RP);
 }
 
@@ -845,6 +832,22 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
     VkRenderPass render_pass = VK_NULL_HANDLE;
+    if (render_pass == VK_NULL_HANDLE)
+    {
+        VkUtil_RenderPassDesc rpdesc = {
+            .mColorAttachmentCount = desc->render_target_count,
+            .mDepthStencilFormat = desc->depth_stencil->view->format,
+            .mSampleCount = desc->sample_count,
+            .mLoadActionDepth = desc->depth_stencil->depth_load_action,
+            .mLoadActionStencil = desc->depth_stencil->stencil_load_action
+        };
+        for (uint32_t i = 0; i < desc->render_target_count; i++)
+        {
+            rpdesc.pColorFormats[i] = desc->color_attachments[i].view->format;
+            rpdesc.pLoadActionsColor[i] = desc->color_attachments[i].load_action;
+        }
+        VkUtil_FindOrCreateRenderPass(D, &rpdesc, &render_pass);
+    }
     // Cmd begin render pass
     Cmd->pRenderPass = render_pass;
     VkRenderPassBeginInfo begin_info = {
