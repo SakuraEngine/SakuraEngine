@@ -13,6 +13,71 @@ FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGpuReso
     return result;
 }
 
+FORCEINLINE static VkImageLayout VkUtil_ResourceStateToImageLayout(ECGpuResourceState usage)
+{
+    if (usage & RS_COPY_SOURCE)
+        return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+
+    if (usage & RS_COPY_DEST)
+        return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+
+    if (usage & RS_RENDER_TARGET)
+        return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    if (usage & RS_DEPTH_WRITE)
+        return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    if (usage & RS_UNORDERED_ACCESS)
+        return VK_IMAGE_LAYOUT_GENERAL;
+
+    if (usage & RS_SHADER_RESOURCE)
+        return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    if (usage & RS_PRESENT)
+        return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    if (usage == RS_COMMON)
+        return VK_IMAGE_LAYOUT_GENERAL;
+
+#if defined(QUEST_VR)
+    if (usage == RS_SHADING_RATE_SOURCE)
+        return VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT;
+#endif
+
+    return VK_IMAGE_LAYOUT_UNDEFINED;
+}
+
+FORCEINLINE static VkImageAspectFlags VkUtil_DeterminAspectMask(VkFormat format, bool includeStencilBit)
+{
+    VkImageAspectFlags result = 0;
+    switch (format)
+    {
+        // Depth
+        case VK_FORMAT_D16_UNORM:
+        case VK_FORMAT_X8_D24_UNORM_PACK32:
+        case VK_FORMAT_D32_SFLOAT:
+            result = VK_IMAGE_ASPECT_DEPTH_BIT;
+            break;
+        // Stencil
+        case VK_FORMAT_S8_UINT:
+            result = VK_IMAGE_ASPECT_STENCIL_BIT;
+            break;
+        // Depth/stencil
+        case VK_FORMAT_D16_UNORM_S8_UINT:
+        case VK_FORMAT_D24_UNORM_S8_UINT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+            result = VK_IMAGE_ASPECT_DEPTH_BIT;
+            if (includeStencilBit)
+                result |= VK_IMAGE_ASPECT_STENCIL_BIT;
+            break;
+        // Assume everything else is Color
+        default:
+            result = VK_IMAGE_ASPECT_COLOR_BIT;
+            break;
+    }
+    return result;
+}
+
 FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuResourceTypes descriptors, bool texel)
 {
     VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;

@@ -7,7 +7,7 @@
     #pragma comment(lib, "shcore.lib")
 #endif
 
-struct PlatformWindow {
+typedef struct PlatformWindow {
 #ifdef _WIN32
     struct
     {
@@ -21,4 +21,4 @@ struct PlatformWindow {
         struct SDL_Window* window;
     } sdl;
 #endif
-};
+} PlatformWindow;

@@ -144,6 +144,20 @@ CGpuFenceId cgpu_create_fence(CGpuDeviceId device)
     return fence;
 }
 
+void cgpu_wait_fences(const CGpuFenceId* fences, uint32_t fence_count)
+{
+    if (fences == CGPU_NULLPTR || fence_count <= 0)
+    {
+        return;
+    }
+    CGpuFenceId fence = fences[0];
+    assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
+    assert(fence->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcWaitFences fn_wait_fences = fence->device->proc_table_cache->wait_fences;
+    assert(fn_wait_fences && "wait_fences Proc Missing!");
+    fn_wait_fences(fences, fence_count);
+}
+
 void cgpu_free_fence(CGpuFenceId fence)
 {
     assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
@@ -274,6 +288,17 @@ void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor
     assert(submit_queue && "submit_queue Proc Missing!");
 
     submit_queue(queue, desc);
+}
+
+void cgpu_queue_present(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc)
+{
+    assert(desc != CGPU_NULLPTR && "fatal: call on NULL desc!");
+    assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcQueuePresent fn_queue_present = queue->device->proc_table_cache->queue_present;
+    assert(fn_queue_present && "queue_present Proc Missing!");
+
+    fn_queue_present(queue, desc);
 }
 
 void cgpu_wait_queue_idle(CGpuQueueId queue)
@@ -624,6 +649,15 @@ CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDe
     return swapchain;
 }
 
+uint32_t cgpu_acquire_next_image(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc)
+{
+    assert(swapchain != CGPU_NULLPTR && "fatal: call on NULL swapchain!");
+    assert(swapchain->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    assert(swapchain->device->proc_table_cache->acquire_next_image && "acquire_next_image Proc Missing!");
+
+    return swapchain->device->proc_table_cache->acquire_next_image(swapchain, desc);
+}
+
 void cgpu_free_swapchain(CGpuSwapChainId swapchain)
 {
     assert(swapchain != CGPU_NULLPTR && "fatal: call on NULL swapchain!");
@@ -631,7 +665,6 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
     assert(swapchain->device->proc_table_cache->create_swapchain && "create_swapchain Proc Missing!");
 
     swapchain->device->proc_table_cache->free_swapchain(swapchain);
-    return;
 }
 
 // surfaces

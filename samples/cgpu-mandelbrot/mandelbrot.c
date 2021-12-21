@@ -241,4 +241,5 @@ int main(void)
         skr_join_thread(hdls[i]);
         skr_destroy_thread(hdls[i]);
     }
+    return 0;
 }

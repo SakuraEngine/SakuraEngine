@@ -35,6 +35,7 @@ RUNTIME_API void cgpu_free_device_vulkan(CGpuDeviceId device);
 
 // API Object APIs
 RUNTIME_API CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device);
+RUNTIME_API void cgpu_wait_fences_vulkan(const CGpuFenceId* fences, uint32_t fence_count);
 RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature);
@@ -50,6 +51,7 @@ RUNTIME_API void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
 RUNTIME_API CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
 RUNTIME_API void cgpu_wait_queue_idle_vulkan(CGpuQueueId queue);
+RUNTIME_API void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc);
 RUNTIME_API void cgpu_free_queue_vulkan(CGpuQueueId queue);
 
 // Command APIs
@@ -77,6 +79,7 @@ RUNTIME_API void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
+RUNTIME_API uint32_t cgpu_acquire_next_image_vulkan(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
 
 // CMDs
