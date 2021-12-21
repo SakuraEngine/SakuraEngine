@@ -1,5 +1,5 @@
 #include "platform/configure.h"
-#if __has_include("emmintrin.h")
+#if __has_include("emmintrin.h") && !defined(TARGET_CPU_ARM)
     #include <emmintrin.h>
 #endif
 #define XXH_INLINE_ALL

@@ -786,7 +786,7 @@ void CGpuUtil_InitRSBlackboardAndParamTables(CGpuRootSignature* RS, CGpuUtil_RSB
 #ifdef _WIN32
                 strcpy_s((char8_t*)set_to_record->resources[i_binding].name, source_len + 1, reflSlot->name);
 #else
-                strcpy((char8_t*)set_to_record->resources[i_binding].name, sig_reflections[i_set * i_binding + i_binding].name);
+                strcpy((char8_t*)set_to_record->resources[i_binding].name, reflSlot->name);
 #endif
                 set_to_record->resources[i_binding].type = reflSlot->type;
                 set_to_record->resources[i_binding].set = reflSlot->set;
