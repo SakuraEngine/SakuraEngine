@@ -648,7 +648,11 @@ void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentD
             .pResults = VK_NULL_HANDLE
         };
         VkResult vk_res = D->mVkDeviceTable.vkQueuePresentKHR(Q->pVkQueue, &present_info);
-        CHECK_VKRESULT(vk_res);
+        if (vk_res != VK_SUCCESS && vk_res != VK_SUBOPTIMAL_KHR &&
+            vk_res != VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            assert(0 && "Present failed!");
+        }
     }
 }
 

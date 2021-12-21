@@ -60,7 +60,7 @@ void initialize(void* usrdata)
     surface = cgpu_surface_from_hwnd(device, wmInfo.info.win.window);
 #elif defined(__APPLE__)
     struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(wmInfo.info.cocoa.window);
-    surface = cgpu_surface_from_ns_view(device, wmInfo.info.cocoa.window);
+    surface = cgpu_surface_from_ns_view(device, ns_view);
 #endif
     DECLARE_ZERO(CGpuSwapChainDescriptor, descriptor)
     descriptor.presentQueues = &gfx_queue;
@@ -155,6 +155,7 @@ void finalize()
 {
     SDL_Quit();
     cgpu_wait_queue_idle(gfx_queue);
+    cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
