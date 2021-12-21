@@ -1,3 +1,4 @@
+#include "EASTL/unordered_map.h"
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/backend/vulkan/cgpu_vulkan.h"

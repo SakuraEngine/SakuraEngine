@@ -174,6 +174,8 @@ typedef struct CGpuDevice_Vulkan {
     struct VkUtil_DescriptorPool* pDescriptorPool;
     struct VmaAllocator_T* pVmaAllocator;
     struct VolkDeviceTable mVkDeviceTable;
+    // Created renderpass table
+    struct CGpuVkPassTable* pPassTable;
 } CGpuDevice_Vulkan;
 
 typedef struct CGpuFence_Vulkan {
@@ -281,7 +283,6 @@ typedef struct CGpuComputePipeline_Vulkan {
 typedef struct CGpuRenderPipeline_Vulkan {
     CGpuRenderPipeline super;
     VkPipeline pVkPipeline;
-    VkRenderPass pRenderPass;
 } CGpuRenderPipeline_Vulkan;
 
 static const VkPipelineBindPoint gPipelineBindPoint[PT_COUNT] = {

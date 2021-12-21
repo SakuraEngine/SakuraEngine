@@ -52,6 +52,11 @@ void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
 void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
     const char* const* device_extensions, uint32_t device_extension_count);
 
+// Table Helpers
+struct VkUtil_RenderPassDesc;
+VkRenderPass VkUtil_RenderPassTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc);
+void VkUtil_RenderPassTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass);
+
 // Debug Helpers
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -85,6 +90,16 @@ typedef struct VkUtil_DescriptorPool {
     /// Lock for multi-threaded descriptor allocations
     struct SMutex* pMutex;
 } VkUtil_DescriptorPool;
+
+typedef struct VkUtil_RenderPassDesc {
+    ECGpuFormat pColorFormats[MAX_MRT_COUNT];
+    ECGpuLoadAction pLoadActionsColor[MAX_MRT_COUNT];
+    uint32_t mColorAttachmentCount;
+    ECGpuSampleCount mSampleCount;
+    ECGpuFormat mDepthStencilFormat;
+    ECGpuLoadAction mLoadActionDepth;
+    ECGpuLoadAction mLoadActionStencil;
+} VkUtil_RenderPassDesc;
 
 #define CHECK_VKRESULT(exp)                                                             \
     {                                                                                   \

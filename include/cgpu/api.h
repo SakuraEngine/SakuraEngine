@@ -703,11 +703,30 @@ typedef struct CGpuComputePassDescriptor {
     const char8_t* name;
 } CGpuComputePassDescriptor;
 
+typedef struct CGpuColorAttachment {
+    CGpuTextureViewId view;
+    ECGpuLoadAction load_action;
+    ECGpuStoreAction store_action;
+    CGpuClearValue clear_color;
+} CGpuColorAttachment;
+
+typedef struct CGpuDepthStencilAttachment {
+    CGpuTextureViewId view;
+    ECGpuLoadAction depth_load_action;
+    ECGpuStoreAction depth_store_action;
+    float clear_depth;
+    bool write_depth;
+    ECGpuLoadAction stencil_load_action;
+    ECGpuStoreAction stencil_store_action;
+    uint32_t clear_stencil;
+    bool write_stencil;
+} CGpuDepthStencilAttachment;
+
 typedef struct CGpuRenderPassDescriptor {
     const char8_t* name;
     ECGpuSampleCount sample_count;
-    const CGpuTextureViewId* render_targets;
-    const CGpuTextureViewId depth_stencil;
+    const CGpuColorAttachment* color_attachments;
+    const CGpuDepthStencilAttachment* depth_stencil;
     uint32_t render_target_count;
 } CGpuRenderPassDescriptor;
 

@@ -66,6 +66,40 @@ public:
     eastl::vector<const char*> device_layers;
 };
 
+struct CGpuCachedRenderPass {
+    VkRenderPass pass;
+    size_t timestamp;
+};
+
+struct CGpuVkPassTable //
+{
+    eastl::unordered_map<size_t, CGpuCachedRenderPass> cached_renderpasses;
+};
+
+VkRenderPass VkUtil_RenderPassTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc)
+{
+    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
+    const auto& iter = table->cached_renderpasses.find(hash);
+    if (iter != table->cached_renderpasses.end())
+    {
+        return iter->second.pass;
+    }
+    return VK_NULL_HANDLE;
+}
+
+void VkUtil_RenderPassTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass)
+{
+    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
+    const auto& iter = table->cached_renderpasses.find(hash);
+    if (iter != table->cached_renderpasses.end())
+    {
+        cgpu_warn("Vulkan Pass with this desc already exists!");
+    }
+    // TODO: Add timestamp
+    CGpuCachedRenderPass new_pass = { pass, 0 };
+    table->cached_renderpasses[hash] = new_pass;
+}
+
 struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> //
 {
     static void ConstructForAllAdapters(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
@@ -365,6 +399,8 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
     VkUtil_CreateVMAAllocator(I, A, D);
     // Create Descriptor Heap
     D->pDescriptorPool = VkUtil_CreateDescriptorPool(D);
+    // Create pass table
+    D->pPassTable = cgpu_new<CGpuVkPassTable>();
     return &D->super;
 }
 
@@ -373,6 +409,12 @@ void cgpu_free_device_vulkan(CGpuDeviceId device)
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
+
+    for (auto& iter : D->pPassTable->cached_renderpasses)
+    {
+        D->mVkDeviceTable.vkDestroyRenderPass(D->pVkDevice, iter.second.pass, GLOBAL_VkAllocationCallbacks);
+    }
+    cgpu_delete(D->pPassTable);
 
     VkUtil_FreeVMAAllocator(I, A, D);
     VkUtil_FreeDescriptorPool(D->pDescriptorPool);
