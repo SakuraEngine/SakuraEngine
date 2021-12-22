@@ -804,7 +804,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
     const float depth_bias = desc->rasterizer_state ? desc->rasterizer_state->depth_bias : 0.f;
     const VkCullModeFlagBits cullMode = !desc->rasterizer_state ? VK_CULL_MODE_BACK_BIT : gVkCullModeTranslator[desc->rasterizer_state->cull_mode];
     const VkPolygonMode polygonMode = !desc->rasterizer_state ? VK_POLYGON_MODE_FILL : gVkFillModeTranslator[desc->rasterizer_state->fill_mode];
-    const VkFrontFace frontFace = !desc->rasterizer_state ? VK_FRONT_FACE_CLOCKWISE : gVkFrontFaceTranslator[desc->rasterizer_state->front_face];
+    const VkFrontFace frontFace = !desc->rasterizer_state ? VK_FRONT_FACE_COUNTER_CLOCKWISE : gVkFrontFaceTranslator[desc->rasterizer_state->front_face];
     const float slope_scaled_depth_bias = desc->rasterizer_state ? desc->rasterizer_state->slope_scaled_depth_bias : 0.f;
     const VkBool32 enable_depth_clamp = desc->rasterizer_state ? 
         (desc->rasterizer_state->enable_depth_clamp ? VK_TRUE : VK_FALSE) :
