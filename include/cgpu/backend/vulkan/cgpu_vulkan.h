@@ -97,6 +97,10 @@ RUNTIME_API void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuC
 
 // Render CMDs
 RUNTIME_API CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_set_viewport_vulkan(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
+RUNTIME_API void cgpu_render_encoder_set_scissor_vulkan(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+RUNTIME_API void cgpu_render_encoder_bind_pipeline_vulkan(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
+RUNTIME_API void cgpu_render_encoder_draw_vulkan(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
 typedef struct CGpuInstance_Vulkan {
@@ -219,13 +223,7 @@ typedef struct CGpuBuffer_Vulkan {
 
 typedef struct CGpuTexture_Vulkan {
     CGpuTexture super;
-    /// Opaque handle used by shaders for doing read/write operations on the texture
-    VkImageView pVkSRVDescriptor;
-    /// Opaque handle used by shaders for doing read/write operations on the texture
-    VkImageView* pVkUAVDescriptors;
-    /// Opaque handle used by shaders for doing read/write operations on the texture
-    VkImageView pVkSRVStencilDescriptor;
-    /// Native handle of the underlying resource
+    VkImageType image_type;
     VkImage pVkImage;
     union
     {
@@ -237,9 +235,9 @@ typedef struct CGpuTexture_Vulkan {
 
 typedef struct CGpuTextureView_Vulkan {
     CGpuTextureView super;
-    VkImageView pVkDescriptor;
-    VkImageView* pVkSliceDescriptors;
-    uint32_t mId;
+    VkImageView pVkRTVDescriptor;
+    VkImageView pVkSRVDescriptor;
+    VkImageView pVkUAVDescriptor;
 } CGpuTextureView_Vulkan;
 
 typedef struct CGpuShaderLibrary_Vulkan {

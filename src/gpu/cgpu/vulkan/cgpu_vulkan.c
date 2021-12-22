@@ -89,9 +89,43 @@ const CGpuProcTable tbl_vk = {
 
     // Render CMDs
     .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_vulkan,
+    .render_encoder_set_viewport = &cgpu_render_encoder_set_viewport_vulkan,
+    .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_vulkan,
+    .render_encoder_bind_pipeline = &cgpu_render_encoder_bind_pipeline_vulkan,
+    .render_encoder_draw = &cgpu_render_encoder_draw_vulkan,
     .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan
 };
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
+
+static void VkUtil_FindOrCreateFrameBuffer(const CGpuDevice_Vulkan* D, const struct VkUtil_FramebufferDesc* pDesc, VkFramebuffer* ppFramebuffer)
+{
+    VkFramebuffer found = VkUtil_FramebufferTableTryFind(D->pPassTable, pDesc);
+    if (found != VK_NULL_HANDLE)
+    {
+        *ppFramebuffer = found;
+        return;
+    }
+    assert(VK_NULL_HANDLE != D->pVkDevice);
+    VkFramebufferCreateInfo add_info = {
+        .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .attachmentCount = pDesc->mColorAttachmentCount,
+        .pAttachments = pDesc->pImageViews,
+        .width = pDesc->mWidth,
+        .height = pDesc->mHeight,
+        .layers = pDesc->mLayers,
+        .renderPass = pDesc->pRenderPass
+    };
+    CHECK_VKRESULT(vkCreateFramebuffer(D->pVkDevice, &add_info, GLOBAL_VkAllocationCallbacks, ppFramebuffer));
+    VkUtil_FramebufferTableAdd(D->pPassTable, pDesc, *ppFramebuffer);
+}
+
+// TODO: recycle cached render passes
+FORCEINLINE static void VkUtil_FreeFramebuffer(CGpuDevice_Vulkan* D, VkFramebuffer pFramebuffer)
+{
+    D->mVkDeviceTable.vkDestroyFramebuffer(D->pVkDevice, pFramebuffer, GLOBAL_VkAllocationCallbacks);
+}
 
 // Render Pass Utils
 VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LA_COUNT] = {
@@ -100,13 +134,13 @@ VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LA_COUNT] = {
     VK_ATTACHMENT_LOAD_OP_CLEAR,
 };
 
+// TODO: recycle cached render passes
 FORCEINLINE static void VkUtil_FreeRenderPass(CGpuDevice_Vulkan* D, VkRenderPass pRenderPass)
 {
     D->mVkDeviceTable.vkDestroyRenderPass(D->pVkDevice, pRenderPass, GLOBAL_VkAllocationCallbacks);
-    cgpu_free(pRenderPass);
 }
 
-FORCEINLINE static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUtil_RenderPassDesc* pDesc, VkRenderPass* ppRenderPass)
+static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUtil_RenderPassDesc* pDesc, VkRenderPass* ppRenderPass)
 {
     VkRenderPass found = VkUtil_RenderPassTableTryFind(D->pPassTable, pDesc);
     if (found != VK_NULL_HANDLE)
@@ -114,9 +148,6 @@ FORCEINLINE static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D
         *ppRenderPass = found;
         return;
     }
-    /************************************************************************/
-    // Add render pass
-    /************************************************************************/
     assert(VK_NULL_HANDLE != D->pVkDevice);
     uint32_t colorAttachmentCount = pDesc->mColorAttachmentCount;
     uint32_t depthAttachmentCount = (pDesc->mDepthStencilFormat != PF_UNDEFINED) ? 1 : 0;
@@ -173,7 +204,7 @@ FORCEINLINE static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D
         .colorAttachmentCount = colorAttachmentCount,
         .pColorAttachments = color_attachment_refs,
         .pResolveAttachments = NULL,
-        .pDepthStencilAttachment = depth_stencil_attachment_ref,
+        .pDepthStencilAttachment = (depthAttachmentCount > 0) ? depth_stencil_attachment_ref : VK_NULL_HANDLE,
         .preserveAttachmentCount = 0,
         .pPreserveAttachments = NULL
     };
@@ -550,18 +581,326 @@ void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline)
     cgpu_free(PPL);
 }
 
+VkCullModeFlagBits gVkCullModeTranslator[CULL_MODE_COUNT] = {
+    VK_CULL_MODE_NONE,
+    VK_CULL_MODE_BACK_BIT,
+    VK_CULL_MODE_FRONT_BIT
+};
+
+VkPolygonMode gVkFillModeTranslator[FM_COUNT] = {
+    VK_POLYGON_MODE_FILL,
+    VK_POLYGON_MODE_LINE
+};
+
+VkFrontFace gVkFrontFaceTranslator[] = {
+    VK_FRONT_FACE_COUNTER_CLOCKWISE,
+    VK_FRONT_FACE_CLOCKWISE
+};
+VkBlendFactor gVkBlendConstantTranslator[BC_COUNT] = {
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_SRC_COLOR,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+    VK_BLEND_FACTOR_DST_COLOR,
+    VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_FACTOR_DST_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+    VK_BLEND_FACTOR_SRC_ALPHA_SATURATE,
+    VK_BLEND_FACTOR_CONSTANT_COLOR,
+    VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
+};
+VkBlendOp gVkBlendOpTranslator[BM_COUNT] = {
+    VK_BLEND_OP_ADD,
+    VK_BLEND_OP_SUBTRACT,
+    VK_BLEND_OP_REVERSE_SUBTRACT,
+    VK_BLEND_OP_MIN,
+    VK_BLEND_OP_MAX,
+};
+/* clang-format off */
 CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
 {
-    // CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)desc->root_signature;
     CGpuRenderPipeline_Vulkan* RP = (CGpuRenderPipeline_Vulkan*)cgpu_calloc(1, sizeof(CGpuRenderPipeline_Vulkan));
+    // TODO: Shader spec
+    const VkSpecializationInfo* specializationInfo = VK_NULL_HANDLE;
+    // Vertex input state
+    uint32_t input_binding_count = 0;
+	DECLARE_ZERO(VkVertexInputBindingDescription, input_bindings[MAX_VERTEX_BINDINGS]) 
+	uint32_t  input_attribute_count = 0;
+	DECLARE_ZERO(VkVertexInputAttributeDescription, input_attributes[MAX_VERTEX_BINDINGS]) 
+    // Make sure there's attributes
+    if (desc->vertex_layout != NULL)
+    {
+        // Ignore everything that's beyond max_vertex_attribs
+        uint32_t attrib_count = desc->vertex_layout->attribute_count > MAX_VERTEX_ATTRIBS ? MAX_VERTEX_ATTRIBS : desc->vertex_layout->attribute_count;
+        uint32_t binding_value = UINT32_MAX;
+        // Initial values
+        for (uint32_t i = 0; i < attrib_count; ++i)
+        {
+            const CGpuVertexAttribute* attrib = &(desc->vertex_layout->attributes[i]);
+            if (binding_value != attrib->binding)
+            {
+                binding_value = attrib->binding;
+                ++input_binding_count;
+            }
+            input_bindings[input_binding_count - 1].binding = binding_value;
+            if (attrib->rate == VAR_INSTANCE)
+            {
+                input_bindings[input_binding_count - 1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+            }
+            else
+            {
+                input_bindings[input_binding_count - 1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            }
+            input_bindings[input_binding_count - 1].stride += FormatUtil_BitSizeOfBlock(attrib->format) / 8;
+            input_attributes[input_attribute_count].location = attrib->location;
+            input_attributes[input_attribute_count].binding = attrib->binding;
+            input_attributes[input_attribute_count].format = VkUtil_FormatTranslateToVk(attrib->format);
+            input_attributes[input_attribute_count].offset = attrib->offset;
+            ++input_attribute_count;
+        }
+    }
+    VkPipelineVertexInputStateCreateInfo vi = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.pNext = NULL,
+		.flags = 0,
+		.vertexBindingDescriptionCount = input_binding_count,
+		.pVertexBindingDescriptions = input_bindings,
+		.vertexAttributeDescriptionCount = input_attribute_count,
+		.pVertexAttributeDescriptions = input_attributes
+    };
+    // Shader stages
+    DECLARE_ZERO(VkPipelineShaderStageCreateInfo, shaderStages[5])
+    uint32_t stage_count = 0;
+    for (uint32_t i = 0; i < 5; ++i)
+    {
+        ECGpuShaderStage stage_mask = (ECGpuShaderStage)(1 << i);
+        shaderStages[stage_count].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        shaderStages[stage_count].pNext = NULL;
+        shaderStages[stage_count].flags = 0;
+        shaderStages[stage_count].pSpecializationInfo = specializationInfo;
+        switch (stage_mask)
+        {
+            case SS_VERT:
+            {
+                if(desc->vertex_shader)
+                {
+                    shaderStages[stage_count].pName = desc->vertex_shader->entry;
+                    shaderStages[stage_count].stage = VK_SHADER_STAGE_VERTEX_BIT;
+                    shaderStages[stage_count].module = ((CGpuShaderLibrary_Vulkan*)desc->vertex_shader->library)->mShaderModule;
+                    ++stage_count;
+                }
+            }
+            break;
+            case SS_TESC:
+            {
+                if(desc->tesc_shader)
+                {
+                    shaderStages[stage_count].pName = desc->tesc_shader->entry;
+                    shaderStages[stage_count].stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+                    shaderStages[stage_count].module = ((CGpuShaderLibrary_Vulkan*)desc->tesc_shader->library)->mShaderModule;
+                    ++stage_count;
+                }
+            }
+            break;
+            case SS_TESE:
+            {
+                if(desc->tese_shader)
+                {
+                    shaderStages[stage_count].pName = desc->tese_shader->entry;
+                    shaderStages[stage_count].stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+                    shaderStages[stage_count].module = ((CGpuShaderLibrary_Vulkan*)desc->tese_shader->library)->mShaderModule;
+                    ++stage_count;
+                }
+            }
+            break;
+            case SS_GEOM:
+            {
+                if(desc->geom_shader)
+                {
+                    shaderStages[stage_count].pName = desc->geom_shader->entry;
+                    shaderStages[stage_count].stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+                    shaderStages[stage_count].module = ((CGpuShaderLibrary_Vulkan*)desc->geom_shader->library)->mShaderModule;
+                    ++stage_count;
+                }
+            }
+            break;
+            case SS_FRAG:
+            {
+                if(desc->fragment_shader)
+                {
+                    shaderStages[stage_count].pName = desc->fragment_shader->entry;
+                    shaderStages[stage_count].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+                    shaderStages[stage_count].module = ((CGpuShaderLibrary_Vulkan*)desc->fragment_shader->library)->mShaderModule;
+                    ++stage_count;
+                }
+            }
+            break;
+            default: assert(false && "Shader Stage not supported!"); break;
+        }
+    }
+    // Viewport state
+    VkPipelineViewportStateCreateInfo vps = {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            // we are using dynamic viewports but we must set the count to 1
+            .viewportCount = 1,
+            .pViewports = NULL,
+            .scissorCount = 1,
+            .pScissors = NULL
+    };
+    
+	VkDynamicState dyn_states[] =
+    {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR,
+        VK_DYNAMIC_STATE_BLEND_CONSTANTS,
+        VK_DYNAMIC_STATE_DEPTH_BOUNDS,
+        VK_DYNAMIC_STATE_STENCIL_REFERENCE,
+    };
+    VkPipelineDynamicStateCreateInfo dys = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.pNext = NULL,
+		.flags = 0,
+		.dynamicStateCount = sizeof(dyn_states) / sizeof(dyn_states[0]),
+		.pDynamicStates = dyn_states
+    };
+    // Multi-sampling
+    VkPipelineMultisampleStateCreateInfo ms = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+		.pNext = NULL,
+		.flags = 0,
+		.rasterizationSamples = VkUtil_SampleCountTranslateToVk(desc->sample_count),
+		.sampleShadingEnable = VK_FALSE,
+		.minSampleShading = 0.0f,
+		.pSampleMask = 0,
+		.alphaToCoverageEnable = VK_FALSE,
+		.alphaToOneEnable = VK_FALSE
+    };
+    // IA stage
+    VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    switch (desc->prim_topology)
+    {
+        case TOPO_POINT_LIST: topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST; break;
+        case TOPO_LINE_LIST: topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; break;
+        case TOPO_LINE_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP; break;
+        case TOPO_TRI_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
+        case TOPO_PATCH_LIST: topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; break;
+        case TOPO_TRI_LIST: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
+        default:  assert(false && "Primitive Topo not supported!"); break;
+    }
+    VkPipelineInputAssemblyStateCreateInfo ia = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .topology = topology,
+        .primitiveRestartEnable = VK_FALSE
+    };
+    // Rasterizer state
+    const float depth_bias = desc->rasterizer_state ? desc->rasterizer_state->depth_bias : 0.f;
+    const VkCullModeFlagBits cullMode = !desc->rasterizer_state ? VK_CULL_MODE_BACK_BIT : gVkCullModeTranslator[desc->rasterizer_state->cull_mode];
+    const VkPolygonMode polygonMode = !desc->rasterizer_state ? VK_POLYGON_MODE_FILL : gVkFillModeTranslator[desc->rasterizer_state->fill_mode];
+    const VkFrontFace frontFace = !desc->rasterizer_state ? VK_FRONT_FACE_CLOCKWISE : gVkFrontFaceTranslator[desc->rasterizer_state->front_face];
+    const float slope_scaled_depth_bias = desc->rasterizer_state ? desc->rasterizer_state->slope_scaled_depth_bias : 0.f;
+    const VkBool32 enable_depth_clamp = desc->rasterizer_state ? 
+        (desc->rasterizer_state->enable_depth_clamp ? VK_TRUE : VK_FALSE) :
+        VK_FALSE;
+    VkPipelineRasterizationStateCreateInfo rs = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .depthClampEnable = enable_depth_clamp,
+        .rasterizerDiscardEnable = VK_FALSE,
+        .polygonMode = polygonMode,
+        .cullMode = cullMode,
+        .frontFace = frontFace,
+        .depthBiasEnable = (depth_bias != 0) ? VK_TRUE : VK_FALSE,
+        .depthBiasConstantFactor = depth_bias,
+        .depthBiasClamp = 0.0f,
+        .depthBiasSlopeFactor = slope_scaled_depth_bias,
+        .lineWidth = 1.f
+    };
+    // Color blending state
+    DECLARE_ZERO(VkPipelineColorBlendAttachmentState, cb_attachments[MAX_MRT_COUNT])
+	int blendDescIndex = 0;
+    for (int i = 0; i < MAX_MRT_COUNT; ++i)
+	{
+        const CGpuBlendStateDescriptor* pDesc = desc->blend_state;
+        VkBool32 blendEnable =
+            (gVkBlendConstantTranslator[pDesc->src_factors[blendDescIndex]] != VK_BLEND_FACTOR_ONE ||
+                gVkBlendConstantTranslator[pDesc->dst_factors[blendDescIndex]] != VK_BLEND_FACTOR_ZERO ||
+                gVkBlendConstantTranslator[pDesc->src_alpha_factors[blendDescIndex]] != VK_BLEND_FACTOR_ONE ||
+                gVkBlendConstantTranslator[pDesc->dst_alpha_factors[blendDescIndex]] != VK_BLEND_FACTOR_ZERO);
 
+        cb_attachments[i].blendEnable = blendEnable;
+        cb_attachments[i].colorWriteMask = pDesc->masks[blendDescIndex];
+        cb_attachments[i].srcColorBlendFactor = gVkBlendConstantTranslator[pDesc->src_factors[blendDescIndex]];
+        cb_attachments[i].dstColorBlendFactor = gVkBlendConstantTranslator[pDesc->dst_factors[blendDescIndex]];
+        cb_attachments[i].colorBlendOp = gVkBlendOpTranslator[pDesc->blend_modes[blendDescIndex]];
+        cb_attachments[i].srcAlphaBlendFactor = gVkBlendConstantTranslator[pDesc->src_alpha_factors[blendDescIndex]];
+        cb_attachments[i].dstAlphaBlendFactor = gVkBlendConstantTranslator[pDesc->dst_alpha_factors[blendDescIndex]];
+        cb_attachments[i].alphaBlendOp = gVkBlendOpTranslator[pDesc->blend_alpha_modes[blendDescIndex]];
+
+		if (desc->blend_state->independent_blend)
+			++blendDescIndex;
+	}
+    VkPipelineColorBlendStateCreateInfo cbs = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .logicOpEnable = VK_FALSE,
+        .logicOp = VK_LOGIC_OP_COPY,
+        .attachmentCount = desc->render_target_count,
+        .pAttachments = cb_attachments,
+        .blendConstants[0] = 0.0f,
+        .blendConstants[1] = 0.0f,
+        .blendConstants[2] = 0.0f,
+        .blendConstants[3] = 0.0f
+    };
+    // Create a stub render pass
+    VkRenderPass render_pass = VK_NULL_HANDLE;
+    assert(desc->render_target_count >= 0);
+    VkUtil_RenderPassDesc rp_desc = {
+        .mColorAttachmentCount = desc->render_target_count,
+        .mSampleCount = desc->sample_count,
+        .mDepthStencilFormat = desc->depth_stencil_format
+    };
+    for (uint32_t i = 0; i < desc->render_target_count; i++)
+        rp_desc.pColorFormats[i] = desc->color_formats[i];
+    VkUtil_FindOrCreateRenderPass(D, &rp_desc, &render_pass);
+    VkGraphicsPipelineCreateInfo pipelineInfo = {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .stageCount = stage_count,
+        .pStages = shaderStages,
+        .pVertexInputState = &vi,
+        .pInputAssemblyState = &ia,
+        .pDynamicState = &dys,
+        .pViewportState = &vps,
+        .pRasterizationState = &rs,
+        .pMultisampleState = &ms,
+        // TODO: Depth stencil state
+        .pDepthStencilState = VK_NULL_HANDLE,
+        .pColorBlendState = &cbs,
+        .layout = RS->pipeline_layout,
+        .renderPass = render_pass,
+        .subpass = 0,
+        .basePipelineHandle = VK_NULL_HANDLE,
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateGraphicsPipelines(D->pVkDevice,
+        D->pPipelineCache, 1, &pipelineInfo, GLOBAL_VkAllocationCallbacks, &RP->pVkPipeline));
     return &RP->super;
 }
+/* clang-format on */
 
 void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
 {
-    // CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
     CGpuRenderPipeline_Vulkan* RP = (CGpuRenderPipeline_Vulkan*)pipeline;
+    D->mVkDeviceTable.vkDestroyPipeline(D->pVkDevice, RP->pVkPipeline, GLOBAL_VkAllocationCallbacks);
     cgpu_free(RP);
 }
 
@@ -946,41 +1285,131 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    // Find or create render pass
+    uint32_t Width, Height;
     VkRenderPass render_pass = VK_NULL_HANDLE;
-    if (render_pass == VK_NULL_HANDLE)
     {
         VkUtil_RenderPassDesc rpdesc = {
             .mColorAttachmentCount = desc->render_target_count,
-            .mDepthStencilFormat = desc->depth_stencil ? desc->depth_stencil->view->format : PF_UNDEFINED,
+            .mDepthStencilFormat = desc->depth_stencil ? desc->depth_stencil->view->info.format : PF_UNDEFINED,
             .mSampleCount = desc->sample_count,
             .mLoadActionDepth = desc->depth_stencil ? desc->depth_stencil->depth_load_action : LA_DONTCARE,
             .mLoadActionStencil = desc->depth_stencil ? desc->depth_stencil->stencil_load_action : LA_DONTCARE
         };
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {
-            rpdesc.pColorFormats[i] = desc->color_attachments[i].view->format;
+            rpdesc.pColorFormats[i] = desc->color_attachments[i].view->info.format;
             rpdesc.pLoadActionsColor[i] = desc->color_attachments[i].load_action;
+            Width = desc->color_attachments[i].view->info.texture->width;
+            Height = desc->color_attachments[i].view->info.texture->height;
         }
         VkUtil_FindOrCreateRenderPass(D, &rpdesc, &render_pass);
     }
+    // Find or create framebuffer
+    VkFramebuffer pFramebuffer = VK_NULL_HANDLE;
+    {
+        VkUtil_FramebufferDesc fbDesc = {
+            .pRenderPass = render_pass,
+            .mColorAttachmentCount = desc->render_target_count,
+            .mWidth = Width,
+            .mHeight = Height,
+            .mLayers = 1
+        };
+        for (uint32_t i = 0; i < desc->render_target_count; i++)
+        {
+            CGpuTextureView_Vulkan* TVV = (CGpuTextureView_Vulkan*)desc->color_attachments[i].view;
+            fbDesc.pImageViews[i] = TVV->pVkRTVDescriptor;
+            fbDesc.mLayers = TVV->super.info.array_layer_count;
+        }
+        if (desc->depth_stencil != CGPU_NULLPTR)
+        {
+            CGpuTextureView_Vulkan* TVV = (CGpuTextureView_Vulkan*)desc->depth_stencil->view;
+            fbDesc.pImageViews[desc->render_target_count] = TVV->pVkRTVDescriptor;
+            fbDesc.mLayers = TVV->super.info.array_layer_count;
+        }
+        if (desc->render_target_count)
+            assert(fbDesc.mLayers == 1 && "MRT pass supports only one layer!");
+        VkUtil_FindOrCreateFrameBuffer(D, &fbDesc, &pFramebuffer);
+    }
     // Cmd begin render pass
-    Cmd->pRenderPass = render_pass;
+    VkClearValue clearValues[MAX_MRT_COUNT + 1];
+    for (uint32_t i = 0; i < desc->render_target_count; i++)
+    {
+        CGpuClearValue clearValue = desc->color_attachments[i].clear_color;
+        clearValues[i].color.float32[0] = clearValue.r;
+        clearValues[i].color.float32[1] = clearValue.g;
+        clearValues[i].color.float32[2] = clearValue.b;
+        clearValues[i].color.float32[3] = clearValue.a;
+    }
+    VkRect2D render_area = {
+        .offset.x = 0,
+        .offset.y = 0,
+        .extent.width = Width,
+        .extent.height = Height
+    };
     VkRenderPassBeginInfo begin_info = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .pNext = NULL,
-        .renderPass = Cmd->pRenderPass,
-        .framebuffer = NULL // pFrameBuffer->pFramebuffer,
-        //.renderArea = render_area,
-        //.clearValueCount = clearValueCount,
-        //.pClearValues = clearValues
+        .pNext = VK_NULL_HANDLE,
+        .renderPass = render_pass,
+        .framebuffer = pFramebuffer,
+        .renderArea = render_area,
+        // TODO: Support depth render target clear
+        .clearValueCount = desc->render_target_count,
+        .pClearValues = clearValues
     };
     D->mVkDeviceTable.vkCmdBeginRenderPass(Cmd->pVkCmdBuf, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
-    return NULL;
+    Cmd->pRenderPass = render_pass;
+    return (CGpuRenderPassEncoderId)cmd;
+}
+
+void cgpu_render_encoder_set_viewport_vulkan(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
+    VkViewport viewport = {
+        .x = x,
+        .y = y + height,
+        .width = width,
+        .height = -height,
+        .minDepth = min_depth,
+        .maxDepth = max_depth
+    };
+    D->mVkDeviceTable.vkCmdSetViewport(Cmd->pVkCmdBuf, 0, 1, &viewport);
+}
+
+void cgpu_render_encoder_set_scissor_vulkan(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
+    VkRect2D scissor = {
+        .offset.x = x,
+        .offset.y = y,
+        .extent.width = width,
+        .extent.height = height
+    };
+    D->mVkDeviceTable.vkCmdSetScissor(Cmd->pVkCmdBuf, 0, 1, &scissor);
+}
+
+void cgpu_render_encoder_bind_pipeline_vulkan(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    CGpuComputePipeline_Vulkan* PPL = (CGpuComputePipeline_Vulkan*)pipeline;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pipeline->device;
+    D->mVkDeviceTable.vkCmdBindPipeline(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, PPL->pVkPipeline);
+}
+
+void cgpu_render_encoder_draw_vulkan(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)
+{
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    D->mVkDeviceTable.vkCmdDraw(Cmd->pVkCmdBuf, vertex_count, 1, first_vertex, 0);
 }
 
 void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    D->mVkDeviceTable.vkCmdEndRenderPass(Cmd->pVkCmdBuf);
     Cmd->pRenderPass = VK_NULL_HANDLE;
 }
 
@@ -1214,10 +1643,11 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     for (uint32_t i = 0; i < buffer_count; i++)
     {
         Ts[i].pVkImage = vimages[i];
+        Ts[i].image_type = VK_IMAGE_TYPE_2D;
         // TODO: Create default SRV descriptor
         // Ts[i].pVkSRVDescriptor
         // TODO: Create default UAV descriptor
-        Ts[i].super.uav = false;
+        Ts[i].super.is_cube = false;
         // Ts[i].pVkUAVDescriptors
         Ts[i].super.array_size_minus_one = 0;
         Ts[i].super.device = &D->super;
@@ -1235,7 +1665,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     {
         Vs[i] = &Ts[i].super;
     }
-    S->super.views = Vs;
+    S->super.back_buffers = Vs;
     S->pVkSurface = vkSurface;
     return &S->super;
 }

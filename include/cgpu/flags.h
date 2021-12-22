@@ -315,7 +315,7 @@ typedef enum ECGpuBlendConstant
     BC_SRC_ALPHA_SATURATE,
     BC_BLEND_FACTOR,
     BC_ONE_MINUS_BLEND_FACTOR,
-    MAX_BLEND_CONSTANTS
+    BC_COUNT
 } ECGpuBlendConstant;
 
 typedef enum ECGpuCullMode
@@ -380,7 +380,7 @@ typedef enum ECGpuBlendMode
     BM_REVERSE_SUBTRACT,
     BM_MIN,
     BM_MAX,
-    MAX_BLEND_MODES,
+    BM_COUNT,
 } ECGpuBlendMode;
 
 typedef enum ECGpuTextureDimension
@@ -578,6 +578,198 @@ typedef enum ECGpuResourceType
 #endif
 } ECGpuResourceType;
 typedef uint32_t CGpuResourceTypes;
+
+typedef enum ECGpuTexutreViewUsage
+{
+    TVU_SRV = 0x01,
+    TVU_RTV = 0x02,
+    TVU_UAV = 0x04
+} ECGpuTexutreViewUsage;
+typedef uint32_t CGpuTexutreViewUsages;
+
+typedef enum ECGpuTextureViewAspect
+{
+    TVA_COLOR = 0x01,
+    TVA_DEPTH = 0x02,
+    TVA_STENCIL = 0x04
+} ECGpuTextureViewAspect;
+typedef uint32_t CGpuTextureViewAspects;
+
+//
+/* clang-format off */
+static FORCEINLINE uint32_t FormatUtil_BitSizeOfBlock(ECGpuFormat const fmt) {
+	switch(fmt) {
+		case PF_UNDEFINED: return 0;
+		case PF_R1_UNORM: return 8;
+		case PF_R2_UNORM: return 8;
+		case PF_R4_UNORM: return 8;
+		case PF_R4G4_UNORM: return 8;
+		case PF_G4R4_UNORM: return 8;
+		case PF_A8_UNORM: return 8;
+		case PF_R8_UNORM: return 8;
+		case PF_R8_SNORM: return 8;
+		case PF_R8_UINT: return 8;
+		case PF_R8_SINT: return 8;
+		case PF_R8_SRGB: return 8;
+		case PF_B2G3R3_UNORM: return 8;
+		case PF_R4G4B4A4_UNORM: return 16;
+		case PF_R4G4B4X4_UNORM: return 16;
+		case PF_B4G4R4A4_UNORM: return 16;
+		case PF_B4G4R4X4_UNORM: return 16;
+		case PF_A4R4G4B4_UNORM: return 16;
+		case PF_X4R4G4B4_UNORM: return 16;
+		case PF_A4B4G4R4_UNORM: return 16;
+		case PF_X4B4G4R4_UNORM: return 16;
+		case PF_R5G6B5_UNORM: return 16;
+		case PF_B5G6R5_UNORM: return 16;
+		case PF_R5G5B5A1_UNORM: return 16;
+		case PF_B5G5R5A1_UNORM: return 16;
+		case PF_A1B5G5R5_UNORM: return 16;
+		case PF_A1R5G5B5_UNORM: return 16;
+		case PF_R5G5B5X1_UNORM: return 16;
+		case PF_B5G5R5X1_UNORM: return 16;
+		case PF_X1R5G5B5_UNORM: return 16;
+		case PF_X1B5G5R5_UNORM: return 16;
+		case PF_B2G3R3A8_UNORM: return 16;
+		case PF_R8G8_UNORM: return 16;
+		case PF_R8G8_SNORM: return 16;
+		case PF_G8R8_UNORM: return 16;
+		case PF_G8R8_SNORM: return 16;
+		case PF_R8G8_UINT: return 16;
+		case PF_R8G8_SINT: return 16;
+		case PF_R8G8_SRGB: return 16;
+		case PF_R16_UNORM: return 16;
+		case PF_R16_SNORM: return 16;
+		case PF_R16_UINT: return 16;
+		case PF_R16_SINT: return 16;
+		case PF_R16_SFLOAT: return 16;
+		case PF_R16_SBFLOAT: return 16;
+		case PF_R8G8B8_UNORM: return 24;
+		case PF_R8G8B8_SNORM: return 24;
+		case PF_R8G8B8_UINT: return 24;
+		case PF_R8G8B8_SINT: return 24;
+		case PF_R8G8B8_SRGB: return 24;
+		case PF_B8G8R8_UNORM: return 24;
+		case PF_B8G8R8_SNORM: return 24;
+		case PF_B8G8R8_UINT: return 24;
+		case PF_B8G8R8_SINT: return 24;
+		case PF_B8G8R8_SRGB: return 24;
+		case PF_R16G16B16_UNORM: return 48;
+		case PF_R16G16B16_SNORM: return 48;
+		case PF_R16G16B16_UINT: return 48;
+		case PF_R16G16B16_SINT: return 48;
+		case PF_R16G16B16_SFLOAT: return 48;
+		case PF_R16G16B16_SBFLOAT: return 48;
+		case PF_R16G16B16A16_UNORM: return 64;
+		case PF_R16G16B16A16_SNORM: return 64;
+		case PF_R16G16B16A16_UINT: return 64;
+		case PF_R16G16B16A16_SINT: return 64;
+		case PF_R16G16B16A16_SFLOAT: return 64;
+		case PF_R16G16B16A16_SBFLOAT: return 64;
+		case PF_R32G32_UINT: return 64;
+		case PF_R32G32_SINT: return 64;
+		case PF_R32G32_SFLOAT: return 64;
+		case PF_R32G32B32_UINT: return 96;
+		case PF_R32G32B32_SINT: return 96;
+		case PF_R32G32B32_SFLOAT: return 96;
+		case PF_R32G32B32A32_UINT: return 128;
+		case PF_R32G32B32A32_SINT: return 128;
+		case PF_R32G32B32A32_SFLOAT: return 128;
+		case PF_R64_UINT: return 64;
+		case PF_R64_SINT: return 64;
+		case PF_R64_SFLOAT: return 64;
+		case PF_R64G64_UINT: return 128;
+		case PF_R64G64_SINT: return 128;
+		case PF_R64G64_SFLOAT: return 128;
+		case PF_R64G64B64_UINT: return 192;
+		case PF_R64G64B64_SINT: return 192;
+		case PF_R64G64B64_SFLOAT: return 192;
+		case PF_R64G64B64A64_UINT: return 256;
+		case PF_R64G64B64A64_SINT: return 256;
+		case PF_R64G64B64A64_SFLOAT: return 256;
+		case PF_D16_UNORM: return 16;
+		case PF_S8_UINT: return 8;
+		case PF_D32_SFLOAT_S8_UINT: return 64;
+		case PF_DXBC1_RGB_UNORM: return 64;
+		case PF_DXBC1_RGB_SRGB: return 64;
+		case PF_DXBC1_RGBA_UNORM: return 64;
+		case PF_DXBC1_RGBA_SRGB: return 64;
+		case PF_DXBC2_UNORM: return 128;
+		case PF_DXBC2_SRGB: return 128;
+		case PF_DXBC3_UNORM: return 128;
+		case PF_DXBC3_SRGB: return 128;
+		case PF_DXBC4_UNORM: return 64;
+		case PF_DXBC4_SNORM: return 64;
+		case PF_DXBC5_UNORM: return 128;
+		case PF_DXBC5_SNORM: return 128;
+		case PF_DXBC6H_UFLOAT: return 128;
+		case PF_DXBC6H_SFLOAT: return 128;
+		case PF_DXBC7_UNORM: return 128;
+		case PF_DXBC7_SRGB: return 128;
+		case PF_PVRTC1_2BPP_UNORM: return 64;
+		case PF_PVRTC1_4BPP_UNORM: return 64;
+		case PF_PVRTC2_2BPP_UNORM: return 64;
+		case PF_PVRTC2_4BPP_UNORM: return 64;
+		case PF_PVRTC1_2BPP_SRGB: return 64;
+		case PF_PVRTC1_4BPP_SRGB: return 64;
+		case PF_PVRTC2_2BPP_SRGB: return 64;
+		case PF_PVRTC2_4BPP_SRGB: return 64;
+		case PF_ETC2_R8G8B8_UNORM: return 64;
+		case PF_ETC2_R8G8B8_SRGB: return 64;
+		case PF_ETC2_R8G8B8A1_UNORM: return 64;
+		case PF_ETC2_R8G8B8A1_SRGB: return 64;
+		case PF_ETC2_R8G8B8A8_UNORM: return 64;
+		case PF_ETC2_R8G8B8A8_SRGB: return 64;
+		case PF_ETC2_EAC_R11_UNORM: return 64;
+		case PF_ETC2_EAC_R11_SNORM: return 64;
+		case PF_ETC2_EAC_R11G11_UNORM: return 64;
+		case PF_ETC2_EAC_R11G11_SNORM: return 64;
+		case PF_ASTC_4x4_UNORM: return 128;
+		case PF_ASTC_4x4_SRGB: return 128;
+		case PF_ASTC_5x4_UNORM: return 128;
+		case PF_ASTC_5x4_SRGB: return 128;
+		case PF_ASTC_5x5_UNORM: return 128;
+		case PF_ASTC_5x5_SRGB: return 128;
+		case PF_ASTC_6x5_UNORM: return 128;
+		case PF_ASTC_6x5_SRGB: return 128;
+		case PF_ASTC_6x6_UNORM: return 128;
+		case PF_ASTC_6x6_SRGB: return 128;
+		case PF_ASTC_8x5_UNORM: return 128;
+		case PF_ASTC_8x5_SRGB: return 128;
+		case PF_ASTC_8x6_UNORM: return 128;
+		case PF_ASTC_8x6_SRGB: return 128;
+		case PF_ASTC_8x8_UNORM: return 128;
+		case PF_ASTC_8x8_SRGB: return 128;
+		case PF_ASTC_10x5_UNORM: return 128;
+		case PF_ASTC_10x5_SRGB: return 128;
+		case PF_ASTC_10x6_UNORM: return 128;
+		case PF_ASTC_10x6_SRGB: return 128;
+		case PF_ASTC_10x8_UNORM: return 128;
+		case PF_ASTC_10x8_SRGB: return 128;
+		case PF_ASTC_10x10_UNORM: return 128;
+		case PF_ASTC_10x10_SRGB: return 128;
+		case PF_ASTC_12x10_UNORM: return 128;
+		case PF_ASTC_12x10_SRGB: return 128;
+		case PF_ASTC_12x12_UNORM: return 128;
+		case PF_ASTC_12x12_SRGB: return 128;
+		case PF_CLUT_P4: return 8;
+		case PF_CLUT_P4A4: return 8;
+		case PF_CLUT_P8: return 8;
+		case PF_CLUT_P8A8: return 16;
+		case PF_G16B16G16R16_422_UNORM: return 8;
+		case PF_B16G16R16G16_422_UNORM: return 8;
+		case PF_R12X4G12X4B12X4A12X4_UNORM_4PACK16: return 8;
+		case PF_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16: return 8;
+		case PF_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16: return 8;
+		case PF_R10X6G10X6B10X6A10X6_UNORM_4PACK16: return 8;
+		case PF_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16: return 8;
+		case PF_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16: return 8;
+		case PF_G8B8G8R8_422_UNORM: return 4;
+		case PF_B8G8R8G8_422_UNORM: return 4;
+		default: return 32;
+	}
+}
+/* clang-format on */
 
 #ifdef __cplusplus
 } // end extern "C"

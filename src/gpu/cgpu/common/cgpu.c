@@ -235,7 +235,25 @@ CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const stru
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(device->proc_table_cache->create_render_pipeline && "create_render_pipeline Proc Missing!");
-    CGpuRenderPipeline* pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
+    CGpuRenderPipeline* pipeline = CGPU_NULLPTR;
+    if (desc->blend_state == CGPU_NULLPTR)
+    {
+        CGpuBlendStateDescriptor blendStateDesc = {
+            .src_factors[0] = BC_ONE,
+            .dst_factors[0] = BC_ZERO,
+            .blend_modes[0] = BM_ADD,
+            .src_alpha_factors[0] = BC_ONE,
+            .dst_alpha_factors[0] = BC_ZERO,
+            .masks[0] = COLOR_MASK_ALL,
+            .independent_blend = false
+        };
+        ((CGpuRenderPipelineDescriptor*)desc)->blend_state = &blendStateDesc;
+        pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
+    }
+    else
+    {
+        pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
+    }
     pipeline->device = device;
     return pipeline;
 }
@@ -490,6 +508,42 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, cons
     return ecd;
 }
 
+void cgpu_render_encoder_set_viewport(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
+{
+    CGpuDeviceId device = encoder->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderSetViewport fn_render_set_viewport = device->proc_table_cache->render_encoder_set_viewport;
+    assert(fn_render_set_viewport && "render_encoder_set_viewport Proc Missing!");
+    fn_render_set_viewport(encoder, x, y, width, height, min_depth, max_depth);
+}
+
+void cgpu_render_encoder_set_scissor(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+{
+    CGpuDeviceId device = encoder->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderSetScissor fn_render_set_scissor = device->proc_table_cache->render_encoder_set_scissor;
+    assert(fn_render_set_scissor && "render_encoder_set_scissor Proc Missing!");
+    fn_render_set_scissor(encoder, x, y, width, height);
+}
+
+void cgpu_render_encoder_bind_pipeline(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline)
+{
+    CGpuDeviceId device = encoder->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderBindPipeline fn_render_bind_pipeline = device->proc_table_cache->render_encoder_bind_pipeline;
+    assert(fn_render_bind_pipeline && "render_encoder_bind_pipeline Proc Missing!");
+    fn_render_bind_pipeline(encoder, pipeline);
+}
+
+void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)
+{
+    CGpuDeviceId device = encoder->device;
+    assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderDraw fn_draw = device->proc_table_cache->render_encoder_draw;
+    assert(fn_draw && "render_encoder_draw Proc Missing!");
+    fn_draw(encoder, vertex_count, first_vertex);
+}
+
 void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
 {
     assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
@@ -610,10 +664,14 @@ CGpuTextureViewId cgpu_create_texture_view(CGpuDeviceId device, const struct CGp
 {
     assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     assert(device->proc_table_cache->create_texture_view && "create_texture_view Proc Missing!");
+    CGpuTextureViewDescriptor* wdesc = (CGpuTextureViewDescriptor*)desc;
+    if (desc->array_layer_count == 0) wdesc->array_layer_count = 1;
+    if (desc->mip_level_count == 0) wdesc->mip_level_count = 1;
     CGPUProcCreateTextureView fn_create_texture_view = device->proc_table_cache->create_texture_view;
-    CGpuTextureView* render_target = (CGpuTextureView*)fn_create_texture_view(device, desc);
-    render_target->device = device;
-    return render_target;
+    CGpuTextureView* texture_view = (CGpuTextureView*)fn_create_texture_view(device, desc);
+    texture_view->device = device;
+    texture_view->info = *desc;
+    return texture_view;
 }
 
 void cgpu_free_texture_view(CGpuTextureViewId render_target)

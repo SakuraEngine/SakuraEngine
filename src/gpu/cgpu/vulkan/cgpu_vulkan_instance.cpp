@@ -71,10 +71,40 @@ struct CGpuCachedRenderPass {
     size_t timestamp;
 };
 
+struct CGpuCachedFramebuffer {
+    VkFramebuffer framebuffer;
+    size_t timestamp;
+};
+
 struct CGpuVkPassTable //
 {
     eastl::unordered_map<size_t, CGpuCachedRenderPass> cached_renderpasses;
+    eastl::unordered_map<size_t, CGpuCachedFramebuffer> cached_framebuffers;
 };
+
+VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGpuVkPassTable* table, const VkUtil_FramebufferDesc* desc)
+{
+    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
+    const auto& iter = table->cached_framebuffers.find(hash);
+    if (iter != table->cached_framebuffers.end())
+    {
+        return iter->second.framebuffer;
+    }
+    return VK_NULL_HANDLE;
+}
+
+void VkUtil_FramebufferTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_FramebufferDesc* desc, VkFramebuffer framebuffer)
+{
+    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
+    const auto& iter = table->cached_framebuffers.find(hash);
+    if (iter != table->cached_framebuffers.end())
+    {
+        cgpu_warn("Vulkan Framebuffer with this desc already exists!");
+    }
+    // TODO: Add timestamp
+    CGpuCachedFramebuffer new_fb = { framebuffer, 0 };
+    table->cached_framebuffers[hash] = new_fb;
+}
 
 VkRenderPass VkUtil_RenderPassTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc)
 {
@@ -413,6 +443,10 @@ void cgpu_free_device_vulkan(CGpuDeviceId device)
     for (auto& iter : D->pPassTable->cached_renderpasses)
     {
         D->mVkDeviceTable.vkDestroyRenderPass(D->pVkDevice, iter.second.pass, GLOBAL_VkAllocationCallbacks);
+    }
+    for (auto& iter : D->pPassTable->cached_framebuffers)
+    {
+        D->mVkDeviceTable.vkDestroyFramebuffer(D->pVkDevice, iter.second.framebuffer, GLOBAL_VkAllocationCallbacks);
     }
     cgpu_delete(D->pPassTable);
 

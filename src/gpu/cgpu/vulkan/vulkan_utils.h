@@ -54,8 +54,11 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
 
 // Table Helpers
 struct VkUtil_RenderPassDesc;
+struct VkUtil_FramebufferDesc;
 VkRenderPass VkUtil_RenderPassTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc);
 void VkUtil_RenderPassTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass);
+VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_FramebufferDesc* desc);
+void VkUtil_FramebufferTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_FramebufferDesc* desc, VkFramebuffer framebuffer);
 
 // Debug Helpers
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
@@ -100,6 +103,15 @@ typedef struct VkUtil_RenderPassDesc {
     ECGpuLoadAction mLoadActionDepth;
     ECGpuLoadAction mLoadActionStencil;
 } VkUtil_RenderPassDesc;
+
+typedef struct VkUtil_FramebufferDesc {
+    VkRenderPass pRenderPass;
+    VkImageView pImageViews[MAX_MRT_COUNT + 1];
+    uint32_t mColorAttachmentCount;
+    uint32_t mWidth;
+    uint32_t mHeight;
+    uint32_t mLayers;
+} VkUtil_FramebufferDesc;
 
 #define CHECK_VKRESULT(exp)                                                             \
     {                                                                                   \

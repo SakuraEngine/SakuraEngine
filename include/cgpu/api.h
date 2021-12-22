@@ -6,6 +6,13 @@
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
 #define MAX_MRT_COUNT 8
 #define MAX_VERTEX_ATTRIBS 15
+#define MAX_VERTEX_BINDINGS 15
+static const int COLOR_MASK_RED = 0x1;
+static const int COLOR_MASK_GREEN = 0x2;
+static const int COLOR_MASK_BLUE = 0x4;
+static const int COLOR_MASK_ALPHA = 0x8;
+static const int COLOR_MASK_ALL = (COLOR_MASK_RED | COLOR_MASK_GREEN | COLOR_MASK_BLUE | COLOR_MASK_ALPHA);
+static const int COLOR_MASK_NONE = 0;
 
 #ifdef __cplusplus
 extern "C" {
@@ -234,10 +241,6 @@ RUNTIME_API void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CG
 typedef void (*CGPUProcCmdUpdateBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 typedef void (*CGPUProcCmdResourceBarrier)(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
-RUNTIME_API void cgpu_cmd_set_viewport(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
-typedef void (*CGPUProcCmdSetViewport)(CGpuCommandBufferId cmd, float x, float y, float width, float height, float min_depth, float max_depth);
-RUNTIME_API void cgpu_cmd_set_scissor(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
-typedef void (*CGPUProcCmdSetScissor)(CGpuCommandBufferId cmd, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 RUNTIME_API void cgpu_cmd_end(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdEnd)(CGpuCommandBufferId cmd);
 
@@ -256,6 +259,14 @@ typedef void (*CGPUProcCmdEndComputePass)(CGpuCommandBufferId cmd, CGpuComputePa
 // Render Pass
 RUNTIME_API CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
 typedef CGpuRenderPassEncoderId (*CGPUProcCmdBeginRenderPass)(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_set_viewport(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
+typedef void (*CGPUProcRenderEncoderSetViewport)(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
+RUNTIME_API void cgpu_render_encoder_set_scissor(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+typedef void (*CGPUProcRenderEncoderSetScissor)(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+RUNTIME_API void cgpu_render_encoder_bind_pipeline(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
+typedef void (*CGPUProcRenderEncoderBindPipeline)(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
+RUNTIME_API void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
+typedef void (*CGPUProcRenderEncoderDraw)(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 typedef void (*CGPUProcCmdEndRenderPass)(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
@@ -328,8 +339,6 @@ typedef struct CGpuProcTable {
     const CGPUProcCmdBegin cmd_begin;
     const CGPUProcCmdUpdateBuffer cmd_update_buffer;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
-    const CGPUProcCmdSetViewport cmd_set_viewport;
-    const CGPUProcCmdSetScissor cmd_set_scissor;
     const CGPUProcCmdEnd cmd_end;
 
     // Compute CMDs
@@ -341,6 +350,10 @@ typedef struct CGpuProcTable {
 
     // Render CMDs
     const CGPUProcCmdBeginRenderPass cmd_begin_render_pass;
+    const CGPUProcRenderEncoderBindPipeline render_encoder_bind_pipeline;
+    const CGPUProcRenderEncoderSetViewport render_encoder_set_viewport;
+    const CGPUProcRenderEncoderSetScissor render_encoder_set_scissor;
+    const CGPUProcRenderEncoderDraw render_encoder_draw;
     const CGPUProcCmdEndRenderPass cmd_end_render_pass;
 } CGpuProcTable;
 
@@ -450,6 +463,10 @@ typedef struct CGpuCommandBuffer {
 typedef struct CGpuComputePassEncoder {
     CGpuDeviceId device;
 } CGpuComputePassEncoder;
+
+typedef struct CGpuRenderPassEncoder {
+    CGpuDeviceId device;
+} CGpuRenderPassEncoder;
 
 // Shaders
 typedef struct CGpuShaderResource {
@@ -565,41 +582,9 @@ typedef union CGpuClearValue
     };
 } CGpuClearValue;
 
-typedef struct CGpuTexture {
-    CGpuDeviceId device;
-    /// Current state of the buffer
-    uint32_t width : 16;
-    uint32_t height : 16;
-    uint32_t depth : 16;
-    uint32_t mip_levels : 5;
-    uint32_t array_size_minus_one : 11;
-    uint32_t format : 8;
-    /// Flags specifying which aspects (COLOR,DEPTH,STENCIL) are included in the pVkImageView
-    uint32_t aspect_mask : 4;
-    uint32_t node_index : 4;
-    uint32_t uav : 1;
-    /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
-    uint32_t owns_image : 1;
-} CGpuTexture;
-
-typedef struct CGpuTextureView {
-    CGpuDeviceId device;
-    CGpuTextureId texture;
-    CGpuClearValue clear_value;
-    uint32_t array_size : 16;
-    uint32_t depth : 16;
-    uint32_t width : 16;
-    uint32_t height : 16;
-    uint32_t descriptors : 20;
-    uint32_t mip_levels : 10;
-    uint32_t sample_quality : 5;
-    ECGpuFormat format;
-    ECGpuSampleCount sample_count;
-} CGpuTextureView;
-
 typedef struct CGpuSwapChain {
     CGpuDeviceId device;
-    const CGpuTextureId* views;
+    const CGpuTextureId* back_buffers;
     uint32_t buffer_count;
 } CGpuSwapChain;
 
@@ -849,19 +834,22 @@ typedef struct CGpuVertexAttribute {
 } CGpuVertexAttribute;
 
 typedef struct CGpuVertexLayout {
-    uint32_t mAttribCount;
-    CGpuVertexAttribute mAttribs[MAX_VERTEX_ATTRIBS];
+    uint32_t attribute_count;
+    CGpuVertexAttribute attributes[MAX_VERTEX_ATTRIBS];
 } CGpuVertexLayout;
 
 typedef struct CGpuRenderPipelineDescriptor {
     CGpuRootSignatureId root_signature;
     CGpuPipelineShaderDescriptor* vertex_shader;
+    CGpuPipelineShaderDescriptor* tesc_shader;
+    CGpuPipelineShaderDescriptor* tese_shader;
+    CGpuPipelineShaderDescriptor* geom_shader;
     CGpuPipelineShaderDescriptor* fragment_shader;
     CGpuVertexLayout* vertex_layout;
     CGpuBlendStateDescriptor* blend_state;
     CGpuDepthStateDescriptor* depth_state;
     CGpuRasterizerStateDescriptor* rasterizer_state;
-    ECGpuFormat* color_formats;
+    const ECGpuFormat* color_formats;
     uint32_t render_target_count;
     ECGpuSampleCount sample_count;
     uint32_t sample_quality;
@@ -930,18 +918,6 @@ typedef struct CGpuBufferDescriptor {
     ECGpuResourceState start_state;
 } CGpuBufferDescriptor;
 
-typedef struct CGpuTextureViewDescriptor {
-    /// Debug name used in gpu profile
-    const char8_t* name;
-    CGpuTextureId texture;
-    ECGpuFormat format;
-    ECGpuTextureDimension dims;
-    uint32_t base_mip_level;
-    uint32_t mip_level_count;
-    uint32_t base_array_layer;
-    uint32_t array_layer_count;
-} CGpuTextureViewDescriptor;
-
 typedef struct CGpuTextureDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
@@ -972,6 +948,42 @@ typedef struct CGpuTextureDescriptor {
     /// Descriptor creation
     CGpuResourceTypes descriptors;
 } CGpuTextureDescriptor;
+
+typedef struct CGpuTextureViewDescriptor {
+    /// Debug name used in gpu profile
+    const char8_t* name;
+    CGpuTextureId texture;
+    ECGpuFormat format;
+    CGpuTexutreViewUsages usages;
+    CGpuTextureViewAspects aspects;
+    ECGpuTextureDimension dims;
+    uint32_t base_mip_level;
+    uint32_t mip_level_count;
+    uint32_t base_array_layer;
+    uint32_t array_layer_count;
+} CGpuTextureViewDescriptor;
+
+typedef struct CGpuTexture {
+    CGpuDeviceId device;
+    /// Current state of the buffer
+    uint32_t width : 16;
+    uint32_t height : 16;
+    uint32_t depth : 16;
+    uint32_t mip_levels : 5;
+    uint32_t array_size_minus_one : 11;
+    uint32_t format : 8;
+    /// Flags specifying which aspects (COLOR,DEPTH,STENCIL) are included in the pVkImageView
+    uint32_t aspect_mask : 4;
+    uint32_t node_index : 4;
+    uint32_t is_cube : 1;
+    /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
+    uint32_t owns_image : 1;
+} CGpuTexture;
+
+typedef struct CGpuTextureView {
+    CGpuDeviceId device;
+    CGpuTextureViewDescriptor info;
+} CGpuTextureView;
 
 #pragma endregion DESCRIPTORS
 
