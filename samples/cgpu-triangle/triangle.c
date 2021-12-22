@@ -2,6 +2,7 @@
 #include "math.h"
 #include "cgpu/api.h"
 
+_Thread_local ECGpuBackend backend;
 _Thread_local SDL_Window* sdl_window;
 _Thread_local CGpuSurfaceId surface;
 _Thread_local CGpuSwapChainId swapchain;
@@ -11,8 +12,88 @@ _Thread_local CGpuAdapterId adapter;
 _Thread_local CGpuDeviceId device;
 _Thread_local CGpuFenceId present_fence;
 _Thread_local CGpuQueueId gfx_queue;
+_Thread_local CGpuRootSignatureId root_sig;
+_Thread_local CGpuRenderPipelineId pipeline;
 _Thread_local CGpuCommandPoolId pool;
 _Thread_local CGpuCommandBufferId cmd;
+_Thread_local CGpuTextureViewId views[3];
+
+const uint32_t* get_vertex_shader()
+{
+    if (backend == ECGpuBackend_VULKAN) return (const uint32_t*)vertex_shader_spirv;
+    return CGPU_NULLPTR;
+}
+const size_t get_vertex_shader_size()
+{
+    if (backend == ECGpuBackend_VULKAN) return sizeof(vertex_shader_spirv);
+    return 0;
+}
+const uint32_t* get_fragment_shader()
+{
+    if (backend == ECGpuBackend_VULKAN) return (const uint32_t*)fragment_shader_spirv;
+    return CGPU_NULLPTR;
+}
+const size_t get_fragment_shader_size()
+{
+    if (backend == ECGpuBackend_VULKAN) return sizeof(fragment_shader_spirv);
+    return 0;
+}
+
+void create_render_pipeline()
+{
+    CGpuShaderLibraryDescriptor vs_desc = {
+        .code = get_vertex_shader(),
+        .code_size = get_vertex_shader_size(),
+        .name = "VertexShaderLibrary",
+        .stage = SS_VERT
+    };
+    CGpuShaderLibraryDescriptor ps_desc = {
+        .code = get_fragment_shader(),
+        .code_size = get_fragment_shader_size(),
+        .name = "FragmentShaderLibrary",
+        .stage = SS_VERT
+    };
+    CGpuShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
+    CGpuShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
+    CGpuPipelineShaderDescriptor ppl_shaders[2];
+    ppl_shaders[0].stage = SS_VERT;
+    ppl_shaders[0].entry = "main";
+    ppl_shaders[0].library = vertex_shader;
+    ppl_shaders[1].stage = SS_FRAG;
+    ppl_shaders[1].entry = "main";
+    ppl_shaders[1].library = fragment_shader;
+    CGpuRootSignatureDescriptor rs_desc = {
+        .shaders = ppl_shaders,
+        .shaders_count = 2
+    };
+    root_sig = cgpu_create_root_signature(device, &rs_desc);
+    for (uint32_t i = 0; i < swapchain->buffer_count; i++)
+    {
+        CGpuTextureViewDescriptor view_desc = {
+            .texture = swapchain->back_buffers[i],
+            .aspects = TVA_COLOR,
+            .dims = TD_2D,
+            .format = swapchain->back_buffers[i]->format,
+            .usages = TVU_RTV
+        };
+        views[i] = cgpu_create_texture_view(device, &view_desc);
+    }
+    CGpuVertexLayout vertex_layout = {
+        .attribute_count = 0
+    };
+    CGpuRenderPipelineDescriptor rp_desc = {
+        .root_signature = root_sig,
+        .prim_topology = TOPO_TRI_LIST,
+        .vertex_layout = &vertex_layout,
+        .vertex_shader = &ppl_shaders[0],
+        .fragment_shader = &ppl_shaders[1],
+        .render_target_count = 1,
+        .color_formats = &views[0]->info.format
+    };
+    pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+    cgpu_free_shader_library(vertex_shader);
+    cgpu_free_shader_library(fragment_shader);
+}
 
 void initialize(void* usrdata)
 {
@@ -25,7 +106,7 @@ void initialize(void* usrdata)
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdl_window, &wmInfo);
 
-    ECGpuBackend backend = *(ECGpuBackend*)usrdata;
+    backend = *(ECGpuBackend*)usrdata;
     // Create instance
     CGpuInstanceDescriptor instance_desc = {
         .backend = backend,
@@ -62,14 +143,17 @@ void initialize(void* usrdata)
     struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(wmInfo.info.cocoa.window);
     surface = cgpu_surface_from_ns_view(device, ns_view);
 #endif
-    DECLARE_ZERO(CGpuSwapChainDescriptor, descriptor)
-    descriptor.presentQueues = &gfx_queue;
-    descriptor.presentQueuesCount = 1;
-    descriptor.surface = surface;
-    descriptor.imageCount = 3;
-    descriptor.format = PF_R8G8B8A8_UNORM;
-    descriptor.enableVsync = true;
+    CGpuSwapChainDescriptor descriptor = {
+        .presentQueues = &gfx_queue,
+        .presentQueuesCount = 1,
+        .surface = surface,
+        .imageCount = 3,
+        .format = PF_R8G8B8A8_UNORM,
+        .enableVsync = true
+    };
     swapchain = cgpu_create_swapchain(device, &descriptor);
+
+    create_render_pipeline();
 }
 
 void raster_redraw()
@@ -80,13 +164,13 @@ void raster_redraw()
         .fence = present_fence
     };
     backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
+    const CGpuTextureId back_buffer = swapchain->back_buffers[backbuffer_index];
     cgpu_reset_command_pool(pool);
     // record
     cgpu_cmd_begin(cmd);
-    /*
-    CGpuClearValue fast_clear = { 0 };
+    CGpuClearValue fast_clear = { .r = 0.f, .g = 0.f, .b = 0.f, .a = 0.f };
     CGpuColorAttachment screen_attachment = {
-        .view = swapchain->views[backbuffer_index],
+        .view = views[backbuffer_index],
         .load_action = LA_CLEAR,
         .store_action = SA_Store,
         .clear_color = fast_clear
@@ -97,17 +181,28 @@ void raster_redraw()
         .color_attachments = &screen_attachment,
         .depth_stencil = CGPU_NULLPTR
     };
-    CGpuRenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
-
-    cgpu_cmd_end_render_pass(cmd, rp_encoder);
-    */
-    CGpuTextureBarrier texture_barrier = {
-        .texture = swapchain->views[backbuffer_index],
+    CGpuTextureBarrier draw_barrier = {
+        .texture = back_buffer,
         .src_state = RS_UNDEFINED,
+        .dst_state = RS_RENDER_TARGET
+    };
+    CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
+    cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
+    CGpuRenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
+    {
+        cgpu_render_encoder_set_viewport(rp_encoder, 0.0f, 0.0f, back_buffer->width, back_buffer->height, 0.f, 1.f);
+        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
+        cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
+        cgpu_render_encoder_draw(rp_encoder, 3, 0);
+    }
+    cgpu_cmd_end_render_pass(cmd, rp_encoder);
+    CGpuTextureBarrier present_barrier = {
+        .texture = back_buffer,
+        .src_state = RS_RENDER_TARGET,
         .dst_state = RS_PRESENT
     };
-    CGpuResourceBarrierDescriptor barrier_desc = { .texture_barriers = &texture_barrier, .texture_barriers_count = 1 };
-    cgpu_cmd_resource_barrier(cmd, &barrier_desc);
+    CGpuResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &present_barrier, .texture_barriers_count = 1 };
+    cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
     cgpu_cmd_end(cmd);
     // submit
     CGpuQueueSubmitDescriptor submit_desc = {
@@ -157,10 +252,16 @@ void finalize()
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
+    for (uint32_t i = 0; i < swapchain->buffer_count; i++)
+    {
+        cgpu_free_texture_view(views[i]);
+    }
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
     cgpu_free_command_buffer(cmd);
     cgpu_free_command_pool(pool);
+    cgpu_free_render_pipeline(pipeline);
+    cgpu_free_root_signature(root_sig);
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
     cgpu_free_instance(instance);

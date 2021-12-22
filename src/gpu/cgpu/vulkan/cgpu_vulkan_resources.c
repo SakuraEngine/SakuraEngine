@@ -211,15 +211,11 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     }
     // Alloc aligned memory
     size_t totalSize = sizeof(CGpuTexture_Vulkan);
-    totalSize += (desc->descriptors & RT_RW_TEXTURE ? (desc->mip_levels * sizeof(VkImageView)) : 0);
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuTexture_Vulkan));
     const CGpuFormatSupport* format_support = &A->adapter_detail.format_supports[desc->format];
     assert(T);
-    //
-    if (desc->descriptors & RT_RW_TEXTURE)
-        T->pVkUAVDescriptors = (VkImageView*)(T + 1);
     if (desc->native_handle && !(desc->flags & TCF_IMPORT_BIT))
     {
         T->super.owns_image = false;
@@ -236,31 +232,32 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
 
     uint32_t arraySize = desc->array_size;
     // Image type
-    VkImageType image_type = VK_IMAGE_TYPE_MAX_ENUM;
+    T->image_type = VK_IMAGE_TYPE_MAX_ENUM;
     if (desc->flags & TCF_FORCE_2D)
     {
         assert(desc->depth == 1);
-        image_type = VK_IMAGE_TYPE_2D;
+        T->image_type = VK_IMAGE_TYPE_2D;
     }
     else if (desc->flags & TCF_FORCE_3D)
     {
-        image_type = VK_IMAGE_TYPE_3D;
+        T->image_type = VK_IMAGE_TYPE_3D;
     }
     else
     {
         if (desc->depth > 1)
-            image_type = VK_IMAGE_TYPE_3D;
+            T->image_type = VK_IMAGE_TYPE_3D;
         else if (desc->height > 1)
-            image_type = VK_IMAGE_TYPE_2D;
+            T->image_type = VK_IMAGE_TYPE_2D;
         else
-            image_type = VK_IMAGE_TYPE_1D;
+            T->image_type = VK_IMAGE_TYPE_1D;
     }
 
     CGpuResourceTypes descriptors = desc->descriptors;
     bool cubemapRequired = (RT_TEXTURE_CUBE == (descriptors & RT_TEXTURE_CUBE));
-    bool arrayRequired = image_type == VK_IMAGE_TYPE_3D;
+    bool arrayRequired = T->image_type == VK_IMAGE_TYPE_3D;
     // TODO: Support stencil format
-    const bool isTencilFormat = false;
+    const bool isStencilFormat = false;
+    (void)isStencilFormat;
     // TODO: Support planar format
     const bool isPlanarFormat = false;
     const uint32_t numOfPlanes = 1;
@@ -275,7 +272,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .pNext = NULL,
             .flags = 0,
-            .imageType = image_type,
+            .imageType = T->image_type,
             .format = (VkFormat)VkUtil_FormatTranslateToVk(desc->format),
             .extent.width = desc->width,
             .extent.height = desc->height,
@@ -290,6 +287,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             .pQueueFamilyIndices = NULL,
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };
+        T->super.aspect_mask = VkUtil_DeterminAspectMask(add_info.format, true);
         add_info.usage |= additionalFlags;
         if (cubemapRequired)
             add_info.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
@@ -360,88 +358,11 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             // TODO: Planar formats
         }
     }
-    /************************************************************************/
-    // Create image view
-    /************************************************************************/
-    VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
-    switch (image_type)
-    {
-        case VK_IMAGE_TYPE_1D:
-            view_type = arraySize > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;
-            break;
-        case VK_IMAGE_TYPE_2D:
-            if (cubemapRequired)
-                view_type = (arraySize > 6) ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE;
-            else
-                view_type = arraySize > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
-            break;
-        case VK_IMAGE_TYPE_3D:
-            if (arraySize > 1)
-            {
-                cgpu_error("Cannot support 3D Texture Array in Vulkan");
-                assert(false);
-            }
-            view_type = VK_IMAGE_VIEW_TYPE_3D;
-            break;
-        default:
-            assert(false && "Image Format not supported!");
-            break;
-    }
-    assert(view_type != VK_IMAGE_VIEW_TYPE_MAX_ENUM && "Invalid Image View");
-    // SRV
-    VkImageViewCreateInfo srvDesc = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        .pNext = NULL,
-        .flags = 0,
-        .image = T->pVkImage,
-        .viewType = view_type,
-        .format = VkUtil_FormatTranslateToVk(desc->format),
-        .components.r = VK_COMPONENT_SWIZZLE_R,
-        .components.g = VK_COMPONENT_SWIZZLE_G,
-        .components.b = VK_COMPONENT_SWIZZLE_B,
-        .components.a = VK_COMPONENT_SWIZZLE_A,
-        .subresourceRange.aspectMask = VkUtil_DeterminAspectMask(srvDesc.format, false),
-        .subresourceRange.baseMipLevel = 0,
-        .subresourceRange.levelCount = desc->mip_levels,
-        .subresourceRange.baseArrayLayer = 0,
-        .subresourceRange.layerCount = arraySize
-    };
-    T->super.aspect_mask = VkUtil_DeterminAspectMask(srvDesc.format, true);
-    if (descriptors & RT_TEXTURE)
-    {
-        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice,
-            &srvDesc, GLOBAL_VkAllocationCallbacks, &T->pVkSRVDescriptor));
-    }
-    // SRV stencil
-    if (isTencilFormat && (descriptors & RT_TEXTURE))
-    {
-        srvDesc.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice,
-            &srvDesc, GLOBAL_VkAllocationCallbacks, &T->pVkSRVStencilDescriptor));
-    }
-    // UAV
-    if (descriptors & RT_RW_TEXTURE)
-    {
-        VkImageViewCreateInfo uavDesc = srvDesc;
-        // #NOTE : We dont support imageCube, imageCubeArray for consistency with other APIs
-        // All cubemaps will be used as image2DArray for Image Load / Store ops
-        if (uavDesc.viewType == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY || uavDesc.viewType == VK_IMAGE_VIEW_TYPE_CUBE)
-            uavDesc.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-        uavDesc.subresourceRange.levelCount = 1;
-        for (uint32_t i = 0; i < desc->mip_levels; ++i)
-        {
-            uavDesc.subresourceRange.baseMipLevel = i;
-            CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice,
-                &uavDesc, GLOBAL_VkAllocationCallbacks, &T->pVkUAVDescriptors[i]));
-        }
-    }
-    /************************************************************************/
-    /************************************************************************/
     T->super.width = desc->width;
     T->super.height = desc->height;
     T->super.depth = desc->depth;
     T->super.mip_levels = desc->mip_levels;
-    T->super.uav = desc->descriptors & RT_RW_TEXTURE;
+    T->super.is_cube = cubemapRequired;
     T->super.array_size_minus_one = arraySize - 1;
     T->super.format = desc->format;
     // Set Texture Name
@@ -469,49 +390,102 @@ void cgpu_free_texture_vulkan(CGpuTextureId texture)
             D->mVkDeviceTable.vkFreeMemory(D->pVkDevice, T->pVkDeviceMemory, GLOBAL_VkAllocationCallbacks);
         }
     }
-    // Free descriptors
-    if (VK_NULL_HANDLE != T->pVkSRVDescriptor)
-        D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, T->pVkSRVDescriptor, GLOBAL_VkAllocationCallbacks);
-    if (VK_NULL_HANDLE != T->pVkSRVStencilDescriptor)
-        D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, T->pVkSRVStencilDescriptor, GLOBAL_VkAllocationCallbacks);
-    if (T->pVkUAVDescriptors)
-    {
-        for (uint32_t i = 0; i < T->super.mip_levels; ++i)
-        {
-            D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, T->pVkUAVDescriptors[i], GLOBAL_VkAllocationCallbacks);
-        }
-    }
     cgpu_free(T);
 }
 
 CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)
 {
-    // TODO: Support Depth Format
-    bool isDepth = false;
-    (void)isDepth;
-    /*
-    uint32_t arraySize = desc->array_size;
-    uint32_t depthOrArraySize = arraySize * desc->depth;
-    uint32_t numRTVs = desc->mip_levels;
-    if ((desc->descriptors & RT_RENDER_TARGET_ARRAY_SLICES) ||
-        (desc->descriptors & RT_RENDER_TARGET_DEPTH_SLICES))
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)desc->texture->device;
+    CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)desc->texture;
+    CGpuTextureView_Vulkan* TV = (CGpuTextureView_Vulkan*)cgpu_calloc_aligned(1, sizeof(CGpuTextureView_Vulkan), _Alignof(CGpuTextureView_Vulkan));
+    VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
+    switch (T->image_type)
     {
-        numRTVs *= depthOrArraySize;
+        case VK_IMAGE_TYPE_1D:
+            view_type = desc->array_layer_count > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;
+            break;
+        case VK_IMAGE_TYPE_2D:
+            if (T->super.is_cube)
+                view_type = (desc->dims == TD_CUBE_ARRAY) ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE;
+            else
+                view_type = ((desc->dims == TD_2D_ARRAY) || (desc->dims == TD_2DMS_ARRAY)) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+            break;
+        case VK_IMAGE_TYPE_3D:
+            if (desc->array_layer_count > 1)
+            {
+                cgpu_error("Cannot support 3D Texture Array in Vulkan");
+                assert(false);
+            }
+            view_type = VK_IMAGE_VIEW_TYPE_3D;
+            break;
+        default:
+            assert(false && "Image Format not supported!");
+            break;
     }
-    size_t totalSize = sizeof(CGpuTextureView_Vulkan);
-    totalSize += numRTVs * sizeof(VkImageView);
-    CGpuTextureView_Vulkan* pTextureView = (CGpuTextureView_Vulkan*)
-        cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuTextureView_Vulkan));
+    assert(view_type != VK_IMAGE_VIEW_TYPE_MAX_ENUM && "Invalid Image View");
 
-    return &pTextureView->super;
-    */
-    return CGPU_NULLPTR;
+    // Determin aspect mask
+    VkImageAspectFlags aspectMask = 0;
+    if (desc->aspects & TVA_STENCIL)
+        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+    if (desc->aspects & TVA_COLOR)
+        aspectMask |= VK_IMAGE_ASPECT_COLOR_BIT;
+    if (desc->aspects & TVA_DEPTH)
+        aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
+
+    // SRV
+    VkImageViewCreateInfo srvDesc = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .image = T->pVkImage,
+        .viewType = view_type,
+        .format = VkUtil_FormatTranslateToVk(desc->format),
+        .components.r = VK_COMPONENT_SWIZZLE_R,
+        .components.g = VK_COMPONENT_SWIZZLE_G,
+        .components.b = VK_COMPONENT_SWIZZLE_B,
+        .components.a = VK_COMPONENT_SWIZZLE_A,
+        .subresourceRange.aspectMask = aspectMask,
+        .subresourceRange.baseMipLevel = desc->base_mip_level,
+        .subresourceRange.levelCount = desc->mip_level_count,
+        .subresourceRange.baseArrayLayer = desc->base_array_layer,
+        .subresourceRange.layerCount = desc->array_layer_count
+    };
+    if (desc->usages & TVU_SRV)
+    {
+        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice, &srvDesc, GLOBAL_VkAllocationCallbacks, &TV->pVkSRVDescriptor));
+    }
+    // UAV
+    if (desc->usages & TVU_UAV)
+    {
+        VkImageViewCreateInfo uavDesc = srvDesc;
+        // #NOTE : We dont support imageCube, imageCubeArray for consistency with other APIs
+        // All cubemaps will be used as image2DArray for Image Load / Store ops
+        if (uavDesc.viewType == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY || uavDesc.viewType == VK_IMAGE_VIEW_TYPE_CUBE)
+            uavDesc.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        uavDesc.subresourceRange.baseMipLevel = desc->base_mip_level;
+        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice, &uavDesc, GLOBAL_VkAllocationCallbacks, &TV->pVkUAVDescriptor));
+    }
+    // RTV
+    if (desc->usages & TVU_RTV)
+    {
+        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice, &srvDesc, GLOBAL_VkAllocationCallbacks, &TV->pVkRTVDescriptor));
+    }
+    return &TV->super;
 }
 
 void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target)
 {
-    CGpuTextureView_Vulkan* RT = (CGpuTextureView_Vulkan*)render_target;
-    cgpu_free(RT);
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)render_target->device;
+    CGpuTextureView_Vulkan* TV = (CGpuTextureView_Vulkan*)render_target;
+    // Free descriptors
+    if (VK_NULL_HANDLE != TV->pVkSRVDescriptor)
+        D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkSRVDescriptor, GLOBAL_VkAllocationCallbacks);
+    if (VK_NULL_HANDLE != TV->pVkRTVDescriptor)
+        D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkRTVDescriptor, GLOBAL_VkAllocationCallbacks);
+    if (VK_NULL_HANDLE != TV->pVkUAVDescriptor)
+        D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkUAVDescriptor, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(TV);
 }
 
 // Shader APIs
