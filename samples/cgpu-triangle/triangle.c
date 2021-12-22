@@ -146,6 +146,8 @@ void initialize(void* usrdata)
     CGpuSwapChainDescriptor descriptor = {
         .presentQueues = &gfx_queue,
         .presentQueuesCount = 1,
+        .width = BACK_BUFFER_WIDTH,
+        .height = BACK_BUFFER_HEIGHT,
         .surface = surface,
         .imageCount = 3,
         .format = PF_R8G8B8A8_UNORM,

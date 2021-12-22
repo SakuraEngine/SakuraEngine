@@ -525,10 +525,10 @@ void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 
 void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter)
 {
+    CGpuAdapterDetail* adapter_detail = (CGpuAdapterDetail*)&VkAdapter->adapter_detail;
     for (uint32_t i = 0; i < PF_Count; ++i)
     {
         VkFormatProperties formatSupport;
-        CGpuAdapterDetail* adapter_detail = (CGpuAdapterDetail*)&VkAdapter->adapter_detail;
         adapter_detail->format_supports[i].shader_read = 0;
         adapter_detail->format_supports[i].shader_write = 0;
         adapter_detail->format_supports[i].render_target_write = 0;
