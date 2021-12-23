@@ -164,13 +164,13 @@ TEST_P(QueueOperations, TransferCmdReadback)
             EXPECT_NE(cmd, CGPU_NULLPTR);
             {
                 cgpu_cmd_begin(cmd);
-                DECLARE_ZERO(CGpuBufferUpdateDescriptor, cpy_desc);
+                DECLARE_ZERO(CGpuBufferToBufferTransfer, cpy_desc);
                 cpy_desc.src = upload_buffer;
                 cpy_desc.src_offset = 0;
                 cpy_desc.dst = index_buffer;
                 cpy_desc.dst_offset = 0;
                 cpy_desc.size = sizeof(uint16_t) * 3;
-                cgpu_cmd_update_buffer(cmd, &cpy_desc);
+                cgpu_cmd_transfer_buffer_to_buffer(cmd, &cpy_desc);
                 cgpu_cmd_end(cmd);
             }
             CGpuQueueSubmitDescriptor submit_desc = {};

@@ -273,6 +273,26 @@ typedef enum ECGpuFormat
     PF_Count = PF_G16_B16R16_2PLANE_422_UNORM + 1
 } ECGpuFormat;
 
+typedef enum ECGpuFilterType
+{
+    FT_NEAREST = 0,
+    FT_LINEAR
+} ECGpuFilterType;
+
+typedef enum ECGpuAddressMode
+{
+    ADDRESS_MODE_MIRROR,
+    ADDRESS_MODE_REPEAT,
+    ADDRESS_MODE_CLAMP_TO_EDGE,
+    ADDRESS_MODE_CLAMP_TO_BORDER
+} ECGpuAddressMode;
+
+typedef enum ECGpuMipMapMode
+{
+    MIPMAP_MODE_NEAREST = 0,
+    MIPMAP_MODE_LINEAR
+} ECGpuMipMapMode;
+
 typedef enum ECGpuLoadAction
 {
     LA_DONTCARE,
@@ -766,6 +786,148 @@ static FORCEINLINE uint32_t FormatUtil_BitSizeOfBlock(ECGpuFormat const fmt) {
 		case PF_G8B8G8R8_422_UNORM: return 4;
 		case PF_B8G8R8G8_422_UNORM: return 4;
 		default: return 32;
+	}
+}
+
+static FORCEINLINE uint32_t FormatUtil_WidthOfBlock(ECGpuFormat const fmt) {
+    switch(fmt) {
+    case PF_UNDEFINED: return 1;
+    case PF_R1_UNORM: return 8;
+    case PF_R2_UNORM: return 4;
+    case PF_R4_UNORM: return 2;
+    case PF_DXBC1_RGB_UNORM: return 4;
+    case PF_DXBC1_RGB_SRGB: return 4;
+    case PF_DXBC1_RGBA_UNORM: return 4;
+    case PF_DXBC1_RGBA_SRGB: return 4;
+    case PF_DXBC2_UNORM: return 4;
+    case PF_DXBC2_SRGB: return 4;
+    case PF_DXBC3_UNORM: return 4;
+    case PF_DXBC3_SRGB: return 4;
+    case PF_DXBC4_UNORM: return 4;
+    case PF_DXBC4_SNORM: return 4;
+    case PF_DXBC5_UNORM: return 4;
+    case PF_DXBC5_SNORM: return 4;
+    case PF_DXBC6H_UFLOAT: return 4;
+    case PF_DXBC6H_SFLOAT: return 4;
+    case PF_DXBC7_UNORM: return 4;
+    case PF_DXBC7_SRGB: return 4;
+    case PF_PVRTC1_2BPP_UNORM: return 8;
+    case PF_PVRTC1_4BPP_UNORM: return 4;
+    case PF_PVRTC2_2BPP_UNORM: return 8;
+    case PF_PVRTC2_4BPP_UNORM: return 4;
+    case PF_PVRTC1_2BPP_SRGB: return 8;
+    case PF_PVRTC1_4BPP_SRGB: return 4;
+    case PF_PVRTC2_2BPP_SRGB: return 8;
+    case PF_PVRTC2_4BPP_SRGB: return 4;
+    case PF_ETC2_R8G8B8_UNORM: return 4;
+    case PF_ETC2_R8G8B8_SRGB: return 4;
+    case PF_ETC2_R8G8B8A1_UNORM: return 4;
+    case PF_ETC2_R8G8B8A1_SRGB: return 4;
+    case PF_ETC2_R8G8B8A8_UNORM: return 4;
+    case PF_ETC2_R8G8B8A8_SRGB: return 4;
+    case PF_ETC2_EAC_R11_UNORM: return 4;
+    case PF_ETC2_EAC_R11_SNORM: return 4;
+    case PF_ETC2_EAC_R11G11_UNORM: return 4;
+    case PF_ETC2_EAC_R11G11_SNORM: return 4;
+    case PF_ASTC_4x4_UNORM: return 4;
+    case PF_ASTC_4x4_SRGB: return 4;
+    case PF_ASTC_5x4_UNORM: return 5;
+    case PF_ASTC_5x4_SRGB: return 5;
+    case PF_ASTC_5x5_UNORM: return 5;
+    case PF_ASTC_5x5_SRGB: return 5;
+    case PF_ASTC_6x5_UNORM: return 6;
+    case PF_ASTC_6x5_SRGB: return 6;
+    case PF_ASTC_6x6_UNORM: return 6;
+    case PF_ASTC_6x6_SRGB: return 6;
+    case PF_ASTC_8x5_UNORM: return 8;
+    case PF_ASTC_8x5_SRGB: return 8;
+    case PF_ASTC_8x6_UNORM: return 8;
+    case PF_ASTC_8x6_SRGB: return 8;
+    case PF_ASTC_8x8_UNORM: return 8;
+    case PF_ASTC_8x8_SRGB: return 8;
+    case PF_ASTC_10x5_UNORM: return 10;
+    case PF_ASTC_10x5_SRGB: return 10;
+    case PF_ASTC_10x6_UNORM: return 10;
+    case PF_ASTC_10x6_SRGB: return 10;
+    case PF_ASTC_10x8_UNORM: return 10;
+    case PF_ASTC_10x8_SRGB: return 10;
+    case PF_ASTC_10x10_UNORM: return 10;
+    case PF_ASTC_10x10_SRGB: return 10;
+    case PF_ASTC_12x10_UNORM: return 12;
+    case PF_ASTC_12x10_SRGB: return 12;
+    case PF_ASTC_12x12_UNORM: return 12;
+    case PF_ASTC_12x12_SRGB: return 12;
+    case PF_CLUT_P4: return 2;
+    default: return 1;
+	}
+}
+
+static FORCEINLINE uint32_t FormatUtil_HeightOfBlock(ECGpuFormat const fmt) {
+	switch(fmt) {
+		case PF_UNDEFINED: return 1;
+		case PF_DXBC1_RGB_UNORM: return 4;
+		case PF_DXBC1_RGB_SRGB: return 4;
+		case PF_DXBC1_RGBA_UNORM: return 4;
+		case PF_DXBC1_RGBA_SRGB: return 4;
+		case PF_DXBC2_UNORM: return 4;
+		case PF_DXBC2_SRGB: return 4;
+		case PF_DXBC3_UNORM: return 4;
+		case PF_DXBC3_SRGB: return 4;
+		case PF_DXBC4_UNORM: return 4;
+		case PF_DXBC4_SNORM: return 4;
+		case PF_DXBC5_UNORM: return 4;
+		case PF_DXBC5_SNORM: return 4;
+		case PF_DXBC6H_UFLOAT: return 4;
+		case PF_DXBC6H_SFLOAT: return 4;
+		case PF_DXBC7_UNORM: return 4;
+		case PF_DXBC7_SRGB: return 4;
+		case PF_PVRTC1_2BPP_UNORM: return 4;
+		case PF_PVRTC1_4BPP_UNORM: return 4;
+		case PF_PVRTC2_2BPP_UNORM: return 4;
+		case PF_PVRTC2_4BPP_UNORM: return 4;
+		case PF_PVRTC1_2BPP_SRGB: return 4;
+		case PF_PVRTC1_4BPP_SRGB: return 4;
+		case PF_PVRTC2_2BPP_SRGB: return 4;
+		case PF_PVRTC2_4BPP_SRGB: return 4;
+		case PF_ETC2_R8G8B8_UNORM: return 4;
+		case PF_ETC2_R8G8B8_SRGB: return 4;
+		case PF_ETC2_R8G8B8A1_UNORM: return 4;
+		case PF_ETC2_R8G8B8A1_SRGB: return 4;
+		case PF_ETC2_R8G8B8A8_UNORM: return 4;
+		case PF_ETC2_R8G8B8A8_SRGB: return 4;
+		case PF_ETC2_EAC_R11_UNORM: return 4;
+		case PF_ETC2_EAC_R11_SNORM: return 4;
+		case PF_ETC2_EAC_R11G11_UNORM: return 4;
+		case PF_ETC2_EAC_R11G11_SNORM: return 4;
+		case PF_ASTC_4x4_UNORM: return 4;
+		case PF_ASTC_4x4_SRGB: return 4;
+		case PF_ASTC_5x4_UNORM: return 4;
+		case PF_ASTC_5x4_SRGB: return 4;
+		case PF_ASTC_5x5_UNORM: return 5;
+		case PF_ASTC_5x5_SRGB: return 5;
+		case PF_ASTC_6x5_UNORM: return 5;
+		case PF_ASTC_6x5_SRGB: return 5;
+		case PF_ASTC_6x6_UNORM: return 6;
+		case PF_ASTC_6x6_SRGB: return 6;
+		case PF_ASTC_8x5_UNORM: return 5;
+		case PF_ASTC_8x5_SRGB: return 5;
+		case PF_ASTC_8x6_UNORM: return 6;
+		case PF_ASTC_8x6_SRGB: return 6;
+		case PF_ASTC_8x8_UNORM: return 8;
+		case PF_ASTC_8x8_SRGB: return 8;
+		case PF_ASTC_10x5_UNORM: return 5;
+		case PF_ASTC_10x5_SRGB: return 5;
+		case PF_ASTC_10x6_UNORM: return 6;
+		case PF_ASTC_10x6_SRGB: return 6;
+		case PF_ASTC_10x8_UNORM: return 8;
+		case PF_ASTC_10x8_SRGB: return 8;
+		case PF_ASTC_10x10_UNORM: return 10;
+		case PF_ASTC_10x10_SRGB: return 10;
+		case PF_ASTC_12x10_UNORM: return 10;
+		case PF_ASTC_12x10_SRGB: return 10;
+		case PF_ASTC_12x12_UNORM: return 12;
+		case PF_ASTC_12x12_SRGB: return 12;
+		default: return 1;
 	}
 }
 /* clang-format on */

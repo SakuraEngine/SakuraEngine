@@ -417,14 +417,27 @@ void cgpu_cmd_begin(CGpuCommandBufferId cmd)
     fn_cmd_begin(cmd);
 }
 
-void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc)
+void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->current_dispatch == PT_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    const CGPUProcCmdUpdateBuffer fn_cmd_update_buffer = cmd->device->proc_table_cache->cmd_update_buffer;
-    cgpu_assert(fn_cmd_update_buffer && "cmd_update_buffer Proc Missing!");
-    fn_cmd_update_buffer(cmd, desc);
+    const CGPUProcCmdTransferBufferToBuffer fn_cmd_transfer_buffer_to_buffer = cmd->device->proc_table_cache->cmd_transfer_buffer_to_buffer;
+    cgpu_assert(fn_cmd_transfer_buffer_to_buffer && "cmd_transfer_buffer_to_buffer Proc Missing!");
+    fn_cmd_transfer_buffer_to_buffer(cmd, desc);
+}
+
+void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->current_dispatch == PT_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    if (desc->layer_count == 0) ((CGpuBufferToTextureTransfer*)desc)->layer_count = 1;
+    assert(desc->bytes_per_row != 0 && "fatal: bytes_per_raw must be greater than 0!");
+    assert(desc->rows_per_image != 0 && "fatal: rows_per_image must be greater than 0!");
+    const CGPUProcCmdTransferBufferToTexture fn_cmd_transfer_buffer_to_texture = cmd->device->proc_table_cache->cmd_transfer_buffer_to_texture;
+    cgpu_assert(fn_cmd_transfer_buffer_to_texture && "cmd_transfer_buffer_to_texture Proc Missing!");
+    fn_cmd_transfer_buffer_to_texture(cmd, desc);
 }
 
 void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
@@ -648,6 +661,7 @@ CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureD
     CGpuTextureDescriptor* wdesc = (CGpuTextureDescriptor*)desc;
     if (desc->array_size == 0) wdesc->array_size = 1;
     if (desc->mip_levels == 0) wdesc->mip_levels = 1;
+    if (desc->depth == 0) wdesc->depth = 1;
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
     CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, desc);
     texture->device = device;
@@ -663,6 +677,27 @@ void cgpu_free_texture(CGpuTextureId texture)
     CGPUProcFreeTexture fn_free_texture = device->proc_table_cache->free_texture;
     cgpu_assert(fn_free_texture && "free_texture Proc Missing!");
     fn_free_texture(texture);
+}
+
+CGpuSamplerId cgpu_create_sampler(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->create_sampler && "create_sampler Proc Missing!");
+    CGPUProcCreateSampler fn_create_sampler = device->proc_table_cache->create_sampler;
+    CGpuSampler* sampler = (CGpuSampler*)fn_create_sampler(device, desc);
+    sampler->device = device;
+    return sampler;
+}
+
+void cgpu_free_sampler(CGpuSamplerId sampler)
+{
+    cgpu_assert(sampler != CGPU_NULLPTR && "fatal: call on NULL sampler!");
+    const CGpuDeviceId device = sampler->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+
+    CGPUProcFreeSampler fn_free_sampler = device->proc_table_cache->free_sampler;
+    cgpu_assert(fn_free_sampler && "free_sampler Proc Missing!");
+    fn_free_sampler(sampler);
 }
 
 CGpuTextureViewId cgpu_create_texture_view(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)

@@ -160,7 +160,7 @@ void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer)
     B->super.cpu_mapped_address = CGPU_NULLPTR;
 }
 
-void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc)
+void cgpu_cmd_transfer_buffer_to_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
@@ -172,6 +172,41 @@ void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBuf
         .size = desc->size
     };
     D->mVkDeviceTable.vkCmdCopyBuffer(Cmd->pVkCmdBuf, Src->pVkBuffer, Dst->pVkBuffer, 1, &region);
+}
+
+RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuTexture_Vulkan* Dst = (CGpuTexture_Vulkan*)desc->dst;
+    CGpuBuffer_Vulkan* Src = (CGpuBuffer_Vulkan*)desc->src;
+    const bool isSinglePlane = true;
+    const ECGpuFormat fmt = desc->dst->format;
+    if (isSinglePlane)
+    {
+        const uint32_t width = cgpu_max(1, desc->dst->width >> desc->dst_mip_level);
+        const uint32_t height = cgpu_max(1, desc->dst->height >> desc->dst_mip_level);
+        const uint32_t depth = cgpu_max(1, desc->dst->depth >> desc->dst_mip_level);
+
+        VkBufferImageCopy copy = {
+            .bufferOffset = desc->src_offset,
+            .bufferRowLength = desc->bytes_per_row,
+            .bufferImageHeight = desc->rows_per_image * FormatUtil_HeightOfBlock(fmt),
+            .imageSubresource.aspectMask = (VkImageAspectFlags)desc->dst->aspect_mask,
+            .imageSubresource.mipLevel = desc->dst_mip_level,
+            .imageSubresource.baseArrayLayer = desc->base_array_layer,
+            .imageSubresource.layerCount = desc->layer_count,
+            .imageOffset.x = 0,
+            .imageOffset.y = 0,
+            .imageOffset.z = 0,
+            .imageExtent.width = width,
+            .imageExtent.height = height,
+            .imageExtent.depth = depth
+        };
+        D->mVkDeviceTable.vkCmdCopyBufferToImage(Cmd->pVkCmdBuf,
+            Src->pVkBuffer, Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+            &copy);
+    }
 }
 
 void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
@@ -365,6 +400,8 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     T->super.format = desc->format;
     // Set Texture Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)T->pVkImage, VK_OBJECT_TYPE_IMAGE, desc->name);
+    // TODO: Start state
+
     return &T->super;
 }
 
@@ -484,6 +521,16 @@ void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target)
     if (VK_NULL_HANDLE != TV->pVkUAVDescriptor)
         D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkUAVDescriptor, GLOBAL_VkAllocationCallbacks);
     cgpu_free(TV);
+}
+
+// Sampler APIs
+CGpuSamplerId cgpu_create_sampler_vulkan(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc)
+{
+    return NULL;
+}
+
+void cgpu_free_sampler_vulkan(CGpuSamplerId sampler)
+{
 }
 
 // Shader APIs

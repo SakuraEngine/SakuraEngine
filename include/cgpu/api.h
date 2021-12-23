@@ -32,11 +32,15 @@ struct CGpuRenderPipelineDescriptor;
 struct CGpuBufferDescriptor;
 struct CGpuTextureDescriptor;
 struct CGpuTextureViewDescriptor;
+struct CGpuSamplerDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuAcquireNextDescriptor;
 struct CGpuQueueSubmitDescriptor;
 struct CGpuQueuePresentDescriptor;
-struct CGpuBufferUpdateDescriptor;
+struct CGpuBufferToBufferTransfer;
+struct CGpuBufferToTextureTransfer;
+struct CGpuTextureToTextureTransfer;
+struct CGpuTextureToBufferTransfer;
 struct CGpuRootSignatureDescriptor;
 struct CGpuDescriptorSetDescriptor;
 struct CGpuRenderPassDescriptor;
@@ -67,6 +71,7 @@ typedef const struct CGpuRootSignature* CGpuRootSignatureId;
 typedef const struct CGpuDescriptorSet* CGpuDescriptorSetId;
 typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuTexture* CGpuTextureId;
+typedef const struct CGpuSampler* CGpuSamplerId;
 typedef const struct CGpuTextureView* CGpuTextureViewId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
 typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
@@ -217,6 +222,12 @@ typedef void (*CGPUProcUnmapBuffer)(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer(CGpuBufferId buffer);
 typedef void (*CGPUProcFreeBuffer)(CGpuBufferId buffer);
 
+// Sampler APIs
+RUNTIME_API CGpuSamplerId cgpu_create_sampler(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc);
+typedef CGpuSamplerId (*CGPUProcCreateSampler)(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc);
+RUNTIME_API void cgpu_free_sampler(CGpuSamplerId sampler);
+typedef void (*CGPUProcFreeSampler)(CGpuSamplerId sampler);
+
 // Texture/TextureView APIs
 RUNTIME_API CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
 typedef CGpuTextureId (*CGPUProcCreateTexture)(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
@@ -238,8 +249,10 @@ typedef void (*CGPUProcFreeSwapChain)(CGpuSwapChainId swapchain);
 // CMDs
 RUNTIME_API void cgpu_cmd_begin(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdBegin)(CGpuCommandBufferId cmd);
-RUNTIME_API void cgpu_cmd_update_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
-typedef void (*CGPUProcCmdUpdateBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
+typedef void (*CGPUProcCmdTransferBufferToBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
+RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
+typedef void (*CGPUProcCmdTransferBufferToTexture)(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 typedef void (*CGPUProcCmdResourceBarrier)(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end(CGpuCommandBufferId cmd);
@@ -325,6 +338,10 @@ typedef struct CGpuProcTable {
     const CGPUProcUnmapBuffer unmap_buffer;
     const CGPUProcFreeBuffer free_buffer;
 
+    // Sampler APIs
+    const CGPUProcCreateSampler create_sampler;
+    const CGPUProcFreeSampler free_sampler;
+
     // Texture/TextureView APIs
     const CGPUProcCreateTexture create_texture;
     const CGPUProcFreeTexture free_texture;
@@ -338,7 +355,8 @@ typedef struct CGpuProcTable {
 
     // CMDs
     const CGPUProcCmdBegin cmd_begin;
-    const CGPUProcCmdUpdateBuffer cmd_update_buffer;
+    const CGPUProcCmdTransferBufferToBuffer cmd_transfer_buffer_to_buffer;
+    const CGPUProcCmdTransferBufferToTexture cmd_transfer_buffer_to_texture;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
     const CGPUProcCmdEnd cmd_end;
 
@@ -538,9 +556,9 @@ typedef struct CGpuDescriptorData {
     union
     {
         /// Array of texture descriptors (srv and uav textures)
-        // CGpuTextureId* textures;
+        CGpuTextureId* textures;
         /// Array of sampler descriptors
-        // CGpuSamplerId* samplers;
+        CGpuSamplerId* samplers;
         /// Array of buffer descriptors (srv, uav and cbv buffers)
         CGpuBufferId* buffers;
         /// Array of pipeline descriptors
@@ -646,13 +664,24 @@ typedef struct CGpuAcquireNextDescriptor {
     CGpuFenceId fence;
 } CGpuAcquireNextDescriptor;
 
-typedef struct CGpuBufferUpdateDescriptor {
+typedef struct CGpuBufferToBufferTransfer {
     CGpuBufferId dst;
     uint64_t dst_offset;
     CGpuBufferId src;
     uint64_t src_offset;
     uint64_t size;
-} CGpuBufferUpdateDescriptor;
+} CGpuBufferToBufferTransfer;
+
+typedef struct CGpuBufferToTextureTransfer {
+    CGpuTextureId dst;
+    uint32_t dst_mip_level;
+    uint32_t bytes_per_row;
+    uint32_t rows_per_image;
+    uint32_t base_array_layer;
+    uint32_t layer_count;
+    CGpuBufferId src;
+    uint64_t src_offset;
+} CGpuBufferToTextureTransfer;
 
 typedef struct CGpuBufferBarrier {
     CGpuBufferId buffer;
@@ -861,7 +890,7 @@ typedef struct CGpuRenderPipelineDescriptor {
     CGpuVertexLayout* vertex_layout;
     const CGpuBlendStateDescriptor* blend_state;
     const CGpuDepthStateDescriptor* depth_state;
-    CGpuRasterizerStateDescriptor* rasterizer_state;
+    const CGpuRasterizerStateDescriptor* rasterizer_state;
     const ECGpuFormat* color_formats;
     uint32_t render_target_count;
     ECGpuSampleCount sample_count;
@@ -997,6 +1026,22 @@ typedef struct CGpuTextureView {
     CGpuDeviceId device;
     CGpuTextureViewDescriptor info;
 } CGpuTextureView;
+
+typedef struct CGpuSamplerDescriptor {
+    ECGpuFilterType min_filter;
+    ECGpuFilterType mag_filter;
+    ECGpuMipMapMode mipmap_mode;
+    ECGpuAddressMode address_u;
+    ECGpuAddressMode address_v;
+    ECGpuAddressMode address_w;
+    float mip_lod_bias;
+    float max_anisotropy;
+    ECGpuCompareMode compare_func;
+} CGpuSamplerDescriptor;
+
+typedef struct CGpuSampler {
+    CGpuDeviceId device;
+} CGpuSampler;
 
 #pragma endregion DESCRIPTORS
 
