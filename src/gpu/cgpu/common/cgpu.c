@@ -230,29 +230,35 @@ void cgpu_free_compute_pipeline(CGpuComputePipelineId pipeline)
     device->proc_table_cache->free_compute_pipeline(pipeline);
 }
 
+static const CGpuBlendStateDescriptor defaultBlendStateDesc = {
+    .src_factors[0] = BC_ONE,
+    .dst_factors[0] = BC_ZERO,
+    .blend_modes[0] = BM_ADD,
+    .src_alpha_factors[0] = BC_ONE,
+    .dst_alpha_factors[0] = BC_ZERO,
+    .masks[0] = COLOR_MASK_ALL,
+    .independent_blend = false
+};
+static const CGpuRasterizerStateDescriptor defaultRasterStateDesc = {
+    .cull_mode = CULL_MODE_BACK,
+    .fill_mode = FM_SOLID,
+    .front_face = FF_CCW,
+    .slope_scaled_depth_bias = 0.f,
+    .enable_depth_clamp = false,
+    .enable_scissor = false,
+    .enable_multi_sample = false,
+    .depth_bias = 0.f
+};
 CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_render_pipeline && "create_render_pipeline Proc Missing!");
     CGpuRenderPipeline* pipeline = CGPU_NULLPTR;
     if (desc->blend_state == CGPU_NULLPTR)
-    {
-        CGpuBlendStateDescriptor blendStateDesc = {
-            .src_factors[0] = BC_ONE,
-            .dst_factors[0] = BC_ZERO,
-            .blend_modes[0] = BM_ADD,
-            .src_alpha_factors[0] = BC_ONE,
-            .dst_alpha_factors[0] = BC_ZERO,
-            .masks[0] = COLOR_MASK_ALL,
-            .independent_blend = false
-        };
-        ((CGpuRenderPipelineDescriptor*)desc)->blend_state = &blendStateDesc;
-        pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
-    }
-    else
-    {
-        pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
-    }
+        ((CGpuRenderPipelineDescriptor*)desc)->blend_state = &defaultBlendStateDesc;
+    if (desc->rasterizer_state == CGPU_NULLPTR)
+        ((CGpuRenderPipelineDescriptor*)desc)->rasterizer_state = &defaultRasterStateDesc;
+    pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
     pipeline->device = device;
     return pipeline;
 }
