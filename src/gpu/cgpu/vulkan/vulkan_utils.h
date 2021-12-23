@@ -90,8 +90,10 @@ typedef struct VkUtil_DescriptorPool {
     CGpuDevice_Vulkan* Device;
     VkDescriptorPool pVkDescPool;
     VkDescriptorPoolCreateFlags mFlags;
+#ifdef CGPU_THREAD_SAFETY
     /// Lock for multi-threaded descriptor allocations
     struct SMutex* pMutex;
+#endif
 } VkUtil_DescriptorPool;
 
 typedef struct VkUtil_RenderPassDesc {
@@ -119,7 +121,7 @@ typedef struct VkUtil_FramebufferDesc {
         if (VK_SUCCESS != vkres)                                                        \
         {                                                                               \
             cgpu_error("VKRESULT %s: FAILED with VkResult: %u", #exp, (uint32_t)vkres); \
-            assert(0);                                                                  \
+            cgpu_assert(0);                                                             \
         }                                                                               \
     }
 

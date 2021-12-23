@@ -176,7 +176,7 @@ CGpuQueueId cgpu_get_queue_metal(CGpuDeviceId device, ECGpuQueueType type, uint3
 
 void cgpu_submit_queue_metal(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
 {
-    assert(0 && "No impl!");
+    cgpu_assert(0 && "No impl!");
 }
 
 void cgpu_wait_queue_idle_metal(CGpuQueueId queue)

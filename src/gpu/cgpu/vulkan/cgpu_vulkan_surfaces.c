@@ -1,5 +1,4 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan_surfaces.h"
-#include "assert.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 
@@ -18,7 +17,7 @@ const CGpuSurfacesProcTable* CGPU_VulkanSurfacesProcTable() { return &s_tbl_vk; 
 
 void cgpu_free_surface_vulkan(CGpuDeviceId device, CGpuSurfaceId surface)
 {
-    assert(surface && "CGPU VULKAN ERROR: NULL surface!");
+    cgpu_assert(surface && "CGPU VULKAN ERROR: NULL surface!");
 
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
     VkSurfaceKHR vkSurface = (VkSurfaceKHR)surface;
@@ -33,7 +32,7 @@ void cgpu_free_surface_vulkan(CGpuDeviceId device, CGpuSurfaceId surface)
 
 CGpuSurfaceId cgpu_surface_from_hwnd_vulkan(CGpuDeviceId device, HWND window)
 {
-    assert(window && "CGPU VULKAN ERROR: NULL HWND!");
+    cgpu_assert(window && "CGPU VULKAN ERROR: NULL HWND!");
 
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
     CGpuSurfaceId surface;
@@ -47,7 +46,7 @@ CGpuSurfaceId cgpu_surface_from_hwnd_vulkan(CGpuDeviceId device, HWND window)
     if (vkCreateWin32SurfaceKHR(I->pVkInstance, &create_info, GLOBAL_VkAllocationCallbacks,
             (VkSurfaceKHR*)&surface) != VK_SUCCESS)
     {
-        assert(0 && "Create VKWin32 Surface Failed!");
+        cgpu_assert(0 && "Create VKWin32 Surface Failed!");
         return CGPU_NULLPTR;
     }
     return surface;
@@ -55,7 +54,7 @@ CGpuSurfaceId cgpu_surface_from_hwnd_vulkan(CGpuDeviceId device, HWND window)
 #elif defined(_MACOS)
 CGpuSurfaceId cgpu_surface_from_ns_view_vulkan(CGpuDeviceId device, CGpuNSView* window)
 {
-    assert(window && "CGPU VULKAN ERROR: NULL NSVIEW!");
+    cgpu_assert(window && "CGPU VULKAN ERROR: NULL NSVIEW!");
 
     CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
     CGpuSurfaceId surface;
@@ -68,7 +67,7 @@ CGpuSurfaceId cgpu_surface_from_ns_view_vulkan(CGpuDeviceId device, CGpuNSView* 
     if (vkCreateMacOSSurfaceMVK(I->pVkInstance, &create_info, GLOBAL_VkAllocationCallbacks,
             (VkSurfaceKHR*)&surface) != VK_SUCCESS)
     {
-        assert(0 && "Create VKWin32 Surface Failed!");
+        cgpu_assert(0 && "Create VKWin32 Surface Failed!");
         return CGPU_NULLPTR;
     }
     return surface;

@@ -1,6 +1,5 @@
 #pragma once
 #include "cgpu_config.h"
-#include "assert.h"
 
 #ifdef __cplusplus
 extern "C" {

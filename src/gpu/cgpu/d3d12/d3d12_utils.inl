@@ -56,7 +56,7 @@ FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescripto
   case RT_BUFFER:
     return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
   default:
-    assert(false && "Invalid DescriptorInfo Type");
+    cgpu_assert(false && "Invalid DescriptorInfo Type");
     return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
   }
 }
@@ -137,7 +137,7 @@ FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGpuS
   if (stages == SS_RAYTRACING) {
     return D3D12_SHADER_VISIBILITY_ALL;
   }
-  assert(stageCount > 0);
+  cgpu_assert(stageCount > 0);
   return stageCount > 1 ? D3D12_SHADER_VISIBILITY_ALL : res;
 }
 

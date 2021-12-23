@@ -1,9 +1,10 @@
 #pragma once
-#include "cgpu/api.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "D3D12MemAlloc.h"
-#include "platform/thread.h"
-#include "platform/atomic.h"
+#ifdef CGPU_THREAD_SAFETY
+    #include "platform/thread.h"
+    #include "platform/atomic.h"
+#endif
 #include <EASTL/vector.h>
 
 // Instance Helpers
@@ -51,8 +52,6 @@ void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
 typedef struct D3D12Util_DescriptorHeap {
     /// DX Heap
     ID3D12DescriptorHeap* pCurrentHeap;
-    /// Lock for multi-threaded descriptor allocations
-    struct SMutex* pMutex;
     ID3D12Device* pDevice;
     D3D12_CPU_DESCRIPTOR_HANDLE* pHandles;
     /// Start position in the heap
@@ -63,8 +62,15 @@ typedef struct D3D12Util_DescriptorHeap {
     D3D12_DESCRIPTOR_HEAP_DESC mDesc;
     /// DescriptorInfo Increment Size
     uint32_t mDescriptorSize;
+#ifdef CGPU_THREAD_SAFETY
+    /// Lock for multi-threaded descriptor allocations
+    struct SMutex* pMutex;
     /// Used
     SAtomic32 mUsedDescriptors;
+#else
+    /// Used
+    uint32_t mUsedDescriptors;
+#endif
 } D3D12Util_DescriptorHeap;
 
 typedef struct DescriptorHeapProperties {

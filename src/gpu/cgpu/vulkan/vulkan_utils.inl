@@ -138,7 +138,7 @@ FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGpuShaderSta
             (VK_SHADER_STAGE_RAYGEN_BIT_NV | VK_SHADER_STAGE_ANY_HIT_BIT_NV | VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV |
                 VK_SHADER_STAGE_MISS_BIT_NV | VK_SHADER_STAGE_INTERSECTION_BIT_NV | VK_SHADER_STAGE_CALLABLE_BIT_NV);
 #endif
-    assert(res != 0);
+    cgpu_assert(res != 0);
     return res;
 }
 
@@ -147,7 +147,7 @@ FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGpuResourceTy
 {
 	switch (type)
 	{
-		case RT_NONE: assert(0 && "Invalid DescriptorInfo Type"); return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+		case RT_NONE: cgpu_assert(0 && "Invalid DescriptorInfo Type"); return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		case RT_SAMPLER: return VK_DESCRIPTOR_TYPE_SAMPLER;
 		case RT_TEXTURE: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		case RT_UNIFORM_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -162,7 +162,7 @@ FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGpuResourceTy
 		case RT_RAY_TRACING: return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
 #endif
 		default:
-			assert(0 && "Invalid DescriptorInfo Type");
+			cgpu_assert(0 && "Invalid DescriptorInfo Type");
 			return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 	}
 	return VK_DESCRIPTOR_TYPE_MAX_ENUM;
