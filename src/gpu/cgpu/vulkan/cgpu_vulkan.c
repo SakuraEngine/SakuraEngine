@@ -64,6 +64,10 @@ const CGpuProcTable tbl_vk = {
     .create_texture_view = &cgpu_create_texture_view_vulkan,
     .free_texture_view = &cgpu_free_texture_view_vulkan,
 
+    // Sampler APIs
+    .create_sampler = &cgpu_create_sampler_vulkan,
+    .free_sampler = &cgpu_free_sampler_vulkan,
+
     // Swapchain APIs
     .create_swapchain = &cgpu_create_swapchain_vulkan,
     .acquire_next_image = &cgpu_acquire_next_image_vulkan,
@@ -71,7 +75,8 @@ const CGpuProcTable tbl_vk = {
 
     // CMDs
     .cmd_begin = &cgpu_cmd_begin_vulkan,
-    .cmd_update_buffer = &cgpu_cmd_update_buffer_vulkan,
+    .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_vulkan,
+    .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_vulkan,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_end = &cgpu_cmd_end_vulkan,
 
@@ -949,10 +954,9 @@ void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDes
         .pSignalSemaphores = NULL,
     };
     // TODO: Thread Safety ?
-    CHECK_VKRESULT(D->mVkDeviceTable.vkQueueSubmit(
-        Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE));
-    if (F)
-        F->mSubmitted = true;
+    VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
+    CHECK_VKRESULT(res);
+    if (F) F->mSubmitted = true;
 }
 
 void cgpu_wait_queue_idle_vulkan(CGpuQueueId queue)

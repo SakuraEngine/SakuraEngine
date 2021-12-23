@@ -55,7 +55,7 @@ const CGpuProcTable tbl_d3d12 = {
 
     // CMDs
     .cmd_begin = &cgpu_cmd_begin_d3d12,
-    .cmd_update_buffer = &cgpu_cmd_update_buffer_d3d12,
+    .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_d3d12,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_d3d12,
     .cmd_end = &cgpu_cmd_end_d3d12,
 

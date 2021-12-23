@@ -189,7 +189,7 @@ void cgpu_unmap_buffer_d3d12(CGpuBufferId buffer)
     B->super.cpu_mapped_address = NULL;
 }
 
-void cgpu_cmd_update_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc)
+void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
     CGpuBuffer_D3D12* Src = (CGpuBuffer_D3D12*)desc->src;

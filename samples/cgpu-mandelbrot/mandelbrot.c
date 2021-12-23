@@ -151,14 +151,14 @@ void ComputeFunc(void* usrdata)
         };
         cgpu_cmd_resource_barrier(cmd, &barriers_desc);
         // Copy buffer to readback
-        CGpuBufferUpdateDescriptor cpy_desc = {
+        CGpuBufferToBufferTransfer cpy_desc = {
             .src = data_buffer,
             .src_offset = 0,
             .dst = readback_buffer,
             .dst_offset = 0,
             .size = buffer_desc.size
         };
-        cgpu_cmd_update_buffer(cmd, &cpy_desc);
+        cgpu_cmd_transfer_buffer_to_buffer(cmd, &cpy_desc);
         cgpu_cmd_end(cmd);
         CGpuQueueSubmitDescriptor submit_desc = {
             .cmds = &cmd,

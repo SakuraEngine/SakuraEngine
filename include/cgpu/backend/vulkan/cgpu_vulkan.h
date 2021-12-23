@@ -71,6 +71,10 @@ RUNTIME_API void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBu
 RUNTIME_API void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer_vulkan(CGpuBufferId buffer);
 
+// Sampler APIs
+RUNTIME_API CGpuSamplerId cgpu_create_sampler_vulkan(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc);
+RUNTIME_API void cgpu_free_sampler_vulkan(CGpuSamplerId sampler);
+
 // Texture/TextureView APIs
 RUNTIME_API CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
 RUNTIME_API void cgpu_free_texture_vulkan(CGpuTextureId texture);
@@ -84,7 +88,8 @@ RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
 
 // CMDs
 RUNTIME_API void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd);
-RUNTIME_API void cgpu_cmd_update_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferUpdateDescriptor* desc);
+RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
+RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
 
