@@ -1,4 +1,4 @@
-#include "window_helper.h"
+#include "utils.h"
 #include "math.h"
 #include "cgpu/api.h"
 
@@ -42,16 +42,16 @@ const size_t get_fragment_shader_size()
 void create_render_pipeline()
 {
     CGpuShaderLibraryDescriptor vs_desc = {
-        .code = get_vertex_shader(),
-        .code_size = get_vertex_shader_size(),
+        .stage = SS_VERT,
         .name = "VertexShaderLibrary",
-        .stage = SS_VERT
+        .code = get_vertex_shader(),
+        .code_size = get_vertex_shader_size()
     };
     CGpuShaderLibraryDescriptor ps_desc = {
-        .code = get_fragment_shader(),
-        .code_size = get_fragment_shader_size(),
         .name = "FragmentShaderLibrary",
-        .stage = SS_VERT
+        .stage = SS_FRAG,
+        .code = get_fragment_shader(),
+        .code_size = get_fragment_shader_size()
     };
     CGpuShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
     CGpuShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
@@ -67,20 +67,7 @@ void create_render_pipeline()
         .shaders_count = 2
     };
     root_sig = cgpu_create_root_signature(device, &rs_desc);
-    for (uint32_t i = 0; i < swapchain->buffer_count; i++)
-    {
-        CGpuTextureViewDescriptor view_desc = {
-            .texture = swapchain->back_buffers[i],
-            .aspects = TVA_COLOR,
-            .dims = TD_2D,
-            .format = swapchain->back_buffers[i]->format,
-            .usages = TVU_RTV
-        };
-        views[i] = cgpu_create_texture_view(device, &view_desc);
-    }
-    CGpuVertexLayout vertex_layout = {
-        .attribute_count = 0
-    };
+    CGpuVertexLayout vertex_layout = { .attribute_count = 0 };
     CGpuRenderPipelineDescriptor rp_desc = {
         .root_signature = root_sig,
         .prim_topology = TOPO_TRI_LIST,
@@ -154,7 +141,18 @@ void initialize(void* usrdata)
         .enableVsync = true
     };
     swapchain = cgpu_create_swapchain(device, &descriptor);
-
+    // Create views
+    for (uint32_t i = 0; i < swapchain->buffer_count; i++)
+    {
+        CGpuTextureViewDescriptor view_desc = {
+            .texture = swapchain->back_buffers[i],
+            .aspects = TVA_COLOR,
+            .dims = TD_2D,
+            .format = swapchain->back_buffers[i]->format,
+            .usages = TVU_RTV
+        };
+        views[i] = cgpu_create_texture_view(device, &view_desc);
+    }
     create_render_pipeline();
 }
 
@@ -249,7 +247,7 @@ void raster_program()
 
 void finalize()
 {
-    SDL_Quit();
+    SDL_DestroyWindow(sdl_window);
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
@@ -276,6 +274,8 @@ int main()
     initialize(&backend);
     raster_program();
     finalize();
+
+    SDL_Quit();
 
     return 0;
 }

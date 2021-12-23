@@ -853,14 +853,14 @@ typedef struct CGpuVertexLayout {
 
 typedef struct CGpuRenderPipelineDescriptor {
     CGpuRootSignatureId root_signature;
-    CGpuPipelineShaderDescriptor* vertex_shader;
-    CGpuPipelineShaderDescriptor* tesc_shader;
-    CGpuPipelineShaderDescriptor* tese_shader;
-    CGpuPipelineShaderDescriptor* geom_shader;
-    CGpuPipelineShaderDescriptor* fragment_shader;
+    const CGpuPipelineShaderDescriptor* vertex_shader;
+    const CGpuPipelineShaderDescriptor* tesc_shader;
+    const CGpuPipelineShaderDescriptor* tese_shader;
+    const CGpuPipelineShaderDescriptor* geom_shader;
+    const CGpuPipelineShaderDescriptor* fragment_shader;
     CGpuVertexLayout* vertex_layout;
-    CGpuBlendStateDescriptor* blend_state;
-    CGpuDepthStateDescriptor* depth_state;
+    const CGpuBlendStateDescriptor* blend_state;
+    const CGpuDepthStateDescriptor* depth_state;
     CGpuRasterizerStateDescriptor* rasterizer_state;
     const ECGpuFormat* color_formats;
     uint32_t render_target_count;

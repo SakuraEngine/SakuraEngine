@@ -1,5 +1,7 @@
 # Sakura.Runtime
 
+[![build](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci.yml)
+
 ## 特性
 ### 极速编译
 八成以上的代码由C构成, 其余两成为简单的C++。搭配手动安排的UnityBuild, 这将全量编译的耗时压缩到秒级。
