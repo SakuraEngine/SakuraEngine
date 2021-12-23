@@ -110,9 +110,9 @@ void initialize(void* usrdata)
     // Create instance
     CGpuInstanceDescriptor instance_desc = {
         .backend = backend,
-        .enable_debug_layer = true,
-        .enable_gpu_based_validation = true,
-        .enable_set_name = true
+        .enable_debug_layer = false,
+        .enable_gpu_based_validation = false,
+        .enable_set_name = false
     };
     instance = cgpu_create_instance(&instance_desc);
 
@@ -170,12 +170,11 @@ void raster_redraw()
     cgpu_reset_command_pool(pool);
     // record
     cgpu_cmd_begin(cmd);
-    CGpuClearValue fast_clear = { .r = 0.f, .g = 0.f, .b = 0.f, .a = 0.f };
     CGpuColorAttachment screen_attachment = {
         .view = views[backbuffer_index],
         .load_action = LA_CLEAR,
         .store_action = SA_Store,
-        .clear_color = fast_clear
+        .clear_color = fastclear_0000
     };
     CGpuRenderPassDescriptor rp_desc = {
         .render_target_count = 1,

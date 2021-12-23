@@ -4,9 +4,10 @@
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/flags.h"
 #include "vulkan/vulkan_core.h"
-#include "platform/thread.h"
+#ifdef CGPU_THREAD_SAFETY
+    #include "platform/thread.h"
+#endif
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
-#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -25,7 +26,7 @@ bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
     VkResult volkInit = volkInitialize();
     if (volkInit != VK_SUCCESS)
     {
-        assert((volkInit == VK_SUCCESS) && "Volk Initialize Failed!");
+        cgpu_assert((volkInit == VK_SUCCESS) && "Volk Initialize Failed!");
         return false;
     }
 #endif
@@ -64,13 +65,13 @@ void VkUtil_EnableValidationLayer(
         const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr =
             (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
 
-        assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
+        cgpu_assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
         VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
             messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
             &(I->pVkDebugUtilsMessenger));
         if (VK_SUCCESS != res)
         {
-            assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
+            cgpu_assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
         }
     }
     else if (I->debug_report)
@@ -90,10 +91,10 @@ void VkUtil_EnableValidationLayer(
         VkResult res = vkCreateDebugReportCallbackEXT(I->pVkInstance,
             reportInfoPtr, GLOBAL_VkAllocationCallbacks,
             &(I->pVkDebugReport));
-        assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugReportCallbackEXT failed!");
+        cgpu_assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugReportCallbackEXT failed!");
         if (VK_SUCCESS != res)
         {
-            assert(0 && "vkCreateDebugReportCallbackEXT failed - disabling Vulkan debug callbacks");
+            cgpu_assert(0 && "vkCreateDebugReportCallbackEXT failed - disabling Vulkan debug callbacks");
         }
     }
 }
@@ -103,7 +104,7 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     const char* const* device_layers, uint32_t device_layers_count,
     const char* const* device_extensions, uint32_t device_extension_count)
 {
-    assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
+    cgpu_assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
 
     vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount, CGPU_NULLPTR);
     if (I->mPhysicalDeviceCount != 0)
@@ -149,14 +150,14 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     }
     else
     {
-        assert(0 && "Vulkan: 0 physical device avalable!");
+        cgpu_assert(0 && "Vulkan: 0 physical device avalable!");
     }
 }
 
 // Device APIs
 void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D)
 {
-    assert((D->pPipelineCache == VK_NULL_HANDLE) && "VkUtil_CreatePipelineCache should be called only once!");
+    cgpu_assert((D->pPipelineCache == VK_NULL_HANDLE) && "VkUtil_CreatePipelineCache should be called only once!");
 
     // TODO: serde
     VkPipelineCacheCreateInfo info = {
@@ -207,7 +208,7 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
     S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
     SpvReflectResult spvRes = spvReflectCreateShaderModule(desc->code_size, desc->code, S->pReflect);
     (void)spvRes;
-    assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
+    cgpu_assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
     uint32_t entry_count = S->pReflect->entry_point_count;
     S->super.entrys_count = entry_count;
     S->super.entry_reflections = cgpu_calloc(entry_count, sizeof(CGpuShaderReflection));
@@ -355,7 +356,7 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A,
     }
     if (vmaCreateAllocator(&vmaInfo, &D->pVmaAllocator) != VK_SUCCESS)
     {
-        assert(0);
+        cgpu_assert(0);
     }
 }
 
@@ -377,8 +378,10 @@ void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGp
 struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D)
 {
     VkUtil_DescriptorPool* Pool = (VkUtil_DescriptorPool*)cgpu_calloc(1, sizeof(VkUtil_DescriptorPool));
+#ifdef CGPU_THREAD_SAFETY
     Pool->pMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
     skr_init_mutex(Pool->pMutex);
+#endif
     VkDescriptorPoolCreateFlags flags = (VkDescriptorPoolCreateFlags)0;
     // TODO: It is possible to avoid using that flag by updating descriptor sets instead of deleting them.
     flags |= VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
@@ -400,7 +403,9 @@ struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D)
 void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool,
     const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
 {
+#ifdef CGPU_THREAD_SAFETY
     skr_acquire_mutex(pPool->pMutex);
+#endif
     {
         CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pPool->Device;
         VkDescriptorSetAllocateInfo alloc_info = {
@@ -413,15 +418,19 @@ void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool,
         VkResult vk_res = D->mVkDeviceTable.vkAllocateDescriptorSets(D->pVkDevice, &alloc_info, pSets);
         if (vk_res != VK_SUCCESS)
         {
-            assert(0 && "Descriptor Set used out, vk descriptor pool expansion not implemented!");
+            cgpu_assert(0 && "Descriptor Set used out, vk descriptor pool expansion not implemented!");
         }
     }
+#ifdef CGPU_THREAD_SAFETY
     skr_release_mutex(pPool->pMutex);
+#endif
 }
 
 void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
 {
+#ifdef CGPU_THREAD_SAFETY
     skr_acquire_mutex(pPool->pMutex);
+#endif
     {
         // TODO: It is possible to avoid using that flag by updating descriptor sets instead of deleting them.
         // The application can keep track of recycled descriptor sets and re-use one of them when a new one is requested.
@@ -429,13 +438,22 @@ void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescript
         CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pPool->Device;
         D->mVkDeviceTable.vkFreeDescriptorSets(D->pVkDevice, pPool->pVkDescPool, numDescriptorSets, pSets);
     }
+#ifdef CGPU_THREAD_SAFETY
     skr_release_mutex(pPool->pMutex);
+#endif
 }
 
 void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool)
 {
     CGpuDevice_Vulkan* D = DescPool->Device;
     D->mVkDeviceTable.vkDestroyDescriptorPool(D->pVkDevice, DescPool->pVkDescPool, GLOBAL_VkAllocationCallbacks);
+#ifdef CGPU_THREAD_SAFETY
+    if (DescPool->pMutex)
+    {
+        skr_destroy_mutex(DescPool->pMutex);
+        cgpu_free(DescPool->pMutex);
+    }
+#endif
     cgpu_free(DescPool);
 }
 
@@ -468,7 +486,7 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     adapter_detail->is_cpu = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
     adapter_detail->is_virtual = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
     adapter_detail->is_uma = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
-    assert(prop->deviceType != VK_PHYSICAL_DEVICE_TYPE_OTHER && "VK_PHYSICAL_DEVICE_TYPE_OTHER not supported!");
+    cgpu_assert(prop->deviceType != VK_PHYSICAL_DEVICE_TYPE_OTHER && "VK_PHYSICAL_DEVICE_TYPE_OTHER not supported!");
 
     // Vendor Info
     adapter_detail->vendor_preset.device_id = prop->deviceID;

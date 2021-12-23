@@ -1,7 +1,4 @@
 #include "vulkan_utils.h"
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <EASTL/vector.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/string.h>
@@ -29,7 +26,7 @@ public:
         {
             if (exts_desc->backend != ECGpuBackend_VULKAN)
             {
-                assert(exts_desc->backend == ECGpuBackend_VULKAN && "Chained Instance Descriptor must have a vulkan backend!");
+                cgpu_assert(exts_desc->backend == ECGpuBackend_VULKAN && "Chained Instance Descriptor must have a vulkan backend!");
                 exts_desc = CGPU_NULLPTR;
             }
             else
@@ -299,7 +296,7 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
 
     if (vkCreateInstance(&createInfo, GLOBAL_VkAllocationCallbacks, &I->pVkInstance) != VK_SUCCESS)
     {
-        assert(0 && "Vulkan: failed to create instance!");
+        cgpu_assert(0 && "Vulkan: failed to create instance!");
     }
     CGpuVkLayersTable::ConstructForInstance(I, blackboard);
     CGpuVkExtensionsTable::ConstructForInstance(I, blackboard);
@@ -338,7 +335,7 @@ void cgpu_free_instance_vulkan(CGpuInstanceId instance)
     VkUtil_DeInitializeEnvironment(&to_destroy->super);
     if (to_destroy->pVkDebugUtilsMessenger)
     {
-        assert(vkDestroyDebugUtilsMessengerEXT && "Load vkDestroyDebugUtilsMessengerEXT failed!");
+        cgpu_assert(vkDestroyDebugUtilsMessengerEXT && "Load vkDestroyDebugUtilsMessengerEXT failed!");
         vkDestroyDebugUtilsMessengerEXT(to_destroy->pVkInstance, to_destroy->pVkDebugUtilsMessenger, nullptr);
     }
 
@@ -396,7 +393,7 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
         info.queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[descriptor.queueType];
         info.pQueuePriorities = queuePriorities;
 
-        assert(cgpu_query_queue_count_vulkan(adapter, descriptor.queueType) >= descriptor.queueCount && "allocated too many queues!");
+        cgpu_assert(cgpu_query_queue_count_vulkan(adapter, descriptor.queueType) >= descriptor.queueCount && "allocated too many queues!");
     }
     // Create Device
     DECLARE_ZERO(VkDeviceCreateInfo, createInfo)
@@ -412,7 +409,7 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
 
     if (vkCreateDevice(A->pPhysicalDevice, &createInfo, CGPU_NULLPTR, &D->pVkDevice) != VK_SUCCESS)
     {
-        assert(0 && "failed to create logical device!");
+        cgpu_assert(0 && "failed to create logical device!");
     }
 
     // Single Device Only.

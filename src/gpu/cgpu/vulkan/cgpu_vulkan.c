@@ -1,13 +1,8 @@
-#include "cgpu/api.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
-#include "cgpu/cgpu_config.h"
-#include "cgpu/flags.h"
-#include "platform/configure.h"
-#include "vulkan/vulkan_core.h"
 #include "vulkan_utils.h"
+#include "vulkan/vulkan_core.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include "../common/common_utils.h"
-#include <stdint.h>
 #include <string.h>
 
 const CGpuProcTable tbl_vk = {
@@ -105,7 +100,7 @@ static void VkUtil_FindOrCreateFrameBuffer(const CGpuDevice_Vulkan* D, const str
         *ppFramebuffer = found;
         return;
     }
-    assert(VK_NULL_HANDLE != D->pVkDevice);
+    cgpu_assert(VK_NULL_HANDLE != D->pVkDevice);
     VkFramebufferCreateInfo add_info = {
         .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
         .pNext = NULL,
@@ -148,7 +143,7 @@ static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUt
         *ppRenderPass = found;
         return;
     }
-    assert(VK_NULL_HANDLE != D->pVkDevice);
+    cgpu_assert(VK_NULL_HANDLE != D->pVkDevice);
     uint32_t colorAttachmentCount = pDesc->mColorAttachmentCount;
     uint32_t depthAttachmentCount = (pDesc->mDepthStencilFormat != PF_UNDEFINED) ? 1 : 0;
     VkAttachmentDescription attachments[MAX_MRT_COUNT + 1] = { 0 };
@@ -296,7 +291,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
         }
         break;
         default:
-            assert(0 && "CGPU VULKAN: ERROR Queue Type!");
+            cgpu_assert(0 && "CGPU VULKAN: ERROR Queue Type!");
     }
     return count;
 }
@@ -306,7 +301,7 @@ CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device)
 {
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuFence_Vulkan* F = (CGpuFence_Vulkan*)cgpu_calloc(1, sizeof(CGpuFence_Vulkan));
-    assert(F);
+    cgpu_assert(F);
     VkFenceCreateInfo add_info = {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = NULL,
@@ -508,11 +503,11 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
             case RT_BUFFER_RAW:
             case RT_RW_BUFFER:
             case RT_RW_BUFFER_RAW: {
-                assert(ArgData->buffers && "ASSERT: Binding NULL Buffer(s)!");
+                cgpu_assert(ArgData->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
                 CGpuBuffer_Vulkan** Buffers = (CGpuBuffer_Vulkan**)ArgData->buffers;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
                 {
-                    assert(ArgData->buffers[arr] && "ASSERT: Binding NULL Buffer!");
+                    cgpu_assert(ArgData->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
                     VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
                     Data->mBufferInfo.buffer = Buffers[arr]->pVkBuffer;
                     Data->mBufferInfo.offset = Buffers[arr]->mOffset;
@@ -739,7 +734,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
                 }
             }
             break;
-            default: assert(false && "Shader Stage not supported!"); break;
+            default: cgpu_assert(false && "Shader Stage not supported!"); break;
         }
     }
     // Viewport state
@@ -791,7 +786,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
         case TOPO_TRI_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
         case TOPO_PATCH_LIST: topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; break;
         case TOPO_TRI_LIST: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
-        default:  assert(false && "Primitive Topo not supported!"); break;
+        default:  cgpu_assert(false && "Primitive Topo not supported!"); break;
     }
     VkPipelineInputAssemblyStateCreateInfo ia = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -863,7 +858,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
     };
     // Create a stub render pass
     VkRenderPass render_pass = VK_NULL_HANDLE;
-    assert(desc->render_target_count >= 0);
+    cgpu_assert(desc->render_target_count >= 0);
     VkUtil_RenderPassDesc rp_desc = {
         .mColorAttachmentCount = desc->render_target_count,
         .mSampleCount = desc->sample_count,
@@ -907,7 +902,7 @@ void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
 // Queue APIs
 CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
 {
-    assert(device && "CGPU VULKAN: NULL DEVICE!");
+    cgpu_assert(device && "CGPU VULKAN: NULL DEVICE!");
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
 
@@ -929,11 +924,11 @@ void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDes
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)queue->device;
     CGpuFence_Vulkan* F = (CGpuFence_Vulkan*)desc->signal_fence;
 
-    // ASSERT that given cmd list and given params are valid
-    assert(CmdCount > 0);
-    assert(Cmds);
+    // cgpu_assert that given cmd list and given params are valid
+    cgpu_assert(CmdCount > 0);
+    cgpu_assert(Cmds);
     // execute given command list
-    assert(Q->pVkQueue != VK_NULL_HANDLE);
+    cgpu_assert(Q->pVkQueue != VK_NULL_HANDLE);
 
     DECLARE_ZERO_VLA(VkCommandBuffer, vkCmds, CmdCount);
     for (uint32_t i = 0; i < CmdCount; ++i)
@@ -990,7 +985,7 @@ void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentD
         if (vk_res != VK_SUCCESS && vk_res != VK_SUBOPTIMAL_KHR &&
             vk_res != VK_ERROR_OUT_OF_DATE_KHR)
         {
-            assert(0 && "Present failed!");
+            cgpu_assert(0 && "Present failed!");
         }
     }
 }
@@ -1032,13 +1027,13 @@ CGpuCommandPoolId cgpu_create_command_pool_vulkan(CGpuQueueId queue, const CGpuC
 
 CGpuCommandBufferId cgpu_create_command_buffer_vulkan(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
 {
-    assert(pool);
+    cgpu_assert(pool);
     CGpuCommandPool_Vulkan* P = (CGpuCommandPool_Vulkan*)pool;
     CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)P->super.queue;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)Q->super.device;
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cgpu_calloc_aligned(
         1, sizeof(CGpuCommandBuffer_Vulkan), _Alignof(CGpuCommandBuffer_Vulkan));
-    assert(Cmd);
+    cgpu_assert(Cmd);
 
     Cmd->mType = Q->super.type;
     Cmd->mNodeIndex = SINGLE_GPU_NODE_MASK;
@@ -1328,7 +1323,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
             fbDesc.mLayers = TVV->super.info.array_layer_count;
         }
         if (desc->render_target_count)
-            assert(fbDesc.mLayers == 1 && "MRT pass supports only one layer!");
+            cgpu_assert(fbDesc.mLayers == 1 && "MRT pass supports only one layer!");
         VkUtil_FindOrCreateFrameBuffer(D, &fbDesc, &pFramebuffer);
     }
     // Cmd begin render pass
@@ -1479,7 +1474,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
             surface_format.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         }
     }
-    assert(VK_FORMAT_UNDEFINED != surface_format.format);
+    cgpu_assert(VK_FORMAT_UNDEFINED != surface_format.format);
 
     // The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
     // This mode waits for the vertical blank ("v-sync")
@@ -1571,7 +1566,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
                         else
                         {
                             // No present queue family available. Something goes wrong.
-                            assert(0);
+                            cgpu_assert(0);
                         }
                     }
                 }
@@ -1601,7 +1596,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
             break;
         }
     }
-    assert(composite_alpha != VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR);
+    cgpu_assert(composite_alpha != VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR);
 
     VkSwapchainCreateInfoKHR swapChainCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -1628,7 +1623,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     VkResult res = D->mVkDeviceTable.vkCreateSwapchainKHR(D->pVkDevice, &swapChainCreateInfo, GLOBAL_VkAllocationCallbacks, &new_chain);
     if (VK_SUCCESS != res)
     {
-        assert(0 && "fatal: vkCreateSwapchainKHR failed!");
+        cgpu_assert(0 && "fatal: vkCreateSwapchainKHR failed!");
     }
 
     // Get swapchain images

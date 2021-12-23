@@ -1,7 +1,5 @@
-#include "cgpu/cgpu_config.h"
-#include "cgpu/flags.h"
 #include "math/common.h"
-#include "platform/configure.h"
+#include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "vulkan_utils.h"
 #include <string.h>
 
@@ -54,7 +52,7 @@ FORCEINLINE static VkFormatFeatureFlags VkUtil_ImageUsageToFormatFeatures(VkImag
 }
 
 // Buffer APIs
-static_assert(sizeof(CGpuBuffer_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
+cgpu_static_assert(sizeof(CGpuBuffer_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
 {
     CGpuBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGpuBuffer_Vulkan), _Alignof(CGpuBuffer_Vulkan));
@@ -74,7 +72,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         vmaCreateBuffer(D->pVmaAllocator, &add_info, &vma_mem_reqs, &B->pVkBuffer, &B->pVkAllocation, &alloc_info);
     if (bufferResult != VK_SUCCESS)
     {
-        assert(0);
+        cgpu_assert(0);
         return NULL;
     }
     B->super.cpu_mapped_address = alloc_info.pMappedData;
@@ -141,10 +139,10 @@ void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBufferRange* r
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
-    assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to map non-cpu accessible resource");
+    cgpu_assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to map non-cpu accessible resource");
 
     VkResult vk_res = vmaMapMemory(D->pVmaAllocator, B->pVkAllocation, &B->super.cpu_mapped_address);
-    assert(vk_res == VK_SUCCESS);
+    cgpu_assert(vk_res == VK_SUCCESS);
 
     if (range && (vk_res == VK_SUCCESS))
     {
@@ -156,7 +154,7 @@ void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer)
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
-    assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
+    cgpu_assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
 
     vmaUnmapMemory(D->pVmaAllocator, B->pVkAllocation);
     B->super.cpu_mapped_address = CGPU_NULLPTR;
@@ -180,7 +178,7 @@ void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
-    assert(B->pVkAllocation && "pVkAllocation must not be null!");
+    cgpu_assert(B->pVkAllocation && "pVkAllocation must not be null!");
     if (B->pVkUniformTexelView)
     {
         vkDestroyBufferView(D->pVkDevice, B->pVkUniformTexelView, GLOBAL_VkAllocationCallbacks);
@@ -196,7 +194,7 @@ void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
 }
 
 // Texture/TextureView APIs
-static_assert(sizeof(CGpuTexture_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
+cgpu_static_assert(sizeof(CGpuTexture_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 typedef struct ImportHandleInfo {
     void* pHandle;
     VkExternalMemoryHandleTypeFlagBitsKHR mHandleType;
@@ -206,7 +204,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     if (desc->sample_count > SC_1 && desc->mip_levels > 1)
     {
         cgpu_error("Multi-Sampled textures cannot have mip maps");
-        assert(false);
+        cgpu_assert(false);
         return CGPU_NULLPTR;
     }
     // Alloc aligned memory
@@ -215,7 +213,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuTexture_Vulkan));
     const CGpuFormatSupport* format_support = &A->adapter_detail.format_supports[desc->format];
-    assert(T);
+    cgpu_assert(T);
     if (desc->native_handle && !(desc->flags & TCF_IMPORT_BIT))
     {
         T->super.owns_image = false;
@@ -235,7 +233,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     T->image_type = VK_IMAGE_TYPE_MAX_ENUM;
     if (desc->flags & TCF_FORCE_2D)
     {
-        assert(desc->depth == 1);
+        cgpu_assert(desc->depth == 1);
         T->image_type = VK_IMAGE_TYPE_2D;
     }
     else if (desc->flags & TCF_FORCE_3D)
@@ -262,7 +260,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     const bool isPlanarFormat = false;
     const uint32_t numOfPlanes = 1;
     const bool isSinglePlane = true;
-    assert(
+    cgpu_assert(
         ((isSinglePlane && numOfPlanes == 1) || (!isSinglePlane && numOfPlanes > 1 && numOfPlanes <= MAX_PLANE_COUNT)) &&
         "Number of planes for multi-planar formats must be 2 or 3 and for single-planar formats it must be 1.");
 
@@ -298,7 +296,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
         vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, add_info.format, &format_props);
         if (isPlanarFormat) // multi-planar formats must have each plane separately bound to memory, rather than having a single memory binding for the whole image
         {
-            assert(format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_DISJOINT_BIT);
+            cgpu_assert(format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_DISJOINT_BIT);
             add_info.flags |= VK_IMAGE_CREATE_DISJOINT_BIT;
         }
 
@@ -307,11 +305,11 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             // Make it easy to copy to and from textures
             add_info.usage |= (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
         }
-        assert(format_support->shader_read && "GPU shader can't' read from this format");
+        cgpu_assert(format_support->shader_read && "GPU shader can't' read from this format");
         // Verify that GPU supports this format
         VkFormatFeatureFlags format_features = VkUtil_ImageUsageToFormatFeatures(add_info.usage);
         VkFormatFeatureFlags flags = format_props.optimalTilingFeatures & format_features;
-        assert((0 != flags) && "Format is not supported for GPU local images (i.e. not host visible images)");
+        cgpu_assert((0 != flags) && "Format is not supported for GPU local images (i.e. not host visible images)");
         // Allocate texture memory
         VmaAllocationCreateInfo mem_reqs = { 0 };
         if (desc->flags & TCF_OWN_MEMORY_BIT)
@@ -414,15 +412,15 @@ CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const str
             if (desc->array_layer_count > 1)
             {
                 cgpu_error("Cannot support 3D Texture Array in Vulkan");
-                assert(false);
+                cgpu_assert(false);
             }
             view_type = VK_IMAGE_VIEW_TYPE_3D;
             break;
         default:
-            assert(false && "Image Format not supported!");
+            cgpu_assert(false && "Image Format not supported!");
             break;
     }
-    assert(view_type != VK_IMAGE_VIEW_TYPE_MAX_ENUM && "Invalid Image View");
+    cgpu_assert(view_type != VK_IMAGE_VIEW_TYPE_MAX_ENUM && "Invalid Image View");
 
     // Determin aspect mask
     VkImageAspectFlags aspectMask = 0;

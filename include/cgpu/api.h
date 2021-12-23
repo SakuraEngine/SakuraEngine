@@ -3,6 +3,7 @@
 #include "platform/configure.h"
 #include "cgpu_config.h"
 #include "flags.h"
+
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
 #define MAX_MRT_COUNT 8
 #define MAX_VERTEX_ATTRIBS 15
@@ -581,6 +582,18 @@ typedef union CGpuClearValue
         uint32_t stencil;
     };
 } CGpuClearValue;
+static const CGpuClearValue fastclear_0000 = {
+    .r = 0.f, .g = 0.f, .b = 0.f, .a = 0.f
+};
+static const CGpuClearValue fastclear_0001 = {
+    .r = 0.f, .g = 0.f, .b = 0.f, .a = 1.f
+};
+static const CGpuClearValue fastclear_1110 = {
+    .r = 1.f, .g = 1.f, .b = 1.f, .a = 1.f
+};
+static const CGpuClearValue fastclear_1111 = {
+    .r = 1.f, .g = 1.f, .b = 1.f, .a = 1.f
+};
 
 typedef struct CGpuSwapChain {
     CGpuDeviceId device;

@@ -1,14 +1,14 @@
+#include "math/common.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.h"
-#include "math/common.h"
 #include <dxcapi.h>
-#include <type_traits>
 
 // Inline Utils
 D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGpuAdapter_D3D12* A, CGpuDevice_D3D12* D, const struct CGpuBufferDescriptor* desc);
 D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGpuBufferDescriptor* desc);
+
 // Buffer APIs
-static_assert(sizeof(CGpuBuffer_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
+cgpu_static_assert(sizeof(CGpuBuffer_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
 {
     CGpuBuffer_D3D12* B = new CGpuBuffer_D3D12();
@@ -169,7 +169,7 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
 void cgpu_map_buffer_d3d12(CGpuBufferId buffer, const struct CGpuBufferRange* range)
 {
     CGpuBuffer_D3D12* B = (CGpuBuffer_D3D12*)buffer;
-    assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to map non-cpu accessible resource");
+    cgpu_assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to map non-cpu accessible resource");
 
     D3D12_RANGE dxrange = { 0, B->super.size };
     if (range)
@@ -183,7 +183,7 @@ void cgpu_map_buffer_d3d12(CGpuBufferId buffer, const struct CGpuBufferRange* ra
 void cgpu_unmap_buffer_d3d12(CGpuBufferId buffer)
 {
     CGpuBuffer_D3D12* B = (CGpuBuffer_D3D12*)buffer;
-    assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
+    cgpu_assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
 
     B->pDxResource->Unmap(0, NULL);
     B->super.cpu_mapped_address = NULL;
@@ -264,7 +264,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
         pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob);
     }
     // Validate & Signing
-    // if (!is_dxil_signed(desc->code)) assert(0 && "The dxil shader is not signed!");
+    // if (!is_dxil_signed(desc->code)) cgpu_assert(0 && "The dxil shader is not signed!");
     // Reflection
     D3D12Util_InitializeShaderReflection(D, S, desc);
     pUtils->Release();
@@ -344,8 +344,9 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
 {
     if (pHeap->mUsedDescriptors + descriptorCount > pHeap->mDesc.NumDescriptors)
     {
+#ifdef CGPU_THREAD_SAFETY
         SMutexLock lock(*pHeap->pMutex);
-
+#endif
         if ((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE))
         {
             uint32_t currentOffset = pHeap->mUsedDescriptors;
@@ -363,7 +364,11 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
             pHeap->mStartHandle.mGpu = pHeap->pCurrentHeap->GetGPUDescriptorHandleForHeapStart();
 
             uint32_t* rangeSizes = (uint32_t*)alloca(pHeap->mUsedDescriptors * sizeof(uint32_t));
+#ifdef CGPU_THREAD_SAFETY
             uint32_t usedDescriptors = skr_atomic32_load_relaxed(&pHeap->mUsedDescriptors);
+#else
+            uint32_t usedDescriptors = pHeap->mUsedDescriptors;
+#endif
             for (uint32_t i = 0; i < pHeap->mUsedDescriptors; ++i)
                 rangeSizes[i] = 1;
             pDevice->CopyDescriptors(
@@ -402,8 +407,12 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
             }
         }
     }
+#ifdef CGPU_THREAD_SAFETY
     uint32_t usedDescriptors = skr_atomic32_add_relaxed(&pHeap->mUsedDescriptors, descriptorCount);
-    assert(usedDescriptors + descriptorCount <= pHeap->mDesc.NumDescriptors);
+#else
+    uint32_t usedDescriptors = pHeap->mUsedDescriptors + descriptorCount;
+#endif
+    cgpu_assert(usedDescriptors + descriptorCount <= pHeap->mDesc.NumDescriptors);
     D3D12Util_DescriptorHandle ret = {
         { pHeap->mStartHandle.mCpu.ptr + usedDescriptors * pHeap->mDescriptorSize },
         { pHeap->mStartHandle.mGpu.ptr + usedDescriptors * pHeap->mDescriptorSize },
@@ -416,9 +425,10 @@ void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
 {
     uint32_t numDescriptors = pDesc->NumDescriptors;
     D3D12Util_DescriptorHeap* pHeap = (D3D12Util_DescriptorHeap*)cgpu_calloc(1, sizeof(*pHeap));
-
+#ifdef CGPU_THREAD_SAFETY
     pHeap->pMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
     skr_init_mutex(pHeap->pMutex);
+#endif
     pHeap->pDevice = pDevice;
 
     // Keep 32 aligned for easy remove
@@ -445,8 +455,10 @@ void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
 void D3D12Util_ReturnDescriptorHandles(
     struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count)
 {
-    assert((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE) == 0);
+    cgpu_assert((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE) == 0);
+#ifdef CGPU_THREAD_SAFETY
     SMutexLock lock(*pHeap->pMutex);
+#endif
     for (uint32_t i = 0; i < count; ++i)
     {
         DECLARE_ZERO(D3D12Util_DescriptorHandle, Free)
@@ -467,9 +479,11 @@ static void D3D12Util_FreeDescriptorHeap(D3D12Util_DescriptorHeap* pHeap)
     if (pHeap == nullptr) return;
     SAFE_RELEASE(pHeap->pCurrentHeap);
 
-    // Need delete since object frees allocated memory in destructor
+// Need delete since object frees allocated memory in destructor
+#ifdef CGPU_THREAD_SAFETY
     skr_destroy_mutex(pHeap->pMutex);
     cgpu_free(pHeap->pMutex);
+#endif
 
     pHeap->mFreeList.~vector();
 

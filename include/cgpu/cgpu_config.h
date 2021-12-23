@@ -189,6 +189,16 @@
 #define cgpu_memalign sakura_malloc_aligned
 #define cgpu_free sakura_free
 
+//#define CGPU_THREAD_SAFETY
+
+#ifdef _DEBUG
+    #include "assert.h"
+    #define cgpu_assert assert
+#else
+    #define cgpu_assert(expr) (void)(expr);
+#endif
+#define cgpu_static_assert static_assert
+
 #ifdef __cplusplus
     #include <type_traits>
 template <typename T, typename... Args>

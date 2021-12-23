@@ -1,11 +1,6 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "cgpu/api.h"
-#include "cgpu/cgpu_config.h"
-#include "cgpu/flags.h"
 #include "d3d12_utils.h"
 #include "../common/common_utils.h"
-#include <assert.h>
-#include <stdio.h>
 #include <dxcapi.h>
 
 #if !defined(XBOX)
@@ -36,13 +31,13 @@ CGpuInstanceId cgpu_create_instance_d3d12(CGpuInstanceDescriptor const* descript
         // If the only adapter we found is a software adapter, log error message for QA
         if (!gpuCount && foundSoftwareAdapter)
         {
-            assert(0 && "The only available GPU has DXGI_ADAPTER_FLAG_SOFTWARE. Early exiting");
+            cgpu_assert(0 && "The only available GPU has DXGI_ADAPTER_FLAG_SOFTWARE. Early exiting");
             return CGPU_NULLPTR;
         }
     }
     else
     {
-        assert("[D3D12 Fatal]: Create DXGIFactory2 Failed!");
+        cgpu_assert("[D3D12 Fatal]: Create DXGIFactory2 Failed!");
     }
 #endif
     return &result->super;
@@ -87,7 +82,7 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
 
 void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
 {
-    assert(instance != nullptr && "fatal: null instance!");
+    cgpu_assert(instance != nullptr && "fatal: null instance!");
     CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)instance;
     *adapters_num = I->mAdaptersCount;
     if (!adapters)
@@ -132,7 +127,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
     if (!SUCCEEDED(D3D12CreateDevice(A->pDxActiveGPU, // default adapter
             A->mFeatureLevel, IID_PPV_ARGS(&D->pDxDevice))))
     {
-        assert("[D3D12 Fatal]: Create D3D12Device Failed!");
+        cgpu_assert("[D3D12 Fatal]: Create D3D12Device Failed!");
     }
 
     // Create Requested Queues.
@@ -160,20 +155,20 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
                     break;
                 default:
-                    assert(0 && "[D3D12 Fatal]: Unsupported ECGpuQueueType!");
+                    cgpu_assert(0 && "[D3D12 Fatal]: Unsupported ECGpuQueueType!");
                     return CGPU_NULLPTR;
             }
             queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
             if (!SUCCEEDED(D->pDxDevice->CreateCommandQueue(
                     &queueDesc, IID_PPV_ARGS(&D->ppCommandQueues[type][j]))))
             {
-                assert("[D3D12 Fatal]: Create D3D12CommandQueue Failed!");
+                cgpu_assert("[D3D12 Fatal]: Create D3D12CommandQueue Failed!");
             }
         }
     }
     // Create D3D12MA Allocator
     D3D12Util_CreateDMAAllocator(I, A, D);
-    assert(D->pResourceAllocator && "DMA Allocator Must be Created!");
+    cgpu_assert(D->pResourceAllocator && "DMA Allocator Must be Created!");
     // Create Descriptor Heaps
     D->pCPUDescriptorHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES * sizeof(D3D12Util_DescriptorHeap*));
     D->pCbvSrvUavHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
@@ -237,9 +232,9 @@ void cgpu_free_device_d3d12(CGpuDeviceId device)
 CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
-    // create a Fence and ASSERT that it is valid
+    // create a Fence and cgpu_assert that it is valid
     CGpuFence_D3D12* F = cgpu_new<CGpuFence_D3D12>();
-    assert(F);
+    cgpu_assert(F);
 
     CHECK_HRESULT(D->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_ARGS(&F->pDxFence)));
     F->mFenceValue = 1;
@@ -415,11 +410,11 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
             }
             case RT_RW_BUFFER:
             case RT_RW_BUFFER_RAW: {
-                assert(ArgData->buffers && "ASSERT: Binding NULL Buffer(s)!");
+                cgpu_assert(ArgData->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
                 CGpuBuffer_D3D12** Buffers = (CGpuBuffer_D3D12**)ArgData->buffers;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
                 {
-                    assert(ArgData->buffers[arr] && "ASSERT: Binding NULL Buffer!");
+                    cgpu_assert(ArgData->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
                         { Buffers[arr]->mDxDescriptorHandles.ptr + Buffers[arr]->mDxUavOffset },
                         Set->mCbvSrvUavHandle, arr);
@@ -497,11 +492,11 @@ void cgpu_submit_queue_d3d12(CGpuQueueId queue, const struct CGpuQueueSubmitDesc
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
     CGpuFence_D3D12* F = (CGpuFence_D3D12*)desc->signal_fence;
 
-    // ASSERT that given cmd list and given params are valid
-    assert(CmdCount > 0);
-    assert(Cmds);
+    // cgpu_assert that given cmd list and given params are valid
+    cgpu_assert(CmdCount > 0);
+    cgpu_assert(Cmds);
     // execute given command list
-    assert(Q->pCommandQueue);
+    cgpu_assert(Q->pCommandQueue);
 
     ID3D12CommandList** cmds = (ID3D12CommandList**)alloca(CmdCount * sizeof(ID3D12CommandList*));
     for (uint32_t i = 0; i < CmdCount; ++i)
@@ -530,7 +525,7 @@ void cgpu_wait_queue_idle_d3d12(CGpuQueueId queue)
 void cgpu_free_queue_d3d12(CGpuQueueId queue)
 {
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
-    assert(queue && "D3D12 ERROR: FREE NULL QUEUE!");
+    cgpu_assert(queue && "D3D12 ERROR: FREE NULL QUEUE!");
     cgpu_free_fence_d3d12(&Q->pFence->super);
     cgpu_delete(Q);
 }
@@ -573,7 +568,7 @@ CGpuCommandBufferId cgpu_create_command_buffer_d3d12(CGpuCommandPoolId pool, con
     CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)pool;
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)P->super.queue;
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)Q->super.device;
-    assert(Cmd);
+    cgpu_assert(Cmd);
 
     // set command pool of new command
     Cmd->mNodeIndex = SINGLE_GPU_NODE_INDEX;
@@ -606,8 +601,8 @@ void cgpu_free_command_buffer_d3d12(CGpuCommandBufferId cmd)
 void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool)
 {
     CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)pool;
-    assert(pool && "D3D12 ERROR: FREE NULL COMMAND POOL!");
-    assert(P->pDxCmdAlloc && "D3D12 ERROR: FREE NULL pDxCmdAlloc!");
+    cgpu_assert(pool && "D3D12 ERROR: FREE NULL COMMAND POOL!");
+    cgpu_assert(P->pDxCmdAlloc && "D3D12 ERROR: FREE NULL pDxCmdAlloc!");
 
     free_transient_command_allocator(P->pDxCmdAlloc);
     cgpu_delete(P);
@@ -681,7 +676,7 @@ void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuR
 void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
-    assert(Cmd->pDxCmdList);
+    cgpu_assert(Cmd->pDxCmdList);
 
     CHECK_HRESULT(Cmd->pDxCmdList->Close());
 }
@@ -775,15 +770,15 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     auto bCreated =
         SUCCEEDED(I->pDXGIFactory->CreateSwapChainForHwnd(Q->pCommandQueue, hwnd, &chain_desc1, NULL, NULL, &swapchain));
     (void)bCreated;
-    assert(bCreated && "Failed to Try to Create SwapChain!");
+    cgpu_assert(bCreated && "Failed to Try to Create SwapChain!");
 
     auto bAssociation = SUCCEEDED(I->pDXGIFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
     (void)bAssociation;
-    assert(bAssociation && "Failed to Try to Associate SwapChain With Window!");
+    cgpu_assert(bAssociation && "Failed to Try to Associate SwapChain With Window!");
 
     auto bQueryChain3 = SUCCEEDED(swapchain->QueryInterface(IID_PPV_ARGS(&S->pDxSwapChain)));
     (void)bQueryChain3;
-    assert(bQueryChain3 && "Failed to Query IDXGISwapChain3 from Created SwapChain!");
+    cgpu_assert(bQueryChain3 && "Failed to Query IDXGISwapChain3 from Created SwapChain!");
 
     SAFE_RELEASE(swapchain);
 

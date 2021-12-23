@@ -1,6 +1,4 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "cgpu/cgpu_config.h"
-#include "cgpu/flags.h"
 #include "d3d12_utils.h"
 #include <dxcapi.h>
 #include <d3d12shader.h>
@@ -34,8 +32,8 @@ void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstan
 
 void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* instance, uint32_t* count, bool* foundSoftwareAdapter)
 {
-    assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
-    assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
+    cgpu_assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
+    cgpu_assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
     IDXGIAdapter4* adapter = NULL;
     eastl::vector<IDXGIAdapter4*> dxgi_adapters;
     eastl::vector<D3D_FEATURE_LEVEL> adapter_levels;
@@ -112,7 +110,7 @@ void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter)
     ID3D12Device* pCheckDevice = nullptr;
     if (!SUCCEEDED(D3D12CreateDevice(adapter.pDxActiveGPU, adapter.mFeatureLevel, IID_PPV_ARGS(&pCheckDevice))))
     {
-        assert("[D3D12 Fatal]: Create D3D12Device Failed When Query Adapter Features!");
+        cgpu_assert("[D3D12 Fatal]: Create D3D12Device Failed When Query Adapter Features!");
     }
     // Architecture features
     DECLARE_ZERO(D3D12_FEATURE_DATA_ARCHITECTURE1, dxgi_feature)
@@ -146,7 +144,7 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
     desc.pAllocationCallbacks = &allocationCallbacks;
     if (!SUCCEEDED(D3D12MA::CreateAllocator(&desc, &D->pResourceAllocator)))
     {
-        assert(0 && "DMA Allocator Create Failed!");
+        cgpu_assert(0 && "DMA Allocator Create Failed!");
     }
 }
 
