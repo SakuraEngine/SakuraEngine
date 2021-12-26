@@ -89,6 +89,7 @@ void create_render_pipeline()
         .size = sizeof(TEXTURE_DATA),
         .name = "UploadBuffer"
     };
+
     CGpuBufferId upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGpuBufferRange map_range = {
         .offset = 0, .size = upload_buffer_desc.size
