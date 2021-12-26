@@ -254,7 +254,6 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
         // Handle Descriptor Sets
         uint32_t scount;
         spvReflectEnumerateDescriptorSets(S->pReflect, &scount, NULL);
-        reflection->shader_resources_count = scount;
         if (scount > 0)
         {
             DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount)
@@ -264,6 +263,7 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
             {
                 bcount += descriptros_sets[i]->binding_count;
             }
+            reflection->shader_resources_count = bcount;
             reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGpuShaderResource));
             // Fill Shader Resources
             for (uint32_t i_set = 0, i_res = 0; i_set < scount; i_set++)

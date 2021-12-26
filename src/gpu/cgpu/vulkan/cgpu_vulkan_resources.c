@@ -1,4 +1,5 @@
 #include "math/common.h"
+#include "float.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "vulkan_utils.h"
 #include <string.h>
@@ -526,11 +527,38 @@ void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target)
 // Sampler APIs
 CGpuSamplerId cgpu_create_sampler_vulkan(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc)
 {
-    return NULL;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuSampler_Vulkan* S = (CGpuSampler_Vulkan*)cgpu_calloc_aligned(1, sizeof(CGpuSampler_Vulkan), _Alignof(CGpuSampler_Vulkan));
+    VkSamplerCreateInfo sampler_info = {
+        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .magFilter = VkUtil_TranslateFilterType(desc->mag_filter),
+        .minFilter = VkUtil_TranslateFilterType(desc->min_filter),
+        .mipmapMode = VkUtil_TranslateMipMapMode(desc->mipmap_mode),
+        .addressModeU = VkUtil_TranslateAddressMode(desc->address_u),
+        .addressModeV = VkUtil_TranslateAddressMode(desc->address_v),
+        .addressModeW = VkUtil_TranslateAddressMode(desc->address_w),
+        .mipLodBias = desc->mip_lod_bias,
+        .anisotropyEnable = (desc->max_anisotropy > 0.0f) ? VK_TRUE : VK_FALSE,
+        .maxAnisotropy = desc->max_anisotropy,
+        .compareEnable = (gVkComparisonFuncTranslator[desc->compare_func] != VK_COMPARE_OP_NEVER) ? VK_TRUE : VK_FALSE,
+        .compareOp = gVkComparisonFuncTranslator[desc->compare_func],
+        .minLod = 0.0f,
+        .maxLod = ((desc->mipmap_mode == MIPMAP_MODE_LINEAR) ? FLT_MAX : 0.0f),
+        .borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
+        .unnormalizedCoordinates = VK_FALSE
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateSampler(D->pVkDevice, &sampler_info, GLOBAL_VkAllocationCallbacks, &S->pVkSampler));
+    return &S->super;
 }
 
 void cgpu_free_sampler_vulkan(CGpuSamplerId sampler)
 {
+    CGpuSampler_Vulkan* S = (CGpuSampler_Vulkan*)sampler;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)sampler->device;
+    D->mVkDeviceTable.vkDestroySampler(D->pVkDevice, S->pVkSampler, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(S);
 }
 
 // Shader APIs

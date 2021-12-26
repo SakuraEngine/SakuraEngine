@@ -102,6 +102,7 @@ RUNTIME_API void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuC
 
 // Render CMDs
 RUNTIME_API CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_bind_descriptor_set_vulkan(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set);
 RUNTIME_API void cgpu_render_encoder_set_viewport_vulkan(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
 RUNTIME_API void cgpu_render_encoder_set_scissor_vulkan(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 RUNTIME_API void cgpu_render_encoder_bind_pipeline_vulkan(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
@@ -245,6 +246,11 @@ typedef struct CGpuTextureView_Vulkan {
     VkImageView pVkUAVDescriptor;
 } CGpuTextureView_Vulkan;
 
+typedef struct CGpuSampler_Vulkan {
+    CGpuSampler super;
+    VkSampler pVkSampler;
+} CGpuSampler_Vulkan;
+
 typedef struct CGpuShaderLibrary_Vulkan {
     CGpuShaderLibrary super;
     VkShaderModule mShaderModule;
@@ -298,6 +304,23 @@ static const VkPipelineBindPoint gPipelineBindPoint[PT_COUNT] = {
 #ifdef ENABLE_RAYTRACING
     VK_PIPELINE_BIND_POINT_RAY_TRACING_NV
 #endif
+};
+
+static const VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LA_COUNT] = {
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+};
+
+static const VkCompareOp gVkComparisonFuncTranslator[MAX_COMPARE_MODES] = {
+    VK_COMPARE_OP_NEVER,
+    VK_COMPARE_OP_LESS,
+    VK_COMPARE_OP_EQUAL,
+    VK_COMPARE_OP_LESS_OR_EQUAL,
+    VK_COMPARE_OP_GREATER,
+    VK_COMPARE_OP_NOT_EQUAL,
+    VK_COMPARE_OP_GREATER_OR_EQUAL,
+    VK_COMPARE_OP_ALWAYS,
 };
 
 #ifdef __cplusplus

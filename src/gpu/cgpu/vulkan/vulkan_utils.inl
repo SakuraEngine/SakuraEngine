@@ -13,6 +13,50 @@ FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGpuReso
     return result;
 }
 
+FORCEINLINE static VkFilter VkUtil_TranslateFilterType(ECGpuFilterType filter)
+{
+    switch (filter)
+    {
+        case FT_NEAREST:
+            return VK_FILTER_NEAREST;
+        case FT_LINEAR:
+            return VK_FILTER_LINEAR;
+        default:
+            return VK_FILTER_LINEAR;
+    }
+}
+
+FORCEINLINE static VkSamplerMipmapMode VkUtil_TranslateMipMapMode(ECGpuMipMapMode mipMapMode)
+{
+    switch (mipMapMode)
+    {
+        case MIPMAP_MODE_NEAREST:
+            return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        case MIPMAP_MODE_LINEAR:
+            return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        default:
+            cgpu_assert(false && "Invalid Mip Map Mode");
+            return VK_SAMPLER_MIPMAP_MODE_MAX_ENUM;
+    }
+}
+
+FORCEINLINE static VkSamplerAddressMode VkUtil_TranslateAddressMode(ECGpuAddressMode addressMode)
+{
+    switch (addressMode)
+    {
+        case ADDRESS_MODE_MIRROR:
+            return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case ADDRESS_MODE_REPEAT:
+            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        case ADDRESS_MODE_CLAMP_TO_EDGE:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case ADDRESS_MODE_CLAMP_TO_BORDER:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        default:
+            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    }
+}
+
 FORCEINLINE static VkImageLayout VkUtil_ResourceStateToImageLayout(ECGpuResourceState usage)
 {
     if (usage & RS_COPY_SOURCE)
