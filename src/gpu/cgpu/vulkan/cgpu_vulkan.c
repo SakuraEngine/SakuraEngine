@@ -414,6 +414,8 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             this_entry->descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
             this_entry->dstBinding = param_table->resources[i_binding].binding;
             this_entry->dstArrayElement = 0;
+            this_entry->stride = sizeof(VkDescriptorUpdateData);
+            this_entry->offset = this_entry->dstBinding * this_entry->stride;
         }
         VkDescriptorUpdateTemplateCreateInfo template_info = {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
