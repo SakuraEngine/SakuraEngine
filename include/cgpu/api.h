@@ -273,6 +273,8 @@ typedef void (*CGPUProcCmdEndComputePass)(CGpuCommandBufferId cmd, CGpuComputePa
 // Render Pass
 RUNTIME_API CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
 typedef CGpuRenderPassEncoderId (*CGPUProcCmdBeginRenderPass)(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_bind_descriptor_set(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set);
+typedef void (*CGPUProcRenderEncoderBindDescriptorSet)(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set);
 RUNTIME_API void cgpu_render_encoder_set_viewport(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
 typedef void (*CGPUProcRenderEncoderSetViewport)(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
 RUNTIME_API void cgpu_render_encoder_set_scissor(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
@@ -369,6 +371,7 @@ typedef struct CGpuProcTable {
 
     // Render CMDs
     const CGPUProcCmdBeginRenderPass cmd_begin_render_pass;
+    const CGPUProcRenderEncoderBindDescriptorSet render_encoder_bind_descriptor_set;
     const CGPUProcRenderEncoderBindPipeline render_encoder_bind_pipeline;
     const CGPUProcRenderEncoderSetViewport render_encoder_set_viewport;
     const CGPUProcRenderEncoderSetScissor render_encoder_set_scissor;
@@ -556,7 +559,7 @@ typedef struct CGpuDescriptorData {
     union
     {
         /// Array of texture descriptors (srv and uav textures)
-        CGpuTextureId* textures;
+        CGpuTextureViewId* textures;
         /// Array of sampler descriptors
         CGpuSamplerId* samplers;
         /// Array of buffer descriptors (srv, uav and cbv buffers)

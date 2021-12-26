@@ -526,6 +526,17 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, cons
     return ecd;
 }
 
+void cgpu_render_encoder_bind_descriptor_set(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set)
+{
+    cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
+    cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL descriptor!");
+    CGpuDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderBindDescriptorSet fn_bind_descriptor_set = device->proc_table_cache->render_encoder_bind_descriptor_set;
+    cgpu_assert(fn_bind_descriptor_set && "render_encoder_bind_descriptor_set Proc Missing!");
+    fn_bind_descriptor_set(encoder, set);
+}
+
 void cgpu_render_encoder_set_viewport(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
 {
     CGpuDeviceId device = encoder->device;

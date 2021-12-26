@@ -89,6 +89,7 @@ const CGpuProcTable tbl_vk = {
 
     // Render CMDs
     .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_vulkan,
+    .render_encoder_bind_descriptor_set = cgpu_render_encoder_bind_descriptor_set_vulkan,
     .render_encoder_set_viewport = &cgpu_render_encoder_set_viewport_vulkan,
     .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_vulkan,
     .render_encoder_bind_pipeline = &cgpu_render_encoder_bind_pipeline_vulkan,
@@ -128,12 +129,6 @@ FORCEINLINE static void VkUtil_FreeFramebuffer(CGpuDevice_Vulkan* D, VkFramebuff
 }
 
 // Render Pass Utils
-VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LA_COUNT] = {
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-    VK_ATTACHMENT_LOAD_OP_LOAD,
-    VK_ATTACHMENT_LOAD_OP_CLEAR,
-};
-
 // TODO: recycle cached render passes
 FORCEINLINE static void VkUtil_FreeRenderPass(CGpuDevice_Vulkan* D, VkRenderPass pRenderPass)
 {
@@ -414,10 +409,11 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             param_table->resources_count, sizeof(VkDescriptorUpdateTemplateEntry));
         for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
         {
-            template_entries[i_binding].descriptorCount = param_table->resources[i_binding].size;
-            template_entries[i_binding].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
-            template_entries[i_binding].dstArrayElement = 0;
-            template_entries[i_binding].dstBinding = param_table->resources[i_binding].binding;
+            VkDescriptorUpdateTemplateEntry* this_entry = template_entries + i_binding;
+            this_entry->descriptorCount = param_table->resources[i_binding].size;
+            this_entry->descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
+            this_entry->dstBinding = param_table->resources[i_binding].binding;
+            this_entry->dstArrayElement = 0;
         }
         VkDescriptorUpdateTemplateCreateInfo template_info = {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
@@ -465,7 +461,7 @@ CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)desc->root_signature;
     SetLayout_Vulkan* SetLayout = &RS->set_layouts[desc->set_index];
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    const size_t UpdateTemplateSize = RS->super.table_count * sizeof(VkDescriptorUpdateData);
+    const size_t UpdateTemplateSize = RS->super.tables[desc->set_index].resources_count * sizeof(VkDescriptorUpdateData);
     totalSize += UpdateTemplateSize;
     CGpuDescriptorSet_Vulkan* Set = cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuDescriptorSet_Vulkan));
     char8_t* pMem = (char8_t*)(Set + 1);
@@ -489,9 +485,9 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     for (uint32_t i = 0; i < count; i++)
     {
         // Descriptor Info
-        const CGpuDescriptorData* ArgData = datas + i;
+        const CGpuDescriptorData* pParam = datas + i;
         CGpuShaderResource* ResData = CGPU_NULLPTR;
-        size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), *(size_t*)&D);
+        size_t argNameHash = cgpu_hash(pParam->name, strlen(pParam->name), *(size_t*)&D);
         for (uint32_t p = 0; p < ParamTable->resources_count; p++)
         {
             if (ParamTable->resources[p].name_hash == argNameHash)
@@ -500,39 +496,66 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
             }
         }
         // Update Info
-        const CGpuDescriptorData* pParam = datas + i;
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
         switch (ResData->type)
         {
+            case RT_TEXTURE: {
+                cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL texture(s)");
+                CGpuTextureView_Vulkan** TextureViews = (CGpuTextureView_Vulkan**)pParam->textures;
+                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                {
+                    // TODO: Stencil support
+                    cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL texture!");
+                    VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
+                    Data->mImageInfo.imageView = TextureViews[arr]->pVkSRVDescriptor;
+                    Data->mImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    Data->mImageInfo.sampler = VK_NULL_HANDLE;
+                    dirty = true;
+                }
+                break;
+            }
+            case RT_SAMPLER: {
+                cgpu_assert(pParam->samplers && "cgpu_assert: Binding NULL Sampler(s)");
+                CGpuSampler_Vulkan** Samplers = (CGpuSampler_Vulkan**)pParam->samplers;
+                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                {
+                    cgpu_assert(pParam->samplers[arr] && "cgpu_assert: Binding NULL Sampler!");
+                    VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
+                    Data->mImageInfo.sampler = Samplers[arr]->pVkSampler;
+                    dirty = true;
+                }
+                break;
+            }
             case RT_BUFFER:
             case RT_BUFFER_RAW:
             case RT_RW_BUFFER:
             case RT_RW_BUFFER_RAW: {
-                cgpu_assert(ArgData->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
-                CGpuBuffer_Vulkan** Buffers = (CGpuBuffer_Vulkan**)ArgData->buffers;
+                cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
+                CGpuBuffer_Vulkan** Buffers = (CGpuBuffer_Vulkan**)pParam->buffers;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
                 {
-                    cgpu_assert(ArgData->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
+                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
                     VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
                     Data->mBufferInfo.buffer = Buffers[arr]->pVkBuffer;
                     Data->mBufferInfo.offset = Buffers[arr]->mOffset;
                     Data->mBufferInfo.range = VK_WHOLE_SIZE;
-                    if (ArgData->buffers_params.offsets)
+                    if (pParam->buffers_params.offsets)
                     {
-                        Data->mBufferInfo.offset = ArgData->buffers_params.offsets[arr];
-                        Data->mBufferInfo.range = ArgData->buffers_params.sizes[arr];
+                        Data->mBufferInfo.offset = pParam->buffers_params.offsets[arr];
+                        Data->mBufferInfo.range = pParam->buffers_params.sizes[arr];
                     }
                     dirty = true;
                 }
                 break;
             }
             default:
+                assert(0 && ResData->type && "Descriptor Type not supported!");
                 break;
         }
-        if (dirty)
-        {
-            D->mVkDeviceTable.vkUpdateDescriptorSetWithTemplateKHR(D->pVkDevice, Set->pVkDescriptorSet, SetLayout->update_template, pUpdateData);
-        }
+    }
+    if (dirty)
+    {
+        D->mVkDeviceTable.vkUpdateDescriptorSetWithTemplateKHR(D->pVkDevice, Set->pVkDescriptorSet, SetLayout->update_template, Set->pUpdateData);
     }
 }
 
@@ -1254,6 +1277,21 @@ void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId en
     // Example: If shader uses only set 2, we still have to bind empty sets for set=0 and set=1
 
     D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, RS->pipeline_layout,
+        Set->super.index, 1, &Set->pVkDescriptorSet,
+        // TODO: Dynamic Offset
+        0, NULL);
+}
+
+void cgpu_render_encoder_bind_descriptor_set_vulkan(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    const CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
+    const CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
+
+    // TODO: VK Must Fill All DescriptorSetLayouts at first dispach/draw.
+    // Example: If shader uses only set 2, we still have to bind empty sets for set=0 and set=1
+    D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pipeline_layout,
         Set->super.index, 1, &Set->pVkDescriptorSet,
         // TODO: Dynamic Offset
         0, NULL);
