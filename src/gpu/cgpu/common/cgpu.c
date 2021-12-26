@@ -433,7 +433,7 @@ void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct C
     cgpu_assert(cmd->current_dispatch == PT_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     if (desc->layer_count == 0) ((CGpuBufferToTextureTransfer*)desc)->layer_count = 1;
-    assert(desc->bytes_per_row != 0 && "fatal: bytes_per_raw must be greater than 0!");
+    assert(desc->elems_per_row != 0 && "fatal: bytes_per_raw must be greater than 0!");
     assert(desc->rows_per_image != 0 && "fatal: rows_per_image must be greater than 0!");
     const CGPUProcCmdTransferBufferToTexture fn_cmd_transfer_buffer_to_texture = cmd->device->proc_table_cache->cmd_transfer_buffer_to_texture;
     cgpu_assert(fn_cmd_transfer_buffer_to_texture && "cmd_transfer_buffer_to_texture Proc Missing!");

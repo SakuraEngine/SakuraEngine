@@ -47,7 +47,6 @@ if(BUILD_TEST)
 
     add_subdirectory(math)
     add_subdirectory(memory)
-    add_subdirectory(render-setup)
     add_subdirectory(window-exts)
     add_subdirectory(cgpu)
 endif()
