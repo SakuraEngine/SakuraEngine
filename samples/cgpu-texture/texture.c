@@ -83,8 +83,8 @@ void create_render_pipeline()
     CGpuBufferDescriptor upload_buffer_desc = {
         .name = "UploadBuffer",
         .flags = BCF_OWN_MEMORY_BIT,
-        .descriptors = RT_BUFFER,
-        .memory_usage = MU_CPU_TO_GPU,
+        .descriptors = RT_NONE,
+        .memory_usage = MU_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),
         .elemet_count = 1,
         .size = sizeof(TEXTURE_DATA)
