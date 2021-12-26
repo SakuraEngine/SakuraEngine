@@ -678,7 +678,7 @@ typedef struct CGpuBufferToBufferTransfer {
 typedef struct CGpuBufferToTextureTransfer {
     CGpuTextureId dst;
     uint32_t dst_mip_level;
-    uint32_t bytes_per_row;
+    uint32_t elems_per_row;
     uint32_t rows_per_image;
     uint32_t base_array_layer;
     uint32_t layer_count;

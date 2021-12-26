@@ -81,15 +81,14 @@ void create_render_pipeline()
     };
     sampled_view = cgpu_create_texture_view(device, &sview_desc);
     CGpuBufferDescriptor upload_buffer_desc = {
+        .name = "UploadBuffer",
         .flags = BCF_OWN_MEMORY_BIT,
         .descriptors = RT_BUFFER,
         .memory_usage = MU_CPU_TO_GPU,
-        .element_stride = sizeof(uint8_t),
-        .elemet_count = sizeof(TEXTURE_DATA) / sizeof(uint8_t),
-        .size = sizeof(TEXTURE_DATA),
-        .name = "UploadBuffer"
+        .element_stride = sizeof(TEXTURE_DATA),
+        .elemet_count = 1,
+        .size = sizeof(TEXTURE_DATA)
     };
-
     CGpuBufferId upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGpuBufferRange map_range = {
         .offset = 0, .size = upload_buffer_desc.size
@@ -114,7 +113,7 @@ void create_render_pipeline()
         .src = upload_buffer,
         .src_offset = 0,
         .dst = sampled_texture,
-        .bytes_per_row = FormatUtil_WidthOfBlock(PF_R8G8B8A8_UNORM) * TEXTURE_WIDTH,
+        .elems_per_row = FormatUtil_WidthOfBlock(PF_R8G8B8A8_UNORM) * TEXTURE_WIDTH,
         .rows_per_image = TEXTURE_HEIGHT,
         .base_array_layer = 0,
         .layer_count = 1
@@ -202,7 +201,6 @@ void initialize(void* usrdata)
         .enable_set_name = true
     };
     instance = cgpu_create_instance(&instance_desc);
-
     // Filter adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, CGPU_NULLPTR, &adapters_count);
@@ -226,7 +224,6 @@ void initialize(void* usrdata)
     pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
     CGpuCommandBufferDescriptor cmd_desc = { .is_secondary = false };
     cmd = cgpu_create_command_buffer(pool, &cmd_desc);
-
     // Create swapchain
 #if defined(_WIN32) || defined(_WIN64)
     surface = cgpu_surface_from_hwnd(device, wmInfo.info.win.window);

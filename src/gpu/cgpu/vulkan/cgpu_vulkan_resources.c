@@ -191,7 +191,7 @@ RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId 
 
         VkBufferImageCopy copy = {
             .bufferOffset = desc->src_offset,
-            .bufferRowLength = desc->bytes_per_row,
+            .bufferRowLength = desc->elems_per_row,
             .bufferImageHeight = desc->rows_per_image * FormatUtil_HeightOfBlock(fmt),
             .imageSubresource.aspectMask = (VkImageAspectFlags)desc->dst->aspect_mask,
             .imageSubresource.mipLevel = desc->dst_mip_level,
