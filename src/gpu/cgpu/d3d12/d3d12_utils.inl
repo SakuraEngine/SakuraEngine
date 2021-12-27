@@ -61,6 +61,118 @@ FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescripto
   }
 }
 
+FORCEINLINE static D3D12_BLEND_DESC D3D12Util_TranslateBlendState(const CGpuBlendStateDescriptor* pDesc)
+{
+  int blendDescIndex = 0;
+  D3D12_BLEND_DESC ret = {};
+  ret.AlphaToCoverageEnable = (BOOL)pDesc->alpha_to_coverage;
+  ret.IndependentBlendEnable = TRUE;
+  for (int i = 0; i < MAX_MRT_COUNT; i++) {
+      BOOL blendEnable =
+        (gDx12BlendConstantTranslator[pDesc->src_factors[blendDescIndex]] !=
+            D3D12_BLEND_ONE ||
+        gDx12BlendConstantTranslator[pDesc->dst_factors[blendDescIndex]] !=
+            D3D12_BLEND_ZERO ||
+        gDx12BlendConstantTranslator[pDesc->src_alpha_factors[blendDescIndex]] !=
+            D3D12_BLEND_ONE ||
+           gDx12BlendConstantTranslator[pDesc->dst_alpha_factors[blendDescIndex]] !=
+            D3D12_BLEND_ZERO);
+
+      ret.RenderTarget[i].BlendEnable = blendEnable;
+      ret.RenderTarget[i].RenderTargetWriteMask = (UINT8)pDesc->masks[blendDescIndex];
+      ret.RenderTarget[i].BlendOp =
+          gDx12BlendOpTranslator[pDesc->blend_modes[blendDescIndex]];
+      ret.RenderTarget[i].SrcBlend =
+          gDx12BlendConstantTranslator[pDesc->src_factors[blendDescIndex]];
+      ret.RenderTarget[i].DestBlend =
+          gDx12BlendConstantTranslator[pDesc->dst_factors[blendDescIndex]];
+      ret.RenderTarget[i].BlendOpAlpha =
+          gDx12BlendOpTranslator[pDesc->blend_alpha_modes[blendDescIndex]];
+      ret.RenderTarget[i].SrcBlendAlpha =
+          gDx12BlendConstantTranslator[pDesc->src_alpha_factors[blendDescIndex]];
+      ret.RenderTarget[i].DestBlendAlpha =
+          gDx12BlendConstantTranslator[pDesc->dst_alpha_factors[blendDescIndex]];
+
+    if (pDesc->independent_blend)
+      ++blendDescIndex;
+  }
+  return ret;
+}
+
+FORCEINLINE static D3D12_RASTERIZER_DESC D3D12Util_TranslateRasterizerState(const CGpuRasterizerStateDescriptor *pDesc) {
+  cgpu_assert(pDesc->fill_mode < FM_COUNT);
+  cgpu_assert(pDesc->cull_mode < CULL_MODE_COUNT);
+  cgpu_assert(pDesc->front_face == FF_CCW ||  pDesc->front_face == FF_CW);
+  D3D12_RASTERIZER_DESC ret = {};
+  ret.FillMode = gDx12FillModeTranslator[pDesc->fill_mode];
+  ret.CullMode = gDx12CullModeTranslator[pDesc->cull_mode];
+  ret.FrontCounterClockwise = pDesc->front_face == FF_CCW;
+  ret.DepthBias = pDesc->depth_bias;
+  ret.DepthBiasClamp = 0.0f;
+  ret.SlopeScaledDepthBias = pDesc->slope_scaled_depth_bias;
+  ret.DepthClipEnable = !pDesc->enable_depth_clamp;
+  ret.MultisampleEnable = pDesc->enable_multi_sample ? TRUE : FALSE;
+  ret.AntialiasedLineEnable = FALSE;
+  ret.ForcedSampleCount = 0;
+  ret.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+  return ret;
+}
+
+FORCEINLINE static  D3D12_DEPTH_STENCIL_DESC D3D12Util_TranslateDephStencilState(const CGpuDepthStateDescriptor *pDesc) {
+  cgpu_assert(pDesc->depth_func < MAX_COMPARE_MODES);
+  cgpu_assert(pDesc->stencil_front_func < MAX_COMPARE_MODES);
+  cgpu_assert(pDesc->stencil_front_fail < MAX_STENCIL_OPS);
+  cgpu_assert(pDesc->depth_front_fail < MAX_STENCIL_OPS);
+  cgpu_assert(pDesc->stencil_front_pass < MAX_STENCIL_OPS);
+  cgpu_assert(pDesc->stencil_back_func < MAX_COMPARE_MODES);
+  cgpu_assert(pDesc->stencil_back_fail < MAX_STENCIL_OPS);
+  cgpu_assert(pDesc->depth_back_fail < MAX_STENCIL_OPS);
+  cgpu_assert(pDesc->stencil_back_pass < MAX_STENCIL_OPS);
+
+  D3D12_DEPTH_STENCIL_DESC ret = {};
+  ret.DepthEnable = (BOOL)pDesc->depth_test;
+  ret.DepthWriteMask = pDesc->depth_write ? D3D12_DEPTH_WRITE_MASK_ALL
+                                          : D3D12_DEPTH_WRITE_MASK_ZERO;
+  ret.DepthFunc = gDx12ComparisonFuncTranslator[pDesc->depth_func];
+  ret.StencilEnable = (BOOL)pDesc->stencil_test;
+  ret.StencilReadMask = pDesc->stencil_read_mask;
+  ret.StencilWriteMask = pDesc->stencil_write_mask;
+  ret.BackFace.StencilFunc =
+      gDx12ComparisonFuncTranslator[pDesc->stencil_back_func];
+  ret.FrontFace.StencilFunc =
+      gDx12ComparisonFuncTranslator[pDesc->stencil_front_func];
+  ret.BackFace.StencilDepthFailOp =
+      gDx12StencilOpTranslator[pDesc->depth_back_fail];
+  ret.FrontFace.StencilDepthFailOp =
+      gDx12StencilOpTranslator[pDesc->depth_front_fail];
+  ret.BackFace.StencilFailOp =
+      gDx12StencilOpTranslator[pDesc->stencil_back_fail];
+  ret.FrontFace.StencilFailOp =
+      gDx12StencilOpTranslator[pDesc->stencil_front_fail];
+  ret.BackFace.StencilPassOp =
+      gDx12StencilOpTranslator[pDesc->stencil_back_pass];
+  ret.FrontFace.StencilPassOp =
+      gDx12StencilOpTranslator[pDesc->stencil_front_pass];
+
+  return ret;
+}
+
+FORCEINLINE static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12Util_TranslatePrimitiveTopology(ECGpuPrimitiveTopology topology) {
+  switch (topology) {
+  case TOPO_POINT_LIST:
+    return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+  case TOPO_LINE_LIST:
+  case TOPO_LINE_STRIP:
+    return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+  case TOPO_TRI_LIST:
+  case TOPO_TRI_STRIP:
+    return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+  case TOPO_PATCH_LIST:
+    return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+  }
+  return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+}
+
 FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_TranslateResourceState(ECGpuResourceState state)
 {
     D3D12_RESOURCE_STATES ret = D3D12_RESOURCE_STATE_COMMON;

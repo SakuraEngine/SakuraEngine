@@ -877,9 +877,9 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
     // Color blending state
     DECLARE_ZERO(VkPipelineColorBlendAttachmentState, cb_attachments[MAX_MRT_COUNT])
 	int blendDescIndex = 0;
+    const CGpuBlendStateDescriptor* pDesc = desc->blend_state;
     for (int i = 0; i < MAX_MRT_COUNT; ++i)
 	{
-        const CGpuBlendStateDescriptor* pDesc = desc->blend_state;
         VkBool32 blendEnable =
             (gVkBlendConstantTranslator[pDesc->src_factors[blendDescIndex]] != VK_BLEND_FACTOR_ONE ||
                 gVkBlendConstantTranslator[pDesc->dst_factors[blendDescIndex]] != VK_BLEND_FACTOR_ZERO ||
@@ -1746,11 +1746,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     {
         Ts[i].pVkImage = vimages[i];
         Ts[i].image_type = VK_IMAGE_TYPE_2D;
-        // TODO: Create default SRV descriptor
-        // Ts[i].pVkSRVDescriptor
-        // TODO: Create default UAV descriptor
         Ts[i].super.is_cube = false;
-        // Ts[i].pVkUAVDescriptors
         Ts[i].super.array_size_minus_one = 0;
         Ts[i].super.device = &D->super;
         Ts[i].super.format = VkUtil_FormatTranslateToCGPU(surface_format.format);

@@ -202,15 +202,26 @@
 #ifdef __cplusplus
     #include <type_traits>
 template <typename T, typename... Args>
+T* cgpu_new_placed(void* memory, Args&&... args)
+{
+    return new (memory) T(std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
 T* cgpu_new(Args&&... args)
 {
     void* memory = sakura_malloc_aligned(sizeof(T), alignof(T));
-    return new (memory) T(std::forward<Args>(args)...);
+    return cgpu_new_placed<T>(memory, std::forward<Args>(args)...);
+}
+template <typename T>
+void cgpu_delete_placed(T* object)
+{
+    object->~T();
 }
 template <typename T>
 void cgpu_delete(T* object)
 {
-    object->~T();
+    cgpu_delete_placed(object);
     cgpu_free(object);
 }
 #endif

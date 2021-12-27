@@ -21,21 +21,25 @@ _Thread_local CGpuTextureViewId views[3];
 const uint32_t* get_vertex_shader()
 {
     if (backend == ECGpuBackend_VULKAN) return (const uint32_t*)vertex_shader_spirv;
+    if (backend == ECGpuBackend_D3D12) return (const uint32_t*)vertex_shader_dxil;
     return CGPU_NULLPTR;
 }
 const size_t get_vertex_shader_size()
 {
     if (backend == ECGpuBackend_VULKAN) return sizeof(vertex_shader_spirv);
+    if (backend == ECGpuBackend_D3D12) return sizeof(vertex_shader_dxil);
     return 0;
 }
 const uint32_t* get_fragment_shader()
 {
     if (backend == ECGpuBackend_VULKAN) return (const uint32_t*)fragment_shader_spirv;
+    if (backend == ECGpuBackend_D3D12) return (const uint32_t*)fragment_shader_dxil;
     return CGPU_NULLPTR;
 }
 const size_t get_fragment_shader_size()
 {
     if (backend == ECGpuBackend_VULKAN) return sizeof(fragment_shader_spirv);
+    if (backend == ECGpuBackend_D3D12) return sizeof(fragment_shader_dxil);
     return 0;
 }
 
@@ -97,9 +101,9 @@ void initialize(void* usrdata)
     // Create instance
     CGpuInstanceDescriptor instance_desc = {
         .backend = backend,
-        .enable_debug_layer = false,
-        .enable_gpu_based_validation = false,
-        .enable_set_name = false
+        .enable_debug_layer = true,
+        .enable_gpu_based_validation = true,
+        .enable_set_name = true
     };
     instance = cgpu_create_instance(&instance_desc);
 
@@ -270,7 +274,7 @@ int main()
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
 
-    ECGpuBackend backend = ECGpuBackend_VULKAN;
+    ECGpuBackend backend = ECGpuBackend_D3D12;
     initialize(&backend);
     raster_program();
     finalize();

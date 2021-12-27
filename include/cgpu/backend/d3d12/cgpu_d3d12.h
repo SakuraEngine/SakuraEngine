@@ -44,6 +44,8 @@ RUNTIME_API void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const
 RUNTIME_API void cgpu_free_descriptor_set_d3d12(CGpuDescriptorSetId set);
 RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline_d3d12(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_compute_pipeline_d3d12(CGpuComputePipelineId pipeline);
+RUNTIME_API CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc);
+RUNTIME_API void cgpu_free_render_pipeline_d3d12(CGpuRenderPipelineId pipeline);
 
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
@@ -213,6 +215,13 @@ typedef struct CGpuComputePipeline_D3D12 {
     ID3D12RootSignature* pRootSignature;
 } CGpuComputePipeline_D3D12;
 
+typedef struct CGpuRenderPipeline_D3D12 {
+    CGpuRenderPipeline super;
+    ID3D12PipelineState* pDxPipelineState;
+    ID3D12RootSignature* pRootSignature;
+    D3D_PRIMITIVE_TOPOLOGY mDxPrimitiveTopology;
+} CGpuRenderPipeline_D3D12;
+
 typedef struct CGpuBuffer_D3D12 {
     CGpuBuffer super;
     /// GPU Address - Cache to avoid calls to ID3D12Resource::GetGpuVirtualAddress
@@ -232,6 +241,12 @@ typedef struct CGpuBuffer_D3D12 {
     struct DMA_Allocation* pDxAllocation;
 #endif
 } CGpuBuffer_D3D12;
+
+typedef struct CGpuTexture_D3D12 {
+    CGpuTexture super;
+    ID3D12Resource* pDxResource;
+    struct DMA_Allocation* pDxAllocation;
+} CGpuTexture_D3D12;
 
 typedef struct CGpuSwapChain_D3D12 {
     CGpuSwapChain super;
