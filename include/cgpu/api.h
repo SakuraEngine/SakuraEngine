@@ -162,6 +162,10 @@ RUNTIME_API void cgpu_wait_fences(const CGpuFenceId* fences, uint32_t fence_coun
 typedef void (*CGPUProcWaitFences)(const CGpuFenceId* fences, uint32_t fence_count);
 RUNTIME_API void cgpu_free_fence(CGpuFenceId fence);
 typedef void (*CGPUProcFreeFence)(CGpuFenceId fence);
+RUNTIME_API CGpuSemaphoreId cgpu_create_semaphore(CGpuDeviceId device);
+typedef CGpuSemaphoreId (*CGPUProcCreateSemaphore)(CGpuDeviceId device);
+RUNTIME_API void cgpu_free_semaphore(CGpuSemaphoreId semaphore);
+typedef void (*CGPUProcFreeSemaphore)(CGpuSemaphoreId semaphore);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 typedef CGpuRootSignatureId (*CGPUProcCreateRootSignature)(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature(CGpuRootSignatureId signature);
@@ -306,6 +310,8 @@ typedef struct CGpuProcTable {
     const CGPUProcCreateFence create_fence;
     const CGPUProcWaitFences wait_fences;
     const CGPUProcFreeFence free_fence;
+    const CGPUProcCreateSemaphore create_semaphore;
+    const CGPUProcFreeSemaphore free_semaphore;
     const CGPUProcCreateRootSignature create_root_signature;
     const CGPUProcFreeRootSignature free_root_signature;
     const CGPUProcCreateDescriptorSet create_descriptor_set;
@@ -651,8 +657,8 @@ typedef struct CGpuQueueSubmitDescriptor {
     CGpuSemaphoreId* wait_semaphores;
     CGpuSemaphoreId* signal_semaphores;
     uint32_t cmds_count;
-    uint32_t wait_semaphores_count;
-    uint32_t signal_semaphores_count;
+    uint32_t wait_semaphore_count;
+    uint32_t signal_semaphore_count;
 } CGpuQueueSubmitDescriptor;
 
 typedef struct CGpuQueuePresentDescriptor {
