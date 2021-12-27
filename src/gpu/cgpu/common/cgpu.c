@@ -272,6 +272,8 @@ CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const stru
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_render_pipeline && "create_render_pipeline Proc Missing!");
     CGpuRenderPipeline* pipeline = CGPU_NULLPTR;
+    if (desc->sample_count == 0)
+        ((CGpuRenderPipelineDescriptor*)desc)->sample_count = 1;
     if (desc->blend_state == CGPU_NULLPTR)
         ((CGpuRenderPipelineDescriptor*)desc)->blend_state = &defaultBlendStateDesc;
     if (desc->rasterizer_state == CGPU_NULLPTR)

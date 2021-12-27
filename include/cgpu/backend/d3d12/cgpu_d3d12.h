@@ -69,6 +69,12 @@ RUNTIME_API void cgpu_map_buffer_d3d12(CGpuBufferId buffer, const struct CGpuBuf
 RUNTIME_API void cgpu_unmap_buffer_d3d12(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer_d3d12(CGpuBufferId buffer);
 
+// Texture/TextureView APIs
+RUNTIME_API CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
+RUNTIME_API void cgpu_free_texture_d3d12(CGpuTextureId texture);
+RUNTIME_API CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc);
+RUNTIME_API void cgpu_free_texture_view_d3d12(CGpuTextureViewId render_target);
+
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
@@ -247,6 +253,17 @@ typedef struct CGpuTexture_D3D12 {
     ID3D12Resource* pDxResource;
     struct DMA_Allocation* pDxAllocation;
 } CGpuTexture_D3D12;
+
+typedef struct CGpuTextureView_D3D12 {
+    CGpuTextureView super;
+    D3D12_CPU_DESCRIPTOR_HANDLE mDxDescriptorHandles;
+    /// Offset from mDxDescriptors for srv descriptor handle
+    uint64_t mDxSrvOffset : 8;
+    /// Offset from mDxDescriptors for uav descriptor handle
+    uint64_t mDxUavOffset : 8;
+    /// Offset from mDxDescriptors for rtv descriptor handle
+    D3D12_CPU_DESCRIPTOR_HANDLE mDxRtxDescriptorHandle;
+} CGpuTextureView_D3D12;
 
 typedef struct CGpuSwapChain_D3D12 {
     CGpuSwapChain super;

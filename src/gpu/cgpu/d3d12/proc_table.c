@@ -45,6 +45,10 @@ const CGpuProcTable tbl_d3d12 = {
     .create_shader_library = &cgpu_create_shader_library_d3d12,
     .free_shader_library = &cgpu_free_shader_library_d3d12,
 
+    // Texture/TextureView APIs
+    .create_texture_view = &cgpu_create_texture_view_d3d12,
+    .free_texture_view = &cgpu_free_texture_view_d3d12,
+
     // Buffer APIs
     .create_buffer = &cgpu_create_buffer_d3d12,
     .map_buffer = &cgpu_map_buffer_d3d12,
