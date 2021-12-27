@@ -48,6 +48,8 @@ void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
     const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
     const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+void D3D12Util_CreateRTV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+    const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 
 typedef struct D3D12Util_DescriptorHeap {
     /// DX Heap
