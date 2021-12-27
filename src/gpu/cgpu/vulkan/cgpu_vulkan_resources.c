@@ -1,6 +1,7 @@
 #include "math/common.h"
 #include "float.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
+#include "../common/common_utils.h"
 #include "vulkan_utils.h"
 #include <string.h>
 
@@ -191,7 +192,7 @@ RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId 
 
         VkBufferImageCopy copy = {
             .bufferOffset = desc->src_offset,
-            .bufferRowLength = desc->elems_per_row,
+            .bufferRowLength = desc->elems_per_row * FormatUtil_WidthOfBlock(PF_R8G8B8A8_UNORM),
             .bufferImageHeight = desc->rows_per_image * FormatUtil_HeightOfBlock(fmt),
             .imageSubresource.aspectMask = (VkImageAspectFlags)desc->dst->aspect_mask,
             .imageSubresource.mipLevel = desc->dst_mip_level,
@@ -402,7 +403,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     // Set Texture Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)T->pVkImage, VK_OBJECT_TYPE_IMAGE, desc->name);
     // TODO: Start state
-
+    // CGpuQueueId gfx_queue = cgpu_runtime_table_try_get_queue(device, ECGpuQueueType_Graphics, 0);
     return &T->super;
 }
 

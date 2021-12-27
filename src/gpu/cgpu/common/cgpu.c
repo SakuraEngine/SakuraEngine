@@ -166,6 +166,24 @@ void cgpu_free_fence(CGpuFenceId fence)
     fn_free_fence(fence);
 }
 
+CGpuSemaphoreId cgpu_create_semaphore(CGpuDeviceId device)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->create_semaphore && "create_semaphore Proc Missing!");
+    CGpuSemaphore* semaphore = (CGpuSemaphore*)device->proc_table_cache->create_semaphore(device);
+    semaphore->device = device;
+    return semaphore;
+}
+
+void cgpu_free_semaphore(CGpuSemaphoreId semaphore)
+{
+    cgpu_assert(semaphore != CGPU_NULLPTR && "fatal: call on NULL semaphore!");
+    cgpu_assert(semaphore->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcFreeSemaphore fn_free_semaphore = semaphore->device->proc_table_cache->free_semaphore;
+    cgpu_assert(fn_free_semaphore && "free_semaphore Proc Missing!");
+    fn_free_semaphore(semaphore);
+}
+
 CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");

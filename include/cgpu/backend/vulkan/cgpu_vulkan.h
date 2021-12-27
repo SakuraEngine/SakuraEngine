@@ -37,6 +37,8 @@ RUNTIME_API void cgpu_free_device_vulkan(CGpuDeviceId device);
 RUNTIME_API CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device);
 RUNTIME_API void cgpu_wait_fences_vulkan(const CGpuFenceId* fences, uint32_t fence_count);
 RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
+RUNTIME_API CGpuSemaphoreId cgpu_create_semaphore_vulkan(CGpuDeviceId device);
+RUNTIME_API void cgpu_free_semaphore_vulkan(CGpuSemaphoreId semaphore);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature);
 RUNTIME_API CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc);
@@ -196,6 +198,12 @@ typedef struct CGpuFence_Vulkan {
     VkFence pVkFence;
     uint32_t mSubmitted : 1;
 } CGpuFence_Vulkan;
+
+typedef struct CGpuSemaphore_Vulkan {
+    CGpuSemaphore super;
+    VkSemaphore pVkSemaphore;
+    uint8_t mSignaled : 1;
+} CGpuSemaphore_Vulkan;
 
 typedef struct CGpuQueue_Vulkan {
     const CGpuQueue super;

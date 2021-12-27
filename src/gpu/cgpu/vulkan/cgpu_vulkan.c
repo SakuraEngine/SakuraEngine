@@ -24,6 +24,8 @@ const CGpuProcTable tbl_vk = {
     .create_fence = &cgpu_create_fence_vulkan,
     .wait_fences = &cgpu_wait_fences_vulkan,
     .free_fence = &cgpu_free_fence_vulkan,
+    .create_semaphore = &cgpu_create_semaphore_vulkan,
+    .free_semaphore = &cgpu_free_semaphore_vulkan,
     .create_root_signature = &cgpu_create_root_signature_vulkan,
     .free_root_signature = &cgpu_free_root_signature_vulkan,
     .create_descriptor_set = &cgpu_create_descriptor_set_vulkan,
@@ -343,6 +345,29 @@ void cgpu_free_fence_vulkan(CGpuFenceId fence)
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)fence->device;
     D->mVkDeviceTable.vkDestroyFence(D->pVkDevice, F->pVkFence, GLOBAL_VkAllocationCallbacks);
     cgpu_free(F);
+}
+
+CGpuSemaphoreId cgpu_create_semaphore_vulkan(CGpuDeviceId device)
+{
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuSemaphore_Vulkan* Semaphore = (CGpuSemaphore_Vulkan*)cgpu_calloc(1, sizeof(CGpuSemaphore_Vulkan));
+    VkSemaphoreCreateInfo semaphore_info = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0
+    };
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateSemaphore(D->pVkDevice,
+        &semaphore_info, GLOBAL_VkAllocationCallbacks, &(Semaphore->pVkSemaphore)));
+    Semaphore->mSignaled = false;
+    return &Semaphore->super;
+}
+
+void cgpu_free_semaphore_vulkan(CGpuSemaphoreId semaphore)
+{
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)semaphore->device;
+    CGpuSemaphore_Vulkan* Semaphore = (CGpuSemaphore_Vulkan*)semaphore;
+    D->mVkDeviceTable.vkDestroySemaphore(D->pVkDevice, Semaphore->pVkSemaphore, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(Semaphore);
 }
 
 CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
@@ -965,18 +990,43 @@ void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDes
     {
         vkCmds[i] = Cmds[i]->pVkCmdBuf;
     }
-
-    // TODO: Add Necessary Semaphores
+    // Set wait semaphores
+    DECLARE_ZERO_VLA(VkSemaphore, wait_semaphores, desc->wait_semaphore_count + 1)
+    uint32_t waitCount = 0;
+    CGpuSemaphore_Vulkan** WaitSemaphores = (CGpuSemaphore_Vulkan**)desc->wait_semaphores;
+    for (uint32_t i = 0; i < desc->wait_semaphore_count; ++i)
+    {
+        if (WaitSemaphores[i]->mSignaled)
+        {
+            wait_semaphores[waitCount] = WaitSemaphores[i]->pVkSemaphore;
+            WaitSemaphores[i]->mSignaled = false;
+            ++waitCount;
+        }
+    }
+    // Set signal semaphores
+    DECLARE_ZERO_VLA(VkSemaphore, signal_semaphores, desc->signal_semaphore_count + 1)
+    uint32_t signalCount = 0;
+    CGpuSemaphore_Vulkan** SignalSemaphores = (CGpuSemaphore_Vulkan**)desc->signal_semaphores;
+    for (uint32_t i = 0; i < desc->signal_semaphore_count; ++i)
+    {
+        if (!SignalSemaphores[i]->mSignaled)
+        {
+            wait_semaphores[signalCount] = SignalSemaphores[i]->pVkSemaphore;
+            SignalSemaphores[i]->mSignaled = true;
+            ++signalCount;
+        }
+    }
+    // Submit
     VkSubmitInfo submit_info = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext = NULL,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = NULL,
         .pWaitDstStageMask = 0,
         .commandBufferCount = CmdCount,
         .pCommandBuffers = vkCmds,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = NULL,
+        .waitSemaphoreCount = waitCount,
+        .pWaitSemaphores = signal_semaphores,
+        .signalSemaphoreCount = signalCount,
+        .pSignalSemaphores = wait_semaphores,
     };
     // TODO: Thread Safety ?
     VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
@@ -998,13 +1048,26 @@ void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentD
     CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)queue;
     if (SC)
     {
+        // Set semaphores
+        DECLARE_ZERO_VLA(VkSemaphore, wait_semaphores, desc->wait_semaphore_count + 1)
+        uint32_t waitCount = 0;
+        CGpuSemaphore_Vulkan** Semaphores = (CGpuSemaphore_Vulkan**)desc->wait_semaphores;
+        for (uint32_t i = 0; i < desc->wait_semaphore_count; ++i)
+        {
+            if (Semaphores[i]->mSignaled)
+            {
+                wait_semaphores[waitCount] = Semaphores[i]->pVkSemaphore;
+                Semaphores[i]->mSignaled = false;
+                ++waitCount;
+            }
+        }
+        // Present
         uint32_t presentIndex = desc->index;
-        // TODO: Wait semaphores
         VkPresentInfoKHR present_info = {
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
             .pNext = VK_NULL_HANDLE,
-            .waitSemaphoreCount = 0,
-            .pWaitSemaphores = VK_NULL_HANDLE,
+            .waitSemaphoreCount = waitCount,
+            .pWaitSemaphores = wait_semaphores,
             .swapchainCount = 1,
             .pSwapchains = &SC->pVkSwapChain,
             .pImageIndices = &presentIndex,
@@ -1712,13 +1775,14 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
 uint32_t cgpu_acquire_next_image_vulkan(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc)
 {
     CGpuFence_Vulkan* Fence = (CGpuFence_Vulkan*)desc->fence;
+    CGpuSemaphore_Vulkan* Semaphore = (CGpuSemaphore_Vulkan*)desc->signal_semaphore;
     CGpuSwapChain_Vulkan* SC = (CGpuSwapChain_Vulkan*)swapchain;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)swapchain->device;
 
     VkResult vk_res = VK_SUCCESS;
     uint32_t idx;
 
-    VkSemaphore vsemaphore = VK_NULL_HANDLE;
+    VkSemaphore vsemaphore = Semaphore ? Semaphore->pVkSemaphore : VK_NULL_HANDLE;
     VkFence vfence = Fence ? Fence->pVkFence : VK_NULL_HANDLE;
 
     vk_res = vkAcquireNextImageKHR(
@@ -1728,11 +1792,21 @@ uint32_t cgpu_acquire_next_image_vulkan(CGpuSwapChainId swapchain, const struct 
         vfence,     // fence
         &idx);
 
-    if (Fence) Fence->mSubmitted = true;
     // If swapchain is out of date, let caller know by setting image index to -1
     if (vk_res == VK_ERROR_OUT_OF_DATE_KHR)
     {
         idx = -1;
+        if (Fence)
+        {
+            Fence->mSubmitted = false;
+            D->mVkDeviceTable.vkResetFences(D->pVkDevice, 1, &Fence->pVkFence);
+        }
+        if (Semaphore) Semaphore->mSignaled = false;
+    }
+    else if (vk_res == VK_SUCCESS)
+    {
+        if (Fence) Fence->mSubmitted = true;
+        if (Semaphore) Semaphore->mSignaled = true;
     }
     return idx;
 }
