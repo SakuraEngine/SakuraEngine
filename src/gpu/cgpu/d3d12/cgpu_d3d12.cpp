@@ -474,6 +474,182 @@ void cgpu_free_compute_pipeline_d3d12(CGpuComputePipelineId pipeline)
     cgpu_delete(PPL);
 }
 
+D3D12_DEPTH_STENCIL_DESC gDefaultDepthDesc = {};
+D3D12_BLEND_DESC gDefaultBlendDesc = {};
+D3D12_RASTERIZER_DESC gDefaultRasterizerDesc = {};
+CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
+{
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
+    CGpuRenderPipeline_D3D12* PPL = cgpu_new<CGpuRenderPipeline_D3D12>();
+    CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)desc->root_signature;
+    // TODO: Vertex input state
+    uint32_t input_elementCount = 0;
+    DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[MAX_VERTEX_ATTRIBS]);
+    if (desc->vertex_layout != nullptr)
+    {
+        for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
+        {
+            const CGpuVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
+            (void)attrib;
+        }
+    }
+    DECLARE_ZERO(D3D12_INPUT_LAYOUT_DESC, input_layout_desc);
+    input_layout_desc.pInputElementDescs = input_elementCount ? input_elements : NULL;
+    input_layout_desc.NumElements = input_elementCount;
+    // Shader stages
+    DECLARE_ZERO(D3D12_SHADER_BYTECODE, VS);
+    DECLARE_ZERO(D3D12_SHADER_BYTECODE, PS);
+    DECLARE_ZERO(D3D12_SHADER_BYTECODE, DS);
+    DECLARE_ZERO(D3D12_SHADER_BYTECODE, HS);
+    DECLARE_ZERO(D3D12_SHADER_BYTECODE, GS);
+    for (uint32_t i = 0; i < 5; ++i)
+    {
+        ECGpuShaderStage stage_mask = (ECGpuShaderStage)(1 << i);
+        switch (stage_mask)
+        {
+            case SS_VERT: {
+                if (desc->vertex_shader)
+                {
+                    CGpuShaderLibrary_D3D12* VertLib = (CGpuShaderLibrary_D3D12*)desc->vertex_shader->library;
+                    VS.BytecodeLength = VertLib->pShaderBlob->GetBufferSize();
+                    VS.pShaderBytecode = VertLib->pShaderBlob->GetBufferPointer();
+                }
+            }
+            break;
+            case SS_TESC: {
+                if (desc->tesc_shader)
+                {
+                    CGpuShaderLibrary_D3D12* TescLib = (CGpuShaderLibrary_D3D12*)desc->tesc_shader->library;
+                    HS.BytecodeLength = TescLib->pShaderBlob->GetBufferSize();
+                    HS.pShaderBytecode = TescLib->pShaderBlob->GetBufferPointer();
+                }
+            }
+            break;
+            case SS_TESE: {
+                if (desc->tese_shader)
+                {
+                    CGpuShaderLibrary_D3D12* TeseLib = (CGpuShaderLibrary_D3D12*)desc->tese_shader->library;
+                    DS.BytecodeLength = TeseLib->pShaderBlob->GetBufferSize();
+                    DS.pShaderBytecode = TeseLib->pShaderBlob->GetBufferPointer();
+                }
+            }
+            break;
+            case SS_GEOM: {
+                if (desc->geom_shader)
+                {
+                    CGpuShaderLibrary_D3D12* GeomLib = (CGpuShaderLibrary_D3D12*)desc->geom_shader->library;
+                    GS.BytecodeLength = GeomLib->pShaderBlob->GetBufferSize();
+                    GS.pShaderBytecode = GeomLib->pShaderBlob->GetBufferPointer();
+                }
+            }
+            break;
+            case SS_FRAG: {
+                if (desc->fragment_shader)
+                {
+                    CGpuShaderLibrary_D3D12* FragLib = (CGpuShaderLibrary_D3D12*)desc->fragment_shader->library;
+                    PS.BytecodeLength = FragLib->pShaderBlob->GetBufferSize();
+                    PS.pShaderBytecode = FragLib->pShaderBlob->GetBufferPointer();
+                }
+            }
+            break;
+            default:
+                cgpu_assert(false && "Shader Stage not supported!");
+                break;
+        }
+    }
+    // Stream out
+    DECLARE_ZERO(D3D12_STREAM_OUTPUT_DESC, stream_output_desc);
+    stream_output_desc.pSODeclaration = NULL;
+    stream_output_desc.NumEntries = 0;
+    stream_output_desc.pBufferStrides = NULL;
+    stream_output_desc.NumStrides = 0;
+    stream_output_desc.RasterizedStream = 0;
+    // Depth stencil
+    DECLARE_ZERO(D3D12_DEPTH_STENCILOP_DESC, depth_stencilop_desc);
+    depth_stencilop_desc.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+    depth_stencilop_desc.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+    depth_stencilop_desc.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+    depth_stencilop_desc.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    // Sample
+    DECLARE_ZERO(DXGI_SAMPLE_DESC, sample_desc);
+    sample_desc.Count = (UINT)(desc->sample_count);
+    sample_desc.Quality = (UINT)(desc->sample_quality);
+    // TODO: Pipeline cache
+    DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
+    cached_pso_desc.pCachedBlob = NULL;
+    cached_pso_desc.CachedBlobSizeInBytes = 0;
+    // Fill pipeline object desc
+    DECLARE_ZERO(D3D12_GRAPHICS_PIPELINE_STATE_DESC, pipeline_state_desc);
+    pipeline_state_desc.pRootSignature = RS->pDxRootSignature;
+    // Single GPU
+    pipeline_state_desc.NodeMask = SINGLE_GPU_NODE_MASK;
+    pipeline_state_desc.VS = VS;
+    pipeline_state_desc.PS = PS;
+    pipeline_state_desc.DS = DS;
+    pipeline_state_desc.HS = HS;
+    pipeline_state_desc.GS = GS;
+    pipeline_state_desc.StreamOutput = stream_output_desc;
+    pipeline_state_desc.BlendState = desc->blend_state ? D3D12Util_TranslateBlendState(desc->blend_state) : gDefaultBlendDesc;
+    pipeline_state_desc.SampleMask = UINT_MAX;
+    pipeline_state_desc.RasterizerState = desc->rasterizer_state ? D3D12Util_TranslateRasterizerState(desc->rasterizer_state) : gDefaultRasterizerDesc;
+    pipeline_state_desc.DepthStencilState =
+        desc->depth_state ? D3D12Util_TranslateDephStencilState(desc->depth_state) : gDefaultDepthDesc;
+    pipeline_state_desc.InputLayout = input_layout_desc;
+    pipeline_state_desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+    pipeline_state_desc.PrimitiveTopologyType = D3D12Util_TranslatePrimitiveTopology(desc->prim_topology);
+    pipeline_state_desc.NumRenderTargets = desc->render_target_count;
+    pipeline_state_desc.DSVFormat = DXGIUtil_TranslatePixelFormat(desc->depth_stencil_format);
+    pipeline_state_desc.SampleDesc = sample_desc;
+    pipeline_state_desc.CachedPSO = cached_pso_desc;
+    pipeline_state_desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+    for (uint32_t i = 0; i < pipeline_state_desc.NumRenderTargets; ++i)
+    {
+        pipeline_state_desc.RTVFormats[i] = DXGIUtil_TranslatePixelFormat(desc->color_formats[i]);
+    }
+    // Create pipeline object
+    HRESULT result = E_FAIL;
+    // TODO: Pipeline cache
+    if (!SUCCEEDED(result))
+    {
+        CHECK_HRESULT(D->pDxDevice->CreateGraphicsPipelineState(&pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
+    }
+    D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    switch (desc->prim_topology)
+    {
+        case TOPO_POINT_LIST:
+            topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+            break;
+        case TOPO_LINE_LIST:
+            topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+            break;
+        case TOPO_LINE_STRIP:
+            topology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+            break;
+        case TOPO_TRI_LIST:
+            topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+            break;
+        case TOPO_TRI_STRIP:
+            topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+            break;
+        case TOPO_PATCH_LIST: {
+            // TODO: Support D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST with Hull Shaders
+            cgpu_assert(0 && "Unsupported primitive topology!");
+        }
+        default:
+            break;
+    }
+    PPL->mDxPrimitiveTopology = topology;
+    PPL->pRootSignature = RS->pDxRootSignature;
+    return &PPL->super;
+}
+
+void cgpu_free_render_pipeline_d3d12(CGpuRenderPipelineId pipeline)
+{
+    CGpuRenderPipeline_D3D12* PPL = (CGpuRenderPipeline_D3D12*)pipeline;
+    SAFE_RELEASE(PPL->pDxPipelineState);
+    cgpu_delete(PPL);
+}
+
 // Queue APIs
 CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
 {
@@ -733,8 +909,12 @@ void cgpu_cmd_end_compute_pass_d3d12(CGpuCommandBufferId cmd, CGpuComputePassEnc
 CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {
     CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)device->adapter->instance;
-    // CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
-    CGpuSwapChain_D3D12* S = cgpu_new<CGpuSwapChain_D3D12>();
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
+    const uint32_t buffer_count = desc->imageCount;
+    void* Memory = cgpu_calloc(1, sizeof(CGpuSwapChain_D3D12) +
+                                      sizeof(CGpuTexture_D3D12) * buffer_count +
+                                      sizeof(CGpuTextureId) * buffer_count);
+    CGpuSwapChain_D3D12* S = cgpu_new_placed<CGpuSwapChain_D3D12>(Memory);
 
     S->mDxSyncInterval = desc->enableVsync ? 1 : 0;
     DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, chain_desc1)
@@ -781,7 +961,37 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     cgpu_assert(bQueryChain3 && "Failed to Query IDXGISwapChain3 from Created SwapChain!");
 
     SAFE_RELEASE(swapchain);
-
+    // Get swapchain images
+    ID3D12Resource** backbuffers =
+        (ID3D12Resource**)alloca(desc->imageCount * sizeof(ID3D12Resource*));
+    for (uint32_t i = 0; i < desc->imageCount; ++i)
+    {
+        CHECK_HRESULT(S->pDxSwapChain->GetBuffer(i, IID_ARGS(&backbuffers[i])));
+    }
+    CGpuTexture_D3D12* Ts = (CGpuTexture_D3D12*)(S + 1);
+    for (uint32_t i = 0; i < buffer_count; i++)
+    {
+        Ts[i].pDxResource = backbuffers[i];
+        Ts[i].pDxAllocation = nullptr;
+        Ts[i].super.is_cube = false;
+        Ts[i].super.array_size_minus_one = 0;
+        Ts[i].super.device = &D->super;
+        Ts[i].super.format = desc->format;
+        Ts[i].super.aspect_mask = 1; // TODO: aspect mask
+        Ts[i].super.depth = 1;
+        Ts[i].super.width = desc->width;
+        Ts[i].super.height = desc->height;
+        Ts[i].super.mip_levels = 1;
+        Ts[i].super.node_index = SINGLE_GPU_NODE_INDEX;
+        Ts[i].super.owns_image = false;
+    }
+    CGpuTextureId* Vs = (CGpuTextureId*)(Ts + buffer_count);
+    for (uint32_t i = 0; i < buffer_count; i++)
+    {
+        Vs[i] = &Ts[i].super;
+    }
+    S->super.back_buffers = Vs;
+    S->super.buffer_count = buffer_count;
     return &S->super;
 }
 
@@ -789,7 +999,8 @@ void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain)
 {
     CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)swapchain;
     SAFE_RELEASE(S->pDxSwapChain);
-    cgpu_delete(S);
+    cgpu_delete_placed(S);
+    cgpu_free(S);
 }
 
 #include "cgpu/extensions/cgpu_d3d12_exts.h"

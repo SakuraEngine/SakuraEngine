@@ -26,6 +26,8 @@ const CGpuProcTable tbl_d3d12 = {
     .free_descriptor_set = &cgpu_free_descriptor_set_d3d12,
     .create_compute_pipeline = &cgpu_create_compute_pipeline_d3d12,
     .free_compute_pipeline = &cgpu_free_compute_pipeline_d3d12,
+    .create_render_pipeline = &cgpu_create_render_pipeline_d3d12,
+    .free_render_pipeline = &cgpu_free_render_pipeline_d3d12,
 
     // Queue APIs
     .get_queue = &cgpu_get_queue_d3d12,
