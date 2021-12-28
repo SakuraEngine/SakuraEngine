@@ -27,22 +27,22 @@ _Thread_local CGpuTextureViewId views[BACK_BUFFER_COUNT];
 
 const uint32_t* get_vertex_shader()
 {
-    if (backend == ECGpuBackend_VULKAN) return (const uint32_t*)vertex_shader_spirv;
+    if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)vertex_shader_spirv;
     return CGPU_NULLPTR;
 }
 const size_t get_vertex_shader_size()
 {
-    if (backend == ECGpuBackend_VULKAN) return sizeof(vertex_shader_spirv);
+    if (backend == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
     return 0;
 }
 const uint32_t* get_fragment_shader()
 {
-    if (backend == ECGpuBackend_VULKAN) return (const uint32_t*)fragment_shader_spirv;
+    if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)fragment_shader_spirv;
     return CGPU_NULLPTR;
 }
 const size_t get_fragment_shader_size()
 {
-    if (backend == ECGpuBackend_VULKAN) return sizeof(fragment_shader_spirv);
+    if (backend == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
     return 0;
 }
 
@@ -54,8 +54,8 @@ void create_sampled_texture()
         .address_v = ADDRESS_MODE_REPEAT,
         .address_w = ADDRESS_MODE_REPEAT,
         .mipmap_mode = MIPMAP_MODE_LINEAR,
-        .min_filter = FT_LINEAR,
-        .mag_filter = FT_LINEAR,
+        .min_filter = FILTER_TYPE_LINEAR,
+        .mag_filter = FILTER_TYPE_LINEAR,
         .compare_func = CMP_ALWAYS
     };
     sampler_state = cgpu_create_sampler(device, &sampler_desc);
@@ -68,7 +68,7 @@ void create_sampled_texture()
         .depth = 1,
         .format = PF_R8G8B8A8_UNORM,
         .array_size = 1,
-        .start_state = RS_COPY_DEST
+        .start_state = RESOURCE_STATE_COPY_DEST
     };
     sampled_texture = cgpu_create_texture(device, &tex_desc);
     CGpuTextureViewDescriptor sview_desc = {
@@ -79,7 +79,7 @@ void create_sampled_texture()
         .mip_level_count = 1,
         .base_mip_level = 0,
         .aspects = TVA_COLOR,
-        .dims = TD_2D,
+        .dims = TEX_DIMENSION_2D,
         .usages = TVU_SRV
     };
     sampled_view = cgpu_create_texture_view(device, &sview_desc);
@@ -87,7 +87,7 @@ void create_sampled_texture()
         .name = "UploadBuffer",
         .flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT,
         .descriptors = RT_NONE,
-        .memory_usage = MU_CPU_ONLY,
+        .memory_usage = MEM_USAGE_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),
         .elemet_count = 1,
         .size = sizeof(TEXTURE_DATA)
@@ -101,8 +101,8 @@ void create_sampled_texture()
     cgpu_cmd_begin(cmds[0]);
     CGpuTextureBarrier cpy_barrier = {
         .texture = sampled_texture,
-        .src_state = RS_UNDEFINED,
-        .dst_state = RS_COPY_DEST
+        .src_state = RESOURCE_STATE_UNDEFINED,
+        .dst_state = RESOURCE_STATE_COPY_DEST
     };
     CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &cpy_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmds[0], &barrier_desc0);
@@ -118,8 +118,8 @@ void create_sampled_texture()
     cgpu_cmd_transfer_buffer_to_texture(cmds[0], &b2t);
     CGpuTextureBarrier srv_barrier = {
         .texture = sampled_texture,
-        .src_state = RS_COPY_DEST,
-        .dst_state = RS_SHADER_RESOURCE
+        .src_state = RESOURCE_STATE_COPY_DEST,
+        .dst_state = RESOURCE_STATE_SHADER_RESOURCE
     };
     CGpuResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &srv_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmds[0], &barrier_desc1);
@@ -142,15 +142,15 @@ void create_sampled_texture()
 void create_render_pipeline()
 {
     // Shaders
-    CGpuShaderLibraryDescriptor vs_desc = { .name = "VertexShaderLibrary", .stage = SS_VERT, .code = get_vertex_shader(), .code_size = get_vertex_shader_size() };
-    CGpuShaderLibraryDescriptor ps_desc = { .name = "FragmentShaderLibrary", .stage = SS_FRAG, .code = get_fragment_shader(), .code_size = get_fragment_shader_size() };
+    CGpuShaderLibraryDescriptor vs_desc = { .name = "VertexShaderLibrary", .stage = SHADER_STAGE_VERT, .code = get_vertex_shader(), .code_size = get_vertex_shader_size() };
+    CGpuShaderLibraryDescriptor ps_desc = { .name = "FragmentShaderLibrary", .stage = SHADER_STAGE_FRAG, .code = get_fragment_shader(), .code_size = get_fragment_shader_size() };
     CGpuShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
     CGpuShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
     CGpuPipelineShaderDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = SS_VERT;
+    ppl_shaders[0].stage = SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = SS_FRAG;
+    ppl_shaders[1].stage = SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
     CGpuRootSignatureDescriptor rs_desc = {
@@ -166,7 +166,7 @@ void create_render_pipeline()
     CGpuVertexLayout vertex_layout = { .attribute_count = 0 };
     CGpuRenderPipelineDescriptor rp_desc = {
         .root_signature = root_sig,
-        .prim_topology = TOPO_TRI_LIST,
+        .prim_topology = PRIM_TOPO_TRI_LIST,
         .vertex_layout = &vertex_layout,
         .vertex_shader = &ppl_shaders[0],
         .fragment_shader = &ppl_shaders[1],
@@ -207,7 +207,7 @@ void initialize(void* usrdata)
 
     // Create device
     CGpuQueueGroupDescriptor G = {
-        .queueType = ECGpuQueueType_Graphics,
+        .queueType = QUEUE_TYPE_GRAPHICS,
         .queueCount = 1
     };
     CGpuDeviceDescriptor device_desc = {
@@ -216,7 +216,7 @@ void initialize(void* usrdata)
     };
     device = cgpu_create_device(adapter, &device_desc);
     // Create command objects
-    gfx_queue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+    gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
     present_semaphore = cgpu_create_semaphore(device);
     for (uint32_t i = 0; i < FLIGHT_FRAMES; i++)
     {
@@ -249,7 +249,7 @@ void initialize(void* usrdata)
         CGpuTextureViewDescriptor view_desc = {
             .texture = swapchain->back_buffers[i],
             .aspects = TVA_COLOR,
-            .dims = TD_2D,
+            .dims = TEX_DIMENSION_2D,
             .format = swapchain->back_buffers[i]->format,
             .usages = TVU_RTV
         };
@@ -275,20 +275,20 @@ void raster_redraw()
     cgpu_cmd_begin(cmd);
     CGpuColorAttachment screen_attachment = {
         .view = views[backbuffer_index],
-        .load_action = LA_CLEAR,
-        .store_action = SA_Store,
+        .load_action = LOAD_ACTION_CLEAR,
+        .store_action = STORE_ACTION_STORE,
         .clear_color = fastclear_0000
     };
     CGpuRenderPassDescriptor rp_desc = {
         .render_target_count = 1,
-        .sample_count = SC_1,
+        .sample_count = SAMPLE_COUNT_1,
         .color_attachments = &screen_attachment,
         .depth_stencil = CGPU_NULLPTR
     };
     CGpuTextureBarrier draw_barrier = {
         .texture = back_buffer,
-        .src_state = RS_UNDEFINED,
-        .dst_state = RS_RENDER_TARGET
+        .src_state = RESOURCE_STATE_UNDEFINED,
+        .dst_state = RESOURCE_STATE_RENDER_TARGET
     };
     CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
@@ -304,8 +304,8 @@ void raster_redraw()
     cgpu_cmd_end_render_pass(cmd, rp_encoder);
     CGpuTextureBarrier present_barrier = {
         .texture = back_buffer,
-        .src_state = RS_RENDER_TARGET,
-        .dst_state = RS_PRESENT
+        .src_state = RESOURCE_STATE_RENDER_TARGET,
+        .dst_state = RESOURCE_STATE_PRESENT
     };
     CGpuResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &present_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
@@ -379,7 +379,7 @@ int main()
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
 
-    ECGpuBackend backend = ECGpuBackend_VULKAN;
+    ECGpuBackend backend = CGPU_BACKEND_VULKAN;
     initialize(&backend);
     raster_program();
     finalize();

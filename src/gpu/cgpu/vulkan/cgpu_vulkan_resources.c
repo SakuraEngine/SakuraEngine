@@ -26,7 +26,7 @@ FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_
     };
     add_info.usage = VkUtil_DescriptorTypesToBufferUsage(desc->descriptors, desc->format != PF_UNDEFINED);
     // Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
-    if (desc->memory_usage == MU_GPU_ONLY || desc->memory_usage == MU_GPU_TO_CPU)
+    if (desc->memory_usage == MEM_USAGE_GPU_ONLY || desc->memory_usage == MEM_USAGE_GPU_TO_CPU)
         add_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     return add_info;
 }
@@ -141,7 +141,7 @@ void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBufferRange* r
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
-    cgpu_assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to map non-cpu accessible resource");
+    cgpu_assert(B->super.memory_usage != MEM_USAGE_GPU_ONLY && "Trying to map non-cpu accessible resource");
 
     VkResult vk_res = vmaMapMemory(D->pVmaAllocator, B->pVkAllocation, &B->super.cpu_mapped_address);
     cgpu_assert(vk_res == VK_SUCCESS);
@@ -156,7 +156,7 @@ void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer)
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
-    cgpu_assert(B->super.memory_usage != MU_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
+    cgpu_assert(B->super.memory_usage != MEM_USAGE_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
 
     vmaUnmapMemory(D->pVmaAllocator, B->pVkAllocation);
     B->super.cpu_mapped_address = CGPU_NULLPTR;
@@ -238,7 +238,7 @@ typedef struct ImportHandleInfo {
 } ImportHandleInfo;
 CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc)
 {
-    if (desc->sample_count > SC_1 && desc->mip_levels > 1)
+    if (desc->sample_count > SAMPLE_COUNT_1 && desc->mip_levels > 1)
     {
         cgpu_error("Multi-Sampled textures cannot have mip maps");
         cgpu_assert(false);
@@ -260,9 +260,9 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
         T->super.owns_image = true;
     // Usage flags
     VkImageUsageFlags additionalFlags = 0;
-    if (desc->start_state & RS_RENDER_TARGET)
+    if (desc->start_state & RESOURCE_STATE_RENDER_TARGET)
         additionalFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    else if (desc->start_state & RS_DEPTH_WRITE)
+    else if (desc->start_state & RESOURCE_STATE_DEPTH_WRITE)
         additionalFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
     uint32_t arraySize = desc->array_size;
@@ -403,7 +403,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     // Set Texture Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)T->pVkImage, VK_OBJECT_TYPE_IMAGE, desc->name);
     // TODO: Start state
-    // CGpuQueueId gfx_queue = cgpu_runtime_table_try_get_queue(device, ECGpuQueueType_Graphics, 0);
+    // CGpuQueueId gfx_queue = cgpu_runtime_table_try_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
     return &T->super;
 }
 
@@ -443,9 +443,9 @@ CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const str
             break;
         case VK_IMAGE_TYPE_2D:
             if (T->super.is_cube)
-                view_type = (desc->dims == TD_CUBE_ARRAY) ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE;
+                view_type = (desc->dims == TEX_DIMENSION_CUBE_ARRAY) ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE;
             else
-                view_type = ((desc->dims == TD_2D_ARRAY) || (desc->dims == TD_2DMS_ARRAY)) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+                view_type = ((desc->dims == TEX_DIMENSION_2D_ARRAY) || (desc->dims == TEX_DIMENSION_2DMS_ARRAY)) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
             break;
         case VK_IMAGE_TYPE_3D:
             if (desc->array_layer_count > 1)

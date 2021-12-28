@@ -17,9 +17,9 @@ FORCEINLINE static VkFilter VkUtil_TranslateFilterType(ECGpuFilterType filter)
 {
     switch (filter)
     {
-        case FT_NEAREST:
+        case FILTER_TYPE_NEAREST:
             return VK_FILTER_NEAREST;
-        case FT_LINEAR:
+        case FILTER_TYPE_LINEAR:
             return VK_FILTER_LINEAR;
         default:
             return VK_FILTER_LINEAR;
@@ -59,28 +59,28 @@ FORCEINLINE static VkSamplerAddressMode VkUtil_TranslateAddressMode(ECGpuAddress
 
 FORCEINLINE static VkImageLayout VkUtil_ResourceStateToImageLayout(ECGpuResourceState usage)
 {
-    if (usage & RS_COPY_SOURCE)
+    if (usage & RESOURCE_STATE_COPY_SOURCE)
         return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
-    if (usage & RS_COPY_DEST)
+    if (usage & RESOURCE_STATE_COPY_DEST)
         return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
-    if (usage & RS_RENDER_TARGET)
+    if (usage & RESOURCE_STATE_RENDER_TARGET)
         return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    if (usage & RS_DEPTH_WRITE)
+    if (usage & RESOURCE_STATE_DEPTH_WRITE)
         return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    if (usage & RS_UNORDERED_ACCESS)
+    if (usage & RESOURCE_STATE_UNORDERED_ACCESS)
         return VK_IMAGE_LAYOUT_GENERAL;
 
-    if (usage & RS_SHADER_RESOURCE)
+    if (usage & RESOURCE_STATE_SHADER_RESOURCE)
         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    if (usage & RS_PRESENT)
+    if (usage & RESOURCE_STATE_PRESENT)
         return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    if (usage == RS_COMMON)
+    if (usage == RESOURCE_STATE_COMMON)
         return VK_IMAGE_LAYOUT_GENERAL;
 
 #if defined(QUEST_VR)
@@ -163,21 +163,21 @@ FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuRe
 FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGpuShaderStages stages)
 {
     VkShaderStageFlags res = 0;
-    if (stages & SS_ALL_GRAPHICS)
+    if (stages & SHADER_STAGE_ALL_GRAPHICS)
         return VK_SHADER_STAGE_ALL_GRAPHICS;
 
-    if (stages & SS_VERT)
+    if (stages & SHADER_STAGE_VERT)
         res |= VK_SHADER_STAGE_VERTEX_BIT;
-    if (stages & SS_GEOM)
+    if (stages & SHADER_STAGE_GEOM)
         res |= VK_SHADER_STAGE_GEOMETRY_BIT;
-    if (stages & SS_TESE)
+    if (stages & SHADER_STAGE_TESE)
         res |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-    if (stages & SS_TESC)
+    if (stages & SHADER_STAGE_TESC)
         res |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-    if (stages & SS_COMPUTE)
+    if (stages & SHADER_STAGE_COMPUTE)
         res |= VK_SHADER_STAGE_COMPUTE_BIT;
 #ifdef ENABLE_RAYTRACING
-    if (stages & SS_RAYTRACING)
+    if (stages & SHADER_STAGE_RAYTRACING)
         res |=
             (VK_SHADER_STAGE_RAYGEN_BIT_NV | VK_SHADER_STAGE_ANY_HIT_BIT_NV | VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV |
                 VK_SHADER_STAGE_MISS_BIT_NV | VK_SHADER_STAGE_INTERSECTION_BIT_NV | VK_SHADER_STAGE_CALLABLE_BIT_NV);
@@ -218,7 +218,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGpuA
 
 	switch (queueType)
 	{
-		case ECGpuQueueType_Graphics:
+		case QUEUE_TYPE_GRAPHICS:
 		{
 			if ((accessFlags & (VK_ACCESS_INDEX_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT)) != 0)
 				flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
@@ -254,7 +254,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGpuA
 				flags |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 			break;
 		}
-		case ECGpuQueueType_Compute:
+		case QUEUE_TYPE_COMPUTE:
 		{
 			if ((accessFlags & (VK_ACCESS_INDEX_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT)) != 0 ||
 				(accessFlags & VK_ACCESS_INPUT_ATTACHMENT_READ_BIT) != 0 ||
@@ -267,7 +267,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGpuA
 
 			break;
 		}
-		case ECGpuQueueType_Transfer: return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		case QUEUE_TYPE_TRANSFER: return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
 		default: break;
 	}
 	// Compatible with both compute and graphics queues
@@ -289,25 +289,25 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGpuA
 FORCEINLINE static VkAccessFlags VkUtil_ResourceStateToVkAccessFlags(ECGpuResourceState state)
 {
 	VkAccessFlags ret = 0;
-	if (state & RS_COPY_SOURCE)
+	if (state & RESOURCE_STATE_COPY_SOURCE)
 		ret |= VK_ACCESS_TRANSFER_READ_BIT;
-	if (state & RS_COPY_DEST)
+	if (state & RESOURCE_STATE_COPY_DEST)
 		ret |= VK_ACCESS_TRANSFER_WRITE_BIT;
-	if (state & RS_VERTEX_AND_CONSTANT_BUFFER)
+	if (state & RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
 		ret |= VK_ACCESS_UNIFORM_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
-	if (state & RS_INDEX_BUFFER)
+	if (state & RESOURCE_STATE_INDEX_BUFFER)
 		ret |= VK_ACCESS_INDEX_READ_BIT;
-	if (state & RS_UNORDERED_ACCESS)
+	if (state & RESOURCE_STATE_UNORDERED_ACCESS)
 		ret |= VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-	if (state & RS_INDIRECT_ARGUMENT)
+	if (state & RESOURCE_STATE_INDIRECT_ARGUMENT)
 		ret |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-	if (state & RS_RENDER_TARGET)
+	if (state & RESOURCE_STATE_RENDER_TARGET)
 		ret |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	if (state & RS_DEPTH_WRITE)
+	if (state & RESOURCE_STATE_DEPTH_WRITE)
 		ret |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	if (state & RS_SHADER_RESOURCE)
+	if (state & RESOURCE_STATE_SHADER_RESOURCE)
 		ret |= VK_ACCESS_SHADER_READ_BIT;
-	if (state & RS_PRESENT)
+	if (state & RESOURCE_STATE_PRESENT)
 		ret |= VK_ACCESS_MEMORY_READ_BIT;
 #ifdef ENABLE_RAYTRACING
 	if (state & RS_RAYTRACING_ACCELERATION_STRUCTURE)

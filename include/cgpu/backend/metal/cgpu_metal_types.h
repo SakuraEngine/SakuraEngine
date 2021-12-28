@@ -9,8 +9,8 @@ static_assert(0, "This Header Should Only Be Included By OBJC SOURCES!!!!!");
 typedef struct CGpuDevice_Metal {
     CGpuDevice super;
     id<MTLDevice> pDevice;
-    id<MTLCommandQueue>* __strong ppMtlQueues[ECGpuQueueType_Count];
-    uint32_t pMtlQueueCounts[ECGpuQueueType_Count];
+    id<MTLCommandQueue>* __strong ppMtlQueues[QUEUE_TYPE_COUNT];
+    uint32_t pMtlQueueCounts[QUEUE_TYPE_COUNT];
 } CGpuDevice_Metal;
 
 typedef struct CGpuFence_Metal {

@@ -23,14 +23,14 @@ protected:
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         for (auto a : adapters)
         {
-            auto gQueue = cgpu_query_queue_count(a, ECGpuQueueType_Graphics);
-            auto cQueue = cgpu_query_queue_count(a, ECGpuQueueType_Compute);
-            auto tQueue = cgpu_query_queue_count(a, ECGpuQueueType_Transfer);
+            auto gQueue = cgpu_query_queue_count(a, QUEUE_TYPE_GRAPHICS);
+            auto cQueue = cgpu_query_queue_count(a, QUEUE_TYPE_COMPUTE);
+            auto tQueue = cgpu_query_queue_count(a, QUEUE_TYPE_TRANSFER);
 
             std::vector<CGpuQueueGroupDescriptor> queueGroup;
-            if (gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Graphics, 1 });
-            if (cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Compute, 1 });
-            if (tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Transfer, 1 });
+            if (gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_GRAPHICS, 1 });
+            if (cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_COMPUTE, 1 });
+            if (tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_TRANSFER, 1 });
             DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
             descriptor.queueGroups = queueGroup.data();
             descriptor.queueGroupCount = (uint32_t)queueGroup.size();
@@ -57,10 +57,10 @@ protected:
 TEST_P(QueueOperations, GetGraphicsQueue)
 {
     CGpuQueueId graphicsQueue;
-    auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
+    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
     if (gQueue > 0)
     {
-        graphicsQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        graphicsQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
         EXPECT_NE(graphicsQueue, nullptr);
         cgpu_free_queue(graphicsQueue);
@@ -71,12 +71,12 @@ TEST_P(QueueOperations, GetSameQueue)
 {
     CGpuQueueId graphicsQueue;
     CGpuQueueId graphicsQueueSame;
-    auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
+    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
     if (gQueue > 0)
     {
-        graphicsQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        graphicsQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
-        graphicsQueueSame = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        graphicsQueueSame = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_EQ(graphicsQueue, graphicsQueueSame);
         cgpu_free_queue(graphicsQueue);
     }
@@ -85,10 +85,10 @@ TEST_P(QueueOperations, GetSameQueue)
 TEST_P(QueueOperations, CreateCommands)
 {
     CGpuQueueId graphicsQueue;
-    auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
+    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
     if (gQueue > 0)
     {
-        graphicsQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        graphicsQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
         EXPECT_NE(graphicsQueue, nullptr);
 
@@ -114,7 +114,7 @@ TEST_P(QueueOperations, TransferCmdReadback)
         DECLARE_ZERO(CGpuBufferDescriptor, desc)
         desc.flags = BCF_PERSISTENT_MAP_BIT;
         desc.descriptors = RT_BUFFER;
-        desc.memory_usage = MU_CPU_ONLY;
+        desc.memory_usage = MEM_USAGE_CPU_ONLY;
         desc.element_stride = sizeof(uint16_t);
         desc.elemet_count = 3;
         desc.size = sizeof(uint16_t) * 3;
@@ -131,8 +131,8 @@ TEST_P(QueueOperations, TransferCmdReadback)
         DECLARE_ZERO(CGpuBufferDescriptor, desc)
         desc.flags = BCF_OWN_MEMORY_BIT;
         desc.descriptors = RT_NONE;
-        desc.start_state = RS_COPY_DEST;
-        desc.memory_usage = MU_GPU_TO_CPU;
+        desc.start_state = RESOURCE_STATE_COPY_DEST;
+        desc.memory_usage = MEM_USAGE_GPU_TO_CPU;
         desc.element_stride = sizeof(uint16_t);
         desc.elemet_count = 3;
         desc.size = sizeof(uint16_t) * 3;
@@ -143,14 +143,14 @@ TEST_P(QueueOperations, TransferCmdReadback)
     }
     // Transfer
     CGpuQueueId transferQueue;
-    auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
-    auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
+    auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
+    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
     if (tQueue > 0 || gQueue > 0)
     {
         if (tQueue > 0)
-            transferQueue = cgpu_get_queue(device, ECGpuQueueType_Transfer, 0);
+            transferQueue = cgpu_get_queue(device, QUEUE_TYPE_TRANSFER, 0);
         else if (gQueue > 0)
-            transferQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+            transferQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
 
         EXPECT_NE(transferQueue, CGPU_NULLPTR);
         EXPECT_NE(transferQueue, nullptr);
@@ -200,11 +200,11 @@ TEST_P(QueueOperations, TransferCmdReadback)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    ECGpuBackend_VULKAN
+    CGPU_BACKEND_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
     ,
-    ECGpuBackend_D3D12
+    CGPU_BACKEND_D3D12
 #endif
 );
 

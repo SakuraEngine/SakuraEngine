@@ -87,7 +87,7 @@ static const DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIP
     { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
 };
 
-static const D3D12_BLEND_OP gDx12BlendOpTranslator[BM_COUNT] = {
+static const D3D12_BLEND_OP gDx12BlendOpTranslator[BLEND_MODE_COUNT] = {
     D3D12_BLEND_OP_ADD,
     D3D12_BLEND_OP_SUBTRACT,
     D3D12_BLEND_OP_REV_SUBTRACT,
@@ -95,7 +95,7 @@ static const D3D12_BLEND_OP gDx12BlendOpTranslator[BM_COUNT] = {
     D3D12_BLEND_OP_MAX,
 };
 
-static const D3D12_BLEND gDx12BlendConstantTranslator[BC_COUNT] = {
+static const D3D12_BLEND gDx12BlendConstantTranslator[BLEND_CONST_COUNT] = {
     D3D12_BLEND_ZERO,
     D3D12_BLEND_ONE,
     D3D12_BLEND_SRC_COLOR,
@@ -111,7 +111,7 @@ static const D3D12_BLEND gDx12BlendConstantTranslator[BC_COUNT] = {
     D3D12_BLEND_INV_BLEND_FACTOR,
 };
 
-static const D3D12_COMPARISON_FUNC gDx12ComparisonFuncTranslator[MAX_COMPARE_MODES] = {
+static const D3D12_COMPARISON_FUNC gDx12ComparisonFuncTranslator[CMP_COUNT] = {
     D3D12_COMPARISON_FUNC_NEVER,
     D3D12_COMPARISON_FUNC_LESS,
     D3D12_COMPARISON_FUNC_EQUAL,
@@ -122,7 +122,7 @@ static const D3D12_COMPARISON_FUNC gDx12ComparisonFuncTranslator[MAX_COMPARE_MOD
     D3D12_COMPARISON_FUNC_ALWAYS,
 };
 
-static const D3D12_STENCIL_OP gDx12StencilOpTranslator[MAX_STENCIL_OPS] = {
+static const D3D12_STENCIL_OP gDx12StencilOpTranslator[STENCIL_OP_COUNT] = {
     D3D12_STENCIL_OP_KEEP,
     D3D12_STENCIL_OP_ZERO,
     D3D12_STENCIL_OP_REPLACE,
@@ -139,7 +139,7 @@ D3D12_CULL_MODE gDx12CullModeTranslator[CULL_MODE_COUNT] = {
     D3D12_CULL_MODE_FRONT,
 };
 
-D3D12_FILL_MODE gDx12FillModeTranslator[FM_COUNT] = {
+D3D12_FILL_MODE gDx12FillModeTranslator[FILL_MODE_COUNT] = {
     D3D12_FILL_MODE_SOLID,
     D3D12_FILL_MODE_WIREFRAME,
 };

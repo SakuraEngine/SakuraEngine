@@ -118,7 +118,7 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
         {
             // Alloc & Zero Adapter
             CGpuAdapter_Vulkan* VkAdapter = &I->pVulkanAdapters[i];
-            for (uint32_t q = 0; q < ECGpuQueueType_Count; q++)
+            for (uint32_t q = 0; q < QUEUE_TYPE_COUNT; q++)
             {
                 VkAdapter->mQueueFamilyIndices[q] = -1;
             }
@@ -186,22 +186,22 @@ static const ECGpuResourceType RTLut[] = {
     RT_RAY_TRACING             // SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
 };
 static ECGpuTextureDimension DIMLut[SpvDimSubpassData + 1] = {
-    TD_1D,        // SpvDim1D
-    TD_2D,        // SpvDim2D
-    TD_3D,        // SpvDim3D
-    TD_CUBE,      // SpvDimCube
-    TD_UNDEFINED, // SpvDimRect
-    TD_UNDEFINED, // SpvDimBuffer
-    TD_UNDEFINED  // SpvDimSubpassData
+    TEX_DIMENSION_1D,        // SpvDim1D
+    TEX_DIMENSION_2D,        // SpvDim2D
+    TEX_DIMENSION_3D,        // SpvDim3D
+    TEX_DIMENSION_CUBE,      // SpvDimCube
+    TEX_DIMENSION_UNDEFINED, // SpvDimRect
+    TEX_DIMENSION_UNDEFINED, // SpvDimBuffer
+    TEX_DIMENSION_UNDEFINED  // SpvDimSubpassData
 };
 static ECGpuTextureDimension ArrDIMLut[SpvDimSubpassData + 1] = {
-    TD_1D_ARRAY,   // SpvDim1D
-    TD_2D_ARRAY,   // SpvDim2D
-    TD_UNDEFINED,  // SpvDim3D
-    TD_CUBE_ARRAY, // SpvDimCube
-    TD_UNDEFINED,  // SpvDimRect
-    TD_UNDEFINED,  // SpvDimBuffer
-    TD_UNDEFINED   // SpvDimSubpassData
+    TEX_DIMENSION_1D_ARRAY,   // SpvDim1D
+    TEX_DIMENSION_2D_ARRAY,   // SpvDim2D
+    TEX_DIMENSION_UNDEFINED,  // SpvDim3D
+    TEX_DIMENSION_CUBE_ARRAY, // SpvDimCube
+    TEX_DIMENSION_UNDEFINED,  // SpvDimRect
+    TEX_DIMENSION_UNDEFINED,  // SpvDimBuffer
+    TEX_DIMENSION_UNDEFINED   // SpvDimSubpassData
 };
 void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vulkan* S, const struct CGpuShaderLibraryDescriptor* desc)
 {
@@ -220,7 +220,7 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
         const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[i].name);
         reflection->entry_name = (const char8_t*)entry->name;
         reflection->stage = (ECGpuShaderStage)entry->shader_stage;
-        if (reflection->stage == SS_COMPUTE)
+        if (reflection->stage == SHADER_STAGE_COMPUTE)
         {
             reflection->thread_group_sizes[0] = entry->local_size.x;
             reflection->thread_group_sizes[1] = entry->local_size.y;
@@ -291,8 +291,8 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
                             current_res->dim = DIMLut[current_binding->image.dim];
                         if (current_binding->image.ms)
                         {
-                            current_res->dim = current_res->dim & TD_2D ? TD_2DMS : current_res->dim;
-                            current_res->dim = current_res->dim & TD_2D_ARRAY ? TD_2DMS_ARRAY : current_res->dim;
+                            current_res->dim = current_res->dim & TEX_DIMENSION_2D ? TEX_DIMENSION_2DMS : current_res->dim;
+                            current_res->dim = current_res->dim & TEX_DIMENSION_2D_ARRAY ? TEX_DIMENSION_2DMS_ARRAY : current_res->dim;
                         }
                     }
                 }
@@ -522,20 +522,20 @@ void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
     for (uint32_t j = 0; j < VkAdapter->mQueueFamiliesCount; j++)
     {
         const VkQueueFamilyProperties* prop = &VkAdapter->pQueueFamilyProperties[j];
-        if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] == -1) &&
+        if ((VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_GRAPHICS] == -1) &&
             (prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
         {
-            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Graphics] = j;
+            VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_GRAPHICS] = j;
         }
-        else if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] == -1) &&
+        else if ((VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_COMPUTE] == -1) &&
                  (prop->queueFlags & VK_QUEUE_COMPUTE_BIT))
         {
-            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Compute] = j;
+            VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_COMPUTE] = j;
         }
-        else if ((VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] == -1) &&
+        else if ((VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_TRANSFER] == -1) &&
                  (prop->queueFlags & VK_QUEUE_TRANSFER_BIT))
         {
-            VkAdapter->mQueueFamilyIndices[ECGpuQueueType_Transfer] = j;
+            VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_TRANSFER] = j;
         }
     }
 }
@@ -543,7 +543,7 @@ void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
 void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter)
 {
     CGpuAdapterDetail* adapter_detail = (CGpuAdapterDetail*)&VkAdapter->adapter_detail;
-    for (uint32_t i = 0; i < PF_Count; ++i)
+    for (uint32_t i = 0; i < PF_COUNT; ++i)
     {
         VkFormatProperties formatSupport;
         adapter_detail->format_supports[i].shader_read = 0;

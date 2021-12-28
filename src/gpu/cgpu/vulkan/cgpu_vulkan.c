@@ -250,7 +250,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
     uint32_t count = 0;
     switch (type)
     {
-        case ECGpuQueueType_Graphics: {
+        case QUEUE_TYPE_GRAPHICS: {
             for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
@@ -261,7 +261,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
             }
         }
         break;
-        case ECGpuQueueType_Compute: {
+        case QUEUE_TYPE_COMPUTE: {
             for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
@@ -275,7 +275,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGpuAdapterId adapter, const ECGpuQ
             }
         }
         break;
-        case ECGpuQueueType_Transfer: {
+        case QUEUE_TYPE_TRANSFER: {
             for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
@@ -637,7 +637,7 @@ VkCullModeFlagBits gVkCullModeTranslator[CULL_MODE_COUNT] = {
     VK_CULL_MODE_FRONT_BIT
 };
 
-VkPolygonMode gVkFillModeTranslator[FM_COUNT] = {
+VkPolygonMode gVkFillModeTranslator[FILL_MODE_COUNT] = {
     VK_POLYGON_MODE_FILL,
     VK_POLYGON_MODE_LINE
 };
@@ -646,7 +646,7 @@ VkFrontFace gVkFrontFaceTranslator[] = {
     VK_FRONT_FACE_COUNTER_CLOCKWISE,
     VK_FRONT_FACE_CLOCKWISE
 };
-VkBlendFactor gVkBlendConstantTranslator[BC_COUNT] = {
+VkBlendFactor gVkBlendConstantTranslator[BLEND_CONST_COUNT] = {
     VK_BLEND_FACTOR_ZERO,
     VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_SRC_COLOR,
@@ -661,7 +661,7 @@ VkBlendFactor gVkBlendConstantTranslator[BC_COUNT] = {
     VK_BLEND_FACTOR_CONSTANT_COLOR,
     VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
 };
-VkBlendOp gVkBlendOpTranslator[BM_COUNT] = {
+VkBlendOp gVkBlendOpTranslator[BLEND_MODE_COUNT] = {
     VK_BLEND_OP_ADD,
     VK_BLEND_OP_SUBTRACT,
     VK_BLEND_OP_REVERSE_SUBTRACT,
@@ -697,7 +697,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
                 ++input_binding_count;
             }
             input_bindings[input_binding_count - 1].binding = binding_value;
-            if (attrib->rate == VAR_INSTANCE)
+            if (attrib->rate == INPUT_RATE_INSTANCE)
             {
                 input_bindings[input_binding_count - 1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
             }
@@ -734,7 +734,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
         shaderStages[stage_count].pSpecializationInfo = specializationInfo;
         switch (stage_mask)
         {
-            case SS_VERT:
+            case SHADER_STAGE_VERT:
             {
                 if(desc->vertex_shader)
                 {
@@ -745,7 +745,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
                 }
             }
             break;
-            case SS_TESC:
+            case SHADER_STAGE_TESC:
             {
                 if(desc->tesc_shader)
                 {
@@ -756,7 +756,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
                 }
             }
             break;
-            case SS_TESE:
+            case SHADER_STAGE_TESE:
             {
                 if(desc->tese_shader)
                 {
@@ -767,7 +767,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
                 }
             }
             break;
-            case SS_GEOM:
+            case SHADER_STAGE_GEOM:
             {
                 if(desc->geom_shader)
                 {
@@ -778,7 +778,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
                 }
             }
             break;
-            case SS_FRAG:
+            case SHADER_STAGE_FRAG:
             {
                 if(desc->fragment_shader)
                 {
@@ -835,12 +835,12 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
     VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     switch (desc->prim_topology)
     {
-        case TOPO_POINT_LIST: topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST; break;
-        case TOPO_LINE_LIST: topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; break;
-        case TOPO_LINE_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP; break;
-        case TOPO_TRI_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
-        case TOPO_PATCH_LIST: topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; break;
-        case TOPO_TRI_LIST: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
+        case PRIM_TOPO_POINT_LIST: topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST; break;
+        case PRIM_TOPO_LINE_LIST: topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; break;
+        case PRIM_TOPO_LINE_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP; break;
+        case PRIM_TOPO_TRI_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
+        case PRIM_TOPO_PATCH_LIST: topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; break;
+        case PRIM_TOPO_TRI_LIST: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
         default:  cgpu_assert(false && "Primitive Topo not supported!"); break;
     }
     VkPipelineInputAssemblyStateCreateInfo ia = {
@@ -1197,7 +1197,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpu
         CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer_barrier->buffer;
         VkBufferMemoryBarrier* pBufferBarrier = NULL;
 
-        if (RS_UNORDERED_ACCESS == buffer_barrier->src_state && RS_UNORDERED_ACCESS == buffer_barrier->dst_state)
+        if (RESOURCE_STATE_UNORDERED_ACCESS == buffer_barrier->src_state && RESOURCE_STATE_UNORDERED_ACCESS == buffer_barrier->dst_state)
         {
             pBufferBarrier = &BBs[bufferBarrierCount++];                     //-V522
             pBufferBarrier->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER; //-V522
@@ -1249,7 +1249,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpu
         const CGpuTextureBarrier* texture_barrier = &desc->texture_barriers[i];
         CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)texture_barrier->texture;
         VkImageMemoryBarrier* pImageBarrier = NULL;
-        if (RS_UNORDERED_ACCESS == texture_barrier->src_state && RS_UNORDERED_ACCESS == texture_barrier->dst_state)
+        if (RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->src_state && RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->dst_state)
         {
             pImageBarrier = &TBs[imageBarrierCount++];
             pImageBarrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1281,12 +1281,12 @@ void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpu
             pImageBarrier->subresourceRange.baseArrayLayer = texture_barrier->subresource_barrier ? texture_barrier->array_layer : 0;
             pImageBarrier->subresourceRange.layerCount = texture_barrier->subresource_barrier ? 1 : VK_REMAINING_ARRAY_LAYERS;
 
-            if (texture_barrier->queue_acquire && texture_barrier->src_state != RS_UNDEFINED)
+            if (texture_barrier->queue_acquire && texture_barrier->src_state != RESOURCE_STATE_UNDEFINED)
             {
                 pImageBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
                 pImageBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[texture_barrier->queue_type];
             }
-            else if (texture_barrier->queue_release && texture_barrier->src_state != RS_UNDEFINED)
+            else if (texture_barrier->queue_release && texture_barrier->src_state != RESOURCE_STATE_UNDEFINED)
             {
                 pImageBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
                 pImageBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[texture_barrier->queue_type];
@@ -1395,8 +1395,8 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
             .mColorAttachmentCount = desc->render_target_count,
             .mDepthStencilFormat = desc->depth_stencil ? desc->depth_stencil->view->info.format : PF_UNDEFINED,
             .mSampleCount = desc->sample_count,
-            .mLoadActionDepth = desc->depth_stencil ? desc->depth_stencil->depth_load_action : LA_DONTCARE,
-            .mLoadActionStencil = desc->depth_stencil ? desc->depth_stencil->stencil_load_action : LA_DONTCARE
+            .mLoadActionDepth = desc->depth_stencil ? desc->depth_stencil->depth_load_action : LOAD_ACTION_DONTCARE,
+            .mLoadActionStencil = desc->depth_stencil ? desc->depth_stencil->stencil_load_action : LOAD_ACTION_DONTCARE
         };
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {

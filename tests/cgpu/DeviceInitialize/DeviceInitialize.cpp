@@ -13,13 +13,13 @@ protected:
         ECGpuBackend backend = GetParam();
         switch (backend)
         {
-            case ECGpuBackend::ECGpuBackend_D3D12:
+            case ECGpuBackend::CGPU_BACKEND_D3D12:
                 return "D3D12";
-            case ECGpuBackend::ECGpuBackend_METAL:
+            case ECGpuBackend::CGPU_BACKEND_METAL:
                 return "Metal";
-            case ECGpuBackend::ECGpuBackend_VULKAN:
+            case ECGpuBackend::CGPU_BACKEND_VULKAN:
                 return "Vulkan";
-            case ECGpuBackend::ECGpuBackend_AGC:
+            case ECGpuBackend::CGPU_BACKEND_AGC:
                 return "AGC";
             default:
                 return "UNKNOWN";
@@ -36,15 +36,15 @@ CGpuInstanceId init_instance(ECGpuBackend backend, bool enable_debug_layer, bool
     CGpuInstanceId instance = cgpu_create_instance(&desc);
     DECLARE_ZERO(CGpuInstanceFeatures, instance_features)
     cgpu_query_instance_features(instance, &instance_features);
-    if (backend == ECGpuBackend::ECGpuBackend_VULKAN)
+    if (backend == ECGpuBackend::CGPU_BACKEND_VULKAN)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
-    else if (backend == ECGpuBackend::ECGpuBackend_D3D12)
+    else if (backend == ECGpuBackend::CGPU_BACKEND_D3D12)
     {
         EXPECT_FALSE(instance_features.specialization_constant);
     }
-    else if (backend == ECGpuBackend::ECGpuBackend_METAL)
+    else if (backend == ECGpuBackend::CGPU_BACKEND_METAL)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
@@ -82,14 +82,14 @@ void test_create_device(CGpuInstanceId instance, bool enable_debug_layer, bool e
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
     {
-        auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
-        auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);
-        auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
+        auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
+        auto cQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_COMPUTE);
+        auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
 
         std::vector<CGpuQueueGroupDescriptor> queueGroup;
-        if (gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Graphics, 1 });
-        if (cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Compute, 1 });
-        if (tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ ECGpuQueueType_Transfer, 1 });
+        if (gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_GRAPHICS, 1 });
+        if (cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_COMPUTE, 1 });
+        if (tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_TRANSFER, 1 });
         DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = queueGroup.data();
         descriptor.queueGroupCount = (uint32_t)queueGroup.size();
@@ -168,9 +168,9 @@ TEST_P(CGpuTest, QueryQueueCount)
     for (auto adapter : adapters)
     {
         const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
-        auto gQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Graphics);
-        auto cQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Compute);
-        auto tQueue = cgpu_query_queue_count(adapter, ECGpuQueueType_Transfer);
+        auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
+        auto cQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_COMPUTE);
+        auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
         std::cout << prop->vendor_preset.gpu_name
                   << " of backend " << GetBackendName() << "  \n"
                   << "    GraphicsQueue: " << gQueue << "  \n"
@@ -205,11 +205,11 @@ TEST_P(CGpuTest, QueryVendorInfo)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    ECGpuBackend_VULKAN
+    CGPU_BACKEND_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
     ,
-    ECGpuBackend_D3D12
+    CGPU_BACKEND_D3D12
 #endif
 #ifdef CGPU_USE_METAL
     ,

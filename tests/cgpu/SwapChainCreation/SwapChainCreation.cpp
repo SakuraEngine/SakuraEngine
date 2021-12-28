@@ -33,7 +33,7 @@ protected:
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         adapter = adapters[0];
 
-        CGpuQueueGroupDescriptor G = { ECGpuQueueType_Graphics, 1 };
+        CGpuQueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
         DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
@@ -50,7 +50,7 @@ protected:
 
     CGpuSwapChainId CreateSwapChainWithSurface(CGpuSurfaceId surface)
     {
-        auto mainQueue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+        auto mainQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
         DECLARE_ZERO(CGpuSwapChainDescriptor, descriptor)
         descriptor.presentQueues = &mainQueue;
         descriptor.presentQueuesCount = 1;
@@ -120,11 +120,11 @@ TEST_P(SwapChainCreation, CreateFromNSView)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    ECGpuBackend_VULKAN
+    CGPU_BACKEND_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
     ,
-    ECGpuBackend_D3D12
+    CGPU_BACKEND_D3D12
 #endif
 );
 
