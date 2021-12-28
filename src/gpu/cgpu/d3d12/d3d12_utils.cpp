@@ -172,18 +172,18 @@ static ECGpuResourceType gD3D12_TO_DESCRIPTOR[] = {
 };
 
 static ECGpuTextureDimension gD3D12_TO_RESOURCE_DIM[D3D_SRV_DIMENSION_BUFFEREX + 1] = {
-    TD_UNDEFINED,  // D3D_SRV_DIMENSION_UNKNOWN
-    TD_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFER
-    TD_1D,         // D3D_SRV_DIMENSION_TEXTURE1D
-    TD_1D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE1DARRAY
-    TD_2D,         // D3D_SRV_DIMENSION_TEXTURE2D
-    TD_2D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE2DARRAY
-    TD_2DMS,       // D3D_SRV_DIMENSION_TEXTURE2DMS
-    TD_2DMS_ARRAY, // D3D_SRV_DIMENSION_TEXTURE2DMSARRAY
-    TD_3D,         // D3D_SRV_DIMENSION_TEXTURE3D
-    TD_CUBE,       // D3D_SRV_DIMENSION_TEXTURECUBE
-    TD_CUBE_ARRAY, // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
-    TD_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFEREX
+    TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_UNKNOWN
+    TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFER
+    TEX_DIMENSION_1D,         // D3D_SRV_DIMENSION_TEXTURE1D
+    TEX_DIMENSION_1D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE1DARRAY
+    TEX_DIMENSION_2D,         // D3D_SRV_DIMENSION_TEXTURE2D
+    TEX_DIMENSION_2D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE2DARRAY
+    TEX_DIMENSION_2DMS,       // D3D_SRV_DIMENSION_TEXTURE2DMS
+    TEX_DIMENSION_2DMS_ARRAY, // D3D_SRV_DIMENSION_TEXTURE2DMSARRAY
+    TEX_DIMENSION_3D,         // D3D_SRV_DIMENSION_TEXTURE3D
+    TEX_DIMENSION_CUBE,       // D3D_SRV_DIMENSION_TEXTURECUBE
+    TEX_DIMENSION_CUBE_ARRAY, // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
+    TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFEREX
 };
 
 static ECGpuFormat gD3D12_TO_VERTEX_FORMAT[] = {
@@ -253,7 +253,7 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
     reflectionRecordShaderResources(d3d12reflection, stage, shaderDesc, S);
     CGpuShaderReflection* Reflection = S->super.entry_reflections;
     // Collect vertex inputs
-    if (stage == SS_VERT)
+    if (stage == SHADER_STAGE_VERT)
     {
         Reflection->vertex_inputs_count = shaderDesc.InputParameters;
         Reflection->vertex_inputs = (CGpuVertexInput*)cgpu_calloc(Reflection->vertex_inputs_count, sizeof(CGpuVertexInput));
@@ -275,7 +275,7 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
             Reflection->vertex_inputs[i].format = gD3D12_TO_VERTEX_FORMAT[paramDesc.ComponentType + 3 * Comps];
         }
     }
-    else if (stage == SS_COMPUTE)
+    else if (stage == SHADER_STAGE_COMPUTE)
     {
         d3d12reflection->GetThreadGroupSize(
             &Reflection->thread_group_sizes[0],

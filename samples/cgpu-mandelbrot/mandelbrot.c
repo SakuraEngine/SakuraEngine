@@ -7,9 +7,9 @@
 #include "stdio.h"
 #include <stdint.h>
 
-const uint32_t* compute_shaders[ECGpuBackend_COUNT];
-uint32_t compute_shader_sizes[ECGpuBackend_COUNT];
-static const char8_t* gPNGNames[ECGpuBackend_COUNT] = {
+const uint32_t* compute_shaders[CGPU_BACKEND_COUNT];
+uint32_t compute_shader_sizes[CGPU_BACKEND_COUNT];
+static const char8_t* gPNGNames[CGPU_BACKEND_COUNT] = {
     "mandelbrot-vulkan.png",
     "mandelbrot-d3d12.png",
     "mandelbrot-d3d12(xbox).png",
@@ -42,7 +42,7 @@ void ComputeFunc(void* usrdata)
 
     // Create device
     CGpuQueueGroupDescriptor G = {
-        .queueType = ECGpuQueueType_Graphics,
+        .queueType = QUEUE_TYPE_GRAPHICS,
         .queueCount = 1
     };
     CGpuDeviceDescriptor device_desc = {
@@ -56,14 +56,14 @@ void ComputeFunc(void* usrdata)
         .code = compute_shaders[backend],
         .code_size = compute_shader_sizes[backend],
         .name = "ComputeShaderLibrary",
-        .stage = SS_COMPUTE
+        .stage = SHADER_STAGE_COMPUTE
     };
     CGpuShaderLibraryId compute_shader = cgpu_create_shader_library(device, &shader_desc);
 
     // Create root signature
     CGpuPipelineShaderDescriptor compute_shader_entry = {
         .entry = "main",
-        .stage = SS_COMPUTE,
+        .stage = SHADER_STAGE_COMPUTE,
         .library = compute_shader
     };
     CGpuShaderReflection* entry_reflection = &compute_shader->entry_reflections[0];
@@ -91,8 +91,8 @@ void ComputeFunc(void* usrdata)
         .name = "DataBuffer",
         .flags = BCF_NONE,
         .descriptors = RT_RW_BUFFER,
-        .start_state = RS_UNORDERED_ACCESS,
-        .memory_usage = MU_GPU_ONLY,
+        .start_state = RESOURCE_STATE_UNORDERED_ACCESS,
+        .memory_usage = MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Pixel),
         .elemet_count = MANDELBROT_WIDTH * MANDELBROT_HEIGHT,
         .size = sizeof(Pixel) * MANDELBROT_WIDTH * MANDELBROT_HEIGHT
@@ -104,8 +104,8 @@ void ComputeFunc(void* usrdata)
         .name = "ReadbackBuffer",
         .flags = BCF_OWN_MEMORY_BIT,
         .descriptors = RT_NONE,
-        .start_state = RS_COPY_DEST,
-        .memory_usage = MU_GPU_TO_CPU,
+        .start_state = RESOURCE_STATE_COPY_DEST,
+        .memory_usage = MEM_USAGE_GPU_TO_CPU,
         .element_stride = buffer_desc.element_stride,
         .elemet_count = buffer_desc.elemet_count,
         .size = buffer_desc.size
@@ -121,7 +121,7 @@ void ComputeFunc(void* usrdata)
     cgpu_update_descriptor_set(set, &descriptor_data, 1);
 
     // Create command objects
-    CGpuQueueId gfx_queue = cgpu_get_queue(device, ECGpuQueueType_Graphics, 0);
+    CGpuQueueId gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
     CGpuCommandPoolId pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
     CGpuCommandBufferDescriptor cmd_desc = { .is_secondary = false };
     CGpuCommandBufferId cmd = cgpu_create_command_buffer(pool, &cmd_desc);
@@ -142,8 +142,8 @@ void ComputeFunc(void* usrdata)
         // Barrier UAV buffer to transfer source
         CGpuBufferBarrier buffer_barrier = {
             .buffer = data_buffer,
-            .src_state = RS_UNORDERED_ACCESS,
-            .dst_state = RS_COPY_SOURCE
+            .src_state = RESOURCE_STATE_UNORDERED_ACCESS,
+            .dst_state = RESOURCE_STATE_COPY_SOURCE
         };
         CGpuResourceBarrierDescriptor barriers_desc = {
             .buffer_barriers = &buffer_barrier,
@@ -213,30 +213,30 @@ void ComputeFunc(void* usrdata)
 
 int main(void)
 {
-    compute_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)mandelbrot_comp_spirv;
-    compute_shader_sizes[ECGpuBackend_VULKAN] = sizeof(mandelbrot_comp_spirv);
+    compute_shaders[CGPU_BACKEND_VULKAN] = (const uint32_t*)mandelbrot_comp_spirv;
+    compute_shader_sizes[CGPU_BACKEND_VULKAN] = sizeof(mandelbrot_comp_spirv);
 
-    compute_shaders[ECGpuBackend_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
-    compute_shader_sizes[ECGpuBackend_D3D12] = sizeof(mandelbrot_comp_dxil);
+    compute_shaders[CGPU_BACKEND_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
+    compute_shader_sizes[CGPU_BACKEND_D3D12] = sizeof(mandelbrot_comp_dxil);
 
     // When we support more add them here
     ECGpuBackend backends[] = {
-        ECGpuBackend_VULKAN
+        CGPU_BACKEND_VULKAN
 #ifdef CGPU_USE_D3D12
         ,
-        ECGpuBackend_D3D12
+        CGPU_BACKEND_D3D12
 #endif
     };
-    const uint32_t backend_count = sizeof(backends) / sizeof(ECGpuBackend);
-    DECLARE_ZERO_VLA(SThreadHandle, hdls, backend_count)
-    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, backend_count)
-    for (uint32_t i = 0; i < backend_count; i++)
+    const uint32_t CGPU_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
+    DECLARE_ZERO_VLA(SThreadHandle, hdls, CGPU_BACKEND_COUNT)
+    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, CGPU_BACKEND_COUNT)
+    for (uint32_t i = 0; i < CGPU_BACKEND_COUNT; i++)
     {
         thread_descs[i].pFunc = &ComputeFunc;
         thread_descs[i].pData = &backends[i];
         skr_init_thread(&thread_descs[i], &hdls[i]);
     }
-    for (uint32_t i = 0; i < backend_count; i++)
+    for (uint32_t i = 0; i < CGPU_BACKEND_COUNT; i++)
     {
         skr_join_thread(hdls[i]);
         skr_destroy_thread(hdls[i]);

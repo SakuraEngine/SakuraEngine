@@ -4,11 +4,11 @@ FORCEINLINE static VkSampleCountFlagBits VkUtil_SampleCountTranslateToVk(const E
 	VkSampleCountFlagBits result = VK_SAMPLE_COUNT_1_BIT;
 	switch (count)
 	{
-		case SC_1: result = VK_SAMPLE_COUNT_1_BIT; break;
-		case SC_2: result = VK_SAMPLE_COUNT_2_BIT; break;
-		case SC_4: result = VK_SAMPLE_COUNT_4_BIT; break;
-		case SC_8: result = VK_SAMPLE_COUNT_8_BIT; break;
-		case SC_16: result = VK_SAMPLE_COUNT_16_BIT; break;
+		case SAMPLE_COUNT_1: result = VK_SAMPLE_COUNT_1_BIT; break;
+		case SAMPLE_COUNT_2: result = VK_SAMPLE_COUNT_2_BIT; break;
+		case SAMPLE_COUNT_4: result = VK_SAMPLE_COUNT_4_BIT; break;
+		case SAMPLE_COUNT_8: result = VK_SAMPLE_COUNT_8_BIT; break;
+		case SAMPLE_COUNT_16: result = VK_SAMPLE_COUNT_16_BIT; break;
 	}
 	return result;
 }

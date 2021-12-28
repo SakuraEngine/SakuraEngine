@@ -31,7 +31,7 @@ protected:
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         adapter = adapters[0];
 
-        CGpuQueueGroupDescriptor G = { ECGpuQueueType_Graphics, 1 };
+        CGpuQueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
         DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
@@ -39,19 +39,19 @@ protected:
         EXPECT_NE(device, nullptr);
         EXPECT_NE(device, CGPU_NULLPTR);
 
-        vertex_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)triangle_vert_spirv;
-        vertex_shader_sizes[ECGpuBackend_VULKAN] = sizeof(triangle_vert_spirv);
-        frag_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)triangle_frag_spirv;
-        frag_shader_sizes[ECGpuBackend_VULKAN] = sizeof(triangle_frag_spirv);
-        compute_shaders[ECGpuBackend_VULKAN] = (const uint32_t*)simple_compute_spirv;
-        compute_shader_sizes[ECGpuBackend_VULKAN] = sizeof(simple_compute_spirv);
+        vertex_shaders[CGPU_BACKEND_VULKAN] = (const uint32_t*)triangle_vert_spirv;
+        vertex_shader_sizes[CGPU_BACKEND_VULKAN] = sizeof(triangle_vert_spirv);
+        frag_shaders[CGPU_BACKEND_VULKAN] = (const uint32_t*)triangle_frag_spirv;
+        frag_shader_sizes[CGPU_BACKEND_VULKAN] = sizeof(triangle_frag_spirv);
+        compute_shaders[CGPU_BACKEND_VULKAN] = (const uint32_t*)simple_compute_spirv;
+        compute_shader_sizes[CGPU_BACKEND_VULKAN] = sizeof(simple_compute_spirv);
 
-        vertex_shaders[ECGpuBackend_D3D12] = (const uint32_t*)triangle_vert_dxil;
-        vertex_shader_sizes[ECGpuBackend_D3D12] = sizeof(triangle_vert_dxil);
-        frag_shaders[ECGpuBackend_D3D12] = (const uint32_t*)triangle_frag_dxil;
-        frag_shader_sizes[ECGpuBackend_D3D12] = sizeof(triangle_frag_dxil);
-        compute_shaders[ECGpuBackend_D3D12] = (const uint32_t*)simple_compute_dxil;
-        compute_shader_sizes[ECGpuBackend_D3D12] = sizeof(simple_compute_dxil);
+        vertex_shaders[CGPU_BACKEND_D3D12] = (const uint32_t*)triangle_vert_dxil;
+        vertex_shader_sizes[CGPU_BACKEND_D3D12] = sizeof(triangle_vert_dxil);
+        frag_shaders[CGPU_BACKEND_D3D12] = (const uint32_t*)triangle_frag_dxil;
+        frag_shader_sizes[CGPU_BACKEND_D3D12] = sizeof(triangle_frag_dxil);
+        compute_shaders[CGPU_BACKEND_D3D12] = (const uint32_t*)simple_compute_dxil;
+        compute_shader_sizes[CGPU_BACKEND_D3D12] = sizeof(simple_compute_dxil);
     }
 
     void TearDown() override
@@ -63,12 +63,12 @@ protected:
     CGpuInstanceId instance;
     CGpuAdapterId adapter;
     CGpuDeviceId device;
-    const uint32_t* vertex_shaders[ECGpuBackend::ECGpuBackend_COUNT];
-    uint32_t vertex_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
-    const uint32_t* frag_shaders[ECGpuBackend::ECGpuBackend_COUNT];
-    uint32_t frag_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
-    const uint32_t* compute_shaders[ECGpuBackend::ECGpuBackend_COUNT];
-    uint32_t compute_shader_sizes[ECGpuBackend::ECGpuBackend_COUNT];
+    const uint32_t* vertex_shaders[ECGpuBackend::CGPU_BACKEND_COUNT];
+    uint32_t vertex_shader_sizes[ECGpuBackend::CGPU_BACKEND_COUNT];
+    const uint32_t* frag_shaders[ECGpuBackend::CGPU_BACKEND_COUNT];
+    uint32_t frag_shader_sizes[ECGpuBackend::CGPU_BACKEND_COUNT];
+    const uint32_t* compute_shaders[ECGpuBackend::CGPU_BACKEND_COUNT];
+    uint32_t compute_shader_sizes[ECGpuBackend::CGPU_BACKEND_COUNT];
 };
 
 TEST_P(ResourceCreation, CreateIndexBuffer)
@@ -76,7 +76,7 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
     DECLARE_ZERO(CGpuBufferDescriptor, desc)
     desc.flags = BCF_OWN_MEMORY_BIT;
     desc.descriptors = RT_INDEX_BUFFER;
-    desc.memory_usage = MU_GPU_ONLY;
+    desc.memory_usage = MEM_USAGE_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
@@ -93,7 +93,7 @@ TEST_P(ResourceCreation, CreateTexture)
     desc.name = "Texture";
     desc.flags = TCF_OWN_MEMORY_BIT;
     desc.format = PF_R8G8B8A8_UNORM;
-    desc.start_state = RS_COMMON;
+    desc.start_state = RESOURCE_STATE_COMMON;
     desc.descriptors = RT_TEXTURE;
     desc.width = 512;
     desc.height = 512;
@@ -108,7 +108,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
     DECLARE_ZERO(CGpuBufferDescriptor, desc)
     desc.flags = BCF_OWN_MEMORY_BIT;
     desc.descriptors = RT_INDEX_BUFFER | RT_BUFFER;
-    desc.memory_usage = MU_CPU_TO_GPU;
+    desc.memory_usage = MEM_USAGE_CPU_TO_GPU;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
@@ -142,7 +142,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
     DECLARE_ZERO(CGpuBufferDescriptor, desc)
     desc.flags = BCF_PERSISTENT_MAP_BIT;
     desc.descriptors = RT_BUFFER;
-    desc.memory_usage = MU_CPU_TO_GPU;
+    desc.memory_usage = MEM_USAGE_CPU_TO_GPU;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
@@ -160,14 +160,14 @@ TEST_P(ResourceCreation, CreateModules)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
     vdesc.name = "VertexShaderLibrary";
-    vdesc.stage = ECGpuShaderStage::SS_VERT;
+    vdesc.stage = ECGpuShaderStage::SHADER_STAGE_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
 
     DECLARE_ZERO(CGpuShaderLibraryDescriptor, fdesc)
     fdesc.code = frag_shaders[backend];
     fdesc.code_size = frag_shader_sizes[backend];
     fdesc.name = "FragmentShaderLibrary";
-    fdesc.stage = ECGpuShaderStage::SS_FRAG;
+    fdesc.stage = ECGpuShaderStage::SHADER_STAGE_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
     eastl::string cbName = fragment_shader->entry_reflections[0].shader_resources[0].name;
@@ -187,23 +187,23 @@ TEST_P(ResourceCreation, CreateRootSignature)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
     vdesc.name = "VertexShaderLibrary";
-    vdesc.stage = ECGpuShaderStage::SS_VERT;
+    vdesc.stage = ECGpuShaderStage::SHADER_STAGE_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
 
     DECLARE_ZERO(CGpuShaderLibraryDescriptor, fdesc)
     fdesc.code = frag_shaders[backend];
     fdesc.code_size = frag_shader_sizes[backend];
     fdesc.name = "FragmentShaderLibrary";
-    fdesc.stage = ECGpuShaderStage::SS_FRAG;
+    fdesc.stage = ECGpuShaderStage::SHADER_STAGE_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
     CGpuPipelineShaderDescriptor vertex_shader_entry = {};
     vertex_shader_entry.entry = "main";
-    vertex_shader_entry.stage = ECGpuShaderStage::SS_TESE;
+    vertex_shader_entry.stage = ECGpuShaderStage::SHADER_STAGE_TESE;
     vertex_shader_entry.library = vertex_shader;
     CGpuPipelineShaderDescriptor fragment_shader_entry = {};
     fragment_shader_entry.entry = "main";
-    fragment_shader_entry.stage = ECGpuShaderStage::SS_FRAG;
+    fragment_shader_entry.stage = ECGpuShaderStage::SHADER_STAGE_FRAG;
     fragment_shader_entry.library = fragment_shader;
     CGpuPipelineShaderDescriptor shaders[] = { vertex_shader_entry, fragment_shader_entry };
     CGpuRootSignatureDescriptor root_desc = {};
@@ -226,14 +226,14 @@ TEST_P(ResourceCreation, CreateComputePipeline)
     csdesc.code = compute_shaders[backend];
     csdesc.code_size = compute_shader_sizes[backend];
     csdesc.name = "ComputeShaderLibrary";
-    csdesc.stage = ECGpuShaderStage::SS_COMPUTE;
+    csdesc.stage = ECGpuShaderStage::SHADER_STAGE_COMPUTE;
     auto compute_shader = cgpu_create_shader_library(device, &csdesc);
     EXPECT_NE(compute_shader, CGPU_NULLPTR);
 
     // Create root signature
     DECLARE_ZERO(CGpuPipelineShaderDescriptor, compute_shader_entry)
     compute_shader_entry.entry = "main";
-    compute_shader_entry.stage = SS_COMPUTE;
+    compute_shader_entry.stage = SHADER_STAGE_COMPUTE;
     compute_shader_entry.library = compute_shader;
     DECLARE_ZERO(CGpuRootSignatureDescriptor, root_desc)
     root_desc.shaders = &compute_shader_entry;
@@ -251,11 +251,11 @@ TEST_P(ResourceCreation, CreateRenderPipeline)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    ECGpuBackend_VULKAN
+    CGPU_BACKEND_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
     ,
-    ECGpuBackend_D3D12
+    CGPU_BACKEND_D3D12
 #endif
 );
 

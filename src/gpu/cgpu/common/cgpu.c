@@ -30,15 +30,15 @@
 
 CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
 {
-    cgpu_assert((desc->backend == ECGpuBackend_VULKAN || desc->backend == ECGpuBackend_D3D12 || desc->backend == ECGpuBackend_METAL) && "cgpu support only vulkan & d3d12 currently!");
+    cgpu_assert((desc->backend == CGPU_BACKEND_VULKAN || desc->backend == CGPU_BACKEND_D3D12 || desc->backend == CGPU_BACKEND_METAL) && "CGPU support only vulkan & d3d12 & metal currently!");
     const CGpuProcTable* tbl = CGPU_NULLPTR;
     const CGpuSurfacesProcTable* s_tbl = CGPU_NULLPTR;
 
-    if (desc->backend == ECGpuBackend_COUNT)
+    if (desc->backend == CGPU_BACKEND_COUNT)
     {
     }
 #ifdef CGPU_USE_VULKAN
-    else if (desc->backend == ECGpuBackend_VULKAN)
+    else if (desc->backend == CGPU_BACKEND_VULKAN)
     {
         tbl = CGPU_VulkanProcTable();
         s_tbl = CGPU_VulkanSurfacesProcTable();
@@ -52,7 +52,7 @@ CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
     }
 #endif
 #ifdef CGPU_USE_D3D12
-    else if (desc->backend == ECGpuBackend_D3D12)
+    else if (desc->backend == CGPU_BACKEND_D3D12)
     {
         tbl = CGPU_D3D12ProcTable();
         s_tbl = CGPU_D3D12SurfacesProcTable();
@@ -157,6 +157,15 @@ void cgpu_wait_fences(const CGpuFenceId* fences, uint32_t fence_count)
     fn_wait_fences(fences, fence_count);
 }
 
+ECGpuFenceStatus cgpu_query_fence_status(CGpuFenceId fence)
+{
+    cgpu_assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
+    cgpu_assert(fence->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcQueryFenceStatus fn_query_fence = fence->device->proc_table_cache->query_fence_status;
+    cgpu_assert(fn_query_fence && "query_fence_status Proc Missing!");
+    return fn_query_fence(fence);
+}
+
 void cgpu_free_fence(CGpuFenceId fence)
 {
     cgpu_assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
@@ -249,18 +258,18 @@ void cgpu_free_compute_pipeline(CGpuComputePipelineId pipeline)
 }
 
 static const CGpuBlendStateDescriptor defaultBlendStateDesc = {
-    .src_factors[0] = BC_ONE,
-    .dst_factors[0] = BC_ZERO,
-    .blend_modes[0] = BM_ADD,
-    .src_alpha_factors[0] = BC_ONE,
-    .dst_alpha_factors[0] = BC_ZERO,
+    .src_factors[0] = BLEND_CONST_ONE,
+    .dst_factors[0] = BLEND_CONST_ZERO,
+    .blend_modes[0] = BLEND_MODE_ADD,
+    .src_alpha_factors[0] = BLEND_CONST_ONE,
+    .dst_alpha_factors[0] = BLEND_CONST_ZERO,
     .masks[0] = COLOR_MASK_ALL,
     .independent_blend = false
 };
 static const CGpuRasterizerStateDescriptor defaultRasterStateDesc = {
     .cull_mode = CULL_MODE_BACK,
-    .fill_mode = FM_SOLID,
-    .front_face = FF_CCW,
+    .fill_mode = FILL_MODE_SOLID,
+    .front_face = FRONT_FACE_CCW,
     .slope_scaled_depth_bias = 0.f,
     .enable_depth_clamp = false,
     .enable_scissor = false,
@@ -440,7 +449,7 @@ void cgpu_cmd_begin(CGpuCommandBufferId cmd)
 void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    cgpu_assert(cmd->current_dispatch == PT_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCmdTransferBufferToBuffer fn_cmd_transfer_buffer_to_buffer = cmd->device->proc_table_cache->cmd_transfer_buffer_to_buffer;
     cgpu_assert(fn_cmd_transfer_buffer_to_buffer && "cmd_transfer_buffer_to_buffer Proc Missing!");
@@ -450,7 +459,7 @@ void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CG
 void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    cgpu_assert(cmd->current_dispatch == PT_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     if (desc->layer_count == 0) ((CGpuBufferToTextureTransfer*)desc)->layer_count = 1;
     assert(desc->elems_per_row != 0 && "fatal: bytes_per_raw must be greater than 0!");
@@ -463,7 +472,7 @@ void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct C
 void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    cgpu_assert(cmd->current_dispatch == PT_NONE && "fatal: can't call resource barriers in render/dispatch passes!");
+    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call resource barriers in render/dispatch passes!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCmdResourceBarrier fn_cmd_resource_barrier = cmd->device->proc_table_cache->cmd_resource_barrier;
     cgpu_assert(fn_cmd_resource_barrier && "cmd_resource_barrier Proc Missing!");
@@ -488,7 +497,7 @@ CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, co
     cgpu_assert(fn_begin_compute_pass && "cmd_begin_compute_pass Proc Missing!");
     CGpuComputePassEncoderId ecd = (CGpuComputePassEncoderId)fn_begin_compute_pass(cmd, desc);
     CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PT_COMPUTE;
+    Cmd->current_dispatch = PIPELINE_TYPE_COMPUTE;
     return ecd;
 }
 
@@ -525,12 +534,12 @@ void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(cmd->current_dispatch == PT_COMPUTE && "fatal: can't call end command pass on commnd buffer while not dispatching compute!");
+    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_COMPUTE && "fatal: can't call end command pass on commnd buffer while not dispatching compute!");
     const CGPUProcCmdEndComputePass fn_end_compute_pass = cmd->device->proc_table_cache->cmd_end_compute_pass;
     cgpu_assert(fn_end_compute_pass && "cmd_end_compute_pass Proc Missing!");
     fn_end_compute_pass(cmd, encoder);
     CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PT_NONE;
+    Cmd->current_dispatch = PIPELINE_TYPE_NONE;
 }
 
 // Render CMDs
@@ -542,7 +551,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, cons
     cgpu_assert(fn_begin_render_pass && "cmd_begin_render_pass Proc Missing!");
     CGpuRenderPassEncoderId ecd = (CGpuRenderPassEncoderId)fn_begin_render_pass(cmd, desc);
     CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PT_GRAPHICS;
+    Cmd->current_dispatch = PIPELINE_TYPE_GRAPHICS;
     return ecd;
 }
 
@@ -597,12 +606,12 @@ void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId e
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(cmd->current_dispatch == PT_GRAPHICS && "fatal: can't call end command pass on commnd buffer while not dispatching graphics!");
+    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_GRAPHICS && "fatal: can't call end command pass on commnd buffer while not dispatching graphics!");
     const CGPUProcCmdEndRenderPass fn_end_render_pass = cmd->device->proc_table_cache->cmd_end_render_pass;
     cgpu_assert(fn_end_render_pass && "cmd_end_render_pass Proc Missing!");
     fn_end_render_pass(cmd, encoder);
     CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PT_NONE;
+    Cmd->current_dispatch = PIPELINE_TYPE_NONE;
 }
 
 // Shader APIs
@@ -857,7 +866,7 @@ void CGpuUtil_InitRSBlackboardAndParamTables(CGpuRootSignature* RS, CGpuUtil_RSB
         }
     }
     // Count Sets and Binding Slots
-    bb->pipelineType = PT_NONE;
+    bb->pipelineType = PIPELINE_TYPE_NONE;
     for (uint32_t i = 0; i < desc->shaders_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
@@ -868,12 +877,12 @@ void CGpuUtil_InitRSBlackboardAndParamTables(CGpuRootSignature* RS, CGpuUtil_RSB
             bb->max_binding = bb->max_binding > resource->binding + 1 ? bb->max_binding : resource->binding + 1;
         }
         // Pipeline Type
-        if (reflection->stage & SS_COMPUTE)
-            bb->pipelineType = PT_COMPUTE;
-        else if (reflection->stage & SS_RAYTRACING)
-            bb->pipelineType = PT_RAYTRACING;
+        if (reflection->stage & SHADER_STAGE_COMPUTE)
+            bb->pipelineType = PIPELINE_TYPE_COMPUTE;
+        else if (reflection->stage & SHADER_STAGE_RAYTRACING)
+            bb->pipelineType = PIPELINE_TYPE_RAYTRACING;
         else
-            bb->pipelineType = PT_GRAPHICS;
+            bb->pipelineType = PIPELINE_TYPE_GRAPHICS;
     }
     // Collect Shader Resources
     if (bb->set_count * bb->max_binding > 0)

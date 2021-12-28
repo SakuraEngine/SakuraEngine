@@ -11,6 +11,7 @@ typedef enum ECGpuNvAPI_Status
     CGPU_NVAPI_OK = 0, //!< Success. Request is completed.
     CGPU_NVAPI_NONE = 1,
     CGPU_NVAPI_ERROR = -1, //!< Generic error
+    CGPU_NVAPI_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuNvAPI_Status;
 
 typedef enum ECGpuAGSReturnCode
@@ -25,7 +26,8 @@ typedef enum ECGpuAGSReturnCode
     CGPU_AGS_EXTENSION_NOT_SUPPORTED, ///< Returned if the driver does not support the requested driver extension
     CGPU_AGS_ADL_FAILURE,             ///< Failure in ADL (the AMD Display Library)
     CGPU_AGS_DX_FAILURE,              ///< Failure from DirectX runtime
-    CGPU_AGS_NONE
+    CGPU_AGS_NONE,
+    CGPU_AGS_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuAGSReturnCode;
 
 // Format
@@ -270,13 +272,15 @@ typedef enum ECGpuFormat
     PF_G16_B16_R16_3PLANE_444_UNORM = 236,
     PF_G16_B16R16_2PLANE_420_UNORM = 237,
     PF_G16_B16R16_2PLANE_422_UNORM = 238,
-    PF_Count = PF_G16_B16R16_2PLANE_422_UNORM + 1
+    PF_COUNT = PF_G16_B16R16_2PLANE_422_UNORM + 1,
+    PF_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuFormat;
 
 typedef enum ECGpuFilterType
 {
-    FT_NEAREST = 0,
-    FT_LINEAR
+    FILTER_TYPE_NEAREST = 0,
+    FILTER_TYPE_LINEAR,
+    FILTER_TYPE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuFilterType;
 
 typedef enum ECGpuAddressMode
@@ -284,57 +288,63 @@ typedef enum ECGpuAddressMode
     ADDRESS_MODE_MIRROR,
     ADDRESS_MODE_REPEAT,
     ADDRESS_MODE_CLAMP_TO_EDGE,
-    ADDRESS_MODE_CLAMP_TO_BORDER
+    ADDRESS_MODE_CLAMP_TO_BORDER,
+    ADDRESS_MODE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuAddressMode;
 
 typedef enum ECGpuMipMapMode
 {
     MIPMAP_MODE_NEAREST = 0,
-    MIPMAP_MODE_LINEAR
+    MIPMAP_MODE_LINEAR,
+    MIPMAP_MODE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuMipMapMode;
 
 typedef enum ECGpuLoadAction
 {
-    LA_DONTCARE,
-    LA_LOAD,
-    LA_CLEAR,
-    LA_COUNT
+    LOAD_ACTION_DONTCARE,
+    LOAD_ACTION_LOAD,
+    LOAD_ACTION_CLEAR,
+    LOAD_ACTION_COUNT,
+    LOAD_ACTION_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuLoadAction;
 
 typedef enum ECGpuStoreAction
 {
-    SA_Store,
-    SA_Discard,
-    SA_COUNT
+    STORE_ACTION_STORE,
+    STORE_ACTION_DISCARD,
+    STORE_ACTION_COUNT,
+    STORE_ACTION_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuStoreAction;
 
 typedef enum ECGpuPrimitiveTopology
 {
-    TOPO_POINT_LIST = 0,
-    TOPO_LINE_LIST,
-    TOPO_LINE_STRIP,
-    TOPO_TRI_LIST,
-    TOPO_TRI_STRIP,
-    TOPO_PATCH_LIST,
-    TOPO_COUNT,
+    PRIM_TOPO_POINT_LIST = 0,
+    PRIM_TOPO_LINE_LIST,
+    PRIM_TOPO_LINE_STRIP,
+    PRIM_TOPO_TRI_LIST,
+    PRIM_TOPO_TRI_STRIP,
+    PRIM_TOPO_PATCH_LIST,
+    PRIM_TOPO_COUNT,
+    PRIM_TOPO_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuPrimitiveTopology;
 
 typedef enum ECGpuBlendConstant
 {
-    BC_ZERO = 0,
-    BC_ONE,
-    BC_SRC_COLOR,
-    BC_ONE_MINUS_SRC_COLOR,
-    BC_DST_COLOR,
-    BC_ONE_MINUS_DST_COLOR,
-    BC_SRC_ALPHA,
-    BC_ONE_MINUS_SRC_ALPHA,
-    BC_DST_ALPHA,
-    BC_ONE_MINUS_DST_ALPHA,
-    BC_SRC_ALPHA_SATURATE,
-    BC_BLEND_FACTOR,
-    BC_ONE_MINUS_BLEND_FACTOR,
-    BC_COUNT
+    BLEND_CONST_ZERO = 0,
+    BLEND_CONST_ONE,
+    BLEND_CONST_SRC_COLOR,
+    BLEND_CONST_ONE_MINUS_SRC_COLOR,
+    BLEND_CONST_DST_COLOR,
+    BLEND_CONST_ONE_MINUS_DST_COLOR,
+    BLEND_CONST_SRC_ALPHA,
+    BLEND_CONST_ONE_MINUS_SRC_ALPHA,
+    BLEND_CONST_DST_ALPHA,
+    BLEND_CONST_ONE_MINUS_DST_ALPHA,
+    BLEND_CONST_SRC_ALPHA_SATURATE,
+    BLEND_CONST_BLEND_FACTOR,
+    BLEND_CONST_ONE_MINUS_BLEND_FACTOR,
+    BLEND_CONST_COUNT,
+    BLEND_CONST_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuBlendConstant;
 
 typedef enum ECGpuCullMode
@@ -343,28 +353,32 @@ typedef enum ECGpuCullMode
     CULL_MODE_BACK,
     CULL_MODE_FRONT,
     CULL_MODE_BOTH,
-    CULL_MODE_COUNT
+    CULL_MODE_COUNT,
+    CULL_MODE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuCullMode;
 
 typedef enum ECGpuFrontFace
 {
-    FF_CCW = 0,
-    FF_CW
+    FRONT_FACE_CCW = 0,
+    FRONT_FACE_CW,
+    FRONT_FACE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuFrontFace;
 
 typedef enum ECGpuFillMode
 {
-    FM_SOLID,
-    FM_WIREFRAME,
-    FM_COUNT
+    FILL_MODE_SOLID,
+    FILL_MODE_WIREFRAME,
+    FILL_MODE_COUNT,
+    FILL_MODE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuFillMode;
 
-typedef enum ECGpuVertexAttribRate
+typedef enum ECGpuVertexInputRate
 {
-    VAR_VERTEX = 0,
-    VAR_INSTANCE = 1,
-    VAR_COUNT,
-} ECGpuVertexAttribRate;
+    INPUT_RATE_VERTEX = 0,
+    INPUT_RATE_INSTANCE = 1,
+    INPUT_RATE_COUNT,
+    INPUT_RATE_MAX_ENUM_BIT = 0x7FFFFFFF
+} ECGpuVertexInputRate;
 
 typedef enum ECGpuCompareMode
 {
@@ -376,7 +390,8 @@ typedef enum ECGpuCompareMode
     CMP_NOTEQUAL,
     CMP_GEQUAL,
     CMP_ALWAYS,
-    MAX_COMPARE_MODES,
+    CMP_COUNT,
+    CMP_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuCompareMode;
 
 typedef enum ECGpuStencilOp
@@ -389,92 +404,105 @@ typedef enum ECGpuStencilOp
     STENCIL_OP_DECR,
     STENCIL_OP_INCR_SAT,
     STENCIL_OP_DECR_SAT,
-    MAX_STENCIL_OPS,
+    STENCIL_OP_COUNT,
+    STENCIL_OP_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuStencilOp;
 
 typedef enum ECGpuBlendMode
 {
-    BM_ADD,
-    BM_SUBTRACT,
-    BM_REVERSE_SUBTRACT,
-    BM_MIN,
-    BM_MAX,
-    BM_COUNT,
+    BLEND_MODE_ADD,
+    BLEND_MODE_SUBTRACT,
+    BLEND_MODE_REVERSE_SUBTRACT,
+    BLEND_MODE_MIN,
+    BLEND_MODE_MAX,
+    BLEND_MODE_COUNT,
+    BLEND_MODE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuBlendMode;
 
 typedef enum ECGpuTextureDimension
 {
-    TD_1D,
-    TD_2D,
-    TD_2DMS,
-    TD_3D,
-    TD_CUBE,
-    TD_1D_ARRAY,
-    TD_2D_ARRAY,
-    TD_2DMS_ARRAY,
-    TD_CUBE_ARRAY,
-    TD_COUNT,
-    TD_UNDEFINED,
+    TEX_DIMENSION_1D,
+    TEX_DIMENSION_2D,
+    TEX_DIMENSION_2DMS,
+    TEX_DIMENSION_3D,
+    TEX_DIMENSION_CUBE,
+    TEX_DIMENSION_1D_ARRAY,
+    TEX_DIMENSION_2D_ARRAY,
+    TEX_DIMENSION_2DMS_ARRAY,
+    TEX_DIMENSION_CUBE_ARRAY,
+    TEX_DIMENSION_COUNT,
+    TEX_DIMENSION_UNDEFINED,
+    TEX_DIMENSION_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuTextureDimension;
 
 // Same Value As Vulkan Enumeration Bits.
 typedef enum ECGpuShaderStage
 {
-    SS_NONE = 0,
+    SHADER_STAGE_NONE = 0,
 
-    SS_VERT = 0X00000001,
-    SS_TESC = 0X00000002,
-    SS_TESE = 0X00000004,
-    SS_GEOM = 0X00000008,
-    SS_FRAG = 0X00000010,
-    SS_COMPUTE = 0X00000020,
-    SS_RAYTRACING = 0X00000040,
+    SHADER_STAGE_VERT = 0X00000001,
+    SHADER_STAGE_TESC = 0X00000002,
+    SHADER_STAGE_TESE = 0X00000004,
+    SHADER_STAGE_GEOM = 0X00000008,
+    SHADER_STAGE_FRAG = 0X00000010,
+    SHADER_STAGE_COMPUTE = 0X00000020,
+    SHADER_STAGE_RAYTRACING = 0X00000040,
 
-    SS_ALL_GRAPHICS = (uint32_t)SS_VERT | (uint32_t)SS_TESC | (uint32_t)SS_TESE | (uint32_t)SS_GEOM | (uint32_t)SS_FRAG,
-    SS_HULL = SS_TESC,
-    SS_DOMN = SS_TESE,
-    SS_COUNT = 6
+    SHADER_STAGE_ALL_GRAPHICS = (uint32_t)SHADER_STAGE_VERT | (uint32_t)SHADER_STAGE_TESC | (uint32_t)SHADER_STAGE_TESE | (uint32_t)SHADER_STAGE_GEOM | (uint32_t)SHADER_STAGE_FRAG,
+    SHADER_STAGE_ALL_HULL = SHADER_STAGE_TESC,
+    SHADER_STAGE_ALL_DOMAIN = SHADER_STAGE_TESE,
+    SHADER_STAGE_COUNT = 6,
+    SHADER_STAGE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuShaderStage;
 typedef uint32_t CGpuShaderStages;
 
+typedef enum ECGpuFenceStatus
+{
+    FENCE_STATUS_COMPLETE = 0,
+    FENCE_STATUS_INCOMPLETE,
+    FENCE_STATUS_NOTSUBMITTED,
+    FENCE_STATUS_MAX_ENUM_BIT = 0x7FFFFFFF
+} ECGpuFenceStatus;
+
 typedef enum ECGpuResourceState
 {
-    RS_UNDEFINED = 0,
-    RS_VERTEX_AND_CONSTANT_BUFFER = 0x1,
-    RS_INDEX_BUFFER = 0x2,
-    RS_RENDER_TARGET = 0x4,
-    RS_UNORDERED_ACCESS = 0x8,
-    RS_DEPTH_WRITE = 0x10,
-    RS_DEPTH_READ = 0x20,
-    RS_NON_PIXEL_SHADER_RESOURCE = 0x40,
-    RS_PIXEL_SHADER_RESOURCE = 0x80,
-    RS_SHADER_RESOURCE = 0x40 | 0x80,
-    RS_STREAM_OUT = 0x100,
-    RS_INDIRECT_ARGUMENT = 0x200,
-    RS_COPY_DEST = 0x400,
-    RS_COPY_SOURCE = 0x800,
-    RS_GENERIC_READ = (((((0x1 | 0x2) | 0x40) | 0x80) | 0x200) | 0x800),
-    RS_PRESENT = 0x1000,
-    RS_COMMON = 0x2000,
-    RS_RAYTRACING_ACCELERATION_STRUCTURE = 0x4000,
-    RS_SHADING_RATE_SOURCE = 0x8000,
+    RESOURCE_STATE_UNDEFINED = 0,
+    RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER = 0x1,
+    RESOURCE_STATE_INDEX_BUFFER = 0x2,
+    RESOURCE_STATE_RENDER_TARGET = 0x4,
+    RESOURCE_STATE_UNORDERED_ACCESS = 0x8,
+    RESOURCE_STATE_DEPTH_WRITE = 0x10,
+    RESOURCE_STATE_DEPTH_READ = 0x20,
+    RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE = 0x40,
+    RESOURCE_STATE_PIXEL_SHADER_RESOURCE = 0x80,
+    RESOURCE_STATE_SHADER_RESOURCE = 0x40 | 0x80,
+    RESOURCE_STATE_STREAM_OUT = 0x100,
+    RESOURCE_STATE_INDIRECT_ARGUMENT = 0x200,
+    RESOURCE_STATE_COPY_DEST = 0x400,
+    RESOURCE_STATE_COPY_SOURCE = 0x800,
+    RESOURCE_STATE_GENERIC_READ = (((((0x1 | 0x2) | 0x40) | 0x80) | 0x200) | 0x800),
+    RESOURCE_STATE_PRESENT = 0x1000,
+    RESOURCE_STATE_COMMON = 0x2000,
+    RESOURCE_STATE_ACCELERATION_STRUCTURE = 0x4000,
+    RESOURCE_STATE_SHADING_RATE_SOURCE = 0x8000,
+    RESOURCE_STATE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuResourceState;
 typedef uint32_t ECGpuResourceStates;
 
 typedef enum ECGpuMemoryUsage
 {
     /// No intended memory usage specified.
-    MU_UNKNOWN = 0,
+    MEM_USAGE_UNKNOWN = 0,
     /// Memory will be used on device only, no need to be mapped on host.
-    MU_GPU_ONLY = 1,
+    MEM_USAGE_GPU_ONLY = 1,
     /// Memory will be mapped on host. Could be used for transfer to device.
-    MU_CPU_ONLY = 2,
+    MEM_USAGE_CPU_ONLY = 2,
     /// Memory will be used for frequent (dynamic) updates from host and reads on device.
-    MU_CPU_TO_GPU = 3,
+    MEM_USAGE_CPU_TO_GPU = 3,
     /// Memory will be used for writing on device and readback on host.
-    MU_GPU_TO_CPU = 4,
-    MU_COUNT,
-    MU_MAX_ENUM = 0x7FFFFFFF
+    MEM_USAGE_GPU_TO_CPU = 4,
+    MEM_USAGE_COUNT,
+    MEM_USAGE_MAX_ENUM = 0x7FFFFFFF
 } ECGpuMemoryUsage;
 
 typedef enum ECGpuBufferCreationFlag
@@ -496,6 +524,7 @@ typedef enum ECGpuBufferCreationFlag
     /// Inherit pipeline in ICB
     BCF_ICB_INHERIT_BUFFERS = 0x200,
 #endif
+    BCF_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuBufferCreationFlag;
 typedef uint32_t CGpuBufferCreationFlags;
 
@@ -530,26 +559,29 @@ typedef enum ECGpuTextureCreationFlag
     /// Fast clear
     TCF_FAST_CLEAR = 0x1000,
     /// Fragment mask
-    TCF_FRAG_MASK = 0x2000
+    TCF_FRAG_MASK = 0x2000,
+    TCF_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuTextureCreationFlag;
 typedef uint32_t CGpuTextureCreationFlags;
 
 typedef enum ECGpuSampleCount
 {
-    SC_1 = 1,
-    SC_2 = 2,
-    SC_4 = 4,
-    SC_8 = 8,
-    SC_16 = 16,
+    SAMPLE_COUNT_1 = 1,
+    SAMPLE_COUNT_2 = 2,
+    SAMPLE_COUNT_4 = 4,
+    SAMPLE_COUNT_8 = 8,
+    SAMPLE_COUNT_16 = 16,
+    SAMPLE_COUNT_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuSampleCount;
 
 typedef enum ECGpuPipelineType
 {
-    PT_NONE = 0,
-    PT_COMPUTE,
-    PT_GRAPHICS,
-    PT_RAYTRACING,
-    PT_COUNT,
+    PIPELINE_TYPE_NONE = 0,
+    PIPELINE_TYPE_COMPUTE,
+    PIPELINE_TYPE_GRAPHICS,
+    PIPELINE_TYPE_RAYTRACING,
+    PIPELINE_TYPE_COUNT,
+    PIPELINE_TYPE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuPipelineType;
 
 typedef enum ECGpuResourceType
@@ -595,6 +627,7 @@ typedef enum ECGpuResourceType
     RT_INDIRECT_COMMAND_BUFFER = (RT_ARGUMENT_BUFFER << 1),
     RT_RENDER_PIPELINE_STATE = (RT_INDIRECT_COMMAND_BUFFER << 1),
 #endif
+    RT_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuResourceType;
 typedef uint32_t CGpuResourceTypes;
 
@@ -602,7 +635,8 @@ typedef enum ECGpuTexutreViewUsage
 {
     TVU_SRV = 0x01,
     TVU_RTV = 0x02,
-    TVU_UAV = 0x04
+    TVU_UAV = 0x04,
+    TVU_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuTexutreViewUsage;
 typedef uint32_t CGpuTexutreViewUsages;
 
@@ -610,7 +644,8 @@ typedef enum ECGpuTextureViewAspect
 {
     TVA_COLOR = 0x01,
     TVA_DEPTH = 0x02,
-    TVA_STENCIL = 0x04
+    TVA_STENCIL = 0x04,
+    TVA_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuTextureViewAspect;
 typedef uint32_t CGpuTextureViewAspects;
 

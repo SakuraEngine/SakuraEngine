@@ -14,7 +14,7 @@ void MetalUtilInner_EnumFormatRenderTargetWriteSupports(struct CGpuAdapter_Metal
 #define SET_RENDER_TARGET_WRITE(x, opt) MAdapter->adapter_detail.format_supports[PF_##x].render_target_write = (opt);
 void MetalUtil_EnumFormatSupports(struct CGpuAdapter_Metal* MAdapter)
 {
-    for (uint32_t i = 0; i < PF_Count; ++i)
+    for (uint32_t i = 0; i < PF_COUNT; ++i)
     {
         MAdapter->adapter_detail.format_supports[i].shader_read = 0;
         MAdapter->adapter_detail.format_supports[i].shader_write = 0;
@@ -78,7 +78,7 @@ uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGpuAdapter_Metal* MAdapter)
 
 void MetalUtilInner_EnumFormatShaderReadSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier)
 {
-    for (uint32_t i = 0; i < PF_Count; ++i)
+    for (uint32_t i = 0; i < PF_COUNT; ++i)
     {
         MTLPixelFormat mformat = MetalUtil_TranslatePixelFormat((ECGpuFormat)i);
         if (mformat != MTLPixelFormatInvalid)

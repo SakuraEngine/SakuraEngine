@@ -82,15 +82,16 @@ typedef const struct CGpuPipelineReflection* CGpuPipelineReflectionId;
 
 typedef enum ECGpuBackend
 {
-    ECGpuBackend_VULKAN = 0,
-    ECGpuBackend_D3D12 = 1,
-    ECGpuBackend_XBOX_D3D12 = 2,
-    ECGpuBackend_AGC = 3,
-    ECGpuBackend_METAL = 4,
-    ECGpuBackend_COUNT
+    CGPU_BACKEND_VULKAN = 0,
+    CGPU_BACKEND_D3D12 = 1,
+    CGPU_BACKEND_XBOX_D3D12 = 2,
+    CGPU_BACKEND_AGC = 3,
+    CGPU_BACKEND_METAL = 4,
+    CGPU_BACKEND_COUNT,
+    CGPU_BACKEND_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuBackend;
 
-static const char8_t* gCGpuBackendNames[ECGpuBackend_COUNT] = {
+static const char8_t* gCGpuBackendNames[CGPU_BACKEND_COUNT] = {
     "vulkan",
     "d3d12",
     "d3d12(xbox)",
@@ -100,10 +101,11 @@ static const char8_t* gCGpuBackendNames[ECGpuBackend_COUNT] = {
 
 typedef enum ECGpuQueueType
 {
-    ECGpuQueueType_Graphics = 0,
-    ECGpuQueueType_Compute = 1,
-    ECGpuQueueType_Transfer = 2,
-    ECGpuQueueType_Count
+    QUEUE_TYPE_GRAPHICS = 0,
+    QUEUE_TYPE_COMPUTE = 1,
+    QUEUE_TYPE_TRANSFER = 2,
+    QUEUE_TYPE_COUNT,
+    QUEUE_TYPE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuQueueType;
 
 typedef struct CGpuFormatSupport {
@@ -160,6 +162,8 @@ RUNTIME_API CGpuFenceId cgpu_create_fence(CGpuDeviceId device);
 typedef CGpuFenceId (*CGPUProcCreateFence)(CGpuDeviceId device);
 RUNTIME_API void cgpu_wait_fences(const CGpuFenceId* fences, uint32_t fence_count);
 typedef void (*CGPUProcWaitFences)(const CGpuFenceId* fences, uint32_t fence_count);
+RUNTIME_API ECGpuFenceStatus cgpu_query_fence_status(CGpuFenceId fence);
+typedef ECGpuFenceStatus (*CGPUProcQueryFenceStatus)(CGpuFenceId fence);
 RUNTIME_API void cgpu_free_fence(CGpuFenceId fence);
 typedef void (*CGPUProcFreeFence)(CGpuFenceId fence);
 RUNTIME_API CGpuSemaphoreId cgpu_create_semaphore(CGpuDeviceId device);
@@ -309,6 +313,7 @@ typedef struct CGpuProcTable {
     // API Objects
     const CGPUProcCreateFence create_fence;
     const CGPUProcWaitFences wait_fences;
+    const CGPUProcQueryFenceStatus query_fence_status;
     const CGPUProcFreeFence free_fence;
     const CGPUProcCreateSemaphore create_semaphore;
     const CGPUProcFreeSemaphore free_semaphore;
@@ -431,7 +436,7 @@ typedef struct CGpuAdapterDetail {
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
-    CGpuFormatSupport format_supports[PF_Count];
+    CGpuFormatSupport format_supports[PF_COUNT];
     GPUVendorPreset vendor_preset;
 } CGpuAdapterDetail;
 
@@ -531,7 +536,7 @@ typedef struct CGpuShaderLibrary {
 } CGpuShaderLibrary;
 
 typedef struct CGpuPipelineReflection {
-    CGpuShaderReflection* stages[SS_COUNT];
+    CGpuShaderReflection* stages[SHADER_STAGE_COUNT];
     // descriptor sets / root tables
     CGpuShaderResource* shader_resources;
     uint32_t shader_resources_count;
@@ -881,7 +886,7 @@ typedef struct CGpuVertexAttribute {
     uint32_t binding;
     uint32_t location;
     uint32_t offset;
-    ECGpuVertexAttribRate rate;
+    ECGpuVertexInputRate rate;
 } CGpuVertexAttribute;
 
 typedef struct CGpuVertexLayout {

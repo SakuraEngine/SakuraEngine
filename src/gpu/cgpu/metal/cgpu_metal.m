@@ -128,7 +128,7 @@ CGpuDeviceId cgpu_create_device_metal(CGpuAdapterId adapter, const CGpuDeviceDes
 void cgpu_free_device_metal(CGpuDeviceId device)
 {
     CGpuDevice_Metal* MD = (CGpuDevice_Metal*)device;
-    for (uint32_t i = 0; i < ECGpuQueueType_Count; i++)
+    for (uint32_t i = 0; i < QUEUE_TYPE_COUNT; i++)
     {
         if (MD->ppMtlQueues[i] != NULL && MD->pMtlQueueCounts[i] != 0)
         {

@@ -103,13 +103,13 @@ FORCEINLINE static D3D12_BLEND_DESC D3D12Util_TranslateBlendState(const CGpuBlen
 }
 
 FORCEINLINE static D3D12_RASTERIZER_DESC D3D12Util_TranslateRasterizerState(const CGpuRasterizerStateDescriptor *pDesc) {
-  cgpu_assert(pDesc->fill_mode < FM_COUNT);
+  cgpu_assert(pDesc->fill_mode < FILL_MODE_COUNT);
   cgpu_assert(pDesc->cull_mode < CULL_MODE_COUNT);
-  cgpu_assert(pDesc->front_face == FF_CCW ||  pDesc->front_face == FF_CW);
+  cgpu_assert(pDesc->front_face == FRONT_FACE_CCW ||  pDesc->front_face == FRONT_FACE_CW);
   D3D12_RASTERIZER_DESC ret = {};
   ret.FillMode = gDx12FillModeTranslator[pDesc->fill_mode];
   ret.CullMode = gDx12CullModeTranslator[pDesc->cull_mode];
-  ret.FrontCounterClockwise = pDesc->front_face == FF_CCW;
+  ret.FrontCounterClockwise = pDesc->front_face == FRONT_FACE_CCW;
   ret.DepthBias = pDesc->depth_bias;
   ret.DepthBiasClamp = 0.0f;
   ret.SlopeScaledDepthBias = pDesc->slope_scaled_depth_bias;
@@ -122,15 +122,15 @@ FORCEINLINE static D3D12_RASTERIZER_DESC D3D12Util_TranslateRasterizerState(cons
 }
 
 FORCEINLINE static  D3D12_DEPTH_STENCIL_DESC D3D12Util_TranslateDephStencilState(const CGpuDepthStateDescriptor *pDesc) {
-  cgpu_assert(pDesc->depth_func < MAX_COMPARE_MODES);
-  cgpu_assert(pDesc->stencil_front_func < MAX_COMPARE_MODES);
-  cgpu_assert(pDesc->stencil_front_fail < MAX_STENCIL_OPS);
-  cgpu_assert(pDesc->depth_front_fail < MAX_STENCIL_OPS);
-  cgpu_assert(pDesc->stencil_front_pass < MAX_STENCIL_OPS);
-  cgpu_assert(pDesc->stencil_back_func < MAX_COMPARE_MODES);
-  cgpu_assert(pDesc->stencil_back_fail < MAX_STENCIL_OPS);
-  cgpu_assert(pDesc->depth_back_fail < MAX_STENCIL_OPS);
-  cgpu_assert(pDesc->stencil_back_pass < MAX_STENCIL_OPS);
+  cgpu_assert(pDesc->depth_func < CMP_COUNT);
+  cgpu_assert(pDesc->stencil_front_func < CMP_COUNT);
+  cgpu_assert(pDesc->stencil_front_fail < STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->depth_front_fail < STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->stencil_front_pass < STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->stencil_back_func < CMP_COUNT);
+  cgpu_assert(pDesc->stencil_back_fail < STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->depth_back_fail < STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->stencil_back_pass < STENCIL_OP_COUNT);
 
   D3D12_DEPTH_STENCIL_DESC ret = {};
   ret.DepthEnable = (BOOL)pDesc->depth_test;
@@ -162,15 +162,15 @@ FORCEINLINE static  D3D12_DEPTH_STENCIL_DESC D3D12Util_TranslateDephStencilState
 
 FORCEINLINE static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12Util_TranslatePrimitiveTopology(ECGpuPrimitiveTopology topology) {
   switch (topology) {
-  case TOPO_POINT_LIST:
+  case PRIM_TOPO_POINT_LIST:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
-  case TOPO_LINE_LIST:
-  case TOPO_LINE_STRIP:
+  case PRIM_TOPO_LINE_LIST:
+  case PRIM_TOPO_LINE_STRIP:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-  case TOPO_TRI_LIST:
-  case TOPO_TRI_STRIP:
+  case PRIM_TOPO_TRI_LIST:
+  case PRIM_TOPO_TRI_STRIP:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-  case TOPO_PATCH_LIST:
+  case PRIM_TOPO_PATCH_LIST:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
   }
   return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
@@ -181,36 +181,36 @@ FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_TranslateResourceState(ECGpuR
     D3D12_RESOURCE_STATES ret = D3D12_RESOURCE_STATE_COMMON;
 
     // These states cannot be combined with other states so we just do an == check
-    if (state == RS_GENERIC_READ)
+    if (state == RESOURCE_STATE_GENERIC_READ)
         return D3D12_RESOURCE_STATE_GENERIC_READ;
-    if (state == RS_COMMON)
+    if (state == RESOURCE_STATE_COMMON)
         return D3D12_RESOURCE_STATE_COMMON;
-    if (state == RS_PRESENT)
+    if (state == RESOURCE_STATE_PRESENT)
         return D3D12_RESOURCE_STATE_PRESENT;
 
-    if (state & RS_VERTEX_AND_CONSTANT_BUFFER)
+    if (state & RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
         ret |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-    if (state & RS_INDEX_BUFFER)
+    if (state & RESOURCE_STATE_INDEX_BUFFER)
         ret |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
-    if (state & RS_RENDER_TARGET)
+    if (state & RESOURCE_STATE_RENDER_TARGET)
         ret |= D3D12_RESOURCE_STATE_RENDER_TARGET;
-    if (state & RS_UNORDERED_ACCESS)
+    if (state & RESOURCE_STATE_UNORDERED_ACCESS)
         ret |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    if (state & RS_DEPTH_WRITE)
+    if (state & RESOURCE_STATE_DEPTH_WRITE)
         ret |= D3D12_RESOURCE_STATE_DEPTH_WRITE;
-    if (state & RS_DEPTH_READ)
+    if (state & RESOURCE_STATE_DEPTH_READ)
         ret |= D3D12_RESOURCE_STATE_DEPTH_READ;
-    if (state & RS_STREAM_OUT)
+    if (state & RESOURCE_STATE_STREAM_OUT)
         ret |= D3D12_RESOURCE_STATE_STREAM_OUT;
-    if (state & RS_INDIRECT_ARGUMENT)
+    if (state & RESOURCE_STATE_INDIRECT_ARGUMENT)
         ret |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
-    if (state & RS_COPY_DEST)
+    if (state & RESOURCE_STATE_COPY_DEST)
         ret |= D3D12_RESOURCE_STATE_COPY_DEST;
-    if (state & RS_COPY_SOURCE)
+    if (state & RESOURCE_STATE_COPY_SOURCE)
         ret |= D3D12_RESOURCE_STATE_COPY_SOURCE;
-    if (state & RS_NON_PIXEL_SHADER_RESOURCE)
+    if (state & RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
         ret |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-    if (state & RS_PIXEL_SHADER_RESOURCE)
+    if (state & RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
         ret |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 #ifdef ENABLE_RAYTRACING
     if (state & RS_RAYTRACING_ACCELERATION_STRUCTURE)
@@ -226,30 +226,30 @@ FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_TranslateResourceState(ECGpuR
 FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGpuShaderStages stages) {
   D3D12_SHADER_VISIBILITY res = D3D12_SHADER_VISIBILITY_ALL;
   uint32_t stageCount = 0;
-  if (stages == SS_COMPUTE) {
+  if (stages == SHADER_STAGE_COMPUTE) {
     return D3D12_SHADER_VISIBILITY_ALL;
   }
-  if (stages & SS_VERT) {
+  if (stages & SHADER_STAGE_VERT) {
     res = D3D12_SHADER_VISIBILITY_VERTEX;
     ++stageCount;
   }
-  if (stages & SS_GEOM) {
+  if (stages & SHADER_STAGE_GEOM) {
     res = D3D12_SHADER_VISIBILITY_GEOMETRY;
     ++stageCount;
   }
-  if (stages & SS_HULL) {
+  if (stages & SHADER_STAGE_ALL_HULL) {
     res = D3D12_SHADER_VISIBILITY_HULL;
     ++stageCount;
   }
-  if (stages & SS_DOMN) {
+  if (stages & SHADER_STAGE_ALL_DOMAIN) {
     res = D3D12_SHADER_VISIBILITY_DOMAIN;
     ++stageCount;
   }
-  if (stages & SS_FRAG) {
+  if (stages & SHADER_STAGE_FRAG) {
     res = D3D12_SHADER_VISIBILITY_PIXEL;
     ++stageCount;
   }
-  if (stages == SS_RAYTRACING) {
+  if (stages == SHADER_STAGE_RAYTRACING) {
     return D3D12_SHADER_VISIBILITY_ALL;
   }
   cgpu_assert(stageCount > 0);

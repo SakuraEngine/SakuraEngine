@@ -108,9 +108,9 @@ uint32_t cgpu_query_queue_count_d3d12(const CGpuAdapterId adapter, const ECGpuQu
     /*
     switch(type)
     {
-        case ECGpuQueueType_Graphics: return 1;
-        case ECGpuQueueType_Compute: return 2;
-        case ECGpuQueueType_Transfer: return 2;
+        case QUEUE_TYPE_GRAPHICS: return 1;
+        case QUEUE_TYPE_COMPUTE: return 2;
+        case QUEUE_TYPE_TRANSFER: return 2;
         default: return 0;
     }
     */
@@ -145,13 +145,13 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
             DECLARE_ZERO(D3D12_COMMAND_QUEUE_DESC, queueDesc)
             switch (type)
             {
-                case ECGpuQueueType_Graphics:
+                case QUEUE_TYPE_GRAPHICS:
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
                     break;
-                case ECGpuQueueType_Compute:
+                case QUEUE_TYPE_COMPUTE:
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
                     break;
-                case ECGpuQueueType_Transfer:
+                case QUEUE_TYPE_TRANSFER:
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
                     break;
                 default:
@@ -203,7 +203,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
 void cgpu_free_device_d3d12(CGpuDeviceId device)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
-    for (uint32_t t = 0u; t < ECGpuQueueType_Count; t++)
+    for (uint32_t t = 0u; t < QUEUE_TYPE_COUNT; t++)
     {
         for (uint32_t i = 0; i < D->pCommandQueueCounts[t]; i++)
         {
@@ -241,6 +241,10 @@ CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device)
 
     F->pDxWaitIdleFenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     return &F->super;
+}
+
+void cgpu_wait_fences_d3d12(const CGpuFenceId* fences, uint32_t fence_count)
+{
 }
 
 void cgpu_free_fence_d3d12(CGpuFenceId fence)
@@ -284,7 +288,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     {
         D3D12_ROOT_PARAMETER1* rootParam = &rootParams[i_table];
         rootParam->ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        CGpuShaderStages visStages = SS_NONE;
+        CGpuShaderStages visStages = SHADER_STAGE_NONE;
         const D3D12_DESCRIPTOR_RANGE1* descRangeCursor = &cbvSrvUavRanges[i_range];
         for (uint32_t i_binding = 0; i_binding < bb.valid_bindings[i_set]; i_binding++)
         {
@@ -308,20 +312,20 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     // TODO: Support static samplers
     UINT staticSamplerCount = 0;
     D3D12_STATIC_SAMPLER_DESC* staticSamplerDescs = CGPU_NULLPTR;
-    bool useInputLayout = shaderStages & SS_VERT; // VertexStage uses input layout
+    bool useInputLayout = shaderStages & SHADER_STAGE_VERT; // VertexStage uses input layout
     // Fill RS flags
     D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
     if (useInputLayout)
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-    if (!(shaderStages & SS_VERT))
+    if (!(shaderStages & SHADER_STAGE_VERT))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
-    if (!(shaderStages & SS_HULL))
+    if (!(shaderStages & SHADER_STAGE_ALL_HULL))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
-    if (!(shaderStages & SS_DOMN))
+    if (!(shaderStages & SHADER_STAGE_ALL_DOMAIN))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
-    if (!(shaderStages & SS_GEOM))
+    if (!(shaderStages & SHADER_STAGE_GEOM))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-    if (!(shaderStages & SS_FRAG))
+    if (!(shaderStages & SHADER_STAGE_FRAG))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
     // Serialize versioned RS
     const UINT paramCount = tableCount - staticSamplerCount;
@@ -507,7 +511,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
         ECGpuShaderStage stage_mask = (ECGpuShaderStage)(1 << i);
         switch (stage_mask)
         {
-            case SS_VERT: {
+            case SHADER_STAGE_VERT: {
                 if (desc->vertex_shader)
                 {
                     CGpuShaderLibrary_D3D12* VertLib = (CGpuShaderLibrary_D3D12*)desc->vertex_shader->library;
@@ -516,7 +520,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
                 }
             }
             break;
-            case SS_TESC: {
+            case SHADER_STAGE_TESC: {
                 if (desc->tesc_shader)
                 {
                     CGpuShaderLibrary_D3D12* TescLib = (CGpuShaderLibrary_D3D12*)desc->tesc_shader->library;
@@ -525,7 +529,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
                 }
             }
             break;
-            case SS_TESE: {
+            case SHADER_STAGE_TESE: {
                 if (desc->tese_shader)
                 {
                     CGpuShaderLibrary_D3D12* TeseLib = (CGpuShaderLibrary_D3D12*)desc->tese_shader->library;
@@ -534,7 +538,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
                 }
             }
             break;
-            case SS_GEOM: {
+            case SHADER_STAGE_GEOM: {
                 if (desc->geom_shader)
                 {
                     CGpuShaderLibrary_D3D12* GeomLib = (CGpuShaderLibrary_D3D12*)desc->geom_shader->library;
@@ -543,7 +547,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
                 }
             }
             break;
-            case SS_FRAG: {
+            case SHADER_STAGE_FRAG: {
                 if (desc->fragment_shader)
                 {
                     CGpuShaderLibrary_D3D12* FragLib = (CGpuShaderLibrary_D3D12*)desc->fragment_shader->library;
@@ -616,22 +620,22 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
     D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
     switch (desc->prim_topology)
     {
-        case TOPO_POINT_LIST:
+        case PRIM_TOPO_POINT_LIST:
             topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
             break;
-        case TOPO_LINE_LIST:
+        case PRIM_TOPO_LINE_LIST:
             topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
             break;
-        case TOPO_LINE_STRIP:
+        case PRIM_TOPO_LINE_STRIP:
             topology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
             break;
-        case TOPO_TRI_LIST:
+        case PRIM_TOPO_TRI_LIST:
             topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
             break;
-        case TOPO_TRI_STRIP:
+        case PRIM_TOPO_TRI_STRIP:
             topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
             break;
-        case TOPO_PATCH_LIST: {
+        case PRIM_TOPO_PATCH_LIST: {
             // TODO: Support D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST with Hull Shaders
             cgpu_assert(0 && "Unsupported primitive topology!");
         }
@@ -714,9 +718,9 @@ ID3D12CommandAllocator* allocate_transient_command_allocator(CGpuCommandPool_D3D
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)queue->device;
 
     D3D12_COMMAND_LIST_TYPE type =
-        queue->type == ECGpuQueueType_Transfer ?
+        queue->type == QUEUE_TYPE_TRANSFER ?
             D3D12_COMMAND_LIST_TYPE_COPY :
-        queue->type == ECGpuQueueType_Compute ?
+        queue->type == QUEUE_TYPE_COMPUTE ?
             D3D12_COMMAND_LIST_TYPE_COMPUTE :
             D3D12_COMMAND_LIST_TYPE_DIRECT;
 
@@ -791,7 +795,7 @@ void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd)
     CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)Cmd->pCmdPool;
     CHECK_HRESULT(Cmd->pDxCmdList->Reset(P->pDxCmdAlloc, NULL));
 
-    if (Cmd->mType != ECGpuQueueType_Transfer)
+    if (Cmd->mType != QUEUE_TYPE_TRANSFER)
     {
         ID3D12DescriptorHeap* heaps[] = {
             Cmd->pBoundHeaps[0]->pCurrentHeap,
@@ -819,12 +823,12 @@ void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuR
         const CGpuBufferBarrier* pTransBarrier = &desc->buffer_barriers[i];
         D3D12_RESOURCE_BARRIER* pBarrier = &barriers[transitionCount];
         CGpuBuffer_D3D12* pBuffer = (CGpuBuffer_D3D12*)pTransBarrier->buffer;
-        if (pBuffer->super.memory_usage == MU_GPU_ONLY ||
-            pBuffer->super.memory_usage == MU_GPU_TO_CPU ||
-            (pBuffer->super.memory_usage == MU_CPU_TO_GPU && (pBuffer->super.descriptors & RT_RW_BUFFER)))
+        if (pBuffer->super.memory_usage == MEM_USAGE_GPU_ONLY ||
+            pBuffer->super.memory_usage == MEM_USAGE_GPU_TO_CPU ||
+            (pBuffer->super.memory_usage == MEM_USAGE_CPU_TO_GPU && (pBuffer->super.descriptors & RT_RW_BUFFER)))
         {
-            if (RS_UNORDERED_ACCESS == pTransBarrier->src_state &&
-                RS_UNORDERED_ACCESS == pTransBarrier->dst_state)
+            if (RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->src_state &&
+                RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->dst_state)
             {
                 pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -878,7 +882,7 @@ bool reset_root_signature(CGpuCommandBuffer_D3D12* pCmd, ECGpuPipelineType type,
     if (pCmd->pBoundRootSignature != pRootSignature)
     {
         pCmd->pBoundRootSignature = pRootSignature;
-        if (type == PT_GRAPHICS)
+        if (type == PIPELINE_TYPE_GRAPHICS)
             pCmd->pDxCmdList->SetGraphicsRootSignature(pRootSignature);
         else
             pCmd->pDxCmdList->SetComputeRootSignature(pRootSignature);
@@ -890,7 +894,7 @@ void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, 
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
     CGpuComputePipeline_D3D12* PPL = (CGpuComputePipeline_D3D12*)pipeline;
-    reset_root_signature(Cmd, PT_COMPUTE, PPL->pRootSignature);
+    reset_root_signature(Cmd, PIPELINE_TYPE_COMPUTE, PPL->pRootSignature);
     Cmd->pDxCmdList->SetPipelineState(PPL->pDxPipelineState);
 }
 
@@ -941,7 +945,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     CGpuQueue_D3D12* Q = CGPU_NULLPTR;
     if (desc->presentQueues == CGPU_NULLPTR)
     {
-        Q = (CGpuQueue_D3D12*)cgpu_get_queue_d3d12(device, ECGpuQueueType_Graphics, 0);
+        Q = (CGpuQueue_D3D12*)cgpu_get_queue_d3d12(device, QUEUE_TYPE_GRAPHICS, 0);
     }
     else
     {

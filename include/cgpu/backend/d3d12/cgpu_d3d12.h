@@ -36,6 +36,7 @@ RUNTIME_API void cgpu_free_device_d3d12(CGpuDeviceId device);
 
 // API Object APIs
 RUNTIME_API CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device);
+RUNTIME_API void cgpu_wait_fences_d3d12(const CGpuFenceId* fences, uint32_t fence_count);
 RUNTIME_API void cgpu_free_fence_d3d12(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature);
@@ -134,12 +135,12 @@ typedef struct CGpuDevice_D3D12 {
     struct D3D12Util_DescriptorHeap** pCbvSrvUavHeaps;
     struct D3D12Util_DescriptorHeap** pSamplerHeaps;
     ID3D12Device* pDxDevice;
-    struct ID3D12CommandQueue** const ppCommandQueues[ECGpuQueueType_Count]
+    struct ID3D12CommandQueue** const ppCommandQueues[QUEUE_TYPE_COUNT]
 #ifdef __cplusplus
         = {}
 #endif
     ;
-    const uint32_t pCommandQueueCounts[ECGpuQueueType_Count]
+    const uint32_t pCommandQueueCounts[QUEUE_TYPE_COUNT]
 #ifdef __cplusplus
         = {}
 #endif
@@ -290,7 +291,7 @@ static const D3D_FEATURE_LEVEL d3d_feature_levels[] = {
     D3D_FEATURE_LEVEL_11_0
 };
 
-static const D3D12_COMMAND_LIST_TYPE gDx12CmdTypeTranslator[ECGpuQueueType_Count] = {
+static const D3D12_COMMAND_LIST_TYPE gDx12CmdTypeTranslator[QUEUE_TYPE_COUNT] = {
     D3D12_COMMAND_LIST_TYPE_DIRECT,
     D3D12_COMMAND_LIST_TYPE_COMPUTE,
     D3D12_COMMAND_LIST_TYPE_COPY

@@ -148,7 +148,7 @@ typedef struct CGpuAdapter_Vulkan {
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
     /// Queue Families
     uint32_t mQueueFamiliesCount;
-    int64_t mQueueFamilyIndices[ECGpuQueueType_Count];
+    int64_t mQueueFamilyIndices[QUEUE_TYPE_COUNT];
     struct VkQueueFamilyProperties* pQueueFamilyProperties;
 
     // Layers of Physical Device
@@ -305,7 +305,7 @@ typedef struct CGpuRenderPipeline_Vulkan {
     VkPipeline pVkPipeline;
 } CGpuRenderPipeline_Vulkan;
 
-static const VkPipelineBindPoint gPipelineBindPoint[PT_COUNT] = {
+static const VkPipelineBindPoint gPipelineBindPoint[PIPELINE_TYPE_COUNT] = {
     VK_PIPELINE_BIND_POINT_MAX_ENUM,
     VK_PIPELINE_BIND_POINT_COMPUTE,
     VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -314,13 +314,13 @@ static const VkPipelineBindPoint gPipelineBindPoint[PT_COUNT] = {
 #endif
 };
 
-static const VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LA_COUNT] = {
+static const VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LOAD_ACTION_COUNT] = {
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
 };
 
-static const VkCompareOp gVkComparisonFuncTranslator[MAX_COMPARE_MODES] = {
+static const VkCompareOp gVkComparisonFuncTranslator[CMP_COUNT] = {
     VK_COMPARE_OP_NEVER,
     VK_COMPARE_OP_LESS,
     VK_COMPARE_OP_EQUAL,
