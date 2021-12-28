@@ -245,6 +245,29 @@ CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device)
 
 void cgpu_wait_fences_d3d12(const CGpuFenceId* fences, uint32_t fence_count)
 {
+    const CGpuFence_D3D12** Fences = (const CGpuFence_D3D12**)fences;
+    for (uint32_t i = 0; i < fence_count; ++i)
+    {
+        ECGpuFenceStatus fenceStatus = cgpu_query_fence_status(fences[i]);
+        uint64_t fenceValue = Fences[i]->mFenceValue - 1;
+        if (fenceStatus == FENCE_STATUS_INCOMPLETE)
+        {
+            Fences[i]->pDxFence->SetEventOnCompletion(
+                fenceValue, Fences[i]->pDxWaitIdleFenceEvent);
+            WaitForSingleObject(Fences[i]->pDxWaitIdleFenceEvent, INFINITE);
+        }
+    }
+}
+
+ECGpuFenceStatus cgpu_query_fence_status_d3d12(CGpuFenceId fence)
+{
+    ECGpuFenceStatus status = FENCE_STATUS_COMPLETE;
+    CGpuFence_D3D12* F = (CGpuFence_D3D12*)fence;
+    if (F->pDxFence->GetCompletedValue() < F->mFenceValue - 1)
+        status = FENCE_STATUS_INCOMPLETE;
+    else
+        status = FENCE_STATUS_COMPLETE;
+    return status;
 }
 
 void cgpu_free_fence_d3d12(CGpuFenceId fence)

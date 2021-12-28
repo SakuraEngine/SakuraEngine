@@ -213,7 +213,7 @@ static const auto allPlatforms = testing::Values(
 #endif
 #ifdef CGPU_USE_METAL
     ,
-    ECGpuBackend_METAL
+    CGPU_BACKEND_METAL
 #endif
 );
 

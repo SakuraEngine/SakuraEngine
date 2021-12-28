@@ -36,6 +36,7 @@ RUNTIME_API void cgpu_free_device_vulkan(CGpuDeviceId device);
 // API Object APIs
 RUNTIME_API CGpuFenceId cgpu_create_fence_vulkan(CGpuDeviceId device);
 RUNTIME_API void cgpu_wait_fences_vulkan(const CGpuFenceId* fences, uint32_t fence_count);
+ECGpuFenceStatus cgpu_query_fence_status_vulkan(CGpuFenceId fence);
 RUNTIME_API void cgpu_free_fence_vulkan(CGpuFenceId fence);
 RUNTIME_API CGpuSemaphoreId cgpu_create_semaphore_vulkan(CGpuDeviceId device);
 RUNTIME_API void cgpu_free_semaphore_vulkan(CGpuSemaphoreId semaphore);

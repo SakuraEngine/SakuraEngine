@@ -23,6 +23,7 @@ const CGpuProcTable tbl_vk = {
     // API Object APIs
     .create_fence = &cgpu_create_fence_vulkan,
     .wait_fences = &cgpu_wait_fences_vulkan,
+    .query_fence_status = &cgpu_query_fence_status_vulkan,
     .free_fence = &cgpu_free_fence_vulkan,
     .create_semaphore = &cgpu_create_semaphore_vulkan,
     .free_semaphore = &cgpu_free_semaphore_vulkan,
@@ -337,6 +338,28 @@ void cgpu_wait_fences_vulkan(const CGpuFenceId* fences, uint32_t fence_count)
         CGpuFence_Vulkan* Fence = (CGpuFence_Vulkan*)fences[i];
         Fence->mSubmitted = false;
     }
+}
+
+ECGpuFenceStatus cgpu_query_fence_status_vulkan(CGpuFenceId fence)
+{
+    ECGpuFenceStatus status = FENCE_STATUS_COMPLETE;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)fence->device;
+    CGpuFence_Vulkan* F = (CGpuFence_Vulkan*)fence;
+    if (F->mSubmitted)
+    {
+        VkResult vkRes = vkGetFenceStatus(D->pVkDevice, F->pVkFence);
+        if (vkRes == VK_SUCCESS)
+        {
+            D->mVkDeviceTable.vkResetFences(D->pVkDevice, 1, &F->pVkFence);
+            F->mSubmitted = false;
+        }
+        status = vkRes == VK_SUCCESS ? FENCE_STATUS_COMPLETE : FENCE_STATUS_INCOMPLETE;
+    }
+    else
+    {
+        status = FENCE_STATUS_NOTSUBMITTED;
+    }
+    return status;
 }
 
 void cgpu_free_fence_vulkan(CGpuFenceId fence)
