@@ -35,11 +35,13 @@ const CGpuProcTable tbl_d3d12 = {
     .get_queue = &cgpu_get_queue_d3d12,
     .submit_queue = &cgpu_submit_queue_d3d12,
     .wait_queue_idle = &cgpu_wait_queue_idle_d3d12,
+    .queue_present = &cgpu_queue_present_d3d12,
     .free_queue = &cgpu_free_queue_d3d12,
 
     // Command APIs
     .create_command_pool = &cgpu_create_command_pool_d3d12,
     .create_command_buffer = &cgpu_create_command_buffer_d3d12,
+    .reset_command_pool = &cgpu_reset_command_pool_d3d12,
     .free_command_buffer = &cgpu_free_command_buffer_d3d12,
     .free_command_pool = &cgpu_free_command_pool_d3d12,
 
@@ -59,6 +61,7 @@ const CGpuProcTable tbl_d3d12 = {
 
     // Swapchain APIs
     .create_swapchain = &cgpu_create_swapchain_d3d12,
+    .acquire_next_image = &cgpu_acquire_next_image_d3d12,
     .free_swapchain = &cgpu_free_swapchain_d3d12,
 
     // CMDs
@@ -72,7 +75,16 @@ const CGpuProcTable tbl_d3d12 = {
     .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_d3d12,
     .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_d3d12,
     .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_d3d12,
-    .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_d3d12
+    .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_d3d12,
+
+    // Render Pass
+    .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_d3d12,
+    .render_encoder_bind_descriptor_set = cgpu_render_encoder_bind_descriptor_set_d3d12,
+    .render_encoder_set_viewport = &cgpu_render_encoder_set_viewport_d3d12,
+    .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_d3d12,
+    .render_encoder_bind_pipeline = &cgpu_render_encoder_bind_pipeline_d3d12,
+    .render_encoder_draw = &cgpu_render_encoder_draw_d3d12,
+    .cmd_end_render_pass = &cgpu_cmd_end_render_pass_d3d12
 };
 
 const CGpuProcTable* CGPU_D3D12ProcTable()
