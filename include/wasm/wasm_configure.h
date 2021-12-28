@@ -1,0 +1,82 @@
+#pragma once
+#include "platform/configure.h"
+// Currently we have only wasm3 as our wasm3 engine
+#define USE_M3
+
+#ifdef __cplusplus
+    #ifndef SWA_NULLPTR
+        #define SWA_NULLPTR nullptr
+    #endif
+#else
+    #ifndef SWA_NULLPTR
+        #define SWA_NULLPTR NULL
+    #endif
+#endif
+
+#ifdef __cplusplus
+    #define SWA_EXTERN_C extern "C"
+    #define SWA_NULL nullptr
+#else
+    #define SWA_EXTERN_C
+    #define SWA_NULL 0
+#endif
+
+#ifdef _DEBUG
+    #include "assert.h"
+    #define swa_assert assert
+#else
+    #define swa_assert(expr) (void)(expr);
+#endif
+#define swa_static_assert static_assert
+
+#define swa_malloc sakura_malloc
+#define swa_malloc_aligned sakura_malloc_aligned
+#define swa_calloc sakura_calloc
+#define swa_calloc_aligned sakura_calloc_aligned
+#define swa_memalign sakura_malloc_aligned
+#define swa_free sakura_free
+
+#ifdef __cplusplus
+    #include <type_traits>
+template <typename T, typename... Args>
+T* swa_new_placed(void* memory, Args&&... args)
+{
+    return new (memory) T(std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+T* swa_new(Args&&... args)
+{
+    void* memory = sakura_malloc_aligned(sizeof(T), alignof(T));
+    return swa_new_placed<T>(memory, std::forward<Args>(args)...);
+}
+template <typename T>
+void swa_delete_placed(T* object)
+{
+    object->~T();
+}
+template <typename T>
+void swa_delete(T* object)
+{
+    swa_delete_placed(object);
+    swa_free(object);
+}
+#endif
+
+#ifndef swa_max
+    #define swa_max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef swa_min
+    #define swa_min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+#include "utils/hash.h"
+#define swa_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
+#include "utils/log.h"
+#define swa_trace(...) log_log(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define swa_debug(...) log_log(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define swa_info(...) log_log(LOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define swa_warn(...) log_log(LOG_WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define swa_error(...) log_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define swa_fatal(...) log_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)

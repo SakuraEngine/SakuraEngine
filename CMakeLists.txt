@@ -67,13 +67,14 @@ endif()
 
 # glob sources
 set(RUNTIME_SOURCES
+    src/utils/build.0.c
     src/platform/build.0.cpp
     src/gpu/cgpu/build.0.cpp
     src/gpu/cgpu/build.1.cpp
     src/gpu/cgpu/build.2.cpp
-    src/utils/build.0.c
     src/gpu/cgpu/build.0.c
     src/gpu/cgpu/build.1.c
+    src/wasm/build.0.c
     ${NATVIS_SOURCES}
 )
 if(APPLE)
