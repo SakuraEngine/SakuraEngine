@@ -1,6 +1,4 @@
 if(UNIX)
-    set(PLATFORM_INCLUDES ${PLATFORM_INCLUDES} include/Platform/Unix)
-    set(PLATFORM_INCLUDES ${PLATFORM_INCLUDES} include/Platform/DirectXMath)
     add_definitions(-D "SAKURA_TARGET_PLATFORM_UNIX")
     if(APPLE)
         add_definitions(-D "SAKURA_TARGET_PLATFORM_MACOS")
