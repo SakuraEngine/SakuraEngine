@@ -66,6 +66,7 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
     {
         SAFE_RELEASE(to_destroy->pDXDebug);
     }
+    cgpu_delete(to_destroy);
 #ifdef _DEBUG
     {
         IDXGIDebug1* dxgiDebug;
@@ -77,7 +78,6 @@ void cgpu_free_instance_d3d12(CGpuInstanceId instance)
         SAFE_RELEASE(dxgiDebug);
     }
 #endif
-    cgpu_delete(to_destroy);
 }
 
 void cgpu_enum_adapters_d3d12(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
@@ -1233,6 +1233,11 @@ uint32_t cgpu_acquire_next_image_d3d12(CGpuSwapChainId swapchain, const struct C
 void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain)
 {
     CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)swapchain;
+    for (uint32_t i = 0; i < S->super.buffer_count; i++)
+    {
+        CGpuTexture_D3D12* Texture = (CGpuTexture_D3D12*)S->super.back_buffers[i];
+        SAFE_RELEASE(Texture->pDxResource);
+    }
     SAFE_RELEASE(S->pDxSwapChain);
     cgpu_delete_placed(S);
     cgpu_free(S);
