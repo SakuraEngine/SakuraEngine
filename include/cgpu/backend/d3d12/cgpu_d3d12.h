@@ -53,11 +53,13 @@ RUNTIME_API void cgpu_free_render_pipeline_d3d12(CGpuRenderPipelineId pipeline);
 RUNTIME_API CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue_d3d12(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
 RUNTIME_API void cgpu_wait_queue_idle_d3d12(CGpuQueueId queue);
+RUNTIME_API void cgpu_queue_present_d3d12(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc);
 RUNTIME_API void cgpu_free_queue_d3d12(CGpuQueueId queue);
 
 // Command APIs
 RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc);
 RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer_d3d12(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc);
+RUNTIME_API void cgpu_reset_command_pool_d3d12(CGpuCommandPoolId pool);
 RUNTIME_API void cgpu_free_command_buffer_d3d12(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool);
 
@@ -79,6 +81,7 @@ RUNTIME_API void cgpu_free_texture_view_d3d12(CGpuTextureViewId render_target);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
+RUNTIME_API uint32_t cgpu_acquire_next_image_d3d12(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc);
 RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 
 // CMDs
@@ -87,12 +90,21 @@ RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGpuCommandBufferId cm
 RUNTIME_API void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd);
 
-// Compute Pass
+// Compute CMDs
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_d3d12(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set);
 RUNTIME_API void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
 RUNTIME_API void cgpu_compute_encoder_dispatch_d3d12(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 RUNTIME_API void cgpu_cmd_end_compute_pass_d3d12(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
+
+// Render CMDs
+RUNTIME_API CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_bind_descriptor_set_d3d12(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set);
+RUNTIME_API void cgpu_render_encoder_set_viewport_d3d12(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
+RUNTIME_API void cgpu_render_encoder_set_scissor_d3d12(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+RUNTIME_API void cgpu_render_encoder_bind_pipeline_d3d12(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
+RUNTIME_API void cgpu_render_encoder_draw_d3d12(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
+RUNTIME_API void cgpu_cmd_end_render_pass_d3d12(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
 #ifdef __cplusplus
 } // end extern "C"
@@ -179,7 +191,7 @@ typedef struct CGpuCommandBuffer_D3D12 {
 #endif
     ID3D12GraphicsCommandList* pDxCmdList;
     // Cached in beginCmd to avoid fetching them during rendering
-    struct D3D12Util_DescriptorHeap* pBoundHeaps[2];
+    struct D3D12Util_DescriptorHeap* pBoundHeaps[2]; // pCbvSrvUavHeaps, pSamplerHeaps
     D3D12_GPU_DESCRIPTOR_HANDLE mBoundHeapStartHandles[2];
     // Command buffer state
     const ID3D12RootSignature* pBoundRootSignature;

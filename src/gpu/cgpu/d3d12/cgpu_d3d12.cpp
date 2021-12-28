@@ -725,6 +725,45 @@ void cgpu_wait_queue_idle_d3d12(CGpuQueueId queue)
     }
 }
 
+void cgpu_queue_present_d3d12(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc)
+{
+    CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)desc->swapchain;
+    HRESULT hr = S->pDxSwapChain->Present(S->mDxSyncInterval, 0 /*desc->index*/);
+    if (FAILED(hr))
+    {
+#if defined(_WINDOWS)
+        ID3D12Device* device = NULL;
+        S->pDxSwapChain->GetDevice(IID_ARGS(&device));
+        HRESULT removeHr = device->GetDeviceRemovedReason();
+        if (FAILED(removeHr))
+        {
+            Sleep(5000); // Wait for a few seconds to allow the driver to come
+                         // back online before doing a reset.
+            // onDeviceLost();
+        }
+    #ifdef __ID3D12DeviceRemovedExtendedData_FWD_DEFINED__
+        ID3D12DeviceRemovedExtendedData* pDread;
+        if (SUCCEEDED(device->QueryInterface(IID_ARGS(&pDread))))
+        {
+            D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT breadcrumbs;
+            if (SUCCEEDED(pDread->GetAutoBreadcrumbsOutput(&breadcrumbs)))
+            {
+                cgpu_info("Gathered auto-breadcrumbs output.");
+            }
+            D3D12_DRED_PAGE_FAULT_OUTPUT pageFault;
+            if (SUCCEEDED(pDread->GetPageFaultAllocationOutput(&pageFault)))
+            {
+                cgpu_info("Gathered page fault allocation output.");
+            }
+        }
+        pDread->Release();
+    #endif
+        device->Release();
+#endif
+        cgpu_error("Failed to present swapchain render target!");
+    }
+}
+
 void cgpu_free_queue_d3d12(CGpuQueueId queue)
 {
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
@@ -762,6 +801,12 @@ CGpuCommandPoolId cgpu_create_command_pool_d3d12(CGpuQueueId queue, const CGpuCo
     CGpuCommandPool_D3D12* P = cgpu_new<CGpuCommandPool_D3D12>();
     P->pDxCmdAlloc = allocate_transient_command_allocator(P, queue);
     return &P->super;
+}
+
+void cgpu_reset_command_pool_d3d12(CGpuCommandPoolId pool)
+{
+    CGpuCommandPool_D3D12* P = (CGpuCommandPool_D3D12*)pool;
+    CHECK_HRESULT(P->pDxCmdAlloc->Reset());
 }
 
 CGpuCommandBufferId cgpu_create_command_buffer_d3d12(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
@@ -833,12 +878,17 @@ void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd)
     Cmd->pBoundRootSignature = NULL;
 }
 
+#define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, \
+    ArraySize)                                                              \
+    ((MipSlice) + ((ArraySlice) * (MipLevels)) +                            \
+        ((PlaneSlice) * (MipLevels) * (ArraySize)))
+
 // TODO: https://microsoft.github.io/DirectX-Specs/d3d/D3D12EnhancedBarriers.html#introduction
 // Enhanced Barriers is not currently a hardware or driver requirement
 void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
-    const uint32_t barriers_count = desc->buffer_barriers_count;
+    const uint32_t barriers_count = desc->buffer_barriers_count + desc->texture_barriers_count;
     D3D12_RESOURCE_BARRIER* barriers = (D3D12_RESOURCE_BARRIER*)alloca(barriers_count * sizeof(D3D12_RESOURCE_BARRIER));
     uint32_t transitionCount = 0;
     for (uint32_t i = 0; i < desc->buffer_barriers_count; ++i)
@@ -861,7 +911,14 @@ void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuR
             else
             {
                 pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                // TODO: BeginOnly/EndOnly
+                if (pTransBarrier->d3d12.begin_ony)
+                {
+                    pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
+                }
+                else if (pTransBarrier->d3d12.end_only)
+                {
+                    pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+                }
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
                 pBarrier->Transition.pResource = pBuffer->pDxResource;
                 pBarrier->Transition.Subresource =
@@ -872,6 +929,51 @@ void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuR
             }
         }
     }
+    for (uint32_t i = 0; i < desc->texture_barriers_count; ++i)
+    {
+        const CGpuTextureBarrier* pTransBarrier = &desc->texture_barriers[i];
+        D3D12_RESOURCE_BARRIER* pBarrier = &barriers[transitionCount];
+        CGpuTexture_D3D12* pTexture = (CGpuTexture_D3D12*)pTransBarrier->texture;
+        if (RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->src_state &&
+            RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->dst_state)
+        {
+            pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+            pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            pBarrier->UAV.pResource = pTexture->pDxResource;
+            ++transitionCount;
+        }
+        else
+        {
+            pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            if (pTransBarrier->d3d12.begin_ony)
+            {
+                pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
+            }
+            else if (pTransBarrier->d3d12.end_only)
+            {
+                pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+            }
+            pBarrier->Transition.pResource = pTexture->pDxResource;
+            pBarrier->Transition.Subresource =
+                pTransBarrier->subresource_barrier ? CALC_SUBRESOURCE_INDEX(
+                                                         pTransBarrier->mip_level, pTransBarrier->array_layer,
+                                                         0, pTexture->super.mip_levels,
+                                                         pTexture->super.array_size_minus_one + 1) :
+                                                     D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+            if (pTransBarrier->queue_acquire)
+                pBarrier->Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+            else
+                pBarrier->Transition.StateBefore = D3D12Util_TranslateResourceState(pTransBarrier->src_state);
+
+            if (pTransBarrier->queue_release)
+                pBarrier->Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+            else
+                pBarrier->Transition.StateAfter = D3D12Util_TranslateResourceState(pTransBarrier->dst_state);
+
+            ++transitionCount;
+        }
+    }
     if (transitionCount)
         Cmd->pDxCmdList->ResourceBarrier(transitionCount, barriers);
 }
@@ -880,7 +982,6 @@ void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
     cgpu_assert(Cmd->pDxCmdList);
-
     CHECK_HRESULT(Cmd->pDxCmdList->Close());
 }
 
@@ -930,6 +1031,100 @@ void cgpu_compute_encoder_dispatch_d3d12(CGpuComputePassEncoderId encoder, uint3
 void cgpu_cmd_end_compute_pass_d3d12(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)
 {
     // DO NOTHING NOW
+}
+
+// Render CMDs
+CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+#ifdef __ID3D12GraphicsCommandList4_FWD_DEFINED__
+    ID3D12GraphicsCommandList4* CmdList4 = (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList;
+    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValues[MAX_MRT_COUNT]);
+    DECLARE_ZERO(D3D12_RENDER_PASS_RENDER_TARGET_DESC, renderPassRenderTargetDescs[MAX_MRT_COUNT]);
+    for (uint32_t i = 0; i < desc->render_target_count; i++)
+    {
+        CGpuTextureView_D3D12* TV = (CGpuTextureView_D3D12*)desc->color_attachments[i].view;
+        clearValues[i].Format = DXGIUtil_TranslatePixelFormat(TV->super.info.format);
+        clearValues[i].Color[0] = desc->color_attachments[i].clear_color.r;
+        clearValues[i].Color[1] = desc->color_attachments[i].clear_color.g;
+        clearValues[i].Color[2] = desc->color_attachments[i].clear_color.b;
+        clearValues[i].Color[3] = desc->color_attachments[i].clear_color.a;
+        // TODO: Load & Store action
+        // desc->color_attachments[i].load_action
+        // desc->color_attachments[i].store_action
+        renderPassRenderTargetDescs[i].cpuDescriptor = TV->mDxRtxDescriptorHandle;
+        renderPassRenderTargetDescs[i].BeginningAccess = { D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValues[i] } };
+        renderPassRenderTargetDescs[i].EndingAccess = { D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE, {} };
+    }
+    /*
+        D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessNoAccess{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
+        D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessNoAccess{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS, {} };
+        D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{ dsvCPUDescriptorHandle, renderPassBeginningAccessNoAccess, renderPassBeginningAccessNoAccess, renderPassEndingAccessNoAccess, renderPassEndingAccessNoAccess };
+    */
+    D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderPassRenderTargetDesc = renderPassRenderTargetDescs;
+    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pRenderPassDepthStencilDesc = nullptr;
+    CmdList4->BeginRenderPass(desc->render_target_count,
+        pRenderPassRenderTargetDesc, pRenderPassDepthStencilDesc /*&renderPassDepthStencilDesc*/,
+        D3D12_RENDER_PASS_FLAG_NONE);
+    return (CGpuRenderPassEncoderId)&Cmd->super;
+#endif
+    cgpu_info("ID3D12GraphicsCommandList4 is not defined!");
+    return (CGpuRenderPassEncoderId)&Cmd->super;
+}
+
+void cgpu_render_encoder_bind_descriptor_set_d3d12(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set)
+{
+    cgpu_assert(0);
+}
+
+void cgpu_render_encoder_set_viewport_d3d12(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    D3D12_VIEWPORT viewport;
+    viewport.TopLeftX = x;
+    viewport.TopLeftY = y;
+    viewport.Width = width;
+    viewport.Height = height;
+    viewport.MinDepth = min_depth;
+    viewport.MaxDepth = max_depth;
+    Cmd->pDxCmdList->RSSetViewports(1, &viewport);
+}
+
+void cgpu_render_encoder_set_scissor_d3d12(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    D3D12_RECT scissor;
+    scissor.left = x;
+    scissor.top = y;
+    scissor.right = x + width;
+    scissor.bottom = y + height;
+    Cmd->pDxCmdList->RSSetScissorRects(1, &scissor);
+}
+
+void cgpu_render_encoder_bind_pipeline_d3d12(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    CGpuRenderPipeline_D3D12* PPL = (CGpuRenderPipeline_D3D12*)pipeline;
+    reset_root_signature(Cmd, PIPELINE_TYPE_GRAPHICS, PPL->pRootSignature);
+    Cmd->pDxCmdList->IASetPrimitiveTopology(PPL->mDxPrimitiveTopology);
+    Cmd->pDxCmdList->SetPipelineState(PPL->pDxPipelineState);
+}
+
+void cgpu_render_encoder_draw_d3d12(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    Cmd->pDxCmdList->DrawInstanced((UINT)vertex_count, (UINT)1, (UINT)first_vertex, (UINT)0);
+}
+
+void cgpu_cmd_end_render_pass_d3d12(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+#ifdef __ID3D12GraphicsCommandList4_FWD_DEFINED__
+    ID3D12GraphicsCommandList4* CmdList4 = (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList;
+    CmdList4->EndRenderPass();
+    return;
+#endif
+    cgpu_info("ID3D12GraphicsCommandList4 is not defined!");
 }
 
 // SwapChain APIs
@@ -1020,6 +1215,19 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
     S->super.back_buffers = Vs;
     S->super.buffer_count = buffer_count;
     return &S->super;
+}
+
+uint32_t cgpu_acquire_next_image_d3d12(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc)
+{
+    CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)swapchain;
+    // On PC AquireNext is always true
+    HRESULT hr = S_OK;
+    if (FAILED(hr))
+    {
+        cgpu_error("Failed to acquire next image");
+        return UINT32_MAX;
+    }
+    return S->pDxSwapChain->GetCurrentBackBufferIndex();
 }
 
 void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain)
