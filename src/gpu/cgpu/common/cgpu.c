@@ -274,7 +274,7 @@ static const CGpuRasterizerStateDescriptor defaultRasterStateDesc = {
     .enable_depth_clamp = false,
     .enable_scissor = false,
     .enable_multi_sample = false,
-    .depth_bias = 0.f
+    .depth_bias = 0
 };
 CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
 {

@@ -1,4 +1,4 @@
-/* clang-format off */
+﻿/* clang-format off */
 #include"nvapi_lite_salstart.h"
 #include"nvapi_lite_common.h"
 #include"nvapi_lite_sli.h"

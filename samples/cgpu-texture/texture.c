@@ -1,29 +1,30 @@
 #include "utils.h"
 #include "math.h"
 #include "cgpu/api.h"
+#include "platform/thread.h"
 
 #define FLIGHT_FRAMES 3
 #define BACK_BUFFER_COUNT 3
-_Thread_local ECGpuBackend backend;
-_Thread_local SDL_Window* sdl_window;
-_Thread_local CGpuSurfaceId surface;
-_Thread_local CGpuSwapChainId swapchain;
-_Thread_local uint32_t backbuffer_index;
-_Thread_local CGpuInstanceId instance;
-_Thread_local CGpuAdapterId adapter;
-_Thread_local CGpuDeviceId device;
-_Thread_local CGpuSemaphoreId present_semaphore;
-_Thread_local CGpuFenceId exec_fences[FLIGHT_FRAMES];
-_Thread_local CGpuQueueId gfx_queue;
-_Thread_local CGpuRootSignatureId root_sig;
-_Thread_local CGpuDescriptorSetId desc_set;
-_Thread_local CGpuRenderPipelineId pipeline;
-_Thread_local CGpuCommandPoolId pools[FLIGHT_FRAMES];
-_Thread_local CGpuCommandBufferId cmds[FLIGHT_FRAMES];
-_Thread_local CGpuTextureId sampled_texture;
-_Thread_local CGpuSamplerId sampler_state;
-_Thread_local CGpuTextureViewId sampled_view;
-_Thread_local CGpuTextureViewId views[BACK_BUFFER_COUNT];
+THREAD_LOCAL ECGpuBackend backend;
+THREAD_LOCAL SDL_Window* sdl_window;
+THREAD_LOCAL CGpuSurfaceId surface;
+THREAD_LOCAL CGpuSwapChainId swapchain;
+THREAD_LOCAL uint32_t backbuffer_index;
+THREAD_LOCAL CGpuInstanceId instance;
+THREAD_LOCAL CGpuAdapterId adapter;
+THREAD_LOCAL CGpuDeviceId device;
+THREAD_LOCAL CGpuSemaphoreId present_semaphore;
+THREAD_LOCAL CGpuFenceId exec_fences[FLIGHT_FRAMES];
+THREAD_LOCAL CGpuQueueId gfx_queue;
+THREAD_LOCAL CGpuRootSignatureId root_sig;
+THREAD_LOCAL CGpuDescriptorSetId desc_set;
+THREAD_LOCAL CGpuRenderPipelineId pipeline;
+THREAD_LOCAL CGpuCommandPoolId pools[FLIGHT_FRAMES];
+THREAD_LOCAL CGpuCommandBufferId cmds[FLIGHT_FRAMES];
+THREAD_LOCAL CGpuTextureId sampled_texture;
+THREAD_LOCAL CGpuSamplerId sampler_state;
+THREAD_LOCAL CGpuTextureViewId sampled_view;
+THREAD_LOCAL CGpuTextureViewId views[BACK_BUFFER_COUNT];
 
 const uint32_t* get_vertex_shader()
 {

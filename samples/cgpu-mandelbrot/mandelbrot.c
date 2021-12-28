@@ -180,10 +180,10 @@ void ComputeFunc(void* usrdata)
         image = sakura_malloc(MANDELBROT_WIDTH * MANDELBROT_HEIGHT * 4);
         for (int i = 0; i < MANDELBROT_WIDTH * MANDELBROT_HEIGHT; i += 1)
         {
-            image[i * 4] = 255.0f * mapped_memory[i].r;
-            image[i * 4 + 1] = 255.0f * mapped_memory[i].g;
-            image[i * 4 + 2] = 255.0f * mapped_memory[i].b;
-            image[i * 4 + 3] = 255.0f * mapped_memory[i].a;
+            image[i * 4] = (uint8_t)(255.0f * mapped_memory[i].r);
+            image[i * 4 + 1] = (uint8_t)(255.0f * mapped_memory[i].g);
+            image[i * 4 + 2] = (uint8_t)(255.0f * mapped_memory[i].b);
+            image[i * 4 + 3] = (uint8_t)(255.0f * mapped_memory[i].a);
         }
         cgpu_unmap_buffer(readback_buffer);
     }

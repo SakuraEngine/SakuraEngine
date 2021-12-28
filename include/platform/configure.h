@@ -61,11 +61,11 @@ typedef char char8_t;
     #if defined(_MSC_VER) && !defined(__clang__)
         #define DECLARE_ZERO_VLA(type, var, num)              \
             type* var = (type*)_alloca(sizeof(type) * (num)); \
-            memset((var), 0, sizeof(type) * (num));
+            memset((void*)(var), 0, sizeof(type) * (num));
     #else
         #define DECLARE_ZERO_VLA(type, var, num) \
             type var[(num)];                     \
-            memset((var), 0, sizeof(type) * (num));
+            memset((void*)(var), 0, sizeof(type) * (num));
     #endif
 #endif
 
