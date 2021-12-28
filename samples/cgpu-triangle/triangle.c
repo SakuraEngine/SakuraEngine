@@ -280,6 +280,5 @@ int main()
     finalize();
 
     SDL_Quit();
-
     return 0;
 }
