@@ -152,6 +152,133 @@ typedef SSIZE_T ssize_t;
     #error Unknown language dialect
 #endif
 
+#ifndef RUNTIME_MANUAL_CONFIG_CPU_ARCHITECTURE
+    #if defined(__x86_64__) || defined(_M_X64) || defined(_AMD64_) || defined(_M_AMD64)
+        #define RUNTIME_PLATFORM_X86_64
+    #elif defined(__i386) || defined(_M_IX86) || defined(_X86_)
+        #define RUNTIME_PLATFORM_X86
+    #elif defined(__aarch64__) || defined(__AARCH64) || defined(_M_ARM64)
+        #define RUNTIME_PLATFORM_ARM64
+    #elif defined(__arm__) || defined(_M_ARM)
+        #define RUNTIME_PLATFORM_ARM32
+    #elif defined(__POWERPC64__) || defined(__powerpc64__)
+        #define RUNTIME_PLATFORM_POWERPC64
+    #elif defined(__POWERPC__) || defined(__powerpc__)
+        #define RUNTIME_PLATFORM_POWERPC32
+    #else
+        #error Unrecognized CPU was used.
+    #endif
+#endif
+
+#ifndef RUNTIME_MANUAL_CONFIG_CPU_TRAITS
+    #if defined(__AVX__)
+        #define RUNTIME_PLATFORM_AVX
+    #endif
+    #if defined(__AVX2__)
+        #define RUNTIME_PLATFORM_AVX2
+    #endif
+
+    #if defined(RUNTIME_PLATFORM_X86)
+        #define RUNTIME_PLATFORM_32BIT
+        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
+        #define RUNTIME_PLATFORM_SSE
+        #define RUNTIME_PLATFORM_SSE2
+    #endif
+
+    #if defined(RUNTIME_PLATFORM_X86_64)
+        #define RUNTIME_PLATFORM_64BIT
+        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
+        #define RUNTIME_PLATFORM_SSE
+        #define RUNTIME_PLATFORM_SSE2
+    #endif
+
+    #if defined(RUNTIME_PLATFORM_ARM32)
+        #define RUNTIME_PLATFORM_32BIT
+        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
+    #endif
+
+    #if defined(RUNTIME_PLATFORM_ARM64)
+        #define RUNTIME_PLATFORM_64BIT
+        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
+        #define RUNTIME_PLATFORM_SSE
+        #define RUNTIME_PLATFORM_SSE2
+    #endif
+
+    #if defined(RUNTIME_PLATFORM_POWERPC32)
+        #define RUNTIME_PLATFORM_32BIT
+        #define RUNTIME_PLATFORM_BIG_ENDIAN
+    #endif
+
+    #if defined(RUNTIME_PLATFORM_POWERPC64)
+        #define RUNTIME_PLATFORM_64BIT
+        #define RUNTIME_PLATFORM_BIG_ENDIAN
+    #endif
+#endif
+
+#ifndef RUNTIME_MANUAL_CONFIG_COMPILER
+    #if defined(_MSC_VER)
+        #define RUNTIME_COMPILER_MSVC
+    #endif
+
+    #if defined(__clang__)
+        #define RUNTIME_COMPILER_CLANG
+    #elif defined(__GNUC__)
+        #define RUNTIME_COMPILER_GCC
+    #elif defined(_MSC_VER)
+    #else
+        #error Unrecognized compiler was used.
+    #endif
+#endif
+
+#ifndef RUNTIME_MANUAL_CONFIG_COMPILER_TRAITS
+    #if defined(RUNTIME_COMPILER_MSVC)
+        #define RUNTIME_COMPILER_VERSION _MSC_VER
+    #elif defined(RUNTIME_COMPILER_CLANG)
+        #define RUNTIME_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
+    #elif defined(RUNTIME_COMPILER_GCC)
+        #define RUNTIME_COMPILER_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
+    #endif
+#endif
+
+#ifndef RUNTIME_MANUAL_CONFIG_CPP_STANDARD
+    #if (defined(RUNTIME_COMPILER_CLANG) || defined(RUNTIME_COMPILER_GCC))
+        #if __cplusplus >= 201703L
+            #define RUNTIME_COMPILER_CPP17
+        #endif
+        #if __cplusplus >= 201402L
+            #define RUNTIME_COMPILER_CPP14
+        #endif
+    #elif defined(RUNTIME_COMPILER_MSVC)
+        #if (RUNTIME_COMPILER_VERSION >= 1920) // VS 2019
+            #define RUNTIME_COMPILER_CPP17
+        #endif
+        #if (RUNTIME_COMPILER_VERSION >= 1910) // VS 2017
+            #define RUNTIME_COMPILER_CPP14
+        #endif
+    #else
+        #error "Failed to delect C++ standard version."
+    #endif
+#endif // RUNTIME_MANUAL_CONFIG_CPP_STANDARD_VERSION
+
+// no vtable
+#ifdef _MSC_VER
+    #define RUNTIME_NOVTABLE __declspec(novtable)
+#else
+    #define RUNTIME_NOVTABLE
+#endif
+
+// inline defs
+#ifndef RUNTIME_FORCEINLINE
+    #ifdef RUNTIME_COMPILER_MSVC
+        #define RUNTIME_FORCEINLINE __forceinline
+    #else
+        #define RUNTIME_FORCEINLINE inline
+    #endif
+#endif
+#define RUNTIME_INLINE inline
+// By Default we use cpp-standard above 2011XXL
+#define RUNTIME_NOEXCEPT noexcept
+
 // Alloc Configure
 #ifdef __cplusplus
 extern "C" {
