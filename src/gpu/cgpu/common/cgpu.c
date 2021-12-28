@@ -45,7 +45,7 @@ CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
     }
 #endif
 #ifdef CGPU_USE_METAL
-    else if (desc->backend == ECGpuBackend_METAL)
+    else if (desc->backend == CGPU_BACKEND_METAL)
     {
         tbl = CGPU_MetalProcTable();
         s_tbl = CGPU_MetalSurfacesProcTable();

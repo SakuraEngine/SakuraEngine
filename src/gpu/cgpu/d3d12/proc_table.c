@@ -19,6 +19,7 @@ const CGpuProcTable tbl_d3d12 = {
     // API Object APIs
     .create_fence = &cgpu_create_fence_d3d12,
     .wait_fences = &cgpu_wait_fences_d3d12,
+    .query_fence_status = &cgpu_query_fence_status_d3d12,
     .free_fence = &cgpu_free_fence_d3d12,
     .create_root_signature = &cgpu_create_root_signature_d3d12,
     .free_root_signature = &cgpu_free_root_signature_d3d12,

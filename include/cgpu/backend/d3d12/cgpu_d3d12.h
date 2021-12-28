@@ -37,6 +37,7 @@ RUNTIME_API void cgpu_free_device_d3d12(CGpuDeviceId device);
 // API Object APIs
 RUNTIME_API CGpuFenceId cgpu_create_fence_d3d12(CGpuDeviceId device);
 RUNTIME_API void cgpu_wait_fences_d3d12(const CGpuFenceId* fences, uint32_t fence_count);
+ECGpuFenceStatus cgpu_query_fence_status_d3d12(CGpuFenceId fence);
 RUNTIME_API void cgpu_free_fence_d3d12(CGpuFenceId fence);
 RUNTIME_API CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature);
