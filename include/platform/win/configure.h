@@ -1,5 +1,10 @@
 #pragma once
 #include <stdio.h>
+#ifdef _DEBUG
+    #include "assert.h"
+#else
+    #define assert(expr) (void)(expr);
+#endif
 
 #if defined(_WINDOWS) || defined(XBOX)
     #define CHECK_HRESULT(exp)                                               \
