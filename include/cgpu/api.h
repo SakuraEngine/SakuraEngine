@@ -8,12 +8,12 @@
 #define MAX_MRT_COUNT 8
 #define MAX_VERTEX_ATTRIBS 15
 #define MAX_VERTEX_BINDINGS 15
-static const int COLOR_MASK_RED = 0x1;
-static const int COLOR_MASK_GREEN = 0x2;
-static const int COLOR_MASK_BLUE = 0x4;
-static const int COLOR_MASK_ALPHA = 0x8;
-static const int COLOR_MASK_ALL = (COLOR_MASK_RED | COLOR_MASK_GREEN | COLOR_MASK_BLUE | COLOR_MASK_ALPHA);
-static const int COLOR_MASK_NONE = 0;
+#define COLOR_MASK_RED 0x1
+#define COLOR_MASK_GREEN 0x2
+#define COLOR_MASK_BLUE 0x4
+#define COLOR_MASK_ALPHA 0x8
+#define COLOR_MASK_ALL COLOR_MASK_RED | COLOR_MASK_GREEN | COLOR_MASK_BLUE | COLOR_MASK_ALPHA
+#define COLOR_MASK_NONE 0
 
 #ifdef __cplusplus
 extern "C" {

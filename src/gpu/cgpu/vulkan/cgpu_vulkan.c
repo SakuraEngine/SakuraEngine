@@ -1247,13 +1247,13 @@ void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpu
 
             if (buffer_barrier->queue_acquire)
             {
-                pBufferBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
-                pBufferBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[buffer_barrier->queue_type];
+                pBufferBarrier->dstQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[Cmd->mType];
+                pBufferBarrier->srcQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[buffer_barrier->queue_type];
             }
             else if (buffer_barrier->queue_release)
             {
-                pBufferBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
-                pBufferBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[buffer_barrier->queue_type];
+                pBufferBarrier->srcQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[Cmd->mType];
+                pBufferBarrier->dstQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[buffer_barrier->queue_type];
             }
             else
             {
@@ -1306,13 +1306,13 @@ void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpu
 
             if (texture_barrier->queue_acquire && texture_barrier->src_state != RESOURCE_STATE_UNDEFINED)
             {
-                pImageBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
-                pImageBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[texture_barrier->queue_type];
+                pImageBarrier->dstQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[Cmd->mType];
+                pImageBarrier->srcQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[texture_barrier->queue_type];
             }
             else if (texture_barrier->queue_release && texture_barrier->src_state != RESOURCE_STATE_UNDEFINED)
             {
-                pImageBarrier->srcQueueFamilyIndex = A->mQueueFamilyIndices[Cmd->mType];
-                pImageBarrier->dstQueueFamilyIndex = A->mQueueFamilyIndices[texture_barrier->queue_type];
+                pImageBarrier->srcQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[Cmd->mType];
+                pImageBarrier->dstQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[texture_barrier->queue_type];
             }
             else
             {

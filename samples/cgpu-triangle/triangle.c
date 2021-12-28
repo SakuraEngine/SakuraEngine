@@ -1,22 +1,23 @@
 #include "utils.h"
 #include "math.h"
 #include "cgpu/api.h"
+#include "platform/thread.h"
 
-_Thread_local ECGpuBackend backend;
-_Thread_local SDL_Window* sdl_window;
-_Thread_local CGpuSurfaceId surface;
-_Thread_local CGpuSwapChainId swapchain;
-_Thread_local uint32_t backbuffer_index;
-_Thread_local CGpuInstanceId instance;
-_Thread_local CGpuAdapterId adapter;
-_Thread_local CGpuDeviceId device;
-_Thread_local CGpuFenceId present_fence;
-_Thread_local CGpuQueueId gfx_queue;
-_Thread_local CGpuRootSignatureId root_sig;
-_Thread_local CGpuRenderPipelineId pipeline;
-_Thread_local CGpuCommandPoolId pool;
-_Thread_local CGpuCommandBufferId cmd;
-_Thread_local CGpuTextureViewId views[3];
+THREAD_LOCAL ECGpuBackend backend;
+THREAD_LOCAL SDL_Window* sdl_window;
+THREAD_LOCAL CGpuSurfaceId surface;
+THREAD_LOCAL CGpuSwapChainId swapchain;
+THREAD_LOCAL uint32_t backbuffer_index;
+THREAD_LOCAL CGpuInstanceId instance;
+THREAD_LOCAL CGpuAdapterId adapter;
+THREAD_LOCAL CGpuDeviceId device;
+THREAD_LOCAL CGpuFenceId present_fence;
+THREAD_LOCAL CGpuQueueId gfx_queue;
+THREAD_LOCAL CGpuRootSignatureId root_sig;
+THREAD_LOCAL CGpuRenderPipelineId pipeline;
+THREAD_LOCAL CGpuCommandPoolId pool;
+THREAD_LOCAL CGpuCommandBufferId cmd;
+THREAD_LOCAL CGpuTextureViewId views[3];
 
 const uint32_t* get_vertex_shader()
 {
@@ -90,14 +91,15 @@ void initialize(void* usrdata)
 {
     // Create window
     SDL_SysWMinfo wmInfo;
-    sdl_window = SDL_CreateWindow("title",
+    backend = *(ECGpuBackend*)usrdata;
+
+    sdl_window = SDL_CreateWindow(gCGpuBackendNames[backend],
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdl_window, &wmInfo);
 
-    backend = *(ECGpuBackend*)usrdata;
     // Create instance
     CGpuInstanceDescriptor instance_desc = {
         .backend = backend,
@@ -193,7 +195,10 @@ void raster_redraw()
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
     CGpuRenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
     {
-        cgpu_render_encoder_set_viewport(rp_encoder, 0.0f, 0.0f, back_buffer->width, back_buffer->height, 0.f, 1.f);
+        cgpu_render_encoder_set_viewport(rp_encoder,
+            0.0f, 0.0f,
+            (float)back_buffer->width, (float)back_buffer->height,
+            0.f, 1.f);
         cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_draw(rp_encoder, 3, 0);
@@ -270,15 +275,38 @@ void finalize()
     cgpu_free_instance(instance);
 }
 
-int main()
+void ProgramMain(void* usrdata)
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-
-    ECGpuBackend backend = CGPU_BACKEND_D3D12;
-    initialize(&backend);
+    initialize(usrdata);
     raster_program();
     finalize();
+}
 
+int main(int argc, char* argv[])
+{
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
+    // When we support more add them here
+    ECGpuBackend backends[] = {
+        CGPU_BACKEND_VULKAN
+#ifdef CGPU_USE_D3D12
+        ,
+        CGPU_BACKEND_D3D12
+#endif
+    };
+    const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
+    DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
+    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
+    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
+    {
+        thread_descs[i].pFunc = &ProgramMain;
+        thread_descs[i].pData = &backends[i];
+        skr_init_thread(&thread_descs[i], &hdls[i]);
+    }
+    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
+    {
+        skr_join_thread(hdls[i]);
+        skr_destroy_thread(hdls[i]);
+    }
     SDL_Quit();
     return 0;
 }
