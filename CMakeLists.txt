@@ -20,12 +20,14 @@ project(SakuraRuntime)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 include(Extract)
 include(PlatformConfigure)
-# Build
+
+# include component builds
 include(mimalloc) # Fetch mimalloc SOURCES
 include(EASTL) # Fetch EASTL SOURCES
-include(SDL2) # Fetch EASTL SOURCES
-include(GPU)
 include(vulkan)
+include(GPU)
+include(WASM3) # Set WASM3 ENVS
+include(SDL2) # Set SDL2 ENVS
 
 if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)
@@ -42,6 +44,19 @@ else()
     target_compile_definitions(SakuraRuntime PUBLIC -DRUNTIME_STATIC)
 endif(RUNTIME_SHARED)
 
+# apple platform frameworks
+if(APPLE)
+    find_library(FoundationLib CoreFoundation)
+    find_library(CocoaLib Cocoa)
+    find_library(MetalLib Metal)
+    find_library(IOKitLib IOKit)
+    set(PLATFORM_FRAMEWORKS ${FoundationLib} ${CocoaLib} ${MetalLib} ${IOKitLib})
+elseif(WIN32)
+    # libuv uses these frameworks
+    set(PLATFORM_FRAMEWORKS psapi user32 advapi32 iphlpapi userenv ws2_32)
+endif()
+
+# MSVC natvis
 if(MSVC)
     set(NATVIS_SOURCES 
         SDKs/natvis/EASTL.natvis
@@ -50,6 +65,7 @@ if(MSVC)
     message(STATUS "Add Natvis to Project: ${NATVIS_SOURCES}")
 endif()
 
+# glob sources
 set(RUNTIME_SOURCES
     src/platform/build.0.cpp
     src/gpu/cgpu/build.0.cpp
@@ -69,31 +85,29 @@ if(APPLE)
     )
 endif()
 
+# sources
 target_sources(SakuraRuntime
     PRIVATE
     ${RUNTIME_SOURCES}
     ${EASTL_SOURCES}
     ${MIMALLOC_SOURCES}
 )
+
+# include dirs
 target_include_directories(SakuraRuntime
     PUBLIC
     ${MIMALLOC_INCLUDES_DIR}
     ${EASTL_INCLUDES_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${WASM3_INCLUDES}
 )
-if(APPLE)
-    find_library(FoundationLib CoreFoundation)
-    find_library(CocoaLib Cocoa)
-    find_library(MetalLib Metal)
-    find_library(IOKitLib IOKit)
-    target_link_libraries(SakuraRuntime 
-        PUBLIC
-        ${FoundationLib}
-        ${CocoaLib}
-        ${MetalLib}
-        ${IOKitLib}
-    )
-endif()
+
+# link targets
+target_link_libraries(SakuraRuntime 
+    PUBLIC
+    ${PLATFORM_FRAMEWORKS}
+    ${WASM3_LIBRARIES}
+)
 
 if(RUNTIME_SHARED)
     add_definitions(-DRUNTIME_DLL)
