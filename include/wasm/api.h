@@ -40,6 +40,12 @@ typedef struct SWAValue {
     };
 #ifdef __cplusplus
     /* clang-format off */
+    FORCEINLINE operator swa_f32() const { return f; }
+    FORCEINLINE operator swa_f64() const { return F; }
+    FORCEINLINE operator swa_i32() const { return i; }
+    FORCEINLINE operator swa_i64() const { return I; }
+    FORCEINLINE operator swa_ptr() const { return ptr; }
+    FORCEINLINE operator swa_cptr() const { return cptr; }
     SWAValue() : I(0) {}
     SWAValue(swa_f32 f) : f(f) {}
     SWAValue(swa_f64 F) : F(F) {}
@@ -209,7 +215,7 @@ public:
             };
             auto error = ::swa_exec(runtime, "exec", &exec_desc);
             if (error) { swa_handle_error(error); }
-            return *(RetT*)&ret;
+            return RetT(ret);
         }
         executor(SWARuntimeId runtime, const char* function_name)
             : runtime(runtime)
