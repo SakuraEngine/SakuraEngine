@@ -12,6 +12,7 @@ _deps
 .DS_Store
 /build
 /build-wasm
+/build-wasi
 /.vs
 /.vscode
 /.cache

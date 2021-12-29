@@ -150,7 +150,7 @@ typedef SSIZE_T ssize_t;
     #elif defined(__aarch64__)
         #define ARCH_ARM64
         #define ARCH_ARM_FAMILY
-    #elif defined(__EMSCRIPTEN__)
+    #elif defined(__EMSCRIPTEN__) || defined(__wasi__)
         #define ARCH_WA
         #define ARCH_WEB_FAMILY
     #else
@@ -174,7 +174,7 @@ typedef SSIZE_T ssize_t;
         #define RUNTIME_PLATFORM_POWERPC64
     #elif defined(__POWERPC__) || defined(__powerpc__)
         #define RUNTIME_PLATFORM_POWERPC32
-    #elif defined(__EMSCRIPTEN__)
+    #elif defined(__EMSCRIPTEN__) || defined(__wasi__)
         #define RUNTIME_PLATFORM_WA
     #else
         #error Unrecognized CPU was used.

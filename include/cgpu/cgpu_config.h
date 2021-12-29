@@ -10,7 +10,7 @@
     #define CGPU_USE_METAL
 #endif
 
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(__wasi__)
     #ifdef CGPU_USE_VULKAN
         #undef CGPU_USE_VULKAN
     #endif
