@@ -1,7 +1,7 @@
+#include "triangle_module.c"
+#include "../common/utils.h"
 #include "utils.h"
 #include "math.h"
-#include "cgpu/api.h"
-#include "platform/thread.h"
 
 THREAD_LOCAL ECGpuBackend backend;
 THREAD_LOCAL SDL_Window* sdl_window;
@@ -293,6 +293,9 @@ int main(int argc, char* argv[])
         CGPU_BACKEND_D3D12
 #endif
     };
+#if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
+    ProgramMain(backends);
+#else
     const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
     DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
     DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
@@ -307,6 +310,7 @@ int main(int argc, char* argv[])
         skr_join_thread(hdls[i]);
         skr_destroy_thread(hdls[i]);
     }
+#endif
     SDL_Quit();
     return 0;
 }

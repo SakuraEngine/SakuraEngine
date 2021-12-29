@@ -1,5 +1,6 @@
 #pragma once
-#include "../common/utils.h"
+#include "platform/configure.h"
+
 /*
 struct VSOut
 {
