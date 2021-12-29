@@ -80,3 +80,10 @@ void swa_delete(T* object)
 #define swa_warn(...) log_log(LOG_WARN, __FILE__, __LINE__, __VA_ARGS__)
 #define swa_error(...) log_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define swa_fatal(...) log_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+
+typedef int64_t swa_i64;
+typedef int32_t swa_i32;
+typedef double swa_f64;
+typedef float swa_f32;
+typedef void* swa_ptr;
+typedef const void* swa_cptr;

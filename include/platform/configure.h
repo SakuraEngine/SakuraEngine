@@ -10,9 +10,15 @@
     #define FORCEINLINE inline __attribute__((always_inline))
 #endif
 
+#ifdef __cplusplus
+    #define RUNTIME_EXTERN_C extern "C"
+#else
+    #define RUNTIME_EXTERN_C
+#endif
+
 #ifndef RUNTIME_EXPORT
     #if defined(_MSC_VER)
-        #define RUNTIME_EXPORT __declspec(dllexport)
+        #define RUNTIME_EXPORT __declspec(dllexport) RUNTIME_EXTERN_C
     #else
         #define RUNTIME_EXPORT
     #endif

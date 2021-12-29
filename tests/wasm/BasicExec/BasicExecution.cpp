@@ -1,283 +1,100 @@
 #include "gtest/gtest.h"
-#include "wasm3/wasm3.h"
-#include "wasm3/m3_api_libc.h"
+#include "wasm/api.h"
 
-#define d_m3HasUVWASI
-#define LINK_WASI
-#include "wasm3/m3_api_wasi.h"
+/*
+#define WASM_EXPORT __attribute__((visibility("default")))
 
-#define d_m3HasTracer
-#include "wasm3/m3_api_tracer.h"
-
-#include "wasm3/m3_env.h"
-
-#define GAS_LIMIT 500000000
-#define GAS_FACTOR 10000LL
-#define MAX_MODULES 16
-static int64_t initial_gas = GAS_FACTOR * GAS_LIMIT;
-static int64_t current_gas = GAS_FACTOR * GAS_LIMIT;
-static bool is_gas_metered = false;
-
-m3ApiRawFunction(metering_usegas)
-{
-    m3ApiGetArg(int32_t, gas)
-
-        current_gas -= gas;
-
-    if (M3_UNLIKELY(current_gas < 0))
-    {
-        m3ApiTrap("[trap] Out of gas");
-    }
-    m3ApiSuccess();
+int WASM_EXPORT add(int a, int b) {
+  return a + b;
 }
-
-const char* modname_from_fn(const char* fn)
-{
-    const char* sep = "/\\:*?";
-    char c;
-    while ((c = *sep++))
-    {
-        const char* off = strrchr(fn, c) + 1;
-        fn = (fn < off) ? off : fn;
-    }
-    return fn;
-}
-
-M3Result link_all(IM3Module module)
-{
-    M3Result res;
-    res = m3_LinkSpecTest(module);
-    if (res) return res;
-
-    res = m3_LinkLibC(module);
-    if (res) return res;
-
-#if defined(LINK_WASI)
-    res = m3_LinkWASI(module);
-    if (res) return res;
-#endif
-
-#if defined(d_m3HasTracer)
-    res = m3_LinkTracer(module);
-    if (res) return res;
-#endif
-
-#if defined(GAS_LIMIT)
-    res = m3_LinkRawFunction(module, "metering", "usegas", "v(i)", &metering_usegas);
-    if (!res)
-    {
-        fprintf(stderr, "Warning: Gas is limited to %0.4f\n", (double)(current_gas) / GAS_FACTOR);
-        is_gas_metered = true;
-    }
-    if (res == m3Err_functionLookupFailed) { res = NULL; }
-#endif
-
-    return res;
-}
+*/
+static const uint8_t add_wasm[] = {
+    0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x07, 0x01, 0x60,
+    0x02, 0x7f, 0x7f, 0x01, 0x7f, 0x03, 0x02, 0x01, 0x00, 0x05, 0x03, 0x01,
+    0x00, 0x02, 0x06, 0x0e, 0x02, 0x7f, 0x00, 0x41, 0x80, 0x88, 0x04, 0x0b,
+    0x7f, 0x00, 0x41, 0x80, 0x08, 0x0b, 0x07, 0x2b, 0x04, 0x06, 0x6d, 0x65,
+    0x6d, 0x6f, 0x72, 0x79, 0x02, 0x00, 0x0b, 0x5f, 0x5f, 0x68, 0x65, 0x61,
+    0x70, 0x5f, 0x62, 0x61, 0x73, 0x65, 0x03, 0x00, 0x0a, 0x5f, 0x5f, 0x64,
+    0x61, 0x74, 0x61, 0x5f, 0x65, 0x6e, 0x64, 0x03, 0x01, 0x03, 0x61, 0x64,
+    0x64, 0x00, 0x00, 0x0a, 0x09, 0x01, 0x07, 0x00, 0x20, 0x01, 0x20, 0x00,
+    0x6a, 0x0b, 0x00, 0x64, 0x0b, 0x2e, 0x64, 0x65, 0x62, 0x75, 0x67, 0x5f,
+    0x69, 0x6e, 0x66, 0x6f, 0x54, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x23, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x43, 0x00, 0x00, 0x00, 0x05, 0x00,
+    0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x02, 0x05, 0x00, 0x00, 0x00, 0x07,
+    0x00, 0x00, 0x00, 0x5c, 0x00, 0x00, 0x00, 0x01, 0x03, 0x50, 0x00, 0x00,
+    0x00, 0x03, 0x64, 0x00, 0x00, 0x00, 0x01, 0x03, 0x50, 0x00, 0x00, 0x00,
+    0x03, 0x66, 0x00, 0x00, 0x00, 0x01, 0x03, 0x50, 0x00, 0x00, 0x00, 0x00,
+    0x04, 0x60, 0x00, 0x00, 0x00, 0x05, 0x04, 0x00, 0x00, 0x10, 0x0e, 0x2e,
+    0x64, 0x65, 0x62, 0x75, 0x67, 0x5f, 0x6d, 0x61, 0x63, 0x69, 0x6e, 0x66,
+    0x6f, 0x00, 0x00, 0x4f, 0x0d, 0x2e, 0x64, 0x65, 0x62, 0x75, 0x67, 0x5f,
+    0x61, 0x62, 0x62, 0x72, 0x65, 0x76, 0x01, 0x11, 0x01, 0x25, 0x0e, 0x13,
+    0x05, 0x03, 0x0e, 0x10, 0x17, 0x1b, 0x0e, 0x11, 0x01, 0x12, 0x06, 0x00,
+    0x00, 0x02, 0x2e, 0x01, 0x11, 0x01, 0x12, 0x06, 0x03, 0x0e, 0x3a, 0x0b,
+    0x3b, 0x0b, 0x27, 0x19, 0x49, 0x13, 0x3f, 0x19, 0x00, 0x00, 0x03, 0x05,
+    0x00, 0x03, 0x0e, 0x3a, 0x0b, 0x3b, 0x0b, 0x49, 0x13, 0x00, 0x00, 0x04,
+    0x24, 0x00, 0x03, 0x0e, 0x3e, 0x0b, 0x0b, 0x0b, 0x00, 0x00, 0x00, 0x00,
+    0x62, 0x0b, 0x2e, 0x64, 0x65, 0x62, 0x75, 0x67, 0x5f, 0x6c, 0x69, 0x6e,
+    0x65, 0x52, 0x00, 0x00, 0x00, 0x04, 0x00, 0x37, 0x00, 0x00, 0x00, 0x01,
+    0x01, 0x01, 0xfb, 0x0e, 0x0d, 0x00, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00,
+    0x00, 0x01, 0x00, 0x00, 0x01, 0x2f, 0x74, 0x6d, 0x70, 0x2f, 0x62, 0x75,
+    0x69, 0x6c, 0x64, 0x5f, 0x6f, 0x67, 0x34, 0x39, 0x75, 0x30, 0x70, 0x73,
+    0x34, 0x61, 0x6e, 0x2e, 0x24, 0x00, 0x00, 0x66, 0x69, 0x6c, 0x65, 0x2e,
+    0x63, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x05, 0x02, 0x05, 0x00, 0x00,
+    0x00, 0x14, 0x05, 0x0c, 0x0a, 0x21, 0x05, 0x03, 0x06, 0x58, 0x02, 0x01,
+    0x00, 0x01, 0x01, 0x00, 0x73, 0x0a, 0x2e, 0x64, 0x65, 0x62, 0x75, 0x67,
+    0x5f, 0x73, 0x74, 0x72, 0x63, 0x6c, 0x61, 0x6e, 0x67, 0x20, 0x76, 0x65,
+    0x72, 0x73, 0x69, 0x6f, 0x6e, 0x20, 0x38, 0x2e, 0x30, 0x2e, 0x30, 0x20,
+    0x28, 0x74, 0x72, 0x75, 0x6e, 0x6b, 0x20, 0x33, 0x34, 0x31, 0x39, 0x36,
+    0x30, 0x29, 0x00, 0x2f, 0x74, 0x6d, 0x70, 0x2f, 0x62, 0x75, 0x69, 0x6c,
+    0x64, 0x5f, 0x6f, 0x67, 0x34, 0x39, 0x75, 0x30, 0x70, 0x73, 0x34, 0x61,
+    0x6e, 0x2e, 0x24, 0x2f, 0x66, 0x69, 0x6c, 0x65, 0x2e, 0x63, 0x00, 0x2f,
+    0x74, 0x6d, 0x70, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x5f, 0x6f, 0x67,
+    0x34, 0x39, 0x75, 0x30, 0x70, 0x73, 0x34, 0x61, 0x6e, 0x2e, 0x24, 0x00,
+    0x61, 0x64, 0x64, 0x00, 0x69, 0x6e, 0x74, 0x00, 0x61, 0x00, 0x62, 0x00
+};
 
 class WASM3Test : public ::testing::Test
 {
 protected:
     void SetUp() override
     {
-        env = m3_NewEnvironment();
-        unsigned stackSize = 64 * 1024;
-        runtime = m3_NewRuntime(env, stackSize, NULL);
-    }
-
-    M3Result repl_load(const char* fn)
-    {
-        M3Result result = m3Err_none;
-        IM3Module module = NULL;
-
-        u8* wasm = NULL;
-        u32 fsize = 0;
-
-        FILE* f = fopen(fn, "rb");
-        if (!f)
-        {
-            return "cannot open file";
-        }
-        fseek(f, 0, SEEK_END);
-        fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
-        if (fsize < 8)
-        {
-            result = "file is too small";
-            goto on_error;
-        }
-        else if (fsize > 64 * 1024 * 1024)
-        {
-            result = "file is too big";
-            goto on_error;
-        }
-
-        wasm = (u8*)malloc(fsize);
-        if (!wasm)
-        {
-            result = "cannot allocate memory for wasm binary";
-            goto on_error;
-        }
-
-        if (fread(wasm, 1, fsize, f) != fsize)
-        {
-            result = "cannot read file";
-            goto on_error;
-        }
-        fclose(f);
-        f = NULL;
-
-        result = m3_ParseModule(env, &module, wasm, fsize);
-        if (result) goto on_error;
-
-        result = m3_LoadModule(runtime, module);
-        if (result) goto on_error;
-
-        m3_SetModuleName(module, modname_from_fn(fn));
-
-        result = link_all(module);
-        if (result) goto on_error;
-
-        if (wasm_bins_qty < MAX_MODULES)
-        {
-            wasm_bins[wasm_bins_qty++] = wasm;
-        }
-
-        return result;
-    on_error:
-        m3_FreeModule(module);
-        if (wasm) free(wasm);
-        if (f) fclose(f);
-
-        return result;
-    }
-
-    void print_gas_used()
-    {
-#if defined(GAS_LIMIT)
-        if (is_gas_metered)
-        {
-            fprintf(stderr, "Gas used: %0.4f\n", (double)(initial_gas - current_gas) / GAS_FACTOR);
-        }
-#endif
-    }
-
-    M3Result repl_call(const char* name, int argc, const char* argv[])
-    {
-        IM3Function func;
-        M3Result result = m3_FindFunction(&func, runtime, name);
-        if (result) return result;
-
-        if (argc && (!strcmp(name, "main") || !strcmp(name, "_main")))
-        {
-            return "passing arguments to libc main() not implemented";
-        }
-
-        if (!strcmp(name, "_start"))
-        {
-#if defined(LINK_WASI)
-            // Strip wasm file path
-            if (argc > 0)
-            {
-                argv[0] = modname_from_fn(argv[0]);
-            }
-
-            m3_wasi_context_t* wasi_ctx = m3_GetWasiContext();
-            wasi_ctx->argc = argc;
-            wasi_ctx->argv = argv;
-
-            result = m3_CallArgv(func, 0, NULL);
-
-            print_gas_used();
-
-            if (result == m3Err_trapExit)
-            {
-                exit(wasi_ctx->exit_code);
-            }
-
-            return result;
-#else
-            return "WASI not linked";
-#endif
-        }
-
-        int arg_count = m3_GetArgCount(func);
-        int ret_count = m3_GetRetCount(func);
-        if (argc < arg_count)
-        {
-            return "not enough arguments";
-        }
-        else if (argc > arg_count)
-        {
-            return "too many arguments";
-        }
-
-        result = m3_CallArgv(func, argc, argv);
-
-        print_gas_used();
-
-        if (result) return result;
-
-        static uint64_t valbuff[128];
-        static const void* valptrs[128];
-        memset(valbuff, 0, sizeof(valbuff));
-        for (int i = 0; i < ret_count; i++)
-        {
-            valptrs[i] = &valbuff[i];
-        }
-        result = m3_GetResults(func, ret_count, valptrs);
-        if (result) return result;
-
-        if (ret_count <= 0)
-        {
-            fprintf(stderr, "Result: <Empty Stack>\n");
-        }
-        for (int i = 0; i < ret_count; i++)
-        {
-            switch (m3_GetRetType(func, i))
-            {
-                case c_m3Type_i32:
-                    fprintf(stderr, "Result: %" PRIi32 "\n", *(i32*)valptrs[i]);
-                    break;
-                case c_m3Type_i64:
-                    fprintf(stderr, "Result: %" PRIi64 "\n", *(i64*)valptrs[i]);
-                    break;
-#if d_m3HasFloat
-                case c_m3Type_f32:
-                    fprintf(stderr, "Result: %" PRIf32 "\n", *(f32*)valptrs[i]);
-                    break;
-                case c_m3Type_f64:
-                    fprintf(stderr, "Result: %" PRIf64 "\n", *(f64*)valptrs[i]);
-                    break;
-#endif
-                default:
-                    return "unknown return type";
-            }
-        }
-
-        return result;
+        SWAInstanceDescriptor inst_desc = { ESWA_BACKEND_WASM3 };
+        instance = swa_create_instance(&inst_desc);
+        EXPECT_NE(instance, nullptr);
+        SWARuntimeDescriptor runtime_desc = { "wa_runtime", 64 * 1024 };
+        runtime = swa_create_runtime(instance, &runtime_desc);
+        EXPECT_NE(runtime, nullptr);
     }
 
     void TearDown() override
     {
-        if (runtime) m3_FreeRuntime(runtime);
-        if (env) m3_FreeEnvironment(env);
+        if (runtime) swa_free_runtime(runtime);
+        if (instance) swa_free_instance(instance);
     }
-
-    IM3Environment env;
-    IM3Runtime runtime;
-
-    u8* wasm_bins[MAX_MODULES];
-    int wasm_bins_qty = 0;
+    SWAInstanceId instance = nullptr;
+    SWARuntimeId runtime = nullptr;
 };
 
 TEST_F(WASM3Test, LoadAndIncrement)
 {
-    M3Result result = m3Err_none;
-    const char* argFile = "increment.wasm";
-    const char* argFunc = "loadAndIncrement";
-    const char* args[] = { "2" };
-    result = repl_load(argFile);
-    result = repl_call(argFunc, 1, args);
+    SWAModuleDescriptor add_desc = {
+        .name = "add",
+        .wasm = add_wasm,
+        .wasm_size = sizeof(add_wasm),
+        .bytes_pinned_outside = true
+    };
+    SWAModuleId module = swa_create_module(runtime, &add_desc);
+    EXPECT_NE(module, nullptr);
+    SWAValue params[2];
+    params[0].i = 12;
+    params[1].i = 33;
+    SWAValue ret;
+    SWAExecDescriptor exec_desc = {
+        2, params,
+        1, &ret
+    };
+    auto res = swa_exec(runtime, "add", &exec_desc);
+    EXPECT_EQ(res, nullptr);
+    EXPECT_EQ(ret.i, 12 + 33);
 }
