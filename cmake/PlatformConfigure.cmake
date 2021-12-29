@@ -11,6 +11,7 @@ if(UNIX)
     elseif(${CMAKE_SYSTEM_NAME} MATCHES Emscripten)
         add_definitions(-D "SAKURA_TARGET_PLATFORM_EMSCRIPTEN")
         set(SAKURA_TARGET_PLATFORM "web")
+        set(TARGET_EMSCRIPTON 1)   #Web
         set(TARGET_WA 1)   #Web
     else(APPLE)
         add_definitions(-D "SAKURA_TARGET_PLATFORM_LINUX")

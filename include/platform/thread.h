@@ -95,6 +95,8 @@ typedef pthread_t SThreadHandle;
     #include "win/thread.inl"
 #elif defined(__APPLE__)
     #include "apple/thread.inl"
+#elif defined(__EMSCRIPTEN__)
+    #include "linux/thread.inl"
 #endif
 
 /*

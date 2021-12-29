@@ -1,9 +1,9 @@
+/* clang-format off */
 #include "internal/config.h"
 #include "allocator_forge.h"
 #include <stdlib.h>
 
-#define MIMALLOC
-#ifdef MIMALLOC
+#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
 extern "C"
 {
 	extern void* mi_malloc(size_t size);
@@ -18,7 +18,7 @@ extern "C"
 #ifdef _WINDOWS
 #define core_memalign _aligned_malloc
 #else
-#define core_memalign aligned_alloc
+#define core_memalign(size, alignment) aligned_alloc((alignment), (size))
 #endif
 #define core_free free
 #endif
@@ -67,13 +67,4 @@ extern "C"
 
 #endif // EASTL_USER_DEFINED_ALLOCATOR
 
-
-
-
-
-
-
-
-
-
-
+/* clang-format on */

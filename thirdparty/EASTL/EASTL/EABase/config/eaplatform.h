@@ -1,3 +1,4 @@
+/* clang-format off */
 /*-----------------------------------------------------------------------------
  * config/eaplatform.h
  *
@@ -612,9 +613,12 @@
 // __i386 is defined by the Sun and GCC compilers.
 // __sparc is defined by the Sun and GCC compilers.
 #else
-	#error Unknown platform
-	#error Unknown processor
-	#error Unknown endianness
+	#if defined(__EMSCRIPTEN__)
+	#else
+		#error Unknown platform
+		#error Unknown processor
+		#error Unknown endianness
+	#endif
 #endif
 
 #ifndef EA_PROCESSOR_ARM
@@ -726,11 +730,4 @@
 
 #endif // INCLUDED_eaplatform_H
 
-
-
-
-
-
-
-
-
+/* clang-format on */
