@@ -205,12 +205,12 @@ public:
     // execution
     struct executor {
         template <typename RetT, typename... Args>
-        FORCEINLINE RetT exec(Args... args)
+        FORCEINLINE RetT exec(Args&&... args)
         {
             SWAValue ret;
             const SWAValue iargs[] = { std::forward<Args>(args)... };
             SWAExecDescriptor exec_desc = {
-                1, iargs,
+                sizeof...(Args), iargs,
                 1, &ret
             };
             auto error = ::swa_exec(runtime, "exec", &exec_desc);
