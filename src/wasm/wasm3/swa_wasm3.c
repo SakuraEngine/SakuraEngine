@@ -105,8 +105,12 @@ void swa_module_link_host_function_wasm3(SWAModuleId module, const struct SWAHos
 {
     SWAModule_WASM3* MW = (SWAModule_WASM3*)module;
     M3Result result = m3Err_none;
-    result = m3_LinkRawFunction(MW->module, desc->module_name, desc->function_name, desc->signature, desc->proc);
+    result =
+        m3_LinkRawFunctionEx(MW->module, desc->module_name,
+            desc->function_name, desc->signature,
+            desc->backend_wrappers.m3, desc->proc);
     if (result) goto on_error;
+    return;
 on_error:
     swa_error("swa error(swa_create_module_wasm3): %s", result);
 }
@@ -130,7 +134,7 @@ SWAExecResult swa_exec_wasm3(SWARuntimeId runtime, const char8_t* const name, SW
     if (!function)
     {
         res = m3_FindFunction(&function, RW->runtime, name);
-        if (res) goto ret;
+        if (res) goto error;
         WASM3RuntimeFunctionTableAdd(RW->functions, name, function);
     }
     for (uint32_t i = 0; i < desc->param_count; i++)
@@ -138,8 +142,11 @@ SWAExecResult swa_exec_wasm3(SWARuntimeId runtime, const char8_t* const name, SW
     for (uint32_t i = 0; i < desc->ret_count; i++)
         out_ptrs[i] = desc->rets + i;
     res = m3_Call(function, desc->param_count, ptrs);
-    if (res) goto ret;
+    if (res) goto error;
     res = m3_GetResults(function, desc->ret_count, out_ptrs);
-ret:
+    if (res) goto error;
+    return res;
+error:
+    swa_fatal("[fatal]: %s", res);
     return res;
 }

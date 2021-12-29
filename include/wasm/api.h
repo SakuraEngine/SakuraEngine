@@ -41,6 +41,9 @@ typedef struct SWAExecDescriptor {
 
 typedef struct SWANamedObjectTable SWANamedObjectTable;
 
+#ifdef USE_M3
+    #include "wasm3/wasm3.h"
+#endif
 typedef enum ESWABackend
 {
     ESWA_BACKEND_UNDEFINED,
@@ -134,12 +137,22 @@ typedef struct SWAModule {
 } SWAModule;
 
 typedef struct SWAHostFunctionDescriptor {
-    const char* const module_name;
-    const char* const function_name;
-    const char* const signature;
+    const char* module_name;
+    const char* function_name;
+    const char* signature;
     void* proc;
+    union
+    {
+        M3RawCall m3;
+    } backend_wrappers;
 } SWAHostFunctionDescriptor;
 
 #ifdef __cplusplus
 } // end extern "C"
+
+// SWAX
+namespace SWA
+{
+
+}
 #endif
