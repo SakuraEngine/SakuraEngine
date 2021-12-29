@@ -150,6 +150,9 @@ typedef SSIZE_T ssize_t;
     #elif defined(__aarch64__)
         #define ARCH_ARM64
         #define ARCH_ARM_FAMILY
+    #elif defined(__EMSCRIPTEN__)
+        #define ARCH_WA
+        #define ARCH_WEB_FAMILY
     #else
         #error "Unsupported architecture for gcc compiler"
     #endif
@@ -171,6 +174,8 @@ typedef SSIZE_T ssize_t;
         #define RUNTIME_PLATFORM_POWERPC64
     #elif defined(__POWERPC__) || defined(__powerpc__)
         #define RUNTIME_PLATFORM_POWERPC32
+    #elif defined(__EMSCRIPTEN__)
+        #define RUNTIME_PLATFORM_WA
     #else
         #error Unrecognized CPU was used.
     #endif
@@ -286,22 +291,38 @@ typedef SSIZE_T ssize_t;
 #define RUNTIME_NOEXCEPT noexcept
 
 // Alloc Configure
-#ifdef __cplusplus
+#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
+    #ifdef __cplusplus
 extern "C" {
-#endif
+    #endif
 RUNTIME_API void* mi_malloc(size_t size);
 RUNTIME_API void* mi_calloc(size_t count, size_t size);
 RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment);
 RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment);
 RUNTIME_API void mi_free(void* p);
-#ifdef __cplusplus
+    #ifdef __cplusplus
 }
+    #endif
+    #define sakura_malloc mi_malloc
+    #define sakura_calloc mi_calloc
+    #define sakura_calloc_aligned mi_calloc_aligned
+    #define sakura_malloc_aligned mi_malloc_aligned
+    #define sakura_free mi_free
+#else
+    #include <stdlib.h>
+    #include <string.h>
+FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignment)
+{
+    void* ptr = aligned_alloc(alignment, size * count);
+    memset(ptr, 0, size * count);
+    return ptr;
+}
+    #define sakura_malloc malloc
+    #define sakura_calloc calloc
+    #define sakura_calloc_aligned calloc_aligned
+    #define sakura_malloc_aligned(size, alignment) aligned_alloc((alignment), (size))
+    #define sakura_free free
 #endif
-#define sakura_malloc mi_malloc
-#define sakura_calloc mi_calloc
-#define sakura_calloc_aligned mi_calloc_aligned
-#define sakura_malloc_aligned mi_malloc_aligned
-#define sakura_free mi_free
 
 // Platform Specific Configure
 #ifdef __APPLE__

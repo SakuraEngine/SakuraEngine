@@ -11,6 +11,7 @@ CTestTestfile.cmake
 _deps
 .DS_Store
 /build
+/build-wasm
 /.vs
 /.vscode
 /.cache

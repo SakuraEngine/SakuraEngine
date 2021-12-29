@@ -9,7 +9,7 @@ set(BUILD_SAMPLES TRUE)
 set(BUILD_TEST TRUE)
 
 set(SAKURA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(SAKURA_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/Binaries) 
+set(SAKURA_BIN_DIR ${CMAKE_BINARY_DIR}/Binaries) 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SAKURA_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SAKURA_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SAKURA_BIN_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)

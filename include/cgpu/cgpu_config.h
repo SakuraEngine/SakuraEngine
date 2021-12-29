@@ -2,11 +2,18 @@
 #include "platform/configure.h"
 
 #define CGPU_USE_VULKAN
+
 #ifdef _WINDOWS
     #define CGPU_USE_D3D12
 #endif
 #ifdef __APPLE__
     #define CGPU_USE_METAL
+#endif
+
+#ifdef __EMSCRIPTEN__
+    #ifdef CGPU_USE_VULKAN
+        #undef CGPU_USE_VULKAN
+    #endif
 #endif
 
 #ifdef __cplusplus
