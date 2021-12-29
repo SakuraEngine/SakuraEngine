@@ -1,6 +1,10 @@
 #pragma once
 #include "wasm_configure.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct SWAInstance SWAInstance;
 typedef struct SWAInstanceDescriptor SWAInstanceDescriptor;
 typedef const struct SWAInstance* SWAInstanceId;
@@ -13,6 +17,27 @@ typedef struct SWAHostFunctionDescriptor SWAHostFunctionDescriptor;
 typedef struct SWAModule SWAModule;
 typedef struct SWAModuleDescriptor SWAModuleDescriptor;
 typedef const struct SWAModule* SWAModuleId;
+
+typedef struct SWAFunction SWAFunction;
+typedef const struct SWAFunction* SWAFunctionId;
+typedef const char* SWAExecResult;
+
+typedef union SWAValue
+{
+    swa_f32 f;
+    swa_f64 F;
+    swa_i32 i;
+    swa_i64 I;
+    swa_ptr ptr;
+    swa_cptr cptr;
+} SWAValue;
+
+typedef struct SWAExecDescriptor {
+    const uint32_t param_count;
+    const SWAValue* params;
+    const uint32_t ret_count;
+    SWAValue* rets;
+} SWAExecDescriptor;
 
 typedef struct SWANamedObjectTable SWANamedObjectTable;
 
@@ -32,15 +57,11 @@ typedef SWAInstanceId (*SWAProcCreateInstance)(const struct SWAInstanceDescripto
 RUNTIME_API void swa_free_instance(SWAInstanceId instance);
 typedef void (*SWAProcFreeInstance)(SWAInstanceId instance);
 
-RUNTIME_API SWARuntimeId swa_instance_try_find_runtime(SWAInstanceId instance, const char* name);
-
 // Runtime APIs
 RUNTIME_API SWARuntimeId swa_create_runtime(SWAInstanceId instance, const struct SWARuntimeDescriptor* desc);
 typedef SWARuntimeId (*SWAProcCreateRuntime)(SWAInstanceId instance, const struct SWARuntimeDescriptor* desc);
 RUNTIME_API void swa_free_runtime(SWARuntimeId runtime);
 typedef void (*SWAProcFreeRuntime)(SWARuntimeId runtime);
-
-RUNTIME_API SWAModuleId swa_runtime_try_find_module(SWARuntimeId runtime, const char* name);
 
 // Module APIs
 RUNTIME_API SWAModuleId swa_create_module(SWARuntimeId runtime, const struct SWAModuleDescriptor* desc);
@@ -50,16 +71,30 @@ typedef void (*SWAProcModuleLinkHostFunction)(SWAModuleId module, const struct S
 RUNTIME_API void swa_free_module(SWAModuleId module);
 typedef void (*SWAProcFreeModule)(SWAModuleId module);
 
+// Function APIs
+RUNTIME_API SWAExecResult swa_exec(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc);
+typedef SWAExecResult (*SWAProcExec)(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc);
+
+// Util X
+RUNTIME_API SWARuntimeId swa_instance_try_find_runtime(SWAInstanceId instance, const char* name);
+RUNTIME_API SWAModuleId swa_runtime_try_find_module(SWARuntimeId runtime, const char* name);
+
 typedef struct SWAProcTable {
+    // Instance APIs
     const SWAProcCreateInstance create_instance;
     const SWAProcFreeInstance free_instance;
 
+    // Runtime APIs
     const SWAProcCreateRuntime create_runtime;
     const SWAProcFreeRuntime free_runtime;
 
+    // Module APIs
     const SWAProcCreateModule create_module;
     const SWAProcModuleLinkHostFunction link_host_function;
     const SWAProcFreeModule free_module;
+
+    // Function APIs
+    const SWAProcExec exec;
 } SWAProcTable;
 
 typedef struct SWAInstance {
@@ -104,3 +139,7 @@ typedef struct SWAHostFunctionDescriptor {
     const char* const signature;
     void* proc;
 } SWAHostFunctionDescriptor;
+
+#ifdef __cplusplus
+} // end extern "C"
+#endif

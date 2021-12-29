@@ -1,13 +1,16 @@
 #include "common_utils.h"
 #include "wasm/api.h"
 #include <EASTL/string_map.h>
+#include <time.h>
 
 struct SWANamedObjectTable : eastl::string_map<void*> {
     ~SWANamedObjectTable()
     {
         if (deletor)
         {
-            for (const auto& iter : *this)
+            SWANamedObjectTable cpy = *this;
+            cpy.deletor = nullptr;
+            for (auto iter : cpy)
             {
                 deletor(this, iter.first, iter.second);
             }
@@ -21,7 +24,7 @@ struct SWANamedObjectTable* SWAObjectTableCreate()
     return swa_new<SWANamedObjectTable>();
 }
 
-RUNTIME_API void SWAObjectTableSetDeletor(struct SWANamedObjectTable* table, SWANamedObjectTableDeletor deletor)
+void SWAObjectTableSetDeletor(struct SWANamedObjectTable* table, SWANamedObjectTableDeletor deletor)
 {
     table->deletor = deletor;
 }
@@ -31,8 +34,9 @@ const char* SWAObjectTableAdd(struct SWANamedObjectTable* table, const char* nam
     eastl::string auto_name;
     if (name == SWA_NULLPTR)
     {
+        srand((uint32_t)time(NULL));
         auto_name = "object#";
-        auto_name.append(eastl::to_string(table->size()));
+        auto_name.append(eastl::to_string(rand()));
         name = auto_name.c_str();
     }
     const auto& iter = table->find(name);

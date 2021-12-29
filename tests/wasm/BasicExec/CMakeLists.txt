@@ -1,5 +1,3 @@
-enable_testing()
-
 add_executable(BasicExecution 
    BasicExecution.cpp 
 )

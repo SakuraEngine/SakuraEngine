@@ -6,7 +6,7 @@ static void SWANamedRuntimeDeletor(SWANamedObjectTable* table, const char* name,
 {
     swa_free_runtime((SWARuntimeId)object);
 }
-RUNTIME_API SWAInstanceId swa_create_instance(const struct SWAInstanceDescriptor* desc)
+SWAInstanceId swa_create_instance(const struct SWAInstanceDescriptor* desc)
 {
     swa_assert((desc->backend == ESWA_BACKEND_WASM3) && "SWA support only wasm3 currently!");
     const SWAProcTable* tbl = SWA_NULLPTR;
@@ -28,6 +28,7 @@ RUNTIME_API SWAInstanceId swa_create_instance(const struct SWAInstanceDescriptor
 void swa_free_instance(SWAInstanceId instance)
 {
     swa_assert(instance && "fatal: NULL SWA instance!");
+    SWAObjectTableFree(instance->runtimes);
     swa_assert(instance->proc_table->free_instance && "fatal: can't find proc free_instance!");
     instance->proc_table->free_instance(instance);
 }
@@ -62,6 +63,8 @@ SWARuntimeId swa_create_runtime(SWAInstanceId instance, const struct SWARuntimeD
 void swa_free_runtime(SWARuntimeId runtime)
 {
     swa_assert(runtime && "fatal: Called with NULL runtime!");
+    SWAObjectTableFree(runtime->modules);
+
     swa_assert(runtime->instance && "fatal: Called with NULL instance!");
     SWAObjectTableRemove(runtime->instance->runtimes, runtime->name, false);
 
@@ -78,15 +81,20 @@ SWAModuleId swa_create_module(SWARuntimeId runtime, const struct SWAModuleDescri
     swa_assert(runtime->proc_table->create_module && "fatal: can't find proc create_module!");
 
     SWAModule* module = (SWAModule*)runtime->proc_table->create_module(runtime, desc);
-    // Copy bytecode into module
-    module->bytes_pinned_outside = desc->bytes_pinned_outside;
-    if (!desc->bytes_pinned_outside)
+    if (module)
     {
-        module->wasm = swa_malloc(desc->wasm_size);
-        memcpy(module->wasm, desc->wasm, desc->wasm_size);
+        module->runtime = runtime;
+        module->wasm_size = desc->wasm_size;
+        // Copy bytecode into module
+        module->bytes_pinned_outside = desc->bytes_pinned_outside;
+        if (!desc->bytes_pinned_outside)
+        {
+            module->wasm = swa_malloc(module->wasm_size);
+            memcpy(module->wasm, desc->wasm, module->wasm_size);
+        }
+        // Insert module into object table
+        module->name = SWAObjectTableAdd(runtime->modules, desc->name, module);
     }
-    // Insert module into object table
-    module->name = SWAObjectTableAdd(runtime->modules, desc->name, module);
     return module;
 }
 
@@ -111,6 +119,15 @@ void swa_free_module(SWAModuleId module)
     {
         swa_free(module->wasm);
     }
+}
+
+// Function APIs
+SWAExecResult swa_exec(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc)
+{
+    swa_assert(name && "fatal: Called with NULL name!");
+    swa_assert(desc && "fatal: Called with NULL SWAExecDescriptor!");
+    swa_assert(runtime && "fatal: Called with NULL runtime!");
+    return runtime->proc_table->exec(runtime, name, desc);
 }
 
 // UtilX
