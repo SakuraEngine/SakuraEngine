@@ -17,6 +17,9 @@ const SWAProcTable tbl_wasm3 = {
     .create_instance = &swa_create_instance_wasm3,
     .free_instance = &swa_free_instance_wasm3,
 
+    .create_runtime = &swa_create_runtime_wasm3,
+    .free_runtime = &swa_free_runtime_wasm3,
+
     .create_module = &swa_create_module_wasm3,
     .link_host_function = &swa_module_link_host_function_wasm3,
     .free_module = &swa_free_module_wasm3
@@ -31,29 +34,45 @@ SWAInstanceId swa_create_instance_wasm3(const struct SWAInstanceDescriptor* desc
 {
     SWAInstance_WASM3* IW = (SWAInstance_WASM3*)swa_calloc(1, sizeof(SWAInstance_WASM3));
     IW->env = m3_NewEnvironment();
-    IW->runtime = m3_NewRuntime(IW->env, desc->stack_size, NULL);
     return &IW->super;
 }
 
 void swa_free_instance_wasm3(SWAInstanceId instance)
 {
     SWAInstance_WASM3* IW = (SWAInstance_WASM3*)instance;
-    if (IW->runtime) m3_FreeRuntime(IW->runtime);
     if (IW->env) m3_FreeEnvironment(IW->env);
     swa_free(IW);
 }
 
-// Module APIs
-SWAModuleId swa_create_module_wasm3(SWAInstanceId instance, const struct SWAModuleDescriptor* desc)
+// Runtime APIs
+SWARuntimeId swa_create_runtime_wasm3(SWAInstanceId instance, const struct SWARuntimeDescriptor* desc)
 {
     SWAInstance_WASM3* IW = (SWAInstance_WASM3*)instance;
+    SWARuntime_WASM3* RW = (SWARuntime_WASM3*)swa_calloc(1, sizeof(SWARuntime_WASM3));
+    RW->runtime = m3_NewRuntime(IW->env, desc->stack_size, NULL);
+    return &RW->super;
+}
+
+void swa_free_runtime_wasm3(SWARuntimeId runtime)
+{
+    SWARuntime_WASM3* RW = (SWARuntime_WASM3*)runtime;
+    // SWAInstance_WASM3* IW = (SWAInstance_WASM3*)runtime->instance;
+    if (RW->runtime) m3_FreeRuntime(RW->runtime);
+    swa_free(RW);
+}
+
+// Module APIs
+SWAModuleId swa_create_module_wasm3(SWARuntimeId runtime, const struct SWAModuleDescriptor* desc)
+{
+    SWARuntime_WASM3* RW = (SWARuntime_WASM3*)runtime;
+    SWAInstance_WASM3* IW = (SWAInstance_WASM3*)runtime->instance;
     SWAModule_WASM3* MW = (SWAModule_WASM3*)swa_calloc(1, sizeof(SWAModule_WASM3));
     M3Result result = m3Err_none;
     result = m3_ParseModule(IW->env, &MW->module, desc->wasm, (uint32_t)desc->wasm_size);
     IM3Module module = MW->module;
     if (result) goto on_error;
 
-    result = m3_LoadModule(IW->runtime, module);
+    result = m3_LoadModule(RW->runtime, module);
     if (result) goto on_error;
     // Set Name
     m3_SetModuleName(module, desc->name);
