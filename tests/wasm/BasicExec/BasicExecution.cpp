@@ -26,12 +26,11 @@ protected:
 
 TEST_F(WASM3Test, LoadAndIncrement)
 {
-    SWAModuleDescriptor add_desc = {
-        .name = "add",
-        .wasm = add_wasm,
-        .wasm_size = sizeof(add_wasm),
-        .bytes_pinned_outside = true
-    };
+    SWAModuleDescriptor add_desc;
+    add_desc.name = "add";
+    add_desc.wasm = add_wasm;
+    add_desc.wasm_size = sizeof(add_wasm);
+    add_desc.bytes_pinned_outside = true;
     SWAModuleId module = swa_create_module(runtime, &add_desc);
     EXPECT_NE(module, nullptr);
     SWAValue params[2];
@@ -63,12 +62,11 @@ m3ApiRawFunction(host_func_warpper_m3)
 
 TEST_F(WASM3Test, HostLink)
 {
-    SWAModuleDescriptor add_desc = {
-        .name = "invoke_host",
-        .wasm = invoke_host,
-        .wasm_size = sizeof(invoke_host),
-        .bytes_pinned_outside = true
-    };
+    SWAModuleDescriptor add_desc;
+    add_desc.name = "invoke_host";
+    add_desc.wasm = invoke_host;
+    add_desc.wasm_size = sizeof(invoke_host);
+    add_desc.bytes_pinned_outside = true;
     SWAModuleId module = swa_create_module(runtime, &add_desc);
     EXPECT_NE(module, nullptr);
     SWAValue param;
@@ -93,12 +91,11 @@ TEST_F(WASM3Test, HostLink)
 
 TEST_F(WASM3Test, HostLinkX)
 {
-    SWAModuleDescriptor add_desc = {
-        .name = "invoke_host",
-        .wasm = invoke_host,
-        .wasm_size = sizeof(invoke_host),
-        .bytes_pinned_outside = true
-    };
+    SWAModuleDescriptor add_desc;
+    add_desc.name = "invoke_host";
+    add_desc.wasm = invoke_host;
+    add_desc.wasm_size = sizeof(invoke_host);
+    add_desc.bytes_pinned_outside = true;
     SWAModuleId module = swa_create_module(runtime, &add_desc);
     EXPECT_NE(module, nullptr);
     swa::utilx::link(module, "env", "host_function", host_function);
