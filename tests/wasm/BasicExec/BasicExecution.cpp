@@ -90,3 +90,18 @@ TEST_F(WASM3Test, HostLink)
     EXPECT_EQ(res, nullptr);
     EXPECT_EQ(ret.i, 12 + 1);
 }
+
+TEST_F(WASM3Test, HostLinkX)
+{
+    SWAModuleDescriptor add_desc = {
+        .name = "invoke_host",
+        .wasm = invoke_host,
+        .wasm_size = sizeof(invoke_host),
+        .bytes_pinned_outside = true
+    };
+    SWAModuleId module = swa_create_module(runtime, &add_desc);
+    EXPECT_NE(module, nullptr);
+    swa::utilx::link(module, "env", "host_function", host_function);
+    auto ret = swa::utilx::executor(runtime, "exec").exec<int>(12);
+    EXPECT_EQ(ret, 12 + 1);
+}

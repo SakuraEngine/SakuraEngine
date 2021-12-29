@@ -1,6 +1,12 @@
 #pragma once
 #include "wasm_configure.h"
 
+#define swa_handle_error(error)        \
+    {                                  \
+        swa_error("error: %s", error); \
+        swa_assert(0 && (error));      \
+    }
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,14 +28,27 @@ typedef struct SWAFunction SWAFunction;
 typedef const struct SWAFunction* SWAFunctionId;
 typedef const char* SWAExecResult;
 
-typedef union SWAValue
-{
-    swa_f32 f;
-    swa_f64 F;
-    swa_i32 i;
-    swa_i64 I;
-    swa_ptr ptr;
-    swa_cptr cptr;
+typedef struct SWAValue {
+    union
+    {
+        swa_f32 f;
+        swa_f64 F;
+        swa_i32 i;
+        swa_i64 I;
+        swa_ptr ptr;
+        swa_cptr cptr;
+    };
+#ifdef __cplusplus
+    /* clang-format off */
+    SWAValue() : I(0) {}
+    SWAValue(swa_f32 f) : f(f) {}
+    SWAValue(swa_f64 F) : F(F) {}
+    SWAValue(swa_i32 i) : i(i) {}
+    SWAValue(swa_i64 I) : I(I) {}
+    SWAValue(swa_ptr ptr) : ptr(ptr) {}
+    SWAValue(swa_cptr cptr) : cptr(cptr) {}
+    /* clang-format on */
+#endif
 } SWAValue;
 
 typedef struct SWAExecDescriptor {
@@ -141,7 +160,7 @@ typedef struct SWAHostFunctionDescriptor {
     const char* function_name;
     const char* signature;
     void* proc;
-    union
+    struct
     {
         M3RawCall m3;
     } backend_wrappers;
@@ -150,9 +169,57 @@ typedef struct SWAHostFunctionDescriptor {
 #ifdef __cplusplus
 } // end extern "C"
 
-// SWAX
-namespace SWA
+    #ifdef USE_M3
+        #include "wasm/backend/wasm3/utilx.inl"
+    #endif
+namespace swa
 {
+class utilx
+{
+public:
+    // linkage
+    template <typename Func>
+    FORCEINLINE static SWAHostFunctionDescriptor linkage(const char* module_name,
+        const char* function_name, Func* function)
+    {
+        SWAHostFunctionDescriptor out = {};
+    #ifdef USE_M3
+        m3::utilx<Func>::fill_linkage(out, module_name, function_name, function);
+    #endif
+        return out;
+    }
+    template <typename Func>
+    FORCEINLINE static void link(SWAModuleId module, const char* module_name,
+        const char* function_name, Func* function)
+    {
+        SWAHostFunctionDescriptor host_func = linkage(module_name, function_name, function);
+        swa_module_link_host_function(module, &host_func);
+    }
 
-}
+    // execution
+    struct executor {
+        template <typename RetT, typename... Args>
+        FORCEINLINE RetT exec(Args... args)
+        {
+            SWAValue ret;
+            const SWAValue iargs[] = { std::forward<Args>(args)... };
+            SWAExecDescriptor exec_desc = {
+                1, iargs,
+                1, &ret
+            };
+            auto error = ::swa_exec(runtime, "exec", &exec_desc);
+            if (error) { swa_handle_error(error); }
+            return *(RetT*)&ret;
+        }
+        executor(SWARuntimeId runtime, const char* function_name)
+            : runtime(runtime)
+            , function_name(function_name)
+        {
+        }
+        SWARuntimeId runtime;
+        const char* function_name;
+    };
+};
+} // namespace swa
+
 #endif
