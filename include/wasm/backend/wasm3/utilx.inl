@@ -33,6 +33,12 @@ namespace detail
         static const char value = c;
     };
     template<typename T> struct m3_type_to_sig;
+    template<> struct m3_type_to_sig<uint8_t> : m3_sig<'i'> {};
+    template<> struct m3_type_to_sig<uint16_t> : m3_sig<'i'> {};
+    template<> struct m3_type_to_sig<uint32_t> : m3_sig<'i'> {};
+    template<> struct m3_type_to_sig<uint64_t> : m3_sig<'I'> {};
+    template<> struct m3_type_to_sig<int8_t> : m3_sig<'i'> {};
+    template<> struct m3_type_to_sig<int16_t> : m3_sig<'i'> {};
     template<> struct m3_type_to_sig<int32_t> : m3_sig<'i'> {};
     template<> struct m3_type_to_sig<int64_t> : m3_sig<'I'> {};
     template<> struct m3_type_to_sig<float>   : m3_sig<'f'> {};

@@ -171,47 +171,12 @@ void raster_redraw()
     };
     backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
     const CGpuTextureId back_buffer = swapchain->back_buffers[backbuffer_index];
+    const CGpuTextureViewId back_buffer_view = views[backbuffer_index];
     cgpu_reset_command_pool(pool);
     // record
-    cgpu_cmd_begin(cmd);
-    CGpuColorAttachment screen_attachment = {
-        .view = views[backbuffer_index],
-        .load_action = LOAD_ACTION_CLEAR,
-        .store_action = STORE_ACTION_STORE,
-        .clear_color = fastclear_0000
-    };
-    CGpuRenderPassDescriptor rp_desc = {
-        .render_target_count = 1,
-        .sample_count = SAMPLE_COUNT_1,
-        .color_attachments = &screen_attachment,
-        .depth_stencil = CGPU_NULLPTR
-    };
-    CGpuTextureBarrier draw_barrier = {
-        .texture = back_buffer,
-        .src_state = RESOURCE_STATE_UNDEFINED,
-        .dst_state = RESOURCE_STATE_RENDER_TARGET
-    };
-    CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
-    cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
-    CGpuRenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
-    {
-        cgpu_render_encoder_set_viewport(rp_encoder,
-            0.0f, 0.0f,
-            (float)back_buffer->width, (float)back_buffer->height,
-            0.f, 1.f);
-        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
-        cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
-        cgpu_render_encoder_draw(rp_encoder, 3, 0);
-    }
-    cgpu_cmd_end_render_pass(cmd, rp_encoder);
-    CGpuTextureBarrier present_barrier = {
-        .texture = back_buffer,
-        .src_state = RESOURCE_STATE_RENDER_TARGET,
-        .dst_state = RESOURCE_STATE_PRESENT
-    };
-    CGpuResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &present_barrier, .texture_barriers_count = 1 };
-    cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
-    cgpu_cmd_end(cmd);
+    raster_cmd_record(cmd, pipeline,
+        back_buffer, back_buffer_view,
+        back_buffer->width, back_buffer->height);
     // submit
     CGpuQueueSubmitDescriptor submit_desc = {
         .cmds = &cmd,

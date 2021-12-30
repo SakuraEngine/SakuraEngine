@@ -1,6 +1,5 @@
 #pragma once
 #include <stdint.h>
-#include "platform/configure.h"
 #include "cgpu_config.h"
 #include "flags.h"
 
@@ -504,7 +503,14 @@ typedef struct CGpuRenderPassEncoder {
 // Shaders
 typedef struct CGpuShaderResource {
     const char8_t* name;
+#if SIZE_MAX == UINT64_MAX
     size_t name_hash;
+#elif SIZE_MAX == UINT32_MAX
+    size_t name_hash;
+    uint32_t pad;
+#else
+    #error "unsupported hash size!"
+#endif
     ECGpuResourceType type;
     ECGpuTextureDimension dim;
     uint32_t set;
@@ -758,7 +764,7 @@ typedef struct CGpuPipelineShaderDescriptor {
     ECGpuShaderStage stage;
     // ++ constant_specialization
     const CGpuConstantSpecialization* constants;
-    size_t num_constants;
+    uint32_t num_constants;
     // -- constant_specialization
 } CGpuPipelineShaderDescriptor;
 
@@ -801,11 +807,11 @@ typedef struct CGpuDepthStencilAttachment {
     ECGpuLoadAction depth_load_action;
     ECGpuStoreAction depth_store_action;
     float clear_depth;
-    bool write_depth;
+    uint8_t write_depth;
     ECGpuLoadAction stencil_load_action;
     ECGpuStoreAction stencil_store_action;
     uint32_t clear_stencil;
-    bool write_stencil;
+    uint8_t write_stencil;
 } CGpuDepthStencilAttachment;
 
 typedef struct CGpuRenderPassDescriptor {
@@ -944,7 +950,7 @@ typedef struct CGpuShaderLibraryDescriptor {
     const char8_t* name;
     uint32_t name_size;
     const uint32_t* code;
-    size_t code_size;
+    uint32_t code_size;
     ECGpuShaderStage stage;
     ECGpuTextureDimension dimension;
 } CGpuShaderLibraryDescriptor;
