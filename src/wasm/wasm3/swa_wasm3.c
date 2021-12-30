@@ -34,6 +34,7 @@ const SWAProcTable* SWA_WASM3ProcTable()
     return &tbl_wasm3;
 }
 
+// Instance APIs
 SWAInstanceId swa_create_instance_wasm3(const struct SWAInstanceDescriptor* desc)
 {
     SWAInstance_WASM3* IW = (SWAInstance_WASM3*)swa_calloc(1, sizeof(SWAInstance_WASM3));
@@ -124,9 +125,9 @@ void swa_free_module_wasm3(SWAModuleId module)
 }
 
 // Function APIs
-SWAExecResult swa_exec_wasm3(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc)
+SWAExecResult swa_exec_wasm3(SWAModuleId module, const char8_t* const name, SWAExecDescriptor* desc)
 {
-    SWARuntime_WASM3* RW = (SWARuntime_WASM3*)runtime;
+    SWARuntime_WASM3* RW = (SWARuntime_WASM3*)module->runtime;
     IM3Function function = WASM3RuntimeFunctionTableTryFind(RW->functions, name);
     SWAExecResult res = SWA_NULLPTR;
     DECLARE_ZERO_VLA(const void*, ptrs, desc->param_count + 1)

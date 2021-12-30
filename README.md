@@ -28,6 +28,7 @@
 - D3D12MemoryAllocator 23e4d91, org.fork (MIT)
 - SPIRV-Reflect 173ae4d (Apache-2.0)
 - wasm3 a3abb3f, org.fork (MIT)
+- WAVM nightly/2021-12-15
 
 ## 接入的扩展API以及版本
 - nvapi R460, 2021/03/16 

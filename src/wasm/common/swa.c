@@ -1,5 +1,6 @@
 #include "common_utils.h"
 #include "wasm/backend/wasm3/swa_wasm3.h"
+#include "wasm/backend/wasmedge/swa_wasmedge.h"
 #include "wasm/api.h"
 
 static void SWANamedRuntimeDeletor(SWANamedObjectTable* table, const char* name, void* object)
@@ -8,12 +9,14 @@ static void SWANamedRuntimeDeletor(SWANamedObjectTable* table, const char* name,
 }
 SWAInstanceId swa_create_instance(const struct SWAInstanceDescriptor* desc)
 {
-    swa_assert((desc->backend == ESWA_BACKEND_WASM3) && "SWA support only wasm3 currently!");
     const SWAProcTable* tbl = SWA_NULLPTR;
     switch (desc->backend)
     {
         case ESWA_BACKEND_WASM3:
             tbl = SWA_WASM3ProcTable();
+            break;
+        case ESWA_BACKEND_WASM_EDGE:
+            tbl = SWA_WAEdgeProcTable();
             break;
         default:
             swa_assert(0 && "unsupported swa backend!");
@@ -122,12 +125,13 @@ void swa_free_module(SWAModuleId module)
 }
 
 // Function APIs
-SWAExecResult swa_exec(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc)
+SWAExecResult swa_exec(SWAModuleId module, const char8_t* const name, SWAExecDescriptor* desc)
 {
     swa_assert(name && "fatal: Called with NULL name!");
     swa_assert(desc && "fatal: Called with NULL SWAExecDescriptor!");
-    swa_assert(runtime && "fatal: Called with NULL runtime!");
-    return runtime->proc_table->exec(runtime, name, desc);
+    swa_assert(module && "fatal: Called with NULL module!");
+    swa_assert(module->runtime && "fatal: Called with NULL runtime!");
+    return module->runtime->proc_table->exec(module, name, desc);
 }
 
 // UtilX

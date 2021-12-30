@@ -27,6 +27,7 @@ include(EASTL) # Fetch EASTL SOURCES
 include(vulkan)
 include(GPU)
 include(WASM3) # Set WASM3 ENVS
+include(WasmEdge) # Set WasmEdge ENVS
 include(SDL2) # Set SDL2 ENVS
 
 if(RUNTIME_SHARED)
@@ -102,6 +103,7 @@ target_include_directories(SakuraRuntime
     ${EASTL_INCLUDES_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${WASM3_INCLUDES}
+    ${WASM_EDGE_INCLUDES}
 )
 
 # link targets
@@ -109,6 +111,7 @@ target_link_libraries(SakuraRuntime
     PUBLIC
     ${PLATFORM_FRAMEWORKS}
     ${WASM3_LIBRARIES}
+    ${WASM_EDGE_LIBRARIES}
 )
 
 if(RUNTIME_SHARED)
