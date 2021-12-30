@@ -20,7 +20,7 @@ RUNTIME_API void swa_module_link_host_function_wasm3(SWAModuleId module, const s
 RUNTIME_API void swa_free_module_wasm3(SWAModuleId module);
 
 // Function APIs
-RUNTIME_API SWAExecResult swa_exec_wasm3(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc);
+RUNTIME_API SWAExecResult swa_exec_wasm3(SWAModuleId module, const char8_t* const name, SWAExecDescriptor* desc);
 
 typedef struct SWAInstance_WASM3 {
     SWAInstance super;

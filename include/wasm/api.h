@@ -28,6 +28,17 @@ typedef struct SWAFunction SWAFunction;
 typedef const struct SWAFunction* SWAFunctionId;
 typedef const char* SWAExecResult;
 
+typedef enum ESWAValueType
+{
+    SWA_VAL_I32 = 0x7FU,
+    SWA_VAL_I64 = 0x7EU,
+    SWA_VAL_F32 = 0x7DU,
+    SWA_VAL_F64 = 0x7CU,
+    SWA_VAL_V128 = 0x7BU,
+    SWA_VAL_FuncRef = 0x70U,
+    SWA_VAL_ExternRef = 0x6FU
+} ESWAValueType;
+
 typedef struct SWAValue {
     union
     {
@@ -38,6 +49,7 @@ typedef struct SWAValue {
         swa_ptr ptr;
         swa_cptr cptr;
     };
+    ESWAValueType type;
 #ifdef __cplusplus
     /* clang-format off */
     FORCEINLINE operator swa_f32() const { return f; }
@@ -47,12 +59,12 @@ typedef struct SWAValue {
     FORCEINLINE operator swa_ptr() const { return ptr; }
     FORCEINLINE operator swa_cptr() const { return cptr; }
     SWAValue() : I(0) {}
-    SWAValue(swa_f32 f) : f(f) {}
-    SWAValue(swa_f64 F) : F(F) {}
-    SWAValue(swa_i32 i) : i(i) {}
-    SWAValue(swa_i64 I) : I(I) {}
-    SWAValue(swa_ptr ptr) : ptr(ptr) {}
-    SWAValue(swa_cptr cptr) : cptr(cptr) {}
+    SWAValue(swa_f32 f) : f(f), type(SWA_VAL_F32) {}
+    SWAValue(swa_f64 F) : F(F), type(SWA_VAL_F64) {}
+    SWAValue(swa_i32 i) : i(i), type(SWA_VAL_I32) {}
+    SWAValue(swa_i64 I) : I(I), type(SWA_VAL_I64) {}
+    SWAValue(swa_ptr ptr) : ptr(ptr), type(SWA_VAL_I64) {}
+    SWAValue(swa_cptr cptr) : cptr(cptr), type(SWA_VAL_I64) {}
     /* clang-format on */
 #endif
 } SWAValue;
@@ -69,11 +81,15 @@ typedef struct SWANamedObjectTable SWANamedObjectTable;
 #ifdef USE_M3
     #include "wasm3/wasm3.h"
 #endif
+
 typedef enum ESWABackend
 {
     ESWA_BACKEND_UNDEFINED,
 #ifdef USE_M3
     ESWA_BACKEND_WASM3,
+#endif
+#ifdef USE_WASM_EDGE
+    ESWA_BACKEND_WASM_EDGE,
 #endif
     ESWA_BACKEND_EMSCRIPTON,
     ESWA_BACKEND_MAX_ENUM_BIT = 0x7FFFFFFF
@@ -100,8 +116,8 @@ RUNTIME_API void swa_free_module(SWAModuleId module);
 typedef void (*SWAProcFreeModule)(SWAModuleId module);
 
 // Function APIs
-RUNTIME_API SWAExecResult swa_exec(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc);
-typedef SWAExecResult (*SWAProcExec)(SWARuntimeId runtime, const char8_t* const name, SWAExecDescriptor* desc);
+RUNTIME_API SWAExecResult swa_exec(SWAModuleId runtime, const char8_t* const name, SWAExecDescriptor* desc);
+typedef SWAExecResult (*SWAProcExec)(SWAModuleId runtime, const char8_t* const name, SWAExecDescriptor* desc);
 
 // Util X
 RUNTIME_API SWARuntimeId swa_instance_try_find_runtime(SWAInstanceId instance, const char* name);
@@ -213,7 +229,7 @@ public:
                 sizeof...(Args), iargs,
                 1, &ret
             };
-            auto error = ::swa_exec(runtime, function_name, &exec_desc);
+            auto error = ::swa_exec(module, function_name, &exec_desc);
             if (error) { swa_handle_error(error); }
             return RetT(ret);
         }
@@ -225,16 +241,16 @@ public:
                 0, nullptr,
                 1, &ret
             };
-            auto error = ::swa_exec(runtime, function_name, &exec_desc);
+            auto error = ::swa_exec(module, function_name, &exec_desc);
             if (error) { swa_handle_error(error); }
             return RetT(ret);
         }
-        executor(SWARuntimeId runtime, const char* function_name)
-            : runtime(runtime)
+        executor(SWAModuleId module, const char* function_name)
+            : module(module)
             , function_name(function_name)
         {
         }
-        SWARuntimeId runtime;
+        SWAModuleId module;
         const char* function_name;
     };
 };
