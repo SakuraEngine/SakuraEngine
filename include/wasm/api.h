@@ -5,11 +5,6 @@
 #endif
 #ifdef USE_WASM_EDGE
     #include "wasmedge/wasmedge.h"
-    #if defined(__x86_64__) || defined(__aarch64__)
-        #define INCLUDED_int128_h
-    #else
-        #error "Fuck headers & type-alias"
-    #endif
 #endif
 
 #define swa_handle_error(error)        \
