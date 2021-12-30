@@ -213,7 +213,7 @@ public:
                 sizeof...(Args), iargs,
                 1, &ret
             };
-            auto error = ::swa_exec(runtime, "exec", &exec_desc);
+            auto error = ::swa_exec(runtime, function_name, &exec_desc);
             if (error) { swa_handle_error(error); }
             return RetT(ret);
         }

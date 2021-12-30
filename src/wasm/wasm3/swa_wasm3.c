@@ -112,7 +112,7 @@ void swa_module_link_host_function_wasm3(SWAModuleId module, const struct SWAHos
     if (result) goto on_error;
     return;
 on_error:
-    swa_error("swa error(swa_create_module_wasm3): %s", result);
+    swa_error("swa error(swa_module_link_host_function_wasm3): %s, function name %s", result, desc->function_name);
 }
 
 void swa_free_module_wasm3(SWAModuleId module)
