@@ -86,6 +86,7 @@ TEST_P(WASM3Test, HostLink)
     module_desc.wasm = invoke_host_wasm;
     module_desc.wasm_size = sizeof(invoke_host_wasm);
     module_desc.bytes_pinned_outside = true;
+    module_desc.strong_stub = false;
     SWAModuleId module = swa_create_module(runtime, &module_desc);
     EXPECT_NE(module, nullptr);
     SWAValue param;
