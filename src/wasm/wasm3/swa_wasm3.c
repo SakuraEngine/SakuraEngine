@@ -108,7 +108,7 @@ void swa_module_link_host_function_wasm3(SWAModuleId module, const struct SWAHos
     M3Result result = m3Err_none;
     result =
         m3_LinkRawFunctionEx(MW->module, desc->module_name,
-            desc->function_name, desc->signature,
+            desc->function_name, desc->signatures.m3,
             desc->backend_wrappers.m3, desc->proc);
     if (result) goto on_error;
     return;

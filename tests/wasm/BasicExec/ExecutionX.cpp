@@ -85,14 +85,14 @@ TEST_F(WASM3Test, VMHeapAlloc)
     SWAHostFunctionDescriptor memset_func = {};
     memset_func.function_name = "memset";
     memset_func.module_name = "*";
-    memset_func.signature = "i(iii)";
+    memset_func.signatures.m3 = "i(iii)";
     memset_func.backend_wrappers.m3 = &m3_libc_memset;
     swa_module_link_host_function(module, &memset_func);
 
     SWAHostFunctionDescriptor malloc_func = {};
     malloc_func.function_name = "malloc";
     malloc_func.module_name = "*";
-    malloc_func.signature = "i(i)";
+    malloc_func.signatures.m3 = "i(i)";
     malloc_func.backend_wrappers.m3 = &m3_libc_malloc;
     swa_module_link_host_function(module, &malloc_func);
 

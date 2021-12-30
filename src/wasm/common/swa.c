@@ -88,6 +88,7 @@ SWAModuleId swa_create_module(SWARuntimeId runtime, const struct SWAModuleDescri
     {
         module->runtime = runtime;
         module->wasm_size = desc->wasm_size;
+        module->strong_stub = desc->strong_stub;
         // Copy bytecode into module
         module->bytes_pinned_outside = desc->bytes_pinned_outside;
         if (!desc->bytes_pinned_outside)
@@ -101,11 +102,14 @@ SWAModuleId swa_create_module(SWARuntimeId runtime, const struct SWAModuleDescri
     return module;
 }
 
+const char* env_name = "env";
 void swa_module_link_host_function(SWAModuleId module, const struct SWAHostFunctionDescriptor* desc)
 {
     swa_assert(module && "fatal: Called with NULL module!");
     swa_assert(module->runtime && "fatal: Called with NULL runtime!");
     swa_assert(module->runtime->proc_table->link_host_function && "fatal: can't find proc link_host_function!");
+
+    if (strcmp(desc->module_name, "*") == 0) ((SWAHostFunctionDescriptor*)desc)->module_name = env_name;
 
     module->runtime->proc_table->link_host_function(module, desc);
 }

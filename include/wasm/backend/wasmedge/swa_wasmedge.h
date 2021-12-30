@@ -27,12 +27,15 @@ typedef struct SWAInstance_WAEdge {
 
 typedef struct SWARuntime_WAEdge {
     SWARuntime super;
+    WasmEdge_StatisticsContext* stat_ctx;
     WasmEdge_StoreContext* store;
-    WasmEdge_VMContext* ctx;
+    WasmEdge_LoaderContext* load_ctx;
+    WasmEdge_ValidatorContext* valid_ctx;
+    WasmEdge_ExecutorContext* exec_ctx;
 } SWARuntime_WAEdge;
 
 typedef struct SWAModule_WAEdge {
     SWAModule super;
     WasmEdge_String mod_name;
-    uint32_t functions;
+    WasmEdge_ASTModuleContext* ast_ctx;
 } SWAModule_WAEdge;
