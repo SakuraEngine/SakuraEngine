@@ -1,5 +1,16 @@
 #pragma once
 #include "wasm_configure.h"
+#ifdef USE_M3
+    #include "wasm3/wasm3.h"
+#endif
+#ifdef USE_WASM_EDGE
+    #include "wasmedge/wasmedge.h"
+    #if defined(__x86_64__) || defined(__aarch64__)
+        #define INCLUDED_int128_h
+    #else
+        #error "Fuck headers & type-alias"
+    #endif
+#endif
 
 #define swa_handle_error(error)        \
     {                                  \
@@ -77,10 +88,6 @@ typedef struct SWAExecDescriptor {
 } SWAExecDescriptor;
 
 typedef struct SWANamedObjectTable SWANamedObjectTable;
-
-#ifdef USE_M3
-    #include "wasm3/wasm3.h"
-#endif
 
 typedef enum ESWABackend
 {
@@ -166,7 +173,8 @@ typedef struct SWAModuleDescriptor {
     const char8_t* name;
     const uint8_t* wasm;
     size_t wasm_size;
-    bool bytes_pinned_outside;
+    uint8_t bytes_pinned_outside;
+    uint8_t strong_stub;
 } SWAModuleDescriptor;
 
 typedef struct SWAModule {
@@ -174,18 +182,40 @@ typedef struct SWAModule {
     const char8_t* name;
     uint8_t* wasm;
     size_t wasm_size;
-    bool bytes_pinned_outside;
+    uint8_t bytes_pinned_outside;
+
+    uint8_t strong_stub;
+    uint8_t instantiated;
 } SWAModule;
 
 typedef struct SWAHostFunctionDescriptor {
     const char* module_name;
     const char* function_name;
-    const char* signature;
     void* proc;
     struct
     {
+#ifdef USE_M3
         M3RawCall m3;
+#endif
+#ifdef USE_WASM_EDGE
+        WasmEdge_HostFunc_t wa_edge;
+#endif
     } backend_wrappers;
+    struct
+    {
+#ifdef USE_M3
+        const char* m3;
+#endif
+#ifdef USE_WASM_EDGE
+        struct
+        {
+            const enum WasmEdge_ValType* i_types;
+            uint32_t i_count;
+            const enum WasmEdge_ValType* o_types;
+            uint32_t o_count;
+        } wa_edge;
+#endif
+    } signatures;
 } SWAHostFunctionDescriptor;
 
 #ifdef __cplusplus
@@ -193,6 +223,9 @@ typedef struct SWAHostFunctionDescriptor {
 
     #ifdef USE_M3
         #include "wasm/backend/wasm3/utilx.inl"
+    #endif
+    #ifdef USE_WASM_EDGE
+        #include "wasm/backend/wasmedge/utilx.inl"
     #endif
 namespace swa
 {
@@ -207,6 +240,9 @@ public:
         SWAHostFunctionDescriptor out = {};
     #ifdef USE_M3
         m3::utilx<Func>::fill_linkage(out, module_name, function_name, function);
+    #endif
+    #ifdef USE_WASM_EDGE
+        wa_edge::utilx<Func>::fill_linkage(out, module_name, function_name, function);
     #endif
         return out;
     }

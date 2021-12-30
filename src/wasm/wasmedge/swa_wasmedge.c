@@ -25,7 +25,6 @@ SWAInstanceId swa_create_instance_WAEdge(const struct SWAInstanceDescriptor* des
 {
     SWAInstance_WAEdge* IW = (SWAInstance_WAEdge*)swa_calloc(1, sizeof(SWAInstance_WAEdge));
     IW->cfg = WasmEdge_ConfigureCreate();
-    WasmEdge_ConfigureAddHostRegistration(IW->cfg, WasmEdge_HostRegistration_Wasi);
     // Add propsals
     WasmEdge_ConfigureAddProposal(IW->cfg, WasmEdge_Proposal_SIMD);
     WasmEdge_ConfigureAddProposal(IW->cfg, WasmEdge_Proposal_Memory64);
@@ -48,14 +47,21 @@ SWARuntimeId swa_create_runtime_WAEdge(SWAInstanceId instance, const struct SWAR
     SWAInstance_WAEdge* IW = (SWAInstance_WAEdge*)instance;
     SWARuntime_WAEdge* RW = (SWARuntime_WAEdge*)swa_calloc(1, sizeof(SWARuntime_WAEdge));
     RW->store = WasmEdge_StoreCreate();
-    RW->ctx = WasmEdge_VMCreate(IW->cfg, RW->store);
+    RW->stat_ctx = WasmEdge_StatisticsCreate();
+    RW->load_ctx = WasmEdge_LoaderCreate(IW->cfg);
+    RW->valid_ctx = WasmEdge_ValidatorCreate(IW->cfg);
+    RW->exec_ctx = WasmEdge_ExecutorCreate(IW->cfg, RW->stat_ctx);
     return &RW->super;
 }
 
 void swa_free_runtime_WAEdge(SWARuntimeId runtime)
 {
     SWARuntime_WAEdge* RW = (SWARuntime_WAEdge*)runtime;
-    WasmEdge_VMDelete(RW->ctx);
+    WasmEdge_StoreDelete(RW->store);
+    WasmEdge_LoaderDelete(RW->load_ctx);
+    WasmEdge_StatisticsDelete(RW->stat_ctx);
+    WasmEdge_ValidatorDelete(RW->valid_ctx);
+    WasmEdge_ExecutorDelete(RW->exec_ctx);
     swa_free(RW);
 }
 
@@ -67,9 +73,16 @@ SWAModuleId swa_create_module_WAEdge(SWARuntimeId runtime, const struct SWAModul
     SWAModule_WAEdge* MW = (SWAModule_WAEdge*)swa_calloc(1, sizeof(SWAModule_WAEdge));
 
     MW->mod_name = WasmEdge_StringCreateByCString(desc->name);
-    result = WasmEdge_VMRegisterModuleFromBuffer(RW->ctx, MW->mod_name, desc->wasm, desc->wasm_size);
+    result = WasmEdge_LoaderParseFromBuffer(RW->load_ctx, &MW->ast_ctx, desc->wasm, desc->wasm_size);
     if (!WasmEdge_ResultOK(result)) goto on_error;
-    MW->functions = WasmEdge_StoreListFunctionRegisteredLength(RW->store, MW->mod_name);
+    result = WasmEdge_ValidatorValidate(RW->valid_ctx, MW->ast_ctx);
+    if (!WasmEdge_ResultOK(result)) goto on_error;
+    if (desc->strong_stub)
+    {
+        result = WasmEdge_ExecutorRegisterModule(RW->exec_ctx, RW->store, MW->ast_ctx, MW->mod_name);
+        if (!WasmEdge_ResultOK(result)) goto on_error;
+        MW->super.instantiated = true;
+    }
     return &MW->super;
 on_error:
     swa_error("swa error(swa_create_module_WAEdge): %s", WasmEdge_ResultGetMessage(result));
@@ -80,11 +93,37 @@ on_error:
 
 void swa_module_link_host_function_WAEdge(SWAModuleId module, const struct SWAHostFunctionDescriptor* desc)
 {
+    SWARuntime_WAEdge* RW = (SWARuntime_WAEdge*)module->runtime;
+    WasmEdge_Result result;
+
+    WasmEdge_String module_name = WasmEdge_StringCreateByCString(desc->module_name);
+    WasmEdge_ImportObjectContext* import_module = WasmEdge_ImportObjectCreate(module_name);
+    WasmEdge_StringDelete(module_name);
+
+    WasmEdge_FunctionTypeContext* func_t_ctx = WasmEdge_FunctionTypeCreate(
+        desc->signatures.wa_edge.i_types, desc->signatures.wa_edge.i_count,
+        desc->signatures.wa_edge.o_types, desc->signatures.wa_edge.o_count);
+    WasmEdge_FunctionInstanceContext* host_func =
+        WasmEdge_FunctionInstanceCreate(func_t_ctx, desc->backend_wrappers.wa_edge, NULL, 0);
+    WasmEdge_FunctionTypeDelete(func_t_ctx);
+
+    WasmEdge_String import_name = WasmEdge_StringCreateByCString(desc->function_name);
+    WasmEdge_ImportObjectAddFunction(import_module, import_name, host_func);
+    WasmEdge_StringDelete(import_name);
+
+    // Register host function
+    result = WasmEdge_ExecutorRegisterImport(RW->exec_ctx, RW->store, import_module);
+    if (!WasmEdge_ResultOK(result)) goto on_error;
+    return;
+on_error:
+    WasmEdge_FunctionInstanceDelete(host_func);
+    swa_error("swa error(swa_link_host_WAEdge): %s", WasmEdge_ResultGetMessage(result));
 }
 
 void swa_free_module_WAEdge(SWAModuleId module)
 {
     SWAModule_WAEdge* MW = (SWAModule_WAEdge*)module;
+    WasmEdge_ASTModuleDelete(MW->ast_ctx);
     WasmEdge_StringDelete(MW->mod_name);
     swa_free(MW);
 }
@@ -122,9 +161,27 @@ SWAExecResult swa_exec_WAEdge(SWAModuleId module, const char8_t* const name, SWA
                     break;
             }
         }
-        result = WasmEdge_VMExecuteRegistered(RW->ctx, mod_name, func_name,
-            params, desc->param_count, rets, desc->ret_count);
-        if (!WasmEdge_ResultOK(result)) goto on_error;
+        if (module->strong_stub)
+        {
+            swa_assert(module->instantiated && "error: strong stub must be instantiated!");
+            result = WasmEdge_ExecutorInvokeRegistered(
+                RW->exec_ctx, RW->store,
+                mod_name, func_name,
+                params, desc->param_count, rets, desc->ret_count);
+            if (!WasmEdge_ResultOK(result)) goto on_error;
+        }
+        else
+        {
+            if (!module->instantiated)
+            {
+                result = WasmEdge_ExecutorInstantiate(RW->exec_ctx, RW->store, MW->ast_ctx);
+                if (!WasmEdge_ResultOK(result)) goto on_error;
+                MW->super.instantiated = true;
+            }
+            result = WasmEdge_ExecutorInvoke(RW->exec_ctx, RW->store, func_name,
+                params, desc->param_count, rets, desc->ret_count);
+            if (!WasmEdge_ResultOK(result)) goto on_error;
+        }
         for (uint32_t i = 0; i < desc->ret_count; i++)
         {
             switch (rets[i].Type)

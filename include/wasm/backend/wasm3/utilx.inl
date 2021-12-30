@@ -110,7 +110,7 @@ namespace detail
             linkage.module_name = module_name;
             linkage.proc = reinterpret_cast<void*>(function);
             linkage.backend_wrappers.m3 = &detail::wrap_helper<Ret(Args...)>::wrap_fn;
-            linkage.signature = detail::m3_signature<Ret, Args...>::value;
+            linkage.signatures.m3 = detail::m3_signature<Ret, Args...>::value;
         }
     };
 } // namespace m3
