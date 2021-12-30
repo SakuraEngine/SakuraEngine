@@ -217,6 +217,18 @@ public:
             if (error) { swa_handle_error(error); }
             return RetT(ret);
         }
+        template <typename RetT>
+        FORCEINLINE RetT exec()
+        {
+            SWAValue ret;
+            SWAExecDescriptor exec_desc = {
+                0, nullptr,
+                1, &ret
+            };
+            auto error = ::swa_exec(runtime, function_name, &exec_desc);
+            if (error) { swa_handle_error(error); }
+            return RetT(ret);
+        }
         executor(SWARuntimeId runtime, const char* function_name)
             : runtime(runtime)
             , function_name(function_name)
