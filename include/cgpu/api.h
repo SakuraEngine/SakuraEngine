@@ -54,8 +54,34 @@ struct CGpuShaderReflection;
 struct CGpuPipelineReflection;
 
 typedef uint32_t CGpuQueueIndex;
-typedef const struct CGpuSurface_Dummy* CGpuSurfaceId;
+#if defined(RUNTIME_PLATFORM_WA32)
 typedef const int CGpuVersion;
+typedef const int64_t CGpuSurfaceId;
+typedef const int64_t CGpuInstanceId;
+typedef const int64_t CGpuAdapterId;
+typedef const int64_t CGpuDeviceId;
+typedef const int64_t CGpuQueueId;
+typedef const int64_t CGpuSemaphoreId;
+typedef const int64_t CGpuFenceId;
+typedef const int64_t CGpuCommandPoolId;
+typedef const int64_t CGpuCommandBufferId;
+typedef const int64_t CGpuSwapChainId;
+typedef const int64_t CGpuShaderLibraryId;
+typedef const int64_t CGpuRootSignatureId;
+typedef const int64_t CGpuDescriptorSetId;
+typedef const int64_t CGpuBufferId;
+typedef const int64_t CGpuTextureId;
+typedef const int64_t CGpuSamplerId;
+typedef const int64_t CGpuTextureViewId;
+typedef const int64_t CGpuRenderPassEncoderId;
+typedef const int64_t CGpuComputePassEncoderId;
+typedef const int64_t CGpuRenderPipelineId;
+typedef const int64_t CGpuComputePipelineId;
+typedef const int64_t CGpuShaderReflectionId;
+typedef const int64_t CGpuPipelineReflectionId;
+#else
+typedef const int CGpuVersion;
+typedef const struct CGpuSurface_Dummy* CGpuSurfaceId;
 typedef const struct CGpuInstance* CGpuInstanceId;
 typedef const struct CGpuAdapter* CGpuAdapterId;
 typedef const struct CGpuDevice* CGpuDeviceId;
@@ -78,6 +104,7 @@ typedef const struct CGpuRenderPipeline* CGpuRenderPipelineId;
 typedef const struct CGpuComputePipeline* CGpuComputePipelineId;
 typedef const struct CGpuShaderReflection* CGpuShaderReflectionId;
 typedef const struct CGpuPipelineReflection* CGpuPipelineReflectionId;
+#endif
 
 typedef enum ECGpuBackend
 {

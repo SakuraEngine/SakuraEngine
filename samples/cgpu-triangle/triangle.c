@@ -1,4 +1,4 @@
-#include "triangle_module.c"
+#include "triangle_module.wa.c"
 #include "../common/utils.h"
 #include "platform/thread.h"
 #include "utils.h"
@@ -8,6 +8,8 @@
 THREAD_LOCAL SWAInstanceId wa_instance;
 THREAD_LOCAL SWARuntimeId wa_runtime;
 THREAD_LOCAL SWAModuleId wa_module;
+THREAD_LOCAL void* wa_watcher;
+THREAD_LOCAL const uint8_t* wa_bytes;
 
 // Render objects
 THREAD_LOCAL ECGpuBackend backend;
@@ -97,7 +99,7 @@ void create_render_pipeline()
 void initialize(void* usrdata)
 {
     // WASM
-    setup_wasm(&wa_instance, &wa_runtime, &wa_module);
+    wa_watcher = watch_wasm();
     // Create window
     SDL_SysWMinfo wmInfo;
     backend = *(ECGpuBackend*)usrdata;
@@ -173,6 +175,16 @@ void initialize(void* usrdata)
 
 void raster_redraw()
 {
+    // hot-reload wasm
+    uint32_t size;
+    const uint8_t* old_wa_bytes = wa_bytes;
+    wasm_glob(wa_watcher, &wa_bytes, &size);
+    if (wa_bytes != old_wa_bytes && size != 0)
+    {
+        if (wa_instance && wa_runtime && wa_module)
+            finalize_wasm(wa_instance, wa_runtime, wa_module);
+        setup_wasm(&wa_instance, &wa_runtime, &wa_module, wa_bytes, size);
+    }
     // sync & reset
     cgpu_wait_fences(&present_fence, 1);
     CGpuAcquireNextDescriptor acquire_desc = {
@@ -183,23 +195,41 @@ void raster_redraw()
     const CGpuTextureViewId back_buffer_view = views[backbuffer_index];
     cgpu_reset_command_pool(pool);
     // record
+    cgpu_cmd_begin(cmd);
+    CGpuColorAttachment screen_attachment = {
+        .view = back_buffer_view,
+        .load_action = LOAD_ACTION_CLEAR,
+        .store_action = STORE_ACTION_STORE,
+        .clear_color = fastclear_0000
+    };
+    CGpuRenderPassDescriptor rp_desc = {
+        .render_target_count = 1,
+        .sample_count = SAMPLE_COUNT_1,
+        .color_attachments = &screen_attachment,
+        .depth_stencil = CGPU_NULLPTR
+    };
+    CGpuTextureBarrier draw_barrier = {
+        .texture = back_buffer,
+        .src_state = RESOURCE_STATE_UNDEFINED,
+        .dst_state = RESOURCE_STATE_RENDER_TARGET
+    };
+    CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
+    cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
+    CGpuRenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
     if (wa_module != NULL)
     {
-        SWAValue params[6];
+        SWAValue params[5];
         params[0].I = (int64_t)cmd;
         params[0].type = SWA_VAL_I64;
         params[1].I = (int64_t)pipeline;
         params[1].type = SWA_VAL_I64;
-        params[2].I = (int64_t)back_buffer;
-        params[2].type = SWA_VAL_I64;
-        params[3].I = (int64_t)back_buffer_view;
-        params[3].type = SWA_VAL_I64;
-        params[4].i = back_buffer->width;
+        params[2].I = (int64_t)rp_encoder;
+        params[3].i = back_buffer->width;
+        params[3].type = SWA_VAL_I32;
+        params[4].i = back_buffer->height;
         params[4].type = SWA_VAL_I32;
-        params[5].i = back_buffer->height;
-        params[5].type = SWA_VAL_I32;
         SWAExecDescriptor exec_desc = {
-            6, params,
+            5, params,
             0, NULL
         };
         const char* res = swa_exec(wa_module, "raster_cmd_record", &exec_desc);
@@ -208,9 +238,18 @@ void raster_redraw()
     else
     {
         raster_cmd_record(cmd, pipeline,
-            back_buffer, back_buffer_view,
+            rp_encoder,
             back_buffer->width, back_buffer->height);
     }
+    CGpuTextureBarrier present_barrier = {
+        .texture = back_buffer,
+        .src_state = RESOURCE_STATE_RENDER_TARGET,
+        .dst_state = RESOURCE_STATE_PRESENT
+    };
+    cgpu_cmd_end_render_pass(cmd, rp_encoder);
+    CGpuResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &present_barrier, .texture_barriers_count = 1 };
+    cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
+    cgpu_cmd_end(cmd);
     // submit
     CGpuQueueSubmitDescriptor submit_desc = {
         .cmds = &cmd,
@@ -240,7 +279,6 @@ void raster_program()
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            // olog::Info(u"event type: {}  windowID: {}"_o, (int)event.type, (int)event.window.windowID);
             if (SDL_GetWindowID(sdl_window) == event.window.windowID)
             {
                 if (!SDLEventHandler(&event, sdl_window))
@@ -258,6 +296,7 @@ void finalize()
     SDL_DestroyWindow(sdl_window);
     // Free wasm engine
     finalize_wasm(wa_instance, wa_runtime, wa_module);
+    unwatch_wasm(wa_watcher);
     // Free cgpu objects
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
@@ -295,7 +334,11 @@ int main(int argc, char* argv[])
         CGPU_BACKEND_D3D12
 #endif
     };
+    void* watcher = watch_source("C:\\Coding\\Sakura.Runtime\\samples\\cgpu-triangle\\");
+
     ProgramMain(backends);
+
+    unwatch_source(watcher);
 
     SDL_Quit();
     return 0;
