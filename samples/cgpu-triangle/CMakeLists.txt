@@ -7,5 +7,5 @@ target_include_directories(CGpuTriangle PRIVATE ${SDL2_INCLUDES})
 target_link_libraries(CGpuTriangle PUBLIC SakuraRuntime)
 
 # Build a wasm target
-add_library(CGpuTriangleModule triangle_module.c)
-target_include_directories(CGpuTriangleModule PRIVATE ${SAKURA_ROOT_DIR}/include)
+#add_library(CGpuTriangleModule triangle_module.c)
+#target_include_directories(CGpuTriangleModule PRIVATE ${SAKURA_ROOT_DIR}/include)

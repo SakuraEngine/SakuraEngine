@@ -20,12 +20,12 @@ namespace detail
     }
     template<typename T>
     void arg_from_stack(T* &dest, stack_type &_sp, mem_type _mem) {
-        m3ApiGetArgMem(T*, tmp);
+        m3ApiGetArg(T*, tmp);
         dest = tmp;
     };
     template<typename T>
     void arg_from_stack(const T* &dest, stack_type &_sp, mem_type _mem) {
-        m3ApiGetArgMem(const T*, tmp);
+        m3ApiGetArg(const T*, tmp);
         dest = tmp;
     };
     template<char c>
@@ -44,8 +44,8 @@ namespace detail
     template<> struct m3_type_to_sig<float>   : m3_sig<'f'> {};
     template<> struct m3_type_to_sig<double>  : m3_sig<'F'> {};
     template<> struct m3_type_to_sig<void>    : m3_sig<'v'> {};
-    template<typename F> struct m3_type_to_sig<F*>  : m3_sig<'*'> {};
-    template<typename F> struct m3_type_to_sig<const F*> : m3_sig<'*'> {};
+    template<typename F> struct m3_type_to_sig<F*>  : m3_sig<'I'> {};
+    template<typename F> struct m3_type_to_sig<const F*> : m3_sig<'I'> {};
     template<typename Ret, typename ... Args>
     struct m3_signature {
         constexpr static size_t n_args = sizeof...(Args);
