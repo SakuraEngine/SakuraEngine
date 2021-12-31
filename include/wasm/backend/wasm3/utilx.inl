@@ -44,8 +44,8 @@ namespace detail
     template<> struct m3_type_to_sig<float>   : m3_sig<'f'> {};
     template<> struct m3_type_to_sig<double>  : m3_sig<'F'> {};
     template<> struct m3_type_to_sig<void>    : m3_sig<'v'> {};
-    template<> struct m3_type_to_sig<void *>  : m3_sig<'*'> {};
-    template<> struct m3_type_to_sig<const void *> : m3_sig<'*'> {};
+    template<typename F> struct m3_type_to_sig<F*>  : m3_sig<'*'> {};
+    template<typename F> struct m3_type_to_sig<const F*> : m3_sig<'*'> {};
     template<typename Ret, typename ... Args>
     struct m3_signature {
         constexpr static size_t n_args = sizeof...(Args);

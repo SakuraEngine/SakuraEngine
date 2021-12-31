@@ -2,7 +2,9 @@
 #ifndef __cplusplus
     #include <stdbool.h>
 #endif
-#include <stdint.h>
+#if __has_include("stdint.h")
+    #include <stdint.h>
+#endif
 
 #if defined(_MSC_VER)
     #define FORCEINLINE __forceinline
@@ -21,6 +23,30 @@
         #define RUNTIME_EXPORT __declspec(dllexport) RUNTIME_EXTERN_C
     #else
         #define RUNTIME_EXPORT
+    #endif
+#endif
+
+#ifndef RUNTIME_MANUAL_CONFIG_CPU_ARCHITECTURE
+    #if defined(__x86_64__) || defined(_M_X64) || defined(_AMD64_) || defined(_M_AMD64)
+        #define RUNTIME_PLATFORM_X86_64
+    #elif defined(__i386) || defined(_M_IX86) || defined(_X86_)
+        #define RUNTIME_PLATFORM_X86
+    #elif defined(__aarch64__) || defined(__AARCH64) || defined(_M_ARM64)
+        #define RUNTIME_PLATFORM_ARM64
+    #elif defined(__arm__) || defined(_M_ARM)
+        #define RUNTIME_PLATFORM_ARM32
+    #elif defined(__POWERPC64__) || defined(__powerpc64__)
+        #define RUNTIME_PLATFORM_POWERPC64
+    #elif defined(__POWERPC__) || defined(__powerpc__)
+        #define RUNTIME_PLATFORM_POWERPC32
+    #elif defined(__wasm64__)
+        #define RUNTIME_PLATFORM_WA
+        #define RUNTIME_PLATFORM_WA64
+    #elif defined(__wasm__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
+        #define RUNTIME_PLATFORM_WA
+        #define RUNTIME_PLATFORM_WA32
+    #else
+        #error Unrecognized CPU was used.
     #endif
 #endif
 
@@ -109,7 +135,10 @@ typedef SSIZE_T ssize_t;
     #else
         #error "Unsupported architecture for msvc compiler"
     #endif
-
+#elif defined(RUNTIME_PLATFORM_WA32)
+    #define size_t uint32_t;
+#elif defined(RUNTIME_PLATFORM_WA64)
+    #define size_t uint64_t;
 #elif defined(__GNUC__) || defined(__clang__)
     #include <sys/types.h>
     #include <assert.h>
@@ -159,26 +188,6 @@ typedef SSIZE_T ssize_t;
 
 #else
     #error Unknown language dialect
-#endif
-
-#ifndef RUNTIME_MANUAL_CONFIG_CPU_ARCHITECTURE
-    #if defined(__x86_64__) || defined(_M_X64) || defined(_AMD64_) || defined(_M_AMD64)
-        #define RUNTIME_PLATFORM_X86_64
-    #elif defined(__i386) || defined(_M_IX86) || defined(_X86_)
-        #define RUNTIME_PLATFORM_X86
-    #elif defined(__aarch64__) || defined(__AARCH64) || defined(_M_ARM64)
-        #define RUNTIME_PLATFORM_ARM64
-    #elif defined(__arm__) || defined(_M_ARM)
-        #define RUNTIME_PLATFORM_ARM32
-    #elif defined(__POWERPC64__) || defined(__powerpc64__)
-        #define RUNTIME_PLATFORM_POWERPC64
-    #elif defined(__POWERPC__) || defined(__powerpc__)
-        #define RUNTIME_PLATFORM_POWERPC32
-    #elif defined(__EMSCRIPTEN__) || defined(__wasi__)
-        #define RUNTIME_PLATFORM_WA
-    #else
-        #error Unrecognized CPU was used.
-    #endif
 #endif
 
 #ifndef RUNTIME_MANUAL_CONFIG_CPU_TRAITS
@@ -291,7 +300,7 @@ typedef SSIZE_T ssize_t;
 #define RUNTIME_NOEXCEPT noexcept
 
 // Alloc Configure
-#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
+#if !defined(RUNTIME_PLATFORM_WA) && !defined(__APPLE__)
     #ifdef __cplusplus
 extern "C" {
     #endif
@@ -308,6 +317,8 @@ RUNTIME_API void mi_free(void* p);
     #define sakura_calloc_aligned mi_calloc_aligned
     #define sakura_malloc_aligned mi_malloc_aligned
     #define sakura_free mi_free
+#elif defined(RUNTIME_PLATFORM_WA)
+
 #else
     #include <stdlib.h>
     #include <string.h>

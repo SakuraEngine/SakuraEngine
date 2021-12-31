@@ -89,14 +89,7 @@ TEST_P(WASM3Test, HostLink)
     module_desc.strong_stub = false;
     SWAModuleId module = swa_create_module(runtime, &module_desc);
     EXPECT_NE(module, nullptr);
-    SWAValue param;
-    param.i = 12;
-    param.type = SWA_VAL_I32;
-    SWAValue ret;
-    SWAExecDescriptor exec_desc = {
-        1, &param,
-        1, &ret
-    };
+
     SWAHostFunctionDescriptor host_func = {};
     host_func.function_name = "host_function";
     host_func.module_name = "*";
@@ -110,10 +103,25 @@ TEST_P(WASM3Test, HostLink)
     host_func.signatures.wa_edge.i_types = &type;
     host_func.signatures.wa_edge.o_types = &type;
     swa_module_link_host_function(module, &host_func);
+
+    SWAValue param;
+    param.i = 12;
+    param.type = SWA_VAL_I32;
+    SWAValue ret;
+    SWAExecDescriptor exec_desc = {
+        1, &param,
+        1, &ret
+    };
     auto res = swa_exec(module, "exec", &exec_desc);
     if (res) printf("[fatal]: %s", res);
     EXPECT_EQ(res, nullptr);
     EXPECT_EQ(ret.i, 12 + 1);
+
+    param.i = 15;
+    res = swa_exec(module, "exec", &exec_desc);
+    if (res) printf("[fatal]: %s", res);
+    EXPECT_EQ(res, nullptr);
+    EXPECT_EQ(ret.i, 15 + 1);
 }
 
 static const auto allPlatforms = testing::Values(

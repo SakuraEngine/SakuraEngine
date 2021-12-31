@@ -3,6 +3,7 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include "cgpu/backend/vulkan/vk_mem_alloc.h"
+#include "../common/common_utils.h"
 
 #ifdef __cplusplus
 extern "C" {

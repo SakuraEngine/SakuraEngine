@@ -1,3 +1,4 @@
+/* clang-format off */
 // SPDX-License-Identifier: Apache-2.0
 //===-- wasmedge/wasmedge.h - WasmEdge C API ------------------------------===//
 //
@@ -57,9 +58,9 @@ typedef struct WasmEdge_String {
 typedef struct WasmEdge_Result {
     uint8_t Code;
 } WasmEdge_Result;
-#define WasmEdge_Result_Success ((WasmEdge_Result){ .Code = 0x00 })
-#define WasmEdge_Result_Terminate ((WasmEdge_Result){ .Code = 0x01 })
-#define WasmEdge_Result_Fail ((WasmEdge_Result){ .Code = 0x02 })
+#define WasmEdge_Result_Success { 0x00 } 
+#define WasmEdge_Result_Terminate { 0x01 }
+#define WasmEdge_Result_Fail { 0x02 }
 
 /// Struct of WASM limit.
 typedef struct WasmEdge_Limit {
@@ -2931,3 +2932,4 @@ WASMEDGE_CAPI_EXPORT extern void WasmEdge_VMDelete(WasmEdge_VMContext* Cxt);
 #endif
 
 #endif /// WASMEDGE_C_API_H
+/* clang-format on */

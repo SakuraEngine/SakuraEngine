@@ -192,7 +192,7 @@ void ComputeFunc(void* usrdata)
     {
         unsigned error = lodepng_encode32_file(gPNGNames[backend], image, MANDELBROT_WIDTH, MANDELBROT_HEIGHT);
         if (error)
-            log_fatal("encoder error %d: %s", error, lodepng_error_text(error));
+            printf("encoder error %d: %s", error, lodepng_error_text(error));
     }
     // Clean up
     cgpu_free_command_buffer(cmd);

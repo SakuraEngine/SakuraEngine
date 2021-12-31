@@ -1,5 +1,4 @@
 #include "cgpu/api.h"
-#include "platform/thread.h"
 
 void raster_cmd_record(
     CGpuCommandBufferId cmd, CGpuRenderPipelineId pipeline,
