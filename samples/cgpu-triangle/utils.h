@@ -1,6 +1,17 @@
 #pragma once
 #include "platform/configure.h"
 
+#include "wasm/api.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void setup_wasm(SWAInstanceId*, SWARuntimeId*, SWAModuleId*);
+void finalize_wasm(SWAInstanceId, SWARuntimeId, SWAModuleId);
+#ifdef __cplusplus
+}
+#endif
+
 /*
 struct VSOut
 {

@@ -504,9 +504,9 @@ typedef struct CGpuRenderPassEncoder {
 typedef struct CGpuShaderResource {
     const char8_t* name;
 #if SIZE_MAX == UINT64_MAX
-    size_t name_hash;
+    uint64_t name_hash;
 #elif SIZE_MAX == UINT32_MAX
-    size_t name_hash;
+    uint32_t name_hash;
     uint32_t pad;
 #else
     #error "unsupported hash size!"

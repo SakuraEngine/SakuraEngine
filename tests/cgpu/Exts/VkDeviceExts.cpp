@@ -70,16 +70,16 @@ VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
     switch (messageSeverity)
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            cgpu_trace("Vulkan validation layer: %s\n", pCallbackData->pMessage);
+            printf("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            cgpu_info("Vulkan validation layer: %s\n", pCallbackData->pMessage);
+            printf("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            cgpu_warn("Vulkan validation layer: %s\n", pCallbackData->pMessage);
+            printf("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            cgpu_error("Vulkan validation layer: %s\n", pCallbackData->pMessage);
+            printf("Vulkan validation layer: %s\n", pCallbackData->pMessage);
             break;
         default:
             return VK_TRUE;

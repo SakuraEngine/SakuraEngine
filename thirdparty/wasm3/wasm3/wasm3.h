@@ -1,3 +1,4 @@
+/* clang-format off */
 //
 //  Wasm3, high performance WebAssembly interpreter
 //
@@ -364,3 +365,4 @@ d_m3ErrorConst  (trapStackOverflow,             "[trap] stack overflow")
 #endif
 
 #endif // wasm3_h
+/* clang-format on */

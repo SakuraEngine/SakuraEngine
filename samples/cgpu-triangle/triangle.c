@@ -1,8 +1,15 @@
 #include "triangle_module.c"
 #include "../common/utils.h"
+#include "platform/thread.h"
 #include "utils.h"
 #include "math.h"
 
+// WA Engine
+THREAD_LOCAL SWAInstanceId wa_instance;
+THREAD_LOCAL SWARuntimeId wa_runtime;
+THREAD_LOCAL SWAModuleId wa_module;
+
+// Render objects
 THREAD_LOCAL ECGpuBackend backend;
 THREAD_LOCAL SDL_Window* sdl_window;
 THREAD_LOCAL CGpuSurfaceId surface;
@@ -89,6 +96,8 @@ void create_render_pipeline()
 
 void initialize(void* usrdata)
 {
+    // WASM
+    setup_wasm(&wa_instance, &wa_runtime, &wa_module);
     // Create window
     SDL_SysWMinfo wmInfo;
     backend = *(ECGpuBackend*)usrdata;
@@ -174,9 +183,34 @@ void raster_redraw()
     const CGpuTextureViewId back_buffer_view = views[backbuffer_index];
     cgpu_reset_command_pool(pool);
     // record
-    raster_cmd_record(cmd, pipeline,
-        back_buffer, back_buffer_view,
-        back_buffer->width, back_buffer->height);
+    if (wa_module != NULL)
+    {
+        SWAValue params[6];
+        params[0].I = (int64_t)cmd;
+        params[0].type = SWA_VAL_I64;
+        params[1].I = (int64_t)pipeline;
+        params[1].type = SWA_VAL_I64;
+        params[2].I = (int64_t)back_buffer;
+        params[2].type = SWA_VAL_I64;
+        params[3].I = (int64_t)back_buffer_view;
+        params[3].type = SWA_VAL_I64;
+        params[4].i = back_buffer->width;
+        params[4].type = SWA_VAL_I32;
+        params[5].i = back_buffer->height;
+        params[5].type = SWA_VAL_I32;
+        SWAExecDescriptor exec_desc = {
+            6, params,
+            0, NULL
+        };
+        const char* res = swa_exec(wa_module, "raster_cmd_record", &exec_desc);
+        if (res) printf("[fatal]: %s", res);
+    }
+    else
+    {
+        raster_cmd_record(cmd, pipeline,
+            back_buffer, back_buffer_view,
+            back_buffer->width, back_buffer->height);
+    }
     // submit
     CGpuQueueSubmitDescriptor submit_desc = {
         .cmds = &cmd,
@@ -222,6 +256,9 @@ void raster_program()
 void finalize()
 {
     SDL_DestroyWindow(sdl_window);
+    // Free wasm engine
+    finalize_wasm(wa_instance, wa_runtime, wa_module);
+    // Free cgpu objects
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
@@ -258,24 +295,8 @@ int main(int argc, char* argv[])
         CGPU_BACKEND_D3D12
 #endif
     };
-#if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
     ProgramMain(backends);
-#else
-    const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
-    DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
-    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
-    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
-    {
-        thread_descs[i].pFunc = &ProgramMain;
-        thread_descs[i].pData = &backends[i];
-        skr_init_thread(&thread_descs[i], &hdls[i]);
-    }
-    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
-    {
-        skr_join_thread(hdls[i]);
-        skr_destroy_thread(hdls[i]);
-    }
-#endif
+
     SDL_Quit();
     return 0;
 }
