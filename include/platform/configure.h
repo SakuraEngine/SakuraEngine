@@ -137,8 +137,10 @@ typedef SSIZE_T ssize_t;
     #endif
 #elif defined(RUNTIME_PLATFORM_WA32)
     #define size_t uint32_t;
+typedef int64_t host_ptr_t;
 #elif defined(RUNTIME_PLATFORM_WA64)
     #define size_t uint64_t;
+typedef int64_t host_ptr_t;
 #elif defined(__GNUC__) || defined(__clang__)
     #include <sys/types.h>
     #include <assert.h>
@@ -322,7 +324,8 @@ RUNTIME_API void mi_free(void* p);
 #else
     #include <stdlib.h>
     #include <string.h>
-FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignment)
+FORCEINLINE static void*
+calloc_aligned(size_t count, size_t size, size_t alignment)
 {
     void* ptr = aligned_alloc(alignment, size * count);
     memset(ptr, 0, size * count);

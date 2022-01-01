@@ -12,8 +12,10 @@ if(CAN_USE_SDL2)
     elseif(UNIX)
         find_package(SDL2 REQUIRED)
     elseif(TARGET_WIN)
-        extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/SDL2-win.zip ${SAKURA_BIN_DIR}/Debug)
-        extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/SDL2-win.zip ${SAKURA_BIN_DIR}/Release)
+        extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/SDL2-win.zip 
+            ${SAKURA_BIN_DIR}/Debug
+            ${SAKURA_BIN_DIR}/Release
+        )
         set(SDL2_LIBRARIES SDL2 SDL2main)
     endif(TARGET_EMSCRIPTON)
 

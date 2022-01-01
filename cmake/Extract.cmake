@@ -1,7 +1,4 @@
-function(extract_file2 filename extract_dir)
-  message(STATUS "Extract to ${extract_dir} ...")
-
-  # cmake -E tar -xf filename.tgz
+function(extract_file2 filename )
   set(temp_dir ${CMAKE_BINARY_DIR}/tmp_for_extract.dir)
   if(EXISTS ${temp_dir})
     file(REMOVE_RECURSE ${temp_dir})
@@ -17,7 +14,10 @@ function(extract_file2 filename extract_dir)
   endif()
 
   get_filename_component(contents ${contents} ABSOLUTE)
-  file(INSTALL "${contents}/" DESTINATION ${extract_dir})
+
+  foreach(extract_dir IN LISTS ARGN)
+    file(INSTALL "${contents}/" DESTINATION ${extract_dir})
+  endforeach(extract_dir ${extract_dirs})
   
   file(REMOVE_RECURSE ${temp_dir})
 endfunction()
