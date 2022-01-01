@@ -89,7 +89,8 @@ void unwatch_wasm(void* watcher)
 struct SourceWatcher {
     void Compile()
     {
-        auto dirstr = watch_path.string().append("compile_32.bat");
+        auto bat_dir = watch_path / "compile_32.bat";
+        auto dirstr = bat_dir.string();
         std::string cmdstr;
         {
             std::filesystem::path valid = dirstr;
@@ -123,11 +124,12 @@ struct SourceWatcher {
     std::filesystem::path watch_path;
 };
 
-void* watch_source(const char* dir)
+void* watch_source()
 {
     try
     {
-        std::filesystem::path watch_path = dir ? std::filesystem::path(dir) : std::filesystem::absolute("");
+        std::filesystem::path watch_path = __FILE__;
+        watch_path = watch_path.parent_path();
         return new SourceWatcher(watch_path);
     } //
     catch (std::system_error err)

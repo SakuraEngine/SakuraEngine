@@ -321,8 +321,7 @@ int main(int argc, char* argv[])
         CGPU_BACKEND_D3D12
 #endif
     };
-    void* watcher = watch_source("C:\\Coding\\Sakura.Runtime\\samples\\cgpu-triangle\\");
-
+    void* watcher = watch_source();
 #if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
     ProgramMain(backends);
 #else
@@ -341,9 +340,7 @@ int main(int argc, char* argv[])
         skr_destroy_thread(hdls[i]);
     }
 #endif
-
     unwatch_source(watcher);
-
     SDL_Quit();
     return 0;
 }
