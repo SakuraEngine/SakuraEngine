@@ -60,10 +60,16 @@ CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
 #endif
     CGpuInstance* instance = (CGpuInstance*)tbl->create_instance(desc);
     *(bool*)&instance->enable_set_name = desc->enable_set_name;
+    instance->backend = desc->backend;
     instance->proc_table = tbl;
     instance->surfaces_table = s_tbl;
     instance->runtime_table = cgpu_create_runtime_table();
     return instance;
+}
+
+RUNTIME_API ECGpuBackend cgpu_instance_get_backend(CGpuInstanceId instance)
+{
+    return instance->backend;
 }
 
 RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
