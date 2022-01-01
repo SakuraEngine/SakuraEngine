@@ -8,8 +8,8 @@
 THREAD_LOCAL void* wa_watcher;
 
 // Render objects
-THREAD_LOCAL ECGpuBackend backend;
 THREAD_LOCAL SDL_Window* sdl_window;
+THREAD_LOCAL ECGpuBackend backend;
 THREAD_LOCAL CGpuSurfaceId surface;
 THREAD_LOCAL CGpuSwapChainId swapchain;
 THREAD_LOCAL uint32_t backbuffer_index;

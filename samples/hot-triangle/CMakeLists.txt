@@ -1,6 +1,6 @@
 add_executable(CGpuTriangle
     triangle.c
-    wasm_modules.cpp
+    hot_wasm.cpp
 )
 target_link_libraries(CGpuTriangle PRIVATE ${SDL2_LIBRARIES})
 target_include_directories(CGpuTriangle PRIVATE ${SDL2_INCLUDES})

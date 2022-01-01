@@ -158,6 +158,9 @@ typedef struct CGpuConstantSpecialization {
     };
 } CGpuConstantSpecialization;
 
+// Above APIs
+RUNTIME_API ECGpuBackend cgpu_instance_get_backend(CGpuInstanceId instance);
+
 // Instance APIs
 RUNTIME_API CGpuInstanceId cgpu_create_instance(const struct CGpuInstanceDescriptor* desc);
 typedef CGpuInstanceId (*CGPUProcCreateInstance)(const struct CGpuInstanceDescriptor* descriptor);
@@ -470,6 +473,7 @@ typedef struct CGpuInstance {
     const CGpuSurfacesProcTable* surfaces_table;
     // Some Cached Data
     struct CGpuRuntimeTable* runtime_table;
+    ECGpuBackend backend;
     ECGpuNvAPI_Status nvapi_status;
     ECGpuAGSReturnCode ags_status;
     bool enable_set_name;
