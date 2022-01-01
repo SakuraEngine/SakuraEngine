@@ -26,9 +26,15 @@ include(mimalloc) # Fetch mimalloc SOURCES
 include(EASTL) # Fetch EASTL SOURCES
 include(vulkan)
 include(GPU)
+include(SDL2) # Set SDL2 ENVS
+# WASM
+extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/wasm-clang-win.zip 
+    ${SAKURA_BIN_DIR}/Debug
+    ${SAKURA_BIN_DIR}/Release
+)
+
 include(WASM3) # Set WASM3 ENVS
 include(WasmEdge) # Set WasmEdge ENVS
-include(SDL2) # Set SDL2 ENVS
 
 if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)

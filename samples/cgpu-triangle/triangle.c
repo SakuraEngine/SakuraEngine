@@ -5,11 +5,7 @@
 #include "math.h"
 
 // WA Engine
-THREAD_LOCAL SWAInstanceId wa_instance;
-THREAD_LOCAL SWARuntimeId wa_runtime;
-THREAD_LOCAL SWAModuleId wa_module;
 THREAD_LOCAL void* wa_watcher;
-THREAD_LOCAL const uint8_t* wa_bytes;
 
 // Render objects
 THREAD_LOCAL ECGpuBackend backend;
@@ -175,16 +171,6 @@ void initialize(void* usrdata)
 
 void raster_redraw()
 {
-    // hot-reload wasm
-    uint32_t size;
-    const uint8_t* old_wa_bytes = wa_bytes;
-    wasm_glob(wa_watcher, &wa_bytes, &size);
-    if (wa_bytes != old_wa_bytes && size != 0)
-    {
-        if (wa_instance && wa_runtime && wa_module)
-            finalize_wasm(wa_instance, wa_runtime, wa_module);
-        setup_wasm(&wa_instance, &wa_runtime, &wa_module, wa_bytes, size);
-    }
     // sync & reset
     cgpu_wait_fences(&present_fence, 1);
     CGpuAcquireNextDescriptor acquire_desc = {
@@ -216,6 +202,8 @@ void raster_redraw()
     CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
     CGpuRenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
+    // get hot-reloadable wasm
+    SWAModuleId wa_module = get_available_wasm(wa_watcher);
     if (wa_module != NULL)
     {
         SWAValue params[5];
@@ -295,7 +283,6 @@ void finalize()
 {
     SDL_DestroyWindow(sdl_window);
     // Free wasm engine
-    finalize_wasm(wa_instance, wa_runtime, wa_module);
     unwatch_wasm(wa_watcher);
     // Free cgpu objects
     cgpu_wait_queue_idle(gfx_queue);
@@ -336,7 +323,24 @@ int main(int argc, char* argv[])
     };
     void* watcher = watch_source("C:\\Coding\\Sakura.Runtime\\samples\\cgpu-triangle\\");
 
+#if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
     ProgramMain(backends);
+#else
+    const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
+    DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
+    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
+    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
+    {
+        thread_descs[i].pFunc = &ProgramMain;
+        thread_descs[i].pData = &backends[i];
+        skr_init_thread(&thread_descs[i], &hdls[i]);
+    }
+    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
+    {
+        skr_join_thread(hdls[i]);
+        skr_destroy_thread(hdls[i]);
+    }
+#endif
 
     unwatch_source(watcher);
 

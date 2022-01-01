@@ -6,13 +6,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void setup_wasm(SWAInstanceId*, SWARuntimeId*, SWAModuleId*, const uint8_t* bytes, uint32_t bytes_size);
-void finalize_wasm(SWAInstanceId, SWARuntimeId, SWAModuleId);
 void* watch_source(const char* dir);
+SWAModuleId get_available_wasm(void* watcher);
+void unwatch_wasm(void* watcher);
 void unwatch_source(void* watcher);
 void* watch_wasm();
-void wasm_glob(void* watcher, const uint8_t** bytes, uint32_t* size);
-void unwatch_wasm(void* watcher);
 #ifdef __cplusplus
 }
 #endif
