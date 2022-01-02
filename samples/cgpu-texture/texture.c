@@ -29,21 +29,25 @@ THREAD_LOCAL CGpuTextureViewId views[BACK_BUFFER_COUNT];
 const uint32_t* get_vertex_shader()
 {
     if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)vertex_shader_spirv;
+    if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)vertex_shader_dxil;
     return CGPU_NULLPTR;
 }
 const uint32_t get_vertex_shader_size()
 {
     if (backend == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
+    if (backend == CGPU_BACKEND_D3D12) return sizeof(vertex_shader_dxil);
     return 0;
 }
 const uint32_t* get_fragment_shader()
 {
     if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)fragment_shader_spirv;
+    if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)fragment_shader_dxil;
     return CGPU_NULLPTR;
 }
 const uint32_t get_fragment_shader_size()
 {
     if (backend == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
+    if (backend == CGPU_BACKEND_D3D12) return sizeof(fragment_shader_dxil);
     return 0;
 }
 
@@ -194,9 +198,9 @@ void initialize(void* usrdata)
     // Create instance
     CGpuInstanceDescriptor instance_desc = {
         .backend = backend,
-        .enable_debug_layer = false,
-        .enable_gpu_based_validation = false,
-        .enable_set_name = false
+        .enable_debug_layer = true,
+        .enable_gpu_based_validation = true,
+        .enable_set_name = true
     };
     instance = cgpu_create_instance(&instance_desc);
     // Filter adapters
@@ -379,15 +383,42 @@ void finalize()
     cgpu_free_instance(instance);
 }
 
+void ProgramMain(void* usrdata)
+{
+    initialize(usrdata);
+    raster_program();
+    finalize();
+}
+
 int main()
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-
-    ECGpuBackend backend = CGPU_BACKEND_VULKAN;
-    initialize(&backend);
-    raster_program();
-    finalize();
-
+    // When we support more add them here
+    ECGpuBackend backends[] = {
+        CGPU_BACKEND_VULKAN
+#ifdef CGPU_USE_D3D12
+        ,
+        CGPU_BACKEND_D3D12
+#endif
+    };
+#if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
+    ProgramMain(backends);
+#else
+    const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
+    DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
+    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
+    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
+    {
+        thread_descs[i].pFunc = &ProgramMain;
+        thread_descs[i].pData = &backends[i];
+        skr_init_thread(&thread_descs[i], &hdls[i]);
+    }
+    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
+    {
+        skr_join_thread(hdls[i]);
+        skr_destroy_thread(hdls[i]);
+    }
+#endif
     SDL_Quit();
 
     return 0;

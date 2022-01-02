@@ -959,6 +959,7 @@ typedef struct CGpuRootSignature {
     CGpuDeviceId device;
     CGpuParameterTable* tables;
     uint32_t table_count;
+    ECGpuPipelineType pipeline_type;
 } CGpuRootSignature;
 
 typedef struct CGpuDescriptorSet {
