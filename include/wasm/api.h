@@ -167,7 +167,7 @@ typedef struct SWARuntimeDescriptor {
 typedef struct SWAModuleDescriptor {
     const char8_t* name;
     const uint8_t* wasm;
-    size_t wasm_size;
+    uint32_t wasm_size;
     uint8_t bytes_pinned_outside;
     uint8_t strong_stub;
 } SWAModuleDescriptor;
@@ -176,7 +176,7 @@ typedef struct SWAModule {
     SWARuntimeId runtime;
     const char8_t* name;
     uint8_t* wasm;
-    size_t wasm_size;
+    uint32_t wasm_size;
     uint8_t bytes_pinned_outside;
 
     uint8_t strong_stub;

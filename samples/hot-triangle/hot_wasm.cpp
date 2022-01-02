@@ -49,7 +49,7 @@ struct WasmWatcher {
             SWAModuleDescriptor module_desc;
             module_desc.name = "raster_cmd";
             module_desc.wasm = (const uint8_t*)content.c_str();
-            module_desc.wasm_size = content.size();
+            module_desc.wasm_size = (uint32_t)content.size();
             module_desc.bytes_pinned_outside = true;
             module_desc.strong_stub = false;
             wa_module = swa_create_module(wa_runtime, &module_desc);

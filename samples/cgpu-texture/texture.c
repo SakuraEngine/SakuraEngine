@@ -31,7 +31,7 @@ const uint32_t* get_vertex_shader()
     if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)vertex_shader_spirv;
     return CGPU_NULLPTR;
 }
-const size_t get_vertex_shader_size()
+const uint32_t get_vertex_shader_size()
 {
     if (backend == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
     return 0;
@@ -41,7 +41,7 @@ const uint32_t* get_fragment_shader()
     if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)fragment_shader_spirv;
     return CGPU_NULLPTR;
 }
-const size_t get_fragment_shader_size()
+const uint32_t get_fragment_shader_size()
 {
     if (backend == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
     return 0;
@@ -295,7 +295,10 @@ void raster_redraw()
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
     CGpuRenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
     {
-        cgpu_render_encoder_set_viewport(rp_encoder, 0.0f, 0.0f, back_buffer->width, back_buffer->height, 0.f, 1.f);
+        cgpu_render_encoder_set_viewport(rp_encoder,
+            0.0f, 0.0f,
+            (float)back_buffer->width, (float)back_buffer->height,
+            0.f, 1.f);
         cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);

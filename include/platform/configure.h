@@ -111,7 +111,7 @@ typedef char char8_t;
 #endif
 
 #if defined(_MSC_VER) && !defined(__clang__)
-    #if !defined(_DEBUG)
+    #if !defined(_DEBUG) && !defined(NDEBUG)
         #define NDEBUG
     #endif
 

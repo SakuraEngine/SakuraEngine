@@ -148,13 +148,13 @@ SWAExecResult swa_exec_WAEdge(SWAModuleId module, const char8_t* const name, SWA
                     params[i] = WasmEdge_ValueGenI32(desc->params[i].i);
                     break;
                 case SWA_VAL_I64:
-                    params[i] = WasmEdge_ValueGenI32(desc->params[i].I);
+                    params[i] = WasmEdge_ValueGenI64(desc->params[i].I);
                     break;
                 case SWA_VAL_F32:
-                    params[i] = WasmEdge_ValueGenI32(desc->params[i].f);
+                    params[i] = WasmEdge_ValueGenF32(desc->params[i].f);
                     break;
                 case SWA_VAL_F64:
-                    params[i] = WasmEdge_ValueGenI32(desc->params[i].F);
+                    params[i] = WasmEdge_ValueGenF64(desc->params[i].F);
                     break;
                 default:
                     swa_assert(0 && "not supported!");
