@@ -708,6 +708,7 @@ CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureD
     if (desc->array_size == 0) wdesc->array_size = 1;
     if (desc->mip_levels == 0) wdesc->mip_levels = 1;
     if (desc->depth == 0) wdesc->depth = 1;
+    if (desc->sample_count == 0) wdesc->sample_count = 1;
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
     CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, desc);
     texture->device = device;

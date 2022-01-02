@@ -1,11 +1,17 @@
 #pragma once
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
+#include "./../common/common_utils.h"
 #include "D3D12MemAlloc.h"
 #ifdef CGPU_THREAD_SAFETY
     #include "platform/thread.h"
     #include "platform/atomic.h"
 #endif
 #include <EASTL/vector.h>
+
+#define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, \
+    ArraySize)                                                              \
+    ((MipSlice) + ((ArraySlice) * (MipLevels)) +                            \
+        ((PlaneSlice) * (MipLevels) * (ArraySize)))
 
 // Instance Helpers
 void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* I, uint32_t* count, bool* foundSoftwareAdapter);

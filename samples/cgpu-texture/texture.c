@@ -18,6 +18,7 @@ THREAD_LOCAL CGpuFenceId exec_fences[FLIGHT_FRAMES];
 THREAD_LOCAL CGpuQueueId gfx_queue;
 THREAD_LOCAL CGpuRootSignatureId root_sig;
 THREAD_LOCAL CGpuDescriptorSetId desc_set;
+THREAD_LOCAL CGpuDescriptorSetId desc_set2; // We use this for samplers under D3D12
 THREAD_LOCAL CGpuRenderPipelineId pipeline;
 THREAD_LOCAL CGpuCommandPoolId pools[FLIGHT_FRAMES];
 THREAD_LOCAL CGpuCommandBufferId cmds[FLIGHT_FRAMES];
@@ -61,7 +62,7 @@ void create_sampled_texture()
         .mipmap_mode = MIPMAP_MODE_LINEAR,
         .min_filter = FILTER_TYPE_LINEAR,
         .mag_filter = FILTER_TYPE_LINEAR,
-        .compare_func = CMP_ALWAYS
+        .compare_func = CMP_NEVER
     };
     sampler_state = cgpu_create_sampler(device, &sampler_desc);
     // Texture
@@ -104,13 +105,18 @@ void create_sampled_texture()
     cgpu_reset_command_pool(pools[0]);
     // record
     cgpu_cmd_begin(cmds[0]);
-    CGpuTextureBarrier cpy_barrier = {
-        .texture = sampled_texture,
-        .src_state = RESOURCE_STATE_UNDEFINED,
-        .dst_state = RESOURCE_STATE_COPY_DEST
-    };
-    CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &cpy_barrier, .texture_barriers_count = 1 };
-    cgpu_cmd_resource_barrier(cmds[0], &barrier_desc0);
+    // TODO: This is a diry hack for vulkan resource state barrier
+    //       Fix it soon!
+    if (backend == CGPU_BACKEND_VULKAN)
+    {
+        CGpuTextureBarrier cpy_barrier = {
+            .texture = sampled_texture,
+            .src_state = RESOURCE_STATE_UNDEFINED,
+            .dst_state = RESOURCE_STATE_COPY_DEST
+        };
+        CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &cpy_barrier, .texture_barriers_count = 1 };
+        cgpu_cmd_resource_barrier(cmds[0], &barrier_desc0);
+    }
     CGpuBufferToTextureTransfer b2t = {
         .src = upload_buffer,
         .src_offset = 0,
@@ -141,7 +147,13 @@ void create_sampled_texture()
     arguments[1].name = "texture_sampler";
     arguments[1].count = 1;
     arguments[1].samplers = &sampler_state;
-    cgpu_update_descriptor_set(desc_set, arguments, 2);
+    if (backend != CGPU_BACKEND_D3D12)
+        cgpu_update_descriptor_set(desc_set, arguments, 2);
+    else
+    {
+        cgpu_update_descriptor_set(desc_set2, arguments + 1, 1);
+        cgpu_update_descriptor_set(desc_set, arguments, 1);
+    }
 }
 
 void create_render_pipeline()
@@ -168,6 +180,11 @@ void create_render_pipeline()
         .set_index = 0
     };
     desc_set = cgpu_create_descriptor_set(device, &desc_set_desc);
+    if (backend == CGPU_BACKEND_D3D12)
+    {
+        desc_set_desc.set_index = 1;
+        desc_set2 = cgpu_create_descriptor_set(device, &desc_set_desc);
+    }
     CGpuVertexLayout vertex_layout = { .attribute_count = 0 };
     CGpuRenderPipelineDescriptor rp_desc = {
         .root_signature = root_sig,
@@ -185,16 +202,17 @@ void create_render_pipeline()
 
 void initialize(void* usrdata)
 {
+    backend = *(ECGpuBackend*)usrdata;
+
     // Create window
     SDL_SysWMinfo wmInfo;
-    sdl_window = SDL_CreateWindow("title",
+    sdl_window = SDL_CreateWindow(gCGpuBackendNames[backend],
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdl_window, &wmInfo);
 
-    backend = *(ECGpuBackend*)usrdata;
     // Create instance
     CGpuInstanceDescriptor instance_desc = {
         .backend = backend,
@@ -306,8 +324,8 @@ void raster_redraw()
         cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
-        cgpu_render_encoder_draw(rp_encoder, 3, 0);
-        cgpu_render_encoder_draw(rp_encoder, 3, 3);
+        if (desc_set2) cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set2);
+        cgpu_render_encoder_draw(rp_encoder, 6, 0);
     }
     cgpu_cmd_end_render_pass(cmd, rp_encoder);
     CGpuTextureBarrier present_barrier = {
@@ -367,6 +385,7 @@ void finalize()
     }
     cgpu_free_semaphore(present_semaphore);
     cgpu_free_descriptor_set(desc_set);
+    if (desc_set2) cgpu_free_descriptor_set(desc_set2);
     cgpu_free_sampler(sampler_state);
     cgpu_free_texture(sampled_texture);
     cgpu_free_texture_view(sampled_view);
@@ -390,14 +409,13 @@ void ProgramMain(void* usrdata)
     finalize();
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     // When we support more add them here
     ECGpuBackend backends[] = {
-        CGPU_BACKEND_VULKAN
+        CGPU_BACKEND_VULKAN,
 #ifdef CGPU_USE_D3D12
-        ,
         CGPU_BACKEND_D3D12
 #endif
     };
@@ -420,6 +438,5 @@ int main()
     }
 #endif
     SDL_Quit();
-
     return 0;
 }

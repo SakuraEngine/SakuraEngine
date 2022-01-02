@@ -406,11 +406,40 @@ CGpuDescriptorSetId cgpu_create_descriptor_set_d3d12(CGpuDeviceId device, const 
     struct D3D12Util_DescriptorHeap* pSamplerHeap = D->pSamplerHeaps[nodeIndex];
     (void)pSamplerHeap;
     CGpuParameterTable* param_table = &RS->super.tables[desc->set_index];
+    uint32_t CbvSrvUavCount = 0;
+    uint32_t SamplerCount = 0;
+    for (uint32_t i = 0; i < param_table->resources_count; i++)
+    {
+        if (param_table->resources[i].type == RT_SAMPLER)
+            SamplerCount++;
+        else if (param_table->resources[i].type == RT_TEXTURE ||
+                 param_table->resources[i].type == RT_RW_TEXTURE ||
+                 param_table->resources[i].type == RT_BUFFER ||
+                 param_table->resources[i].type == RT_BUFFER_RAW ||
+                 param_table->resources[i].type == RT_RW_BUFFER ||
+                 param_table->resources[i].type == RT_RW_BUFFER_RAW ||
+                 param_table->resources[i].type == RT_TEXTURE_CUBE ||
+                 param_table->resources[i].type == RT_UNIFORM_BUFFER)
+        {
+            CbvSrvUavCount++;
+        }
+    }
     // CBV/SRV/UAV
-    auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pCbvSrvUavHeap, param_table->resources_count);
-    Set->mCbvSrvUavHandle = StartHandle.mGpu.ptr - pCbvSrvUavHeap->mStartHandle.mGpu.ptr;
-    Set->mCbvSrvUavStride = param_table->resources_count * pCbvSrvUavHeap->mDescriptorSize;
-    // TODO: Static samplers
+    Set->mCbvSrvUavHandle = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+    Set->mSamplerHandle = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+    if (CbvSrvUavCount)
+    {
+        auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pCbvSrvUavHeap, param_table->resources_count);
+        Set->mCbvSrvUavHandle = StartHandle.mGpu.ptr - pCbvSrvUavHeap->mStartHandle.mGpu.ptr;
+        Set->mCbvSrvUavStride = CbvSrvUavCount * pCbvSrvUavHeap->mDescriptorSize;
+    }
+    if (SamplerCount)
+    {
+        auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pSamplerHeap, param_table->resources_count);
+        Set->mSamplerHandle = StartHandle.mGpu.ptr - pSamplerHeap->mStartHandle.mGpu.ptr;
+        Set->mSamplerStride = SamplerCount * pSamplerHeap->mDescriptorSize;
+    }
+    // TODO: Bind NULL handles on creation
     // TODO: Support root descriptors
     return &Set->super;
 }
@@ -423,6 +452,7 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
     CGpuParameterTable* ParamTable = &RS->super.tables[set->index];
     const uint32_t nodeIndex = SINGLE_GPU_NODE_INDEX;
     struct D3D12Util_DescriptorHeap* pCbvSrvUavHeap = D->pCbvSrvUavHeaps[nodeIndex];
+    struct D3D12Util_DescriptorHeap* pSamplerHeap = D->pSamplerHeaps[nodeIndex];
     for (uint32_t i = 0; i < count; i++)
     {
         // Descriptor Info
@@ -441,9 +471,37 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
         switch (ResData->type)
         {
+            case RT_SAMPLER: {
+                cgpu_assert(ArgData->samplers && "cgpu_assert: Binding NULL Sampler(s)!");
+                CGpuSampler_D3D12** Samplers = (CGpuSampler_D3D12**)ArgData->samplers;
+                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                {
+                    cgpu_assert(ArgData->samplers[arr] && "cgpu_assert: Binding NULL Sampler!");
+                    D3D12Util_CopyDescriptorHandle(pSamplerHeap,
+                        { Samplers[arr]->mDxHandle.ptr },
+                        Set->mSamplerHandle, arr);
+                }
+            }
+            break;
+            case RT_TEXTURE:
+            case RT_TEXTURE_CUBE: {
+                cgpu_assert(ArgData->textures && "cgpu_assert: Binding NULL Textures(s)!");
+                CGpuTextureView_D3D12** Textures = (CGpuTextureView_D3D12**)ArgData->textures;
+                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                {
+                    cgpu_assert(ArgData->textures[arr] && "cgpu_assert: Binding NULL Textures!");
+                    D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
+                        { Textures[arr]->mDxDescriptorHandles.ptr },
+                        Set->mCbvSrvUavHandle, arr);
+                }
+            }
+            break;
             case RT_BUFFER:
             case RT_BUFFER_RAW: {
+                // TODO: CBV
             }
+            break;
+            case RT_RW_TEXTURE:
             case RT_RW_BUFFER:
             case RT_RW_BUFFER_RAW: {
                 cgpu_assert(ArgData->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
@@ -455,8 +513,8 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
                         { Buffers[arr]->mDxDescriptorHandles.ptr + Buffers[arr]->mDxUavOffset },
                         Set->mCbvSrvUavHandle, arr);
                 }
-                break;
             }
+            break;
             default:
                 break;
         }
@@ -896,11 +954,6 @@ void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd)
     Cmd->pBoundRootSignature = NULL;
 }
 
-#define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, \
-    ArraySize)                                                              \
-    ((MipSlice) + ((ArraySlice) * (MipLevels)) +                            \
-        ((PlaneSlice) * (MipLevels) * (ArraySize)))
-
 // TODO: https://microsoft.github.io/DirectX-Specs/d3d/D3D12EnhancedBarriers.html#introduction
 // Enhanced Barriers is not currently a hardware or driver requirement
 void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
@@ -1092,7 +1145,18 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
 
 void cgpu_render_encoder_bind_descriptor_set_d3d12(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set)
 {
-    cgpu_assert(0);
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    const CGpuDescriptorSet_D3D12* Set = (CGpuDescriptorSet_D3D12*)set;
+    if (Set->mCbvSrvUavHandle != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+    {
+        Cmd->pDxCmdList->SetGraphicsRootDescriptorTable(set->index,
+            { Cmd->mBoundHeapStartHandles[0].ptr + Set->mCbvSrvUavHandle });
+    }
+    else if (Set->mSamplerHandle != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+    {
+        Cmd->pDxCmdList->SetGraphicsRootDescriptorTable(set->index,
+            { Cmd->mBoundHeapStartHandles[1].ptr + Set->mSamplerHandle });
+    }
 }
 
 void cgpu_render_encoder_set_viewport_d3d12(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)

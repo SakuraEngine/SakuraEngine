@@ -75,6 +75,10 @@ RUNTIME_API void cgpu_map_buffer_d3d12(CGpuBufferId buffer, const struct CGpuBuf
 RUNTIME_API void cgpu_unmap_buffer_d3d12(CGpuBufferId buffer);
 RUNTIME_API void cgpu_free_buffer_d3d12(CGpuBufferId buffer);
 
+// Sampler APIs
+RUNTIME_API CGpuSamplerId cgpu_create_sampler_d3d12(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc);
+RUNTIME_API void cgpu_free_sampler_d3d12(CGpuSamplerId sampler);
+
 // Texture/TextureView APIs
 RUNTIME_API CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc);
 RUNTIME_API void cgpu_free_texture_d3d12(CGpuTextureId texture);
@@ -89,6 +93,7 @@ RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 // CMDs
 RUNTIME_API void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
+RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd);
 
@@ -227,6 +232,10 @@ typedef struct CGpuDescriptorSet_D3D12 {
     uint64_t mCbvSrvUavHandle;
     /// Stride of the cbv srv uav descriptor table (number of descriptors * descriptor size)
     uint32_t mCbvSrvUavStride;
+    /// Start handle to sampler descriptor table
+    uint64_t mSamplerHandle;
+    /// Stride of the sampler descriptor table (number of descriptors * descriptor size)
+    uint32_t mSamplerStride;
     // TODO: Support root descriptors
     // D3D12_GPU_VIRTUAL_ADDRESS* pRootAddresses;
 } CGpuDescriptorSet_D3D12;
@@ -267,7 +276,11 @@ typedef struct CGpuBuffer_D3D12 {
 typedef struct CGpuTexture_D3D12 {
     CGpuTexture super;
     ID3D12Resource* pDxResource;
+#ifdef __cplusplus
+    D3D12MA::Allocation* pDxAllocation;
+#else
     struct DMA_Allocation* pDxAllocation;
+#endif
 } CGpuTexture_D3D12;
 
 typedef struct CGpuTextureView_D3D12 {
@@ -280,6 +293,14 @@ typedef struct CGpuTextureView_D3D12 {
     /// Offset from mDxDescriptors for rtv descriptor handle
     D3D12_CPU_DESCRIPTOR_HANDLE mDxRtxDescriptorHandle;
 } CGpuTextureView_D3D12;
+
+typedef struct CGpuSampler_D3D12 {
+    CGpuSampler super;
+    /// Description for creating the Sampler descriptor for this sampler
+    D3D12_SAMPLER_DESC mDxDesc;
+    /// Descriptor handle of the Sampler in a CPU visible descriptor heap
+    D3D12_CPU_DESCRIPTOR_HANDLE mDxHandle;
+} CGpuSampler_D3D12;
 
 typedef struct CGpuSwapChain_D3D12 {
     CGpuSwapChain super;
