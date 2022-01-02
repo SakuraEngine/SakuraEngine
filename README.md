@@ -28,7 +28,8 @@
 ## 核心组件
 - platform
 - math
-- cgpu: [[api]](include/cgpu/api.h) [[design]](src/gpu/cgpu/README.md)
+- cgpu: [[api]](include/cgpu/api.h) [[design]](include/cgpu/README.md)
+- swa: [[api]](include/wasm/api.h) [[design]](include/wasm/README.md)
 
 ## 嵌入源码的开源库和版本
 - log.c f9ea349 (MIT)
