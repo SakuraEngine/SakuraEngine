@@ -398,12 +398,11 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
 {
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGpuRootSignature_Vulkan));
-    DECLARE_ZERO(CGpuUtil_RSBlackboard, bb)
-    CGpuUtil_InitRSBlackboardAndParamTables((CGpuRootSignature*)RS, &bb, desc);
+    CGpuUtil_InitRSParamTables((CGpuRootSignature*)RS, desc);
     // Collect Shader Resources
-    if (bb.set_count * bb.max_binding > 0)
+    if (RS->super.table_count > 0)
     {
-        RS->set_layouts = (SetLayout_Vulkan*)cgpu_calloc(bb.set_count, sizeof(SetLayout_Vulkan));
+        RS->set_layouts = (SetLayout_Vulkan*)cgpu_calloc(RS->super.table_count, sizeof(SetLayout_Vulkan));
         // Create Vk Objects
         for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
         {
@@ -470,7 +469,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             .pNext = NULL,
             .templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET_KHR,
             .pipelineLayout = RS->pipeline_layout,
-            .pipelineBindPoint = gPipelineBindPoint[bb.pipelineType],
+            .pipelineBindPoint = gPipelineBindPoint[RS->super.pipeline_type],
             .descriptorSetLayout = set_to_record->layout,
             .set = i_set,
             .pDescriptorUpdateEntries = template_entries,
@@ -480,7 +479,6 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->update_template));
     }
     // Free Temporal Memory
-    CGpuUtil_FreeRSBlackboard(&bb);
     cgpu_free(set_layouts);
     return &RS->super;
 }

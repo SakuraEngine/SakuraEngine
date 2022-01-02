@@ -278,6 +278,16 @@ void cgpu_free_fence_d3d12(CGpuFenceId fence)
     cgpu_delete(F);
 }
 
+CGpuSemaphoreId cgpu_create_semaphore_d3d12(CGpuDeviceId device)
+{
+    return (CGpuSemaphoreId)cgpu_create_fence(device);
+}
+
+void cgpu_free_semaphore_d3d12(CGpuSemaphoreId semaphore)
+{
+    return cgpu_free_fence((CGpuFenceId)semaphore);
+}
+
 CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
@@ -290,33 +300,33 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
         shaderStages |= shader_desc->stage;
     }
     // Pick shader reflection data
-    DECLARE_ZERO(CGpuUtil_RSBlackboard, bb)
-    CGpuUtil_InitRSBlackboardAndParamTables((CGpuRootSignature*)RS, &bb, desc);
+    CGpuUtil_InitRSParamTables((CGpuRootSignature*)RS, desc);
     // Fill resource slots
     // Only support descriptor tables now
     // TODO: Support root CBVs
     //       Add backend sort for better performance
-    const UINT tableCount = bb.set_count;
+    const UINT tableCount = RS->super.table_count;
     UINT descRangeCount = 0;
-    for (uint32_t i = 0; i < bb.set_count; i++)
+    for (uint32_t i = 0; i < tableCount; i++)
     {
-        descRangeCount += bb.valid_bindings[i];
+        descRangeCount += RS->super.tables[i].resources_count;
     }
     D3D12_ROOT_PARAMETER1* rootParams = (D3D12_ROOT_PARAMETER1*)cgpu_calloc(tableCount, sizeof(D3D12_ROOT_PARAMETER1));
     D3D12_DESCRIPTOR_RANGE1* cbvSrvUavRanges = (D3D12_DESCRIPTOR_RANGE1*)cgpu_calloc(descRangeCount, sizeof(D3D12_DESCRIPTOR_RANGE1));
     uint32_t i_table = 0;
     uint32_t i_range = 0;
     // Create descriptor tables
-    for (uint32_t i_set = 0; i_set < bb.set_count; i_set++)
+    for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
     {
+        CGpuParameterTable* ParamTable = &RS->super.tables[i_set];
         D3D12_ROOT_PARAMETER1* rootParam = &rootParams[i_table];
         rootParam->ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         CGpuShaderStages visStages = SHADER_STAGE_NONE;
         const D3D12_DESCRIPTOR_RANGE1* descRangeCursor = &cbvSrvUavRanges[i_range];
-        for (uint32_t i_binding = 0; i_binding < bb.valid_bindings[i_set]; i_binding++)
+        for (uint32_t i_binding = 0; i_binding < ParamTable->resources_count; i_binding++)
         {
             D3D12_DESCRIPTOR_RANGE1* descRange = &cbvSrvUavRanges[i_range];
-            CGpuShaderResource* reflSlot = &bb.sig_reflections[i_set * i_binding + i_binding];
+            CGpuShaderResource* reflSlot = &ParamTable->resources[i_binding];
             descRange->RegisterSpace = reflSlot->set;
             descRange->BaseShaderRegister = reflSlot->binding;
             descRange->Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
@@ -327,7 +337,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
             i_range++;
         }
         rootParam->ShaderVisibility = D3D12Util_TranslateShaderStages(visStages);
-        rootParam->DescriptorTable.NumDescriptorRanges = bb.valid_bindings[i_set];
+        rootParam->DescriptorTable.NumDescriptorRanges = ParamTable->resources_count;
         rootParam->DescriptorTable.pDescriptorRanges = descRangeCursor;
         i_table++;
     }
@@ -374,7 +384,6 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
         rootSignatureString->GetBufferPointer(),
         rootSignatureString->GetBufferSize(),
         IID_ARGS(&RS->pDxRootSignature)));
-    CGpuUtil_FreeRSBlackboard(&bb);
     cgpu_free(rootParams);
     cgpu_free(cbvSrvUavRanges);
     return &RS->super;
@@ -689,7 +698,6 @@ CGpuQueueId cgpu_get_queue_d3d12(CGpuDeviceId device, ECGpuQueueType type, uint3
 
 void cgpu_submit_queue_d3d12(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
 {
-    // TODO: Add Necessary Semaphores
     uint32_t CmdCount = desc->cmds_count;
     CGpuCommandBuffer_D3D12** Cmds = (CGpuCommandBuffer_D3D12**)desc->cmds;
     CGpuQueue_D3D12* Q = (CGpuQueue_D3D12*)queue;
@@ -706,10 +714,20 @@ void cgpu_submit_queue_d3d12(CGpuQueueId queue, const struct CGpuQueueSubmitDesc
     {
         cmds[i] = Cmds[i]->pDxCmdList;
     }
+    // Wait semaphores
+    CGpuFence_D3D12** WaitSemaphores = (CGpuFence_D3D12**)desc->wait_semaphores;
+    for (uint32_t i = 0; i < desc->wait_semaphore_count; ++i)
+        Q->pCommandQueue->Wait(WaitSemaphores[i]->pDxFence,
+            WaitSemaphores[i]->mFenceValue - 1);
+    // Execute
     Q->pCommandQueue->ExecuteCommandLists(CmdCount, cmds);
-
+    // Signal fences
     if (F)
         D3D12Util_SignalFence(Q, F->pDxFence, F->mFenceValue++);
+    // Signal Semaphores
+    CGpuFence_D3D12** SignalSemaphores = (CGpuFence_D3D12**)desc->signal_semaphores;
+    for (uint32_t i = 0; i < desc->signal_semaphore_count; i++)
+        D3D12Util_SignalFence(Q, SignalSemaphores[i]->pDxFence, SignalSemaphores[i]->mFenceValue++);
 }
 
 void cgpu_wait_queue_idle_d3d12(CGpuQueueId queue)

@@ -849,14 +849,14 @@ void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
 }
 
 // Common Utils
-void CGpuUtil_InitRSBlackboardAndParamTables(CGpuRootSignature* RS, CGpuUtil_RSBlackboard* bb, const struct CGpuRootSignatureDescriptor* desc)
+void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSignatureDescriptor* desc)
 {
     DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shaders_count)
     // Pick shader reflection data
     for (uint32_t i = 0; i < desc->shaders_count; i++)
     {
         const CGpuPipelineShaderDescriptor* shader_desc = &desc->shaders[i];
-        // find shader refl
+        // Find shader reflection
         for (uint32_t j = 0; j < shader_desc->library->entrys_count; j++)
         {
             CGpuShaderReflection* temp_entry_reflcetion = &shader_desc->library->entry_reflections[j];
@@ -871,74 +871,83 @@ void CGpuUtil_InitRSBlackboardAndParamTables(CGpuRootSignature* RS, CGpuUtil_RSB
             entry_reflections[i] = &shader_desc->library->entry_reflections[0];
         }
     }
-    // Count Sets and Binding Slots
-    bb->pipelineType = PIPELINE_TYPE_NONE;
+    // Count sets and binding slots
+    uint32_t set_count = 0;
+    RS->pipeline_type = PIPELINE_TYPE_NONE;
     for (uint32_t i = 0; i < desc->shaders_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
         for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
         {
             CGpuShaderResource* resource = &reflection->shader_resources[j];
-            bb->set_count = bb->set_count > resource->set + 1 ? bb->set_count : resource->set + 1;
-            bb->max_binding = bb->max_binding > resource->binding + 1 ? bb->max_binding : resource->binding + 1;
+            set_count = set_count > resource->set + 1 ? set_count : resource->set + 1;
         }
         // Pipeline Type
         if (reflection->stage & SHADER_STAGE_COMPUTE)
-            bb->pipelineType = PIPELINE_TYPE_COMPUTE;
+            RS->pipeline_type = PIPELINE_TYPE_COMPUTE;
         else if (reflection->stage & SHADER_STAGE_RAYTRACING)
-            bb->pipelineType = PIPELINE_TYPE_RAYTRACING;
+            RS->pipeline_type = PIPELINE_TYPE_RAYTRACING;
         else
-            bb->pipelineType = PIPELINE_TYPE_GRAPHICS;
+            RS->pipeline_type = PIPELINE_TYPE_GRAPHICS;
     }
-    // Collect Shader Resources
-    if (bb->set_count * bb->max_binding > 0)
+    // Count bindings for each set
+    uint32_t* valid_bindings = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
     {
-        // Record On Temporal Memory
-        bb->sig_reflections = (CGpuShaderResource*)cgpu_calloc(bb->set_count * bb->max_binding, sizeof(CGpuShaderResource));
-        bb->valid_bindings = (uint32_t*)cgpu_calloc(bb->set_count, sizeof(uint32_t));
-        for (uint32_t i = 0; i < desc->shaders_count; i++)
+        CGpuShaderReflection* reflection = entry_reflections[i];
+        for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
         {
-            CGpuShaderReflection* reflection = entry_reflections[i];
-            for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
+            CGpuShaderResource* resource = &reflection->shader_resources[j];
+            valid_bindings[resource->set]++;
+        }
+    }
+    // Resize param table
+    if (set_count)
+    {
+        RS->tables = (CGpuParameterTable*)cgpu_calloc(set_count, sizeof(CGpuParameterTable));
+        RS->table_count = set_count;
+        for (uint32_t i = 0; i < RS->table_count; i++)
+        {
+            CGpuParameterTable* set_to_record = &RS->tables[i];
+            if (valid_bindings[i])
             {
-                CGpuShaderResource* resource = &reflection->shader_resources[j];
-                const uint32_t slot = bb->max_binding * resource->set + resource->binding;
-                CGpuShaderStages prev_stages = bb->sig_reflections[slot].stages;
-                memcpy(&bb->sig_reflections[slot], resource, sizeof(CGpuShaderResource));
-                // Merge stage masks
-                bb->sig_reflections[slot].stages |= prev_stages;
-                bb->valid_bindings[resource->set] =
-                    bb->valid_bindings[resource->set] > resource->binding + 1 ? bb->valid_bindings[resource->set] : resource->binding + 1;
+                set_to_record->resources_count = valid_bindings[i];
+                set_to_record->resources = cgpu_calloc(set_to_record->resources_count, sizeof(CGpuShaderResource));
             }
         }
     }
-    // Initailize CGpuRootSignature::tables
-    RS->table_count = bb->set_count;
-    if (bb->set_count * bb->max_binding > 0)
+    cgpu_free(valid_bindings);
+    // Collect shader resources
+    uint32_t* dst_bindings = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
+    for (uint32_t i = 0; i < desc->shaders_count; i++)
     {
-        RS->tables = (CGpuParameterTable*)cgpu_calloc(bb->set_count, sizeof(CGpuParameterTable));
-        for (uint32_t i_set = 0; i_set < bb->set_count; i_set++)
+        CGpuShaderReflection* reflection = entry_reflections[i];
+        for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
         {
-            CGpuParameterTable* set_to_record = &RS->tables[i_set];
-            set_to_record->resources_count = bb->valid_bindings[i_set];
-            set_to_record->resources = cgpu_calloc(set_to_record->resources_count, sizeof(CGpuShaderResource));
-            for (uint32_t i_binding = 0; i_binding < set_to_record->resources_count; i_binding++)
-            {
-                CGpuShaderResource* reflSlot = &bb->sig_reflections[i_set * bb->max_binding + i_binding];
-                const size_t source_len = strlen(reflSlot->name);
-                set_to_record->resources[i_binding].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
+            CGpuShaderResource* resource = &reflection->shader_resources[j];
+            CGpuShaderResource* dst = &RS->tables[resource->set].resources[dst_bindings[resource->set]];
+            CGpuShaderStages prev_stages = dst->stages;
+            memcpy(dst, resource, sizeof(CGpuShaderResource));
+            dst->stages |= prev_stages;
+            dst_bindings[resource->set]++;
+        }
+    }
+    cgpu_free(dst_bindings);
+    // Store name
+    for (uint32_t i = 0; i < RS->table_count; i++)
+    {
+        CGpuParameterTable* set_to_record = &RS->tables[i];
+        for (uint32_t j = 0; j < set_to_record->resources_count; j++)
+        {
+            CGpuShaderResource* dst = &set_to_record->resources[j];
+            const char* src_name = dst->name;
+            const size_t source_len = strlen(src_name);
+            dst->name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
 #ifdef _WIN32
-                strcpy_s((char8_t*)set_to_record->resources[i_binding].name, source_len + 1, reflSlot->name);
+            strcpy_s((char8_t*)dst->name, source_len + 1, src_name);
 #else
-                strcpy((char8_t*)set_to_record->resources[i_binding].name, reflSlot->name);
+            strcpy((char8_t*)dst->name, src_name);
 #endif
-                set_to_record->resources[i_binding].type = reflSlot->type;
-                set_to_record->resources[i_binding].set = reflSlot->set;
-                set_to_record->resources[i_binding].binding = reflSlot->binding;
-                set_to_record->resources[i_binding].size = reflSlot->size;
-                set_to_record->resources[i_binding].stages = reflSlot->stages;
-                set_to_record->resources[i_binding].name_hash = reflSlot->name_hash;
-            }
         }
     }
 }
@@ -966,11 +975,4 @@ void CGpuUtil_FreeRSParamTables(CGpuRootSignature* RS)
         }
         cgpu_free(RS->tables);
     }
-}
-
-void CGpuUtil_FreeRSBlackboard(CGpuUtil_RSBlackboard* bb)
-{
-    // Free Temporal Memory
-    cgpu_free(bb->sig_reflections);
-    cgpu_free(bb->valid_bindings);
 }
