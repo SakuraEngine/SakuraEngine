@@ -201,6 +201,38 @@ void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGpuCommandBufferId cmd, const str
 #endif
 }
 
+void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
+{
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)cmd->device;
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    CGpuBuffer_D3D12* Src = (CGpuBuffer_D3D12*)desc->src;
+    CGpuTexture_D3D12* Dst = (CGpuTexture_D3D12*)desc->dst;
+
+    uint32_t subresource = CALC_SUBRESOURCE_INDEX(
+        desc->dst_mip_level, desc->base_array_layer,
+        0, Dst->super.mip_levels,
+        Dst->super.array_size_minus_one + 1);
+    D3D12_RESOURCE_DESC resourceDesc = Dst->pDxResource->GetDesc();
+
+    D3D12_TEXTURE_COPY_LOCATION src = {};
+    D3D12_TEXTURE_COPY_LOCATION dst = {};
+    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    src.pResource = Src->pDxResource;
+    D->pDxDevice->GetCopyableFootprints(
+        &resourceDesc, subresource, 1,
+        desc->src_offset, &src.PlacedFootprint,
+        NULL, NULL, NULL);
+    src.PlacedFootprint.Offset = desc->src_offset;
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.pResource = Dst->pDxResource;
+    dst.SubresourceIndex = subresource;
+#if defined(XBOX)
+    Cmd->mDma.pDxCmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, NULL);
+#else
+    Cmd->pDxCmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, NULL);
+#endif
+}
+
 void cgpu_free_buffer_d3d12(CGpuBufferId buffer)
 {
     CGpuBuffer_D3D12* B = (CGpuBuffer_D3D12*)buffer;
@@ -219,7 +251,228 @@ void cgpu_free_buffer_d3d12(CGpuBufferId buffer)
     delete B;
 }
 
+// Sampler APIs
+CGpuSamplerId cgpu_create_sampler_d3d12(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc)
+{
+    // initialize to zero
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
+    CGpuSampler_D3D12* pSampler = cgpu_new<CGpuSampler_D3D12>();
+
+    D3D12_SAMPLER_DESC add_desc = {};
+    // add sampler to gpu
+    add_desc.Filter = D3D12Util_TranslateFilter(
+        desc->min_filter, desc->mag_filter,
+        desc->mipmap_mode, desc->max_anisotropy > 0.0f,
+        (desc->compare_func != CMP_NEVER ? true : false));
+    add_desc.AddressU = D3D12Util_TranslateAddressMode(desc->address_u);
+    add_desc.AddressV = D3D12Util_TranslateAddressMode(desc->address_v);
+    add_desc.AddressW = D3D12Util_TranslateAddressMode(desc->address_w);
+    add_desc.MipLODBias = desc->mip_lod_bias;
+    add_desc.MaxAnisotropy = cgpu_max((UINT)desc->max_anisotropy, 1U);
+    add_desc.ComparisonFunc = gDx12ComparisonFuncTranslator[desc->compare_func];
+    add_desc.BorderColor[0] = 0.0f;
+    add_desc.BorderColor[1] = 0.0f;
+    add_desc.BorderColor[2] = 0.0f;
+    add_desc.BorderColor[3] = 0.0f;
+    add_desc.MinLOD = 0.0f;
+    add_desc.MaxLOD =
+        ((desc->mipmap_mode == MIPMAP_MODE_LINEAR) ? D3D12_FLOAT32_MAX : 0.0f);
+    ;
+    pSampler->mDxDesc = add_desc;
+    pSampler->mDxHandle =
+        D3D12Util_ConsumeDescriptorHandles(
+            D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER], 1)
+            .mCpu;
+    D->pDxDevice->CreateSampler(&pSampler->mDxDesc, pSampler->mDxHandle);
+    return &pSampler->super;
+}
+
+void cgpu_free_sampler_d3d12(CGpuSamplerId sampler)
+{
+    CGpuSampler_D3D12* pSampler = (CGpuSampler_D3D12*)sampler;
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)sampler->device;
+
+    D3D12Util_ReturnDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER],
+        pSampler->mDxHandle, 1);
+    cgpu_delete(pSampler);
+}
+
 // Texture/TextureView APIs
+CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc)
+{
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
+    CGpuTexture_D3D12* T = cgpu_new<CGpuTexture_D3D12>();
+    if (desc->native_handle)
+    {
+        T->pDxResource = (ID3D12Resource*)desc->native_handle;
+        T->super.owns_image = false;
+    }
+    else
+        T->super.owns_image = true;
+
+    // add to gpu
+    D3D12_RESOURCE_DESC res_desc = {};
+    DXGI_FORMAT dxFormat = DXGIUtil_TranslatePixelFormat(desc->format);
+    CGpuResourceTypes descriptors = desc->descriptors;
+    if (T->pDxResource == CGPU_NULLPTR)
+    {
+        D3D12_RESOURCE_DIMENSION res_dim = D3D12_RESOURCE_DIMENSION_UNKNOWN;
+        if (desc->flags & TCF_FORCE_2D)
+        {
+            cgpu_assert(desc->depth == 1);
+            res_dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        }
+        else if (desc->flags & TCF_FORCE_3D)
+            res_dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+        else
+        {
+            if (desc->depth > 1)
+                res_dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+            else if (desc->height > 1)
+                res_dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            else
+                res_dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+        }
+        res_desc.Dimension = res_dim;
+        // On PC, If Alignment is set to 0, the runtime will use 4MB for MSAA
+        // textures and 64KB for everything else. On XBox, We have to explicitlly
+        // assign D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT if MSAA is used
+        res_desc.Alignment = (UINT)desc->sample_count > 1 ? D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT : 0;
+        res_desc.Width = desc->width;
+        res_desc.Height = desc->height;
+        res_desc.DepthOrArraySize =
+            (UINT16)(desc->array_size != 1 ? desc->array_size : desc->depth);
+        res_desc.MipLevels = (UINT16)desc->mip_levels;
+        res_desc.Format = DXGIUtil_FormatToTypeless(dxFormat);
+        res_desc.SampleDesc.Count = (UINT)desc->sample_count;
+        res_desc.SampleDesc.Quality = (UINT)desc->sample_quality;
+        res_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+        res_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+        // VRS enforces the format
+        if (desc->start_state == RESOURCE_STATE_SHADING_RATE_SOURCE)
+            res_desc.Format = dxFormat;
+
+        D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS data;
+        data.Format = res_desc.Format;
+        data.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+        data.SampleCount = res_desc.SampleDesc.Count;
+        D->pDxDevice->CheckFeatureSupport(
+            D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &data, sizeof(data));
+        while (data.NumQualityLevels == 0 && data.SampleCount > 0)
+        {
+            cgpu_warn(
+                "Sample Count (%u) not supported. Trying a lower sample count (%u)",
+                data.SampleCount, data.SampleCount / 2);
+            data.SampleCount = res_desc.SampleDesc.Count / 2;
+            D->pDxDevice->CheckFeatureSupport(
+                D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &data, sizeof(data));
+        }
+        res_desc.SampleDesc.Count = data.SampleCount;
+
+        CGpuResourceStates actualStartState = desc->start_state;
+        // Decide UAV flags
+        if (descriptors & RT_RW_TEXTURE)
+        {
+            res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        }
+        // Decide render target flags
+        if (desc->start_state & RESOURCE_STATE_RENDER_TARGET)
+        {
+            res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            actualStartState = (desc->start_state > RESOURCE_STATE_RENDER_TARGET) ?
+                                   (desc->start_state & (ECGpuResourceState)~RESOURCE_STATE_RENDER_TARGET) :
+                                   RESOURCE_STATE_RENDER_TARGET;
+        }
+        else if (desc->start_state & RESOURCE_STATE_DEPTH_WRITE)
+        {
+            res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+            actualStartState = (desc->start_state > RESOURCE_STATE_DEPTH_WRITE) ?
+                                   (desc->start_state & (ECGpuResourceState)~RESOURCE_STATE_DEPTH_WRITE) :
+                                   RESOURCE_STATE_DEPTH_WRITE;
+        }
+        // Decide sharing flags
+        if (desc->flags & TCF_EXPORT_ADAPTER_BIT)
+        {
+            res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER;
+            res_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        }
+        if (desc->flags & TCF_ALLOW_DISPLAY_TARGET)
+        {
+            actualStartState = RESOURCE_STATE_PRESENT;
+        }
+        // Decide clear value
+        DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValue);
+        clearValue.Format = dxFormat;
+        if (res_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+        {
+            clearValue.DepthStencil.Depth = desc->clear_value.depth;
+            clearValue.DepthStencil.Stencil = (UINT8)desc->clear_value.stencil;
+        }
+        else
+        {
+            clearValue.Color[0] = desc->clear_value.r;
+            clearValue.Color[1] = desc->clear_value.g;
+            clearValue.Color[2] = desc->clear_value.b;
+            clearValue.Color[3] = desc->clear_value.a;
+        }
+        D3D12_CLEAR_VALUE* pClearValue = NULL;
+        D3D12_RESOURCE_STATES res_states = D3D12Util_TranslateResourceState(actualStartState);
+        if ((res_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) ||
+            (res_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL))
+        {
+            pClearValue = &clearValue;
+        }
+#if defined(XBOX)
+        if (desc->flags & TCF_ALLOW_DISPLAY_TARGET)
+        {
+            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_ALLOW_DISPLAY;
+            res_desc.Format = dxFormat;
+        }
+#endif
+        // Do allocation (TODO: mGPU)
+        D3D12MA::ALLOCATION_DESC alloc_desc = {};
+        alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+        if (desc->flags & TCF_OWN_MEMORY_BIT)
+            alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
+        CHECK_HRESULT(D->pResourceAllocator->CreateResource(
+            &alloc_desc, &res_desc, res_states, pClearValue,
+            &T->pDxAllocation, IID_ARGS(&T->pDxResource)));
+    }
+    else
+    {
+        res_desc = T->pDxResource->GetDesc();
+        dxFormat = res_desc.Format;
+    }
+    // Set debug name
+    if (device->adapter->instance->enable_set_name && desc->name)
+    {
+        wchar_t debugName[MAX_GPU_DEBUG_NAME_LENGTH] = {};
+        if (desc->name)
+            mbstowcs(debugName, desc->name, MAX_GPU_DEBUG_NAME_LENGTH);
+        T->pDxResource->SetName(debugName);
+    }
+    T->super.width = desc->width;
+    T->super.height = desc->height;
+    T->super.depth = desc->depth;
+    T->super.mip_levels = desc->mip_levels;
+    T->super.is_cube = (RT_TEXTURE_CUBE == (descriptors & RT_TEXTURE_CUBE));
+    T->super.array_size_minus_one = desc->array_size - 1;
+    T->super.format = desc->format;
+    return &T->super;
+}
+
+void cgpu_free_texture_d3d12(CGpuTextureId texture)
+{
+    CGpuTexture_D3D12* T = (CGpuTexture_D3D12*)texture;
+    if (texture->owns_image)
+    {
+        SAFE_RELEASE(T->pDxAllocation);
+        SAFE_RELEASE(T->pDxResource);
+    }
+}
+
 CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)
 {
     CGpuTextureView_D3D12* TV = cgpu_new<CGpuTextureView_D3D12>();

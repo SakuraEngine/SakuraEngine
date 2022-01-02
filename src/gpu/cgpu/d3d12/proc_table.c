@@ -52,6 +52,8 @@ const CGpuProcTable tbl_d3d12 = {
     .free_shader_library = &cgpu_free_shader_library_d3d12,
 
     // Texture/TextureView APIs
+    .create_texture = &cgpu_create_texture_d3d12,
+    .free_texture = &cgpu_free_texture_d3d12,
     .create_texture_view = &cgpu_create_texture_view_d3d12,
     .free_texture_view = &cgpu_free_texture_view_d3d12,
 
@@ -61,6 +63,10 @@ const CGpuProcTable tbl_d3d12 = {
     .unmap_buffer = &cgpu_unmap_buffer_d3d12,
     .free_buffer = &cgpu_free_buffer_d3d12,
 
+    // Sampler APIs
+    .create_sampler = &cgpu_create_sampler_d3d12,
+    .free_sampler = &cgpu_free_sampler_d3d12,
+
     // Swapchain APIs
     .create_swapchain = &cgpu_create_swapchain_d3d12,
     .acquire_next_image = &cgpu_acquire_next_image_d3d12,
@@ -69,6 +75,7 @@ const CGpuProcTable tbl_d3d12 = {
     // CMDs
     .cmd_begin = &cgpu_cmd_begin_d3d12,
     .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_d3d12,
+    .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_d3d12,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_d3d12,
     .cmd_end = &cgpu_cmd_end_d3d12,
 

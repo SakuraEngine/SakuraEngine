@@ -274,9 +274,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
         T->image_type = VK_IMAGE_TYPE_2D;
     }
     else if (desc->flags & TCF_FORCE_3D)
-    {
         T->image_type = VK_IMAGE_TYPE_3D;
-    }
     else
     {
         if (desc->depth > 1)

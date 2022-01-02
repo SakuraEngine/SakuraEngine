@@ -487,7 +487,7 @@ typedef enum ECGpuResourceState
     RESOURCE_STATE_SHADING_RATE_SOURCE = 0x8000,
     RESOURCE_STATE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuResourceState;
-typedef uint32_t ECGpuResourceStates;
+typedef uint32_t CGpuResourceStates;
 
 typedef enum ECGpuMemoryUsage
 {
