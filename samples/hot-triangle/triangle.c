@@ -30,7 +30,7 @@ const uint32_t* get_vertex_shader()
     if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)vertex_shader_dxil;
     return CGPU_NULLPTR;
 }
-const size_t get_vertex_shader_size()
+const uint32_t get_vertex_shader_size()
 {
     if (backend == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
     if (backend == CGPU_BACKEND_D3D12) return sizeof(vertex_shader_dxil);
@@ -42,7 +42,7 @@ const uint32_t* get_fragment_shader()
     if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)fragment_shader_dxil;
     return CGPU_NULLPTR;
 }
-const size_t get_fragment_shader_size()
+const uint32_t get_fragment_shader_size()
 {
     if (backend == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
     if (backend == CGPU_BACKEND_D3D12) return sizeof(fragment_shader_dxil);

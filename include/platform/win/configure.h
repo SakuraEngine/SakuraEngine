@@ -3,7 +3,9 @@
 #ifdef _DEBUG
     #include "assert.h"
 #else
-    #define assert(expr) (void)(expr);
+    #ifndef assert
+        #define assert(expr) (void)(expr);
+    #endif
 #endif
 
 #if defined(_WINDOWS) || defined(XBOX)

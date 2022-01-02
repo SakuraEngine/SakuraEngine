@@ -7,17 +7,23 @@ if(USE_WASM3)
 if(TARGET_WIN)
     extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3_d-win.zip 
         ${SAKURA_BIN_DIR}/Debug
+    )
+    extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3-win.zip 
         ${SAKURA_BIN_DIR}/Release
     )
 elseif(TARGET_MAC)
     if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm64")
         extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3_d-macos-arm.zip
             ${SAKURA_BIN_DIR}/Debug
-            ${SAKURA_BIN_DIR}/Release
+        )
+        extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3-macos-arm.zip
+        ${SAKURA_BIN_DIR}/Release
         )
     else()
         extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3_d-macos-amd64.zip 
             ${SAKURA_BIN_DIR}/Debug
+        )
+        extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3-macos-amd64.zip 
             ${SAKURA_BIN_DIR}/Release
         )
     endif()
