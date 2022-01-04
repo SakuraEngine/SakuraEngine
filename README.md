@@ -23,7 +23,15 @@
 - 每个后端会拉起一个窗口, 并在一个独立的线程上绘制它；
 - drawcall录制的逻辑可以运行在host程序或者wasm虚拟机后端中, host程序和wasm‘脚本’共享[同一份C代码](samples/hot-triangle/triangle_module.wa.c)；
 - 实现了一个简单的[filewatcher](samples/hot-triangle/hot_wasm.cpp)，自动对drawcall脚本进行变更检查，调用SDK编译wasm，并基于产出物应用热修复。
+
 ![hot-triangle](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/hot-triangle.gif)
+
+### [纹理](samples/cgpu-texture)
+这个demo演示了如何在CGPU中使用纹理采样，demo也演示了怎么在CGPU中启用Static/Immutable Samplers。
+
+注意ImmutableSamplers需要放在独立的绑定表中，和动态的绑定区分。
+
+![cgpu-texture](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/cgpu-texture.png)
 
 ## 核心组件
 - platform
@@ -39,7 +47,7 @@
 - D3D12MemoryAllocator 23e4d91, org.fork (MIT)
 - SPIRV-Reflect 173ae4d (Apache-2.0)
 - wasm3 a3abb3f, org.fork (MIT)
-- WAVM nightly/2021-12-15
+- WASMEdge 0.9.0 Release
 
 ## 接入的扩展API以及版本
 - nvapi R460, 2021/03/16 
