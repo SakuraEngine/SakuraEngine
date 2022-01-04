@@ -27,11 +27,12 @@ protected:
 
 TEST_P(WASM3Test, LoadAndIncrement)
 {
-    SWAModuleDescriptor module_desc;
+    SWAModuleDescriptor module_desc = {};
     module_desc.name = "add";
     module_desc.wasm = add_wasm;
     module_desc.wasm_size = sizeof(add_wasm);
     module_desc.bytes_pinned_outside = true;
+    module_desc.strong_stub = false;
     SWAModuleId module = swa_create_module(runtime, &module_desc);
     EXPECT_NE(module, nullptr);
     SWAValue params[2];

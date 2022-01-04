@@ -208,7 +208,7 @@ TEST_P(ResourceCreation, CreateRootSignature)
     CGpuPipelineShaderDescriptor shaders[] = { vertex_shader_entry, fragment_shader_entry };
     CGpuRootSignatureDescriptor root_desc = {};
     root_desc.shaders = shaders;
-    root_desc.shaders_count = 2;
+    root_desc.shader_count = 2;
     auto signature = cgpu_create_root_signature(device, &root_desc);
 
     EXPECT_NE(signature, CGPU_NULLPTR);
@@ -237,7 +237,7 @@ TEST_P(ResourceCreation, CreateComputePipeline)
     compute_shader_entry.library = compute_shader;
     DECLARE_ZERO(CGpuRootSignatureDescriptor, root_desc)
     root_desc.shaders = &compute_shader_entry;
-    root_desc.shaders_count = 1;
+    root_desc.shader_count = 1;
     CGpuRootSignatureId signature = cgpu_create_root_signature(device, &root_desc);
     EXPECT_NE(signature, CGPU_NULLPTR);
 

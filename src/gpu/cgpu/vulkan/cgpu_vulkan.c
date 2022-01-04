@@ -403,6 +403,12 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     if (RS->super.table_count > 0)
     {
         RS->set_layouts = (SetLayout_Vulkan*)cgpu_calloc(RS->super.table_count, sizeof(SetLayout_Vulkan));
+        DECLARE_ZERO_VLA(size_t, name_hashes, desc->static_sampler_count)
+        for (uint32_t i = 0; i < desc->static_sampler_count; i++)
+        {
+            name_hashes[i] = cgpu_hash(desc->static_sampler_names[i],
+                strlen(desc->static_sampler_names[i]), (size_t)device);
+        }
         // Create Vk Objects
         for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
         {
@@ -415,8 +421,15 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 vkbindings[i_binding].stageFlags = VkUtil_TranslateShaderUsages(param_table->resources[i_binding].stages);
                 vkbindings[i_binding].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
                 vkbindings[i_binding].descriptorCount = param_table->resources[i_binding].size;
-                // TODO: Support static samplers
-                vkbindings[i_binding].pImmutableSamplers = CGPU_NULL;
+                // Create static samplers
+                for (uint32_t i_ss = 0; i_ss < desc->static_sampler_count; i_ss++)
+                {
+                    if (param_table->resources[i_binding].name_hash == name_hashes[i_ss])
+                    {
+                        CGpuSampler_Vulkan* immutableSampler = (CGpuSampler_Vulkan*)desc->static_samplers[i_ss];
+                        vkbindings[i_binding].pImmutableSamplers = &immutableSampler->pVkSampler;
+                    }
+                }
             }
             VkDescriptorSetLayoutCreateInfo set_info = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
@@ -477,6 +490,8 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         };
         CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorUpdateTemplate(D->pVkDevice,
             &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->update_template));
+        VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
+            &set_to_record->layout, &set_to_record->empty_desc_set, 1);
     }
     // Free Temporal Memory
     cgpu_free(set_layouts);
@@ -526,10 +541,11 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
-    VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
-    bool dirty = false;
     SetLayout_Vulkan* SetLayout = &RS->set_layouts[set->index];
     CGpuParameterTable* ParamTable = &RS->super.tables[set->index];
+    VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
+    memset(pUpdateData, 0, ParamTable->resources_count);
+    bool dirty = false;
     for (uint32_t i = 0; i < count; i++)
     {
         // Descriptor Info
@@ -1359,10 +1375,24 @@ void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId en
     const CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
 
-    // TODO: VK Must Fill All DescriptorSetLayouts at first dispach/draw.
+    // VK Must Fill All DescriptorSetLayouts at first dispach/draw.
     // Example: If shader uses only set 2, we still have to bind empty sets for set=0 and set=1
-
-    D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, RS->pipeline_layout,
+    if (Cmd->pBoundPipelineLayout != RS->pipeline_layout)
+    {
+        Cmd->pBoundPipelineLayout = RS->pipeline_layout;
+        for (uint32_t i = 0; i < RS->super.table_count; i++)
+        {
+            if (RS->set_layouts[i].empty_desc_set != VK_NULL_HANDLE &&
+                Set->super.index != i)
+            {
+                D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
+                    VK_PIPELINE_BIND_POINT_COMPUTE, RS->pipeline_layout, i,
+                    1, &RS->set_layouts[i].empty_desc_set, 0, NULL);
+            }
+        }
+    }
+    D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
+        VK_PIPELINE_BIND_POINT_COMPUTE, RS->pipeline_layout,
         Set->super.index, 1, &Set->pVkDescriptorSet,
         // TODO: Dynamic Offset
         0, NULL);
@@ -1375,8 +1405,22 @@ void cgpu_render_encoder_bind_descriptor_set_vulkan(CGpuRenderPassEncoderId enco
     const CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
 
-    // TODO: VK Must Fill All DescriptorSetLayouts at first dispach/draw.
+    // VK Must Fill All DescriptorSetLayouts at first dispach/draw.
     // Example: If shader uses only set 2, we still have to bind empty sets for set=0 and set=1
+    if (Cmd->pBoundPipelineLayout != RS->pipeline_layout)
+    {
+        Cmd->pBoundPipelineLayout = RS->pipeline_layout;
+        for (uint32_t i = 0; i < RS->super.table_count; i++)
+        {
+            if (RS->set_layouts[i].empty_desc_set != VK_NULL_HANDLE &&
+                Set->super.index != i)
+            {
+                D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pipeline_layout, i,
+                    1, &RS->set_layouts[i].empty_desc_set, 0, NULL);
+            }
+        }
+    }
     D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pipeline_layout,
         Set->super.index, 1, &Set->pVkDescriptorSet,
         // TODO: Dynamic Offset

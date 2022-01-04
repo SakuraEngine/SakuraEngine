@@ -229,7 +229,7 @@ CGpuDescriptorSetId cgpu_create_descriptor_set(CGpuDeviceId device, const struct
 
 void cgpu_update_descriptor_set(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count)
 {
-    cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL signature!");
+    cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL descriptor set!");
     const CGpuDeviceId device = set->root_signature->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->update_descriptor_set && "update_descriptor_set Proc Missing!");
@@ -852,9 +852,9 @@ void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
 // Common Utils
 void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSignatureDescriptor* desc)
 {
-    DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shaders_count)
+    DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shader_count)
     // Pick shader reflection data
-    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         const CGpuPipelineShaderDescriptor* shader_desc = &desc->shaders[i];
         // Find shader reflection
@@ -875,7 +875,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     // Count sets and binding slots
     uint32_t set_count = 0;
     RS->pipeline_type = PIPELINE_TYPE_NONE;
-    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
         for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
@@ -893,7 +893,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     }
     // Count bindings for each set
     uint32_t* valid_bindings = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
-    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
         for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
@@ -920,7 +920,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     cgpu_free(valid_bindings);
     // Collect shader resources
     uint32_t* dst_bindings = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
-    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
         for (uint32_t j = 0; j < reflection->shader_resources_count; j++)

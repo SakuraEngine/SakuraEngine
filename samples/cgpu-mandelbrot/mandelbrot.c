@@ -69,7 +69,7 @@ void ComputeFunc(void* usrdata)
     CGpuShaderReflection* entry_reflection = &compute_shader->entry_reflections[0];
     CGpuRootSignatureDescriptor root_desc = {
         .shaders = &compute_shader_entry,
-        .shaders_count = 1
+        .shader_count = 1
     };
     CGpuRootSignatureId signature = cgpu_create_root_signature(device, &root_desc);
 
