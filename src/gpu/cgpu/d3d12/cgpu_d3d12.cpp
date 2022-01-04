@@ -2,6 +2,7 @@
 #include "d3d12_utils.h"
 #include "../common/common_utils.h"
 #include <dxcapi.h>
+#include <EASTL/string_hash_map.h>
 
 #if !defined(XBOX)
     #pragma comment(lib, "d3d12.lib")
@@ -292,9 +293,16 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     CGpuRootSignature_D3D12* RS = cgpu_new<CGpuRootSignature_D3D12>();
+    // Construct LUT Map for static samplers
+    eastl::string_hash_map<eastl::pair<CGpuSamplerId, CGpuShaderResource*>> staticSamplerMap;
+    for (uint32_t i = 0; i < desc->static_sampler_count; i++)
+    {
+        staticSamplerMap.insert(desc->static_sampler_names[i],
+            { desc->static_samplers[i], nullptr });
+    }
     // Pick root parameters from desc data
     CGpuShaderStages shaderStages = 0;
-    for (uint32_t i = 0; i < desc->shaders_count; i++)
+    for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGpuPipelineShaderDescriptor* shader_desc = desc->shaders + i;
         shaderStages |= shader_desc->stage;
@@ -335,6 +343,14 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
             descRange->RangeType = D3D12Util_ResourceTypeToDescriptorRangeType(reflSlot->type);
             visStages |= reflSlot->stages;
             i_range++;
+            if (reflSlot->type == RT_SAMPLER)
+            {
+                const auto& iter = staticSamplerMap.find(reflSlot->name);
+                if (iter != staticSamplerMap.end())
+                {
+                    iter->second.second = reflSlot;
+                }
+            }
         }
         rootParam->ShaderVisibility = D3D12Util_TranslateShaderStages(visStages);
         rootParam->DescriptorTable.NumDescriptorRanges = ParamTable->resources_count;
@@ -342,9 +358,38 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
         i_table++;
     }
     // End create descriptor tables
-    // TODO: Support static samplers
-    UINT staticSamplerCount = 0;
+    // Create static samplers
+    UINT staticSamplerCount = desc->static_sampler_count;
     D3D12_STATIC_SAMPLER_DESC* staticSamplerDescs = CGPU_NULLPTR;
+    if (staticSamplerCount > 0)
+    {
+        staticSamplerDescs = (D3D12_STATIC_SAMPLER_DESC*)alloca(
+            staticSamplerCount * sizeof(D3D12_STATIC_SAMPLER_DESC));
+        size_t i = 0;
+        for (const auto& iter : staticSamplerMap)
+        {
+            if (iter.second.second == nullptr)
+                cgpu_error("error: RS-unknown static sampler bound with name %s", iter.first);
+
+            D3D12_SAMPLER_DESC& desc = ((CGpuSampler_D3D12*)iter.second.first)->mDxDesc;
+            staticSamplerDescs[i].Filter = desc.Filter;
+            staticSamplerDescs[i].AddressU = desc.AddressU;
+            staticSamplerDescs[i].AddressV = desc.AddressV;
+            staticSamplerDescs[i].AddressW = desc.AddressW;
+            staticSamplerDescs[i].MipLODBias = desc.MipLODBias;
+            staticSamplerDescs[i].MaxAnisotropy = desc.MaxAnisotropy;
+            staticSamplerDescs[i].ComparisonFunc = desc.ComparisonFunc;
+            staticSamplerDescs[i].MinLOD = desc.MinLOD;
+            staticSamplerDescs[i].MaxLOD = desc.MaxLOD;
+            staticSamplerDescs[i].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+
+            CGpuShaderResource* samplerResource = iter.second.second;
+            staticSamplerDescs[i].RegisterSpace = samplerResource->set;
+            staticSamplerDescs[i].ShaderRegister = samplerResource->binding;
+            staticSamplerDescs[i].ShaderVisibility = D3D12Util_TranslateShaderStages(samplerResource->stages);
+            i++;
+        }
+    }
     bool useInputLayout = shaderStages & SHADER_STAGE_VERT; // VertexStage uses input layout
     // Fill RS flags
     D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;

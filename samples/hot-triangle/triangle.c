@@ -74,7 +74,7 @@ void create_render_pipeline()
     ppl_shaders[1].library = fragment_shader;
     CGpuRootSignatureDescriptor rs_desc = {
         .shaders = ppl_shaders,
-        .shaders_count = 2
+        .shader_count = 2
     };
     root_sig = cgpu_create_root_signature(device, &rs_desc);
     CGpuVertexLayout vertex_layout = { .attribute_count = 0 };

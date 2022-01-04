@@ -24,6 +24,7 @@ THREAD_LOCAL CGpuCommandPoolId pools[FLIGHT_FRAMES];
 THREAD_LOCAL CGpuCommandBufferId cmds[FLIGHT_FRAMES];
 THREAD_LOCAL CGpuTextureId sampled_texture;
 THREAD_LOCAL CGpuSamplerId sampler_state;
+THREAD_LOCAL bool bUseStaticSampler = true;
 THREAD_LOCAL CGpuTextureViewId sampled_view;
 THREAD_LOCAL CGpuTextureViewId views[BACK_BUFFER_COUNT];
 
@@ -139,21 +140,6 @@ void create_sampled_texture()
     cgpu_submit_queue(gfx_queue, &cpy_submit);
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_free_buffer(upload_buffer);
-    // Update descriptor set for once
-    CGpuDescriptorData arguments[2];
-    arguments[0].name = "sampled_texture";
-    arguments[0].count = 1;
-    arguments[0].textures = &sampled_view;
-    arguments[1].name = "texture_sampler";
-    arguments[1].count = 1;
-    arguments[1].samplers = &sampler_state;
-    if (backend != CGPU_BACKEND_D3D12)
-        cgpu_update_descriptor_set(desc_set, arguments, 2);
-    else
-    {
-        cgpu_update_descriptor_set(desc_set2, arguments + 1, 1);
-        cgpu_update_descriptor_set(desc_set, arguments, 1);
-    }
 }
 
 void create_render_pipeline()
@@ -163,6 +149,7 @@ void create_render_pipeline()
     CGpuShaderLibraryDescriptor ps_desc = { .name = "FragmentShaderLibrary", .stage = SHADER_STAGE_FRAG, .code = get_fragment_shader(), .code_size = get_fragment_shader_size() };
     CGpuShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
     CGpuShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
+    // Create RS
     CGpuPipelineShaderDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
@@ -170,17 +157,25 @@ void create_render_pipeline()
     ppl_shaders[1].stage = SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
+    const char8_t* sampler_name = "texture_sampler";
     CGpuRootSignatureDescriptor rs_desc = {
         .shaders = ppl_shaders,
-        .shaders_count = 2
+        .shader_count = 2
     };
+    if (bUseStaticSampler)
+    {
+        rs_desc.static_samplers = &sampler_state;
+        rs_desc.static_sampler_count = 1;
+        rs_desc.static_sampler_names = &sampler_name;
+    }
     root_sig = cgpu_create_root_signature(device, &rs_desc);
+    // Create descriptor set
     CGpuDescriptorSetDescriptor desc_set_desc = {
         .root_signature = root_sig,
         .set_index = 0
     };
     desc_set = cgpu_create_descriptor_set(device, &desc_set_desc);
-    if (backend == CGPU_BACKEND_D3D12)
+    if (!bUseStaticSampler)
     {
         desc_set_desc.set_index = 1;
         desc_set2 = cgpu_create_descriptor_set(device, &desc_set_desc);
@@ -198,6 +193,18 @@ void create_render_pipeline()
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
+    // Update descriptor set for once
+    CGpuDescriptorData arguments[2];
+    arguments[0].name = "sampled_texture";
+    arguments[0].count = 1;
+    arguments[0].textures = &sampled_view;
+    arguments[1].name = sampler_name;
+    arguments[1].count = 1;
+    arguments[1].samplers = &sampler_state;
+    {
+        cgpu_update_descriptor_set(desc_set, arguments, 1);
+        if (!bUseStaticSampler) cgpu_update_descriptor_set(desc_set2, arguments + 1, 1);
+    }
 }
 
 void initialize(void* usrdata)
@@ -278,8 +285,8 @@ void initialize(void* usrdata)
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
     }
-    create_render_pipeline();
     create_sampled_texture();
+    create_render_pipeline();
 }
 
 void raster_redraw()

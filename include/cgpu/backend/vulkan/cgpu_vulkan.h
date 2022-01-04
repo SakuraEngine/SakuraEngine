@@ -275,6 +275,7 @@ typedef struct CGpuSwapChain_Vulkan {
 typedef struct SetLayout_Vulkan {
     VkDescriptorSetLayout layout;
     VkDescriptorUpdateTemplate update_template;
+    VkDescriptorSet empty_desc_set;
 } SetLayout_Vulkan;
 
 typedef struct CGpuRootSignature_Vulkan {

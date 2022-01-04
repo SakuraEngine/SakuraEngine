@@ -137,10 +137,10 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
     desc.pAdapter = A->pDxActiveGPU;
 
     D3D12MA::ALLOCATION_CALLBACKS allocationCallbacks = {};
-    allocationCallbacks.pAllocate = [](size_t size, size_t alignment, void*) {
+    allocationCallbacks.pAllocate = +[](size_t size, size_t alignment, void*) {
         return cgpu_memalign(size, alignment);
     };
-    allocationCallbacks.pFree = [](void* ptr, void*) { cgpu_free(ptr); };
+    allocationCallbacks.pFree = +[](void* ptr, void*) { cgpu_free(ptr); };
     desc.pAllocationCallbacks = &allocationCallbacks;
     if (!SUCCEEDED(D3D12MA::CreateAllocator(&desc, &D->pResourceAllocator)))
     {

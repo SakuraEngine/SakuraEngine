@@ -853,7 +853,10 @@ typedef struct CGpuRenderPassDescriptor {
 
 typedef struct CGpuRootSignatureDescriptor {
     struct CGpuPipelineShaderDescriptor* shaders;
-    uint32_t shaders_count;
+    uint32_t shader_count;
+    const CGpuSamplerId* static_samplers;
+    const char8_t* const* static_sampler_names;
+    uint32_t static_sampler_count;
 } CGpuRootSignatureDescriptor;
 
 typedef struct CGpuDescriptorSetDescriptor {
