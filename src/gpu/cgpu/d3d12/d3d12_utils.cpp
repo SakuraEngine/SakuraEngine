@@ -222,7 +222,7 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGpuSh
         D3D12_SHADER_INPUT_BIND_DESC bindDesc;
         d3d12reflection->GetResourceBindingDesc(i, &bindDesc);
         const size_t source_len = strlen(bindDesc.Name);
-        Reflection->shader_resources[i].name = (char8_t*)malloc(sizeof(char8_t) * (source_len + 1));
+        Reflection->shader_resources[i].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (source_len + 1));
         Reflection->shader_resources[i].name_hash = cgpu_hash(bindDesc.Name, strlen(bindDesc.Name), *(size_t*)&S->super.device);
         // We are very sure it's windows platform
         strcpy_s((char8_t*)Reflection->shader_resources[i].name, source_len + 1, bindDesc.Name);
@@ -266,7 +266,7 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
             bool hasParamIndex = paramDesc.SemanticIndex > 0 || !strcmp(paramDesc.SemanticName, "TEXCOORD");
             uint32_t source_len = (uint32_t)strlen(paramDesc.SemanticName) + (hasParamIndex ? 1 : 0);
 
-            Reflection->vertex_inputs[i].name = (char8_t*)malloc(sizeof(char8_t) * (source_len + 1));
+            Reflection->vertex_inputs[i].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (source_len + 1));
             if (hasParamIndex)
                 sprintf((char8_t*)Reflection->vertex_inputs[i].name, "%s%u", paramDesc.SemanticName, paramDesc.SemanticIndex);
             else
@@ -313,8 +313,22 @@ void D3D12Util_FreeShaderReflection(CGpuShaderLibrary_D3D12* S)
         for (uint32_t i = 0; i < S->super.entrys_count; i++)
         {
             CGpuShaderReflection* reflection = S->super.entry_reflections + i;
-            if (reflection->vertex_inputs) cgpu_free(reflection->vertex_inputs);
-            if (reflection->shader_resources) cgpu_free(reflection->shader_resources);
+            if (reflection->vertex_inputs)
+            {
+                for (uint32_t j = 0; j < reflection->vertex_inputs_count; j++)
+                {
+                    cgpu_free((void*)reflection->vertex_inputs[j].name);
+                }
+                cgpu_free(reflection->vertex_inputs);
+            }
+            if (reflection->shader_resources)
+            {
+                for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
+                {
+                    cgpu_free((void*)reflection->shader_resources[j].name);
+                }
+                cgpu_free(reflection->shader_resources);
+            }
         }
     }
     cgpu_free(S->super.entry_reflections);
