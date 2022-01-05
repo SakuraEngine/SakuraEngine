@@ -1,5 +1,6 @@
 #pragma once
 #include "cgpu/backend/metal/cgpu_metal.h"
+#include "../common/common_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
