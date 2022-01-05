@@ -1,3 +1,4 @@
+#include "../common/common_utils.h"
 #include "cgpu/backend/metal/cgpu_metal.h"
 
 const CGpuSurfacesProcTable s_tbl_metal = {
