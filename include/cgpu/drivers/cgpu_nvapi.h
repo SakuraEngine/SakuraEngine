@@ -9,6 +9,7 @@ extern "C" {
 #include "cgpu/api.h"
 
 ECGpuNvAPI_Status cgpu_nvapi_init(struct CGpuInstance* Inst);
+uint32_t cgpu_nvapi_get_driver_version();
 void cgpu_nvapi_exit();
 
 #ifdef __cplusplus

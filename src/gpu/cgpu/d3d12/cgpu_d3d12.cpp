@@ -160,8 +160,7 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
                     return CGPU_NULLPTR;
             }
             queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-            if (!SUCCEEDED(D->pDxDevice->CreateCommandQueue(
-                    &queueDesc, IID_PPV_ARGS(&D->ppCommandQueues[type][j]))))
+            if (!SUCCEEDED(D->pDxDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&D->ppCommandQueues[type][j]))))
             {
                 cgpu_assert("[D3D12 Fatal]: Create D3D12CommandQueue Failed!");
             }
@@ -197,6 +196,25 @@ CGpuDeviceId cgpu_create_device_d3d12(CGpuAdapterId adapter, const CGpuDeviceDes
         desc.NumDescriptors = 1 << 11;
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
         D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pSamplerHeaps[i]);
+    }
+    // Pipeline cache
+    D3D12_FEATURE_DATA_SHADER_CACHE feature = {};
+    HRESULT result = D->pDxDevice->CheckFeatureSupport(
+        D3D12_FEATURE_SHADER_CACHE, &feature, sizeof(feature));
+    if (SUCCEEDED(result))
+    {
+        result = E_NOTIMPL;
+        if (feature.SupportFlags & D3D12_SHADER_CACHE_SUPPORT_LIBRARY)
+        {
+            ID3D12Device1* device1 = NULL;
+            result = D->pDxDevice->QueryInterface(IID_ARGS(&device1));
+            if (SUCCEEDED(result))
+            {
+                result = device1->CreatePipelineLibrary(
+                    D->pPSOCacheData, 0, IID_ARGS(&D->pPipelineLibrary));
+            }
+            SAFE_RELEASE(device1);
+        }
     }
     return &D->super;
 }
@@ -594,14 +612,26 @@ CGpuComputePipelineId cgpu_create_compute_pipeline_d3d12(CGpuDeviceId device, co
     pipeline_state_desc.CachedPSO = cached_pso_desc;
     pipeline_state_desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
     pipeline_state_desc.NodeMask = SINGLE_GPU_NODE_MASK;
-    // TODO: Pipeline cache
+    // Pipeline cache
     HRESULT result = E_FAIL;
-    ID3D12PipelineLibrary* psoCache = CGPU_NULLPTR;
-    (void)psoCache;
+    wchar_t pipelineName[PSO_NAME_LENGTH] = {};
+    size_t psoShaderHash = 0;
+    size_t psoComputeHash = 0;
+    if (D->pPipelineLibrary)
+    {
+        if (CS.BytecodeLength)
+            psoShaderHash = cgpu_hash(CS.pShaderBytecode, CS.BytecodeLength, psoShaderHash);
+        psoComputeHash = cgpu_hash(&pipeline_state_desc.Flags, sizeof(D3D12_PIPELINE_STATE_FLAGS), psoComputeHash);
+        psoComputeHash = cgpu_hash(&pipeline_state_desc.NodeMask, sizeof(UINT), psoComputeHash);
+        swprintf(pipelineName, PSO_NAME_LENGTH, L"%S_S%zuR%zu", "COMPUTEPSO", psoShaderHash, psoComputeHash);
+        result = D->pPipelineLibrary->LoadComputePipeline(pipelineName,
+            &pipeline_state_desc, IID_ARGS(&PPL->pDxPipelineState));
+    }
     if (!SUCCEEDED(result))
     {
-        // TODO: Support PSO extensions
-        CHECK_HRESULT(D->pDxDevice->CreateComputePipelineState(&pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
+        // XBOX: Support PSO extensions
+        CHECK_HRESULT(D->pDxDevice->CreateComputePipelineState(
+            &pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
     }
     return &PPL->super;
 }
@@ -713,7 +743,6 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
     DECLARE_ZERO(DXGI_SAMPLE_DESC, sample_desc);
     sample_desc.Count = (UINT)(desc->sample_count);
     sample_desc.Quality = (UINT)(desc->sample_quality);
-    // TODO: Pipeline cache
     DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
     cached_pso_desc.pCachedBlob = NULL;
     cached_pso_desc.CachedBlobSizeInBytes = 0;
@@ -747,10 +776,50 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
     }
     // Create pipeline object
     HRESULT result = E_FAIL;
-    // TODO: Pipeline cache
+    wchar_t pipelineName[PSO_NAME_LENGTH] = {};
+    size_t psoShaderHash = 0;
+    size_t psoRenderHash = 0;
+    if (D->pPipelineLibrary)
+    {
+        // Calculate graphics pso shader hash
+        if (VS.BytecodeLength)
+            psoShaderHash = cgpu_hash(VS.pShaderBytecode, VS.BytecodeLength, psoShaderHash);
+        if (PS.BytecodeLength)
+            psoShaderHash = cgpu_hash(PS.pShaderBytecode, PS.BytecodeLength, psoShaderHash);
+        if (DS.BytecodeLength)
+            psoShaderHash = cgpu_hash(DS.pShaderBytecode, DS.BytecodeLength, psoShaderHash);
+        if (HS.BytecodeLength)
+            psoShaderHash = cgpu_hash(HS.pShaderBytecode, HS.BytecodeLength, psoShaderHash);
+        if (GS.BytecodeLength)
+            psoShaderHash = cgpu_hash(GS.pShaderBytecode, GS.BytecodeLength, psoShaderHash);
+        // Calculate graphics pso desc hash
+        psoRenderHash = cgpu_hash(&pipeline_state_desc.BlendState, sizeof(D3D12_BLEND_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&pipeline_state_desc.RasterizerState, sizeof(D3D12_RASTERIZER_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&pipeline_state_desc.DepthStencilState, sizeof(D3D12_DEPTH_STENCIL_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&pipeline_state_desc.IBStripCutValue, sizeof(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE), psoRenderHash);
+        psoRenderHash = cgpu_hash(pipeline_state_desc.RTVFormats,
+            pipeline_state_desc.NumRenderTargets * sizeof(DXGI_FORMAT), psoRenderHash);
+        psoRenderHash = cgpu_hash(&pipeline_state_desc.DSVFormat, sizeof(DXGI_FORMAT), psoRenderHash);
+        psoRenderHash = cgpu_hash(&pipeline_state_desc.SampleDesc, sizeof(DXGI_SAMPLE_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&pipeline_state_desc.Flags, sizeof(D3D12_PIPELINE_STATE_FLAGS), psoRenderHash);
+        for (uint32_t i = 0; i < pipeline_state_desc.InputLayout.NumElements; i++)
+        {
+            psoRenderHash = cgpu_hash(&pipeline_state_desc.InputLayout.pInputElementDescs[i],
+                sizeof(D3D12_INPUT_ELEMENT_DESC), psoRenderHash);
+        }
+        swprintf(pipelineName, PSO_NAME_LENGTH, L"%S_S%zuR%zu", "GRAPHICSPSO", psoShaderHash, psoRenderHash);
+        result = D->pPipelineLibrary->LoadGraphicsPipeline(pipelineName,
+            &pipeline_state_desc, IID_ARGS(&PPL->pDxPipelineState));
+    }
     if (!SUCCEEDED(result))
     {
-        CHECK_HRESULT(D->pDxDevice->CreateGraphicsPipelineState(&pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
+        CHECK_HRESULT(D->pDxDevice->CreateGraphicsPipelineState(
+            &pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
+        // Pipeline cache
+        if (D->pPipelineLibrary)
+        {
+            CHECK_HRESULT(D->pPipelineLibrary->StorePipeline(pipelineName, PPL->pDxPipelineState));
+        }
     }
     D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
     switch (desc->prim_topology)
@@ -1328,7 +1397,7 @@ CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapC
         Ts[i].super.array_size_minus_one = 0;
         Ts[i].super.device = &D->super;
         Ts[i].super.format = desc->format;
-        Ts[i].super.aspect_mask = 1; // TODO: aspect mask
+        Ts[i].super.aspect_mask = 1;
         Ts[i].super.depth = 1;
         Ts[i].super.width = desc->width;
         Ts[i].super.height = desc->height;

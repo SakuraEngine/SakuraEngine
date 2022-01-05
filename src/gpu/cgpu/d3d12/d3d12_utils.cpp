@@ -1,3 +1,5 @@
+#include "cgpu/drivers/cgpu_nvapi.h"
+#include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.h"
 #include <dxcapi.h>
@@ -87,12 +89,14 @@ void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* instance, uint32_t* count, b
         // Device Objects
         adapter.pDxActiveGPU = dxgi_adapters[i];
         adapter.mFeatureLevel = adapter_levels[i];
+        adapter.super.instance = &instance->super;
         D3D12Util_RecordAdapterDetail(&adapter);
     }
 }
 
 void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter)
 {
+    CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)D3D12Adapter->super.instance;
     auto& adapter = *D3D12Adapter;
     auto& adapter_detail = adapter.adapter_detail;
     auto& vendor_preset = adapter_detail.vendor_preset;
@@ -104,8 +108,13 @@ void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter)
     _bstr_t b(desc3.Description);
     char* str = b;
     strncpy(adapter_detail.vendor_preset.gpu_name, str, MAX_GPU_VENDOR_STRING_LENGTH);
-    // TODO: Driver Version
-    vendor_preset.driver_version = 0;
+    // Get Driver Version
+    if (I->super.nvapi_status == CGPU_NVAPI_OK)
+        vendor_preset.driver_version = cgpu_nvapi_get_driver_version();
+    else if (I->super.ags_status == CGPU_AGS_SUCCESS)
+        vendor_preset.driver_version = cgpu_ags_get_driver_version();
+    else
+        vendor_preset.driver_version = 0;
     // Create a device for feature query
     ID3D12Device* pCheckDevice = nullptr;
     if (!SUCCEEDED(D3D12CreateDevice(adapter.pDxActiveGPU, adapter.mFeatureLevel, IID_PPV_ARGS(&pCheckDevice))))
