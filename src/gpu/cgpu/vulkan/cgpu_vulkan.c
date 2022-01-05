@@ -3,6 +3,9 @@
 #include "vulkan/vulkan_core.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include "../common/common_utils.h"
+#ifdef CGPU_THREAD_SAFETY
+    #include "platform/thread.h"
+#endif
 #include <string.h>
 
 const CGpuProcTable tbl_vk = {
@@ -402,7 +405,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     // Collect Shader Resources
     if (RS->super.table_count > 0)
     {
-        RS->set_layouts = (SetLayout_Vulkan*)cgpu_calloc(RS->super.table_count, sizeof(SetLayout_Vulkan));
+        RS->pSetLayouts = (SetLayout_Vulkan*)cgpu_calloc(RS->super.table_count, sizeof(SetLayout_Vulkan));
         DECLARE_ZERO_VLA(size_t, name_hashes, desc->static_sampler_count)
         for (uint32_t i = 0; i < desc->static_sampler_count; i++)
         {
@@ -412,7 +415,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         // Create Vk Objects
         for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
         {
-            SetLayout_Vulkan* set_to_record = &RS->set_layouts[i_set];
+            SetLayout_Vulkan* set_to_record = &RS->pSetLayouts[i_set];
             CGpuParameterTable* param_table = &RS->super.tables[i_set];
             VkDescriptorSetLayoutBinding* vkbindings = (VkDescriptorSetLayoutBinding*)cgpu_calloc(param_table->resources_count, sizeof(VkDescriptorSetLayoutBinding));
             for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
@@ -443,11 +446,11 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         }
     }
     // Record Descriptor Sets
-    VkDescriptorSetLayout* set_layouts = cgpu_calloc(RS->super.table_count + 1, sizeof(VkDescriptorSetLayout));
+    VkDescriptorSetLayout* pSetLayouts = cgpu_calloc(RS->super.table_count + 1, sizeof(VkDescriptorSetLayout));
     for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
     {
-        SetLayout_Vulkan* set_to_record = (SetLayout_Vulkan*)&RS->set_layouts[i_set];
-        set_layouts[i_set] = set_to_record->layout;
+        SetLayout_Vulkan* set_to_record = (SetLayout_Vulkan*)&RS->pSetLayouts[i_set];
+        pSetLayouts[i_set] = set_to_record->layout;
     }
     // Create Pipeline Layout
     VkPipelineLayoutCreateInfo pipeline_info = {
@@ -455,16 +458,16 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         .pNext = NULL,
         .flags = 0,
         .setLayoutCount = RS->super.table_count,
-        .pSetLayouts = set_layouts,
+        .pSetLayouts = pSetLayouts,
         .pushConstantRangeCount = 0,
         .pPushConstantRanges = NULL
     };
-    CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice, &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pipeline_layout));
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice, &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pPipelineLayout));
     // Create Update Templates
     for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
     {
         CGpuParameterTable* param_table = &RS->super.tables[i_set];
-        SetLayout_Vulkan* set_to_record = &RS->set_layouts[i_set];
+        SetLayout_Vulkan* set_to_record = &RS->pSetLayouts[i_set];
         VkDescriptorUpdateTemplateEntry* template_entries = (VkDescriptorUpdateTemplateEntry*)cgpu_calloc(
             param_table->resources_count, sizeof(VkDescriptorUpdateTemplateEntry));
         for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
@@ -481,7 +484,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
             .pNext = NULL,
             .templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET_KHR,
-            .pipelineLayout = RS->pipeline_layout,
+            .pipelineLayout = RS->pPipelineLayout,
             .pipelineBindPoint = gPipelineBindPoint[RS->super.pipeline_type],
             .descriptorSetLayout = set_to_record->layout,
             .set = i_set,
@@ -489,12 +492,12 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             .descriptorUpdateEntryCount = param_table->resources_count
         };
         CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorUpdateTemplate(D->pVkDevice,
-            &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->update_template));
+            &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->pUpdateTemplate));
         VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
-            &set_to_record->layout, &set_to_record->empty_desc_set, 1);
+            &set_to_record->layout, &set_to_record->pEmptyDescSet, 1);
     }
     // Free Temporal Memory
-    cgpu_free(set_layouts);
+    cgpu_free(pSetLayouts);
     return &RS->super;
 }
 
@@ -507,14 +510,14 @@ void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature)
     // Free Vk Objects
     for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
     {
-        SetLayout_Vulkan* set_to_free = &RS->set_layouts[i_set];
+        SetLayout_Vulkan* set_to_free = &RS->pSetLayouts[i_set];
         if (set_to_free->layout != VK_NULL_HANDLE)
             D->mVkDeviceTable.vkDestroyDescriptorSetLayout(D->pVkDevice, set_to_free->layout, GLOBAL_VkAllocationCallbacks);
-        if (set_to_free->update_template != VK_NULL_HANDLE)
-            D->mVkDeviceTable.vkDestroyDescriptorUpdateTemplate(D->pVkDevice, set_to_free->update_template, GLOBAL_VkAllocationCallbacks);
+        if (set_to_free->pUpdateTemplate != VK_NULL_HANDLE)
+            D->mVkDeviceTable.vkDestroyDescriptorUpdateTemplate(D->pVkDevice, set_to_free->pUpdateTemplate, GLOBAL_VkAllocationCallbacks);
     }
-    cgpu_free(RS->set_layouts);
-    D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pipeline_layout, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(RS->pSetLayouts);
+    D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pPipelineLayout, GLOBAL_VkAllocationCallbacks);
     cgpu_free(RS);
 }
 
@@ -522,7 +525,7 @@ CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const
 {
     size_t totalSize = sizeof(CGpuDescriptorSet_Vulkan);
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)desc->root_signature;
-    SetLayout_Vulkan* SetLayout = &RS->set_layouts[desc->set_index];
+    SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[desc->set_index];
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     const size_t UpdateTemplateSize = RS->super.tables[desc->set_index].resources_count * sizeof(VkDescriptorUpdateData);
     totalSize += UpdateTemplateSize;
@@ -541,7 +544,7 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
-    SetLayout_Vulkan* SetLayout = &RS->set_layouts[set->index];
+    SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[set->index];
     CGpuParameterTable* ParamTable = &RS->super.tables[set->index];
     VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
     memset(pUpdateData, 0, ParamTable->resources_count);
@@ -619,7 +622,7 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     }
     if (dirty)
     {
-        D->mVkDeviceTable.vkUpdateDescriptorSetWithTemplateKHR(D->pVkDevice, Set->pVkDescriptorSet, SetLayout->update_template, Set->pUpdateData);
+        D->mVkDeviceTable.vkUpdateDescriptorSetWithTemplateKHR(D->pVkDevice, Set->pVkDescriptorSet, SetLayout->pUpdateTemplate, Set->pUpdateData);
     }
 }
 
@@ -651,7 +654,7 @@ CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, c
         .pNext = NULL,
         .flags = 0,
         .stage = cs_stage_info,
-        .layout = RS->pipeline_layout,
+        .layout = RS->pPipelineLayout,
         .basePipelineHandle = 0,
         .basePipelineIndex = 0
     };
@@ -972,7 +975,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
         // TODO: Depth stencil state
         .pDepthStencilState = VK_NULL_HANDLE,
         .pColorBlendState = &cbs,
-        .layout = RS->pipeline_layout,
+        .layout = RS->pPipelineLayout,
         .renderPass = render_pass,
         .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,
@@ -998,13 +1001,31 @@ CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
 
-    CGpuQueue_Vulkan Q = { .super = { .device = &D->super, .index = index, .type = type } };
+    CGpuQueue_Vulkan Q = {
+        .super = {
+            .device = device,
+            .index = index,
+            .type = type }
+    };
     D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, (uint32_t)A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
     Q.mVkQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[type];
     Q.mTimestampPeriod = A->mPhysicalDeviceProps.properties.limits.timestampPeriod;
 
     CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)cgpu_calloc(1, sizeof(CGpuQueue_Vulkan));
     memcpy(RQ, &Q, sizeof(Q));
+    CGpuCommandPoolDescriptor pool_desc = {
+        .___nothing_and_useless__ = 0
+    };
+    RQ->pInnerCmdPool = cgpu_create_command_pool(&RQ->super, &pool_desc);
+    CGpuCommandBufferDescriptor cmd_desc = {
+        .is_secondary = false
+    };
+    RQ->pInnerCmdBuffer = cgpu_create_command_buffer(RQ->pInnerCmdPool, &cmd_desc);
+    RQ->pInnerFence = cgpu_create_fence(device);
+#ifdef CGPU_THREAD_SAFETY
+    RQ->pMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
+    skr_init_mutex(RQ->pMutex);
+#endif
     return &RQ->super;
 }
 
@@ -1121,6 +1142,17 @@ void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentD
 
 void cgpu_free_queue_vulkan(CGpuQueueId queue)
 {
+    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)queue;
+    if (Q->pInnerCmdBuffer) cgpu_free_command_buffer(Q->pInnerCmdBuffer);
+    if (Q->pInnerCmdPool) cgpu_free_command_pool(Q->pInnerCmdPool);
+    if (Q->pInnerFence) cgpu_free_fence(Q->pInnerFence);
+#ifdef CGPU_THREAD_SAFETY
+    if (Q->pMutex)
+    {
+        cgpu_free(Q->pMutex);
+        skr_release_mutex(Q->pMutex);
+    }
+#endif
     cgpu_free((void*)queue);
 }
 
@@ -1377,22 +1409,22 @@ void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId en
 
     // VK Must Fill All DescriptorSetLayouts at first dispach/draw.
     // Example: If shader uses only set 2, we still have to bind empty sets for set=0 and set=1
-    if (Cmd->pBoundPipelineLayout != RS->pipeline_layout)
+    if (Cmd->pBoundPipelineLayout != RS->pPipelineLayout)
     {
-        Cmd->pBoundPipelineLayout = RS->pipeline_layout;
+        Cmd->pBoundPipelineLayout = RS->pPipelineLayout;
         for (uint32_t i = 0; i < RS->super.table_count; i++)
         {
-            if (RS->set_layouts[i].empty_desc_set != VK_NULL_HANDLE &&
+            if (RS->pSetLayouts[i].pEmptyDescSet != VK_NULL_HANDLE &&
                 Set->super.index != i)
             {
                 D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
-                    VK_PIPELINE_BIND_POINT_COMPUTE, RS->pipeline_layout, i,
-                    1, &RS->set_layouts[i].empty_desc_set, 0, NULL);
+                    VK_PIPELINE_BIND_POINT_COMPUTE, RS->pPipelineLayout, i,
+                    1, &RS->pSetLayouts[i].pEmptyDescSet, 0, NULL);
             }
         }
     }
     D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
-        VK_PIPELINE_BIND_POINT_COMPUTE, RS->pipeline_layout,
+        VK_PIPELINE_BIND_POINT_COMPUTE, RS->pPipelineLayout,
         Set->super.index, 1, &Set->pVkDescriptorSet,
         // TODO: Dynamic Offset
         0, NULL);
@@ -1407,21 +1439,21 @@ void cgpu_render_encoder_bind_descriptor_set_vulkan(CGpuRenderPassEncoderId enco
 
     // VK Must Fill All DescriptorSetLayouts at first dispach/draw.
     // Example: If shader uses only set 2, we still have to bind empty sets for set=0 and set=1
-    if (Cmd->pBoundPipelineLayout != RS->pipeline_layout)
+    if (Cmd->pBoundPipelineLayout != RS->pPipelineLayout)
     {
-        Cmd->pBoundPipelineLayout = RS->pipeline_layout;
+        Cmd->pBoundPipelineLayout = RS->pPipelineLayout;
         for (uint32_t i = 0; i < RS->super.table_count; i++)
         {
-            if (RS->set_layouts[i].empty_desc_set != VK_NULL_HANDLE &&
+            if (RS->pSetLayouts[i].pEmptyDescSet != VK_NULL_HANDLE &&
                 Set->super.index != i)
             {
                 D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pipeline_layout, i,
-                    1, &RS->set_layouts[i].empty_desc_set, 0, NULL);
+                    VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pPipelineLayout, i,
+                    1, &RS->pSetLayouts[i].pEmptyDescSet, 0, NULL);
             }
         }
     }
-    D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pipeline_layout,
+    D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pPipelineLayout,
         Set->super.index, 1, &Set->pVkDescriptorSet,
         // TODO: Dynamic Offset
         0, NULL);
@@ -1811,7 +1843,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     for (uint32_t i = 0; i < buffer_count; i++)
     {
         Ts[i].pVkImage = vimages[i];
-        Ts[i].image_type = VK_IMAGE_TYPE_2D;
+        Ts[i].mImageType = VK_IMAGE_TYPE_2D;
         Ts[i].super.is_cube = false;
         Ts[i].super.array_size_minus_one = 0;
         Ts[i].super.device = &D->super;

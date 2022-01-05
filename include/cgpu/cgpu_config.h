@@ -54,7 +54,7 @@
 #define cgpu_memalign sakura_malloc_aligned
 #define cgpu_free sakura_free
 
-//#define CGPU_THREAD_SAFETY
+#define CGPU_THREAD_SAFETY
 
 #ifdef _DEBUG
     #include "assert.h"

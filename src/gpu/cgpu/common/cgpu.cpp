@@ -34,8 +34,11 @@ ECGpuAGSReturnCode cgpu_ags_init(struct CGpuInstance* Inst)
     int apiVersion = AGS_MAKE_VERSION(6, 0, 1);
     auto Status = agsInitialize(apiVersion, &config, &pAgsContext, &gAgsGpuInfo);
     Inst->ags_status = (ECGpuAGSReturnCode)Status;
-    char* stopstring;
-    driverVersion = strtoul(gAgsGpuInfo.driverVersion, &stopstring, 10);
+    if (Status == AGS_SUCCESS)
+    {
+        char* stopstring;
+        driverVersion = strtoul(gAgsGpuInfo.driverVersion, &stopstring, 10);
+    }
     return Inst->ags_status;
 #else
     return CGPU_AGS_NONE;

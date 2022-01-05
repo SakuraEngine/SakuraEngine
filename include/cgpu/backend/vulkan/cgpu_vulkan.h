@@ -211,6 +211,12 @@ typedef struct CGpuQueue_Vulkan {
     VkQueue pVkQueue;
     float mTimestampPeriod;
     uint32_t mVkQueueFamilyIndex : 5;
+    // Cmd pool for inner usage like resource transition
+    CGpuCommandPoolId pInnerCmdPool;
+    CGpuCommandBufferId pInnerCmdBuffer;
+    CGpuFenceId pInnerFence;
+    /// Lock for multi-threaded descriptor allocations
+    struct SMutex* pMutex;
 } CGpuQueue_Vulkan;
 
 typedef struct CGpuCommandPool_Vulkan {
@@ -238,7 +244,7 @@ typedef struct CGpuBuffer_Vulkan {
 
 typedef struct CGpuTexture_Vulkan {
     CGpuTexture super;
-    VkImageType image_type;
+    VkImageType mImageType;
     VkImage pVkImage;
     union
     {
@@ -274,14 +280,14 @@ typedef struct CGpuSwapChain_Vulkan {
 
 typedef struct SetLayout_Vulkan {
     VkDescriptorSetLayout layout;
-    VkDescriptorUpdateTemplate update_template;
-    VkDescriptorSet empty_desc_set;
+    VkDescriptorUpdateTemplate pUpdateTemplate;
+    VkDescriptorSet pEmptyDescSet;
 } SetLayout_Vulkan;
 
 typedef struct CGpuRootSignature_Vulkan {
     CGpuRootSignature super;
-    VkPipelineLayout pipeline_layout;
-    SetLayout_Vulkan* set_layouts;
+    VkPipelineLayout pPipelineLayout;
+    SetLayout_Vulkan* pSetLayouts;
 } CGpuRootSignature_Vulkan;
 
 typedef union VkDescriptorUpdateData
