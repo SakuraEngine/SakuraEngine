@@ -230,7 +230,7 @@ void cgpu_free_buffer_vulkan(CGpuBufferId buffer)
         B->pVkStorageTexelView = VK_NULL_HANDLE;
     }
     vmaDestroyBuffer(D->pVmaAllocator, B->pVkBuffer, B->pVkAllocation);
-    cgpu_free(B);
+    cgpu_free_aligned(B);
 }
 
 // Texture/TextureView APIs
@@ -457,7 +457,7 @@ void cgpu_free_texture_vulkan(CGpuTextureId texture)
             D->mVkDeviceTable.vkFreeMemory(D->pVkDevice, T->pVkDeviceMemory, GLOBAL_VkAllocationCallbacks);
         }
     }
-    cgpu_free(T);
+    cgpu_free_aligned(T);
 }
 
 CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)
@@ -552,7 +552,7 @@ void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target)
         D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkRTVDescriptor, GLOBAL_VkAllocationCallbacks);
     if (VK_NULL_HANDLE != TV->pVkUAVDescriptor)
         D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkUAVDescriptor, GLOBAL_VkAllocationCallbacks);
-    cgpu_free(TV);
+    cgpu_free_aligned(TV);
 }
 
 // Sampler APIs
@@ -589,7 +589,7 @@ void cgpu_free_sampler_vulkan(CGpuSamplerId sampler)
     CGpuSampler_Vulkan* S = (CGpuSampler_Vulkan*)sampler;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)sampler->device;
     D->mVkDeviceTable.vkDestroySampler(D->pVkDevice, S->pVkSampler, GLOBAL_VkAllocationCallbacks);
-    cgpu_free(S);
+    cgpu_free_aligned(S);
 }
 
 // Shader APIs

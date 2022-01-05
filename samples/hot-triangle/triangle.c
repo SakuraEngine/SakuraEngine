@@ -342,5 +342,6 @@ int main(int argc, char* argv[])
 #endif
     unwatch_source(watcher);
     SDL_Quit();
+
     return 0;
 }

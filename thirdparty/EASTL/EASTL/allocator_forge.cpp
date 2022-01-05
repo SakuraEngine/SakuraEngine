@@ -3,24 +3,31 @@
 #include "allocator_forge.h"
 #include <stdlib.h>
 
-#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
-extern "C"
-{
-	extern void* mi_malloc(size_t size);
-	extern void* mi_malloc_aligned(size_t size, size_t alignment);
-	extern void mi_free(void* p);
-}
-#define core_malloc ::mi_malloc
-#define core_memalign ::mi_malloc_aligned
-#define core_free ::mi_free
+#ifdef _CRTDBG_MAP_ALLOC
+    #include <crtdbg.h>
+	#define core_malloc(n) _aligned_malloc((n), 1)
+	#define core_memalign _aligned_malloc
+	#define core_free _aligned_free
 #else
-#define core_malloc malloc
-#ifdef _WINDOWS
-#define core_memalign _aligned_malloc
-#else
-#define core_memalign(size, alignment) aligned_alloc((alignment), (size))
-#endif
-#define core_free free
+	#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
+	extern "C"
+	{
+		extern void* mi_malloc(size_t size);
+		extern void* mi_malloc_aligned(size_t size, size_t alignment);
+		extern void mi_free(void* p);
+	}
+	#define core_malloc ::mi_malloc
+	#define core_memalign ::mi_malloc_aligned
+	#define core_free ::mi_free
+	#else
+	#define core_malloc malloc
+	#ifdef _WINDOWS
+	#define core_memalign _aligned_malloc
+	#else
+	#define core_memalign(size, alignment) aligned_alloc((alignment), (size))
+	#endif
+	#define core_free free
+	#endif
 #endif
 
 #if EASTL_ALLOCATOR_FORGE

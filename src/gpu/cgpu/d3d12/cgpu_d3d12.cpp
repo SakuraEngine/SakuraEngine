@@ -457,6 +457,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
 void cgpu_free_root_signature_d3d12(CGpuRootSignatureId signature)
 {
     CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)signature;
+    CGpuUtil_FreeRSParamTables((CGpuRootSignature*)signature);
     SAFE_RELEASE(RS->pDxRootSignature);
     cgpu_delete(RS);
 }
@@ -1198,7 +1199,7 @@ bool reset_root_signature(CGpuCommandBuffer_D3D12* pCmd, ECGpuPipelineType type,
         else
             pCmd->pDxCmdList->SetComputeRootSignature(pRootSignature);
     }
-    return false;
+    return true;
 }
 
 void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline)
