@@ -405,10 +405,6 @@ void ProgramMain(void* usrdata)
     finalize();
 }
 
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-
 int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
@@ -438,8 +434,6 @@ int main(int argc, char* argv[])
     }
 #endif
     SDL_Quit();
-
-    _CrtDumpMemoryLeaks();
 
     return 0;
 }
