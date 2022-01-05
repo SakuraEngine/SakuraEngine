@@ -495,6 +495,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->pUpdateTemplate));
         VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
             &set_to_record->layout, &set_to_record->pEmptyDescSet, 1);
+        cgpu_free(template_entries);
     }
     // Free Temporal Memory
     cgpu_free(pSetLayouts);
@@ -631,7 +632,7 @@ void cgpu_free_descriptor_set_vulkan(CGpuDescriptorSetId set)
     CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
     VkUtil_ReturnDescriptorSets(D->pDescriptorPool, &Set->pVkDescriptorSet, 1);
-    cgpu_free(Set);
+    cgpu_free_aligned(Set);
 }
 
 CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc)
@@ -1224,7 +1225,7 @@ void cgpu_free_command_buffer_vulkan(CGpuCommandBufferId cmd)
     CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)P->super.queue;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)Q->super.device;
     D->mVkDeviceTable.vkFreeCommandBuffers(D->pVkDevice, P->pVkCmdPool, 1, &(Cmd->pVkCmdBuf));
-    cgpu_free(Cmd);
+    cgpu_free_aligned(Cmd);
 }
 
 void cgpu_free_command_pool_vulkan(CGpuCommandPoolId pool)

@@ -47,13 +47,6 @@
 #endif
 
 // ...
-#define cgpu_malloc sakura_malloc
-#define cgpu_malloc_aligned sakura_malloc_aligned
-#define cgpu_calloc sakura_calloc
-#define cgpu_calloc_aligned sakura_calloc_aligned
-#define cgpu_memalign sakura_malloc_aligned
-#define cgpu_free sakura_free
-
 #define CGPU_THREAD_SAFETY
 
 #ifdef _DEBUG
@@ -63,30 +56,3 @@
     #define cgpu_assert(expr) (void)(expr);
 #endif
 #define cgpu_static_assert static_assert
-
-#ifdef __cplusplus
-    #include <type_traits>
-template <typename T, typename... Args>
-T* cgpu_new_placed(void* memory, Args&&... args)
-{
-    return new (memory) T(std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-T* cgpu_new(Args&&... args)
-{
-    void* memory = sakura_malloc_aligned(sizeof(T), alignof(T));
-    return cgpu_new_placed<T>(memory, std::forward<Args>(args)...);
-}
-template <typename T>
-void cgpu_delete_placed(T* object)
-{
-    object->~T();
-}
-template <typename T>
-void cgpu_delete(T* object)
-{
-    cgpu_delete_placed(object);
-    cgpu_free(object);
-}
-#endif

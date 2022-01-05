@@ -11,7 +11,7 @@ D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGpuBufferD
 cgpu_static_assert(sizeof(CGpuBuffer_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
 {
-    CGpuBuffer_D3D12* B = new CGpuBuffer_D3D12();
+    CGpuBuffer_D3D12* B = cgpu_new<CGpuBuffer_D3D12>();
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     CGpuAdapter_D3D12* A = (CGpuAdapter_D3D12*)device->adapter;
     D3D12_RESOURCE_DESC bufDesc = D3D12Util_CreateBufferDesc(A, D, desc);
@@ -248,7 +248,7 @@ void cgpu_free_buffer_d3d12(CGpuBufferId buffer)
     }
     SAFE_RELEASE(B->pDxAllocation)
     SAFE_RELEASE(B->pDxResource)
-    delete B;
+    cgpu_delete(B);
 }
 
 // Sampler APIs
@@ -471,6 +471,7 @@ void cgpu_free_texture_d3d12(CGpuTextureId texture)
         SAFE_RELEASE(T->pDxAllocation);
         SAFE_RELEASE(T->pDxResource);
     }
+    cgpu_delete(T);
 }
 
 CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)
@@ -688,6 +689,7 @@ void cgpu_free_texture_view_d3d12(CGpuTextureViewId view)
             D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], TV->mDxDescriptorHandles,
             handleCount);
     }
+    cgpu_delete(TV);
 }
 
 // Shader APIs
@@ -725,7 +727,7 @@ CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
     CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
-    CGpuShaderLibrary_D3D12* S = new CGpuShaderLibrary_D3D12();
+    CGpuShaderLibrary_D3D12* S = cgpu_new<CGpuShaderLibrary_D3D12>();
     IDxcLibrary* pUtils;
     DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&pUtils));
     if (!try_invoke_pinned_api(pUtils, desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob))
@@ -743,11 +745,12 @@ CGpuShaderLibraryId cgpu_create_shader_library_d3d12(
 void cgpu_free_shader_library_d3d12(CGpuShaderLibraryId shader_library)
 {
     CGpuShaderLibrary_D3D12* S = (CGpuShaderLibrary_D3D12*)shader_library;
+    D3D12Util_FreeShaderReflection(S);
     if (S->pShaderBlob != CGPU_NULLPTR)
     {
         S->pShaderBlob->Release();
     }
-    delete S;
+    cgpu_delete(S);
 }
 
 // Util Implementations
