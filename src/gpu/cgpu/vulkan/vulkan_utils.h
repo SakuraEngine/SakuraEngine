@@ -100,6 +100,7 @@ typedef struct VkUtil_DescriptorPool {
 typedef struct VkUtil_RenderPassDesc {
     ECGpuFormat pColorFormats[MAX_MRT_COUNT];
     ECGpuLoadAction pLoadActionsColor[MAX_MRT_COUNT];
+    ECGpuStoreAction pStoreActionsColor[MAX_MRT_COUNT];
     uint32_t mColorAttachmentCount;
     ECGpuSampleCount mSampleCount;
     ECGpuFormat mDepthStencilFormat;

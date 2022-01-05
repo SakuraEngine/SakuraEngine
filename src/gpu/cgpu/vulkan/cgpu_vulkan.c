@@ -164,7 +164,7 @@ static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUt
             attachments[ssidx].format = (VkFormat)VkUtil_FormatTranslateToVk(pDesc->pColorFormats[i]);
             attachments[ssidx].samples = sample_count;
             attachments[ssidx].loadOp = gVkAttachmentLoadOpTranslator[pDesc->pLoadActionsColor[i]];
-            attachments[ssidx].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachments[ssidx].storeOp = gVkAttachmentStoreOpTranslator[pDesc->pStoreActionsColor[i]];
             attachments[ssidx].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachments[ssidx].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
             attachments[ssidx].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -1467,6 +1467,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
         {
             rpdesc.pColorFormats[i] = desc->color_attachments[i].view->info.format;
             rpdesc.pLoadActionsColor[i] = desc->color_attachments[i].load_action;
+            rpdesc.pStoreActionsColor[i] = desc->color_attachments[i].store_action;
             Width = desc->color_attachments[i].view->info.texture->width;
             Height = desc->color_attachments[i].view->info.texture->height;
         }

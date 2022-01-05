@@ -316,6 +316,10 @@ static const VkPipelineBindPoint gPipelineBindPoint[PIPELINE_TYPE_COUNT] = {
 #endif
 };
 
+static const VkAttachmentStoreOp gVkAttachmentStoreOpTranslator[STORE_ACTION_COUNT] = {
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE
+};
 static const VkAttachmentLoadOp gVkAttachmentLoadOpTranslator[LOAD_ACTION_COUNT] = {
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_LOAD_OP_LOAD,

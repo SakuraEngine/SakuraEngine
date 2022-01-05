@@ -1165,12 +1165,14 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
         clearValues[i].Color[1] = desc->color_attachments[i].clear_color.g;
         clearValues[i].Color[2] = desc->color_attachments[i].clear_color.b;
         clearValues[i].Color[3] = desc->color_attachments[i].clear_color.a;
-        // TODO: Load & Store action
-        // desc->color_attachments[i].load_action
-        // desc->color_attachments[i].store_action
+        // Load & Store action
+        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE beginningAccess =
+            gDx12PassBeginOpTranslator[desc->color_attachments[i].load_action];
+        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE endingAccess =
+            gDx12PassEndOpTranslator[desc->color_attachments[i].store_action];
         renderPassRenderTargetDescs[i].cpuDescriptor = TV->mDxRtxDescriptorHandle;
-        renderPassRenderTargetDescs[i].BeginningAccess = { D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValues[i] } };
-        renderPassRenderTargetDescs[i].EndingAccess = { D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE, {} };
+        renderPassRenderTargetDescs[i].BeginningAccess = { beginningAccess, { clearValues[i] } };
+        renderPassRenderTargetDescs[i].EndingAccess = { endingAccess, {} };
     }
     /*
         D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessNoAccess{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
