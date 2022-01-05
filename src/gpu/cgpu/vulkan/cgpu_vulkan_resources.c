@@ -3,6 +3,9 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
 #include "vulkan_utils.h"
+#ifdef CGPU_THREAD_SAFETY
+    #include "platform/thread.h"
+#endif
 #include <string.h>
 
 FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_Vulkan* A, const struct CGpuBufferDescriptor* desc)
@@ -246,6 +249,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     }
     // Alloc aligned memory
     size_t totalSize = sizeof(CGpuTexture_Vulkan);
+    CGpuQueue_Vulkan* Q = (CGpuQueue_Vulkan*)desc->owner_queue;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuTexture_Vulkan));
@@ -267,27 +271,27 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
 
     uint32_t arraySize = desc->array_size;
     // Image type
-    T->image_type = VK_IMAGE_TYPE_MAX_ENUM;
+    T->mImageType = VK_IMAGE_TYPE_MAX_ENUM;
     if (desc->flags & TCF_FORCE_2D)
     {
         cgpu_assert(desc->depth == 1);
-        T->image_type = VK_IMAGE_TYPE_2D;
+        T->mImageType = VK_IMAGE_TYPE_2D;
     }
     else if (desc->flags & TCF_FORCE_3D)
-        T->image_type = VK_IMAGE_TYPE_3D;
+        T->mImageType = VK_IMAGE_TYPE_3D;
     else
     {
         if (desc->depth > 1)
-            T->image_type = VK_IMAGE_TYPE_3D;
+            T->mImageType = VK_IMAGE_TYPE_3D;
         else if (desc->height > 1)
-            T->image_type = VK_IMAGE_TYPE_2D;
+            T->mImageType = VK_IMAGE_TYPE_2D;
         else
-            T->image_type = VK_IMAGE_TYPE_1D;
+            T->mImageType = VK_IMAGE_TYPE_1D;
     }
 
     CGpuResourceTypes descriptors = desc->descriptors;
     bool cubemapRequired = (RT_TEXTURE_CUBE == (descriptors & RT_TEXTURE_CUBE));
-    bool arrayRequired = T->image_type == VK_IMAGE_TYPE_3D;
+    bool arrayRequired = T->mImageType == VK_IMAGE_TYPE_3D;
     // TODO: Support stencil format
     const bool isStencilFormat = false;
     (void)isStencilFormat;
@@ -305,7 +309,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .pNext = NULL,
             .flags = 0,
-            .imageType = T->image_type,
+            .imageType = T->mImageType,
             .format = (VkFormat)VkUtil_FormatTranslateToVk(desc->format),
             .extent.width = desc->width,
             .extent.height = desc->height,
@@ -400,8 +404,36 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     T->super.format = desc->format;
     // Set Texture Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)T->pVkImage, VK_OBJECT_TYPE_IMAGE, desc->name);
-    // TODO: Start state
-    // CGpuQueueId gfx_queue = cgpu_runtime_table_try_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+    // Start state
+    if (Q)
+    {
+#ifdef CGPU_THREAD_SAFETY
+        skr_acquire_mutex(Q->pMutex);
+#endif
+        cgpu_reset_command_pool(Q->pInnerCmdPool);
+        cgpu_cmd_begin(Q->pInnerCmdBuffer);
+        CGpuTextureBarrier init_barrier = {
+            .texture = &T->super,
+            .src_state = RESOURCE_STATE_UNDEFINED,
+            .dst_state = desc->start_state
+        };
+        CGpuResourceBarrierDescriptor init_barrier_d = {
+            .texture_barriers = &init_barrier,
+            .texture_barriers_count = 1
+        };
+        cgpu_cmd_resource_barrier(Q->pInnerCmdBuffer, &init_barrier_d);
+        cgpu_cmd_end(Q->pInnerCmdBuffer);
+        CGpuQueueSubmitDescriptor barrier_submit = {
+            .cmds = &Q->pInnerCmdBuffer,
+            .cmds_count = 1,
+            .signal_fence = Q->pInnerFence
+        };
+        cgpu_submit_queue(&Q->super, &barrier_submit);
+        cgpu_wait_fences(&Q->pInnerFence, 1);
+#ifdef CGPU_THREAD_SAFETY
+        skr_release_mutex(Q->pMutex);
+#endif
+    }
     return &T->super;
 }
 
@@ -434,7 +466,7 @@ CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const str
     CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)desc->texture;
     CGpuTextureView_Vulkan* TV = (CGpuTextureView_Vulkan*)cgpu_calloc_aligned(1, sizeof(CGpuTextureView_Vulkan), _Alignof(CGpuTextureView_Vulkan));
     VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
-    switch (T->image_type)
+    switch (T->mImageType)
     {
         case VK_IMAGE_TYPE_1D:
             view_type = desc->array_layer_count > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;

@@ -219,11 +219,6 @@ typedef struct CGpuShaderLibrary_D3D12 {
     struct IDxcBlobEncoding* pShaderBlob;
 } CGpuShaderLibrary_D3D12;
 
-typedef struct ParameterTable_D3D12 {
-    CGpuShaderResource* resources; // This should be stored here because shader could be destoryed after RS creation
-    uint32_t resources_count;
-} ParameterTable_D3D12;
-
 typedef struct CGpuRootSignature_D3D12 {
     CGpuRootSignature super;
     ID3D12RootSignature* pDxRootSignature;

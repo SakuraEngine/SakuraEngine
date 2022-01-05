@@ -709,6 +709,12 @@ CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureD
     if (desc->mip_levels == 0) wdesc->mip_levels = 1;
     if (desc->depth == 0) wdesc->depth = 1;
     if (desc->sample_count == 0) wdesc->sample_count = 1;
+    if ((!desc->owner_queue) && (desc->start_state != RESOURCE_STATE_UNDEFINED))
+    {
+        cgpu_warn("warn: texture has a start_state of %d but no owner queue is setted!\n"
+                  "\tif texture is used with start_state, an owner queue must be set!",
+            desc->start_state);
+    }
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
     CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, desc);
     texture->device = device;

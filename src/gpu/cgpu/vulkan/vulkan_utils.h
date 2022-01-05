@@ -91,10 +91,8 @@ typedef struct VkUtil_DescriptorPool {
     CGpuDevice_Vulkan* Device;
     VkDescriptorPool pVkDescPool;
     VkDescriptorPoolCreateFlags mFlags;
-#ifdef CGPU_THREAD_SAFETY
     /// Lock for multi-threaded descriptor allocations
     struct SMutex* pMutex;
-#endif
 } VkUtil_DescriptorPool;
 
 typedef struct VkUtil_RenderPassDesc {

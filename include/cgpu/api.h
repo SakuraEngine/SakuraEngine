@@ -649,6 +649,7 @@ typedef union CGpuClearValue
         uint32_t stencil;
     };
 } CGpuClearValue;
+
 static const CGpuClearValue fastclear_0000 = {
     { 0.f, 0.f, 0.f, 0.f }
 };
@@ -1038,6 +1039,8 @@ typedef struct CGpuTextureDescriptor {
     ECGpuSampleCount sample_count;
     /// The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for mSampleCount
     uint32_t sample_quality;
+    /// Owner queue of the resource at creation
+    CGpuQueueId owner_queue;
     /// What state will the texture get created in
     ECGpuResourceState start_state;
     /// Descriptor creation

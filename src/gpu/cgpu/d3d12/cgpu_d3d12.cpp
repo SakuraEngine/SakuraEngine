@@ -244,6 +244,8 @@ void cgpu_free_device_d3d12(CGpuDeviceId device)
     cgpu_free(D->pSamplerHeaps);
     // Release D3D12 Device
     SAFE_RELEASE(D->pDxDevice);
+    SAFE_RELEASE(D->pPipelineLibrary);
+    if (D->pPSOCacheData) cgpu_free(D->pPSOCacheData);
     cgpu_delete(D);
 }
 

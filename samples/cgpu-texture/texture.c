@@ -75,6 +75,7 @@ void create_sampled_texture()
         .depth = 1,
         .format = PF_R8G8B8A8_UNORM,
         .array_size = 1,
+        .owner_queue = gfx_queue,
         .start_state = RESOURCE_STATE_COPY_DEST
     };
     sampled_texture = cgpu_create_texture(device, &tex_desc);
@@ -106,18 +107,6 @@ void create_sampled_texture()
     cgpu_reset_command_pool(pools[0]);
     // record
     cgpu_cmd_begin(cmds[0]);
-    // TODO: This is a diry hack for vulkan resource state barrier
-    //       Fix it soon!
-    if (backend == CGPU_BACKEND_VULKAN)
-    {
-        CGpuTextureBarrier cpy_barrier = {
-            .texture = sampled_texture,
-            .src_state = RESOURCE_STATE_UNDEFINED,
-            .dst_state = RESOURCE_STATE_COPY_DEST
-        };
-        CGpuResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &cpy_barrier, .texture_barriers_count = 1 };
-        cgpu_cmd_resource_barrier(cmds[0], &barrier_desc0);
-    }
     CGpuBufferToTextureTransfer b2t = {
         .src = upload_buffer,
         .src_offset = 0,
@@ -416,6 +405,10 @@ void ProgramMain(void* usrdata)
     finalize();
 }
 
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
@@ -445,5 +438,8 @@ int main(int argc, char* argv[])
     }
 #endif
     SDL_Quit();
+
+    _CrtDumpMemoryLeaks();
+
     return 0;
 }
