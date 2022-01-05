@@ -480,7 +480,7 @@ typedef struct CGpuInstance {
 } CGpuInstance;
 
 typedef struct CGpuAdapter {
-    const CGpuInstanceId instance;
+    CGpuInstanceId instance;
     const CGpuProcTable* proc_table_cache;
 } CGpuAdapter;
 

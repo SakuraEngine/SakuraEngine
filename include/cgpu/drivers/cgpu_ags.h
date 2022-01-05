@@ -9,6 +9,7 @@ extern "C" {
 #include "cgpu/api.h"
 
 ECGpuAGSReturnCode cgpu_ags_init(struct CGpuInstance* Inst);
+uint32_t cgpu_ags_get_driver_version();
 void cgpu_ags_exit();
 
 #ifdef __cplusplus

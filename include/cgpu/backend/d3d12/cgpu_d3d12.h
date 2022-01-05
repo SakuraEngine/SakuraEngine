@@ -171,6 +171,8 @@ typedef struct CGpuDevice_D3D12 {
     struct DMA_Allocator* pResourceAllocator;
 #endif
     struct D3D12Util_StaticSamplerMap* pStaticSamplersMap;
+    ID3D12PipelineLibrary* pPipelineLibrary;
+    void* pPSOCacheData;
 } CGpuDevice_D3D12;
 
 typedef struct CGpuFence_D3D12 {

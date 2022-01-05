@@ -18,6 +18,7 @@
 #if defined(AMDAGS)
 static AGSContext* pAgsContext = NULL;
 static AGSGPUInfo gAgsGpuInfo = {};
+static uint32_t driverVersion = 0;
     // Actually it's always windows.
     #if defined(_WIN64)
         #pragma comment(lib, "amd_ags_x64.lib")
@@ -33,10 +34,20 @@ ECGpuAGSReturnCode cgpu_ags_init(struct CGpuInstance* Inst)
     int apiVersion = AGS_MAKE_VERSION(6, 0, 1);
     auto Status = agsInitialize(apiVersion, &config, &pAgsContext, &gAgsGpuInfo);
     Inst->ags_status = (ECGpuAGSReturnCode)Status;
+    char* stopstring;
+    driverVersion = strtoul(gAgsGpuInfo.driverVersion, &stopstring, 10);
     return Inst->ags_status;
 #else
     return CGPU_AGS_NONE;
 #endif
+}
+
+uint32_t cgpu_ags_get_driver_version()
+{
+#if defined(AMDAGS)
+    return driverVersion;
+#endif
+    return 0;
 }
 
 void cgpu_ags_exit()
@@ -64,6 +75,25 @@ ECGpuNvAPI_Status cgpu_nvapi_init(struct CGpuInstance* Inst)
     return ECGpuNvAPI_Status::CGPU_NVAPI_NONE;
 #endif
 }
+
+uint32_t cgpu_nvapi_get_driver_version()
+{
+#if defined(NVAPI)
+    NvU32 v = 0;         // version
+    NvAPI_ShortString b; // branch
+    auto Status = NvAPI_SYS_GetDriverAndBranchVersion(&v, b);
+    if (Status != NVAPI_OK)
+    {
+        NvAPI_ShortString string;
+        NvAPI_GetErrorMessage(Status, string);
+        cgpu_warn("[warn] nvapi failed to get driver version! \n message: %s", string);
+        return v;
+    }
+    return v;
+#endif
+    return 0;
+}
+
 void cgpu_nvapi_exit()
 {
 #if defined(NVAPI)
