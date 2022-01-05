@@ -34,7 +34,6 @@ extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/wasm-clang-win.zip
 )
 
 include(WASM3) # Set WASM3 ENVS
-include(WasmEdge) # Set WasmEdge ENVS
 
 if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)
