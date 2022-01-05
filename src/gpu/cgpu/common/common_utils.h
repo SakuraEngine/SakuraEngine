@@ -43,6 +43,7 @@ FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t ali
     #define cgpu_memalign _aligned_malloc
     #define cgpu_free free
     #define cgpu_free_aligned _aligned_free
+    #define DEBUG_NEW_SOURCE_LINE (_NORMAL_BLOCK, __FILE__, __LINE__)
 #else
     #define cgpu_malloc sakura_malloc
     #define cgpu_malloc_aligned sakura_malloc_aligned
@@ -51,6 +52,7 @@ FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t ali
     #define cgpu_memalign sakura_malloc_aligned
     #define cgpu_free sakura_free
     #define cgpu_free_aligned sakura_free
+    #define DEBUG_NEW_SOURCE_LINE
 #endif
 
 #ifdef __cplusplus
@@ -64,7 +66,7 @@ T* cgpu_new_placed(void* memory, Args&&... args)
 template <typename T, typename... Args>
 T* cgpu_new(Args&&... args)
 {
-    return new (_NORMAL_BLOCK, __FILE__, __LINE__) T(std::forward<Args>(args)...);
+    return new DEBUG_NEW_SOURCE_LINE T(std::forward<Args>(args)...);
 }
 template <typename T>
 void cgpu_delete_placed(T* object)
