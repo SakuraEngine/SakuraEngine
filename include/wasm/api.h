@@ -3,9 +3,6 @@
 #ifdef USE_M3
     #include "wasm3/wasm3.h"
 #endif
-#ifdef USE_WASM_EDGE
-    #include "wasmedge/wasmedge.h"
-#endif
 
 #define swa_handle_error(error)        \
     {                                  \
@@ -89,9 +86,6 @@ typedef enum ESWABackend
     ESWA_BACKEND_UNDEFINED,
 #ifdef USE_M3
     ESWA_BACKEND_WASM3,
-#endif
-#ifdef USE_WASM_EDGE
-    ESWA_BACKEND_WASM_EDGE,
 #endif
     ESWA_BACKEND_EMSCRIPTON,
     ESWA_BACKEND_MAX_ENUM_BIT = 0x7FFFFFFF
@@ -192,23 +186,11 @@ typedef struct SWAHostFunctionDescriptor {
 #ifdef USE_M3
         M3RawCall m3;
 #endif
-#ifdef USE_WASM_EDGE
-        WasmEdge_HostFunc_t wa_edge;
-#endif
     } backend_wrappers;
     struct
     {
 #ifdef USE_M3
         const char* m3;
-#endif
-#ifdef USE_WASM_EDGE
-        struct
-        {
-            const enum WasmEdge_ValType* i_types;
-            uint32_t i_count;
-            const enum WasmEdge_ValType* o_types;
-            uint32_t o_count;
-        } wa_edge;
 #endif
     } signatures;
 } SWAHostFunctionDescriptor;

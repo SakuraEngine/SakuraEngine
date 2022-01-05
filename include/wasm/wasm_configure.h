@@ -2,7 +2,6 @@
 #include "platform/configure.h"
 // Currently we have only wasm3 as our wasm3 engine
 #define USE_M3
-#define USE_WASM_EDGE
 
 #ifdef __cplusplus
     #ifndef SWA_NULLPTR

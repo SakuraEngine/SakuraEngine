@@ -64,22 +64,6 @@ m3ApiRawFunction(host_func_warpper_m3)
     m3ApiReturn(ret);
 }
 
-WasmEdge_Result host_func_warpper_edge(void*, WasmEdge_MemoryInstanceContext*,
-    const WasmEdge_Value* In, WasmEdge_Value* Out)
-{
-    /*
-     * Params: {i32}
-     * Returns: {i32}
-     * Developers should take care about the function type.
-     */
-    /* Retrieve the value 1. */
-    int32_t val = WasmEdge_ValueGetI32(In[0]);
-    /* Output value 1 is Val1 + Val2. */
-    Out[0] = WasmEdge_ValueGenI32(host_function(val));
-    /* Return the status of success. */
-    return WasmEdge_Result_Success;
-}
-
 TEST_P(WASM3Test, HostLink)
 {
     SWAModuleDescriptor module_desc;
@@ -97,12 +81,6 @@ TEST_P(WASM3Test, HostLink)
     host_func.proc = (void*)&host_function;
     host_func.signatures.m3 = "i(i)";
     host_func.backend_wrappers.m3 = &host_func_warpper_m3;
-    host_func.backend_wrappers.wa_edge = &host_func_warpper_edge;
-    const auto type = WasmEdge_ValType_I32;
-    host_func.signatures.wa_edge.i_count = 1;
-    host_func.signatures.wa_edge.o_count = 1;
-    host_func.signatures.wa_edge.i_types = &type;
-    host_func.signatures.wa_edge.o_types = &type;
     swa_module_link_host_function(module, &host_func);
 
     SWAValue param;

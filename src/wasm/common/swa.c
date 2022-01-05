@@ -1,6 +1,5 @@
 #include "common_utils.h"
 #include "wasm/backend/wasm3/swa_wasm3.h"
-#include "wasm/backend/wasmedge/swa_wasmedge.h"
 #include "wasm/api.h"
 
 static void SWANamedRuntimeDeletor(SWANamedObjectTable* table, const char* name, void* object)
@@ -14,9 +13,6 @@ SWAInstanceId swa_create_instance(const struct SWAInstanceDescriptor* desc)
     {
         case ESWA_BACKEND_WASM3:
             tbl = SWA_WASM3ProcTable();
-            break;
-        case ESWA_BACKEND_WASM_EDGE:
-            tbl = SWA_WAEdgeProcTable();
             break;
         default:
             swa_assert(0 && "unsupported swa backend!");
