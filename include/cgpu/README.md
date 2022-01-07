@@ -76,3 +76,7 @@
 虽然在VK后端使用表结构，但要注意并不能再使用这些set index来创建CGPUDescriptorSet，因为会产生相对D3D12的语义差。
 
 使用cgpu_push_root_descriptor进行更新, 后端会使用Shader反射来对此错误操作进行Validate。
+
+# 完成度
+
+- 
