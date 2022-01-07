@@ -160,30 +160,41 @@ FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGpuRe
     return result;
 }
 
-FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGpuShaderStages stages)
+FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGpuShaderStages shader_stages)
 {
-    VkShaderStageFlags res = 0;
-    if (stages & SHADER_STAGE_ALL_GRAPHICS)
-        return VK_SHADER_STAGE_ALL_GRAPHICS;
-
-    if (stages & SHADER_STAGE_VERT)
-        res |= VK_SHADER_STAGE_VERTEX_BIT;
-    if (stages & SHADER_STAGE_GEOM)
-        res |= VK_SHADER_STAGE_GEOMETRY_BIT;
-    if (stages & SHADER_STAGE_TESE)
-        res |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-    if (stages & SHADER_STAGE_TESC)
-        res |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-    if (stages & SHADER_STAGE_COMPUTE)
-        res |= VK_SHADER_STAGE_COMPUTE_BIT;
-#ifdef ENABLE_RAYTRACING
-    if (stages & SHADER_STAGE_RAYTRACING)
-        res |=
-            (VK_SHADER_STAGE_RAYGEN_BIT_NV | VK_SHADER_STAGE_ANY_HIT_BIT_NV | VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV |
-                VK_SHADER_STAGE_MISS_BIT_NV | VK_SHADER_STAGE_INTERSECTION_BIT_NV | VK_SHADER_STAGE_CALLABLE_BIT_NV);
-#endif
-    cgpu_assert(res != 0);
-    return res;
+    VkShaderStageFlags result = 0;
+    if (SHADER_STAGE_ALL_GRAPHICS == (shader_stages & SHADER_STAGE_ALL_GRAPHICS))
+    {
+        result = VK_SHADER_STAGE_ALL_GRAPHICS;
+    }
+    else
+    {
+        if (SHADER_STAGE_VERT == (shader_stages & SHADER_STAGE_VERT))
+        {
+            result |= VK_SHADER_STAGE_VERTEX_BIT;
+        }
+        if (SHADER_STAGE_TESC == (shader_stages & SHADER_STAGE_TESC))
+        {
+            result |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        }
+        if (SHADER_STAGE_TESE == (shader_stages & SHADER_STAGE_TESE))
+        {
+            result |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        }
+        if (SHADER_STAGE_GEOM == (shader_stages & SHADER_STAGE_GEOM))
+        {
+            result |= VK_SHADER_STAGE_GEOMETRY_BIT;
+        }
+        if (SHADER_STAGE_FRAG == (shader_stages & SHADER_STAGE_FRAG))
+        {
+            result |= VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
+        if (SHADER_STAGE_COMPUTE == (shader_stages & SHADER_STAGE_COMPUTE))
+        {
+            result |= VK_SHADER_STAGE_COMPUTE_BIT;
+        }
+    }
+    return result;
 }
 
 /* clang-format off */

@@ -282,6 +282,7 @@ typedef struct CGpuSwapChain_Vulkan {
 typedef struct SetLayout_Vulkan {
     VkDescriptorSetLayout layout;
     VkDescriptorUpdateTemplate pUpdateTemplate;
+    uint32_t mUpdateEntriesCount;
     VkDescriptorSet pEmptyDescSet;
 } SetLayout_Vulkan;
 

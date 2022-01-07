@@ -942,13 +942,29 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
         {
             CGpuShaderResource* resource = &reflection->shader_resources[j];
             CGpuShaderResource* dst = &RS->tables[resource->set].resources[dst_bindings[resource->set]];
-            CGpuShaderStages prev_stages = dst->stages;
             memcpy(dst, resource, sizeof(CGpuShaderResource));
-            dst->stages |= prev_stages;
             dst_bindings[resource->set]++;
         }
     }
     cgpu_free(dst_bindings);
+    // Join
+    for (uint32_t i = 0; i < RS->table_count; i++)
+    {
+        CGpuParameterTable* set_to_join = &RS->tables[i];
+        for (uint32_t j = 0; j < set_to_join->resources_count; j++)
+        {
+            for (uint32_t k = j + 1; k < set_to_join->resources_count; k++)
+            {
+                if (set_to_join->resources[j].name_hash == set_to_join->resources[k].name_hash)
+                {
+                    set_to_join->resources[j].stages |= set_to_join->resources[k].stages;
+                    memcpy(&set_to_join->resources[k],
+                        &set_to_join->resources[set_to_join->resources_count - 1], sizeof(CGpuShaderResource));
+                    set_to_join->resources_count--;
+                }
+            }
+        }
+    }
     // Store name
     for (uint32_t i = 0; i < RS->table_count; i++)
     {

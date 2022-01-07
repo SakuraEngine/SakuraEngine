@@ -315,6 +315,7 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
                     cgpu_hash(current_res->name, strlen(current_res->name), (size_t)device);
                 current_res->stages = S->pReflect->shader_stage;
                 current_res->size = root_sets[i]->size;
+                current_res->offset = root_sets[i]->offset;
             }
         }
     }
