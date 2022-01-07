@@ -1,9 +1,5 @@
 # Sakura.Runtime
 
-[![build](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci.yml)
-
-
-
 ## 特性
 ### 极速编译
 八成以上的代码由C构成, 其余两成为简单的C++。搭配手动安排的UnityBuild, 这将全量编译的耗时压缩到秒级。
@@ -16,6 +12,15 @@
 
 ### 易剥离
 每个功能模块有清晰且尽量简单的引用关系，以及自己独立的配置头。可以很容易地剥离出某个组件为你所用，例如CGPU。
+
+## 组件支持矩阵
+
+### CGPU
+
+| Platform | CI | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/DirectX12U.png" height="15" /> D3D12 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/DirectX11.png" height="15" />D3D11 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Vulkan.png" height="15" />Vulkan |<img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Metal.png" height="15" />Metal |
+|----------|:--:|:-----:|:-----:|:------:|:-----:|
+| <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Windows.png" height="20" /> Windows | [![windows build](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-windows.yml) | :heavy_check_mark: | :heavy_exclamation_mark: | :heavy_check_mark: | N/A |
+| <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/MacOS.png" height="20" /> macOS | [![macos build](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-macos.yml) | N/A | N/A | :heavy_check_mark: | :heavy_exclamation_mark: |
 
 ## 示例
 ### [热更三角形](samples/hot-triangle)
