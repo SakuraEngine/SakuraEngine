@@ -278,6 +278,18 @@ void initialize(void* usrdata)
     create_render_pipeline();
 }
 
+typedef struct PushConstants {
+    float ColorMultiplier;
+    uint32_t bFlipUVX;
+    uint32_t bFlipUVY;
+} PushConstants;
+
+const static PushConstants data = {
+    .ColorMultiplier = 0.5f,
+    .bFlipUVX = 0,
+    .bFlipUVY = 1
+};
+
 void raster_redraw()
 {
     // sync & reset
@@ -320,6 +332,8 @@ void raster_redraw()
         cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
+
+        cgpu_render_encoder_push_constants(rp_encoder, root_sig, "root_constants", &data);
         if (desc_set2) cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set2);
         cgpu_render_encoder_draw(rp_encoder, 6, 0);
     }
@@ -410,10 +424,7 @@ int main(int argc, char* argv[])
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     // When we support more add them here
     ECGpuBackend backends[] = {
-        CGPU_BACKEND_VULKAN,
-#ifdef CGPU_USE_D3D12
-        CGPU_BACKEND_D3D12
-#endif
+        CGPU_BACKEND_VULKAN
     };
 #if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
     ProgramMain(backends);

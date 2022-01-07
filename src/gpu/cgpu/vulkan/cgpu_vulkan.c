@@ -404,6 +404,8 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGpuRootSignature_Vulkan));
     CGpuUtil_InitRSParamTables((CGpuRootSignature*)RS, desc);
     // Collect Shader Resources
+    uint32_t push_constant_counts = 0;
+    VkPushConstantRange* push_constant_ranges = CGPU_NULLPTR;
     if (RS->super.table_count > 0)
     {
         RS->pSetLayouts = (SetLayout_Vulkan*)cgpu_calloc(RS->super.table_count, sizeof(SetLayout_Vulkan));
@@ -413,26 +415,51 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             name_hashes[i] = cgpu_hash(desc->static_sampler_names[i],
                 strlen(desc->static_sampler_names[i]), (size_t)device);
         }
+        // Collect push constants count
+        for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
+        {
+            CGpuParameterTable* param_table = &RS->super.tables[i_set];
+            for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
+            {
+                push_constant_counts += (param_table->resources[i_iter].type == RT_ROOT_CONSTANT);
+            }
+        }
+        push_constant_ranges = (VkPushConstantRange*)cgpu_calloc(push_constant_counts, sizeof(VkPushConstantRange));
         // Create Vk Objects
+        uint32_t i_const = 0;
         for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
         {
             SetLayout_Vulkan* set_to_record = &RS->pSetLayouts[i_set];
             CGpuParameterTable* param_table = &RS->super.tables[i_set];
             VkDescriptorSetLayoutBinding* vkbindings = (VkDescriptorSetLayoutBinding*)cgpu_calloc(param_table->resources_count, sizeof(VkDescriptorSetLayoutBinding));
-            for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
+            uint32_t i_binding = 0;
+            for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
             {
-                vkbindings[i_binding].binding = param_table->resources[i_binding].binding;
-                vkbindings[i_binding].stageFlags = VkUtil_TranslateShaderUsages(param_table->resources[i_binding].stages);
-                vkbindings[i_binding].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
-                vkbindings[i_binding].descriptorCount = param_table->resources[i_binding].size;
-                // Create static samplers
-                for (uint32_t i_ss = 0; i_ss < desc->static_sampler_count; i_ss++)
+                // Collect push constants
+                if (param_table->resources[i_iter].type == RT_ROOT_CONSTANT)
                 {
-                    if (param_table->resources[i_binding].name_hash == name_hashes[i_ss])
+                    push_constant_ranges[i_const].stageFlags =
+                        VkUtil_TranslateShaderUsages(param_table->resources[i_iter].stages);
+                    push_constant_ranges[i_const].size = param_table->resources[i_iter].size;
+                    push_constant_ranges[i_const].offset = param_table->resources[i_iter].offset;
+                    i_const++;
+                }
+                else
+                {
+                    vkbindings[i_iter].binding = param_table->resources[i_iter].binding;
+                    vkbindings[i_iter].stageFlags = VkUtil_TranslateShaderUsages(param_table->resources[i_iter].stages);
+                    vkbindings[i_iter].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_iter].type);
+                    vkbindings[i_iter].descriptorCount = param_table->resources[i_iter].size;
+                    // Create static samplers
+                    for (uint32_t i_ss = 0; i_ss < desc->static_sampler_count; i_ss++)
                     {
-                        CGpuSampler_Vulkan* immutableSampler = (CGpuSampler_Vulkan*)desc->static_samplers[i_ss];
-                        vkbindings[i_binding].pImmutableSamplers = &immutableSampler->pVkSampler;
+                        if (param_table->resources[i_iter].name_hash == name_hashes[i_ss])
+                        {
+                            CGpuSampler_Vulkan* immutableSampler = (CGpuSampler_Vulkan*)desc->static_samplers[i_ss];
+                            vkbindings[i_iter].pImmutableSamplers = &immutableSampler->pVkSampler;
+                        }
                     }
+                    i_binding++;
                 }
             }
             VkDescriptorSetLayoutCreateInfo set_info = {
@@ -440,7 +467,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 .pNext = NULL,
                 .flags = 0,
                 .pBindings = vkbindings,
-                .bindingCount = param_table->resources_count
+                .bindingCount = i_binding
             };
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice, &set_info, GLOBAL_VkAllocationCallbacks, &set_to_record->layout));
             cgpu_free(vkbindings);
@@ -460,8 +487,8 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         .flags = 0,
         .setLayoutCount = RS->super.table_count,
         .pSetLayouts = pSetLayouts,
-        .pushConstantRangeCount = 0,
-        .pPushConstantRanges = NULL
+        .pushConstantRangeCount = push_constant_counts,
+        .pPushConstantRanges = push_constant_ranges
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice, &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pPipelineLayout));
     // Create Update Templates
@@ -469,17 +496,26 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     {
         CGpuParameterTable* param_table = &RS->super.tables[i_set];
         SetLayout_Vulkan* set_to_record = &RS->pSetLayouts[i_set];
+        uint32_t update_entry_count = param_table->resources_count;
         VkDescriptorUpdateTemplateEntry* template_entries = (VkDescriptorUpdateTemplateEntry*)cgpu_calloc(
             param_table->resources_count, sizeof(VkDescriptorUpdateTemplateEntry));
-        for (uint32_t i_binding = 0; i_binding < param_table->resources_count; i_binding++)
+        for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
         {
-            VkDescriptorUpdateTemplateEntry* this_entry = template_entries + i_binding;
-            this_entry->descriptorCount = param_table->resources[i_binding].size;
-            this_entry->descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_binding].type);
-            this_entry->dstBinding = param_table->resources[i_binding].binding;
-            this_entry->dstArrayElement = 0;
-            this_entry->stride = sizeof(VkDescriptorUpdateData);
-            this_entry->offset = this_entry->dstBinding * this_entry->stride;
+            if (param_table->resources[i_iter].type != RT_ROOT_CONSTANT)
+            {
+                uint32_t i_binding = param_table->resources[i_iter].binding;
+                VkDescriptorUpdateTemplateEntry* this_entry = template_entries + i_binding;
+                this_entry->descriptorCount = param_table->resources[i_iter].size;
+                this_entry->descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_iter].type);
+                this_entry->dstBinding = i_binding;
+                this_entry->dstArrayElement = 0;
+                this_entry->stride = sizeof(VkDescriptorUpdateData);
+                this_entry->offset = this_entry->dstBinding * this_entry->stride;
+            }
+            else
+            {
+                update_entry_count--;
+            }
         }
         VkDescriptorUpdateTemplateCreateInfo template_info = {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
@@ -490,8 +526,9 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             .descriptorSetLayout = set_to_record->layout,
             .set = i_set,
             .pDescriptorUpdateEntries = template_entries,
-            .descriptorUpdateEntryCount = param_table->resources_count
+            .descriptorUpdateEntryCount = update_entry_count
         };
+        set_to_record->mUpdateEntriesCount = update_entry_count;
         CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorUpdateTemplate(D->pVkDevice,
             &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->pUpdateTemplate));
         VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
@@ -500,6 +537,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     }
     // Free Temporal Memory
     cgpu_free(pSetLayouts);
+    cgpu_free(push_constant_ranges);
     return &RS->super;
 }
 
@@ -549,7 +587,7 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[set->index];
     CGpuParameterTable* ParamTable = &RS->super.tables[set->index];
     VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
-    memset(pUpdateData, 0, ParamTable->resources_count);
+    memset(pUpdateData, 0, count * sizeof(VkDescriptorUpdateData));
     bool dirty = false;
     for (uint32_t i = 0; i < count; i++)
     {
