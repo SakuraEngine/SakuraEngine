@@ -110,6 +110,7 @@ RUNTIME_API void cgpu_render_encoder_bind_descriptor_set_d3d12(CGpuRenderPassEnc
 RUNTIME_API void cgpu_render_encoder_set_viewport_d3d12(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
 RUNTIME_API void cgpu_render_encoder_set_scissor_d3d12(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 RUNTIME_API void cgpu_render_encoder_bind_pipeline_d3d12(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
+RUNTIME_API void cgpu_render_encoder_push_constants_d3d12(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_render_encoder_draw_d3d12(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass_d3d12(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 

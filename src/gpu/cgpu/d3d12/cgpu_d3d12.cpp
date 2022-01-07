@@ -329,6 +329,27 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     }
     // Pick shader reflection data
     CGpuUtil_InitRSParamTables((CGpuRootSignature*)RS, desc);
+    // Collect root constants count
+    uint32_t rootConstCount = 0;
+    for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
+    {
+        CGpuParameterTable* ParamTable = &RS->super.tables[i_set];
+        for (uint32_t i_binding = 0; i_binding < ParamTable->resources_count; i_binding++)
+        {
+            CGpuShaderResource* reflSlot = &ParamTable->resources[i_binding];
+            bool isRootConstant = false;
+            for (uint32_t rc = 0; rc < desc->root_constant_count; rc++)
+            {
+                isRootConstant |= (0 == strcmp(desc->root_constant_names[rc], reflSlot->name));
+                if (isRootConstant)
+                {
+                    reflSlot->type = RT_ROOT_CONSTANT;
+                    rootConstCount++;
+                    break;
+                }
+            }
+        }
+    }
     // Fill resource slots
     // Only support descriptor tables now
     // TODO: Support root CBVs
