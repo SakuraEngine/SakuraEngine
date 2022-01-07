@@ -862,6 +862,8 @@ typedef struct CGpuRootSignatureDescriptor {
     const CGpuSamplerId* static_samplers;
     const char8_t* const* static_sampler_names;
     uint32_t static_sampler_count;
+    const char8_t* const* root_constant_names;
+    uint32_t root_constant_count;
 } CGpuRootSignatureDescriptor;
 
 typedef struct CGpuDescriptorSetDescriptor {

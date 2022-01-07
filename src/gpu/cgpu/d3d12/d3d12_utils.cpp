@@ -241,6 +241,14 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGpuSh
         Reflection->shader_resources[i].size = bindDesc.BindCount;
         Reflection->shader_resources[i].stages = stage;
         Reflection->shader_resources[i].dim = gD3D12_TO_RESOURCE_DIM[bindDesc.Dimension];
+        if (shaderDesc.ConstantBuffers && bindDesc.Type == D3D_SIT_CBUFFER)
+        {
+            ID3D12ShaderReflectionConstantBuffer* buffer = d3d12reflection->GetConstantBufferByName(bindDesc.Name);
+            cgpu_assert(buffer && "D3D12 reflection fatal: CBV not found!");
+            D3D12_SHADER_BUFFER_DESC bufferDesc;
+            buffer->GetDesc(&bufferDesc);
+            Reflection->shader_resources[i].size = bufferDesc.Size;
+        }
         // RWTyped is considered as DESCRIPTOR_TYPE_TEXTURE by default so we handle the case for RWBuffer here
         if (bindDesc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_UAV_RWTYPED && bindDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
         {

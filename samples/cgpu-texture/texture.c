@@ -147,9 +147,12 @@ void create_render_pipeline()
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
     const char8_t* sampler_name = "texture_sampler";
+    const char8_t* root_constant_name = "root_constants";
     CGpuRootSignatureDescriptor rs_desc = {
         .shaders = ppl_shaders,
-        .shader_count = 2
+        .shader_count = 2,
+        .root_constant_names = &root_constant_name,
+        .root_constant_count = 1
     };
     if (bUseStaticSampler)
     {
@@ -332,7 +335,6 @@ void raster_redraw()
         cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
-
         cgpu_render_encoder_push_constants(rp_encoder, root_sig, "root_constants", &data);
         if (desc_set2) cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set2);
         cgpu_render_encoder_draw(rp_encoder, 6, 0);
@@ -425,6 +427,10 @@ int main(int argc, char* argv[])
     // When we support more add them here
     ECGpuBackend backends[] = {
         CGPU_BACKEND_VULKAN
+#ifdef CGPU_USE_D3D12
+        ,
+        CGPU_BACKEND_D3D12
+#endif
     };
 #if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
     ProgramMain(backends);
