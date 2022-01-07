@@ -316,6 +316,8 @@ RUNTIME_API void cgpu_render_encoder_set_scissor(CGpuRenderPassEncoderId encoder
 typedef void (*CGPUProcRenderEncoderSetScissor)(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 RUNTIME_API void cgpu_render_encoder_bind_pipeline(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
 typedef void (*CGPUProcRenderEncoderBindPipeline)(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
+RUNTIME_API void cgpu_render_encoder_push_constants(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
+typedef void (*CGPUProcRenderEncoderPushConstants)(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 typedef void (*CGPUProcRenderEncoderDraw)(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
@@ -411,6 +413,7 @@ typedef struct CGpuProcTable {
     const CGPUProcCmdBeginRenderPass cmd_begin_render_pass;
     const CGPUProcRenderEncoderBindDescriptorSet render_encoder_bind_descriptor_set;
     const CGPUProcRenderEncoderBindPipeline render_encoder_bind_pipeline;
+    const CGPUProcRenderEncoderPushConstants render_encoder_push_constants;
     const CGPUProcRenderEncoderSetViewport render_encoder_set_viewport;
     const CGPUProcRenderEncoderSetScissor render_encoder_set_scissor;
     const CGPUProcRenderEncoderDraw render_encoder_draw;
