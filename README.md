@@ -15,9 +15,9 @@
 
 ## 组件支持矩阵
 
-### CGPU
+### [CGPU](include/cgpu/README.md)
 
-| Platform | CI | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/DirectX12U.png" height="15" /> D3D12 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/DirectX11.png" height="15" />D3D11 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Vulkan.png" height="15" />Vulkan |<img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Metal.png" height="15" />Metal |
+| Platform | CI | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/DirectX12U.png" height="18" /> D3D12 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/DirectX11.png" height="18" />D3D11 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Vulkan.png" height="18" />Vulkan |<img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Metal.png" height="18" />Metal |
 |----------|:--:|:-----:|:-----:|:------:|:-----:|
 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Windows.png" height="20" /> Windows | [![windows build](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-windows.yml) | :heavy_check_mark: | :heavy_exclamation_mark: | :heavy_check_mark: | N/A |
 | <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/MacOS.png" height="20" /> macOS | [![macos build](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/SakuraEngine/Sakura.Runtime/actions/workflows/ci-macos.yml) | N/A | N/A | :heavy_check_mark: | :heavy_exclamation_mark: |
