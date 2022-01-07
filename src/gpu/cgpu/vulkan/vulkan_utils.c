@@ -253,20 +253,26 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
         }
         // Handle Descriptor Sets
         uint32_t scount;
+        uint32_t ccount;
+        spvReflectEnumeratePushConstantBlocks(S->pReflect, &ccount, NULL);
         spvReflectEnumerateDescriptorSets(S->pReflect, &scount, NULL);
-        if (scount > 0)
+        if (scount > 0 || ccount > 0)
         {
-            DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount)
+            DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount + 1)
+            DECLARE_ZERO_VLA(SpvReflectBlockVariable*, root_sets, ccount + 1)
             spvReflectEnumerateDescriptorSets(S->pReflect, &scount, descriptros_sets);
+            spvReflectEnumeratePushConstantBlocks(S->pReflect, &ccount, root_sets);
             uint32_t bcount = 0;
             for (uint32_t i = 0; i < scount; i++)
             {
                 bcount += descriptros_sets[i]->binding_count;
             }
+            bcount += ccount;
             reflection->shader_resources_count = bcount;
             reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGpuShaderResource));
             // Fill Shader Resources
-            for (uint32_t i_set = 0, i_res = 0; i_set < scount; i_set++)
+            uint32_t i_res = 0;
+            for (uint32_t i_set = 0; i_set < scount; i_set++)
             {
                 SpvReflectDescriptorSet* current_set = descriptros_sets[i_set];
                 for (uint32_t i_binding = 0; i_binding < current_set->binding_count; i_binding++, i_res++)
@@ -296,6 +302,19 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
                         }
                     }
                 }
+            }
+            // Fill Push Constants
+            for (uint32_t i = 0; i < ccount; i++)
+            {
+                CGpuShaderResource* current_res = &reflection->shader_resources[i_res + i];
+                current_res->set = 0;
+                current_res->type = RT_ROOT_CONSTANT;
+                current_res->binding = 0;
+                current_res->name = root_sets[i]->name;
+                current_res->name_hash =
+                    cgpu_hash(current_res->name, strlen(current_res->name), (size_t)device);
+                current_res->stages = S->pReflect->shader_stage;
+                current_res->size = root_sets[i]->size;
             }
         }
     }

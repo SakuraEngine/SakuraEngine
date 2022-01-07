@@ -599,6 +599,15 @@ void cgpu_render_encoder_bind_pipeline(CGpuRenderPassEncoderId encoder, CGpuRend
     fn_render_bind_pipeline(encoder, pipeline);
 }
 
+void cgpu_render_encoder_push_constants(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data)
+{
+    CGpuDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderPushConstants fn_push_constants = device->proc_table_cache->render_encoder_push_constants;
+    cgpu_assert(fn_push_constants && "render_encoder_push_constants Proc Missing!");
+    fn_push_constants(encoder, rs, name, data);
+}
+
 void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)
 {
     CGpuDeviceId device = encoder->device;
