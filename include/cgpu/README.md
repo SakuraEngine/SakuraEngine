@@ -1,82 +1,63 @@
 # CGPU
 非常LowLevel的GPU计算/绘制层抽象。
 
-# RenderPass & PipelineState 
-- RenderPass是多个或者一个PipelineState的组合
-- 在PC这种没有Subpass的平台上，一个Pass对应一个PipelineState
-- Subpass等行为会导致PipelineState在Pass内产生变化与切换
-- 在更加LowLevel的平台上，可以以寄存器组为Scope直接操控Pipeline上的状态
-    - 例如，在CommandBuffer的寄存器区内直接嵌入SetScissor等状态切换代码
-    - 这使得操控粒度进一步达到了传统API的级别
-- 所以vkSetPass+vkSetPipelineState/SetPSO是一种Flush的行为
-- 而一些平台进一步地提供SubPass等细粒度控制管线状态的API
+## 宗旨和入门摘要
 
-## 寄存器組
-- ShRegisters：Shader状态，对应VkPipelineShaderStageCreateInfo
-- CxRegisters: 调度管线状态
-- UcRegisters：
+### HAL
 
-## API
-综上我们认为：
-- 直接将Pass归类为一种Flush行为, 它有自己的RootSignature/Binder，并在开始时对GPU状态进行Flush
-- 提供Pass内转换状态的扩展API，此API按照它的功用使用枚举对参数集分组
-- 在进行Pass切换时，将状态分组并筛排可能会获得性能提升。虽然API（如D3D12 PSO）行为设计为Flush，但没有理由不认为驱动会diff PSO并在GPU上应用最少的状态切换
+作为复杂的跨平台HAL，CGPU拥有相当细粒度的API设计，来确保在每个后端可以尽量高效率地运行。我们加入了ResourceBarrier相关的接口，并完整保留了Multi-Device和Multi-Queue相关的功能（Multi-Adapter还未支持，需要在Resource上开洞实现Share）。
 
-# Shader反射和管线反射
-由于每个API的管线绑定部分天差地别，这部分我们必须借助运行时反射来辅助创建这些对象。
+但是这并不意味着CGPU是非常难用的接口。我们基本沿用webgpu的大量设计，并且使用shader反射辅助根签名的自动创建。对GPU功能熟悉的程序员可以非常快速地上手CGPU，因为CGPU的接口基本是对GPU功能的一对一映射。
 
-# 关于资源表和绑定
-- D3D12的寄存器类似占位符，实际上DescriptorTable完全是在运行时映射的
-- Vulkan的set和binding则严格对应运行时生成的表
+### 理念
 
-因此
+和很多自顶向上地、对各个API进行统计总结并设计接口的gfx库不同，CGPU中的大部分概念取自硬件或平台功能。我们首先选取特定的一个GPU功能，再对不同的平台接口进行软件封装相关的考量和兼容，最终呈现到API上。也就是说，CGPU基本上是以自底向下的方向进行设计的。
 
-- 对于D3D12，要点是指示运行时生成与[[vk::binding]]一致的表结构。可以将space index映射到set index上去来实现
+一个典型的例子是CommandBuffer / CommandEncoder / CommandList相关的设计。Vulkan和D3D12在Pool/Allocator中申请Command和State内存，再映射到实际的Buffer/List中，最终交给GPU处理，而这个过程是支持混录的。而Metal则是分离了不同Scope的Command Encoder，限制用户在每个Copy / Compute / Render Dispatch中的Command Call来强制保证命令流的紧凑性。
 
-即
+很多自顶向上设计的API会选择直接兼容Metal的软件接口，让用户创建多个List或者多个Encoder，以此实现对Metal API的接口。但是这样会造成D3D和Vulkan后端的CommandBuffer/Pool管理的困难，因为事实上零散的Encoder很难对应到单一的Allocator上，而零散的List也很难映射到单一的D3D12List / VkCmdBuffer上（Spec要求每个线程一个Allocator，且CmdList要尽量长，不能太零散），这会造成潜在的性能问题。初此之外，用户手动创建的encoder也会增大gfx对象管理的难度。
 
-        [[vk::binding(1, 0)]]
-        RWByteAddressBuffer buf : register(u0, space1);
-        =>
-        SHADER_RESOURCE(RWByteAddressBuffer, buf, 1/*set or space*/, u0, 1/*register or binding*/)
+其实从硬件/驱动的功能性角度上讲，事实上这些cmd会被送达不同的执行引擎，而且每个cmd的执行需要一定的上下文，这是造成这些设计差异的根源。CGPU从实际硬件调度的角度锁定Command录取的上下文：
 
+- RenderDispatch（RenderPass）之中：可以调用SetScissor，SetVertexBuffer，SetGfxPSO等光栅化管线相关命令；
+- ComputeDispatch相对比较自由，只要寄存器状态合理（所有binder都被设置好，资源barrier正确），且不在RenderPass内部，就可以开始调度；
+- TransferDispatch（Copy）是最灵活的，所有调度引擎可以在任何时候执行transfer命令，唯一例外是在RenderPass打开状态下的Gfx引擎。
 
-# 关于推送常量
-推送常量是一种将小变量直接嵌入到管线布局的数据更新方法。
-- 推常量使用非常方便，对uber shader的多分支很有用
-- NVIDIA硬件下像素着色器访问根常量非常快
-- AMD也在GPUOpen表示RDNA架构下改变绘制的常量可以放在根常量下
-- 要减少根签名/管线布局的状态设置次数，NV和AMD都推荐按根状态对draw进行排序
+可以轻易发现其实Scope锁定发生在Begin/End Dispatch上。因此CGPU会在BeginPass时返回对应的Encoder，在EndPass时收回对应的Encoder，并确保CmdBuffer的最终录制。这样可以在维持独立Allocator和Buffer的同时，兼容Metal Encoder的设计，也不用维护额外的Encoder对象。并且，由于这是贴近调度引擎最佳工作状态的流程，即使在Vulkan和D3D12上也能保证更优的性能表现。
 
-暂时不对推送常量进行支持，但是方法如下：
-- D3D12实际上要使用RootConstant来进行内联绑定，常量值实际上是在寄存器组bx上的，在shader中它和常规的cbuffer无二致
-- VK的推送常量只需要着色器中写明attribute [[vk::push_constant]]
-- 我认为着色器中应当采取vulkan的写法，在编译shader的时候对HLSL文件进行修补，自动生成寄存器bx，来弥补D3D12的失败设计
-- 退而求其次的方案是使用宏：ROOT_CONSTANT(type, variable, register)
+这样的设计理念带来非凡的性能和最符合HAL程序员直觉的使用体验。事实上，CGPU后台很少进行脏数据Cache之类的DirtyWork，这可以显著降低invoke的成本、增强上游封装的自由度，也最终降低了程序维护的难度。
 
+## 功能完成度
 
-# 关于推送描述符
+### 通用
+- Binding Table :heavy_check_mark:
+- Fence & Semaphore :heavy_check_mark:
+- Resource Barriers :heavy_check_mark:
+- Multi Queue :heavy_check_mark:
+- mGPU :heavy_exclamation_mark:
 
-短期内不考虑实现此特性，写此文档时VK实现要配合VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT，并且需要很复杂的异步逻辑，且最终性能毫无疑问会更差。
+### 计算管线
+- Dispatch :heavy_check_mark:
+- CBV :heavy_exclamation_mark:
+- UAV :heavy_check_mark:
+- Texture :heavy_check_mark:
 
-推送描述符是直接将描述符内联到表槽位的更新方法。
-- 比一个表占用的DWORD更多，在AMD硬件上占用2DWORD，而表只占用1DWORD
-- NV表示在PS Stage访问Root CBV非常快，估计和RootConstant/PushConstant类似
-- VK的Push系列API由于实际Storage位置和D3D的不同，支持vkCmdPushDescriptorSetKHR扩展的设备极少
+### 光栅化管线
+- Shader Reflection :heavy_check_mark:
+- MSAA :heavy_exclamation_mark: 
+- Reflection Created RootSig :heavy_check_mark:
+- Texture Sample :heavy_check_mark:
+- CBV :heavy_check_mark:
+- Static Sampler :heavy_check_mark:
+- Vertex Layout :heavy_exclamation_mark:
+- Root Constant :heavy_exclamation_mark:
+- Constant Spec :heavy_exclamation_mark:
+- Shading Rate :heavy_exclamation_mark:
 
-考虑到如上几点，我们认为此特性更适合显式指定开启。
+### MeshPipeline
 
-考虑对推送描述符进行单独支持。在D3D中直接设置寄存器，在VK后端则是退化到表结构。
-    
-        [[vk::binding(0, 0)]]
-        RWByteAddressBuffer buf : register(u0);
-        =>
-        ROOT_DESCRIPTOR(RWByteAddressBuffer, buf, 1/*set*/, u0, 1/*binding*/)
+:heavy_exclamation_mark:
 
-虽然在VK后端使用表结构，但要注意并不能再使用这些set index来创建CGPUDescriptorSet，因为会产生相对D3D12的语义差。
+### 光线追踪管线
 
-使用cgpu_push_root_descriptor进行更新, 后端会使用Shader反射来对此错误操作进行Validate。
-
-# 完成度
-
-- 
+:heavy_exclamation_mark:
