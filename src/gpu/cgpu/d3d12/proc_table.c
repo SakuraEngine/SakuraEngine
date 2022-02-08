@@ -92,6 +92,7 @@ const CGpuProcTable tbl_d3d12 = {
     .render_encoder_set_viewport = &cgpu_render_encoder_set_viewport_d3d12,
     .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_d3d12,
     .render_encoder_bind_pipeline = &cgpu_render_encoder_bind_pipeline_d3d12,
+    .render_encoder_bind_vertex_buffers = &cgpu_render_encoder_bind_vertex_buffers_d3d12,
     .render_encoder_push_constants = &cgpu_render_encoder_push_constants_d3d12,
     .render_encoder_draw = &cgpu_render_encoder_draw_d3d12,
     .cmd_end_render_pass = &cgpu_cmd_end_render_pass_d3d12

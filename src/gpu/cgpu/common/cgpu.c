@@ -572,6 +572,18 @@ void cgpu_render_encoder_bind_descriptor_set(CGpuRenderPassEncoderId encoder, CG
     fn_bind_descriptor_set(encoder, set);
 }
 
+void cgpu_render_encoder_bind_vertex_buffers(CGpuRenderPassEncoderId encoder, uint32_t buffer_count,
+    const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
+{
+    cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
+    cgpu_assert(buffers != CGPU_NULLPTR && "fatal: call on NULL buffers!");
+    CGpuDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRendeEncoderBindVertexBuffers fn_bind_vertex_buffers = device->proc_table_cache->render_encoder_bind_vertex_buffers;
+    cgpu_assert(fn_bind_vertex_buffers && "render_encoder_bind_vertex_buffers Proc Missing!");
+    fn_bind_vertex_buffers(encoder, buffer_count, buffers, strides, offsets);
+}
+
 void cgpu_render_encoder_set_viewport(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
 {
     CGpuDeviceId device = encoder->device;

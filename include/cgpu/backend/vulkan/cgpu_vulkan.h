@@ -109,6 +109,8 @@ RUNTIME_API void cgpu_render_encoder_bind_descriptor_set_vulkan(CGpuRenderPassEn
 RUNTIME_API void cgpu_render_encoder_set_viewport_vulkan(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
 RUNTIME_API void cgpu_render_encoder_set_scissor_vulkan(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 RUNTIME_API void cgpu_render_encoder_bind_pipeline_vulkan(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
+RUNTIME_API void cgpu_render_encoder_bind_vertex_buffers_vulkan(CGpuRenderPassEncoderId encoder, uint32_t buffer_count,
+    const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets);
 RUNTIME_API void cgpu_render_encoder_push_constants_vulkan(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_render_encoder_draw_vulkan(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);

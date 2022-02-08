@@ -691,15 +691,30 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     CGpuRenderPipeline_D3D12* PPL = cgpu_new<CGpuRenderPipeline_D3D12>();
     CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)desc->root_signature;
-    // TODO: Vertex input state
-    uint32_t input_elementCount = 0;
+    // Vertex input state
+    uint32_t input_elementCount = desc->vertex_layout ? desc->vertex_layout->attribute_count : 0;
     DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[MAX_VERTEX_ATTRIBS]);
     if (desc->vertex_layout != nullptr)
     {
         for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
         {
             const CGpuVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
-            (void)attrib;
+            // TODO: DO SOMETHING WITH THIS FUCKING SEMANTIC STRING & INDEX
+            input_elements[attrib_index].SemanticIndex = 0;
+            input_elements[attrib_index].SemanticName = attrib->semantic_name;
+            input_elements[attrib_index].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
+            input_elements[attrib_index].InputSlot = attrib->binding;
+            input_elements[attrib_index].AlignedByteOffset = attrib->offset;
+            if (attrib->rate == INPUT_RATE_INSTANCE)
+            {
+                input_elements[attrib_index].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+                input_elements[attrib_index].InstanceDataStepRate = 1;
+            }
+            else
+            {
+                input_elements[attrib_index].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+                input_elements[attrib_index].InstanceDataStepRate = 0;
+            }
         }
     }
     DECLARE_ZERO(D3D12_INPUT_LAYOUT_DESC, input_layout_desc);
@@ -1247,6 +1262,27 @@ void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, 
     Cmd->pDxCmdList->SetPipelineState(PPL->pDxPipelineState);
 }
 
+void cgpu_render_encoder_bind_vertex_buffers_d3d12(CGpuRenderPassEncoderId encoder, uint32_t buffer_count,
+    const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+
+    const CGpuBuffer_D3D12** Buffers = (const CGpuBuffer_D3D12**)buffers;
+    DECLARE_ZERO(D3D12_VERTEX_BUFFER_VIEW, views[MAX_VERTEX_ATTRIBS]);
+    for (uint32_t i = 0; i < buffer_count; ++i)
+    {
+        cgpu_assert(D3D12_GPU_VIRTUAL_ADDRESS_NULL != Buffers[i]->mDxGpuAddress);
+
+        views[i].BufferLocation =
+            (Buffers[i]->mDxGpuAddress + (offsets ? offsets[i] : 0));
+        views[i].SizeInBytes =
+            (UINT)(Buffers[i]->super.size - (offsets ? offsets[i] : 0));
+        views[i].StrideInBytes = (UINT)strides[i];
+    }
+
+    Cmd->pDxCmdList->IASetVertexBuffers(0, buffer_count, views);
+}
+
 void cgpu_compute_encoder_dispatch_d3d12(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
@@ -1356,6 +1392,12 @@ void cgpu_render_encoder_push_constants_d3d12(CGpuRenderPassEncoderId encoder, C
     if (RS->super.pipeline_type == PIPELINE_TYPE_GRAPHICS)
     {
         Cmd->pDxCmdList->SetGraphicsRoot32BitConstants(RS->mRootParamIndex,
+            RS->mRootConstantParam.Constants.Num32BitValues,
+            data, 0);
+    }
+    else if (RS->super.pipeline_type == PIPELINE_TYPE_COMPUTE)
+    {
+        Cmd->pDxCmdList->SetComputeRoot32BitConstants(RS->mRootParamIndex,
             RS->mRootConstantParam.Constants.Num32BitValues,
             data, 0);
     }
