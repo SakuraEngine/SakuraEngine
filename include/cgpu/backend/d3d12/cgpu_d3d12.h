@@ -223,6 +223,8 @@ typedef struct CGpuShaderLibrary_D3D12 {
 typedef struct CGpuRootSignature_D3D12 {
     CGpuRootSignature super;
     ID3D12RootSignature* pDxRootSignature;
+    D3D12_ROOT_PARAMETER1 mRootConstantParam;
+    uint32_t mRootParamIndex;
 } CGpuRootSignature_D3D12;
 
 typedef struct CGpuDescriptorSet_D3D12 {

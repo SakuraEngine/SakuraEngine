@@ -401,11 +401,10 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     const struct CGpuRootSignatureDescriptor* desc)
 {
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGpuRootSignature_Vulkan));
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)cgpu_calloc(1,
+        sizeof(CGpuRootSignature_Vulkan));
     CGpuUtil_InitRSParamTables((CGpuRootSignature*)RS, desc);
     // Collect Shader Resources
-    uint32_t push_constant_counts = 0;
-    VkPushConstantRange* push_constant_ranges = CGPU_NULLPTR;
     if (RS->super.table_count > 0)
     {
         RS->pSetLayouts = (SetLayout_Vulkan*)cgpu_calloc(RS->super.table_count, sizeof(SetLayout_Vulkan));
@@ -421,10 +420,10 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             CGpuParameterTable* param_table = &RS->super.tables[i_set];
             for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
             {
-                push_constant_counts += (param_table->resources[i_iter].type == RT_ROOT_CONSTANT);
+                RS->mPushConstRangesCount += (param_table->resources[i_iter].type == RT_ROOT_CONSTANT);
             }
         }
-        push_constant_ranges = (VkPushConstantRange*)cgpu_calloc(push_constant_counts, sizeof(VkPushConstantRange));
+        RS->pPushConstRanges = (VkPushConstantRange*)cgpu_calloc(RS->mPushConstRangesCount, sizeof(VkPushConstantRange));
         // Create Vk Objects
         uint32_t i_const = 0;
         for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
@@ -438,10 +437,10 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 // Collect push constants
                 if (param_table->resources[i_iter].type == RT_ROOT_CONSTANT)
                 {
-                    push_constant_ranges[i_const].stageFlags =
+                    RS->pPushConstRanges[i_const].stageFlags =
                         VkUtil_TranslateShaderUsages(param_table->resources[i_iter].stages);
-                    push_constant_ranges[i_const].size = param_table->resources[i_iter].size;
-                    push_constant_ranges[i_const].offset = param_table->resources[i_iter].offset;
+                    RS->pPushConstRanges[i_const].size = param_table->resources[i_iter].size;
+                    RS->pPushConstRanges[i_const].offset = param_table->resources[i_iter].offset;
                     i_const++;
                 }
                 else
@@ -487,8 +486,8 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         .flags = 0,
         .setLayoutCount = RS->super.table_count,
         .pSetLayouts = pSetLayouts,
-        .pushConstantRangeCount = push_constant_counts,
-        .pPushConstantRanges = push_constant_ranges
+        .pushConstantRangeCount = RS->mPushConstRangesCount,
+        .pPushConstantRanges = RS->pPushConstRanges
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice, &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pPipelineLayout));
     // Create Update Templates
@@ -537,7 +536,6 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
     }
     // Free Temporal Memory
     cgpu_free(pSetLayouts);
-    cgpu_free(push_constant_ranges);
     return &RS->super;
 }
 
@@ -557,6 +555,7 @@ void cgpu_free_root_signature_vulkan(CGpuRootSignatureId signature)
             D->mVkDeviceTable.vkDestroyDescriptorUpdateTemplate(D->pVkDevice, set_to_free->pUpdateTemplate, GLOBAL_VkAllocationCallbacks);
     }
     cgpu_free(RS->pSetLayouts);
+    cgpu_free(RS->pPushConstRanges);
     D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pPipelineLayout, GLOBAL_VkAllocationCallbacks);
     cgpu_free(RS);
 }
@@ -1643,9 +1642,9 @@ void cgpu_render_encoder_push_constants_vulkan(CGpuRenderPassEncoderId encoder, 
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)rs;
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)rs->device;
-    size_t const_size = sizeof(float) + sizeof(uint32_t) + sizeof(uint32_t);
     D->mVkDeviceTable.vkCmdPushConstants(Cmd->pVkCmdBuf, RS->pPipelineLayout,
-        VK_SHADER_STAGE_FRAGMENT_BIT, 0, const_size, data);
+        RS->pPushConstRanges[0].stageFlags, 0,
+        RS->pPushConstRanges[0].size, data);
 }
 
 void cgpu_render_encoder_draw_vulkan(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)
