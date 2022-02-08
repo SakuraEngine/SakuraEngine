@@ -461,7 +461,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     // Serialize versioned RS
     const UINT paramCount = tableCount - staticSamplerCount + rootConstCount /*must be 0 or 1 now*/;
     // Root Constant
-    rootParams[paramCount - 1] = RS->mRootConstantParam;
+    if (rootConstCount) rootParams[paramCount - 1] = RS->mRootConstantParam;
     RS->mRootParamIndex = paramCount - 1;
     // Serialize PSO
     ID3DBlob* error = NULL;
