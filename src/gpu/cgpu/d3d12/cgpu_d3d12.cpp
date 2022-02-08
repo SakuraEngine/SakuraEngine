@@ -345,6 +345,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
                 {
                     reflSlot->type = RT_ROOT_CONSTANT;
                     rootConstCount++;
+                    assert((rootConstCount <= 1) && "Multi-RootConstant not supported!");
                     break;
                 }
             }
@@ -360,7 +361,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     {
         descRangeCount += RS->super.tables[i].resources_count;
     }
-    D3D12_ROOT_PARAMETER1* rootParams = (D3D12_ROOT_PARAMETER1*)cgpu_calloc(tableCount, sizeof(D3D12_ROOT_PARAMETER1));
+    D3D12_ROOT_PARAMETER1* rootParams = (D3D12_ROOT_PARAMETER1*)cgpu_calloc(tableCount + rootConstCount, sizeof(D3D12_ROOT_PARAMETER1));
     D3D12_DESCRIPTOR_RANGE1* cbvSrvUavRanges = (D3D12_DESCRIPTOR_RANGE1*)cgpu_calloc(descRangeCount, sizeof(D3D12_DESCRIPTOR_RANGE1));
     uint32_t i_table = 0;
     uint32_t i_range = 0;
@@ -374,16 +375,8 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
         const D3D12_DESCRIPTOR_RANGE1* descRangeCursor = &cbvSrvUavRanges[i_range];
         for (uint32_t i_binding = 0; i_binding < ParamTable->resources_count; i_binding++)
         {
-            D3D12_DESCRIPTOR_RANGE1* descRange = &cbvSrvUavRanges[i_range];
             CGpuShaderResource* reflSlot = &ParamTable->resources[i_binding];
-            descRange->RegisterSpace = reflSlot->set;
-            descRange->BaseShaderRegister = reflSlot->binding;
-            descRange->Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
-            descRange->NumDescriptors = reflSlot->size;
-            descRange->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-            descRange->RangeType = D3D12Util_ResourceTypeToDescriptorRangeType(reflSlot->type);
             visStages |= reflSlot->stages;
-            i_range++;
             if (reflSlot->type == RT_SAMPLER)
             {
                 const auto& iter = staticSamplerMap.find(reflSlot->name);
@@ -392,9 +385,28 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
                     iter->second.second = reflSlot;
                 }
             }
+            else if (reflSlot->type == RT_ROOT_CONSTANT)
+            {
+                RS->mRootConstantParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+                RS->mRootConstantParam.Constants.RegisterSpace = reflSlot->set;
+                RS->mRootConstantParam.Constants.ShaderRegister = reflSlot->binding;
+                RS->mRootConstantParam.Constants.Num32BitValues = reflSlot->size / sizeof(uint32_t);
+                RS->mRootConstantParam.ShaderVisibility = D3D12Util_TranslateShaderStages(visStages);
+            }
+            else
+            {
+                D3D12_DESCRIPTOR_RANGE1* descRange = &cbvSrvUavRanges[i_range];
+                descRange->RegisterSpace = reflSlot->set;
+                descRange->BaseShaderRegister = reflSlot->binding;
+                descRange->Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+                descRange->NumDescriptors = reflSlot->size;
+                descRange->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+                descRange->RangeType = D3D12Util_ResourceTypeToDescriptorRangeType(reflSlot->type);
+                rootParam->DescriptorTable.NumDescriptorRanges++;
+                i_range++;
+            }
         }
         rootParam->ShaderVisibility = D3D12Util_TranslateShaderStages(visStages);
-        rootParam->DescriptorTable.NumDescriptorRanges = ParamTable->resources_count;
         rootParam->DescriptorTable.pDescriptorRanges = descRangeCursor;
         i_table++;
     }
@@ -447,7 +459,11 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     if (!(shaderStages & SHADER_STAGE_FRAG))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
     // Serialize versioned RS
-    const UINT paramCount = tableCount - staticSamplerCount;
+    const UINT paramCount = tableCount - staticSamplerCount + rootConstCount /*must be 0 or 1 now*/;
+    // Root Constant
+    rootParams[paramCount - 1] = RS->mRootConstantParam;
+    RS->mRootParamIndex = paramCount - 1;
+    // Serialize PSO
     ID3DBlob* error = NULL;
     ID3DBlob* rootSignatureString = NULL;
     DECLARE_ZERO(D3D12_VERSIONED_ROOT_SIGNATURE_DESC, sig_desc);
@@ -1330,6 +1346,19 @@ void cgpu_render_encoder_bind_pipeline_d3d12(CGpuRenderPassEncoderId encoder, CG
     reset_root_signature(Cmd, PIPELINE_TYPE_GRAPHICS, PPL->pRootSignature);
     Cmd->pDxCmdList->IASetPrimitiveTopology(PPL->mDxPrimitiveTopology);
     Cmd->pDxCmdList->SetPipelineState(PPL->pDxPipelineState);
+}
+
+void cgpu_render_encoder_push_constants_d3d12(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)rs;
+    reset_root_signature(Cmd, PIPELINE_TYPE_GRAPHICS, RS->pDxRootSignature);
+    if (RS->super.pipeline_type == PIPELINE_TYPE_GRAPHICS)
+    {
+        Cmd->pDxCmdList->SetGraphicsRoot32BitConstants(RS->mRootParamIndex,
+            RS->mRootConstantParam.Constants.Num32BitValues,
+            data, 0);
+    }
 }
 
 void cgpu_render_encoder_draw_d3d12(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)

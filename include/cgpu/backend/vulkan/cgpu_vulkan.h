@@ -290,6 +290,8 @@ typedef struct CGpuRootSignature_Vulkan {
     CGpuRootSignature super;
     VkPipelineLayout pPipelineLayout;
     SetLayout_Vulkan* pSetLayouts;
+    VkPushConstantRange* pPushConstRanges;
+    uint32_t mPushConstRangesCount;
 } CGpuRootSignature_Vulkan;
 
 typedef union VkDescriptorUpdateData
