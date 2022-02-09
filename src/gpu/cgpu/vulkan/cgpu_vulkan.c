@@ -103,7 +103,9 @@ const CGpuProcTable tbl_vk = {
     .render_encoder_bind_index_buffer = &cgpu_render_encoder_bind_index_buffer_vulkan,
     .render_encoder_push_constants = &cgpu_render_encoder_push_constants_vulkan,
     .render_encoder_draw = &cgpu_render_encoder_draw_vulkan,
+    .render_encoder_draw_instanced = &cgpu_render_encoder_draw_instanced_vulkan,
     .render_encoder_draw_indexed = &cgpu_render_encoder_draw_indexed_vulkan,
+    .render_encoder_draw_indexed_instanced = &cgpu_render_encoder_draw_indexed_instanced_vulkan,
     .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan
 };
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
@@ -1695,11 +1697,25 @@ void cgpu_render_encoder_draw_vulkan(CGpuRenderPassEncoderId encoder, uint32_t v
     D->mVkDeviceTable.vkCmdDraw(Cmd->pVkCmdBuf, vertex_count, 1, first_vertex, 0);
 }
 
+void cgpu_render_encoder_draw_instanced_vulkan(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance)
+{
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    D->mVkDeviceTable.vkCmdDraw(Cmd->pVkCmdBuf, vertex_count, instance_count, first_vertex, first_instance);
+}
+
 void cgpu_render_encoder_draw_indexed_vulkan(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
 {
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
     D->mVkDeviceTable.vkCmdDrawIndexed(Cmd->pVkCmdBuf, index_count, 1, first_index, first_vertex, 0);
+}
+
+void cgpu_render_encoder_draw_indexed_instanced_vulkan(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex)
+{
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    D->mVkDeviceTable.vkCmdDrawIndexed(Cmd->pVkCmdBuf, index_count, instance_count, first_index, first_vertex, first_instance);
 }
 
 void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)

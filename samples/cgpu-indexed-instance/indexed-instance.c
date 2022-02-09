@@ -460,7 +460,7 @@ void raster_redraw()
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
         cgpu_render_encoder_push_constants(rp_encoder, root_sig, "root_constants", &data);
         if (desc_set2) cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set2);
-        cgpu_render_encoder_draw_indexed(rp_encoder, 6, 0, 0);
+        cgpu_render_encoder_draw_indexed_instanced(rp_encoder, 6, 0, 1, 0, 0);
     }
     cgpu_cmd_end_render_pass(cmd, rp_encoder);
     CGpuTextureBarrier present_barrier = {

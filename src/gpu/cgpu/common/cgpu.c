@@ -457,6 +457,9 @@ void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CG
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
+    cgpu_assert(desc->src != CGPU_NULLPTR && "fatal: call on NULL cpy_src!");
+    cgpu_assert(desc->dst != CGPU_NULLPTR && "fatal: call on NULL cpy_dst!");
     const CGPUProcCmdTransferBufferToBuffer fn_cmd_transfer_buffer_to_buffer = cmd->device->proc_table_cache->cmd_transfer_buffer_to_buffer;
     cgpu_assert(fn_cmd_transfer_buffer_to_buffer && "cmd_transfer_buffer_to_buffer Proc Missing!");
     fn_cmd_transfer_buffer_to_buffer(cmd, desc);
@@ -467,6 +470,9 @@ void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct C
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
+    cgpu_assert(desc->src != CGPU_NULLPTR && "fatal: call on NULL cpy_src!");
+    cgpu_assert(desc->dst != CGPU_NULLPTR && "fatal: call on NULL cpy_dst!");
     if (desc->layer_count == 0) ((CGpuBufferToTextureTransfer*)desc)->layer_count = 1;
     assert(desc->elems_per_row != 0 && "fatal: bytes_per_raw must be greater than 0!");
     assert(desc->rows_per_image != 0 && "fatal: rows_per_image must be greater than 0!");
@@ -640,6 +646,15 @@ void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_c
     fn_draw(encoder, vertex_count, first_vertex);
 }
 
+void cgpu_render_encoder_draw_instanced(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance)
+{
+    CGpuDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderDrawInstanced fn_draw_instanced = device->proc_table_cache->render_encoder_draw_instanced;
+    cgpu_assert(fn_draw_instanced && "render_encoder_draw_instanced Proc Missing!");
+    fn_draw_instanced(encoder, vertex_count, first_vertex, instance_count, first_instance);
+}
+
 void cgpu_render_encoder_draw_indexed(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
 {
     CGpuDeviceId device = encoder->device;
@@ -647,6 +662,15 @@ void cgpu_render_encoder_draw_indexed(CGpuRenderPassEncoderId encoder, uint32_t 
     const CGPUProcRenderEncoderDrawIndexed fn_draw_indexed = device->proc_table_cache->render_encoder_draw_indexed;
     cgpu_assert(fn_draw_indexed && "render_encoder_draw_indexed Proc Missing!");
     fn_draw_indexed(encoder, index_count, first_index, first_vertex);
+}
+
+void cgpu_render_encoder_draw_indexed_instanced(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex)
+{
+    CGpuDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderDrawIndexedInstanced fn_draw_indexed_instanced = device->proc_table_cache->render_encoder_draw_indexed_instanced;
+    cgpu_assert(fn_draw_indexed_instanced && "render_encoder_draw_indexed_instanced Proc Missing!");
+    fn_draw_indexed_instanced(encoder, index_count, first_index, instance_count, first_instance, first_vertex);
 }
 
 void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)

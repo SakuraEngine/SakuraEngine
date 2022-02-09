@@ -1306,7 +1306,7 @@ void cgpu_render_encoder_bind_index_buffer_d3d12(CGpuRenderPassEncoderId encoder
     view.Format =
         (16 == index_stride) ? DXGI_FORMAT_R16_UINT :
                                ((8 == index_stride) ? DXGI_FORMAT_R8_UINT : DXGI_FORMAT_R32_UINT);
-    view.SizeInBytes = Buffer->super.size - offset;
+    view.SizeInBytes = (UINT)(Buffer->super.size - offset);
     Cmd->pDxCmdList->IASetIndexBuffer(&view);
 }
 
@@ -1436,10 +1436,22 @@ void cgpu_render_encoder_draw_d3d12(CGpuRenderPassEncoderId encoder, uint32_t ve
     Cmd->pDxCmdList->DrawInstanced((UINT)vertex_count, (UINT)1, (UINT)first_vertex, (UINT)0);
 }
 
+void cgpu_render_encoder_draw_instanced_d3d12(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    Cmd->pDxCmdList->DrawInstanced((UINT)vertex_count, (UINT)instance_count, (UINT)first_vertex, (UINT)first_instance);
+}
+
 void cgpu_render_encoder_draw_indexed_d3d12(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
     Cmd->pDxCmdList->DrawIndexedInstanced((UINT)index_count, (UINT)1, (UINT)first_index, (UINT)first_vertex, (UINT)0);
+}
+
+void cgpu_render_encoder_draw_indexed_instanced_d3d12(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    Cmd->pDxCmdList->DrawIndexedInstanced((UINT)index_count, (UINT)instance_count, (UINT)first_index, (UINT)first_vertex, (UINT)first_instance);
 }
 
 void cgpu_cmd_end_render_pass_d3d12(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
