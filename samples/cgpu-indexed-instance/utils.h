@@ -399,8 +399,8 @@ ConstantBuffer<RootConstants> root_constants : register(b0);
 
 struct VSOut
 {
-     float4 position : SV_POSITION;
-     float2 uv : TEXCOORD0;
+    float4 position : SV_POSITION;
+    float2 uv : TEXCOORD0;
 };
 
 float4 main(VSOut psIn) : SV_TARGET

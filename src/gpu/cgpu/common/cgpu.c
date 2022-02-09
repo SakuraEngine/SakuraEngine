@@ -584,6 +584,17 @@ void cgpu_render_encoder_bind_vertex_buffers(CGpuRenderPassEncoderId encoder, ui
     fn_bind_vertex_buffers(encoder, buffer_count, buffers, strides, offsets);
 }
 
+RUNTIME_API void cgpu_render_encoder_bind_index_buffer(CGpuRenderPassEncoderId encoder, CGpuBufferId buffer, uint32_t index_stride, uint64_t offset)
+{
+    cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
+    cgpu_assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
+    CGpuDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRendeEncoderBindIndexBuffer fn_bind_index_buffer = device->proc_table_cache->render_encoder_bind_index_buffer;
+    cgpu_assert(fn_bind_index_buffer && "render_encoder_bind_index_buffer Proc Missing!");
+    fn_bind_index_buffer(encoder, buffer, index_stride, offset);
+}
+
 void cgpu_render_encoder_set_viewport(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
 {
     CGpuDeviceId device = encoder->device;
@@ -627,6 +638,15 @@ void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_c
     const CGPUProcRenderEncoderDraw fn_draw = device->proc_table_cache->render_encoder_draw;
     cgpu_assert(fn_draw && "render_encoder_draw Proc Missing!");
     fn_draw(encoder, vertex_count, first_vertex);
+}
+
+void cgpu_render_encoder_draw_indexed(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
+{
+    CGpuDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderDrawIndexed fn_draw_indexed = device->proc_table_cache->render_encoder_draw_indexed;
+    cgpu_assert(fn_draw_indexed && "render_encoder_draw_indexed Proc Missing!");
+    fn_draw_indexed(encoder, index_count, first_index, first_vertex);
 }
 
 void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)

@@ -100,8 +100,10 @@ const CGpuProcTable tbl_vk = {
     .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_vulkan,
     .render_encoder_bind_pipeline = &cgpu_render_encoder_bind_pipeline_vulkan,
     .render_encoder_bind_vertex_buffers = &cgpu_render_encoder_bind_vertex_buffers_vulkan,
+    .render_encoder_bind_index_buffer = &cgpu_render_encoder_bind_index_buffer_vulkan,
     .render_encoder_push_constants = &cgpu_render_encoder_push_constants_vulkan,
     .render_encoder_draw = &cgpu_render_encoder_draw_vulkan,
+    .render_encoder_draw_indexed = &cgpu_render_encoder_draw_indexed_vulkan,
     .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan
 };
 const CGpuProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
@@ -1638,23 +1640,6 @@ void cgpu_render_encoder_bind_pipeline_vulkan(CGpuRenderPassEncoderId encoder, C
     D->mVkDeviceTable.vkCmdBindPipeline(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, PPL->pVkPipeline);
 }
 
-void cgpu_render_encoder_bind_index_buffer(CGpuRenderPassEncoderId encoder, CGpuBufferId buffer,
-    uint32_t index_stride, uint64_t offset)
-{
-    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
-    const CGpuBuffer_Vulkan* Buffer = (const CGpuBuffer_Vulkan*)buffer;
-    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)buffer->device;
-    cgpu_assert(Cmd);
-    cgpu_assert(buffer);
-    cgpu_assert(VK_NULL_HANDLE != Cmd->pVkCmdBuf);
-    cgpu_assert(VK_NULL_HANDLE != Buffer->pVkBuffer);
-
-    VkIndexType vk_index_type =
-        (16 == index_stride) ? VK_INDEX_TYPE_UINT16 :
-                               ((8 == index_stride) ? VK_INDEX_TYPE_UINT8_EXT : VK_INDEX_TYPE_UINT32);
-    D->mVkDeviceTable.vkCmdBindIndexBuffer(Cmd->pVkCmdBuf, Buffer->pVkBuffer, offset, vk_index_type);
-}
-
 void cgpu_render_encoder_bind_vertex_buffers_vulkan(CGpuRenderPassEncoderId encoder, uint32_t buffer_count,
     const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
 {
@@ -1676,6 +1661,23 @@ void cgpu_render_encoder_bind_vertex_buffers_vulkan(CGpuRenderPassEncoderId enco
     D->mVkDeviceTable.vkCmdBindVertexBuffers(Cmd->pVkCmdBuf, 0, final_buffer_count, vkBuffers, vkOffsets);
 }
 
+void cgpu_render_encoder_bind_index_buffer_vulkan(CGpuRenderPassEncoderId encoder, CGpuBufferId buffer,
+    uint32_t index_stride, uint64_t offset)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    const CGpuBuffer_Vulkan* Buffer = (const CGpuBuffer_Vulkan*)buffer;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)buffer->device;
+    cgpu_assert(Cmd);
+    cgpu_assert(buffer);
+    cgpu_assert(VK_NULL_HANDLE != Cmd->pVkCmdBuf);
+    cgpu_assert(VK_NULL_HANDLE != Buffer->pVkBuffer);
+
+    VkIndexType vk_index_type =
+        (16 == index_stride) ? VK_INDEX_TYPE_UINT16 :
+                               ((8 == index_stride) ? VK_INDEX_TYPE_UINT8_EXT : VK_INDEX_TYPE_UINT32);
+    D->mVkDeviceTable.vkCmdBindIndexBuffer(Cmd->pVkCmdBuf, Buffer->pVkBuffer, offset, vk_index_type);
+}
+
 void cgpu_render_encoder_push_constants_vulkan(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
@@ -1691,6 +1693,13 @@ void cgpu_render_encoder_draw_vulkan(CGpuRenderPassEncoderId encoder, uint32_t v
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
     D->mVkDeviceTable.vkCmdDraw(Cmd->pVkCmdBuf, vertex_count, 1, first_vertex, 0);
+}
+
+void cgpu_render_encoder_draw_indexed_vulkan(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
+{
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)encoder->device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    D->mVkDeviceTable.vkCmdDrawIndexed(Cmd->pVkCmdBuf, index_count, 1, first_index, first_vertex, 0);
 }
 
 void cgpu_cmd_end_render_pass_vulkan(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)

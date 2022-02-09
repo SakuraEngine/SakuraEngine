@@ -309,6 +309,10 @@ void cgpu_free_semaphore_d3d12(CGpuSemaphoreId semaphore)
     return cgpu_free_fence((CGpuFenceId)semaphore);
 }
 
+// for example, shader register set: (s0t0) (s0b1) [s0b0[root]] (s1t0) (s1t1) {s2s0{static}}
+// rootParams: |   s0    |   s1    |  [s0b0]  |
+// rootRanges: | s0t0 | s0b1 | s1t0 | s1t1 |
+// staticSamplers: |  s2s0  |   ...   |
 CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
@@ -381,9 +385,12 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
                 if (iter != staticSamplerMap.end())
                 {
                     iter->second.second = reflSlot;
+                    // Static samplers are not enqueued to rootParams
+                    continue;
                 }
             }
-            else if (reflSlot->type == RT_ROOT_CONSTANT)
+            // Record RS::mRootConstantParam directly, it'll be copied to the end of rootParams list
+            if (reflSlot->type == RT_ROOT_CONSTANT)
             {
                 RS->mRootConstantParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
                 RS->mRootConstantParam.Constants.RegisterSpace = reflSlot->set;
@@ -1284,6 +1291,25 @@ void cgpu_render_encoder_bind_vertex_buffers_d3d12(CGpuRenderPassEncoderId encod
     Cmd->pDxCmdList->IASetVertexBuffers(0, buffer_count, views);
 }
 
+void cgpu_render_encoder_bind_index_buffer_d3d12(CGpuRenderPassEncoderId encoder, CGpuBufferId buffer,
+    uint32_t index_stride, uint64_t offset)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    const CGpuBuffer_D3D12* Buffer = (const CGpuBuffer_D3D12*)buffer;
+    cgpu_assert(Cmd);
+    cgpu_assert(buffer);
+    cgpu_assert(CGPU_NULLPTR != Cmd->pDxCmdList);
+    cgpu_assert(CGPU_NULLPTR != Buffer->pDxResource);
+
+    DECLARE_ZERO(D3D12_INDEX_BUFFER_VIEW, view);
+    view.BufferLocation = Buffer->mDxGpuAddress + offset;
+    view.Format =
+        (16 == index_stride) ? DXGI_FORMAT_R16_UINT :
+                               ((8 == index_stride) ? DXGI_FORMAT_R8_UINT : DXGI_FORMAT_R32_UINT);
+    view.SizeInBytes = Buffer->super.size - offset;
+    Cmd->pDxCmdList->IASetIndexBuffer(&view);
+}
+
 void cgpu_compute_encoder_dispatch_d3d12(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
@@ -1408,6 +1434,12 @@ void cgpu_render_encoder_draw_d3d12(CGpuRenderPassEncoderId encoder, uint32_t ve
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
     Cmd->pDxCmdList->DrawInstanced((UINT)vertex_count, (UINT)1, (UINT)first_vertex, (UINT)0);
+}
+
+void cgpu_render_encoder_draw_indexed_d3d12(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    Cmd->pDxCmdList->DrawIndexedInstanced((UINT)index_count, (UINT)1, (UINT)first_index, (UINT)first_vertex, (UINT)0);
 }
 
 void cgpu_cmd_end_render_pass_d3d12(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
