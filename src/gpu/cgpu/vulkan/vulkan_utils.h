@@ -109,7 +109,7 @@ typedef struct VkUtil_RenderPassDesc {
 typedef struct VkUtil_FramebufferDesc {
     VkRenderPass pRenderPass;
     VkImageView pImageViews[MAX_MRT_COUNT + 1];
-    uint32_t mColorAttachmentCount;
+    uint32_t mAttachmentCount;
     uint32_t mWidth;
     uint32_t mHeight;
     uint32_t mLayers;

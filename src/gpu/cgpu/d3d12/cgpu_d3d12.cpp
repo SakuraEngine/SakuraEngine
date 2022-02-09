@@ -796,12 +796,6 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
     stream_output_desc.pBufferStrides = NULL;
     stream_output_desc.NumStrides = 0;
     stream_output_desc.RasterizedStream = 0;
-    // Depth stencil
-    DECLARE_ZERO(D3D12_DEPTH_STENCILOP_DESC, depth_stencilop_desc);
-    depth_stencilop_desc.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-    depth_stencilop_desc.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-    depth_stencilop_desc.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-    depth_stencilop_desc.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
     // Sample
     DECLARE_ZERO(DXGI_SAMPLE_DESC, sample_desc);
     sample_desc.Count = (UINT)(desc->sample_count);
@@ -823,8 +817,8 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
     pipeline_state_desc.BlendState = desc->blend_state ? D3D12Util_TranslateBlendState(desc->blend_state) : gDefaultBlendDesc;
     pipeline_state_desc.SampleMask = UINT_MAX;
     pipeline_state_desc.RasterizerState = desc->rasterizer_state ? D3D12Util_TranslateRasterizerState(desc->rasterizer_state) : gDefaultRasterizerDesc;
-    pipeline_state_desc.DepthStencilState =
-        desc->depth_state ? D3D12Util_TranslateDephStencilState(desc->depth_state) : gDefaultDepthDesc;
+    // Depth stencil
+    pipeline_state_desc.DepthStencilState = desc->depth_state ? D3D12Util_TranslateDephStencilState(desc->depth_state) : gDefaultDepthDesc;
     pipeline_state_desc.InputLayout = input_layout_desc;
     pipeline_state_desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     pipeline_state_desc.PrimitiveTopologyType = D3D12Util_TranslatePrimitiveTopology(desc->prim_topology);
@@ -1342,7 +1336,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
             gDx12PassBeginOpTranslator[desc->color_attachments[i].load_action];
         D3D12_RENDER_PASS_ENDING_ACCESS_TYPE endingAccess =
             gDx12PassEndOpTranslator[desc->color_attachments[i].store_action];
-        renderPassRenderTargetDescs[i].cpuDescriptor = TV->mDxRtxDescriptorHandle;
+        renderPassRenderTargetDescs[i].cpuDescriptor = TV->mDxRtvDsvDescriptorHandle;
         renderPassRenderTargetDescs[i].BeginningAccess = { beginningAccess, { clearValues[i] } };
         renderPassRenderTargetDescs[i].EndingAccess = { endingAccess, {} };
     }

@@ -298,7 +298,7 @@ typedef struct CGpuTextureView_D3D12 {
     /// Offset from mDxDescriptors for uav descriptor handle
     uint64_t mDxUavOffset : 8;
     /// Offset from mDxDescriptors for rtv descriptor handle
-    D3D12_CPU_DESCRIPTOR_HANDLE mDxRtxDescriptorHandle;
+    D3D12_CPU_DESCRIPTOR_HANDLE mDxRtvDsvDescriptorHandle;
 } CGpuTextureView_D3D12;
 
 typedef struct CGpuSampler_D3D12 {

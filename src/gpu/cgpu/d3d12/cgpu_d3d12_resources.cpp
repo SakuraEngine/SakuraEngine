@@ -616,61 +616,112 @@ CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const stru
         }
     }
     // Create RTV
-    if (usages & TVU_RTV)
+    if (usages & TVU_RTV_DSV)
     {
-        D3D12Util_DescriptorHeap* pRtvHeap = D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
-        TV->mDxRtxDescriptorHandle = D3D12Util_ConsumeDescriptorHandles(pRtvHeap, 1).mCpu;
-        D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-        rtvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
-        switch (desc->dims)
+        const bool isDSV = FormatUtil_IsDepthStencilFormat(desc->format);
+        if (isDSV)
         {
-            case TEX_DIMENSION_1D: {
-                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
-                rtvDesc.Texture1D.MipSlice = desc->base_mip_level;
-            }
-            break;
-            case TEX_DIMENSION_1D_ARRAY: {
-                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
-                rtvDesc.Texture1DArray.MipSlice = desc->base_mip_level;
-                rtvDesc.Texture1DArray.FirstArraySlice = desc->base_array_layer;
-                rtvDesc.Texture1DArray.ArraySize = desc->array_layer_count;
-            }
-            break;
-            case TEX_DIMENSION_2DMS: {
-                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
-            }
-            break;
-            case TEX_DIMENSION_2D: {
-                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-                rtvDesc.Texture2D.MipSlice = desc->base_mip_level;
-                rtvDesc.Texture2D.PlaneSlice = 0;
-            }
-            break;
-            case TEX_DIMENSION_2DMS_ARRAY: {
-                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
-                rtvDesc.Texture2DMSArray.FirstArraySlice = desc->base_array_layer;
-                rtvDesc.Texture2DMSArray.ArraySize = desc->array_layer_count;
-            }
-            case TEX_DIMENSION_2D_ARRAY: {
-                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-                rtvDesc.Texture2DArray.MipSlice = desc->base_mip_level;
-                rtvDesc.Texture2DArray.PlaneSlice = 0;
-                rtvDesc.Texture2DArray.FirstArraySlice = desc->base_array_layer;
-                rtvDesc.Texture2DArray.ArraySize = desc->array_layer_count;
-            }
-            break;
-            case TEX_DIMENSION_3D: {
-                rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
-                rtvDesc.Texture3D.MipSlice = desc->base_mip_level;
-                rtvDesc.Texture3D.FirstWSlice = desc->base_array_layer;
-                rtvDesc.Texture3D.WSize = desc->array_layer_count;
-            }
-            break;
-            default:
-                cgpu_assert(0 && "Unsupported texture dimension!");
+            D3D12Util_DescriptorHeap* pDsvHeap = D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
+            TV->mDxRtvDsvDescriptorHandle = D3D12Util_ConsumeDescriptorHandles(pDsvHeap, 1).mCpu;
+            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
+            switch (desc->dims)
+            {
+                case TEX_DIMENSION_1D: {
+                    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
+                    dsvDesc.Texture1D.MipSlice = desc->base_mip_level;
+                }
                 break;
+                case TEX_DIMENSION_1D_ARRAY: {
+                    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+                    dsvDesc.Texture1DArray.MipSlice = desc->base_mip_level;
+                    dsvDesc.Texture1DArray.FirstArraySlice = desc->base_array_layer;
+                    dsvDesc.Texture1DArray.ArraySize = desc->array_layer_count;
+                }
+                break;
+                case TEX_DIMENSION_2DMS: {
+                    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+                }
+                break;
+                case TEX_DIMENSION_2D: {
+                    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+                    dsvDesc.Texture2D.MipSlice = desc->base_mip_level;
+                }
+                break;
+                case TEX_DIMENSION_2DMS_ARRAY: {
+                    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
+                    dsvDesc.Texture2DMSArray.FirstArraySlice = desc->base_array_layer;
+                    dsvDesc.Texture2DMSArray.ArraySize = desc->array_layer_count;
+                }
+                case TEX_DIMENSION_2D_ARRAY: {
+                    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+                    dsvDesc.Texture2DArray.MipSlice = desc->base_mip_level;
+                    dsvDesc.Texture2DArray.FirstArraySlice = desc->base_array_layer;
+                    dsvDesc.Texture2DArray.ArraySize = desc->array_layer_count;
+                }
+                break;
+                default:
+                    cgpu_assert(0 && "Unsupported texture dimension!");
+                    break;
+            }
+            D3D12Util_CreateDSV(D, T->pDxResource, &dsvDesc, &TV->mDxRtvDsvDescriptorHandle);
         }
-        D3D12Util_CreateRTV(D, T->pDxResource, &rtvDesc, &TV->mDxRtxDescriptorHandle);
+        else
+        {
+            D3D12Util_DescriptorHeap* pRtvHeap = D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
+            TV->mDxRtvDsvDescriptorHandle = D3D12Util_ConsumeDescriptorHandles(pRtvHeap, 1).mCpu;
+            D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+            rtvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
+            switch (desc->dims)
+            {
+                case TEX_DIMENSION_1D: {
+                    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
+                    rtvDesc.Texture1D.MipSlice = desc->base_mip_level;
+                }
+                break;
+                case TEX_DIMENSION_1D_ARRAY: {
+                    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
+                    rtvDesc.Texture1DArray.MipSlice = desc->base_mip_level;
+                    rtvDesc.Texture1DArray.FirstArraySlice = desc->base_array_layer;
+                    rtvDesc.Texture1DArray.ArraySize = desc->array_layer_count;
+                }
+                break;
+                case TEX_DIMENSION_2DMS: {
+                    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+                }
+                break;
+                case TEX_DIMENSION_2D: {
+                    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+                    rtvDesc.Texture2D.MipSlice = desc->base_mip_level;
+                    rtvDesc.Texture2D.PlaneSlice = 0;
+                }
+                break;
+                case TEX_DIMENSION_2DMS_ARRAY: {
+                    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
+                    rtvDesc.Texture2DMSArray.FirstArraySlice = desc->base_array_layer;
+                    rtvDesc.Texture2DMSArray.ArraySize = desc->array_layer_count;
+                }
+                case TEX_DIMENSION_2D_ARRAY: {
+                    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+                    rtvDesc.Texture2DArray.MipSlice = desc->base_mip_level;
+                    rtvDesc.Texture2DArray.PlaneSlice = 0;
+                    rtvDesc.Texture2DArray.FirstArraySlice = desc->base_array_layer;
+                    rtvDesc.Texture2DArray.ArraySize = desc->array_layer_count;
+                }
+                break;
+                case TEX_DIMENSION_3D: {
+                    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
+                    rtvDesc.Texture3D.MipSlice = desc->base_mip_level;
+                    rtvDesc.Texture3D.FirstWSlice = desc->base_array_layer;
+                    rtvDesc.Texture3D.WSize = desc->array_layer_count;
+                }
+                break;
+                default:
+                    cgpu_assert(0 && "Unsupported texture dimension!");
+                    break;
+            }
+            D3D12Util_CreateRTV(D, T->pDxResource, &rtvDesc, &TV->mDxRtvDsvDescriptorHandle);
+        }
     }
     return &TV->super;
 }
@@ -684,7 +735,7 @@ void cgpu_free_texture_view_d3d12(CGpuTextureViewId view)
         const auto usages = TV->super.info.usages;
         uint32_t handleCount = ((usages & TVU_SRV) ? 1 : 0) +
                                ((usages & TVU_UAV) ? 1 : 0) +
-                               ((usages & TVU_RTV) ? 1 : 0);
+                               ((usages & TVU_RTV_DSV) ? 1 : 0);
         D3D12Util_ReturnDescriptorHandles(
             D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], TV->mDxDescriptorHandles,
             handleCount);

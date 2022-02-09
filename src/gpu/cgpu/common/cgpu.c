@@ -282,6 +282,11 @@ static const CGpuRasterizerStateDescriptor defaultRasterStateDesc = {
     .enable_multi_sample = false,
     .depth_bias = 0
 };
+static const CGpuDepthStateDescriptor defaultDepthStateDesc = {
+    .depth_test = false,
+    .depth_write = false,
+    .stencil_test = false
+};
 CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -291,6 +296,8 @@ CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const stru
         ((CGpuRenderPipelineDescriptor*)desc)->sample_count = 1;
     if (desc->blend_state == CGPU_NULLPTR)
         ((CGpuRenderPipelineDescriptor*)desc)->blend_state = &defaultBlendStateDesc;
+    if (desc->depth_state == CGPU_NULLPTR)
+        ((CGpuRenderPipelineDescriptor*)desc)->depth_state = &defaultDepthStateDesc;
     if (desc->rasterizer_state == CGPU_NULLPTR)
         ((CGpuRenderPipelineDescriptor*)desc)->rasterizer_state = &defaultRasterStateDesc;
     pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
