@@ -112,8 +112,10 @@ RUNTIME_API void cgpu_render_encoder_set_scissor_d3d12(CGpuRenderPassEncoderId e
 RUNTIME_API void cgpu_render_encoder_bind_pipeline_d3d12(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline);
 RUNTIME_API void cgpu_render_encoder_bind_vertex_buffers_d3d12(CGpuRenderPassEncoderId encoder, uint32_t buffer_count,
     const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets);
+RUNTIME_API void cgpu_render_encoder_bind_index_buffer_d3d12(CGpuRenderPassEncoderId encoder, CGpuBufferId buffer, uint32_t index_stride, uint64_t offset);
 RUNTIME_API void cgpu_render_encoder_push_constants_d3d12(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_render_encoder_draw_d3d12(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
+RUNTIME_API void cgpu_render_encoder_draw_indexed_d3d12(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass_d3d12(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
 #ifdef __cplusplus

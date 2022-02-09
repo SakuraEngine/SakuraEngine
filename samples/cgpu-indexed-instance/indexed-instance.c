@@ -28,6 +28,7 @@ THREAD_LOCAL bool bUseStaticSampler = true;
 THREAD_LOCAL CGpuTextureViewId sampled_view;
 THREAD_LOCAL CGpuTextureViewId views[BACK_BUFFER_COUNT];
 THREAD_LOCAL CGpuBufferId vertex_buffer;
+THREAD_LOCAL CGpuBufferId index_buffer;
 
 const uint32_t* get_vertex_shader()
 {
@@ -104,11 +105,13 @@ const Vertex vertices[] = {
     { { 0.5f, 0.5f, 0.f }, { 1.0f, 1.0f, 1.0f }, { 1.f, 1.f } },
     { { -0.5f, -0.5f, 0.f }, { 0.0f, 1.0f, 0.0f }, { 0.f, 0.f } },
     { { 0.5f, -0.5f, 0.f }, { 0.0f, 0.0f, 1.0f }, { 1.f, 0.f } },
-
-    { { 0.5f, 0.5f, 0.f }, { 1.0f, 1.0f, 1.0f }, { 1.f, 1.f } },
     { { -0.5f, 0.5f, 0.f }, { 0.0f, 1.0f, 0.0f }, { 0.f, 1.f } },
-    { { -0.5f, -0.5f, 0.f }, { 0.0f, 0.0f, 1.0f }, { 0.f, 0.f } },
 };
+
+const uint16_t indices[] = {
+    0, 1, 2, 0, 3, 1
+};
+typedef uint16_t Index;
 
 void create_vertex_buffer()
 {
@@ -122,6 +125,20 @@ void create_vertex_buffer()
         .name = "VertexBuffer"
     };
     vertex_buffer = cgpu_create_buffer(device, &vertex_buffer_desc);
+}
+
+void create_index_buffer()
+{
+    CGpuBufferDescriptor index_buffer_desc = {
+        .flags = BCF_OWN_MEMORY_BIT,
+        .descriptors = RT_INDEX_BUFFER,
+        .memory_usage = MEM_USAGE_GPU_ONLY,
+        .element_stride = sizeof(Index),
+        .elemet_count = sizeof(indices) / sizeof(Index),
+        .size = sizeof(indices),
+        .name = "IndexBuffer"
+    };
+    index_buffer = cgpu_create_buffer(device, &index_buffer_desc);
 }
 
 void upload_resources()
@@ -141,7 +158,6 @@ void upload_resources()
         memcpy(upload_buffer->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
     }
     cgpu_reset_command_pool(pools[0]);
-    // record
     cgpu_cmd_begin(cmds[0]);
     CGpuBufferToTextureTransfer b2t = {
         .src = upload_buffer,
@@ -169,7 +185,6 @@ void upload_resources()
         memcpy(upload_buffer->cpu_mapped_address, vertices, sizeof(vertices));
     }
     cgpu_reset_command_pool(pools[0]);
-    // record
     cgpu_cmd_begin(cmds[0]);
     CGpuBufferToBufferTransfer b2v = {
         .src = upload_buffer,
@@ -191,6 +206,32 @@ void upload_resources()
     cgpu_cmd_end(cmds[0]);
     cgpu_submit_queue(gfx_queue, &cpy_submit);
     cgpu_wait_queue_idle(gfx_queue);
+    // upload index buffer
+    {
+        memcpy(upload_buffer->cpu_mapped_address, indices, sizeof(indices));
+    }
+    cgpu_reset_command_pool(pools[0]);
+    cgpu_cmd_begin(cmds[0]);
+    CGpuBufferToBufferTransfer b2i = {
+        .src = upload_buffer,
+        .src_offset = 0,
+        .dst = index_buffer,
+        .dst_offset = 0,
+        .size = sizeof(indices)
+    };
+    cgpu_cmd_transfer_buffer_to_buffer(cmds[0], &b2i);
+    CGpuBufferBarrier ib_barrier = {
+        .buffer = index_buffer,
+        .src_state = RESOURCE_STATE_COPY_DEST,
+        .dst_state = RESOURCE_STATE_INDEX_BUFFER
+    };
+    CGpuResourceBarrierDescriptor barrier_desc3 = {
+        .buffer_barriers = &ib_barrier, .buffer_barriers_count = 1
+    };
+    cgpu_cmd_resource_barrier(cmds[0], &barrier_desc3);
+    cgpu_cmd_end(cmds[0]);
+    cgpu_submit_queue(gfx_queue, &cpy_submit);
+    cgpu_wait_queue_idle(gfx_queue);
     // free
     cgpu_free_buffer(upload_buffer);
 }
@@ -199,6 +240,7 @@ void create_render_resources()
 {
     create_sampled_texture();
     create_vertex_buffer();
+    create_index_buffer();
     upload_resources();
 }
 
@@ -414,10 +456,11 @@ void raster_redraw()
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         const uint32_t stride = sizeof(Vertex);
         cgpu_render_encoder_bind_vertex_buffers(rp_encoder, 1, &vertex_buffer, &stride, CGPU_NULLPTR);
+        cgpu_render_encoder_bind_index_buffer(rp_encoder, index_buffer, 16, 0);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
         cgpu_render_encoder_push_constants(rp_encoder, root_sig, "root_constants", &data);
         if (desc_set2) cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set2);
-        cgpu_render_encoder_draw(rp_encoder, 6, 0);
+        cgpu_render_encoder_draw_indexed(rp_encoder, 6, 0, 0);
     }
     cgpu_cmd_end_render_pass(cmd, rp_encoder);
     CGpuTextureBarrier present_barrier = {
@@ -479,6 +522,7 @@ void finalize()
     cgpu_free_descriptor_set(desc_set);
     if (desc_set2) cgpu_free_descriptor_set(desc_set2);
     cgpu_free_buffer(vertex_buffer);
+    cgpu_free_buffer(index_buffer);
     cgpu_free_sampler(sampler_state);
     cgpu_free_texture(sampled_texture);
     cgpu_free_texture_view(sampled_view);
