@@ -634,7 +634,7 @@ typedef uint32_t CGpuResourceTypes;
 typedef enum ECGpuTexutreViewUsage
 {
     TVU_SRV = 0x01,
-    TVU_RTV = 0x02,
+    TVU_RTV_DSV = 0x02,
     TVU_UAV = 0x04,
     TVU_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuTexutreViewUsage;
@@ -651,6 +651,20 @@ typedef uint32_t CGpuTextureViewAspects;
 
 //
 /* clang-format off */
+static FORCEINLINE bool FormatUtil_IsDepthStencilFormat(ECGpuFormat const fmt) {
+    switch(fmt) {
+        case PF_D24_UNORM_S8_UINT:
+        case PF_D32_SFLOAT_S8_UINT:
+        case PF_D32_SFLOAT:
+        case PF_X8_D24_UNORM:
+        case PF_D16_UNORM:
+        case PF_D16_UNORM_S8_UINT:
+            return true;
+        default: return false;
+    }
+    return false;
+}
+
 static FORCEINLINE uint32_t FormatUtil_BitSizeOfBlock(ECGpuFormat const fmt) {
 	switch(fmt) {
 		case PF_UNDEFINED: return 0;

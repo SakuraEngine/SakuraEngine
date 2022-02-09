@@ -1077,13 +1077,13 @@ typedef struct CGpuTextureViewDescriptor {
     const char8_t* name;
     CGpuTextureId texture;
     ECGpuFormat format;
-    CGpuTexutreViewUsages usages;
-    CGpuTextureViewAspects aspects;
-    ECGpuTextureDimension dims;
-    uint32_t base_mip_level;
-    uint32_t mip_level_count;
-    uint32_t base_array_layer;
-    uint32_t array_layer_count;
+    CGpuTexutreViewUsages usages : 8;
+    CGpuTextureViewAspects aspects : 8;
+    ECGpuTextureDimension dims : 8;
+    uint32_t base_array_layer : 8;
+    uint32_t array_layer_count : 8;
+    uint32_t base_mip_level : 8;
+    uint32_t mip_level_count : 8;
 } CGpuTextureViewDescriptor;
 
 typedef struct CGpuTexture {

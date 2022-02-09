@@ -263,7 +263,7 @@ typedef struct CGpuTexture_Vulkan {
 
 typedef struct CGpuTextureView_Vulkan {
     CGpuTextureView super;
-    VkImageView pVkRTVDescriptor;
+    VkImageView pVkRTVDSVDescriptor;
     VkImageView pVkSRVDescriptor;
     VkImageView pVkUAVDescriptor;
 } CGpuTextureView_Vulkan;
@@ -351,6 +351,17 @@ static const VkCompareOp gVkComparisonFuncTranslator[CMP_COUNT] = {
     VK_COMPARE_OP_NOT_EQUAL,
     VK_COMPARE_OP_GREATER_OR_EQUAL,
     VK_COMPARE_OP_ALWAYS,
+};
+
+static const VkStencilOp gVkStencilOpTranslator[STENCIL_OP_COUNT] = {
+    VK_STENCIL_OP_KEEP,
+    VK_STENCIL_OP_ZERO,
+    VK_STENCIL_OP_REPLACE,
+    VK_STENCIL_OP_INVERT,
+    VK_STENCIL_OP_INCREMENT_AND_WRAP,
+    VK_STENCIL_OP_DECREMENT_AND_WRAP,
+    VK_STENCIL_OP_INCREMENT_AND_CLAMP,
+    VK_STENCIL_OP_DECREMENT_AND_CLAMP,
 };
 
 #ifdef __cplusplus

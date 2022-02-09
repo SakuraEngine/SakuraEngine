@@ -393,7 +393,7 @@ void initialize(void* usrdata)
             .aspects = TVA_COLOR,
             .dims = TEX_DIMENSION_2D,
             .format = swapchain->back_buffers[i]->format,
-            .usages = TVU_RTV
+            .usages = TVU_RTV_DSV
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
     }
@@ -433,11 +433,17 @@ void raster_redraw()
         .store_action = STORE_ACTION_STORE,
         .clear_color = fastclear_0000
     };
+    CGpuDepthStencilAttachment ds_attachment = {
+        .view = NULL,
+        .write_depth = false,
+        .clear_depth = false,
+        .write_stencil = false
+    };
     CGpuRenderPassDescriptor rp_desc = {
         .render_target_count = 1,
         .sample_count = SAMPLE_COUNT_1,
         .color_attachments = &screen_attachment,
-        .depth_stencil = CGPU_NULLPTR
+        .depth_stencil = &ds_attachment
     };
     CGpuTextureBarrier draw_barrier = {
         .texture = back_buffer,

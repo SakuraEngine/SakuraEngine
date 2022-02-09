@@ -123,7 +123,7 @@ static void VkUtil_FindOrCreateFrameBuffer(const CGpuDevice_Vulkan* D, const str
         .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
-        .attachmentCount = pDesc->mColorAttachmentCount,
+        .attachmentCount = pDesc->mAttachmentCount,
         .pAttachments = pDesc->pImageViews,
         .width = pDesc->mWidth,
         .height = pDesc->mHeight,
@@ -934,6 +934,36 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
         .topology = topology,
         .primitiveRestartEnable = VK_FALSE
     };
+    // Depth stencil state
+    VkPipelineDepthStencilStateCreateInfo dss = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .depthTestEnable = desc->depth_state->depth_test ? VK_TRUE : VK_FALSE,
+        .depthWriteEnable = desc->depth_state->depth_write ? VK_TRUE : VK_FALSE,
+        .depthCompareOp = gVkComparisonFuncTranslator[desc->depth_state->depth_func],
+        .depthBoundsTestEnable = VK_FALSE,
+        .stencilTestEnable = desc->depth_state->stencil_test ? VK_TRUE : VK_FALSE,
+
+        .front.failOp = gVkStencilOpTranslator[desc->depth_state->stencil_front_fail],
+        .front.passOp = gVkStencilOpTranslator[desc->depth_state->stencil_front_pass],
+        .front.depthFailOp = gVkStencilOpTranslator[desc->depth_state->depth_front_fail],
+        .front.compareOp = gVkComparisonFuncTranslator[desc->depth_state->stencil_front_func],
+        .front.compareMask = desc->depth_state->stencil_read_mask,
+        .front.writeMask = desc->depth_state->stencil_write_mask,
+        .front.reference = 0,
+
+        .back.failOp = gVkStencilOpTranslator[desc->depth_state->stencil_back_fail],
+        .back.passOp = gVkStencilOpTranslator[desc->depth_state->stencil_back_pass],
+        .back.depthFailOp = gVkStencilOpTranslator[desc->depth_state->depth_back_fail],
+        .back.compareOp = gVkComparisonFuncTranslator[desc->depth_state->stencil_back_func],
+        .back.compareMask = desc->depth_state->stencil_read_mask,
+        .back.writeMask = desc->depth_state->stencil_write_mask,
+        .back.reference = 0,
+
+        .minDepthBounds = 0,
+        .maxDepthBounds = 1
+    };
     // Rasterizer state
     const float depth_bias = desc->rasterizer_state ? desc->rasterizer_state->depth_bias : 0.f;
     const VkCullModeFlagBits cullMode = !desc->rasterizer_state ? VK_CULL_MODE_BACK_BIT : gVkCullModeTranslator[desc->rasterizer_state->cull_mode];
@@ -1016,8 +1046,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
         .pViewportState = &vps,
         .pRasterizationState = &rs,
         .pMultisampleState = &ms,
-        // TODO: Depth stencil state
-        .pDepthStencilState = VK_NULL_HANDLE,
+        .pDepthStencilState = &dss,
         .pColorBlendState = &cbs,
         .layout = RS->pPipelineLayout,
         .renderPass = render_pass,
@@ -1534,10 +1563,15 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
     {
         VkUtil_RenderPassDesc rpdesc = {
             .mColorAttachmentCount = desc->render_target_count,
-            .mDepthStencilFormat = desc->depth_stencil ? desc->depth_stencil->view->info.format : PF_UNDEFINED,
+            .mDepthStencilFormat =
+                desc->depth_stencil ?
+                    (desc->depth_stencil->view ? desc->depth_stencil->view->info.format : PF_UNDEFINED) :
+                    PF_UNDEFINED,
             .mSampleCount = desc->sample_count,
-            .mLoadActionDepth = desc->depth_stencil ? desc->depth_stencil->depth_load_action : LOAD_ACTION_DONTCARE,
-            .mLoadActionStencil = desc->depth_stencil ? desc->depth_stencil->stencil_load_action : LOAD_ACTION_DONTCARE
+            .mLoadActionDepth =
+                desc->depth_stencil ? desc->depth_stencil->depth_load_action : LOAD_ACTION_DONTCARE,
+            .mLoadActionStencil =
+                desc->depth_stencil ? desc->depth_stencil->stencil_load_action : LOAD_ACTION_DONTCARE
         };
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {
@@ -1554,7 +1588,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
     {
         VkUtil_FramebufferDesc fbDesc = {
             .pRenderPass = render_pass,
-            .mColorAttachmentCount = desc->render_target_count,
+            .mAttachmentCount = desc->render_target_count,
             .mWidth = Width,
             .mHeight = Height,
             .mLayers = 1
@@ -1562,14 +1596,15 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {
             CGpuTextureView_Vulkan* TVV = (CGpuTextureView_Vulkan*)desc->color_attachments[i].view;
-            fbDesc.pImageViews[i] = TVV->pVkRTVDescriptor;
+            fbDesc.pImageViews[i] = TVV->pVkRTVDSVDescriptor;
             fbDesc.mLayers = TVV->super.info.array_layer_count;
         }
-        if (desc->depth_stencil != CGPU_NULLPTR)
+        if (desc->depth_stencil != CGPU_NULLPTR && desc->depth_stencil->view != CGPU_NULLPTR)
         {
             CGpuTextureView_Vulkan* TVV = (CGpuTextureView_Vulkan*)desc->depth_stencil->view;
-            fbDesc.pImageViews[desc->render_target_count] = TVV->pVkRTVDescriptor;
+            fbDesc.pImageViews[desc->render_target_count] = TVV->pVkRTVDSVDescriptor;
             fbDesc.mLayers = TVV->super.info.array_layer_count;
+            fbDesc.mAttachmentCount += 1;
         }
         if (desc->render_target_count)
             cgpu_assert(fbDesc.mLayers == 1 && "MRT pass supports only one layer!");

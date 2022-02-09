@@ -533,10 +533,10 @@ CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const str
         uavDesc.subresourceRange.baseMipLevel = desc->base_mip_level;
         CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice, &uavDesc, GLOBAL_VkAllocationCallbacks, &TV->pVkUAVDescriptor));
     }
-    // RTV
-    if (desc->usages & TVU_RTV)
+    // RTV & DSV
+    if (desc->usages & TVU_RTV_DSV)
     {
-        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice, &srvDesc, GLOBAL_VkAllocationCallbacks, &TV->pVkRTVDescriptor));
+        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateImageView(D->pVkDevice, &srvDesc, GLOBAL_VkAllocationCallbacks, &TV->pVkRTVDSVDescriptor));
     }
     return &TV->super;
 }
@@ -548,8 +548,8 @@ void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target)
     // Free descriptors
     if (VK_NULL_HANDLE != TV->pVkSRVDescriptor)
         D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkSRVDescriptor, GLOBAL_VkAllocationCallbacks);
-    if (VK_NULL_HANDLE != TV->pVkRTVDescriptor)
-        D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkRTVDescriptor, GLOBAL_VkAllocationCallbacks);
+    if (VK_NULL_HANDLE != TV->pVkRTVDSVDescriptor)
+        D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkRTVDSVDescriptor, GLOBAL_VkAllocationCallbacks);
     if (VK_NULL_HANDLE != TV->pVkUAVDescriptor)
         D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkUAVDescriptor, GLOBAL_VkAllocationCallbacks);
     cgpu_free_aligned(TV);

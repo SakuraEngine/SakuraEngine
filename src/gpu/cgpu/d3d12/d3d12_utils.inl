@@ -44,6 +44,15 @@ FORCEINLINE static void D3D12Util_CreateRTV(CGpuDevice_D3D12* D,
     D->pDxDevice->CreateRenderTargetView(pResource, pRtvDesc, *pHandle);
 }
 
+FORCEINLINE static void D3D12Util_CreateDSV(CGpuDevice_D3D12* D,
+    ID3D12Resource* pResource,
+    const D3D12_DEPTH_STENCIL_VIEW_DESC* pDsvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
+{
+    if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
+        *pHandle = D3D12Util_ConsumeDescriptorHandles(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_DSV], 1).mCpu;
+    D->pDxDevice->CreateDepthStencilView(pResource, pDsvDesc, *pHandle);
+}
+
 FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescriptorRangeType(ECGpuResourceType type) {
   switch (type) {
   case RT_UNIFORM_BUFFER:
