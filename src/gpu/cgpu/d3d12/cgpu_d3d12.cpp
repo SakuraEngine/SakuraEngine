@@ -363,10 +363,8 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     }
     D3D12_ROOT_PARAMETER1* rootParams = (D3D12_ROOT_PARAMETER1*)cgpu_calloc(tableCount + rootConstCount, sizeof(D3D12_ROOT_PARAMETER1));
     D3D12_DESCRIPTOR_RANGE1* cbvSrvUavRanges = (D3D12_DESCRIPTOR_RANGE1*)cgpu_calloc(descRangeCount, sizeof(D3D12_DESCRIPTOR_RANGE1));
-    uint32_t i_table = 0;
-    uint32_t i_range = 0;
     // Create descriptor tables
-    for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
+    for (uint32_t i_set = 0, i_table = 0, i_range = 0; i_set < RS->super.table_count; i_set++)
     {
         CGpuParameterTable* ParamTable = &RS->super.tables[i_set];
         D3D12_ROOT_PARAMETER1* rootParam = &rootParams[i_table];
@@ -399,7 +397,7 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
                 descRange->RegisterSpace = reflSlot->set;
                 descRange->BaseShaderRegister = reflSlot->binding;
                 descRange->Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
-                descRange->NumDescriptors = reflSlot->size;
+                descRange->NumDescriptors = (reflSlot->type != RT_UNIFORM_BUFFER) ? reflSlot->size : 1;
                 descRange->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
                 descRange->RangeType = D3D12Util_ResourceTypeToDescriptorRangeType(reflSlot->type);
                 rootParam->DescriptorTable.NumDescriptorRanges++;
@@ -461,8 +459,11 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     // Serialize versioned RS
     const UINT paramCount = tableCount - staticSamplerCount + rootConstCount /*must be 0 or 1 now*/;
     // Root Constant
-    if (rootConstCount) rootParams[paramCount - 1] = RS->mRootConstantParam;
-    RS->mRootParamIndex = paramCount - 1;
+    if (rootConstCount)
+    {
+        rootParams[paramCount - 1] = RS->mRootConstantParam;
+        RS->mRootParamIndex = paramCount - 1;
+    }
     // Serialize PSO
     ID3DBlob* error = NULL;
     ID3DBlob* rootSignatureString = NULL;
