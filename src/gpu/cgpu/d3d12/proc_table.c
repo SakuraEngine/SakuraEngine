@@ -96,7 +96,9 @@ const CGpuProcTable tbl_d3d12 = {
     .render_encoder_bind_index_buffer = &cgpu_render_encoder_bind_index_buffer_d3d12,
     .render_encoder_push_constants = &cgpu_render_encoder_push_constants_d3d12,
     .render_encoder_draw = &cgpu_render_encoder_draw_d3d12,
+    .render_encoder_draw_instanced = &cgpu_render_encoder_draw_instanced_d3d12,
     .render_encoder_draw_indexed = &cgpu_render_encoder_draw_indexed_d3d12,
+    .render_encoder_draw_indexed_instanced = &cgpu_render_encoder_draw_indexed_instanced_d3d12,
     .cmd_end_render_pass = &cgpu_cmd_end_render_pass_d3d12
 };
 

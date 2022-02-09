@@ -328,8 +328,12 @@ RUNTIME_API void cgpu_render_encoder_push_constants(CGpuRenderPassEncoderId enco
 typedef void (*CGPUProcRenderEncoderPushConstants)(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 typedef void (*CGPUProcRenderEncoderDraw)(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
+RUNTIME_API void cgpu_render_encoder_draw_instanced(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
+typedef void (*CGPUProcRenderEncoderDrawInstanced)(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
 RUNTIME_API void cgpu_render_encoder_draw_indexed(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
 typedef void (*CGPUProcRenderEncoderDrawIndexed)(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
+RUNTIME_API void cgpu_render_encoder_draw_indexed_instanced(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
+typedef void (*CGPUProcRenderEncoderDrawIndexedInstanced)(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 typedef void (*CGPUProcCmdEndRenderPass)(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
@@ -429,7 +433,9 @@ typedef struct CGpuProcTable {
     const CGPUProcRenderEncoderSetViewport render_encoder_set_viewport;
     const CGPUProcRenderEncoderSetScissor render_encoder_set_scissor;
     const CGPUProcRenderEncoderDraw render_encoder_draw;
+    const CGPUProcRenderEncoderDrawInstanced render_encoder_draw_instanced;
     const CGPUProcRenderEncoderDrawIndexed render_encoder_draw_indexed;
+    const CGPUProcRenderEncoderDrawIndexedInstanced render_encoder_draw_indexed_instanced;
     const CGPUProcCmdEndRenderPass cmd_end_render_pass;
 } CGpuProcTable;
 
