@@ -955,7 +955,7 @@ void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
     pHeap->pDevice = pDevice;
 
     // Keep 32 aligned for easy remove
-    numDescriptors = smath_round_up(numDescriptors, 32);
+    numDescriptors = smath_round_up_32(numDescriptors, 32);
 
     D3D12_DESCRIPTOR_HEAP_DESC Desc = *pDesc;
     Desc.NumDescriptors = numDescriptors;
