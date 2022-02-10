@@ -345,3 +345,19 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
 #ifdef _WINDOWS
     #include "win/configure.h"
 #endif
+
+// Numbers
+#ifndef KINDA_SMALL_NUMBER
+    #define KINDA_SMALL_NUMBER (1.e-4)
+#endif
+
+#ifndef SMALL_NUMBER
+    #define SMALL_NUMBER (1.e-8)
+#endif
+
+#ifndef THRESH_VECTOR_NORMALIZED
+    #define THRESH_VECTOR_NORMALIZED 0.01
+#endif
+
+// TODO: move this anywhere else
+#define USE_DXMATH

@@ -25,6 +25,7 @@ include(PlatformConfigure)
 include(mimalloc) # Fetch mimalloc SOURCES
 include(EASTL) # Fetch EASTL SOURCES
 include(DirectXMath)
+include(GSL)
 include(vulkan)
 include(GPU)
 include(SDL2) # Set SDL2 ENVS
@@ -109,6 +110,7 @@ target_include_directories(SakuraRuntime
     ${MIMALLOC_INCLUDES_DIR}
     ${EASTL_INCLUDES_DIR}
     ${DXMATH_INCLUDES_DIR}
+    ${GSL_INCLUDES_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${WASM3_INCLUDES}
     ${WASM_EDGE_INCLUDES}

@@ -1,4 +1,4 @@
-#include "math/common.h"
+#include "math/scalarmath.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.h"
 #include <dxcapi.h>
@@ -814,7 +814,7 @@ inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(
     if (desc->descriptors & RT_UNIFORM_BUFFER)
     {
         uint64_t minAlignment = A->adapter_detail.uniform_buffer_alignment;
-        allocationSize = smath_round_up_64(allocationSize, minAlignment);
+        allocationSize = smath_round_up(allocationSize, minAlignment);
     }
     bufDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     // Alignment must be 64KB (D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT) or 0, which is effectively 64KB.
@@ -955,7 +955,7 @@ void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
     pHeap->pDevice = pDevice;
 
     // Keep 32 aligned for easy remove
-    numDescriptors = smath_round_up_32(numDescriptors, 32);
+    numDescriptors = smath_round_up(numDescriptors, 32);
 
     D3D12_DESCRIPTOR_HEAP_DESC Desc = *pDesc;
     Desc.NumDescriptors = numDescriptors;

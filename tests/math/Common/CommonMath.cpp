@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "math/common.h"
+#include "math/scalarmath.h"
 
 class CommonMath : public ::testing::Test
 {
@@ -17,8 +17,8 @@ TEST(CommonMath, CommonMath0)
 {
     uint32_t value = 15;
     uint32_t alignment = 4;
-    auto uvalue = smath_round_up_32(value, alignment);
-    auto dvalue = smath_round_down_32(value, alignment);
+    auto uvalue = smath_round_up(value, alignment);
+    auto dvalue = smath_round_down(value, alignment);
     EXPECT_TRUE(uvalue == 16);
     EXPECT_TRUE(dvalue == 12);
 }
