@@ -1,4 +1,4 @@
-#include "math/common.h"
+#include "math/scalarmath.h"
 #include "float.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
@@ -15,7 +15,7 @@ FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGpuAdapter_
     if (desc->descriptors & RT_UNIFORM_BUFFER)
     {
         uint64_t minAlignment = A->adapter_detail.uniform_buffer_alignment;
-        allocationSize = smath_round_up_64(allocationSize, minAlignment);
+        allocationSize = smath_round_up(allocationSize, minAlignment);
     }
     VkBufferCreateInfo add_info = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,

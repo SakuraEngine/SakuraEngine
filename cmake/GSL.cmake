@@ -1,0 +1,5 @@
+set(GSL_INCLUDES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gsl CACHE STRING INTERNAL FORCE)
+file(GLOB_RECURSE gsl_headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gsl/gsl/*
+)
+set(GSL_HEADERS ${gsl_headers} CACHE STRING INTERNAL FORCE)
