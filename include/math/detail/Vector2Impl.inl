@@ -9,7 +9,7 @@ FORCEINLINE constexpr Vector<T, 2>::Vector(const T x, const T y)
 }
 
 template <typename T>
-FORCEINLINE constexpr Vector<T, 2>::Vector(const std::array<T, 2> v)
+FORCEINLINE constexpr Vector<T, 2>::Vector(const sakura::array<T, 2> v)
     : m_(v)
 {
 }

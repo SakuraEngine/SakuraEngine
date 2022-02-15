@@ -35,7 +35,6 @@ extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/wasm-clang-win.zip
     ${SAKURA_BIN_DIR}/Release
 )
 message(STATUS ${DXMATH_INCLUDES_DIR})
-
 include(WASM3) # Set WASM3 ENVS
 
 if(RUNTIME_SHARED)
