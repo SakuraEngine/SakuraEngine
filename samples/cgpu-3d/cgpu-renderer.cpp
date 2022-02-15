@@ -42,7 +42,7 @@ void RenderDevice::Initialize(ECGpuBackend backend)
     surface_ = cgpu_surface_from_hwnd(device_, wmInfo.info.win.window);
 #elif defined(__APPLE__)
     struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(wmInfo.info.cocoa.window);
-    surface = cgpu_surface_from_ns_view(device, ns_view);
+    surface_ = cgpu_surface_from_ns_view(device_, ns_view);
 #endif
     CGpuSwapChainDescriptor swapchain_desc = {};
     swapchain_desc.presentQueues = &gfx_queue_;
@@ -133,6 +133,7 @@ int32_t RenderScene::loadNode(struct cgltf_node* src, int32_t parent_idx)
 void RenderScene::Initialize(const char8_t* path)
 {
     cgltf_options options = {};
+    // file input
     if (path)
     {
         cgltf_result result = cgltf_parse_file(&options, path, &gltf_data_);
@@ -150,17 +151,17 @@ void RenderScene::Initialize(const char8_t* path)
                 return;
             }
         }
-        load_ready_ = true;
     }
-    if (load_ready_)
+    // construct
     {
+        // load meshes
         meshes_.reserve(gltf_data_->meshes_count);
         for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
         {
             auto gltf_mesh = gltf_data_->meshes + i;
             loadMesh(gltf_mesh);
         }
-
+        // load nodes
         nodes_.reserve(gltf_data_->nodes_count);
         for (uint32_t i = 0; i < gltf_data_->nodes_count; i++)
         {
@@ -172,6 +173,7 @@ void RenderScene::Initialize(const char8_t* path)
             }
         }
     }
+    load_ready_ = true;
 }
 
 void RenderScene::Upload(RenderContext* context, bool keep_gltf_data_)
@@ -203,6 +205,7 @@ void RenderScene::Upload(RenderContext* context, bool keep_gltf_data_)
             }
         }
     }
+    upload_ready_ = true;
 }
 
 void RenderScene::Destroy()
