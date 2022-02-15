@@ -10,7 +10,7 @@ FORCEINLINE constexpr Vector<T, 3>::Vector(const T x, const T y, const T z)
 }
 
 template <typename T>
-FORCEINLINE constexpr Vector<T, 3>::Vector(const std::array<T, 3> v)
+FORCEINLINE constexpr Vector<T, 3>::Vector(const sakura::array<T, 3> v)
     : m_(v)
 {
 }
@@ -18,13 +18,13 @@ FORCEINLINE constexpr Vector<T, 3>::Vector(const std::array<T, 3> v)
 template <typename T>
 FORCEINLINE span<T, 3> Vector<T, 3>::data_view()
 {
-    return m_;
+    return m_.mValue;
 }
 
 template <typename T>
 FORCEINLINE span<const T, 3> Vector<T, 3>::data_view() const
 {
-    return m_;
+    return m_.mValue;
 }
 
 template <typename T>

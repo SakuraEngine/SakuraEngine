@@ -56,7 +56,7 @@ struct Vector {
     static constexpr Vector<T, N> vector_one();
     static constexpr Vector<T, N> vector_zero();
 
-    std::array<T, N> m_ = sakura::create_array<T, N>(0);
+    sakura::array<T, N> m_ = sakura::create_array<T, N>(0);
 };
 
 template <typename T, size_t N>
@@ -76,7 +76,7 @@ struct Vector<T, 2> {
 public:
     FORCEINLINE constexpr Vector() = default;
     FORCEINLINE constexpr Vector(const T x, const T y);
-    FORCEINLINE constexpr Vector(const std::array<T, 2> v);
+    FORCEINLINE constexpr Vector(const sakura::array<T, 2> v);
     FORCEINLINE sakura::span<T, 2> data_view();
     FORCEINLINE sakura::span<const T, 2> data_view() const;
     FORCEINLINE static constexpr Vector<T, 2> vector_one();
@@ -167,7 +167,7 @@ public:
         struct {
             T x, y;
         };
-        std::array<T, 2> m_ = { 0, 0 };
+        sakura::array<T, 2> m_ = { 0, 0 };
     };
 };
 using Vector2f = Vector<float, 2u>;
@@ -189,7 +189,7 @@ struct Vector<T, 3> {
 public:
     FORCEINLINE constexpr Vector() = default;
     FORCEINLINE constexpr Vector(const T x, const T y, const T z);
-    FORCEINLINE constexpr Vector(const std::array<T, 3> v);
+    FORCEINLINE constexpr Vector(const sakura::array<T, 3> v);
     FORCEINLINE sakura::span<T, 3> data_view();
     FORCEINLINE sakura::span<const T, 3> data_view() const;
     FORCEINLINE static constexpr Vector<T, 3> vector_one();
@@ -289,7 +289,7 @@ public:
         struct {
             T x, y, z;
         };
-        std::array<T, 3> m_ = { 0, 0, 0 };
+        sakura::array<T, 3> m_ = { 0, 0, 0 };
     };
 };
 using Vector3f = Vector<float, 3>;
@@ -306,17 +306,17 @@ public:
         : m_({ x, y, z, w })
     {
     }
-    FORCEINLINE constexpr Vector(const std::array<float, 4> v)
+    FORCEINLINE constexpr Vector(const sakura::array<float, 4> v)
         : m_(v)
     {
     }
     FORCEINLINE sakura::span<float, 4> data_view()
     {
-        return m_;
+        return m_.mValue;
     }
     FORCEINLINE sakura::span<const float, 4> data_view() const
     {
-        return m_;
+        return m_.mValue;
     }
     FORCEINLINE float length() const;
     FORCEINLINE float length_squared() const;
@@ -396,7 +396,7 @@ public:
         struct alignas(16) {
             float x, y, z, w;
         };
-        alignas(16) std::array<float, 4> m_ = { 0.f, 0.f, 0.f, 0.f };
+        alignas(16) sakura::array<float, 4> m_ = { 0.f, 0.f, 0.f, 0.f };
     };
 };
 using Color4u = Vector<uint8_t, 4u>;
