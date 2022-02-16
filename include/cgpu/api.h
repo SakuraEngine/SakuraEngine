@@ -945,6 +945,7 @@ typedef struct CGpuRasterizerStateDescriptor {
 } CGpuRasterizerStateDescriptor;
 
 typedef struct CGpuVertexAttribute {
+    // TODO: handle this in a better way
     char8_t semantic_name[64];
     ECGpuFormat format;
     uint32_t binding;
