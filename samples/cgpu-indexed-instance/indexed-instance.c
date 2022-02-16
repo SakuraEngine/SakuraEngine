@@ -293,6 +293,16 @@ void create_render_pipeline()
         },
         .attribute_count = 3
     };
+    CGpuRasterizerStateDescriptor rs_state = {
+        .cull_mode = CULL_MODE_BACK,
+        .fill_mode = FILL_MODE_SOLID,
+        .front_face = FRONT_FACE_CCW,
+        .slope_scaled_depth_bias = 0.f,
+        .enable_depth_clamp = false,
+        .enable_scissor = false,
+        .enable_multi_sample = false,
+        .depth_bias = 0
+    };
     CGpuRenderPipelineDescriptor rp_desc = {
         .root_signature = root_sig,
         .prim_topology = PRIM_TOPO_TRI_LIST,
@@ -300,6 +310,7 @@ void create_render_pipeline()
         .vertex_shader = &ppl_shaders[0],
         .fragment_shader = &ppl_shaders[1],
         .render_target_count = 1,
+        .rasterizer_state = &rs_state,
         .color_formats = &views[0]->info.format
     };
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);

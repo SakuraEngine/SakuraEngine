@@ -47,10 +47,13 @@ public:
     eastl::vector<RenderMesh> meshes_;
 
     std::atomic_bool load_ready_ = false;
-    std::atomic_bool upload_ready_ = false;
+    std::atomic_bool gpu_memory_ready = false;
+    CGpuSemaphoreId gpu_geometry_semaphore;
+    CGpuFenceId gpu_geometry_fence;
 
     eastl::vector<CGpuBufferId> vertex_buffers_;
     CGpuBufferId index_buffer_;
+    CGpuBufferId staging_buffer_;
 
 protected:
     int32_t loadNode(struct cgltf_node* src, int32_t parent_idx);
