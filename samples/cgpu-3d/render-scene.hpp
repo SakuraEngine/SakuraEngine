@@ -22,6 +22,9 @@ struct RenderMaterial {
 struct RenderPrimitive {
     uint32_t first_index_;
     uint32_t index_count_;
+    uint32_t vertex_layout_id_;
+    CGpuRenderPipelineId pipeline_;
+    CGpuDescriptorSetId desc_set_;
     eastl::shared_ptr<RenderMaterial> material_;
 };
 

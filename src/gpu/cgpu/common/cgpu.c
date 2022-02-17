@@ -251,6 +251,7 @@ CGpuComputePipelineId cgpu_create_compute_pipeline(CGpuDeviceId device, const st
     cgpu_assert(device->proc_table_cache->create_compute_pipeline && "create_compute_pipeline Proc Missing!");
     CGpuComputePipeline* pipeline = (CGpuComputePipeline*)device->proc_table_cache->create_compute_pipeline(device, desc);
     pipeline->device = device;
+    pipeline->root_signature = desc->root_signature;
     return pipeline;
 }
 
@@ -302,6 +303,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const stru
         ((CGpuRenderPipelineDescriptor*)desc)->rasterizer_state = &defaultRasterStateDesc;
     pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
     pipeline->device = device;
+    pipeline->root_signature = desc->root_signature;
     return pipeline;
 }
 

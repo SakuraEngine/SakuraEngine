@@ -86,17 +86,49 @@ void RenderDevice::Initialize(ECGpuBackend backend)
     fs_desc.code = get_fragment_shader();
     fs_desc.code_size = get_fragment_shader_size();
     fs_library_ = cgpu_create_shader_library(device_, &fs_desc);
+    CGpuSamplerDescriptor sampler_desc = {};
+    sampler_desc.address_u = ADDRESS_MODE_REPEAT;
+    sampler_desc.address_v = ADDRESS_MODE_REPEAT;
+    sampler_desc.address_w = ADDRESS_MODE_REPEAT;
+    sampler_desc.mipmap_mode = MIPMAP_MODE_LINEAR;
+    sampler_desc.min_filter = FILTER_TYPE_LINEAR;
+    sampler_desc.mag_filter = FILTER_TYPE_LINEAR;
+    sampler_desc.compare_func = CMP_NEVER;
+    default_sampler_ = cgpu_create_sampler(device_, &sampler_desc);
+    // create root signature
+    ppl_shaders_[0].stage = SHADER_STAGE_VERT;
+    ppl_shaders_[0].entry = "main";
+    ppl_shaders_[0].library = vs_library_;
+    ppl_shaders_[1].stage = SHADER_STAGE_FRAG;
+    ppl_shaders_[1].entry = "main";
+    ppl_shaders_[1].library = fs_library_;
+    const char8_t* sampler_name = "texture_sampler";
+    const char8_t* root_constant_name = "root_constants";
+    CGpuRootSignatureDescriptor rs_desc = {};
+    rs_desc.shaders = ppl_shaders_;
+    rs_desc.shader_count = 2;
+    rs_desc.root_constant_names = &root_constant_name;
+    rs_desc.root_constant_count = 1;
+    rs_desc.static_samplers = &default_sampler_;
+    rs_desc.static_sampler_count = 1;
+    rs_desc.static_sampler_names = &sampler_name;
+    root_sig_ = cgpu_create_root_signature(device_, &rs_desc);
 }
 
 void RenderDevice::Destroy()
 {
+    for (auto iter : pipelines_)
+        cgpu_free_render_pipeline(iter.second);
+    cgpu_free_sampler(default_sampler_);
+    cgpu_free_root_signature(root_sig_);
     cgpu_free_shader_library(vs_library_);
     cgpu_free_shader_library(fs_library_);
     cgpu_free_swapchain(swapchain_);
     cgpu_free_surface(device_, surface_);
     cgpu_free_command_pool(cpy_cmd_pool_);
     cgpu_free_queue(gfx_queue_);
-    if (cpy_queue_ != gfx_queue_) cgpu_free_queue(cpy_queue_);
+    if (cpy_queue_ != gfx_queue_)
+        cgpu_free_queue(cpy_queue_);
     cgpu_free_device(device_);
     cgpu_free_instance(instance_);
     SDL_DestroyWindow(sdl_window_);
@@ -107,7 +139,7 @@ void RenderDevice::FreeSemaphore(CGpuSemaphoreId semaphore)
     cgpu_free_semaphore(semaphore);
 }
 
-CGpuSemaphoreId RenderDevice::allocSemaphore()
+CGpuSemaphoreId RenderDevice::AllocSemaphore()
 {
     return cgpu_create_semaphore(device_);
 }
@@ -123,9 +155,22 @@ void RenderDevice::FreeFence(CGpuFenceId fence)
     cgpu_free_fence(fence);
 }
 
-void RenderDevice::asyncTransfer(const CGpuBufferToBufferTransfer* transfers, uint32_t transfer_count,
+void RenderDevice::asyncTransfer(const CGpuBufferToBufferTransfer* transfers,
+    const ECGpuResourceState* dst_states, uint32_t transfer_count,
     CGpuSemaphoreId semaphore, CGpuFenceId fence)
 {
+    eastl::vector<CGpuBufferBarrier> barriers(transfer_count);
+    for (uint32_t i = 0; i < barriers.size(); i++)
+    {
+        barriers[i].buffer = transfers[i].dst;
+        barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
+        barriers[i].dst_state = dst_states[i];
+        if (gfx_queue_ != cpy_queue_)
+        {
+            barriers[i].queue_release = true;
+            barriers[i].queue_type = QUEUE_TYPE_GRAPHICS;
+        }
+    }
     CGpuCommandBufferDescriptor cmd_desc = {};
     CGpuCommandBufferId cmd = cgpu_create_command_buffer(cpy_cmd_pool_, &cmd_desc);
     cpy_cmds[semaphore] = cmd;
@@ -134,6 +179,10 @@ void RenderDevice::asyncTransfer(const CGpuBufferToBufferTransfer* transfers, ui
     {
         cgpu_cmd_transfer_buffer_to_buffer(cmd, &transfers[i]);
     }
+    CGpuResourceBarrierDescriptor barriers_desc = {};
+    barriers_desc.buffer_barriers = barriers.data();
+    barriers_desc.buffer_barriers_count = barriers.size();
+    cgpu_cmd_resource_barrier(cmd, &barriers_desc);
     cgpu_cmd_end(cmd);
     CGpuQueueSubmitDescriptor submit_desc = {};
     submit_desc.cmds = &cmd;
@@ -142,6 +191,40 @@ void RenderDevice::asyncTransfer(const CGpuBufferToBufferTransfer* transfers, ui
     submit_desc.signal_semaphores = semaphore ? &semaphore : nullptr;
     submit_desc.signal_fence = fence;
     cgpu_submit_queue(cpy_queue_, &submit_desc);
+}
+
+CGpuRenderPipelineId RenderDevice::CreateRenderPipeline(const PipelineKey& key)
+{
+    auto iter = pipelines_.find(key);
+    if (iter != pipelines_.end()) return iter->second;
+    CGpuRasterizerStateDescriptor rasterizer_state = {};
+    rasterizer_state.cull_mode = CULL_MODE_BACK;
+    rasterizer_state.fill_mode = key.wireframe_mode_ ? FILL_MODE_WIREFRAME : FILL_MODE_SOLID;
+    rasterizer_state.front_face = FRONT_FACE_CCW;
+    rasterizer_state.slope_scaled_depth_bias = 0.f;
+    rasterizer_state.enable_depth_clamp = false;
+    rasterizer_state.enable_scissor = false;
+    rasterizer_state.enable_multi_sample = false;
+    rasterizer_state.depth_bias = 0;
+    CGpuRenderPipelineDescriptor rp_desc = {};
+    rp_desc.root_signature = key.root_sig_;
+    rp_desc.prim_topology = PRIM_TOPO_TRI_LIST;
+    auto viter = vertex_layouts_.find_by_hash(key.vertex_layout_id_);
+    rp_desc.vertex_layout = &viter.get_node()->mValue;
+    rp_desc.vertex_shader = &ppl_shaders_[0];
+    rp_desc.fragment_shader = &ppl_shaders_[1];
+    rp_desc.render_target_count = 1;
+    rp_desc.rasterizer_state = &rasterizer_state;
+    ECGpuFormat color_format = (ECGpuFormat)swapchain_->back_buffers[0]->format;
+    rp_desc.color_formats = &color_format;
+    auto new_pipeline = cgpu_create_render_pipeline(device_, &rp_desc);
+    pipelines_.insert({ key, new_pipeline });
+    return new_pipeline;
+}
+
+void RenderDevice::freeRenderPipeline(CGpuRenderPipelineId pipeline)
+{
+    cgpu_free_render_pipeline(pipeline);
 }
 
 void RenderContext::Initialize(RenderDevice* device)
@@ -164,10 +247,10 @@ void RenderContext::Destroy()
 int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_cursor)
 {
     RenderPrimitive newPrim = {};
-    newPrim.first_index_ = src->indices->count;
+    newPrim.index_count_ = src->indices->count;
     newPrim.first_index_ = index_cursor;
     primitives_.emplace_back(newPrim);
-    index_cursor += newPrim.first_index_;
+    index_cursor += newPrim.index_count_;
     return primitives_.size() - 1;
 }
 
@@ -349,7 +432,6 @@ void RenderScene::Upload(RenderContext* context, bool keep_gltf_data_)
         eastl::vector_map<cgltf_buffer_view*, uint32_t> viewVBBindingMap = {};
         cgltf_buffer_view* indices_view = nullptr;
         eastl::vector_map<uint32_t, uint32_t> bindingOffsetMap = {};
-        eastl::vector_map<uint32_t, uint32_t> bindingLocationMap = {};
         for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
         {
             cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
@@ -375,13 +457,13 @@ void RenderScene::Upload(RenderContext* context, bool keep_gltf_data_)
                 vertex_buffers_.emplace_back(vertex_buffer_);
                 viewVBBindingMap.insert({ buf_view, vertex_buffers_.size() - 1 });
                 bindingOffsetMap.insert({ vertex_buffers_.size() - 1, 0 });
-                bindingLocationMap.insert({ vertex_buffers_.size() - 1, 0 });
             }
         }
         // create vertex layout
         for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
         {
             auto gltf_mesh = gltf_data_->meshes + i;
+            uint32_t location = 0;
             for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
             {
                 auto gltf_prim = gltf_mesh->primitives + j;
@@ -403,20 +485,23 @@ void RenderScene::Upload(RenderContext* context, bool keep_gltf_data_)
                         layout.attributes[k].binding = binding;
                         layout.attributes[k].offset = offset;
                         bindingOffsetMap[binding] = offset + gltf_attrib->data->stride;
-                        const auto location = bindingLocationMap[binding];
                         layout.attributes[k].location = location;
-                        bindingLocationMap[binding] = location + 1;
+                        location = location + 1;
                     }
                 }
-                context->GetRenderDevice()->AddVertexLayout(layout);
+                // pso
+                PipelineKey pplKey = {};
+                pplKey.vertex_layout_id_ = context->GetRenderDevice()->AddVertexLayout(layout);
+                pplKey.root_sig_ = context->GetRenderDevice()->GetCGPUSignature();
+                pplKey.wireframe_mode_ = false;
+                meshes_[i].primitives_[j].pipeline_ = context->GetRenderDevice()->CreateRenderPipeline(pplKey);
+                meshes_[i].primitives_[j].desc_set_ = nullptr;
+
                 // reset binding offsets & locations
                 for (auto&& iter : bindingOffsetMap)
                     iter.second = 0;
-                for (auto&& iter : bindingLocationMap)
-                    iter.second = 0;
             }
         }
-
         gpu_memory_ready = true;
         gpu_geometry_fence = context->GetRenderDevice()->AllocFence();
         // staging buffer
@@ -446,14 +531,16 @@ void RenderScene::Upload(RenderContext* context, bool keep_gltf_data_)
                 address_cursor += gltf_data_->buffers[i].size;
             }
         }
-        eastl::vector<CGpuBufferToBufferTransfer> transfers(viewVBBindingMap.size());
+        eastl::vector<ECGpuResourceState> dst_states(viewVBBindingMap.size() + 1);
+        eastl::vector<CGpuBufferToBufferTransfer> transfers(viewVBBindingMap.size() + 1);
         // transfer
         transfers[0].src = staging_buffer_;
         transfers[0].src_offset = bufferRangeMap[indices_view->buffer].first + indices_view->offset;
         transfers[0].dst = index_buffer_;
         transfers[0].dst_offset = 0;
         transfers[0].size = indices_view->size;
-        for (uint32_t i = 1; i < viewVBBindingMap.size(); i++)
+        dst_states[0] = RESOURCE_STATE_INDEX_BUFFER;
+        for (uint32_t i = 1; i < viewVBBindingMap.size() + 1; i++)
         {
             const cgltf_buffer_view* cgltfBufferView = viewVBBindingMap.at(i - 1).first;
             const cgltf_buffer* cgltfBuffer = cgltfBufferView->buffer;
@@ -462,8 +549,10 @@ void RenderScene::Upload(RenderContext* context, bool keep_gltf_data_)
             transfers[i].dst = vertex_buffers_[i - 1];
             transfers[i].dst_offset = 0;
             transfers[i].size = cgltfBufferView->size;
+            dst_states[i] = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
         }
-        gpu_geometry_semaphore = context->GetRenderDevice()->AsyncTransfer(transfers.data(), transfers.size(), gpu_geometry_fence);
+        gpu_geometry_semaphore = context->GetRenderDevice()->AsyncTransfer(
+            transfers.data(), dst_states.data(), transfers.size(), gpu_geometry_fence);
     }
 }
 
