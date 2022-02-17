@@ -966,7 +966,7 @@ typedef struct CGpuRenderPipelineDescriptor {
     const CGpuPipelineShaderDescriptor* tese_shader;
     const CGpuPipelineShaderDescriptor* geom_shader;
     const CGpuPipelineShaderDescriptor* fragment_shader;
-    CGpuVertexLayout* vertex_layout;
+    const CGpuVertexLayout* vertex_layout;
     const CGpuBlendStateDescriptor* blend_state;
     const CGpuDepthStateDescriptor* depth_state;
     const CGpuRasterizerStateDescriptor* rasterizer_state;
@@ -999,10 +999,12 @@ typedef struct CGpuDescriptorSet {
 
 typedef struct CGpuComputePipeline {
     CGpuDeviceId device;
+    CGpuRootSignatureId root_signature;
 } CGpuComputePipeline;
 
 typedef struct CGpuRenderPipeline {
     CGpuDeviceId device;
+    CGpuRootSignatureId root_signature;
 } CGpuRenderPipeline;
 
 // Resources
