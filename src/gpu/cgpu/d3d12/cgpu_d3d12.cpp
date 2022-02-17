@@ -1165,8 +1165,17 @@ void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuR
                 pBarrier->Transition.pResource = pBuffer->pDxResource;
                 pBarrier->Transition.Subresource =
                     D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                pBarrier->Transition.StateBefore = D3D12Util_TranslateResourceState(pTransBarrier->src_state);
-                pBarrier->Transition.StateAfter = D3D12Util_TranslateResourceState(pTransBarrier->dst_state);
+
+                if (pTransBarrier->queue_acquire)
+                    pBarrier->Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+                else
+                    pBarrier->Transition.StateBefore = D3D12Util_TranslateResourceState(pTransBarrier->src_state);
+
+                if (pTransBarrier->queue_release)
+                    pBarrier->Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+                else
+                    pBarrier->Transition.StateAfter = D3D12Util_TranslateResourceState(pTransBarrier->dst_state);
+
                 ++transitionCount;
             }
         }
