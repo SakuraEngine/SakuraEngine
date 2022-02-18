@@ -727,7 +727,7 @@ typedef struct CGpuQueueSubmitDescriptor {
 
 typedef struct CGpuQueuePresentDescriptor {
     CGpuSwapChainId swapchain;
-    CGpuSemaphoreId* wait_semaphores;
+    const CGpuSemaphoreId* wait_semaphores;
     uint32_t wait_semaphore_count;
     uint8_t index;
 } CGpuQueuePresentDescriptor;
