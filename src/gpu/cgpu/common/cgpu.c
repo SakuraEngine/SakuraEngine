@@ -941,6 +941,22 @@ bool CGpuUtil_ShaderResourceIsRootConst(CGpuShaderResource* resource, const stru
     return false;
 }
 
+char8_t* duplicate_string(const char8_t* src_string)
+{
+    if (src_string != CGPU_NULLPTR)
+    {
+        const size_t source_len = strlen(src_string);
+        char8_t* result = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
+#ifdef _WIN32
+        strcpy_s((char8_t*)result, source_len + 1, src_string);
+#else
+        strcpy((char8_t*)result, src_string);
+#endif
+        return result;
+    }
+    return CGPU_NULLPTR;
+}
+
 // 这是一个非常复杂的过程，牵扯到大量的move和join操作。具体的逻辑如下：
 // 1.对desc中每个Shader进行遍历，在它们的运行时反射信息中拿取ShaderEntry的反射绑定；
 // 2.对Entry进行遍历，获取到实际的RootSignature上的Set（Table）数量，以及PipelineType；
@@ -1074,17 +1090,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     for (uint32_t i = 0; i < RS->push_constant_count; i++)
     {
         CGpuShaderResource* dst = RS->push_constants + i;
-        const char* src_name = dst->name;
-        if (src_name != CGPU_NULL)
-        {
-            const size_t source_len = strlen(src_name);
-            dst->name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
-#ifdef _WIN32
-            strcpy_s((char8_t*)dst->name, source_len + 1, src_name);
-#else
-            strcpy((char8_t*)dst->name, src_name);
-#endif
-        }
+        dst->name = duplicate_string(dst->name);
     }
     for (uint32_t i = 0; i < RS->table_count; i++)
     {
@@ -1092,17 +1098,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
         for (uint32_t j = 0; j < set_to_record->resources_count; j++)
         {
             CGpuShaderResource* dst = &set_to_record->resources[j];
-            const char* src_name = dst->name;
-            if (src_name != CGPU_NULL)
-            {
-                const size_t source_len = strlen(src_name);
-                dst->name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
-#ifdef _WIN32
-                strcpy_s((char8_t*)dst->name, source_len + 1, src_name);
-#else
-                strcpy((char8_t*)dst->name, src_name);
-#endif
-            }
+            dst->name = duplicate_string(dst->name);
         }
     }
 }
