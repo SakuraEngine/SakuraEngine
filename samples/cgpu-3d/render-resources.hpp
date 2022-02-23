@@ -15,23 +15,34 @@ struct RenderResource {
         while (!resource_handle_ready_) {}
     }
     std::atomic_bool resource_handle_ready_;
+};
+
+struct RenderMemoryResource : public RenderResource {
     CGpuFenceId upload_ready_fence_;
     CGpuSemaphoreId upload_ready_semaphore;
 };
 
-struct RenderBuffer : public RenderResource {
+struct RenderBuffer : public RenderMemoryResource {
     void Initialize(struct RenderAuxThread* aux_thread, const CGpuBufferDescriptor& buffer_desc);
     void Destroy(struct RenderAuxThread* aux_thread);
 
     CGpuBufferId buffer_;
 };
 
-struct RenderTexture : public RenderResource {
+struct RenderTexture : public RenderMemoryResource {
     void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, bool default_srv = true);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc);
     void Destroy(struct RenderAuxThread* aux_thread);
 
     CGpuTextureId texture_;
     CGpuTextureViewId view_;
+};
+
+struct RenderShader : public RenderResource {
+    void Initialize(struct RenderAuxThread* aux_thread, const CGpuShaderLibraryDescriptor& desc);
+    void Destroy(struct RenderAuxThread* aux_thread);
+
+    CGpuShaderLibraryId shader_;
 };
 
 using AuxThreadTask = eastl::function<void(CGpuDeviceId)>;
