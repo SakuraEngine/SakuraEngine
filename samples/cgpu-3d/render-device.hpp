@@ -5,6 +5,7 @@
 #include <EASTL/vector_map.h>
 #include <EASTL/unordered_set.h>
 #include <EASTL/unordered_map.h>
+#include <EASTL/string.h>
 
 struct PipelineKey {
     uint32_t vertex_layout_id_;
@@ -34,14 +35,31 @@ struct equal_to<PipelineKey> {
 };
 } // namespace eastl
 
+class RenderWindow
+{
+    friend class RenderDevice;
+
+public:
+    RenderWindow() = default;
+    void Destroy();
+
+    // window
+    SDL_Window* sdl_window_;
+    SDL_SysWMinfo wmInfo;
+    // surface and swapchain
+    CGpuSurfaceId surface_;
+    CGpuSwapChainId swapchain_;
+    CGpuTextureViewId views_[3] = { nullptr, nullptr, nullptr };
+    CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
+    CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
+};
+
 // D3D11-CreateDeviceAndSwapChain
 class RenderDevice
 {
 public:
-    void Initialize(ECGpuBackend backend);
+    void Initialize(ECGpuBackend backend, RenderWindow** render_window);
     void Destroy();
-    const eastl::cached_hashset<CGpuVertexLayout>* GetVertexLayouts() const;
-    size_t AddVertexLayout(const CGpuVertexLayout& layout);
 
     const uint32_t* get_vertex_shader();
     const uint32_t get_vertex_shader_size();
@@ -66,29 +84,29 @@ public:
     CGpuRenderPipelineId CreateRenderPipeline(const PipelineKey& key);
     CGpuDescriptorSetId CreateDescriptorSet(const CGpuRootSignatureId signature, uint32_t set_index);
     void FreeDescriptorSet(CGpuDescriptorSetId desc_set);
-    uint32_t AcquireNextFrame(const CGpuAcquireNextDescriptor& acquire);
-    void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
+    uint32_t AcquireNextFrame(RenderWindow* window, const CGpuAcquireNextDescriptor& acquire);
+    void Present(RenderWindow* window, uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
     void Submit(class RenderContext* context);
     void WaitIdle();
     void CollectGarbage(bool wait_idle = false);
 
-    // window
-    SDL_Window* sdl_window_;
-    SDL_SysWMinfo wmInfo;
-    // surface and swapchain
-    CGpuSurfaceId surface_;
-    CGpuSwapChainId swapchain_;
-    CGpuTextureViewId views_[3] = { nullptr, nullptr, nullptr };
-    CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
-    CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
+    // TODO: Async Resource & Management
+    eastl::pair<CGpuTextureId, CGpuTextureViewId> GetSampledTexture(const char* name);
+    eastl::pair<CGpuTextureId, CGpuTextureViewId> SyncCreateSampledTexture(const char* name,
+        uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM);
+    eastl::pair<CGpuTextureId, CGpuTextureViewId> SyncUploadSampledTexture(const char* name,
+        const void* data, size_t data_size);
+
+    static const eastl::cached_hashset<CGpuVertexLayout>* GetVertexLayouts();
+    static size_t AddVertexLayout(const CGpuVertexLayout& layout);
 
 protected:
     void freeRenderPipeline(CGpuRenderPipelineId pipeline);
-
     void asyncTransfer(const CGpuBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,
         uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
 
     ECGpuBackend backend_;
+    ECGpuFormat screen_format_;
     // instance & adapter & device
     CGpuInstanceId instance_;
     CGpuAdapterId adapter_;
@@ -99,8 +117,7 @@ protected:
     CGpuQueueId cpy_queue_;
     eastl::vector_map<CGpuSemaphoreId, CGpuCommandBufferId> cpy_cmds;
     // textures
-    CGpuTextureId default_texture_;
-    CGpuTextureViewId default_texture_view_;
+    eastl::vector_map<eastl::string, eastl::pair<CGpuTextureId, CGpuTextureViewId>> sampled_textures_;
     // samplers
     CGpuSamplerId default_sampler_;
     // shaders & root_sigs
@@ -111,12 +128,12 @@ protected:
     // async transfers
     eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
     // vertex layouts
-    eastl::cached_hashset<CGpuVertexLayout> vertex_layouts_;
+    static eastl::cached_hashset<CGpuVertexLayout> vertex_layouts_;
     // pipelines
     eastl::unordered_map<PipelineKey, CGpuRenderPipelineId> pipelines_;
 };
 
-FORCEINLINE const eastl::cached_hashset<CGpuVertexLayout>* RenderDevice::GetVertexLayouts() const
+FORCEINLINE const eastl::cached_hashset<CGpuVertexLayout>* RenderDevice::GetVertexLayouts()
 {
     return &vertex_layouts_;
 }
