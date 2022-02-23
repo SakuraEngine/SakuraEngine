@@ -66,11 +66,14 @@ void RenderBuffer::Destroy(struct RenderAuxThread* aux_thread)
         cgpu_free_fence(upload_ready_fence_);
         cgpu_free_semaphore(upload_ready_semaphore);
         buffer_ = nullptr;
+        upload_ready_fence_ = nullptr;
+        upload_ready_semaphore = nullptr;
     });
 }
 
 // Render Texture
-void RenderTexture::Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, bool default_srv)
+void RenderTexture::Initialize(struct RenderAuxThread* aux_thread,
+    const CGpuTextureDescriptor& tex_desc, bool default_srv)
 {
     aux_thread->Enqueue([=](CGpuDeviceId device) {
         texture_ = cgpu_create_texture(device, &tex_desc);
@@ -97,6 +100,18 @@ void RenderTexture::Initialize(struct RenderAuxThread* aux_thread, const CGpuTex
     });
 }
 
+void RenderTexture::Initialize(struct RenderAuxThread* aux_thread,
+    const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc)
+{
+    aux_thread->Enqueue([=](CGpuDeviceId device) {
+        texture_ = cgpu_create_texture(device, &tex_desc);
+        view_ = cgpu_create_texture_view(device, &tex_view_desc);
+        upload_ready_fence_ = cgpu_create_fence(device);
+        upload_ready_semaphore = cgpu_create_semaphore(device);
+        resource_handle_ready_ = true;
+    });
+}
+
 void RenderTexture::Destroy(struct RenderAuxThread* aux_thread)
 {
     aux_thread->Enqueue([this](CGpuDeviceId device) {
@@ -105,5 +120,24 @@ void RenderTexture::Destroy(struct RenderAuxThread* aux_thread)
         cgpu_free_fence(upload_ready_fence_);
         cgpu_free_semaphore(upload_ready_semaphore);
         texture_ = nullptr;
+        view_ = nullptr;
+        upload_ready_fence_ = nullptr;
+        upload_ready_semaphore = nullptr;
+    });
+}
+
+void RenderShader::Initialize(struct RenderAuxThread* aux_thread, const CGpuShaderLibraryDescriptor& desc)
+{
+    aux_thread->Enqueue([=](CGpuDeviceId device) {
+        shader_ = cgpu_create_shader_library(device, &desc);
+        resource_handle_ready_ = true;
+    });
+}
+
+void RenderShader::Destroy(struct RenderAuxThread* aux_thread)
+{
+    aux_thread->Enqueue([this](CGpuDeviceId device) {
+        cgpu_free_shader_library(shader_);
+        shader_ = nullptr;
     });
 }

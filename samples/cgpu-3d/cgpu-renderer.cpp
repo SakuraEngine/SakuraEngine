@@ -161,8 +161,8 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
 #if defined(_WIN32) || defined(_WIN64)
     render_window->surface_ = cgpu_surface_from_hwnd(device_, render_window->wmInfo.info.win.window);
 #elif defined(__APPLE__)
-    struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(wmInfo.info.cocoa.window);
-    surface_ = cgpu_surface_from_ns_view(device_, ns_view);
+    struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(render_window->wmInfo.info.cocoa.window);
+    render_window->surface_ = cgpu_surface_from_ns_view(device_, ns_view);
 #endif
     CGpuSwapChainDescriptor swapchain_desc = {};
     swapchain_desc.presentQueues = &gfx_queue_;
@@ -218,6 +218,7 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     vs_desc.code = get_vertex_shader();
     vs_desc.code_size = get_vertex_shader_size();
     vs_library_ = cgpu_create_shader_library(device_, &vs_desc);
+    RenderMemoryResource async_fs = {};
     CGpuShaderLibraryDescriptor fs_desc = {};
     fs_desc.name = "FragmentShaderLibrary";
     fs_desc.stage = SHADER_STAGE_FRAG;
