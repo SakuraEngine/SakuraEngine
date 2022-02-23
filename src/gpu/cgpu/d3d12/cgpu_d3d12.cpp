@@ -1331,7 +1331,10 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
 #ifdef __ID3D12GraphicsCommandList4_FWD_DEFINED__
     ID3D12GraphicsCommandList4* CmdList4 = (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList;
     DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValues[MAX_MRT_COUNT]);
+    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearDepth);
+    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearStencil);
     DECLARE_ZERO(D3D12_RENDER_PASS_RENDER_TARGET_DESC, renderPassRenderTargetDescs[MAX_MRT_COUNT]);
+    DECLARE_ZERO(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC, renderPassDepthStencilDesc);
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
         CGpuTextureView_D3D12* TV = (CGpuTextureView_D3D12*)desc->color_attachments[i].view;
@@ -1349,15 +1352,38 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
         renderPassRenderTargetDescs[i].BeginningAccess = { beginningAccess, { clearValues[i] } };
         renderPassRenderTargetDescs[i].EndingAccess = { endingAccess, {} };
     }
-    /*
-        D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessNoAccess{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
-        D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessNoAccess{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS, {} };
-        D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{ dsvCPUDescriptorHandle, renderPassBeginningAccessNoAccess, renderPassBeginningAccessNoAccess, renderPassEndingAccessNoAccess, renderPassEndingAccessNoAccess };
-    */
+    // depth stencil
+    if (desc->depth_stencil != nullptr && desc->depth_stencil->view != nullptr)
+    {
+        CGpuTextureView_D3D12* DTV = (CGpuTextureView_D3D12*)desc->depth_stencil->view;
+        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE dBeginingAccess =
+            gDx12PassBeginOpTranslator[desc->depth_stencil->depth_load_action];
+        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE sBeginingAccess =
+            gDx12PassBeginOpTranslator[desc->depth_stencil->stencil_load_action];
+        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE dEndingAccess =
+            gDx12PassEndOpTranslator[desc->depth_stencil->depth_store_action];
+        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE sEndingAccess =
+            gDx12PassEndOpTranslator[desc->depth_stencil->stencil_store_action];
+        clearDepth.Format = DXGIUtil_TranslatePixelFormat(desc->depth_stencil->view->info.format);
+        clearDepth.Color[0] = desc->depth_stencil->clear_depth;
+        clearDepth.Color[1] = desc->depth_stencil->clear_depth;
+        clearDepth.Color[2] = desc->depth_stencil->clear_depth;
+        clearDepth.Color[3] = desc->depth_stencil->clear_depth;
+        clearStencil.Format = DXGIUtil_TranslatePixelFormat(desc->depth_stencil->view->info.format);
+        clearStencil.Color[0] = desc->depth_stencil->clear_stencil;
+        clearStencil.Color[1] = desc->depth_stencil->clear_stencil;
+        clearStencil.Color[2] = desc->depth_stencil->clear_stencil;
+        clearStencil.Color[3] = desc->depth_stencil->clear_stencil;
+        renderPassDepthStencilDesc.cpuDescriptor = DTV->mDxRtvDsvDescriptorHandle;
+        renderPassDepthStencilDesc.DepthBeginningAccess = { dBeginingAccess, { clearDepth } };
+        renderPassDepthStencilDesc.DepthEndingAccess = { dEndingAccess };
+        renderPassDepthStencilDesc.StencilBeginningAccess = { sBeginingAccess, { clearStencil } };
+        renderPassDepthStencilDesc.StencilEndingAccess = { sEndingAccess };
+    }
     D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderPassRenderTargetDesc = renderPassRenderTargetDescs;
-    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pRenderPassDepthStencilDesc = nullptr;
+    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pRenderPassDepthStencilDesc = &renderPassDepthStencilDesc;
     CmdList4->BeginRenderPass(desc->render_target_count,
-        pRenderPassRenderTargetDesc, pRenderPassDepthStencilDesc /*&renderPassDepthStencilDesc*/,
+        pRenderPassRenderTargetDesc, pRenderPassDepthStencilDesc,
         D3D12_RENDER_PASS_FLAG_NONE);
     return (CGpuRenderPassEncoderId)&Cmd->super;
 #endif

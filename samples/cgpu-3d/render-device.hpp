@@ -64,6 +64,23 @@ public:
     CGpuFenceId AllocFence();
     void FreeFence(CGpuFenceId fence);
     CGpuRenderPipelineId CreateRenderPipeline(const PipelineKey& key);
+    CGpuDescriptorSetId CreateDescriptorSet(const CGpuRootSignatureId signature, uint32_t set_index);
+    void FreeDescriptorSet(CGpuDescriptorSetId desc_set);
+    uint32_t AcquireNextFrame(const CGpuAcquireNextDescriptor& acquire);
+    void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
+    void Submit(class RenderContext* context);
+    void WaitIdle();
+    void CollectGarbage(bool wait_idle = false);
+
+    // window
+    SDL_Window* sdl_window_;
+    SDL_SysWMinfo wmInfo;
+    // surface and swapchain
+    CGpuSurfaceId surface_;
+    CGpuSwapChainId swapchain_;
+    CGpuTextureViewId views_[3] = { nullptr, nullptr, nullptr };
+    CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
+    CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
 
 protected:
     void freeRenderPipeline(CGpuRenderPipelineId pipeline);
@@ -72,9 +89,6 @@ protected:
         uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
 
     ECGpuBackend backend_;
-    // window
-    SDL_Window* sdl_window_;
-    SDL_SysWMinfo wmInfo;
     // instance & adapter & device
     CGpuInstanceId instance_;
     CGpuAdapterId adapter_;
@@ -84,9 +98,9 @@ protected:
     CGpuCommandPoolId cpy_cmd_pool_;
     CGpuQueueId cpy_queue_;
     eastl::vector_map<CGpuSemaphoreId, CGpuCommandBufferId> cpy_cmds;
-    // surface and swapchain
-    CGpuSurfaceId surface_;
-    CGpuSwapChainId swapchain_;
+    // textures
+    CGpuTextureId default_texture_;
+    CGpuTextureViewId default_texture_view_;
     // samplers
     CGpuSamplerId default_sampler_;
     // shaders & root_sigs
@@ -94,6 +108,8 @@ protected:
     CGpuShaderLibraryId fs_library_;
     CGpuPipelineShaderDescriptor ppl_shaders_[2];
     CGpuRootSignatureId root_sig_;
+    // async transfers
+    eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
     // vertex layouts
     eastl::cached_hashset<CGpuVertexLayout> vertex_layouts_;
     // pipelines

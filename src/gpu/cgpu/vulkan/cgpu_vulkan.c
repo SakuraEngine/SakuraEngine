@@ -420,17 +420,15 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 strlen(desc->static_sampler_names[i]), (size_t)device);
         }
         // Collect push constants count
-        for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
-        {
-            CGpuParameterTable* param_table = &RS->super.tables[i_set];
-            for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
-            {
-                RS->mPushConstRangesCount += (param_table->resources[i_iter].type == RT_ROOT_CONSTANT);
-            }
-        }
-        RS->pPushConstRanges = (VkPushConstantRange*)cgpu_calloc(RS->mPushConstRangesCount, sizeof(VkPushConstantRange));
+        RS->pPushConstRanges = (VkPushConstantRange*)cgpu_calloc(RS->super.push_constant_count, sizeof(VkPushConstantRange));
         // Create Vk Objects
-        uint32_t i_const = 0;
+        for (uint32_t i_const = 0; i_const < RS->super.push_constant_count; i_const++)
+        {
+            RS->pPushConstRanges[i_const].stageFlags =
+                VkUtil_TranslateShaderUsages(RS->super.push_constants[i_const].stages);
+            RS->pPushConstRanges[i_const].size = RS->super.push_constants[i_const].size;
+            RS->pPushConstRanges[i_const].offset = RS->super.push_constants[i_const].offset;
+        }
         for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
         {
             SetLayout_Vulkan* set_to_record = &RS->pSetLayouts[i_set];
@@ -440,31 +438,20 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
             {
                 // Collect push constants
-                if (param_table->resources[i_iter].type == RT_ROOT_CONSTANT)
+                vkbindings[i_iter].binding = param_table->resources[i_iter].binding;
+                vkbindings[i_iter].stageFlags = VkUtil_TranslateShaderUsages(param_table->resources[i_iter].stages);
+                vkbindings[i_iter].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_iter].type);
+                vkbindings[i_iter].descriptorCount = param_table->resources[i_iter].size;
+                // Create static samplers
+                for (uint32_t i_ss = 0; i_ss < desc->static_sampler_count; i_ss++)
                 {
-                    RS->pPushConstRanges[i_const].stageFlags =
-                        VkUtil_TranslateShaderUsages(param_table->resources[i_iter].stages);
-                    RS->pPushConstRanges[i_const].size = param_table->resources[i_iter].size;
-                    RS->pPushConstRanges[i_const].offset = param_table->resources[i_iter].offset;
-                    i_const++;
-                }
-                else
-                {
-                    vkbindings[i_iter].binding = param_table->resources[i_iter].binding;
-                    vkbindings[i_iter].stageFlags = VkUtil_TranslateShaderUsages(param_table->resources[i_iter].stages);
-                    vkbindings[i_iter].descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_iter].type);
-                    vkbindings[i_iter].descriptorCount = param_table->resources[i_iter].size;
-                    // Create static samplers
-                    for (uint32_t i_ss = 0; i_ss < desc->static_sampler_count; i_ss++)
+                    if (param_table->resources[i_iter].name_hash == name_hashes[i_ss])
                     {
-                        if (param_table->resources[i_iter].name_hash == name_hashes[i_ss])
-                        {
-                            CGpuSampler_Vulkan* immutableSampler = (CGpuSampler_Vulkan*)desc->static_samplers[i_ss];
-                            vkbindings[i_iter].pImmutableSamplers = &immutableSampler->pVkSampler;
-                        }
+                        CGpuSampler_Vulkan* immutableSampler = (CGpuSampler_Vulkan*)desc->static_samplers[i_ss];
+                        vkbindings[i_iter].pImmutableSamplers = &immutableSampler->pVkSampler;
                     }
-                    i_binding++;
                 }
+                i_binding++;
             }
             VkDescriptorSetLayoutCreateInfo set_info = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
@@ -491,7 +478,7 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
         .flags = 0,
         .setLayoutCount = RS->super.table_count,
         .pSetLayouts = pSetLayouts,
-        .pushConstantRangeCount = RS->mPushConstRangesCount,
+        .pushConstantRangeCount = RS->super.push_constant_count,
         .pPushConstantRanges = RS->pPushConstRanges
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreatePipelineLayout(D->pVkDevice, &pipeline_info, GLOBAL_VkAllocationCallbacks, &RS->pPipelineLayout));
@@ -887,7 +874,6 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
             .scissorCount = 1,
             .pScissors = NULL
     };
-    
 	VkDynamicState dyn_states[] =
     {
         VK_DYNAMIC_STATE_VIEWPORT,
@@ -1391,7 +1377,8 @@ void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpu
         const CGpuTextureBarrier* texture_barrier = &desc->texture_barriers[i];
         CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)texture_barrier->texture;
         VkImageMemoryBarrier* pImageBarrier = NULL;
-        if (RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->src_state && RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->dst_state)
+        if (RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->src_state &&
+            RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->dst_state)
         {
             pImageBarrier = &TBs[imageBarrierCount++];
             pImageBarrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

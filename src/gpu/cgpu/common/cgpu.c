@@ -783,12 +783,6 @@ CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureD
     if (desc->mip_levels == 0) wdesc->mip_levels = 1;
     if (desc->depth == 0) wdesc->depth = 1;
     if (desc->sample_count == 0) wdesc->sample_count = 1;
-    if ((!desc->owner_queue) && (desc->start_state != RESOURCE_STATE_UNDEFINED))
-    {
-        cgpu_warn("warn: texture has a start_state of %d but no owner queue is setted!\n"
-                  "\tif texture is used with start_state, an owner queue must be set!",
-            desc->start_state);
-    }
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
     CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, desc);
     texture->device = device;
@@ -930,6 +924,31 @@ void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
 }
 
 // Common Utils
+bool CGpuUtil_ShaderResourceIsPushConst(CGpuShaderResource* resource, const struct CGpuRootSignatureDescriptor* desc)
+{
+    if (resource->type == RT_ROOT_CONSTANT) return true;
+    return false;
+}
+
+bool CGpuUtil_ShaderResourceIsRootConst(CGpuShaderResource* resource, const struct CGpuRootSignatureDescriptor* desc)
+{
+    if (resource->type == RT_ROOT_CONSTANT) return true;
+    for (uint32_t i = 0; i < desc->root_constant_count; i++)
+    {
+        if (strcmp(resource->name, desc->root_constant_names[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
+// 这是一个非常复杂的过程，牵扯到大量的move和join操作。具体的逻辑如下：
+// 1.对desc中每个Shader进行遍历，在它们的运行时反射信息中拿取ShaderEntry的反射绑定；
+// 2.对Entry进行遍历，获取到实际的RootSignature上的Set（Table）数量，以及PipelineType；
+// 3.确定每个Set上面的binding数量，这里的数量是最大值，确保我们开取足够的空间，会在后面进行进一步join。
+//   要注意的是Vulkan/GL标准的push_const不会占binding槽位，而D3D标准的root_const会占据Set上面的Binding槽位，因为它是虚拟映射的。
+// 4.遍历Entry收集信息。
+// 5.Join，合并ParmTable中的重复项。
+// 6.复制ShaderReflection中的各种名字到RootSig Reflection Table中。
 void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSignatureDescriptor* desc)
 {
     DECLARE_ZERO_VLA(CGpuShaderReflection*, entry_reflections, desc->shader_count)
@@ -973,16 +992,25 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     }
     // Count bindings for each set
     uint32_t* valid_bindings = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
+    uint32_t valid_root_constants = 0;
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
         for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
         {
             CGpuShaderResource* resource = &reflection->shader_resources[j];
-            valid_bindings[resource->set]++;
+            if (!CGpuUtil_ShaderResourceIsPushConst(resource, desc))
+                valid_bindings[resource->set]++;
+            if (CGpuUtil_ShaderResourceIsRootConst(resource, desc))
+                valid_root_constants++;
         }
     }
     // Resize param table
+    if (valid_root_constants)
+    {
+        RS->push_constant_count = valid_root_constants;
+        RS->push_constants = (CGpuShaderResource*)cgpu_calloc(set_count, sizeof(CGpuShaderResource));
+    }
     if (set_count)
     {
         RS->tables = (CGpuParameterTable*)cgpu_calloc(set_count, sizeof(CGpuParameterTable));
@@ -999,19 +1027,31 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     }
     cgpu_free(valid_bindings);
     // Collect shader resources
-    uint32_t* dst_bindings = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
-    for (uint32_t i = 0; i < desc->shader_count; i++)
+    uint32_t* dst_indices = (uint32_t*)cgpu_calloc(set_count, sizeof(uint32_t));
+    for (uint32_t i = 0, root_const_idx = 0; i < desc->shader_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
         for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
         {
             CGpuShaderResource* resource = &reflection->shader_resources[j];
-            CGpuShaderResource* dst = &RS->tables[resource->set].resources[dst_bindings[resource->set]];
-            memcpy(dst, resource, sizeof(CGpuShaderResource));
-            dst_bindings[resource->set]++;
+            CGpuShaderResource* table_dst = &RS->tables[resource->set].resources[dst_indices[resource->set]];
+            if (!CGpuUtil_ShaderResourceIsPushConst(resource, desc))
+            {
+                memcpy(table_dst, resource, sizeof(CGpuShaderResource));
+                dst_indices[resource->set]++;
+            }
+            if (CGpuUtil_ShaderResourceIsRootConst(resource, desc))
+            {
+                CGpuShaderResource* dst = RS->push_constants + root_const_idx;
+                memcpy(dst, resource, sizeof(CGpuShaderResource));
+                dst->type = RT_ROOT_CONSTANT;
+                if (!CGpuUtil_ShaderResourceIsPushConst(resource, desc))
+                    table_dst->type = RT_ROOT_CONSTANT;
+                root_const_idx += 1;
+            }
         }
     }
-    cgpu_free(dst_bindings);
+    cgpu_free(dst_indices);
     // Join
     for (uint32_t i = 0; i < RS->table_count; i++)
     {
@@ -1031,13 +1071,12 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
         }
     }
     // Store name
-    for (uint32_t i = 0; i < RS->table_count; i++)
+    for (uint32_t i = 0; i < RS->push_constant_count; i++)
     {
-        CGpuParameterTable* set_to_record = &RS->tables[i];
-        for (uint32_t j = 0; j < set_to_record->resources_count; j++)
+        CGpuShaderResource* dst = RS->push_constants + i;
+        const char* src_name = dst->name;
+        if (src_name != CGPU_NULL)
         {
-            CGpuShaderResource* dst = &set_to_record->resources[j];
-            const char* src_name = dst->name;
             const size_t source_len = strlen(src_name);
             dst->name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
 #ifdef _WIN32
@@ -1045,6 +1084,25 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
 #else
             strcpy((char8_t*)dst->name, src_name);
 #endif
+        }
+    }
+    for (uint32_t i = 0; i < RS->table_count; i++)
+    {
+        CGpuParameterTable* set_to_record = &RS->tables[i];
+        for (uint32_t j = 0; j < set_to_record->resources_count; j++)
+        {
+            CGpuShaderResource* dst = &set_to_record->resources[j];
+            const char* src_name = dst->name;
+            if (src_name != CGPU_NULL)
+            {
+                const size_t source_len = strlen(src_name);
+                dst->name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
+#ifdef _WIN32
+                strcpy_s((char8_t*)dst->name, source_len + 1, src_name);
+#else
+                strcpy((char8_t*)dst->name, src_name);
+#endif
+            }
         }
     }
 }
@@ -1066,10 +1124,21 @@ void CGpuUtil_FreeRSParamTables(CGpuRootSignature* RS)
                         cgpu_free((char8_t*)binding_to_free->name);
                     }
                 }
-
                 cgpu_free(param_table->resources);
             }
         }
         cgpu_free(RS->tables);
+    }
+    if (RS->push_constants != CGPU_NULLPTR)
+    {
+        for (uint32_t i = 0; i < RS->push_constant_count; i++)
+        {
+            CGpuShaderResource* binding_to_free = RS->push_constants + i;
+            if (binding_to_free->name != CGPU_NULLPTR)
+            {
+                cgpu_free((char8_t*)binding_to_free->name);
+            }
+        }
+        cgpu_free(RS->push_constants);
     }
 }

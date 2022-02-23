@@ -73,7 +73,7 @@ FORCEINLINE MatrixRegister look_at(
     const Vector3f Eye,
     const Vector3f At)
 {
-    return DirectX::XMMatrixLookAtLH(
+    return DirectX::XMMatrixLookAtRH(
         __vector::load_float3_w1(Eye.data_view()),
         __vector::load_float3_w1(At.data_view()),
         DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f));
@@ -85,7 +85,7 @@ FORCEINLINE MatrixRegister perspective_fov(
     float NearZ,
     float FarZ)
 {
-    return DirectX::XMMatrixPerspectiveFovLH(
+    return DirectX::XMMatrixPerspectiveFovRH(
         FovAngleY, AspectRatio, NearZ, FarZ);
 }
 
@@ -95,7 +95,7 @@ FORCEINLINE MatrixRegister ortho_projection(
     float NearZ,
     float FarZ)
 {
-    return DirectX::XMMatrixOrthographicLH(
+    return DirectX::XMMatrixOrthographicRH(
         ViewWidth, ViewHeight, NearZ, FarZ);
 }
 } // namespace __matrix
