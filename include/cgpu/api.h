@@ -989,6 +989,8 @@ typedef struct CGpuRootSignature {
     CGpuDeviceId device;
     CGpuParameterTable* tables;
     uint32_t table_count;
+    CGpuShaderResource* push_constants;
+    uint32_t push_constant_count;
     ECGpuPipelineType pipeline_type;
 } CGpuRootSignature;
 

@@ -18,7 +18,7 @@ struct Scale {
     Vector3f scale_ = Vector3f::vector_one();
 };
 
-// LH.
+// RH.
 struct alignas(16) Transform {
     using VectorStorage = __vector::VectorRegister;
 
