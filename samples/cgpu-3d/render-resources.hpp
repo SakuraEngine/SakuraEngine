@@ -2,60 +2,126 @@
 #include "cgpu/cgpux.hpp"
 #include "platform/thread.h"
 #include <EASTL/vector.h>
+#include <EASTL/vector_map.h>
+#include <EASTL/string.h>
 #include <atomic>
 
 // AsyncI/O & AsyncUpload
-// 1.1 CreateRenderMemeoryObject  |  (Then handles are available for drawcalls)  Aux Thread
+// 1.1 CreateRenderMemeoryObject  |                                              Aux Thread
 // 1.2 LoadDiskObject             |                                              I/O Thread
-//                              2.1 AsyncTransfer                                Main/Aux Thread
-//                              2.2 Acquire/Release Barrier                      Main/Aux Thread
-struct RenderResource {
+//                    (wait resource_handle_ready_)
+//                              2.1 AsyncTransfer                                Cmd Thread
+//                              2.2 Acquire/Release Barrier                      Cmd Thread
+//                    (wait upload_ready_fence_/semaphore_)
+// Then handles are available for drawcalls.
+struct AsyncRenderResource {
+    AsyncRenderResource() = default;
+    AsyncRenderResource(AsyncRenderResource&& rhs)
+        : resource_handle_ready_(rhs.resource_handle_ready_.load())
+    {
+    }
     inline virtual void Wait()
     {
         while (!resource_handle_ready_) {}
     }
-    std::atomic_bool resource_handle_ready_;
+    inline virtual bool Ready()
+    {
+        return resource_handle_ready_;
+    }
+    std::atomic_bool resource_handle_ready_ = false;
+};
+using AuxTaskCallback = eastl::function<void()>;
+using AuxThreadTask = eastl::function<void(CGpuDeviceId)>;
+using AuxThreadTaskWithCallback = eastl::pair<AuxThreadTask, AuxTaskCallback>;
+static const AuxTaskCallback defaultAuxCallback = +[]() {};
+
+struct AsyncRenderMemoryResource : public AsyncRenderResource {
+    AsyncRenderMemoryResource() = default;
+    AsyncRenderMemoryResource(AsyncRenderMemoryResource&&) = default;
 };
 
-struct RenderMemoryResource : public RenderResource {
-    CGpuFenceId upload_ready_fence_;
-    CGpuSemaphoreId upload_ready_semaphore;
-};
+struct AsyncRenderBuffer : public AsyncRenderMemoryResource {
+    AsyncRenderBuffer() = default;
+    AsyncRenderBuffer(AsyncRenderBuffer&&) = default;
 
-struct RenderBuffer : public RenderMemoryResource {
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuBufferDescriptor& buffer_desc);
-    void Destroy(struct RenderAuxThread* aux_thread);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGpuBufferDescriptor& buffer_desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
     CGpuBufferId buffer_;
 };
 
-struct RenderTexture : public RenderMemoryResource {
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, bool default_srv = true);
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc);
-    void Destroy(struct RenderAuxThread* aux_thread);
+struct AsyncRenderTexture : public AsyncRenderMemoryResource {
+    AsyncRenderTexture() = default;
+    AsyncRenderTexture(AsyncRenderTexture&&) = default;
+
+    void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const AuxTaskCallback& cb = defaultAuxCallback, bool default_srv = true);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
     CGpuTextureId texture_;
     CGpuTextureViewId view_;
 };
 
-struct RenderShader : public RenderResource {
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuShaderLibraryDescriptor& desc);
-    void Destroy(struct RenderAuxThread* aux_thread);
+struct AsyncRenderShader : public AsyncRenderResource {
+    AsyncRenderShader() = default;
+    AsyncRenderShader(AsyncRenderShader&&) = default;
+
+    void Initialize(struct RenderAuxThread* aux_thread, const CGpuShaderLibraryDescriptor& desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
     CGpuShaderLibraryId shader_;
 };
 
-using AuxThreadTask = eastl::function<void(CGpuDeviceId)>;
 struct RenderAuxThread {
     void Initialize(class RenderDevice* render_device);
     void Destroy();
 
     void Enqueue(const AuxThreadTask& task);
+    void Enqueue(const AuxThreadTaskWithCallback& task);
     void Wait();
     SThreadDesc aux_item_;
     SThreadHandle aux_thread_;
     SMutex load_mutex_;
-    CGpuDeviceId device_;
+    RenderDevice* render_device_;
     eastl::vector<AuxThreadTask> task_queue_;
+    eastl::vector<AuxThreadTaskWithCallback> task_queue2_;
     std::atomic_bool is_running_;
 };
+
+namespace eastl
+{
+template <typename T>
+using cached_hashset = hash_set<T, eastl::hash<T>, eastl::equal_to<T>, EASTLAllocatorType, true>;
+}
+
+struct RenderBlackboard {
+    static void Finalize(struct RenderAuxThread* aux_thread = nullptr);
+
+    static const eastl::cached_hashset<CGpuVertexLayout>* GetVertexLayouts();
+    static size_t AddVertexLayout(const CGpuVertexLayout& layout);
+
+    static AsyncRenderTexture* GetTexture(const char* name);
+    static AsyncRenderTexture* AddTexture(const char* name, struct RenderAuxThread* aux_thread, uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM);
+    static AsyncRenderTexture* UploadTexture(const char* name, RenderDevice* device, const void* data, size_t data_size);
+
+protected:
+    static eastl::vector_map<eastl::string, AsyncRenderTexture> textures_;
+    static eastl::cached_hashset<CGpuVertexLayout> vertex_layouts_;
+};
+
+FORCEINLINE const eastl::cached_hashset<CGpuVertexLayout>* RenderBlackboard::GetVertexLayouts()
+{
+    return &vertex_layouts_;
+}
+
+FORCEINLINE size_t RenderBlackboard::AddVertexLayout(const CGpuVertexLayout& layout)
+{
+    const auto hash = vertex_layouts_.get_hash_code(layout);
+    auto iter = vertex_layouts_.find_by_hash(hash);
+    if (iter == vertex_layouts_.end())
+    {
+        vertex_layouts_.insert(layout);
+        return hash;
+    }
+    return hash;
+}

@@ -30,6 +30,7 @@ struct RenderPrimitive {
     uint32_t material_id_;
     CGpuRenderPipelineId pipeline_;
     CGpuDescriptorSetId desc_set_;
+    // set by aux thread callback
     eastl::vector<CGpuBufferId> vertex_buffers_;
     eastl::vector<uint32_t> vertex_strides_;
     eastl::vector<uint32_t> vertex_offsets_;
@@ -49,25 +50,28 @@ class RenderScene
 {
 public:
     void Initialize(const char8_t* path);
-    void Upload(RenderContext* context, struct RenderAuxThread* aux_thread, bool keep_gltf_data = false);
-    void Destroy(struct RenderAuxThread* aux_thread);
+    // On AuxThread and not stuck the calling thread
+    void CreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void Upload(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void Destroy(struct RenderAuxThread* aux_thread = nullptr);
 
-    struct cgltf_data* gltf_data_ = nullptr;
     eastl::vector<RenderNode> nodes_;
     uint32_t root_node_index_;
     eastl::vector<RenderMesh> meshes_;
     eastl::vector_map<eastl::string, RenderMaterial> materials_;
 
-    std::atomic_bool load_ready_ = false;
-    std::atomic_bool gpu_memory_ready = false;
+    std::atomic_bool bufs_creation_ready_ = false;
+    std::atomic_uint32_t bufs_creation_counter_ = 0;
+    std::atomic_bool bufs_upload_started_ = false;
+    std::atomic_bool bufs_upload_ready_ = false;
 
     RenderContext* context_;
     CGpuSemaphoreId gpu_geometry_semaphore;
     CGpuFenceId gpu_geometry_fence;
 
-    RenderBuffer* vertex_buffers_;
+    AsyncRenderBuffer* vertex_buffers_;
     uint32_t vertex_buffer_count_ = 0;
-    RenderBuffer index_buffer_;
+    AsyncRenderBuffer index_buffer_;
     uint32_t index_stride_;
     CGpuBufferId staging_buffer_;
 
@@ -75,4 +79,7 @@ protected:
     int32_t loadNode(struct cgltf_node* src, int32_t parent_idx);
     int32_t loadMesh(struct cgltf_mesh* src);
     int32_t loadMaterial(struct cgltf_material* src);
+
+    struct cgltf_data* gltf_data_ = nullptr;
+    eastl::vector_map<struct cgltf_buffer_view*, uint32_t> viewVBIdxMap = {};
 };

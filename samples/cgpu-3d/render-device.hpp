@@ -2,6 +2,7 @@
 #include "../common/utils.h"
 #include "cgpu/cgpux.hpp"
 #include "shaders.h"
+#include "render-resources.hpp"
 #include <EASTL/vector_map.h>
 #include <EASTL/unordered_set.h>
 #include <EASTL/unordered_map.h>
@@ -15,9 +16,6 @@ struct PipelineKey {
 
 namespace eastl
 {
-template <typename T>
-using cached_hashset = hash_set<T, eastl::hash<T>, eastl::equal_to<T>, EASTLAllocatorType, true>;
-
 template <>
 struct hash<PipelineKey> {
     size_t operator()(const PipelineKey& val) const { return skr_hash(&val, sizeof(PipelineKey), 0); }
@@ -57,6 +55,8 @@ public:
 // D3D11-CreateDeviceAndSwapChain
 class RenderDevice
 {
+    friend struct RenderBlackboard;
+
 public:
     void Initialize(ECGpuBackend backend, RenderWindow** render_window);
     void Destroy();
@@ -90,16 +90,6 @@ public:
     void WaitIdle();
     void CollectGarbage(bool wait_idle = false);
 
-    // TODO: Async Resource & Management
-    eastl::pair<CGpuTextureId, CGpuTextureViewId> GetSampledTexture(const char* name);
-    eastl::pair<CGpuTextureId, CGpuTextureViewId> SyncCreateSampledTexture(const char* name,
-        uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM);
-    eastl::pair<CGpuTextureId, CGpuTextureViewId> SyncUploadSampledTexture(const char* name,
-        const void* data, size_t data_size);
-
-    static const eastl::cached_hashset<CGpuVertexLayout>* GetVertexLayouts();
-    static size_t AddVertexLayout(const CGpuVertexLayout& layout);
-
 protected:
     void freeRenderPipeline(CGpuRenderPipelineId pipeline);
     void asyncTransfer(const CGpuBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,
@@ -116,8 +106,6 @@ protected:
     CGpuCommandPoolId cpy_cmd_pool_;
     CGpuQueueId cpy_queue_;
     eastl::vector_map<CGpuSemaphoreId, CGpuCommandBufferId> cpy_cmds;
-    // textures
-    eastl::vector_map<eastl::string, eastl::pair<CGpuTextureId, CGpuTextureViewId>> sampled_textures_;
     // samplers
     CGpuSamplerId default_sampler_;
     // shaders & root_sigs
@@ -127,28 +115,9 @@ protected:
     CGpuRootSignatureId root_sig_;
     // async transfers
     eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
-    // vertex layouts
-    static eastl::cached_hashset<CGpuVertexLayout> vertex_layouts_;
     // pipelines
     eastl::unordered_map<PipelineKey, CGpuRenderPipelineId> pipelines_;
 };
-
-FORCEINLINE const eastl::cached_hashset<CGpuVertexLayout>* RenderDevice::GetVertexLayouts()
-{
-    return &vertex_layouts_;
-}
-
-FORCEINLINE size_t RenderDevice::AddVertexLayout(const CGpuVertexLayout& layout)
-{
-    const auto hash = vertex_layouts_.get_hash_code(layout);
-    auto iter = vertex_layouts_.find_by_hash(hash);
-    if (iter == vertex_layouts_.end())
-    {
-        vertex_layouts_.insert(layout);
-        return hash;
-    }
-    return hash;
-}
 
 FORCEINLINE const uint32_t* RenderDevice::get_vertex_shader()
 {
