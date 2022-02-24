@@ -104,19 +104,75 @@ static const char8_t* gGLTFAttributeTypeLUT[] = {
     "WEIGHTS"
 };
 
-eastl::cached_hashset<CGpuVertexLayout> RenderBlackboard::vertex_layouts_;
-eastl::vector_map<eastl::string, AsyncRenderTexture> RenderBlackboard::textures_;
-void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_window)
+void RenderWindow::Initialize(RenderDevice* render_device)
 {
-    *pprender_window = new RenderWindow();
-    RenderWindow* render_window = *pprender_window;
+    auto device_ = render_device->GetCGPUDevice();
     // create sdl window
-    render_window->sdl_window_ = SDL_CreateWindow(gCGpuBackendNames[backend],
+    sdl_window_ = SDL_CreateWindow(gCGpuBackendNames[render_device->backend_],
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-    SDL_VERSION(&render_window->wmInfo.version);
-    SDL_GetWindowWMInfo(render_window->sdl_window_, &render_window->wmInfo);
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(sdl_window_, &wmInfo);
+#if defined(_WIN32) || defined(_WIN64)
+    surface_ = cgpu_surface_from_hwnd(device_, wmInfo.info.win.window);
+#elif defined(__APPLE__)
+    struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(render_window->wmInfo.info.cocoa.window);
+    render_window->surface_ = cgpu_surface_from_ns_view(device_, ns_view);
+#endif
+    CGpuSwapChainDescriptor swapchain_desc = {};
+    swapchain_desc.presentQueues = &render_device->gfx_queue_;
+    swapchain_desc.presentQueuesCount = 1;
+    swapchain_desc.width = BACK_BUFFER_WIDTH;
+    swapchain_desc.height = BACK_BUFFER_HEIGHT;
+    swapchain_desc.surface = surface_;
+    swapchain_desc.imageCount = 3;
+    swapchain_desc.format = PF_R8G8B8A8_UNORM;
+    swapchain_desc.enableVsync = true;
+    swapchain_ = cgpu_create_swapchain(device_, &swapchain_desc);
+    for (uint32_t i = 0; i < swapchain_->buffer_count; i++)
+    {
+        CGpuTextureViewDescriptor view_desc = {};
+        view_desc.texture = swapchain_->back_buffers[i];
+        view_desc.aspects = TVA_COLOR;
+        view_desc.dims = TEX_DIMENSION_2D;
+        view_desc.format = (ECGpuFormat)swapchain_->back_buffers[i]->format;
+        view_desc.usages = TVU_RTV_DSV;
+        views_[i] = cgpu_create_texture_view(device_, &view_desc);
+        // create ds
+        CGpuTextureDescriptor ds_desc = {};
+        eastl::string name = "DepthStencil";
+        name += eastl::to_string(i);
+        ds_desc.name = name.c_str();
+        ds_desc.descriptors = RT_TEXTURE;
+        ds_desc.flags = TCF_OWN_MEMORY_BIT;
+        ds_desc.width = swapchain_->back_buffers[i]->width;
+        ds_desc.height = swapchain_->back_buffers[i]->height;
+        ds_desc.depth = 1;
+        ds_desc.format = PF_D24_UNORM_S8_UINT;
+        ds_desc.array_size = 1;
+        ds_desc.start_state = RESOURCE_STATE_DEPTH_WRITE;
+        ds_desc.owner_queue = render_device->gfx_queue_;
+        screen_ds_[i] = cgpu_create_texture(device_, &ds_desc);
+        CGpuTextureViewDescriptor ds_view_desc = {};
+        ds_view_desc.texture = screen_ds_[i];
+        ds_view_desc.format = PF_D24_UNORM_S8_UINT;
+        ds_view_desc.array_layer_count = 1;
+        ds_view_desc.base_array_layer = 0;
+        ds_view_desc.mip_level_count = 1;
+        ds_view_desc.base_mip_level = 0;
+        ds_view_desc.aspects = TVA_DEPTH;
+        ds_view_desc.dims = TEX_DIMENSION_2D;
+        ds_view_desc.usages = TVU_RTV_DSV;
+        screen_ds_view_[i] = cgpu_create_texture_view(device_, &ds_view_desc);
+    }
+}
+
+eastl::cached_hashset<CGpuVertexLayout> RenderBlackboard::vertex_layouts_;
+eastl::vector_map<eastl::string, AsyncRenderTexture> RenderBlackboard::textures_;
+eastl::unordered_map<PipelineKey, AsyncRenderPipeline> RenderBlackboard::pipelines_;
+void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_window)
+{
     // create backend device
     backend_ = backend;
     // create instance
@@ -159,59 +215,12 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     // copy cmd pool
     CGpuCommandPoolDescriptor pool_desc = {};
     cpy_cmd_pool_ = cgpu_create_command_pool(cpy_queue_, &pool_desc);
-#if defined(_WIN32) || defined(_WIN64)
-    render_window->surface_ = cgpu_surface_from_hwnd(device_, render_window->wmInfo.info.win.window);
-#elif defined(__APPLE__)
-    struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(render_window->wmInfo.info.cocoa.window);
-    render_window->surface_ = cgpu_surface_from_ns_view(device_, ns_view);
-#endif
-    CGpuSwapChainDescriptor swapchain_desc = {};
-    swapchain_desc.presentQueues = &gfx_queue_;
-    swapchain_desc.presentQueuesCount = 1;
-    swapchain_desc.width = BACK_BUFFER_WIDTH;
-    swapchain_desc.height = BACK_BUFFER_HEIGHT;
-    swapchain_desc.surface = render_window->surface_;
-    swapchain_desc.imageCount = 3;
-    swapchain_desc.format = PF_R8G8B8A8_UNORM;
-    swapchain_desc.enableVsync = true;
-    render_window->swapchain_ = cgpu_create_swapchain(device_, &swapchain_desc);
+
+    *pprender_window = new RenderWindow();
+    RenderWindow* render_window = *pprender_window;
+    render_window->Initialize(this);
     screen_format_ = (ECGpuFormat)render_window->swapchain_->back_buffers[0]->format;
-    for (uint32_t i = 0; i < render_window->swapchain_->buffer_count; i++)
-    {
-        CGpuTextureViewDescriptor view_desc = {};
-        view_desc.texture = render_window->swapchain_->back_buffers[i];
-        view_desc.aspects = TVA_COLOR;
-        view_desc.dims = TEX_DIMENSION_2D;
-        view_desc.format = (ECGpuFormat)render_window->swapchain_->back_buffers[i]->format;
-        view_desc.usages = TVU_RTV_DSV;
-        render_window->views_[i] = cgpu_create_texture_view(device_, &view_desc);
-        // create ds
-        CGpuTextureDescriptor ds_desc = {};
-        eastl::string name = "DepthStencil";
-        name += eastl::to_string(i);
-        ds_desc.name = name.c_str();
-        ds_desc.descriptors = RT_TEXTURE;
-        ds_desc.flags = TCF_OWN_MEMORY_BIT;
-        ds_desc.width = render_window->swapchain_->back_buffers[i]->width;
-        ds_desc.height = render_window->swapchain_->back_buffers[i]->height;
-        ds_desc.depth = 1;
-        ds_desc.format = PF_D24_UNORM_S8_UINT;
-        ds_desc.array_size = 1;
-        ds_desc.start_state = RESOURCE_STATE_DEPTH_WRITE;
-        ds_desc.owner_queue = gfx_queue_;
-        render_window->screen_ds_[i] = cgpu_create_texture(device_, &ds_desc);
-        CGpuTextureViewDescriptor ds_view_desc = {};
-        ds_view_desc.texture = render_window->screen_ds_[i];
-        ds_view_desc.format = PF_D24_UNORM_S8_UINT;
-        ds_view_desc.array_layer_count = 1;
-        ds_view_desc.base_array_layer = 0;
-        ds_view_desc.mip_level_count = 1;
-        ds_view_desc.base_mip_level = 0;
-        ds_view_desc.aspects = TVA_DEPTH;
-        ds_view_desc.dims = TEX_DIMENSION_2D;
-        ds_view_desc.usages = TVU_RTV_DSV;
-        render_window->screen_ds_view_[i] = cgpu_create_texture_view(device_, &ds_view_desc);
-    }
+
     // create default shaders & resources
     CGpuShaderLibraryDescriptor vs_desc = {};
     vs_desc.name = "VertexShaderLibrary";
@@ -352,6 +361,63 @@ AsyncRenderTexture* RenderBlackboard::UploadTexture(const char* name,
     return target;
 }
 
+AsyncRenderPipeline* RenderBlackboard::GetRenderPipeline(const PipelineKey& key)
+{
+    auto&& iter = pipelines_.find(key);
+    if (iter != pipelines_.end()) return &iter->second;
+    return nullptr;
+}
+
+AsyncRenderPipeline* RenderBlackboard::AddRenderPipeline(RenderAuxThread* aux_thread, const PipelineKey& key, const AuxTaskCallback& cb)
+{
+    {
+        auto found = GetRenderPipeline(key);
+        if (found != nullptr)
+            return found;
+    }
+    pipelines_.insert(key);
+    auto ppl = GetRenderPipeline(key);
+    auto descHeap = new eastl::tuple<
+        CGpuRasterizerStateDescriptor,
+        CGpuRenderPipelineDescriptor,
+        CGpuDepthStateDescriptor,
+        ECGpuFormat>();
+    auto&& rasterizer_state = eastl::get<CGpuRasterizerStateDescriptor>(*descHeap);
+    rasterizer_state.cull_mode = CULL_MODE_BACK;
+    rasterizer_state.fill_mode = key.wireframe_mode_ ? FILL_MODE_WIREFRAME : FILL_MODE_SOLID;
+    // From glTF 2.0 specification:
+    // "For triangle primitives, the front face has a counter-clockwise (CCW) winding order."
+    rasterizer_state.front_face = FRONT_FACE_CCW;
+    rasterizer_state.slope_scaled_depth_bias = 0.f;
+    rasterizer_state.enable_depth_clamp = false;
+    rasterizer_state.enable_scissor = false;
+    rasterizer_state.enable_multi_sample = false;
+    rasterizer_state.depth_bias = 0;
+    auto&& rp_desc = eastl::get<CGpuRenderPipelineDescriptor>(*descHeap);
+    rp_desc.root_signature = key.root_sig_;
+    rp_desc.prim_topology = PRIM_TOPO_TRI_LIST;
+    auto viter = RenderBlackboard::GetVertexLayouts()->find_by_hash(key.vertex_layout_id_);
+    rp_desc.vertex_layout = &viter.get_node()->mValue;
+    rp_desc.vertex_shader = &aux_thread->render_device_->ppl_shaders_[0];
+    rp_desc.fragment_shader = &aux_thread->render_device_->ppl_shaders_[1];
+    rp_desc.rasterizer_state = &rasterizer_state;
+    auto&& ds_state = eastl::get<CGpuDepthStateDescriptor>(*descHeap);
+    ds_state.depth_write = true;
+    ds_state.depth_test = true;
+    ds_state.depth_func = CMP_GEQUAL;
+    ds_state.stencil_test = false;
+    rp_desc.depth_stencil_format = PF_D24_UNORM_S8_UINT;
+    rp_desc.depth_state = &ds_state;
+    rp_desc.render_target_count = 1;
+    auto&& color_format = eastl::get<ECGpuFormat>(*descHeap);
+    color_format = key.screen_format_;
+    rp_desc.color_formats = &color_format;
+    ppl->Initialize(aux_thread, rp_desc, [descHeap]() {
+        delete descHeap;
+    });
+    return ppl;
+}
+
 void RenderWindow::Destroy()
 {
     for (uint32_t i = 0; i < 3; i++)
@@ -369,8 +435,6 @@ void RenderWindow::Destroy()
 void RenderDevice::Destroy()
 {
     this->CollectGarbage(true);
-    for (auto iter : pipelines_)
-        cgpu_free_render_pipeline(iter.second);
     cgpu_free_sampler(default_sampler_);
     cgpu_free_root_signature(root_sig_);
     cgpu_free_shader_library(vs_library_);
@@ -422,7 +486,6 @@ void RenderDevice::asyncTransfer(const CGpuBufferToBufferTransfer* transfers,
     }
     CGpuCommandBufferDescriptor cmd_desc = {};
     CGpuCommandBufferId cmd = cgpu_create_command_buffer(cpy_cmd_pool_, &cmd_desc);
-    cpy_cmds[semaphore] = cmd;
     cgpu_cmd_begin(cmd);
     for (uint32_t i = 0; i < transfer_count; i++)
     {
@@ -467,44 +530,6 @@ void RenderDevice::CollectGarbage(bool wait_idle)
     {
         async_cpy_cmds_.erase(iter);
     }
-}
-
-CGpuRenderPipelineId RenderDevice::CreateRenderPipeline(const PipelineKey& key)
-{
-    auto iter = pipelines_.find(key);
-    if (iter != pipelines_.end()) return iter->second;
-    CGpuRasterizerStateDescriptor rasterizer_state = {};
-    rasterizer_state.cull_mode = CULL_MODE_BACK;
-    rasterizer_state.fill_mode = key.wireframe_mode_ ? FILL_MODE_WIREFRAME : FILL_MODE_SOLID;
-    // From glTF 2.0 specification:
-    // "For triangle primitives, the front face has a counter-clockwise (CCW) winding order."
-    rasterizer_state.front_face = FRONT_FACE_CCW;
-    rasterizer_state.slope_scaled_depth_bias = 0.f;
-    rasterizer_state.enable_depth_clamp = false;
-    rasterizer_state.enable_scissor = false;
-    rasterizer_state.enable_multi_sample = false;
-    rasterizer_state.depth_bias = 0;
-    CGpuRenderPipelineDescriptor rp_desc = {};
-    rp_desc.root_signature = key.root_sig_;
-    rp_desc.prim_topology = PRIM_TOPO_TRI_LIST;
-    auto viter = RenderBlackboard::GetVertexLayouts()->find_by_hash(key.vertex_layout_id_);
-    rp_desc.vertex_layout = &viter.get_node()->mValue;
-    rp_desc.vertex_shader = &ppl_shaders_[0];
-    rp_desc.fragment_shader = &ppl_shaders_[1];
-    rp_desc.render_target_count = 1;
-    rp_desc.rasterizer_state = &rasterizer_state;
-    CGpuDepthStateDescriptor ds_state = {};
-    ds_state.depth_write = true;
-    ds_state.depth_test = true;
-    ds_state.depth_func = CMP_GEQUAL;
-    ds_state.stencil_test = false;
-    rp_desc.depth_stencil_format = PF_D24_UNORM_S8_UINT;
-    rp_desc.depth_state = &ds_state;
-    ECGpuFormat color_format = screen_format_;
-    rp_desc.color_formats = &color_format;
-    auto new_pipeline = cgpu_create_render_pipeline(device_, &rp_desc);
-    pipelines_.insert({ key, new_pipeline });
-    return new_pipeline;
 }
 
 CGpuDescriptorSetId RenderDevice::CreateDescriptorSet(const CGpuRootSignatureId signature, uint32_t set_index)
@@ -700,7 +725,7 @@ int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_c
         location = location + 1;
     }
     newPrim.vertex_layout_id_ = (uint32_t)RenderBlackboard::AddVertexLayout(layout);
-    primitives_.emplace_back(newPrim);
+    primitives_.emplace_back(eastl::move(newPrim));
     index_cursor += newPrim.index_count_;
     return (int32_t)primitives_.size() - 1;
 }
@@ -807,6 +832,24 @@ void RenderScene::Initialize(const char8_t* path)
     }
 }
 
+void RenderScene::CreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread)
+{
+    for (uint32_t i = 0; i < meshes_.size(); i++)
+    {
+        auto& mesh = meshes_[i];
+        for (uint32_t j = 0; j < mesh.primitives_.size(); j++)
+        {
+            auto& prim = mesh.primitives_[j];
+            PipelineKey pplKey = {};
+            pplKey.vertex_layout_id_ = prim.vertex_layout_id_;
+            pplKey.root_sig_ = context->GetRenderDevice()->GetCGPUSignature();
+            pplKey.screen_format_ = context->GetRenderDevice()->GetScreenFormat();
+            pplKey.wireframe_mode_ = false;
+            RenderBlackboard::AddRenderPipeline(aux_thread, pplKey);
+        }
+    }
+}
+
 void RenderScene::CreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
 {
     auto renderDevice = context->GetRenderDevice();
@@ -891,13 +934,7 @@ void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thr
             auto gltf_mesh = gltf_data_->meshes + i;
             for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
             {
-                // create pso
-                PipelineKey pplKey = {};
-                pplKey.vertex_layout_id_ = meshes_[i].primitives_[j].vertex_layout_id_;
-                pplKey.root_sig_ = renderDevice->GetCGPUSignature();
-                pplKey.wireframe_mode_ = false;
-                meshes_[i].primitives_[j].pipeline_ = renderDevice->CreateRenderPipeline(pplKey);
-                meshes_[i].primitives_[j].desc_set_ = renderDevice->CreateDescriptorSet(pplKey.root_sig_, 0);
+                meshes_[i].primitives_[j].desc_set_ = renderDevice->CreateDescriptorSet(renderDevice->GetCGPUSignature(), 0);
             }
         }
         for (uint32_t i = 0; i < materials_.size(); i++)

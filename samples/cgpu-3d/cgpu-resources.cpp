@@ -169,9 +169,37 @@ void AsyncRenderShader::Destroy(struct RenderAuxThread* aux_thread, const AuxTas
     }
 }
 
+void AsyncRenderPipeline::Initialize(struct RenderAuxThread* aux_thread, const CGpuRenderPipelineDescriptor& desc, const AuxTaskCallback& cb)
+{
+    aux_thread->Enqueue({ [=](CGpuDeviceId device) {
+                             pipeline_ = cgpu_create_render_pipeline(device, &desc);
+                             resource_handle_ready_ = true;
+                         },
+        cb });
+}
+
+void AsyncRenderPipeline::Destroy(struct RenderAuxThread* aux_thread, const AuxTaskCallback& cb)
+{
+    auto destructor = [this](CGpuDeviceId device) {
+        cgpu_free_render_pipeline(pipeline_);
+        pipeline_ = nullptr;
+    };
+    if (aux_thread)
+        aux_thread->Enqueue({ destructor, cb });
+    else
+    {
+        destructor(pipeline_->device);
+        cb();
+    }
+}
+
 void RenderBlackboard::Finalize(struct RenderAuxThread* aux_thread)
 {
     for (auto&& iter : textures_)
+    {
+        iter.second.Destroy(aux_thread);
+    }
+    for (auto&& iter : pipelines_)
     {
         iter.second.Destroy(aux_thread);
     }
