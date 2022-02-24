@@ -28,7 +28,6 @@ struct RenderPrimitive {
     uint32_t index_count_;
     uint32_t vertex_layout_id_;
     uint32_t material_id_;
-    CGpuRenderPipelineId pipeline_;
     CGpuDescriptorSetId desc_set_;
     // set by aux thread callback
     eastl::vector<CGpuBufferId> vertex_buffers_;
@@ -50,6 +49,8 @@ class RenderScene
 {
 public:
     void Initialize(const char8_t* path);
+    // On AuxThread and not stuck the calling thread
+    void CreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread);
     // On AuxThread and not stuck the calling thread
     void CreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
     void Upload(RenderContext* context, struct RenderAuxThread* aux_thread);

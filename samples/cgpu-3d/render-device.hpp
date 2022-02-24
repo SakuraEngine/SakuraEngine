@@ -5,33 +5,7 @@
 #include "render-resources.hpp"
 #include <EASTL/vector_map.h>
 #include <EASTL/unordered_set.h>
-#include <EASTL/unordered_map.h>
 #include <EASTL/string.h>
-
-struct PipelineKey {
-    uint32_t vertex_layout_id_;
-    CGpuRootSignatureId root_sig_;
-    bool wireframe_mode_;
-};
-
-namespace eastl
-{
-template <>
-struct hash<PipelineKey> {
-    size_t operator()(const PipelineKey& val) const { return skr_hash(&val, sizeof(PipelineKey), 0); }
-};
-template <>
-struct equal_to<PipelineKey> {
-    size_t operator()(const PipelineKey& a, const PipelineKey& b) const
-    {
-        const bool equal =
-            (a.vertex_layout_id_ == b.vertex_layout_id_) &&
-            (a.wireframe_mode_ == b.wireframe_mode_) &&
-            (a.root_sig_ == b.root_sig_);
-        return equal;
-    }
-};
-} // namespace eastl
 
 class RenderWindow
 {
@@ -39,6 +13,7 @@ class RenderWindow
 
 public:
     RenderWindow() = default;
+    void Initialize(RenderDevice* render_device);
     void Destroy();
 
     // window
@@ -55,6 +30,7 @@ public:
 // D3D11-CreateDeviceAndSwapChain
 class RenderDevice
 {
+    friend class RenderWindow;
     friend struct RenderBlackboard;
 
 public:
@@ -67,6 +43,7 @@ public:
     const uint32_t get_fragment_shader_size();
     FORCEINLINE CGpuDeviceId GetCGPUDevice() { return device_; }
     FORCEINLINE CGpuQueueId GetCGPUQueue() { return gfx_queue_; }
+    FORCEINLINE ECGpuFormat GetScreenFormat() { return screen_format_; }
     FORCEINLINE CGpuRootSignatureId GetCGPUSignature() { return root_sig_; }
 
     template <typename Transfer>
@@ -81,7 +58,6 @@ public:
     void FreeSemaphore(CGpuSemaphoreId semaphore);
     CGpuFenceId AllocFence();
     void FreeFence(CGpuFenceId fence);
-    CGpuRenderPipelineId CreateRenderPipeline(const PipelineKey& key);
     CGpuDescriptorSetId CreateDescriptorSet(const CGpuRootSignatureId signature, uint32_t set_index);
     void FreeDescriptorSet(CGpuDescriptorSetId desc_set);
     uint32_t AcquireNextFrame(RenderWindow* window, const CGpuAcquireNextDescriptor& acquire);
@@ -105,7 +81,7 @@ protected:
     // cpy
     CGpuCommandPoolId cpy_cmd_pool_;
     CGpuQueueId cpy_queue_;
-    eastl::vector_map<CGpuSemaphoreId, CGpuCommandBufferId> cpy_cmds;
+    eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
     // samplers
     CGpuSamplerId default_sampler_;
     // shaders & root_sigs
@@ -113,10 +89,6 @@ protected:
     CGpuShaderLibraryId fs_library_;
     CGpuPipelineShaderDescriptor ppl_shaders_[2];
     CGpuRootSignatureId root_sig_;
-    // async transfers
-    eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
-    // pipelines
-    eastl::unordered_map<PipelineKey, CGpuRenderPipelineId> pipelines_;
 };
 
 FORCEINLINE const uint32_t* RenderDevice::get_vertex_shader()
