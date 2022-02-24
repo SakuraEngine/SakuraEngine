@@ -18,8 +18,14 @@ static PushConstants data = {};
 
 int main(int argc, char* argv[])
 {
-    eastl::string cmdArgv1 = argv[0];
-    ECGpuBackend cmdBackend = cmdArgv1 == "-dx12" ? CGPU_BACKEND_D3D12 : CGPU_BACKEND_VULKAN;
+    ECGpuBackend cmdBackend;
+    if (argc <= 1)
+        cmdBackend = CGPU_BACKEND_D3D12;
+    else
+    {
+        eastl::string cmdArgv1 = argv[1];
+        cmdBackend = cmdArgv1 == "-dx12" ? CGPU_BACKEND_D3D12 : CGPU_BACKEND_VULKAN;
+    }
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
     auto render_device = eastl::make_unique<RenderDevice>();
     RenderWindow* render_window = nullptr;
@@ -28,11 +34,14 @@ int main(int argc, char* argv[])
     auto aux_thread = eastl::make_unique<RenderAuxThread>();
     aux_thread->Initialize(render_device.get());
 
+    RenderBlackboard::AddTexture("DefaultTexture", aux_thread.get(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    RenderBlackboard::UploadTexture("DefaultTexture", render_device.get(), TEXTURE_DATA, sizeof(TEXTURE_DATA));
+
     auto render_context = eastl::make_unique<RenderContext>();
     render_context->Initialize(render_device.get());
     auto render_scene = eastl::make_unique<RenderScene>();
     render_scene->Initialize("./../Resources/scene.gltf");
-    render_scene->Upload(render_context.get(), aux_thread.get());
+    render_scene->CreateGPUMemory(render_context.get(), aux_thread.get());
     // wvp
     auto world = smath::make_transform(
         { 0.f, 0.f, 0.f },                                             // translation
@@ -94,41 +103,47 @@ int main(int argc, char* argv[])
         barrier_desc0.texture_barriers_count = 1;
         render_context->ResourceBarrier(barrier_desc0);
         {
+            // Begin render scene
             render_context->BeginRenderPass(rp_desc);
             render_context->SetViewport(0.0f, 0.0f,
                 (float)back_buffer->width, (float)back_buffer->height,
                 0.f, 1.f);
             render_context->SetScissor(0, 0, back_buffer->width, back_buffer->height);
-            // foreach prim
+            if (render_scene->bufs_creation_ready_ && !render_scene->bufs_upload_started_)
+            {
+                render_scene->Upload(render_context.get(), aux_thread.get());
+            }
             CGpuRenderPipelineId cached_pipeline = nullptr;
             CGpuDescriptorSetId cached_descset = nullptr;
-            for (uint32_t i = 0; i < render_scene->meshes_.size(); i++)
+            if (render_scene->bufs_upload_started_)
             {
-                auto& mesh = render_scene->meshes_[i];
-                for (uint32_t j = 0; j < mesh.primitives_.size(); j++)
+                for (uint32_t i = 0; i < render_scene->meshes_.size(); i++)
                 {
-                    auto& prim = mesh.primitives_[j];
-                    if (cached_pipeline != prim.pipeline_)
+                    auto& mesh = render_scene->meshes_[i];
+                    for (uint32_t j = 0; j < mesh.primitives_.size(); j++)
                     {
-                        render_context->BindPipeline(prim.pipeline_);
-                        cached_pipeline = prim.pipeline_;
+                        auto& prim = mesh.primitives_[j];
+                        if (cached_pipeline != prim.pipeline_)
+                        {
+                            render_context->BindPipeline(prim.pipeline_);
+                            cached_pipeline = prim.pipeline_;
+                        }
+                        if (cached_descset != prim.desc_set_)
+                        {
+                            render_context->BindDescriptorSet(prim.desc_set_);
+                            cached_descset = prim.desc_set_;
+                        }
+                        render_context->BindIndexBuffer(render_scene->index_buffer_.buffer_,
+                            render_scene->index_stride_, prim.index_offset_);
+                        const uint32_t vbc = prim.vertex_buffers_.size();
+                        render_context->BindVertexBuffers(
+                            vbc,
+                            prim.vertex_buffers_.data(),
+                            prim.vertex_strides_.data(),
+                            prim.vertex_offsets_.data());
+                        render_context->PushConstants(prim.pipeline_->root_signature, "root_constants", &data);
+                        render_context->DrawIndexedInstanced(prim.index_count_, prim.first_index_, 1, 0, 0);
                     }
-                    if (cached_descset != prim.desc_set_)
-                    {
-                        render_context->BindDescriptorSet(prim.desc_set_);
-                        cached_descset = prim.desc_set_;
-                    }
-                    render_scene->index_buffer_.Wait();
-                    render_context->BindIndexBuffer(
-                        render_scene->index_buffer_.buffer_, render_scene->index_stride_, prim.index_offset_);
-                    const uint32_t vbc = prim.vertex_buffers_.size();
-                    render_context->BindVertexBuffers(
-                        vbc,
-                        prim.vertex_buffers_.data(),
-                        prim.vertex_strides_.data(),
-                        prim.vertex_offsets_.data());
-                    render_context->PushConstants(prim.pipeline_->root_signature, "root_constants", &data);
-                    render_context->DrawIndexedInstanced(prim.index_count_, prim.first_index_, 1, 0, 0);
                 }
             }
             render_context->EndRenderPass();
@@ -148,10 +163,12 @@ int main(int argc, char* argv[])
     }
     render_device->FreeSemaphore(present_semaphore);
     render_device->WaitIdle();
-    render_scene->Destroy(aux_thread.get());
     render_context->Destroy();
-    render_window->Destroy();
+    aux_thread->Wait();
+    render_scene->Destroy();
+    RenderBlackboard::Finalize();
     aux_thread->Destroy();
+    render_window->Destroy();
     render_device->Destroy();
     return 0;
 }

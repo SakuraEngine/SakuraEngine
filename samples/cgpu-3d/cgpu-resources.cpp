@@ -9,12 +9,18 @@ void loaderFunction(void* data)
     {
         skr_acquire_mutex(&dt->load_mutex_);
         auto tasks = dt->task_queue_;
+        auto tasks2 = dt->task_queue2_;
         dt->task_queue_.clear();
+        dt->task_queue2_.clear();
         skr_release_mutex(&dt->load_mutex_);
-
         for (auto&& task : tasks)
         {
-            task(dt->device_);
+            task(dt->render_device_->GetCGPUDevice());
+        }
+        for (auto&& task : tasks2)
+        {
+            task.first(dt->render_device_->GetCGPUDevice());
+            task.second();
         }
         skr_thread_sleep(1);
     }
@@ -22,7 +28,7 @@ void loaderFunction(void* data)
 
 void RenderAuxThread::Initialize(class RenderDevice* render_device)
 {
-    device_ = render_device->GetCGPUDevice();
+    render_device_ = render_device;
     is_running_ = true;
     aux_item_.pData = this;
     aux_item_.pFunc = &loaderFunction;
@@ -35,109 +41,138 @@ void RenderAuxThread::Enqueue(const AuxThreadTask& task)
     task_queue_.emplace_back(task);
 }
 
+void RenderAuxThread::Enqueue(const AuxThreadTaskWithCallback& task)
+{
+    task_queue2_.emplace_back(task);
+}
+
 void RenderAuxThread::Wait()
 {
-    skr_join_thread(aux_thread_);
+    if (is_running_)
+    {
+        is_running_ = false;
+        skr_join_thread(aux_thread_);
+    }
 }
 
 void RenderAuxThread::Destroy()
 {
-    is_running_ = false;
     Wait();
     skr_destroy_mutex(&load_mutex_);
     skr_destroy_thread(aux_thread_);
 }
 
 // Render Buffer
-void RenderBuffer::Initialize(struct RenderAuxThread* aux_thread, const CGpuBufferDescriptor& buff_desc)
+void AsyncRenderBuffer::Initialize(struct RenderAuxThread* aux_thread, const CGpuBufferDescriptor& buff_desc, const AuxTaskCallback& cb)
 {
-    aux_thread->Enqueue([=](CGpuDeviceId device) {
-        buffer_ = cgpu_create_buffer(device, &buff_desc);
-        upload_ready_fence_ = cgpu_create_fence(device);
-        upload_ready_semaphore = cgpu_create_semaphore(device);
-        resource_handle_ready_ = true;
-    });
+    aux_thread->Enqueue({ [=](CGpuDeviceId device) {
+                             buffer_ = cgpu_create_buffer(device, &buff_desc);
+                             resource_handle_ready_ = true;
+                         },
+        cb });
 }
 
-void RenderBuffer::Destroy(struct RenderAuxThread* aux_thread)
+void AsyncRenderBuffer::Destroy(struct RenderAuxThread* aux_thread, const AuxTaskCallback& cb)
 {
-    aux_thread->Enqueue([this](CGpuDeviceId device) {
+    auto destructor = [this](CGpuDeviceId device) {
         cgpu_free_buffer(buffer_);
-        cgpu_free_fence(upload_ready_fence_);
-        cgpu_free_semaphore(upload_ready_semaphore);
         buffer_ = nullptr;
-        upload_ready_fence_ = nullptr;
-        upload_ready_semaphore = nullptr;
-    });
+    };
+    if (aux_thread)
+        aux_thread->Enqueue({ destructor, cb });
+    else
+    {
+        destructor(buffer_->device);
+        cb();
+    }
 }
 
 // Render Texture
-void RenderTexture::Initialize(struct RenderAuxThread* aux_thread,
-    const CGpuTextureDescriptor& tex_desc, bool default_srv)
+void AsyncRenderTexture::Initialize(struct RenderAuxThread* aux_thread,
+    const CGpuTextureDescriptor& tex_desc, const AuxTaskCallback& cb, bool default_srv)
 {
-    aux_thread->Enqueue([=](CGpuDeviceId device) {
-        texture_ = cgpu_create_texture(device, &tex_desc);
-        if (default_srv)
-        {
-            CGpuTextureViewDescriptor view_desc = {};
-            eastl::string view_name = tex_desc.name;
-            view_name.append("-view");
-            view_desc.name = view_name.c_str();
-            view_desc.texture = texture_;
-            view_desc.array_layer_count = tex_desc.array_size;
-            view_desc.base_array_layer = 0;
-            view_desc.base_mip_level = 0;
-            view_desc.mip_level_count = tex_desc.mip_levels;
-            view_desc.aspects = TVA_COLOR;
-            view_desc.dims = TEX_DIMENSION_2D;
-            view_desc.format = tex_desc.format;
-            view_desc.usages = TVU_SRV;
-            view_ = cgpu_create_texture_view(device, &view_desc);
-        }
-        upload_ready_fence_ = cgpu_create_fence(device);
-        upload_ready_semaphore = cgpu_create_semaphore(device);
-        resource_handle_ready_ = true;
-    });
+    aux_thread->Enqueue({ [=](CGpuDeviceId device) {
+                             texture_ = cgpu_create_texture(device, &tex_desc);
+                             if (default_srv)
+                             {
+                                 CGpuTextureViewDescriptor view_desc = {};
+                                 eastl::string view_name = tex_desc.name;
+                                 view_name.append("-view");
+                                 view_desc.name = view_name.c_str();
+                                 view_desc.texture = texture_;
+                                 view_desc.array_layer_count = tex_desc.array_size;
+                                 view_desc.base_array_layer = 0;
+                                 view_desc.base_mip_level = 0;
+                                 view_desc.mip_level_count = tex_desc.mip_levels;
+                                 view_desc.aspects = TVA_COLOR;
+                                 view_desc.dims = TEX_DIMENSION_2D;
+                                 view_desc.format = tex_desc.format;
+                                 view_desc.usages = TVU_SRV;
+                                 view_ = cgpu_create_texture_view(device, &view_desc);
+                             }
+                             resource_handle_ready_ = true;
+                         },
+        cb });
 }
 
-void RenderTexture::Initialize(struct RenderAuxThread* aux_thread,
-    const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc)
+void AsyncRenderTexture::Initialize(struct RenderAuxThread* aux_thread,
+    const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc, const AuxTaskCallback& cb)
 {
-    aux_thread->Enqueue([=](CGpuDeviceId device) {
-        texture_ = cgpu_create_texture(device, &tex_desc);
-        view_ = cgpu_create_texture_view(device, &tex_view_desc);
-        upload_ready_fence_ = cgpu_create_fence(device);
-        upload_ready_semaphore = cgpu_create_semaphore(device);
-        resource_handle_ready_ = true;
-    });
+    aux_thread->Enqueue({ [=](CGpuDeviceId device) {
+                             texture_ = cgpu_create_texture(device, &tex_desc);
+                             CGpuTextureViewDescriptor view_desc = tex_view_desc;
+                             view_desc.texture = texture_;
+                             view_ = cgpu_create_texture_view(device, &view_desc);
+                             resource_handle_ready_ = true;
+                         },
+        cb });
 }
 
-void RenderTexture::Destroy(struct RenderAuxThread* aux_thread)
+void AsyncRenderTexture::Destroy(struct RenderAuxThread* aux_thread, const AuxTaskCallback& cb)
 {
-    aux_thread->Enqueue([this](CGpuDeviceId device) {
+    auto destructor = [this](CGpuDeviceId device) {
         cgpu_free_texture(texture_);
         if (view_) cgpu_free_texture_view(view_);
-        cgpu_free_fence(upload_ready_fence_);
-        cgpu_free_semaphore(upload_ready_semaphore);
         texture_ = nullptr;
         view_ = nullptr;
-        upload_ready_fence_ = nullptr;
-        upload_ready_semaphore = nullptr;
-    });
+    };
+    if (aux_thread)
+        aux_thread->Enqueue({ destructor, cb });
+    else
+    {
+        destructor(texture_->device);
+        cb();
+    }
 }
 
-void RenderShader::Initialize(struct RenderAuxThread* aux_thread, const CGpuShaderLibraryDescriptor& desc)
+void AsyncRenderShader::Initialize(struct RenderAuxThread* aux_thread, const CGpuShaderLibraryDescriptor& desc, const AuxTaskCallback& cb)
 {
-    aux_thread->Enqueue([=](CGpuDeviceId device) {
-        shader_ = cgpu_create_shader_library(device, &desc);
-        resource_handle_ready_ = true;
-    });
+    aux_thread->Enqueue({ [=](CGpuDeviceId device) {
+                             shader_ = cgpu_create_shader_library(device, &desc);
+                             resource_handle_ready_ = true;
+                         },
+        cb });
 }
 
-void RenderShader::Destroy(struct RenderAuxThread* aux_thread)
+void AsyncRenderShader::Destroy(struct RenderAuxThread* aux_thread, const AuxTaskCallback& cb)
 {
-    aux_thread->Enqueue([this](CGpuDeviceId device) {
+    auto destructor = [this](CGpuDeviceId device) {
         cgpu_free_shader_library(shader_);
         shader_ = nullptr;
-    });
+    };
+    if (aux_thread)
+        aux_thread->Enqueue({ destructor, cb });
+    else
+    {
+        destructor(shader_->device);
+        cb();
+    }
+}
+
+void RenderBlackboard::Finalize(struct RenderAuxThread* aux_thread)
+{
+    for (auto&& iter : textures_)
+    {
+        iter.second.Destroy(aux_thread);
+    }
 }

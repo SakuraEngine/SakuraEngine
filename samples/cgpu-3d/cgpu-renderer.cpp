@@ -104,7 +104,8 @@ static const char8_t* gGLTFAttributeTypeLUT[] = {
     "WEIGHTS"
 };
 
-eastl::cached_hashset<CGpuVertexLayout> RenderDevice::vertex_layouts_;
+eastl::cached_hashset<CGpuVertexLayout> RenderBlackboard::vertex_layouts_;
+eastl::vector_map<eastl::string, AsyncRenderTexture> RenderBlackboard::textures_;
 void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_window)
 {
     *pprender_window = new RenderWindow();
@@ -218,7 +219,6 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     vs_desc.code = get_vertex_shader();
     vs_desc.code_size = get_vertex_shader_size();
     vs_library_ = cgpu_create_shader_library(device_, &vs_desc);
-    RenderMemoryResource async_fs = {};
     CGpuShaderLibraryDescriptor fs_desc = {};
     fs_desc.name = "FragmentShaderLibrary";
     fs_desc.stage = SHADER_STAGE_FRAG;
@@ -252,35 +252,23 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     rs_desc.static_sampler_count = 1;
     rs_desc.static_sampler_names = &sampler_name;
     root_sig_ = cgpu_create_root_signature(device_, &rs_desc);
-    CGpuTextureDescriptor tex_desc = {};
-    tex_desc.name = "DefaultTexture";
-    tex_desc.descriptors = RT_TEXTURE;
-    tex_desc.flags = TCF_OWN_MEMORY_BIT;
-    tex_desc.width = TEXTURE_WIDTH;
-    tex_desc.height = TEXTURE_HEIGHT;
-    tex_desc.depth = 1;
-    tex_desc.format = PF_R8G8B8A8_UNORM;
-    tex_desc.array_size = 1;
-    tex_desc.owner_queue = cpy_queue_;
-    tex_desc.start_state = RESOURCE_STATE_COPY_DEST;
-    SyncCreateSampledTexture("DefaultTexture", TEXTURE_WIDTH, TEXTURE_HEIGHT);
-    SyncUploadSampledTexture("DefaultTexture", TEXTURE_DATA, sizeof(TEXTURE_DATA));
 }
 
-eastl::pair<CGpuTextureId, CGpuTextureViewId> RenderDevice::GetSampledTexture(const char* name)
+AsyncRenderTexture* RenderBlackboard::GetTexture(const char* name)
 {
-    if (sampled_textures_.find(name) != sampled_textures_.end())
+    auto&& iter = textures_.find(name);
+    if (iter != textures_.end())
     {
-        return sampled_textures_[name];
+        return &iter->second;
     }
-    return { nullptr, nullptr };
+    return nullptr;
 }
 
-eastl::pair<CGpuTextureId, CGpuTextureViewId> RenderDevice::SyncCreateSampledTexture(const char* name,
+AsyncRenderTexture* RenderBlackboard::AddTexture(const char* name, struct RenderAuxThread* aux_thread,
     uint32_t width, uint32_t height, ECGpuFormat format)
 {
-    if (GetSampledTexture(name).first != nullptr)
-        return GetSampledTexture(name);
+    if (GetTexture(name) != nullptr)
+        return GetTexture(name);
     CGpuTextureDescriptor tex_desc = {};
     tex_desc.name = name;
     tex_desc.descriptors = RT_TEXTURE;
@@ -290,11 +278,9 @@ eastl::pair<CGpuTextureId, CGpuTextureViewId> RenderDevice::SyncCreateSampledTex
     tex_desc.depth = 1;
     tex_desc.format = format;
     tex_desc.array_size = 1;
-    tex_desc.owner_queue = cpy_queue_;
     tex_desc.start_state = RESOURCE_STATE_COPY_DEST;
-    auto new_tex = cgpu_create_texture(device_, &tex_desc);
+    tex_desc.owner_queue = aux_thread->render_device_->cpy_queue_;
     CGpuTextureViewDescriptor sview_desc = {};
-    sview_desc.texture = new_tex;
     sview_desc.format = tex_desc.format;
     sview_desc.array_layer_count = 1;
     sview_desc.base_array_layer = 0;
@@ -303,17 +289,18 @@ eastl::pair<CGpuTextureId, CGpuTextureViewId> RenderDevice::SyncCreateSampledTex
     sview_desc.aspects = TVA_COLOR;
     sview_desc.dims = TEX_DIMENSION_2D;
     sview_desc.usages = TVU_SRV;
-    auto new_view = cgpu_create_texture_view(device_, &sview_desc);
-    sampled_textures_[name] = { new_tex, new_view };
-    return sampled_textures_[name];
+    textures_.reserve(textures_.size() + 1);
+    auto&& target = textures_.emplace_back(name, eastl::move(AsyncRenderTexture()));
+    target.second.Initialize(aux_thread, tex_desc, sview_desc);
+    return &target.second;
 }
 
-eastl::pair<CGpuTextureId, CGpuTextureViewId> RenderDevice::SyncUploadSampledTexture(const char* name,
-    const void* data, size_t data_size)
+AsyncRenderTexture* RenderBlackboard::UploadTexture(const char* name,
+    RenderDevice* device, const void* data, size_t data_size)
 {
-    if (GetSampledTexture(name).first == nullptr)
-        return GetSampledTexture(name);
-    auto target = sampled_textures_[name];
+    auto target = GetTexture(name);
+    if (target == nullptr)
+        return target;
     // upload texture data
     CGpuBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = eastl::string("Upload-").append(name).c_str(),
@@ -321,30 +308,31 @@ eastl::pair<CGpuTextureId, CGpuTextureViewId> RenderDevice::SyncUploadSampledTex
     upload_buffer_desc.descriptors = RT_NONE,
     upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY,
     upload_buffer_desc.size = data_size;
-    CGpuBufferId upload_buffer = cgpu_create_buffer(device_, &upload_buffer_desc);
+    CGpuBufferId upload_buffer = cgpu_create_buffer(device->GetCGPUDevice(), &upload_buffer_desc);
     // upload texture
     {
         memcpy(upload_buffer->cpu_mapped_address, data, upload_buffer_desc.size);
     }
     CGpuCommandBufferDescriptor cmd_desc = {};
     cmd_desc.is_secondary = false;
-    CGpuCommandBufferId cmd = cgpu_create_command_buffer(cpy_cmd_pool_, &cmd_desc);
-    cgpu_reset_command_pool(cpy_cmd_pool_);
+    CGpuCommandBufferId cmd = cgpu_create_command_buffer(device->cpy_cmd_pool_, &cmd_desc);
+    cgpu_reset_command_pool(device->cpy_cmd_pool_);
     cgpu_cmd_begin(cmd);
+    target->Wait();
     CGpuBufferToTextureTransfer b2t = {};
     b2t.src = upload_buffer;
     b2t.src_offset = 0;
-    b2t.dst = target.first;
-    b2t.elems_per_row = target.first->width;
-    b2t.rows_per_image = target.first->height;
+    b2t.dst = target->texture_;
+    b2t.elems_per_row = target->texture_->width;
+    b2t.rows_per_image = target->texture_->height;
     b2t.base_array_layer = 0;
     b2t.layer_count = 1;
     cgpu_cmd_transfer_buffer_to_texture(cmd, &b2t);
     CGpuTextureBarrier srv_barrier = {};
-    srv_barrier.texture = target.first;
+    srv_barrier.texture = target->texture_;
     srv_barrier.src_state = RESOURCE_STATE_COPY_DEST;
     srv_barrier.dst_state = RESOURCE_STATE_SHADER_RESOURCE;
-    if (cpy_queue_ != gfx_queue_)
+    if (device->cpy_queue_ != device->gfx_queue_)
     {
         srv_barrier.queue_release = true;
         srv_barrier.queue_type = QUEUE_TYPE_GRAPHICS;
@@ -357,8 +345,8 @@ eastl::pair<CGpuTextureId, CGpuTextureViewId> RenderDevice::SyncUploadSampledTex
     CGpuQueueSubmitDescriptor cpy_submit = {};
     cpy_submit.cmds = &cmd;
     cpy_submit.cmds_count = 1;
-    cgpu_submit_queue(cpy_queue_, &cpy_submit);
-    cgpu_wait_queue_idle(cpy_queue_);
+    cgpu_submit_queue(device->cpy_queue_, &cpy_submit);
+    cgpu_wait_queue_idle(device->cpy_queue_);
     cgpu_free_buffer(upload_buffer);
     cgpu_free_command_buffer(cmd);
     return target;
@@ -387,11 +375,6 @@ void RenderDevice::Destroy()
     cgpu_free_root_signature(root_sig_);
     cgpu_free_shader_library(vs_library_);
     cgpu_free_shader_library(fs_library_);
-    for (auto iter : sampled_textures_)
-    {
-        cgpu_free_texture_view(iter.second.second);
-        cgpu_free_texture(iter.second.first);
-    }
     cgpu_free_command_pool(cpy_cmd_pool_);
     cgpu_free_queue(gfx_queue_);
     if (cpy_queue_ != gfx_queue_)
@@ -504,7 +487,7 @@ CGpuRenderPipelineId RenderDevice::CreateRenderPipeline(const PipelineKey& key)
     CGpuRenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = key.root_sig_;
     rp_desc.prim_topology = PRIM_TOPO_TRI_LIST;
-    auto viter = RenderDevice::GetVertexLayouts()->find_by_hash(key.vertex_layout_id_);
+    auto viter = RenderBlackboard::GetVertexLayouts()->find_by_hash(key.vertex_layout_id_);
     rp_desc.vertex_layout = &viter.get_node()->mValue;
     rp_desc.vertex_shader = &ppl_shaders_[0];
     rp_desc.fragment_shader = &ppl_shaders_[1];
@@ -533,7 +516,8 @@ CGpuDescriptorSetId RenderDevice::CreateDescriptorSet(const CGpuRootSignatureId 
     CGpuDescriptorData arguments[1];
     arguments[0].name = "sampled_texture";
     arguments[0].count = 1;
-    arguments[0].textures = &sampled_textures_.at(0).second.second;
+    auto default_tex_view = RenderBlackboard::GetTexture("DefaultTexture")->view_;
+    arguments[0].textures = &default_tex_view;
     cgpu_update_descriptor_set(desc_set, arguments, 1);
     return desc_set;
 }
@@ -578,7 +562,7 @@ void RenderDevice::freeRenderPipeline(CGpuRenderPipelineId pipeline)
     cgpu_free_render_pipeline(pipeline);
 }
 
-void RenderContext::Initialize(RenderDevice* device)
+void GfxContext::Initialize(RenderDevice* device)
 {
     device_ = device;
     CGpuCommandPoolDescriptor pool_desc = {};
@@ -588,16 +572,40 @@ void RenderContext::Initialize(RenderDevice* device)
     cmd_buffer_ = cgpu_create_command_buffer(cmd_pool_, &cmd_desc);
     exec_fence_ = cgpu_create_fence(device->GetCGPUDevice());
 }
-void RenderContext::Begin()
+void GfxContext::Begin()
 {
     cgpu_wait_fences(&exec_fence_, 1);
     cgpu_reset_command_pool(cmd_pool_);
     cgpu_cmd_begin(cmd_buffer_);
 }
 
-void RenderContext::ResourceBarrier(const CGpuResourceBarrierDescriptor& barrier_desc)
+void GfxContext::ResourceBarrier(const CGpuResourceBarrierDescriptor& barrier_desc)
 {
     cgpu_cmd_resource_barrier(cmd_buffer_, &barrier_desc);
+}
+
+void GfxContext::End()
+{
+    cgpu_cmd_end(cmd_buffer_);
+}
+
+void GfxContext::Wait()
+{
+    if (cgpu_query_fence_status(exec_fence_) == FENCE_STATUS_INCOMPLETE)
+        cgpu_wait_fences(&exec_fence_, 1);
+}
+
+void GfxContext::Destroy()
+{
+    auto status = cgpu_query_fence_status(exec_fence_);
+    if (status == FENCE_STATUS_INCOMPLETE)
+    {
+        cgpu_wait_fences(&exec_fence_, 1);
+    }
+    cgpu_free_fence(exec_fence_);
+    cgpu_reset_command_pool(cmd_pool_);
+    cgpu_free_command_buffer(cmd_buffer_);
+    cgpu_free_command_pool(cmd_pool_);
 }
 
 void RenderContext::BeginRenderPass(const CGpuRenderPassDescriptor& rp_desc)
@@ -651,30 +659,6 @@ void RenderContext::EndRenderPass()
     rp_encoder_ = nullptr;
 }
 
-void RenderContext::End()
-{
-    cgpu_cmd_end(cmd_buffer_);
-}
-
-void RenderContext::Wait()
-{
-    if (cgpu_query_fence_status(exec_fence_) == FENCE_STATUS_INCOMPLETE)
-        cgpu_wait_fences(&exec_fence_, 1);
-}
-
-void RenderContext::Destroy()
-{
-    auto status = cgpu_query_fence_status(exec_fence_);
-    if (status == FENCE_STATUS_INCOMPLETE)
-    {
-        cgpu_wait_fences(&exec_fence_, 1);
-    }
-    cgpu_free_fence(exec_fence_);
-    cgpu_reset_command_pool(cmd_pool_);
-    cgpu_free_command_buffer(cmd_buffer_);
-    cgpu_free_command_pool(cmd_pool_);
-}
-
 int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_cursor)
 {
     RenderPrimitive newPrim = {};
@@ -715,7 +699,7 @@ int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_c
         layout.attributes[i].location = location;
         location = location + 1;
     }
-    newPrim.vertex_layout_id_ = (uint32_t)RenderDevice::AddVertexLayout(layout);
+    newPrim.vertex_layout_id_ = (uint32_t)RenderBlackboard::AddVertexLayout(layout);
     primitives_.emplace_back(newPrim);
     index_cursor += newPrim.index_count_;
     return (int32_t)primitives_.size() - 1;
@@ -821,52 +805,84 @@ void RenderScene::Initialize(const char8_t* path)
             }
         }
     }
-    load_ready_ = true;
 }
 
-void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thread, bool keep_gltf_data_)
+void RenderScene::CreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
+{
+    auto renderDevice = context->GetRenderDevice();
+    gpu_geometry_fence = renderDevice->AllocFence();
+    // create buffers
+    for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
+    {
+        cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
+        if (buf_view->type != cgltf_buffer_view_type_indices)
+        {
+            vertex_buffer_count_ += 1;
+        }
+    }
+    vertex_buffers_ = new AsyncRenderBuffer[vertex_buffer_count_];
+    auto setter_callback = [this]() {
+        bufs_creation_counter_ += 1;
+        if (bufs_creation_counter_ >= vertex_buffer_count_ + 1)
+        {
+            for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
+            {
+                auto gltf_mesh = gltf_data_->meshes + i;
+                for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
+                {
+                    auto gltf_prim = gltf_mesh->primitives + j;
+                    for (uint32_t k = 0; k < gltf_prim->attributes_count; k++)
+                    {
+                        const auto gltf_attrib = gltf_prim->attributes + k;
+                        auto&& asyncVB = vertex_buffers_[viewVBIdxMap[gltf_attrib->data->buffer_view]];
+                        meshes_[i].primitives_[j].vertex_buffers_.emplace_back(asyncVB.buffer_);
+                    }
+                }
+            }
+            bufs_creation_ready_ = true;
+        }
+    };
+    for (uint32_t i = 0, vb_idx = 0; i < gltf_data_->buffer_views_count; i++)
+    {
+        cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
+        CGpuBufferDescriptor buffer_desc = {};
+        buffer_desc.flags = BCF_OWN_MEMORY_BIT;
+        buffer_desc.memory_usage = MEM_USAGE_GPU_ONLY;
+        buffer_desc.descriptors =
+            buf_view->type == cgltf_buffer_view_type_indices ?
+                RT_INDEX_BUFFER :
+                RT_VERTEX_BUFFER;
+        buffer_desc.element_stride = buf_view->stride ? buf_view->stride : buf_view->size;
+        buffer_desc.elemet_count = buf_view->size / buffer_desc.element_stride;
+        buffer_desc.size = buf_view->size;
+        buffer_desc.name = buf_view->name;
+        if (buf_view->type == cgltf_buffer_view_type_indices)
+        {
+            index_buffer_.Initialize(aux_thread, buffer_desc, setter_callback);
+            index_stride_ = gltf_data_->accessors->component_type;
+        }
+        else
+        {
+            viewVBIdxMap[buf_view] = vb_idx;
+            vertex_buffers_[vb_idx].Initialize(aux_thread, buffer_desc, setter_callback);
+            vb_idx += 1;
+        }
+    }
+}
+
+void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thread)
 {
     context_ = context;
     auto renderDevice = context->GetRenderDevice();
-    if (load_ready_)
     {
         // create buffers
-        eastl::vector_map<cgltf_buffer_view*, uint32_t> viewVBIdxMap = {};
         cgltf_buffer_view* indices_view = nullptr;
         for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
         {
             cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
-            if (buf_view->type != cgltf_buffer_view_type_indices)
-            {
-                vertex_buffer_count_ += 1;
-            }
-        }
-        vertex_buffers_ = new RenderBuffer[vertex_buffer_count_];
-        for (uint32_t i = 0, vb_idx = 0; i < gltf_data_->buffer_views_count; i++)
-        {
-            cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
-            CGpuBufferDescriptor buffer_desc = {};
-            buffer_desc.flags = BCF_OWN_MEMORY_BIT;
-            buffer_desc.memory_usage = MEM_USAGE_GPU_ONLY;
-            buffer_desc.descriptors =
-                buf_view->type == cgltf_buffer_view_type_indices ?
-                    RT_INDEX_BUFFER :
-                    RT_VERTEX_BUFFER;
-            buffer_desc.element_stride = buf_view->stride ? buf_view->stride : buf_view->size;
-            buffer_desc.elemet_count = buf_view->size / buffer_desc.element_stride;
-            buffer_desc.size = buf_view->size;
-            buffer_desc.name = buf_view->name;
             if (buf_view->type == cgltf_buffer_view_type_indices)
             {
                 indices_view = buf_view;
-                index_buffer_.Initialize(aux_thread, buffer_desc);
-                index_stride_ = gltf_data_->accessors->component_type;
-            }
-            else
-            {
-                vertex_buffers_[vb_idx].Initialize(aux_thread, buffer_desc);
-                viewVBIdxMap[buf_view] = vb_idx;
-                vb_idx += 1;
             }
         }
         // set vertex buffers
@@ -875,16 +891,7 @@ void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thr
             auto gltf_mesh = gltf_data_->meshes + i;
             for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
             {
-                auto gltf_prim = gltf_mesh->primitives + j;
-                for (uint32_t k = 0; k < gltf_prim->attributes_count; k++)
-                {
-                    const auto gltf_attrib = gltf_prim->attributes + k;
-                    auto&& asyncVB = vertex_buffers_[viewVBIdxMap[gltf_attrib->data->buffer_view]];
-                    asyncVB.Wait();
-                    auto vbuf = asyncVB.buffer_;
-                    meshes_[i].primitives_[j].vertex_buffers_.emplace_back(vbuf);
-                }
-                // pso
+                // create pso
                 PipelineKey pplKey = {};
                 pplKey.vertex_layout_id_ = meshes_[i].primitives_[j].vertex_layout_id_;
                 pplKey.root_sig_ = renderDevice->GetCGPUSignature();
@@ -899,14 +906,14 @@ void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thr
             auto uri = material.base_color_uri_.c_str();
             auto path = eastl::string("./../Resources/").append(uri);
             // TODO: impl async upload here
-            if (renderDevice->GetSampledTexture(uri).first == nullptr)
+            if (RenderBlackboard::GetTexture(uri) == nullptr)
             {
                 unsigned char* image = nullptr;
                 unsigned width, height;
                 unsigned error = ::lodepng_decode32_file(&image, &width, &height, path.c_str());
                 if (error) printf("error %u: %s\n", error, ::lodepng_error_text(error));
-                renderDevice->SyncCreateSampledTexture(uri, width, height, PF_R8G8B8A8_UNORM);
-                renderDevice->SyncUploadSampledTexture(uri, image, width * height * sizeof(uint32_t));
+                RenderBlackboard::AddTexture(uri, aux_thread, width, height, PF_R8G8B8A8_UNORM);
+                RenderBlackboard::UploadTexture(uri, renderDevice, image, width * height * sizeof(uint32_t));
                 free(image);
             }
         }
@@ -916,19 +923,17 @@ void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thr
             for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
             {
                 auto&& material = materials_.at(meshes_[i].primitives_[j].material_id_);
-                auto img_pair = renderDevice->GetSampledTexture(material.second.base_color_uri_.c_str());
-                if (img_pair.first != nullptr)
+                auto rdrTex = RenderBlackboard::GetTexture(material.second.base_color_uri_.c_str());
+                if (rdrTex->texture_ != nullptr)
                 {
                     CGpuDescriptorData arguments[1];
                     arguments[0].name = "sampled_texture";
                     arguments[0].count = 1;
-                    arguments[0].textures = &img_pair.second;
+                    arguments[0].textures = &rdrTex->view_;
                     cgpu_update_descriptor_set(meshes_[i].primitives_[j].desc_set_, arguments, 1);
                 }
             }
         }
-        gpu_memory_ready = true;
-        gpu_geometry_fence = renderDevice->AllocFence();
         // staging buffer
         eastl::vector_map<const cgltf_buffer*, eastl::pair<uint32_t, uint32_t>> bufferRangeMap = {};
         size_t staging_size = 0;
@@ -977,6 +982,7 @@ void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thr
         }
         gpu_geometry_semaphore = renderDevice->AsyncTransfer(
             transfers.data(), dst_states.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
+        bufs_upload_started_ = true;
     }
 }
 
