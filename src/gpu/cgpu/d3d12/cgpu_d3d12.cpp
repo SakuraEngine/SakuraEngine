@@ -1365,15 +1365,9 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
         D3D12_RENDER_PASS_ENDING_ACCESS_TYPE sEndingAccess =
             gDx12PassEndOpTranslator[desc->depth_stencil->stencil_store_action];
         clearDepth.Format = DXGIUtil_TranslatePixelFormat(desc->depth_stencil->view->info.format);
-        clearDepth.Color[0] = desc->depth_stencil->clear_depth;
-        clearDepth.Color[1] = desc->depth_stencil->clear_depth;
-        clearDepth.Color[2] = desc->depth_stencil->clear_depth;
-        clearDepth.Color[3] = desc->depth_stencil->clear_depth;
+        clearDepth.DepthStencil.Depth = desc->depth_stencil->clear_depth;
         clearStencil.Format = DXGIUtil_TranslatePixelFormat(desc->depth_stencil->view->info.format);
-        clearStencil.Color[0] = desc->depth_stencil->clear_stencil;
-        clearStencil.Color[1] = desc->depth_stencil->clear_stencil;
-        clearStencil.Color[2] = desc->depth_stencil->clear_stencil;
-        clearStencil.Color[3] = desc->depth_stencil->clear_stencil;
+        clearStencil.DepthStencil.Stencil = desc->depth_stencil->clear_stencil;
         renderPassDepthStencilDesc.cpuDescriptor = DTV->mDxRtvDsvDescriptorHandle;
         renderPassDepthStencilDesc.DepthBeginningAccess = { dBeginingAccess, { clearDepth } };
         renderPassDepthStencilDesc.DepthEndingAccess = { dEndingAccess };
