@@ -32,6 +32,8 @@ class RenderDevice
 {
     friend class RenderWindow;
     friend struct RenderBlackboard;
+    friend struct RenderAuxThread;
+    friend struct AsyncTransferThread;
 
 public:
     void Initialize(ECGpuBackend backend, RenderWindow** render_window);
@@ -46,14 +48,6 @@ public:
     FORCEINLINE ECGpuFormat GetScreenFormat() { return screen_format_; }
     FORCEINLINE CGpuRootSignatureId GetCGPUSignature() { return root_sig_; }
 
-    template <typename Transfer>
-    CGpuSemaphoreId AsyncTransfer(const Transfer* transfers, const ECGpuResourceState* dst_states,
-        uint32_t transfer_count, CGpuFenceId fence = nullptr)
-    {
-        CGpuSemaphoreId semaphore = AllocSemaphore();
-        asyncTransfer(transfers, dst_states, transfer_count, semaphore, fence);
-        return semaphore;
-    }
     CGpuSemaphoreId AllocSemaphore();
     void FreeSemaphore(CGpuSemaphoreId semaphore);
     CGpuFenceId AllocFence();
@@ -64,12 +58,9 @@ public:
     void Present(RenderWindow* window, uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
     void Submit(class RenderContext* context);
     void WaitIdle();
-    void CollectGarbage(bool wait_idle = false);
 
 protected:
     void freeRenderPipeline(CGpuRenderPipelineId pipeline);
-    void asyncTransfer(const CGpuBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,
-        uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
 
     ECGpuBackend backend_;
     ECGpuFormat screen_format_;
@@ -81,7 +72,6 @@ protected:
     // cpy
     CGpuCommandPoolId cpy_cmd_pool_;
     CGpuQueueId cpy_queue_;
-    eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
     // samplers
     CGpuSamplerId default_sampler_;
     // shaders & root_sigs
@@ -89,6 +79,48 @@ protected:
     CGpuShaderLibraryId fs_library_;
     CGpuPipelineShaderDescriptor ppl_shaders_[2];
     CGpuRootSignatureId root_sig_;
+};
+
+struct RenderAuxThread {
+    friend class RenderDevice;
+
+    virtual ~RenderAuxThread() = default;
+    virtual void Initialize(class RenderDevice* render_device);
+    virtual void Destroy();
+    virtual void Wait();
+
+    void Enqueue(const AuxThreadTaskWithCallback& task);
+    SThreadDesc aux_item_;
+    SThreadHandle aux_thread_;
+    SMutex load_mutex_;
+    RenderDevice* render_device_;
+    eastl::vector<AuxThreadTaskWithCallback> task_queue_;
+    std::atomic_bool is_running_;
+    bool force_block_ = false;
+};
+
+struct AsyncTransferThread : public RenderAuxThread {
+    friend class RenderDevice;
+
+    void Initialize(class RenderDevice* render_device) override;
+    void Destroy() override;
+
+    template <typename Transfer>
+    CGpuSemaphoreId AsyncTransfer(const Transfer* transfers, const ECGpuResourceState* dst_states,
+        uint32_t transfer_count, CGpuFenceId fence = nullptr)
+    {
+        CGpuSemaphoreId semaphore = render_device_->AllocSemaphore();
+        asyncTransfer(transfers, dst_states, transfer_count, semaphore, fence);
+        return semaphore;
+    }
+
+protected:
+    void asyncTransfer(const CGpuBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,
+        uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
+    // cpy
+    CGpuCommandPoolId cpy_cmd_pool_;
+    eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
+    eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> staging_bufs_;
 };
 
 FORCEINLINE const uint32_t* RenderDevice::get_vertex_shader()

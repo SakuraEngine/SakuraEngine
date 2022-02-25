@@ -250,6 +250,7 @@ void RenderScene::Initialize(const char8_t* path)
 
 void RenderScene::AsyncCreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread)
 {
+    auto renderDevice = context->GetRenderDevice();
     for (uint32_t i = 0; i < meshes_.size(); i++)
     {
         auto& mesh = meshes_[i];
@@ -262,6 +263,8 @@ void RenderScene::AsyncCreateRenderPipelines(RenderContext* context, struct Rend
             pplKey.screen_format_ = context->GetRenderDevice()->GetScreenFormat();
             pplKey.wireframe_mode_ = false;
             prim.async_ppl_ = RenderBlackboard::AddRenderPipeline(aux_thread, pplKey);
+            // create descriotor sets
+            prim.desc_set_ = renderDevice->CreateDescriptorSet(pplKey.root_sig_, 0);
         }
     }
 }
@@ -280,9 +283,9 @@ void RenderScene::AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxT
         }
     }
     vertex_buffers_ = new AsyncRenderBuffer[vertex_buffer_count_];
-    auto setter_callback = [this]() {
+    auto setter_callback = [=]() {
         bufs_creation_counter_ += 1;
-        if (bufs_creation_counter_ >= vertex_buffer_count_ + 1)
+        if (bufs_creation_counter_ >= vertex_buffer_count_ + 1 /*idx buffer*/ + 1 /*staging buffer*/)
         {
             for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
             {
@@ -301,6 +304,21 @@ void RenderScene::AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxT
             bufs_creation_ready_ = true;
         }
     };
+    // create & prepare staging buffer
+    size_t staging_size = 0;
+    for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
+    {
+        staging_size += gltf_data_->buffers[i].size;
+    }
+    CGpuBufferDescriptor staging_buffer_desc = {};
+    staging_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT;
+    staging_buffer_desc.descriptors = RT_NONE;
+    staging_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY;
+    staging_buffer_desc.element_stride = staging_size;
+    staging_buffer_desc.elemet_count = 1;
+    staging_buffer_desc.size = staging_size;
+    staging_buffer_.Initialize(aux_thread, staging_buffer_desc, setter_callback);
+    // create vertex & index buffers
     for (uint32_t i = 0, vb_idx = 0; i < gltf_data_->buffer_views_count; i++)
     {
         cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
@@ -329,113 +347,99 @@ void RenderScene::AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxT
     }
 }
 
-void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thread)
+void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
     context_ = context;
     auto renderDevice = context->GetRenderDevice();
+    // create buffers
+    cgltf_buffer_view* indices_view = nullptr;
+    for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
     {
-        // create buffers
-        cgltf_buffer_view* indices_view = nullptr;
-        for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
+        cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
+        if (buf_view->type == cgltf_buffer_view_type_indices)
         {
-            cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
-            if (buf_view->type == cgltf_buffer_view_type_indices)
-            {
-                indices_view = buf_view;
-            }
+            indices_view = buf_view;
+            break;
         }
-        // set vertex buffers
-        for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
-        {
-            auto gltf_mesh = gltf_data_->meshes + i;
-            for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
-            {
-                meshes_[i].primitives_[j].desc_set_ = renderDevice->CreateDescriptorSet(renderDevice->GetCGPUSignature(), 0);
-            }
-        }
-        for (uint32_t i = 0; i < materials_.size(); i++)
-        {
-            auto&& material = materials_.at(i).second;
-            auto uri = material.base_color_uri_.c_str();
-            auto path = eastl::string("./../Resources/").append(uri);
-            // TODO: impl async upload here
-            if (RenderBlackboard::GetTexture(uri) == nullptr)
-            {
-                unsigned char* image = nullptr;
-                unsigned width, height;
-                unsigned error = ::lodepng_decode32_file(&image, &width, &height, path.c_str());
-                if (error) printf("error %u: %s\n", error, ::lodepng_error_text(error));
-                RenderBlackboard::AddTexture(uri, aux_thread, width, height, PF_R8G8B8A8_UNORM);
-                RenderBlackboard::UploadTexture(uri, renderDevice, image, width * height * sizeof(uint32_t));
-                free(image);
-            }
-        }
-        for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
-        {
-            auto gltf_mesh = gltf_data_->meshes + i;
-            for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
-            {
-                auto&& material = materials_.at(meshes_[i].primitives_[j].material_id_);
-                auto rdrTex = RenderBlackboard::GetTexture(material.second.base_color_uri_.c_str());
-                if (rdrTex->texture_ != nullptr)
-                {
-                    CGpuDescriptorData arguments[1];
-                    arguments[0].name = "sampled_texture";
-                    arguments[0].count = 1;
-                    arguments[0].textures = &rdrTex->view_;
-                    cgpu_update_descriptor_set(meshes_[i].primitives_[j].desc_set_, arguments, 1);
-                }
-            }
-        }
-        // staging buffer
-        eastl::vector_map<const cgltf_buffer*, eastl::pair<uint32_t, uint32_t>> bufferRangeMap = {};
-        size_t staging_size = 0;
+    }
+    // upload staging buffers
+    eastl::vector_map<const cgltf_buffer*, eastl::pair<uint32_t, uint32_t>> bufferRangeMap = {};
+    size_t staging_size = 0;
+    for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
+    {
+        const size_t range_start = staging_size;
+        staging_size += gltf_data_->buffers[i].size;
+        bufferRangeMap[gltf_data_->buffers + i] = { (uint32_t)range_start, (uint32_t)staging_size };
+    }
+    {
+        char8_t* address_cursor = (char8_t*)staging_buffer_.buffer_->cpu_mapped_address;
         for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
         {
-            const size_t range_start = staging_size;
-            staging_size += gltf_data_->buffers[i].size;
-            bufferRangeMap[gltf_data_->buffers + i] = { (uint32_t)range_start, (uint32_t)staging_size };
+            memcpy(address_cursor, gltf_data_->buffers[i].data, gltf_data_->buffers[i].size);
+            address_cursor += gltf_data_->buffers[i].size;
         }
-        CGpuBufferDescriptor upload_buffer_desc = {};
-        upload_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT;
-        upload_buffer_desc.descriptors = RT_NONE;
-        upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY;
-        upload_buffer_desc.element_stride = staging_size;
-        upload_buffer_desc.elemet_count = 1;
-        upload_buffer_desc.size = staging_size;
-        staging_buffer_ = cgpu_create_buffer(renderDevice->GetCGPUDevice(), &upload_buffer_desc);
-        // upload buffers
+    }
+    eastl::vector<ECGpuResourceState> dst_states(viewVBIdxMap.size() + 1);
+    eastl::vector<CGpuBufferToBufferTransfer> transfers(viewVBIdxMap.size() + 1);
+    // transfer
+    transfers[0].src = staging_buffer_.buffer_;
+    transfers[0].src_offset = bufferRangeMap[indices_view->buffer].first + indices_view->offset;
+    transfers[0].dst = index_buffer_.buffer_;
+    transfers[0].dst_offset = 0;
+    transfers[0].size = indices_view->size;
+    dst_states[0] = RESOURCE_STATE_INDEX_BUFFER;
+    for (uint32_t i = 1; i < viewVBIdxMap.size() + 1; i++)
+    {
+        const cgltf_buffer_view* cgltfBufferView = viewVBIdxMap.at(i - 1).first;
+        const cgltf_buffer* cgltfBuffer = cgltfBufferView->buffer;
+        transfers[i].src = staging_buffer_.buffer_;
+        transfers[i].src_offset = bufferRangeMap[cgltfBuffer].first + cgltfBufferView->offset;
+        transfers[i].dst = vertex_buffers_[i - 1].buffer_;
+        transfers[i].dst_offset = 0;
+        transfers[i].size = cgltfBufferView->size;
+        dst_states[i] = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    }
+    gpu_geometry_semaphore = aux_thread->AsyncTransfer(
+        transfers.data(), dst_states.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
+    bufs_upload_started_ = true;
+}
+
+void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thread)
+{
+    auto renderDevice = context->GetRenderDevice();
+    for (uint32_t i = 0; i < materials_.size(); i++)
+    {
+        auto&& material = materials_.at(i).second;
+        auto uri = material.base_color_uri_.c_str();
+        auto path = eastl::string("./../Resources/").append(uri);
+        // TODO: impl async upload here
+        if (RenderBlackboard::GetTexture(uri) == nullptr)
         {
-            char8_t* address_cursor = (char8_t*)staging_buffer_->cpu_mapped_address;
-            for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
+            unsigned char* image = nullptr;
+            unsigned width, height;
+            unsigned error = ::lodepng_decode32_file(&image, &width, &height, path.c_str());
+            if (error) printf("error %u: %s\n", error, ::lodepng_error_text(error));
+            RenderBlackboard::AddTexture(uri, aux_thread, width, height, PF_R8G8B8A8_UNORM);
+            RenderBlackboard::UploadTexture(uri, renderDevice, image, width * height * sizeof(uint32_t));
+            free(image);
+        }
+    }
+    for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
+    {
+        auto gltf_mesh = gltf_data_->meshes + i;
+        for (uint32_t j = 0; j < gltf_mesh->primitives_count; j++)
+        {
+            auto&& material = materials_.at(meshes_[i].primitives_[j].material_id_);
+            auto rdrTex = RenderBlackboard::GetTexture(material.second.base_color_uri_.c_str());
+            if (rdrTex->texture_ != nullptr)
             {
-                memcpy(address_cursor, gltf_data_->buffers[i].data, gltf_data_->buffers[i].size);
-                address_cursor += gltf_data_->buffers[i].size;
+                CGpuDescriptorData arguments[1];
+                arguments[0].name = "sampled_texture";
+                arguments[0].count = 1;
+                arguments[0].textures = &rdrTex->view_;
+                cgpu_update_descriptor_set(meshes_[i].primitives_[j].desc_set_, arguments, 1);
             }
         }
-        eastl::vector<ECGpuResourceState> dst_states(viewVBIdxMap.size() + 1);
-        eastl::vector<CGpuBufferToBufferTransfer> transfers(viewVBIdxMap.size() + 1);
-        // transfer
-        transfers[0].src = staging_buffer_;
-        transfers[0].src_offset = bufferRangeMap[indices_view->buffer].first + indices_view->offset;
-        transfers[0].dst = index_buffer_.buffer_;
-        transfers[0].dst_offset = 0;
-        transfers[0].size = indices_view->size;
-        dst_states[0] = RESOURCE_STATE_INDEX_BUFFER;
-        for (uint32_t i = 1; i < viewVBIdxMap.size() + 1; i++)
-        {
-            const cgltf_buffer_view* cgltfBufferView = viewVBIdxMap.at(i - 1).first;
-            const cgltf_buffer* cgltfBuffer = cgltfBufferView->buffer;
-            transfers[i].src = staging_buffer_;
-            transfers[i].src_offset = bufferRangeMap[cgltfBuffer].first + cgltfBufferView->offset;
-            transfers[i].dst = vertex_buffers_[i - 1].buffer_;
-            transfers[i].dst_offset = 0;
-            transfers[i].size = cgltfBufferView->size;
-            dst_states[i] = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-        }
-        gpu_geometry_semaphore = renderDevice->AsyncTransfer(
-            transfers.data(), dst_states.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
-        bufs_upload_started_ = true;
     }
 }
 
@@ -459,8 +463,6 @@ void RenderScene::Destroy(struct RenderAuxThread* aux_thread)
     {
         renderDevice->FreeFence(gpu_geometry_fence);
         renderDevice->FreeSemaphore(gpu_geometry_semaphore);
-        // TODO: Refactor this
-        renderDevice->WaitIdle();
         for (auto& mesh : meshes_)
         {
             for (auto& prim : mesh.primitives_)
@@ -468,8 +470,8 @@ void RenderScene::Destroy(struct RenderAuxThread* aux_thread)
                 renderDevice->FreeDescriptorSet(prim.desc_set_);
             }
         }
-        if (staging_buffer_) cgpu_free_buffer(staging_buffer_);
     }
+    staging_buffer_.Destroy(aux_thread);
     index_buffer_.Destroy(aux_thread);
     for (uint32_t i = 0; i < vertex_buffer_count_; i++)
     {

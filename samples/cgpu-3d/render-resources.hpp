@@ -110,24 +110,6 @@ struct AsyncRenderPipeline : public AsyncRenderResource {
     CGpuRenderPipelineId pipeline_;
 };
 
-struct RenderAuxThread {
-    void Initialize(class RenderDevice* render_device);
-    void Destroy();
-    void Wait();
-
-    void Enqueue(const AuxThreadTaskWithCallback& task);
-    SThreadDesc aux_item_;
-    SThreadHandle aux_thread_;
-    SMutex load_mutex_;
-    RenderDevice* render_device_;
-    eastl::vector<AuxThreadTaskWithCallback> task_queue_;
-    std::atomic_bool is_running_;
-    bool force_block_ = false;
-};
-
-struct AsyncTransferThread : public RenderAuxThread {
-};
-
 namespace eastl
 {
 template <typename T>
@@ -142,7 +124,7 @@ struct RenderBlackboard {
 
     static AsyncRenderTexture* GetTexture(const char* name);
     static AsyncRenderTexture* AddTexture(const char* name, struct RenderAuxThread* aux_thread, uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM);
-    static AsyncRenderTexture* UploadTexture(const char* name, RenderDevice* device, const void* data, size_t data_size);
+    static AsyncRenderTexture* UploadTexture(const char* name, class RenderDevice* device, const void* data, size_t data_size);
 
     static AsyncRenderPipeline* AddRenderPipeline(RenderAuxThread* aux_thread, const PipelineKey& key, const AuxTaskCallback& cb = defaultAuxCallback);
     static AsyncRenderPipeline* GetRenderPipeline(const PipelineKey& key);

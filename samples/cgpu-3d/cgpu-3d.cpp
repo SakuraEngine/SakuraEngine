@@ -36,6 +36,8 @@ int main(int argc, char* argv[])
     aux_thread->Initialize(render_device.get());
     auto pso_aux_thread = eastl::make_unique<RenderAuxThread>();
     pso_aux_thread->Initialize(render_device.get());
+    auto async_transfer_thread = eastl::make_unique<AsyncTransferThread>();
+    async_transfer_thread->Initialize(render_device.get());
 
     RenderBlackboard::AddTexture("DefaultTexture", aux_thread.get(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
     RenderBlackboard::UploadTexture("DefaultTexture", render_device.get(), TEXTURE_DATA, sizeof(TEXTURE_DATA));
@@ -46,6 +48,7 @@ int main(int argc, char* argv[])
     render_scene->Initialize("./../Resources/scene.gltf");
     render_scene->AsyncCreateGPUMemory(render_context.get(), aux_thread.get());
     render_scene->AsyncCreateRenderPipelines(render_context.get(), pso_aux_thread.get());
+    render_scene->Upload(render_context.get(), aux_thread.get());
     // wvp
     auto world = smath::make_transform(
         { 0.f, 0.f, 0.f },                                             // translation
@@ -115,7 +118,7 @@ int main(int argc, char* argv[])
             render_context->SetScissor(0, 0, back_buffer->width, back_buffer->height);
             if (render_scene->bufs_creation_ready_ && !render_scene->bufs_upload_started_)
             {
-                render_scene->Upload(render_context.get(), aux_thread.get());
+                render_scene->AsyncUploadBuffers(render_context.get(), async_transfer_thread.get());
             }
             CGpuRenderPipelineId cached_pipeline = nullptr;
             CGpuDescriptorSetId cached_descset = nullptr;
@@ -167,16 +170,18 @@ int main(int argc, char* argv[])
         render_context->End();
         render_device->Submit(render_context.get());
         render_device->Present(render_window, backbuffer_index, &present_semaphore, 1);
-        render_device->CollectGarbage();
     }
     render_device->FreeSemaphore(present_semaphore);
     render_device->WaitIdle();
-    render_context->Destroy();
-    aux_thread->Wait();
+    // stop & wait cpy cmds
+    aux_thread->Destroy();
+    async_transfer_thread->Destroy();
+    pso_aux_thread->Destroy();
+    // destroy render resources
     render_scene->Destroy();
     RenderBlackboard::Finalize();
-    aux_thread->Destroy();
-    pso_aux_thread->Destroy();
+    // destroy driver objects
+    render_context->Destroy();
     render_window->Destroy();
     render_device->Destroy();
     return 0;

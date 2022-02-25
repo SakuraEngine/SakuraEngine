@@ -56,6 +56,69 @@ void RenderAuxThread::Destroy()
     skr_destroy_thread(aux_thread_);
 }
 
+void AsyncTransferThread::Initialize(class RenderDevice* render_device)
+{
+    RenderAuxThread::Initialize(render_device);
+    // copy cmd pool
+    CGpuCommandPoolDescriptor pool_desc = {};
+    cpy_cmd_pool_ = cgpu_create_command_pool(render_device->cpy_queue_, &pool_desc);
+}
+
+void AsyncTransferThread::Destroy()
+{
+    RenderAuxThread::Destroy();
+    eastl::vector<CGpuFenceId> removed;
+    for (auto&& iter : async_cpy_cmds_)
+    {
+        cgpu_wait_fences(&iter.first, 1);
+        cgpu_free_command_buffer(iter.second);
+        removed.emplace_back(iter.first);
+    }
+    for (auto&& iter : removed)
+    {
+        async_cpy_cmds_.erase(iter);
+    }
+    cgpu_free_command_pool(cpy_cmd_pool_);
+}
+
+void AsyncTransferThread::asyncTransfer(const CGpuBufferToBufferTransfer* transfers,
+    const ECGpuResourceState* dst_states,
+    uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence)
+{
+    eastl::vector<CGpuBufferBarrier> barriers(transfer_count);
+    for (uint32_t i = 0; i < barriers.size(); i++)
+    {
+        barriers[i].buffer = transfers[i].dst;
+        barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
+        barriers[i].dst_state = dst_states[i];
+        if (render_device_->gfx_queue_ != render_device_->cpy_queue_)
+        {
+            barriers[i].queue_release = true;
+            barriers[i].queue_type = QUEUE_TYPE_GRAPHICS;
+        }
+    }
+    CGpuCommandBufferDescriptor cmd_desc = {};
+    CGpuCommandBufferId cmd = cgpu_create_command_buffer(cpy_cmd_pool_, &cmd_desc);
+    cgpu_cmd_begin(cmd);
+    for (uint32_t i = 0; i < transfer_count; i++)
+    {
+        cgpu_cmd_transfer_buffer_to_buffer(cmd, &transfers[i]);
+    }
+    CGpuResourceBarrierDescriptor barriers_desc = {};
+    barriers_desc.buffer_barriers = barriers.data();
+    barriers_desc.buffer_barriers_count = (uint32_t)barriers.size();
+    cgpu_cmd_resource_barrier(cmd, &barriers_desc);
+    cgpu_cmd_end(cmd);
+    CGpuQueueSubmitDescriptor submit_desc = {};
+    submit_desc.cmds = &cmd;
+    submit_desc.cmds_count = 1;
+    submit_desc.signal_semaphore_count = semaphore ? 1 : 0;
+    submit_desc.signal_semaphores = semaphore ? &semaphore : nullptr;
+    submit_desc.signal_fence = fence;
+    cgpu_submit_queue(render_device_->cpy_queue_, &submit_desc);
+    async_cpy_cmds_[fence] = cmd;
+}
+
 // Render Buffer
 void AsyncRenderBuffer::Initialize(struct RenderAuxThread* aux_thread, const CGpuBufferDescriptor& buff_desc, const AuxTaskCallback& cb)
 {
