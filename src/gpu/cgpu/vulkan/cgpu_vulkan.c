@@ -357,11 +357,13 @@ ECGpuFenceStatus cgpu_query_fence_status_vulkan(CGpuFenceId fence)
     if (F->mSubmitted)
     {
         VkResult vkRes = vkGetFenceStatus(D->pVkDevice, F->pVkFence);
+        /*
         if (vkRes == VK_SUCCESS)
         {
             D->mVkDeviceTable.vkResetFences(D->pVkDevice, 1, &F->pVkFence);
             F->mSubmitted = false;
         }
+        */
         status = vkRes == VK_SUCCESS ? FENCE_STATUS_COMPLETE : FENCE_STATUS_INCOMPLETE;
     }
     else
@@ -1148,7 +1150,8 @@ void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDes
     // TODO: Thread Safety ?
     VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
     CHECK_VKRESULT(res);
-    if (F) F->mSubmitted = true;
+    if (F)
+        F->mSubmitted = true;
 }
 
 void cgpu_wait_queue_idle_vulkan(CGpuQueueId queue)
