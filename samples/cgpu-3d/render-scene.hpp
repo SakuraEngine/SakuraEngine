@@ -57,6 +57,7 @@ public:
     // On AuxThread and not stuck the calling thread
     void AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
     bool AsyncUploadReady();
+    void AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread);
     void Upload(RenderContext* context, struct RenderAuxThread* aux_thread);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr);
 
@@ -78,7 +79,6 @@ public:
     uint32_t vertex_buffer_count_ = 0;
     AsyncRenderBuffer index_buffer_;
     uint32_t index_stride_;
-    CGpuBufferId staging_buffer_;
 
 protected:
     int32_t loadNode(struct cgltf_node* src, int32_t parent_idx);
@@ -87,4 +87,5 @@ protected:
 
     struct cgltf_data* gltf_data_ = nullptr;
     eastl::vector_map<struct cgltf_buffer_view*, uint32_t> viewVBIdxMap = {};
+    AsyncRenderBuffer staging_buffer_;
 };

@@ -225,7 +225,6 @@ AsyncRenderTexture* RenderBlackboard::UploadTexture(const char* name,
     CGpuCommandBufferDescriptor cmd_desc = {};
     cmd_desc.is_secondary = false;
     CGpuCommandBufferId cmd = cgpu_create_command_buffer(device->cpy_cmd_pool_, &cmd_desc);
-    cgpu_reset_command_pool(device->cpy_cmd_pool_);
     cgpu_cmd_begin(cmd);
     target->Wait();
     CGpuBufferToTextureTransfer b2t = {};
@@ -334,7 +333,6 @@ void RenderWindow::Destroy()
 
 void RenderDevice::Destroy()
 {
-    this->CollectGarbage(true);
     cgpu_free_sampler(default_sampler_);
     cgpu_free_root_signature(root_sig_);
     cgpu_free_shader_library(vs_library_);
@@ -366,70 +364,6 @@ void RenderDevice::FreeFence(CGpuFenceId fence)
 {
     cgpu_wait_fences(&fence, 1);
     cgpu_free_fence(fence);
-}
-
-void RenderDevice::asyncTransfer(const CGpuBufferToBufferTransfer* transfers,
-    const ECGpuResourceState* dst_states, uint32_t transfer_count,
-    CGpuSemaphoreId semaphore, CGpuFenceId fence)
-{
-    eastl::vector<CGpuBufferBarrier> barriers(transfer_count);
-    for (uint32_t i = 0; i < barriers.size(); i++)
-    {
-        barriers[i].buffer = transfers[i].dst;
-        barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
-        barriers[i].dst_state = dst_states[i];
-        if (gfx_queue_ != cpy_queue_)
-        {
-            barriers[i].queue_release = true;
-            barriers[i].queue_type = QUEUE_TYPE_GRAPHICS;
-        }
-    }
-    CGpuCommandBufferDescriptor cmd_desc = {};
-    CGpuCommandBufferId cmd = cgpu_create_command_buffer(cpy_cmd_pool_, &cmd_desc);
-    cgpu_cmd_begin(cmd);
-    for (uint32_t i = 0; i < transfer_count; i++)
-    {
-        cgpu_cmd_transfer_buffer_to_buffer(cmd, &transfers[i]);
-    }
-    CGpuResourceBarrierDescriptor barriers_desc = {};
-    barriers_desc.buffer_barriers = barriers.data();
-    barriers_desc.buffer_barriers_count = (uint32_t)barriers.size();
-    cgpu_cmd_resource_barrier(cmd, &barriers_desc);
-    cgpu_cmd_end(cmd);
-    CGpuQueueSubmitDescriptor submit_desc = {};
-    submit_desc.cmds = &cmd;
-    submit_desc.cmds_count = 1;
-    submit_desc.signal_semaphore_count = semaphore ? 1 : 0;
-    submit_desc.signal_semaphores = semaphore ? &semaphore : nullptr;
-    submit_desc.signal_fence = fence;
-    cgpu_submit_queue(cpy_queue_, &submit_desc);
-    async_cpy_cmds_[fence] = cmd;
-}
-
-void RenderDevice::CollectGarbage(bool wait_idle)
-{
-    eastl::vector<CGpuFenceId> removed;
-    for (auto&& iter : async_cpy_cmds_)
-    {
-        if (!wait_idle)
-        {
-            if (cgpu_query_fence_status(iter.first) == FENCE_STATUS_COMPLETE)
-            {
-                cgpu_free_command_buffer(iter.second);
-                removed.emplace_back(iter.first);
-            }
-        }
-        else
-        {
-            cgpu_wait_fences(&iter.first, 1);
-            cgpu_free_command_buffer(iter.second);
-            removed.emplace_back(iter.first);
-        }
-    }
-    for (auto&& iter : removed)
-    {
-        async_cpy_cmds_.erase(iter);
-    }
 }
 
 CGpuDescriptorSetId RenderDevice::CreateDescriptorSet(const CGpuRootSignatureId signature, uint32_t set_index)
