@@ -21,6 +21,11 @@ struct AsyncRenderResource {
         : resource_handle_ready_(rhs.resource_handle_ready_.load())
     {
     }
+    AsyncRenderResource& operator=(AsyncRenderResource&& rhs)
+    {
+        this->resource_handle_ready_ = rhs.resource_handle_ready_.load();
+        return *this;
+    }
     inline virtual void Wait()
     {
         while (!resource_handle_ready_) {}
@@ -38,10 +43,21 @@ static const AuxTaskCallback defaultAuxCallback = +[]() {};
 
 struct AsyncRenderMemoryResource : public AsyncRenderResource {
     AsyncRenderMemoryResource() = default;
-    AsyncRenderMemoryResource(AsyncRenderMemoryResource&&) = default;
+    AsyncRenderMemoryResource(AsyncRenderMemoryResource&& rhs)
+        : AsyncRenderResource(eastl::move(rhs))
+        , upload_started_(rhs.upload_started_.load())
+    {
+    }
+    AsyncRenderMemoryResource& operator=(AsyncRenderMemoryResource&& rhs)
+    {
+        this->resource_handle_ready_ = rhs.resource_handle_ready_.load();
+        this->upload_started_ = rhs.upload_started_.load();
+        return *this;
+    }
+    std::atomic_bool upload_started_ = false;
 };
 
-struct AsyncRenderBuffer : public AsyncRenderMemoryResource {
+struct AsyncRenderBuffer final : public AsyncRenderMemoryResource {
     AsyncRenderBuffer() = default;
     AsyncRenderBuffer(AsyncRenderBuffer&&) = default;
 
@@ -51,19 +67,24 @@ struct AsyncRenderBuffer : public AsyncRenderMemoryResource {
     CGpuBufferId buffer_;
 };
 
-struct AsyncRenderTexture : public AsyncRenderMemoryResource {
+struct AsyncRenderTexture final : public AsyncRenderMemoryResource {
     AsyncRenderTexture() = default;
     AsyncRenderTexture(AsyncRenderTexture&&) = default;
 
     void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const AuxTaskCallback& cb = defaultAuxCallback, bool default_srv = true);
     void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Initialize(struct RenderAuxThread* aux_thread, const eastl::string name, const eastl::string disk_file, ECGpuFormat format, const AuxTaskCallback& cb = defaultAuxCallback);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
     CGpuTextureId texture_;
     CGpuTextureViewId view_;
+    unsigned char* image_bytes_ = nullptr;
+    CGpuFenceId upload_fence_ = nullptr;
+    CGpuBufferId upload_buffer_ = nullptr;
+    CGpuCommandBufferId upload_cmd_ = nullptr;
 };
 
-struct AsyncRenderShader : public AsyncRenderResource {
+struct AsyncRenderShader final : public AsyncRenderResource {
     AsyncRenderShader() = default;
     AsyncRenderShader(AsyncRenderShader&&) = default;
 
@@ -100,7 +121,7 @@ struct equal_to<PipelineKey> {
 };
 } // namespace eastl
 
-struct AsyncRenderPipeline : public AsyncRenderResource {
+struct AsyncRenderPipeline final : public AsyncRenderResource {
     AsyncRenderPipeline() = default;
     AsyncRenderPipeline(AsyncRenderPipeline&&) = default;
 
@@ -117,6 +138,7 @@ using cached_hashset = hash_set<T, eastl::hash<T>, eastl::equal_to<T>, EASTLAllo
 }
 
 struct RenderBlackboard {
+    static void Initialize();
     static void Finalize(struct RenderAuxThread* aux_thread = nullptr);
 
     static const eastl::cached_hashset<CGpuVertexLayout>* GetVertexLayouts();
@@ -124,14 +146,14 @@ struct RenderBlackboard {
 
     static AsyncRenderTexture* GetTexture(const char* name);
     static AsyncRenderTexture* AddTexture(const char* name, struct RenderAuxThread* aux_thread, uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM);
-    static AsyncRenderTexture* UploadTexture(const char* name, class RenderDevice* device, const void* data, size_t data_size);
+    static AsyncRenderTexture* AddTexture(const char* name, const char* disk_file, struct RenderAuxThread* aux_thread, ECGpuFormat format);
 
     static AsyncRenderPipeline* AddRenderPipeline(RenderAuxThread* aux_thread, const PipelineKey& key, const AuxTaskCallback& cb = defaultAuxCallback);
     static AsyncRenderPipeline* GetRenderPipeline(const PipelineKey& key);
 
 protected:
-    static eastl::vector_map<eastl::string, AsyncRenderTexture> textures_;
-    static eastl::unordered_map<PipelineKey, AsyncRenderPipeline> pipelines_;
+    static eastl::vector_map<eastl::string, AsyncRenderTexture*> textures_;
+    static eastl::unordered_map<PipelineKey, AsyncRenderPipeline*> pipelines_;
     static eastl::cached_hashset<CGpuVertexLayout> vertex_layouts_;
 };
 

@@ -45,6 +45,7 @@ public:
     const uint32_t get_fragment_shader_size();
     FORCEINLINE CGpuDeviceId GetCGPUDevice() { return device_; }
     FORCEINLINE CGpuQueueId GetCGPUQueue() { return gfx_queue_; }
+    FORCEINLINE CGpuQueueId GetCopyQueue() { return cpy_queue_; }
     FORCEINLINE ECGpuFormat GetScreenFormat() { return screen_format_; }
     FORCEINLINE CGpuRootSignatureId GetCGPUSignature() { return root_sig_; }
 
@@ -99,28 +100,50 @@ struct RenderAuxThread {
     bool force_block_ = false;
 };
 
-struct AsyncTransferThread : public RenderAuxThread {
+struct AsyncBufferToBufferTransfer {
+    AsyncRenderBuffer* dst;
+    uint64_t dst_offset;
+    CGpuBufferId raw_src;
+    AsyncRenderBuffer* src;
+    uint64_t src_offset;
+    uint64_t size;
+};
+
+struct AsyncBufferToTextureTransfer {
+    AsyncRenderTexture* dst;
+    uint32_t dst_mip_level;
+    uint32_t elems_per_row;
+    uint32_t rows_per_image;
+    uint32_t base_array_layer;
+    uint32_t layer_count;
+    CGpuBufferId raw_src = nullptr;
+    AsyncRenderBuffer* src = nullptr;
+    uint64_t src_offset;
+};
+
+struct AsyncTransferThread {
     friend class RenderDevice;
 
-    void Initialize(class RenderDevice* render_device) override;
-    void Destroy() override;
+    void Initialize(class RenderDevice* render_device);
+    void Destroy();
 
     template <typename Transfer>
-    CGpuSemaphoreId AsyncTransfer(const Transfer* transfers, const ECGpuResourceState* dst_states,
+    void AsyncTransfer(const Transfer* transfers, const ECGpuResourceState* dst_states,
         uint32_t transfer_count, CGpuFenceId fence = nullptr)
     {
-        CGpuSemaphoreId semaphore = render_device_->AllocSemaphore();
-        asyncTransfer(transfers, dst_states, transfer_count, semaphore, fence);
-        return semaphore;
+        asyncTransfer(transfers, dst_states, transfer_count, nullptr, fence);
     }
+    AsyncRenderTexture* UploadTexture(AsyncRenderTexture* target, const void* data, size_t data_size);
 
 protected:
-    void asyncTransfer(const CGpuBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,
+    void asyncTransfer(const AsyncBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,
         uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
-    // cpy
+    void asyncTransfer(const AsyncBufferToTextureTransfer* transfers, const ECGpuResourceState* dst_states,
+        uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
+    RenderDevice* render_device_;
     CGpuCommandPoolId cpy_cmd_pool_;
     eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
-    eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> staging_bufs_;
+    eastl::unordered_map<CGpuFenceId, CGpuBufferId> async_cpy_bufs_;
 };
 
 FORCEINLINE const uint32_t* RenderDevice::get_vertex_shader()

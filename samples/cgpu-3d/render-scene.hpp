@@ -28,6 +28,7 @@ struct RenderPrimitive {
     uint32_t index_count_;
     uint32_t vertex_layout_id_;
     uint32_t material_id_;
+    AsyncRenderTexture* texture_;
     CGpuDescriptorSetId desc_set_;
     // considering some status like wireframe_mode, fetch pipeline with RenderBlackboard::GetRenderPipeline
     // when recording drawcalls may be better
@@ -55,10 +56,11 @@ public:
     // On AuxThread and not stuck the calling thread
     void AsyncCreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread);
     // On AuxThread and not stuck the calling thread
-    void AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void AsyncCreateGeometryMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
     bool AsyncUploadReady();
     void AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread);
-    void Upload(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr);
 
     eastl::vector<RenderNode> nodes_;
@@ -72,7 +74,6 @@ public:
     std::atomic_bool bufs_upload_ready_ = false;
 
     RenderContext* context_ = nullptr;
-    CGpuSemaphoreId gpu_geometry_semaphore = nullptr;
     CGpuFenceId gpu_geometry_fence = nullptr;
 
     AsyncRenderBuffer* vertex_buffers_;

@@ -250,6 +250,7 @@ void RenderScene::Initialize(const char8_t* path)
 
 void RenderScene::AsyncCreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread)
 {
+    context_ = context;
     auto renderDevice = context->GetRenderDevice();
     for (uint32_t i = 0; i < meshes_.size(); i++)
     {
@@ -269,8 +270,9 @@ void RenderScene::AsyncCreateRenderPipelines(RenderContext* context, struct Rend
     }
 }
 
-void RenderScene::AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
+void RenderScene::AsyncCreateGeometryMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
 {
+    context_ = context;
     auto renderDevice = context->GetRenderDevice();
     gpu_geometry_fence = renderDevice->AllocFence();
     // create buffers
@@ -349,8 +351,6 @@ void RenderScene::AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxT
 
 void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
-    context_ = context;
-    auto renderDevice = context->GetRenderDevice();
     // create buffers
     cgltf_buffer_view* indices_view = nullptr;
     for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
@@ -380,11 +380,11 @@ void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransfe
         }
     }
     eastl::vector<ECGpuResourceState> dst_states(viewVBIdxMap.size() + 1);
-    eastl::vector<CGpuBufferToBufferTransfer> transfers(viewVBIdxMap.size() + 1);
+    eastl::vector<AsyncBufferToBufferTransfer> transfers(viewVBIdxMap.size() + 1);
     // transfer
-    transfers[0].src = staging_buffer_.buffer_;
+    transfers[0].src = &staging_buffer_;
     transfers[0].src_offset = bufferRangeMap[indices_view->buffer].first + indices_view->offset;
-    transfers[0].dst = index_buffer_.buffer_;
+    transfers[0].dst = &index_buffer_;
     transfers[0].dst_offset = 0;
     transfers[0].size = indices_view->size;
     dst_states[0] = RESOURCE_STATE_INDEX_BUFFER;
@@ -392,36 +392,37 @@ void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransfe
     {
         const cgltf_buffer_view* cgltfBufferView = viewVBIdxMap.at(i - 1).first;
         const cgltf_buffer* cgltfBuffer = cgltfBufferView->buffer;
-        transfers[i].src = staging_buffer_.buffer_;
+        transfers[i].src = &staging_buffer_;
         transfers[i].src_offset = bufferRangeMap[cgltfBuffer].first + cgltfBufferView->offset;
-        transfers[i].dst = vertex_buffers_[i - 1].buffer_;
+        transfers[i].dst = &vertex_buffers_[i - 1];
         transfers[i].dst_offset = 0;
         transfers[i].size = cgltfBufferView->size;
         dst_states[i] = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
     }
-    gpu_geometry_semaphore = aux_thread->AsyncTransfer(
+    aux_thread->AsyncTransfer(
         transfers.data(), dst_states.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
     bufs_upload_started_ = true;
 }
 
-void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thread)
+void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
-    auto renderDevice = context->GetRenderDevice();
     for (uint32_t i = 0; i < materials_.size(); i++)
     {
         auto&& material = materials_.at(i).second;
         auto uri = material.base_color_uri_.c_str();
-        auto path = eastl::string("./../Resources/").append(uri);
-        // TODO: impl async upload here
-        if (RenderBlackboard::GetTexture(uri) == nullptr)
+        if (auto target = RenderBlackboard::GetTexture(uri); target != nullptr)
         {
-            unsigned char* image = nullptr;
-            unsigned width, height;
-            unsigned error = ::lodepng_decode32_file(&image, &width, &height, path.c_str());
-            if (error) printf("error %u: %s\n", error, ::lodepng_error_text(error));
-            RenderBlackboard::AddTexture(uri, aux_thread, width, height, PF_R8G8B8A8_UNORM);
-            RenderBlackboard::UploadTexture(uri, renderDevice, image, width * height * sizeof(uint32_t));
-            free(image);
+            target->Wait();
+            AsyncBufferToTextureTransfer b2t = {};
+            b2t.raw_src = target->upload_buffer_;
+            b2t.src_offset = 0;
+            b2t.dst = target;
+            b2t.elems_per_row = target->texture_->width;
+            b2t.rows_per_image = target->texture_->height;
+            b2t.base_array_layer = 0;
+            b2t.layer_count = 1;
+            ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE;
+            aux_thread->AsyncTransfer(&b2t, &state, 1, target->upload_fence_);
         }
     }
     for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
@@ -438,8 +439,21 @@ void RenderScene::Upload(RenderContext* context, struct RenderAuxThread* aux_thr
                 arguments[0].count = 1;
                 arguments[0].textures = &rdrTex->view_;
                 cgpu_update_descriptor_set(meshes_[i].primitives_[j].desc_set_, arguments, 1);
+                meshes_[i].primitives_[j].texture_ = rdrTex;
             }
         }
+    }
+}
+
+void RenderScene::AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
+{
+    context_ = context;
+    for (uint32_t i = 0; i < materials_.size(); i++)
+    {
+        auto&& material = materials_.at(i).second;
+        auto uri = material.base_color_uri_.c_str();
+        auto path = eastl::string("./../Resources/").append(uri);
+        RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
     }
 }
 
@@ -462,7 +476,6 @@ void RenderScene::Destroy(struct RenderAuxThread* aux_thread)
     if (gpu_geometry_fence)
     {
         renderDevice->FreeFence(gpu_geometry_fence);
-        renderDevice->FreeSemaphore(gpu_geometry_semaphore);
         for (auto& mesh : meshes_)
         {
             for (auto& prim : mesh.primitives_)
