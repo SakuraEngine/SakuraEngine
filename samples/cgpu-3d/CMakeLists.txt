@@ -3,7 +3,8 @@ include_directories(${SDL2_INCLUDES})
 
 add_executable(CGpu3D
     cgpu-renderer.cpp
-    cgpu-resources.cpp
+    render-resources.cpp
+    render-scene.cpp
     cgpu-3d.cpp
     thirdparty/lodepng.cpp
 )

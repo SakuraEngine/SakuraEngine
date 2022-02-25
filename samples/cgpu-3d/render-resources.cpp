@@ -9,20 +9,24 @@ void loaderFunction(void* data)
     {
         skr_acquire_mutex(&dt->load_mutex_);
         auto tasks = dt->task_queue_;
-        auto tasks2 = dt->task_queue2_;
         dt->task_queue_.clear();
-        dt->task_queue2_.clear();
         skr_release_mutex(&dt->load_mutex_);
         for (auto&& task : tasks)
-        {
-            task(dt->render_device_->GetCGPUDevice());
-        }
-        for (auto&& task : tasks2)
         {
             task.first(dt->render_device_->GetCGPUDevice());
             task.second();
         }
         skr_thread_sleep(1);
+    }
+}
+void RenderAuxThread::Enqueue(const AuxThreadTaskWithCallback& task)
+{
+    if (!force_block_)
+        task_queue_.emplace_back(task);
+    else
+    {
+        task.first(render_device_->GetCGPUDevice());
+        task.second();
     }
 }
 
@@ -34,16 +38,6 @@ void RenderAuxThread::Initialize(class RenderDevice* render_device)
     aux_item_.pFunc = &loaderFunction;
     skr_init_thread(&aux_item_, &aux_thread_);
     skr_init_mutex(&load_mutex_);
-}
-
-void RenderAuxThread::Enqueue(const AuxThreadTask& task)
-{
-    task_queue_.emplace_back(task);
-}
-
-void RenderAuxThread::Enqueue(const AuxThreadTaskWithCallback& task)
-{
-    task_queue2_.emplace_back(task);
 }
 
 void RenderAuxThread::Wait()

@@ -30,7 +30,8 @@ int main(int argc, char* argv[])
     auto render_device = eastl::make_unique<RenderDevice>();
     RenderWindow* render_window = nullptr;
     render_device->Initialize(cmdBackend, &render_window);
-
+    // we can fork multiple threads to create resources of different types
+    // here we create two aux_threads for memory_resource & pso creation
     auto aux_thread = eastl::make_unique<RenderAuxThread>();
     aux_thread->Initialize(render_device.get());
     auto pso_aux_thread = eastl::make_unique<RenderAuxThread>();
@@ -43,8 +44,8 @@ int main(int argc, char* argv[])
     render_context->Initialize(render_device.get());
     auto render_scene = eastl::make_unique<RenderScene>();
     render_scene->Initialize("./../Resources/scene.gltf");
-    render_scene->CreateGPUMemory(render_context.get(), aux_thread.get());
-    render_scene->CreateRenderPipelines(render_context.get(), pso_aux_thread.get());
+    render_scene->AsyncCreateGPUMemory(render_context.get(), aux_thread.get());
+    render_scene->AsyncCreateRenderPipelines(render_context.get(), pso_aux_thread.get());
     // wvp
     auto world = smath::make_transform(
         { 0.f, 0.f, 0.f },                                             // translation
@@ -118,20 +119,15 @@ int main(int argc, char* argv[])
             }
             CGpuRenderPipelineId cached_pipeline = nullptr;
             CGpuDescriptorSetId cached_descset = nullptr;
-            if (render_scene->bufs_upload_started_)
+            if (render_scene->AsyncUploadReady())
             {
-                PipelineKey pplKey = {};
-                pplKey.root_sig_ = render_device->GetCGPUSignature();
-                pplKey.screen_format_ = render_device->GetScreenFormat();
-                pplKey.wireframe_mode_ = false;
                 for (uint32_t i = 0; i < render_scene->meshes_.size(); i++)
                 {
                     auto& mesh = render_scene->meshes_[i];
                     for (uint32_t j = 0; j < mesh.primitives_.size(); j++)
                     {
                         auto& prim = mesh.primitives_[j];
-                        pplKey.vertex_layout_id_ = prim.vertex_layout_id_;
-                        auto prim_pipeline = RenderBlackboard::GetRenderPipeline(pplKey);
+                        auto prim_pipeline = prim.async_ppl_;
                         if (prim_pipeline->Ready())
                         {
                             if (cached_pipeline != prim_pipeline->pipeline_)

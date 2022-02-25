@@ -29,6 +29,9 @@ struct RenderPrimitive {
     uint32_t vertex_layout_id_;
     uint32_t material_id_;
     CGpuDescriptorSetId desc_set_;
+    // considering some status like wireframe_mode, fetch pipeline with RenderBlackboard::GetRenderPipeline
+    // when recording drawcalls may be better
+    AsyncRenderPipeline* async_ppl_;
     // set by aux thread callback
     eastl::vector<CGpuBufferId> vertex_buffers_;
     eastl::vector<uint32_t> vertex_strides_;
@@ -50,9 +53,10 @@ class RenderScene
 public:
     void Initialize(const char8_t* path);
     // On AuxThread and not stuck the calling thread
-    void CreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void AsyncCreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread);
     // On AuxThread and not stuck the calling thread
-    void CreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void AsyncCreateGPUMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
+    bool AsyncUploadReady();
     void Upload(RenderContext* context, struct RenderAuxThread* aux_thread);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr);
 
@@ -66,9 +70,9 @@ public:
     std::atomic_bool bufs_upload_started_ = false;
     std::atomic_bool bufs_upload_ready_ = false;
 
-    RenderContext* context_;
-    CGpuSemaphoreId gpu_geometry_semaphore;
-    CGpuFenceId gpu_geometry_fence;
+    RenderContext* context_ = nullptr;
+    CGpuSemaphoreId gpu_geometry_semaphore = nullptr;
+    CGpuFenceId gpu_geometry_fence = nullptr;
 
     AsyncRenderBuffer* vertex_buffers_;
     uint32_t vertex_buffer_count_ = 0;
