@@ -38,7 +38,7 @@ jobs:
         hdiutil detach /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}}
     - name: Configure and Build
       run: |
-        cmake -S . -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D CMAKE_C_COMPILER:FILEPATH=clang -D CMAKE_CXX_COMPILER:FILEPATH=clang++
+        cmake -S . -G Ninja -B build -DBUILD_TEST=OFF -D CMAKE_BUILD_TYPE=Release -D CMAKE_C_COMPILER:FILEPATH=clang -D CMAKE_CXX_COMPILER:FILEPATH=clang++
         cmake --build build --target all
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}

@@ -4,9 +4,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-set(RUNTIME_SHARED FALSE)
-set(BUILD_SAMPLES TRUE)
-set(BUILD_TEST TRUE)
+option(BUILD_TEST "build with tests" ON)
+option(BUILD_SAMPLES "build with samples" ON)
+option(RUNTIME_SHARED "build as shared library" OFF)
 
 set(SAKURA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(SAKURA_BIN_DIR ${CMAKE_BINARY_DIR}/Binaries) 
