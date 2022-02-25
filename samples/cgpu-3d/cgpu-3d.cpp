@@ -39,16 +39,17 @@ int main(int argc, char* argv[])
     auto async_transfer_thread = eastl::make_unique<AsyncTransferThread>();
     async_transfer_thread->Initialize(render_device.get());
 
-    RenderBlackboard::AddTexture("DefaultTexture", aux_thread.get(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-    RenderBlackboard::UploadTexture("DefaultTexture", render_device.get(), TEXTURE_DATA, sizeof(TEXTURE_DATA));
+    RenderBlackboard::Initialize();
+    auto target = RenderBlackboard::AddTexture("DefaultTexture", aux_thread.get(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    async_transfer_thread->UploadTexture(target, TEXTURE_DATA, sizeof(TEXTURE_DATA));
 
     auto render_context = eastl::make_unique<RenderContext>();
     render_context->Initialize(render_device.get());
     auto render_scene = eastl::make_unique<RenderScene>();
     render_scene->Initialize("./../Resources/scene.gltf");
-    render_scene->AsyncCreateGPUMemory(render_context.get(), aux_thread.get());
+    render_scene->AsyncCreateGeometryMemory(render_context.get(), aux_thread.get());
+    render_scene->AsyncCreateTextureMemory(render_context.get(), aux_thread.get());
     render_scene->AsyncCreateRenderPipelines(render_context.get(), pso_aux_thread.get());
-    render_scene->Upload(render_context.get(), aux_thread.get());
     // wvp
     auto world = smath::make_transform(
         { 0.f, 0.f, 0.f },                                             // translation
@@ -119,6 +120,7 @@ int main(int argc, char* argv[])
             if (render_scene->bufs_creation_ready_ && !render_scene->bufs_upload_started_)
             {
                 render_scene->AsyncUploadBuffers(render_context.get(), async_transfer_thread.get());
+                render_scene->AsyncUploadTextures(render_context.get(), async_transfer_thread.get());
             }
             CGpuRenderPipelineId cached_pipeline = nullptr;
             CGpuDescriptorSetId cached_descset = nullptr;
@@ -131,7 +133,8 @@ int main(int argc, char* argv[])
                     {
                         auto& prim = mesh.primitives_[j];
                         auto prim_pipeline = prim.async_ppl_;
-                        if (prim_pipeline->Ready())
+                        if (prim_pipeline->Ready() &&
+                            (cgpu_query_fence_status(prim.texture_->upload_fence_) == FENCE_STATUS_COMPLETE))
                         {
                             if (cached_pipeline != prim_pipeline->pipeline_)
                             {
