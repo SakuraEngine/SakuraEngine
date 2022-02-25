@@ -113,17 +113,19 @@ struct AsyncRenderPipeline : public AsyncRenderResource {
 struct RenderAuxThread {
     void Initialize(class RenderDevice* render_device);
     void Destroy();
-
-    void Enqueue(const AuxThreadTask& task);
-    void Enqueue(const AuxThreadTaskWithCallback& task);
     void Wait();
+
+    void Enqueue(const AuxThreadTaskWithCallback& task);
     SThreadDesc aux_item_;
     SThreadHandle aux_thread_;
     SMutex load_mutex_;
     RenderDevice* render_device_;
-    eastl::vector<AuxThreadTask> task_queue_;
-    eastl::vector<AuxThreadTaskWithCallback> task_queue2_;
+    eastl::vector<AuxThreadTaskWithCallback> task_queue_;
     std::atomic_bool is_running_;
+    bool force_block_ = false;
+};
+
+struct AsyncTransferThread : public RenderAuxThread {
 };
 
 namespace eastl
