@@ -38,6 +38,11 @@
 
 ![cgpu-texture](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/cgpu-texture.png)
 
+### [全异步glTF渲染器](samples/cgpu-3d)
+这个demo的所有I/O操作完全异步。从Disk I/O到Memory，再从Memory流送到VideoMemory，全部都是异步完成的。在有AsyncCompute支持的情况下，demo会使用CopyQueue并处理好Release/Acquire Barriers。在单一Queue的情况下，demo会使用单个的Graphics Queue，通过多个分离的TransferSubmit完成异步的上传操作。
+
+![cgpu-glTF](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/AsyncGLTF.gif)
+
 ## 核心组件
 - platform
 - math
