@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 {
     ECGpuBackend cmdBackend;
     if (argc <= 1)
-        cmdBackend = CGPU_BACKEND_VULKAN;
+        cmdBackend = CGPU_BACKEND_D3D12;
     else
     {
         eastl::string cmdArgv1 = argv[1];
@@ -41,7 +41,9 @@ int main(int argc, char* argv[])
 
     RenderBlackboard::Initialize();
     auto target = RenderBlackboard::AddTexture("DefaultTexture", aux_thread.get(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-    async_transfer_thread->UploadTexture(target, TEXTURE_DATA, sizeof(TEXTURE_DATA));
+    auto defaultTexUploadFence = render_device->AllocFence();
+    async_transfer_thread->UploadTexture(target, TEXTURE_DATA, sizeof(TEXTURE_DATA), defaultTexUploadFence);
+    cgpu_wait_fences(&defaultTexUploadFence, 1);
 
     auto render_context = eastl::make_unique<RenderContext>();
     render_context->Initialize(render_device.get());
@@ -120,11 +122,11 @@ int main(int argc, char* argv[])
             if (render_scene->bufs_creation_ready_ && !render_scene->bufs_upload_started_)
             {
                 render_scene->AsyncUploadBuffers(render_context.get(), async_transfer_thread.get());
-                render_scene->AsyncUploadTextures(render_context.get(), async_transfer_thread.get());
             }
+            render_scene->AsyncUploadTextures(render_context.get(), async_transfer_thread.get());
             CGpuRenderPipelineId cached_pipeline = nullptr;
             CGpuDescriptorSetId cached_descset = nullptr;
-            if (render_scene->AsyncUploadReady())
+            if (render_scene->AsyncGeometryUploadReady())
             {
                 for (uint32_t i = 0; i < render_scene->meshes_.size(); i++)
                 {
@@ -133,8 +135,7 @@ int main(int argc, char* argv[])
                     {
                         auto& prim = mesh.primitives_[j];
                         auto prim_pipeline = prim.async_ppl_;
-                        if (prim_pipeline->Ready() &&
-                            (cgpu_query_fence_status(prim.texture_->upload_fence_) == FENCE_STATUS_COMPLETE))
+                        if (prim_pipeline->Ready())
                         {
                             if (cached_pipeline != prim_pipeline->pipeline_)
                             {

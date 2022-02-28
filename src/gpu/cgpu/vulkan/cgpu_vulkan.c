@@ -1147,11 +1147,18 @@ void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDes
         .signalSemaphoreCount = signalCount,
         .pSignalSemaphores = wait_semaphores,
     };
-    // TODO: Thread Safety ?
+#ifdef CGPU_THREAD_SAFETY
+    if (Q->pMutex)
+        skr_acquire_mutex(Q->pMutex);
+#endif
     VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
     CHECK_VKRESULT(res);
     if (F)
         F->mSubmitted = true;
+#ifdef CGPU_THREAD_SAFETY
+    if (Q->pMutex)
+        skr_release_mutex(Q->pMutex);
+#endif
 }
 
 void cgpu_wait_queue_idle_vulkan(CGpuQueueId queue)
@@ -1193,7 +1200,15 @@ void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentD
             .pImageIndices = &presentIndex,
             .pResults = VK_NULL_HANDLE
         };
+#ifdef CGPU_THREAD_SAFETY
+        if (Q->pMutex)
+            skr_acquire_mutex(Q->pMutex);
+#endif
         VkResult vk_res = D->mVkDeviceTable.vkQueuePresentKHR(Q->pVkQueue, &present_info);
+#ifdef CGPU_THREAD_SAFETY
+        if (Q->pMutex)
+            skr_release_mutex(Q->pMutex);
+#endif
         if (vk_res != VK_SUCCESS && vk_res != VK_SUBOPTIMAL_KHR &&
             vk_res != VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -1211,8 +1226,8 @@ void cgpu_free_queue_vulkan(CGpuQueueId queue)
 #ifdef CGPU_THREAD_SAFETY
     if (Q->pMutex)
     {
+        skr_destroy_mutex(Q->pMutex);
         cgpu_free(Q->pMutex);
-        skr_release_mutex(Q->pMutex);
     }
 #endif
     cgpu_free((void*)queue);

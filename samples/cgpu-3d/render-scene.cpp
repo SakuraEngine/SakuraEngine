@@ -404,6 +404,26 @@ void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransfe
     bufs_upload_started_ = true;
 }
 
+void RenderScene::AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
+{
+    context_ = context;
+    auto renderDevice = context->GetRenderDevice();
+    for (uint32_t i = 0; i < materials_.size(); i++)
+    {
+        auto&& material = materials_.at(i).second;
+        auto uri = material.base_color_uri_.c_str();
+        auto path = eastl::string("./../Resources/").append(uri);
+        auto tex = RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
+        if (tex != nullptr && !tex->Ready())
+        {
+            if (texs_created_.find(tex) == texs_created_.end())
+            {
+                texs_created_[tex] = renderDevice->AllocFence();
+            }
+        }
+    }
+}
+
 void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
     for (uint32_t i = 0; i < materials_.size(); i++)
@@ -412,17 +432,19 @@ void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransf
         auto uri = material.base_color_uri_.c_str();
         if (auto target = RenderBlackboard::GetTexture(uri); target != nullptr)
         {
-            target->Wait();
-            AsyncBufferToTextureTransfer b2t = {};
-            b2t.raw_src = target->upload_buffer_;
-            b2t.src_offset = 0;
-            b2t.dst = target;
-            b2t.elems_per_row = target->texture_->width;
-            b2t.rows_per_image = target->texture_->height;
-            b2t.base_array_layer = 0;
-            b2t.layer_count = 1;
-            ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE;
-            aux_thread->AsyncTransfer(&b2t, &state, 1, target->upload_fence_);
+            if (target->Ready() && !target->upload_started_)
+            {
+                AsyncBufferToTextureTransfer b2t = {};
+                b2t.raw_src = target->upload_buffer_;
+                b2t.src_offset = 0;
+                b2t.dst = target;
+                b2t.elems_per_row = target->texture_->width;
+                b2t.rows_per_image = target->texture_->height;
+                b2t.base_array_layer = 0;
+                b2t.layer_count = 1;
+                ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE;
+                aux_thread->AsyncTransfer(&b2t, &state, 1, texs_created_[target]);
+            }
         }
     }
     for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
@@ -432,7 +454,8 @@ void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransf
         {
             auto&& material = materials_.at(meshes_[i].primitives_[j].material_id_);
             auto rdrTex = RenderBlackboard::GetTexture(material.second.base_color_uri_.c_str());
-            if (rdrTex->texture_ != nullptr)
+            if (rdrTex != nullptr && rdrTex->Ready() &&
+                (cgpu_query_fence_status(texs_created_[rdrTex]) == FENCE_STATUS_COMPLETE))
             {
                 CGpuDescriptorData arguments[1];
                 arguments[0].name = "sampled_texture";
@@ -445,19 +468,7 @@ void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransf
     }
 }
 
-void RenderScene::AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
-{
-    context_ = context;
-    for (uint32_t i = 0; i < materials_.size(); i++)
-    {
-        auto&& material = materials_.at(i).second;
-        auto uri = material.base_color_uri_.c_str();
-        auto path = eastl::string("./../Resources/").append(uri);
-        RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
-    }
-}
-
-bool RenderScene::AsyncUploadReady()
+bool RenderScene::AsyncGeometryUploadReady()
 {
     if (gpu_geometry_fence)
     {
@@ -475,7 +486,6 @@ void RenderScene::Destroy(struct RenderAuxThread* aux_thread)
     if (gltf_data_) cgltf_free(gltf_data_);
     if (gpu_geometry_fence)
     {
-        renderDevice->FreeFence(gpu_geometry_fence);
         for (auto& mesh : meshes_)
         {
             for (auto& prim : mesh.primitives_)

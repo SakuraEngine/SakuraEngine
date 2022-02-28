@@ -133,7 +133,7 @@ struct AsyncTransferThread {
     {
         asyncTransfer(transfers, dst_states, transfer_count, nullptr, fence);
     }
-    AsyncRenderTexture* UploadTexture(AsyncRenderTexture* target, const void* data, size_t data_size);
+    AsyncRenderTexture* UploadTexture(AsyncRenderTexture* target, const void* data, size_t data_size, CGpuFenceId fence);
 
 protected:
     void asyncTransfer(const AsyncBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,

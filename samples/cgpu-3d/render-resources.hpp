@@ -15,6 +15,10 @@
 //                              2.2 Acquire/Release Barrier                      Cmd Thread
 //                    (wait upload_ready_fence_/semaphore_)
 // Then handles are available for drawcalls.
+// AsyncTransfer Task
+// .Prepare(AuxThread, ResourceDesc*) [resource_handle_ready_]  create buffers & driver objects (on Aux Thread)
+//  when resource_handle_ready_:1 mem copy data to handles (on Any Callback Thread)
+// .Run(TransferThread)     after setup, dispatch async transfer tasks (on Cmd Thread)
 struct AsyncRenderResource {
     AsyncRenderResource() = default;
     AsyncRenderResource(AsyncRenderResource&& rhs)
@@ -46,6 +50,7 @@ struct AsyncRenderMemoryResource : public AsyncRenderResource {
     AsyncRenderMemoryResource(AsyncRenderMemoryResource&& rhs)
         : AsyncRenderResource(eastl::move(rhs))
         , upload_started_(rhs.upload_started_.load())
+        , queue_released_(rhs.queue_released_.load())
     {
     }
     AsyncRenderMemoryResource& operator=(AsyncRenderMemoryResource&& rhs)
@@ -55,6 +60,7 @@ struct AsyncRenderMemoryResource : public AsyncRenderResource {
         return *this;
     }
     std::atomic_bool upload_started_ = false;
+    std::atomic_bool queue_released_ = false;
 };
 
 struct AsyncRenderBuffer final : public AsyncRenderMemoryResource {
@@ -79,9 +85,7 @@ struct AsyncRenderTexture final : public AsyncRenderMemoryResource {
     CGpuTextureId texture_;
     CGpuTextureViewId view_;
     unsigned char* image_bytes_ = nullptr;
-    CGpuFenceId upload_fence_ = nullptr;
     CGpuBufferId upload_buffer_ = nullptr;
-    CGpuCommandBufferId upload_cmd_ = nullptr;
 };
 
 struct AsyncRenderShader final : public AsyncRenderResource {
@@ -145,8 +149,8 @@ struct RenderBlackboard {
     static size_t AddVertexLayout(const CGpuVertexLayout& layout);
 
     static AsyncRenderTexture* GetTexture(const char* name);
-    static AsyncRenderTexture* AddTexture(const char* name, struct RenderAuxThread* aux_thread, uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM);
-    static AsyncRenderTexture* AddTexture(const char* name, const char* disk_file, struct RenderAuxThread* aux_thread, ECGpuFormat format);
+    static AsyncRenderTexture* AddTexture(const char* name, struct RenderAuxThread* aux_thread, uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM, const AuxTaskCallback& cb = defaultAuxCallback);
+    static AsyncRenderTexture* AddTexture(const char* name, const char* disk_file, struct RenderAuxThread* aux_thread, ECGpuFormat format, const AuxTaskCallback& cb = defaultAuxCallback);
 
     static AsyncRenderPipeline* AddRenderPipeline(RenderAuxThread* aux_thread, const PipelineKey& key, const AuxTaskCallback& cb = defaultAuxCallback);
     static AsyncRenderPipeline* GetRenderPipeline(const PipelineKey& key);

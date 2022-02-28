@@ -58,7 +58,7 @@ public:
     // On AuxThread and not stuck the calling thread
     void AsyncCreateGeometryMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
     void AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
-    bool AsyncUploadReady();
+    bool AsyncGeometryUploadReady();
     void AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread);
     void AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr);
@@ -71,7 +71,7 @@ public:
     std::atomic_bool bufs_creation_ready_ = false;
     std::atomic_uint32_t bufs_creation_counter_ = 0;
     std::atomic_bool bufs_upload_started_ = false;
-    std::atomic_bool bufs_upload_ready_ = false;
+    eastl::vector_map<AsyncRenderTexture*, CGpuFenceId> texs_created_;
 
     RenderContext* context_ = nullptr;
     CGpuFenceId gpu_geometry_fence = nullptr;
