@@ -67,16 +67,10 @@ void AsyncTransferThread::Initialize(class RenderDevice* render_device)
 
 void AsyncTransferThread::Destroy()
 {
-    eastl::vector<CGpuFenceId> removed;
     for (auto&& iter : async_cpy_cmds_)
     {
-        cgpu_wait_fences(&iter.first, 1);
+        render_device_->FreeFence(iter.first);
         cgpu_free_command_buffer(iter.second);
-        removed.emplace_back(iter.first);
-    }
-    for (auto&& iter : removed)
-    {
-        async_cpy_cmds_.erase(iter);
     }
     cgpu_free_command_pool(cpy_cmd_pool_);
 }
@@ -126,7 +120,8 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToBufferTransfer* trans
     {
         transfers[i].dst->upload_started_ = true;
     }
-    async_cpy_cmds_[fence] = cmd;
+    if (fence)
+        async_cpy_cmds_[fence] = cmd;
 }
 
 void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* transfers, const ECGpuResourceState* dst_states,
@@ -176,7 +171,73 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* tran
     {
         transfers[i].dst->upload_started_ = true;
     }
-    async_cpy_cmds_[fence] = cmd;
+    if (fence)
+        async_cpy_cmds_[fence] = cmd;
+}
+
+AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* target, const void* data, size_t data_size, CGpuFenceId fence)
+{
+    if (target == nullptr)
+        return target;
+    target->Wait();
+    const void* src_ptr = data;
+    if (target->image_bytes_ != nullptr)
+    {
+        src_ptr = target->image_bytes_;
+        data_size = target->texture_->width * target->texture_->height *
+                    FormatUtil_BitSizeOfBlock((ECGpuFormat)target->texture_->format) / 8;
+    }
+    // upload texture data
+    if (!target->upload_buffer_)
+    {
+        CGpuBufferDescriptor upload_buffer_desc = {};
+        upload_buffer_desc.name = eastl::string("Upload-Texture").c_str(),
+        upload_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT,
+        upload_buffer_desc.descriptors = RT_NONE,
+        upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY,
+        upload_buffer_desc.size = data_size;
+        target->upload_buffer_ = cgpu_create_buffer(render_device_->GetCGPUDevice(), &upload_buffer_desc);
+    }
+    // upload texture
+    {
+        memcpy(target->upload_buffer_->cpu_mapped_address, src_ptr, data_size);
+    }
+    CGpuCommandBufferDescriptor cmd_desc = {};
+    cmd_desc.is_secondary = false;
+    CGpuCommandBufferId cmd = cgpu_create_command_buffer(render_device_->cpy_cmd_pool_, &cmd_desc);
+    cgpu_cmd_begin(cmd);
+    CGpuBufferToTextureTransfer b2t = {};
+    b2t.src = target->upload_buffer_;
+    b2t.src_offset = 0;
+    b2t.dst = target->texture_;
+    b2t.elems_per_row = target->texture_->width;
+    b2t.rows_per_image = target->texture_->height;
+    b2t.base_array_layer = 0;
+    b2t.layer_count = 1;
+    cgpu_cmd_transfer_buffer_to_texture(cmd, &b2t);
+    CGpuTextureBarrier srv_barrier = {};
+    srv_barrier.texture = target->texture_;
+    srv_barrier.src_state = RESOURCE_STATE_COPY_DEST;
+    srv_barrier.dst_state = RESOURCE_STATE_SHADER_RESOURCE;
+    if (render_device_->cpy_queue_ != render_device_->gfx_queue_)
+    {
+        srv_barrier.queue_release = true;
+        srv_barrier.queue_type = QUEUE_TYPE_GRAPHICS;
+    }
+    CGpuResourceBarrierDescriptor barrier_desc = {};
+    barrier_desc.texture_barriers = &srv_barrier;
+    barrier_desc.texture_barriers_count = 1;
+    cgpu_cmd_resource_barrier(cmd, &barrier_desc);
+    cgpu_cmd_end(cmd);
+    CGpuQueueSubmitDescriptor cpy_submit = {};
+    cpy_submit.cmds = &cmd;
+    cpy_submit.cmds_count = 1;
+    cpy_submit.signal_fence = fence ? fence : nullptr;
+    cgpu_submit_queue(render_device_->cpy_queue_, &cpy_submit);
+    if (fence)
+        async_cpy_cmds_[fence] = cmd;
+    target->upload_started_ = true;
+    return target;
 }
 
 // Render Buffer
@@ -228,8 +289,6 @@ void AsyncRenderTexture::Initialize(struct RenderAuxThread* aux_thread,
                  view_desc.usages = TVU_SRV;
                  view_ = cgpu_create_texture_view(device, &view_desc);
              }
-             upload_fence_ = cgpu_create_fence(device);
-
              resource_handle_ready_ = true;
          },
             cb });
@@ -271,7 +330,6 @@ void AsyncRenderTexture::Initialize(struct RenderAuxThread* aux_thread, const ea
              sview_desc.texture = texture_;
              view_ = cgpu_create_texture_view(device, &sview_desc);
 
-             upload_fence_ = cgpu_create_fence(device);
              {
                  auto data_size = texture_->width * texture_->height *
                                   FormatUtil_BitSizeOfBlock((ECGpuFormat)texture_->format) / 8;
@@ -303,7 +361,6 @@ void AsyncRenderTexture::Initialize(struct RenderAuxThread* aux_thread,
              CGpuTextureViewDescriptor view_desc = tex_view_desc;
              view_desc.texture = texture_;
              view_ = cgpu_create_texture_view(device, &view_desc);
-             upload_fence_ = cgpu_create_fence(device);
 
              resource_handle_ready_ = true;
          },
@@ -316,7 +373,6 @@ void AsyncRenderTexture::Destroy(struct RenderAuxThread* aux_thread, const AuxTa
         if (image_bytes_) free(image_bytes_);
         cgpu_free_texture(texture_);
         if (view_) cgpu_free_texture_view(view_);
-        if (upload_fence_) cgpu_free_fence(upload_fence_);
         if (upload_buffer_) cgpu_free_buffer(upload_buffer_);
         texture_ = nullptr;
         view_ = nullptr;
@@ -394,18 +450,18 @@ AsyncRenderTexture* RenderBlackboard::GetTexture(const char* name)
 }
 
 AsyncRenderTexture* RenderBlackboard::AddTexture(const char* name, const char* disk_file,
-    struct RenderAuxThread* aux_thread, ECGpuFormat format)
+    struct RenderAuxThread* aux_thread, ECGpuFormat format, const AuxTaskCallback& cb)
 {
     if (GetTexture(name) != nullptr)
         return GetTexture(name);
     textures_.reserve(textures_.size() + 1);
     auto&& target = textures_.emplace_back(name, new AsyncRenderTexture());
-    target.second->Initialize(aux_thread, name, disk_file, format);
+    target.second->Initialize(aux_thread, name, disk_file, format, cb);
     return target.second;
 }
 
 AsyncRenderTexture* RenderBlackboard::AddTexture(const char* name, struct RenderAuxThread* aux_thread,
-    uint32_t width, uint32_t height, ECGpuFormat format)
+    uint32_t width, uint32_t height, ECGpuFormat format, const AuxTaskCallback& cb)
 {
     if (GetTexture(name) != nullptr)
         return GetTexture(name);
@@ -431,71 +487,8 @@ AsyncRenderTexture* RenderBlackboard::AddTexture(const char* name, struct Render
     sview_desc.usages = TVU_SRV;
     textures_.reserve(textures_.size() + 1);
     auto&& target = textures_.emplace_back(name, new AsyncRenderTexture());
-    target.second->Initialize(aux_thread, tex_desc, sview_desc);
+    target.second->Initialize(aux_thread, tex_desc, sview_desc, cb);
     return target.second;
-}
-
-AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* target, const void* data, size_t data_size)
-{
-    if (target == nullptr)
-        return target;
-    target->Wait();
-    const void* src_ptr = data;
-    if (target->image_bytes_ != nullptr)
-    {
-        src_ptr = target->image_bytes_;
-        data_size = target->texture_->width * target->texture_->height *
-                    FormatUtil_BitSizeOfBlock((ECGpuFormat)target->texture_->format) / 8;
-    }
-    // upload texture data
-    if (!target->upload_buffer_)
-    {
-        CGpuBufferDescriptor upload_buffer_desc = {};
-        upload_buffer_desc.name = eastl::string("Upload-Texture").c_str(),
-        upload_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT,
-        upload_buffer_desc.descriptors = RT_NONE,
-        upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY,
-        upload_buffer_desc.size = data_size;
-        target->upload_buffer_ = cgpu_create_buffer(render_device_->GetCGPUDevice(), &upload_buffer_desc);
-    }
-    // upload texture
-    {
-        memcpy(target->upload_buffer_->cpu_mapped_address, src_ptr, data_size);
-    }
-    CGpuCommandBufferDescriptor cmd_desc = {};
-    cmd_desc.is_secondary = false;
-    CGpuCommandBufferId cmd = cgpu_create_command_buffer(render_device_->cpy_cmd_pool_, &cmd_desc);
-    cgpu_cmd_begin(cmd);
-    CGpuBufferToTextureTransfer b2t = {};
-    b2t.src = target->upload_buffer_;
-    b2t.src_offset = 0;
-    b2t.dst = target->texture_;
-    b2t.elems_per_row = target->texture_->width;
-    b2t.rows_per_image = target->texture_->height;
-    b2t.base_array_layer = 0;
-    b2t.layer_count = 1;
-    cgpu_cmd_transfer_buffer_to_texture(cmd, &b2t);
-    CGpuTextureBarrier srv_barrier = {};
-    srv_barrier.texture = target->texture_;
-    srv_barrier.src_state = RESOURCE_STATE_COPY_DEST;
-    srv_barrier.dst_state = RESOURCE_STATE_SHADER_RESOURCE;
-    if (render_device_->cpy_queue_ != render_device_->gfx_queue_)
-    {
-        srv_barrier.queue_release = true;
-        srv_barrier.queue_type = QUEUE_TYPE_GRAPHICS;
-    }
-    CGpuResourceBarrierDescriptor barrier_desc = {};
-    barrier_desc.texture_barriers = &srv_barrier;
-    barrier_desc.texture_barriers_count = 1;
-    cgpu_cmd_resource_barrier(cmd, &barrier_desc);
-    cgpu_cmd_end(cmd);
-    CGpuQueueSubmitDescriptor cpy_submit = {};
-    cpy_submit.cmds = &cmd;
-    cpy_submit.cmds_count = 1;
-    cpy_submit.signal_fence = target->upload_fence_ ? target->upload_fence_ : nullptr;
-    cgpu_submit_queue(render_device_->cpy_queue_, &cpy_submit);
-    target->upload_started_ = true;
-    return target;
 }
 
 AsyncRenderPipeline* RenderBlackboard::GetRenderPipeline(const PipelineKey& key)
