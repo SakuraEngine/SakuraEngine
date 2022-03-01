@@ -27,7 +27,8 @@ public:
     CGpuTextureViewId views_[3] = { nullptr, nullptr, nullptr };
     CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
     CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
-    CGpuSemaphoreId present_semaphore_ = nullptr;
+    CGpuSemaphoreId present_semaphores_[3] = { nullptr, nullptr, nullptr };
+    uint32_t backbuffer_index_ = 0;
     RenderDevice* render_device_ = nullptr;
 };
 

@@ -50,6 +50,7 @@ struct AsyncRenderMemoryResource : public AsyncRenderResource {
     AsyncRenderMemoryResource(AsyncRenderMemoryResource&& rhs)
         : AsyncRenderResource(eastl::move(rhs))
         , upload_started_(rhs.upload_started_.load())
+        , queue_type_(rhs.queue_type_.load())
         , queue_released_(rhs.queue_released_.load())
     {
     }
@@ -57,9 +58,12 @@ struct AsyncRenderMemoryResource : public AsyncRenderResource {
     {
         this->resource_handle_ready_ = rhs.resource_handle_ready_.load();
         this->upload_started_ = rhs.upload_started_.load();
+        this->queue_type_ = rhs.queue_type_.load();
+        this->queue_released_ = rhs.queue_released_.load();
         return *this;
     }
     std::atomic_bool upload_started_ = false;
+    std::atomic<ECGpuQueueType> queue_type_ = QUEUE_TYPE_TRANSFER;
     std::atomic_bool queue_released_ = false;
 };
 
@@ -133,6 +137,7 @@ struct AsyncRenderPipeline final : public AsyncRenderResource {
     void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
     CGpuRenderPipelineId pipeline_;
+    CGpuDescriptorSetId desc_set_;
 };
 
 namespace eastl

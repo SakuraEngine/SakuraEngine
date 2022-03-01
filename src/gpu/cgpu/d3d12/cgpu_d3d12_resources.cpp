@@ -380,6 +380,11 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
         {
             res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         }
+        //
+        if (desc->start_state & RESOURCE_STATE_COPY_DEST)
+        {
+            actualStartState = D3D12_RESOURCE_STATE_COMMON;
+        }
         // Decide render target flags
         if (desc->start_state & RESOURCE_STATE_RENDER_TARGET)
         {

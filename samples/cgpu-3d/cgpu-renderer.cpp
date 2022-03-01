@@ -67,15 +67,17 @@ void RenderWindow::Initialize(RenderDevice* render_device)
         ds_view_desc.usages = TVU_RTV_DSV;
         screen_ds_view_[i] = cgpu_create_texture_view(device_, &ds_view_desc);
     }
-    present_semaphore_ = render_device->AllocSemaphore();
+    for (uint32_t i = 0; i < swapchain_->buffer_count; i++)
+        present_semaphores_[i] = render_device->AllocSemaphore();
 }
 
 CGpuSemaphoreId RenderWindow::AcquireNextFrame(uint32_t& backbuffer_index)
 {
     CGpuAcquireNextDescriptor acquire_desc = {};
-    acquire_desc.signal_semaphore = present_semaphore_;
+    acquire_desc.signal_semaphore = present_semaphores_[backbuffer_index_];
     backbuffer_index = cgpu_acquire_next_image(swapchain_, &acquire_desc);
-    return present_semaphore_;
+    backbuffer_index_ = backbuffer_index;
+    return acquire_desc.signal_semaphore;
 }
 
 void RenderWindow::Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count)
@@ -97,7 +99,8 @@ void RenderWindow::Destroy()
         if (screen_ds_view_[i] != nullptr) cgpu_free_texture_view(screen_ds_view_[i]);
     }
     auto device = swapchain_->device;
-    render_device_->FreeSemaphore(present_semaphore_);
+    for (uint32_t i = 0; i < swapchain_->buffer_count; i++)
+        render_device_->FreeSemaphore(present_semaphores_[i]);
     cgpu_free_swapchain(swapchain_);
     cgpu_free_surface(device, surface_);
     SDL_DestroyWindow(sdl_window_);
@@ -126,7 +129,7 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     Gs[0].queueCount = 1;
     Gs[1].queueType = QUEUE_TYPE_TRANSFER;
     Gs[1].queueCount = 1;
-    if (cgpu_query_queue_count(adapter_, QUEUE_TYPE_TRANSFER) && false)
+    if (cgpu_query_queue_count(adapter_, QUEUE_TYPE_TRANSFER))
     {
         CGpuDeviceDescriptor device_desc = {};
         device_desc.queueGroups = Gs;
@@ -280,6 +283,7 @@ void GfxContext::Initialize(RenderDevice* device)
     cmd_buffer_ = cgpu_create_command_buffer(cmd_pool_, &cmd_desc);
     exec_fence_ = cgpu_create_fence(device->GetCGPUDevice());
 }
+
 void GfxContext::Begin()
 {
     cgpu_wait_fences(&exec_fence_, 1);
@@ -290,6 +294,42 @@ void GfxContext::Begin()
 void GfxContext::ResourceBarrier(const CGpuResourceBarrierDescriptor& barrier_desc)
 {
     cgpu_cmd_resource_barrier(cmd_buffer_, &barrier_desc);
+}
+
+void GfxContext::AcquireResources(AsyncRenderTexture* const* textures, uint32_t textures_count,
+    AsyncRenderBuffer* const* buffers, uint32_t buffers_count)
+{
+    const auto theQueueType = QUEUE_TYPE_GRAPHICS;
+    eastl::vector<CGpuTextureBarrier> tex_barriers(textures_count);
+    eastl::vector<CGpuBufferBarrier> buf_barriers(buffers_count);
+    for (uint32_t i = 0; i < textures_count; i++)
+    {
+        tex_barriers[i].texture = textures[i]->texture_;
+        tex_barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
+        tex_barriers[i].dst_state = RESOURCE_STATE_SHADER_RESOURCE;
+        tex_barriers[i].queue_acquire = true;
+        tex_barriers[i].queue_release = false;
+        tex_barriers[i].queue_type = theQueueType;
+        textures[i]->queue_type_ = theQueueType;
+        textures[i]->queue_released_ = false;
+    }
+    for (uint32_t i = 0; i < buffers_count; i++)
+    {
+        buf_barriers[i].buffer = buffers[i]->buffer_;
+        buf_barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
+        buf_barriers[i].dst_state = RESOURCE_STATE_SHADER_RESOURCE;
+        buf_barriers[i].queue_acquire = true;
+        buf_barriers[i].queue_release = false;
+        buf_barriers[i].queue_type = theQueueType;
+        buffers[i]->queue_type_ = theQueueType;
+        buffers[i]->queue_released_ = false;
+    }
+    CGpuResourceBarrierDescriptor acquire_barriers = {};
+    acquire_barriers.texture_barriers = tex_barriers.data();
+    acquire_barriers.texture_barriers_count = (uint32_t)tex_barriers.size();
+    acquire_barriers.buffer_barriers = buf_barriers.data();
+    acquire_barriers.buffer_barriers_count = (uint32_t)buf_barriers.size();
+    ResourceBarrier(acquire_barriers);
 }
 
 void GfxContext::End()

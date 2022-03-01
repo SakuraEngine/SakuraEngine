@@ -24,6 +24,7 @@ const uint8_t TEXTURE_DATA[] = {
     255, 255, 255, 255,
     0, 0, 0, 0
 };
+#define MAX_FLIGHT_FRAMES 3
 
 int main(int argc, char* argv[])
 {
@@ -47,21 +48,30 @@ int main(int argc, char* argv[])
     pso_aux_thread->Initialize(render_device.get());
     auto async_transfer_thread = eastl::make_unique<AsyncTransferThread>();
     async_transfer_thread->Initialize(render_device.get());
-
+    // context & default resources
+    eastl::unique_ptr<RenderContext> render_contexts_[MAX_FLIGHT_FRAMES];
+    for (uint32_t i = 0; i < MAX_FLIGHT_FRAMES; i++)
+    {
+        render_contexts_[i] = eastl::make_unique<RenderContext>();
+        render_contexts_[i]->Initialize(render_device.get());
+    }
     RenderBlackboard::Initialize();
     auto target = RenderBlackboard::AddTexture("DefaultTexture", aux_thread.get(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
     auto defaultTexUploadFence = render_device->AllocFence();
     target->Wait();
     async_transfer_thread->UploadTexture(target, TEXTURE_DATA, sizeof(TEXTURE_DATA), defaultTexUploadFence);
     cgpu_wait_fences(&defaultTexUploadFence, 1);
-
-    auto render_context = eastl::make_unique<RenderContext>();
-    render_context->Initialize(render_device.get());
+    render_contexts_[0]->Begin();
+    render_contexts_[0]->AcquireResources(&target, 1, nullptr, 0);
+    render_contexts_[0]->End();
+    render_device->Submit(render_contexts_[0].get());
+    // scene
     auto render_scene = eastl::make_unique<RenderScene>();
     render_scene->Initialize("./../Resources/scene.gltf");
-    render_scene->AsyncCreateGeometryMemory(render_context.get(), aux_thread.get());
-    render_scene->AsyncCreateTextureMemory(render_context.get(), aux_thread.get());
-    render_scene->AsyncCreateRenderPipelines(render_context.get(), pso_aux_thread.get());
+    // !!! render_contexts_ -> render_device !!!
+    render_scene->AsyncCreateGeometryMemory(render_contexts_[0].get(), aux_thread.get());
+    render_scene->AsyncCreateTextureMemory(render_contexts_[0].get(), aux_thread.get());
+    render_scene->AsyncCreateRenderPipelines(render_contexts_[0].get(), pso_aux_thread.get());
     // wvp
     auto world = smath::make_transform(
         { 0.f, 0.f, 0.f },                                             // translation
@@ -79,6 +89,7 @@ int main(int argc, char* argv[])
     // render loop
     bool quit = false;
     uint32_t backbuffer_index = 0;
+    uint32_t context_index = 0;
     while (!quit)
     {
         SDL_Event event;
@@ -89,6 +100,8 @@ int main(int argc, char* argv[])
                 quit = !SDLEventHandler(&event, render_window->sdl_window_);
             }
         }
+
+        auto render_context = render_contexts_[context_index].get();
         render_context->Wait();
         render_context->Begin();
         // swapchain get ready
@@ -120,16 +133,16 @@ int main(int argc, char* argv[])
         barrier_desc0.texture_barriers = &draw_barrier;
         barrier_desc0.texture_barriers_count = 1;
         render_context->ResourceBarrier(barrier_desc0);
+        {
+            render_scene->AsyncUploadBuffers(render_context, async_transfer_thread.get());
+            render_scene->AsyncUploadTextures(render_context, async_transfer_thread.get());
+        }
         // begin render scene
         render_context->BeginRenderPass(rp_desc);
         render_context->SetViewport(0.0f, 0.0f,
             (float)back_buffer->width, (float)back_buffer->height,
             0.f, 1.f);
         render_context->SetScissor(0, 0, back_buffer->width, back_buffer->height);
-        {
-            render_scene->AsyncUploadBuffers(render_context.get(), async_transfer_thread.get());
-            render_scene->AsyncUploadTextures(render_context.get(), async_transfer_thread.get());
-        }
         if (render_scene->AsyncGeometryUploadReady())
         {
             for (uint32_t i = 0; i < render_scene->meshes_.size(); i++)
@@ -142,7 +155,8 @@ int main(int argc, char* argv[])
                     if (prim_pipeline->Ready())
                     {
                         render_context->BindPipeline(prim_pipeline->pipeline_);
-                        render_context->BindDescriptorSet(prim.desc_set_);
+                        render_context->BindDescriptorSet(
+                            prim.desc_set_updated_ ? prim.desc_set_ : prim_pipeline->desc_set_);
                         render_context->BindIndexBuffer(render_scene->index_buffer_.buffer_,
                             render_scene->index_stride_, prim.index_offset_);
                         const auto vbc = (uint32_t)prim.vertex_buffers_.size();
@@ -167,8 +181,9 @@ int main(int argc, char* argv[])
         barrier_desc1.texture_barriers_count = 1;
         render_context->ResourceBarrier(barrier_desc1);
         render_context->End();
-        render_device->Submit(render_context.get());
-        render_window->Present(backbuffer_index, &render_window->present_semaphore_, 1);
+        render_device->Submit(render_context);
+        render_window->Present(backbuffer_index, &render_window->present_semaphores_[backbuffer_index], 1);
+        context_index = (context_index + 1) % MAX_FLIGHT_FRAMES;
     }
     render_device->WaitIdle();
     // stop & wait cpy cmds
@@ -179,7 +194,8 @@ int main(int argc, char* argv[])
     render_scene->Destroy();
     RenderBlackboard::Finalize();
     // destroy driver objects
-    render_context->Destroy();
+    for (uint32_t i = 0; i < MAX_FLIGHT_FRAMES; i++)
+        render_contexts_[i]->Destroy();
     render_window->Destroy();
     render_device->Destroy();
     return 0;

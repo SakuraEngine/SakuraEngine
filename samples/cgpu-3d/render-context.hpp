@@ -13,6 +13,8 @@ public:
 
     void Begin();
     void ResourceBarrier(const CGpuResourceBarrierDescriptor& barrier_desc);
+    void AcquireResources(AsyncRenderTexture* const* textures, uint32_t textures_count,
+        AsyncRenderBuffer* const* buffers, uint32_t buffers_count);
     void End();
     void Wait();
 
