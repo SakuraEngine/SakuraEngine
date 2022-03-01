@@ -120,6 +120,8 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToBufferTransfer* trans
     for (uint32_t i = 0; i < transfer_count; i++)
     {
         transfers[i].dst->upload_started_ = true;
+        transfers[i].dst->queue_released_ = false;
+        transfers[i].dst->queue_type_ = QUEUE_TYPE_TRANSFER;
     }
     if (fence)
         async_cpy_cmds_[fence] = cmd;
@@ -156,10 +158,10 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* tran
         trans.src_offset = transfers[i].src_offset;
         cgpu_cmd_transfer_buffer_to_texture(cmd, &trans);
     }
-    CGpuResourceBarrierDescriptor barriers_desc = {};
-    barriers_desc.texture_barriers = barriers.data();
-    barriers_desc.texture_barriers_count = (uint32_t)barriers.size();
-    cgpu_cmd_resource_barrier(cmd, &barriers_desc);
+    CGpuResourceBarrierDescriptor release_barriers = {};
+    release_barriers.texture_barriers = barriers.data();
+    release_barriers.texture_barriers_count = (uint32_t)barriers.size();
+    cgpu_cmd_resource_barrier(cmd, &release_barriers);
     cgpu_cmd_end(cmd);
     CGpuQueueSubmitDescriptor submit_desc = {};
     submit_desc.cmds = &cmd;
@@ -171,6 +173,8 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* tran
     for (uint32_t i = 0; i < transfer_count; i++)
     {
         transfers[i].dst->upload_started_ = true;
+        transfers[i].dst->queue_released_ = false;
+        transfers[i].dst->queue_type_ = QUEUE_TYPE_TRANSFER;
     }
     if (fence)
         async_cpy_cmds_[fence] = cmd;
@@ -255,6 +259,8 @@ AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* targe
     if (fence)
         async_cpy_cmds_[fence] = cmd;
     target->upload_started_ = true;
+    target->queue_released_ = false;
+    target->queue_type_ = QUEUE_TYPE_TRANSFER;
     return target;
 }
 
@@ -433,6 +439,10 @@ void AsyncRenderPipeline::Initialize(struct RenderAuxThread* aux_thread, const C
 {
     aux_thread->Enqueue({ [=](CGpuDeviceId device) {
                              pipeline_ = cgpu_create_render_pipeline(device, &desc);
+                             CGpuDescriptorSetDescriptor desc_desc = {};
+                             desc_desc.root_signature = desc.root_signature;
+                             desc_desc.set_index = 0;
+                             desc_set_ = aux_thread->render_device_->CreateDescriptorSet(desc.root_signature, 0);
                              resource_handle_ready_ = true;
                          },
         cb });
@@ -440,8 +450,10 @@ void AsyncRenderPipeline::Initialize(struct RenderAuxThread* aux_thread, const C
 
 void AsyncRenderPipeline::Destroy(struct RenderAuxThread* aux_thread, const AuxTaskCallback& cb)
 {
-    auto destructor = [this](CGpuDeviceId device) {
+    auto destructor = [this, aux_thread](CGpuDeviceId device) {
         cgpu_free_render_pipeline(pipeline_);
+        cgpu_free_descriptor_set(desc_set_);
+        desc_set_ = nullptr;
         pipeline_ = nullptr;
     };
     if (aux_thread)

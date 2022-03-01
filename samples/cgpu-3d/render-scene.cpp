@@ -419,9 +419,9 @@ void RenderScene::AsyncCreateTextureMemory(RenderContext* context, struct Render
         auto tex = RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
         if (tex != nullptr && !tex->Ready())
         {
-            if (texs_created_.find(tex) == texs_created_.end())
+            if (tex_transfers_.find(tex) == tex_transfers_.end())
             {
-                texs_created_[tex] = renderDevice->AllocFence();
+                tex_transfers_[tex] = renderDevice->AllocFence();
             }
         }
     }
@@ -429,6 +429,8 @@ void RenderScene::AsyncCreateTextureMemory(RenderContext* context, struct Render
 
 void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
+    auto renderDevice = context->GetRenderDevice();
+    eastl::vector<AsyncRenderTexture*> textures_to_acquire;
     for (uint32_t i = 0; i < materials_.size(); i++)
     {
         auto&& material = materials_.at(i).second;
@@ -446,7 +448,18 @@ void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransf
                 b2t.base_array_layer = 0;
                 b2t.layer_count = 1;
                 ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE;
-                aux_thread->AsyncTransfer(&b2t, &state, 1, texs_created_[target]);
+                aux_thread->AsyncTransfer(&b2t, &state, 1, tex_transfers_[target]);
+            }
+            if (!target->queue_released_ &&
+                cgpu_query_fence_status(tex_transfers_[target]) == FENCE_STATUS_COMPLETE)
+            {
+                // TODO: impl this as callback in AsyncTransferThread::asyncTransfer
+                target->queue_released_ = true;
+                if ((target->queue_type_.load() == QUEUE_TYPE_TRANSFER) &&
+                    renderDevice->GetCopyQueue() != renderDevice->GetGraphicsQueue())
+                {
+                    textures_to_acquire.emplace_back(target);
+                }
             }
         }
     }
@@ -458,14 +471,25 @@ void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransf
             auto&& material = materials_.at(meshes_[i].primitives_[j].material_id_);
             auto rdrTex = RenderBlackboard::GetTexture(material.second.base_color_uri_.c_str());
             if (rdrTex != nullptr && rdrTex->Ready() &&
-                (cgpu_query_fence_status(texs_created_[rdrTex]) == FENCE_STATUS_COMPLETE))
+                (cgpu_query_fence_status(tex_transfers_[rdrTex]) == FENCE_STATUS_COMPLETE))
             {
-                CGpuDescriptorData arguments[1];
-                arguments[0].name = "sampled_texture";
-                arguments[0].count = 1;
-                arguments[0].textures = &rdrTex->view_;
-                cgpu_update_descriptor_set(meshes_[i].primitives_[j].desc_set_, arguments, 1);
-                meshes_[i].primitives_[j].texture_ = rdrTex;
+                if (rdrTex->queue_released_ && (rdrTex->queue_type_.load() == QUEUE_TYPE_TRANSFER))
+                {
+                    if (renderDevice->GetCopyQueue() != renderDevice->GetGraphicsQueue())
+                    {
+                        context->AcquireResources(textures_to_acquire.data(), textures_to_acquire.size(), nullptr, 0);
+                    }
+                }
+                if (!meshes_[i].primitives_[j].desc_set_updated_)
+                {
+                    CGpuDescriptorData arguments[1];
+                    arguments[0].name = "sampled_texture";
+                    arguments[0].count = 1;
+                    arguments[0].textures = &rdrTex->view_;
+                    cgpu_update_descriptor_set(meshes_[i].primitives_[j].desc_set_, arguments, 1);
+                    meshes_[i].primitives_[j].desc_set_updated_ = true;
+                    meshes_[i].primitives_[j].texture_ = rdrTex;
+                }
             }
         }
     }
