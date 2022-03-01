@@ -15,6 +15,8 @@ public:
     RenderWindow() = default;
     void Initialize(RenderDevice* render_device);
     void Destroy();
+    CGpuSemaphoreId AcquireNextFrame(uint32_t& back_buffer_index);
+    void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
 
     // window
     SDL_Window* sdl_window_;
@@ -25,6 +27,8 @@ public:
     CGpuTextureViewId views_[3] = { nullptr, nullptr, nullptr };
     CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
     CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
+    CGpuSemaphoreId present_semaphore_ = nullptr;
+    RenderDevice* render_device_ = nullptr;
 };
 
 // D3D11-CreateDeviceAndSwapChain
@@ -39,12 +43,9 @@ public:
     void Initialize(ECGpuBackend backend, RenderWindow** render_window);
     void Destroy();
 
-    const uint32_t* get_vertex_shader();
-    const uint32_t get_vertex_shader_size();
-    const uint32_t* get_fragment_shader();
-    const uint32_t get_fragment_shader_size();
     FORCEINLINE CGpuDeviceId GetCGPUDevice() { return device_; }
-    FORCEINLINE CGpuQueueId GetCGPUQueue() { return gfx_queue_; }
+    FORCEINLINE CGpuQueueId GetGraphicsQueue() { return gfx_queue_; }
+    FORCEINLINE CGpuQueueId GetPresentQueue() { return gfx_queue_; }
     FORCEINLINE CGpuQueueId GetCopyQueue() { return cpy_queue_; }
     FORCEINLINE ECGpuFormat GetScreenFormat() { return screen_format_; }
     FORCEINLINE CGpuRootSignatureId GetCGPUSignature() { return root_sig_; }
@@ -55,12 +56,14 @@ public:
     void FreeFence(CGpuFenceId fence);
     CGpuDescriptorSetId CreateDescriptorSet(const CGpuRootSignatureId signature, uint32_t set_index);
     void FreeDescriptorSet(CGpuDescriptorSetId desc_set);
-    uint32_t AcquireNextFrame(RenderWindow* window, const CGpuAcquireNextDescriptor& acquire);
-    void Present(RenderWindow* window, uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
     void Submit(class RenderContext* context);
     void WaitIdle();
 
 protected:
+    const uint32_t* getVertexShader();
+    const uint32_t getVertexShaderSize();
+    const uint32_t* getFragmentShader();
+    const uint32_t getFragmentShaderSize();
     void freeRenderPipeline(CGpuRenderPipelineId pipeline);
 
     ECGpuBackend backend_;
@@ -146,25 +149,25 @@ protected:
     eastl::unordered_map<CGpuFenceId, CGpuBufferId> async_cpy_bufs_;
 };
 
-FORCEINLINE const uint32_t* RenderDevice::get_vertex_shader()
+FORCEINLINE const uint32_t* RenderDevice::getVertexShader()
 {
     if (backend_ == CGPU_BACKEND_VULKAN) return (const uint32_t*)vertex_shader_spirv;
     if (backend_ == CGPU_BACKEND_D3D12) return (const uint32_t*)vertex_shader_dxil;
     return CGPU_NULLPTR;
 }
-FORCEINLINE const uint32_t RenderDevice::get_vertex_shader_size()
+FORCEINLINE const uint32_t RenderDevice::getVertexShaderSize()
 {
     if (backend_ == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
     if (backend_ == CGPU_BACKEND_D3D12) return sizeof(vertex_shader_dxil);
     return 0;
 }
-FORCEINLINE const uint32_t* RenderDevice::get_fragment_shader()
+FORCEINLINE const uint32_t* RenderDevice::getFragmentShader()
 {
     if (backend_ == CGPU_BACKEND_VULKAN) return (const uint32_t*)fragment_shader_spirv;
     if (backend_ == CGPU_BACKEND_D3D12) return (const uint32_t*)fragment_shader_dxil;
     return CGPU_NULLPTR;
 }
-FORCEINLINE const uint32_t RenderDevice::get_fragment_shader_size()
+FORCEINLINE const uint32_t RenderDevice::getFragmentShaderSize()
 {
     if (backend_ == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
     if (backend_ == CGPU_BACKEND_D3D12) return sizeof(fragment_shader_dxil);

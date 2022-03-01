@@ -16,11 +16,20 @@ typedef struct PushConstants {
 
 static PushConstants data = {};
 
+#define TEXTURE_WIDTH 2
+#define TEXTURE_HEIGHT 2
+const uint8_t TEXTURE_DATA[] = {
+    0, 0, 0, 0,
+    255, 255, 255, 255,
+    255, 255, 255, 255,
+    0, 0, 0, 0
+};
+
 int main(int argc, char* argv[])
 {
     ECGpuBackend cmdBackend;
     if (argc <= 1)
-        cmdBackend = CGPU_BACKEND_D3D12;
+        cmdBackend = CGPU_BACKEND_VULKAN;
     else
     {
         eastl::string cmdArgv1 = argv[1];
@@ -42,6 +51,7 @@ int main(int argc, char* argv[])
     RenderBlackboard::Initialize();
     auto target = RenderBlackboard::AddTexture("DefaultTexture", aux_thread.get(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
     auto defaultTexUploadFence = render_device->AllocFence();
+    target->Wait();
     async_transfer_thread->UploadTexture(target, TEXTURE_DATA, sizeof(TEXTURE_DATA), defaultTexUploadFence);
     cgpu_wait_fences(&defaultTexUploadFence, 1);
 
@@ -69,7 +79,6 @@ int main(int argc, char* argv[])
     // render loop
     bool quit = false;
     uint32_t backbuffer_index = 0;
-    auto present_semaphore = render_device->AllocSemaphore();
     while (!quit)
     {
         SDL_Event event;
@@ -80,12 +89,11 @@ int main(int argc, char* argv[])
                 quit = !SDLEventHandler(&event, render_window->sdl_window_);
             }
         }
-        CGpuAcquireNextDescriptor acquire_desc = {};
-        acquire_desc.signal_semaphore = present_semaphore;
-        backbuffer_index = render_device->AcquireNextFrame(render_window, acquire_desc);
-        const CGpuTextureId back_buffer = render_window->swapchain_->back_buffers[backbuffer_index];
         render_context->Wait();
         render_context->Begin();
+        // swapchain get ready
+        render_window->AcquireNextFrame(backbuffer_index);
+        const CGpuTextureId back_buffer = render_window->swapchain_->back_buffers[backbuffer_index];
         // render pass
         CGpuColorAttachment screen_attachment = {};
         screen_attachment.view = render_window->views_[backbuffer_index];
@@ -112,57 +120,44 @@ int main(int argc, char* argv[])
         barrier_desc0.texture_barriers = &draw_barrier;
         barrier_desc0.texture_barriers_count = 1;
         render_context->ResourceBarrier(barrier_desc0);
+        // begin render scene
+        render_context->BeginRenderPass(rp_desc);
+        render_context->SetViewport(0.0f, 0.0f,
+            (float)back_buffer->width, (float)back_buffer->height,
+            0.f, 1.f);
+        render_context->SetScissor(0, 0, back_buffer->width, back_buffer->height);
         {
-            // Begin render scene
-            render_context->BeginRenderPass(rp_desc);
-            render_context->SetViewport(0.0f, 0.0f,
-                (float)back_buffer->width, (float)back_buffer->height,
-                0.f, 1.f);
-            render_context->SetScissor(0, 0, back_buffer->width, back_buffer->height);
-            if (render_scene->bufs_creation_ready_ && !render_scene->bufs_upload_started_)
-            {
-                render_scene->AsyncUploadBuffers(render_context.get(), async_transfer_thread.get());
-            }
+            render_scene->AsyncUploadBuffers(render_context.get(), async_transfer_thread.get());
             render_scene->AsyncUploadTextures(render_context.get(), async_transfer_thread.get());
-            CGpuRenderPipelineId cached_pipeline = nullptr;
-            CGpuDescriptorSetId cached_descset = nullptr;
-            if (render_scene->AsyncGeometryUploadReady())
+        }
+        if (render_scene->AsyncGeometryUploadReady())
+        {
+            for (uint32_t i = 0; i < render_scene->meshes_.size(); i++)
             {
-                for (uint32_t i = 0; i < render_scene->meshes_.size(); i++)
+                auto& mesh = render_scene->meshes_[i];
+                for (uint32_t j = 0; j < mesh.primitives_.size(); j++)
                 {
-                    auto& mesh = render_scene->meshes_[i];
-                    for (uint32_t j = 0; j < mesh.primitives_.size(); j++)
+                    auto& prim = mesh.primitives_[j];
+                    auto prim_pipeline = prim.async_ppl_;
+                    if (prim_pipeline->Ready())
                     {
-                        auto& prim = mesh.primitives_[j];
-                        auto prim_pipeline = prim.async_ppl_;
-                        if (prim_pipeline->Ready())
-                        {
-                            if (cached_pipeline != prim_pipeline->pipeline_)
-                            {
-                                render_context->BindPipeline(prim_pipeline->pipeline_);
-                                cached_pipeline = prim_pipeline->pipeline_;
-                            }
-                            if (cached_descset != prim.desc_set_)
-                            {
-                                render_context->BindDescriptorSet(prim.desc_set_);
-                                cached_descset = prim.desc_set_;
-                            }
-                            render_context->BindIndexBuffer(render_scene->index_buffer_.buffer_,
-                                render_scene->index_stride_, prim.index_offset_);
-                            const auto vbc = (uint32_t)prim.vertex_buffers_.size();
-                            render_context->BindVertexBuffers(
-                                vbc,
-                                prim.vertex_buffers_.data(),
-                                prim.vertex_strides_.data(),
-                                prim.vertex_offsets_.data());
-                            render_context->PushConstants(cached_pipeline->root_signature, "root_constants", &data);
-                            render_context->DrawIndexedInstanced(prim.index_count_, prim.first_index_, 1, 0, 0);
-                        }
+                        render_context->BindPipeline(prim_pipeline->pipeline_);
+                        render_context->BindDescriptorSet(prim.desc_set_);
+                        render_context->BindIndexBuffer(render_scene->index_buffer_.buffer_,
+                            render_scene->index_stride_, prim.index_offset_);
+                        const auto vbc = (uint32_t)prim.vertex_buffers_.size();
+                        render_context->BindVertexBuffers(
+                            vbc,
+                            prim.vertex_buffers_.data(),
+                            prim.vertex_strides_.data(),
+                            prim.vertex_offsets_.data());
+                        render_context->PushConstants(prim_pipeline->pipeline_->root_signature, "root_constants", &data);
+                        render_context->DrawIndexedInstanced(prim.index_count_, prim.first_index_, 1, 0, 0);
                     }
                 }
             }
-            render_context->EndRenderPass();
         }
+        render_context->EndRenderPass();
         CGpuTextureBarrier present_barrier = {};
         present_barrier.texture = back_buffer;
         present_barrier.src_state = RESOURCE_STATE_RENDER_TARGET;
@@ -173,9 +168,8 @@ int main(int argc, char* argv[])
         render_context->ResourceBarrier(barrier_desc1);
         render_context->End();
         render_device->Submit(render_context.get());
-        render_device->Present(render_window, backbuffer_index, &present_semaphore, 1);
+        render_window->Present(backbuffer_index, &render_window->present_semaphore_, 1);
     }
-    render_device->FreeSemaphore(present_semaphore);
     render_device->WaitIdle();
     // stop & wait cpy cmds
     aux_thread->Destroy();

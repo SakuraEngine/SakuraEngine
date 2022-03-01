@@ -47,4 +47,7 @@ protected:
     CGpuRootSignatureId current_root_sig_;
     // encoders
     CGpuRenderPassEncoderId rp_encoder_;
+    // cached states
+    CGpuRenderPipelineId cached_pipeline = nullptr;
+    CGpuDescriptorSetId cached_descset = nullptr;
 };

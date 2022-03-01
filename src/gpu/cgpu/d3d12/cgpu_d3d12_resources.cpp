@@ -338,7 +338,10 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
         // On PC, If Alignment is set to 0, the runtime will use 4MB for MSAA
         // textures and 64KB for everything else. On XBox, We have to explicitlly
         // assign D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT if MSAA is used
-        res_desc.Alignment = (UINT)desc->sample_count > 1 ? D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT : 0;
+        res_desc.Alignment =
+            (UINT)desc->sample_count > 1 ?
+                D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT :
+                0;
         res_desc.Width = desc->width;
         res_desc.Height = desc->height;
         res_desc.DepthOrArraySize =
