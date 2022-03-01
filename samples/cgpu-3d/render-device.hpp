@@ -13,7 +13,7 @@ class RenderWindow
 
 public:
     RenderWindow() = default;
-    void Initialize(RenderDevice* render_device);
+    void Initialize(class RenderDevice* render_device);
     void Destroy();
     CGpuSemaphoreId AcquireNextFrame(uint32_t& back_buffer_index);
     void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
@@ -40,7 +40,7 @@ class RenderDevice
     friend struct AsyncTransferThread;
 
 public:
-    void Initialize(ECGpuBackend backend, RenderWindow** render_window);
+    void Initialize(ECGpuBackend backend, class RenderWindow** render_window);
     void Destroy();
 
     FORCEINLINE CGpuDeviceId GetCGPUDevice() { return device_; }
