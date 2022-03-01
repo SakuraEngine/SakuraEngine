@@ -6,6 +6,7 @@
 
 void RenderWindow::Initialize(RenderDevice* render_device)
 {
+    render_device_ = render_device;
     auto device_ = render_device->GetCGPUDevice();
     // create sdl window
     sdl_window_ = SDL_CreateWindow(gCGpuBackendNames[render_device->backend_],
@@ -66,6 +67,40 @@ void RenderWindow::Initialize(RenderDevice* render_device)
         ds_view_desc.usages = TVU_RTV_DSV;
         screen_ds_view_[i] = cgpu_create_texture_view(device_, &ds_view_desc);
     }
+    present_semaphore_ = render_device->AllocSemaphore();
+}
+
+CGpuSemaphoreId RenderWindow::AcquireNextFrame(uint32_t& backbuffer_index)
+{
+    CGpuAcquireNextDescriptor acquire_desc = {};
+    acquire_desc.signal_semaphore = present_semaphore_;
+    backbuffer_index = cgpu_acquire_next_image(swapchain_, &acquire_desc);
+    return present_semaphore_;
+}
+
+void RenderWindow::Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count)
+{
+    CGpuQueuePresentDescriptor present_desc = {};
+    present_desc.index = index;
+    present_desc.wait_semaphore_count = semaphore_count;
+    present_desc.wait_semaphores = wait_semaphores;
+    present_desc.swapchain = swapchain_;
+    cgpu_queue_present(render_device_->GetPresentQueue(), &present_desc);
+}
+
+void RenderWindow::Destroy()
+{
+    for (uint32_t i = 0; i < 3; i++)
+    {
+        if (views_[i] != nullptr) cgpu_free_texture_view(views_[i]);
+        if (screen_ds_[i] != nullptr) cgpu_free_texture(screen_ds_[i]);
+        if (screen_ds_view_[i] != nullptr) cgpu_free_texture_view(screen_ds_view_[i]);
+    }
+    auto device = swapchain_->device;
+    render_device_->FreeSemaphore(present_semaphore_);
+    cgpu_free_swapchain(swapchain_);
+    cgpu_free_surface(device, surface_);
+    SDL_DestroyWindow(sdl_window_);
 }
 
 void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_window)
@@ -122,14 +157,14 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     CGpuShaderLibraryDescriptor vs_desc = {};
     vs_desc.name = "VertexShaderLibrary";
     vs_desc.stage = SHADER_STAGE_VERT;
-    vs_desc.code = get_vertex_shader();
-    vs_desc.code_size = get_vertex_shader_size();
+    vs_desc.code = getVertexShader();
+    vs_desc.code_size = getVertexShaderSize();
     vs_library_ = cgpu_create_shader_library(device_, &vs_desc);
     CGpuShaderLibraryDescriptor fs_desc = {};
     fs_desc.name = "FragmentShaderLibrary";
     fs_desc.stage = SHADER_STAGE_FRAG;
-    fs_desc.code = get_fragment_shader();
-    fs_desc.code_size = get_fragment_shader_size();
+    fs_desc.code = getFragmentShader();
+    fs_desc.code_size = getFragmentShaderSize();
     fs_library_ = cgpu_create_shader_library(device_, &fs_desc);
     CGpuSamplerDescriptor sampler_desc = {};
     sampler_desc.address_u = ADDRESS_MODE_REPEAT;
@@ -158,20 +193,6 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     rs_desc.static_sampler_count = 1;
     rs_desc.static_sampler_names = &sampler_name;
     root_sig_ = cgpu_create_root_signature(device_, &rs_desc);
-}
-
-void RenderWindow::Destroy()
-{
-    for (uint32_t i = 0; i < 3; i++)
-    {
-        if (views_[i] != nullptr) cgpu_free_texture_view(views_[i]);
-        if (screen_ds_[i] != nullptr) cgpu_free_texture(screen_ds_[i]);
-        if (screen_ds_view_[i] != nullptr) cgpu_free_texture_view(screen_ds_view_[i]);
-    }
-    auto device = swapchain_->device;
-    cgpu_free_swapchain(swapchain_);
-    cgpu_free_surface(device, surface_);
-    SDL_DestroyWindow(sdl_window_);
 }
 
 void RenderDevice::Destroy()
@@ -229,21 +250,6 @@ void RenderDevice::FreeDescriptorSet(CGpuDescriptorSetId desc_set)
     cgpu_free_descriptor_set(desc_set);
 }
 
-uint32_t RenderDevice::AcquireNextFrame(RenderWindow* window, const CGpuAcquireNextDescriptor& acquire)
-{
-    return cgpu_acquire_next_image(window->swapchain_, &acquire);
-}
-
-void RenderDevice::Present(RenderWindow* window, uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count)
-{
-    CGpuQueuePresentDescriptor present_desc = {};
-    present_desc.index = index;
-    present_desc.wait_semaphore_count = semaphore_count;
-    present_desc.wait_semaphores = wait_semaphores;
-    present_desc.swapchain = window->swapchain_;
-    cgpu_queue_present(gfx_queue_, &present_desc);
-}
-
 void RenderDevice::Submit(class RenderContext* context)
 {
     CGpuQueueSubmitDescriptor submit_desc = {};
@@ -268,7 +274,7 @@ void GfxContext::Initialize(RenderDevice* device)
 {
     device_ = device;
     CGpuCommandPoolDescriptor pool_desc = {};
-    cmd_pool_ = cgpu_create_command_pool(device->GetCGPUQueue(), &pool_desc);
+    cmd_pool_ = cgpu_create_command_pool(device->GetGraphicsQueue(), &pool_desc);
     CGpuCommandBufferDescriptor cmd_desc = {};
     cmd_desc.is_secondary = false;
     cmd_buffer_ = cgpu_create_command_buffer(cmd_pool_, &cmd_desc);
@@ -327,7 +333,11 @@ void RenderContext::SetScissor(uint32_t x, uint32_t y, uint32_t width, uint32_t 
 
 void RenderContext::BindPipeline(CGpuRenderPipelineId pipeline)
 {
-    cgpu_render_encoder_bind_pipeline(rp_encoder_, pipeline);
+    if (cached_pipeline != pipeline)
+    {
+        cgpu_render_encoder_bind_pipeline(rp_encoder_, pipeline);
+        cached_pipeline = pipeline;
+    }
 }
 
 void RenderContext::BindVertexBuffers(uint32_t buffer_count, const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
@@ -342,7 +352,11 @@ void RenderContext::BindIndexBuffer(CGpuBufferId buffer, uint32_t index_stride, 
 
 void RenderContext::BindDescriptorSet(CGpuDescriptorSetId desc_set)
 {
-    cgpu_render_encoder_bind_descriptor_set(rp_encoder_, desc_set);
+    if (cached_descset != desc_set)
+    {
+        cgpu_render_encoder_bind_descriptor_set(rp_encoder_, desc_set);
+        cached_descset = desc_set;
+    }
 }
 
 void RenderContext::PushConstants(CGpuRootSignatureId rs, const char8_t* name, const void* data)
@@ -359,4 +373,6 @@ void RenderContext::EndRenderPass()
 {
     cgpu_cmd_end_render_pass(cmd_buffer_, rp_encoder_);
     rp_encoder_ = nullptr;
+    cached_pipeline = nullptr;
+    cached_descset = nullptr;
 }

@@ -351,57 +351,60 @@ void RenderScene::AsyncCreateGeometryMemory(RenderContext* context, struct Rende
 
 void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
-    // create buffers
-    cgltf_buffer_view* indices_view = nullptr;
-    for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
+    if (bufs_creation_ready_ && !bufs_upload_started_)
     {
-        cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
-        if (buf_view->type == cgltf_buffer_view_type_indices)
+        // create buffers
+        cgltf_buffer_view* indices_view = nullptr;
+        for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
         {
-            indices_view = buf_view;
-            break;
+            cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
+            if (buf_view->type == cgltf_buffer_view_type_indices)
+            {
+                indices_view = buf_view;
+                break;
+            }
         }
-    }
-    // upload staging buffers
-    eastl::vector_map<const cgltf_buffer*, eastl::pair<uint32_t, uint32_t>> bufferRangeMap = {};
-    size_t staging_size = 0;
-    for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
-    {
-        const size_t range_start = staging_size;
-        staging_size += gltf_data_->buffers[i].size;
-        bufferRangeMap[gltf_data_->buffers + i] = { (uint32_t)range_start, (uint32_t)staging_size };
-    }
-    {
-        char8_t* address_cursor = (char8_t*)staging_buffer_.buffer_->cpu_mapped_address;
+        // upload staging buffers
+        eastl::vector_map<const cgltf_buffer*, eastl::pair<uint32_t, uint32_t>> bufferRangeMap = {};
+        size_t staging_size = 0;
         for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
         {
-            memcpy(address_cursor, gltf_data_->buffers[i].data, gltf_data_->buffers[i].size);
-            address_cursor += gltf_data_->buffers[i].size;
+            const size_t range_start = staging_size;
+            staging_size += gltf_data_->buffers[i].size;
+            bufferRangeMap[gltf_data_->buffers + i] = { (uint32_t)range_start, (uint32_t)staging_size };
         }
+        {
+            char8_t* address_cursor = (char8_t*)staging_buffer_.buffer_->cpu_mapped_address;
+            for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
+            {
+                memcpy(address_cursor, gltf_data_->buffers[i].data, gltf_data_->buffers[i].size);
+                address_cursor += gltf_data_->buffers[i].size;
+            }
+        }
+        eastl::vector<ECGpuResourceState> dst_states(viewVBIdxMap.size() + 1);
+        eastl::vector<AsyncBufferToBufferTransfer> transfers(viewVBIdxMap.size() + 1);
+        // transfer
+        transfers[0].src = &staging_buffer_;
+        transfers[0].src_offset = bufferRangeMap[indices_view->buffer].first + indices_view->offset;
+        transfers[0].dst = &index_buffer_;
+        transfers[0].dst_offset = 0;
+        transfers[0].size = indices_view->size;
+        dst_states[0] = RESOURCE_STATE_INDEX_BUFFER;
+        for (uint32_t i = 1; i < viewVBIdxMap.size() + 1; i++)
+        {
+            const cgltf_buffer_view* cgltfBufferView = viewVBIdxMap.at(i - 1).first;
+            const cgltf_buffer* cgltfBuffer = cgltfBufferView->buffer;
+            transfers[i].src = &staging_buffer_;
+            transfers[i].src_offset = bufferRangeMap[cgltfBuffer].first + cgltfBufferView->offset;
+            transfers[i].dst = &vertex_buffers_[i - 1];
+            transfers[i].dst_offset = 0;
+            transfers[i].size = cgltfBufferView->size;
+            dst_states[i] = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+        }
+        aux_thread->AsyncTransfer(
+            transfers.data(), dst_states.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
+        bufs_upload_started_ = true;
     }
-    eastl::vector<ECGpuResourceState> dst_states(viewVBIdxMap.size() + 1);
-    eastl::vector<AsyncBufferToBufferTransfer> transfers(viewVBIdxMap.size() + 1);
-    // transfer
-    transfers[0].src = &staging_buffer_;
-    transfers[0].src_offset = bufferRangeMap[indices_view->buffer].first + indices_view->offset;
-    transfers[0].dst = &index_buffer_;
-    transfers[0].dst_offset = 0;
-    transfers[0].size = indices_view->size;
-    dst_states[0] = RESOURCE_STATE_INDEX_BUFFER;
-    for (uint32_t i = 1; i < viewVBIdxMap.size() + 1; i++)
-    {
-        const cgltf_buffer_view* cgltfBufferView = viewVBIdxMap.at(i - 1).first;
-        const cgltf_buffer* cgltfBuffer = cgltfBufferView->buffer;
-        transfers[i].src = &staging_buffer_;
-        transfers[i].src_offset = bufferRangeMap[cgltfBuffer].first + cgltfBufferView->offset;
-        transfers[i].dst = &vertex_buffers_[i - 1];
-        transfers[i].dst_offset = 0;
-        transfers[i].size = cgltfBufferView->size;
-        dst_states[i] = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-    }
-    aux_thread->AsyncTransfer(
-        transfers.data(), dst_states.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
-    bufs_upload_started_ = true;
 }
 
 void RenderScene::AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread)

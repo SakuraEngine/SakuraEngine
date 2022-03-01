@@ -1,6 +1,7 @@
 #include "render-device.hpp"
 #include "render-resources.hpp"
 #include "thirdparty/lodepng.h"
+#include "math/scalarmath.h"
 
 // Aux Thread
 void loaderFunction(void* data)
@@ -179,28 +180,45 @@ AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* targe
 {
     if (target == nullptr)
         return target;
-    target->Wait();
     const void* src_ptr = data;
+    size_t row_data_size = 0;
+    size_t upload_row_pitch = 0;
+    row_data_size = target->texture_->width *
+                    FormatUtil_BitSizeOfBlock((ECGpuFormat)target->texture_->format) / 8;
+    upload_row_pitch = smath_round_up(row_data_size, 256);
     if (target->image_bytes_ != nullptr)
     {
         src_ptr = target->image_bytes_;
-        data_size = target->texture_->width * target->texture_->height *
-                    FormatUtil_BitSizeOfBlock((ECGpuFormat)target->texture_->format) / 8;
     }
     // upload texture data
+    CGpuBufferDescriptor upload_buffer_desc = {};
+    upload_buffer_desc.name = eastl::string("Upload-Texture").c_str();
+    upload_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT;
+    upload_buffer_desc.descriptors = RT_NONE;
+    upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY;
     if (!target->upload_buffer_)
     {
-        CGpuBufferDescriptor upload_buffer_desc = {};
-        upload_buffer_desc.name = eastl::string("Upload-Texture").c_str(),
-        upload_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT,
-        upload_buffer_desc.descriptors = RT_NONE,
-        upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY,
-        upload_buffer_desc.size = data_size;
+        // fuck d3d
+        if (target->texture_->device->adapter->instance->backend == CGPU_BACKEND_D3D12)
+            upload_buffer_desc.size = upload_row_pitch * target->texture_->height;
+        else
+            upload_buffer_desc.size = data_size;
         target->upload_buffer_ = cgpu_create_buffer(render_device_->GetCGPUDevice(), &upload_buffer_desc);
     }
     // upload texture
+    if (target->texture_->device->adapter->instance->backend == CGPU_BACKEND_D3D12)
     {
-        memcpy(target->upload_buffer_->cpu_mapped_address, src_ptr, data_size);
+        for (uint32_t i = 0; i < target->texture_->height; i++)
+        {
+            const auto row_start =
+                (uint8_t*)target->upload_buffer_->cpu_mapped_address + i * upload_row_pitch;
+            const auto src_row_start = (uint8_t*)src_ptr + i * row_data_size;
+            memcpy(row_start, src_row_start, row_data_size);
+        }
+    }
+    else
+    {
+        memcpy(target->upload_buffer_->cpu_mapped_address, data, data_size);
     }
     CGpuCommandBufferDescriptor cmd_desc = {};
     cmd_desc.is_secondary = false;

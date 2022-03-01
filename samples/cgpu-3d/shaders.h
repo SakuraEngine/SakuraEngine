@@ -1,7 +1,6 @@
 #pragma once
 #pragma once
 #include "../common/utils.h"
-#include "../common/texture.h"
 
 /*
 struct VSIn
