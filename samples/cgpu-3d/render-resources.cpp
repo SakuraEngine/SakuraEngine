@@ -70,28 +70,15 @@ void AsyncTransferThread::Destroy()
 {
     for (auto&& iter : async_cpy_cmds_)
     {
-        render_device_->FreeFence(iter.first);
+        if (iter.first) render_device_->FreeFence(iter.first);
         cgpu_free_command_buffer(iter.second);
     }
     cgpu_free_command_pool(cpy_cmd_pool_);
 }
 
 void AsyncTransferThread::asyncTransfer(const AsyncBufferToBufferTransfer* transfers,
-    const ECGpuResourceState* dst_states,
     uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence)
 {
-    eastl::vector<CGpuBufferBarrier> barriers(transfer_count);
-    for (uint32_t i = 0; i < barriers.size(); i++)
-    {
-        barriers[i].buffer = transfers[i].dst->buffer_;
-        barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
-        barriers[i].dst_state = dst_states[i];
-        if (render_device_->gfx_queue_ != render_device_->cpy_queue_)
-        {
-            barriers[i].queue_release = true;
-            barriers[i].queue_type = QUEUE_TYPE_GRAPHICS;
-        }
-    }
     CGpuCommandBufferDescriptor cmd_desc = {};
     CGpuCommandBufferId cmd = cgpu_create_command_buffer(cpy_cmd_pool_, &cmd_desc);
     cgpu_cmd_begin(cmd);
@@ -105,10 +92,7 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToBufferTransfer* trans
         trans.size = transfers[i].size;
         cgpu_cmd_transfer_buffer_to_buffer(cmd, &trans);
     }
-    CGpuResourceBarrierDescriptor barriers_desc = {};
-    barriers_desc.buffer_barriers = barriers.data();
-    barriers_desc.buffer_barriers_count = (uint32_t)barriers.size();
-    cgpu_cmd_resource_barrier(cmd, &barriers_desc);
+    const auto asyncCopy = render_device_->AsyncCopyQueueEnabled();
     cgpu_cmd_end(cmd);
     CGpuQueueSubmitDescriptor submit_desc = {};
     submit_desc.cmds = &cmd;
@@ -116,32 +100,20 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToBufferTransfer* trans
     submit_desc.signal_semaphore_count = semaphore ? 1 : 0;
     submit_desc.signal_semaphores = semaphore ? &semaphore : nullptr;
     submit_desc.signal_fence = fence;
-    cgpu_submit_queue(render_device_->cpy_queue_, &submit_desc);
+    cgpu_submit_queue(render_device_->GetAsyncCopyQueue(), &submit_desc);
     for (uint32_t i = 0; i < transfer_count; i++)
     {
         transfers[i].dst->upload_started_ = true;
         transfers[i].dst->queue_released_ = false;
-        transfers[i].dst->queue_type_ = QUEUE_TYPE_TRANSFER;
+        transfers[i].dst->queue_type_ = asyncCopy ? QUEUE_TYPE_TRANSFER : QUEUE_TYPE_GRAPHICS;
     }
     if (fence)
         async_cpy_cmds_[fence] = cmd;
 }
 
-void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* transfers, const ECGpuResourceState* dst_states,
+void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* transfers,
     uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence)
 {
-    eastl::vector<CGpuTextureBarrier> barriers(transfer_count);
-    for (uint32_t i = 0; i < barriers.size(); i++)
-    {
-        barriers[i].texture = transfers[i].dst->texture_;
-        barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
-        barriers[i].dst_state = dst_states[i];
-        if (render_device_->gfx_queue_ != render_device_->cpy_queue_)
-        {
-            barriers[i].queue_release = true;
-            barriers[i].queue_type = QUEUE_TYPE_GRAPHICS;
-        }
-    }
     CGpuCommandBufferDescriptor cmd_desc = {};
     CGpuCommandBufferId cmd = cgpu_create_command_buffer(cpy_cmd_pool_, &cmd_desc);
     cgpu_cmd_begin(cmd);
@@ -158,10 +130,7 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* tran
         trans.src_offset = transfers[i].src_offset;
         cgpu_cmd_transfer_buffer_to_texture(cmd, &trans);
     }
-    CGpuResourceBarrierDescriptor release_barriers = {};
-    release_barriers.texture_barriers = barriers.data();
-    release_barriers.texture_barriers_count = (uint32_t)barriers.size();
-    cgpu_cmd_resource_barrier(cmd, &release_barriers);
+    const auto asyncCopy = render_device_->AsyncCopyQueueEnabled();
     cgpu_cmd_end(cmd);
     CGpuQueueSubmitDescriptor submit_desc = {};
     submit_desc.cmds = &cmd;
@@ -169,12 +138,12 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* tran
     submit_desc.signal_semaphore_count = semaphore ? 1 : 0;
     submit_desc.signal_semaphores = semaphore ? &semaphore : nullptr;
     submit_desc.signal_fence = fence;
-    cgpu_submit_queue(render_device_->cpy_queue_, &submit_desc);
+    cgpu_submit_queue(render_device_->GetAsyncCopyQueue(), &submit_desc);
     for (uint32_t i = 0; i < transfer_count; i++)
     {
         transfers[i].dst->upload_started_ = true;
         transfers[i].dst->queue_released_ = false;
-        transfers[i].dst->queue_type_ = QUEUE_TYPE_TRANSFER;
+        transfers[i].dst->queue_type_ = asyncCopy ? QUEUE_TYPE_TRANSFER : QUEUE_TYPE_GRAPHICS;
     }
     if (fence)
         async_cpy_cmds_[fence] = cmd;
@@ -237,30 +206,18 @@ AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* targe
     b2t.base_array_layer = 0;
     b2t.layer_count = 1;
     cgpu_cmd_transfer_buffer_to_texture(cmd, &b2t);
-    CGpuTextureBarrier srv_barrier = {};
-    srv_barrier.texture = target->texture_;
-    srv_barrier.src_state = RESOURCE_STATE_COPY_DEST;
-    srv_barrier.dst_state = RESOURCE_STATE_SHADER_RESOURCE;
-    if (render_device_->cpy_queue_ != render_device_->gfx_queue_)
-    {
-        srv_barrier.queue_release = true;
-        srv_barrier.queue_type = QUEUE_TYPE_GRAPHICS;
-    }
-    CGpuResourceBarrierDescriptor barrier_desc = {};
-    barrier_desc.texture_barriers = &srv_barrier;
-    barrier_desc.texture_barriers_count = 1;
-    cgpu_cmd_resource_barrier(cmd, &barrier_desc);
     cgpu_cmd_end(cmd);
     CGpuQueueSubmitDescriptor cpy_submit = {};
     cpy_submit.cmds = &cmd;
     cpy_submit.cmds_count = 1;
     cpy_submit.signal_fence = fence ? fence : nullptr;
-    cgpu_submit_queue(render_device_->cpy_queue_, &cpy_submit);
+    cgpu_submit_queue(render_device_->GetAsyncCopyQueue(), &cpy_submit);
     if (fence)
         async_cpy_cmds_[fence] = cmd;
     target->upload_started_ = true;
     target->queue_released_ = false;
-    target->queue_type_ = QUEUE_TYPE_TRANSFER;
+    const auto asyncCopy = render_device_->AsyncCopyQueueEnabled();
+    target->queue_type_ = asyncCopy ? QUEUE_TYPE_TRANSFER : QUEUE_TYPE_GRAPHICS;
     return target;
 }
 
@@ -450,7 +407,7 @@ void AsyncRenderPipeline::Initialize(struct RenderAuxThread* aux_thread, const C
 
 void AsyncRenderPipeline::Destroy(struct RenderAuxThread* aux_thread, const AuxTaskCallback& cb)
 {
-    auto destructor = [this, aux_thread](CGpuDeviceId device) {
+    auto destructor = [this](CGpuDeviceId device) {
         cgpu_free_render_pipeline(pipeline_);
         cgpu_free_descriptor_set(desc_set_);
         desc_set_ = nullptr;

@@ -28,6 +28,7 @@ public:
     CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
     CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
     CGpuSemaphoreId present_semaphores_[3] = { nullptr, nullptr, nullptr };
+    uint32_t present_semaphores_cursor_ = 0;
     uint32_t backbuffer_index_ = 0;
     RenderDevice* render_device_ = nullptr;
 };
@@ -48,8 +49,21 @@ public:
     FORCEINLINE CGpuQueueId GetGraphicsQueue() { return gfx_queue_; }
     FORCEINLINE CGpuQueueId GetPresentQueue() { return gfx_queue_; }
     FORCEINLINE CGpuQueueId GetCopyQueue() { return cpy_queue_; }
-    FORCEINLINE ECGpuFormat GetScreenFormat() { return screen_format_; }
+    FORCEINLINE CGpuQueueId GetAsyncCopyQueue()
+    {
+        CGpuQueueId queue_ = cpy_queue_;
+        if (extra_cpy_queue_cursor_ > 0)
+        {
+            queue_ = extra_cpy_queues_[extra_cpy_queue_cursor_.load() - 1];
+        }
+        extra_cpy_queue_cursor_++;
+        extra_cpy_queue_cursor_ = extra_cpy_queue_cursor_.load() % (1 + extra_cpy_queue_count_);
+        return queue_;
+    }
+    FORCEINLINE ECGpuFormat
+    GetScreenFormat() { return screen_format_; }
     FORCEINLINE CGpuRootSignatureId GetCGPUSignature() { return root_sig_; }
+    FORCEINLINE bool AsyncCopyQueueEnabled() const { return gfx_queue_ != cpy_queue_; }
 
     CGpuSemaphoreId AllocSemaphore();
     void FreeSemaphore(CGpuSemaphoreId semaphore);
@@ -77,6 +91,9 @@ protected:
     // cpy
     CGpuCommandPoolId cpy_cmd_pool_;
     CGpuQueueId cpy_queue_;
+    CGpuQueueId extra_cpy_queues_[7] = { nullptr };
+    uint32_t extra_cpy_queue_count_ = 0;
+    std::atomic_int32_t extra_cpy_queue_cursor_ = 0;
     // samplers
     CGpuSamplerId default_sampler_;
     // shaders & root_sigs
@@ -132,17 +149,16 @@ struct AsyncTransferThread {
     void Destroy();
 
     template <typename Transfer>
-    void AsyncTransfer(const Transfer* transfers, const ECGpuResourceState* dst_states,
-        uint32_t transfer_count, CGpuFenceId fence = nullptr)
+    void AsyncTransfer(const Transfer* transfers, uint32_t transfer_count, CGpuFenceId fence = nullptr)
     {
-        asyncTransfer(transfers, dst_states, transfer_count, nullptr, fence);
+        asyncTransfer(transfers, transfer_count, nullptr, fence);
     }
     AsyncRenderTexture* UploadTexture(AsyncRenderTexture* target, const void* data, size_t data_size, CGpuFenceId fence);
 
 protected:
-    void asyncTransfer(const AsyncBufferToBufferTransfer* transfers, const ECGpuResourceState* dst_states,
+    void asyncTransfer(const AsyncBufferToBufferTransfer* transfers,
         uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
-    void asyncTransfer(const AsyncBufferToTextureTransfer* transfers, const ECGpuResourceState* dst_states,
+    void asyncTransfer(const AsyncBufferToTextureTransfer* transfers,
         uint32_t transfer_count, CGpuSemaphoreId semaphore, CGpuFenceId fence = nullptr);
     RenderDevice* render_device_;
     CGpuCommandPoolId cpy_cmd_pool_;

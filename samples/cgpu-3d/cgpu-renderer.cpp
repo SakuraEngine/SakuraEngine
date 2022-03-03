@@ -4,6 +4,8 @@
 #include "render-resources.hpp"
 #include <EASTL/vector_map.h>
 
+#define MAX_CPY_QUEUE_COUNT 2
+
 void RenderWindow::Initialize(RenderDevice* render_device)
 {
     render_device_ = render_device;
@@ -73,8 +75,10 @@ void RenderWindow::Initialize(RenderDevice* render_device)
 
 CGpuSemaphoreId RenderWindow::AcquireNextFrame(uint32_t& backbuffer_index)
 {
+    present_semaphores_cursor_++;
+    present_semaphores_cursor_ = present_semaphores_cursor_ % swapchain_->buffer_count;
     CGpuAcquireNextDescriptor acquire_desc = {};
-    acquire_desc.signal_semaphore = present_semaphores_[backbuffer_index_];
+    acquire_desc.signal_semaphore = present_semaphores_[present_semaphores_cursor_];
     backbuffer_index = cgpu_acquire_next_image(swapchain_, &acquire_desc);
     backbuffer_index_ = backbuffer_index;
     return acquire_desc.signal_semaphore;
@@ -113,9 +117,9 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     // create instance
     CGpuInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
-    instance_desc.enable_set_name = true;
+    instance_desc.enable_debug_layer = false;
+    instance_desc.enable_gpu_based_validation = false;
+    instance_desc.enable_set_name = false;
     instance_ = cgpu_create_instance(&instance_desc);
     {
         uint32_t adapters_count = 0;
@@ -124,12 +128,13 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
         cgpu_enum_adapters(instance_, adapters, &adapters_count);
         adapter_ = adapters[0];
     }
+    const auto cpy_queue_count_ = cgpu_query_queue_count(adapter_, QUEUE_TYPE_TRANSFER);
     CGpuQueueGroupDescriptor Gs[2];
     Gs[0].queueType = QUEUE_TYPE_GRAPHICS;
     Gs[0].queueCount = 1;
     Gs[1].queueType = QUEUE_TYPE_TRANSFER;
-    Gs[1].queueCount = 1;
-    if (cgpu_query_queue_count(adapter_, QUEUE_TYPE_TRANSFER))
+    Gs[1].queueCount = cgpu_min(cpy_queue_count_, MAX_CPY_QUEUE_COUNT);
+    if (Gs[1].queueCount)
     {
         CGpuDeviceDescriptor device_desc = {};
         device_desc.queueGroups = Gs;
@@ -137,6 +142,11 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
         device_ = cgpu_create_device(adapter_, &device_desc);
         gfx_queue_ = cgpu_get_queue(device_, QUEUE_TYPE_GRAPHICS, 0);
         cpy_queue_ = cgpu_get_queue(device_, QUEUE_TYPE_TRANSFER, 0);
+        for (uint32_t i = 1; i < Gs[1].queueCount; i++)
+        {
+            extra_cpy_queues_[i - 1] = cgpu_get_queue(device_, QUEUE_TYPE_TRANSFER, i);
+            extra_cpy_queue_count_++;
+        }
     }
     else
     {
@@ -208,6 +218,10 @@ void RenderDevice::Destroy()
     cgpu_free_queue(gfx_queue_);
     if (cpy_queue_ != gfx_queue_)
         cgpu_free_queue(cpy_queue_);
+    for (uint32_t i = 0; i < 7; i++)
+    {
+        if (extra_cpy_queues_[i]) cgpu_free_queue(extra_cpy_queues_[i]);
+    }
     cgpu_free_device(device_);
     cgpu_free_instance(instance_);
 }
@@ -307,9 +321,11 @@ void GfxContext::AcquireResources(AsyncRenderTexture* const* textures, uint32_t 
         tex_barriers[i].texture = textures[i]->texture_;
         tex_barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
         tex_barriers[i].dst_state = RESOURCE_STATE_SHADER_RESOURCE;
-        tex_barriers[i].queue_acquire = true;
-        tex_barriers[i].queue_release = false;
-        tex_barriers[i].queue_type = theQueueType;
+        if (textures[i]->queue_type_.load() == QUEUE_TYPE_TRANSFER)
+        {
+            tex_barriers[i].queue_acquire = true;
+            tex_barriers[i].queue_type = theQueueType;
+        }
         textures[i]->queue_type_ = theQueueType;
         textures[i]->queue_released_ = false;
     }
@@ -318,9 +334,11 @@ void GfxContext::AcquireResources(AsyncRenderTexture* const* textures, uint32_t 
         buf_barriers[i].buffer = buffers[i]->buffer_;
         buf_barriers[i].src_state = RESOURCE_STATE_COPY_DEST;
         buf_barriers[i].dst_state = RESOURCE_STATE_SHADER_RESOURCE;
-        buf_barriers[i].queue_acquire = true;
-        buf_barriers[i].queue_release = false;
-        buf_barriers[i].queue_type = theQueueType;
+        if (textures[i]->queue_type_.load() == QUEUE_TYPE_TRANSFER)
+        {
+            tex_barriers[i].queue_acquire = true;
+            buf_barriers[i].queue_type = theQueueType;
+        }
         buffers[i]->queue_type_ = theQueueType;
         buffers[i]->queue_released_ = false;
     }
