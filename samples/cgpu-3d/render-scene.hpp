@@ -55,10 +55,10 @@ class RenderScene
 public:
     void Initialize(const char8_t* path);
     // On AuxThread and not stuck the calling thread
-    void AsyncCreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void AsyncCreateRenderPipelines(class RenderDevice* device, struct RenderAuxThread* aux_thread);
     // On AuxThread and not stuck the calling thread
-    void AsyncCreateGeometryMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
-    void AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread);
+    void AsyncCreateGeometryMemory(class RenderDevice* device, struct RenderAuxThread* aux_thread);
+    void AsyncCreateTextureMemory(class RenderDevice* device, struct RenderAuxThread* aux_thread);
     bool AsyncGeometryUploadReady();
     void AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread);
     void AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread);
@@ -74,13 +74,13 @@ public:
     std::atomic_bool bufs_upload_started_ = false;
     eastl::vector_map<AsyncRenderTexture*, CGpuFenceId> tex_transfers_;
 
-    RenderContext* context_ = nullptr;
     CGpuFenceId gpu_geometry_fence = nullptr;
 
     AsyncRenderBuffer* vertex_buffers_;
     uint32_t vertex_buffer_count_ = 0;
     AsyncRenderBuffer index_buffer_;
     uint32_t index_stride_;
+    class RenderDevice* render_device_ = nullptr;
 
 protected:
     int32_t loadNode(struct cgltf_node* src, int32_t parent_idx);

@@ -248,10 +248,9 @@ void RenderScene::Initialize(const char8_t* path)
     }
 }
 
-void RenderScene::AsyncCreateRenderPipelines(RenderContext* context, struct RenderAuxThread* aux_thread)
+void RenderScene::AsyncCreateRenderPipelines(class RenderDevice* device, struct RenderAuxThread* aux_thread)
 {
-    context_ = context;
-    auto renderDevice = context->GetRenderDevice();
+    render_device_ = device;
     for (uint32_t i = 0; i < meshes_.size(); i++)
     {
         auto& mesh = meshes_[i];
@@ -260,21 +259,20 @@ void RenderScene::AsyncCreateRenderPipelines(RenderContext* context, struct Rend
             auto& prim = mesh.primitives_[j];
             PipelineKey pplKey = {};
             pplKey.vertex_layout_id_ = prim.vertex_layout_id_;
-            pplKey.root_sig_ = context->GetRenderDevice()->GetCGPUSignature();
-            pplKey.screen_format_ = context->GetRenderDevice()->GetScreenFormat();
+            pplKey.root_sig_ = device->GetCGPUSignature();
+            pplKey.screen_format_ = device->GetScreenFormat();
             pplKey.wireframe_mode_ = false;
             prim.async_ppl_ = RenderBlackboard::AddRenderPipeline(aux_thread, pplKey);
             // create descriotor sets
-            prim.desc_set_ = renderDevice->CreateDescriptorSet(pplKey.root_sig_, 0);
+            prim.desc_set_ = device->CreateDescriptorSet(pplKey.root_sig_, 0);
         }
     }
 }
 
-void RenderScene::AsyncCreateGeometryMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
+void RenderScene::AsyncCreateGeometryMemory(class RenderDevice* device, struct RenderAuxThread* aux_thread)
 {
-    context_ = context;
-    auto renderDevice = context->GetRenderDevice();
-    gpu_geometry_fence = renderDevice->AllocFence();
+    render_device_ = device;
+    gpu_geometry_fence = device->AllocFence();
     // create buffers
     for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
     {
@@ -349,6 +347,25 @@ void RenderScene::AsyncCreateGeometryMemory(RenderContext* context, struct Rende
     }
 }
 
+void RenderScene::AsyncCreateTextureMemory(class RenderDevice* device, struct RenderAuxThread* aux_thread)
+{
+    render_device_ = device;
+    for (uint32_t i = 0; i < materials_.size(); i++)
+    {
+        auto&& material = materials_.at(i).second;
+        auto uri = material.base_color_uri_.c_str();
+        auto path = eastl::string("./../Resources/").append(uri);
+        auto tex = RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
+        if (tex != nullptr && !tex->Ready())
+        {
+            if (tex_transfers_.find(tex) == tex_transfers_.end())
+            {
+                tex_transfers_[tex] = device->AllocFence();
+            }
+        }
+    }
+}
+
 void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
     if (bufs_creation_ready_ && !bufs_upload_started_)
@@ -399,37 +416,15 @@ void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransfe
             transfers[i].dst = &vertex_buffers_[i - 1];
             transfers[i].dst_offset = 0;
             transfers[i].size = cgltfBufferView->size;
-            dst_states[i] = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
         }
         aux_thread->AsyncTransfer(
-            transfers.data(), dst_states.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
+            transfers.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
         bufs_upload_started_ = true;
-    }
-}
-
-void RenderScene::AsyncCreateTextureMemory(RenderContext* context, struct RenderAuxThread* aux_thread)
-{
-    context_ = context;
-    auto renderDevice = context->GetRenderDevice();
-    for (uint32_t i = 0; i < materials_.size(); i++)
-    {
-        auto&& material = materials_.at(i).second;
-        auto uri = material.base_color_uri_.c_str();
-        auto path = eastl::string("./../Resources/").append(uri);
-        auto tex = RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
-        if (tex != nullptr && !tex->Ready())
-        {
-            if (tex_transfers_.find(tex) == tex_transfers_.end())
-            {
-                tex_transfers_[tex] = renderDevice->AllocFence();
-            }
-        }
     }
 }
 
 void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
-    auto renderDevice = context->GetRenderDevice();
     eastl::vector<AsyncRenderTexture*> textures_to_acquire;
     for (uint32_t i = 0; i < materials_.size(); i++)
     {
@@ -447,22 +442,20 @@ void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransf
                 b2t.rows_per_image = target->texture_->height;
                 b2t.base_array_layer = 0;
                 b2t.layer_count = 1;
-                ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE;
-                aux_thread->AsyncTransfer(&b2t, &state, 1, tex_transfers_[target]);
+                aux_thread->AsyncTransfer(&b2t, 1, tex_transfers_[target]);
             }
-            if (!target->queue_released_ &&
-                cgpu_query_fence_status(tex_transfers_[target]) == FENCE_STATUS_COMPLETE)
+            if (target->Ready() && !target->queue_released_ &&
+                tex_transfers_[target] &&
+                (cgpu_query_fence_status(tex_transfers_[target]) == FENCE_STATUS_COMPLETE))
             {
                 // TODO: impl this as callback in AsyncTransferThread::asyncTransfer
                 target->queue_released_ = true;
-                if ((target->queue_type_.load() == QUEUE_TYPE_TRANSFER) &&
-                    renderDevice->GetCopyQueue() != renderDevice->GetGraphicsQueue())
-                {
-                    textures_to_acquire.emplace_back(target);
-                }
+                textures_to_acquire.emplace_back(target);
+                tex_transfers_[target] = nullptr;
             }
         }
     }
+    context->AcquireResources(textures_to_acquire.data(), textures_to_acquire.size(), nullptr, 0);
     for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
     {
         auto gltf_mesh = gltf_data_->meshes + i;
@@ -470,16 +463,8 @@ void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransf
         {
             auto&& material = materials_.at(meshes_[i].primitives_[j].material_id_);
             auto rdrTex = RenderBlackboard::GetTexture(material.second.base_color_uri_.c_str());
-            if (rdrTex != nullptr && rdrTex->Ready() &&
-                (cgpu_query_fence_status(tex_transfers_[rdrTex]) == FENCE_STATUS_COMPLETE))
+            if (rdrTex != nullptr && rdrTex->Ready() && !tex_transfers_[rdrTex])
             {
-                if (rdrTex->queue_released_ && (rdrTex->queue_type_.load() == QUEUE_TYPE_TRANSFER))
-                {
-                    if (renderDevice->GetCopyQueue() != renderDevice->GetGraphicsQueue())
-                    {
-                        context->AcquireResources(textures_to_acquire.data(), textures_to_acquire.size(), nullptr, 0);
-                    }
-                }
                 if (!meshes_[i].primitives_[j].desc_set_updated_)
                 {
                     CGpuDescriptorData arguments[1];
@@ -509,7 +494,6 @@ bool RenderScene::AsyncGeometryUploadReady()
 
 void RenderScene::Destroy(struct RenderAuxThread* aux_thread)
 {
-    auto renderDevice = context_->GetRenderDevice();
     if (gltf_data_) cgltf_free(gltf_data_);
     if (gpu_geometry_fence)
     {
@@ -517,7 +501,7 @@ void RenderScene::Destroy(struct RenderAuxThread* aux_thread)
         {
             for (auto& prim : mesh.primitives_)
             {
-                renderDevice->FreeDescriptorSet(prim.desc_set_);
+                render_device_->FreeDescriptorSet(prim.desc_set_);
             }
         }
     }

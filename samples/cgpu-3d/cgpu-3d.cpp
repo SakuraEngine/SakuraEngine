@@ -69,9 +69,9 @@ int main(int argc, char* argv[])
     auto render_scene = eastl::make_unique<RenderScene>();
     render_scene->Initialize("./../Resources/scene.gltf");
     // !!! render_contexts_ -> render_device !!!
-    render_scene->AsyncCreateGeometryMemory(render_contexts_[0].get(), aux_thread.get());
-    render_scene->AsyncCreateTextureMemory(render_contexts_[0].get(), aux_thread.get());
-    render_scene->AsyncCreateRenderPipelines(render_contexts_[0].get(), pso_aux_thread.get());
+    render_scene->AsyncCreateGeometryMemory(render_device.get(), aux_thread.get());
+    render_scene->AsyncCreateTextureMemory(render_device.get(), aux_thread.get());
+    render_scene->AsyncCreateRenderPipelines(render_device.get(), pso_aux_thread.get());
     // wvp
     auto world = smath::make_transform(
         { 0.f, 0.f, 0.f },                                             // translation
@@ -182,7 +182,9 @@ int main(int argc, char* argv[])
         render_context->ResourceBarrier(barrier_desc1);
         render_context->End();
         render_device->Submit(render_context);
-        render_window->Present(backbuffer_index, &render_window->present_semaphores_[backbuffer_index], 1);
+        render_window->Present(backbuffer_index,
+            &render_window->present_semaphores_[render_window->present_semaphores_cursor_],
+            1);
         context_index = (context_index + 1) % MAX_FLIGHT_FRAMES;
     }
     render_device->WaitIdle();
