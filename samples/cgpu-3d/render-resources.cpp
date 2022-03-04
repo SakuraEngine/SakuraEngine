@@ -529,6 +529,7 @@ AsyncRenderPipeline* RenderBlackboard::AddRenderPipeline(RenderAuxThread* aux_th
     auto&& color_format = eastl::get<ECGpuFormat>(*descHeap);
     color_format = key.screen_format_;
     rp_desc.color_formats = &color_format;
+    rp_desc.sample_count = key.sample_count_;
     ppl->Initialize(aux_thread, rp_desc, [descHeap]() {
         delete descHeap;
     });

@@ -99,6 +99,9 @@ typedef struct VkUtil_RenderPassDesc {
     ECGpuFormat pColorFormats[MAX_MRT_COUNT];
     ECGpuLoadAction pLoadActionsColor[MAX_MRT_COUNT];
     ECGpuStoreAction pStoreActionsColor[MAX_MRT_COUNT];
+    ECGpuLoadAction pLoadActionsColorResolve[MAX_MRT_COUNT];
+    ECGpuStoreAction pStoreActionsColorResolve[MAX_MRT_COUNT];
+    bool pResolveMasks[MAX_MRT_COUNT];
     uint32_t mColorAttachmentCount;
     ECGpuSampleCount mSampleCount;
     ECGpuFormat mDepthStencilFormat;
@@ -108,8 +111,9 @@ typedef struct VkUtil_RenderPassDesc {
 
 typedef struct VkUtil_FramebufferDesc {
     VkRenderPass pRenderPass;
-    VkImageView pImageViews[MAX_MRT_COUNT + 1];
     uint32_t mAttachmentCount;
+    uint32_t mResolveAttachmentCount;
+    VkImageView pImageViews[MAX_MRT_COUNT * 2 + 1];
     uint32_t mWidth;
     uint32_t mHeight;
     uint32_t mLayers;
