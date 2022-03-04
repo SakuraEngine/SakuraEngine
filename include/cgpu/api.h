@@ -850,6 +850,7 @@ typedef struct CGpuComputePassDescriptor {
 
 typedef struct CGpuColorAttachment {
     CGpuTextureViewId view;
+    CGpuTextureViewId resolve_view;
     ECGpuLoadAction load_action;
     ECGpuStoreAction store_action;
     CGpuClearValue clear_color;
@@ -869,6 +870,7 @@ typedef struct CGpuDepthStencilAttachment {
 
 typedef struct CGpuRenderPassDescriptor {
     const char8_t* name;
+    // TODO: remove this
     ECGpuSampleCount sample_count;
     const CGpuColorAttachment* color_attachments;
     const CGpuDepthStencilAttachment* depth_stencil;
@@ -974,6 +976,7 @@ typedef struct CGpuRenderPipelineDescriptor {
     uint32_t render_target_count;
     ECGpuSampleCount sample_count;
     uint32_t sample_quality;
+    ECGpuSlotMask color_resolve_disable_mask;
     ECGpuFormat depth_stencil_format;
     ECGpuPrimitiveTopology prim_topology;
     bool enable_indirect_command;

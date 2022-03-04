@@ -262,6 +262,7 @@ void RenderScene::AsyncCreateRenderPipelines(class RenderDevice* device, struct 
             pplKey.root_sig_ = device->GetCGPUSignature();
             pplKey.screen_format_ = device->GetScreenFormat();
             pplKey.wireframe_mode_ = false;
+            pplKey.sample_count_ = RenderWindow::SampleCount;
             prim.async_ppl_ = RenderBlackboard::AddRenderPipeline(aux_thread, pplKey);
             // create descriotor sets
             prim.desc_set_ = device->CreateDescriptorSet(pplKey.root_sig_, 0);
@@ -366,7 +367,7 @@ void RenderScene::AsyncCreateTextureMemory(class RenderDevice* device, struct Re
     }
 }
 
-void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread)
+void RenderScene::TryAsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
     if (bufs_creation_ready_ && !bufs_upload_started_)
     {
@@ -423,7 +424,7 @@ void RenderScene::AsyncUploadBuffers(RenderContext* context, struct AsyncTransfe
     }
 }
 
-void RenderScene::AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread)
+void RenderScene::TryAsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread)
 {
     eastl::vector<AsyncRenderTexture*> textures_to_acquire;
     for (uint32_t i = 0; i < materials_.size(); i++)

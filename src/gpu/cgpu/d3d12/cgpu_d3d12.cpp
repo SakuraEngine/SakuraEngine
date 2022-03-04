@@ -1335,6 +1335,8 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
     DECLARE_ZERO(D3D12_CLEAR_VALUE, clearStencil);
     DECLARE_ZERO(D3D12_RENDER_PASS_RENDER_TARGET_DESC, renderPassRenderTargetDescs[MAX_MRT_COUNT]);
     DECLARE_ZERO(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC, renderPassDepthStencilDesc);
+    uint32_t colorTargetCount = 0;
+    // color
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
         CGpuTextureView_D3D12* TV = (CGpuTextureView_D3D12*)desc->color_attachments[i].view;
@@ -1343,14 +1345,41 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
         clearValues[i].Color[1] = desc->color_attachments[i].clear_color.g;
         clearValues[i].Color[2] = desc->color_attachments[i].clear_color.b;
         clearValues[i].Color[3] = desc->color_attachments[i].clear_color.a;
-        // Load & Store action
-        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE beginningAccess =
-            gDx12PassBeginOpTranslator[desc->color_attachments[i].load_action];
-        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE endingAccess =
-            gDx12PassEndOpTranslator[desc->color_attachments[i].store_action];
-        renderPassRenderTargetDescs[i].cpuDescriptor = TV->mDxRtvDsvDescriptorHandle;
-        renderPassRenderTargetDescs[i].BeginningAccess = { beginningAccess, { clearValues[i] } };
-        renderPassRenderTargetDescs[i].EndingAccess = { endingAccess, {} };
+        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE beginningAccess = gDx12PassBeginOpTranslator[desc->color_attachments[i].load_action];
+        CGpuTextureView_D3D12* TV_Resolve = (CGpuTextureView_D3D12*)desc->color_attachments[i].resolve_view;
+        if (desc->sample_count != SAMPLE_COUNT_1 && TV_Resolve)
+        {
+            CGpuTexture_D3D12* T = (CGpuTexture_D3D12*)TV->super.info.texture;
+            CGpuTexture_D3D12* T_Resolve = (CGpuTexture_D3D12*)TV_Resolve->super.info.texture;
+            D3D12_RENDER_PASS_ENDING_ACCESS_TYPE endingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_RESOLVE;
+            renderPassRenderTargetDescs[colorTargetCount].cpuDescriptor = TV->mDxRtvDsvDescriptorHandle;
+            renderPassRenderTargetDescs[colorTargetCount].BeginningAccess = { beginningAccess, { clearValues[i] } };
+            renderPassRenderTargetDescs[colorTargetCount].EndingAccess = { endingAccess, {} };
+            auto& Resolve = renderPassRenderTargetDescs[colorTargetCount].EndingAccess.Resolve;
+            Resolve.ResolveMode = D3D12_RESOLVE_MODE_AVERAGE;
+            Resolve.Format = clearValues[i].Format;
+            Resolve.pSrcResource = T->pDxResource;
+            Resolve.pDstResource = T_Resolve->pDxResource;
+            Cmd->mSubResolveResource.SrcRect = { 0, 0, 0, 0 };
+            Cmd->mSubResolveResource.DstX = 0;
+            Cmd->mSubResolveResource.DstY = 0;
+            Cmd->mSubResolveResource.SrcSubresource = 0;
+            Cmd->mSubResolveResource.DstSubresource = CALC_SUBRESOURCE_INDEX(
+                0, 0, 0,
+                T->super.mip_levels, T->super.array_size_minus_one + 1);
+            Resolve.PreserveResolveSource = false;
+            Resolve.SubresourceCount = 1;
+            Resolve.pSubresourceParameters = &Cmd->mSubResolveResource;
+        }
+        else
+        {
+            // Load & Store action
+            D3D12_RENDER_PASS_ENDING_ACCESS_TYPE endingAccess = gDx12PassEndOpTranslator[desc->color_attachments[i].store_action];
+            renderPassRenderTargetDescs[colorTargetCount].cpuDescriptor = TV->mDxRtvDsvDescriptorHandle;
+            renderPassRenderTargetDescs[colorTargetCount].BeginningAccess = { beginningAccess, { clearValues[i] } };
+            renderPassRenderTargetDescs[colorTargetCount].EndingAccess = { endingAccess, {} };
+        }
+        colorTargetCount++;
     }
     // depth stencil
     if (desc->depth_stencil != nullptr && desc->depth_stencil->view != nullptr)
@@ -1376,7 +1405,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
     }
     D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderPassRenderTargetDesc = renderPassRenderTargetDescs;
     D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pRenderPassDepthStencilDesc = &renderPassDepthStencilDesc;
-    CmdList4->BeginRenderPass(desc->render_target_count,
+    CmdList4->BeginRenderPass(colorTargetCount,
         pRenderPassRenderTargetDesc, pRenderPassDepthStencilDesc,
         D3D12_RENDER_PASS_FLAG_NONE);
     return (CGpuRenderPassEncoderId)&Cmd->super;

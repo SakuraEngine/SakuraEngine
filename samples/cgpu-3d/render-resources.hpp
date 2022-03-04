@@ -107,6 +107,7 @@ struct PipelineKey {
     CGpuRootSignatureId root_sig_;
     bool wireframe_mode_;
     ECGpuFormat screen_format_;
+    ECGpuSampleCount sample_count_;
 };
 
 namespace eastl
@@ -123,7 +124,8 @@ struct equal_to<PipelineKey> {
             (a.vertex_layout_id_ == b.vertex_layout_id_) &&
             (a.wireframe_mode_ == b.wireframe_mode_) &&
             (a.root_sig_ == b.root_sig_) &&
-            (a.screen_format_ == b.screen_format_);
+            (a.screen_format_ == b.screen_format_) &&
+            (a.sample_count_ == b.sample_count_);
         return equal;
     }
 };

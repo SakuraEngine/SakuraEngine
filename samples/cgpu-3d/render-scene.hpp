@@ -60,8 +60,8 @@ public:
     void AsyncCreateGeometryMemory(class RenderDevice* device, struct RenderAuxThread* aux_thread);
     void AsyncCreateTextureMemory(class RenderDevice* device, struct RenderAuxThread* aux_thread);
     bool AsyncGeometryUploadReady();
-    void AsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread);
-    void AsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread);
+    void TryAsyncUploadBuffers(RenderContext* context, struct AsyncTransferThread* aux_thread);
+    void TryAsyncUploadTextures(RenderContext* context, struct AsyncTransferThread* aux_thread);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr);
 
     eastl::vector<RenderNode> nodes_;

@@ -16,7 +16,10 @@ public:
     void Initialize(class RenderDevice* render_device);
     void Destroy();
     CGpuSemaphoreId AcquireNextFrame(uint32_t& back_buffer_index);
-    void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count);
+    void BeginScreenPass(class RenderContext* ctx);
+    void EndScreenPass(class RenderContext* ctx);
+    void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores = nullptr, uint32_t semaphore_count = 0);
+    static const auto SampleCount = SAMPLE_COUNT_8;
 
     // window
     SDL_Window* sdl_window_;
@@ -25,8 +28,12 @@ public:
     CGpuSurfaceId surface_;
     CGpuSwapChainId swapchain_;
     CGpuTextureViewId views_[3] = { nullptr, nullptr, nullptr };
+
+protected:
     CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
     CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
+    CGpuTextureId msaa_render_targets_[3] = { nullptr, nullptr, nullptr };
+    CGpuTextureViewId msaa_render_target_views_[3] = { nullptr, nullptr, nullptr };
     CGpuSemaphoreId present_semaphores_[3] = { nullptr, nullptr, nullptr };
     uint32_t present_semaphores_cursor_ = 0;
     uint32_t backbuffer_index_ = 0;

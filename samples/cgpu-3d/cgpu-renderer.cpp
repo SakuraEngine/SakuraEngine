@@ -54,6 +54,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
         ds_desc.depth = 1;
         ds_desc.format = PF_D24_UNORM_S8_UINT;
         ds_desc.array_size = 1;
+        ds_desc.sample_count = RenderWindow::SampleCount;
         ds_desc.start_state = RESOURCE_STATE_DEPTH_WRITE;
         ds_desc.owner_queue = render_device->gfx_queue_;
         screen_ds_[i] = cgpu_create_texture(device_, &ds_desc);
@@ -65,9 +66,44 @@ void RenderWindow::Initialize(RenderDevice* render_device)
         ds_view_desc.mip_level_count = 1;
         ds_view_desc.base_mip_level = 0;
         ds_view_desc.aspects = TVA_DEPTH;
-        ds_view_desc.dims = TEX_DIMENSION_2D;
+        ds_view_desc.dims = ds_desc.sample_count == SAMPLE_COUNT_1 ? TEX_DIMENSION_2D : TEX_DIMENSION_2DMS;
         ds_view_desc.usages = TVU_RTV_DSV;
         screen_ds_view_[i] = cgpu_create_texture_view(device_, &ds_view_desc);
+        // create msaa resolve views
+        if (RenderWindow::SampleCount != SAMPLE_COUNT_1)
+        {
+            CGpuTextureDescriptor resolve_desc = {};
+            eastl::string name2 = "MSAAResolve";
+            name2 += eastl::to_string(i);
+            resolve_desc.name = name2.c_str();
+            resolve_desc.descriptors = RT_TEXTURE;
+            resolve_desc.flags = TCF_OWN_MEMORY_BIT;
+            resolve_desc.width = swapchain_->back_buffers[i]->width;
+            resolve_desc.height = swapchain_->back_buffers[i]->height;
+            resolve_desc.depth = 1;
+            resolve_desc.format = (ECGpuFormat)swapchain_->back_buffers[i]->format;
+            resolve_desc.array_size = 1;
+            resolve_desc.sample_count = RenderWindow::SampleCount;
+            resolve_desc.start_state = RESOURCE_STATE_RENDER_TARGET;
+            resolve_desc.owner_queue = render_device->GetGraphicsQueue();
+            msaa_render_targets_[i] = cgpu_create_texture(device_, &resolve_desc);
+            CGpuTextureViewDescriptor resolve_view_desc = {};
+            resolve_view_desc.texture = msaa_render_targets_[i];
+            resolve_view_desc.format = resolve_desc.format;
+            resolve_view_desc.array_layer_count = 1;
+            resolve_view_desc.base_array_layer = 0;
+            resolve_view_desc.mip_level_count = 1;
+            resolve_view_desc.base_mip_level = 0;
+            resolve_view_desc.aspects = TVA_COLOR;
+            resolve_view_desc.dims = resolve_desc.sample_count == SAMPLE_COUNT_1 ? TEX_DIMENSION_2D : TEX_DIMENSION_2DMS;
+            resolve_view_desc.usages = TVU_RTV_DSV;
+            msaa_render_target_views_[i] = cgpu_create_texture_view(device_, &resolve_view_desc);
+        }
+        else
+        {
+            msaa_render_targets_[i] = swapchain_->back_buffers[i];
+            msaa_render_target_views_[i] = views_[i];
+        }
     }
     for (uint32_t i = 0; i < swapchain_->buffer_count; i++)
         present_semaphores_[i] = render_device->AllocSemaphore();
@@ -84,12 +120,76 @@ CGpuSemaphoreId RenderWindow::AcquireNextFrame(uint32_t& backbuffer_index)
     return acquire_desc.signal_semaphore;
 }
 
+void RenderWindow::BeginScreenPass(class RenderContext* ctx)
+{
+    const CGpuTextureId back_buffer = swapchain_->back_buffers[backbuffer_index_];
+    const CGpuTextureId back_render_target = msaa_render_targets_[backbuffer_index_];
+    CGpuColorAttachment screen_attachment = {};
+    screen_attachment.view = msaa_render_target_views_[backbuffer_index_];
+    screen_attachment.resolve_view = views_[backbuffer_index_];
+    screen_attachment.load_action = LOAD_ACTION_CLEAR;
+    screen_attachment.store_action = STORE_ACTION_STORE;
+    screen_attachment.clear_color = fastclear_0000;
+    CGpuDepthStencilAttachment ds_attachment = {};
+    ds_attachment.view = screen_ds_view_[backbuffer_index_];
+    ds_attachment.write_depth = true;
+    ds_attachment.clear_depth = true;
+    ds_attachment.write_stencil = false;
+    ds_attachment.depth_load_action = LOAD_ACTION_LOAD;
+    ds_attachment.depth_store_action = STORE_ACTION_STORE;
+    CGpuRenderPassDescriptor rp_desc = {};
+    rp_desc.render_target_count = 1;
+    rp_desc.sample_count = RenderWindow::SampleCount;
+    rp_desc.color_attachments = &screen_attachment;
+    rp_desc.depth_stencil = &ds_attachment;
+    CGpuTextureBarrier tex_barriers[2] = {};
+    CGpuTextureBarrier& draw_barrier = tex_barriers[0];
+    draw_barrier.texture = back_render_target;
+    draw_barrier.src_state = RESOURCE_STATE_UNDEFINED;
+    draw_barrier.dst_state = RESOURCE_STATE_RENDER_TARGET;
+    CGpuTextureBarrier& resolve_barrier = tex_barriers[1];
+    resolve_barrier.texture = back_buffer;
+    resolve_barrier.src_state = RESOURCE_STATE_UNDEFINED;
+    resolve_barrier.dst_state = RESOURCE_STATE_RESOLVE_DEST;
+    CGpuResourceBarrierDescriptor barrier_desc0 = {};
+    barrier_desc0.texture_barriers = SampleCount == SAMPLE_COUNT_1 ? &draw_barrier : &resolve_barrier;
+    barrier_desc0.texture_barriers_count = 1;
+    ctx->ResourceBarrier(barrier_desc0);
+    ctx->BeginRenderPass(rp_desc);
+    // begin render scene
+    ctx->SetViewport(0.0f, 0.0f,
+        (float)back_buffer->width, (float)back_buffer->height,
+        0.f, 1.f);
+    ctx->SetScissor(0, 0, back_buffer->width, back_buffer->height);
+}
+
+void RenderWindow::EndScreenPass(class RenderContext* ctx)
+{
+    const CGpuTextureId back_buffer = swapchain_->back_buffers[backbuffer_index_];
+    ctx->EndRenderPass();
+    CGpuTextureBarrier present_barrier = {};
+    present_barrier.texture = back_buffer;
+    present_barrier.src_state = SampleCount == SAMPLE_COUNT_1 ? RESOURCE_STATE_RENDER_TARGET : RESOURCE_STATE_RESOLVE_DEST;
+    present_barrier.dst_state = RESOURCE_STATE_PRESENT;
+    CGpuResourceBarrierDescriptor barrier_desc1 = {};
+    barrier_desc1.texture_barriers = &present_barrier;
+    barrier_desc1.texture_barriers_count = 1;
+    ctx->ResourceBarrier(barrier_desc1);
+}
+
 void RenderWindow::Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores, uint32_t semaphore_count)
 {
+    eastl::vector<CGpuSemaphoreId> final_semaphores = {};
+    final_semaphores.reserve(semaphore_count + 1);
+    final_semaphores.emplace_back(present_semaphores_[present_semaphores_cursor_]);
+    for (uint32_t i = 0; i < semaphore_count; i++)
+    {
+        final_semaphores.emplace_back(wait_semaphores[i]);
+    }
     CGpuQueuePresentDescriptor present_desc = {};
     present_desc.index = index;
-    present_desc.wait_semaphore_count = semaphore_count;
-    present_desc.wait_semaphores = wait_semaphores;
+    present_desc.wait_semaphore_count = final_semaphores.size();
+    present_desc.wait_semaphores = final_semaphores.data();
     present_desc.swapchain = swapchain_;
     cgpu_queue_present(render_device_->GetPresentQueue(), &present_desc);
 }
@@ -98,6 +198,8 @@ void RenderWindow::Destroy()
 {
     for (uint32_t i = 0; i < 3; i++)
     {
+        if (msaa_render_target_views_[i] != views_[i]) cgpu_free_texture_view(msaa_render_target_views_[i]);
+        if (msaa_render_targets_[i] != swapchain_->back_buffers[i]) cgpu_free_texture(msaa_render_targets_[i]);
         if (views_[i] != nullptr) cgpu_free_texture_view(views_[i]);
         if (screen_ds_[i] != nullptr) cgpu_free_texture(screen_ds_[i]);
         if (screen_ds_view_[i] != nullptr) cgpu_free_texture_view(screen_ds_view_[i]);
@@ -117,9 +219,9 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     // create instance
     CGpuInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = false;
-    instance_desc.enable_gpu_based_validation = false;
-    instance_desc.enable_set_name = false;
+    instance_desc.enable_debug_layer = true;
+    instance_desc.enable_gpu_based_validation = true;
+    instance_desc.enable_set_name = true;
     instance_ = cgpu_create_instance(&instance_desc);
     {
         uint32_t adapters_count = 0;

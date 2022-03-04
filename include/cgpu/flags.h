@@ -276,6 +276,19 @@ typedef enum ECGpuFormat
     PF_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuFormat;
 
+typedef enum ECGpuSlotMaskBit
+{
+    CGPU_SLOT_0 = 0x1,
+    CGPU_SLOT_1 = 0x2,
+    CGPU_SLOT_2 = 0x4,
+    CGPU_SLOT_3 = 0x8,
+    CGPU_SLOT_4 = 0x10,
+    CGPU_SLOT_5 = 0x20,
+    CGPU_SLOT_6 = 0x40,
+    CGPU_SLOT_7 = 0x80
+} ECGpuSlotMaskBit;
+typedef uint32_t ECGpuSlotMask;
+
 typedef enum ECGpuFilterType
 {
     FILTER_TYPE_NEAREST = 0,
@@ -485,6 +498,7 @@ typedef enum ECGpuResourceState
     RESOURCE_STATE_COMMON = 0x2000,
     RESOURCE_STATE_ACCELERATION_STRUCTURE = 0x4000,
     RESOURCE_STATE_SHADING_RATE_SOURCE = 0x8000,
+    RESOURCE_STATE_RESOLVE_DEST = 0x10000,
     RESOURCE_STATE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGpuResourceState;
 typedef uint32_t CGpuResourceStates;

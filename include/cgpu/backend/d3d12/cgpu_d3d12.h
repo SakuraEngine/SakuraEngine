@@ -215,10 +215,7 @@ typedef struct CGpuCommandBuffer_D3D12 {
     uint32_t mNodeIndex : 4;
     uint32_t mType : 3;
     CGpuCommandPool_D3D12* pCmdPool;
-    uint32_t mPadA;
-#if !defined(XBOX)
-    uint64_t mPadB;
-#endif
+    D3D12_RENDER_PASS_ENDING_ACCESS_RESOLVE_SUBRESOURCE_PARAMETERS mSubResolveResource;
 } CGpuCommandBuffer_D3D12;
 
 typedef struct CGpuShaderLibrary_D3D12 {
