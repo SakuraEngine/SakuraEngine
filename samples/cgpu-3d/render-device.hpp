@@ -19,7 +19,7 @@ public:
     void BeginScreenPass(class RenderContext* ctx);
     void EndScreenPass(class RenderContext* ctx);
     void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores = nullptr, uint32_t semaphore_count = 0);
-    static const auto SampleCount = SAMPLE_COUNT_8;
+    static const auto SampleCount = SAMPLE_COUNT_1;
 
     // window
     SDL_Window* sdl_window_;
@@ -30,8 +30,8 @@ public:
     CGpuTextureViewId views_[3] = { nullptr, nullptr, nullptr };
 
 protected:
-    CGpuTextureId screen_ds_[3] = { nullptr, nullptr, nullptr };
-    CGpuTextureViewId screen_ds_view_[3] = { nullptr, nullptr, nullptr };
+    CGpuTextureId screen_ds_ = nullptr;
+    CGpuTextureViewId screen_ds_view_ = nullptr;
     CGpuTextureId msaa_render_targets_[3] = { nullptr, nullptr, nullptr };
     CGpuTextureViewId msaa_render_target_views_[3] = { nullptr, nullptr, nullptr };
     CGpuSemaphoreId present_semaphores_[3] = { nullptr, nullptr, nullptr };
