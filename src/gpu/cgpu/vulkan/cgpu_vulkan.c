@@ -1,4 +1,5 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
+#include "cgpu/flags.h"
 #include "vulkan_utils.h"
 #include "vulkan/vulkan_core.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
@@ -216,9 +217,9 @@ static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUt
         attachments[ssidx].format = (VkFormat)VkUtil_FormatTranslateToVk(pDesc->mDepthStencilFormat);
         attachments[ssidx].samples = sample_count;
         attachments[ssidx].loadOp = gVkAttachmentLoadOpTranslator[pDesc->mLoadActionDepth];
-        attachments[ssidx].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[ssidx].storeOp = gVkAttachmentStoreOpTranslator[pDesc->mStoreActionDepth];
         attachments[ssidx].stencilLoadOp = gVkAttachmentLoadOpTranslator[pDesc->mLoadActionStencil];
-        attachments[ssidx].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[ssidx].stencilStoreOp = gVkAttachmentStoreOpTranslator[pDesc->mStoreActionStencil];
         attachments[ssidx].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         attachments[ssidx].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         depth_stencil_attachment_ref[0].attachment = ssidx;
@@ -1605,8 +1606,12 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
             .mSampleCount = desc->sample_count,
             .mLoadActionDepth =
                 desc->depth_stencil ? desc->depth_stencil->depth_load_action : LOAD_ACTION_DONTCARE,
+            .mStoreActionDepth =
+                desc->depth_stencil ? desc->depth_stencil->depth_store_action : STORE_ACTION_STORE,
             .mLoadActionStencil =
-                desc->depth_stencil ? desc->depth_stencil->stencil_load_action : LOAD_ACTION_DONTCARE
+                desc->depth_stencil ? desc->depth_stencil->stencil_load_action : LOAD_ACTION_DONTCARE,
+            .mStoreActionStencil =
+                desc->depth_stencil ? desc->depth_stencil->stencil_store_action : STORE_ACTION_STORE
         };
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {
