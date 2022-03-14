@@ -4,6 +4,7 @@
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include "cgpu/backend/vulkan/vk_mem_alloc.h"
 #include "../common/common_utils.h"
+#include "cgpu/flags.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,7 +107,9 @@ typedef struct VkUtil_RenderPassDesc {
     ECGpuSampleCount mSampleCount;
     ECGpuFormat mDepthStencilFormat;
     ECGpuLoadAction mLoadActionDepth;
+    ECGpuStoreAction mStoreActionDepth;
     ECGpuLoadAction mLoadActionStencil;
+    ECGpuStoreAction mStoreActionStencil;
 } VkUtil_RenderPassDesc;
 
 typedef struct VkUtil_FramebufferDesc {
