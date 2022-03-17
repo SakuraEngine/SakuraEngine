@@ -1667,7 +1667,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
         VkUtil_FindOrCreateFrameBuffer(D, &fbDesc, &pFramebuffer);
     }
     // Cmd begin render pass
-    VkClearValue clearValues[2 * MAX_MRT_COUNT + 1];
+    VkClearValue clearValues[2 * MAX_MRT_COUNT + 1] = {0};
     uint32_t idx = 0;
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
@@ -1682,8 +1682,9 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
         if (desc->color_attachments[i].resolve_view)
+        {
             idx++;
-        // now we only support 0 bindwidth(LOAD_CLEAR & STORE_DONT_CARE)
+        }
     }
     // depth stencil clear
     if (desc->depth_stencil)
