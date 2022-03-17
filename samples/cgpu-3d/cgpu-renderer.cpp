@@ -203,10 +203,10 @@ void RenderWindow::Present(uint32_t index, const CGpuSemaphoreId* wait_semaphore
 
 void RenderWindow::Destroy()
 {
+    if (msaa_render_targets_[0] != swapchain_->back_buffers[0]) cgpu_free_texture(msaa_render_targets_[0]);
+    if (msaa_render_target_views_[0] != views_[0]) cgpu_free_texture_view(msaa_render_target_views_[0]);
     for (uint32_t i = 0; i < 3; i++)
     {
-        if (msaa_render_target_views_[i] != views_[i]) cgpu_free_texture_view(msaa_render_target_views_[i]);
-        if (msaa_render_targets_[i] != swapchain_->back_buffers[i]) cgpu_free_texture(msaa_render_targets_[i]);
         if (views_[i] != nullptr) cgpu_free_texture_view(views_[i]);
     }
     if (screen_ds_ != nullptr) cgpu_free_texture(screen_ds_);
