@@ -7,8 +7,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 
-#define BACK_BUFFER_WIDTH 1080
-#define BACK_BUFFER_HEIGHT 1080
+#define BACK_BUFFER_WIDTH 900
+#define BACK_BUFFER_HEIGHT 900
 
 inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
 {
