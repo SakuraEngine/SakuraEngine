@@ -23,6 +23,7 @@ include(PlatformConfigure)
 
 # include component builds
 include(mimalloc) # Fetch mimalloc SOURCES
+include(BOOST) # Fetch Boost SOURCES
 include(EASTL) # Fetch EASTL SOURCES
 include(DirectXMath)
 include(GSL)
@@ -107,6 +108,7 @@ target_sources(SakuraRuntime
 target_include_directories(SakuraRuntime
     PUBLIC
     ${MIMALLOC_INCLUDES_DIR}
+    ${BOOST_INCLUDES_DIR}
     ${EASTL_INCLUDES_DIR}
     ${DXMATH_INCLUDES_DIR}
     ${GSL_INCLUDES_DIR}
