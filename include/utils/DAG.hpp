@@ -51,7 +51,7 @@ template <class VertexProperty = boost::no_property,
     class EdgeProperty = boost::no_property,
     class GraphProperty = boost::no_property,
     class EdgeListS = boost::listS>
-using MutaGraphVertex =
+using MutableGraphVertex =
     typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
         vertex_descriptor;
 
@@ -59,7 +59,7 @@ template <class VertexProperty = boost::no_property,
     class EdgeProperty = boost::no_property,
     class GraphProperty = boost::no_property,
     class EdgeListS = boost::listS>
-using MutaGraphEdge =
+using MutableGraphEdge =
     typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
         edge_descriptor;
 

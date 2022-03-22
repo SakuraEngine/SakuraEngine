@@ -83,6 +83,7 @@ set(RUNTIME_SOURCES
     src/gpu/cgpu/build.2.cpp
     src/gpu/cgpu/build.0.c
     src/gpu/cgpu/build.1.c
+    src/gpu/render_graph/build.0.cpp
     src/wasm/build.0.c
     src/wasm/build.0.cpp
     ${NATVIS_SOURCES}
