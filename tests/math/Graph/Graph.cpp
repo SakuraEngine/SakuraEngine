@@ -1,9 +1,16 @@
-#include "gtest/gtest.h"
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunused-variable"
+    #pragma clang diagnostic ignored "-Wunknown-pragmas"
+    #pragma clang diagnostic ignored "-Wuninitialized-const-reference"
+#endif
+
 #include <boost/graph/graphviz.hpp>
+#include "gtest/gtest.h"
 #include <EASTL/string.h>
 #include <fstream>
 #include <iostream>
-#include "utils/DAG.hpp"
+#include "utils/DAG.boost.hpp"
 
 class GraphTest : public ::testing::Test
 {
@@ -91,6 +98,7 @@ TEST(GraphTest, GraphTest0)
         if (iter->m_target == to)
         {
             auto prop = (edgeProp*)iter->get_property();
+            std::cout << prop->name.c_str() << std::endl;
         }
         iter++;
     }
@@ -149,13 +157,13 @@ TEST(GraphTest, GraphTest0)
     boost::write_graphviz(outf, g, boost::default_writer(), w);
 }
 
-#include "render_graph/frontend/dependency_graph.hpp"
+#include "utils/dependency_graph.hpp"
 
-class TestRDGNode : public sakura::RenderDependencyGraphNode
+class TestRDGNode : public sakura::DependencyGraphNode
 {
 public:
     TestRDGNode(const char* n)
-        : RenderDependencyGraphNode()
+        : DependencyGraphNode()
         , name(n)
     {
     }
@@ -163,13 +171,13 @@ public:
     eastl::string name;
 };
 
-TEST(GraphTest, RenderDependencyGraph)
+TEST(GraphTest, DependencyGraph)
 {
-    sakura::RenderDependencyGraphEdge edge;
+    sakura::DependencyGraphEdge edge;
     TestRDGNode node0("node0");
     TestRDGNode node1("node1");
     TestRDGNode node2("node2");
-    auto rdg = sakura::RenderDependencyGraph::Create();
+    auto rdg = sakura::DependencyGraph::Create();
     rdg->insert(&node0);
     rdg->insert(&node1);
     rdg->insert(&node2);
@@ -178,11 +186,15 @@ TEST(GraphTest, RenderDependencyGraph)
     rdg->link(&node1, &node2, &edge);
     std::cout << rdg->outgoing_edges(&node0) << std::endl;
     std::cout << rdg->incoming_edges(&node2) << std::endl;
-    using Node = sakura::RenderDependencyGraphNode;
-    using Edge = sakura::RenderDependencyGraphEdge;
+    using Node = sakura::DependencyGraphNode;
+    using Edge = sakura::DependencyGraphEdge;
     rdg->foreach_incoming_edges(&node1, [](Node* from, Node* to, Edge* e) {
         std::cout << "edge: " << ((TestRDGNode*)from)->name.c_str()
                   << " -> " << ((TestRDGNode*)to)->name.c_str() << std::endl;
     });
     delete rdg;
 }
+
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#endif
