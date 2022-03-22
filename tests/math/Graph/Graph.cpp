@@ -82,6 +82,29 @@ TEST(GraphTest, GraphTest0)
     g[E42] = { "E42" };
     std::cout << "num vertices: " << boost::num_vertices(g) << std::endl;
 
+    GraphVertex from(2);
+    GraphVertex to(0);
+    auto out_edges = DAG::out_edges(from, g);
+    auto iter = out_edges.first;
+    while (iter != out_edges.second)
+    {
+        if (iter->m_target == to)
+        {
+            auto prop = (edgeProp*)iter->get_property();
+        }
+        iter++;
+    }
+
+    using Graph2 = DAG::Graph<int, edgeProp>;
+    using GraphVertex2 = DAG::GraphVertex<int, edgeProp>;
+    GraphVertex2 from2(2);
+    Graph2 g2;
+    boost::add_vertex(12, g2);
+    boost::add_vertex(12, g2);
+    boost::add_vertex(32, g2);
+    auto nd = g2[from2];
+    std::cout << "Node ID: " << nd << std::endl;
+
     boost::property_map<Graph, vertex_prop_map_key_t>::type val = boost::get(vertex_prop_map_key_t(), g);
     boost::put(val, 0, "0");
     boost::put(val, 1, "1");
@@ -124,4 +147,42 @@ TEST(GraphTest, GraphTest0)
     EdgeWriter<Graph> w(g);
     std::ofstream outf("net.gv");
     boost::write_graphviz(outf, g, boost::default_writer(), w);
+}
+
+#include "render_graph/frontend/dependency_graph.hpp"
+
+class TestRDGNode : public sakura::RenderDependencyGraphNode
+{
+public:
+    TestRDGNode(const char* n)
+        : RenderDependencyGraphNode()
+        , name(n)
+    {
+    }
+
+    eastl::string name;
+};
+
+TEST(GraphTest, RenderDependencyGraph)
+{
+    sakura::RenderDependencyGraphEdge edge;
+    TestRDGNode node0("node0");
+    TestRDGNode node1("node1");
+    TestRDGNode node2("node2");
+    auto rdg = sakura::RenderDependencyGraph::Create();
+    rdg->insert(&node0);
+    rdg->insert(&node1);
+    rdg->insert(&node2);
+    rdg->link(&node0, &node1, &edge);
+    rdg->link(&node0, &node2, &edge);
+    rdg->link(&node1, &node2, &edge);
+    std::cout << rdg->outgoing_edges(&node0) << std::endl;
+    std::cout << rdg->incoming_edges(&node2) << std::endl;
+    using Node = sakura::RenderDependencyGraphNode;
+    using Edge = sakura::RenderDependencyGraphEdge;
+    rdg->foreach_incoming_edges(&node1, [](Node* from, Node* to, Edge* e) {
+        std::cout << "edge: " << ((TestRDGNode*)from)->name.c_str()
+                  << " -> " << ((TestRDGNode*)to)->name.c_str() << std::endl;
+    });
+    delete rdg;
 }
