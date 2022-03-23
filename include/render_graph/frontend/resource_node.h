@@ -1,8 +1,6 @@
 #pragma once
 #include <atomic>
-#include "cgpu/api.h"
 #include "render_graph/frontend/base_types.hpp"
-#include "utils/dependency_graph.hpp"
 
 namespace sakura
 {
@@ -39,6 +37,10 @@ class TextureReferenceEdge : public RenderGraphEdge
     friend class PassNode;
     friend class RenderGraph;
 
+public:
+    const uint32_t set;
+    const uint32_t binding;
+
 protected:
     TextureReferenceEdge(
         uint32_t set, uint32_t binding, TextureHandle handle,
@@ -50,8 +52,6 @@ protected:
         , requested_state(state)
     {
     }
-    uint32_t set;
-    uint32_t binding;
     TextureHandle handle;
     ECGpuResourceState requested_state = RESOURCE_STATE_SHADER_RESOURCE;
     // temporal handle with a lifespan of only one frame
@@ -63,6 +63,9 @@ class TextureAccessEdge : public RenderGraphEdge
     friend class PassNode;
     friend class RenderGraph;
 
+public:
+    const uint32_t mrt_index;
+
 protected:
     TextureAccessEdge(uint32_t mrt_index, TextureHandle handle,
         ECGpuResourceState state = RESOURCE_STATE_RENDER_TARGET)
@@ -72,7 +75,6 @@ protected:
         , requested_state(state)
     {
     }
-    uint32_t mrt_index;
     TextureHandle handle;
     ECGpuResourceState requested_state;
     // temporal handle with a lifespan of only one frame

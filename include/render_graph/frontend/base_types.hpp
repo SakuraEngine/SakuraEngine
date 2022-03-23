@@ -2,7 +2,6 @@
 #include "render_graph/rg_config.h"
 #include "utils/dependency_graph.hpp"
 #include <EASTL/string.h>
-#include <stdint.h>
 
 namespace sakura
 {
