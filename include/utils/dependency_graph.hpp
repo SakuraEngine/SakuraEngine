@@ -15,6 +15,9 @@ public:
     virtual ~DependencyGraphNode() RUNTIME_NOEXCEPT = default;
     // Nodes can't be copied
     DependencyGraphNode(const Type&) RUNTIME_NOEXCEPT = delete;
+    virtual void on_insert() {}
+    virtual void on_remove() {}
+    const dep_graph_handle_t get_id() const { return id; }
 
 private:
     class DependencyGraph* graph;
@@ -31,6 +34,8 @@ public:
     virtual ~DependencyGraphEdge() RUNTIME_NOEXCEPT = default;
     // Edges can't be copied
     DependencyGraphEdge(const Type&) RUNTIME_NOEXCEPT = delete;
+    virtual void on_link() {}
+    virtual void on_unlink() {}
 
 private:
     class DependencyGraph* graph;
@@ -43,7 +48,11 @@ public:
     using Edge = DependencyGraphEdge;
     static DependencyGraph* Create() RUNTIME_NOEXCEPT;
     virtual ~DependencyGraph() RUNTIME_NOEXCEPT = default;
-    virtual dep_graph_handle_t insert(Node* Node) = 0;
+    virtual dep_graph_handle_t insert(Node* node) = 0;
+    virtual Node* access_node(dep_graph_handle_t handle) = 0;
+    virtual bool remove(dep_graph_handle_t node) = 0;
+    virtual bool remove(Node* node) = 0;
+    virtual bool clear() = 0;
     virtual bool link(Node* from, Node* to, Edge* edge = nullptr) = 0;
     virtual Edge* linkage(Node* from, Node* to) = 0;
     virtual Edge* linkage(dep_graph_handle_t from, dep_graph_handle_t to) = 0;

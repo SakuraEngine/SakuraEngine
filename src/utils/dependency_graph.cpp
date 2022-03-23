@@ -1,21 +1,40 @@
+#include "boost/graph/named_graph.hpp"
 #include "utils/DAG.boost.hpp"
 #include "utils/dependency_graph.hpp"
 
 namespace sakura
 {
-class DependencyGraphImpl
-    : public DependencyGraph,
-      public DAG::Graph<DependencyGraph::Node*, DependencyGraph::Edge*>
+class DependencyGraphImpl : public DependencyGraph, public DependencyGraphBase
 {
-    using DAGVertex = DAG::GraphVertex<DependencyGraph::Node*, DependencyGraph::Edge*>;
-    using DAGEdge = DAG::GraphEdge<DependencyGraph::Node*, DependencyGraph::Edge*>;
+    using DAGVertex = DependencyGraphBase::DAGVertex;
+    using DAGEdge = DependencyGraphBase::DAGEdge;
 
 public:
-    virtual dep_graph_handle_t insert(Node* Node) final
+    virtual dep_graph_handle_t insert(Node* node) final
     {
-        Node->id = (dep_graph_handle_t)DAG::add_vertex(Node, *this);
-        Node->graph = this;
-        return Node->id;
+        node->id = (dep_graph_handle_t)DAG::add_vertex(node, *this);
+        node->graph = this;
+        node->on_insert();
+        return node->id;
+    }
+    virtual Node* access_node(dep_graph_handle_t handle) final
+    {
+        return (*this)[DAGVertex(handle)];
+    }
+    virtual bool remove(dep_graph_handle_t node) final
+    {
+        boost::remove_vertex(node, *this);
+        (*this)[node]->on_remove();
+        return true;
+    }
+    virtual bool remove(Node* node) final
+    {
+        return remove(node->id);
+    }
+    virtual bool clear() final
+    {
+        DAG::Graph<DependencyGraph::Node*, DependencyGraph::Edge*>::clear();
+        return true;
     }
     virtual bool link(Node* from, Node* to, Edge* edge) final
     {
@@ -25,6 +44,7 @@ public:
 #endif
         auto&& result = DAG::add_edge(get_descriptor(from), get_descriptor(to), edge, *this);
         edge->graph = this;
+        edge->on_link();
         return result.second;
     }
     virtual Edge* linkage(Node* from, Node* to) final
@@ -48,6 +68,7 @@ public:
     {
         auto find_edge = boost::edge((vertex_descriptor)from, (vertex_descriptor)to, *this);
         if (!find_edge.second) return false;
+        (*this)[find_edge.first]->on_unlink();
         boost::remove_edge(find_edge.first, *this);
         return true;
     }
@@ -142,5 +163,10 @@ namespace sakura
 DependencyGraph* DependencyGraph::Create() RUNTIME_NOEXCEPT
 {
     return new DependencyGraphImpl();
+}
+
+DependencyGraphBase* DependencyGraphBase::as(DependencyGraph* interface)
+{
+    return (DependencyGraphImpl*)interface;
 }
 } // namespace sakura
