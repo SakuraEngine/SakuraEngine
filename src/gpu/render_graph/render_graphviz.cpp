@@ -1,10 +1,6 @@
-#include "render_graph/frontend/base_types.hpp"
-#include "render_graph/frontend/resource_node.h"
-#include "render_graph/rg_config.h"
 #include "utils/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
 #include "render_graph/frontend/render_graph.hpp"
-#include "utils/dependency_graph.hpp"
 
 namespace sakura
 {
@@ -27,12 +23,16 @@ public:
         {
             case ERelationshipType::TextureRead: {
                 auto SRV = (TextureReferenceEdge*)rg_edge;
-                label = "SRV";
+                label = "SRV:s";
+                label.append(eastl::to_string(SRV->set))
+                    .append("b")
+                    .append(eastl::to_string(SRV->binding));
             }
             break;
             case ERelationshipType::TextureWrite: {
-                auto RTV = (TextureReferenceEdge*)rg_edge;
-                label = "RTV";
+                auto RTV = (TextureAccessEdge*)rg_edge;
+                label = "RTV:";
+                label.append(eastl::to_string(RTV->mrt_index));
             }
             break;
             default:
@@ -62,11 +62,11 @@ public:
         switch (rg_node->type)
         {
             case EObjectType::Texture:
-                label = "texture:\n";
+                label = "texture: ";
                 shape = "box";
                 break;
             case EObjectType::Pass:
-                label = "pass:\n";
+                label = "pass: ";
                 shape = "ellipse";
                 break;
             default:
