@@ -12,9 +12,8 @@ using PassExecuteFunction = eastl::function<void()>;
 
 class PassNode : public RenderGraphNode
 {
-    friend class RenderGraph;
-
 public:
+    friend class RenderGraph;
     PassNode()
         : RenderGraphNode(EObjectType::Pass)
     {
@@ -33,7 +32,10 @@ protected:
 class RenderPassNode : public PassNode
 {
 public:
+    friend class RenderGraph;
+
 protected:
+    CGpuRenderPipelineId pipeline;
     CGpuRenderPassDescriptor descriptor;
 };
 } // namespace render_graph

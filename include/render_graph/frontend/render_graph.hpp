@@ -10,43 +10,41 @@ namespace sakura
 {
 namespace render_graph
 {
-
 class RenderGraph
 {
-    friend class RenderGraphViz;
-
 public:
-    class PassBuilder
+    friend class RenderGraphViz;
+    class RenderPassBuilder
     {
-        friend class RenderGraph;
-
     public:
-        PassBuilder& set_name(const char* name);
-        PassBuilder& read(uint32_t set, uint32_t binding, TextureHandle handle);
-        PassBuilder& write(uint32_t mrt_index, TextureHandle handle);
-        PassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
-        PassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
+        friend class RenderGraph;
+        RenderPassBuilder& set_name(const char* name);
+        RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureHandle handle);
+        RenderPassBuilder& write(uint32_t mrt_index, TextureHandle handle);
+        RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
+        RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
+        RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
 
     protected:
         inline void Apply()
         {
         }
-        PassBuilder(RenderGraph& graph, RenderPassNode& pass)
+        RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass)
             : graph(graph)
-            , pass(pass)
+            , node(pass)
         {
         }
         RenderGraph& graph;
-        RenderPassNode& pass;
+        RenderPassNode& node;
     };
-    using PassSetupFunction = eastl::function<void(class RenderGraph::PassBuilder&)>;
-    inline PassHandle add_pass(const PassSetupFunction& setup, const PassExecuteFunction& executor)
+    using RenderPassSetupFunction = eastl::function<void(class RenderGraph::RenderPassBuilder&)>;
+    inline PassHandle add_pass(const RenderPassSetupFunction& setup, const PassExecuteFunction& executor)
     {
         auto newPass = new RenderPassNode();
         passes.emplace_back(newPass);
         graph->insert(newPass);
         // build up
-        PassBuilder builder(*this, *newPass);
+        RenderPassBuilder builder(*this, *newPass);
         setup(builder);
         builder.Apply();
         newPass->executor = executor;
@@ -54,9 +52,8 @@ public:
     }
     class TextureBuilder
     {
-        friend class RenderGraph;
-
     public:
+        friend class RenderGraph;
         TextureBuilder& import(CGpuTextureId texture);
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1);
         TextureBuilder& format(ECGpuFormat format);
@@ -116,8 +113,8 @@ protected:
     eastl::vector<ResourceNode*> resources;
 };
 
-using PassSetupFunction = RenderGraph::PassSetupFunction;
-using PassBuilder = RenderGraph::PassBuilder;
+using RenderPassSetupFunction = RenderGraph::RenderPassSetupFunction;
+using RenderPassBuilder = RenderGraph::RenderPassBuilder;
 using TextureSetupFunction = RenderGraph::TextureSetupFunction;
 using TextureBuilder = RenderGraph::TextureBuilder;
 
@@ -135,35 +132,40 @@ namespace sakura
 namespace render_graph
 {
 // pass builder
-inline RenderGraph::PassBuilder& RenderGraph::PassBuilder::set_name(const char* name)
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const char* name)
 {
     if (name)
     {
-        graph.blackboard.named_passes[name] = &pass;
-        pass.set_name(name);
+        graph.blackboard.named_passes[name] = &node;
+        node.set_name(name);
     }
     return *this;
 }
-inline RenderGraph::PassBuilder& RenderGraph::PassBuilder::read(uint32_t set, uint32_t binding, TextureHandle handle)
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, TextureHandle handle)
 {
-    auto&& edge = pass.in_edges.emplace_back(
+    auto&& edge = node.in_edges.emplace_back(
         new TextureReadEdge(set, binding, handle));
-    graph.graph->link(graph.graph->access_node(handle.handle), &pass, edge);
+    graph.graph->link(graph.graph->access_node(handle.handle), &node, edge);
     return *this;
 }
-inline RenderGraph::PassBuilder& RenderGraph::PassBuilder::write(uint32_t mrt_index, TextureHandle handle)
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(uint32_t mrt_index, TextureHandle handle)
 {
-    auto&& edge = pass.out_edges.emplace_back(
+    auto&& edge = node.out_edges.emplace_back(
         new TextureRenderEdge(mrt_index, handle));
-    graph.graph->link(&pass, graph.graph->access_node(handle.handle), edge);
+    graph.graph->link(&node, graph.graph->access_node(handle.handle), edge);
     return *this;
 }
-inline RenderGraph::PassBuilder& RenderGraph::PassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
 {
     return *this;
 }
-inline RenderGraph::PassBuilder& RenderGraph::PassBuilder::write(uint32_t set, uint32_t binding, BufferHandle handle)
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(uint32_t set, uint32_t binding, BufferHandle handle)
 {
+    return *this;
+}
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipeline(CGpuRenderPipelineId pipeline)
+{
+    node.pipeline = pipeline;
     return *this;
 }
 

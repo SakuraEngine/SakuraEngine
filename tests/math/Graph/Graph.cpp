@@ -219,13 +219,13 @@ TEST(GraphTest, RenderGraphFrontEnd)
                 .allow_render_target()
                 .format(PF_B8G8R8A8_UNORM);
         });
-    graph.add_pass([=](render_graph::PassBuilder& builder) {
+    graph.add_pass([=](render_graph::RenderPassBuilder& builder) {
         builder.set_name("gbuffer_pass")
             .write(0, gbuffer0)
             .write(1, gbuffer1);
     },
         render_graph::PassExecuteFunction());
-    graph.add_pass([=](render_graph::PassBuilder& builder) {
+    graph.add_pass([=](render_graph::RenderPassBuilder& builder) {
         builder.set_name("defer_lighting")
             .read(0, 0, gbuffer0)
             .read(0, 1, gbuffer1)

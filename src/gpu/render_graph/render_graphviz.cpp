@@ -1,3 +1,10 @@
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunused-variable"
+    #pragma clang diagnostic ignored "-Wunknown-pragmas"
+    #pragma clang diagnostic ignored "-Wuninitialized-const-reference"
+#endif
+
 #include "utils/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
 #include "render_graph/frontend/render_graph.hpp"
@@ -103,3 +110,7 @@ void RenderGraphViz::write_graphviz(RenderGraph& graph, const char* outf)
 }
 } // namespace render_graph
 } // namespace sakura
+
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#endif

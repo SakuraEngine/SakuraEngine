@@ -7,10 +7,10 @@ namespace render_graph
 {
 class TextureReadEdge : public RenderGraphEdge
 {
+public:
     friend class PassNode;
     friend class RenderGraph;
 
-public:
     const uint32_t set;
     const uint32_t binding;
 
@@ -33,10 +33,10 @@ protected:
 
 class TextureRenderEdge : public RenderGraphEdge
 {
+public:
     friend class PassNode;
     friend class RenderGraph;
 
-public:
     const uint32_t mrt_index;
 
 protected:

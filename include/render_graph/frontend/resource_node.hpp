@@ -8,9 +8,8 @@ namespace render_graph
 {
 class ResourceNode : public RenderGraphNode
 {
-    friend class RenderGraph;
-
 public:
+    friend class RenderGraph;
     ResourceNode(EObjectType type)
         : RenderGraphNode(type)
         , imported(false)
@@ -26,9 +25,8 @@ protected:
 
 class TextureNode : public ResourceNode
 {
-    friend class RenderGraph;
-
 public:
+    friend class RenderGraph;
     TextureNode()
         : ResourceNode(EObjectType::Texture)
     {
