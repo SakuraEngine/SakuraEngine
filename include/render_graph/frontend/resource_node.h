@@ -1,29 +1,81 @@
 #pragma once
+#include <atomic>
 #include "cgpu/api.h"
-#include "cgpu/flags.h"
-#include "render_graph/rg_config.h"
-#include "render_graph/frontend/dependency_graph.hpp"
+#include "render_graph/frontend/base_types.hpp"
+#include "utils/dependency_graph.hpp"
 
 namespace sakura
 {
 namespace render_graph
 {
-class ResourceNode : public DependencyGraphNode
+class ResourceNode : public RenderGraphNode
 {
+public:
+    ResourceNode(EObjectType type)
+        : RenderGraphNode(type)
+        , is_imported(false)
+    {
+    }
+    const bool is_imported : 1;
 };
 
 class TextureNode : public ResourceNode
 {
 public:
+    TextureNode()
+        : ResourceNode(EObjectType::Texture){};
+    const TextureHandle get_handle() const
+    {
+        return TextureHandle(get_id());
+    }
+
 protected:
-    // resource
-    CGpuTextureId texture;
+    // temporal handle with a lifespan of only one frame
+    CGpuTextureId frame_texture;
 };
 
-class TextureReferenceEdge : public DependencyGraphEdge
+class TextureReferenceEdge : public RenderGraphEdge
 {
+    friend class PassNode;
+    friend class RenderGraph;
+
 protected:
+    TextureReferenceEdge(
+        uint32_t set, uint32_t binding, TextureHandle handle,
+        ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE)
+        : RenderGraphEdge(ERelationshipType::TextureRead)
+        , set(set)
+        , binding(binding)
+        , handle(handle)
+        , requested_state(state)
+    {
+    }
+    uint32_t set;
+    uint32_t binding;
+    TextureHandle handle;
+    ECGpuResourceState requested_state = RESOURCE_STATE_SHADER_RESOURCE;
+    // temporal handle with a lifespan of only one frame
+    CGpuTextureViewId texture_view;
+};
+
+class TextureAccessEdge : public RenderGraphEdge
+{
+    friend class PassNode;
+    friend class RenderGraph;
+
+protected:
+    TextureAccessEdge(uint32_t mrt_index, TextureHandle handle,
+        ECGpuResourceState state = RESOURCE_STATE_RENDER_TARGET)
+        : RenderGraphEdge(ERelationshipType::TextureWrite)
+        , mrt_index(mrt_index)
+        , handle(handle)
+        , requested_state(state)
+    {
+    }
+    uint32_t mrt_index;
+    TextureHandle handle;
     ECGpuResourceState requested_state;
+    // temporal handle with a lifespan of only one frame
     CGpuTextureViewId texture_view;
 };
 } // namespace render_graph

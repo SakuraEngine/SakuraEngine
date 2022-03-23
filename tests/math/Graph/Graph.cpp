@@ -195,6 +195,29 @@ TEST(GraphTest, DependencyGraph)
     delete rdg;
 }
 
+#include "render_graph/frontend/render_graph.hpp"
+
+TEST(GraphTest, RenderGraphFrontEnd)
+{
+    namespace render_graph = sakura::render_graph;
+    render_graph::RenderGraph graph;
+    auto gbuffer0 = graph.create_texture("GBuffer0");
+    auto gbuffer1 = graph.create_texture("GBuffer1");
+    graph.add_pass([=](render_graph::RenderGraph::PassBuilder& builder) {
+        builder.set_name("GBuffer Pass");
+        builder.write(0, gbuffer0);
+        builder.write(1, gbuffer1);
+    },
+        render_graph::PassExecuteFunction());
+    graph.add_pass([=](render_graph::RenderGraph::PassBuilder& builder) {
+        builder.set_name("Lighting Pass");
+        builder.read(0, 0, gbuffer0);
+        builder.read(0, 1, gbuffer1);
+    },
+        render_graph::PassExecuteFunction());
+    render_graph::RenderGraphViz::write_graphviz(graph, "render_graph.gv");
+}
+
 #if defined(__clang__)
     #pragma clang diagnostic pop
 #endif

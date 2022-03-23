@@ -2,7 +2,7 @@
 #include <EASTL/vector.h>
 #include <EASTL/list.h>
 #include <boost/graph/adjacency_list.hpp>
-
+#include "utils/dependency_graph.hpp"
 namespace sakura
 {
 namespace DAG
@@ -195,3 +195,15 @@ struct is_random_access<sakura::DAG::____::pmrListS> {
 };
 } // namespace detail
 } // namespace boost
+
+namespace sakura
+{
+class DependencyGraphBase : public DAG::Graph<DependencyGraph::Node*, DependencyGraph::Edge*>
+{
+public:
+    using DAGVertex = DAG::GraphVertex<DependencyGraph::Node*, DependencyGraph::Edge*>;
+    using DAGEdge = DAG::GraphEdge<DependencyGraph::Node*, DependencyGraph::Edge*>;
+
+    static DependencyGraphBase* as(DependencyGraph* interface);
+};
+} // namespace sakura
