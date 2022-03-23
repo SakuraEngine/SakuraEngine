@@ -201,16 +201,31 @@ TEST(GraphTest, RenderGraphFrontEnd)
 {
     namespace render_graph = sakura::render_graph;
     render_graph::RenderGraph graph;
-    auto back_buffer = graph.create_texture("backbuffer");
-    auto gbuffer0 = graph.create_texture("gbuffer0");
-    auto gbuffer1 = graph.create_texture("gbuffer1");
-    graph.add_pass([=](render_graph::RenderGraph::PassBuilder& builder) {
+    CGpuTextureId to_import = (CGpuTextureId)1;
+    auto back_buffer = graph.create_texture(
+        [=](render_graph::TextureBuilder& builder) {
+            builder.set_name("backbuffer")
+                .import(to_import);
+        });
+    auto gbuffer0 = graph.create_texture(
+        [](render_graph::TextureBuilder& builder) {
+            builder.set_name("gbuffer0")
+                .allow_render_target()
+                .format(PF_B8G8R8A8_UNORM);
+        });
+    auto gbuffer1 = graph.create_texture(
+        [](render_graph::TextureBuilder& builder) {
+            builder.set_name("gbuffer1")
+                .allow_render_target()
+                .format(PF_B8G8R8A8_UNORM);
+        });
+    graph.add_pass([=](render_graph::PassBuilder& builder) {
         builder.set_name("gbuffer_pass")
             .write(0, gbuffer0)
             .write(1, gbuffer1);
     },
         render_graph::PassExecuteFunction());
-    graph.add_pass([=](render_graph::RenderGraph::PassBuilder& builder) {
+    graph.add_pass([=](render_graph::PassBuilder& builder) {
         builder.set_name("defer_lighting")
             .read(0, 0, gbuffer0)
             .read(0, 1, gbuffer1)

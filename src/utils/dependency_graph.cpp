@@ -76,11 +76,11 @@ public:
     {
         return (*this)[DAGVertex(ID)];
     }
-    virtual uint32_t outgoing_edges(Node* node) final
+    virtual uint32_t outgoing_edges(const Node* node) const final
     {
         return outgoing_edges(node->id);
     }
-    virtual uint32_t outgoing_edges(dep_graph_handle_t id) final
+    virtual uint32_t outgoing_edges(dep_graph_handle_t id) const final
     {
         auto oedges = DAG::out_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
@@ -107,11 +107,11 @@ public:
         }
         return count;
     }
-    virtual uint32_t incoming_edges(Node* node) final
+    virtual uint32_t incoming_edges(const Node* node) const final
     {
         return incoming_edges(node->id);
     }
-    virtual uint32_t incoming_edges(dep_graph_handle_t id) final
+    virtual uint32_t incoming_edges(dep_graph_handle_t id) const final
     {
         auto iedges = DAG::in_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
@@ -156,6 +156,16 @@ protected:
         return (vertex_descriptor)node->id;
     }
 };
+
+const uint32_t DependencyGraphNode::outgoing_edges() const
+{
+    return graph->outgoing_edges(this);
+}
+
+const uint32_t DependencyGraphNode::incoming_edges() const
+{
+    return graph->incoming_edges(this);
+}
 } // namespace sakura
 
 namespace sakura

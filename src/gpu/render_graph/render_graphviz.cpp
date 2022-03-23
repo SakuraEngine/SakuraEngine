@@ -22,7 +22,7 @@ public:
         switch (rg_edge->type)
         {
             case ERelationshipType::TextureRead: {
-                auto SRV = (TextureReferenceEdge*)rg_edge;
+                auto SRV = (TextureReadEdge*)rg_edge;
                 label = "SRV:s";
                 label.append(eastl::to_string(SRV->set))
                     .append("b")
@@ -30,7 +30,7 @@ public:
             }
             break;
             case ERelationshipType::TextureWrite: {
-                auto RTV = (TextureAccessEdge*)rg_edge;
+                auto RTV = (TextureRenderEdge*)rg_edge;
                 label = "RTV:";
                 label.append(eastl::to_string(RTV->mrt_index));
             }
@@ -58,23 +58,34 @@ public:
     {
         RenderGraphNode* rg_node = (RenderGraphNode*)prop[v];
         eastl::string label;
+        eastl::string color = "lavenderblush";
         eastl::string shape = "none";
         switch (rg_node->type)
         {
-            case EObjectType::Texture:
+            case EObjectType::Texture: {
+                TextureNode* tex_node = (TextureNode*)rg_node;
+                const bool is_imported = tex_node->is_imported();
+                color = is_imported ? "grey35" : "grey70";
                 label = "texture: ";
+                label.append(rg_node->get_name());
+                label.append("\nrefs: ")
+                    .append(is_imported ? "imported" : eastl::to_string(tex_node->outgoing_edges()));
                 shape = "box";
-                break;
-            case EObjectType::Pass:
+            }
+            break;
+            case EObjectType::Pass: {
                 label = "pass: ";
+                label.append(rg_node->get_name());
                 shape = "ellipse";
-                break;
+            }
+            break;
             default:
                 break;
         }
-        label.append(rg_node->get_name());
         out << "[label=\"" << label.c_str() << "\"]";
         out << "[shape=\"" << shape.c_str() << "\"]";
+        out << "[fillcolor=\"" << color.c_str() << "\"]";
+        out << "[style=\"filled\"]";
     }
 
 private:
