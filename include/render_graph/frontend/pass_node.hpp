@@ -1,7 +1,8 @@
 #pragma once
 #include <EASTL/vector.h>
 #include "render_graph/frontend/base_types.hpp"
-#include "render_graph/frontend/resource_node.h"
+#include "render_graph/frontend/resource_node.hpp"
+#include "render_graph/frontend/resource_edge.hpp"
 
 namespace sakura
 {
@@ -25,8 +26,8 @@ public:
 
 protected:
     PassExecuteFunction executor;
-    eastl::vector<TextureReferenceEdge*> in_edges;
-    eastl::vector<TextureAccessEdge*> out_edges;
+    eastl::vector<TextureReadEdge*> in_edges;
+    eastl::vector<TextureRenderEdge*> out_edges;
 };
 
 class RenderPassNode : public PassNode

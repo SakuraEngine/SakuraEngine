@@ -18,6 +18,8 @@ public:
     virtual void on_insert() {}
     virtual void on_remove() {}
     const dep_graph_handle_t get_id() const { return id; }
+    const uint32_t outgoing_edges() const;
+    const uint32_t incoming_edges() const;
 
 private:
     class DependencyGraph* graph;
@@ -59,14 +61,14 @@ public:
     virtual bool unlink(Node* from, Node* to) = 0;
     virtual bool unlink(dep_graph_handle_t from, dep_graph_handle_t to) = 0;
     virtual Node* node_at(dep_graph_handle_t ID) = 0;
-    virtual uint32_t outgoing_edges(Node* node) = 0;
-    virtual uint32_t outgoing_edges(dep_graph_handle_t id) = 0;
+    virtual uint32_t outgoing_edges(const Node* node) const = 0;
+    virtual uint32_t outgoing_edges(dep_graph_handle_t id) const = 0;
     virtual uint32_t foreach_outgoing_edges(dep_graph_handle_t node,
         eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t foreach_outgoing_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
-    virtual uint32_t incoming_edges(Node* node) = 0;
-    virtual uint32_t incoming_edges(dep_graph_handle_t id) = 0;
+    virtual uint32_t incoming_edges(const Node* node) const = 0;
+    virtual uint32_t incoming_edges(dep_graph_handle_t id) const = 0;
     virtual uint32_t foreach_incoming_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t foreach_incoming_edges(dep_graph_handle_t node,
