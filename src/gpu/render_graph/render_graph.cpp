@@ -55,10 +55,9 @@ uint64_t RenderGraphBackend::execute()
     }
     cgpu_cmd_end(executor.gfx_cmd_buf);
     // submit
-    CGpuQueueSubmitDescriptor submit_desc = {
-        .cmds = &executor.gfx_cmd_buf,
-        .cmds_count = 1,
-    };
+    CGpuQueueSubmitDescriptor submit_desc = {};
+    submit_desc.cmds = &executor.gfx_cmd_buf;
+    submit_desc.cmds_count = 1;
     cgpu_submit_queue(gfx_queue, &submit_desc);
     graph->clear();
     return frame_index++;

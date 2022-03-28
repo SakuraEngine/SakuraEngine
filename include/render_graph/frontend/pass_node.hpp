@@ -9,7 +9,7 @@ namespace sakura
 namespace render_graph
 {
 using PassExecuteFunction = eastl::function<
-    void(RenderGraph&, CGpuRenderPassEncoderId)>;
+    void(class RenderGraph&, CGpuRenderPassEncoderId)>;
 
 class PassNode : public RenderGraphNode
 {
