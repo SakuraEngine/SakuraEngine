@@ -1,0 +1,6 @@
+add_executable(RenderGraphTriangle
+    triangle.cpp
+)
+target_link_libraries(RenderGraphTriangle PRIVATE ${SDL2_LIBRARIES})
+target_include_directories(RenderGraphTriangle PRIVATE ${SDL2_INCLUDES})
+target_link_libraries(RenderGraphTriangle PUBLIC SakuraRuntime)

@@ -5,7 +5,7 @@
 #include "render-resources.hpp"
 #include <EASTL/vector_map.h>
 
-#define MAX_CPY_QUEUE_COUNT 2
+#define MAX_CPY_QUEUE_COUNT 1
 
 void RenderWindow::Initialize(RenderDevice* render_device)
 {
@@ -32,7 +32,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
     swapchain_desc.surface = surface_;
     swapchain_desc.imageCount = 3;
     swapchain_desc.format = PF_R8G8B8A8_UNORM;
-    swapchain_desc.enableVsync = true;
+    swapchain_desc.enableVsync = false;
     swapchain_ = cgpu_create_swapchain(device_, &swapchain_desc);
     for (uint32_t i = 0; i < swapchain_->buffer_count; i++)
     {
@@ -95,7 +95,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
     ds_desc.width = swapchain_->back_buffers[0]->width;
     ds_desc.height = swapchain_->back_buffers[0]->height;
     ds_desc.depth = 1;
-    ds_desc.format = PF_D24_UNORM_S8_UINT;
+    ds_desc.format = PF_D32_SFLOAT;
     ds_desc.array_size = 1;
     ds_desc.sample_count = RenderWindow::SampleCount;
     ds_desc.start_state = RESOURCE_STATE_DEPTH_WRITE;
@@ -103,7 +103,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
     screen_ds_ = cgpu_create_texture(device_, &ds_desc);
     CGpuTextureViewDescriptor ds_view_desc = {};
     ds_view_desc.texture = screen_ds_;
-    ds_view_desc.format = PF_D24_UNORM_S8_UINT;
+    ds_view_desc.format = PF_D32_SFLOAT;
     ds_view_desc.array_layer_count = 1;
     ds_view_desc.base_array_layer = 0;
     ds_view_desc.mip_level_count = 1;
@@ -226,9 +226,9 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     // create instance
     CGpuInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
-    instance_desc.enable_set_name = true;
+    instance_desc.enable_debug_layer = false;
+    instance_desc.enable_gpu_based_validation = false;
+    instance_desc.enable_set_name = false;
     instance_ = cgpu_create_instance(&instance_desc);
     {
         uint32_t adapters_count = 0;

@@ -41,9 +41,10 @@ public:
     }
 
 protected:
+    CGpuTextureDescriptor descriptor;
     // temporal handle with a lifespan of only one frame
     CGpuTextureId frame_texture;
-    CGpuTextureDescriptor descriptor;
+    ECGpuResourceState init_state;
 };
 } // namespace render_graph
 } // namespace sakura

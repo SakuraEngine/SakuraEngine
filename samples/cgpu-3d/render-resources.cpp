@@ -523,7 +523,7 @@ AsyncRenderPipeline* RenderBlackboard::AddRenderPipeline(RenderAuxThread* aux_th
     ds_state.depth_test = true;
     ds_state.depth_func = CMP_GEQUAL;
     ds_state.stencil_test = false;
-    rp_desc.depth_stencil_format = PF_D24_UNORM_S8_UINT;
+    rp_desc.depth_stencil_format = PF_D32_SFLOAT;
     rp_desc.depth_state = &ds_state;
     rp_desc.render_target_count = 1;
     auto&& color_format = eastl::get<ECGpuFormat>(*descHeap);
