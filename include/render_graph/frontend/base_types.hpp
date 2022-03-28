@@ -26,6 +26,15 @@ enum class ERelationshipType : uint8_t
     Count
 };
 
+enum class EPassType : uint8_t
+{
+    None,
+    Render,
+    Compute,
+    Present,
+    Count
+};
+
 template <EObjectType type>
 struct ObjectHandle {
     ObjectHandle(handle_t hdl)

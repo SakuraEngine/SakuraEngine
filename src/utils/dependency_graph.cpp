@@ -44,6 +44,8 @@ public:
 #endif
         auto&& result = DAG::add_edge(get_descriptor(from), get_descriptor(to), edge, *this);
         edge->graph = this;
+        edge->from_node = from->get_id();
+        edge->to_node = to->get_id();
         edge->on_link();
         return result.second;
     }
@@ -76,19 +78,28 @@ public:
     {
         return (*this)[DAGVertex(ID)];
     }
-    virtual uint32_t outgoing_edges(const Node* node) const final
+    virtual Node* from_node(Edge* edge) final
+    {
+        return node_at(edge->from_node);
+    }
+    virtual Node* to_node(Edge* edge) final
+    {
+        return node_at(edge->to_node);
+    }
+    virtual gsl::span<DependencyGraphEdge> outgoing_edges(const Node* node) const final
     {
         return outgoing_edges(node->id);
     }
-    virtual uint32_t outgoing_edges(dep_graph_handle_t id) const final
+    virtual gsl::span<DependencyGraphEdge> outgoing_edges(dep_graph_handle_t id) const final
     {
         auto oedges = DAG::out_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
+        auto first_edge = (*this)[*oedges.first];
         for (auto iter = oedges.first; iter != oedges.second; iter++)
         {
             count++;
         }
-        return count;
+        return gsl::span<DependencyGraphEdge>(first_edge, count);
     }
     virtual uint32_t foreach_outgoing_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
@@ -102,24 +113,27 @@ public:
         uint32_t count = 0;
         for (auto iter = oedges.first; iter != oedges.second; iter++)
         {
-            func(node_at(iter->m_source), node_at(iter->m_target), (Edge*)iter->get_property());
+            func(node_at(iter->m_source), node_at(iter->m_target), (*this)[*iter]);
             count++;
         }
         return count;
     }
-    virtual uint32_t incoming_edges(const Node* node) const final
+    virtual gsl::span<Edge> incoming_edges(const Node* node) const final
     {
         return incoming_edges(node->id);
     }
-    virtual uint32_t incoming_edges(dep_graph_handle_t id) const final
+    virtual gsl::span<Edge> incoming_edges(dep_graph_handle_t id) const final
     {
         auto iedges = DAG::in_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
+        auto first_edge = (*this)[*iedges.first];
         for (auto iter = iedges.first; iter != iedges.second; iter++)
         {
             count++;
         }
-        return count;
+        if (first_edge->graph == nullptr)
+            return {};
+        return gsl::span<DependencyGraphEdge>(first_edge, count);
     }
     virtual uint32_t foreach_incoming_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
@@ -133,7 +147,7 @@ public:
         uint32_t count = 0;
         for (auto iter = oedges.first; iter != oedges.second; iter++)
         {
-            func(node_at(iter->m_source), node_at(iter->m_target), (Edge*)iter->get_property());
+            func(node_at(iter->m_source), node_at(iter->m_target), (*this)[*iter]);
             count++;
         }
         return count;
@@ -144,7 +158,7 @@ public:
         uint32_t count = 0;
         for (auto iter = edges.first; iter != edges.second; iter++)
         {
-            func(node_at(iter->m_source), node_at(iter->m_target), (Edge*)iter->get_property());
+            func(node_at(iter->m_source), node_at(iter->m_target), (*this)[*iter]);
             count++;
         }
         return count;
@@ -157,12 +171,12 @@ protected:
     }
 };
 
-const uint32_t DependencyGraphNode::outgoing_edges() const
+const gsl::span<DependencyGraphEdge> DependencyGraphNode::outgoing_edges() const
 {
     return graph->outgoing_edges(this);
 }
 
-const uint32_t DependencyGraphNode::incoming_edges() const
+const gsl::span<DependencyGraphEdge> DependencyGraphNode::incoming_edges() const
 {
     return graph->incoming_edges(this);
 }

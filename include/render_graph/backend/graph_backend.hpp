@@ -14,7 +14,7 @@ public:
 
 protected:
     RenderGraphFrameExecutor() = default;
-    RenderGraphFrameExecutor(CGpuQueueId gfx_queue, CGpuDeviceId deivce)
+    void initialize(CGpuQueueId gfx_queue, CGpuDeviceId deivce)
     {
         CGpuCommandPoolDescriptor pool_desc = {};
         gfx_cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
@@ -24,11 +24,13 @@ protected:
     }
     ~RenderGraphFrameExecutor()
     {
-        cgpu_free_command_buffer(gfx_cmd_buf);
-        cgpu_free_command_pool(gfx_cmd_pool);
+        if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
+        if (gfx_cmd_pool) cgpu_free_command_pool(gfx_cmd_pool);
+        gfx_cmd_buf = nullptr;
+        gfx_cmd_pool = nullptr;
     }
-    CGpuCommandPoolId gfx_cmd_pool;
-    CGpuCommandBufferId gfx_cmd_buf;
+    CGpuCommandPoolId gfx_cmd_pool = nullptr;
+    CGpuCommandBufferId gfx_cmd_buf = nullptr;
 };
 
 class RenderGraphBackend : public RenderGraph
@@ -41,7 +43,7 @@ public:
         backend = device->adapter->instance->backend;
         for (uint32_t i = 0; i < MAX_FRAME_IN_FLIGHT; i++)
         {
-            executors[i] = RenderGraphFrameExecutor(gfx_queue, device);
+            executors[i].initialize(gfx_queue, device);
         }
     }
     void devirtualize(TextureNode* node);
@@ -50,6 +52,9 @@ public:
     virtual uint64_t execute() final;
 
 protected:
+    void execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass);
+    void execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass);
+
     CGpuQueueId gfx_queue;
     CGpuDeviceId device;
     ECGpuBackend backend;

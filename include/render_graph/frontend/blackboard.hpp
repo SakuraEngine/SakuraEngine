@@ -10,6 +10,11 @@ class Blackboard
 {
 public:
     friend class RenderGraph;
+    inline void clear()
+    {
+        named_passes.clear();
+        named_textures.clear();
+    }
 
 protected:
     eastl::string_map<class PassNode*> named_passes;

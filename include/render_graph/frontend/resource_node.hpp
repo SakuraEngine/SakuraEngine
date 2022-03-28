@@ -27,6 +27,8 @@ class TextureNode : public ResourceNode
 {
 public:
     friend class RenderGraph;
+    friend class RenderGraphBackend;
+
     TextureNode()
         : ResourceNode(EObjectType::Texture)
     {
@@ -44,7 +46,8 @@ protected:
     CGpuTextureDescriptor descriptor;
     // temporal handle with a lifespan of only one frame
     CGpuTextureId frame_texture;
-    ECGpuResourceState init_state;
+    CGpuTextureViewId default_view;
+    ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
 };
 } // namespace render_graph
 } // namespace sakura

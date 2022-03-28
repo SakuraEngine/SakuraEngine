@@ -76,7 +76,7 @@ public:
                 label = "texture: ";
                 label.append(rg_node->get_name());
                 label.append("\nrefs: ")
-                    .append(is_imported ? "imported" : eastl::to_string(tex_node->outgoing_edges()));
+                    .append(is_imported ? "imported" : eastl::to_string(tex_node->outgoing_edges().size()));
                 shape = "box";
             }
             break;

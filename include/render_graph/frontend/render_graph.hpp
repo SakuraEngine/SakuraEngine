@@ -43,9 +43,7 @@ public:
         RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
 
     protected:
-        inline void Apply()
-        {
-        }
+        inline void Apply() {}
         RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass)
             : graph(graph)
             , node(pass)
@@ -55,7 +53,7 @@ public:
         RenderPassNode& node;
     };
     using RenderPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
-    inline PassHandle add_pass(const RenderPassSetupFunction& setup, const PassExecuteFunction& executor)
+    inline PassHandle add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor)
     {
         auto newPass = new RenderPassNode();
         passes.emplace_back(newPass);
@@ -67,11 +65,41 @@ public:
         newPass->executor = executor;
         return newPass->get_handle();
     }
+    class PresentPassBuilder
+    {
+    public:
+        friend class RenderGraph;
+
+        PresentPassBuilder& swapchain(CGpuSwapChainId chain);
+        PresentPassBuilder& index(uint32_t index);
+
+    protected:
+        inline void Apply() {}
+        PresentPassBuilder(RenderGraph& graph, PresentPassNode& present)
+            : graph(graph)
+            , node(present)
+        {
+        }
+        RenderGraph& graph;
+        PresentPassNode& node;
+    };
+    using PresentPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::PresentPassBuilder&)>;
+    inline PassHandle add_present_pass(const PresentPassSetupFunction& setup)
+    {
+        auto newPass = new PresentPassNode();
+        passes.emplace_back(newPass);
+        graph->insert(newPass);
+        // build up
+        PresentPassBuilder builder(*this, *newPass);
+        setup(*this, builder);
+        builder.Apply();
+        return newPass->get_handle();
+    }
     class TextureBuilder
     {
     public:
         friend class RenderGraph;
-        TextureBuilder& import(CGpuTextureId texture);
+        TextureBuilder& import(CGpuTextureId texture, CGpuTextureViewId view);
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1);
         TextureBuilder& format(ECGpuFormat format);
         TextureBuilder& array(uint32_t size);
@@ -94,6 +122,7 @@ public:
         {
             node.imported = imported;
             if (imported) node.frame_texture = imported;
+            if (imported_view) node.default_view = imported_view;
             node.canbe_lone = canbe_lone;
             node.descriptor = tex_desc;
             // TODO: create underlying resource
@@ -102,6 +131,7 @@ public:
         TextureNode& node;
         CGpuTextureDescriptor tex_desc = {};
         CGpuTextureId imported = nullptr;
+        CGpuTextureViewId imported_view = nullptr;
         bool create_at_once : 1;
         bool async : 1;
         bool canbe_lone : 1;
@@ -121,6 +151,10 @@ public:
     {
         return -1;
     }
+    const ECGpuResourceState get_lastest_state(TextureHandle texture, PassHandle pending_pass) const;
+
+    virtual ~RenderGraph() = default;
+
     bool compile();
     virtual uint64_t execute();
 
@@ -136,6 +170,8 @@ using RenderGraphSetupFunction = RenderGraph::RenderGraphSetupFunction;
 using RenderGraphBuilder = RenderGraph::RenderGraphBuilder;
 using RenderPassSetupFunction = RenderGraph::RenderPassSetupFunction;
 using RenderPassBuilder = RenderGraph::RenderPassBuilder;
+using PresentPassSetupFunction = RenderGraph::PresentPassSetupFunction;
+using PresentPassBuilder = RenderGraph::PresentPassBuilder;
 using TextureSetupFunction = RenderGraph::TextureSetupFunction;
 using TextureBuilder = RenderGraph::TextureBuilder;
 
@@ -173,7 +209,18 @@ inline RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::fronten
     no_backend = true;
     return *this;
 }
-// pass builder
+// present pass builder
+inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapchain(CGpuSwapChainId chain)
+{
+    node.descriptor.swapchain = chain;
+    return *this;
+}
+inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::index(uint32_t index)
+{
+    node.descriptor.index = index;
+    return *this;
+}
+// render pass builder
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const char* name)
 {
     if (name)
@@ -212,9 +259,11 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipel
 }
 
 // texture builder
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId texture)
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(
+    CGpuTextureId texture, CGpuTextureViewId view)
 {
     imported = texture;
+    imported_view = view;
     return *this;
 }
 
