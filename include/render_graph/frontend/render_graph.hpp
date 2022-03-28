@@ -14,6 +14,23 @@ class RenderGraph
 {
 public:
     friend class RenderGraphViz;
+    class RenderGraphBuilder
+    {
+    public:
+        friend class RenderGraph;
+        RenderGraphBuilder& frontend_only();
+        RenderGraphBuilder& backend_api(ECGpuBackend backend);
+        RenderGraphBuilder& with_device(CGpuDeviceId device);
+        RenderGraphBuilder& with_gfx_queue(CGpuQueueId queue);
+
+    protected:
+        bool no_backend;
+        ECGpuBackend api;
+        CGpuDeviceId device;
+        CGpuQueueId gfx_queue;
+    };
+    using RenderGraphSetupFunction = eastl::function<void(class RenderGraph::RenderGraphBuilder&)>;
+    static RenderGraph* create(const RenderGraphSetupFunction& setup);
     class RenderPassBuilder
     {
     public:
@@ -37,7 +54,7 @@ public:
         RenderGraph& graph;
         RenderPassNode& node;
     };
-    using RenderPassSetupFunction = eastl::function<void(class RenderGraph::RenderPassBuilder&)>;
+    using RenderPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
     inline PassHandle add_pass(const RenderPassSetupFunction& setup, const PassExecuteFunction& executor)
     {
         auto newPass = new RenderPassNode();
@@ -45,7 +62,7 @@ public:
         graph->insert(newPass);
         // build up
         RenderPassBuilder builder(*this, *newPass);
-        setup(builder);
+        setup(*this, builder);
         builder.Apply();
         newPass->executor = executor;
         return newPass->get_handle();
@@ -89,14 +106,14 @@ public:
         bool async : 1;
         bool canbe_lone : 1;
     };
-    using TextureSetupFunction = eastl::function<void(class RenderGraph::TextureBuilder&)>;
+    using TextureSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::TextureBuilder&)>;
     inline TextureHandle create_texture(const TextureSetupFunction& setup)
     {
         auto newTex = new TextureNode();
         resources.emplace_back(newTex);
         graph->insert(newTex);
         TextureBuilder builder(*this, *newTex);
-        setup(builder);
+        setup(*this, builder);
         builder.Apply();
         return newTex->get_handle();
     }
@@ -104,15 +121,19 @@ public:
     {
         return -1;
     }
+    bool compile();
+    virtual uint64_t execute();
 
 protected:
+    uint64_t frame_index = 0;
     Blackboard blackboard;
     eastl::unique_ptr<DependencyGraph> graph =
         eastl::unique_ptr<DependencyGraph>(DependencyGraph::Create());
     eastl::vector<PassNode*> passes;
     eastl::vector<ResourceNode*> resources;
 };
-
+using RenderGraphSetupFunction = RenderGraph::RenderGraphSetupFunction;
+using RenderGraphBuilder = RenderGraph::RenderGraphBuilder;
 using RenderPassSetupFunction = RenderGraph::RenderPassSetupFunction;
 using RenderPassBuilder = RenderGraph::RenderPassBuilder;
 using TextureSetupFunction = RenderGraph::TextureSetupFunction;
@@ -131,6 +152,27 @@ namespace sakura
 {
 namespace render_graph
 {
+// graph builder
+inline RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_device(CGpuDeviceId device_)
+{
+    device = device_;
+    return *this;
+}
+inline RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_gfx_queue(CGpuQueueId queue)
+{
+    gfx_queue = queue;
+    return *this;
+}
+inline RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::backend_api(ECGpuBackend backend)
+{
+    api = backend;
+    return *this;
+}
+inline RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::frontend_only()
+{
+    no_backend = true;
+    return *this;
+}
 // pass builder
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const char* name)
 {
@@ -206,8 +248,7 @@ inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_ta
     tex_desc.start_state = RESOURCE_STATE_RENDER_TARGET;
     return *this;
 }
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(
-    const char* name)
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name)
 {
     tex_desc.name = name;
     // blackboard
