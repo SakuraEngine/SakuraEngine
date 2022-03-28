@@ -10,9 +10,15 @@ class TextureReadEdge : public RenderGraphEdge
 public:
     friend class PassNode;
     friend class RenderGraph;
+    friend class RenderGraphBackend;
 
     const uint32_t set;
     const uint32_t binding;
+
+    inline TextureNode* get_texture_node()
+    {
+        return static_cast<TextureNode*>(graph->access_node(handle.handle));
+    }
 
 protected:
     TextureReadEdge(
@@ -26,7 +32,7 @@ protected:
     {
     }
     TextureHandle handle;
-    ECGpuResourceState requested_state = RESOURCE_STATE_SHADER_RESOURCE;
+    const ECGpuResourceState requested_state = RESOURCE_STATE_SHADER_RESOURCE;
     // temporal handle with a lifespan of only one frame
     CGpuTextureViewId texture_view;
 };
@@ -36,8 +42,14 @@ class TextureRenderEdge : public RenderGraphEdge
 public:
     friend class PassNode;
     friend class RenderGraph;
+    friend class RenderGraphBackend;
 
     const uint32_t mrt_index;
+
+    inline TextureNode* get_texture_node()
+    {
+        return static_cast<TextureNode*>(graph->access_node(handle.handle));
+    }
 
 protected:
     TextureRenderEdge(uint32_t mrt_index, TextureHandle handle,
@@ -49,7 +61,7 @@ protected:
     {
     }
     TextureHandle handle;
-    ECGpuResourceState requested_state;
+    const ECGpuResourceState requested_state;
     // temporal handle with a lifespan of only one frame
     CGpuTextureViewId texture_view;
 };

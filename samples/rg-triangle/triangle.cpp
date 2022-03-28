@@ -199,13 +199,14 @@ int main(int argc, char* argv[])
         backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
         // render graph setup & compile & exec
         CGpuTextureId to_import = swapchain->back_buffers[backbuffer_index];
+        CGpuTextureViewId to_import_view = views[backbuffer_index];
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
-                    .import(to_import)
+                    .import(to_import, to_import_view)
                     .allow_render_target();
             });
-        graph->add_pass(
+        graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("color_pass")
                     .write(0, back_buffer);
@@ -219,6 +220,11 @@ int main(int argc, char* argv[])
                 cgpu_render_encoder_bind_pipeline(encoder, pipeline);
                 cgpu_render_encoder_draw(encoder, 3, 0);
             });
+        graph->add_present_pass(
+            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+                builder.swapchain(swapchain)
+                    .index(backbuffer_index);
+            });
         graph->compile();
         graph->execute();
         // present
@@ -226,11 +232,10 @@ int main(int argc, char* argv[])
         CGpuQueuePresentDescriptor present_desc = {};
         present_desc.index = backbuffer_index;
         present_desc.swapchain = swapchain;
-        present_desc.wait_semaphore_count = 0;
-        present_desc.wait_semaphores = CGPU_NULLPTR;
         cgpu_queue_present(gfx_queue, &present_desc);
     }
     render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_demo.gv");
+    delete graph;
     // clean up
     finalize();
     SDL_Quit();

@@ -97,8 +97,8 @@ TEST(GraphTest, GraphTest0)
     {
         if (iter->m_target == to)
         {
-            auto prop = (edgeProp*)iter->get_property();
-            std::cout << prop->name.c_str() << std::endl;
+            auto&& prop = g[*iter];
+            std::cout << prop.name.c_str() << std::endl;
         }
         iter++;
     }
@@ -184,8 +184,8 @@ TEST(GraphTest, DependencyGraph)
     rdg->link(&node0, &node1, &edge);
     rdg->link(&node0, &node2, &edge);
     rdg->link(&node1, &node2, &edge);
-    std::cout << rdg->outgoing_edges(&node0) << std::endl;
-    std::cout << rdg->incoming_edges(&node2) << std::endl;
+    std::cout << rdg->outgoing_edges(&node0).size() << std::endl;
+    std::cout << rdg->incoming_edges(&node2).size() << std::endl;
     using Node = sakura::DependencyGraphNode;
     using Edge = sakura::DependencyGraphEdge;
     rdg->foreach_incoming_edges(&node1, [](Node* from, Node* to, Edge* e) {
@@ -202,10 +202,11 @@ TEST(GraphTest, RenderGraphFrontEnd)
     namespace render_graph = sakura::render_graph;
     render_graph::RenderGraph graph;
     CGpuTextureId to_import = (CGpuTextureId)1;
+    CGpuTextureViewId to_import_view = (CGpuTextureViewId)1;
     auto back_buffer = graph.create_texture(
         [=](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
             builder.set_name("backbuffer")
-                .import(to_import);
+                .import(to_import, to_import_view);
         });
     auto gbuffer0 = graph.create_texture(
         [](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
@@ -219,21 +220,21 @@ TEST(GraphTest, RenderGraphFrontEnd)
                 .allow_render_target()
                 .format(PF_B8G8R8A8_UNORM);
         });
-    graph.add_pass(
+    graph.add_render_pass(
         [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
             builder.set_name("gbuffer_pass")
                 .write(0, gbuffer0)
                 .write(1, gbuffer1);
         },
-        render_graph::PassExecuteFunction());
-    graph.add_pass(
+        render_graph::RenderPassExecuteFunction());
+    graph.add_render_pass(
         [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
             builder.set_name("defer_lighting")
                 .read(0, 0, gbuffer0)
                 .read(0, 1, gbuffer1)
                 .write(0, back_buffer);
         },
-        render_graph::PassExecuteFunction());
+        render_graph::RenderPassExecuteFunction());
     render_graph::RenderGraphViz::write_graphviz(graph, "render_graph.gv");
 }
 
