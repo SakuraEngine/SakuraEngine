@@ -65,6 +65,7 @@ struct RenderGraphNode : public DependencyGraphNode {
 protected:
     eastl::string name;
 };
+
 struct RenderGraphEdge : public DependencyGraphEdge {
     RenderGraphEdge(ERelationshipType type)
         : type(type)

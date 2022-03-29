@@ -1,7 +1,6 @@
 #pragma once
 #include "platform/configure.h"
 #include <EASTL/functional.h>
-#include <gsl/span>
 
 namespace sakura
 {
@@ -20,8 +19,12 @@ public:
     virtual void on_insert() {}
     virtual void on_remove() {}
     const dep_graph_handle_t get_id() const { return id; }
-    const gsl::span<DependencyGraphEdge> outgoing_edges() const;
-    const gsl::span<DependencyGraphEdge> incoming_edges() const;
+    uint32_t outgoing_edges();
+    uint32_t incoming_edges();
+    uint32_t foreach_neighbors(eastl::function<void(DependencyGraphNode* neig)>);
+    uint32_t foreach_neighbors(eastl::function<void(const DependencyGraphNode* neig)>) const;
+    uint32_t foreach_inv_neighbors(eastl::function<void(DependencyGraphNode* inv_neig)>);
+    uint32_t foreach_inv_neighbors(eastl::function<void(const DependencyGraphNode* inv_neig)>) const;
 
 private:
     class DependencyGraph* graph;
@@ -69,14 +72,22 @@ public:
     virtual Node* node_at(dep_graph_handle_t ID) = 0;
     virtual Node* from_node(Edge* edge) = 0;
     virtual Node* to_node(Edge* edge) = 0;
-    virtual gsl::span<DependencyGraphEdge> outgoing_edges(const Node* node) const = 0;
-    virtual gsl::span<DependencyGraphEdge> outgoing_edges(dep_graph_handle_t id) const = 0;
+    virtual uint32_t foreach_neighbors(Node* node, eastl::function<void(Node* neig)>) = 0;
+    virtual uint32_t foreach_neighbors(dep_graph_handle_t node, eastl::function<void(Node* neig)>) = 0;
+    virtual uint32_t foreach_neighbors(const Node* node, eastl::function<void(const Node* neig)>) const = 0;
+    virtual uint32_t foreach_neighbors(const dep_graph_handle_t node, eastl::function<void(const Node* neig)>) const = 0;
+    virtual uint32_t foreach_inv_neighbors(Node* node, eastl::function<void(Node* inv_neig)>) = 0;
+    virtual uint32_t foreach_inv_neighbors(dep_graph_handle_t node, eastl::function<void(Node* inv_neig)>) = 0;
+    virtual uint32_t foreach_inv_neighbors(const Node* node, eastl::function<void(const Node* inv_neig)>) const = 0;
+    virtual uint32_t foreach_inv_neighbors(const dep_graph_handle_t node, eastl::function<void(const Node* inv_neig)>) const = 0;
+    virtual uint32_t outgoing_edges(const Node* node) = 0;
+    virtual uint32_t outgoing_edges(dep_graph_handle_t id) = 0;
     virtual uint32_t foreach_outgoing_edges(dep_graph_handle_t node,
         eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t foreach_outgoing_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
-    virtual gsl::span<DependencyGraphEdge> incoming_edges(const Node* node) const = 0;
-    virtual gsl::span<DependencyGraphEdge> incoming_edges(dep_graph_handle_t id) const = 0;
+    virtual uint32_t incoming_edges(const Node* node) = 0;
+    virtual uint32_t incoming_edges(dep_graph_handle_t id) = 0;
     virtual uint32_t foreach_incoming_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t foreach_incoming_edges(dep_graph_handle_t node,

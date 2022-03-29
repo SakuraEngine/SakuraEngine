@@ -184,8 +184,8 @@ TEST(GraphTest, DependencyGraph)
     rdg->link(&node0, &node1, &edge);
     rdg->link(&node0, &node2, &edge);
     rdg->link(&node1, &node2, &edge);
-    std::cout << rdg->outgoing_edges(&node0).size() << std::endl;
-    std::cout << rdg->incoming_edges(&node2).size() << std::endl;
+    std::cout << rdg->outgoing_edges(&node0) << std::endl;
+    std::cout << rdg->incoming_edges(&node2) << std::endl;
     using Node = sakura::DependencyGraphNode;
     using Edge = sakura::DependencyGraphEdge;
     rdg->foreach_incoming_edges(&node1, [](Node* from, Node* to, Edge* e) {

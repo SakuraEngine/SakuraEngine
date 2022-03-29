@@ -1,5 +1,6 @@
 #pragma once
 #include "render_graph/frontend/render_graph.hpp"
+#include "texture_pool.hpp"
 
 #define MAX_FRAME_IN_FLIGHT 3
 
@@ -45,6 +46,7 @@ public:
         {
             executors[i].initialize(gfx_queue, device);
         }
+        texture_pool.initialize(device);
     }
     void devirtualize(TextureNode* node);
     void devirtualize(PassNode* node);
@@ -59,6 +61,7 @@ protected:
     CGpuDeviceId device;
     ECGpuBackend backend;
     RenderGraphFrameExecutor executors[MAX_FRAME_IN_FLIGHT];
+    TexturePool texture_pool;
 };
 } // namespace render_graph
 } // namespace sakura

@@ -62,14 +62,12 @@ void create_api_objects()
     adapter = adapters[0];
 
     // Create device
-    CGpuQueueGroupDescriptor G = {
-        .queueType = QUEUE_TYPE_GRAPHICS,
-        .queueCount = 1
-    };
-    CGpuDeviceDescriptor device_desc = {
-        .queueGroups = &G,
-        .queueGroupCount = 1
-    };
+    CGpuQueueGroupDescriptor queue_group_desc = {};
+    queue_group_desc.queueType = QUEUE_TYPE_GRAPHICS;
+    queue_group_desc.queueCount = 1;
+    CGpuDeviceDescriptor device_desc = {};
+    device_desc.queueGroups = &queue_group_desc;
+    device_desc.queueGroupCount = 1;
     device = cgpu_create_device(adapter, &device_desc);
     gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
     present_fence = cgpu_create_fence(device);
@@ -209,12 +207,26 @@ int main(int argc, char* argv[])
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("color_pass")
-                    .write(0, back_buffer);
+                    .write(0, back_buffer, LOAD_ACTION_CLEAR);
             },
             [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
                 cgpu_render_encoder_set_viewport(encoder,
                     0.0f, 0.0f,
-                    (float)to_import->width, (float)to_import->height,
+                    (float)to_import->width / 3, (float)to_import->height,
+                    0.f, 1.f);
+                cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_bind_pipeline(encoder, pipeline);
+                cgpu_render_encoder_draw(encoder, 3, 0);
+            });
+        graph->add_render_pass(
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                builder.set_name("color_pass2")
+                    .write(0, back_buffer, LOAD_ACTION_LOAD);
+            },
+            [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
+                cgpu_render_encoder_set_viewport(encoder,
+                    2 * (float)to_import->width / 3, 0.0f,
+                    (float)to_import->width / 3, (float)to_import->height,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
                 cgpu_render_encoder_bind_pipeline(encoder, pipeline);
@@ -222,19 +234,21 @@ int main(int argc, char* argv[])
             });
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.swapchain(swapchain)
-                    .index(backbuffer_index);
+                builder.set_name("present")
+                    .swapchain(swapchain, backbuffer_index)
+                    .texture(back_buffer, true);
             });
         graph->compile();
-        graph->execute();
+        const auto frame_index = graph->execute();
         // present
         cgpu_wait_queue_idle(gfx_queue);
         CGpuQueuePresentDescriptor present_desc = {};
         present_desc.index = backbuffer_index;
         present_desc.swapchain = swapchain;
         cgpu_queue_present(gfx_queue, &present_desc);
+        if (frame_index == 0)
+            render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_demo.gv");
     }
-    render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_demo.gv");
     delete graph;
     // clean up
     finalize();
