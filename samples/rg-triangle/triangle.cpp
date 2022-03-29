@@ -10,7 +10,7 @@ thread_local uint32_t backbuffer_index;
 thread_local CGpuTextureViewId views[3];
 thread_local CGpuFenceId present_fence;
 
-thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
+thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
 thread_local CGpuInstanceId instance;
 thread_local CGpuAdapterId adapter;
 thread_local CGpuDeviceId device;
