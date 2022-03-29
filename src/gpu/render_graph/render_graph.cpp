@@ -57,7 +57,8 @@ bool RenderGraph::compile()
         {
             case EObjectType::Texture: {
                 auto texture = static_cast<TextureNode*>(resource);
-                texture->init_state = RESOURCE_STATE_COMMON;
+                // texture->init_state = RESOURCE_STATE_COMMON;
+                (void)texture;
             }
             break;
             default:
@@ -83,8 +84,8 @@ bool RenderGraph::compile()
 const ECGpuResourceState RenderGraph::get_lastest_state(TextureHandle texture, PassHandle pending_pass) const
 {
     auto this_tex = static_cast<TextureNode*>(graph->node_at(texture.handle));
-    auto result = RESOURCE_STATE_UNDEFINED;
-    dep_graph_handle_t max_idx = 0;
+    auto result = this_tex->init_state;
+    dep_graph_handle_t max_idx = passes[0]->get_id();
     auto in_edges = graph->foreach_incoming_edges(
         texture.handle,
         [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* edge) {
@@ -94,16 +95,16 @@ const ECGpuResourceState RenderGraph::get_lastest_state(TextureHandle texture, P
             if (rg_edge->type == ERelationshipType::TextureRead)
             {
                 auto read_edge = static_cast<TextureReadEdge*>(rg_edge);
-                some_pass = static_cast<RenderPassNode*>(read_edge->from());
+                some_pass = static_cast<RenderPassNode*>(read_edge->to());
                 some_requested_state = read_edge->requested_state;
             }
             if (rg_edge->type == ERelationshipType::TextureWrite)
             {
                 auto write_edge = static_cast<TextureRenderEdge*>(rg_edge);
-                some_pass = static_cast<RenderPassNode*>(write_edge->to());
+                some_pass = static_cast<RenderPassNode*>(write_edge->from());
                 some_requested_state = write_edge->requested_state;
             }
-            if (max_idx < some_pass->get_id() &&
+            if (max_idx <= some_pass->get_id() &&
                 some_pass->get_id() < pending_pass.handle)
             {
                 max_idx = some_pass->get_id();

@@ -1382,6 +1382,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
         colorTargetCount++;
     }
     // depth stencil
+    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pRenderPassDepthStencilDesc = nullptr;
     if (desc->depth_stencil != nullptr && desc->depth_stencil->view != nullptr)
     {
         CGpuTextureView_D3D12* DTV = (CGpuTextureView_D3D12*)desc->depth_stencil->view;
@@ -1402,9 +1403,9 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
         renderPassDepthStencilDesc.DepthEndingAccess = { dEndingAccess };
         renderPassDepthStencilDesc.StencilBeginningAccess = { sBeginingAccess, { clearStencil } };
         renderPassDepthStencilDesc.StencilEndingAccess = { sEndingAccess };
+        pRenderPassDepthStencilDesc = &renderPassDepthStencilDesc;
     }
     D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderPassRenderTargetDesc = renderPassRenderTargetDescs;
-    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pRenderPassDepthStencilDesc = &renderPassDepthStencilDesc;
     CmdList4->BeginRenderPass(colorTargetCount,
         pRenderPassRenderTargetDesc, pRenderPassDepthStencilDesc,
         D3D12_RENDER_PASS_FLAG_NONE);
