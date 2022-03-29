@@ -1356,7 +1356,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGpuCommandBufferId cmd
             renderPassRenderTargetDescs[colorTargetCount].BeginningAccess = { beginningAccess, { clearValues[i] } };
             renderPassRenderTargetDescs[colorTargetCount].EndingAccess = { endingAccess, {} };
             auto& Resolve = renderPassRenderTargetDescs[colorTargetCount].EndingAccess.Resolve;
-            Resolve.ResolveMode = D3D12_RESOLVE_MODE_AVERAGE;
+            Resolve.ResolveMode = D3D12_RESOLVE_MODE_AVERAGE; // TODO: int->MODE_MAX
             Resolve.Format = clearValues[i].Format;
             Resolve.pSrcResource = T->pDxResource;
             Resolve.pDstResource = T_Resolve->pDxResource;

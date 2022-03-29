@@ -570,8 +570,6 @@ typedef enum ECGpuTextureCreationFlag
     TCF_SRGB = 0x400,
     /// Create a normal map texture
     TCF_NORMAL_MAP = 0x800,
-    /// Fast clear
-    TCF_FAST_CLEAR = 0x1000,
     /// Fragment mask
     TCF_FRAG_MASK = 0x2000,
     TCF_MAX_ENUM_BIT = 0x7FFFFFFF

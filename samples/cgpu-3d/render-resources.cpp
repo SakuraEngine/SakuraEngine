@@ -23,6 +23,7 @@ void loaderFunction(void* data)
 }
 void RenderAuxThread::Enqueue(const AuxThreadTaskWithCallback& task)
 {
+    skr_acquire_mutex(&load_mutex_);
     if (!force_block_)
         task_queue_.emplace_back(task);
     else
@@ -30,6 +31,7 @@ void RenderAuxThread::Enqueue(const AuxThreadTaskWithCallback& task)
         task.first(render_device_->GetCGPUDevice());
         task.second();
     }
+    skr_release_mutex(&load_mutex_);
 }
 
 void RenderAuxThread::Initialize(class RenderDevice* render_device)
