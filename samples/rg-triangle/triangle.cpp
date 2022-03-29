@@ -127,7 +127,8 @@ void create_render_pipeline()
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
     root_sig = cgpu_create_root_signature(device, &rs_desc);
-    CGpuVertexLayout vertex_layout = { .attribute_count = 0 };
+    CGpuVertexLayout vertex_layout = {};
+    vertex_layout.attribute_count = 0;
     CGpuRenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = root_sig;
     rp_desc.prim_topology = PRIM_TOPO_TRI_LIST;
