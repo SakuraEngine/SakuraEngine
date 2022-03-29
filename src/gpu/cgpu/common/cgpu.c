@@ -774,6 +774,35 @@ void cgpu_free_buffer(CGpuBufferId buffer)
 }
 
 // Texture/TextureView APIs
+inline static CGpuTextureViewDescriptor CGpuUtil_CalcDefaultTextureViewDescriptor(CGpuTextureId texture, const struct CGpuTextureDescriptor* desc)
+{
+    ECGpuTextureDimension dims = TEX_DIMENSION_2D;
+    const bool is_multi_sample = desc->sample_count != SAMPLE_COUNT_1;
+    const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(desc->format);
+    if (desc->depth <= 1)
+    {
+        if (desc->array_size == 1)
+            dims = is_multi_sample ? TEX_DIMENSION_2D : TEX_DIMENSION_2DMS;
+        if (desc->array_size != 1)
+            dims = is_multi_sample ? TEX_DIMENSION_2D_ARRAY : TEX_DIMENSION_2DMS_ARRAY;
+    }
+    CGpuTexutreViewUsages usages = TVU_SRV;
+    if (desc->start_state & RESOURCE_STATE_RENDER_TARGET) usages |= TVU_RTV_DSV;
+    if (is_depth_stencil) usages |= TVU_RTV_DSV;
+    if (desc->descriptors & RT_RW_TEXTURE) usages |= TVU_RTV_DSV;
+    CGpuTextureViewDescriptor view_desc = {
+        .texture = texture,
+        .array_layer_count = desc->array_size,
+        .mip_level_count = desc->mip_levels,
+        .base_mip_level = 0,
+        .base_array_layer = 0,
+        .aspects = is_depth_stencil ? TVA_DEPTH | TVA_STENCIL : TVA_COLOR,
+        .dims = dims,
+        .usages = TVU_RTV_DSV,
+        .format = desc->format
+    };
+    return view_desc;
+}
 CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -786,6 +815,12 @@ CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureD
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
     CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, desc);
     texture->device = device;
+    CGpuTextureViewDescriptor view_desc = CGpuUtil_CalcDefaultTextureViewDescriptor(texture, desc);
+    texture->default_view = CGPU_NULLPTR;
+    if (desc->depth <= 1)
+    {
+        texture->default_view = cgpu_create_texture_view(device, &view_desc);
+    }
     return texture;
 }
 
