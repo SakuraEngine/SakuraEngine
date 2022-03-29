@@ -19,8 +19,12 @@ public:
     void BeginScreenPass(class RenderContext* ctx);
     void EndScreenPass(class RenderContext* ctx);
     void Present(uint32_t index, const CGpuSemaphoreId* wait_semaphores = nullptr, uint32_t semaphore_count = 0);
+
+    SDL_Window* GetSDLWindow() { return sdl_window_; }
+
     static const auto SampleCount = SAMPLE_COUNT_8;
 
+protected:
     // window
     SDL_Window* sdl_window_;
     SDL_SysWMinfo wmInfo;

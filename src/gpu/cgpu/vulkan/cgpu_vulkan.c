@@ -176,8 +176,6 @@ static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUt
         attachments[ssidx].samples = sample_count;
         attachments[ssidx].loadOp = gVkAttachmentLoadOpTranslator[pDesc->pLoadActionsColor[i]];
         attachments[ssidx].storeOp = gVkAttachmentStoreOpTranslator[pDesc->pStoreActionsColor[i]];
-        attachments[ssidx].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[ssidx].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachments[ssidx].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachments[ssidx].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         // references
@@ -194,9 +192,7 @@ static void VkUtil_FindOrCreateRenderPass(const CGpuDevice_Vulkan* D, const VkUt
             attachments[ssidx].format = (VkFormat)VkUtil_FormatTranslateToVk(pDesc->pColorFormats[i]);
             attachments[ssidx].samples = VK_SAMPLE_COUNT_1_BIT;
             attachments[ssidx].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            attachments[ssidx].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            attachments[ssidx].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            attachments[ssidx].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachments[ssidx].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             attachments[ssidx].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             attachments[ssidx].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             // references

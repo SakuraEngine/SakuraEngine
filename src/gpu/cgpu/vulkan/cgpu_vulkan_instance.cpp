@@ -277,6 +277,7 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
 
     // List Validation Features
     DECLARE_ZERO(VkValidationFeaturesEXT, validationFeaturesExt)
+    validationFeaturesExt.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
     VkValidationFeatureEnableEXT enabledValidationFeatures[] = {
         VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
     };

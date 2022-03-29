@@ -658,7 +658,7 @@ void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
         VkAdapter->pLayerProperties = cgpu_calloc(device_layers_count, sizeof(VkLayerProperties));
 
         DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
-        vkEnumerateInstanceLayerProperties(&count, layer_props);
+        vkEnumerateDeviceLayerProperties(VkAdapter->pPhysicalDevice, &count, layer_props);
         uint32_t filled_exts = 0;
         for (uint32_t i = 0; i < count; i++)
         {
