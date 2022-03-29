@@ -31,13 +31,16 @@ public:
         return gsl::span<TextureRenderEdge*>(out_edges.data(), out_edges.size());
     }
 
+    const EPassType pass_type = EPassType::None;
+    const uint32_t order;
+
 protected:
-    PassNode(EPassType pass_type)
+    PassNode(EPassType pass_type, uint32_t order)
         : RenderGraphNode(EObjectType::Pass)
         , pass_type(pass_type)
+        , order(order)
     {
     }
-    const EPassType pass_type = EPassType::None;
     eastl::vector<TextureReadEdge*> in_edges;
     eastl::vector<TextureRenderEdge*> out_edges;
 };
@@ -49,13 +52,14 @@ public:
     friend class RenderGraphBackend;
 
 protected:
-    RenderPassNode()
-        : PassNode(EPassType::Render)
+    RenderPassNode(uint32_t order)
+        : PassNode(EPassType::Render, order)
     {
     }
     RenderPassExecuteFunction executor;
     CGpuRenderPipelineId pipeline;
-    CGpuRenderPassDescriptor descriptor;
+    ECGpuLoadAction load_actions[MAX_MRT_COUNT + 1];
+    ECGpuStoreAction store_actions[MAX_MRT_COUNT + 1];
 };
 
 class PresentPassNode : public PassNode
@@ -65,8 +69,8 @@ public:
     friend class RenderGraphBackend;
 
 protected:
-    PresentPassNode()
-        : PassNode(EPassType::Present)
+    PresentPassNode(uint32_t order)
+        : PassNode(EPassType::Present, order)
     {
     }
     CGpuQueuePresentDescriptor descriptor;

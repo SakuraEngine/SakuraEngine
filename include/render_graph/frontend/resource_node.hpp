@@ -15,8 +15,13 @@ public:
         , imported(false)
     {
     }
+    struct LifeSpan {
+        const uint32_t from;
+        const uint32_t to;
+    };
     inline const bool is_imported() const { return imported; }
     inline const bool allow_lone() const { return canbe_lone; }
+    const LifeSpan lifespan() const;
 
 protected:
     bool imported : 1;

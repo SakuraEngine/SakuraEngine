@@ -37,7 +37,8 @@ public:
         friend class RenderGraph;
         RenderPassBuilder& set_name(const char* name);
         RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureHandle handle);
-        RenderPassBuilder& write(uint32_t mrt_index, TextureHandle handle);
+        RenderPassBuilder& write(uint32_t mrt_index, TextureHandle handle,
+            ECGpuLoadAction load_action = LOAD_ACTION_DONTCARE, ECGpuStoreAction store_action = STORE_ACTION_STORE);
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
@@ -55,7 +56,7 @@ public:
     using RenderPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
     inline PassHandle add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor)
     {
-        auto newPass = new RenderPassNode();
+        auto newPass = new RenderPassNode(passes.size());
         passes.emplace_back(newPass);
         graph->insert(newPass);
         // build up
@@ -70,8 +71,9 @@ public:
     public:
         friend class RenderGraph;
 
-        PresentPassBuilder& swapchain(CGpuSwapChainId chain);
-        PresentPassBuilder& index(uint32_t index);
+        PresentPassBuilder& set_name(const char* name);
+        PresentPassBuilder& swapchain(CGpuSwapChainId chain, uint32_t idnex);
+        PresentPassBuilder& texture(TextureHandle texture, bool is_backbuffer = true);
 
     protected:
         inline void Apply() {}
@@ -86,7 +88,7 @@ public:
     using PresentPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::PresentPassBuilder&)>;
     inline PassHandle add_present_pass(const PresentPassSetupFunction& setup)
     {
-        auto newPass = new PresentPassNode();
+        auto newPass = new PresentPassNode(passes.size());
         passes.emplace_back(newPass);
         graph->insert(newPass);
         // build up
@@ -210,14 +212,26 @@ inline RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::fronten
     return *this;
 }
 // present pass builder
-inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapchain(CGpuSwapChainId chain)
+inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::set_name(const char* name)
 {
-    node.descriptor.swapchain = chain;
+    if (name)
+    {
+        graph.blackboard.named_passes[name] = &node;
+        node.set_name(name);
+    }
     return *this;
 }
-inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::index(uint32_t index)
+inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapchain(CGpuSwapChainId chain, uint32_t index)
 {
+    node.descriptor.swapchain = chain;
     node.descriptor.index = index;
+    return *this;
+}
+inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(TextureHandle handle, bool is_backbuffer)
+{
+    assert(is_backbuffer && "blit to screen mode not supported!");
+    auto&& edge = node.in_edges.emplace_back(new TextureReadEdge(0, 0, handle));
+    graph.graph->link(graph.graph->access_node(handle.handle), &node, edge);
     return *this;
 }
 // render pass builder
@@ -237,11 +251,15 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint
     graph.graph->link(graph.graph->access_node(handle.handle), &node, edge);
     return *this;
 }
-inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(uint32_t mrt_index, TextureHandle handle)
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
+    uint32_t mrt_index, TextureHandle handle,
+    ECGpuLoadAction load_action, ECGpuStoreAction store_action)
 {
     auto&& edge = node.out_edges.emplace_back(
         new TextureRenderEdge(mrt_index, handle));
     graph.graph->link(&node, graph.graph->access_node(handle.handle), edge);
+    node.load_actions[mrt_index] = load_action;
+    node.store_actions[mrt_index] = store_action;
     return *this;
 }
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
@@ -294,6 +312,7 @@ inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::sample_count(
 }
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_target()
 {
+    tex_desc.descriptors |= RT_RENDER_TARGET;
     tex_desc.start_state = RESOURCE_STATE_RENDER_TARGET;
     return *this;
 }

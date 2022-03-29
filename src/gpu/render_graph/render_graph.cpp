@@ -4,6 +4,30 @@ namespace sakura
 {
 namespace render_graph
 {
+const ResourceNode::LifeSpan ResourceNode::lifespan() const
+{
+    uint32_t from = UINT32_MAX, to = 0;
+    foreach_neighbors([&](const DependencyGraphNode* node) {
+        auto rg_node = static_cast<const RenderGraphNode*>(node);
+        if (rg_node->type == EObjectType::Pass)
+        {
+            auto pass_node = static_cast<const RenderPassNode*>(node);
+            from = (from <= pass_node->order) ? from : pass_node->order;
+            to = (to >= pass_node->order) ? to : pass_node->order;
+        }
+    });
+    foreach_inv_neighbors([&](const DependencyGraphNode* node) {
+        auto rg_node = static_cast<const RenderGraphNode*>(node);
+        if (rg_node->type == EObjectType::Pass)
+        {
+            auto pass_node = static_cast<const RenderPassNode*>(node);
+            from = (from <= pass_node->order) ? from : pass_node->order;
+            to = (to >= pass_node->order) ? to : pass_node->order;
+        }
+    });
+    return { from, to };
+}
+
 RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup)
 {
     RenderGraphBuilder builder = {};
@@ -58,31 +82,34 @@ bool RenderGraph::compile()
 
 const ECGpuResourceState RenderGraph::get_lastest_state(TextureHandle texture, PassHandle pending_pass) const
 {
-    auto in_edges = graph->incoming_edges(texture.handle);
     auto this_tex = static_cast<TextureNode*>(graph->node_at(texture.handle));
     auto result = RESOURCE_STATE_UNDEFINED;
-    if (in_edges.size() == 0)
-    {
-        result = this_tex->init_state;
-    }
-    else
-    {
-        dep_graph_handle_t max_idx = 0;
-        for (auto&& iter : in_edges)
-        {
-            auto&& rg_edge = static_cast<RenderGraphEdge&&>(iter);
-            if (rg_edge.type == ERelationshipType::TextureRead)
+    dep_graph_handle_t max_idx = 0;
+    auto in_edges = graph->foreach_incoming_edges(
+        texture.handle,
+        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* edge) {
+            auto rg_edge = static_cast<RenderGraphEdge*>(edge);
+            RenderPassNode* some_pass = nullptr;
+            ECGpuResourceState some_requested_state;
+            if (rg_edge->type == ERelationshipType::TextureRead)
             {
-                auto&& read_edge = static_cast<TextureReadEdge&&>(iter);
-                auto* pass = static_cast<RenderPassNode*>(read_edge.from());
-                if ((max_idx <= pass->get_id()))
-                {
-                    max_idx = pass->get_id();
-                    result = read_edge.requested_state;
-                }
+                auto read_edge = static_cast<TextureReadEdge*>(rg_edge);
+                some_pass = static_cast<RenderPassNode*>(read_edge->from());
+                some_requested_state = read_edge->requested_state;
             }
-        }
-    }
+            if (rg_edge->type == ERelationshipType::TextureWrite)
+            {
+                auto write_edge = static_cast<TextureRenderEdge*>(rg_edge);
+                some_pass = static_cast<RenderPassNode*>(write_edge->to());
+                some_requested_state = write_edge->requested_state;
+            }
+            if (max_idx < some_pass->get_id() &&
+                some_pass->get_id() < pending_pass.handle)
+            {
+                max_idx = some_pass->get_id();
+                result = some_requested_state;
+            }
+        });
     return result;
 }
 
@@ -104,6 +131,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         auto texture_readed = read_edge->get_texture_node();
         const auto current_state = get_lastest_state(texture_readed->get_handle(), pass->get_handle());
         const auto dst_state = read_edge->requested_state;
+        if (current_state == dst_state) continue;
         CGpuTextureBarrier barrier = {};
         barrier.src_state = current_state;
         barrier.dst_state = dst_state;
@@ -116,6 +144,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         auto texture_target = write_edge->get_texture_node();
         const auto current_state = get_lastest_state(texture_target->get_handle(), pass->get_handle());
         const auto dst_state = write_edge->requested_state;
+        if (current_state == dst_state) continue;
         CGpuTextureBarrier barrier = {};
         barrier.src_state = current_state;
         barrier.dst_state = dst_state;
@@ -131,15 +160,18 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         auto texture_target = write_edge->get_texture_node();
         // TODO: MSAA
         attachment.view = texture_target->imported ? texture_target->default_view : nullptr;
-        attachment.load_action = LOAD_ACTION_CLEAR;
-        attachment.store_action = STORE_ACTION_STORE;
+        attachment.load_action = pass->load_actions[write_edge->mrt_index];
+        attachment.store_action = pass->store_actions[write_edge->mrt_index];
         color_attachments.emplace_back(attachment);
     }
     // call cgpu apis
-    CGpuResourceBarrierDescriptor barriers = {};
-    barriers.texture_barriers = tex_barriers.data();
-    barriers.texture_barriers_count = tex_barriers.size();
-    cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    if (!tex_barriers.empty())
+    {
+        CGpuResourceBarrierDescriptor barriers = {};
+        barriers.texture_barriers = tex_barriers.data();
+        barriers.texture_barriers_count = tex_barriers.size();
+        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    }
     // TODO: MSAA
     CGpuRenderPassDescriptor pass_desc = {};
     pass_desc.render_target_count = write_edges.size();

@@ -86,11 +86,75 @@ public:
     {
         return node_at(edge->to_node);
     }
-    virtual gsl::span<DependencyGraphEdge> outgoing_edges(const Node* node) const final
+    virtual uint32_t foreach_neighbors(Node* node, eastl::function<void(DependencyGraphNode*)> f) final
+    {
+        return foreach_neighbors(node->get_id(), f);
+    }
+    virtual uint32_t foreach_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) final
+    {
+        DAGVertex vert(node);
+        auto neigs = DAG::adjacent_vertices(vert, *this);
+        uint32_t count;
+        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        {
+            f((*this)[*iter]);
+            count++;
+        }
+        return count;
+    }
+    virtual uint32_t foreach_neighbors(const Node* node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    {
+        return foreach_neighbors(node->get_id(), f);
+    }
+    virtual uint32_t foreach_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    {
+        DAGVertex vert(node);
+        auto neigs = DAG::adjacent_vertices(vert, *this);
+        uint32_t count;
+        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        {
+            f((*this)[*iter]);
+            count++;
+        }
+        return count;
+    }
+    virtual uint32_t foreach_inv_neighbors(Node* node, eastl::function<void(DependencyGraphNode*)> f) final
+    {
+        return foreach_inv_neighbors(node->get_id(), f);
+    }
+    virtual uint32_t foreach_inv_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) final
+    {
+        DAGVertex vert(node);
+        auto neigs = DAG::inv_adjacent_vertices(vert, *this);
+        uint32_t count;
+        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        {
+            f((*this)[*iter]);
+            count++;
+        }
+        return count;
+    }
+    virtual uint32_t foreach_inv_neighbors(const Node* node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    {
+        return foreach_inv_neighbors(node->get_id(), f);
+    }
+    virtual uint32_t foreach_inv_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    {
+        DAGVertex vert(node);
+        auto neigs = DAG::inv_adjacent_vertices(vert, *this);
+        uint32_t count;
+        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        {
+            f((*this)[*iter]);
+            count++;
+        }
+        return count;
+    }
+    virtual uint32_t outgoing_edges(const Node* node) final
     {
         return outgoing_edges(node->id);
     }
-    virtual gsl::span<DependencyGraphEdge> outgoing_edges(dep_graph_handle_t id) const final
+    virtual uint32_t outgoing_edges(dep_graph_handle_t id) final
     {
         auto oedges = DAG::out_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
@@ -99,7 +163,7 @@ public:
         {
             count++;
         }
-        return gsl::span<DependencyGraphEdge>(first_edge, count);
+        return count;
     }
     virtual uint32_t foreach_outgoing_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
@@ -118,11 +182,11 @@ public:
         }
         return count;
     }
-    virtual gsl::span<Edge> incoming_edges(const Node* node) const final
+    virtual uint32_t incoming_edges(const Node* node) final
     {
         return incoming_edges(node->id);
     }
-    virtual gsl::span<Edge> incoming_edges(dep_graph_handle_t id) const final
+    virtual uint32_t incoming_edges(dep_graph_handle_t id) final
     {
         auto iedges = DAG::in_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
@@ -131,9 +195,7 @@ public:
         {
             count++;
         }
-        if (first_edge->graph == nullptr)
-            return {};
-        return gsl::span<DependencyGraphEdge>(first_edge, count);
+        return count;
     }
     virtual uint32_t foreach_incoming_edges(Node* node,
         eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
@@ -171,14 +233,34 @@ protected:
     }
 };
 
-const gsl::span<DependencyGraphEdge> DependencyGraphNode::outgoing_edges() const
+uint32_t DependencyGraphNode::outgoing_edges()
 {
     return graph->outgoing_edges(this);
 }
 
-const gsl::span<DependencyGraphEdge> DependencyGraphNode::incoming_edges() const
+uint32_t DependencyGraphNode::incoming_edges()
 {
     return graph->incoming_edges(this);
+}
+
+uint32_t DependencyGraphNode::foreach_neighbors(eastl::function<void(DependencyGraphNode* neig)> f)
+{
+    return graph->foreach_neighbors(this, f);
+}
+
+uint32_t DependencyGraphNode::foreach_neighbors(eastl::function<void(const DependencyGraphNode* neig)> f) const
+{
+    return graph->foreach_neighbors(this, f);
+}
+
+uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(DependencyGraphNode* inv_neig)> f)
+{
+    return graph->foreach_inv_neighbors(this, f);
+}
+
+uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(const DependencyGraphNode* inv_neig)> f) const
+{
+    return graph->foreach_inv_neighbors(this, f);
 }
 } // namespace sakura
 
