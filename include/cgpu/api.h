@@ -1096,6 +1096,7 @@ typedef struct CGpuTextureViewDescriptor {
 
 typedef struct CGpuTexture {
     CGpuDeviceId device;
+    CGpuTextureViewId default_view;
     /// Current state of the buffer
     uint32_t width : 16;
     uint32_t height : 16;

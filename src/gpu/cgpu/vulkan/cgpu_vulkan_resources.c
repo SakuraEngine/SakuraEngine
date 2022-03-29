@@ -253,6 +253,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuTexture_Vulkan));
+    const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(desc->format);
     const CGpuFormatSupport* format_support = &A->adapter_detail.format_supports[desc->format];
     cgpu_assert(T);
     if (desc->native_handle && !(desc->flags & TCF_IMPORT_BIT))
@@ -264,9 +265,9 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
         T->super.owns_image = true;
     // Usage flags
     VkImageUsageFlags additionalFlags = 0;
-    if (desc->start_state & RESOURCE_STATE_RENDER_TARGET)
+    if (desc->descriptors & RT_RENDER_TARGET)
         additionalFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    else if (desc->start_state & RESOURCE_STATE_DEPTH_WRITE)
+    else if (is_depth_stencil)
         additionalFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
     uint32_t arraySize = desc->array_size;

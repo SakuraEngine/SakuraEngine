@@ -604,8 +604,10 @@ typedef enum ECGpuResourceType
     RT_SAMPLER = 0x01,
     // SRV Read only texture
     RT_TEXTURE = (RT_SAMPLER << 1),
+    /// RTV Texture
+    RT_RENDER_TARGET = (RT_TEXTURE << 1),
     /// UAV Texture
-    RT_RW_TEXTURE = (RT_TEXTURE << 1),
+    RT_RW_TEXTURE = (RT_RENDER_TARGET << 1),
     // SRV Read only buffer
     RT_BUFFER = (RT_RW_TEXTURE << 1),
     RT_BUFFER_RAW = (RT_BUFFER | (RT_BUFFER << 1)),
