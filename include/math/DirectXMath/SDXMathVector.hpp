@@ -284,7 +284,7 @@ FORCEINLINE VectorRegister bitwise_xor(const VectorRegister vec1, const VectorRe
     return DirectX::XMVectorXorInt(vec1, vec2);
 }
 
-FORCEINLINE int component_mask(const VectorRegisterInt vec1)
+FORCEINLINE int component_mask(const VectorRegister vec1)
 {
 #ifdef _XM_ARM_NEON_INTRINSICS_
     return vmaskq_i32(vec1);
