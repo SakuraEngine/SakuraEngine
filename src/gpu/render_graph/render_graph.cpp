@@ -4,6 +4,28 @@ namespace sakura
 {
 namespace render_graph
 {
+RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup)
+{
+    RenderGraphBuilder builder = {};
+    RenderGraph* graph = nullptr;
+    setup(builder);
+    if (builder.no_backend)
+        graph = new RenderGraph();
+    else
+    {
+        if (!builder.gfx_queue) assert(0 && "not supported!");
+        graph = new RenderGraphBackend(builder.gfx_queue, builder.device);
+    }
+    graph->initialize();
+    return graph;
+}
+
+void RenderGraph::destroy(RenderGraph* g)
+{
+    g->finalize();
+    delete g;
+}
+
 const ResourceNode::LifeSpan ResourceNode::lifespan() const
 {
     uint32_t from = UINT32_MAX, to = 0;
@@ -26,25 +48,6 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const
         }
     });
     return { from, to };
-}
-
-RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup)
-{
-    RenderGraphBuilder builder = {};
-    setup(builder);
-    if (builder.no_backend)
-    {
-        return new RenderGraph();
-    }
-    else
-    {
-        if (!builder.gfx_queue)
-        {
-            assert(0 && "not supported!");
-        }
-        auto backend_graph = new RenderGraphBackend(builder.gfx_queue, builder.device);
-        return backend_graph;
-    }
 }
 
 bool RenderGraph::compile()
@@ -120,6 +123,40 @@ uint64_t RenderGraph::execute()
     return frame_index++;
 }
 
+void RenderGraph::initialize()
+{
+}
+
+void RenderGraph::finalize()
+{
+}
+
+void RenderGraphBackend::initialize()
+{
+    backend = device->adapter->instance->backend;
+    for (uint32_t i = 0; i < MAX_FRAME_IN_FLIGHT; i++)
+    {
+        executors[i].initialize(gfx_queue, device);
+    }
+    texture_pool.initialize(device);
+    texture_view_pool.initialize(device);
+}
+
+void RenderGraphBackend::finalize()
+{
+    for (uint32_t i = 0; i < MAX_FRAME_IN_FLIGHT; i++)
+    {
+        executors[i].finalize();
+    }
+    texture_pool.finalize();
+    texture_view_pool.finalize();
+}
+
+CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
+{
+    return node.imported ? node.frame_texture : nullptr;
+}
+
 void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
 {
     auto read_edges = pass->read_edges();
@@ -136,8 +173,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         CGpuTextureBarrier barrier = {};
         barrier.src_state = current_state;
         barrier.dst_state = dst_state;
-        barrier.texture =
-            texture_readed->imported ? texture_readed->frame_texture : nullptr;
+        barrier.texture = resolve(*texture_readed);
         tex_barriers.emplace_back(barrier);
     }
     for (auto& write_edge : write_edges)
@@ -149,8 +185,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         CGpuTextureBarrier barrier = {};
         barrier.src_state = current_state;
         barrier.dst_state = dst_state;
-        barrier.texture =
-            texture_target->imported ? texture_target->frame_texture : nullptr;
+        barrier.texture = resolve(*texture_target);
         tex_barriers.emplace_back(barrier);
     }
     // color attachments
@@ -160,7 +195,18 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         CGpuColorAttachment attachment = {};
         auto texture_target = write_edge->get_texture_node();
         // TODO: MSAA
-        attachment.view = texture_target->imported ? texture_target->default_view : nullptr;
+        CGpuTextureViewDescriptor view_desc = {};
+        view_desc.texture = resolve(*texture_target);
+        // TODO: add view_desc on resource edges
+        view_desc.base_array_layer = 0;
+        view_desc.array_layer_count = 1;
+        view_desc.base_mip_level = 0;
+        view_desc.mip_level_count = 1;
+        view_desc.aspects = TVA_COLOR;
+        view_desc.format = (ECGpuFormat)view_desc.texture->format;
+        view_desc.usages = TVU_RTV_DSV;
+        view_desc.dims = TEX_DIMENSION_2D;
+        attachment.view = texture_view_pool.allocate(view_desc, frame_index);
         attachment.load_action = pass->load_actions[write_edge->mrt_index];
         attachment.store_action = pass->store_actions[write_edge->mrt_index];
         color_attachments.emplace_back(attachment);
@@ -187,9 +233,12 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
 
 void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass)
 {
+    auto read_edges = pass->read_edges();
+    auto&& read_edge = read_edges[0];
+    auto texture_target = read_edge->get_texture_node();
     CGpuTextureBarrier present_barrier = {};
     present_barrier.texture = pass->descriptor.swapchain->back_buffers[pass->descriptor.index];
-    present_barrier.src_state = RESOURCE_STATE_RENDER_TARGET; // TODO: !
+    present_barrier.src_state = get_lastest_state(texture_target->get_handle(), pass->get_handle());
     present_barrier.dst_state = RESOURCE_STATE_PRESENT;
     CGpuResourceBarrierDescriptor barriers = {};
     barriers.texture_barriers = &present_barrier;

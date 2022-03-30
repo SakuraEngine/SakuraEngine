@@ -158,7 +158,6 @@ public:
     {
         auto oedges = DAG::out_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
-        auto first_edge = (*this)[*oedges.first];
         for (auto iter = oedges.first; iter != oedges.second; iter++)
         {
             count++;
@@ -190,7 +189,6 @@ public:
     {
         auto iedges = DAG::in_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
-        auto first_edge = (*this)[*iedges.first];
         for (auto iter = iedges.first; iter != iedges.second; iter++)
         {
             count++;

@@ -200,34 +200,36 @@ TEST(GraphTest, DependencyGraph)
 TEST(GraphTest, RenderGraphFrontEnd)
 {
     namespace render_graph = sakura::render_graph;
-    render_graph::RenderGraph graph;
+    auto graph = render_graph::RenderGraph::create(
+        [](render_graph::RenderGraphBuilder& builder) {
+            builder.frontend_only();
+        });
     CGpuTextureId to_import = (CGpuTextureId)1;
     CGpuTextureViewId to_import_view = (CGpuTextureViewId)1;
-    auto back_buffer = graph.create_texture(
+    auto back_buffer = graph->create_texture(
         [=](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
-            builder.set_name("backbuffer")
-                .import(to_import, to_import_view);
+            builder.set_name("backbuffer");
         });
-    auto gbuffer0 = graph.create_texture(
+    auto gbuffer0 = graph->create_texture(
         [](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
             builder.set_name("gbuffer0")
                 .allow_render_target()
                 .format(PF_B8G8R8A8_UNORM);
         });
-    auto gbuffer1 = graph.create_texture(
+    auto gbuffer1 = graph->create_texture(
         [](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
             builder.set_name("gbuffer1")
                 .allow_render_target()
                 .format(PF_B8G8R8A8_UNORM);
         });
-    graph.add_render_pass(
+    graph->add_render_pass(
         [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
             builder.set_name("gbuffer_pass")
                 .write(0, gbuffer0)
                 .write(1, gbuffer1);
         },
         render_graph::RenderPassExecuteFunction());
-    graph.add_render_pass(
+    graph->add_render_pass(
         [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
             builder.set_name("defer_lighting")
                 .read(0, 0, gbuffer0)
@@ -235,7 +237,8 @@ TEST(GraphTest, RenderGraphFrontEnd)
                 .write(0, back_buffer);
         },
         render_graph::RenderPassExecuteFunction());
-    render_graph::RenderGraphViz::write_graphviz(graph, "render_graph.gv");
+    render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph.gv");
+    render_graph::RenderGraph::destroy(graph);
 }
 
 #if defined(__clang__)

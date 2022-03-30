@@ -31,12 +31,13 @@ public:
     };
     using RenderGraphSetupFunction = eastl::function<void(class RenderGraph::RenderGraphBuilder&)>;
     static RenderGraph* create(const RenderGraphSetupFunction& setup);
+    static void destroy(RenderGraph* g);
     class RenderPassBuilder
     {
     public:
         friend class RenderGraph;
         RenderPassBuilder& set_name(const char* name);
-        RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureHandle handle);
+        RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle);
         RenderPassBuilder& write(uint32_t mrt_index, TextureHandle handle,
             ECGpuLoadAction load_action = LOAD_ACTION_DONTCARE, ECGpuStoreAction store_action = STORE_ACTION_STORE);
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
@@ -101,7 +102,7 @@ public:
     {
     public:
         friend class RenderGraph;
-        TextureBuilder& import(CGpuTextureId texture, CGpuTextureViewId view);
+        TextureBuilder& import(CGpuTextureId texture);
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1);
         TextureBuilder& format(ECGpuFormat format);
         TextureBuilder& array(uint32_t size);
@@ -124,7 +125,6 @@ public:
         {
             node.imported = imported;
             if (imported) node.frame_texture = imported;
-            if (imported_view) node.default_view = imported_view;
             node.canbe_lone = canbe_lone;
             node.descriptor = tex_desc;
             // TODO: create underlying resource
@@ -133,7 +133,6 @@ public:
         TextureNode& node;
         CGpuTextureDescriptor tex_desc = {};
         CGpuTextureId imported = nullptr;
-        CGpuTextureViewId imported_view = nullptr;
         bool create_at_once : 1;
         bool async : 1;
         bool canbe_lone : 1;
@@ -155,12 +154,14 @@ public:
     }
     const ECGpuResourceState get_lastest_state(TextureHandle texture, PassHandle pending_pass) const;
 
-    virtual ~RenderGraph() = default;
-
     bool compile();
     virtual uint64_t execute();
 
 protected:
+    virtual void initialize();
+    virtual void finalize();
+    virtual ~RenderGraph() = default;
+
     uint64_t frame_index = 0;
     Blackboard blackboard;
     eastl::unique_ptr<DependencyGraph> graph =
@@ -230,7 +231,9 @@ inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapcha
 inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(TextureHandle handle, bool is_backbuffer)
 {
     assert(is_backbuffer && "blit to screen mode not supported!");
-    auto&& edge = node.in_edges.emplace_back(new TextureReadEdge(0, 0, handle));
+    auto&& edge = node.in_edges.emplace_back(
+        new TextureReadEdge(0, 0, handle, 0, 1, 0, 1,
+            RESOURCE_STATE_PRESENT));
     graph.graph->link(graph.graph->access_node(handle.handle), &node, edge);
     return *this;
 }
@@ -244,11 +247,14 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(
     }
     return *this;
 }
-inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, TextureHandle handle)
+// textures read/write
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle)
 {
     auto&& edge = node.in_edges.emplace_back(
-        new TextureReadEdge(set, binding, handle));
-    graph.graph->link(graph.graph->access_node(handle.handle), &node, edge);
+        new TextureReadEdge(set, binding, handle._this,
+            handle.mip_base, handle.mip_count,
+            handle.array_base, handle.array_count));
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
@@ -262,6 +268,7 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
     node.store_actions[mrt_index] = store_action;
     return *this;
 }
+// buffers read/write
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
 {
     return *this;
@@ -277,11 +284,15 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipel
 }
 
 // texture builder
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(
-    CGpuTextureId texture, CGpuTextureViewId view)
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId texture)
 {
     imported = texture;
-    imported_view = view;
+    tex_desc.width = texture->width;
+    tex_desc.height = texture->height;
+    tex_desc.depth = texture->depth;
+    tex_desc.format = (ECGpuFormat)texture->format;
+    tex_desc.array_size = texture->array_size_minus_one + 1;
+    tex_desc.sample_count = texture->sample_count;
     return *this;
 }
 

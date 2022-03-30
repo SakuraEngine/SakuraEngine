@@ -12,8 +12,8 @@ class TexturePool
 {
 public:
     struct Key {
-        CGpuDeviceId device;
-        CGpuTextureCreationFlags flags;
+        const CGpuDeviceId device;
+        const CGpuTextureCreationFlags flags;
         uint32_t width;
         uint32_t height;
         uint32_t depth;
@@ -23,18 +23,23 @@ public:
         ECGpuSampleCount sample_count;
         uint32_t sample_quality;
         CGpuResourceTypes descriptors;
-        Key(CGpuDeviceId device, const CGpuTextureDescriptor& desc);
         operator size_t() const;
+        friend class TexturePool;
+
+    protected:
+        Key(CGpuDeviceId device, const CGpuTextureDescriptor& desc);
     };
     friend class RenderGraphBackend;
     void initialize(CGpuDeviceId device);
     void finalize();
-    CGpuTextureId allocate(const CGpuTextureDescriptor& desc);
-    void deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture);
+    CGpuTextureId allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index);
+    void deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, uint64_t frame_index);
 
 protected:
     CGpuDeviceId device;
-    eastl::unordered_map<Key, eastl::queue<CGpuTextureId>> textures;
+    eastl::unordered_map<Key,
+        eastl::queue<eastl::pair<CGpuTextureId, uint64_t>>>
+        textures;
 };
 
 inline TexturePool::Key::Key(CGpuDeviceId device, const CGpuTextureDescriptor& desc)
@@ -68,13 +73,13 @@ inline void TexturePool::finalize()
     {
         while (!queue.second.empty())
         {
-            cgpu_free_texture(queue.second.front());
+            cgpu_free_texture(queue.second.front().first);
             queue.second.pop();
         }
     }
 }
 
-inline CGpuTextureId TexturePool::allocate(const CGpuTextureDescriptor& desc)
+inline CGpuTextureId TexturePool::allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index)
 {
     CGpuTextureId allocated = nullptr;
     const TexturePool::Key key(device, desc);
@@ -86,17 +91,17 @@ inline CGpuTextureId TexturePool::allocate(const CGpuTextureDescriptor& desc)
     }
     if (textures[key].empty())
     {
-        textures[key].push(cgpu_create_texture(device, &desc));
+        textures[key].push({ cgpu_create_texture(device, &desc), frame_index });
     }
-    allocated = textures[key].front();
+    allocated = textures[key].front().first;
     textures[key].pop();
     return allocated;
 }
 
-inline void TexturePool::deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture)
+inline void TexturePool::deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, uint64_t frame_index)
 {
     const TexturePool::Key key(device, desc);
-    textures[key].push(texture);
+    textures[key].push({ texture, frame_index });
 }
 } // namespace render_graph
 } // namespace sakura

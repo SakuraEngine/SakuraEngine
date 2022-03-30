@@ -7,10 +7,9 @@ thread_local SDL_SysWMinfo wmInfo;
 thread_local CGpuSurfaceId surface;
 thread_local CGpuSwapChainId swapchain;
 thread_local uint32_t backbuffer_index;
-thread_local CGpuTextureViewId views[3];
 thread_local CGpuFenceId present_fence;
 
-thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
+thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 thread_local CGpuInstanceId instance;
 thread_local CGpuAdapterId adapter;
 thread_local CGpuDeviceId device;
@@ -89,17 +88,6 @@ void create_api_objects()
     chain_desc.format = PF_R8G8B8A8_UNORM;
     chain_desc.enableVsync = true;
     swapchain = cgpu_create_swapchain(device, &chain_desc);
-    // Create views
-    for (uint32_t i = 0; i < swapchain->buffer_count; i++)
-    {
-        CGpuTextureViewDescriptor view_desc = {};
-        view_desc.texture = swapchain->back_buffers[i];
-        view_desc.aspects = TVA_COLOR;
-        view_desc.dims = TEX_DIMENSION_2D;
-        view_desc.format = (ECGpuFormat)swapchain->back_buffers[i]->format;
-        view_desc.usages = TVU_RTV_DSV;
-        views[i] = cgpu_create_texture_view(device, &view_desc);
-    }
 }
 
 void create_render_pipeline()
@@ -136,7 +124,8 @@ void create_render_pipeline()
     rp_desc.vertex_shader = &ppl_shaders[0];
     rp_desc.fragment_shader = &ppl_shaders[1];
     rp_desc.render_target_count = 1;
-    rp_desc.color_formats = &views[0]->info.format;
+    auto backend_format = (ECGpuFormat)swapchain->back_buffers[0]->format;
+    rp_desc.color_formats = &backend_format;
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
@@ -149,10 +138,6 @@ void finalize()
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
-    for (uint32_t i = 0; i < swapchain->buffer_count; i++)
-    {
-        cgpu_free_texture_view(views[i]);
-    }
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
     cgpu_free_render_pipeline(pipeline);
@@ -198,11 +183,10 @@ int main(int argc, char* argv[])
         backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
         // render graph setup & compile & exec
         CGpuTextureId to_import = swapchain->back_buffers[backbuffer_index];
-        CGpuTextureViewId to_import_view = views[backbuffer_index];
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
-                    .import(to_import, to_import_view)
+                    .import(to_import)
                     .allow_render_target();
             });
         graph->add_render_pass(
@@ -250,7 +234,7 @@ int main(int argc, char* argv[])
         if (frame_index == 0)
             render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_demo.gv");
     }
-    delete graph;
+    render_graph::RenderGraph::destroy(graph);
     // clean up
     finalize();
     SDL_Quit();
