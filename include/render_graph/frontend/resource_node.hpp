@@ -51,7 +51,6 @@ protected:
     CGpuTextureDescriptor descriptor;
     // temporal handle with a lifespan of only one frame
     CGpuTextureId frame_texture;
-    CGpuTextureViewId default_view;
     ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
 };
 } // namespace render_graph

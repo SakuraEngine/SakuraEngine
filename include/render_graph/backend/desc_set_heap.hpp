@@ -37,8 +37,12 @@ public:
     }
 
 protected:
+    DescSetHeap(CGpuRootSignatureId root_sig)
+        : root_sig(root_sig)
+    {
+    }
     std::atomic_uint32_t cursor = 0;
-    CGpuRootSignatureId root_sig;
+    const CGpuRootSignatureId root_sig;
     eastl::vector<CGpuDescriptorSetId> heap;
 };
 } // namespace render_graph

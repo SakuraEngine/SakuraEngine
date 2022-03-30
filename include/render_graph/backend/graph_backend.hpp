@@ -1,6 +1,7 @@
 #pragma once
 #include "render_graph/frontend/render_graph.hpp"
 #include "texture_pool.hpp"
+#include "texture_view_pool.hpp"
 
 #define MAX_FRAME_IN_FLIGHT 3
 
@@ -23,7 +24,7 @@ protected:
         cmd_desc.is_secondary = false;
         gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
     }
-    ~RenderGraphFrameExecutor()
+    void finalize()
     {
         if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
         if (gfx_cmd_pool) cgpu_free_command_pool(gfx_cmd_pool);
@@ -37,23 +38,24 @@ protected:
 class RenderGraphBackend : public RenderGraph
 {
 public:
-    RenderGraphBackend(CGpuQueueId gfx_queue, CGpuDeviceId device)
-        : gfx_queue(gfx_queue)
-        , device(device)
-    {
-        backend = device->adapter->instance->backend;
-        for (uint32_t i = 0; i < MAX_FRAME_IN_FLIGHT; i++)
-        {
-            executors[i].initialize(gfx_queue, device);
-        }
-        texture_pool.initialize(device);
-    }
     void devirtualize(TextureNode* node);
     void devirtualize(PassNode* node);
 
     virtual uint64_t execute() final;
 
+    friend class RenderGraph;
+
 protected:
+    RenderGraphBackend(CGpuQueueId gfx_queue, CGpuDeviceId device)
+        : gfx_queue(gfx_queue)
+        , device(device)
+    {
+    }
+    virtual void initialize() final;
+    virtual void finalize() final;
+
+    CGpuTextureId resolve(const TextureNode& node);
+
     void execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass);
     void execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass);
 
@@ -62,6 +64,7 @@ protected:
     ECGpuBackend backend;
     RenderGraphFrameExecutor executors[MAX_FRAME_IN_FLIGHT];
     TexturePool texture_pool;
+    TextureViewPool texture_view_pool;
 };
 } // namespace render_graph
 } // namespace sakura
