@@ -5,6 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 option(BUILD_TEST "build with tests" ON)
+option(BUILD_SPIRV_SHADER "build spirv shaders" ON)
 option(BUILD_SAMPLES "build with samples" ON)
 option(RUNTIME_SHARED "build as shared library" OFF)
 
