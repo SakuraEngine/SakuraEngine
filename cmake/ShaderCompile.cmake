@@ -71,7 +71,8 @@ function(sakura_compile_shaders)
                 COMMAND ${SAKURA_BIN_DIR}/Release/dxc 
                         -T ${TargetProp}
                         -Fc ${params_DXIL}/${PURE_FILE_NAME}.dxil
-                        ${source})
+                        ${source}
+                WORKING_DIRECTORY ${SAKURA_BIN_DIR}/Release)
         endforeach(source ${params_SOURCES})
     endif()
 
@@ -93,7 +94,8 @@ function(sakura_compile_shaders)
                         -T ${TargetProp}
                         -Fc ${params_SPIRV_DXC}/${PURE_FILE_NAME}.spv
                         -spirv
-                        ${source})
+                        ${source}
+                WORKING_DIRECTORY ${SAKURA_BIN_DIR}/Release)
         endforeach(source ${params_SOURCES})
     endif()
 
