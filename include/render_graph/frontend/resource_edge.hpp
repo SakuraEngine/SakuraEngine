@@ -71,12 +71,13 @@ inline TextureReadEdge::TextureReadEdge(
     : RenderGraphEdge(ERelationshipType::TextureRead)
     , set(set)
     , binding(binding)
-    , handle(handle)
     , mip_base(mip_base)
     , mip_count(mip_count)
     , array_base(array_base)
     , array_count(array_count)
+    , handle(handle)
     , requested_state(state)
+
 {
 }
 
