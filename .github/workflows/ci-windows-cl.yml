@@ -1,11 +1,11 @@
-name: windows-build
+name: windows-cl-build
 
 on: [push, pull_request]
 env:
   VulkanSDKVersion: 1.2.162.1
-  
+
 jobs:
- build-windows:
+ build-windows-cl:
   runs-on: windows-latest
   steps:
    - uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
      shell: cmd
      run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        cmake -S . -G Ninja -B build -DBUILD_TEST=OFF -D CMAKE_BUILD_TYPE=Release -D CMAKE_C_COMPILER:FILEPATH=clang-cl.exe -D CMAKE_CXX_COMPILER:FILEPATH=clang-cl.exe
+        cmake -S . -G Ninja -B build -DBUILD_TEST=OFF -D CMAKE_BUILD_TYPE=Release -D CMAKE_C_COMPILER:FILEPATH=cl.exe -D CMAKE_CXX_COMPILER:FILEPATH=cl.exe
         cmake --build build --target all
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
