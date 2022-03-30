@@ -41,22 +41,25 @@ struct ObjectHandle {
         : handle(hdl)
     {
     }
-    const handle_t handle;
+    inline operator handle_t() const { return handle; }
+
+private:
+    handle_t handle;
 };
 template <>
 struct ObjectHandle<EObjectType::Texture> {
     struct ShaderReadHandle {
-        ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
-        ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
         friend class ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureReadEdge;
+        ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
+        ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
+        const handle_t _this;
 
     protected:
         ShaderReadHandle(const handle_t _this,
             const uint32_t mip_base = 0, const uint32_t mip_count = 1,
             const uint32_t array_base = 0, const uint32_t array_count = 1);
-        const handle_t _this;
         uint32_t mip_base = 0;
         uint32_t mip_count = 1;
         uint32_t array_base = 0;
@@ -68,13 +71,14 @@ struct ObjectHandle<EObjectType::Texture> {
         friend class TextureWriteEdge;
         ShaderWriteHandle load_action(ECGpuLoadAction action) const;
         ShaderWriteHandle store_action(ECGpuStoreAction action) const;
+        const handle_t _this;
 
     protected:
         ShaderWriteHandle(const handle_t _this);
-        const handle_t _this;
         ECGpuLoadAction load_act = LOAD_ACTION_DONTCARE;
         ECGpuStoreAction store_act = STORE_ACTION_STORE;
     };
+    inline operator handle_t() const { return handle; }
     // read
     inline operator ShaderReadHandle() const { return ShaderReadHandle(handle); }
     ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
@@ -93,7 +97,9 @@ protected:
         : handle(hdl)
     {
     }
-    const handle_t handle;
+
+private:
+    handle_t handle;
 };
 using PassHandle = ObjectHandle<EObjectType::Pass>;
 using TextureHandle = ObjectHandle<EObjectType::Texture>;
