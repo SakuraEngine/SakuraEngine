@@ -76,7 +76,7 @@ function(sakura_compile_shaders)
         endforeach(source ${params_SOURCES})
     endif()
 
-    if (params_SPIRV_DXC)
+    if (params_SPIRV_DXC AND BUILD_SPIRV_SHADER)
         if (NOT params_CFLAGS)
             set(CFLAGS "$<IF:$<CONFIG:Debug>,-Zi,> -fspv-target-env=vulkan1.2 -O3 -WX -Zpr")
         else()
