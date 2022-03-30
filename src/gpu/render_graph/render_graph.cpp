@@ -74,10 +74,10 @@ bool RenderGraph::compile()
         graph->foreach_incoming_edges(pass,
             [=](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* edge) {
                 auto rg_from = static_cast<RenderGraphNode*>(from);
-                auto rg_to = static_cast<RenderGraphNode*>(to);
+                // auto rg_to = static_cast<RenderGraphNode*>(to);
                 if (rg_from->type == EObjectType::Texture)
                 {
-                    auto texture_from = static_cast<TextureNode*>(rg_from);
+                    // auto texture_from = static_cast<TextureNode*>(rg_from);
                 }
             });
     }

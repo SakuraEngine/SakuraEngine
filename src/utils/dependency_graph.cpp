@@ -94,11 +94,10 @@ public:
     {
         DAGVertex vert(node);
         auto neigs = DAG::adjacent_vertices(vert, *this);
-        uint32_t count;
-        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        uint32_t count = 0;
+        for (auto iter = neigs.first; iter != neigs.second; iter++, count++)
         {
             f((*this)[*iter]);
-            count++;
         }
         return count;
     }
@@ -110,11 +109,10 @@ public:
     {
         DAGVertex vert(node);
         auto neigs = DAG::adjacent_vertices(vert, *this);
-        uint32_t count;
-        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        uint32_t count = 0;
+        for (auto iter = neigs.first; iter != neigs.second; iter++, count++)
         {
             f((*this)[*iter]);
-            count++;
         }
         return count;
     }
@@ -126,11 +124,10 @@ public:
     {
         DAGVertex vert(node);
         auto neigs = DAG::inv_adjacent_vertices(vert, *this);
-        uint32_t count;
-        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        uint32_t count = 0;
+        for (auto iter = neigs.first; iter != neigs.second; iter++, count++)
         {
             f((*this)[*iter]);
-            count++;
         }
         return count;
     }
@@ -142,11 +139,10 @@ public:
     {
         DAGVertex vert(node);
         auto neigs = DAG::inv_adjacent_vertices(vert, *this);
-        uint32_t count;
-        for (auto iter = neigs.first; iter != neigs.second; iter++)
+        uint32_t count = 0;
+        for (auto iter = neigs.first; iter != neigs.second; iter++, count++)
         {
             f((*this)[*iter]);
-            count++;
         }
         return count;
     }

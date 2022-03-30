@@ -49,7 +49,7 @@ private:
 template <>
 struct ObjectHandle<EObjectType::Texture> {
     struct ShaderReadHandle {
-        friend class ObjectHandle<EObjectType::Texture>;
+        friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureReadEdge;
         ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
@@ -66,7 +66,7 @@ struct ObjectHandle<EObjectType::Texture> {
         uint32_t array_count = 1;
     };
     struct ShaderWriteHandle {
-        friend class ObjectHandle<EObjectType::Texture>;
+        friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureWriteEdge;
         ShaderWriteHandle load_action(ECGpuLoadAction action) const;
