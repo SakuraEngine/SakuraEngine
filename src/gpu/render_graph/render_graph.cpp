@@ -84,34 +84,61 @@ bool RenderGraph::compile()
     return true;
 }
 
-const ECGpuResourceState RenderGraph::get_lastest_state(TextureHandle texture, PassHandle pending_pass) const
+uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
+    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
 {
-    auto this_tex = static_cast<TextureNode*>(graph->node_at(texture.handle));
-    auto result = this_tex->init_state;
-    dep_graph_handle_t max_idx = passes[0]->get_id();
-    auto in_edges = graph->foreach_incoming_edges(
-        texture.handle,
-        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* edge) {
-            auto rg_edge = static_cast<RenderGraphEdge*>(edge);
-            RenderPassNode* some_pass = nullptr;
-            ECGpuResourceState some_requested_state;
-            if (rg_edge->type == ERelationshipType::TextureRead)
+    return graph->foreach_incoming_edges(
+        texture,
+        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+            PassNode* pass = static_cast<PassNode*>(from);
+            TextureNode* texture = static_cast<TextureNode*>(to);
+            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+            f(pass, texture, edge);
+        });
+}
+
+uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
+    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
+{
+    return graph->foreach_outgoing_edges(
+        texture,
+        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+            PassNode* pass = static_cast<PassNode*>(to);
+            TextureNode* texture = static_cast<TextureNode*>(from);
+            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+            f(pass, texture, edge);
+        });
+}
+
+const ECGpuResourceState RenderGraph::get_lastest_state(
+    const TextureNode* texture, const PassNode* pending_pass) const
+{
+    if (passes[0] == pending_pass)
+        return texture->init_state;
+    PassNode* pass_iter = nullptr;
+    auto result = texture->init_state;
+    foreach_writer_passes(texture->get_handle(),
+        [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
+            if (edge->type == ERelationshipType::TextureWrite)
             {
-                auto read_edge = static_cast<TextureReadEdge*>(rg_edge);
-                some_pass = static_cast<RenderPassNode*>(read_edge->to());
-                some_requested_state = read_edge->requested_state;
+                auto write_edge = static_cast<TextureRenderEdge*>(edge);
+                if (pass->after(pass_iter) && pass->before(pending_pass))
+                {
+                    pass_iter = pass;
+                    result = write_edge->requested_state;
+                }
             }
-            if (rg_edge->type == ERelationshipType::TextureWrite)
+        });
+    foreach_reader_passes(texture->get_handle(),
+        [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
+            if (edge->type == ERelationshipType::TextureRead)
             {
-                auto write_edge = static_cast<TextureRenderEdge*>(rg_edge);
-                some_pass = static_cast<RenderPassNode*>(write_edge->from());
-                some_requested_state = write_edge->requested_state;
-            }
-            if (max_idx <= some_pass->get_id() &&
-                some_pass->get_id() < pending_pass.handle)
-            {
-                max_idx = some_pass->get_id();
-                result = some_requested_state;
+                auto read_edge = static_cast<TextureRenderEdge*>(edge);
+                if (pass->after(pass_iter) && pass->before(pending_pass))
+                {
+                    pass_iter = pass;
+                    result = read_edge->requested_state;
+                }
             }
         });
     return result;
@@ -167,7 +194,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     for (auto& read_edge : read_edges)
     {
         auto texture_readed = read_edge->get_texture_node();
-        const auto current_state = get_lastest_state(texture_readed->get_handle(), pass->get_handle());
+        const auto current_state = get_lastest_state(texture_readed, pass);
         const auto dst_state = read_edge->requested_state;
         if (current_state == dst_state) continue;
         CGpuTextureBarrier barrier = {};
@@ -179,7 +206,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     for (auto& write_edge : write_edges)
     {
         auto texture_target = write_edge->get_texture_node();
-        const auto current_state = get_lastest_state(texture_target->get_handle(), pass->get_handle());
+        const auto current_state = get_lastest_state(texture_target, pass);
         const auto dst_state = write_edge->requested_state;
         if (current_state == dst_state) continue;
         CGpuTextureBarrier barrier = {};
@@ -238,7 +265,7 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
     auto texture_target = read_edge->get_texture_node();
     CGpuTextureBarrier present_barrier = {};
     present_barrier.texture = pass->descriptor.swapchain->back_buffers[pass->descriptor.index];
-    present_barrier.src_state = get_lastest_state(texture_target->get_handle(), pass->get_handle());
+    present_barrier.src_state = get_lastest_state(texture_target, pass);
     present_barrier.dst_state = RESOURCE_STATE_PRESENT;
     CGpuResourceBarrierDescriptor barriers = {};
     barriers.texture_barriers = &present_barrier;

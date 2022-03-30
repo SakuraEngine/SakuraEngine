@@ -151,12 +151,17 @@ public:
     {
         return -1;
     }
-    const ECGpuResourceState get_lastest_state(TextureHandle texture, PassHandle pending_pass) const;
+    const ECGpuResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const;
 
     bool compile();
     virtual uint64_t execute();
 
-protected:
+    inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
+    inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }
+    uint32_t foreach_writer_passes(TextureHandle texture,
+        eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const;
+    uint32_t foreach_reader_passes(TextureHandle texture,
+        eastl::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const;
     virtual void initialize();
     virtual void finalize();
     virtual ~RenderGraph() = default;
@@ -233,7 +238,7 @@ inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture
     auto&& edge = node.in_edges.emplace_back(
         new TextureReadEdge(0, 0, handle, 0, 1, 0, 1,
             RESOURCE_STATE_PRESENT));
-    graph.graph->link(graph.graph->access_node(handle.handle), &node, edge);
+    graph.graph->link(graph.graph->access_node(handle), &node, edge);
     return *this;
 }
 // render pass builder
