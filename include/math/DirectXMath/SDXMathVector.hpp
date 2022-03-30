@@ -14,7 +14,35 @@ namespace math
 namespace __vector
 {
 using VectorRegister = DirectX::XMVECTOR;
+#ifdef _XM_ARM_NEON_INTRINSICS_
+using VectorRegisterInt = int32x4_t;
+constexpr uint32_t cElementIndex_u[4]{ 1, 2, 4, 8 };
+static inline uint32_t vmaskq_u32(const uint32x4_t& CR)
+{
+    static const uint32x4_t Mask = vld1q_u32(cElementIndex_u);
+    // extract element index bitmask from compare result.
+    uint32x4_t vTemp = vandq_u32(CR, Mask);
+    uint32x2_t vL = vget_low_u32(vTemp);  // get low 2 uint32
+    uint32x2_t vH = vget_high_u32(vTemp); // get high 2 uint32
+    vL = vorr_u32(vL, vH);
+    vL = vpadd_u32(vL, vL);
+    return vget_lane_u32(vL, 0);
+}
+constexpr int32_t cElementIndex_i[4]{ 1, 2, 4, 8 };
+static inline int32_t vmaskq_i32(const int32x4_t& CR)
+{
+    static const int32x4_t Mask = vld1q_s32(cElementIndex_i);
+    // extract element index bitmask from compare result.
+    int32x4_t vTemp = vandq_s32(CR, Mask);
+    int32x2_t vL = vget_low_s32(vTemp);  // get low 2 uint32
+    int32x2_t vH = vget_high_s32(vTemp); // get high 2 uint32
+    vL = vorr_s32(vL, vH);
+    vL = vpadd_s32(vL, vL);
+    return vget_lane_s32(vL, 0);
+}
+#else
 using VectorRegisterInt = __m128i;
+#endif
 
 FORCEINLINE VectorRegister vector_register(float x, float y, float z, float w)
 {
@@ -256,9 +284,13 @@ FORCEINLINE VectorRegister bitwise_xor(const VectorRegister vec1, const VectorRe
     return DirectX::XMVectorXorInt(vec1, vec2);
 }
 
-FORCEINLINE int component_mask(const VectorRegister vec1)
+FORCEINLINE int component_mask(const VectorRegisterInt vec1)
 {
+#ifdef _XM_ARM_NEON_INTRINSICS_
+    return vmaskq_i32(vec1);
+#else
     return _mm_movemask_ps(vec1);
+#endif
 }
 
 FORCEINLINE VectorRegister cross_product(const VectorRegister vec1, const VectorRegister vec2)
