@@ -17,7 +17,7 @@ elseif(TARGET_MAC)
             ${SAKURA_BIN_DIR}/Debug
         )
         extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3-macos-arm.zip
-        ${SAKURA_BIN_DIR}/Release
+            ${SAKURA_BIN_DIR}/Release
         )
     else()
         extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/m3_d-macos-amd64.zip 

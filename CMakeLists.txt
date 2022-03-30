@@ -29,6 +29,7 @@ include(DirectXMath)
 include(GSL)
 include(vulkan)
 include(GPU)
+include(ShaderCompile)
 include(SDL2) # Set SDL2 ENVS
 # WASM
 extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/wasm-clang-win.zip 
