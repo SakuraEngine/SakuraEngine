@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("color_pass")
-                    .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                    .write(0, back_buffer.load_action(LOAD_ACTION_CLEAR));
             },
             [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
                 cgpu_render_encoder_set_viewport(encoder,
@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("color_pass2")
-                    .write(0, back_buffer, LOAD_ACTION_LOAD);
+                    .write(0, back_buffer.load_action(LOAD_ACTION_LOAD));
             },
             [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
                 cgpu_render_encoder_set_viewport(encoder,
