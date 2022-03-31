@@ -534,22 +534,25 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 update_entry_count--;
             }
         }
-        VkDescriptorUpdateTemplateCreateInfo template_info = {
-            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
-            .pNext = NULL,
-            .templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET_KHR,
-            .pipelineLayout = RS->pPipelineLayout,
-            .pipelineBindPoint = gPipelineBindPoint[RS->super.pipeline_type],
-            .descriptorSetLayout = set_to_record->layout,
-            .set = i_set,
-            .pDescriptorUpdateEntries = template_entries,
-            .descriptorUpdateEntryCount = update_entry_count
-        };
-        set_to_record->mUpdateEntriesCount = update_entry_count;
-        CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorUpdateTemplate(D->pVkDevice,
-            &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->pUpdateTemplate));
-        VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
-            &set_to_record->layout, &set_to_record->pEmptyDescSet, 1);
+        if (update_entry_count > 0)
+        {
+            VkDescriptorUpdateTemplateCreateInfo template_info = {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
+                .pNext = NULL,
+                .templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET_KHR,
+                .pipelineLayout = RS->pPipelineLayout,
+                .pipelineBindPoint = gPipelineBindPoint[RS->super.pipeline_type],
+                .descriptorSetLayout = set_to_record->layout,
+                .set = i_set,
+                .pDescriptorUpdateEntries = template_entries,
+                .descriptorUpdateEntryCount = update_entry_count
+            };
+            set_to_record->mUpdateEntriesCount = update_entry_count;
+            CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorUpdateTemplate(D->pVkDevice,
+                &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->pUpdateTemplate));
+            VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
+                &set_to_record->layout, &set_to_record->pEmptyDescSet, 1);
+        }
         cgpu_free(template_entries);
     }
     // Free Temporal Memory
@@ -1663,7 +1666,7 @@ CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGpuCommandBufferId cm
         VkUtil_FindOrCreateFrameBuffer(D, &fbDesc, &pFramebuffer);
     }
     // Cmd begin render pass
-    VkClearValue clearValues[2 * MAX_MRT_COUNT + 1] = {0};
+    VkClearValue clearValues[2 * MAX_MRT_COUNT + 1] = { 0 };
     uint32_t idx = 0;
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {

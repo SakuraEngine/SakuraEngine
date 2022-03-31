@@ -36,7 +36,7 @@ FORCEINLINE float4x4 perspective_fov(
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(),
-        __matrix::inverse(__matrix::perspective_fov(FovAngleY, AspectRatio, NearZ, FarZ)));
+        __matrix::perspective_fov(FovAngleY, AspectRatio, NearZ, FarZ));
     return res;
 }
 
@@ -48,7 +48,7 @@ FORCEINLINE float4x4 ortho_projection(
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(),
-        __matrix::inverse(__matrix::ortho_projection(ViewWidth, ViewHeight, NearZ, FarZ)));
+        __matrix::ortho_projection(ViewWidth, ViewHeight, NearZ, FarZ));
     return res;
 }
 
@@ -152,18 +152,27 @@ FORCEINLINE float4x4 make_transform_2d(
     return make_transform(pos, scale, rot);
 }
 
-FORCEINLINE float2x2 multiply(
-    float2x2 a, float2x2 b)
+FORCEINLINE float2x2 multiply(float2x2 a, float2x2 b)
 {
     auto va = a.data_view(), vb = b.data_view();
     float result[] = { va[0] * vb[0] + va[1] * vb[2], va[0] * vb[1] + va[1] * vb[3], va[2] * vb[0] + va[3] * vb[2], va[2] * vb[1] + va[3] * vb[3] };
     return float2x2{ result };
 }
 
-FORCEINLINE Vector2f multiply(
-    float2x2 a, Vector2f b)
+FORCEINLINE Vector2f multiply(float2x2 a, Vector2f b)
 {
     return Vector2f{ b.x * a.M[0][0] + b.y * a.M[1][0], b.x * a.M[0][1] + b.y * a.M[1][1] };
 }
+
+FORCEINLINE uint32_t vector_to_snorm8(const Vector4f& v)
+{
+    float scale = 127.0f / sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    int x = int(v.x * scale);
+    int y = int(v.y * scale);
+    int z = int(v.z * scale);
+    int w = int(v.w * scale);
+    return (x & 0xff) | ((y & 0xff) << 8) | ((z & 0xff) << 16) | ((w & 0xff) << 24);
+}
+
 } // namespace math
 } // namespace sakura
