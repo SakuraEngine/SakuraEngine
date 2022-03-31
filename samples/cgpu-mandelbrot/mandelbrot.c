@@ -1,14 +1,45 @@
 #include "cgpu/cgpu_config.h"
 #include "math.h"
-#include "embed-shaders.h"
 #include "lodepng.h"
 #include "platform/configure.h"
 #include "cgpu/api.h"
 #include "stdio.h"
 #include <stdint.h>
 
-const uint32_t* compute_shaders[CGPU_BACKEND_COUNT];
-uint32_t compute_shader_sizes[CGPU_BACKEND_COUNT];
+inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
+{
+    FILE* f = fopen(file_name, "r");
+    fseek(f, 0, SEEK_END);
+    *length = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    *bytes = (char8_t*)malloc(*length + 1);
+    fread(*bytes, *length, 1, f);
+    fclose(f);
+}
+
+inline static void read_shader_bytes(
+    const char* virtual_path, uint32_t** bytes, uint32_t* length,
+    ECGpuBackend backend)
+{
+    char shader_file[256];
+    const char* shader_path = "./../Resources/shaders/";
+    strcpy(shader_file, shader_path);
+    strcat(shader_file, virtual_path);
+    switch (backend)
+    {
+        case CGPU_BACKEND_VULKAN:
+            strcat(shader_file, ".spv");
+            break;
+        case CGPU_BACKEND_D3D12:
+        case CGPU_BACKEND_XBOX_D3D12:
+            strcat(shader_file, ".dxil");
+            break;
+    }
+    read_bytes(shader_file, (char8_t**)bytes, length);
+}
+
+#define MANDELBROT_WIDTH 3200
+#define MANDELBROT_HEIGHT 2400
 static const char8_t* gPNGNames[CGPU_BACKEND_COUNT] = {
     "mandelbrot-vulkan.png",
     "mandelbrot-d3d12.png",
@@ -52,13 +83,17 @@ void ComputeFunc(void* usrdata)
     CGpuDeviceId device = cgpu_create_device(adapter, &device_desc);
 
     // Create compute shader
+    uint32_t *shader_bytes, shader_length;
+    read_shader_bytes("cgpu-mandelbrot/mandelbrot",
+        &shader_bytes, &shader_length, backend);
     CGpuShaderLibraryDescriptor shader_desc = {
-        .code = compute_shaders[backend],
-        .code_size = compute_shader_sizes[backend],
+        .code = shader_bytes,
+        .code_size = shader_length,
         .name = "ComputeShaderLibrary",
         .stage = SHADER_STAGE_COMPUTE
     };
     CGpuShaderLibraryId compute_shader = cgpu_create_shader_library(device, &shader_desc);
+    free(shader_bytes);
 
     // Create root signature
     CGpuPipelineShaderDescriptor compute_shader_entry = {
@@ -213,12 +248,6 @@ void ComputeFunc(void* usrdata)
 
 int main(void)
 {
-    compute_shaders[CGPU_BACKEND_VULKAN] = (const uint32_t*)mandelbrot_comp_spirv;
-    compute_shader_sizes[CGPU_BACKEND_VULKAN] = sizeof(mandelbrot_comp_spirv);
-
-    compute_shaders[CGPU_BACKEND_D3D12] = (const uint32_t*)mandelbrot_comp_dxil;
-    compute_shader_sizes[CGPU_BACKEND_D3D12] = sizeof(mandelbrot_comp_dxil);
-
     // When we support more add them here
     ECGpuBackend backends[] = {
         CGPU_BACKEND_VULKAN

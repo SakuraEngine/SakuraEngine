@@ -1,5 +1,4 @@
 #include "../common/utils.h"
-#include "utils.h"
 #include "render_graph/frontend/render_graph.hpp"
 
 thread_local SDL_Window* sdl_window;
@@ -17,31 +16,6 @@ thread_local CGpuQueueId gfx_queue;
 
 thread_local CGpuRootSignatureId root_sig;
 thread_local CGpuRenderPipelineId pipeline;
-
-const uint32_t* get_vertex_shader()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)vertex_shader_spirv;
-    if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)vertex_shader_dxil;
-    return CGPU_NULLPTR;
-}
-const uint32_t get_vertex_shader_size()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
-    if (backend == CGPU_BACKEND_D3D12) return sizeof(vertex_shader_dxil);
-    return 0;
-}
-const uint32_t* get_fragment_shader()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)fragment_shader_spirv;
-    if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)fragment_shader_dxil;
-    return CGPU_NULLPTR;
-}
-const uint32_t get_fragment_shader_size()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
-    if (backend == CGPU_BACKEND_D3D12) return sizeof(fragment_shader_dxil);
-    return 0;
-}
 
 void create_api_objects()
 {
@@ -92,18 +66,24 @@ void create_api_objects()
 
 void create_render_pipeline()
 {
+    uint32_t *vs_bytes, vs_length;
+    uint32_t *fs_bytes, fs_length;
+    read_shader_bytes("rg-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
+    read_shader_bytes("rg-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
     CGpuShaderLibraryDescriptor vs_desc = {};
     vs_desc.stage = SHADER_STAGE_VERT;
     vs_desc.name = "VertexShaderLibrary";
-    vs_desc.code = get_vertex_shader();
-    vs_desc.code_size = get_vertex_shader_size();
+    vs_desc.code = vs_bytes;
+    vs_desc.code_size = vs_length;
     CGpuShaderLibraryDescriptor ps_desc = {};
     ps_desc.name = "FragmentShaderLibrary";
     ps_desc.stage = SHADER_STAGE_FRAG;
-    ps_desc.code = get_fragment_shader();
-    ps_desc.code_size = get_fragment_shader_size();
+    ps_desc.code = fs_bytes;
+    ps_desc.code_size = fs_length;
     CGpuShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
     CGpuShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
+    free(vs_bytes);
+    free(fs_bytes);
     CGpuPipelineShaderDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";

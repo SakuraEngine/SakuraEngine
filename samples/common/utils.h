@@ -4,6 +4,7 @@
 #ifdef TARGET_MACOS
     #include "platform/apple/macos/window.h"
 #endif
+#include "cgpu/api.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 
@@ -28,4 +29,36 @@ inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
             return true;
     }
     return true;
+}
+
+inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
+{
+    FILE* f = fopen(file_name, "r");
+    fseek(f, 0, SEEK_END);
+    *length = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    *bytes = (char8_t*)malloc(*length + 1);
+    fread(*bytes, *length, 1, f);
+    fclose(f);
+}
+
+inline static void read_shader_bytes(
+    const char* virtual_path, uint32_t** bytes, uint32_t* length,
+    ECGpuBackend backend)
+{
+    char shader_file[256];
+    const char* shader_path = "./../Resources/shaders/";
+    strcpy(shader_file, shader_path);
+    strcat(shader_file, virtual_path);
+    switch (backend)
+    {
+        case CGPU_BACKEND_VULKAN:
+            strcat(shader_file, ".spv");
+            break;
+        case CGPU_BACKEND_D3D12:
+        case CGPU_BACKEND_XBOX_D3D12:
+            strcat(shader_file, ".dxil");
+            break;
+    }
+    read_bytes(shader_file, (char8_t**)bytes, length);
 }
