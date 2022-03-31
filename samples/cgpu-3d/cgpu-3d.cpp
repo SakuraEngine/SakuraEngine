@@ -163,7 +163,6 @@ int main(int argc, char* argv[])
         3.1415926f / 2.f,
         (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
         1.f, 1000.f);
-    proj.M[3][2] *= -1;
     data.world = smath::transpose(world);
     data.view_proj = smath::transpose(smath::multiply(view, proj));
     // render loop

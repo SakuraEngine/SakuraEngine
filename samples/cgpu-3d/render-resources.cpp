@@ -523,7 +523,7 @@ AsyncRenderPipeline* RenderBlackboard::AddRenderPipeline(RenderAuxThread* aux_th
     auto&& ds_state = eastl::get<CGpuDepthStateDescriptor>(*descHeap);
     ds_state.depth_write = true;
     ds_state.depth_test = true;
-    ds_state.depth_func = CMP_GEQUAL;
+    ds_state.depth_func = CMP_LEQUAL;
     ds_state.stencil_test = false;
     rp_desc.depth_stencil_format = PF_D32_SFLOAT;
     rp_desc.depth_state = &ds_state;

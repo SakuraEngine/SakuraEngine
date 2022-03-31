@@ -141,6 +141,7 @@ void RenderWindow::BeginScreenPass(class RenderContext* ctx)
     ds_attachment.view = screen_ds_view_;
     ds_attachment.write_depth = true;
     ds_attachment.write_stencil = false;
+    ds_attachment.clear_depth = 1.f;
     ds_attachment.depth_load_action = LOAD_ACTION_CLEAR;
     ds_attachment.depth_store_action = STORE_ACTION_DISCARD;
     ds_attachment.stencil_store_action = STORE_ACTION_DISCARD;
