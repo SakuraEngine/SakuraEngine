@@ -70,7 +70,7 @@ function(sakura_compile_shaders)
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${params_DXIL}
                 COMMAND ${SAKURA_BIN_DIR}/Release/dxc 
                         -T ${TargetProp}
-                        -Fc ${params_DXIL}/${PURE_FILE_NAME}.dxil
+                        -Fo ${params_DXIL}/${PURE_FILE_NAME}.dxil
                         ${source}
                 WORKING_DIRECTORY ${SAKURA_BIN_DIR}/Release)
         endforeach(source ${params_SOURCES})
@@ -92,7 +92,7 @@ function(sakura_compile_shaders)
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${params_SPIRV_DXC}
                 COMMAND ${SAKURA_BIN_DIR}/Release/dxc 
                         -T ${TargetProp}
-                        -Fc ${params_SPIRV_DXC}/${PURE_FILE_NAME}.spv
+                        -Fo ${params_SPIRV_DXC}/${PURE_FILE_NAME}.spv
                         -spirv
                         ${source}
                 WORKING_DIRECTORY ${SAKURA_BIN_DIR}/Release)

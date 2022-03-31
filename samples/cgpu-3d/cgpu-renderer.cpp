@@ -277,17 +277,22 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
 
     // create default shaders & resources
     CGpuShaderLibraryDescriptor vs_desc = {};
+    uint32_t *vs_bytes, *fs_bytes;
+    read_shader_bytes("cgpu-3d/vertex_shader",
+        &vs_bytes, &vs_desc.code_size, backend);
     vs_desc.name = "VertexShaderLibrary";
     vs_desc.stage = SHADER_STAGE_VERT;
-    vs_desc.code = getVertexShader();
-    vs_desc.code_size = getVertexShaderSize();
+    vs_desc.code = vs_bytes;
     vs_library_ = cgpu_create_shader_library(device_, &vs_desc);
     CGpuShaderLibraryDescriptor fs_desc = {};
+    read_shader_bytes("cgpu-3d/fragment_shader",
+        &fs_bytes, &fs_desc.code_size, backend);
     fs_desc.name = "FragmentShaderLibrary";
     fs_desc.stage = SHADER_STAGE_FRAG;
-    fs_desc.code = getFragmentShader();
-    fs_desc.code_size = getFragmentShaderSize();
+    fs_desc.code = fs_bytes;
     fs_library_ = cgpu_create_shader_library(device_, &fs_desc);
+    ::free((void*)vs_desc.code);
+    ::free((void*)fs_desc.code);
     CGpuSamplerDescriptor sampler_desc = {};
     sampler_desc.address_u = ADDRESS_MODE_REPEAT;
     sampler_desc.address_v = ADDRESS_MODE_REPEAT;

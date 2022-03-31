@@ -1,4 +1,5 @@
-#include "utils.h"
+#include "../common/utils.h"
+#include "../common/texture.h"
 #include "math.h"
 #include "cgpu/api.h"
 #include "platform/thread.h"
@@ -27,31 +28,6 @@ THREAD_LOCAL CGpuSamplerId sampler_state;
 THREAD_LOCAL bool bUseStaticSampler = true;
 THREAD_LOCAL CGpuTextureViewId sampled_view;
 THREAD_LOCAL CGpuTextureViewId views[BACK_BUFFER_COUNT];
-
-const uint32_t* get_vertex_shader()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)vertex_shader_spirv;
-    if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)vertex_shader_dxil;
-    return CGPU_NULLPTR;
-}
-const uint32_t get_vertex_shader_size()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
-    if (backend == CGPU_BACKEND_D3D12) return sizeof(vertex_shader_dxil);
-    return 0;
-}
-const uint32_t* get_fragment_shader()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return (const uint32_t*)fragment_shader_spirv;
-    if (backend == CGPU_BACKEND_D3D12) return (const uint32_t*)fragment_shader_dxil;
-    return CGPU_NULLPTR;
-}
-const uint32_t get_fragment_shader_size()
-{
-    if (backend == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
-    if (backend == CGPU_BACKEND_D3D12) return sizeof(fragment_shader_dxil);
-    return 0;
-}
 
 void create_sampled_texture()
 {
@@ -134,10 +110,26 @@ void create_sampled_texture()
 void create_render_pipeline()
 {
     // Shaders
-    CGpuShaderLibraryDescriptor vs_desc = { .name = "VertexShaderLibrary", .stage = SHADER_STAGE_VERT, .code = get_vertex_shader(), .code_size = get_vertex_shader_size() };
-    CGpuShaderLibraryDescriptor ps_desc = { .name = "FragmentShaderLibrary", .stage = SHADER_STAGE_FRAG, .code = get_fragment_shader(), .code_size = get_fragment_shader_size() };
+    uint32_t *vs_bytes, vs_length;
+    uint32_t *fs_bytes, fs_length;
+    read_shader_bytes("cgpu-texture/vertex_shader", &vs_bytes, &vs_length, backend);
+    read_shader_bytes("cgpu-texture/fragment_shader", &fs_bytes, &fs_length, backend);
+    CGpuShaderLibraryDescriptor vs_desc = {
+        .name = "VertexShaderLibrary",
+        .stage = SHADER_STAGE_VERT,
+        .code = vs_bytes,
+        .code_size = vs_length
+    };
+    CGpuShaderLibraryDescriptor ps_desc = {
+        .name = "FragmentShaderLibrary",
+        .stage = SHADER_STAGE_FRAG,
+        .code = fs_bytes,
+        .code_size = fs_length
+    };
     CGpuShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
     CGpuShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
+    free(vs_bytes);
+    free(fs_bytes);
     // Create RS
     CGpuPipelineShaderDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = SHADER_STAGE_VERT;

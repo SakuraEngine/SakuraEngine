@@ -1,7 +1,6 @@
 #pragma once
 #include "../common/utils.h"
 #include "cgpu/cgpux.hpp"
-#include "shaders.h"
 #include "render-resources.hpp"
 #include <EASTL/vector_map.h>
 #include <EASTL/unordered_set.h>
@@ -86,10 +85,6 @@ public:
     void WaitIdle();
 
 protected:
-    const uint32_t* getVertexShader();
-    const uint32_t getVertexShaderSize();
-    const uint32_t* getFragmentShader();
-    const uint32_t getFragmentShaderSize();
     void freeRenderPipeline(CGpuRenderPipelineId pipeline);
 
     ECGpuBackend backend_;
@@ -176,28 +171,3 @@ protected:
     eastl::unordered_map<CGpuFenceId, CGpuCommandBufferId> async_cpy_cmds_;
     eastl::unordered_map<CGpuFenceId, CGpuBufferId> async_cpy_bufs_;
 };
-
-FORCEINLINE const uint32_t* RenderDevice::getVertexShader()
-{
-    if (backend_ == CGPU_BACKEND_VULKAN) return (const uint32_t*)vertex_shader_spirv;
-    if (backend_ == CGPU_BACKEND_D3D12) return (const uint32_t*)vertex_shader_dxil;
-    return CGPU_NULLPTR;
-}
-FORCEINLINE const uint32_t RenderDevice::getVertexShaderSize()
-{
-    if (backend_ == CGPU_BACKEND_VULKAN) return sizeof(vertex_shader_spirv);
-    if (backend_ == CGPU_BACKEND_D3D12) return sizeof(vertex_shader_dxil);
-    return 0;
-}
-FORCEINLINE const uint32_t* RenderDevice::getFragmentShader()
-{
-    if (backend_ == CGPU_BACKEND_VULKAN) return (const uint32_t*)fragment_shader_spirv;
-    if (backend_ == CGPU_BACKEND_D3D12) return (const uint32_t*)fragment_shader_dxil;
-    return CGPU_NULLPTR;
-}
-FORCEINLINE const uint32_t RenderDevice::getFragmentShaderSize()
-{
-    if (backend_ == CGPU_BACKEND_VULKAN) return sizeof(fragment_shader_spirv);
-    if (backend_ == CGPU_BACKEND_D3D12) return sizeof(fragment_shader_dxil);
-    return 0;
-}
