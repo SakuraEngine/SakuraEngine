@@ -101,7 +101,7 @@ public:
     {
     public:
         friend class RenderGraph;
-        TextureBuilder& import(CGpuTextureId texture);
+        TextureBuilder& import(CGpuTextureId texture, ECGpuResourceState init_state);
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1);
         TextureBuilder& format(ECGpuFormat format);
         TextureBuilder& array(uint32_t size);
@@ -287,9 +287,10 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipel
 }
 
 // texture builder
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId texture)
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId texture, ECGpuResourceState init_state)
 {
     imported = texture;
+    node.init_state = init_state;
     tex_desc.width = texture->width;
     tex_desc.height = texture->height;
     tex_desc.depth = texture->depth;
