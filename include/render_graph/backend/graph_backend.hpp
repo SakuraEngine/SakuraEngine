@@ -2,6 +2,7 @@
 #include "render_graph/frontend/render_graph.hpp"
 #include "texture_pool.hpp"
 #include "texture_view_pool.hpp"
+#include "desc_set_heap.hpp"
 
 #define MAX_FRAME_IN_FLIGHT 3
 
@@ -65,6 +66,7 @@ protected:
     RenderGraphFrameExecutor executors[MAX_FRAME_IN_FLIGHT];
     TexturePool texture_pool;
     TextureViewPool texture_view_pool;
+    eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
 };
 } // namespace render_graph
 } // namespace sakura

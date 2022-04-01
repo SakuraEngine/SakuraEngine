@@ -5,13 +5,13 @@ struct VSOut
 };
 
 static const float2 positions[6] = {
-    float2(0.5, 0.5),   //RU
-    float2(-0.5, -0.5), // LD
-    float2(0.5, -0.5),  // RD
+    float2(0.5, 0.5),   //RU   0
+    float2(-0.5, -0.5), // LD  1
+    float2(0.5, -0.5),  // RD  2
 
-    float2(0.5, 0.5),  // RU
-    float2(-0.5, 0.5), // LU
-    float2(-0.5, -0.5) // LD
+    float2(0.5, 0.5),  // RU   3
+    float2(-0.5, 0.5), // LU   4
+    float2(-0.5, -0.5) // LD   5
 };
 
 static const float2 uvs[6] = {
