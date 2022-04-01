@@ -181,12 +181,12 @@ int main(int argc, char* argv[])
                     (float)to_import->width / 3, (float)to_import->height,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
-                cgpu_render_encoder_bind_pipeline(encoder, pipeline);
                 cgpu_render_encoder_draw(encoder, 3, 0);
             });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("color_pass2")
+                    .set_pipeline(pipeline)
                     .write(0, back_buffer.load_action(LOAD_ACTION_LOAD));
             },
             [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
@@ -195,7 +195,6 @@ int main(int argc, char* argv[])
                     (float)to_import->width / 3, (float)to_import->height,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
-                cgpu_render_encoder_bind_pipeline(encoder, pipeline);
                 cgpu_render_encoder_draw(encoder, 3, 0);
             });
         graph->add_present_pass(
