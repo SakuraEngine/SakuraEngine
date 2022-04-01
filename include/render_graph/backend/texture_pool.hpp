@@ -95,7 +95,7 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
     if (textures[key].empty())
     {
         auto new_tex = cgpu_create_texture(device, &desc);
-        textures[key].push({ new_tex, frame_index });
+        textures[key].push({ { new_tex, desc.start_state }, frame_index });
     }
     allocated = textures[key].front().first;
     textures[key].pop();

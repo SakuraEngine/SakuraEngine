@@ -6,28 +6,28 @@
 
 #define FLIGHT_FRAMES 3
 #define BACK_BUFFER_COUNT 3
-THREAD_LOCAL ECGpuBackend backend;
-THREAD_LOCAL SDL_Window* sdl_window;
-THREAD_LOCAL CGpuSurfaceId surface;
-THREAD_LOCAL CGpuSwapChainId swapchain;
-THREAD_LOCAL uint32_t backbuffer_index;
-THREAD_LOCAL CGpuInstanceId instance;
-THREAD_LOCAL CGpuAdapterId adapter;
-THREAD_LOCAL CGpuDeviceId device;
-THREAD_LOCAL CGpuSemaphoreId present_semaphore;
-THREAD_LOCAL CGpuFenceId exec_fences[FLIGHT_FRAMES];
-THREAD_LOCAL CGpuQueueId gfx_queue;
-THREAD_LOCAL CGpuRootSignatureId root_sig;
-THREAD_LOCAL CGpuDescriptorSetId desc_set;
-THREAD_LOCAL CGpuDescriptorSetId desc_set2; // We use this for samplers under D3D12
-THREAD_LOCAL CGpuRenderPipelineId pipeline;
-THREAD_LOCAL CGpuCommandPoolId pools[FLIGHT_FRAMES];
-THREAD_LOCAL CGpuCommandBufferId cmds[FLIGHT_FRAMES];
-THREAD_LOCAL CGpuTextureId sampled_texture;
-THREAD_LOCAL CGpuSamplerId sampler_state;
-THREAD_LOCAL bool bUseStaticSampler = true;
-THREAD_LOCAL CGpuTextureViewId sampled_view;
-THREAD_LOCAL CGpuTextureViewId views[BACK_BUFFER_COUNT];
+ECGpuBackend backend;
+SDL_Window* sdl_window;
+CGpuSurfaceId surface;
+CGpuSwapChainId swapchain;
+uint32_t backbuffer_index;
+CGpuInstanceId instance;
+CGpuAdapterId adapter;
+CGpuDeviceId device;
+CGpuSemaphoreId present_semaphore;
+CGpuFenceId exec_fences[FLIGHT_FRAMES];
+CGpuQueueId gfx_queue;
+CGpuRootSignatureId root_sig;
+CGpuDescriptorSetId desc_set;
+CGpuDescriptorSetId desc_set2; // We use this for samplers under D3D12
+CGpuRenderPipelineId pipeline;
+CGpuCommandPoolId pools[FLIGHT_FRAMES];
+CGpuCommandBufferId cmds[FLIGHT_FRAMES];
+CGpuTextureId sampled_texture;
+CGpuSamplerId sampler_state;
+bool bUseStaticSampler = true;
+CGpuTextureViewId sampled_view;
+CGpuTextureViewId views[BACK_BUFFER_COUNT];
 
 void create_sampled_texture()
 {
@@ -418,32 +418,13 @@ void ProgramMain(void* usrdata)
 int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-    // When we support more add them here
-    ECGpuBackend backends[] = {
-        CGPU_BACKEND_VULKAN
+        // When we support more add them here
 #ifdef CGPU_USE_D3D12
-        ,
-        CGPU_BACKEND_D3D12
-#endif
-    };
-#if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
-    ProgramMain(backends);
+    ECGpuBackend backend = CGPU_BACKEND_D3D12;
 #else
-    const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
-    DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
-    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
-    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
-    {
-        thread_descs[i].pFunc = &ProgramMain;
-        thread_descs[i].pData = &backends[i];
-        skr_init_thread(&thread_descs[i], &hdls[i]);
-    }
-    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
-    {
-        skr_join_thread(hdls[i]);
-        skr_destroy_thread(hdls[i]);
-    }
+    ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #endif
+    ProgramMain(&backend);
     SDL_Quit();
 
     return 0;

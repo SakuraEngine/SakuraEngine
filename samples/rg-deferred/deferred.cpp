@@ -395,16 +395,16 @@ int main(int argc, char* argv[])
                     (float)to_import->width, (float)to_import->height,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
-                cgpu_render_encoder_bind_index_buffer(encoder, index_buffer, sizeof(uint32_t), 0);
                 CGpuBufferId vertex_buffers[4] = { vertex_buffer, vertex_buffer, vertex_buffer, vertex_buffer };
                 const uint32_t strides[4] = {
-                    sizeof(CubeGeometry::g_Positions), sizeof(CubeGeometry::g_TexCoords),
-                    sizeof(CubeGeometry::g_Normals), sizeof(CubeGeometry::g_Tangents)
+                    sizeof(sakura::math::Vector3f), sizeof(sakura::math::Vector2f),
+                    sizeof(uint32_t), sizeof(uint32_t)
                 };
                 const uint32_t offsets[4] = {
                     offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords),
                     offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents)
                 };
+                cgpu_render_encoder_bind_index_buffer(encoder, index_buffer, sizeof(uint32_t), 0);
                 cgpu_render_encoder_bind_vertex_buffers(encoder, 4, vertex_buffers, strides, offsets);
                 cgpu_render_encoder_push_constants(encoder, gbuffer_pipeline->root_signature, "root_constants", &gbuffer_data);
                 cgpu_render_encoder_draw_indexed(encoder, 36, 0, 0);
