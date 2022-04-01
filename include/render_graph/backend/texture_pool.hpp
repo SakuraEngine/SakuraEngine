@@ -32,13 +32,14 @@ public:
     friend class RenderGraphBackend;
     void initialize(CGpuDeviceId device);
     void finalize();
-    CGpuTextureId allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index);
-    void deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, uint64_t frame_index);
+    eastl::pair<CGpuTextureId, ECGpuResourceState> allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index);
+    void deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, ECGpuResourceState final_state, uint64_t frame_index);
 
 protected:
     CGpuDeviceId device;
     eastl::unordered_map<Key,
-        eastl::queue<eastl::pair<CGpuTextureId, uint64_t>>>
+        eastl::queue<eastl::pair<
+            eastl::pair<CGpuTextureId, ECGpuResourceState>, uint64_t>>>
         textures;
 };
 
@@ -73,15 +74,17 @@ inline void TexturePool::finalize()
     {
         while (!queue.second.empty())
         {
-            cgpu_free_texture(queue.second.front().first);
+            cgpu_free_texture(queue.second.front().first.first);
             queue.second.pop();
         }
     }
 }
 
-inline CGpuTextureId TexturePool::allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index)
+inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index)
 {
-    CGpuTextureId allocated = nullptr;
+    eastl::pair<CGpuTextureId, ECGpuResourceState> allocated = {
+        nullptr, RESOURCE_STATE_UNDEFINED
+    };
     const TexturePool::Key key(device, desc);
     auto&& queue_iter = textures.find(key);
     // add queue
@@ -99,10 +102,10 @@ inline CGpuTextureId TexturePool::allocate(const CGpuTextureDescriptor& desc, ui
     return allocated;
 }
 
-inline void TexturePool::deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, uint64_t frame_index)
+inline void TexturePool::deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, ECGpuResourceState final_state, uint64_t frame_index)
 {
     const TexturePool::Key key(device, desc);
-    textures[key].push({ texture, frame_index });
+    textures[key].push({ { texture, final_state }, frame_index });
 }
 } // namespace render_graph
 } // namespace sakura

@@ -177,6 +177,10 @@ void RenderGraphBackend::finalize()
     }
     texture_pool.finalize();
     texture_view_pool.finalize();
+    for (auto desc_set_heap : desc_set_pool)
+    {
+        desc_set_heap.second->destroy();
+    }
 }
 
 CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
@@ -184,9 +188,11 @@ CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
     if (!node.frame_texture)
     {
         auto& wnode = const_cast<TextureNode&>(node);
+        auto allocated = texture_pool.allocate(node.descriptor, frame_index);
         wnode.frame_texture = node.imported ?
                                   node.frame_texture :
-                                  texture_pool.allocate(node.descriptor, frame_index);
+                                  allocated.first;
+        wnode.init_state = allocated.second;
     }
     return node.frame_texture;
 }
@@ -329,7 +335,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             });
         if (is_last_user)
             texture_pool.deallocate(texture_readed->descriptor,
-                texture_readed->frame_texture, frame_index);
+                texture_readed->frame_texture,
+                read_edge->requested_state,
+                frame_index);
     }
     for (auto& write_edge : write_edges)
     {
@@ -346,7 +354,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             });
         if (is_last_user)
             texture_pool.deallocate(texture_target->descriptor,
-                texture_target->frame_texture, frame_index);
+                texture_target->frame_texture,
+                write_edge->requested_state,
+                frame_index);
     }
 }
 
