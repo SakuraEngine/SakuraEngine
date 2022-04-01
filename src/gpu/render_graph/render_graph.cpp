@@ -207,25 +207,27 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     for (auto& read_edge : read_edges)
     {
         auto texture_readed = read_edge->get_texture_node();
+        auto tex_resolved = resolve(*texture_readed);
         const auto current_state = get_lastest_state(texture_readed, pass);
         const auto dst_state = read_edge->requested_state;
         if (current_state == dst_state) continue;
         CGpuTextureBarrier barrier = {};
         barrier.src_state = current_state;
         barrier.dst_state = dst_state;
-        barrier.texture = resolve(*texture_readed);
+        barrier.texture = tex_resolved;
         tex_barriers.emplace_back(barrier);
     }
     for (auto& write_edge : write_edges)
     {
         auto texture_target = write_edge->get_texture_node();
+        auto tex_resolved = resolve(*texture_target);
         const auto current_state = get_lastest_state(texture_target, pass);
         const auto dst_state = write_edge->requested_state;
         if (current_state == dst_state) continue;
         CGpuTextureBarrier barrier = {};
         barrier.src_state = current_state;
         barrier.dst_state = dst_state;
-        barrier.texture = resolve(*texture_target);
+        barrier.texture = tex_resolved;
         tex_barriers.emplace_back(barrier);
     }
     // descriptor sets
@@ -248,6 +250,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                     CGpuDescriptorData update = {};
                     update.count = 1;
                     update.binding = read_edge->binding;
+                    update.binding_type = RT_TEXTURE;
                     CGpuTextureViewDescriptor view_desc = {};
                     view_desc.texture = resolve(*texture_readed);
                     view_desc.base_array_layer = 0;

@@ -328,7 +328,7 @@ inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::sample_count(
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_target()
 {
     tex_desc.descriptors |= RT_RENDER_TARGET;
-    tex_desc.start_state = RESOURCE_STATE_RENDER_TARGET;
+    tex_desc.start_state = RESOURCE_STATE_UNDEFINED;
     return *this;
 }
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name)

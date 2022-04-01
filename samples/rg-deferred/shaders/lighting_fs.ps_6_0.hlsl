@@ -25,7 +25,7 @@ float4 main(VSOut psIn) : SV_TARGET
     float2 uv = psIn.uv;
     if(root_constants.bFlipUVX) uv.x = 1 - uv.x;
     if(root_constants.bFlipUVY) uv.y = 1 - uv.y;
-    return gbuffer_color.Sample(texture_sampler, uv) 
+    return gbuffer_color.Sample(texture_sampler, uv) * 0.5
         +
-        gbuffer_normal.Sample(texture_sampler, uv).xxxx;
+        gbuffer_normal.Sample(texture_sampler, uv).xyzw * 0.5;
 }
