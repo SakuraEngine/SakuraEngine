@@ -8,7 +8,12 @@ thread_local CGpuSwapChainId swapchain;
 thread_local uint32_t backbuffer_index;
 thread_local CGpuFenceId present_fence;
 
+#if _WINDOWS
+thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
+#else
 thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
+#endif
+
 thread_local CGpuInstanceId instance;
 thread_local CGpuAdapterId adapter;
 thread_local CGpuDeviceId device;
@@ -113,7 +118,6 @@ void create_render_pipeline()
 
 void finalize()
 {
-    SDL_DestroyWindow(sdl_window);
     // Free cgpu objects
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
@@ -151,9 +155,12 @@ int main(int argc, char* argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (SDL_GetWindowID(sdl_window) == event.window.windowID && !SDLEventHandler(&event, sdl_window))
+            if (SDL_GetWindowID(sdl_window) == event.window.windowID)
             {
-                sdl_window = CGPU_NULLPTR;
+                if (!SDLEventHandler(&event, sdl_window))
+                {
+                    sdl_window = CGPU_NULLPTR;
+                }
             }
         }
         // acquire frame
@@ -217,6 +224,7 @@ int main(int argc, char* argv[])
     render_graph::RenderGraph::destroy(graph);
     // clean up
     finalize();
+    SDL_DestroyWindow(sdl_window);
     SDL_Quit();
     return 0;
 }
