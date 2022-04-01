@@ -569,13 +569,20 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
         // Descriptor Info
         const CGpuDescriptorData* ArgData = datas + i;
         CGpuShaderResource* ResData = CGPU_NULLPTR;
-        size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), *(size_t*)&D);
-        for (uint32_t p = 0; p < ParamTable->resources_count; p++)
+        if (ArgData->name != CGPU_NULLPTR)
         {
-            if (ParamTable->resources[p].name_hash == argNameHash)
+            size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), *(size_t*)&D);
+            for (uint32_t p = 0; p < ParamTable->resources_count; p++)
             {
-                ResData = ParamTable->resources + p;
+                if (ParamTable->resources[p].name_hash == argNameHash)
+                {
+                    ResData = ParamTable->resources + p;
+                }
             }
+        }
+        else
+        {
+            ResData = ParamTable->resources + ArgData->binding;
         }
         // Update Info
         const CGpuDescriptorData* pParam = datas + i;

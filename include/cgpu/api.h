@@ -603,6 +603,8 @@ typedef struct CGpuPipelineReflection {
 typedef struct CGpuDescriptorData {
     // Update Via Shader Reflection.
     const char8_t* name;
+    // Update Via Binding Slot.
+    uint32_t binding;
     union
     {
         struct
