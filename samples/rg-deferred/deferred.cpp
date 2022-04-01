@@ -358,7 +358,7 @@ int main(int argc, char* argv[])
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
-                    .import(to_import)
+                    .import(to_import, RESOURCE_STATE_UNDEFINED)
                     .allow_render_target();
             });
         auto gbuffer_color = graph->create_texture(

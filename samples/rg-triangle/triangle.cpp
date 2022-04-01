@@ -166,12 +166,13 @@ int main(int argc, char* argv[])
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
-                    .import(to_import)
+                    .import(to_import, RESOURCE_STATE_PRESENT)
                     .allow_render_target();
             });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("color_pass")
+                    .set_pipeline(pipeline)
                     .write(0, back_buffer.load_action(LOAD_ACTION_CLEAR));
             },
             [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
