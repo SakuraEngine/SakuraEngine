@@ -23,7 +23,7 @@ struct RootConstants
 [[vk::push_constant]]
 ConstantBuffer<RootConstants> root_constants : register(b0);
 
-VSOut main(const VSIn input, uint VertexIndex : SV_VertexID)
+VSOut main(const VSIn input)
 {
     VSOut output;
     float4 posW = mul(float4(input.position, 1.0f), root_constants.world);

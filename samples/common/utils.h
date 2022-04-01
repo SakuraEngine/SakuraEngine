@@ -33,7 +33,7 @@ inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
 
 inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
 {
-    FILE* f = fopen(file_name, "r");
+    FILE* f = fopen(file_name, "rb");
     fseek(f, 0, SEEK_END);
     *length = ftell(f);
     fseek(f, 0, SEEK_SET);
