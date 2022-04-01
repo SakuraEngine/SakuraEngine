@@ -614,13 +614,20 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
         // Descriptor Info
         const CGpuDescriptorData* pParam = datas + i;
         CGpuShaderResource* ResData = CGPU_NULLPTR;
-        size_t argNameHash = cgpu_hash(pParam->name, strlen(pParam->name), *(size_t*)&D);
-        for (uint32_t p = 0; p < ParamTable->resources_count; p++)
+        if (pParam->name != CGPU_NULLPTR)
         {
-            if (ParamTable->resources[p].name_hash == argNameHash)
+            size_t argNameHash = cgpu_hash(pParam->name, strlen(pParam->name), *(size_t*)&D);
+            for (uint32_t p = 0; p < ParamTable->resources_count; p++)
             {
-                ResData = ParamTable->resources + p;
+                if (ParamTable->resources[p].name_hash == argNameHash)
+                {
+                    ResData = ParamTable->resources + p;
+                }
             }
+        }
+        else
+        {
+            ResData = ParamTable->resources + pParam->binding;
         }
         // Update Info
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
