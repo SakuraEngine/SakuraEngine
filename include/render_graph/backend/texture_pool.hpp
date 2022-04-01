@@ -47,11 +47,11 @@ inline TexturePool::Key::Key(CGpuDeviceId device, const CGpuTextureDescriptor& d
     , flags(desc.flags)
     , width(desc.width)
     , height(desc.height)
-    , depth(desc.depth)
-    , array_size(desc.array_size)
+    , depth(desc.depth ? desc.depth : 1)
+    , array_size(desc.array_size ? desc.array_size : 1)
     , format(desc.format)
-    , mip_levels(desc.mip_levels)
-    , sample_count(desc.sample_count)
+    , mip_levels(desc.mip_levels ? desc.mip_levels : 1)
+    , sample_count(desc.sample_count ? desc.sample_count : SAMPLE_COUNT_1)
     , sample_quality(desc.sample_quality)
     , descriptors(desc.descriptors)
 {
@@ -91,7 +91,8 @@ inline CGpuTextureId TexturePool::allocate(const CGpuTextureDescriptor& desc, ui
     }
     if (textures[key].empty())
     {
-        textures[key].push({ cgpu_create_texture(device, &desc), frame_index });
+        auto new_tex = cgpu_create_texture(device, &desc);
+        textures[key].push({ new_tex, frame_index });
     }
     allocated = textures[key].front().first;
     textures[key].pop();

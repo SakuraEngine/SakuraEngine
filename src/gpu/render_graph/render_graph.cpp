@@ -181,15 +181,22 @@ void RenderGraphBackend::finalize()
 
 CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
 {
-    return node.imported ? node.frame_texture : nullptr;
+    if (!node.frame_texture)
+    {
+        auto& wnode = const_cast<TextureNode&>(node);
+        wnode.frame_texture = node.imported ?
+                                  node.frame_texture :
+                                  texture_pool.allocate(node.descriptor, frame_index);
+    }
+    return node.frame_texture;
 }
 
 void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
 {
     auto read_edges = pass->read_edges();
     auto write_edges = pass->write_edges();
+    CGpuRootSignatureId root_sig = pass->pipeline->root_signature;
     // resource de-virtualize
-    // init barriers
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
     for (auto& read_edge : read_edges)
     {
@@ -214,6 +221,51 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         barrier.dst_state = dst_state;
         barrier.texture = resolve(*texture_target);
         tex_barriers.emplace_back(barrier);
+    }
+    // descriptor sets
+    auto&& desc_set_heap = desc_set_pool.find(root_sig);
+    if (desc_set_heap == desc_set_pool.end())
+        desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
+    auto descriptor_sets = desc_set_pool[pass->pipeline->root_signature]->pop();
+    if (!descriptor_sets.empty())
+    {
+        for (uint32_t set_idx = 0; set_idx < descriptor_sets.size(); set_idx++)
+        {
+            eastl::vector<CGpuDescriptorData> desc_set_updates;
+            eastl::vector<CGpuTextureViewId> srvs(read_edges.size());
+            for (uint32_t e_idx = 0; e_idx < read_edges.size(); e_idx++)
+            {
+                auto& read_edge = read_edges[e_idx];
+                if (read_edge->set == set_idx)
+                {
+                    auto texture_readed = read_edge->get_texture_node();
+                    CGpuDescriptorData update = {};
+                    update.count = 1;
+                    update.binding = read_edge->binding;
+                    CGpuTextureViewDescriptor view_desc = {};
+                    view_desc.texture = resolve(*texture_readed);
+                    view_desc.base_array_layer = 0;
+                    view_desc.array_layer_count = 1;
+                    view_desc.base_mip_level = 0;
+                    view_desc.mip_level_count = 1;
+                    view_desc.aspects = TVA_COLOR;
+                    view_desc.format = (ECGpuFormat)view_desc.texture->format;
+                    view_desc.usages = TVU_SRV;
+                    view_desc.dims = TEX_DIMENSION_2D;
+                    srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
+                    update.textures = &srvs[e_idx];
+                    desc_set_updates.emplace_back(update);
+                }
+            }
+            auto update_count = desc_set_updates.size();
+            if (update_count)
+            {
+                auto& u0 = desc_set_updates[0];
+                auto& u1 = desc_set_updates[1];
+                cgpu_update_descriptor_set(descriptor_sets[set_idx],
+                    desc_set_updates.data(), desc_set_updates.size());
+            }
+        }
     }
     // color attachments
     eastl::vector<CGpuColorAttachment> color_attachments = {};
@@ -254,8 +306,48 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = nullptr;
     auto encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
+    cgpu_render_encoder_bind_pipeline(encoder, pass->pipeline);
+    for (auto desc_set : descriptor_sets)
+    {
+        cgpu_render_encoder_bind_descriptor_set(encoder, desc_set);
+    }
     pass->executor(*this, encoder);
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, encoder);
+    // deallocate
+    for (auto& read_edge : read_edges)
+    {
+        auto texture_readed = read_edge->get_texture_node();
+        bool is_last_user = true;
+        texture_readed->foreach_neighbors(
+            [&](DependencyGraphNode* neig) {
+                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                if (rg_node->type == EObjectType::Pass)
+                {
+                    PassNode* other_pass = (PassNode*)rg_node;
+                    is_last_user = is_last_user && (pass->order >= other_pass->order);
+                }
+            });
+        if (is_last_user)
+            texture_pool.deallocate(texture_readed->descriptor,
+                texture_readed->frame_texture, frame_index);
+    }
+    for (auto& write_edge : write_edges)
+    {
+        auto texture_target = write_edge->get_texture_node();
+        bool is_last_user = true;
+        texture_target->foreach_neighbors(
+            [&](DependencyGraphNode* neig) {
+                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                if (rg_node->type == EObjectType::Pass)
+                {
+                    PassNode* other_pass = (PassNode*)rg_node;
+                    is_last_user = is_last_user && (pass->order >= other_pass->order);
+                }
+            });
+        if (is_last_user)
+            texture_pool.deallocate(texture_target->descriptor,
+                texture_target->frame_texture, frame_index);
+    }
 }
 
 void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass)
@@ -307,6 +399,11 @@ uint64_t RenderGraphBackend::execute()
         delete resource;
     }
     resources.clear();
+    // cleanup internal resources
+    for (auto desc_heap : desc_set_pool)
+    {
+        desc_heap.second->reset();
+    }
     return frame_index++;
 }
 } // namespace render_graph

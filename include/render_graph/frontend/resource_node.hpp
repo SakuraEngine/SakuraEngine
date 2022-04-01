@@ -50,7 +50,7 @@ public:
 protected:
     CGpuTextureDescriptor descriptor;
     // temporal handle with a lifespan of only one frame
-    CGpuTextureId frame_texture;
+    CGpuTextureId frame_texture = nullptr;
     ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
 };
 } // namespace render_graph

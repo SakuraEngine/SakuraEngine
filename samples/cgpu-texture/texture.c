@@ -180,9 +180,11 @@ void create_render_pipeline()
     // Update descriptor set for once
     CGpuDescriptorData arguments[2];
     arguments[0].name = "sampled_texture";
+    // via binding: arguments[0].binding = 0;
     arguments[0].count = 1;
     arguments[0].textures = &sampled_view;
     arguments[1].name = sampler_name;
+    // via binding: arguments[1].binding = 1;
     arguments[1].count = 1;
     arguments[1].samplers = &sampler_state;
     {
