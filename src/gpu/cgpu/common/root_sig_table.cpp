@@ -47,7 +47,7 @@ char8_t* duplicate_string(const char8_t* src_string)
 //   按照Set把合并好的Resource分割并放进roosting::tables中
 void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSignatureDescriptor* desc)
 {
-    CGpuShaderReflection* entry_reflections[32];
+    CGpuShaderReflection* entry_reflections[32] = { 0 };
     // Pick shader reflection data
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
