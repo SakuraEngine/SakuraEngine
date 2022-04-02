@@ -5,9 +5,15 @@
 #include <EASTL/set.h>
 
 extern "C" {
-bool CGpuUtil_ShaderResourceIsPushConst(CGpuShaderResource* resource, const struct CGpuRootSignatureDescriptor* desc)
+bool CGpuUtil_ShaderResourceIsStaticSampler(CGpuShaderResource* resource, const struct CGpuRootSignatureDescriptor* desc)
 {
-    if (resource->type == RT_ROOT_CONSTANT) return true;
+    for (uint32_t i = 0; i < desc->static_sampler_count; i++)
+    {
+        if (strcmp(resource->name, desc->static_sampler_names[i]) == 0)
+        {
+            return resource->type == RT_SAMPLER;
+        }
+    }
     return false;
 }
 
@@ -41,6 +47,7 @@ char8_t* duplicate_string(const char8_t* src_string)
 // 这是一个非常复杂的过程，牵扯到大量的move和join操作。具体的逻辑如下：
 // 1.收集所有ShaderStage中出现的所有ShaderResource，不管他们是否重复
 //   这个阶段也会收集所有的RootConst，并且对它们进行合并（不同阶段出现的相同RootConst的Stage合并）
+//   也会收集所有的StaticSamplers
 // 2.合并ShaderResources到RootSignatureTable（下称为RST）中
 //   拥有相同set、binding以及type的、出现在不同ShaderStage中的ShaderResource会被合并Stage
 // 3.切分行
@@ -72,13 +79,14 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     RS->pipeline_type = PIPELINE_TYPE_NONE;
     eastl::vector<CGpuShaderResource> all_resources;
     eastl::vector<CGpuShaderResource> all_root_constants;
+    eastl::vector<CGpuShaderResource> all_static_samplers;
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGpuShaderReflection* reflection = entry_reflections[i];
         for (uint32_t j = 0; j < reflection->shader_resources_count; j++)
         {
             CGpuShaderResource& resource = reflection->shader_resources[j];
-            if (resource.type == RT_ROOT_CONSTANT)
+            if (CGpuUtil_ShaderResourceIsRootConst(&resource, desc))
             {
                 bool coincided = false;
                 for (auto&& root_const : all_root_constants)
@@ -94,6 +102,22 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
                 }
                 if (!coincided)
                     all_root_constants.emplace_back(resource);
+            }
+            else if (CGpuUtil_ShaderResourceIsStaticSampler(&resource, desc))
+            {
+                bool coincided = false;
+                for (auto&& static_sampler : all_static_samplers)
+                {
+                    if (static_sampler.name_hash == resource.name_hash &&
+                        static_sampler.set == resource.set &&
+                        static_sampler.binding == resource.binding)
+                    {
+                        static_sampler.stages |= resource.stages;
+                        coincided = true;
+                    }
+                }
+                if (!coincided)
+                    all_static_samplers.emplace_back(resource);
             }
             else
             {
@@ -166,10 +190,23 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
     {
         RS->push_constants[i] = all_root_constants[i];
     }
+    // static samplers
+    RS->static_sampler_count = all_static_samplers.size();
+    RS->static_samplers = (CGpuShaderResource*)calloc(
+        RS->static_sampler_count, sizeof(CGpuShaderResource));
+    for (uint32_t i = 0; i < all_static_samplers.size(); i++)
+    {
+        RS->static_samplers[i] = all_static_samplers[i];
+    }
     // copy names
     for (uint32_t i = 0; i < RS->push_constant_count; i++)
     {
         CGpuShaderResource* dst = RS->push_constants + i;
+        dst->name = duplicate_string(dst->name);
+    }
+    for (uint32_t i = 0; i < RS->static_sampler_count; i++)
+    {
+        CGpuShaderResource* dst = RS->static_samplers + i;
         dst->name = duplicate_string(dst->name);
     }
     for (uint32_t i = 0; i < RS->table_count; i++)
@@ -216,6 +253,18 @@ void CGpuUtil_FreeRSParamTables(CGpuRootSignature* RS)
             }
         }
         cgpu_free(RS->push_constants);
+    }
+    if (RS->static_samplers != CGPU_NULLPTR)
+    {
+        for (uint32_t i = 0; i < RS->static_sampler_count; i++)
+        {
+            CGpuShaderResource* binding_to_free = RS->static_samplers + i;
+            if (binding_to_free->name != CGPU_NULLPTR)
+            {
+                cgpu_free((char8_t*)binding_to_free->name);
+            }
+        }
+        cgpu_free(RS->static_samplers);
     }
 }
 }
