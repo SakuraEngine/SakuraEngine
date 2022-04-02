@@ -243,7 +243,8 @@ void raster_program()
     CGpuCommandBufferDescriptor cmd_desc = { .is_secondary = false };
     cmd = cgpu_create_command_buffer(pool, &cmd_desc);
 
-    while (sdl_window)
+    bool quit = false;
+    while (!quit)
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -252,7 +253,7 @@ void raster_program()
             {
                 if (!SDLEventHandler(&event, sdl_window))
                 {
-                    sdl_window = CGPU_NULLPTR;
+                    quit = true;
                 }
             }
         }

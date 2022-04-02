@@ -317,13 +317,6 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     CGpuRootSignature_D3D12* RS = cgpu_new<CGpuRootSignature_D3D12>();
-    // Construct LUT Map for static samplers
-    eastl::string_hash_map<eastl::pair<CGpuSamplerId, CGpuShaderResource*>> staticSamplerMap;
-    for (uint32_t i = 0; i < desc->static_sampler_count; i++)
-    {
-        staticSamplerMap.insert(desc->static_sampler_names[i],
-            { desc->static_samplers[i], nullptr });
-    }
     // Pick root parameters from desc data
     CGpuShaderStages shaderStages = 0;
     for (uint32_t i = 0; i < desc->shader_count; i++)
@@ -333,28 +326,6 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     }
     // Pick shader reflection data
     CGpuUtil_InitRSParamTables((CGpuRootSignature*)RS, desc);
-    // Collect root constants count
-    uint32_t rootConstCount = 0;
-    for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
-    {
-        CGpuParameterTable* ParamTable = &RS->super.tables[i_set];
-        for (uint32_t i_binding = 0; i_binding < ParamTable->resources_count; i_binding++)
-        {
-            CGpuShaderResource* reflSlot = &ParamTable->resources[i_binding];
-            bool isRootConstant = false;
-            for (uint32_t rc = 0; rc < desc->root_constant_count; rc++)
-            {
-                isRootConstant |= (0 == strcmp(desc->root_constant_names[rc], reflSlot->name));
-                if (isRootConstant)
-                {
-                    reflSlot->type = RT_ROOT_CONSTANT;
-                    rootConstCount++;
-                    assert((rootConstCount <= 1) && "Multi-RootConstant not supported!");
-                    break;
-                }
-            }
-        }
-    }
     // Fill resource slots
     // Only support descriptor tables now
     // TODO: Support root CBVs
@@ -365,7 +336,9 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     {
         descRangeCount += RS->super.tables[i].resources_count;
     }
-    D3D12_ROOT_PARAMETER1* rootParams = (D3D12_ROOT_PARAMETER1*)cgpu_calloc(tableCount + rootConstCount, sizeof(D3D12_ROOT_PARAMETER1));
+    D3D12_ROOT_PARAMETER1* rootParams = (D3D12_ROOT_PARAMETER1*)cgpu_calloc(
+        tableCount + RS->super.push_constant_count,
+        sizeof(D3D12_ROOT_PARAMETER1));
     D3D12_DESCRIPTOR_RANGE1* cbvSrvUavRanges = (D3D12_DESCRIPTOR_RANGE1*)cgpu_calloc(descRangeCount, sizeof(D3D12_DESCRIPTOR_RANGE1));
     // Create descriptor tables
     UINT valid_root_tables = 0;
@@ -376,32 +349,11 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
         rootParam->ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         CGpuShaderStages visStages = SHADER_STAGE_NONE;
         const D3D12_DESCRIPTOR_RANGE1* descRangeCursor = &cbvSrvUavRanges[i_range];
-        UINT rangeAppended = 0;
         for (uint32_t i_register = 0; i_register < paramTable->resources_count; i_register++)
         {
             CGpuShaderResource* reflSlot = &paramTable->resources[i_register];
             visStages |= reflSlot->stages;
-            if (reflSlot->type == RT_SAMPLER)
-            {
-                const auto& iter = staticSamplerMap.find(reflSlot->name);
-                if (iter != staticSamplerMap.end())
-                {
-                    iter->second.second = reflSlot;
-                    // Static samplers are not enqueued to rootParams
-                    continue;
-                }
-            }
             // Record RS::mRootConstantParam directly, it'll be copied to the end of rootParams list
-            if (reflSlot->type == RT_ROOT_CONSTANT)
-            {
-                RS->mRootConstantParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-                RS->mRootConstantParam.Constants.RegisterSpace = reflSlot->set;
-                RS->mRootConstantParam.Constants.ShaderRegister = reflSlot->binding;
-                RS->mRootConstantParam.Constants.Num32BitValues = reflSlot->size / sizeof(uint32_t);
-                RS->mRootConstantParam.ShaderVisibility = D3D12Util_TranslateShaderStages(visStages);
-                continue;
-            }
-            else
             {
                 D3D12_DESCRIPTOR_RANGE1* descRange = &cbvSrvUavRanges[i_range];
                 descRange->RegisterSpace = reflSlot->set;
@@ -411,18 +363,27 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
                 descRange->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
                 descRange->RangeType = D3D12Util_ResourceTypeToDescriptorRangeType(reflSlot->type);
                 rootParam->DescriptorTable.NumDescriptorRanges++;
-                rangeAppended++;
                 i_range++;
             }
         }
-        if (visStages != 0 && rangeAppended)
+        if (visStages != 0)
         {
             rootParam->ShaderVisibility = D3D12Util_TranslateShaderStages(visStages);
             rootParam->DescriptorTable.pDescriptorRanges = descRangeCursor;
             valid_root_tables++;
         }
     }
-    // End create descriptor tables
+    // Root Const
+    assert(RS->super.push_constant_count <= 1 && "Only support 1 push const now!");
+    if (RS->super.push_constant_count)
+    {
+        auto reflSlot = RS->super.push_constants;
+        RS->mRootConstantParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+        RS->mRootConstantParam.Constants.RegisterSpace = reflSlot->set;
+        RS->mRootConstantParam.Constants.ShaderRegister = reflSlot->binding;
+        RS->mRootConstantParam.Constants.Num32BitValues = reflSlot->size / sizeof(uint32_t);
+        RS->mRootConstantParam.ShaderVisibility = D3D12Util_TranslateShaderStages(reflSlot->stages);
+    }
     // Create static samplers
     UINT staticSamplerCount = desc->static_sampler_count;
     D3D12_STATIC_SAMPLER_DESC* staticSamplerDescs = CGPU_NULLPTR;
@@ -430,29 +391,32 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     {
         staticSamplerDescs = (D3D12_STATIC_SAMPLER_DESC*)alloca(
             staticSamplerCount * sizeof(D3D12_STATIC_SAMPLER_DESC));
-        size_t i = 0;
-        for (const auto& iter : staticSamplerMap)
+        for (uint32_t i = 0; i < RS->super.static_sampler_count; i++)
         {
-            if (iter.second.second == nullptr)
-                cgpu_error("error: RS-unknown static sampler bound with name %s", iter.first);
+            auto& RST_slot = RS->super.static_samplers[i];
+            for (uint32_t j = 0; j < desc->static_sampler_count; j++)
+            {
+                auto input_slot = (CGpuSampler_D3D12*)desc->static_samplers[j];
+                if (strcmp(RST_slot.name, desc->static_sampler_names[j]) == 0)
+                {
+                    D3D12_SAMPLER_DESC& desc = input_slot->mDxDesc;
+                    staticSamplerDescs[i].Filter = desc.Filter;
+                    staticSamplerDescs[i].AddressU = desc.AddressU;
+                    staticSamplerDescs[i].AddressV = desc.AddressV;
+                    staticSamplerDescs[i].AddressW = desc.AddressW;
+                    staticSamplerDescs[i].MipLODBias = desc.MipLODBias;
+                    staticSamplerDescs[i].MaxAnisotropy = desc.MaxAnisotropy;
+                    staticSamplerDescs[i].ComparisonFunc = desc.ComparisonFunc;
+                    staticSamplerDescs[i].MinLOD = desc.MinLOD;
+                    staticSamplerDescs[i].MaxLOD = desc.MaxLOD;
+                    staticSamplerDescs[i].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 
-            D3D12_SAMPLER_DESC& desc = ((CGpuSampler_D3D12*)iter.second.first)->mDxDesc;
-            staticSamplerDescs[i].Filter = desc.Filter;
-            staticSamplerDescs[i].AddressU = desc.AddressU;
-            staticSamplerDescs[i].AddressV = desc.AddressV;
-            staticSamplerDescs[i].AddressW = desc.AddressW;
-            staticSamplerDescs[i].MipLODBias = desc.MipLODBias;
-            staticSamplerDescs[i].MaxAnisotropy = desc.MaxAnisotropy;
-            staticSamplerDescs[i].ComparisonFunc = desc.ComparisonFunc;
-            staticSamplerDescs[i].MinLOD = desc.MinLOD;
-            staticSamplerDescs[i].MaxLOD = desc.MaxLOD;
-            staticSamplerDescs[i].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-
-            CGpuShaderResource* samplerResource = iter.second.second;
-            staticSamplerDescs[i].RegisterSpace = samplerResource->set;
-            staticSamplerDescs[i].ShaderRegister = samplerResource->binding;
-            staticSamplerDescs[i].ShaderVisibility = D3D12Util_TranslateShaderStages(samplerResource->stages);
-            i++;
+                    CGpuShaderResource* samplerResource = &RST_slot;
+                    staticSamplerDescs[i].RegisterSpace = samplerResource->set;
+                    staticSamplerDescs[i].ShaderRegister = samplerResource->binding;
+                    staticSamplerDescs[i].ShaderVisibility = D3D12Util_TranslateShaderStages(samplerResource->stages);
+                }
+            }
         }
     }
     bool useInputLayout = shaderStages & SHADER_STAGE_VERT; // VertexStage uses input layout
@@ -471,12 +435,13 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
     if (!(shaderStages & SHADER_STAGE_FRAG))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
     // Serialize versioned RS
-    const UINT paramCount = valid_root_tables + rootConstCount /*must be 0 or 1 now*/;
+    const UINT paramCount = valid_root_tables + RS->super.push_constant_count /*must be 0 or 1 now*/;
     // Root Constant
-    if (rootConstCount)
+    assert(RS->super.push_constant_count <= 1 && "Only support 1 push const now!");
+    for (uint32_t i = 0; i < RS->super.push_constant_count; i++)
     {
-        rootParams[paramCount - 1] = RS->mRootConstantParam;
-        RS->mRootParamIndex = paramCount - 1;
+        rootParams[valid_root_tables + i] = RS->mRootConstantParam;
+        RS->mRootParamIndex = valid_root_tables + i;
     }
     // Serialize PSO
     ID3DBlob* error = NULL;
@@ -562,6 +527,17 @@ CGpuDescriptorSetId cgpu_create_descriptor_set_d3d12(CGpuDeviceId device, const 
     return &Set->super;
 }
 
+uint32_t descriptor_count_needed(CGpuShaderResource* resource)
+{
+    if (resource->dim == TEX_DIMENSION_1D_ARRAY ||
+        resource->dim == TEX_DIMENSION_2D_ARRAY ||
+        resource->dim == TEX_DIMENSION_2DMS_ARRAY ||
+        resource->dim == TEX_DIMENSION_CUBE_ARRAY)
+        return resource->size;
+    else
+        return 1;
+}
+
 void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count)
 {
     CGpuDescriptorSet_D3D12* Set = (CGpuDescriptorSet_D3D12*)set;
@@ -574,12 +550,12 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
     for (uint32_t i = 0; i < count; i++)
     {
         // Descriptor Info
-        const CGpuDescriptorData* ArgData = datas + i;
+        const CGpuDescriptorData* pParam = datas + i;
         CGpuShaderResource* ResData = CGPU_NULLPTR;
         uint32_t HeapOffset = 0;
-        if (ArgData->name != CGPU_NULLPTR)
+        if (pParam->name != CGPU_NULLPTR)
         {
-            size_t argNameHash = cgpu_hash(ArgData->name, strlen(ArgData->name), *(size_t*)&D);
+            size_t argNameHash = cgpu_hash(pParam->name, strlen(pParam->name), *(size_t*)&D);
             for (uint32_t j = 0; j < ParamTable->resources_count; j++)
             {
                 if (ParamTable->resources[j].name_hash == argNameHash)
@@ -587,35 +563,32 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
                     ResData = ParamTable->resources + j;
                     break;
                 }
-                if (ParamTable->resources[j].type != RT_ROOT_CONSTANT)
-                    HeapOffset++;
+                HeapOffset += descriptor_count_needed(&ParamTable->resources[j]);
             }
         }
         else
         {
             for (uint32_t j = 0; j < ParamTable->resources_count; j++)
             {
-                if (ParamTable->resources[j].type == ArgData->binding_type &&
-                    ParamTable->resources[j].binding == ArgData->binding)
+                if (ParamTable->resources[j].type == pParam->binding_type &&
+                    ParamTable->resources[j].binding == pParam->binding)
                 {
                     ResData = &ParamTable->resources[j];
                     break;
                 }
-                if (ParamTable->resources[j].type != RT_ROOT_CONSTANT)
-                    HeapOffset++;
+                HeapOffset += descriptor_count_needed(&ParamTable->resources[j]);
             }
         }
         // Update Info
-        const CGpuDescriptorData* pParam = datas + i;
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
         switch (ResData->type)
         {
             case RT_SAMPLER: {
-                cgpu_assert(ArgData->samplers && "cgpu_assert: Binding NULL Sampler(s)!");
-                CGpuSampler_D3D12** Samplers = (CGpuSampler_D3D12**)ArgData->samplers;
+                cgpu_assert(pParam->samplers && "cgpu_assert: Binding NULL Sampler(s)!");
+                CGpuSampler_D3D12** Samplers = (CGpuSampler_D3D12**)pParam->samplers;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
                 {
-                    cgpu_assert(ArgData->samplers[arr] && "cgpu_assert: Binding NULL Sampler!");
+                    cgpu_assert(pParam->samplers[arr] && "cgpu_assert: Binding NULL Sampler!");
                     D3D12Util_CopyDescriptorHandle(pSamplerHeap,
                         { Samplers[arr]->mDxHandle.ptr },
                         Set->mSamplerHandle, arr + HeapOffset);
@@ -624,11 +597,11 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
             break;
             case RT_TEXTURE:
             case RT_TEXTURE_CUBE: {
-                cgpu_assert(ArgData->textures && "cgpu_assert: Binding NULL Textures(s)!");
-                CGpuTextureView_D3D12** Textures = (CGpuTextureView_D3D12**)ArgData->textures;
+                cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL Textures(s)!");
+                CGpuTextureView_D3D12** Textures = (CGpuTextureView_D3D12**)pParam->textures;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
                 {
-                    cgpu_assert(ArgData->textures[arr] && "cgpu_assert: Binding NULL Textures!");
+                    cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL Textures!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
                         { Textures[arr]->mDxDescriptorHandles.ptr },
                         Set->mCbvSrvUavHandle, arr + HeapOffset);
@@ -643,11 +616,11 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
             case RT_RW_TEXTURE:
             case RT_RW_BUFFER:
             case RT_RW_BUFFER_RAW: {
-                cgpu_assert(ArgData->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
-                CGpuBuffer_D3D12** Buffers = (CGpuBuffer_D3D12**)ArgData->buffers;
+                cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
+                CGpuBuffer_D3D12** Buffers = (CGpuBuffer_D3D12**)pParam->buffers;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
                 {
-                    cgpu_assert(ArgData->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
+                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
                         { Buffers[arr]->mDxDescriptorHandles.ptr + Buffers[arr]->mDxUavOffset },
                         Set->mCbvSrvUavHandle, arr + HeapOffset);
