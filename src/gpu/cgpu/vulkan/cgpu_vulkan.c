@@ -445,16 +445,6 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             name_hashes[i] = cgpu_hash(desc->static_sampler_names[i],
                 strlen(desc->static_sampler_names[i]), (size_t)device);
         }
-        // Collect push constants count
-        RS->pPushConstRanges = (VkPushConstantRange*)cgpu_calloc(RS->super.push_constant_count, sizeof(VkPushConstantRange));
-        // Create Vk Objects
-        for (uint32_t i_const = 0; i_const < RS->super.push_constant_count; i_const++)
-        {
-            RS->pPushConstRanges[i_const].stageFlags =
-                VkUtil_TranslateShaderUsages(RS->super.push_constants[i_const].stages);
-            RS->pPushConstRanges[i_const].size = RS->super.push_constants[i_const].size;
-            RS->pPushConstRanges[i_const].offset = RS->super.push_constants[i_const].offset;
-        }
         for (uint32_t i_set = 0; i_set < RS->super.table_count; i_set++)
         {
             SetLayout_Vulkan* set_to_record = &RS->pSetLayouts[i_set];
@@ -488,6 +478,20 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
             };
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice, &set_info, GLOBAL_VkAllocationCallbacks, &set_to_record->layout));
             cgpu_free(vkbindings);
+        }
+    }
+    // Push constants
+    // Collect push constants count
+    if (RS->super.push_constant_count > 0)
+    {
+        RS->pPushConstRanges = (VkPushConstantRange*)cgpu_calloc(RS->super.push_constant_count, sizeof(VkPushConstantRange));
+        // Create Vk Objects
+        for (uint32_t i_const = 0; i_const < RS->super.push_constant_count; i_const++)
+        {
+            RS->pPushConstRanges[i_const].stageFlags =
+                VkUtil_TranslateShaderUsages(RS->super.push_constants[i_const].stages);
+            RS->pPushConstRanges[i_const].size = RS->super.push_constants[i_const].size;
+            RS->pPushConstRanges[i_const].offset = RS->super.push_constants[i_const].offset;
         }
     }
     // Record Descriptor Sets
@@ -585,9 +589,17 @@ CGpuDescriptorSetId cgpu_create_descriptor_set_vulkan(CGpuDeviceId device, const
 {
     size_t totalSize = sizeof(CGpuDescriptorSet_Vulkan);
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)desc->root_signature;
-    SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[desc->set_index];
+    uint32_t table_index = 0;
+    for (uint32_t i = 0; i < RS->super.table_count; i++)
+    {
+        if (RS->super.tables[i].set_index == desc->set_index)
+        {
+            table_index = i;
+        }
+    }
+    SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[table_index];
     const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    const size_t UpdateTemplateSize = RS->super.tables[desc->set_index].resources_count * sizeof(VkDescriptorUpdateData);
+    const size_t UpdateTemplateSize = RS->super.tables[table_index].resources_count * sizeof(VkDescriptorUpdateData);
     totalSize += UpdateTemplateSize;
     CGpuDescriptorSet_Vulkan* Set = cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuDescriptorSet_Vulkan));
     char8_t* pMem = (char8_t*)(Set + 1);
@@ -604,8 +616,16 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
     CGpuDescriptorSet_Vulkan* Set = (CGpuDescriptorSet_Vulkan*)set;
     CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)set->root_signature;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)set->root_signature->device;
-    SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[set->index];
-    CGpuParameterTable* ParamTable = &RS->super.tables[set->index];
+    uint32_t table_index = 0;
+    for (uint32_t i = 0; i < RS->super.table_count; i++)
+    {
+        if (RS->super.tables[i].set_index == set->index)
+        {
+            table_index = i;
+        }
+    }
+    SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[table_index];
+    CGpuParameterTable* ParamTable = &RS->super.tables[table_index];
     VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
     memset(pUpdateData, 0, count * sizeof(VkDescriptorUpdateData));
     bool dirty = false;
@@ -1530,7 +1550,7 @@ void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId en
         for (uint32_t i = 0; i < RS->super.table_count; i++)
         {
             if (RS->pSetLayouts[i].pEmptyDescSet != VK_NULL_HANDLE &&
-                Set->super.index != i)
+                Set->super.index != RS->super.tables[i].set_index)
             {
                 D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
                     VK_PIPELINE_BIND_POINT_COMPUTE, RS->pPipelineLayout, i,
@@ -1560,7 +1580,7 @@ void cgpu_render_encoder_bind_descriptor_set_vulkan(CGpuRenderPassEncoderId enco
         for (uint32_t i = 0; i < RS->super.table_count; i++)
         {
             if (RS->pSetLayouts[i].pEmptyDescSet != VK_NULL_HANDLE &&
-                Set->super.index != i)
+                Set->super.index != RS->super.tables[i].set_index)
             {
                 D->mVkDeviceTable.vkCmdBindDescriptorSets(Cmd->pVkCmdBuf,
                     VK_PIPELINE_BIND_POINT_GRAPHICS, RS->pPipelineLayout, i,

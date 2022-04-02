@@ -13,7 +13,7 @@ class DescSetHeap
 public:
     inline void expand(size_t set_count = 1)
     {
-        for (uint32_t i = 0; i < valid_table_count(); i++)
+        for (uint32_t i = 0; i < root_sig->table_count; i++)
         {
             CGpuDescriptorSetDescriptor desc = {};
             desc.root_signature = root_sig;
@@ -26,9 +26,8 @@ public:
     {
         if (cursor >= heap.size()) expand();
         auto res = gsl::span<CGpuDescriptorSetId>(
-            heap.data() + cursor,
-            valid_table_count());
-        cursor += valid_table_count();
+            heap.data() + cursor, root_sig->table_count);
+        cursor += root_sig->table_count;
         return res;
     }
     inline void reset() { cursor = 0; }
@@ -36,27 +35,6 @@ public:
     {
         for (auto desc_set : heap)
             cgpu_free_descriptor_set(desc_set);
-    }
-    inline uint32_t valid_table_count() const
-    {
-        uint32_t result = 0;
-        for (uint32_t i = 0; i < root_sig->table_count; i++)
-        {
-            bool is_static_sampler = false;
-            if (root_sig->tables[i].resources_count)
-            {
-                auto&& table = root_sig->tables[i];
-                for (uint32_t j = 0; j < table.resources_count; j++)
-                {
-                    auto&& resource = table.resources[j];
-                    if (resource.type == RT_SAMPLER)
-                        is_static_sampler = true;
-                }
-                if (!is_static_sampler)
-                    result++;
-            }
-        }
-        return result;
     }
     friend class RenderGraphBackend;
 

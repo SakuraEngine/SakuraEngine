@@ -989,6 +989,7 @@ typedef struct CGpuParameterTable {
     // This should be stored here because shader could be destoryed after RS creation
     CGpuShaderResource* resources;
     uint32_t resources_count;
+    uint32_t set_index;
 } CGpuParameterTable;
 
 typedef struct CGpuRootSignature {
