@@ -150,7 +150,8 @@ int main(int argc, char* argv[])
                 .with_gfx_queue(gfx_queue);
         });
     // loop
-    while (sdl_window)
+    bool quit = false;
+    while (!quit)
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -159,7 +160,7 @@ int main(int argc, char* argv[])
             {
                 if (!SDLEventHandler(&event, sdl_window))
                 {
-                    sdl_window = CGPU_NULLPTR;
+                    quit = true;
                 }
             }
         }
