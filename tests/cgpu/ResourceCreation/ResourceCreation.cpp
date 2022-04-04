@@ -153,6 +153,33 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
     cgpu_free_buffer(buffer);
 }
 
+TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
+{
+    DECLARE_ZERO(CGpuBufferDescriptor, desc)
+    desc.flags = BCF_PERSISTENT_MAP_BIT;
+    desc.descriptors = RT_BUFFER;
+    desc.memory_usage = MEM_USAGE_GPU_ONLY;
+    desc.element_stride = sizeof(uint16_t);
+    desc.elemet_count = 3;
+    desc.size = sizeof(uint16_t) * 3;
+    desc.name = "UploadBuffer";
+    auto buffer = cgpu_create_buffer(device, &desc);
+    auto detail = cgpu_query_adapter_detail(device->adapter);
+    if (detail->support_host_visible_device_memory)
+    {
+        EXPECT_NE(buffer, CGPU_NULLPTR);
+        EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    }
+    else
+    {
+        if (buffer)
+        {
+            EXPECT_EQ(buffer->cpu_mapped_address, CGPU_NULLPTR);
+        }
+    }
+    cgpu_free_buffer(buffer);
+}
+
 TEST_P(ResourceCreation, CreateModules)
 {
     ECGpuBackend backend = GetParam();

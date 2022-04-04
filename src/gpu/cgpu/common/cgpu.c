@@ -887,6 +887,25 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
     swapchain->device->proc_table_cache->free_swapchain(swapchain);
 }
 
+// cgpux helpers
+CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name, bool device_local_preferred)
+{
+    DECLARE_ZERO(CGpuBufferDescriptor, buf_desc)
+    buf_desc.descriptors = RT_BUFFER;
+    buf_desc.size = size;
+    buf_desc.name = name;
+    const CGpuAdapterDetail* detail = cgpu_query_adapter_detail(device->adapter);
+    buf_desc.memory_usage = MEM_USAGE_CPU_TO_GPU;
+    buf_desc.flags = BCF_PERSISTENT_MAP_BIT;
+    buf_desc.start_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    if (device_local_preferred && detail->support_host_visible_device_memory)
+    {
+        buf_desc.memory_usage = MEM_USAGE_GPU_ONLY;
+    }
+    return cgpu_create_buffer(device, &buf_desc);
+}
+
 // surfaces
 #if defined(_WIN32) || defined(_WIN64)
 CGpuSurfaceId cgpu_surface_from_hwnd(CGpuDeviceId device, HWND window)

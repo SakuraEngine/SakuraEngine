@@ -507,14 +507,14 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     adapter_detail->is_uma = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
     cgpu_assert(prop->deviceType != VK_PHYSICAL_DEVICE_TYPE_OTHER && "VK_PHYSICAL_DEVICE_TYPE_OTHER not supported!");
 
-    // Vendor Info
+    // vendor info
     adapter_detail->vendor_preset.device_id = prop->deviceID;
     adapter_detail->vendor_preset.vendor_id = prop->vendorID;
     adapter_detail->vendor_preset.driver_version = prop->driverVersion;
     const char* device_name = prop->deviceName;
     memcpy(adapter_detail->vendor_preset.gpu_name, device_name, strlen(device_name));
 
-    // Some Features
+    // some features
     adapter_detail->uniform_buffer_alignment =
         (uint32_t)prop->limits.minUniformBufferOffsetAlignment;
     adapter_detail->upload_buffer_texture_alignment =
@@ -526,6 +526,23 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     adapter_detail->wave_lane_count = VkAdapter->mSubgroupProperties.subgroupSize;
     adapter_detail->support_geom_shader = VkAdapter->mPhysicalDeviceFeatures.features.geometryShader;
     adapter_detail->support_tessellation = VkAdapter->mPhysicalDeviceFeatures.features.tessellationShader;
+    // memory features
+    adapter_detail->support_host_visible_device_memory = false;
+    VkPhysicalDeviceMemoryProperties mem_prop = {};
+    vkGetPhysicalDeviceMemoryProperties(VkAdapter->pPhysicalDevice, &mem_prop);
+    for (uint32_t j = 0; j < mem_prop.memoryTypeCount; j++)
+    {
+        const uint32_t heap_index = mem_prop.memoryTypes[j].heapIndex;
+        if (mem_prop.memoryHeaps[heap_index].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+        {
+            const bool isDeviceLocal =
+                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            const bool isHostVisible =
+                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+            adapter_detail->support_host_visible_device_memory = true;
+            break;
+        }
+    }
 }
 
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
