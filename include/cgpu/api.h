@@ -337,6 +337,9 @@ typedef void (*CGPUProcRenderEncoderDrawIndexedInstanced)(CGpuRenderPassEncoderI
 RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 typedef void (*CGPUProcCmdEndRenderPass)(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
+RUNTIME_API CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name, bool device_local_preferred);
+
 // Types
 typedef struct CGpuProcTable {
     // Instance APIs
@@ -480,6 +483,7 @@ typedef struct CGpuAdapterDetail {
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
     bool multidraw_indirect : 1;
+    bool support_host_visible_device_memory : 1;
     bool support_geom_shader : 1;
     bool support_tessellation : 1;
     bool is_uma : 1;
@@ -873,7 +877,7 @@ typedef struct CGpuDepthStencilAttachment {
 
 typedef struct CGpuRenderPassDescriptor {
     const char8_t* name;
-    // TODO: remove this
+    // TODO: support multi-target & remove this
     ECGpuSampleCount sample_count;
     const CGpuColorAttachment* color_attachments;
     const CGpuDepthStencilAttachment* depth_stencil;
