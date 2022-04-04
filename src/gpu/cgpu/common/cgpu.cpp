@@ -97,6 +97,33 @@ uint32_t cgpu_nvapi_get_driver_version()
     return 0;
 }
 
+uint64_t cgpu_nvapi_d3d12_query_cpu_visible_vram(struct ID3D12Device* Device)
+{
+    NvU64 total, budget;
+    NvAPI_D3D12_QueryCpuVisibleVidmem(Device, &total, &budget);
+    return budget;
+}
+
+bool cgpu_nvapi_d3d12_create_cpu_visible_vram(
+    struct ID3D12Device* Device,
+    _In_ const D3D12_HEAP_PROPERTIES* pHeapProperties,
+    D3D12_HEAP_FLAGS HeapFlags,
+    _In_ const D3D12_RESOURCE_DESC* pDesc,
+    D3D12_RESOURCE_STATES InitialResourceState,
+    _In_opt_ const D3D12_CLEAR_VALUE* pOptimizedClearValue,
+    REFIID riidResource,
+    _COM_Outptr_opt_ void** ppvResource)
+{
+    bool Supported = false;
+    NvAPI_D3D12_CreateCommittedResource(Device, pHeapProperties,
+        HeapFlags,
+        pDesc, InitialResourceState,
+        pOptimizedClearValue, nullptr, riidResource,
+        ppvResource,
+        &Supported);
+    return Supported;
+}
+
 void cgpu_nvapi_exit()
 {
 #if defined(NVAPI)

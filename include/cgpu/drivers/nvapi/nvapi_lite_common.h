@@ -1,6 +1,6 @@
-ï»¿/************************************************************************************************************************************\
+/************************************************************************************************************************************\
 |*                                                                                                                                    *|
-|*     Copyright ï¿½ 2012 NVIDIA Corporation.  All rights reserved.                                                                     *|
+|*     Copyright © 2012 NVIDIA Corporation.  All rights reserved.                                                                     *|
 |*                                                                                                                                    *|
 |*  NOTICE TO USER:                                                                                                                   *|
 |*                                                                                                                                    *|
@@ -31,7 +31,6 @@
 |*  the above Disclaimer (as applicable) and U.S. Government End Users Notice.                                                        *|
 |*                                                                                                                                    *|
  \************************************************************************************************************************************/
-/* clang-format off */
 #pragma once
 #include"nvapi_lite_salstart.h"
 #pragma pack(push,8)
@@ -148,6 +147,7 @@ NV_DECLARE_HANDLE(NvSourceHandle);                 //!< Unique source handle on 
 NV_DECLARE_HANDLE(NvTargetHandle);                 //!< Unique target handle on the system
 NV_DECLARE_HANDLE(NVDX_SwapChainHandle);           //!< DirectX SwapChain objects
 static const NVDX_SwapChainHandle NVDX_SWAPCHAIN_NONE = 0;
+NV_DECLARE_HANDLE(NvPresentBarrierClientHandle);   //!< PresentBarrier client object
 //! @}
 
 //! \ingroup nvapihandles
@@ -367,7 +367,7 @@ typedef enum _NvAPI_Status
     NVAPI_FIRMWARE_REVISION_NOT_SUPPORTED       = -200,    //!< The device's firmware is not supported.
     NVAPI_LICENSE_CALLER_AUTHENTICATION_FAILED  = -201,    //!< The caller is not authorized to modify the License.
     NVAPI_D3D_DEVICE_NOT_REGISTERED             = -202,    //!< The user tried to use a deferred context without registering the device first  
-    NVAPI_RESOURCE_NOT_ACQUIRED                 = -203,    //!< Head or SourceId was not reserved for the VR Display before doing the Modeset.
+    NVAPI_RESOURCE_NOT_ACQUIRED                 = -203,    //!< Head or SourceId was not reserved for the VR Display before doing the Modeset or the dedicated display.
     NVAPI_TIMING_NOT_SUPPORTED                  = -204,    //!< Provided timing is not supported.
     NVAPI_HDCP_ENCRYPTION_FAILED                = -205,    //!< HDCP Encryption Failed for the device. Would be applicable when the device is HDCP Capable.
     NVAPI_PCLK_LIMITATION_FAILED                = -206,    //!< Provided mode is over sink device pclk limitation.

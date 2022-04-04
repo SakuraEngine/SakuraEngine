@@ -506,8 +506,9 @@ void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
     #if VK_EXT_memory_budget
     if (vkGetPhysicalDeviceMemoryProperties2KHR)
     {
-        VkPhysicalDeviceMemoryProperties2 mem_prop2 = {};
         DECLARE_ZERO(VkPhysicalDeviceMemoryBudgetPropertiesEXT, budget)
+        budget.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT;
+        VkPhysicalDeviceMemoryProperties2 mem_prop2 = {};
         mem_prop2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
         mem_prop2.pNext = &budget;
         vkGetPhysicalDeviceMemoryProperties2KHR(VkAdapter->pPhysicalDevice, &mem_prop2);

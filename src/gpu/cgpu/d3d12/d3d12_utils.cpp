@@ -135,6 +135,17 @@ void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter)
         D3D12Adapter->mEnhancedBarriersSupported = options12.EnhancedBarriersSupported;
     }
 #endif
+    adapter_detail.host_visible_vram_budget = 0;
+    adapter_detail.support_host_visible_vram = false;
+#ifdef NVAPI
+    if (I->super.nvapi_status == CGPU_NVAPI_OK)
+    {
+        adapter_detail.host_visible_vram_budget = cgpu_nvapi_d3d12_query_cpu_visible_vram(pCheckDevice);
+        adapter_detail.support_host_visible_vram = adapter_detail.host_visible_vram_budget > 0;
+    }
+#endif
+#ifdef AMDAGS
+#endif
     SAFE_RELEASE(pCheckDevice);
 }
 
