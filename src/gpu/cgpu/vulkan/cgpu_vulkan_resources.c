@@ -71,6 +71,8 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     if (desc->flags & BCF_PERSISTENT_MAP_BIT)
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    if (desc->flags & BCF_HOST_VISIBLE || desc->flags & BCF_PERSISTENT_MAP_BIT)
+        vma_mem_reqs.preferredFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 
     DECLARE_ZERO(VmaAllocationInfo, alloc_info)
     VkResult bufferResult =
@@ -144,7 +146,9 @@ void cgpu_map_buffer_vulkan(CGpuBufferId buffer, const struct CGpuBufferRange* r
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
-    cgpu_assert(B->super.memory_usage != MEM_USAGE_GPU_ONLY && "Trying to map non-cpu accessible resource");
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)buffer->device->adapter;
+    if (!A->adapter_detail.support_host_visible_device_memory)
+        cgpu_assert(B->super.memory_usage != MEM_USAGE_GPU_ONLY && "Trying to map non-cpu accessible resource");
 
     VkResult vk_res = vmaMapMemory(D->pVmaAllocator, B->pVkAllocation, &B->super.cpu_mapped_address);
     cgpu_assert(vk_res == VK_SUCCESS);
@@ -159,7 +163,9 @@ void cgpu_unmap_buffer_vulkan(CGpuBufferId buffer)
 {
     CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)buffer;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)B->super.device;
-    cgpu_assert(B->super.memory_usage != MEM_USAGE_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)buffer->device->adapter;
+    if (!A->adapter_detail.support_host_visible_device_memory)
+        cgpu_assert(B->super.memory_usage != MEM_USAGE_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
 
     vmaUnmapMemory(D->pVmaAllocator, B->pVkAllocation);
     B->super.cpu_mapped_address = CGPU_NULLPTR;
