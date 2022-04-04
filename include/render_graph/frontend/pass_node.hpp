@@ -9,8 +9,14 @@ namespace sakura
 {
 namespace render_graph
 {
+
+struct RenderPassStack {
+    CGpuRenderPassEncoderId encoder;
+    gsl::span<CGpuDescriptorSetId> desc_sets;
+};
+
 using RenderPassExecuteFunction = eastl::function<
-    void(class RenderGraph&, CGpuRenderPassEncoderId)>;
+    void(class RenderGraph&, RenderPassStack&)>;
 
 class PassNode : public RenderGraphNode
 {

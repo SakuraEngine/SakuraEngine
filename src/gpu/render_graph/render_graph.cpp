@@ -199,6 +199,7 @@ CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
 
 void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
 {
+    RenderPassStack stack = {};
     auto read_edges = pass->read_edges();
     auto write_edges = pass->write_edges();
     CGpuRootSignatureId root_sig = pass->pipeline->root_signature;
@@ -230,50 +231,45 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         barrier.texture = tex_resolved;
         tex_barriers.emplace_back(barrier);
     }
-    // descriptor sets
+    // allocate & update descriptor sets
     auto&& desc_set_heap = desc_set_pool.find(root_sig);
     if (desc_set_heap == desc_set_pool.end())
         desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
-    auto descriptor_sets = desc_set_pool[pass->pipeline->root_signature]->pop();
-    if (!descriptor_sets.empty())
+    stack.desc_sets = desc_set_pool[pass->pipeline->root_signature]->pop();
+    for (uint32_t set_idx = 0; set_idx < stack.desc_sets.size(); set_idx++)
     {
-        for (uint32_t set_idx = 0; set_idx < descriptor_sets.size(); set_idx++)
+        eastl::vector<CGpuDescriptorData> desc_set_updates;
+        eastl::vector<CGpuTextureViewId> srvs(read_edges.size());
+        for (uint32_t e_idx = 0; e_idx < read_edges.size(); e_idx++)
         {
-            eastl::vector<CGpuDescriptorData> desc_set_updates;
-            eastl::vector<CGpuTextureViewId> srvs(read_edges.size());
-            for (uint32_t e_idx = 0; e_idx < read_edges.size(); e_idx++)
+            auto& read_edge = read_edges[e_idx];
+            if (read_edge->set == set_idx)
             {
-                auto& read_edge = read_edges[e_idx];
-                if (read_edge->set == set_idx)
-                {
-                    auto texture_readed = read_edge->get_texture_node();
-                    CGpuDescriptorData update = {};
-                    update.count = 1;
-                    update.binding = read_edge->binding;
-                    update.binding_type = RT_TEXTURE;
-                    CGpuTextureViewDescriptor view_desc = {};
-                    view_desc.texture = resolve(*texture_readed);
-                    view_desc.base_array_layer = read_edge->get_array_base();
-                    view_desc.array_layer_count = read_edge->get_array_count();
-                    view_desc.base_mip_level = read_edge->get_mip_base();
-                    view_desc.mip_level_count = read_edge->get_mip_count();
-                    view_desc.aspects = TVA_COLOR;
-                    view_desc.format = (ECGpuFormat)view_desc.texture->format;
-                    view_desc.usages = TVU_SRV;
-                    view_desc.dims = read_edge->get_dimension();
-                    srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
-                    update.textures = &srvs[e_idx];
-                    desc_set_updates.emplace_back(update);
-                }
+                auto texture_readed = read_edge->get_texture_node();
+                CGpuDescriptorData update = {};
+                update.count = 1;
+                update.binding = read_edge->binding;
+                update.binding_type = RT_TEXTURE;
+                CGpuTextureViewDescriptor view_desc = {};
+                view_desc.texture = resolve(*texture_readed);
+                view_desc.base_array_layer = read_edge->get_array_base();
+                view_desc.array_layer_count = read_edge->get_array_count();
+                view_desc.base_mip_level = read_edge->get_mip_base();
+                view_desc.mip_level_count = read_edge->get_mip_count();
+                view_desc.aspects = TVA_COLOR;
+                view_desc.format = (ECGpuFormat)view_desc.texture->format;
+                view_desc.usages = TVU_SRV;
+                view_desc.dims = read_edge->get_dimension();
+                srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
+                update.textures = &srvs[e_idx];
+                desc_set_updates.emplace_back(update);
             }
-            auto update_count = desc_set_updates.size();
-            if (update_count)
-            {
-                auto& u0 = desc_set_updates[0];
-                auto& u1 = desc_set_updates[1];
-                cgpu_update_descriptor_set(descriptor_sets[set_idx],
-                    desc_set_updates.data(), desc_set_updates.size());
-            }
+        }
+        auto update_count = desc_set_updates.size();
+        if (update_count)
+        {
+            cgpu_update_descriptor_set(stack.desc_sets[set_idx],
+                desc_set_updates.data(), desc_set_updates.size());
         }
     }
     // color attachments
@@ -313,14 +309,14 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.name = pass->get_name();
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = nullptr;
-    auto encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
-    cgpu_render_encoder_bind_pipeline(encoder, pass->pipeline);
-    for (auto desc_set : descriptor_sets)
+    stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
+    cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
+    for (auto desc_set : stack.desc_sets)
     {
-        cgpu_render_encoder_bind_descriptor_set(encoder, desc_set);
+        cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
     }
-    pass->executor(*this, encoder);
-    cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, encoder);
+    pass->executor(*this, stack);
+    cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
     // deallocate
     for (auto& read_edge : read_edges)
     {

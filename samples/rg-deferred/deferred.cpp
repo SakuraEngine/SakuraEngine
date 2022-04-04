@@ -390,12 +390,12 @@ int main(int argc, char* argv[])
                     .write(0, gbuffer_color, LOAD_ACTION_CLEAR)
                     .write(1, gbuffer_normal, LOAD_ACTION_CLEAR);
             },
-            [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
-                cgpu_render_encoder_set_viewport(encoder,
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+                cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)to_import->width, (float)to_import->height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
                 CGpuBufferId vertex_buffers[4] = { vertex_buffer, vertex_buffer, vertex_buffer, vertex_buffer };
                 const uint32_t strides[4] = {
                     sizeof(sakura::math::Vector3f), sizeof(sakura::math::Vector2f),
@@ -405,10 +405,10 @@ int main(int argc, char* argv[])
                     offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords),
                     offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents)
                 };
-                cgpu_render_encoder_bind_index_buffer(encoder, index_buffer, sizeof(uint32_t), 0);
-                cgpu_render_encoder_bind_vertex_buffers(encoder, 4, vertex_buffers, strides, offsets);
-                cgpu_render_encoder_push_constants(encoder, gbuffer_pipeline->root_signature, "root_constants", &gbuffer_data);
-                cgpu_render_encoder_draw_indexed(encoder, 36, 0, 0);
+                cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
+                cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 4, vertex_buffers, strides, offsets);
+                cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "root_constants", &gbuffer_data);
+                cgpu_render_encoder_draw_indexed(stack.encoder, 36, 0, 0);
             });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
@@ -418,14 +418,14 @@ int main(int argc, char* argv[])
                     .read(0, 1, gbuffer_normal)
                     .write(0, back_buffer, LOAD_ACTION_CLEAR);
             },
-            [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
-                cgpu_render_encoder_set_viewport(encoder,
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+                cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)to_import->width, (float)to_import->height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
-                cgpu_render_encoder_push_constants(encoder, lighting_pipeline->root_signature, "root_constants", &lighting_data);
-                cgpu_render_encoder_draw(encoder, 6, 0);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "root_constants", &lighting_data);
+                cgpu_render_encoder_draw(stack.encoder, 6, 0);
             });
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
