@@ -498,6 +498,68 @@ void VkUtil_FreeDescriptorSetLayout(CGpuDevice_Vulkan* D, VkDescriptorSetLayout 
 }
 
 // Select Helpers
+void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
+{
+    CGpuAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
+    adapter_detail->support_host_visible_vram = false;
+#ifdef VK_EXT_memory_budget
+    #if VK_EXT_memory_budget
+    if (vkGetPhysicalDeviceMemoryProperties2KHR)
+    {
+        VkPhysicalDeviceMemoryProperties2 mem_prop2 = {};
+        DECLARE_ZERO(VkPhysicalDeviceMemoryBudgetPropertiesEXT, budget)
+        mem_prop2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
+        mem_prop2.pNext = &budget;
+        vkGetPhysicalDeviceMemoryProperties2KHR(VkAdapter->pPhysicalDevice, &mem_prop2);
+        VkPhysicalDeviceMemoryProperties mem_prop = mem_prop2.memoryProperties;
+        for (uint32_t j = 0; j < mem_prop.memoryTypeCount; j++)
+        {
+            const uint32_t heap_index = mem_prop.memoryTypes[j].heapIndex;
+            if (mem_prop.memoryHeaps[heap_index].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+            {
+                const bool isDeviceLocal =
+                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+                const bool isHostVisible =
+                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+                if (isDeviceLocal && isHostVisible)
+                {
+                    adapter_detail->support_host_visible_vram = true;
+                    adapter_detail->host_visible_vram_budget =
+                        budget.heapBudget[heap_index] ?
+                            budget.heapBudget[heap_index] :
+                            mem_prop.memoryHeaps[heap_index].size;
+                    break;
+                }
+            }
+        }
+    }
+    else
+    #endif
+#endif
+    {
+        VkPhysicalDeviceMemoryProperties mem_prop = {};
+        vkGetPhysicalDeviceMemoryProperties(VkAdapter->pPhysicalDevice, &mem_prop);
+        for (uint32_t j = 0; j < mem_prop.memoryTypeCount; j++)
+        {
+            const uint32_t heap_index = mem_prop.memoryTypes[j].heapIndex;
+            if (mem_prop.memoryHeaps[heap_index].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+            {
+                const bool isDeviceLocal =
+                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+                const bool isHostVisible =
+                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+                if (isDeviceLocal && isHostVisible)
+                {
+                    adapter_detail->support_host_visible_vram = true;
+                    adapter_detail->host_visible_vram_budget = mem_prop.memoryHeaps[heap_index].size;
+                    break;
+                }
+                break;
+            }
+        }
+    }
+}
+
 void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
 {
     CGpuAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
@@ -527,22 +589,7 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     adapter_detail->support_geom_shader = VkAdapter->mPhysicalDeviceFeatures.features.geometryShader;
     adapter_detail->support_tessellation = VkAdapter->mPhysicalDeviceFeatures.features.tessellationShader;
     // memory features
-    adapter_detail->support_host_visible_device_memory = false;
-    VkPhysicalDeviceMemoryProperties mem_prop = {};
-    vkGetPhysicalDeviceMemoryProperties(VkAdapter->pPhysicalDevice, &mem_prop);
-    for (uint32_t j = 0; j < mem_prop.memoryTypeCount; j++)
-    {
-        const uint32_t heap_index = mem_prop.memoryTypes[j].heapIndex;
-        if (mem_prop.memoryHeaps[heap_index].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
-        {
-            const bool isDeviceLocal =
-                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-            const bool isHostVisible =
-                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-            adapter_detail->support_host_visible_device_memory = true;
-            break;
-        }
-    }
+    VkUtil_QueryHostVisbleVramInfo(VkAdapter);
 }
 
 void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)

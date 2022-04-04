@@ -165,7 +165,7 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
     desc.name = "UploadBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     auto detail = cgpu_query_adapter_detail(device->adapter);
-    if (detail->support_host_visible_device_memory)
+    if (detail->support_host_visible_vram)
     {
         EXPECT_NE(buffer, CGPU_NULLPTR);
         EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);

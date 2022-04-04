@@ -482,8 +482,9 @@ typedef struct CGpuAdapterDetail {
     uint32_t upload_buffer_texture_row_alignment;
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
+    uint32_t host_visible_vram_budget;
+    bool support_host_visible_vram : 1;
     bool multidraw_indirect : 1;
-    bool support_host_visible_device_memory : 1;
     bool support_geom_shader : 1;
     bool support_tessellation : 1;
     bool is_uma : 1;
