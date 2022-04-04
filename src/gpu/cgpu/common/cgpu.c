@@ -899,7 +899,7 @@ CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
     buf_desc.memory_usage = MEM_USAGE_CPU_TO_GPU;
     buf_desc.flags = BCF_PERSISTENT_MAP_BIT | BCF_HOST_VISIBLE;
     buf_desc.start_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-    if (device_local_preferred && detail->support_host_visible_device_memory)
+    if (device_local_preferred && detail->support_host_visible_vram)
     {
         buf_desc.memory_usage = MEM_USAGE_GPU_ONLY;
     }
