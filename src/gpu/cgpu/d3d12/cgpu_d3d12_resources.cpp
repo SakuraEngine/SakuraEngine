@@ -36,21 +36,21 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
     if ((desc->memory_usage == MEM_USAGE_GPU_ONLY && desc->flags & BCF_HOST_VISIBLE) ||
         (desc->memory_usage & MEM_USAGE_GPU_ONLY && desc->flags == BCF_PERSISTENT_MAP_BIT))
     {
-        bool Supported = false;
+        bool cpuVisibleVRamSupported = false;
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
         heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
         heapProps.VisibleNodeMask = SINGLE_GPU_NODE_MASK;
         heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
-        NV_RESOURCE_PARAMS nv_params = {};
-        nv_params.NVResourceFlags = NV_D3D12_RESOURCE_FLAGS::NV_D3D12_RESOURCE_FLAG_CPUVISIBLE_VIDMEM;
+        NV_RESOURCE_PARAMS nvParams = {};
+        nvParams.NVResourceFlags = NV_D3D12_RESOURCE_FLAGS::NV_D3D12_RESOURCE_FLAG_CPUVISIBLE_VIDMEM;
         NvAPI_D3D12_CreateCommittedResource(D->pDxDevice, &heapProps,
             alloc_desc.ExtraHeapFlags,
             &bufDesc, res_states,
-            nullptr, nullptr, IID_ARGS(&B->pDxResource),
-            &Supported);
-        if (!Supported)
+            nullptr, &nvParams, IID_ARGS(&B->pDxResource),
+            &cpuVisibleVRamSupported);
+        if (!cpuVisibleVRamSupported)
             B->pDxResource = nullptr;
     }
 #endif
