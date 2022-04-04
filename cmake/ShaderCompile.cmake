@@ -72,6 +72,7 @@ function(sakura_compile_shaders)
                         -T ${TargetProp}
                         -Fo ${params_DXIL}/${PURE_FILE_NAME}.dxil
                         -Fh ${params_DXIL}/${PURE_FILE_NAME}.dxil.h
+                        -Wno-ignored-attributes
                         ${source}
                 WORKING_DIRECTORY ${SAKURA_BIN_DIR}/Release)
         endforeach(source ${params_SOURCES})
@@ -97,6 +98,7 @@ function(sakura_compile_shaders)
                         -Fh ${params_SPIRV_DXC}/${PURE_FILE_NAME}.spv.h
                         -spirv
                         -fspv-target-env=vulkan1.1
+                        -Wno-ignored-attributes
                         ${source}
                 WORKING_DIRECTORY ${SAKURA_BIN_DIR}/Release)
         endforeach(source ${params_SOURCES})
