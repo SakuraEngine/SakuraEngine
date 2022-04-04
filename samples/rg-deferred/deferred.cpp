@@ -387,8 +387,8 @@ int main(int argc, char* argv[])
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("gbuffer_pass")
                     .set_pipeline(gbuffer_pipeline)
-                    .write(0, gbuffer_color.load_action(LOAD_ACTION_CLEAR))
-                    .write(1, gbuffer_normal.load_action(LOAD_ACTION_CLEAR));
+                    .write(0, gbuffer_color, LOAD_ACTION_CLEAR)
+                    .write(1, gbuffer_normal, LOAD_ACTION_CLEAR);
             },
             [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
                 cgpu_render_encoder_set_viewport(encoder,
@@ -416,7 +416,7 @@ int main(int argc, char* argv[])
                     .set_pipeline(lighting_pipeline)
                     .read(0, 0, gbuffer_color.read_mip(0, 1))
                     .read(0, 1, gbuffer_normal)
-                    .write(0, back_buffer.load_action(LOAD_ACTION_CLEAR));
+                    .write(0, back_buffer, LOAD_ACTION_CLEAR);
             },
             [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
                 cgpu_render_encoder_set_viewport(encoder,

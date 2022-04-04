@@ -10,7 +10,6 @@ void cgpu_free_runtime_table(struct CGpuRuntimeTable* table);
 void cgpu_runtime_table_add_queue(CGpuQueueId queue, ECGpuQueueType type, uint32_t index);
 CGpuQueueId cgpu_runtime_table_try_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
 
-// TODO: remove this
 void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSignatureDescriptor* desc);
 void CGpuUtil_FreeRSParamTables(CGpuRootSignature* RS);
 
