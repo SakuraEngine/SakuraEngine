@@ -180,6 +180,16 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
     cgpu_free_buffer(buffer);
 }
 
+TEST_P(ResourceCreation, CreateConstantBufferX)
+{
+    auto buffer = cgpux_create_mapped_constant_buffer(device,
+        sizeof(uint16_t) * 3,
+        "ConstantBuffer", true);
+    EXPECT_NE(buffer, CGPU_NULLPTR);
+    EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    cgpu_free_buffer(buffer);
+}
+
 TEST_P(ResourceCreation, CreateModules)
 {
     ECGpuBackend backend = GetParam();
