@@ -1,4 +1,3 @@
-/* clang-format off */
 /***************************************************************************\
 |*                                                                           *|
 |*      Copyright NVIDIA Corporation.  All rights reserved.                  *|
@@ -85,6 +84,7 @@
 #define FXAA_ALLOW_STRING                          L"NVIDIA Predefined FXAA Usage"
 #define FXAA_ENABLE_STRING                         L"Enable FXAA"
 #define FXAA_INDICATOR_ENABLE_STRING               L"Enable FXAA Indicator"
+#define LATENCY_INDICATOR_AUTOALIGN_STRING         L"Autoalign flash indicator"
 #define MCSFRSHOWSPLIT_STRING                      L"SLI indicator"
 #define NV_QUALITY_UPSCALING_STRING                L"NVIDIA Quality upscaling"
 #define OPTIMUS_MAXAA_STRING                       L"Maximum AA samples allowed for a given application"
@@ -126,6 +126,7 @@
 #define MAXWELL_B_SAMPLE_INTERLEAVE_STRING         L"Enable sample interleaving (MFAA)"
 #define PRERENDERLIMIT_STRING                      L"Maximum pre-rendered frames"
 #define PS_SHADERDISKCACHE_STRING                  L"Shader Cache"
+#define PS_SHADERDISKCACHE_MAX_SIZE_STRING         L"Shader disk cache maximum size"
 #define PS_TEXFILTER_ANISO_OPTS2_STRING            L"Texture filtering - Anisotropic sample optimization"
 #define PS_TEXFILTER_BILINEAR_IN_ANISO_STRING      L"Texture filtering - Anisotropic filter optimization"
 #define PS_TEXFILTER_DISABLE_TRILIN_SLOPE_STRING   L"Texture filtering - Trilinear optimization"
@@ -183,6 +184,7 @@ enum ESetting {
     FXAA_ALLOW_ID                                 = 0x1034CB89,
     FXAA_ENABLE_ID                                = 0x1074C972,
     FXAA_INDICATOR_ENABLE_ID                      = 0x1068FB9C,
+    LATENCY_INDICATOR_AUTOALIGN_ID                = 0x1095F170,
     MCSFRSHOWSPLIT_ID                             = 0x10287051,
     NV_QUALITY_UPSCALING_ID                       = 0x10444444,
     OPTIMUS_MAXAA_ID                              = 0x10F9DC83,
@@ -224,6 +226,7 @@ enum ESetting {
     MAXWELL_B_SAMPLE_INTERLEAVE_ID                = 0x0098C1AC,
     PRERENDERLIMIT_ID                             = 0x007BA09E,
     PS_SHADERDISKCACHE_ID                         = 0x00198FFF,
+    PS_SHADERDISKCACHE_MAX_SIZE_ID                = 0x00AC8497,
     PS_TEXFILTER_ANISO_OPTS2_ID                   = 0x00E73211,
     PS_TEXFILTER_BILINEAR_IN_ANISO_ID             = 0x0084CD70,
     PS_TEXFILTER_DISABLE_TRILIN_SLOPE_ID          = 0x002ECAF2,
@@ -235,9 +238,9 @@ enum ESetting {
     SET_VAB_DATA_ID                               = 0x00AB8687,
     VSYNCMODE_ID                                  = 0x00A879CF,
     VSYNCTEARCONTROL_ID                           = 0x005A375C,
-    TOTAL_DWORD_SETTING_NUM = 92,
+    TOTAL_DWORD_SETTING_NUM = 94,
     TOTAL_WSTRING_SETTING_NUM = 4,
-    TOTAL_SETTING_NUM = 96,
+    TOTAL_SETTING_NUM = 98,
     INVALID_SETTING_ID = 0xFFFFFFFF
 };
 
@@ -647,6 +650,13 @@ enum EValues_FXAA_INDICATOR_ENABLE {
     FXAA_INDICATOR_ENABLE_DEFAULT = FXAA_INDICATOR_ENABLE_OFF
 };
 
+enum EValues_LATENCY_INDICATOR_AUTOALIGN {
+    LATENCY_INDICATOR_AUTOALIGN_DISABLED                 = 0x0,
+    LATENCY_INDICATOR_AUTOALIGN_ENABLED                  = 0x1,
+    LATENCY_INDICATOR_AUTOALIGN_NUM_VALUES = 2,
+    LATENCY_INDICATOR_AUTOALIGN_DEFAULT = LATENCY_INDICATOR_AUTOALIGN_ENABLED
+};
+
 enum EValues_MCSFRSHOWSPLIT {
     MCSFRSHOWSPLIT_DISABLED                              = 0x34534064,
     MCSFRSHOWSPLIT_ENABLED                               = 0x24545582,
@@ -1023,7 +1033,14 @@ enum EValues_PS_SHADERDISKCACHE {
     PS_SHADERDISKCACHE_OFF                               = 0x00000000,
     PS_SHADERDISKCACHE_ON                                = 0x00000001,
     PS_SHADERDISKCACHE_NUM_VALUES = 2,
-    PS_SHADERDISKCACHE_DEFAULT = 0x1
+    PS_SHADERDISKCACHE_DEFAULT = PS_SHADERDISKCACHE_ON
+};
+
+enum EValues_PS_SHADERDISKCACHE_MAX_SIZE {
+    PS_SHADERDISKCACHE_MAX_SIZE_MIN                      = 0x0,
+    PS_SHADERDISKCACHE_MAX_SIZE_MAX                      = 0xffffffff,
+    PS_SHADERDISKCACHE_MAX_SIZE_NUM_VALUES = 2,
+    PS_SHADERDISKCACHE_MAX_SIZE_DEFAULT = 0x1000
 };
 
 enum EValues_PS_TEXFILTER_ANISO_OPTS2 {

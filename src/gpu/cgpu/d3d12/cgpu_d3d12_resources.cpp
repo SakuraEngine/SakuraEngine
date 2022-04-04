@@ -1,5 +1,7 @@
 #include "math/scalarmath.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
+#include "cgpu/drivers/cgpu_nvapi.h"
+#include "cgpu/drivers/cgpu_ags.h"
 #include "d3d12_utils.h"
 #include <dxcapi.h>
 
@@ -30,26 +32,51 @@ CGpuBufferId cgpu_create_buffer_d3d12(CGpuDeviceId device, const struct CGpuBuff
 
     // Do Allocation
     D3D12MA::ALLOCATION_DESC alloc_desc = D3D12Util_CreateAllocationDesc(desc);
-    if (D3D12_HEAP_TYPE_DEFAULT != alloc_desc.HeapType &&
-        (alloc_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
+#ifdef NVAPI
+    if ((desc->memory_usage == MEM_USAGE_GPU_ONLY && desc->flags & BCF_HOST_VISIBLE) ||
+        (desc->memory_usage & MEM_USAGE_GPU_ONLY && desc->flags == BCF_PERSISTENT_MAP_BIT))
     {
+        bool Supported = false;
         D3D12_HEAP_PROPERTIES heapProps = {};
         heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
         heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
         heapProps.VisibleNodeMask = SINGLE_GPU_NODE_MASK;
         heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
-        CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
-            &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
+        NV_RESOURCE_PARAMS nv_params = {};
+        nv_params.NVResourceFlags = NV_D3D12_RESOURCE_FLAGS::NV_D3D12_RESOURCE_FLAG_CPUVISIBLE_VIDMEM;
+        NvAPI_D3D12_CreateCommittedResource(D->pDxDevice, &heapProps,
+            alloc_desc.ExtraHeapFlags,
+            &bufDesc, res_states,
+            nullptr, nullptr, IID_ARGS(&B->pDxResource),
+            &Supported);
+        if (!Supported)
+            B->pDxResource = nullptr;
     }
-    else
+#endif
+    if (!B->pDxResource)
     {
-        CHECK_HRESULT(D->pResourceAllocator->CreateResource(
-            &alloc_desc, &bufDesc, res_states, NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
+        if (D3D12_HEAP_TYPE_DEFAULT != alloc_desc.HeapType &&
+            (alloc_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
+        {
+            D3D12_HEAP_PROPERTIES heapProps = {};
+            heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
+            heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
+            heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+            heapProps.VisibleNodeMask = SINGLE_GPU_NODE_MASK;
+            heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
+            CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
+                &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
+        }
+        else
+        {
+            CHECK_HRESULT(D->pResourceAllocator->CreateResource(
+                &alloc_desc, &bufDesc, res_states, NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
+        }
     }
 
     // MemMaps
-    if (desc->memory_usage != MEM_USAGE_GPU_ONLY && desc->flags & BCF_PERSISTENT_MAP_BIT)
+    if (desc->flags & BCF_PERSISTENT_MAP_BIT)
         B->pDxResource->Map(0, NULL, &B->super.cpu_mapped_address);
     B->mDxGpuAddress = B->pDxResource->GetGPUVirtualAddress();
 #if defined(XBOX)
