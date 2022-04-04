@@ -586,7 +586,7 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
             case RT_SAMPLER: {
                 cgpu_assert(pParam->samplers && "cgpu_assert: Binding NULL Sampler(s)!");
                 CGpuSampler_D3D12** Samplers = (CGpuSampler_D3D12**)pParam->samplers;
-                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                for (uint32_t arr = 0; arr < arrayCount; arr++)
                 {
                     cgpu_assert(pParam->samplers[arr] && "cgpu_assert: Binding NULL Sampler!");
                     D3D12Util_CopyDescriptorHandle(pSamplerHeap,
@@ -599,7 +599,7 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
             case RT_TEXTURE_CUBE: {
                 cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL Textures(s)!");
                 CGpuTextureView_D3D12** Textures = (CGpuTextureView_D3D12**)pParam->textures;
-                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                for (uint32_t arr = 0; arr < arrayCount; arr++)
                 {
                     cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL Textures!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
@@ -610,6 +610,15 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
             break;
             case RT_BUFFER:
             case RT_BUFFER_RAW: {
+                cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
+                CGpuBuffer_D3D12** Buffers = (CGpuBuffer_D3D12**)pParam->buffers;
+                for (uint32_t arr = 0; arr < arrayCount; arr++)
+                {
+                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Textures!");
+                    D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
+                        { Buffers[arr]->mDxDescriptorHandles.ptr },
+                        Set->mCbvSrvUavHandle, arr + HeapOffset);
+                }
                 // TODO: CBV
             }
             break;
@@ -618,7 +627,7 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
             case RT_RW_BUFFER_RAW: {
                 cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
                 CGpuBuffer_D3D12** Buffers = (CGpuBuffer_D3D12**)pParam->buffers;
-                for (uint32_t arr = 0; arr < arrayCount; ++arr)
+                for (uint32_t arr = 0; arr < arrayCount; arr++)
                 {
                     cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,

@@ -75,7 +75,6 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
         }
     }
     // Collect all resources
-    uint32_t set_count = 0;
     RS->pipeline_type = PIPELINE_TYPE_NONE;
     eastl::vector<CGpuShaderResource> all_resources;
     eastl::vector<CGpuShaderResource> all_root_constants;

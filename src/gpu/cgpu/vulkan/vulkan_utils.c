@@ -508,7 +508,7 @@ void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
     {
         DECLARE_ZERO(VkPhysicalDeviceMemoryBudgetPropertiesEXT, budget)
         budget.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT;
-        VkPhysicalDeviceMemoryProperties2 mem_prop2 = {};
+        DECLARE_ZERO(VkPhysicalDeviceMemoryProperties2, mem_prop2)
         mem_prop2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
         mem_prop2.pNext = &budget;
         vkGetPhysicalDeviceMemoryProperties2KHR(VkAdapter->pPhysicalDevice, &mem_prop2);
@@ -538,7 +538,7 @@ void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
     #endif
 #endif
     {
-        VkPhysicalDeviceMemoryProperties mem_prop = {};
+        DECLARE_ZERO(VkPhysicalDeviceMemoryProperties, mem_prop)
         vkGetPhysicalDeviceMemoryProperties(VkAdapter->pPhysicalDevice, &mem_prop);
         for (uint32_t j = 0; j < mem_prop.memoryTypeCount; j++)
         {
