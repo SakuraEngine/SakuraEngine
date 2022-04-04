@@ -15,21 +15,20 @@ public:
 
     const uint32_t set;
     const uint32_t binding;
-    const uint32_t mip_base;
-    const uint32_t mip_count;
-    const uint32_t array_base;
-    const uint32_t array_count;
 
     TextureNode* get_texture_node();
     PassNode* get_pass_node();
+    inline uint32_t get_array_base() const { return handle.array_base; }
+    inline uint32_t get_array_count() const { return handle.array_count; }
+    inline uint32_t get_mip_base() const { return handle.mip_base; }
+    inline uint32_t get_mip_count() const { return handle.mip_count; }
+    inline ECGpuTextureDimension get_dimension() const { return handle.dim; }
 
 protected:
+    const TextureSRVHandle handle;
     TextureReadEdge(
-        uint32_t set, uint32_t binding, TextureHandle handle,
-        uint32_t mip_base, uint32_t mip_count,
-        uint32_t array_base, uint32_t array_count,
+        uint32_t set, uint32_t binding, TextureSRVHandle handle,
         ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE);
-    TextureHandle handle;
     const ECGpuResourceState requested_state = RESOURCE_STATE_SHADER_RESOURCE;
     // temporal handle with a lifespan of only one frame
 };
@@ -45,9 +44,12 @@ public:
 
     TextureNode* get_texture_node();
     PassNode* get_pass_node();
+    inline uint32_t get_array_base() const { return handle.array_base; }
+    inline uint32_t get_array_count() const { return handle.array_count; }
+    inline uint32_t get_mip_level() const { return handle.mip_level; }
 
 protected:
-    TextureRenderEdge(uint32_t mrt_index, TextureHandle handle,
+    TextureRenderEdge(uint32_t mrt_index, TextureRTVHandle handle,
         ECGpuResourceState state = RESOURCE_STATE_RENDER_TARGET)
         : RenderGraphEdge(ERelationshipType::TextureWrite)
         , mrt_index(mrt_index)
@@ -55,7 +57,7 @@ protected:
         , requested_state(state)
     {
     }
-    TextureHandle handle;
+    TextureRTVHandle handle;
     const ECGpuResourceState requested_state;
     // temporal handle with a lifespan of only one frame
 };
@@ -65,16 +67,11 @@ class BufferReadEdge : public RenderGraphEdge
 };
 
 inline TextureReadEdge::TextureReadEdge(
-    uint32_t set, uint32_t binding, TextureHandle handle,
-    uint32_t mip_base, uint32_t mip_count,
-    uint32_t array_base, uint32_t array_count, ECGpuResourceState state)
+    uint32_t set, uint32_t binding, TextureSRVHandle handle,
+    ECGpuResourceState state)
     : RenderGraphEdge(ERelationshipType::TextureRead)
     , set(set)
     , binding(binding)
-    , mip_base(mip_base)
-    , mip_count(mip_count)
-    , array_base(array_base)
-    , array_count(array_count)
     , handle(handle)
     , requested_state(state)
 

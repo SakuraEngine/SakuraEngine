@@ -54,6 +54,7 @@ struct ObjectHandle<EObjectType::Texture> {
         friend class TextureReadEdge;
         ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
         ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
+        ShaderReadHandle dimension(ECGpuTextureDimension dim) const;
         const handle_t _this;
 
     protected:
@@ -64,19 +65,21 @@ struct ObjectHandle<EObjectType::Texture> {
         uint32_t mip_count = 1;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
+        ECGpuTextureDimension dim = TEX_DIMENSION_2D;
     };
     struct ShaderWriteHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
-        friend class TextureWriteEdge;
-        ShaderWriteHandle load_action(ECGpuLoadAction action) const;
-        ShaderWriteHandle store_action(ECGpuStoreAction action) const;
+        friend class TextureRenderEdge;
         const handle_t _this;
+        ShaderWriteHandle write_mip(uint32_t mip_level);
+        ShaderWriteHandle write_array(uint32_t base, uint32_t count);
 
     protected:
         ShaderWriteHandle(const handle_t _this);
-        ECGpuLoadAction load_act = LOAD_ACTION_DONTCARE;
-        ECGpuStoreAction store_act = STORE_ACTION_STORE;
+        uint32_t mip_level;
+        uint32_t array_base;
+        uint32_t array_count;
     };
     inline operator handle_t() const { return handle; }
     // read
@@ -85,9 +88,11 @@ struct ObjectHandle<EObjectType::Texture> {
     ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
     // write
     inline operator ShaderWriteHandle() const { return ShaderWriteHandle(handle); }
-    ShaderWriteHandle load_action(ECGpuLoadAction action) const;
-    ShaderWriteHandle store_action(ECGpuStoreAction action) const;
+    ShaderWriteHandle write_mip(uint32_t mip_level);
+    ShaderWriteHandle write_array(uint32_t base, uint32_t count);
+
     friend class RenderGraph;
+    friend class RenderGraphBackend;
     friend class TextureNode;
     friend class TextureReadEdge;
     friend class TextureRenderEdge;
@@ -150,6 +155,13 @@ inline TextureSRVHandle TextureSRVHandle::read_array(uint32_t base, uint32_t cou
     return _;
 }
 
+inline TextureSRVHandle TextureSRVHandle::dimension(ECGpuTextureDimension dim) const
+{
+    ShaderReadHandle _ = *this;
+    _.dim = dim;
+    return _;
+}
+
 inline TextureSRVHandle::ShaderReadHandle(const handle_t _this,
     const uint32_t mip_base,
     const uint32_t mip_count,
@@ -184,31 +196,10 @@ inline TextureRTVHandle::ShaderWriteHandle(const handle_t _this)
 {
 }
 
-inline TextureRTVHandle TextureRTVHandle::load_action(ECGpuLoadAction action) const
+inline TextureRTVHandle TextureRTVHandle::write_mip(uint32_t mip)
 {
     TextureRTVHandle _ = *this;
-    _.load_act = action;
-    return _;
-}
-
-inline TextureRTVHandle TextureRTVHandle::store_action(ECGpuStoreAction action) const
-{
-    TextureRTVHandle _ = *this;
-    _.store_act = action;
-    return _;
-}
-
-inline TextureRTVHandle TextureHandle::load_action(ECGpuLoadAction action) const
-{
-    TextureRTVHandle _ = *this;
-    _.load_act = action;
-    return _;
-}
-
-inline TextureRTVHandle TextureHandle::store_action(ECGpuStoreAction action) const
-{
-    TextureRTVHandle _ = *this;
-    _.store_act = action;
+    _.mip_level = mip;
     return _;
 }
 

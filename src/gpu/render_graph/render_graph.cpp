@@ -253,14 +253,14 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                     update.binding_type = RT_TEXTURE;
                     CGpuTextureViewDescriptor view_desc = {};
                     view_desc.texture = resolve(*texture_readed);
-                    view_desc.base_array_layer = 0;
-                    view_desc.array_layer_count = 1;
-                    view_desc.base_mip_level = 0;
-                    view_desc.mip_level_count = 1;
+                    view_desc.base_array_layer = read_edge->get_array_base();
+                    view_desc.array_layer_count = read_edge->get_array_count();
+                    view_desc.base_mip_level = read_edge->get_mip_base();
+                    view_desc.mip_level_count = read_edge->get_mip_count();
                     view_desc.aspects = TVA_COLOR;
                     view_desc.format = (ECGpuFormat)view_desc.texture->format;
                     view_desc.usages = TVU_SRV;
-                    view_desc.dims = TEX_DIMENSION_2D;
+                    view_desc.dims = read_edge->get_dimension();
                     srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
                     update.textures = &srvs[e_idx];
                     desc_set_updates.emplace_back(update);
@@ -285,10 +285,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         // TODO: MSAA
         CGpuTextureViewDescriptor view_desc = {};
         view_desc.texture = resolve(*texture_target);
-        // TODO: add view_desc on resource edges
-        view_desc.base_array_layer = 0;
-        view_desc.array_layer_count = 1;
-        view_desc.base_mip_level = 0;
+        view_desc.base_array_layer = write_edge->get_array_base();
+        view_desc.array_layer_count = write_edge->get_array_count();
+        view_desc.base_mip_level = write_edge->get_mip_level();
         view_desc.mip_level_count = 1;
         view_desc.aspects = TVA_COLOR;
         view_desc.format = (ECGpuFormat)view_desc.texture->format;
