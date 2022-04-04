@@ -183,13 +183,13 @@ int main(int argc, char* argv[])
                     .set_pipeline(pipeline)
                     .write(0, back_buffer, LOAD_ACTION_CLEAR);
             },
-            [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
-                cgpu_render_encoder_set_viewport(encoder,
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+                cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)to_import->width / 3, (float)to_import->height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
-                cgpu_render_encoder_draw(encoder, 3, 0);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_draw(stack.encoder, 3, 0);
             });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
@@ -197,13 +197,13 @@ int main(int argc, char* argv[])
                     .set_pipeline(pipeline)
                     .write(0, back_buffer, LOAD_ACTION_LOAD);
             },
-            [=](render_graph::RenderGraph& g, CGpuRenderPassEncoderId encoder) {
-                cgpu_render_encoder_set_viewport(encoder,
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+                cgpu_render_encoder_set_viewport(stack.encoder,
                     2 * (float)to_import->width / 3, 0.0f,
                     (float)to_import->width / 3, (float)to_import->height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(encoder, 0, 0, to_import->width, to_import->height);
-                cgpu_render_encoder_draw(encoder, 3, 0);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_draw(stack.encoder, 3, 0);
             });
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
