@@ -531,6 +531,8 @@ typedef enum ECGpuBufferCreationFlag
     BCF_ESRAM = 0x08,
     /// Flag to specify not to allocate descriptors for the resource
     BCF_NO_DESCRIPTOR_VIEW_CREATION = 0x10,
+    /// Flag to specify to create GPUOnly buffer as Host visible
+    BCF_HOST_VISIBLE = 0x20,
 #ifdef CGPU_USE_METAL
     /* ICB Flags */
     /// Inherit pipeline in ICB

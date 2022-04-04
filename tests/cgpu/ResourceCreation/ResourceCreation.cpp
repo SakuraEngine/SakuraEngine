@@ -156,7 +156,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
 TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
 {
     DECLARE_ZERO(CGpuBufferDescriptor, desc)
-    desc.flags = BCF_PERSISTENT_MAP_BIT;
+    desc.flags = BCF_PERSISTENT_MAP_BIT | BCF_HOST_VISIBLE;
     desc.descriptors = RT_BUFFER;
     desc.memory_usage = MEM_USAGE_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
