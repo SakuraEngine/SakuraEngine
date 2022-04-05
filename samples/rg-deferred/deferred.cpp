@@ -9,6 +9,7 @@ thread_local CGpuSwapChainId swapchain;
 thread_local uint32_t backbuffer_index;
 thread_local CGpuFenceId present_fence;
 
+CubeGeometry::InstanceData CubeGeometry::instance_data;
 ECGpuFormat gbuffer_formats[] = { PF_R8G8B8A8_UNORM, PF_R16G16B16A16_SNORM };
 
 #if _WINDOWS
@@ -25,6 +26,7 @@ thread_local CGpuSamplerId static_sampler;
 
 thread_local CGpuBufferId index_buffer;
 thread_local CGpuBufferId vertex_buffer;
+thread_local CGpuBufferId instance_buffer;
 
 thread_local CGpuRootSignatureId gbuffer_root_sig;
 thread_local CGpuRenderPipelineId gbuffer_pipeline;
@@ -93,7 +95,7 @@ void create_api_objects()
     upload_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = RT_NONE;
     upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY;
-    upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
+    upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices) + sizeof(CubeGeometry::InstanceData);
     auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGpuBufferDescriptor vb_desc = {};
     vb_desc.name = "VertexBuffer";
@@ -109,6 +111,13 @@ void create_api_objects()
     ib_desc.memory_usage = MEM_USAGE_GPU_ONLY;
     ib_desc.size = sizeof(CubeGeometry::g_Indices);
     index_buffer = cgpu_create_buffer(device, &ib_desc);
+    CGpuBufferDescriptor inb_desc = {};
+    inb_desc.name = "InstanceBuffer";
+    inb_desc.flags = BCF_OWN_MEMORY_BIT;
+    inb_desc.descriptors = RT_VERTEX_BUFFER;
+    inb_desc.memory_usage = MEM_USAGE_GPU_ONLY;
+    inb_desc.size = sizeof(CubeGeometry::InstanceData);
+    instance_buffer = cgpu_create_buffer(device, &inb_desc);
     auto pool_desc = CGpuCommandPoolDescriptor();
     auto cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
     auto cmd_desc = CGpuCommandBufferDescriptor();
@@ -136,7 +145,34 @@ void create_api_objects()
     ib_cpy.src_offset = sizeof(CubeGeometry);
     ib_cpy.size = sizeof(CubeGeometry::g_Indices);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
-    CGpuBufferBarrier barriers[2];
+    // wvp
+    auto world = smath::make_transform(
+        { 0.f, 0.f, 0.f },                        // translation
+        2 * sakura::math::Vector3f::vector_one(), // scale
+        sakura::math::Quaternion::identity()      // quat
+    );
+    // camera
+    auto view = smath::look_at_matrix(
+        { 0.f, 2.5f, 2.5f } /*eye*/,
+        { 0.f, 0.f, 0.f } /*at*/);
+    auto proj = smath::perspective_fov(
+        3.1415926f / 2.f,
+        (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
+        1.f, 1000.f);
+    CubeGeometry::instance_data.world = smath::transpose(world);
+    CubeGeometry::instance_data.view_proj = smath::transpose(smath::multiply(view, proj));
+    {
+        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices),
+            &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
+    }
+    CGpuBufferToBufferTransfer istb_cpy = {};
+    istb_cpy.dst = instance_buffer;
+    istb_cpy.dst_offset = 0;
+    istb_cpy.src = upload_buffer;
+    istb_cpy.src_offset = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
+    istb_cpy.size = sizeof(CubeGeometry::instance_data);
+    cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &istb_cpy);
+    CGpuBufferBarrier barriers[3];
     CGpuBufferBarrier& vb_barrier = barriers[0];
     vb_barrier.buffer = vertex_buffer;
     vb_barrier.src_state = RESOURCE_STATE_COPY_DEST;
@@ -145,9 +181,13 @@ void create_api_objects()
     ib_barrier.buffer = index_buffer;
     ib_barrier.src_state = RESOURCE_STATE_COPY_DEST;
     ib_barrier.dst_state = RESOURCE_STATE_INDEX_BUFFER;
+    CGpuBufferBarrier& ist_barrier = barriers[2];
+    ist_barrier.buffer = instance_buffer;
+    ist_barrier.src_state = RESOURCE_STATE_COPY_DEST;
+    ist_barrier.dst_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
     CGpuResourceBarrierDescriptor barrier_desc = {};
     barrier_desc.buffer_barriers = barriers;
-    barrier_desc.buffer_barriers_count = 2;
+    barrier_desc.buffer_barriers_count = 3;
     cgpu_cmd_resource_barrier(cpy_cmd, &barrier_desc);
     cgpu_cmd_end(cpy_cmd);
     CGpuQueueSubmitDescriptor cpy_submit = {};
@@ -195,11 +235,13 @@ void create_gbuffer_render_pipeline()
     rs_desc.root_constant_names = &root_constant_name;
     gbuffer_root_sig = cgpu_create_root_signature(device, &rs_desc);
     CGpuVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "POSITION", PF_R32G32B32_SFLOAT, 0, 0, 0, INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", PF_R32G32_SFLOAT, 1, 1, 0, INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "NORMAL", PF_R8G8B8A8_SNORM, 2, 2, 0, INPUT_RATE_VERTEX };
-    vertex_layout.attributes[3] = { "TANGENT", PF_R8G8B8A8_SNORM, 3, 3, 0, INPUT_RATE_VERTEX };
-    vertex_layout.attribute_count = 4;
+    vertex_layout.attributes[0] = { "POSITION", PF_R32G32B32_SFLOAT, 0, 0, 0, INPUT_RATE_VERTEX, 1 };
+    vertex_layout.attributes[1] = { "TEXCOORD", PF_R32G32_SFLOAT, 1, 1, 0, INPUT_RATE_VERTEX, 1 };
+    vertex_layout.attributes[2] = { "NORMAL", PF_R8G8B8A8_SNORM, 2, 2, 0, INPUT_RATE_VERTEX, 1 };
+    vertex_layout.attributes[3] = { "TANGENT", PF_R8G8B8A8_SNORM, 3, 3, 0, INPUT_RATE_VERTEX, 1 };
+    vertex_layout.attributes[4] = { "MODEL", PF_R32G32B32A32_SFLOAT, 4, 4, 0, INPUT_RATE_INSTANCE, 4 };
+    vertex_layout.attributes[5] = { "VIEWPROJ", PF_R32G32B32A32_SFLOAT, 5, 5, 0, INPUT_RATE_INSTANCE, 4 };
+    vertex_layout.attribute_count = 6;
     CGpuRenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = gbuffer_root_sig;
     rp_desc.prim_topology = PRIM_TOPO_TRI_LIST;
@@ -281,6 +323,7 @@ void finalize()
     cgpu_free_fence(present_fence);
     cgpu_free_buffer(index_buffer);
     cgpu_free_buffer(vertex_buffer);
+    cgpu_free_buffer(instance_buffer);
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
     cgpu_free_render_pipeline(gbuffer_pipeline);
@@ -293,13 +336,6 @@ void finalize()
     cgpu_free_instance(instance);
 }
 
-namespace smath = sakura::math;
-typedef struct GBufferPushConstants {
-    sakura::math::float4x4 world;
-    sakura::math::float4x4 view_proj;
-} GBufferPushConstants;
-static GBufferPushConstants gbuffer_data = {};
-
 struct LightingPushConstants {
     int bFlipUVX = 0;
     int bFlipUVY = 0;
@@ -308,23 +344,6 @@ static LightingPushConstants lighting_data = {};
 
 int main(int argc, char* argv[])
 {
-    // wvp
-    auto world = smath::make_transform(
-        { 0.f, 0.f, 0.f },                        // translation
-        2 * sakura::math::Vector3f::vector_one(), // scale
-        sakura::math::Quaternion::identity()      // quat
-    );
-    // camera
-    auto view = smath::look_at_matrix(
-        { 0.f, 2.5f, 2.5f } /*eye*/,
-        { 0.f, 0.f, 0.f } /*at*/);
-    auto proj = smath::perspective_fov(
-        3.1415926f / 2.f,
-        (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
-        1.f, 1000.f);
-    gbuffer_data.world = smath::transpose(world);
-    gbuffer_data.view_proj = smath::transpose(smath::multiply(view, proj));
-
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     sdl_window = SDL_CreateWindow(gCGpuBackendNames[backend],
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -396,19 +415,25 @@ int main(int argc, char* argv[])
                     (float)to_import->width, (float)to_import->height,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
-                CGpuBufferId vertex_buffers[4] = { vertex_buffer, vertex_buffer, vertex_buffer, vertex_buffer };
-                const uint32_t strides[4] = {
-                    sizeof(sakura::math::Vector3f), sizeof(sakura::math::Vector2f),
-                    sizeof(uint32_t), sizeof(uint32_t)
+                CGpuBufferId vertex_buffers[6] = {
+                    vertex_buffer, vertex_buffer, vertex_buffer,
+                    vertex_buffer, instance_buffer, instance_buffer
                 };
-                const uint32_t offsets[4] = {
+                const uint32_t strides[6] = {
+                    sizeof(sakura::math::Vector3f), sizeof(sakura::math::Vector2f),
+                    sizeof(uint32_t), sizeof(uint32_t),
+                    sizeof(CubeGeometry::InstanceData::world),
+                    sizeof(CubeGeometry::InstanceData::view_proj)
+                };
+                const uint32_t offsets[6] = {
                     offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords),
-                    offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents)
+                    offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents),
+                    offsetof(CubeGeometry::InstanceData, world),
+                    offsetof(CubeGeometry::InstanceData, view_proj)
                 };
                 cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
-                cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 4, vertex_buffers, strides, offsets);
-                cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "root_constants", &gbuffer_data);
-                cgpu_render_encoder_draw_indexed(stack.encoder, 36, 0, 0);
+                cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 6, vertex_buffers, strides, offsets);
+                cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
             });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {

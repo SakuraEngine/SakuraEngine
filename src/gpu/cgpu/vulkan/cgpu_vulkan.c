@@ -854,26 +854,29 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
         for (uint32_t i = 0; i < attrib_count; ++i)
         {
             const CGpuVertexAttribute* attrib = &(desc->vertex_layout->attributes[i]);
+            const uint32_t array_size = attrib->array_size ? attrib->array_size : 1;
+
             if (binding_value != attrib->binding)
             {
                 binding_value = attrib->binding;
-                ++input_binding_count;
+                input_binding_count += 1;
             }
-            input_bindings[input_binding_count - 1].binding = binding_value;
+            VkVertexInputBindingDescription* current_binding = &input_bindings[input_binding_count - 1];
+            current_binding->binding = binding_value;
             if (attrib->rate == INPUT_RATE_INSTANCE)
-            {
-                input_bindings[input_binding_count - 1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
-            }
+                current_binding->inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
             else
+                current_binding->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            current_binding->stride += array_size * FormatUtil_BitSizeOfBlock(attrib->format) / 8;
+            
+            for(uint32_t j = 0; j < array_size; j++)
             {
-                input_bindings[input_binding_count - 1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_attributes[input_attribute_count].location = input_attribute_count;
+                input_attributes[input_attribute_count].binding = attrib->binding;
+                input_attributes[input_attribute_count].format = VkUtil_FormatTranslateToVk(attrib->format);
+                input_attributes[input_attribute_count].offset = attrib->offset + j * FormatUtil_BitSizeOfBlock(attrib->format) / 8;
+                ++input_attribute_count;
             }
-            input_bindings[input_binding_count - 1].stride += FormatUtil_BitSizeOfBlock(attrib->format) / 8;
-            input_attributes[input_attribute_count].location = attrib->location;
-            input_attributes[input_attribute_count].binding = attrib->binding;
-            input_attributes[input_attribute_count].format = VkUtil_FormatTranslateToVk(attrib->format);
-            input_attributes[input_attribute_count].offset = attrib->offset;
-            ++input_attribute_count;
         }
     }
     VkPipelineVertexInputStateCreateInfo vi = {
