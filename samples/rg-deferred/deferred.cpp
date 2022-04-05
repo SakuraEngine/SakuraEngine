@@ -159,8 +159,8 @@ void create_api_objects()
         3.1415926f / 2.f,
         (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
         1.f, 1000.f);
-    CubeGeometry::instance_data.world = smath::transpose(world);
-    CubeGeometry::instance_data.view_proj = smath::transpose(smath::multiply(view, proj));
+    CubeGeometry::instance_data.world = world;
+    CubeGeometry::instance_data.view_proj = smath::multiply(view, proj);
     {
         memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices),
             &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
