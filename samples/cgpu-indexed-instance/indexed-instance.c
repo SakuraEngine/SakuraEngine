@@ -281,9 +281,9 @@ void create_render_pipeline()
     }
     CGpuVertexLayout vertex_layout = {
         .attributes = {
-            { "POSITION", PF_R32G32B32_SFLOAT, 0, 0, 0, INPUT_RATE_VERTEX },
-            { "COLOR", PF_R32G32B32_SFLOAT, 0, 1, 12, INPUT_RATE_VERTEX },
-            { "TEXCOORD", PF_R32G32_SFLOAT, 0, 2, 24, INPUT_RATE_VERTEX },
+            { "POSITION", 1, PF_R32G32B32_SFLOAT, 0, 0, sizeof(float) * 3, INPUT_RATE_VERTEX },
+            { "COLOR", 1, PF_R32G32B32_SFLOAT, 0, sizeof(float) * 3, sizeof(float) * 3, INPUT_RATE_VERTEX },
+            { "TEXCOORD", 1, PF_R32G32_SFLOAT, 0, sizeof(float) * 6, sizeof(float) * 2, INPUT_RATE_VERTEX },
         },
         .attribute_count = 3
     };

@@ -957,12 +957,12 @@ typedef struct CGpuRasterizerStateDescriptor {
 typedef struct CGpuVertexAttribute {
     // TODO: handle this in a better way
     char8_t semantic_name[64];
+    uint32_t array_size;
     ECGpuFormat format;
     uint32_t binding;
-    uint32_t location;
     uint32_t offset;
+    uint32_t elem_stride;
     ECGpuVertexInputRate rate;
-    uint32_t array_size;
 } CGpuVertexAttribute;
 
 typedef struct CGpuVertexLayout {

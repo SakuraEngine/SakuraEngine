@@ -127,18 +127,18 @@ int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_c
     CGpuVertexLayout layout = {};
     uint32_t binding = 0;
     layout.attribute_count = (uint32_t)src->attributes_count;
-    for (uint32_t i = 0, location = 0; i < src->attributes_count; i++)
+    for (uint32_t i = 0; i < src->attributes_count; i++)
     {
         const auto gltf_attrib = src->attributes + i;
         const char8_t* attr_name = gGLTFAttributeTypeLUT[gltf_attrib->type];
         strcpy(layout.attributes[i].semantic_name, attr_name);
         layout.attributes[i].rate = INPUT_RATE_VERTEX;
+        layout.attributes[i].array_size = 1;
         layout.attributes[i].format = GLTFUtil_ComponentTypeToFormat(gltf_attrib->data->type, gltf_attrib->data->component_type);
-        layout.attributes[i].binding = binding;
-        binding += 1;
+        layout.attributes[i].binding = binding++;
         layout.attributes[i].offset = 0;
-        layout.attributes[i].location = location;
-        location = location + 1;
+        layout.attributes[i].elem_stride =
+            FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
     }
     newPrim.vertex_layout_id_ = (uint32_t)RenderBlackboard::AddVertexLayout(layout);
     primitives_.emplace_back(eastl::move(newPrim));

@@ -13,7 +13,7 @@ CubeGeometry::InstanceData CubeGeometry::instance_data;
 ECGpuFormat gbuffer_formats[] = { PF_R8G8B8A8_UNORM, PF_R16G16B16A16_SNORM };
 
 #if _WINDOWS
-thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
+thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #else
 thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #endif
@@ -172,7 +172,7 @@ void create_api_objects()
     istb_cpy.src_offset = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
     istb_cpy.size = sizeof(CubeGeometry::instance_data);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &istb_cpy);
-    CGpuBufferBarrier barriers[3];
+    CGpuBufferBarrier barriers[3] = {};
     CGpuBufferBarrier& vb_barrier = barriers[0];
     vb_barrier.buffer = vertex_buffer;
     vb_barrier.src_state = RESOURCE_STATE_COPY_DEST;
@@ -235,12 +235,12 @@ void create_gbuffer_render_pipeline()
     rs_desc.root_constant_names = &root_constant_name;
     gbuffer_root_sig = cgpu_create_root_signature(device, &rs_desc);
     CGpuVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "POSITION", PF_R32G32B32_SFLOAT, 0, 0, 0, INPUT_RATE_VERTEX, 1 };
-    vertex_layout.attributes[1] = { "TEXCOORD", PF_R32G32_SFLOAT, 1, 1, 0, INPUT_RATE_VERTEX, 1 };
-    vertex_layout.attributes[2] = { "NORMAL", PF_R8G8B8A8_SNORM, 2, 2, 0, INPUT_RATE_VERTEX, 1 };
-    vertex_layout.attributes[3] = { "TANGENT", PF_R8G8B8A8_SNORM, 3, 3, 0, INPUT_RATE_VERTEX, 1 };
-    vertex_layout.attributes[4] = { "MODEL", PF_R32G32B32A32_SFLOAT, 4, 4, 0, INPUT_RATE_INSTANCE, 4 };
-    vertex_layout.attributes[5] = { "VIEWPROJ", PF_R32G32B32A32_SFLOAT, 5, 5, 0, INPUT_RATE_INSTANCE, 4 };
+    vertex_layout.attributes[0] = { "POSITION", 1, PF_R32G32B32_SFLOAT, 0, 0, sizeof(smath::Vector3f), INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, PF_R32G32_SFLOAT, 1, 0, sizeof(smath::Vector2f), INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { "NORMAL", 1, PF_R8G8B8A8_SNORM, 2, 0, sizeof(uint32_t), INPUT_RATE_VERTEX };
+    vertex_layout.attributes[3] = { "TANGENT", 1, PF_R8G8B8A8_SNORM, 3, 0, sizeof(uint32_t), INPUT_RATE_VERTEX };
+    vertex_layout.attributes[4] = { "MODEL", 4, PF_R32G32B32A32_SFLOAT, 4, 0, sizeof(smath::float4x4), INPUT_RATE_INSTANCE };
+    vertex_layout.attributes[5] = { "VIEWPROJ", 4, PF_R32G32B32A32_SFLOAT, 5, 0, sizeof(smath::float4x4), INPUT_RATE_INSTANCE };
     vertex_layout.attribute_count = 6;
     CGpuRenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = gbuffer_root_sig;
@@ -344,7 +344,7 @@ static LightingPushConstants lighting_data = {};
 
 int main(int argc, char* argv[])
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
     sdl_window = SDL_CreateWindow(gCGpuBackendNames[backend],
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,

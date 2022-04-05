@@ -710,34 +710,37 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_d3d12(CGpuDeviceId device, cons
     CGpuRenderPipeline_D3D12* PPL = cgpu_new<CGpuRenderPipeline_D3D12>();
     CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)desc->root_signature;
     // Vertex input state
-    uint32_t input_elementCount = desc->vertex_layout ? desc->vertex_layout->attribute_count : 0;
     DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[MAX_VERTEX_ATTRIBS]);
+    uint32_t elem_count = 0;
     if (desc->vertex_layout != nullptr)
     {
         for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
         {
             const CGpuVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
-            // TODO: DO SOMETHING WITH THIS FUCKING SEMANTIC STRING & INDEX
-            input_elements[attrib_index].SemanticIndex = 0;
-            input_elements[attrib_index].SemanticName = attrib->semantic_name;
-            input_elements[attrib_index].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
-            input_elements[attrib_index].InputSlot = attrib->binding;
-            input_elements[attrib_index].AlignedByteOffset = attrib->offset;
-            if (attrib->rate == INPUT_RATE_INSTANCE)
+            for (uint32_t arr_index = 0; arr_index < attrib->array_size; arr_index++)
             {
-                input_elements[attrib_index].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-                input_elements[attrib_index].InstanceDataStepRate = 1;
-            }
-            else
-            {
-                input_elements[attrib_index].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-                input_elements[attrib_index].InstanceDataStepRate = 0;
+                input_elements[elem_count].SemanticIndex = arr_index;
+                input_elements[elem_count].SemanticName = attrib->semantic_name;
+                input_elements[elem_count].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
+                input_elements[elem_count].InputSlot = attrib->binding;
+                input_elements[elem_count].AlignedByteOffset = attrib->offset + arr_index * FormatUtil_BitSizeOfBlock(attrib->format) / 8;
+                if (attrib->rate == INPUT_RATE_INSTANCE)
+                {
+                    input_elements[elem_count].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+                    input_elements[elem_count].InstanceDataStepRate = 1;
+                }
+                else
+                {
+                    input_elements[elem_count].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+                    input_elements[elem_count].InstanceDataStepRate = 0;
+                }
+                elem_count++;
             }
         }
     }
     DECLARE_ZERO(D3D12_INPUT_LAYOUT_DESC, input_layout_desc);
-    input_layout_desc.pInputElementDescs = input_elementCount ? input_elements : NULL;
-    input_layout_desc.NumElements = input_elementCount;
+    input_layout_desc.pInputElementDescs = elem_count ? input_elements : NULL;
+    input_layout_desc.NumElements = elem_count;
     // Shader stages
     DECLARE_ZERO(D3D12_SHADER_BYTECODE, VS);
     DECLARE_ZERO(D3D12_SHADER_BYTECODE, PS);

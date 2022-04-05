@@ -89,11 +89,11 @@ SWAModuleId swa_create_module_wasm3(SWARuntimeId runtime, const struct SWAModule
     result = m3_LinkLibC(module);
     if (result) goto on_error;
     // Link WASI
-    result = m3_LinkWASI(module);
-    if (result) goto on_error;
+    // result = m3_LinkWASI(module);
+    // if (result) goto on_error;
     // Link tracer
-    result = m3_LinkTracer(module);
-    if (result) goto on_error;
+    // result = m3_LinkTracer(module);
+    // if (result) goto on_error;
     // TODO: Link runtime functions
     return &MW->super;
 on_error:

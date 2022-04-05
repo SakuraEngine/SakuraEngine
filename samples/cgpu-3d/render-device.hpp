@@ -21,7 +21,7 @@ public:
 
     SDL_Window* GetSDLWindow() { return sdl_window_; }
 
-    static const auto SampleCount = SAMPLE_COUNT_8;
+    static const auto SampleCount = SAMPLE_COUNT_4;
 
 protected:
     // window

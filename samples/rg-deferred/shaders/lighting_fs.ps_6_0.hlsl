@@ -1,3 +1,5 @@
+#pragma pack_matrix(row_major)
+
 [[vk::binding(0, 0)]]
 Texture2D<float4> gbuffer_color : register(t0, space0);
 [[vk::binding(1, 0)]]
