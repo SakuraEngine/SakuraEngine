@@ -1,3 +1,5 @@
+#pragma pack_matrix(row_major)
+
 struct VSOut
 {
     float4 position : SV_POSITION;

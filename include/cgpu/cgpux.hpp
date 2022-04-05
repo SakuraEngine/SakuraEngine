@@ -23,7 +23,6 @@ struct equal_to<CGpuVertexLayout> {
         {
             const bool equal = (a.attributes[i].binding == b.attributes[i].binding) &&
                                (a.attributes[i].format == b.attributes[i].format) &&
-                               (a.attributes[i].location == b.attributes[i].location) &&
                                (a.attributes[i].offset == b.attributes[i].offset) &&
                                (a.attributes[i].rate == b.attributes[i].rate) &&
                                (0 == strcmp(a.attributes[i].semantic_name, b.attributes[i].semantic_name));

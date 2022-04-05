@@ -50,7 +50,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
         CGpuTextureDescriptor resolve_desc = {};
         eastl::string name2 = "MSAAResolve";
         resolve_desc.name = name2.c_str();
-        resolve_desc.descriptors = RT_TEXTURE;
+        resolve_desc.descriptors = RT_TEXTURE | RT_RENDER_TARGET;
         resolve_desc.flags = TCF_OWN_MEMORY_BIT;
         resolve_desc.width = swapchain_->back_buffers[0]->width;
         resolve_desc.height = swapchain_->back_buffers[0]->height;
@@ -133,7 +133,7 @@ void RenderWindow::BeginScreenPass(class RenderContext* ctx)
     const CGpuTextureId back_render_target = msaa_render_targets_[backbuffer_index_];
     CGpuColorAttachment screen_attachment = {};
     screen_attachment.view = msaa_render_target_views_[backbuffer_index_];
-    screen_attachment.resolve_view = views_[backbuffer_index_];
+    screen_attachment.resolve_view = SampleCount == SAMPLE_COUNT_1 ? nullptr : views_[backbuffer_index_];
     screen_attachment.load_action = LOAD_ACTION_CLEAR;
     screen_attachment.store_action = SampleCount == SAMPLE_COUNT_1 ? STORE_ACTION_STORE : STORE_ACTION_DISCARD;
     screen_attachment.clear_color = fastclear_0000;
@@ -227,9 +227,9 @@ void RenderDevice::Initialize(ECGpuBackend backend, RenderWindow** pprender_wind
     // create instance
     CGpuInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = false;
-    instance_desc.enable_gpu_based_validation = false;
-    instance_desc.enable_set_name = false;
+    instance_desc.enable_debug_layer = true;
+    instance_desc.enable_gpu_based_validation = true;
+    instance_desc.enable_set_name = true;
     instance_ = cgpu_create_instance(&instance_desc);
     {
         uint32_t adapters_count = 0;

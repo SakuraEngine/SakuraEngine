@@ -861,20 +861,20 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
                 binding_value = attrib->binding;
                 input_binding_count += 1;
             }
-            VkVertexInputBindingDescription* current_binding = &input_bindings[input_binding_count - 1];
+            VkVertexInputBindingDescription* current_binding = &input_bindings[binding_value];
             current_binding->binding = binding_value;
             if (attrib->rate == INPUT_RATE_INSTANCE)
                 current_binding->inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
             else
                 current_binding->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            current_binding->stride += array_size * FormatUtil_BitSizeOfBlock(attrib->format) / 8;
+            current_binding->stride += attrib->elem_stride;
             
             for(uint32_t j = 0; j < array_size; j++)
             {
                 input_attributes[input_attribute_count].location = input_attribute_count;
                 input_attributes[input_attribute_count].binding = attrib->binding;
                 input_attributes[input_attribute_count].format = VkUtil_FormatTranslateToVk(attrib->format);
-                input_attributes[input_attribute_count].offset = attrib->offset + j * FormatUtil_BitSizeOfBlock(attrib->format) / 8;
+                input_attributes[input_attribute_count].offset = attrib->offset + (j * FormatUtil_BitSizeOfBlock(attrib->format) / 8);
                 ++input_attribute_count;
             }
         }
