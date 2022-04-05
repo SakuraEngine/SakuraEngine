@@ -962,6 +962,7 @@ typedef struct CGpuVertexAttribute {
     uint32_t location;
     uint32_t offset;
     ECGpuVertexInputRate rate;
+    uint32_t array_size;
 } CGpuVertexAttribute;
 
 typedef struct CGpuVertexLayout {

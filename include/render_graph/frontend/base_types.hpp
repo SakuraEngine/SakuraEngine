@@ -77,9 +77,9 @@ struct ObjectHandle<EObjectType::Texture> {
 
     protected:
         ShaderWriteHandle(const handle_t _this);
-        uint32_t mip_level;
-        uint32_t array_base;
-        uint32_t array_count;
+        uint32_t mip_level = 0;
+        uint32_t array_base = 0;
+        uint32_t array_count = 1;
     };
     inline operator handle_t() const { return handle; }
     // read

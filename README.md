@@ -61,5 +61,5 @@
 - GSL 4.0.0 Release (MIT)
 
 ## 接入的扩展API以及版本
-- nvapi R460, 2021/03/16 
+- nvapi R510
 - amd_ags 6.0.1

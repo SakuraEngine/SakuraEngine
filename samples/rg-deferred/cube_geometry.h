@@ -1,6 +1,14 @@
 #include <math/vectormath.hpp>
 
+namespace smath = sakura::math;
+
 struct CubeGeometry {
+    struct InstanceData {
+        smath::float4x4 world;
+        smath::float4x4 view_proj;
+    };
+    static InstanceData instance_data;
+
     const sakura::math::Vector3f g_Positions[24] = {
         { -0.5f, 0.5f, -0.5f }, // front face
         { 0.5f, -0.5f, -0.5f },
