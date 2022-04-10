@@ -286,6 +286,8 @@ RUNTIME_API void cgpu_cmd_begin(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdBegin)(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
 typedef void (*CGPUProcCmdTransferBufferToBuffer)(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
+RUNTIME_API void cgpu_cmd_transfer_texture_to_texture(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc);
+typedef void (*CGPUProcCmdTransferTextureToTexture)(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 typedef void (*CGPUProcCmdTransferBufferToTexture)(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
@@ -326,6 +328,8 @@ typedef void (*CGPUProcRendeEncoderBindIndexBuffer)(CGpuRenderPassEncoderId enco
     uint32_t index_stride, uint64_t offset);
 RUNTIME_API void cgpu_render_encoder_push_constants(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 typedef void (*CGPUProcRenderEncoderPushConstants)(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
+RUNTIME_API void cgpu_compute_encoder_push_constants(CGpuComputePassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
+typedef void (*CGPUProcComputeEncoderPushConstants)(CGpuComputePassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 typedef void (*CGPUProcRenderEncoderDraw)(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 RUNTIME_API void cgpu_render_encoder_draw_instanced(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
@@ -416,12 +420,14 @@ typedef struct CGpuProcTable {
     const CGPUProcCmdBegin cmd_begin;
     const CGPUProcCmdTransferBufferToBuffer cmd_transfer_buffer_to_buffer;
     const CGPUProcCmdTransferBufferToTexture cmd_transfer_buffer_to_texture;
+    const CGPUProcCmdTransferTextureToTexture cmd_transfer_texture_to_texture;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
     const CGPUProcCmdEnd cmd_end;
 
     // Compute CMDs
     const CGPUProcCmdBeginComputePass cmd_begin_compute_pass;
     const CGPUProcComputeEncoderBindDescriptorSet compute_encoder_bind_descriptor_set;
+    const CGPUProcComputeEncoderPushConstants compute_encoder_push_constants;
     const CGPUProcComputeEncoderBindPipeline compute_encoder_bind_pipeline;
     const CGPUProcComputeEncoderDispatch compute_encoder_dispatch;
     const CGPUProcCmdEndComputePass cmd_end_compute_pass;
@@ -745,6 +751,13 @@ typedef struct CGpuAcquireNextDescriptor {
     CGpuFenceId fence;
 } CGpuAcquireNextDescriptor;
 
+typedef struct CGpuTextureSubresource {
+    CGpuTextureViewAspects aspects;
+    uint32_t mip_level;
+    uint32_t base_array_layer;
+    uint32_t layer_count;
+} CGpuTextureSubresource;
+
 typedef struct CGpuBufferToBufferTransfer {
     CGpuBufferId dst;
     uint64_t dst_offset;
@@ -752,6 +765,13 @@ typedef struct CGpuBufferToBufferTransfer {
     uint64_t src_offset;
     uint64_t size;
 } CGpuBufferToBufferTransfer;
+
+typedef struct CGpuTextureToTextureTransfer {
+    CGpuTextureId src;
+    CGpuTextureSubresource src_subresource;
+    CGpuTextureId dst;
+    CGpuTextureSubresource dst_subresource;
+} CGpuTextureToTextureTransfer;
 
 typedef struct CGpuBufferToTextureTransfer {
     CGpuTextureId dst;

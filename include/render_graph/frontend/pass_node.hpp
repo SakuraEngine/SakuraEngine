@@ -10,14 +10,6 @@ namespace sakura
 namespace render_graph
 {
 
-struct RenderPassStack {
-    CGpuRenderPassEncoderId encoder;
-    gsl::span<CGpuDescriptorSetId> desc_sets;
-};
-
-using RenderPassExecuteFunction = eastl::function<
-    void(class RenderGraph&, RenderPassStack&)>;
-
 class PassNode : public RenderGraphNode
 {
 public:
@@ -29,6 +21,7 @@ public:
     const PassHandle get_handle() const;
     inline gsl::span<TextureReadEdge*> read_edges();
     inline gsl::span<TextureRenderEdge*> write_edges();
+    inline gsl::span<TextureReadWriteEdge*> readwrite_edges();
 
     const EPassType pass_type = EPassType::None;
     const uint32_t order;
@@ -37,8 +30,15 @@ protected:
     PassNode(EPassType pass_type, uint32_t order);
     eastl::vector<TextureReadEdge*> in_edges;
     eastl::vector<TextureRenderEdge*> out_edges;
+    eastl::vector<TextureReadWriteEdge*> inout_edges;
 };
 
+struct RenderPassStack {
+    CGpuRenderPassEncoderId encoder;
+    gsl::span<CGpuDescriptorSetId> desc_sets;
+};
+using RenderPassExecuteFunction = eastl::function<
+    void(class RenderGraph&, RenderPassStack&)>;
 class RenderPassNode : public PassNode
 {
 public:
@@ -54,6 +54,41 @@ protected:
     CGpuRenderPipelineId pipeline;
     ECGpuLoadAction load_actions[MAX_MRT_COUNT + 1];
     ECGpuStoreAction store_actions[MAX_MRT_COUNT + 1];
+};
+
+struct ComputePassStack {
+    CGpuComputePassEncoderId encoder;
+    gsl::span<CGpuDescriptorSetId> desc_sets;
+};
+using ComputePassExecuteFunction = eastl::function<
+    void(class RenderGraph&, ComputePassStack&)>;
+class ComputePassNode : public PassNode
+{
+public:
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+
+protected:
+    ComputePassNode(uint32_t order)
+        : PassNode(EPassType::Compute, order)
+    {
+    }
+    ComputePassExecuteFunction executor;
+    CGpuComputePipelineId pipeline;
+};
+
+class CopyPassNode : public PassNode
+{
+public:
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+
+protected:
+    CopyPassNode(uint32_t order)
+        : PassNode(EPassType::Copy, order)
+    {
+    }
+    eastl::vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>> t2ts;
 };
 
 class PresentPassNode : public PassNode
@@ -100,6 +135,10 @@ inline gsl::span<TextureReadEdge*> PassNode::read_edges()
 inline gsl::span<TextureRenderEdge*> PassNode::write_edges()
 {
     return gsl::span<TextureRenderEdge*>(out_edges.data(), out_edges.size());
+}
+inline gsl::span<TextureReadWriteEdge*> PassNode::readwrite_edges()
+{
+    return gsl::span<TextureReadWriteEdge*>(inout_edges.data(), inout_edges.size());
 }
 
 } // namespace render_graph

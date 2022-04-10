@@ -33,6 +33,8 @@ thread_local CGpuRenderPipelineId gbuffer_pipeline;
 
 thread_local CGpuRootSignatureId lighting_root_sig;
 thread_local CGpuRenderPipelineId lighting_pipeline;
+thread_local CGpuRootSignatureId lighting_cs_root_sig;
+thread_local CGpuComputePipelineId lighting_cs_pipeline;
 
 void create_api_objects()
 {
@@ -255,6 +257,38 @@ void create_gbuffer_render_pipeline()
     cgpu_free_shader_library(gbuffer_fs);
 }
 
+void create_lighting_compute_pipeline()
+{
+    uint32_t *cs_bytes, cs_length;
+    read_shader_bytes("rg-deferred/lighting_cs", &cs_bytes, &cs_length, backend);
+    CGpuShaderLibraryDescriptor cs_desc = {};
+    cs_desc.name = "LightingComputeShader";
+    cs_desc.stage = SHADER_STAGE_COMPUTE;
+    cs_desc.code = cs_bytes;
+    cs_desc.code_size = cs_length;
+    CGpuShaderLibraryId lighting_cs = cgpu_create_shader_library(device, &cs_desc);
+    free(cs_bytes);
+    CGpuPipelineShaderDescriptor pipeline_cs = {};
+    pipeline_cs.stage = SHADER_STAGE_COMPUTE;
+    pipeline_cs.entry = "main";
+    pipeline_cs.library = lighting_cs;
+    const char8_t* root_constant_name = "root_constants";
+    CGpuRootSignatureDescriptor rs_desc = {};
+    rs_desc.shaders = &pipeline_cs;
+    rs_desc.shader_count = 1;
+    rs_desc.root_constant_count = 1;
+    rs_desc.root_constant_names = &root_constant_name;
+    rs_desc.static_samplers = &static_sampler;
+    lighting_cs_root_sig = cgpu_create_root_signature(device, &rs_desc);
+    CGpuVertexLayout vertex_layout = {};
+    vertex_layout.attribute_count = 0;
+    CGpuComputePipelineDescriptor cp_desc = {};
+    cp_desc.compute_shader = &pipeline_cs;
+    cp_desc.root_signature = lighting_cs_root_sig;
+    lighting_cs_pipeline = cgpu_create_compute_pipeline(device, &cp_desc);
+    cgpu_free_shader_library(lighting_cs);
+}
+
 void create_lighting_render_pipeline()
 {
     uint32_t *vs_bytes, vs_length;
@@ -271,8 +305,8 @@ void create_lighting_render_pipeline()
     ps_desc.stage = SHADER_STAGE_FRAG;
     ps_desc.code = fs_bytes;
     ps_desc.code_size = fs_length;
-    CGpuShaderLibraryId screen_vs = cgpu_create_shader_library(device, &vs_desc);
-    CGpuShaderLibraryId lighting_fs = cgpu_create_shader_library(device, &ps_desc);
+    auto screen_vs = cgpu_create_shader_library(device, &vs_desc);
+    auto lighting_fs = cgpu_create_shader_library(device, &ps_desc);
     free(vs_bytes);
     free(fs_bytes);
     CGpuPipelineShaderDescriptor ppl_shaders[2];
@@ -313,6 +347,7 @@ void create_render_pipeline()
 {
     create_gbuffer_render_pipeline();
     create_lighting_render_pipeline();
+    create_lighting_compute_pipeline();
 }
 
 void finalize()
@@ -330,6 +365,8 @@ void finalize()
     cgpu_free_root_signature(gbuffer_root_sig);
     cgpu_free_render_pipeline(lighting_pipeline);
     cgpu_free_root_signature(lighting_root_sig);
+    cgpu_free_compute_pipeline(lighting_cs_pipeline);
+    cgpu_free_root_signature(lighting_cs_root_sig);
     cgpu_free_sampler(static_sampler);
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
@@ -341,6 +378,11 @@ struct LightingPushConstants {
     int bFlipUVY = 0;
 };
 static LightingPushConstants lighting_data = {};
+struct LightingCSPushConstants {
+    smath::Vector2f viewportSize = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT };
+    smath::Vector2f viewportOrigin = { 0, 0 };
+};
+static LightingCSPushConstants lighting_cs_data = {};
 
 int main(int argc, char* argv[])
 {
@@ -402,6 +444,14 @@ int main(int argc, char* argv[])
                     .format(gbuffer_formats[1])
                     .allow_render_target();
             });
+        auto lighting_buffer = graph->create_texture(
+            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                builder.set_name("lighting_buffer")
+                    .extent(to_import->width, to_import->height)
+                    .format((ECGpuFormat)to_import->format)
+                    .allow_render_target()
+                    .allow_readwrite();
+            });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("gbuffer_pass")
@@ -435,23 +485,50 @@ int main(int argc, char* argv[])
                 cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 6, vertex_buffers, strides, offsets);
                 cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
             });
-        graph->add_render_pass(
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                builder.set_name("light_pass")
-                    .set_pipeline(lighting_pipeline)
-                    .read(0, 0, gbuffer_color.read_mip(0, 1))
-                    .read(0, 1, gbuffer_normal)
-                    .write(0, back_buffer, LOAD_ACTION_CLEAR);
-            },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
-                cgpu_render_encoder_set_viewport(stack.encoder,
-                    0.0f, 0.0f,
-                    (float)to_import->width, (float)to_import->height,
-                    0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
-                cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "root_constants", &lighting_data);
-                cgpu_render_encoder_draw(stack.encoder, 6, 0);
-            });
+
+        if (false)
+        {
+            graph->add_render_pass(
+                [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                    builder.set_name("light_pass_fs")
+                        .set_pipeline(lighting_pipeline)
+                        .read(0, 0, gbuffer_color.read_mip(0, 1))
+                        .read(0, 1, gbuffer_normal)
+                        .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                },
+                [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+                    cgpu_render_encoder_set_viewport(stack.encoder,
+                        0.0f, 0.0f,
+                        (float)to_import->width, (float)to_import->height,
+                        0.f, 1.f);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                    cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "root_constants", &lighting_data);
+                    cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                });
+        }
+        else
+        {
+            graph->add_compute_pass(
+                [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
+                    builder.set_name("light_pass_cs")
+                        .set_pipeline(lighting_cs_pipeline)
+                        .read(0, 0, gbuffer_color)
+                        .read(0, 1, gbuffer_normal)
+                        .readwrite(1, 0, lighting_buffer);
+                },
+                [=](render_graph::RenderGraph& g, render_graph::ComputePassStack& stack) {
+                    cgpu_compute_encoder_push_constants(stack.encoder, lighting_cs_pipeline->root_signature, "root_constants", &lighting_cs_data);
+                    cgpu_compute_encoder_dispatch(stack.encoder,
+                        (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
+                        (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),
+                        1);
+                });
+            graph->add_copy_pass(
+                [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
+                    builder.set_name("lighting_buffer_blit")
+                        .texture_to_texture(lighting_buffer, back_buffer);
+                });
+        }
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                 builder.set_name("present_pass")

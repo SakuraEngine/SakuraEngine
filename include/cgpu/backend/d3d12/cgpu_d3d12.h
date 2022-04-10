@@ -100,6 +100,7 @@ RUNTIME_API void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd);
 // Compute CMDs
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_d3d12(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set);
+RUNTIME_API void cgpu_compute_encoder_push_constants_d3d12(CGpuComputePassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
 RUNTIME_API void cgpu_compute_encoder_dispatch_d3d12(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 RUNTIME_API void cgpu_cmd_end_compute_pass_d3d12(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);

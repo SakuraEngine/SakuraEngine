@@ -93,12 +93,14 @@ RUNTIME_API void cgpu_free_swapchain_vulkan(CGpuSwapChainId swapchain);
 RUNTIME_API void cgpu_cmd_begin_vulkan(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
+RUNTIME_API void cgpu_cmd_transfer_texture_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
 
 // Compute CMDs
 RUNTIME_API CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc);
 RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId descriptor);
+RUNTIME_API void cgpu_compute_encoder_push_constants_vulkan(CGpuComputePassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data);
 RUNTIME_API void cgpu_compute_encoder_bind_pipeline_vulkan(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline);
 RUNTIME_API void cgpu_compute_encoder_dispatch_vulkan(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 RUNTIME_API void cgpu_cmd_end_compute_pass_vulkan(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder);
