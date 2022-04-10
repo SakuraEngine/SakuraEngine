@@ -19,10 +19,11 @@ enum class EObjectType : uint8_t
 enum class ERelationshipType : uint8_t
 {
     SubResource,
-    TextureRead,  // SRV
-    TextureWrite, // RTV/DSV
-    BufferRead,   // CBV
-    BufferWrite,  // UAV
+    TextureRead,      // SRV
+    TextureWrite,     // RTV/DSV
+    TextureReadWrite, // UAV
+    BufferRead,       // CBV
+    BufferWrite,      // UAV
     Count
 };
 
@@ -31,6 +32,7 @@ enum class EPassType : uint8_t
     None,
     Render,
     Compute,
+    Copy,
     Present,
     Count
 };
@@ -56,6 +58,7 @@ struct ObjectHandle<EObjectType::Texture> {
         ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
         ShaderReadHandle dimension(ECGpuTextureDimension dim) const;
         const handle_t _this;
+        inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
     protected:
         ShaderReadHandle(const handle_t _this,
@@ -74,12 +77,38 @@ struct ObjectHandle<EObjectType::Texture> {
         const handle_t _this;
         ShaderWriteHandle write_mip(uint32_t mip_level);
         ShaderWriteHandle write_array(uint32_t base, uint32_t count);
+        inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
     protected:
         ShaderWriteHandle(const handle_t _this);
         uint32_t mip_level = 0;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
+    };
+    struct ShaderReadWriteHandle {
+        friend struct ObjectHandle<EObjectType::Texture>;
+        friend class RenderGraph;
+        friend class TextureReadWriteEdge;
+        const handle_t _this;
+        inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
+
+    protected:
+        ShaderReadWriteHandle(const handle_t _this);
+    };
+    struct SubresourceHandle {
+        friend struct ObjectHandle<EObjectType::Texture>;
+        friend class RenderGraph;
+        friend class RenderGraphBackend;
+        friend class TextureCopyEdge;
+        const handle_t _this;
+        inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
+
+    protected:
+        uint32_t mip_level = 0;
+        uint32_t array_base = 0;
+        uint32_t array_count = 1;
+        CGpuTextureViewAspects aspects = TVA_COLOR;
+        SubresourceHandle(const handle_t _this);
     };
     inline operator handle_t() const { return handle; }
     // read
@@ -90,12 +119,19 @@ struct ObjectHandle<EObjectType::Texture> {
     inline operator ShaderWriteHandle() const { return ShaderWriteHandle(handle); }
     ShaderWriteHandle write_mip(uint32_t mip_level);
     ShaderWriteHandle write_array(uint32_t base, uint32_t count);
-
+    // readwrite
+    inline operator ShaderReadWriteHandle() const { return ShaderReadWriteHandle(handle); }
+    // subresource
+    inline operator SubresourceHandle() const { return SubresourceHandle(handle); }
     friend class RenderGraph;
     friend class RenderGraphBackend;
     friend class TextureNode;
     friend class TextureReadEdge;
     friend class TextureRenderEdge;
+    friend class ShaderReadHandle;
+    friend class ShaderWriteHandle;
+    friend class ShaderReadWriteHandle;
+    friend class SubresourceHandle;
 
 protected:
     ObjectHandle(handle_t hdl)
@@ -110,6 +146,8 @@ using PassHandle = ObjectHandle<EObjectType::Pass>;
 using TextureHandle = ObjectHandle<EObjectType::Texture>;
 using TextureSRVHandle = TextureHandle::ShaderReadHandle;
 using TextureRTVHandle = TextureHandle::ShaderWriteHandle;
+using TextureUAVHandle = TextureHandle::ShaderReadWriteHandle;
+using TextureSubresourceHandle = TextureHandle::SubresourceHandle;
 using BufferHandle = ObjectHandle<EObjectType::Buffer>;
 
 struct RenderGraphNode : public DependencyGraphNode {
@@ -203,5 +241,16 @@ inline TextureRTVHandle TextureRTVHandle::write_mip(uint32_t mip)
     return _;
 }
 
+// UAV
+inline TextureUAVHandle::ShaderReadWriteHandle(const handle_t _this)
+    : _this(_this)
+{
+}
+
+// Subresource
+inline TextureSubresourceHandle::SubresourceHandle(const handle_t _this)
+    : _this(_this)
+{
+}
 } // namespace render_graph
 } // namespace sakura

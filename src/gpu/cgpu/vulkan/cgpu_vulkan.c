@@ -84,12 +84,14 @@ const CGpuProcTable tbl_vk = {
     .cmd_begin = &cgpu_cmd_begin_vulkan,
     .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_vulkan,
     .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_vulkan,
+    .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_vulkan,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_end = &cgpu_cmd_end_vulkan,
 
     // Compute CMDs
     .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_vulkan,
     .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_vulkan,
+    .compute_encoder_push_constants = &cgpu_compute_encoder_push_constants_vulkan,
     .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_vulkan,
     .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_vulkan,
     .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_vulkan,
@@ -689,6 +691,7 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
         switch (ResData->type)
         {
+            case RT_RW_TEXTURE:
             case RT_TEXTURE: {
                 cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL texture(s)");
                 CGpuTextureView_Vulkan** TextureViews = (CGpuTextureView_Vulkan**)pParam->textures;
@@ -697,8 +700,14 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
                     // TODO: Stencil support
                     cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL texture!");
                     VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
-                    Data->mImageInfo.imageView = TextureViews[arr]->pVkSRVDescriptor;
-                    Data->mImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    Data->mImageInfo.imageView =
+                        ResData->type == RT_RW_TEXTURE ?
+                            TextureViews[arr]->pVkUAVDescriptor :
+                            TextureViews[arr]->pVkSRVDescriptor;
+                    Data->mImageInfo.imageLayout =
+                        ResData->type == RT_RW_TEXTURE ?
+                            VK_IMAGE_LAYOUT_GENERAL :
+                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     Data->mImageInfo.sampler = VK_NULL_HANDLE;
                     dirty = true;
                 }
@@ -1634,6 +1643,16 @@ void cgpu_render_encoder_bind_descriptor_set_vulkan(CGpuRenderPassEncoderId enco
         0, NULL);
 }
 
+void cgpu_compute_encoder_push_constants_vulkan(CGpuComputePassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
+    CGpuRootSignature_Vulkan* RS = (CGpuRootSignature_Vulkan*)rs;
+    const CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)rs->device;
+    D->mVkDeviceTable.vkCmdPushConstants(Cmd->pVkCmdBuf, RS->pPipelineLayout,
+        RS->pPushConstRanges[0].stageFlags, 0,
+        RS->pPushConstRanges[0].size, data);
+}
+
 void cgpu_compute_encoder_bind_pipeline_vulkan(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)encoder;
@@ -2099,7 +2118,7 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
         .imageColorSpace = surface_format.colorSpace,
         .imageExtent = extent,
         .imageArrayLayers = 1,
-        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         .imageSharingMode = sharing_mode,
         .queueFamilyIndexCount = 1,
         .pQueueFamilyIndices = &presentQueueFamilyIndex,

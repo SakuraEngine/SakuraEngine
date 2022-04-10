@@ -82,6 +82,7 @@ const CGpuProcTable tbl_d3d12 = {
     // Compute Pass
     .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_d3d12,
     .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_d3d12,
+    .compute_encoder_push_constants = &cgpu_compute_encoder_push_constants_d3d12,
     .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_d3d12,
     .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_d3d12,
     .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_d3d12,

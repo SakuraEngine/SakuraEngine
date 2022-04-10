@@ -33,6 +33,28 @@ protected:
     // temporal handle with a lifespan of only one frame
 };
 
+class TextureReadWriteEdge : public RenderGraphEdge
+{
+public:
+    friend class PassNode;
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+
+    const uint32_t set;
+    const uint32_t binding;
+
+    TextureNode* get_texture_node();
+    PassNode* get_pass_node();
+
+protected:
+    const TextureUAVHandle handle;
+    TextureReadWriteEdge(
+        uint32_t set, uint32_t binding, TextureUAVHandle handle,
+        ECGpuResourceState state = RESOURCE_STATE_UNORDERED_ACCESS);
+    const ECGpuResourceState requested_state = RESOURCE_STATE_UNORDERED_ACCESS;
+    // temporal handle with a lifespan of only one frame
+};
+
 class TextureRenderEdge : public RenderGraphEdge
 {
 public:
@@ -97,5 +119,29 @@ inline PassNode* TextureRenderEdge::get_pass_node()
 {
     return (PassNode*)from();
 }
+
+// UAV
+inline TextureReadWriteEdge::TextureReadWriteEdge(
+    uint32_t set, uint32_t binding, TextureUAVHandle handle,
+    ECGpuResourceState state)
+    : RenderGraphEdge(ERelationshipType::TextureReadWrite)
+    , set(set)
+    , binding(binding)
+    , handle(handle)
+    , requested_state(state)
+
+{
+}
+
+inline TextureNode* TextureReadWriteEdge::get_texture_node()
+{
+    return static_cast<TextureNode*>(to());
+}
+
+inline PassNode* TextureReadWriteEdge::get_pass_node()
+{
+    return (PassNode*)from();
+}
+
 } // namespace render_graph
 } // namespace sakura

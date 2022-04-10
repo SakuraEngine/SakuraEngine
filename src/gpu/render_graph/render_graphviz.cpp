@@ -81,9 +81,28 @@ public:
             }
             break;
             case EObjectType::Pass: {
-                label = "pass: ";
-                label.append(rg_node->get_name());
+                PassNode* pass_node = (PassNode*)rg_node;
                 shape = "ellipse";
+                switch (pass_node->pass_type)
+                {
+                    case EPassType::Compute: {
+                        label = "compute: ";
+                        color = "lemonchiffon";
+                    }
+                    break;
+                    case EPassType::Copy: {
+                        label = "copy: ";
+                        color = "lightblue1";
+                    }
+                    break;
+                    case EPassType::Render: {
+                        label = "render(geom): ";
+                    }
+                    break;
+                    default:
+                        break;
+                }
+                label.append(rg_node->get_name());
             }
             break;
             default:

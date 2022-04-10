@@ -57,7 +57,13 @@ protected:
 
     CGpuTextureId resolve(const TextureNode& node);
 
+    void calculate_barriers(PassNode* pass, eastl::vector<CGpuTextureBarrier>& tex_barriers);
+    gsl::span<CGpuDescriptorSetId> alloc_update_pass_descsets(PassNode* pass);
+    void deallocate_resources(PassNode* pass);
+
+    void execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass);
     void execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass);
+    void execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass);
     void execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass);
 
     CGpuQueueId gfx_queue;

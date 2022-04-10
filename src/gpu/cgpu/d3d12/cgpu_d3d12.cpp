@@ -1286,6 +1286,25 @@ void cgpu_compute_encoder_bind_pipeline_d3d12(CGpuComputePassEncoderId encoder, 
     Cmd->pDxCmdList->SetPipelineState(PPL->pDxPipelineState);
 }
 
+void cgpu_compute_encoder_push_constants_d3d12(CGpuComputePassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)encoder;
+    CGpuRootSignature_D3D12* RS = (CGpuRootSignature_D3D12*)rs;
+    reset_root_signature(Cmd, PIPELINE_TYPE_GRAPHICS, RS->pDxRootSignature);
+    if (RS->super.pipeline_type == PIPELINE_TYPE_GRAPHICS)
+    {
+        Cmd->pDxCmdList->SetGraphicsRoot32BitConstants(RS->mRootParamIndex,
+            RS->mRootConstantParam.Constants.Num32BitValues,
+            data, 0);
+    }
+    else if (RS->super.pipeline_type == PIPELINE_TYPE_COMPUTE)
+    {
+        Cmd->pDxCmdList->SetComputeRoot32BitConstants(RS->mRootParamIndex,
+            RS->mRootConstantParam.Constants.Num32BitValues,
+            data, 0);
+    }
+}
+
 void cgpu_render_encoder_bind_vertex_buffers_d3d12(CGpuRenderPassEncoderId encoder, uint32_t buffer_count,
     const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
 {

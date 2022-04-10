@@ -128,6 +128,15 @@ const ECGpuResourceState RenderGraph::get_lastest_state(
                     result = write_edge->requested_state;
                 }
             }
+            else if (edge->type == ERelationshipType::TextureReadWrite)
+            {
+                auto rw_edge = static_cast<TextureReadWriteEdge*>(edge);
+                if (pass->after(pass_iter) && pass->before(pending_pass))
+                {
+                    pass_iter = pass;
+                    result = rw_edge->requested_state;
+                }
+            }
         });
     foreach_reader_passes(texture->get_handle(),
         [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
@@ -197,14 +206,11 @@ CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
     return node.frame_texture;
 }
 
-void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
+void RenderGraphBackend::calculate_barriers(PassNode* pass, eastl::vector<CGpuTextureBarrier>& tex_barriers)
 {
-    RenderPassStack stack = {};
     auto read_edges = pass->read_edges();
     auto write_edges = pass->write_edges();
-    CGpuRootSignatureId root_sig = pass->pipeline->root_signature;
-    // resource de-virtualize
-    eastl::vector<CGpuTextureBarrier> tex_barriers = {};
+    auto rw_edges = pass->readwrite_edges();
     for (auto& read_edge : read_edges)
     {
         auto texture_readed = read_edge->get_texture_node();
@@ -231,14 +237,39 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         barrier.texture = tex_resolved;
         tex_barriers.emplace_back(barrier);
     }
-    // allocate & update descriptor sets
+    for (auto& rw_edge : rw_edges)
+    {
+        auto texture_target = rw_edge->get_texture_node();
+        auto tex_resolved = resolve(*texture_target);
+        const auto current_state = get_lastest_state(texture_target, pass);
+        const auto dst_state = rw_edge->requested_state;
+        if (current_state == dst_state) continue;
+        CGpuTextureBarrier barrier = {};
+        barrier.src_state = current_state;
+        barrier.dst_state = dst_state;
+        barrier.texture = tex_resolved;
+        tex_barriers.emplace_back(barrier);
+    }
+}
+
+gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(PassNode* pass)
+{
+    CGpuRootSignatureId root_sig = nullptr;
+    auto read_edges = pass->read_edges();
+    auto write_edges = pass->write_edges();
+    auto rw_edges = pass->readwrite_edges();
+    if (pass->pass_type == EPassType::Render)
+        root_sig = ((RenderPassNode*)pass)->pipeline->root_signature;
+    else if (pass->pass_type == EPassType::Compute)
+        root_sig = ((ComputePassNode*)pass)->pipeline->root_signature;
     auto&& desc_set_heap = desc_set_pool.find(root_sig);
     if (desc_set_heap == desc_set_pool.end())
         desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
-    stack.desc_sets = desc_set_pool[pass->pipeline->root_signature]->pop();
-    for (uint32_t set_idx = 0; set_idx < stack.desc_sets.size(); set_idx++)
+    auto desc_sets = desc_set_pool[root_sig]->pop();
+    for (uint32_t set_idx = 0; set_idx < desc_sets.size(); set_idx++)
     {
         eastl::vector<CGpuDescriptorData> desc_set_updates;
+        // SRVs
         eastl::vector<CGpuTextureViewId> srvs(read_edges.size());
         for (uint32_t e_idx = 0; e_idx < read_edges.size(); e_idx++)
         {
@@ -265,59 +296,48 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                 desc_set_updates.emplace_back(update);
             }
         }
+        // UAVs
+        eastl::vector<CGpuTextureViewId> uavs(rw_edges.size());
+        for (uint32_t e_idx = 0; e_idx < rw_edges.size(); e_idx++)
+        {
+            auto& rw_edge = rw_edges[e_idx];
+            if (rw_edge->set == set_idx)
+            {
+                auto texture_readed = rw_edge->get_texture_node();
+                CGpuDescriptorData update = {};
+                update.count = 1;
+                update.binding = rw_edge->binding;
+                update.binding_type = RT_RW_TEXTURE;
+                CGpuTextureViewDescriptor view_desc = {};
+                view_desc.texture = resolve(*texture_readed);
+                view_desc.base_array_layer = 0;
+                view_desc.array_layer_count = 1;
+                view_desc.base_mip_level = 0;
+                view_desc.mip_level_count = 1;
+                view_desc.aspects = TVA_COLOR;
+                view_desc.format = (ECGpuFormat)view_desc.texture->format;
+                view_desc.usages = TVU_UAV;
+                view_desc.dims = TEX_DIMENSION_2D;
+                srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
+                update.textures = &srvs[e_idx];
+                desc_set_updates.emplace_back(update);
+            }
+        }
         auto update_count = desc_set_updates.size();
         if (update_count)
         {
-            cgpu_update_descriptor_set(stack.desc_sets[set_idx],
+            cgpu_update_descriptor_set(desc_sets[set_idx],
                 desc_set_updates.data(), desc_set_updates.size());
         }
     }
-    // color attachments
-    eastl::vector<CGpuColorAttachment> color_attachments = {};
-    for (auto& write_edge : write_edges)
-    {
-        CGpuColorAttachment attachment = {};
-        auto texture_target = write_edge->get_texture_node();
-        // TODO: MSAA
-        CGpuTextureViewDescriptor view_desc = {};
-        view_desc.texture = resolve(*texture_target);
-        view_desc.base_array_layer = write_edge->get_array_base();
-        view_desc.array_layer_count = write_edge->get_array_count();
-        view_desc.base_mip_level = write_edge->get_mip_level();
-        view_desc.mip_level_count = 1;
-        view_desc.aspects = TVA_COLOR;
-        view_desc.format = (ECGpuFormat)view_desc.texture->format;
-        view_desc.usages = TVU_RTV_DSV;
-        view_desc.dims = TEX_DIMENSION_2D;
-        attachment.view = texture_view_pool.allocate(view_desc, frame_index);
-        attachment.load_action = pass->load_actions[write_edge->mrt_index];
-        attachment.store_action = pass->store_actions[write_edge->mrt_index];
-        color_attachments.emplace_back(attachment);
-    }
-    // call cgpu apis
-    if (!tex_barriers.empty())
-    {
-        CGpuResourceBarrierDescriptor barriers = {};
-        barriers.texture_barriers = tex_barriers.data();
-        barriers.texture_barriers_count = tex_barriers.size();
-        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
-    }
-    // TODO: MSAA
-    CGpuRenderPassDescriptor pass_desc = {};
-    pass_desc.render_target_count = write_edges.size();
-    pass_desc.sample_count = SAMPLE_COUNT_1;
-    pass_desc.name = pass->get_name();
-    pass_desc.color_attachments = color_attachments.data();
-    pass_desc.depth_stencil = nullptr;
-    stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
-    cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
-    for (auto desc_set : stack.desc_sets)
-    {
-        cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
-    }
-    pass->executor(*this, stack);
-    cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
-    // deallocate
+    return desc_sets;
+}
+
+void RenderGraphBackend::deallocate_resources(PassNode* pass)
+{
+    auto read_edges = pass->read_edges();
+    auto write_edges = pass->write_edges();
+    auto rw_edges = pass->readwrite_edges();
     for (auto& read_edge : read_edges)
     {
         auto texture_readed = read_edge->get_texture_node();
@@ -356,6 +376,155 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                 write_edge->requested_state,
                 frame_index);
     }
+    for (auto& rw_edge : rw_edges)
+    {
+        auto texture_target = rw_edge->get_texture_node();
+        bool is_last_user = true;
+        texture_target->foreach_neighbors(
+            [&](DependencyGraphNode* neig) {
+                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                if (rg_node->type == EObjectType::Pass)
+                {
+                    PassNode* other_pass = (PassNode*)rg_node;
+                    is_last_user = is_last_user && (pass->order >= other_pass->order);
+                }
+            });
+        if (is_last_user)
+            texture_pool.deallocate(texture_target->descriptor,
+                texture_target->frame_texture,
+                rw_edge->requested_state,
+                frame_index);
+    }
+}
+
+void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass)
+{
+    ComputePassStack stack = {};
+    auto read_edges = pass->read_edges();
+    auto write_edges = pass->write_edges();
+    auto rw_edges = pass->readwrite_edges();
+    // resource de-virtualize
+    eastl::vector<CGpuTextureBarrier> tex_barriers = {};
+    calculate_barriers(pass, tex_barriers);
+    // allocate & update descriptor sets
+    stack.desc_sets = alloc_update_pass_descsets(pass);
+    // call cgpu apis
+    if (!tex_barriers.empty())
+    {
+        CGpuResourceBarrierDescriptor barriers = {};
+        barriers.texture_barriers = tex_barriers.data();
+        barriers.texture_barriers_count = tex_barriers.size();
+        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    }
+    // dispatch
+    CGpuComputePassDescriptor pass_desc = {};
+    pass_desc.name = pass->get_name();
+    stack.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
+    cgpu_compute_encoder_bind_pipeline(stack.encoder, pass->pipeline);
+    for (auto desc_set : stack.desc_sets)
+    {
+        cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
+    }
+    pass->executor(*this, stack);
+    cgpu_cmd_end_compute_pass(executor.gfx_cmd_buf, stack.encoder);
+    // deallocate
+    deallocate_resources(pass);
+}
+
+void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
+{
+    RenderPassStack stack = {};
+    auto read_edges = pass->read_edges();
+    auto write_edges = pass->write_edges();
+    auto rw_edges = pass->readwrite_edges();
+    CGpuRootSignatureId root_sig = pass->pipeline->root_signature;
+    // resource de-virtualize
+    eastl::vector<CGpuTextureBarrier> tex_barriers = {};
+    calculate_barriers(pass, tex_barriers);
+    // allocate & update descriptor sets
+    stack.desc_sets = alloc_update_pass_descsets(pass);
+    // call cgpu apis
+    if (!tex_barriers.empty())
+    {
+        CGpuResourceBarrierDescriptor barriers = {};
+        barriers.texture_barriers = tex_barriers.data();
+        barriers.texture_barriers_count = tex_barriers.size();
+        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    }
+    // color attachments
+    // TODO: MSAA
+    eastl::vector<CGpuColorAttachment> color_attachments = {};
+    for (auto& write_edge : write_edges)
+    {
+        CGpuColorAttachment attachment = {};
+        auto texture_target = write_edge->get_texture_node();
+        // TODO: MSAA
+        CGpuTextureViewDescriptor view_desc = {};
+        view_desc.texture = resolve(*texture_target);
+        view_desc.base_array_layer = write_edge->get_array_base();
+        view_desc.array_layer_count = write_edge->get_array_count();
+        view_desc.base_mip_level = write_edge->get_mip_level();
+        view_desc.mip_level_count = 1;
+        view_desc.aspects = TVA_COLOR;
+        view_desc.format = (ECGpuFormat)view_desc.texture->format;
+        view_desc.usages = TVU_RTV_DSV;
+        view_desc.dims = TEX_DIMENSION_2D;
+        attachment.view = texture_view_pool.allocate(view_desc, frame_index);
+        attachment.load_action = pass->load_actions[write_edge->mrt_index];
+        attachment.store_action = pass->store_actions[write_edge->mrt_index];
+        color_attachments.emplace_back(attachment);
+    }
+    CGpuRenderPassDescriptor pass_desc = {};
+    pass_desc.render_target_count = write_edges.size();
+    pass_desc.sample_count = SAMPLE_COUNT_1;
+    pass_desc.name = pass->get_name();
+    pass_desc.color_attachments = color_attachments.data();
+    pass_desc.depth_stencil = nullptr;
+    stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
+    cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
+    for (auto desc_set : stack.desc_sets)
+    {
+        cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
+    }
+    pass->executor(*this, stack);
+    cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
+    // deallocate
+    deallocate_resources(pass);
+}
+
+void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass)
+{
+    auto read_edges = pass->read_edges();
+    auto write_edges = pass->write_edges();
+    // resource de-virtualize
+    eastl::vector<CGpuTextureBarrier> tex_barriers = {};
+    calculate_barriers(pass, tex_barriers);
+    // call cgpu apis
+    if (!tex_barriers.empty())
+    {
+        CGpuResourceBarrierDescriptor barriers = {};
+        barriers.texture_barriers = tex_barriers.data();
+        barriers.texture_barriers_count = tex_barriers.size();
+        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    }
+    for (uint32_t i = 0; i < pass->t2ts.size(); i++)
+    {
+        auto src_node = RenderGraph::resolve(pass->t2ts[i].first);
+        auto dst_node = RenderGraph::resolve(pass->t2ts[i].second);
+        CGpuTextureToTextureTransfer t2t = {};
+        t2t.src = resolve(*src_node);
+        t2t.src_subresource.aspects = pass->t2ts[i].first.aspects;
+        t2t.src_subresource.mip_level = pass->t2ts[i].first.mip_level;
+        t2t.src_subresource.base_array_layer = pass->t2ts[i].first.array_base;
+        t2t.src_subresource.layer_count = pass->t2ts[i].first.array_count;
+        t2t.dst = resolve(*dst_node);
+        t2t.dst_subresource.aspects = pass->t2ts[i].second.aspects;
+        t2t.dst_subresource.mip_level = pass->t2ts[i].second.mip_level;
+        t2t.dst_subresource.base_array_layer = pass->t2ts[i].second.array_base;
+        t2t.dst_subresource.layer_count = pass->t2ts[i].second.array_count;
+        cgpu_cmd_transfer_texture_to_texture(executor.gfx_cmd_buf, &t2t);
+    }
+    deallocate_resources(pass);
 }
 
 void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass)
@@ -363,8 +532,9 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
     auto read_edges = pass->read_edges();
     auto&& read_edge = read_edges[0];
     auto texture_target = read_edge->get_texture_node();
+    auto back_buffer = pass->descriptor.swapchain->back_buffers[pass->descriptor.index];
     CGpuTextureBarrier present_barrier = {};
-    present_barrier.texture = pass->descriptor.swapchain->back_buffers[pass->descriptor.index];
+    present_barrier.texture = back_buffer;
     present_barrier.src_state = get_lastest_state(texture_target, pass);
     present_barrier.dst_state = RESOURCE_STATE_PRESENT;
     CGpuResourceBarrierDescriptor barriers = {};
@@ -387,6 +557,14 @@ uint64_t RenderGraphBackend::execute()
         else if (pass->pass_type == EPassType::Present)
         {
             execute_present_pass(executor, static_cast<PresentPassNode*>(pass));
+        }
+        else if (pass->pass_type == EPassType::Compute)
+        {
+            execute_compute_pass(executor, static_cast<ComputePassNode*>(pass));
+        }
+        else if (pass->pass_type == EPassType::Copy)
+        {
+            execute_copy_pass(executor, static_cast<CopyPassNode*>(pass));
         }
     }
     cgpu_cmd_end(executor.gfx_cmd_buf);

@@ -185,7 +185,7 @@ void cgpu_cmd_transfer_buffer_to_buffer_vulkan(CGpuCommandBufferId cmd, const st
     D->mVkDeviceTable.vkCmdCopyBuffer(Cmd->pVkCmdBuf, Src->pVkBuffer, Dst->pVkBuffer, 1, &region);
 }
 
-RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
+void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
@@ -217,6 +217,41 @@ RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId 
         D->mVkDeviceTable.vkCmdCopyBufferToImage(Cmd->pVkCmdBuf,
             Src->pVkBuffer, Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
             &copy);
+    }
+}
+
+void cgpu_cmd_transfer_texture_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuTexture_Vulkan* Dst = (CGpuTexture_Vulkan*)desc->dst;
+    CGpuTexture_Vulkan* Src = (CGpuTexture_Vulkan*)desc->src;
+    const bool isSinglePlane = true;
+    const ECGpuFormat fmt = desc->dst->format;
+    if (isSinglePlane)
+    {
+        const uint32_t width = cgpu_max(1, desc->dst->width >> desc->dst_subresource.mip_level);
+        const uint32_t height = cgpu_max(1, desc->dst->height >> desc->dst_subresource.mip_level);
+        const uint32_t depth = cgpu_max(1, desc->dst->depth >> desc->dst_subresource.mip_level);
+
+        VkImageCopy copy_region = {
+            .srcSubresource = {
+                desc->src_subresource.aspects,
+                desc->src_subresource.mip_level,
+                desc->src_subresource.base_array_layer,
+                desc->src_subresource.layer_count },
+            .srcOffset = { 0, 0, 0 },
+            .dstSubresource = {                         //
+                desc->dst_subresource.aspects,          //
+                desc->dst_subresource.mip_level,        //
+                desc->dst_subresource.base_array_layer, //
+                desc->dst_subresource.layer_count },
+            .dstOffset = { 0, 0, 0 },
+            .extent = { width, height, depth },
+        };
+        D->mVkDeviceTable.vkCmdCopyImage(Cmd->pVkCmdBuf,
+            Src->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_region);
     }
 }
 

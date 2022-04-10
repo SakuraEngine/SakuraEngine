@@ -68,6 +68,69 @@ public:
         newPass->executor = executor;
         return newPass->get_handle();
     }
+    class ComputePassBuilder
+    {
+    public:
+        friend class RenderGraph;
+        ComputePassBuilder& set_name(const char* name);
+        ComputePassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle);
+        ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle);
+        ComputePassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
+        ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, BufferHandle handle);
+        ComputePassBuilder& set_pipeline(CGpuComputePipelineId pipeline);
+
+    protected:
+        inline void Apply() {}
+        ComputePassBuilder(RenderGraph& graph, ComputePassNode& pass)
+            : graph(graph)
+            , node(pass)
+        {
+        }
+        RenderGraph& graph;
+        ComputePassNode& node;
+    };
+    using ComputePassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::ComputePassBuilder&)>;
+    inline PassHandle add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor)
+    {
+        auto newPass = new ComputePassNode(passes.size());
+        passes.emplace_back(newPass);
+        graph->insert(newPass);
+        // build up
+        ComputePassBuilder builder(*this, *newPass);
+        setup(*this, builder);
+        builder.Apply();
+        newPass->executor = executor;
+        return newPass->get_handle();
+    }
+    class CopyPassBuilder
+    {
+    public:
+        friend class RenderGraph;
+        CopyPassBuilder& set_name(const char* name);
+        CopyPassBuilder& texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst);
+
+    protected:
+        inline void Apply() {}
+        CopyPassBuilder(RenderGraph& graph, CopyPassNode& pass)
+            : graph(graph)
+            , node(pass)
+        {
+        }
+        RenderGraph& graph;
+        CopyPassNode& node;
+    };
+    using CopyPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
+    inline PassHandle add_copy_pass(const CopyPassSetupFunction& setup)
+    {
+        auto newPass = new CopyPassNode(passes.size());
+        passes.emplace_back(newPass);
+        graph->insert(newPass);
+        // build up
+        CopyPassBuilder builder(*this, *newPass);
+        setup(*this, builder);
+        builder.Apply();
+        return newPass->get_handle();
+    }
     class PresentPassBuilder
     {
     public:
@@ -109,6 +172,7 @@ public:
         TextureBuilder& array(uint32_t size);
         TextureBuilder& sample_count(ECGpuSampleCount count);
         TextureBuilder& allow_render_target();
+        TextureBuilder& allow_readwrite();
         TextureBuilder& set_name(const char* name);
         TextureBuilder& owns_memory();
         TextureBuilder& create_immediate();
@@ -178,6 +242,9 @@ using RenderGraphSetupFunction = RenderGraph::RenderGraphSetupFunction;
 using RenderGraphBuilder = RenderGraph::RenderGraphBuilder;
 using RenderPassSetupFunction = RenderGraph::RenderPassSetupFunction;
 using RenderPassBuilder = RenderGraph::RenderPassBuilder;
+using ComputePassSetupFunction = RenderGraph::ComputePassSetupFunction;
+using ComputePassBuilder = RenderGraph::ComputePassBuilder;
+using CopyPassBuilder = RenderGraph::CopyPassBuilder;
 using PresentPassSetupFunction = RenderGraph::PresentPassSetupFunction;
 using PresentPassBuilder = RenderGraph::PresentPassBuilder;
 using TextureSetupFunction = RenderGraph::TextureSetupFunction;
@@ -251,7 +318,6 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(
     }
     return *this;
 }
-// textures read/write
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle)
 {
     auto&& edge = node.in_edges.emplace_back(
@@ -270,7 +336,6 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
     node.store_actions[mrt_index] = store_action;
     return *this;
 }
-// buffers read/write
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
 {
     return *this;
@@ -282,6 +347,68 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(uin
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipeline(CGpuRenderPipelineId pipeline)
 {
     node.pipeline = pipeline;
+    return *this;
+}
+
+// compute pass builder
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const char* name)
+{
+    if (name)
+    {
+        graph.blackboard.named_passes[name] = &node;
+        node.set_name(name);
+    }
+    return *this;
+}
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle)
+{
+    auto&& edge = node.in_edges.emplace_back(
+        new TextureReadEdge(set, binding, handle));
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
+    return *this;
+}
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle)
+{
+    auto&& edge = node.inout_edges.emplace_back(
+        new TextureReadWriteEdge(set, binding, handle));
+    graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
+    return *this;
+}
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
+{
+    return *this;
+}
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, BufferHandle handle)
+{
+    return *this;
+}
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_pipeline(CGpuComputePipelineId pipeline)
+{
+    node.pipeline = pipeline;
+    return *this;
+}
+
+// copy pass
+inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char* name)
+{
+    if (name)
+    {
+        graph.blackboard.named_passes[name] = &node;
+        node.set_name(name);
+    }
+    return *this;
+}
+inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst)
+{
+    auto&& in_edge = node.in_edges.emplace_back(
+        new TextureReadEdge(0, 0, src._this,
+            RESOURCE_STATE_COPY_SOURCE));
+    auto&& out_edge = node.out_edges.emplace_back(
+        new TextureRenderEdge(0, dst._this,
+            RESOURCE_STATE_COPY_DEST));
+    graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
+    graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
+    node.t2ts.emplace_back(src, dst);
     return *this;
 }
 
@@ -298,7 +425,6 @@ inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuText
     tex_desc.sample_count = texture->sample_count;
     return *this;
 }
-
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(
     uint32_t width, uint32_t height, uint32_t depth)
 {
@@ -322,6 +448,12 @@ inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::sample_count(
     ECGpuSampleCount count)
 {
     tex_desc.sample_count = count;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_readwrite()
+{
+    tex_desc.descriptors |= RT_RW_TEXTURE;
+    tex_desc.start_state = RESOURCE_STATE_UNDEFINED;
     return *this;
 }
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_target()
