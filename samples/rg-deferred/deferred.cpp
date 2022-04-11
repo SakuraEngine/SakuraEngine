@@ -383,6 +383,7 @@ struct LightingCSPushConstants {
     smath::Vector2f viewportOrigin = { 0, 0 };
 };
 static LightingCSPushConstants lighting_cs_data = {};
+const bool fragmentLightingPass = false;
 
 int main(int argc, char* argv[])
 {
@@ -485,15 +486,14 @@ int main(int argc, char* argv[])
                 cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 6, vertex_buffers, strides, offsets);
                 cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
             });
-
-        if (false)
+        if (fragmentLightingPass)
         {
             graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                     builder.set_name("light_pass_fs")
                         .set_pipeline(lighting_pipeline)
-                        .read(0, 0, gbuffer_color.read_mip(0, 1))
-                        .read(0, 1, gbuffer_normal)
+                        .read("gbuffer_color", gbuffer_color.read_mip(0, 1))
+                        .read("gbuffer_normal", gbuffer_normal)
                         .write(0, back_buffer, LOAD_ACTION_CLEAR);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
@@ -512,12 +512,13 @@ int main(int argc, char* argv[])
                 [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
                     builder.set_name("light_pass_cs")
                         .set_pipeline(lighting_cs_pipeline)
-                        .read(0, 0, gbuffer_color)
-                        .read(0, 1, gbuffer_normal)
-                        .readwrite(1, 0, lighting_buffer);
+                        .read("gbuffer_color", gbuffer_color)
+                        .read("gbuffer_normal", gbuffer_normal)
+                        .readwrite("lighting_output", lighting_buffer);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::ComputePassStack& stack) {
-                    cgpu_compute_encoder_push_constants(stack.encoder, lighting_cs_pipeline->root_signature, "root_constants", &lighting_cs_data);
+                    cgpu_compute_encoder_push_constants(stack.encoder,
+                        lighting_cs_pipeline->root_signature, "root_constants", &lighting_cs_data);
                     cgpu_compute_encoder_dispatch(stack.encoder,
                         (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
                         (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),

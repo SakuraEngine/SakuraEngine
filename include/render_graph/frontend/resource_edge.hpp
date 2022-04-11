@@ -13,8 +13,9 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    const uint32_t set;
-    const uint32_t binding;
+    const uint32_t set = UINT32_MAX;
+    const uint32_t binding = UINT32_MAX;
+    const eastl::string name = "";
 
     TextureNode* get_texture_node();
     PassNode* get_pass_node();
@@ -29,6 +30,9 @@ protected:
     TextureReadEdge(
         uint32_t set, uint32_t binding, TextureSRVHandle handle,
         ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE);
+    TextureReadEdge(
+        const char8_t* name, TextureSRVHandle handle,
+        ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE);
     const ECGpuResourceState requested_state = RESOURCE_STATE_SHADER_RESOURCE;
     // temporal handle with a lifespan of only one frame
 };
@@ -42,6 +46,7 @@ public:
 
     const uint32_t set;
     const uint32_t binding;
+    const eastl::string name;
 
     TextureNode* get_texture_node();
     PassNode* get_pass_node();
@@ -50,6 +55,9 @@ protected:
     const TextureUAVHandle handle;
     TextureReadWriteEdge(
         uint32_t set, uint32_t binding, TextureUAVHandle handle,
+        ECGpuResourceState state = RESOURCE_STATE_UNORDERED_ACCESS);
+    TextureReadWriteEdge(
+        const char8_t* name, TextureUAVHandle handle,
         ECGpuResourceState state = RESOURCE_STATE_UNORDERED_ACCESS);
     const ECGpuResourceState requested_state = RESOURCE_STATE_UNORDERED_ACCESS;
     // temporal handle with a lifespan of only one frame
@@ -99,22 +107,30 @@ inline TextureReadEdge::TextureReadEdge(
 
 {
 }
+inline TextureReadEdge::TextureReadEdge(
+    const char8_t* name, TextureSRVHandle handle,
+    ECGpuResourceState state)
+    : RenderGraphEdge(ERelationshipType::TextureRead)
+    , name(name)
+    , set(UINT32_MAX)
+    , binding(UINT32_MAX)
+    , handle(handle)
+    , requested_state(state)
 
+{
+}
 inline TextureNode* TextureReadEdge::get_texture_node()
 {
     return static_cast<TextureNode*>(from());
 }
-
 inline PassNode* TextureReadEdge::get_pass_node()
 {
     return (PassNode*)to();
 }
-
 inline TextureNode* TextureRenderEdge::get_texture_node()
 {
     return static_cast<TextureNode*>(to());
 }
-
 inline PassNode* TextureRenderEdge::get_pass_node()
 {
     return (PassNode*)from();
@@ -127,6 +143,19 @@ inline TextureReadWriteEdge::TextureReadWriteEdge(
     : RenderGraphEdge(ERelationshipType::TextureReadWrite)
     , set(set)
     , binding(binding)
+    , handle(handle)
+    , requested_state(state)
+
+{
+}
+
+inline TextureReadWriteEdge::TextureReadWriteEdge(
+    const char8_t* name, TextureUAVHandle handle,
+    ECGpuResourceState state)
+    : RenderGraphEdge(ERelationshipType::TextureReadWrite)
+    , name(name)
+    , binding(UINT32_MAX)
+    , set(UINT32_MAX)
     , handle(handle)
     , requested_state(state)
 
