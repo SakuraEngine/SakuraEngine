@@ -280,6 +280,7 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
     d3d12reflection->GetDesc(&shaderDesc);
     reflectionRecordShaderResources(d3d12reflection, stage, shaderDesc, S);
     CGpuShaderReflection* Reflection = S->super.entry_reflections;
+    Reflection->stage = stage;
     // Collect vertex inputs
     if (stage == SHADER_STAGE_VERT)
     {

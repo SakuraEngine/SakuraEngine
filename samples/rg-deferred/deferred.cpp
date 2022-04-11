@@ -13,7 +13,7 @@ CubeGeometry::InstanceData CubeGeometry::instance_data;
 ECGpuFormat gbuffer_formats[] = { PF_R8G8B8A8_UNORM, PF_R16G16B16A16_SNORM };
 
 #if _WINDOWS
-thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
+thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
 #else
 thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #endif
@@ -229,12 +229,9 @@ void create_gbuffer_render_pipeline()
     ppl_shaders[1].stage = SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = gbuffer_fs;
-    const char8_t* root_constant_name = "root_constants";
     CGpuRootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
-    rs_desc.root_constant_count = 1;
-    rs_desc.root_constant_names = &root_constant_name;
     gbuffer_root_sig = cgpu_create_root_signature(device, &rs_desc);
     CGpuVertexLayout vertex_layout = {};
     vertex_layout.attributes[0] = { "POSITION", 1, PF_R32G32B32_SFLOAT, 0, 0, sizeof(smath::Vector3f), INPUT_RATE_VERTEX };
