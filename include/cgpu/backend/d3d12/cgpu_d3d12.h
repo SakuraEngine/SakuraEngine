@@ -93,6 +93,7 @@ RUNTIME_API void cgpu_free_swapchain_d3d12(CGpuSwapChainId swapchain);
 // CMDs
 RUNTIME_API void cgpu_cmd_begin_d3d12(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc);
+RUNTIME_API void cgpu_cmd_transfer_texture_to_texture_d3d12(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier_d3d12(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 RUNTIME_API void cgpu_cmd_end_d3d12(CGpuCommandBufferId cmd);

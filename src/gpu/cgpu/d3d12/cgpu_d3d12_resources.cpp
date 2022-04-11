@@ -228,6 +228,48 @@ void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGpuCommandBufferId cmd, const str
 #endif
 }
 
+void cgpu_cmd_transfer_texture_to_texture_d3d12(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc)
+{
+    CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)cmd->device;
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    CGpuTexture_D3D12* Src = (CGpuTexture_D3D12*)desc->src;
+    CGpuTexture_D3D12* Dst = (CGpuTexture_D3D12*)desc->dst;
+
+    uint32_t src_subresource = CALC_SUBRESOURCE_INDEX(
+        desc->src_subresource.mip_level, desc->src_subresource.base_array_layer,
+        0, 1,
+        desc->src_subresource.layer_count);
+    uint32_t dst_subresource = CALC_SUBRESOURCE_INDEX(
+        desc->dst_subresource.mip_level, desc->dst_subresource.base_array_layer,
+        0, 1,
+        desc->dst_subresource.layer_count);
+    D3D12_RESOURCE_DESC src_resourceDesc = Src->pDxResource->GetDesc();
+    D3D12_RESOURCE_DESC dst_resourceDesc = Dst->pDxResource->GetDesc();
+
+    D3D12_TEXTURE_COPY_LOCATION src = {};
+    D3D12_TEXTURE_COPY_LOCATION dst = {};
+    D->pDxDevice->GetCopyableFootprints(
+        &src_resourceDesc, src_subresource, 1,
+        0, &src.PlacedFootprint,
+        NULL, NULL, NULL);
+    D->pDxDevice->GetCopyableFootprints(
+        &dst_resourceDesc, dst_subresource, 1,
+        0, &dst.PlacedFootprint,
+        NULL, NULL, NULL);
+    src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    src.pResource = Src->pDxResource;
+    src.SubresourceIndex = src_subresource;
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.pResource = Dst->pDxResource;
+    dst.SubresourceIndex = dst_subresource;
+
+#if defined(XBOX)
+    Cmd->mDma.pDxCmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, NULL);
+#else
+    Cmd->pDxCmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, NULL);
+#endif
+}
+
 void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)cmd->device;

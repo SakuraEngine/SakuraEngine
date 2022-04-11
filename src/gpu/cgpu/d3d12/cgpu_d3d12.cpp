@@ -622,7 +622,18 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
                 // TODO: CBV
             }
             break;
-            case RT_RW_TEXTURE:
+            case RT_RW_TEXTURE: {
+                cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL Texture(s)!");
+                CGpuTextureView_D3D12** Textures = (CGpuTextureView_D3D12**)pParam->textures;
+                for (uint32_t arr = 0; arr < arrayCount; arr++)
+                {
+                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Texture!");
+                    D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
+                        { Textures[arr]->mDxDescriptorHandles.ptr + Textures[arr]->mDxUavOffset },
+                        Set->mCbvSrvUavHandle, arr + HeapOffset);
+                }
+            }
+            break;
             case RT_RW_BUFFER:
             case RT_RW_BUFFER_RAW: {
                 cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
