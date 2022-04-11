@@ -3,7 +3,8 @@
 Texture2D gbuffer_color : register(t0, space0);
 Texture2D gbuffer_normal : register(t1, space0);
 //Texture2D gbuffer_depth : register(t2, space0);
-RWTexture2D<float4> lighting_output : register(u0, space1);
+[[vk::binding(2, 0)]]
+RWTexture2D<float4> lighting_output : register(u0, space0);
 
 struct RootConstants
 {

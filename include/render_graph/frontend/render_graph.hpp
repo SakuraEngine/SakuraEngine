@@ -38,11 +38,14 @@ public:
         friend class RenderGraph;
         RenderPassBuilder& set_name(const char* name);
         RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle);
+        RenderPassBuilder& read(const char8_t* name, TextureSRVHandle handle);
         RenderPassBuilder& write(uint32_t mrt_index, TextureRTVHandle handle,
             ECGpuLoadAction load_action = LOAD_ACTION_CLEAR,
             ECGpuStoreAction store_action = STORE_ACTION_STORE);
+        RenderPassBuilder& read(const char8_t* name, BufferHandle handle);
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
+        RenderPassBuilder& write(const char8_t* name, BufferHandle handle);
         RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
 
     protected:
@@ -74,9 +77,13 @@ public:
         friend class RenderGraph;
         ComputePassBuilder& set_name(const char* name);
         ComputePassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle);
+        ComputePassBuilder& read(const char8_t* name, TextureSRVHandle handle);
         ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle);
+        ComputePassBuilder& readwrite(const char8_t* name, TextureUAVHandle handle);
         ComputePassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
+        ComputePassBuilder& read(const char8_t* name, BufferHandle handle);
         ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, BufferHandle handle);
+        ComputePassBuilder& readwrite(const char8_t* name, BufferHandle handle);
         ComputePassBuilder& set_pipeline(CGpuComputePipelineId pipeline);
 
     protected:
@@ -325,6 +332,13 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, TextureSRVHandle handle)
+{
+    auto&& edge = node.in_edges.emplace_back(
+        new TextureReadEdge(name, handle));
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
+    return *this;
+}
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
     uint32_t mrt_index, TextureRTVHandle handle, ECGpuLoadAction load_action,
     ECGpuStoreAction store_action)
@@ -340,7 +354,15 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint
 {
     return *this;
 }
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, BufferHandle handle)
+{
+    return *this;
+}
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(uint32_t set, uint32_t binding, BufferHandle handle)
+{
+    return *this;
+}
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(const char8_t* name, BufferHandle handle)
 {
     return *this;
 }
@@ -367,6 +389,13 @@ inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(ui
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, TextureSRVHandle handle)
+{
+    auto&& edge = node.in_edges.emplace_back(
+        new TextureReadEdge(name, handle));
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
+    return *this;
+}
 inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle)
 {
     auto&& edge = node.inout_edges.emplace_back(
@@ -374,11 +403,26 @@ inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwri
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, TextureUAVHandle handle)
+{
+    auto&& edge = node.inout_edges.emplace_back(
+        new TextureReadWriteEdge(name, handle));
+    graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
+    return *this;
+}
 inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
 {
     return *this;
 }
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, BufferHandle handle)
+{
+    return *this;
+}
 inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, BufferHandle handle)
+{
+    return *this;
+}
+inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, BufferHandle handle)
 {
     return *this;
 }

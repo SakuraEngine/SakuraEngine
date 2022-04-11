@@ -1,4 +1,5 @@
 #include "render_graph/backend/graph_backend.hpp"
+#include "../cgpu/common/common_utils.h"
 
 namespace sakura
 {
@@ -252,6 +253,25 @@ void RenderGraphBackend::calculate_barriers(PassNode* pass, eastl::vector<CGpuTe
     }
 }
 
+eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGpuRootSignatureId root_sig)
+{
+    uint32_t set = 0, binding = 0;
+    auto name_hash = cgpu_hash(name, strlen(name), (size_t)root_sig->device);
+    for (uint32_t i = 0; i < root_sig->table_count; i++)
+    {
+        for (uint32_t j = 0; j < root_sig->tables[i].resources_count; j++)
+        {
+            if (root_sig->tables[i].resources[j].name_hash == name_hash)
+            {
+                set = root_sig->tables[i].resources[j].set;
+                binding = root_sig->tables[i].resources[j].binding;
+                return { set, binding };
+            }
+        }
+    }
+    return { UINT32_MAX, UINT32_MAX };
+}
+
 gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(PassNode* pass)
 {
     CGpuRootSignatureId root_sig = nullptr;
@@ -274,12 +294,16 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
         for (uint32_t e_idx = 0; e_idx < read_edges.size(); e_idx++)
         {
             auto& read_edge = read_edges[e_idx];
-            if (read_edge->set == set_idx)
+            auto read_set_binding =
+                read_edge->name.empty() ?
+                    eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
+                    calculate_bind_set(read_edge->name.c_str(), root_sig);
+            if (read_set_binding.first == set_idx)
             {
                 auto texture_readed = read_edge->get_texture_node();
                 CGpuDescriptorData update = {};
                 update.count = 1;
-                update.binding = read_edge->binding;
+                update.binding = read_set_binding.second;
                 update.binding_type = RT_TEXTURE;
                 CGpuTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(*texture_readed);
@@ -301,12 +325,16 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
         for (uint32_t e_idx = 0; e_idx < rw_edges.size(); e_idx++)
         {
             auto& rw_edge = rw_edges[e_idx];
-            if (rw_edge->set == set_idx)
+            auto rw_set_binding =
+                rw_edge->name.empty() ?
+                    eastl::pair<uint32_t, uint32_t>(rw_edge->set, rw_edge->binding) :
+                    calculate_bind_set(rw_edge->name.c_str(), root_sig);
+            if (rw_set_binding.first == set_idx)
             {
                 auto texture_readed = rw_edge->get_texture_node();
                 CGpuDescriptorData update = {};
                 update.count = 1;
-                update.binding = rw_edge->binding;
+                update.binding = rw_set_binding.second;
                 update.binding_type = RT_RW_TEXTURE;
                 CGpuTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(*texture_readed);
@@ -318,8 +346,8 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
                 view_desc.format = (ECGpuFormat)view_desc.texture->format;
                 view_desc.usages = TVU_UAV;
                 view_desc.dims = TEX_DIMENSION_2D;
-                srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
-                update.textures = &srvs[e_idx];
+                uavs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
+                update.textures = &uavs[e_idx];
                 desc_set_updates.emplace_back(update);
             }
         }
