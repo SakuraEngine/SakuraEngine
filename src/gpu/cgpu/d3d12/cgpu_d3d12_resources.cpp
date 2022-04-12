@@ -578,7 +578,7 @@ CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const stru
         {
             D3D12_CPU_DESCRIPTOR_HANDLE srv = { TV->mDxDescriptorHandles.ptr + TV->mDxSrvOffset };
             D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
+            srvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format, true);
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
             switch (desc->dims)
             {
@@ -655,7 +655,7 @@ CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const stru
             CurrentOffsetCursor += pHeap->mDescriptorSize * 1;
             D3D12_CPU_DESCRIPTOR_HANDLE uav = { TV->mDxDescriptorHandles.ptr + TV->mDxUavOffset };
             D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-            uavDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
+            uavDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format, true);
             cgpu_assert(desc->mip_level_count <= 1 && "UAV must be created with non-multi mip slices!");
             switch (desc->dims)
             {
