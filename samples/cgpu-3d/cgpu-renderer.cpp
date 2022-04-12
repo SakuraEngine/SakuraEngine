@@ -90,7 +90,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
     CGpuTextureDescriptor ds_desc = {};
     eastl::string name = "DepthStencil";
     ds_desc.name = name.c_str();
-    ds_desc.descriptors = RT_TEXTURE;
+    ds_desc.descriptors = RT_TEXTURE | RT_DEPTH_STENCIL;
     ds_desc.flags = TCF_OWN_MEMORY_BIT;
     ds_desc.width = swapchain_->back_buffers[0]->width;
     ds_desc.height = swapchain_->back_buffers[0]->height;

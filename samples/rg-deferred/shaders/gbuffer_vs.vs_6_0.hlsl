@@ -7,7 +7,6 @@ struct VSIn
     centroid float4 normal : NORMAL;
     centroid float4 tangent : TANGENT;
     nointerpolation float4x4 model : MODEL;
-    nointerpolation float4x4 view_proj : VIEWPROJ;
 };
 
 struct VSOut
@@ -18,11 +17,18 @@ struct VSOut
     centroid float4 tangent : TANGENT;
 };
 
+struct RootConstants
+{
+    float4x4 view_proj;
+};
+[[vk::push_constant]]
+ConstantBuffer<RootConstants> root_constants : register(b0);
+
 VSOut main(const VSIn input)
 {
     VSOut output;
     float4 posW = mul(float4(input.position, 1.0f), input.model);
-    float4 posH = mul(posW, input.view_proj);
+    float4 posH = mul(posW, root_constants.view_proj);
     output.position = posH;
     output.uv = input.uv;
     output.normal = input.normal;

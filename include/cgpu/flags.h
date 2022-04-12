@@ -606,8 +606,10 @@ typedef enum ECGpuResourceType
     RT_TEXTURE = (RT_SAMPLER << 1),
     /// RTV Texture
     RT_RENDER_TARGET = (RT_TEXTURE << 1),
+    /// DSV Texture
+    RT_DEPTH_STENCIL = (RT_RENDER_TARGET << 1),
     /// UAV Texture
-    RT_RW_TEXTURE = (RT_RENDER_TARGET << 1),
+    RT_RW_TEXTURE = (RT_DEPTH_STENCIL << 1),
     // SRV Read only buffer
     RT_BUFFER = (RT_RW_TEXTURE << 1),
     RT_BUFFER_RAW = (RT_BUFFER | (RT_BUFFER << 1)),
@@ -675,6 +677,16 @@ static FORCEINLINE bool FormatUtil_IsDepthStencilFormat(ECGpuFormat const fmt) {
         case PF_X8_D24_UNORM:
         case PF_D16_UNORM:
         case PF_D16_UNORM_S8_UINT:
+            return true;
+        default: return false;
+    }
+    return false;
+}
+
+static FORCEINLINE bool FormatUtil_IsDepthOnlyFormat(ECGpuFormat const fmt) {
+    switch(fmt) {
+        case PF_D32_SFLOAT:
+        case PF_D16_UNORM:
             return true;
         default: return false;
     }

@@ -5,7 +5,6 @@ namespace smath = sakura::math;
 struct CubeGeometry {
     struct InstanceData {
         smath::float4x4 world;
-        smath::float4x4 view_proj;
     };
     static InstanceData instance_data;
 

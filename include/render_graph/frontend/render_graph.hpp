@@ -37,11 +37,18 @@ public:
     public:
         friend class RenderGraph;
         RenderPassBuilder& set_name(const char* name);
+        // textures
         RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle);
         RenderPassBuilder& read(const char8_t* name, TextureSRVHandle handle);
         RenderPassBuilder& write(uint32_t mrt_index, TextureRTVHandle handle,
             ECGpuLoadAction load_action = LOAD_ACTION_CLEAR,
             ECGpuStoreAction store_action = STORE_ACTION_STORE);
+        RenderPassBuilder& set_depth_stencil(TextureDSVHandle handle,
+            ECGpuLoadAction dload_action = LOAD_ACTION_CLEAR,
+            ECGpuStoreAction dstore_action = STORE_ACTION_STORE,
+            ECGpuLoadAction sload_action = LOAD_ACTION_CLEAR,
+            ECGpuStoreAction sstore_action = STORE_ACTION_STORE);
+        // buffers
         RenderPassBuilder& read(const char8_t* name, BufferHandle handle);
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
@@ -179,6 +186,7 @@ public:
         TextureBuilder& array(uint32_t size);
         TextureBuilder& sample_count(ECGpuSampleCount count);
         TextureBuilder& allow_render_target();
+        TextureBuilder& allow_depth_stencil();
         TextureBuilder& allow_readwrite();
         TextureBuilder& set_name(const char* name);
         TextureBuilder& owns_memory();
@@ -350,6 +358,21 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
     node.store_actions[mrt_index] = store_action;
     return *this;
 }
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stencil(TextureDSVHandle handle,
+    ECGpuLoadAction dload_action, ECGpuStoreAction dstore_action,
+    ECGpuLoadAction sload_action, ECGpuStoreAction sstore_action)
+{
+    auto&& edge = node.out_edges.emplace_back(
+        new TextureRenderEdge(
+            MAX_MRT_COUNT, handle._this,
+            RESOURCE_STATE_DEPTH_WRITE));
+    graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
+    node.depth_load_action = dload_action;
+    node.depth_store_action = dstore_action;
+    node.stencil_load_action = sload_action;
+    node.stencil_store_action = sstore_action;
+    return *this;
+}
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle)
 {
     return *this;
@@ -503,6 +526,12 @@ inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_readwrite
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_target()
 {
     tex_desc.descriptors |= RT_RENDER_TARGET;
+    tex_desc.start_state = RESOURCE_STATE_UNDEFINED;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_depth_stencil()
+{
+    tex_desc.descriptors |= RT_DEPTH_STENCIL;
     tex_desc.start_state = RESOURCE_STATE_UNDEFINED;
     return *this;
 }

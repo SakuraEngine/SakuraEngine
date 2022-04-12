@@ -311,8 +311,13 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
                 view_desc.array_layer_count = read_edge->get_array_count();
                 view_desc.base_mip_level = read_edge->get_mip_base();
                 view_desc.mip_level_count = read_edge->get_mip_count();
-                view_desc.aspects = TVA_COLOR;
                 view_desc.format = (ECGpuFormat)view_desc.texture->format;
+                const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
+                const bool is_depth_only = FormatUtil_IsDepthStencilFormat(view_desc.format);
+                view_desc.aspects =
+                    is_depth_stencil ?
+                        is_depth_only ? TVA_DEPTH : TVA_DEPTH | TVA_STENCIL :
+                        TVA_COLOR;
                 view_desc.usages = TVU_SRV;
                 view_desc.dims = read_edge->get_dimension();
                 srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
@@ -482,32 +487,63 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     // color attachments
     // TODO: MSAA
     eastl::vector<CGpuColorAttachment> color_attachments = {};
+    CGpuDepthStencilAttachment ds_attachment = {};
     for (auto& write_edge : write_edges)
     {
-        CGpuColorAttachment attachment = {};
-        auto texture_target = write_edge->get_texture_node();
         // TODO: MSAA
-        CGpuTextureViewDescriptor view_desc = {};
-        view_desc.texture = resolve(*texture_target);
-        view_desc.base_array_layer = write_edge->get_array_base();
-        view_desc.array_layer_count = write_edge->get_array_count();
-        view_desc.base_mip_level = write_edge->get_mip_level();
-        view_desc.mip_level_count = 1;
-        view_desc.aspects = TVA_COLOR;
-        view_desc.format = (ECGpuFormat)view_desc.texture->format;
-        view_desc.usages = TVU_RTV_DSV;
-        view_desc.dims = TEX_DIMENSION_2D;
-        attachment.view = texture_view_pool.allocate(view_desc, frame_index);
-        attachment.load_action = pass->load_actions[write_edge->mrt_index];
-        attachment.store_action = pass->store_actions[write_edge->mrt_index];
-        color_attachments.emplace_back(attachment);
+        auto texture_target = write_edge->get_texture_node();
+        const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(
+            (ECGpuFormat)resolve(*texture_target)->format);
+        const bool is_depth_only = FormatUtil_IsDepthStencilFormat(
+            (ECGpuFormat)resolve(*texture_target)->format);
+        if (write_edge->requested_state == RESOURCE_STATE_DEPTH_WRITE && is_depth_stencil)
+        {
+            CGpuTextureViewDescriptor view_desc = {};
+            view_desc.texture = resolve(*texture_target);
+            view_desc.base_array_layer = write_edge->get_array_base();
+            view_desc.array_layer_count = write_edge->get_array_count();
+            view_desc.base_mip_level = write_edge->get_mip_level();
+            view_desc.mip_level_count = 1;
+            view_desc.aspects =
+                is_depth_only ? TVA_DEPTH : TVA_DEPTH | TVA_STENCIL;
+            view_desc.format = (ECGpuFormat)view_desc.texture->format;
+            view_desc.usages = TVU_RTV_DSV;
+            view_desc.dims = TEX_DIMENSION_2D;
+            ds_attachment.view = texture_view_pool.allocate(view_desc, frame_index);
+            ds_attachment.depth_load_action = pass->depth_load_action;
+            ds_attachment.depth_store_action = pass->depth_store_action;
+            ds_attachment.stencil_load_action = pass->stencil_load_action;
+            ds_attachment.stencil_store_action = pass->stencil_store_action;
+            ds_attachment.clear_depth = 1.f; // TODO:Remove this
+            ds_attachment.write_depth = true;
+        }
+        else
+        {
+            CGpuColorAttachment attachment = {};
+            CGpuTextureViewDescriptor view_desc = {};
+            view_desc.texture = resolve(*texture_target);
+            view_desc.base_array_layer = write_edge->get_array_base();
+            view_desc.array_layer_count = write_edge->get_array_count();
+            view_desc.base_mip_level = write_edge->get_mip_level();
+            view_desc.mip_level_count = 1;
+            view_desc.format = (ECGpuFormat)view_desc.texture->format;
+            const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
+            const bool is_depth_only = FormatUtil_IsDepthStencilFormat(view_desc.format);
+            view_desc.aspects = TVA_COLOR;
+            view_desc.usages = TVU_RTV_DSV;
+            view_desc.dims = TEX_DIMENSION_2D;
+            attachment.view = texture_view_pool.allocate(view_desc, frame_index);
+            attachment.load_action = pass->load_actions[write_edge->mrt_index];
+            attachment.store_action = pass->store_actions[write_edge->mrt_index];
+            color_attachments.emplace_back(attachment);
+        }
     }
     CGpuRenderPassDescriptor pass_desc = {};
-    pass_desc.render_target_count = write_edges.size();
+    pass_desc.render_target_count = color_attachments.size();
     pass_desc.sample_count = SAMPLE_COUNT_1;
     pass_desc.name = pass->get_name();
     pass_desc.color_attachments = color_attachments.data();
-    pass_desc.depth_stencil = nullptr;
+    pass_desc.depth_stencil = &ds_attachment;
     stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
     cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)

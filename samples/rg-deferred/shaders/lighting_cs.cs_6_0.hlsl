@@ -2,8 +2,8 @@
 
 Texture2D gbuffer_color : register(t0, space0);
 Texture2D gbuffer_normal : register(t1, space0);
-//Texture2D gbuffer_depth : register(t2, space0);
-[[vk::binding(2, 0)]]
+Texture2D gbuffer_depth : register(t2, space0);
+[[vk::binding(0, 1)]]
 RWTexture2D<float4> lighting_output : register(u0, space0);
 
 struct RootConstants
@@ -25,4 +25,5 @@ void main(int2 threadID : SV_DispatchThreadID)
     float4 gbufferNormal = gbuffer_normal[pixelPosition];
 
     lighting_output[pixelPosition] = gbufferColor * 0.5 + gbufferNormal * 0.5;
+    lighting_output[pixelPosition] *= gbuffer_depth[pixelPosition].rrrr;
 }

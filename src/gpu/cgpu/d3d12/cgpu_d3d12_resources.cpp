@@ -455,9 +455,14 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
             actualStartState = D3D12_RESOURCE_STATE_COMMON;
         }
         // Decide render target flags
+
         if (descriptors & RT_RENDER_TARGET)
         {
             res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+        }
+        else if (descriptors & RT_DEPTH_STENCIL)
+        {
+            res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
         }
         if (desc->start_state & RESOURCE_STATE_RENDER_TARGET)
         {
@@ -467,7 +472,6 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
         }
         else if (desc->start_state & RESOURCE_STATE_DEPTH_WRITE)
         {
-            res_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
             actualStartState = (desc->start_state > RESOURCE_STATE_DEPTH_WRITE) ?
                                    (desc->start_state & (ECGpuResourceState)~RESOURCE_STATE_DEPTH_WRITE) :
                                    RESOURCE_STATE_DEPTH_WRITE;

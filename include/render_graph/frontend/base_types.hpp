@@ -85,6 +85,17 @@ struct ObjectHandle<EObjectType::Texture> {
         uint32_t array_base = 0;
         uint32_t array_count = 1;
     };
+    struct DepthStencilHandle : public ShaderWriteHandle {
+        friend struct ObjectHandle<EObjectType::Texture>;
+        friend class RenderGraph;
+        friend class TextureRenderEdge;
+
+    protected:
+        inline DepthStencilHandle(const handle_t _this)
+            : ShaderWriteHandle(_this)
+        {
+        }
+    };
     struct ShaderReadWriteHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
@@ -121,6 +132,8 @@ struct ObjectHandle<EObjectType::Texture> {
     ShaderWriteHandle write_array(uint32_t base, uint32_t count);
     // readwrite
     inline operator ShaderReadWriteHandle() const { return ShaderReadWriteHandle(handle); }
+    // ds
+    inline operator DepthStencilHandle() const { return DepthStencilHandle(handle); }
     // subresource
     inline operator SubresourceHandle() const { return SubresourceHandle(handle); }
     friend class RenderGraph;
@@ -146,6 +159,7 @@ using PassHandle = ObjectHandle<EObjectType::Pass>;
 using TextureHandle = ObjectHandle<EObjectType::Texture>;
 using TextureSRVHandle = TextureHandle::ShaderReadHandle;
 using TextureRTVHandle = TextureHandle::ShaderWriteHandle;
+using TextureDSVHandle = TextureHandle::DepthStencilHandle;
 using TextureUAVHandle = TextureHandle::ShaderReadWriteHandle;
 using TextureSubresourceHandle = TextureHandle::SubresourceHandle;
 using BufferHandle = ObjectHandle<EObjectType::Buffer>;
