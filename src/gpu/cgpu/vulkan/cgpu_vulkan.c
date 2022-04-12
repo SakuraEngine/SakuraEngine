@@ -689,7 +689,8 @@ void cgpu_update_descriptor_set_vulkan(CGpuDescriptorSetId set, const struct CGp
         }
         // Update Info
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
-        switch (ResData->type)
+        const ECGpuResourceType resourceType = (ECGpuResourceType)ResData->type;
+        switch (resourceType)
         {
             case RT_RW_TEXTURE:
             case RT_TEXTURE: {
@@ -1029,6 +1030,7 @@ CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, con
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
+        
         .depthTestEnable = desc->depth_state->depth_test ? VK_TRUE : VK_FALSE,
         .depthWriteEnable = desc->depth_state->depth_write ? VK_TRUE : VK_FALSE,
         .depthCompareOp = gVkComparisonFuncTranslator[desc->depth_state->depth_func],

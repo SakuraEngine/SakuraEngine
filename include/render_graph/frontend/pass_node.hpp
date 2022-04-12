@@ -54,6 +54,10 @@ protected:
     CGpuRenderPipelineId pipeline;
     ECGpuLoadAction load_actions[MAX_MRT_COUNT + 1];
     ECGpuStoreAction store_actions[MAX_MRT_COUNT + 1];
+    ECGpuLoadAction depth_load_action;
+    ECGpuStoreAction depth_store_action;
+    ECGpuLoadAction stencil_load_action;
+    ECGpuStoreAction stencil_store_action;
 };
 
 struct ComputePassStack {

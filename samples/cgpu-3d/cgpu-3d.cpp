@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 {
     ECGpuBackend cmdBackend;
     if (argc <= 1)
-        cmdBackend = CGPU_BACKEND_D3D12;
+        cmdBackend = CGPU_BACKEND_VULKAN;
     else
     {
         eastl::string cmdArgv1 = argv[1];

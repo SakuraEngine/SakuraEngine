@@ -62,3 +62,20 @@ inline static void read_shader_bytes(
     }
     read_bytes(shader_file, (char8_t**)bytes, length);
 }
+
+#ifdef __cplusplus
+template <typename Pipeline>
+inline static void free_pipeline_and_signature(Pipeline* pipeline)
+{
+    auto sig = pipeline->root_signature;
+    if constexpr (std::is_same_v<Pipeline*, CGpuRenderPipelineId>)
+    {
+        cgpu_free_render_pipeline(pipeline);
+    }
+    else
+    {
+        cgpu_free_compute_pipeline(pipeline);
+    }
+    cgpu_free_root_signature(sig);
+}
+#endif

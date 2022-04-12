@@ -999,7 +999,7 @@ void cgpu_wait_queue_idle_d3d12(CGpuQueueId queue)
 void cgpu_queue_present_d3d12(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc)
 {
     CGpuSwapChain_D3D12* S = (CGpuSwapChain_D3D12*)desc->swapchain;
-    HRESULT hr = S->pDxSwapChain->Present(S->mDxSyncInterval, 0 /*desc->index*/);
+    HRESULT hr = S->pDxSwapChain->Present(S->mDxSyncInterval, S->mFlags /*desc->index*/);
     if (FAILED(hr))
     {
 #if defined(_WINDOWS)
