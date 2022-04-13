@@ -81,6 +81,7 @@ set(RUNTIME_SOURCES
     src/utils/build.0.c
     src/utils/build.0.cpp
     src/platform/build.0.cpp
+    src/platform/build.0.c
     src/gpu/cgpu/build.0.cpp
     src/gpu/cgpu/build.1.cpp
     src/gpu/cgpu/build.2.cpp
