@@ -953,6 +953,15 @@ CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window)
 }
 #endif
 
+CGpuSurfaceId cgpu_surface_from_native_view(CGpuDeviceId device, void* view)
+{
+#ifdef SAKURA_TARGET_PLATFORM_MACOS
+    return cgpu_surface_from_ns_view(device, (CGpuNSView*)view);
+#elif defined(SAKURA_TARGET_PLATFORM_WIN)
+    return cgpu_surface_from_hwnd(deivce, (HWND)view);
+#endif
+}
+
 void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");

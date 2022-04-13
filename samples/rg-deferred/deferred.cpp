@@ -4,9 +4,9 @@
 #include "lighting_pipeline.h"
 #include "blit_pipeline.h"
 #include "render_graph/frontend/render_graph.hpp"
+#include "platform/window.h"
 
-thread_local SDL_Window* sdl_window;
-thread_local SDL_SysWMinfo wmInfo;
+thread_local SWindowHandle window;
 thread_local CGpuSurfaceId surface;
 thread_local CGpuSwapChainId swapchain;
 thread_local uint32_t backbuffer_index;
@@ -74,12 +74,7 @@ void create_api_objects()
     static_sampler = cgpu_create_sampler(device, &sampler_desc);
 
     // Create swapchain
-#if defined(_WIN32) || defined(_WIN64)
-    surface = cgpu_surface_from_hwnd(device, wmInfo.info.win.window);
-#elif defined(__APPLE__)
-    struct CGpuNSView* ns_view = (struct CGpuNSView*)nswindow_get_content_view(wmInfo.info.cocoa.window);
-    surface = cgpu_surface_from_ns_view(device, ns_view);
-#endif
+    surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
     CGpuSwapChainDescriptor chain_desc = {};
     chain_desc.presentQueues = &gfx_queue;
     chain_desc.presentQueuesCount = 1;
@@ -242,12 +237,12 @@ const bool fragmentLightingPass = false;
 int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
-    sdl_window = SDL_CreateWindow(gCGpuBackendNames[backend],
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(sdl_window, &wmInfo);
+    SWindowDescroptor window_desc = {};
+    window_desc.centered = true;
+    window_desc.resizable = true;
+    window_desc.height = BACK_BUFFER_HEIGHT;
+    window_desc.width = BACK_BUFFER_WIDTH;
+    window = skr_create_window(gCGpuBackendNames[backend], &window_desc);
     create_api_objects();
     create_resources();
     create_render_pipeline();
@@ -263,6 +258,7 @@ int main(int argc, char* argv[])
     while (!quit)
     {
         SDL_Event event;
+        auto sdl_window = (SDL_Window*)window;
         while (SDL_PollEvent(&event))
         {
             if (SDL_GetWindowID(sdl_window) == event.window.windowID)
@@ -434,7 +430,7 @@ int main(int argc, char* argv[])
     render_graph::RenderGraph::destroy(graph);
     // clean up
     finalize();
-    SDL_DestroyWindow(sdl_window);
+    skr_free_window(window);
     SDL_Quit();
     return 0;
 }
