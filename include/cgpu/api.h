@@ -452,6 +452,7 @@ typedef struct CGpuProcTable {
 RUNTIME_API void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface);
 typedef void (*CGPUSurfaceProc_Free)(CGpuDeviceId device, CGpuSurfaceId surface);
 
+RUNTIME_API CGpuSurfaceId cgpu_surface_from_native_view(CGpuDeviceId device, void* view);
 #if defined(_WIN32) || defined(_WIN64)
 typedef struct HWND__* HWND;
 RUNTIME_API CGpuSurfaceId cgpu_surface_from_hwnd(CGpuDeviceId device, HWND window);

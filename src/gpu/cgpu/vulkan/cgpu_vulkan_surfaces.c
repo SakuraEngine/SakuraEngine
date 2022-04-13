@@ -67,7 +67,7 @@ CGpuSurfaceId cgpu_surface_from_ns_view_vulkan(CGpuDeviceId device, CGpuNSView* 
     if (vkCreateMacOSSurfaceMVK(I->pVkInstance, &create_info, GLOBAL_VkAllocationCallbacks,
             (VkSurfaceKHR*)&surface) != VK_SUCCESS)
     {
-        cgpu_assert(0 && "Create VKWin32 Surface Failed!");
+        cgpu_assert(0 && "Create VK NSView Surface Failed!");
         return CGPU_NULLPTR;
     }
     return surface;
