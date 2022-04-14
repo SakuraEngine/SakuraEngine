@@ -452,7 +452,7 @@ int main(int argc, char* argv[])
         ImGui::Text("This is some useful text.");
         ImGui::End();
         ImGui::Render();
-        render_graph_imgui_add_render_pass(graph, back_buffer, LOAD_ACTION_DONTCARE);
+        render_graph_imgui_add_render_pass(graph, back_buffer, LOAD_ACTION_LOAD);
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                 builder.set_name("present_pass")

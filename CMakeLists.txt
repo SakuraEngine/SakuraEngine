@@ -121,6 +121,7 @@ target_include_directories(SakuraRuntime
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${WASM3_INCLUDES}
     ${WASM_EDGE_INCLUDES}
+    ${SDL2_INCLUDES}
 )
 
 # link targets
@@ -129,6 +130,7 @@ target_link_libraries(SakuraRuntime
     ${PLATFORM_FRAMEWORKS}
     ${WASM3_LIBRARIES}
     ${WASM_EDGE_LIBRARIES}
+    ${SDL2_LIBRARIES}
     IMGUI
 )
 

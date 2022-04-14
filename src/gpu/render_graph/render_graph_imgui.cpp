@@ -87,7 +87,7 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             if (vertex_buffer) cgpu_free_buffer(vertex_buffer);
             vertex_buffer = cgpux_create_mapped_buffer(device, index_size,
                 "imgui_vertex_buffer", true,
-                RT_BUFFER | RT_VERTEX_BUFFER,
+                RT_VERTEX_BUFFER,
                 RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
         }
         if ((!index_buffer || index_buffer->size < index_size) && device)
@@ -105,7 +105,7 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             if (index_buffer) cgpu_free_buffer(index_buffer);
             index_buffer = cgpux_create_mapped_buffer(device, index_size,
                 "imgui_index_buffer", true,
-                RT_BUFFER | RT_INDEX_BUFFER,
+                RT_INDEX_BUFFER,
                 RESOURCE_STATE_INDEX_BUFFER);
         }
         if ((!upload_buffer || upload_buffer->size < index_size + vertex_size) && device)
@@ -290,8 +290,8 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     CGpuVertexLayout vertex_layout = {};
     vertex_layout.attribute_count = 3;
     vertex_layout.attributes[0] = { "POSITION", 1, PF_R32G32_SFLOAT, 0, 0, sizeof(float) * 2, INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD0", 1, PF_R32G32_SFLOAT, 0, sizeof(float) * 2, sizeof(float) * 2, INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "COLOR0", 1, PF_R8G8B8A8_UNORM, 0, sizeof(float) * 4, sizeof(uint32_t), INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, PF_R32G32_SFLOAT, 0, sizeof(float) * 2, sizeof(float) * 2, INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { "COLOR", 1, PF_R8G8B8A8_UNORM, 0, sizeof(float) * 4, sizeof(uint32_t), INPUT_RATE_VERTEX };
     CGpuRasterizerStateDescriptor rs_state = {};
     rs_state.cull_mode = CULL_MODE_BACK;
     rs_state.fill_mode = FILL_MODE_SOLID;
