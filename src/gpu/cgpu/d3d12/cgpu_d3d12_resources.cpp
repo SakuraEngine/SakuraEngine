@@ -573,7 +573,7 @@ CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const stru
         D3D12Util_DescriptorHeap* pHeap = D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
         TV->mDxDescriptorHandles = D3D12Util_ConsumeDescriptorHandles(pHeap, handleCount).mCpu;
         TV->mDxSrvOffset = 0;
-        uint64_t CurrentOffsetCursor = TV->mDxSrvOffset + pHeap->mDescriptorSize * 1;
+        uint64_t CurrentOffsetCursor = TV->mDxSrvOffset;
         // Create SRV
         if (usages & TVU_SRV)
         {
@@ -648,6 +648,7 @@ CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const stru
                     break;
             }
             D3D12Util_CreateSRV(D, T->pDxResource, &srvDesc, &srv);
+            CurrentOffsetCursor += pHeap->mDescriptorSize * 1;
         }
         // Create UAV
         if (usages & TVU_UAV)

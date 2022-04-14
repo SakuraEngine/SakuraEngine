@@ -603,7 +603,7 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
                 {
                     cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL Textures!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
-                        { Textures[arr]->mDxDescriptorHandles.ptr },
+                        { Textures[arr]->mDxDescriptorHandles.ptr + Textures[arr]->mDxSrvOffset },
                         Set->mCbvSrvUavHandle, arr + HeapOffset);
                 }
             }
@@ -616,7 +616,7 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
                 {
                     cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Textures!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
-                        { Buffers[arr]->mDxDescriptorHandles.ptr },
+                        { Buffers[arr]->mDxDescriptorHandles.ptr + Buffers[arr]->mDxSrvOffset },
                         Set->mCbvSrvUavHandle, arr + HeapOffset);
                 }
                 // TODO: CBV
@@ -627,7 +627,7 @@ void cgpu_update_descriptor_set_d3d12(CGpuDescriptorSetId set, const struct CGpu
                 CGpuTextureView_D3D12** Textures = (CGpuTextureView_D3D12**)pParam->textures;
                 for (uint32_t arr = 0; arr < arrayCount; arr++)
                 {
-                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Texture!");
+                    cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL Texture!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
                         { Textures[arr]->mDxDescriptorHandles.ptr + Textures[arr]->mDxUavOffset },
                         Set->mCbvSrvUavHandle, arr + HeapOffset);
