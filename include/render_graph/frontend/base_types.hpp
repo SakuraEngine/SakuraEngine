@@ -145,6 +145,7 @@ struct ObjectHandle<EObjectType::Texture> {
     friend class ShaderWriteHandle;
     friend class ShaderReadWriteHandle;
     friend class SubresourceHandle;
+    ObjectHandle(){};
 
 protected:
     ObjectHandle(handle_t hdl)
@@ -153,7 +154,7 @@ protected:
     }
 
 private:
-    handle_t handle;
+    handle_t handle = UINT64_MAX;
 };
 using PassHandle = ObjectHandle<EObjectType::Pass>;
 using TextureHandle = ObjectHandle<EObjectType::Texture>;

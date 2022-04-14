@@ -1350,8 +1350,9 @@ void cgpu_render_encoder_bind_index_buffer_d3d12(CGpuRenderPassEncoderId encoder
     DECLARE_ZERO(D3D12_INDEX_BUFFER_VIEW, view);
     view.BufferLocation = Buffer->mDxGpuAddress + offset;
     view.Format =
-        (16 == index_stride) ? DXGI_FORMAT_R16_UINT :
-                               ((8 == index_stride) ? DXGI_FORMAT_R8_UINT : DXGI_FORMAT_R32_UINT);
+        (sizeof(uint16_t) == index_stride) ?
+            DXGI_FORMAT_R16_UINT :
+            ((sizeof(uint8_t) == index_stride) ? DXGI_FORMAT_R8_UINT : DXGI_FORMAT_R32_UINT);
     view.SizeInBytes = (UINT)(Buffer->super.size - offset);
     Cmd->pDxCmdList->IASetIndexBuffer(&view);
 }

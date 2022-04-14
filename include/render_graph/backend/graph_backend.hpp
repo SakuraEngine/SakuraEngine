@@ -43,6 +43,7 @@ public:
     void devirtualize(PassNode* node);
 
     virtual uint64_t execute() final;
+    virtual CGpuDeviceId get_backend_device() final;
 
     friend class RenderGraph;
 

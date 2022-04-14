@@ -374,6 +374,8 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
     for (auto& read_edge : read_edges)
     {
         auto texture_readed = read_edge->get_texture_node();
+        if (texture_readed->imported)
+            continue;
         bool is_last_user = true;
         texture_readed->foreach_neighbors(
             [&](DependencyGraphNode* neig) {
@@ -393,6 +395,8 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
     for (auto& write_edge : write_edges)
     {
         auto texture_target = write_edge->get_texture_node();
+        if (texture_target->imported)
+            continue;
         bool is_last_user = true;
         texture_target->foreach_neighbors(
             [&](DependencyGraphNode* neig) {
@@ -412,6 +416,8 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
     for (auto& rw_edge : rw_edges)
     {
         auto texture_target = rw_edge->get_texture_node();
+        if (texture_target->imported)
+            continue;
         bool is_last_user = true;
         texture_target->foreach_neighbors(
             [&](DependencyGraphNode* neig) {
@@ -655,6 +661,11 @@ uint64_t RenderGraphBackend::execute()
         desc_heap.second->reset();
     }
     return frame_index++;
+}
+
+CGpuDeviceId RenderGraphBackend::get_backend_device()
+{
+    return device;
 }
 } // namespace render_graph
 } // namespace sakura

@@ -139,10 +139,8 @@ void upload_resources()
         .src = upload_buffer,
         .src_offset = 0,
         .dst = sampled_texture,
-        .elems_per_row = TEXTURE_WIDTH,
-        .rows_per_image = TEXTURE_HEIGHT,
-        .base_array_layer = 0,
-        .layer_count = 1
+        .dst_subresource.base_array_layer = 0,
+        .dst_subresource.layer_count = 1
     };
     cgpu_cmd_transfer_buffer_to_texture(cmds[0], &b2t);
     CGpuTextureBarrier srv_barrier = {

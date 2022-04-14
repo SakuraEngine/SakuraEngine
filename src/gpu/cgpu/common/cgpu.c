@@ -482,9 +482,6 @@ void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct C
     cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
     cgpu_assert(desc->src != CGPU_NULLPTR && "fatal: call on NULL cpy_src!");
     cgpu_assert(desc->dst != CGPU_NULLPTR && "fatal: call on NULL cpy_dst!");
-    if (desc->layer_count == 0) ((CGpuBufferToTextureTransfer*)desc)->layer_count = 1;
-    assert(desc->elems_per_row != 0 && "fatal: bytes_per_raw must be greater than 0!");
-    assert(desc->rows_per_image != 0 && "fatal: rows_per_image must be greater than 0!");
     const CGPUProcCmdTransferBufferToTexture fn_cmd_transfer_buffer_to_texture = cmd->device->proc_table_cache->cmd_transfer_buffer_to_texture;
     cgpu_assert(fn_cmd_transfer_buffer_to_texture && "cmd_transfer_buffer_to_texture Proc Missing!");
     fn_cmd_transfer_buffer_to_texture(cmd, desc);
@@ -910,22 +907,39 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
 }
 
 // cgpux helpers
-CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name, bool device_local_preferred)
+CGpuBufferId cgpux_create_mapped_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name,
+    bool device_local_preferred,
+    CGpuResourceTypes rt,
+    ECGpuResourceState start_state)
 {
     DECLARE_ZERO(CGpuBufferDescriptor, buf_desc)
-    buf_desc.descriptors = RT_BUFFER;
+    buf_desc.descriptors = rt;
     buf_desc.size = size;
     buf_desc.name = name;
     const CGpuAdapterDetail* detail = cgpu_query_adapter_detail(device->adapter);
     buf_desc.memory_usage = MEM_USAGE_CPU_TO_GPU;
     buf_desc.flags = BCF_PERSISTENT_MAP_BIT | BCF_HOST_VISIBLE;
-    buf_desc.start_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    buf_desc.start_state = start_state;
     if (device_local_preferred && detail->support_host_visible_vram)
     {
         buf_desc.memory_usage = MEM_USAGE_GPU_ONLY;
     }
     return cgpu_create_buffer(device, &buf_desc);
+}
+
+CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name, bool device_local_preferred)
+{
+    return cgpux_create_mapped_buffer(device, size, name, device_local_preferred,
+        RT_BUFFER, RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+}
+
+RUNTIME_API CGpuBufferId cgpux_create_mapped_upload_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name, bool device_local_preferred)
+{
+    return cgpux_create_mapped_buffer(device, size, name, device_local_preferred,
+        RT_BUFFER, RESOURCE_STATE_COPY_SOURCE);
 }
 
 // surfaces

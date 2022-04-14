@@ -1869,8 +1869,9 @@ void cgpu_render_encoder_bind_index_buffer_vulkan(CGpuRenderPassEncoderId encode
     cgpu_assert(VK_NULL_HANDLE != Buffer->pVkBuffer);
 
     VkIndexType vk_index_type =
-        (16 == index_stride) ? VK_INDEX_TYPE_UINT16 :
-                               ((8 == index_stride) ? VK_INDEX_TYPE_UINT8_EXT : VK_INDEX_TYPE_UINT32);
+        (sizeof(uint16_t) == index_stride) ?
+            VK_INDEX_TYPE_UINT16 :
+            ((sizeof(uint8_t) == index_stride) ? VK_INDEX_TYPE_UINT8_EXT : VK_INDEX_TYPE_UINT32);
     D->mVkDeviceTable.vkCmdBindIndexBuffer(Cmd->pVkCmdBuf, Buffer->pVkBuffer, offset, vk_index_type);
 }
 
