@@ -195,18 +195,18 @@ void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId cmd, const s
     const ECGpuFormat fmt = desc->dst->format;
     if (isSinglePlane)
     {
-        const uint32_t width = cgpu_max(1, desc->dst->width >> desc->dst_mip_level);
-        const uint32_t height = cgpu_max(1, desc->dst->height >> desc->dst_mip_level);
-        const uint32_t depth = cgpu_max(1, desc->dst->depth >> desc->dst_mip_level);
+        const uint32_t width = cgpu_max(1, desc->dst->width >> desc->dst_subresource.mip_level);
+        const uint32_t height = cgpu_max(1, desc->dst->height >> desc->dst_subresource.mip_level);
+        const uint32_t depth = cgpu_max(1, desc->dst->depth >> desc->dst_subresource.mip_level);
 
         VkBufferImageCopy copy = {
             .bufferOffset = desc->src_offset,
-            .bufferRowLength = desc->elems_per_row * FormatUtil_WidthOfBlock(PF_R8G8B8A8_UNORM),
-            .bufferImageHeight = desc->rows_per_image * FormatUtil_HeightOfBlock(fmt),
+            .bufferRowLength = width * FormatUtil_WidthOfBlock(fmt),
+            .bufferImageHeight = height * FormatUtil_HeightOfBlock(fmt),
             .imageSubresource.aspectMask = (VkImageAspectFlags)desc->dst->aspect_mask,
-            .imageSubresource.mipLevel = desc->dst_mip_level,
-            .imageSubresource.baseArrayLayer = desc->base_array_layer,
-            .imageSubresource.layerCount = desc->layer_count,
+            .imageSubresource.mipLevel = desc->dst_subresource.mip_level,
+            .imageSubresource.baseArrayLayer = desc->dst_subresource.base_array_layer,
+            .imageSubresource.layerCount = desc->dst_subresource.layer_count,
             .imageOffset.x = 0,
             .imageOffset.y = 0,
             .imageOffset.z = 0,

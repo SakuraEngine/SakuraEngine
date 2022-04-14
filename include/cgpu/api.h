@@ -341,7 +341,14 @@ typedef void (*CGPUProcRenderEncoderDrawIndexedInstanced)(CGpuRenderPassEncoderI
 RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 typedef void (*CGPUProcCmdEndRenderPass)(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
+RUNTIME_API CGpuBufferId cgpux_create_mapped_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name,
+    bool device_local_preferred,
+    CGpuResourceTypes rt,
+    ECGpuResourceState start_state);
 RUNTIME_API CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name, bool device_local_preferred);
+RUNTIME_API CGpuBufferId cgpux_create_mapped_upload_buffer(CGpuDeviceId device,
     uint64_t size, const char8_t* name, bool device_local_preferred);
 
 // Types
@@ -776,11 +783,7 @@ typedef struct CGpuTextureToTextureTransfer {
 
 typedef struct CGpuBufferToTextureTransfer {
     CGpuTextureId dst;
-    uint32_t dst_mip_level;
-    uint32_t elems_per_row;
-    uint32_t rows_per_image;
-    uint32_t base_array_layer;
-    uint32_t layer_count;
+    CGpuTextureSubresource dst_subresource;
     CGpuBufferId src;
     uint64_t src_offset;
 } CGpuBufferToTextureTransfer;

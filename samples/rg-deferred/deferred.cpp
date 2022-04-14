@@ -4,6 +4,8 @@
 #include "lighting_pipeline.h"
 #include "blit_pipeline.h"
 #include "render_graph/frontend/render_graph.hpp"
+#include "render_graph/render_graph_imgui.h"
+#include "imgui/imgui.h"
 #include "platform/window.h"
 
 thread_local SWindowHandle window;
@@ -204,8 +206,6 @@ void create_render_pipeline()
 void finalize()
 {
     // Free cgpu objects
-    cgpu_wait_queue_idle(gfx_queue);
-    cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
     cgpu_free_buffer(index_buffer);
     cgpu_free_buffer(vertex_buffer);
@@ -253,6 +253,41 @@ int main(int argc, char* argv[])
             builder.with_device(device)
                 .with_gfx_queue(gfx_queue);
         });
+    ImGui::CreateContext();
+    uint32_t *im_vs_bytes, im_vs_length;
+    read_shader_bytes("imgui_vertex", &im_vs_bytes, &im_vs_length,
+        device->adapter->instance->backend);
+    uint32_t *im_fs_bytes, im_fs_length;
+    read_shader_bytes("imgui_fragment", &im_fs_bytes, &im_fs_length,
+        device->adapter->instance->backend);
+    CGpuShaderLibraryDescriptor vs_desc = {};
+    vs_desc.name = "imgui_vertex_shader";
+    vs_desc.stage = SHADER_STAGE_VERT;
+    vs_desc.code = im_vs_bytes;
+    vs_desc.code_size = im_vs_length;
+    CGpuShaderLibraryDescriptor fs_desc = {};
+    fs_desc.name = "imgui_fragment_shader";
+    fs_desc.stage = SHADER_STAGE_FRAG;
+    fs_desc.code = im_fs_bytes;
+    fs_desc.code_size = im_fs_length;
+    CGpuShaderLibraryId imgui_vs = cgpu_create_shader_library(device, &vs_desc);
+    CGpuShaderLibraryId imgui_fs = cgpu_create_shader_library(device, &fs_desc);
+    free(im_vs_bytes);
+    free(im_fs_bytes);
+    RenderGraphImGuiDescriptor imgui_graph_desc = {};
+    imgui_graph_desc.render_graph = graph;
+    imgui_graph_desc.backbuffer_format = (ECGpuFormat)swapchain->back_buffers[backbuffer_index]->format;
+    imgui_graph_desc.vs.library = imgui_vs;
+    imgui_graph_desc.vs.stage = SHADER_STAGE_VERT;
+    imgui_graph_desc.vs.entry = "main";
+    imgui_graph_desc.ps.library = imgui_fs;
+    imgui_graph_desc.ps.stage = SHADER_STAGE_FRAG;
+    imgui_graph_desc.ps.entry = "main";
+    imgui_graph_desc.queue = gfx_queue;
+    imgui_graph_desc.static_sampler = static_sampler;
+    render_graph_imgui_initialize(&imgui_graph_desc);
+    cgpu_free_shader_library(imgui_vs);
+    cgpu_free_shader_library(imgui_fs);
     // loop
     bool quit = false;
     while (!quit)
@@ -409,6 +444,15 @@ int main(int argc, char* argv[])
                     cgpu_render_encoder_draw(stack.encoder, 6, 0);
                 });
         }
+        render_graph_imgui_setup_resources(graph);
+        auto& io = ImGui::GetIO();
+        io.DisplaySize = ImVec2((float)to_import->width, (float)to_import->height);
+        ImGui::NewFrame();
+        ImGui::Begin("Hello, world!");
+        ImGui::Text("This is some useful text.");
+        ImGui::End();
+        ImGui::Render();
+        render_graph_imgui_add_render_pass(graph, back_buffer, LOAD_ACTION_DONTCARE);
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                 builder.set_name("present_pass")
@@ -427,7 +471,10 @@ int main(int argc, char* argv[])
         present_desc.swapchain = swapchain;
         cgpu_queue_present(gfx_queue, &present_desc);
     }
+    cgpu_wait_queue_idle(gfx_queue);
+    cgpu_wait_fences(&present_fence, 1);
     render_graph::RenderGraph::destroy(graph);
+    render_graph_imgui_finalize();
     // clean up
     finalize();
     skr_free_window(window);

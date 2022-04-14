@@ -278,9 +278,10 @@ void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGpuCommandBufferId cmd, const st
     CGpuTexture_D3D12* Dst = (CGpuTexture_D3D12*)desc->dst;
 
     uint32_t subresource = CALC_SUBRESOURCE_INDEX(
-        desc->dst_mip_level, desc->base_array_layer,
-        0, Dst->super.mip_levels,
-        Dst->super.array_size_minus_one + 1);
+        desc->dst_subresource.mip_level,
+        desc->dst_subresource.base_array_layer,
+        0, 1,
+        desc->dst_subresource.layer_count);
     D3D12_RESOURCE_DESC resourceDesc = Dst->pDxResource->GetDesc();
 
     D3D12_TEXTURE_COPY_LOCATION src = {};

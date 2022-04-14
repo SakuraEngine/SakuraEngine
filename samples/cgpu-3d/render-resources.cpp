@@ -123,11 +123,9 @@ void AsyncTransferThread::asyncTransfer(const AsyncBufferToTextureTransfer* tran
     {
         CGpuBufferToTextureTransfer trans = {};
         trans.dst = transfers[i].dst->texture_;
-        trans.dst_mip_level = transfers[i].dst_mip_level;
-        trans.elems_per_row = transfers[i].elems_per_row;
-        trans.rows_per_image = transfers[i].rows_per_image;
-        trans.base_array_layer = transfers[i].base_array_layer;
-        trans.layer_count = transfers[i].layer_count;
+        trans.dst_subresource.mip_level = transfers[i].dst_mip_level;
+        trans.dst_subresource.base_array_layer = transfers[i].base_array_layer;
+        trans.dst_subresource.layer_count = transfers[i].layer_count;
         trans.src = transfers[i].src ? transfers[i].src->buffer_ : transfers[i].raw_src;
         trans.src_offset = transfers[i].src_offset;
         cgpu_cmd_transfer_buffer_to_texture(cmd, &trans);
@@ -203,10 +201,8 @@ AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* targe
     b2t.src = target->upload_buffer_;
     b2t.src_offset = 0;
     b2t.dst = target->texture_;
-    b2t.elems_per_row = target->texture_->width;
-    b2t.rows_per_image = target->texture_->height;
-    b2t.base_array_layer = 0;
-    b2t.layer_count = 1;
+    b2t.dst_subresource.base_array_layer = 0;
+    b2t.dst_subresource.layer_count = 1;
     cgpu_cmd_transfer_buffer_to_texture(cmd, &b2t);
     cgpu_cmd_end(cmd);
     CGpuQueueSubmitDescriptor cpy_submit = {};

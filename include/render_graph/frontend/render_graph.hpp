@@ -235,6 +235,7 @@ public:
 
     bool compile();
     virtual uint64_t execute();
+    virtual CGpuDeviceId get_backend_device() { return nullptr; }
 
     inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
     inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }

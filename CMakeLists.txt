@@ -32,6 +32,7 @@ include(vulkan)
 include(GPU)
 include(ShaderCompile)
 include(SDL2) # Set SDL2 ENVS
+include(imgui) # Set ImGui ENVS
 # WASM
 extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/wasm-clang-win.zip 
     ${SAKURA_BIN_DIR}/Debug
@@ -128,6 +129,7 @@ target_link_libraries(SakuraRuntime
     ${PLATFORM_FRAMEWORKS}
     ${WASM3_LIBRARIES}
     ${WASM_EDGE_LIBRARIES}
+    IMGUI
 )
 
 if(RUNTIME_SHARED)
