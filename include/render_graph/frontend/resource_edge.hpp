@@ -111,9 +111,9 @@ inline TextureReadEdge::TextureReadEdge(
     const char8_t* name, TextureSRVHandle handle,
     ECGpuResourceState state)
     : RenderGraphEdge(ERelationshipType::TextureRead)
-    , name(name)
     , set(UINT32_MAX)
     , binding(UINT32_MAX)
+    , name(name)
     , handle(handle)
     , requested_state(state)
 
@@ -153,9 +153,9 @@ inline TextureReadWriteEdge::TextureReadWriteEdge(
     const char8_t* name, TextureUAVHandle handle,
     ECGpuResourceState state)
     : RenderGraphEdge(ERelationshipType::TextureReadWrite)
-    , name(name)
-    , binding(UINT32_MAX)
     , set(UINT32_MAX)
+    , binding(UINT32_MAX)
+    , name(name)
     , handle(handle)
     , requested_state(state)
 

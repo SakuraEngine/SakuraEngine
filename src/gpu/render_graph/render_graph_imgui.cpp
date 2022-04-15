@@ -35,6 +35,7 @@ RUNTIME_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor*
 
     // Our render function expect RendererUserData to be storing the window render buffer we need (for the main viewport we won't use ->Window)
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    (void)main_viewport;
 
     imgui_create_fonts(desc->queue);
     imgui_create_pipeline(desc);
@@ -74,7 +75,6 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
         size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
         if ((!vertex_buffer || vertex_buffer->size < vertex_size) && device)
         {
-            /*
             CGpuBufferDescriptor vb_desc = {};
             vb_desc.name = "imgui_vertex_buffer";
             vb_desc.flags = BCF_NONE;
@@ -83,16 +83,9 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             vb_desc.size = vertex_size;
             if (vertex_buffer) cgpu_free_buffer(vertex_buffer);
             vertex_buffer = cgpu_create_buffer(device, &vb_desc);
-            */
-            if (vertex_buffer) cgpu_free_buffer(vertex_buffer);
-            vertex_buffer = cgpux_create_mapped_buffer(device, index_size,
-                "imgui_vertex_buffer", true,
-                RT_VERTEX_BUFFER,
-                RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
         }
         if ((!index_buffer || index_buffer->size < index_size) && device)
         {
-            /*
             CGpuBufferDescriptor ib_desc = {};
             ib_desc.name = "imgui_index_buffer";
             ib_desc.flags = BCF_NONE;
@@ -101,23 +94,17 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             ib_desc.size = index_size;
             if (index_buffer) cgpu_free_buffer(index_buffer);
             index_buffer = cgpu_create_buffer(device, &ib_desc);
-            */
-            if (index_buffer) cgpu_free_buffer(index_buffer);
-            index_buffer = cgpux_create_mapped_buffer(device, index_size,
-                "imgui_index_buffer", true,
-                RT_INDEX_BUFFER,
-                RESOURCE_STATE_INDEX_BUFFER);
         }
         if ((!upload_buffer || upload_buffer->size < index_size + vertex_size) && device)
         {
             if (upload_buffer) cgpu_free_buffer(upload_buffer);
             upload_buffer = cgpux_create_mapped_upload_buffer(
                 device, index_size + vertex_size,
-                "imgui_upload_buffer", true);
+                "imgui_upload_buffer");
         }
         // upload
-        ImDrawVert* vtx_dst = (ImDrawVert*)vertex_buffer->cpu_mapped_address;
-        ImDrawIdx* idx_dst = (ImDrawIdx*)index_buffer->cpu_mapped_address;
+        ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
+        ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
         for (int n = 0; n < draw_data->CmdListsCount; n++)
         {
             const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -125,6 +112,48 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
             vtx_dst += cmd_list->VtxBuffer.Size;
             idx_dst += cmd_list->IdxBuffer.Size;
+        }
+        // TODO: refactor this
+        if (render_graph->get_gfx_queue())
+        {
+            CGpuCommandPoolDescriptor cmd_pool_desc = {};
+            CGpuCommandBufferDescriptor cmd_desc = {};
+            auto cpy_cmd_pool = cgpu_create_command_pool(render_graph->get_gfx_queue(), &cmd_pool_desc);
+            auto cpy_cmd = cgpu_create_command_buffer(cpy_cmd_pool, &cmd_desc);
+            cgpu_cmd_begin(cpy_cmd);
+            CGpuBufferToBufferTransfer b2vb = {};
+            b2vb.src = upload_buffer;
+            b2vb.src_offset = 0;
+            b2vb.dst = vertex_buffer;
+            b2vb.dst_offset = 0;
+            b2vb.size = vertex_size;
+            cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &b2vb);
+            CGpuBufferToBufferTransfer b2ib = {};
+            b2ib.src = upload_buffer;
+            b2ib.src_offset = vertex_size;
+            b2ib.dst = index_buffer;
+            b2ib.dst_offset = 0;
+            b2ib.size = index_size;
+            cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &b2ib);
+            CGpuBufferBarrier barriers[2];
+            barriers[0].buffer = vertex_buffer;
+            barriers[0].src_state = RESOURCE_STATE_COPY_DEST;
+            barriers[0].dst_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+            barriers[0].buffer = index_buffer;
+            barriers[0].src_state = RESOURCE_STATE_COPY_DEST;
+            barriers[0].dst_state = RESOURCE_STATE_INDEX_BUFFER;
+            CGpuResourceBarrierDescriptor barrier_desc1 = {};
+            barrier_desc1.buffer_barriers = barriers;
+            barrier_desc1.buffer_barriers_count = 2;
+            cgpu_cmd_resource_barrier(cpy_cmd, &barrier_desc1);
+            cgpu_cmd_end(cpy_cmd);
+            CGpuQueueSubmitDescriptor cpy_submit = {};
+            cpy_submit.cmds = &cpy_cmd;
+            cpy_submit.cmds_count = 1;
+            cgpu_submit_queue(render_graph->get_gfx_queue(), &cpy_submit);
+            cgpu_wait_queue_idle(render_graph->get_gfx_queue());
+            cgpu_free_command_buffer(cpy_cmd);
+            cgpu_free_command_pool(cpy_cmd_pool);
         }
         // add pass
         render_graph->add_render_pass(
@@ -241,6 +270,9 @@ void imgui_create_fonts(CGpuQueueId queue)
     upload_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = upload_size;
     CGpuBufferId tex_upload_buffer = cgpu_create_buffer(queue->device, &upload_buffer_desc);
+    {
+        memcpy(tex_upload_buffer->cpu_mapped_address, pixels, upload_size);
+    }
     auto cpy_cmd_pool = cgpu_create_command_pool(queue, &cmd_pool_desc);
     auto cpy_cmd = cgpu_create_command_buffer(cpy_cmd_pool, &cmd_desc);
     cgpu_cmd_begin(cpy_cmd);
@@ -269,6 +301,7 @@ void imgui_create_fonts(CGpuQueueId queue)
     cgpu_free_command_buffer(cpy_cmd);
     cgpu_free_command_pool(cpy_cmd_pool);
     cgpu_free_buffer(tex_upload_buffer);
+    io.Fonts->TexID = (ImTextureID)(intptr_t)&font_texture;
 }
 
 void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
@@ -295,10 +328,10 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     CGpuRasterizerStateDescriptor rs_state = {};
     rs_state.cull_mode = CULL_MODE_BACK;
     rs_state.fill_mode = FILL_MODE_SOLID;
-    rs_state.front_face = FRONT_FACE_CCW;
+    rs_state.front_face = FRONT_FACE_CW;
     rs_state.slope_scaled_depth_bias = 0.f;
     rs_state.enable_depth_clamp = false;
-    rs_state.enable_scissor = false;
+    rs_state.enable_scissor = true;
     rs_state.enable_multi_sample = false;
     rs_state.depth_bias = 0;
     CGpuRenderPipelineDescriptor rp_desc = {};
@@ -310,6 +343,15 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     rp_desc.render_target_count = 1;
     rp_desc.rasterizer_state = &rs_state;
     rp_desc.color_formats = &desc->backbuffer_format;
+    CGpuBlendStateDescriptor blend_state = {};
+    blend_state.src_factors[0] = BLEND_CONST_SRC_ALPHA;
+    blend_state.dst_factors[0] = BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+    blend_state.blend_modes[0] = BLEND_MODE_ADD;
+    blend_state.src_alpha_factors[0] = BLEND_CONST_ONE;
+    blend_state.dst_alpha_factors[0] = BLEND_CONST_ZERO;
+    blend_state.masks[0] = COLOR_MASK_ALL;
+    blend_state.independent_blend = false;
+    rp_desc.blend_state = &blend_state;
     render_pipeline = cgpu_create_render_pipeline(desc->queue->device, &rp_desc);
 }
 
@@ -317,7 +359,6 @@ void imgui_render_window(ImGuiViewport* viewport, void*)
 {
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
     {
-        ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     }
 }
 

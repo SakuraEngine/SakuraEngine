@@ -236,6 +236,14 @@ public:
     bool compile();
     virtual uint64_t execute();
     virtual CGpuDeviceId get_backend_device() { return nullptr; }
+    virtual CGpuQueueId get_gfx_queue() { return nullptr; }
+    virtual void collect_grabage(uint64_t critical_frame)
+    {
+        collect_texture_grabage(critical_frame);
+        collect_buffer_grabage(critical_frame);
+    }
+    virtual void collect_texture_grabage(uint64_t critical_frame) {}
+    virtual void collect_buffer_grabage(uint64_t critical_frame) {}
 
     inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
     inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }

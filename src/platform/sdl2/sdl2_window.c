@@ -6,6 +6,7 @@ SWindowHandle skr_create_window(const char8_t* name, const SWindowDescroptor* de
 {
     uint32_t flags = SDL_WINDOW_VULKAN;
     flags = desc->resizable ? (flags | SDL_WINDOW_RESIZABLE) : flags;
+    flags |= SDL_WINDOW_ALLOW_HIGHDPI;
     SDL_Window* sdl_window = SDL_CreateWindow(name,
         desc->centered ? SDL_WINDOWPOS_CENTERED : desc->posx,
         desc->centered ? SDL_WINDOWPOS_CENTERED : desc->posy,

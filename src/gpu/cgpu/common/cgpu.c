@@ -907,20 +907,17 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
 }
 
 // cgpux helpers
-CGpuBufferId cgpux_create_mapped_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name,
-    bool device_local_preferred,
-    CGpuResourceTypes rt,
-    ECGpuResourceState start_state)
+CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
+    uint64_t size, const char8_t* name, bool device_local_preferred)
 {
     DECLARE_ZERO(CGpuBufferDescriptor, buf_desc)
-    buf_desc.descriptors = rt;
+    buf_desc.descriptors = RT_BUFFER;
     buf_desc.size = size;
     buf_desc.name = name;
     const CGpuAdapterDetail* detail = cgpu_query_adapter_detail(device->adapter);
     buf_desc.memory_usage = MEM_USAGE_CPU_TO_GPU;
     buf_desc.flags = BCF_PERSISTENT_MAP_BIT | BCF_HOST_VISIBLE;
-    buf_desc.start_state = start_state;
+    buf_desc.start_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
     if (device_local_preferred && detail->support_host_visible_vram)
     {
         buf_desc.memory_usage = MEM_USAGE_GPU_ONLY;
@@ -928,18 +925,17 @@ CGpuBufferId cgpux_create_mapped_buffer(CGpuDeviceId device,
     return cgpu_create_buffer(device, &buf_desc);
 }
 
-CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name, bool device_local_preferred)
-{
-    return cgpux_create_mapped_buffer(device, size, name, device_local_preferred,
-        RT_BUFFER, RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-}
-
 RUNTIME_API CGpuBufferId cgpux_create_mapped_upload_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name, bool device_local_preferred)
+    uint64_t size, const char8_t* name)
 {
-    return cgpux_create_mapped_buffer(device, size, name, device_local_preferred,
-        RT_BUFFER, RESOURCE_STATE_COPY_SOURCE);
+    DECLARE_ZERO(CGpuBufferDescriptor, buf_desc)
+    buf_desc.descriptors = RT_NONE;
+    buf_desc.size = size;
+    buf_desc.name = name;
+    buf_desc.memory_usage = MEM_USAGE_CPU_ONLY;
+    buf_desc.flags = BCF_PERSISTENT_MAP_BIT;
+    buf_desc.start_state = RESOURCE_STATE_COPY_DEST;
+    return cgpu_create_buffer(device, &buf_desc);
 }
 
 // surfaces

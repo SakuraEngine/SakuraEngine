@@ -227,7 +227,6 @@ void cgpu_cmd_transfer_texture_to_texture_vulkan(CGpuCommandBufferId cmd, const 
     CGpuTexture_Vulkan* Dst = (CGpuTexture_Vulkan*)desc->dst;
     CGpuTexture_Vulkan* Src = (CGpuTexture_Vulkan*)desc->src;
     const bool isSinglePlane = true;
-    const ECGpuFormat fmt = desc->dst->format;
     if (isSinglePlane)
     {
         const uint32_t width = cgpu_max(1, desc->dst->width >> desc->dst_subresource.mip_level);

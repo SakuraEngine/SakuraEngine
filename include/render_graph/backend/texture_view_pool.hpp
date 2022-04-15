@@ -47,7 +47,6 @@ inline void TextureViewPool::initialize(CGpuDeviceId device_)
 
 inline void TextureViewPool::finalize()
 {
-    auto views_count = views.size();
     for (auto view : views)
     {
         cgpu_free_texture_view(view.second.first);
