@@ -341,15 +341,10 @@ typedef void (*CGPUProcRenderEncoderDrawIndexedInstanced)(CGpuRenderPassEncoderI
 RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 typedef void (*CGPUProcCmdEndRenderPass)(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
-RUNTIME_API CGpuBufferId cgpux_create_mapped_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name,
-    bool device_local_preferred,
-    CGpuResourceTypes rt,
-    ECGpuResourceState start_state);
 RUNTIME_API CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
     uint64_t size, const char8_t* name, bool device_local_preferred);
 RUNTIME_API CGpuBufferId cgpux_create_mapped_upload_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name, bool device_local_preferred);
+    uint64_t size, const char8_t* name);
 
 // Types
 typedef struct CGpuProcTable {

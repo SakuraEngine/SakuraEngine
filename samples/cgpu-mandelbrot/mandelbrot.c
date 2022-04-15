@@ -4,6 +4,7 @@
 #include "platform/configure.h"
 #include "cgpu/api.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include <stdint.h>
 
 inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)

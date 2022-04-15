@@ -1,6 +1,7 @@
 #pragma once
 #include "render_graph/frontend/render_graph.hpp"
 #include "texture_pool.hpp"
+#include "buffer_pool.hpp"
 #include "texture_view_pool.hpp"
 #include "desc_set_heap.hpp"
 
@@ -44,6 +45,10 @@ public:
 
     virtual uint64_t execute() final;
     virtual CGpuDeviceId get_backend_device() final;
+    inline virtual CGpuQueueId get_gfx_queue() final { return gfx_queue; }
+    virtual void collect_grabage(uint64_t critical_frame) final;
+    virtual void collect_texture_grabage(uint64_t critical_frame) final;
+    virtual void collect_buffer_grabage(uint64_t critical_frame) final;
 
     friend class RenderGraph;
 
@@ -72,6 +77,7 @@ protected:
     ECGpuBackend backend;
     RenderGraphFrameExecutor executors[MAX_FRAME_IN_FLIGHT];
     TexturePool texture_pool;
+    BufferPool buffer_pool;
     TextureViewPool texture_view_pool;
     eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
 };

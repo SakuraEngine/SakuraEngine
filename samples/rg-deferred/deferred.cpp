@@ -236,6 +236,10 @@ const bool fragmentLightingPass = false;
 
 int main(int argc, char* argv[])
 {
+#ifdef SAKURA_TARGET_PLATFORM_WIN
+    ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
@@ -254,6 +258,30 @@ int main(int argc, char* argv[])
                 .with_gfx_queue(gfx_queue);
         });
     ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    {
+        float ddpi, hdpi, vdpi;
+        SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi);
+
+        auto& style = ImGui::GetStyle();
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
+
+        float dpi_scaling = 1.5;
+        style.ScaleAllSizes(dpi_scaling);
+        ImFontConfig cfg = {};
+        cfg.SizePixels = 13.f * dpi_scaling;
+        cfg.OversampleH = cfg.OversampleV = 1;
+        cfg.PixelSnapH = true;
+        ImGui::GetIO().Fonts->AddFontDefault(&cfg);
+
+        style.AntiAliasedFill = true;
+        style.AntiAliasedLines = true;
+        style.AntiAliasedLinesUseTex = true;
+    }
     uint32_t *im_vs_bytes, im_vs_length;
     read_shader_bytes("imgui_vertex", &im_vs_bytes, &im_vs_length,
         device->adapter->instance->backend);
@@ -446,13 +474,15 @@ int main(int argc, char* argv[])
         }
         render_graph_imgui_setup_resources(graph);
         auto& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2((float)to_import->width, (float)to_import->height);
+        io.DisplaySize = ImVec2(
+            (float)to_import->width, (float)to_import->height);
         ImGui::NewFrame();
-        ImGui::Begin("Hello, world!");
-        ImGui::Text("This is some useful text.");
+        ImGui::Begin(u8"Hello, world!");
+        ImGui::Text(u8"This is some useful text.");
         ImGui::End();
         ImGui::Render();
-        render_graph_imgui_add_render_pass(graph, back_buffer, LOAD_ACTION_LOAD);
+        render_graph_imgui_add_render_pass(graph,
+            back_buffer, LOAD_ACTION_LOAD);
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                 builder.set_name("present_pass")

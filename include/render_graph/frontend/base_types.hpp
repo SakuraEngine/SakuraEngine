@@ -141,10 +141,10 @@ struct ObjectHandle<EObjectType::Texture> {
     friend class TextureNode;
     friend class TextureReadEdge;
     friend class TextureRenderEdge;
-    friend class ShaderReadHandle;
-    friend class ShaderWriteHandle;
-    friend class ShaderReadWriteHandle;
-    friend class SubresourceHandle;
+    friend struct ShaderReadHandle;
+    friend struct ShaderWriteHandle;
+    friend struct ShaderReadWriteHandle;
+    friend struct SubresourceHandle;
     ObjectHandle(){};
 
 protected:

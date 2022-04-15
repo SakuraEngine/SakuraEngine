@@ -276,7 +276,6 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
 {
     CGpuRootSignatureId root_sig = nullptr;
     auto read_edges = pass->read_edges();
-    auto write_edges = pass->write_edges();
     auto rw_edges = pass->readwrite_edges();
     if (pass->pass_type == EPassType::Render)
         root_sig = ((RenderPassNode*)pass)->pipeline->root_signature;
@@ -439,9 +438,6 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
 void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass)
 {
     ComputePassStack stack = {};
-    auto read_edges = pass->read_edges();
-    auto write_edges = pass->write_edges();
-    auto rw_edges = pass->readwrite_edges();
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
     calculate_barriers(pass, tex_barriers);
@@ -473,10 +469,6 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
 void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
 {
     RenderPassStack stack = {};
-    auto read_edges = pass->read_edges();
-    auto write_edges = pass->write_edges();
-    auto rw_edges = pass->readwrite_edges();
-    CGpuRootSignatureId root_sig = pass->pipeline->root_signature;
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
     calculate_barriers(pass, tex_barriers);
@@ -494,6 +486,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     // TODO: MSAA
     eastl::vector<CGpuColorAttachment> color_attachments = {};
     CGpuDepthStencilAttachment ds_attachment = {};
+    auto write_edges = pass->write_edges();
     for (auto& write_edge : write_edges)
     {
         // TODO: MSAA
@@ -533,8 +526,6 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             view_desc.base_mip_level = write_edge->get_mip_level();
             view_desc.mip_level_count = 1;
             view_desc.format = (ECGpuFormat)view_desc.texture->format;
-            const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
-            const bool is_depth_only = FormatUtil_IsDepthStencilFormat(view_desc.format);
             view_desc.aspects = TVA_COLOR;
             view_desc.usages = TVU_RTV_DSV;
             view_desc.dims = TEX_DIMENSION_2D;
@@ -564,8 +555,6 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
 
 void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass)
 {
-    auto read_edges = pass->read_edges();
-    auto write_edges = pass->write_edges();
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
     calculate_barriers(pass, tex_barriers);
@@ -666,6 +655,39 @@ uint64_t RenderGraphBackend::execute()
 CGpuDeviceId RenderGraphBackend::get_backend_device()
 {
     return device;
+}
+
+void RenderGraphBackend::collect_grabage(uint64_t critical_frame)
+{
+    collect_texture_grabage(critical_frame);
+    collect_buffer_grabage(critical_frame);
+}
+
+void RenderGraphBackend::collect_texture_grabage(uint64_t critical_frame)
+{
+    for (auto&& iter : texture_pool.textures)
+    {
+        auto&& queue = iter.second;
+        for (auto&& element : queue)
+        {
+            if (element.second <= critical_frame)
+            {
+                cgpu_free_texture(element.first.first);
+                element.first.first = nullptr;
+            }
+        }
+        using ElementType = decltype(queue.front());
+        queue.erase(
+            eastl::remove_if(queue.begin(), queue.end(),
+                [](ElementType& element) {
+                    return element.first.first == nullptr;
+                }),
+            queue.end());
+    }
+}
+
+void RenderGraphBackend::collect_buffer_grabage(uint64_t critical_frame)
+{
 }
 } // namespace render_graph
 } // namespace sakura

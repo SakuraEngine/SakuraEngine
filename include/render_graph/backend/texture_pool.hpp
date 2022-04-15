@@ -1,6 +1,6 @@
 #pragma once
 #include <EASTL/unordered_map.h>
-#include <EASTL/queue.h>
+#include <EASTL/deque.h>
 #include "utils/hash.h"
 #include "cgpu/api.h"
 
@@ -38,7 +38,7 @@ public:
 protected:
     CGpuDeviceId device;
     eastl::unordered_map<Key,
-        eastl::queue<eastl::pair<
+        eastl::deque<eastl::pair<
             eastl::pair<CGpuTextureId, ECGpuResourceState>, uint64_t>>>
         textures;
 };
@@ -75,7 +75,7 @@ inline void TexturePool::finalize()
         while (!queue.second.empty())
         {
             cgpu_free_texture(queue.second.front().first.first);
-            queue.second.pop();
+            queue.second.pop_front();
         }
     }
 }
@@ -95,17 +95,17 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
     if (textures[key].empty())
     {
         auto new_tex = cgpu_create_texture(device, &desc);
-        textures[key].push({ { new_tex, desc.start_state }, frame_index });
+        textures[key].push_back({ { new_tex, desc.start_state }, frame_index });
     }
     allocated = textures[key].front().first;
-    textures[key].pop();
+    textures[key].pop_front();
     return allocated;
 }
 
 inline void TexturePool::deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, ECGpuResourceState final_state, uint64_t frame_index)
 {
     const TexturePool::Key key(device, desc);
-    textures[key].push({ { texture, final_state }, frame_index });
+    textures[key].push_back({ { texture, final_state }, frame_index });
 }
 } // namespace render_graph
 } // namespace sakura

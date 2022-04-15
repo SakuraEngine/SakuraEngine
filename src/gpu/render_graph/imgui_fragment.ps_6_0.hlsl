@@ -10,6 +10,8 @@ Texture2D texture0 : register(t0);
 
 float4 main(PSIn input) : SV_Target
 {
-    float4 out_col = input.col * texture0.Sample(sampler0, input.uv);
+    float4 font_col = texture0.Sample(sampler0, input.uv);
+    float4 out_col = input.col * font_col;
+    out_col.rgb *= font_col.a;
     return out_col;
 }
