@@ -816,15 +816,23 @@ void cgpu_free_texture_view_d3d12(CGpuTextureViewId view)
 {
     CGpuTextureView_D3D12* TV = (CGpuTextureView_D3D12*)view;
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)view->device;
+    const auto usages = TV->super.info.usages;
+    const bool isDSV = FormatUtil_IsDepthStencilFormat(view->info.format);
     if (TV->mDxDescriptorHandles.ptr != D3D12_GPU_VIRTUAL_ADDRESS_NULL)
     {
-        const auto usages = TV->super.info.usages;
         uint32_t handleCount = ((usages & TVU_SRV) ? 1 : 0) +
-                               ((usages & TVU_UAV) ? 1 : 0) +
-                               ((usages & TVU_RTV_DSV) ? 1 : 0);
+                               ((usages & TVU_UAV) ? 1 : 0);
         D3D12Util_ReturnDescriptorHandles(
             D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], TV->mDxDescriptorHandles,
             handleCount);
+    }
+    if (TV->mDxRtvDsvDescriptorHandle.ptr != D3D12_GPU_VIRTUAL_ADDRESS_NULL)
+    {
+        if (usages & TVU_RTV_DSV)
+            D3D12Util_ReturnDescriptorHandles(
+                isDSV ? D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_DSV] : D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_RTV],
+                TV->mDxRtvDsvDescriptorHandle,
+                1);
     }
     cgpu_delete(TV);
 }
