@@ -19,6 +19,7 @@ public:
 protected:
     eastl::string_map<class PassNode*> named_passes;
     eastl::string_map<class TextureNode*> named_textures;
+    eastl::string_map<class BufferNode*> named_buffers;
 };
 } // namespace render_graph
 } // namespace sakura

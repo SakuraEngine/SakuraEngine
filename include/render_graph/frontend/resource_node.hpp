@@ -10,7 +10,7 @@ class ResourceNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
-    ResourceNode(EObjectType type)
+    inline ResourceNode(EObjectType type)
         : RenderGraphNode(type)
         , imported(false)
     {
@@ -38,19 +38,33 @@ public:
         : ResourceNode(EObjectType::Texture)
     {
     }
-    const TextureHandle get_handle() const
-    {
-        return TextureHandle(get_id());
-    }
-    const CGpuTextureDescriptor& get_desc() const
-    {
-        return descriptor;
-    }
+    inline const TextureHandle get_handle() const { return TextureHandle(get_id()); }
+    inline const CGpuTextureDescriptor& get_desc() const { return descriptor; }
 
 protected:
-    CGpuTextureDescriptor descriptor;
+    CGpuTextureDescriptor descriptor = {};
     // temporal handle with a lifespan of only one frame
     CGpuTextureId frame_texture = nullptr;
+    ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
+};
+
+class BufferNode : public ResourceNode
+{
+public:
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+
+    BufferNode()
+        : ResourceNode(EObjectType::Buffer)
+    {
+    }
+    inline const BufferHandle get_handle() const { return BufferHandle(get_id()); }
+    inline const CGpuBufferDescriptor& get_desc() const { return descriptor; }
+
+protected:
+    CGpuBufferDescriptor descriptor = {};
+    // temporal handle with a lifespan of only one frame
+    CGpuBufferId frame_buffer = nullptr;
     ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
 };
 } // namespace render_graph

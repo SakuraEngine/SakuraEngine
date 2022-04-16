@@ -53,6 +53,8 @@ public:
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(const char8_t* name, BufferHandle handle);
+        RenderPassBuilder& use_buffer(PipelineBufferHandle buffer);
+
         RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
 
     protected:
@@ -176,10 +178,45 @@ public:
         builder.Apply();
         return newPass->get_handle();
     }
+    class BufferBuilder
+    {
+    public:
+        friend class RenderGraph;
+        BufferBuilder& set_name(const char* name);
+        BufferBuilder& import(CGpuBufferId buffer, ECGpuResourceState init_state);
+        BufferBuilder& owns_memory();
+        BufferBuilder& structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride);
+        BufferBuilder& size(uint64_t size);
+        BufferBuilder& memory_usage(ECGpuMemoryUsage mem_usage);
+
+    protected:
+        BufferBuilder(RenderGraph& graph, BufferNode& node)
+            : graph(graph)
+            , node(node)
+        {
+            buffer_desc.descriptors = RT_NONE;
+        }
+        RenderGraph& graph;
+        BufferNode& node;
+        CGpuBufferDescriptor buffer_desc = {};
+    };
+    using BufferSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::BufferBuilder&)>;
+    inline BufferHandle create_buffer(const BufferSetupFunction& setup)
+    {
+        auto newTex = new BufferNode();
+        resources.emplace_back(newTex);
+        graph->insert(newTex);
+        BufferBuilder builder(*this, *newTex);
+        setup(*this, builder);
+        return newTex->get_handle();
+    }
+    const ECGpuResourceState get_lastest_state(const BufferNode* texture, const PassNode* pending_pass) const;
+
     class TextureBuilder
     {
     public:
         friend class RenderGraph;
+        TextureBuilder& set_name(const char* name);
         TextureBuilder& import(CGpuTextureId texture, ECGpuResourceState init_state);
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1);
         TextureBuilder& format(ECGpuFormat format);
@@ -188,10 +225,7 @@ public:
         TextureBuilder& allow_render_target();
         TextureBuilder& allow_depth_stencil();
         TextureBuilder& allow_readwrite();
-        TextureBuilder& set_name(const char* name);
         TextureBuilder& owns_memory();
-        TextureBuilder& create_immediate();
-        TextureBuilder& create_async();
         TextureBuilder& allow_lone();
 
     protected:
@@ -199,22 +233,11 @@ public:
             : graph(graph)
             , node(node)
         {
-            tex_desc.descriptors = RT_TEXTURE;
-        }
-        inline void Apply()
-        {
-            node.imported = imported;
-            if (imported) node.frame_texture = imported;
-            node.canbe_lone = canbe_lone;
-            node.descriptor = tex_desc;
+            node.descriptor.descriptors = RT_TEXTURE;
         }
         RenderGraph& graph;
         TextureNode& node;
-        CGpuTextureDescriptor tex_desc = {};
         CGpuTextureId imported = nullptr;
-        bool create_at_once : 1;
-        bool async : 1;
-        bool canbe_lone : 1;
     };
     using TextureSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::TextureBuilder&)>;
     inline TextureHandle create_texture(const TextureSetupFunction& setup)
@@ -224,12 +247,13 @@ public:
         graph->insert(newTex);
         TextureBuilder builder(*this, *newTex);
         setup(*this, builder);
-        builder.Apply();
         return newTex->get_handle();
     }
     inline TextureHandle get_texture(const char* name)
     {
-        return -1;
+        if (blackboard.named_textures.find(name) != blackboard.named_textures.end())
+            return blackboard.named_textures[name]->get_handle();
+        return UINT64_MAX;
     }
     const ECGpuResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const;
 
@@ -237,13 +261,13 @@ public:
     virtual uint64_t execute();
     virtual CGpuDeviceId get_backend_device() { return nullptr; }
     virtual CGpuQueueId get_gfx_queue() { return nullptr; }
-    virtual void collect_grabage(uint64_t critical_frame)
+    virtual uint32_t collect_garbage(uint64_t critical_frame)
     {
-        collect_texture_grabage(critical_frame);
-        collect_buffer_grabage(critical_frame);
+        return collect_texture_garbage(critical_frame) +
+               collect_buffer_garbage(critical_frame);
     }
-    virtual void collect_texture_grabage(uint64_t critical_frame) {}
-    virtual void collect_buffer_grabage(uint64_t critical_frame) {}
+    virtual uint32_t collect_texture_garbage(uint64_t critical_frame) { return 0; }
+    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) { return 0; }
 
     inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
     inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }
@@ -488,88 +512,122 @@ inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_te
     return *this;
 }
 
-// texture builder
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId texture, ECGpuResourceState init_state)
+// buffer builder
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* name)
 {
-    imported = texture;
+    node.descriptor.name = name;
+    // blackboard
+    graph.blackboard.named_buffers[name] = &node;
+    node.set_name(name);
+    return *this;
+}
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::import(CGpuBufferId buffer, ECGpuResourceState init_state)
+{
+    node.imported = buffer;
+    node.frame_buffer = buffer;
     node.init_state = init_state;
-    tex_desc.width = texture->width;
-    tex_desc.height = texture->height;
-    tex_desc.depth = texture->depth;
-    tex_desc.format = (ECGpuFormat)texture->format;
-    tex_desc.array_size = texture->array_size_minus_one + 1;
-    tex_desc.sample_count = texture->sample_count;
+    node.descriptor.descriptors = buffer->descriptors;
+    node.descriptor.size = buffer->size;
+    node.descriptor.memory_usage = (ECGpuMemoryUsage)buffer->memory_usage;
     return *this;
 }
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(
-    uint32_t width, uint32_t height, uint32_t depth)
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::owns_memory()
 {
-    tex_desc.width = width;
-    tex_desc.height = height;
-    tex_desc.depth = depth;
+    node.descriptor.flags |= BCF_OWN_MEMORY_BIT;
     return *this;
 }
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::format(
-    ECGpuFormat format)
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride)
 {
-    tex_desc.format = format;
+    node.descriptor.first_element = first_element;
+    node.descriptor.elemet_count = element_count;
+    node.descriptor.element_stride = element_stride;
     return *this;
 }
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::array(uint32_t size)
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::size(uint64_t size)
 {
-    tex_desc.array_size = size;
+    node.descriptor.size = size;
     return *this;
 }
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::sample_count(
-    ECGpuSampleCount count)
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::memory_usage(ECGpuMemoryUsage mem_usage)
 {
-    tex_desc.sample_count = count;
+    node.descriptor.memory_usage = mem_usage;
     return *this;
 }
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_readwrite()
-{
-    tex_desc.descriptors |= RT_RW_TEXTURE;
-    tex_desc.start_state = RESOURCE_STATE_UNDEFINED;
-    return *this;
-}
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_target()
-{
-    tex_desc.descriptors |= RT_RENDER_TARGET;
-    tex_desc.start_state = RESOURCE_STATE_UNDEFINED;
-    return *this;
-}
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_depth_stencil()
-{
-    tex_desc.descriptors |= RT_DEPTH_STENCIL;
-    tex_desc.start_state = RESOURCE_STATE_UNDEFINED;
-    return *this;
-}
+
+// texture builder
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name)
 {
-    tex_desc.name = name;
+    node.descriptor.name = name;
     // blackboard
     graph.blackboard.named_textures[name] = &node;
     node.set_name(name);
     return *this;
 }
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId texture, ECGpuResourceState init_state)
+{
+    node.imported = texture;
+    node.frame_texture = texture;
+    node.init_state = init_state;
+    node.descriptor.width = texture->width;
+    node.descriptor.height = texture->height;
+    node.descriptor.depth = texture->depth;
+    node.descriptor.format = (ECGpuFormat)texture->format;
+    node.descriptor.array_size = texture->array_size_minus_one + 1;
+    node.descriptor.sample_count = texture->sample_count;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(
+    uint32_t width, uint32_t height, uint32_t depth)
+{
+    node.descriptor.width = width;
+    node.descriptor.height = height;
+    node.descriptor.depth = depth;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::format(
+    ECGpuFormat format)
+{
+    node.descriptor.format = format;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::array(uint32_t size)
+{
+    node.descriptor.array_size = size;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::sample_count(
+    ECGpuSampleCount count)
+{
+    node.descriptor.sample_count = count;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_readwrite()
+{
+    node.descriptor.descriptors |= RT_RW_TEXTURE;
+    node.descriptor.start_state = RESOURCE_STATE_UNDEFINED;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_target()
+{
+    node.descriptor.descriptors |= RT_RENDER_TARGET;
+    node.descriptor.start_state = RESOURCE_STATE_UNDEFINED;
+    return *this;
+}
+inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_depth_stencil()
+{
+    node.descriptor.descriptors |= RT_DEPTH_STENCIL;
+    node.descriptor.start_state = RESOURCE_STATE_UNDEFINED;
+    return *this;
+}
+
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::owns_memory()
 {
-    tex_desc.flags |= TCF_OWN_MEMORY_BIT;
-    return *this;
-}
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::create_immediate()
-{
-    create_at_once = true;
-    return *this;
-}
-inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::create_async()
-{
-    async = 1;
+    node.descriptor.flags |= TCF_OWN_MEMORY_BIT;
     return *this;
 }
 inline RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_lone()
 {
-    canbe_lone = true;
+    node.canbe_lone = true;
     return *this;
 }
 } // namespace render_graph

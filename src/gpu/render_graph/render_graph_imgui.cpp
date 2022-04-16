@@ -73,7 +73,7 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
         auto device = render_graph->get_backend_device();
         size_t vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
         size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
-        if ((!vertex_buffer || vertex_buffer->size < vertex_size) && device)
+        if (device)
         {
             CGpuBufferDescriptor vb_desc = {};
             vb_desc.name = "imgui_vertex_buffer";
@@ -84,7 +84,7 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             if (vertex_buffer) cgpu_free_buffer(vertex_buffer);
             vertex_buffer = cgpu_create_buffer(device, &vb_desc);
         }
-        if ((!index_buffer || index_buffer->size < index_size) && device)
+        if (device)
         {
             CGpuBufferDescriptor ib_desc = {};
             ib_desc.name = "imgui_index_buffer";
@@ -135,13 +135,13 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             b2ib.dst_offset = 0;
             b2ib.size = index_size;
             cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &b2ib);
-            CGpuBufferBarrier barriers[2];
+            CGpuBufferBarrier barriers[2] = {};
             barriers[0].buffer = vertex_buffer;
             barriers[0].src_state = RESOURCE_STATE_COPY_DEST;
             barriers[0].dst_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-            barriers[0].buffer = index_buffer;
-            barriers[0].src_state = RESOURCE_STATE_COPY_DEST;
-            barriers[0].dst_state = RESOURCE_STATE_INDEX_BUFFER;
+            barriers[1].buffer = index_buffer;
+            barriers[1].src_state = RESOURCE_STATE_COPY_DEST;
+            barriers[1].dst_state = RESOURCE_STATE_INDEX_BUFFER;
             CGpuResourceBarrierDescriptor barrier_desc1 = {};
             barrier_desc1.buffer_barriers = barriers;
             barrier_desc1.buffer_barriers_count = 2;

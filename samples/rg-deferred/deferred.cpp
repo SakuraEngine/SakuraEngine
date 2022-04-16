@@ -416,7 +416,8 @@ int main(int argc, char* argv[])
                 cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "root_constants", &view_proj);
                 cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
             });
-        if (fragmentLightingPass)
+        static uint32_t frame_index = 0;
+        if ((frame_index % 11) > 5)
         {
             graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
@@ -490,12 +491,13 @@ int main(int argc, char* argv[])
                     .texture(back_buffer, true);
             });
         graph->compile();
-        static uint32_t frame_index = 0;
         if (frame_index == 0)
             render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred.gv");
         frame_index = graph->execute();
         // present
         cgpu_wait_queue_idle(gfx_queue);
+        if (frame_index >= 1)
+            graph->collect_garbage(frame_index - 1);
         CGpuQueuePresentDescriptor present_desc = {};
         present_desc.index = backbuffer_index;
         present_desc.swapchain = swapchain;
