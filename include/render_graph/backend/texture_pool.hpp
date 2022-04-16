@@ -70,7 +70,7 @@ inline void TexturePool::initialize(CGpuDeviceId device_)
 
 inline void TexturePool::finalize()
 {
-    for (auto queue : textures)
+    for (auto&& queue : textures)
     {
         while (!queue.second.empty())
         {
@@ -86,6 +86,7 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
         nullptr, RESOURCE_STATE_UNDEFINED
     };
     const TexturePool::Key key(device, desc);
+    CGpuTextureId new_tex = nullptr;
     auto&& queue_iter = textures.find(key);
     // add queue
     if (queue_iter == textures.end())
@@ -94,9 +95,10 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
     }
     if (textures[key].empty())
     {
-        auto new_tex = cgpu_create_texture(device, &desc);
+        new_tex = cgpu_create_texture(device, &desc);
         textures[key].push_back({ { new_tex, desc.start_state }, frame_index });
     }
+    textures[key].front().second = frame_index;
     allocated = textures[key].front().first;
     textures[key].pop_front();
     return allocated;

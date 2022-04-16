@@ -335,13 +335,13 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
                     calculate_bind_set(rw_edge->name.c_str(), root_sig);
             if (rw_set_binding.first == set_idx)
             {
-                auto texture_readed = rw_edge->get_texture_node();
+                auto texture_readwrite = rw_edge->get_texture_node();
                 CGpuDescriptorData update = {};
                 update.count = 1;
                 update.binding = rw_set_binding.second;
                 update.binding_type = RT_RW_TEXTURE;
                 CGpuTextureViewDescriptor view_desc = {};
-                view_desc.texture = resolve(*texture_readed);
+                view_desc.texture = resolve(*texture_readwrite);
                 view_desc.base_array_layer = 0;
                 view_desc.array_layer_count = 1;
                 view_desc.base_mip_level = 0;
@@ -657,14 +657,15 @@ CGpuDeviceId RenderGraphBackend::get_backend_device()
     return device;
 }
 
-void RenderGraphBackend::collect_grabage(uint64_t critical_frame)
+uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame)
 {
-    collect_texture_grabage(critical_frame);
-    collect_buffer_grabage(critical_frame);
+    return collect_texture_garbage(critical_frame) +
+           collect_buffer_garbage(critical_frame);
 }
 
-void RenderGraphBackend::collect_texture_grabage(uint64_t critical_frame)
+uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame)
 {
+    uint32_t total_count = 0;
     for (auto&& iter : texture_pool.textures)
     {
         auto&& queue = iter.second;
@@ -672,22 +673,49 @@ void RenderGraphBackend::collect_texture_grabage(uint64_t critical_frame)
         {
             if (element.second <= critical_frame)
             {
+                texture_view_pool.erase(element.first.first);
                 cgpu_free_texture(element.first.first);
                 element.first.first = nullptr;
             }
         }
         using ElementType = decltype(queue.front());
+        uint32_t prev_count = queue.size();
         queue.erase(
             eastl::remove_if(queue.begin(), queue.end(),
-                [](ElementType& element) {
+                [&](ElementType& element) {
                     return element.first.first == nullptr;
                 }),
             queue.end());
+        total_count += prev_count - queue.size();
     }
+    return total_count;
 }
 
-void RenderGraphBackend::collect_buffer_grabage(uint64_t critical_frame)
+uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame)
 {
+    uint32_t total_count = 0;
+    for (auto&& iter : buffer_pool.buffers)
+    {
+        auto&& queue = iter.second;
+        for (auto&& element : queue)
+        {
+            if (element.second <= critical_frame)
+            {
+                cgpu_free_buffer(element.first.first);
+                element.first.first = nullptr;
+            }
+        }
+        using ElementType = decltype(queue.front());
+        uint32_t prev_count = queue.size();
+        queue.erase(
+            eastl::remove_if(queue.begin(), queue.end(),
+                [&](ElementType& element) {
+                    return element.first.first == nullptr;
+                }),
+            queue.end());
+        total_count += prev_count - queue.size();
+    }
+    return total_count;
 }
 } // namespace render_graph
 } // namespace sakura

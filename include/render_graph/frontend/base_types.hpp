@@ -22,8 +22,9 @@ enum class ERelationshipType : uint8_t
     TextureRead,      // SRV
     TextureWrite,     // RTV/DSV
     TextureReadWrite, // UAV
+    PipelineBuffer,   // VB/IB...
     BufferRead,       // CBV
-    BufferWrite,      // UAV
+    BufferReadWrite,  // UAV
     Count
 };
 
@@ -48,6 +49,67 @@ struct ObjectHandle {
 private:
     handle_t handle;
 };
+
+template <>
+struct ObjectHandle<EObjectType::Buffer> {
+    inline operator handle_t() const { return handle; }
+    struct ShaderReadHandle {
+        friend struct ObjectHandle<EObjectType::Buffer>;
+        friend class RenderGraph;
+        friend class BufferReadEdge;
+        const handle_t _this;
+        inline operator ObjectHandle<EObjectType::Buffer>() const { return ObjectHandle<EObjectType::Buffer>(_this); }
+
+    protected:
+        ShaderReadHandle(const handle_t _this);
+    };
+    struct ShaderReadWriteHandle {
+        friend struct ObjectHandle<EObjectType::Buffer>;
+        friend class RenderGraph;
+        friend class BufferReadWriteEdge;
+        const handle_t _this;
+        inline operator ObjectHandle<EObjectType::Buffer>() const { return ObjectHandle<EObjectType::Buffer>(_this); }
+
+    protected:
+        ShaderReadWriteHandle(const handle_t _this);
+    };
+    struct PipelineReferenceHandle {
+        friend struct ObjectHandle<EObjectType::Buffer>;
+        friend class RenderGraph;
+        friend class PipelineBufferEdge;
+        const handle_t _this;
+        inline operator ObjectHandle<EObjectType::Buffer>() const { return ObjectHandle<EObjectType::Buffer>(_this); }
+
+    protected:
+        PipelineReferenceHandle(const handle_t _this);
+    };
+    // read
+    inline operator ShaderReadHandle() const { return ShaderReadHandle(handle); }
+    // readwrite
+    inline operator ShaderReadWriteHandle() const { return ShaderReadWriteHandle(handle); }
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+    friend class BufferNode;
+    friend class BufferReadEdge;
+    friend class BufferReadWriteEdge;
+    friend struct ShaderReadHandle;
+    friend struct ShaderReadWriteHandle;
+    ObjectHandle(){};
+
+protected:
+    ObjectHandle(handle_t hdl)
+        : handle(hdl)
+    {
+    }
+
+private:
+    handle_t handle = UINT64_MAX;
+};
+using BufferHandle = ObjectHandle<EObjectType::Buffer>;
+using BufferCBVHandle = BufferHandle::ShaderReadHandle;
+using BufferUAVHandle = BufferHandle::ShaderReadWriteHandle;
+using PipelineBufferHandle = BufferHandle::PipelineReferenceHandle;
+
 template <>
 struct ObjectHandle<EObjectType::Texture> {
     struct ShaderReadHandle {
@@ -163,7 +225,6 @@ using TextureRTVHandle = TextureHandle::ShaderWriteHandle;
 using TextureDSVHandle = TextureHandle::DepthStencilHandle;
 using TextureUAVHandle = TextureHandle::ShaderReadWriteHandle;
 using TextureSubresourceHandle = TextureHandle::SubresourceHandle;
-using BufferHandle = ObjectHandle<EObjectType::Buffer>;
 
 struct RenderGraphNode : public DependencyGraphNode {
     RenderGraphNode(EObjectType type)
@@ -264,6 +325,24 @@ inline TextureUAVHandle::ShaderReadWriteHandle(const handle_t _this)
 
 // Subresource
 inline TextureSubresourceHandle::SubresourceHandle(const handle_t _this)
+    : _this(_this)
+{
+}
+
+// CBV
+inline BufferCBVHandle::ShaderReadHandle(const handle_t _this)
+    : _this(_this)
+{
+}
+
+// UAV
+inline BufferUAVHandle::ShaderReadWriteHandle(const handle_t _this)
+    : _this(_this)
+{
+}
+
+// VB/IB
+inline PipelineBufferHandle::PipelineReferenceHandle(const handle_t _this)
     : _this(_this)
 {
 }

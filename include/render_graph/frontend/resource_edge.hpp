@@ -96,6 +96,27 @@ class BufferReadEdge : public RenderGraphEdge
 {
 };
 
+class PipelineBufferEdge : public RenderGraphEdge
+{
+public:
+    friend class PassNode;
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+
+    BufferNode* get_buffer_node();
+    PassNode* get_pass_node();
+
+protected:
+    PipelineBufferEdge(PipelineBufferHandle handle, ECGpuResourceState state)
+        : RenderGraphEdge(ERelationshipType::PipelineBuffer)
+        , handle(handle)
+        , requested_state(state)
+    {
+    }
+    PipelineBufferHandle handle;
+    const ECGpuResourceState requested_state;
+};
+
 inline TextureReadEdge::TextureReadEdge(
     uint32_t set, uint32_t binding, TextureSRVHandle handle,
     ECGpuResourceState state)
@@ -168,6 +189,16 @@ inline TextureNode* TextureReadWriteEdge::get_texture_node()
 }
 
 inline PassNode* TextureReadWriteEdge::get_pass_node()
+{
+    return (PassNode*)from();
+}
+
+// pipeline buffer
+inline BufferNode* PipelineBufferEdge::get_buffer_node()
+{
+    return static_cast<BufferNode*>(to());
+}
+inline PassNode* PipelineBufferEdge::get_pass_node()
 {
     return (PassNode*)from();
 }
