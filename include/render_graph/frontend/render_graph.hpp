@@ -53,7 +53,7 @@ public:
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(const char8_t* name, BufferHandle handle);
-        RenderPassBuilder& use_buffer(PipelineBufferHandle buffer);
+        RenderPassBuilder& use_buffer(PipelineBufferHandle buffer, ECGpuResourceState requested_state);
 
         RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
 
@@ -124,6 +124,7 @@ public:
         friend class RenderGraph;
         CopyPassBuilder& set_name(const char* name);
         CopyPassBuilder& texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst);
+        CopyPassBuilder& buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst);
 
     protected:
         inline void Apply() {}
@@ -188,17 +189,23 @@ public:
         BufferBuilder& structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride);
         BufferBuilder& size(uint64_t size);
         BufferBuilder& memory_usage(ECGpuMemoryUsage mem_usage);
+        BufferBuilder& allow_shader_readwrite();
+        BufferBuilder& allow_shader_read();
+        BufferBuilder& as_upload_buffer();
+        BufferBuilder& as_vertex_buffer();
+        BufferBuilder& as_index_buffer();
 
     protected:
         BufferBuilder(RenderGraph& graph, BufferNode& node)
             : graph(graph)
             , node(node)
         {
-            buffer_desc.descriptors = RT_NONE;
+            node.descriptor.descriptors = RT_NONE;
+            node.descriptor.flags = BCF_NONE;
+            node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
         }
         RenderGraph& graph;
         BufferNode& node;
-        CGpuBufferDescriptor buffer_desc = {};
     };
     using BufferSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::BufferBuilder&)>;
     inline BufferHandle create_buffer(const BufferSetupFunction& setup)
@@ -210,7 +217,13 @@ public:
         setup(*this, builder);
         return newTex->get_handle();
     }
-    const ECGpuResourceState get_lastest_state(const BufferNode* texture, const PassNode* pending_pass) const;
+    inline BufferHandle get_buffer(const char* name)
+    {
+        if (blackboard.named_buffers.find(name) != blackboard.named_buffers.end())
+            return blackboard.named_buffers[name]->get_handle();
+        return UINT64_MAX;
+    }
+    const ECGpuResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const;
 
     class TextureBuilder
     {
@@ -269,12 +282,19 @@ public:
     virtual uint32_t collect_texture_garbage(uint64_t critical_frame) { return 0; }
     virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) { return 0; }
 
+    inline BufferNode* resolve(BufferHandle hdl) { return static_cast<BufferNode*>(graph->node_at(hdl)); }
     inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
     inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }
+
     uint32_t foreach_writer_passes(TextureHandle texture,
         eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const;
     uint32_t foreach_reader_passes(TextureHandle texture,
         eastl::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const;
+    uint32_t foreach_writer_passes(BufferHandle buffer,
+        eastl::function<void(PassNode* writer, BufferNode* buf, RenderGraphEdge* edge)>) const;
+    uint32_t foreach_reader_passes(BufferHandle buffer,
+        eastl::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const;
+
     virtual void initialize();
     virtual void finalize();
     virtual ~RenderGraph() = default;
@@ -297,6 +317,8 @@ using PresentPassSetupFunction = RenderGraph::PresentPassSetupFunction;
 using PresentPassBuilder = RenderGraph::PresentPassBuilder;
 using TextureSetupFunction = RenderGraph::TextureSetupFunction;
 using TextureBuilder = RenderGraph::TextureBuilder;
+using BufferSetupFunction = RenderGraph::BufferSetupFunction;
+using BufferBuilder = RenderGraph::BufferBuilder;
 
 class RenderGraphViz
 {
@@ -422,6 +444,15 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(con
 {
     return *this;
 }
+
+inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::use_buffer(PipelineBufferHandle buffer, ECGpuResourceState requested_state)
+{
+    auto&& edge = node.ppl_buffer_edges.emplace_back(
+        new PipelineBufferEdge(buffer, requested_state));
+    graph.graph->link(graph.graph->access_node(buffer._this), &node, edge);
+    return *this;
+}
+
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipeline(CGpuRenderPipelineId pipeline)
 {
     node.pipeline = pipeline;
@@ -498,6 +529,19 @@ inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(cons
     }
     return *this;
 }
+
+inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst)
+{
+    auto&& in_edge = node.in_buffer_edges.emplace_back(
+        new BufferReadEdge(src, RESOURCE_STATE_COPY_SOURCE));
+    auto&& out_edge = node.out_buffer_edges.emplace_back(
+        new BufferReadWriteEdge(dst, RESOURCE_STATE_COPY_DEST));
+    graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
+    graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
+    node.b2bs.emplace_back(src, dst);
+    return *this;
+}
+
 inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst)
 {
     auto&& in_edge = node.in_edges.emplace_back(
@@ -551,6 +595,38 @@ inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::size(uint64_t siz
 inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::memory_usage(ECGpuMemoryUsage mem_usage)
 {
     node.descriptor.memory_usage = mem_usage;
+    return *this;
+}
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allow_shader_readwrite()
+{
+    node.descriptor.descriptors |= RT_RW_BUFFER;
+    return *this;
+}
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allow_shader_read()
+{
+    node.descriptor.descriptors |= RT_BUFFER;
+    node.descriptor.descriptors |= RT_UNIFORM_BUFFER;
+    return *this;
+}
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_upload_buffer()
+{
+    node.descriptor.flags |= BCF_PERSISTENT_MAP_BIT;
+    node.descriptor.start_state = RESOURCE_STATE_COPY_SOURCE;
+    node.descriptor.memory_usage = MEM_USAGE_CPU_ONLY;
+    return *this;
+}
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_vertex_buffer()
+{
+    node.descriptor.descriptors |= RT_VERTEX_BUFFER;
+    node.descriptor.start_state = RESOURCE_STATE_COPY_DEST;
+    node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
+    return *this;
+}
+inline RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_index_buffer()
+{
+    node.descriptor.descriptors |= RT_INDEX_BUFFER;
+    node.descriptor.start_state = RESOURCE_STATE_COPY_DEST;
+    node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
     return *this;
 }
 

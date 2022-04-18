@@ -89,11 +89,48 @@ protected:
     }
     TextureRTVHandle handle;
     const ECGpuResourceState requested_state;
-    // temporal handle with a lifespan of only one frame
 };
 
 class BufferReadEdge : public RenderGraphEdge
 {
+public:
+    friend class PassNode;
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+
+    BufferNode* get_buffer_node();
+    PassNode* get_pass_node();
+
+protected:
+    BufferReadEdge(BufferRangeHandle handle, ECGpuResourceState state)
+        : RenderGraphEdge(ERelationshipType::BufferRead)
+        , handle(handle)
+        , requested_state(state)
+    {
+    }
+    BufferRangeHandle handle;
+    const ECGpuResourceState requested_state;
+};
+
+class BufferReadWriteEdge : public RenderGraphEdge
+{
+public:
+    friend class PassNode;
+    friend class RenderGraph;
+    friend class RenderGraphBackend;
+
+    BufferNode* get_buffer_node();
+    PassNode* get_pass_node();
+
+protected:
+    BufferReadWriteEdge(BufferRangeHandle handle, ECGpuResourceState state)
+        : RenderGraphEdge(ERelationshipType::BufferReadWrite)
+        , handle(handle)
+        , requested_state(state)
+    {
+    }
+    BufferRangeHandle handle;
+    const ECGpuResourceState requested_state;
 };
 
 class PipelineBufferEdge : public RenderGraphEdge
@@ -196,9 +233,27 @@ inline PassNode* TextureReadWriteEdge::get_pass_node()
 // pipeline buffer
 inline BufferNode* PipelineBufferEdge::get_buffer_node()
 {
-    return static_cast<BufferNode*>(to());
+    return static_cast<BufferNode*>(from());
 }
 inline PassNode* PipelineBufferEdge::get_pass_node()
+{
+    return (PassNode*)to();
+}
+
+inline BufferNode* BufferReadEdge::get_buffer_node()
+{
+    return static_cast<BufferNode*>(from());
+}
+inline PassNode* BufferReadEdge::get_pass_node()
+{
+    return (PassNode*)to();
+}
+
+inline BufferNode* BufferReadWriteEdge::get_buffer_node()
+{
+    return static_cast<BufferNode*>(to());
+}
+inline PassNode* BufferReadWriteEdge::get_pass_node()
 {
     return (PassNode*)from();
 }

@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
                     .set_pipeline(pipeline)
                     .write(0, back_buffer, LOAD_ACTION_CLEAR);
             },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)to_import->width / 3, (float)to_import->height,
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
                     .set_pipeline(pipeline)
                     .write(0, back_buffer, LOAD_ACTION_LOAD);
             },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     2 * (float)to_import->width / 3, 0.0f,
                     (float)to_import->width / 3, (float)to_import->height,

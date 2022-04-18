@@ -62,8 +62,11 @@ protected:
     virtual void finalize() final;
 
     CGpuTextureId resolve(const TextureNode& node);
+    CGpuBufferId resolve(const BufferNode& node);
 
-    void calculate_barriers(PassNode* pass, eastl::vector<CGpuTextureBarrier>& tex_barriers);
+    void calculate_barriers(PassNode* pass,
+        eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
+        eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers);
     gsl::span<CGpuDescriptorSetId> alloc_update_pass_descsets(PassNode* pass);
     void deallocate_resources(PassNode* pass);
 

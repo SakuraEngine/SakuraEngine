@@ -104,6 +104,17 @@ public:
                 shape = "box";
             }
             break;
+            case EObjectType::Buffer: {
+                BufferNode* buf_node = (BufferNode*)rg_node;
+                const bool is_imported = buf_node->is_imported();
+                color = is_imported ? "limegreen" : "lightgreen";
+                label = "buffer: ";
+                label.append(rg_node->get_name());
+                label.append("\nrefs: ")
+                    .append(is_imported ? "imported" : eastl::to_string(buf_node->outgoing_edges()));
+                shape = "box";
+            }
+            break;
             case EObjectType::Pass: {
                 PassNode* pass_node = (PassNode*)rg_node;
                 shape = "ellipse";

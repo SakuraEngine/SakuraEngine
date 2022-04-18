@@ -53,8 +53,22 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const
 
 bool RenderGraph::compile()
 {
-    // TODO: cull
-    // 1.init resources states
+    // 1.cull
+    resources.erase(
+        eastl::remove_if(resources.begin(), resources.end(),
+            [](ResourceNode* resource) {
+                const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
+                return lone;
+            }),
+        resources.end());
+    passes.erase(
+        eastl::remove_if(passes.begin(), passes.end(),
+            [](PassNode* pass) {
+                const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
+                return lone;
+            }),
+        passes.end());
+    // 2.init resources states
     for (auto& resource : resources)
     {
         switch (resource->type)
@@ -69,7 +83,7 @@ bool RenderGraph::compile()
                 break;
         }
     }
-    // 2.calc lifespan
+    // 3.calc lifespan
     for (auto& pass : passes)
     {
         graph->foreach_incoming_edges(pass,
@@ -108,6 +122,32 @@ uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
             TextureNode* texture = static_cast<TextureNode*>(from);
             RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
             f(pass, texture, edge);
+        });
+}
+
+uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
+    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
+{
+    return graph->foreach_incoming_edges(
+        buffer,
+        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+            PassNode* pass = static_cast<PassNode*>(from);
+            BufferNode* buffer = static_cast<BufferNode*>(to);
+            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+            f(pass, buffer, edge);
+        });
+}
+
+uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
+    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
+{
+    return graph->foreach_outgoing_edges(
+        buffer,
+        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+            PassNode* pass = static_cast<PassNode*>(to);
+            BufferNode* buffer = static_cast<BufferNode*>(from);
+            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+            f(pass, buffer, edge);
         });
 }
 
@@ -154,6 +194,49 @@ const ECGpuResourceState RenderGraph::get_lastest_state(
     return result;
 }
 
+const ECGpuResourceState RenderGraph::get_lastest_state(
+    const BufferNode* buffer, const PassNode* pending_pass) const
+{
+    if (passes[0] == pending_pass)
+        return buffer->init_state;
+    PassNode* pass_iter = nullptr;
+    auto result = buffer->init_state;
+    foreach_writer_passes(buffer->get_handle(),
+        [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
+            if (edge->type == ERelationshipType::BufferReadWrite)
+            {
+                auto write_edge = static_cast<BufferReadWriteEdge*>(edge);
+                if (pass->after(pass_iter) && pass->before(pending_pass))
+                {
+                    pass_iter = pass;
+                    result = write_edge->requested_state;
+                }
+            }
+        });
+    foreach_reader_passes(buffer->get_handle(),
+        [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
+            if (edge->type == ERelationshipType::BufferRead)
+            {
+                auto read_edge = static_cast<BufferReadEdge*>(edge);
+                if (pass->after(pass_iter) && pass->before(pending_pass))
+                {
+                    pass_iter = pass;
+                    result = read_edge->requested_state;
+                }
+            }
+            else if (edge->type == ERelationshipType::PipelineBuffer)
+            {
+                auto ppl_edge = static_cast<PipelineBufferEdge*>(edge);
+                if (pass->after(pass_iter) && pass->before(pending_pass))
+                {
+                    pass_iter = pass;
+                    result = ppl_edge->requested_state;
+                }
+            }
+        });
+    return result;
+}
+
 uint64_t RenderGraph::execute()
 {
     graph->clear();
@@ -175,6 +258,7 @@ void RenderGraphBackend::initialize()
     {
         executors[i].initialize(gfx_queue, device);
     }
+    buffer_pool.initialize(device);
     texture_pool.initialize(device);
     texture_view_pool.initialize(device);
 }
@@ -185,6 +269,7 @@ void RenderGraphBackend::finalize()
     {
         executors[i].finalize();
     }
+    buffer_pool.finalize();
     texture_pool.finalize();
     texture_view_pool.finalize();
     for (auto desc_set_heap : desc_set_pool)
@@ -207,15 +292,32 @@ CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
     return node.frame_texture;
 }
 
-void RenderGraphBackend::calculate_barriers(PassNode* pass, eastl::vector<CGpuTextureBarrier>& tex_barriers)
+CGpuBufferId RenderGraphBackend::resolve(const BufferNode& node)
 {
-    auto read_edges = pass->read_edges();
-    auto write_edges = pass->write_edges();
+    if (!node.frame_buffer)
+    {
+        auto& wnode = const_cast<BufferNode&>(node);
+        auto allocated = buffer_pool.allocate(node.descriptor, frame_index);
+        wnode.frame_buffer = node.imported ?
+                                 node.frame_buffer :
+                                 allocated.first;
+        wnode.init_state = allocated.second;
+    }
+    return node.frame_buffer;
+}
+
+void RenderGraphBackend::calculate_barriers(PassNode* pass,
+    eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
+    eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers)
+{
+    auto read_edges = pass->tex_read_edges();
+    auto write_edges = pass->tex_write_edges();
     auto rw_edges = pass->readwrite_edges();
     for (auto& read_edge : read_edges)
     {
         auto texture_readed = read_edge->get_texture_node();
         auto tex_resolved = resolve(*texture_readed);
+        resolved_textures.emplace_back(texture_readed->get_handle(), tex_resolved);
         const auto current_state = get_lastest_state(texture_readed, pass);
         const auto dst_state = read_edge->requested_state;
         if (current_state == dst_state) continue;
@@ -229,6 +331,7 @@ void RenderGraphBackend::calculate_barriers(PassNode* pass, eastl::vector<CGpuTe
     {
         auto texture_target = write_edge->get_texture_node();
         auto tex_resolved = resolve(*texture_target);
+        resolved_textures.emplace_back(texture_target->get_handle(), tex_resolved);
         const auto current_state = get_lastest_state(texture_target, pass);
         const auto dst_state = write_edge->requested_state;
         if (current_state == dst_state) continue;
@@ -242,6 +345,7 @@ void RenderGraphBackend::calculate_barriers(PassNode* pass, eastl::vector<CGpuTe
     {
         auto texture_target = rw_edge->get_texture_node();
         auto tex_resolved = resolve(*texture_target);
+        resolved_textures.emplace_back(texture_target->get_handle(), tex_resolved);
         const auto current_state = get_lastest_state(texture_target, pass);
         const auto dst_state = rw_edge->requested_state;
         if (current_state == dst_state) continue;
@@ -250,6 +354,51 @@ void RenderGraphBackend::calculate_barriers(PassNode* pass, eastl::vector<CGpuTe
         barrier.dst_state = dst_state;
         barrier.texture = tex_resolved;
         tex_barriers.emplace_back(barrier);
+    }
+    auto read_buf_edges = pass->buf_read_edges();
+    auto write_buf_edges = pass->buf_readwrite_edges();
+    auto ppl_edges = pass->buf_ppl_edges();
+    for (auto& read_edge : read_buf_edges)
+    {
+        auto buffer_target = read_edge->get_buffer_node();
+        auto buf_resolved = resolve(*buffer_target);
+        resolved_buffers.emplace_back(buffer_target->get_handle(), buf_resolved);
+        const auto current_state = get_lastest_state(buffer_target, pass);
+        const auto dst_state = read_edge->requested_state;
+        if (current_state == dst_state) continue;
+        CGpuBufferBarrier barrier = {};
+        barrier.src_state = current_state;
+        barrier.dst_state = dst_state;
+        barrier.buffer = buf_resolved;
+        buf_barriers.emplace_back(barrier);
+    }
+    for (auto& write_edge : write_buf_edges)
+    {
+        auto buffer_target = write_edge->get_buffer_node();
+        auto buf_resolved = resolve(*buffer_target);
+        resolved_buffers.emplace_back(buffer_target->get_handle(), buf_resolved);
+        const auto current_state = get_lastest_state(buffer_target, pass);
+        const auto dst_state = write_edge->requested_state;
+        if (current_state == dst_state) continue;
+        CGpuBufferBarrier barrier = {};
+        barrier.src_state = current_state;
+        barrier.dst_state = dst_state;
+        barrier.buffer = buf_resolved;
+        buf_barriers.emplace_back(barrier);
+    }
+    for (auto& ppl_edge : ppl_edges)
+    {
+        auto buffer_target = ppl_edge->get_buffer_node();
+        auto buf_resolved = resolve(*buffer_target);
+        resolved_buffers.emplace_back(buffer_target->get_handle(), buf_resolved);
+        const auto current_state = get_lastest_state(buffer_target, pass);
+        const auto dst_state = ppl_edge->requested_state;
+        if (current_state == dst_state) continue;
+        CGpuBufferBarrier barrier = {};
+        barrier.src_state = current_state;
+        barrier.dst_state = dst_state;
+        barrier.buffer = buf_resolved;
+        buf_barriers.emplace_back(barrier);
     }
 }
 
@@ -275,7 +424,7 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGpuRoot
 gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(PassNode* pass)
 {
     CGpuRootSignatureId root_sig = nullptr;
-    auto read_edges = pass->read_edges();
+    auto read_edges = pass->tex_read_edges();
     auto rw_edges = pass->readwrite_edges();
     if (pass->pass_type == EPassType::Render)
         root_sig = ((RenderPassNode*)pass)->pipeline->root_signature;
@@ -367,8 +516,8 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
 
 void RenderGraphBackend::deallocate_resources(PassNode* pass)
 {
-    auto read_edges = pass->read_edges();
-    auto write_edges = pass->write_edges();
+    auto read_edges = pass->tex_read_edges();
+    auto write_edges = pass->tex_write_edges();
     auto rw_edges = pass->readwrite_edges();
     for (auto& read_edge : read_edges)
     {
@@ -433,24 +582,100 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
                 rw_edge->requested_state,
                 frame_index);
     }
+    auto read_buf_edges = pass->buf_read_edges();
+    auto write_buf_edges = pass->buf_readwrite_edges();
+    auto ppl_edges = pass->buf_ppl_edges();
+    for (auto& buffer_edge : read_buf_edges)
+    {
+        auto buffer_node = buffer_edge->get_buffer_node();
+        if (buffer_node->imported)
+            continue;
+        bool is_last_user = true;
+        buffer_node->foreach_neighbors(
+            [&](DependencyGraphNode* neig) {
+                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                if (rg_node->type == EObjectType::Pass)
+                {
+                    PassNode* other_pass = (PassNode*)rg_node;
+                    is_last_user = is_last_user && (pass->order >= other_pass->order);
+                }
+            });
+        if (is_last_user)
+            buffer_pool.deallocate(buffer_node->descriptor,
+                buffer_node->frame_buffer,
+                buffer_edge->requested_state,
+                frame_index);
+    }
+    for (auto& buffer_edge : write_buf_edges)
+    {
+        auto buffer_node = buffer_edge->get_buffer_node();
+        if (buffer_node->imported)
+            continue;
+        bool is_last_user = true;
+        buffer_node->foreach_neighbors(
+            [&](DependencyGraphNode* neig) {
+                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                if (rg_node->type == EObjectType::Pass)
+                {
+                    PassNode* other_pass = (PassNode*)rg_node;
+                    is_last_user = is_last_user && (pass->order >= other_pass->order);
+                }
+            });
+        if (is_last_user)
+            buffer_pool.deallocate(buffer_node->descriptor,
+                buffer_node->frame_buffer,
+                buffer_edge->requested_state,
+                frame_index);
+    }
+    for (auto& buffer_edge : ppl_edges)
+    {
+        auto buffer_node = buffer_edge->get_buffer_node();
+        if (buffer_node->imported)
+            continue;
+        bool is_last_user = true;
+        buffer_node->foreach_neighbors(
+            [&](DependencyGraphNode* neig) {
+                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                if (rg_node->type == EObjectType::Pass)
+                {
+                    PassNode* other_pass = (PassNode*)rg_node;
+                    is_last_user = is_last_user && (pass->order >= other_pass->order);
+                }
+            });
+        if (is_last_user)
+            buffer_pool.deallocate(buffer_node->descriptor,
+                buffer_node->frame_buffer,
+                buffer_edge->requested_state,
+                frame_index);
+    }
 }
 
 void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass)
 {
-    ComputePassStack stack = {};
+    ComputePassContext stack = {};
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
-    calculate_barriers(pass, tex_barriers);
+    eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures = {};
+    eastl::vector<CGpuBufferBarrier> buffer_barriers = {};
+    eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
+    calculate_barriers(pass, tex_barriers, resolved_textures, buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     stack.desc_sets = alloc_update_pass_descsets(pass);
+    stack.resolved_buffers = resolved_buffers;
+    stack.resolved_textures = resolved_textures;
     // call cgpu apis
+    CGpuResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
     {
-        CGpuResourceBarrierDescriptor barriers = {};
         barriers.texture_barriers = tex_barriers.data();
         barriers.texture_barriers_count = tex_barriers.size();
-        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     }
+    if (!buffer_barriers.empty())
+    {
+        barriers.buffer_barriers = buffer_barriers.data();
+        barriers.buffer_barriers_count = buffer_barriers.size();
+    }
+    cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     // dispatch
     CGpuComputePassDescriptor pass_desc = {};
     pass_desc.name = pass->get_name();
@@ -468,25 +693,35 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
 
 void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
 {
-    RenderPassStack stack = {};
+    RenderPassContext stack = {};
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
-    calculate_barriers(pass, tex_barriers);
+    eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures = {};
+    eastl::vector<CGpuBufferBarrier> buffer_barriers = {};
+    eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
+    calculate_barriers(pass, tex_barriers, resolved_textures, buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     stack.desc_sets = alloc_update_pass_descsets(pass);
+    stack.resolved_buffers = resolved_buffers;
+    stack.resolved_textures = resolved_textures;
     // call cgpu apis
+    CGpuResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
     {
-        CGpuResourceBarrierDescriptor barriers = {};
         barriers.texture_barriers = tex_barriers.data();
         barriers.texture_barriers_count = tex_barriers.size();
-        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     }
+    if (!buffer_barriers.empty())
+    {
+        barriers.buffer_barriers = buffer_barriers.data();
+        barriers.buffer_barriers_count = buffer_barriers.size();
+    }
+    cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     // color attachments
     // TODO: MSAA
     eastl::vector<CGpuColorAttachment> color_attachments = {};
     CGpuDepthStencilAttachment ds_attachment = {};
-    auto write_edges = pass->write_edges();
+    auto write_edges = pass->tex_write_edges();
     for (auto& write_edge : write_edges)
     {
         // TODO: MSAA
@@ -557,15 +792,23 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
 {
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
-    calculate_barriers(pass, tex_barriers);
+    eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures = {};
+    eastl::vector<CGpuBufferBarrier> buffer_barriers = {};
+    eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
+    calculate_barriers(pass, tex_barriers, resolved_textures, buffer_barriers, resolved_buffers);
     // call cgpu apis
+    CGpuResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
     {
-        CGpuResourceBarrierDescriptor barriers = {};
         barriers.texture_barriers = tex_barriers.data();
         barriers.texture_barriers_count = tex_barriers.size();
-        cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     }
+    if (!buffer_barriers.empty())
+    {
+        barriers.buffer_barriers = buffer_barriers.data();
+        barriers.buffer_barriers_count = buffer_barriers.size();
+    }
+    cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     for (uint32_t i = 0; i < pass->t2ts.size(); i++)
     {
         auto src_node = RenderGraph::resolve(pass->t2ts[i].first);
@@ -583,12 +826,24 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         t2t.dst_subresource.layer_count = pass->t2ts[i].second.array_count;
         cgpu_cmd_transfer_texture_to_texture(executor.gfx_cmd_buf, &t2t);
     }
+    for (uint32_t i = 0; i < pass->b2bs.size(); i++)
+    {
+        auto src_node = RenderGraph::resolve(pass->b2bs[i].first);
+        auto dst_node = RenderGraph::resolve(pass->b2bs[i].second);
+        CGpuBufferToBufferTransfer b2b = {};
+        b2b.src = resolve(*src_node);
+        b2b.src_offset = pass->b2bs[i].first.from;
+        b2b.dst = resolve(*dst_node);
+        b2b.dst_offset = pass->b2bs[i].second.from;
+        b2b.size = pass->b2bs[i].first.to - b2b.src_offset;
+        cgpu_cmd_transfer_buffer_to_buffer(executor.gfx_cmd_buf, &b2b);
+    }
     deallocate_resources(pass);
 }
 
 void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass)
 {
-    auto read_edges = pass->read_edges();
+    auto read_edges = pass->tex_read_edges();
     auto&& read_edge = read_edges[0];
     auto texture_target = read_edge->get_texture_node();
     auto back_buffer = pass->descriptor.swapchain->back_buffers[pass->descriptor.index];

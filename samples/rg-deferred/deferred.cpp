@@ -371,7 +371,6 @@ int main(int argc, char* argv[])
                 builder.set_name("lighting_buffer")
                     .extent(to_import->width, to_import->height)
                     .format(lighting_buffer_format)
-                    .allow_render_target()
                     .allow_readwrite();
             });
         // camera
@@ -391,7 +390,7 @@ int main(int argc, char* argv[])
                     .write(1, gbuffer_normal, LOAD_ACTION_CLEAR)
                     .set_depth_stencil(gbuffer_depth);
             },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)to_import->width, (float)to_import->height,
@@ -428,7 +427,7 @@ int main(int argc, char* argv[])
                         .read("gbuffer_depth", gbuffer_depth)
                         .write(0, back_buffer, LOAD_ACTION_CLEAR);
                 },
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+                [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
                         (float)to_import->width, (float)to_import->height,
@@ -449,7 +448,7 @@ int main(int argc, char* argv[])
                         .read("gbuffer_depth", gbuffer_depth)
                         .readwrite("lighting_output", lighting_buffer);
                 },
-                [=](render_graph::RenderGraph& g, render_graph::ComputePassStack& stack) {
+                [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
                     cgpu_compute_encoder_push_constants(stack.encoder,
                         lighting_cs_pipeline->root_signature, "root_constants", &lighting_cs_data);
                     cgpu_compute_encoder_dispatch(stack.encoder,
@@ -464,7 +463,7 @@ int main(int argc, char* argv[])
                         .read("input_color", lighting_buffer)
                         .write(0, back_buffer, LOAD_ACTION_CLEAR);
                 },
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassStack& stack) {
+                [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
                         (float)to_import->width, (float)to_import->height,
@@ -473,7 +472,6 @@ int main(int argc, char* argv[])
                     cgpu_render_encoder_draw(stack.encoder, 6, 0);
                 });
         }
-        render_graph_imgui_setup_resources(graph);
         auto& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(
             (float)to_import->width, (float)to_import->height);
@@ -492,7 +490,10 @@ int main(int argc, char* argv[])
             });
         graph->compile();
         if (frame_index == 0)
+            render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred_cs.gv");
+        if (frame_index == 6)
             render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred.gv");
+
         frame_index = graph->execute();
         // present
         cgpu_wait_queue_idle(gfx_queue);

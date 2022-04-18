@@ -7,8 +7,9 @@ RUNTIME_API CGpuTextureId font_texture;
 RUNTIME_API CGpuRootSignatureId root_sig;
 RUNTIME_API CGpuRenderPipelineId render_pipeline;
 RUNTIME_API sakura::render_graph::TextureHandle font_handle;
-RUNTIME_API CGpuBufferId vertex_buffer;
-RUNTIME_API CGpuBufferId index_buffer;
+RUNTIME_API sakura::render_graph::BufferHandle vertex_buffer_handle;
+RUNTIME_API sakura::render_graph::BufferHandle index_buffer_handle;
+RUNTIME_API sakura::render_graph::BufferHandle upload_buffer_handle;
 RUNTIME_API CGpuBufferId upload_buffer;
 
 RUNTIME_API ImGuiContext*& imgui_context()
@@ -44,15 +45,6 @@ RUNTIME_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor*
     platform_io.Renderer_RenderWindow = imgui_render_window;
 }
 
-RUNTIME_API void render_graph_imgui_setup_resources(sakura::render_graph::RenderGraph* render_graph)
-{
-    font_handle = render_graph->create_texture(
-        [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
-            builder.set_name("imgui_font_texture")
-                .import(font_texture, RESOURCE_STATE_SHADER_RESOURCE);
-        });
-}
-
 RUNTIME_API void render_graph_imgui_add_render_pass(
     sakura::render_graph::RenderGraph* render_graph,
     sakura::render_graph::TextureRTVHandle target,
@@ -73,28 +65,11 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
         auto device = render_graph->get_backend_device();
         size_t vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
         size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
-        if (device)
-        {
-            CGpuBufferDescriptor vb_desc = {};
-            vb_desc.name = "imgui_vertex_buffer";
-            vb_desc.flags = BCF_NONE;
-            vb_desc.descriptors = RT_VERTEX_BUFFER;
-            vb_desc.memory_usage = MEM_USAGE_GPU_ONLY;
-            vb_desc.size = vertex_size;
-            if (vertex_buffer) cgpu_free_buffer(vertex_buffer);
-            vertex_buffer = cgpu_create_buffer(device, &vb_desc);
-        }
-        if (device)
-        {
-            CGpuBufferDescriptor ib_desc = {};
-            ib_desc.name = "imgui_index_buffer";
-            ib_desc.flags = BCF_NONE;
-            ib_desc.descriptors = RT_INDEX_BUFFER;
-            ib_desc.memory_usage = MEM_USAGE_GPU_ONLY;
-            ib_desc.size = index_size;
-            if (index_buffer) cgpu_free_buffer(index_buffer);
-            index_buffer = cgpu_create_buffer(device, &ib_desc);
-        }
+        font_handle = render_graph->create_texture(
+            [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
+                builder.set_name("imgui_font_texture")
+                    .import(font_texture, RESOURCE_STATE_SHADER_RESOURCE);
+            });
         if ((!upload_buffer || upload_buffer->size < index_size + vertex_size) && device)
         {
             if (upload_buffer) cgpu_free_buffer(upload_buffer);
@@ -113,57 +88,42 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             vtx_dst += cmd_list->VtxBuffer.Size;
             idx_dst += cmd_list->IdxBuffer.Size;
         }
-        // TODO: refactor this
-        if (render_graph->get_gfx_queue())
-        {
-            CGpuCommandPoolDescriptor cmd_pool_desc = {};
-            CGpuCommandBufferDescriptor cmd_desc = {};
-            auto cpy_cmd_pool = cgpu_create_command_pool(render_graph->get_gfx_queue(), &cmd_pool_desc);
-            auto cpy_cmd = cgpu_create_command_buffer(cpy_cmd_pool, &cmd_desc);
-            cgpu_cmd_begin(cpy_cmd);
-            CGpuBufferToBufferTransfer b2vb = {};
-            b2vb.src = upload_buffer;
-            b2vb.src_offset = 0;
-            b2vb.dst = vertex_buffer;
-            b2vb.dst_offset = 0;
-            b2vb.size = vertex_size;
-            cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &b2vb);
-            CGpuBufferToBufferTransfer b2ib = {};
-            b2ib.src = upload_buffer;
-            b2ib.src_offset = vertex_size;
-            b2ib.dst = index_buffer;
-            b2ib.dst_offset = 0;
-            b2ib.size = index_size;
-            cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &b2ib);
-            CGpuBufferBarrier barriers[2] = {};
-            barriers[0].buffer = vertex_buffer;
-            barriers[0].src_state = RESOURCE_STATE_COPY_DEST;
-            barriers[0].dst_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-            barriers[1].buffer = index_buffer;
-            barriers[1].src_state = RESOURCE_STATE_COPY_DEST;
-            barriers[1].dst_state = RESOURCE_STATE_INDEX_BUFFER;
-            CGpuResourceBarrierDescriptor barrier_desc1 = {};
-            barrier_desc1.buffer_barriers = barriers;
-            barrier_desc1.buffer_barriers_count = 2;
-            cgpu_cmd_resource_barrier(cpy_cmd, &barrier_desc1);
-            cgpu_cmd_end(cpy_cmd);
-            CGpuQueueSubmitDescriptor cpy_submit = {};
-            cpy_submit.cmds = &cpy_cmd;
-            cpy_submit.cmds_count = 1;
-            cgpu_submit_queue(render_graph->get_gfx_queue(), &cpy_submit);
-            cgpu_wait_queue_idle(render_graph->get_gfx_queue());
-            cgpu_free_command_buffer(cpy_cmd);
-            cgpu_free_command_pool(cpy_cmd_pool);
-        }
+        vertex_buffer_handle = render_graph->create_buffer(
+            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                builder.set_name("imgui_vertex_buffer")
+                    .size(vertex_size)
+                    .memory_usage(MEM_USAGE_GPU_ONLY)
+                    .as_vertex_buffer();
+            });
+        index_buffer_handle = render_graph->create_buffer(
+            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                builder.set_name("imgui_index_buffer")
+                    .size(index_size)
+                    .memory_usage(MEM_USAGE_GPU_ONLY)
+                    .as_index_buffer();
+            });
+        upload_buffer_handle = render_graph->create_buffer(
+            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                builder.set_name("imgui_upload_buffer")
+                    .import(upload_buffer, RESOURCE_STATE_COPY_SOURCE);
+            });
+        render_graph->add_copy_pass(
+            [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+                builder.set_name("imgui_geom_transfer")
+                    .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
+                    .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
+            });
         // add pass
         render_graph->add_render_pass(
             [=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
                 builder.set_name("imgui_pass")
                     .set_pipeline(render_pipeline)
+                    .use_buffer(vertex_buffer_handle, RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+                    .use_buffer(index_buffer_handle, RESOURCE_STATE_INDEX_BUFFER)
                     .read("texture0", font_handle)
                     .write(0, target, load_action);
             },
-            [target](rg::RenderGraph& g, rg::RenderPassStack& stack) {
+            [target](rg::RenderGraph& g, rg::RenderPassContext& context) {
                 auto target_node = g.resolve(target);
                 const auto& target_desc = target_node->get_desc();
                 struct {
@@ -172,12 +132,12 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
                 } invDisplaySize;
                 invDisplaySize.inv_x = 1.f / (float)target_desc.width;
                 invDisplaySize.inv_y = 1.f / (float)target_desc.height;
-                cgpu_render_encoder_set_viewport(stack.encoder,
+                cgpu_render_encoder_set_viewport(context.encoder,
                     0.0f, 0.0f,
                     (float)target_desc.width,
                     (float)target_desc.height,
                     0.f, 1.f);
-                cgpu_render_encoder_push_constants(stack.encoder, root_sig, "root_constants", &invDisplaySize);
+                cgpu_render_encoder_push_constants(context.encoder, root_sig, "root_constants", &invDisplaySize);
                 // drawcalls
                 ImDrawData* draw_data = ImGui::GetDrawData();
                 // Will project scissor/clipping rectangles into framebuffer space
@@ -206,16 +166,17 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
                             clip_rect.w = (pcmd->ClipRect.w - clip_off.y) * clip_scale.y;
                             if (clip_rect.x < 0.0f) clip_rect.x = 0.0f;
                             if (clip_rect.y < 0.0f) clip_rect.y = 0.0f;
-                            cgpu_render_encoder_set_scissor(stack.encoder,
+                            cgpu_render_encoder_set_scissor(context.encoder,
                                 (uint32_t)clip_rect.x, (uint32_t)clip_rect.y,
                                 (uint32_t)(clip_rect.z - clip_rect.x),
                                 (uint32_t)(clip_rect.w - clip_rect.y));
-                            cgpu_render_encoder_bind_index_buffer(stack.encoder,
-                                index_buffer, sizeof(uint16_t), 0);
+                            cgpu_render_encoder_bind_index_buffer(context.encoder,
+                                context.resolve(index_buffer_handle), sizeof(uint16_t), 0);
                             const uint32_t stride = sizeof(ImDrawVert);
-                            cgpu_render_encoder_bind_vertex_buffers(stack.encoder,
-                                1, &vertex_buffer, &stride, NULL);
-                            cgpu_render_encoder_draw_indexed(stack.encoder,
+                            auto resolved_vb = context.resolve(vertex_buffer_handle);
+                            cgpu_render_encoder_bind_vertex_buffers(context.encoder,
+                                1, &resolved_vb, &stride, NULL);
+                            cgpu_render_encoder_draw_indexed(context.encoder,
                                 pcmd->ElemCount,
                                 pcmd->IdxOffset + global_idx_offset,
                                 pcmd->VtxOffset + global_vtx_offset);
@@ -231,8 +192,6 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
 RUNTIME_API void render_graph_imgui_finalize()
 {
     if (upload_buffer) cgpu_free_buffer(upload_buffer);
-    if (vertex_buffer) cgpu_free_buffer(vertex_buffer);
-    if (index_buffer) cgpu_free_buffer(index_buffer);
     cgpu_free_texture(font_texture);
     cgpu_free_render_pipeline(render_pipeline);
     cgpu_free_root_signature(root_sig);

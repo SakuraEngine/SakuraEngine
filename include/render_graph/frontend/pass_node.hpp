@@ -10,6 +10,27 @@ namespace sakura
 namespace render_graph
 {
 
+struct PassContext {
+    gsl::span<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers;
+    gsl::span<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures;
+
+    inline CGpuBufferId resolve(BufferHandle buffer_handle) const
+    {
+        for (auto iter : resolved_buffers)
+        {
+            if (iter.first == buffer_handle) return iter.second;
+        }
+        return nullptr;
+    }
+    inline CGpuTextureId resolve(TextureHandle tex_handle) const
+    {
+        for (auto iter : resolved_textures)
+        {
+            if (iter.first == tex_handle) return iter.second;
+        }
+        return nullptr;
+    }
+};
 class PassNode : public RenderGraphNode
 {
 public:
@@ -19,9 +40,13 @@ public:
     const bool before(const PassNode* other) const;
     const bool after(const PassNode* other) const;
     const PassHandle get_handle() const;
-    inline gsl::span<TextureReadEdge*> read_edges();
-    inline gsl::span<TextureRenderEdge*> write_edges();
+    inline gsl::span<TextureReadEdge*> tex_read_edges();
+    inline gsl::span<TextureRenderEdge*> tex_write_edges();
     inline gsl::span<TextureReadWriteEdge*> readwrite_edges();
+
+    inline gsl::span<BufferReadEdge*> buf_read_edges();
+    inline gsl::span<BufferReadWriteEdge*> buf_readwrite_edges();
+    inline gsl::span<PipelineBufferEdge*> buf_ppl_edges();
 
     const EPassType pass_type = EPassType::None;
     const uint32_t order;
@@ -31,14 +56,18 @@ protected:
     eastl::vector<TextureReadEdge*> in_edges;
     eastl::vector<TextureRenderEdge*> out_edges;
     eastl::vector<TextureReadWriteEdge*> inout_edges;
+
+    eastl::vector<BufferReadEdge*> in_buffer_edges;
+    eastl::vector<BufferReadWriteEdge*> out_buffer_edges;
+    eastl::vector<PipelineBufferEdge*> ppl_buffer_edges;
 };
 
-struct RenderPassStack {
+struct RenderPassContext : public PassContext {
     CGpuRenderPassEncoderId encoder;
     gsl::span<CGpuDescriptorSetId> desc_sets;
 };
 using RenderPassExecuteFunction = eastl::function<
-    void(class RenderGraph&, RenderPassStack&)>;
+    void(class RenderGraph&, RenderPassContext&)>;
 class RenderPassNode : public PassNode
 {
 public:
@@ -60,12 +89,12 @@ protected:
     ECGpuStoreAction stencil_store_action;
 };
 
-struct ComputePassStack {
+struct ComputePassContext : public PassContext {
     CGpuComputePassEncoderId encoder;
     gsl::span<CGpuDescriptorSetId> desc_sets;
 };
 using ComputePassExecuteFunction = eastl::function<
-    void(class RenderGraph&, ComputePassStack&)>;
+    void(class RenderGraph&, ComputePassContext&)>;
 class ComputePassNode : public PassNode
 {
 public:
@@ -93,6 +122,7 @@ protected:
     {
     }
     eastl::vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>> t2ts;
+    eastl::vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>> b2bs;
 };
 
 class PresentPassNode : public PassNode
@@ -132,17 +162,29 @@ inline const bool PassNode::after(const PassNode* other) const
     const bool _ = order > other->order;
     return _;
 }
-inline gsl::span<TextureReadEdge*> PassNode::read_edges()
+inline gsl::span<TextureReadEdge*> PassNode::tex_read_edges()
 {
     return gsl::span<TextureReadEdge*>(in_edges.data(), in_edges.size());
 }
-inline gsl::span<TextureRenderEdge*> PassNode::write_edges()
+inline gsl::span<TextureRenderEdge*> PassNode::tex_write_edges()
 {
     return gsl::span<TextureRenderEdge*>(out_edges.data(), out_edges.size());
 }
 inline gsl::span<TextureReadWriteEdge*> PassNode::readwrite_edges()
 {
     return gsl::span<TextureReadWriteEdge*>(inout_edges.data(), inout_edges.size());
+}
+inline gsl::span<BufferReadEdge*> PassNode::buf_read_edges()
+{
+    return gsl::span<BufferReadEdge*>(in_buffer_edges.data(), in_buffer_edges.size());
+}
+inline gsl::span<BufferReadWriteEdge*> PassNode::buf_readwrite_edges()
+{
+    return gsl::span<BufferReadWriteEdge*>(out_buffer_edges.data(), out_buffer_edges.size());
+}
+inline gsl::span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
+{
+    return gsl::span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
 }
 
 } // namespace render_graph

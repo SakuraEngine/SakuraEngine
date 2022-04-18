@@ -38,10 +38,6 @@ public:
     }
     virtual bool link(Node* from, Node* to, Edge* edge) final
     {
-#ifdef _DEBUG
-        auto old_edge = boost::edge(get_descriptor(from), get_descriptor(to), *this);
-        assert(!old_edge.second && "edge already exists!");
-#endif
         auto&& result = DAG::add_edge(get_descriptor(from), get_descriptor(to), edge, *this);
         edge->graph = this;
         edge->from_node = from->get_id();
