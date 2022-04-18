@@ -73,6 +73,23 @@ struct ObjectHandle<EObjectType::Buffer> {
     protected:
         ShaderReadWriteHandle(const handle_t _this);
     };
+    struct RangeHandle {
+        friend struct ObjectHandle<EObjectType::Buffer>;
+        friend class RenderGraph;
+        friend class BufferReadEdge;
+        const handle_t _this;
+        const uint64_t from;
+        const uint64_t to;
+        inline operator ObjectHandle<EObjectType::Buffer>() const { return ObjectHandle<EObjectType::Buffer>(_this); }
+
+    protected:
+        inline RangeHandle(const handle_t _this, uint64_t from, uint64_t to)
+            : _this(_this)
+            , from(from)
+            , to(to)
+        {
+        }
+    };
     struct PipelineReferenceHandle {
         friend struct ObjectHandle<EObjectType::Buffer>;
         friend class RenderGraph;
@@ -87,6 +104,11 @@ struct ObjectHandle<EObjectType::Buffer> {
     inline operator ShaderReadHandle() const { return ShaderReadHandle(handle); }
     // readwrite
     inline operator ShaderReadWriteHandle() const { return ShaderReadWriteHandle(handle); }
+    // pipeline
+    inline operator PipelineReferenceHandle() const { return PipelineReferenceHandle(handle); }
+    // range
+    inline RangeHandle range(uint64_t from, uint64_t to) { return RangeHandle(handle, from, to); }
+
     friend class RenderGraph;
     friend class RenderGraphBackend;
     friend class BufferNode;
@@ -108,6 +130,7 @@ private:
 using BufferHandle = ObjectHandle<EObjectType::Buffer>;
 using BufferCBVHandle = BufferHandle::ShaderReadHandle;
 using BufferUAVHandle = BufferHandle::ShaderReadWriteHandle;
+using BufferRangeHandle = BufferHandle::RangeHandle;
 using PipelineBufferHandle = BufferHandle::PipelineReferenceHandle;
 
 template <>
