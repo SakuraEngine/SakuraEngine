@@ -282,12 +282,21 @@ int main(int argc, char* argv[])
             style.ScaleAllSizes(1.f / dpi_scaling);
             ImGui::GetIO().FontGlobalScale = 0.5f;
         }
+        else
+        {
+            float ddpi;
+            SDL_GetDisplayDPI(0, &ddpi, NULL, NULL);
+            dpi_scaling = ddpi / OS_DPI;
+            // scale back
+            style.ScaleAllSizes(dpi_scaling);
+        }
         ImFontConfig cfg = {};
         cfg.SizePixels = 16.f * dpi_scaling;
         cfg.OversampleH = cfg.OversampleV = 1;
         cfg.PixelSnapH = true;
         ImGui::GetIO().Fonts->AddFontFromMemoryTTF(font_bytes,
             font_length, cfg.SizePixels, &cfg);
+        ImGui::GetIO().Fonts->Build();
         free(font_bytes);
         style.AntiAliasedFill = true;
         style.AntiAliasedLines = true;
