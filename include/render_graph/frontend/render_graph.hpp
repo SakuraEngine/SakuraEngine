@@ -299,6 +299,8 @@ public:
         eastl::unique_ptr<DependencyGraph>(DependencyGraph::Create());
     eastl::vector<PassNode*> passes;
     eastl::vector<ResourceNode*> resources;
+    eastl::vector<PassNode*> culled_passes;
+    eastl::vector<ResourceNode*> culled_resources;
 };
 using RenderGraphSetupFunction = RenderGraph::RenderGraphSetupFunction;
 using RenderGraphBuilder = RenderGraph::RenderGraphBuilder;
