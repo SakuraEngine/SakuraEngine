@@ -6,6 +6,8 @@
 #include "render_graph/frontend/resource_edge.hpp"
 #include "render_graph/frontend/pass_node.hpp"
 
+#define RG_MAX_FRAME_IN_FLIGHT 3
+
 namespace sakura
 {
 namespace render_graph

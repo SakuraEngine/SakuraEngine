@@ -31,7 +31,7 @@ void RenderGraph::destroy(RenderGraph* g)
 void RenderGraphBackend::initialize()
 {
     backend = device->adapter->instance->backend;
-    for (uint32_t i = 0; i < MAX_FRAME_IN_FLIGHT; i++)
+    for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
     {
         executors[i].initialize(gfx_queue, device);
     }
@@ -42,17 +42,13 @@ void RenderGraphBackend::initialize()
 
 void RenderGraphBackend::finalize()
 {
-    for (uint32_t i = 0; i < MAX_FRAME_IN_FLIGHT; i++)
+    for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
     {
         executors[i].finalize();
     }
     buffer_pool.finalize();
     texture_pool.finalize();
     texture_view_pool.finalize();
-    for (auto desc_set_heap : desc_set_pool)
-    {
-        desc_set_heap.second->destroy();
-    }
 }
 
 CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
@@ -141,7 +137,7 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGpuRoot
     return { UINT32_MAX, UINT32_MAX };
 }
 
-gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(PassNode* pass)
+gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass)
 {
     ZoneScopedN("UpdateBindings");
     CGpuRootSignatureId root_sig = nullptr;
@@ -151,10 +147,10 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
         root_sig = ((RenderPassNode*)pass)->pipeline->root_signature;
     else if (pass->pass_type == EPassType::Compute)
         root_sig = ((ComputePassNode*)pass)->pipeline->root_signature;
-    auto&& desc_set_heap = desc_set_pool.find(root_sig);
-    if (desc_set_heap == desc_set_pool.end())
-        desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
-    auto desc_sets = desc_set_pool[root_sig]->pop();
+    auto&& desc_set_heap = executor.desc_set_pool.find(root_sig);
+    if (desc_set_heap == executor.desc_set_pool.end())
+        executor.desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
+    auto desc_sets = executor.desc_set_pool[root_sig]->pop();
     for (uint32_t set_idx = 0; set_idx < desc_sets.size(); set_idx++)
     {
         eastl::vector<CGpuDescriptorData> desc_set_updates;
@@ -290,7 +286,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
     calculate_barriers(pass, tex_barriers, resolved_textures, buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
-    stack.desc_sets = alloc_update_pass_descsets(pass);
+    stack.desc_sets = alloc_update_pass_descsets(executor, pass);
     stack.resolved_buffers = resolved_buffers;
     stack.resolved_textures = resolved_textures;
     // call cgpu apis
@@ -336,7 +332,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
     calculate_barriers(pass, tex_barriers, resolved_textures, buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
-    stack.desc_sets = alloc_update_pass_descsets(pass);
+    stack.desc_sets = alloc_update_pass_descsets(executor, pass);
     stack.resolved_buffers = resolved_buffers;
     stack.resolved_textures = resolved_textures;
     // call cgpu apis
@@ -499,7 +495,16 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
 
 uint64_t RenderGraphBackend::execute()
 {
-    RenderGraphFrameExecutor& executor = executors[0];
+    const auto executor_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
+    RenderGraphFrameExecutor& executor = executors[executor_index];
+    {
+        ZoneScopedN("AcquireExecutor");
+        cgpu_wait_fences(&executor.exec_fence, 1);
+        for (auto desc_heap : executor.desc_set_pool)
+        {
+            desc_heap.second->reset();
+        }
+    }
     {
         ZoneScopedN("GraphExecutePasses");
         cgpu_reset_command_pool(executor.gfx_cmd_pool);
@@ -531,6 +536,7 @@ uint64_t RenderGraphBackend::execute()
         CGpuQueueSubmitDescriptor submit_desc = {};
         submit_desc.cmds = &executor.gfx_cmd_buf;
         submit_desc.cmds_count = 1;
+        submit_desc.signal_fence = executor.exec_fence;
         cgpu_submit_queue(gfx_queue, &submit_desc);
     }
     {
@@ -547,11 +553,6 @@ uint64_t RenderGraphBackend::execute()
             delete resource;
         }
         resources.clear();
-        // cleanup internal resources
-        for (auto desc_heap : desc_set_pool)
-        {
-            desc_heap.second->reset();
-        }
     }
     return frame_index++;
 }

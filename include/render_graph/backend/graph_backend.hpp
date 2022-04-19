@@ -5,8 +5,6 @@
 #include "texture_view_pool.hpp"
 #include "desc_set_heap.hpp"
 
-#define MAX_FRAME_IN_FLIGHT 3
-
 namespace sakura
 {
 namespace render_graph
@@ -18,23 +16,32 @@ public:
 
 protected:
     RenderGraphFrameExecutor() = default;
-    void initialize(CGpuQueueId gfx_queue, CGpuDeviceId deivce)
+    void initialize(CGpuQueueId gfx_queue, CGpuDeviceId device)
     {
         CGpuCommandPoolDescriptor pool_desc = {};
         gfx_cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
         CGpuCommandBufferDescriptor cmd_desc = {};
         cmd_desc.is_secondary = false;
         gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
+        exec_fence = cgpu_create_fence(device);
     }
     void finalize()
     {
         if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
         if (gfx_cmd_pool) cgpu_free_command_pool(gfx_cmd_pool);
+        if (exec_fence) cgpu_free_fence(exec_fence);
         gfx_cmd_buf = nullptr;
         gfx_cmd_pool = nullptr;
+        exec_fence = nullptr;
+        for (auto desc_set_heap : desc_set_pool)
+        {
+            desc_set_heap.second->destroy();
+        }
     }
     CGpuCommandPoolId gfx_cmd_pool = nullptr;
     CGpuCommandBufferId gfx_cmd_buf = nullptr;
+    CGpuFenceId exec_fence = nullptr;
+    eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
 };
 
 class RenderGraphBackend : public RenderGraph
@@ -67,7 +74,7 @@ protected:
     void calculate_barriers(PassNode* pass,
         eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
         eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers);
-    gsl::span<CGpuDescriptorSetId> alloc_update_pass_descsets(PassNode* pass);
+    gsl::span<CGpuDescriptorSetId> alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass);
     void deallocate_resources(PassNode* pass);
 
     void execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass);
@@ -78,11 +85,10 @@ protected:
     CGpuQueueId gfx_queue;
     CGpuDeviceId device;
     ECGpuBackend backend;
-    RenderGraphFrameExecutor executors[MAX_FRAME_IN_FLIGHT];
+    RenderGraphFrameExecutor executors[RG_MAX_FRAME_IN_FLIGHT];
     TexturePool texture_pool;
     BufferPool buffer_pool;
     TextureViewPool texture_view_pool;
-    eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
 };
 } // namespace render_graph
 } // namespace sakura

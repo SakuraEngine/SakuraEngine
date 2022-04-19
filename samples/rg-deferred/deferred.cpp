@@ -514,13 +514,9 @@ int main(int argc, char* argv[])
         }
         // present
         {
-            ZoneScopedN("WaitGPUQueue");
-            cgpu_wait_queue_idle(gfx_queue);
-        }
-        {
             ZoneScopedN("CollectGarbage");
-            if (frame_index >= 1)
-                graph->collect_garbage(frame_index - 1);
+            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
+                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
         }
         {
             ZoneScopedN("Present");
