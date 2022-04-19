@@ -33,6 +33,7 @@ include(GPU)
 include(ShaderCompile)
 include(SDL2) # Set SDL2 ENVS
 include(imgui) # Set ImGui ENVS
+include(Tracy) # Set Tracy ENVS
 # WASM
 extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/wasm-clang-win.zip 
     ${SAKURA_BIN_DIR}/Debug
@@ -122,6 +123,7 @@ target_include_directories(SakuraRuntime
     ${WASM3_INCLUDES}
     ${WASM_EDGE_INCLUDES}
     ${SDL2_INCLUDES}
+    ${TRACY_INCLUDES}
 )
 
 # link targets
@@ -131,6 +133,7 @@ target_link_libraries(SakuraRuntime
     ${WASM3_LIBRARIES}
     ${WASM_EDGE_LIBRARIES}
     ${SDL2_LIBRARIES}
+    ${TRACY_LIBRARIES}
     IMGUI
 )
 

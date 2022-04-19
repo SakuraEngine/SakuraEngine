@@ -45,11 +45,19 @@ public:
     gsl::span<TextureRenderEdge*> tex_write_edges();
     gsl::span<TextureReadWriteEdge*> tex_readwrite_edges();
     void foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)>);
+    inline uint32_t textures_count() const
+    {
+        return in_texture_edges.size() + out_texture_edges.size() + inout_texture_edges.size();
+    }
 
     gsl::span<BufferReadEdge*> buf_read_edges();
     gsl::span<BufferReadWriteEdge*> buf_readwrite_edges();
     gsl::span<PipelineBufferEdge*> buf_ppl_edges();
     void foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)>);
+    inline uint32_t buffers_count() const
+    {
+        return in_buffer_edges.size() + out_buffer_edges.size() + ppl_buffer_edges.size();
+    }
 
     const EPassType pass_type = EPassType::None;
     const uint32_t order;
