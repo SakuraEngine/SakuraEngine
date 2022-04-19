@@ -14,6 +14,7 @@ public:
         , requested_state(requested_state)
     {
     }
+    virtual ~TextureEdge() = default;
     virtual TextureNode* get_texture_node() = 0;
     virtual PassNode* get_pass_node() = 0;
     const ECGpuResourceState requested_state;
@@ -106,6 +107,8 @@ public:
         , requested_state(requested_state)
     {
     }
+    virtual ~BufferEdge() = default;
+
     virtual BufferNode* get_buffer_node() = 0;
     virtual PassNode* get_pass_node() = 0;
     const ECGpuResourceState requested_state;
