@@ -68,22 +68,7 @@ bool RenderGraph::compile()
                 return lone;
             }),
         passes.end());
-    // 2.init resources states
-    for (auto& resource : resources)
-    {
-        switch (resource->type)
-        {
-            case EObjectType::Texture: {
-                auto texture = static_cast<TextureNode*>(resource);
-                // texture->init_state = RESOURCE_STATE_COMMON;
-                (void)texture;
-            }
-            break;
-            default:
-                break;
-        }
-    }
-    // 3.calc lifespan
+    // 2.calc lifespan
     for (auto& pass : passes)
     {
         graph->foreach_incoming_edges(pass,
@@ -310,96 +295,32 @@ void RenderGraphBackend::calculate_barriers(PassNode* pass,
     eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
     eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers)
 {
-    auto read_edges = pass->tex_read_edges();
-    auto write_edges = pass->tex_write_edges();
-    auto rw_edges = pass->readwrite_edges();
-    for (auto& read_edge : read_edges)
-    {
-        auto texture_readed = read_edge->get_texture_node();
-        auto tex_resolved = resolve(*texture_readed);
-        resolved_textures.emplace_back(texture_readed->get_handle(), tex_resolved);
-        const auto current_state = get_lastest_state(texture_readed, pass);
-        const auto dst_state = read_edge->requested_state;
-        if (current_state == dst_state) continue;
-        CGpuTextureBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.texture = tex_resolved;
-        tex_barriers.emplace_back(barrier);
-    }
-    for (auto& write_edge : write_edges)
-    {
-        auto texture_target = write_edge->get_texture_node();
-        auto tex_resolved = resolve(*texture_target);
-        resolved_textures.emplace_back(texture_target->get_handle(), tex_resolved);
-        const auto current_state = get_lastest_state(texture_target, pass);
-        const auto dst_state = write_edge->requested_state;
-        if (current_state == dst_state) continue;
-        CGpuTextureBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.texture = tex_resolved;
-        tex_barriers.emplace_back(barrier);
-    }
-    for (auto& rw_edge : rw_edges)
-    {
-        auto texture_target = rw_edge->get_texture_node();
-        auto tex_resolved = resolve(*texture_target);
-        resolved_textures.emplace_back(texture_target->get_handle(), tex_resolved);
-        const auto current_state = get_lastest_state(texture_target, pass);
-        const auto dst_state = rw_edge->requested_state;
-        if (current_state == dst_state) continue;
-        CGpuTextureBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.texture = tex_resolved;
-        tex_barriers.emplace_back(barrier);
-    }
-    auto read_buf_edges = pass->buf_read_edges();
-    auto write_buf_edges = pass->buf_readwrite_edges();
-    auto ppl_edges = pass->buf_ppl_edges();
-    for (auto& read_edge : read_buf_edges)
-    {
-        auto buffer_target = read_edge->get_buffer_node();
-        auto buf_resolved = resolve(*buffer_target);
-        resolved_buffers.emplace_back(buffer_target->get_handle(), buf_resolved);
-        const auto current_state = get_lastest_state(buffer_target, pass);
-        const auto dst_state = read_edge->requested_state;
-        if (current_state == dst_state) continue;
-        CGpuBufferBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.buffer = buf_resolved;
-        buf_barriers.emplace_back(barrier);
-    }
-    for (auto& write_edge : write_buf_edges)
-    {
-        auto buffer_target = write_edge->get_buffer_node();
-        auto buf_resolved = resolve(*buffer_target);
-        resolved_buffers.emplace_back(buffer_target->get_handle(), buf_resolved);
-        const auto current_state = get_lastest_state(buffer_target, pass);
-        const auto dst_state = write_edge->requested_state;
-        if (current_state == dst_state) continue;
-        CGpuBufferBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.buffer = buf_resolved;
-        buf_barriers.emplace_back(barrier);
-    }
-    for (auto& ppl_edge : ppl_edges)
-    {
-        auto buffer_target = ppl_edge->get_buffer_node();
-        auto buf_resolved = resolve(*buffer_target);
-        resolved_buffers.emplace_back(buffer_target->get_handle(), buf_resolved);
-        const auto current_state = get_lastest_state(buffer_target, pass);
-        const auto dst_state = ppl_edge->requested_state;
-        if (current_state == dst_state) continue;
-        CGpuBufferBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.buffer = buf_resolved;
-        buf_barriers.emplace_back(barrier);
-    }
+    pass->foreach_textures(
+        [&](TextureNode* texture, TextureEdge* edge) {
+            auto tex_resolved = resolve(*texture);
+            resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
+            const auto current_state = get_lastest_state(texture, pass);
+            const auto dst_state = edge->requested_state;
+            if (current_state == dst_state) return;
+            CGpuTextureBarrier barrier = {};
+            barrier.src_state = current_state;
+            barrier.dst_state = dst_state;
+            barrier.texture = tex_resolved;
+            tex_barriers.emplace_back(barrier);
+        });
+    pass->foreach_buffers(
+        [&](BufferNode* buffer, BufferEdge* edge) {
+            auto buf_resolved = resolve(*buffer);
+            resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
+            const auto current_state = get_lastest_state(buffer, pass);
+            const auto dst_state = edge->requested_state;
+            if (current_state == dst_state) return;
+            CGpuBufferBarrier barrier = {};
+            barrier.src_state = current_state;
+            barrier.dst_state = dst_state;
+            barrier.buffer = buf_resolved;
+            buf_barriers.emplace_back(barrier);
+        });
 }
 
 eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGpuRootSignatureId root_sig)
@@ -425,7 +346,7 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
 {
     CGpuRootSignatureId root_sig = nullptr;
     auto read_edges = pass->tex_read_edges();
-    auto rw_edges = pass->readwrite_edges();
+    auto rw_edges = pass->tex_readwrite_edges();
     if (pass->pass_type == EPassType::Render)
         root_sig = ((RenderPassNode*)pass)->pipeline->root_signature;
     else if (pass->pass_type == EPassType::Compute)
@@ -516,138 +437,44 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
 
 void RenderGraphBackend::deallocate_resources(PassNode* pass)
 {
-    auto read_edges = pass->tex_read_edges();
-    auto write_edges = pass->tex_write_edges();
-    auto rw_edges = pass->readwrite_edges();
-    for (auto& read_edge : read_edges)
-    {
-        auto texture_readed = read_edge->get_texture_node();
-        if (texture_readed->imported)
-            continue;
-        bool is_last_user = true;
-        texture_readed->foreach_neighbors(
-            [&](DependencyGraphNode* neig) {
-                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                if (rg_node->type == EObjectType::Pass)
-                {
-                    PassNode* other_pass = (PassNode*)rg_node;
-                    is_last_user = is_last_user && (pass->order >= other_pass->order);
-                }
-            });
-        if (is_last_user)
-            texture_pool.deallocate(texture_readed->descriptor,
-                texture_readed->frame_texture,
-                read_edge->requested_state,
-                frame_index);
-    }
-    for (auto& write_edge : write_edges)
-    {
-        auto texture_target = write_edge->get_texture_node();
-        if (texture_target->imported)
-            continue;
-        bool is_last_user = true;
-        texture_target->foreach_neighbors(
-            [&](DependencyGraphNode* neig) {
-                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                if (rg_node->type == EObjectType::Pass)
-                {
-                    PassNode* other_pass = (PassNode*)rg_node;
-                    is_last_user = is_last_user && (pass->order >= other_pass->order);
-                }
-            });
-        if (is_last_user)
-            texture_pool.deallocate(texture_target->descriptor,
-                texture_target->frame_texture,
-                write_edge->requested_state,
-                frame_index);
-    }
-    for (auto& rw_edge : rw_edges)
-    {
-        auto texture_target = rw_edge->get_texture_node();
-        if (texture_target->imported)
-            continue;
-        bool is_last_user = true;
-        texture_target->foreach_neighbors(
-            [&](DependencyGraphNode* neig) {
-                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                if (rg_node->type == EObjectType::Pass)
-                {
-                    PassNode* other_pass = (PassNode*)rg_node;
-                    is_last_user = is_last_user && (pass->order >= other_pass->order);
-                }
-            });
-        if (is_last_user)
-            texture_pool.deallocate(texture_target->descriptor,
-                texture_target->frame_texture,
-                rw_edge->requested_state,
-                frame_index);
-    }
-    auto read_buf_edges = pass->buf_read_edges();
-    auto write_buf_edges = pass->buf_readwrite_edges();
-    auto ppl_edges = pass->buf_ppl_edges();
-    for (auto& buffer_edge : read_buf_edges)
-    {
-        auto buffer_node = buffer_edge->get_buffer_node();
-        if (buffer_node->imported)
-            continue;
-        bool is_last_user = true;
-        buffer_node->foreach_neighbors(
-            [&](DependencyGraphNode* neig) {
-                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                if (rg_node->type == EObjectType::Pass)
-                {
-                    PassNode* other_pass = (PassNode*)rg_node;
-                    is_last_user = is_last_user && (pass->order >= other_pass->order);
-                }
-            });
-        if (is_last_user)
-            buffer_pool.deallocate(buffer_node->descriptor,
-                buffer_node->frame_buffer,
-                buffer_edge->requested_state,
-                frame_index);
-    }
-    for (auto& buffer_edge : write_buf_edges)
-    {
-        auto buffer_node = buffer_edge->get_buffer_node();
-        if (buffer_node->imported)
-            continue;
-        bool is_last_user = true;
-        buffer_node->foreach_neighbors(
-            [&](DependencyGraphNode* neig) {
-                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                if (rg_node->type == EObjectType::Pass)
-                {
-                    PassNode* other_pass = (PassNode*)rg_node;
-                    is_last_user = is_last_user && (pass->order >= other_pass->order);
-                }
-            });
-        if (is_last_user)
-            buffer_pool.deallocate(buffer_node->descriptor,
-                buffer_node->frame_buffer,
-                buffer_edge->requested_state,
-                frame_index);
-    }
-    for (auto& buffer_edge : ppl_edges)
-    {
-        auto buffer_node = buffer_edge->get_buffer_node();
-        if (buffer_node->imported)
-            continue;
-        bool is_last_user = true;
-        buffer_node->foreach_neighbors(
-            [&](DependencyGraphNode* neig) {
-                RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                if (rg_node->type == EObjectType::Pass)
-                {
-                    PassNode* other_pass = (PassNode*)rg_node;
-                    is_last_user = is_last_user && (pass->order >= other_pass->order);
-                }
-            });
-        if (is_last_user)
-            buffer_pool.deallocate(buffer_node->descriptor,
-                buffer_node->frame_buffer,
-                buffer_edge->requested_state,
-                frame_index);
-    }
+    pass->foreach_textures(
+        [this, pass](TextureNode* texture, TextureEdge* edge) {
+            if (texture->imported) return;
+            bool is_last_user = true;
+            texture->foreach_neighbors(
+                [&](DependencyGraphNode* neig) {
+                    RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                    if (rg_node->type == EObjectType::Pass)
+                    {
+                        PassNode* other_pass = (PassNode*)rg_node;
+                        is_last_user = is_last_user && (pass->order >= other_pass->order);
+                    }
+                });
+            if (is_last_user)
+                texture_pool.deallocate(texture->descriptor,
+                    texture->frame_texture,
+                    edge->requested_state,
+                    frame_index);
+        });
+    pass->foreach_buffers(
+        [this, pass](BufferNode* buffer, BufferEdge* edge) {
+            if (buffer->imported) return;
+            bool is_last_user = true;
+            buffer->foreach_neighbors(
+                [&](DependencyGraphNode* neig) {
+                    RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+                    if (rg_node->type == EObjectType::Pass)
+                    {
+                        PassNode* other_pass = (PassNode*)rg_node;
+                        is_last_user = is_last_user && (pass->order >= other_pass->order);
+                    }
+                });
+            if (is_last_user)
+                buffer_pool.deallocate(buffer->descriptor,
+                    buffer->frame_buffer,
+                    edge->requested_state,
+                    frame_index);
+        });
 }
 
 void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass)

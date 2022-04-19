@@ -1,10 +1,9 @@
 #pragma pack_matrix(row_major)
 
-Texture2D gbuffer_color : register(t0, space0);
-Texture2D gbuffer_normal : register(t1, space0);
-Texture2D gbuffer_depth : register(t2, space0);
-[[vk::binding(0, 1)]]
-RWTexture2D<float4> lighting_output : register(u0, space0);
+Texture2D gbuffer_color;
+Texture2D gbuffer_normal;
+Texture2D gbuffer_depth;
+RWTexture2D<float4> lighting_output;
 
 struct RootConstants
 {
