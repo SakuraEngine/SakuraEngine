@@ -15,6 +15,7 @@ public:
         , imported(false)
     {
     }
+    virtual ~ResourceNode() = default;
     struct LifeSpan {
         const uint32_t from;
         const uint32_t to;

@@ -35,15 +35,17 @@ bool RenderGraph::compile()
     // 1.cull
     resources.erase(
         eastl::remove_if(resources.begin(), resources.end(),
-            [](ResourceNode* resource) {
+            [this](ResourceNode* resource) {
                 const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
+                if(lone) culled_resources.emplace_back(resource);
                 return lone;
             }),
         resources.end());
     passes.erase(
         eastl::remove_if(passes.begin(), passes.end(),
-            [](PassNode* pass) {
+            [this](PassNode* pass) {
                 const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
+                if(lone) culled_passes.emplace_back(pass);
                 return lone;
             }),
         passes.end());

@@ -543,6 +543,16 @@ uint64_t RenderGraphBackend::execute()
         ZoneScopedN("GraphCleanup");
         graph->clear();
         blackboard.clear();
+        for(auto culled_resource : culled_resources)
+        {
+            delete culled_resource;
+        }
+        culled_resources.clear();
+        for(auto culled_pass : culled_passes)
+        {
+            delete culled_pass;
+        }
+        culled_passes.clear();
         for (auto pass : passes)
         {
             pass->foreach_textures(
