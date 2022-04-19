@@ -88,3 +88,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif //  __cplusplus
+
+#define OS_DPI 72

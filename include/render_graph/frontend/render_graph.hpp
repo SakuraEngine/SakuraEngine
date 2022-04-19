@@ -60,26 +60,13 @@ public:
         RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
 
     protected:
-        RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass)
-            : graph(graph)
-            , node(pass)
-        {
-        }
+        RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass) noexcept;
         RenderGraph& graph;
         RenderPassNode& node;
     };
     using RenderPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
-    inline PassHandle add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor)
-    {
-        auto newPass = new RenderPassNode(passes.size());
-        passes.emplace_back(newPass);
-        graph->insert(newPass);
-        // build up
-        RenderPassBuilder builder(*this, *newPass);
-        setup(*this, builder);
-        newPass->executor = executor;
-        return newPass->get_handle();
-    }
+    PassHandle add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor);
+
     class ComputePassBuilder
     {
     public:
@@ -96,26 +83,13 @@ public:
         ComputePassBuilder& set_pipeline(CGpuComputePipelineId pipeline);
 
     protected:
-        ComputePassBuilder(RenderGraph& graph, ComputePassNode& pass)
-            : graph(graph)
-            , node(pass)
-        {
-        }
+        ComputePassBuilder(RenderGraph& graph, ComputePassNode& pass) noexcept;
         RenderGraph& graph;
         ComputePassNode& node;
     };
     using ComputePassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::ComputePassBuilder&)>;
-    inline PassHandle add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor)
-    {
-        auto newPass = new ComputePassNode(passes.size());
-        passes.emplace_back(newPass);
-        graph->insert(newPass);
-        // build up
-        ComputePassBuilder builder(*this, *newPass);
-        setup(*this, builder);
-        newPass->executor = executor;
-        return newPass->get_handle();
-    }
+    PassHandle add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor);
+
     class CopyPassBuilder
     {
     public:
@@ -125,25 +99,13 @@ public:
         CopyPassBuilder& buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst);
 
     protected:
-        CopyPassBuilder(RenderGraph& graph, CopyPassNode& pass)
-            : graph(graph)
-            , node(pass)
-        {
-        }
+        CopyPassBuilder(RenderGraph& graph, CopyPassNode& pass) noexcept;
         RenderGraph& graph;
         CopyPassNode& node;
     };
     using CopyPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
-    inline PassHandle add_copy_pass(const CopyPassSetupFunction& setup)
-    {
-        auto newPass = new CopyPassNode(passes.size());
-        passes.emplace_back(newPass);
-        graph->insert(newPass);
-        // build up
-        CopyPassBuilder builder(*this, *newPass);
-        setup(*this, builder);
-        return newPass->get_handle();
-    }
+    PassHandle add_copy_pass(const CopyPassSetupFunction& setup);
+
     class PresentPassBuilder
     {
     public:
@@ -154,25 +116,13 @@ public:
         PresentPassBuilder& texture(TextureHandle texture, bool is_backbuffer = true);
 
     protected:
-        PresentPassBuilder(RenderGraph& graph, PresentPassNode& present)
-            : graph(graph)
-            , node(present)
-        {
-        }
+        PresentPassBuilder(RenderGraph& graph, PresentPassNode& present) noexcept;
         RenderGraph& graph;
         PresentPassNode& node;
     };
     using PresentPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::PresentPassBuilder&)>;
-    inline PassHandle add_present_pass(const PresentPassSetupFunction& setup)
-    {
-        auto newPass = new PresentPassNode(passes.size());
-        passes.emplace_back(newPass);
-        graph->insert(newPass);
-        // build up
-        PresentPassBuilder builder(*this, *newPass);
-        setup(*this, builder);
-        return newPass->get_handle();
-    }
+    PassHandle add_present_pass(const PresentPassSetupFunction& setup);
+
     class BufferBuilder
     {
     public:
@@ -190,33 +140,13 @@ public:
         BufferBuilder& as_index_buffer();
 
     protected:
-        BufferBuilder(RenderGraph& graph, BufferNode& node)
-            : graph(graph)
-            , node(node)
-        {
-            node.descriptor.descriptors = RT_NONE;
-            node.descriptor.flags = BCF_NONE;
-            node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
-        }
+        BufferBuilder(RenderGraph& graph, BufferNode& node) noexcept;
         RenderGraph& graph;
         BufferNode& node;
     };
     using BufferSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::BufferBuilder&)>;
-    inline BufferHandle create_buffer(const BufferSetupFunction& setup)
-    {
-        auto newTex = new BufferNode();
-        resources.emplace_back(newTex);
-        graph->insert(newTex);
-        BufferBuilder builder(*this, *newTex);
-        setup(*this, builder);
-        return newTex->get_handle();
-    }
-    inline BufferHandle get_buffer(const char* name)
-    {
-        if (blackboard.named_buffers.find(name) != blackboard.named_buffers.end())
-            return blackboard.named_buffers[name]->get_handle();
-        return UINT64_MAX;
-    }
+    BufferHandle create_buffer(const BufferSetupFunction& setup);
+    inline BufferHandle get_buffer(const char* name);
     const ECGpuResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const;
 
     class TextureBuilder
@@ -236,32 +166,14 @@ public:
         TextureBuilder& allow_lone();
 
     protected:
-        TextureBuilder(RenderGraph& graph, TextureNode& node)
-            : graph(graph)
-            , node(node)
-        {
-            node.descriptor.descriptors = RT_TEXTURE;
-        }
+        TextureBuilder(RenderGraph& graph, TextureNode& node) noexcept;
         RenderGraph& graph;
         TextureNode& node;
         CGpuTextureId imported = nullptr;
     };
     using TextureSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::TextureBuilder&)>;
-    inline TextureHandle create_texture(const TextureSetupFunction& setup)
-    {
-        auto newTex = new TextureNode();
-        resources.emplace_back(newTex);
-        graph->insert(newTex);
-        TextureBuilder builder(*this, *newTex);
-        setup(*this, builder);
-        return newTex->get_handle();
-    }
-    inline TextureHandle get_texture(const char* name)
-    {
-        if (blackboard.named_textures.find(name) != blackboard.named_textures.end())
-            return blackboard.named_textures[name]->get_handle();
-        return UINT64_MAX;
-    }
+    TextureHandle create_texture(const TextureSetupFunction& setup);
+    TextureHandle get_texture(const char* name);
     const ECGpuResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const;
 
     bool compile();
@@ -270,8 +182,7 @@ public:
     virtual CGpuQueueId get_gfx_queue() { return nullptr; }
     virtual uint32_t collect_garbage(uint64_t critical_frame)
     {
-        return collect_texture_garbage(critical_frame) +
-               collect_buffer_garbage(critical_frame);
+        return collect_texture_garbage(critical_frame) + collect_buffer_garbage(critical_frame);
     }
     virtual uint32_t collect_texture_garbage(uint64_t critical_frame) { return 0; }
     virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) { return 0; }

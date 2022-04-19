@@ -1,4 +1,6 @@
 #pragma once
+#include "platform/window.h"
+#include "platform/input.h"
 #include "render_graph/frontend/render_graph.hpp"
 
 typedef struct RenderGraphImGuiDescriptor {
@@ -16,3 +18,4 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
     sakura::render_graph::TextureRTVHandle target,
     ECGpuLoadAction load_action);
 RUNTIME_API void render_graph_imgui_finalize();
+RUNTIME_API void skr_imgui_new_frame(SWindowHandle window, float delta_time);

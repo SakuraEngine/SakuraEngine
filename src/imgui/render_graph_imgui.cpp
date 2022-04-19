@@ -1,5 +1,5 @@
 #include "imgui/imgui.h"
-#include "render_graph/render_graph_imgui.h"
+#include "imgui/skr_imgui.h"
 
 namespace sakura::imgui
 {
@@ -285,7 +285,7 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     vertex_layout.attributes[1] = { "TEXCOORD", 1, PF_R32G32_SFLOAT, 0, sizeof(float) * 2, sizeof(float) * 2, INPUT_RATE_VERTEX };
     vertex_layout.attributes[2] = { "COLOR", 1, PF_R8G8B8A8_UNORM, 0, sizeof(float) * 4, sizeof(uint32_t), INPUT_RATE_VERTEX };
     CGpuRasterizerStateDescriptor rs_state = {};
-    rs_state.cull_mode = CULL_MODE_BACK;
+    rs_state.cull_mode = CULL_MODE_NONE;
     rs_state.fill_mode = FILL_MODE_SOLID;
     rs_state.front_face = FRONT_FACE_CW;
     rs_state.slope_scaled_depth_bias = 0.f;
@@ -303,11 +303,12 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     rp_desc.rasterizer_state = &rs_state;
     rp_desc.color_formats = &desc->backbuffer_format;
     CGpuBlendStateDescriptor blend_state = {};
+    blend_state.blend_modes[0] = BLEND_MODE_ADD;
     blend_state.src_factors[0] = BLEND_CONST_SRC_ALPHA;
     blend_state.dst_factors[0] = BLEND_CONST_ONE_MINUS_SRC_ALPHA;
-    blend_state.blend_modes[0] = BLEND_MODE_ADD;
+    blend_state.blend_alpha_modes[0] = BLEND_MODE_ADD;
     blend_state.src_alpha_factors[0] = BLEND_CONST_ONE;
-    blend_state.dst_alpha_factors[0] = BLEND_CONST_ZERO;
+    blend_state.dst_alpha_factors[0] = BLEND_CONST_ONE_MINUS_SRC_ALPHA;
     blend_state.masks[0] = COLOR_MASK_ALL;
     blend_state.independent_blend = false;
     rp_desc.blend_state = &blend_state;

@@ -19,6 +19,23 @@ void skr_window_set_title(SWindowHandle window, const char8_t* name)
     SDL_SetWindowTitle((SDL_Window*)window, name);
 }
 
+void skr_window_get_extent(SWindowHandle window, int32_t* width, int32_t* height)
+{
+    SDL_Window* sdl_window = (SDL_Window*)window;
+    SDL_GetWindowSize(sdl_window, width, height);
+}
+
+bool skr_window_is_focused(SWindowHandle window)
+{
+    uint32_t flags = SDL_GetWindowFlags((SDL_Window*)window);
+    return (flags & SDL_WINDOW_MOUSE_FOCUS) || (flags & SDL_WINDOW_INPUT_FOCUS);
+}
+
+SWindowHandle skr_get_mouse_focused_window()
+{
+    return (SWindowHandle)SDL_GetMouseFocus();
+}
+
 void* skr_window_get_native_handle(SWindowHandle window)
 {
     SDL_SysWMinfo wmInfo;

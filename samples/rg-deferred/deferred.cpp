@@ -4,7 +4,7 @@
 #include "lighting_pipeline.h"
 #include "blit_pipeline.h"
 #include "render_graph/frontend/render_graph.hpp"
-#include "render_graph/render_graph_imgui.h"
+#include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "platform/window.h"
 #include "tracy/Tracy.hpp"
@@ -234,11 +234,13 @@ struct LightingCSPushConstants {
 };
 static LightingCSPushConstants lighting_cs_data = {};
 const bool fragmentLightingPass = false;
+bool DPIAware = false;
 
 int main(int argc, char* argv[])
 {
 #ifdef SAKURA_TARGET_PLATFORM_WIN
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+    DPIAware = true;
 #endif
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
@@ -261,24 +263,32 @@ int main(int argc, char* argv[])
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
     {
-        float ddpi, hdpi, vdpi;
-        SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi);
-
         auto& style = ImGui::GetStyle();
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
-
-        float dpi_scaling = 1.5;
-        style.ScaleAllSizes(dpi_scaling);
+        const char* font_path = "./../Resources/font/SourceSansPro-Regular.ttf";
+        uint32_t *font_bytes, font_length;
+        read_bytes(font_path, (char**)&font_bytes, &font_length);
+        float dpi_scaling = 1.f;
+        if (!DPIAware)
+        {
+            float ddpi;
+            SDL_GetDisplayDPI(0, &ddpi, NULL, NULL);
+            dpi_scaling = ddpi / OS_DPI;
+            // scale back
+            style.ScaleAllSizes(1.f / dpi_scaling);
+            ImGui::GetIO().FontGlobalScale = 0.5f;
+        }
         ImFontConfig cfg = {};
-        cfg.SizePixels = 13.f * dpi_scaling;
+        cfg.SizePixels = 16.f * dpi_scaling;
         cfg.OversampleH = cfg.OversampleV = 1;
         cfg.PixelSnapH = true;
-        ImGui::GetIO().Fonts->AddFontDefault(&cfg);
-
+        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(font_bytes,
+            font_length, cfg.SizePixels, &cfg);
+        free(font_bytes);
         style.AntiAliasedFill = true;
         style.AntiAliasedLines = true;
         style.AntiAliasedLinesUseTex = true;
@@ -341,7 +351,7 @@ int main(int argc, char* argv[])
             io.DisplaySize = ImVec2(
                 (float)swapchain->back_buffers[0]->width,
                 (float)swapchain->back_buffers[0]->height);
-            ImGui::NewFrame();
+            skr_imgui_new_frame(window, 1.f / 60.f);
             ImGui::Begin(u8"Hello, world!");
             ImGui::Text(u8"This is some useful text.");
             ImGui::End();

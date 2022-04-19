@@ -345,6 +345,9 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
 #ifdef _WINDOWS
     #include "win/configure.h"
 #endif
+#ifndef OS_DPI
+    #define OS_DPI 72
+#endif
 
 // Numbers
 #ifndef KINDA_SMALL_NUMBER
