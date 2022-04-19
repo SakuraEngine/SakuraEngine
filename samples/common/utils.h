@@ -37,7 +37,7 @@ inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* 
     fseek(f, 0, SEEK_END);
     *length = ftell(f);
     fseek(f, 0, SEEK_SET);
-    *bytes = (char8_t*)malloc(*length + 1);
+    *bytes = (char8_t*)malloc(*length);
     fread(*bytes, *length, 1, f);
     fclose(f);
 }

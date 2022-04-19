@@ -72,7 +72,11 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
             });
         if ((!upload_buffer || upload_buffer->size < index_size + vertex_size) && device)
         {
-            if (upload_buffer) cgpu_free_buffer(upload_buffer);
+            if (upload_buffer)
+            {
+                cgpu_wait_queue_idle(render_graph->get_gfx_queue());
+                cgpu_free_buffer(upload_buffer);
+            }
             upload_buffer = cgpux_create_mapped_upload_buffer(
                 device, index_size + vertex_size,
                 "imgui_upload_buffer");
