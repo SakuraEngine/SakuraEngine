@@ -545,6 +545,14 @@ uint64_t RenderGraphBackend::execute()
         blackboard.clear();
         for (auto pass : passes)
         {
+            pass->foreach_textures(
+                +[](TextureNode* t, TextureEdge* e) {
+                    delete e;
+                });
+            pass->foreach_buffers(
+                +[](BufferNode* t, BufferEdge* e) {
+                    delete e;
+                });
             delete pass;
         }
         passes.clear();
