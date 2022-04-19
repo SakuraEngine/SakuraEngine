@@ -1,5 +1,6 @@
 #include "render_graph/frontend/render_graph.hpp"
 #include "../cgpu/common/common_utils.h"
+#include "tracy/Tracy.hpp"
 
 namespace sakura
 {
@@ -117,6 +118,8 @@ uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
 const ECGpuResourceState RenderGraph::get_lastest_state(
     const TextureNode* texture, const PassNode* pending_pass) const
 {
+    ZoneScopedN("CaclulateLatestState-Texture");
+
     if (passes[0] == pending_pass)
         return texture->init_state;
     PassNode* pass_iter = nullptr;
@@ -160,6 +163,8 @@ const ECGpuResourceState RenderGraph::get_lastest_state(
 const ECGpuResourceState RenderGraph::get_lastest_state(
     const BufferNode* buffer, const PassNode* pending_pass) const
 {
+    ZoneScopedN("CaclulateLatestState-Buffer");
+
     if (passes[0] == pending_pass)
         return buffer->init_state;
     PassNode* pass_iter = nullptr;

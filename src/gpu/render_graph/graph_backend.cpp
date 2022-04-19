@@ -1,5 +1,6 @@
 #include "render_graph/backend/graph_backend.hpp"
 #include "../cgpu/common/common_utils.h"
+#include "tracy/Tracy.hpp"
 
 namespace sakura
 {
@@ -56,6 +57,7 @@ void RenderGraphBackend::finalize()
 
 CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
 {
+    ZoneScopedN("ResolveTexture");
     if (!node.frame_texture)
     {
         auto& wnode = const_cast<TextureNode&>(node);
@@ -70,6 +72,7 @@ CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
 
 CGpuBufferId RenderGraphBackend::resolve(const BufferNode& node)
 {
+    ZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
     {
         auto& wnode = const_cast<BufferNode&>(node);
@@ -86,6 +89,11 @@ void RenderGraphBackend::calculate_barriers(PassNode* pass,
     eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
     eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers)
 {
+    ZoneScopedN("CalculateBarriers");
+    tex_barriers.reserve(pass->textures_count());
+    resolved_textures.reserve(pass->textures_count());
+    buf_barriers.reserve(pass->buffers_count());
+    resolved_buffers.reserve(pass->buffers_count());
     pass->foreach_textures(
         [&](TextureNode* texture, TextureEdge* edge) {
             auto tex_resolved = resolve(*texture);
@@ -135,6 +143,7 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGpuRoot
 
 gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(PassNode* pass)
 {
+    ZoneScopedN("UpdateBindings");
     CGpuRootSignatureId root_sig = nullptr;
     auto read_edges = pass->tex_read_edges();
     auto rw_edges = pass->tex_readwrite_edges();
@@ -228,6 +237,7 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Pa
 
 void RenderGraphBackend::deallocate_resources(PassNode* pass)
 {
+    ZoneScopedN("VirtualDeallocate");
     pass->foreach_textures(
         [this, pass](TextureNode* texture, TextureEdge* edge) {
             if (texture->imported) return;
@@ -270,6 +280,8 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
 
 void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass)
 {
+    ZoneScopedC(tracy::Color::LightBlue);
+    ZoneName(pass->name.c_str(), pass->name.size());
     ComputePassContext stack = {};
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
@@ -303,7 +315,10 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     {
         cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
     }
-    pass->executor(*this, stack);
+    {
+        ZoneScopedN("PassExecutor");
+        pass->executor(*this, stack);
+    }
     cgpu_cmd_end_compute_pass(executor.gfx_cmd_buf, stack.encoder);
     // deallocate
     deallocate_resources(pass);
@@ -311,6 +326,8 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
 
 void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
 {
+    ZoneScopedC(tracy::Color::LightPink);
+    ZoneName(pass->name.c_str(), pass->name.size());
     RenderPassContext stack = {};
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
@@ -400,7 +417,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     {
         cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
     }
-    pass->executor(*this, stack);
+    {
+        ZoneScopedN("PassExecutor");
+        pass->executor(*this, stack);
+    }
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
     // deallocate
     deallocate_resources(pass);
@@ -408,6 +428,8 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
 
 void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass)
 {
+    ZoneScopedC(tracy::Color::LightYellow);
+    ZoneName(pass->name.c_str(), pass->name.size());
     // resource de-virtualize
     eastl::vector<CGpuTextureBarrier> tex_barriers = {};
     eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures = {};
@@ -478,49 +500,58 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
 uint64_t RenderGraphBackend::execute()
 {
     RenderGraphFrameExecutor& executor = executors[0];
-    cgpu_reset_command_pool(executor.gfx_cmd_pool);
-    cgpu_cmd_begin(executor.gfx_cmd_buf);
-    for (auto& pass : passes)
     {
-        if (pass->pass_type == EPassType::Render)
+        ZoneScopedN("GraphExecutePasses");
+        cgpu_reset_command_pool(executor.gfx_cmd_pool);
+        cgpu_cmd_begin(executor.gfx_cmd_buf);
+        for (auto& pass : passes)
         {
-            execute_render_pass(executor, static_cast<RenderPassNode*>(pass));
+            if (pass->pass_type == EPassType::Render)
+            {
+                execute_render_pass(executor, static_cast<RenderPassNode*>(pass));
+            }
+            else if (pass->pass_type == EPassType::Present)
+            {
+                execute_present_pass(executor, static_cast<PresentPassNode*>(pass));
+            }
+            else if (pass->pass_type == EPassType::Compute)
+            {
+                execute_compute_pass(executor, static_cast<ComputePassNode*>(pass));
+            }
+            else if (pass->pass_type == EPassType::Copy)
+            {
+                execute_copy_pass(executor, static_cast<CopyPassNode*>(pass));
+            }
         }
-        else if (pass->pass_type == EPassType::Present)
-        {
-            execute_present_pass(executor, static_cast<PresentPassNode*>(pass));
-        }
-        else if (pass->pass_type == EPassType::Compute)
-        {
-            execute_compute_pass(executor, static_cast<ComputePassNode*>(pass));
-        }
-        else if (pass->pass_type == EPassType::Copy)
-        {
-            execute_copy_pass(executor, static_cast<CopyPassNode*>(pass));
-        }
+        cgpu_cmd_end(executor.gfx_cmd_buf);
     }
-    cgpu_cmd_end(executor.gfx_cmd_buf);
-    // submit
-    CGpuQueueSubmitDescriptor submit_desc = {};
-    submit_desc.cmds = &executor.gfx_cmd_buf;
-    submit_desc.cmds_count = 1;
-    cgpu_submit_queue(gfx_queue, &submit_desc);
-    graph->clear();
-    blackboard.clear();
-    for (auto pass : passes)
     {
-        delete pass;
+        // submit
+        ZoneScopedN("GraphQueueSubmit");
+        CGpuQueueSubmitDescriptor submit_desc = {};
+        submit_desc.cmds = &executor.gfx_cmd_buf;
+        submit_desc.cmds_count = 1;
+        cgpu_submit_queue(gfx_queue, &submit_desc);
     }
-    passes.clear();
-    for (auto resource : resources)
     {
-        delete resource;
-    }
-    resources.clear();
-    // cleanup internal resources
-    for (auto desc_heap : desc_set_pool)
-    {
-        desc_heap.second->reset();
+        ZoneScopedN("GraphCleanup");
+        graph->clear();
+        blackboard.clear();
+        for (auto pass : passes)
+        {
+            delete pass;
+        }
+        passes.clear();
+        for (auto resource : resources)
+        {
+            delete resource;
+        }
+        resources.clear();
+        // cleanup internal resources
+        for (auto desc_heap : desc_set_pool)
+        {
+            desc_heap.second->reset();
+        }
     }
     return frame_index++;
 }

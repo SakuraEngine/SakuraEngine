@@ -7,6 +7,7 @@
 #include "render_graph/render_graph_imgui.h"
 #include "imgui/imgui.h"
 #include "platform/window.h"
+#include "tracy/Tracy.hpp"
 
 thread_local SWindowHandle window;
 thread_local CGpuSurfaceId surface;
@@ -83,9 +84,9 @@ void create_api_objects()
     chain_desc.width = BACK_BUFFER_WIDTH;
     chain_desc.height = BACK_BUFFER_HEIGHT;
     chain_desc.surface = surface;
-    chain_desc.imageCount = 3;
+    chain_desc.imageCount = 2;
     chain_desc.format = PF_R8G8B8A8_UNORM;
-    chain_desc.enableVsync = true;
+    chain_desc.enableVsync = false;
     swapchain = cgpu_create_swapchain(device, &chain_desc);
 }
 
@@ -332,177 +333,202 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        // acquire frame
-        cgpu_wait_fences(&present_fence, 1);
-        CGpuAcquireNextDescriptor acquire_desc = {};
-        acquire_desc.fence = present_fence;
-        backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
-        // render graph setup & compile & exec
-        CGpuTextureId to_import = swapchain->back_buffers[backbuffer_index];
-        auto back_buffer = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("backbuffer")
-                    .import(to_import, RESOURCE_STATE_UNDEFINED)
-                    .allow_render_target();
-            });
-        auto gbuffer_color = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("gbuffer_color")
-                    .extent(to_import->width, to_import->height)
-                    .format(gbuffer_formats[0])
-                    .allow_render_target();
-            });
-        auto gbuffer_depth = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("gbuffer_depth")
-                    .extent(to_import->width, to_import->height)
-                    .format(gbuffer_depth_format)
-                    .allow_depth_stencil();
-            });
-        auto gbuffer_normal = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("gbuffer_normal")
-                    .extent(to_import->width, to_import->height)
-                    .format(gbuffer_formats[1])
-                    .allow_render_target();
-            });
-        auto lighting_buffer = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("lighting_buffer")
-                    .extent(to_import->width, to_import->height)
-                    .format(lighting_buffer_format)
-                    .allow_readwrite();
-            });
-        // camera
-        auto view = smath::look_at_matrix(
-            { 0.f, 2.5f, 2.5f } /*eye*/,
-            { 0.f, 0.f, 0.f } /*at*/);
-        auto proj = smath::perspective_fov(
-            3.1415926f / 2.f,
-            (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
-            1.f, 1000.f);
-        auto view_proj = smath::multiply(view, proj);
-        graph->add_render_pass(
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                builder.set_name("gbuffer_pass")
-                    .set_pipeline(gbuffer_pipeline)
-                    .write(0, gbuffer_color, LOAD_ACTION_CLEAR)
-                    .write(1, gbuffer_normal, LOAD_ACTION_CLEAR)
-                    .set_depth_stencil(gbuffer_depth);
-            },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
-                cgpu_render_encoder_set_viewport(stack.encoder,
-                    0.0f, 0.0f,
-                    (float)to_import->width, (float)to_import->height,
-                    0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
-                CGpuBufferId vertex_buffers[5] = {
-                    vertex_buffer, vertex_buffer, vertex_buffer,
-                    vertex_buffer, instance_buffer
-                };
-                const uint32_t strides[5] = {
-                    sizeof(sakura::math::Vector3f), sizeof(sakura::math::Vector2f),
-                    sizeof(uint32_t), sizeof(uint32_t),
-                    sizeof(CubeGeometry::InstanceData::world)
-                };
-                const uint32_t offsets[5] = {
-                    offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords),
-                    offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents),
-                    offsetof(CubeGeometry::InstanceData, world)
-                };
-                cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
-                cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 5, vertex_buffers, strides, offsets);
-                cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "root_constants", &view_proj);
-                cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
-            });
+        ZoneScopedN("FrameTime");
         static uint32_t frame_index = 0;
-        if ((frame_index % 11) > 5)
         {
+            ZoneScopedN("ImGui");
+            auto& io = ImGui::GetIO();
+            io.DisplaySize = ImVec2(
+                (float)swapchain->back_buffers[0]->width,
+                (float)swapchain->back_buffers[0]->height);
+            ImGui::NewFrame();
+            ImGui::Begin(u8"Hello, world!");
+            ImGui::Text(u8"This is some useful text.");
+            ImGui::End();
+            ImGui::Render();
+        }
+        {
+            // acquire frame
+            ZoneScopedN("AcquireFrame");
+            cgpu_wait_fences(&present_fence, 1);
+            CGpuAcquireNextDescriptor acquire_desc = {};
+            acquire_desc.fence = present_fence;
+            backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
+        }
+        CGpuTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
+        {
+            ZoneScopedN("GraphSetup");
+            // render graph setup & compile & exec
+            auto back_buffer = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("backbuffer")
+                        .import(native_backbuffer, RESOURCE_STATE_UNDEFINED)
+                        .allow_render_target();
+                });
+            auto gbuffer_color = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("gbuffer_color")
+                        .extent(native_backbuffer->width, native_backbuffer->height)
+                        .format(gbuffer_formats[0])
+                        .allow_render_target();
+                });
+            auto gbuffer_depth = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("gbuffer_depth")
+                        .extent(native_backbuffer->width, native_backbuffer->height)
+                        .format(gbuffer_depth_format)
+                        .allow_depth_stencil();
+                });
+            auto gbuffer_normal = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("gbuffer_normal")
+                        .extent(native_backbuffer->width, native_backbuffer->height)
+                        .format(gbuffer_formats[1])
+                        .allow_render_target();
+                });
+            auto lighting_buffer = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("lighting_buffer")
+                        .extent(native_backbuffer->width, native_backbuffer->height)
+                        .format(lighting_buffer_format)
+                        .allow_readwrite();
+                });
+            // camera
+            auto view = smath::look_at_matrix(
+                { 0.f, 2.5f, 2.5f } /*eye*/,
+                { 0.f, 0.f, 0.f } /*at*/);
+            auto proj = smath::perspective_fov(
+                3.1415926f / 2.f,
+                (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
+                1.f, 1000.f);
+            auto view_proj = smath::multiply(view, proj);
             graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                    builder.set_name("light_pass_fs")
-                        .set_pipeline(lighting_pipeline)
-                        .read("gbuffer_color", gbuffer_color.read_mip(0, 1))
-                        .read("gbuffer_normal", gbuffer_normal)
-                        .read("gbuffer_depth", gbuffer_depth)
-                        .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                    builder.set_name("gbuffer_pass")
+                        .set_pipeline(gbuffer_pipeline)
+                        .write(0, gbuffer_color, LOAD_ACTION_CLEAR)
+                        .write(1, gbuffer_normal, LOAD_ACTION_CLEAR)
+                        .set_depth_stencil(gbuffer_depth);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
-                        (float)to_import->width, (float)to_import->height,
+                        (float)native_backbuffer->width, (float)native_backbuffer->height,
                         0.f, 1.f);
-                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
-                    cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "root_constants", &lighting_data);
-                    cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                    CGpuBufferId vertex_buffers[5] = {
+                        vertex_buffer, vertex_buffer, vertex_buffer,
+                        vertex_buffer, instance_buffer
+                    };
+                    const uint32_t strides[5] = {
+                        sizeof(sakura::math::Vector3f), sizeof(sakura::math::Vector2f),
+                        sizeof(uint32_t), sizeof(uint32_t),
+                        sizeof(CubeGeometry::InstanceData::world)
+                    };
+                    const uint32_t offsets[5] = {
+                        offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords),
+                        offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents),
+                        offsetof(CubeGeometry::InstanceData, world)
+                    };
+                    cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
+                    cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 5, vertex_buffers, strides, offsets);
+                    cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "root_constants", &view_proj);
+                    cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
+                });
+            if ((frame_index % 11) > 5)
+            {
+                graph->add_render_pass(
+                    [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                        builder.set_name("light_pass_fs")
+                            .set_pipeline(lighting_pipeline)
+                            .read("gbuffer_color", gbuffer_color.read_mip(0, 1))
+                            .read("gbuffer_normal", gbuffer_normal)
+                            .read("gbuffer_depth", gbuffer_depth)
+                            .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                    },
+                    [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                        cgpu_render_encoder_set_viewport(stack.encoder,
+                            0.0f, 0.0f,
+                            (float)native_backbuffer->width, (float)native_backbuffer->height,
+                            0.f, 1.f);
+                        cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                        cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "root_constants", &lighting_data);
+                        cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                    });
+            }
+            else
+            {
+                graph->add_compute_pass(
+                    [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
+                        builder.set_name("light_pass_cs")
+                            .set_pipeline(lighting_cs_pipeline)
+                            .read("gbuffer_color", gbuffer_color)
+                            .read("gbuffer_normal", gbuffer_normal)
+                            .read("gbuffer_depth", gbuffer_depth)
+                            .readwrite("lighting_output", lighting_buffer);
+                    },
+                    [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
+                        cgpu_compute_encoder_push_constants(stack.encoder,
+                            lighting_cs_pipeline->root_signature, "root_constants", &lighting_cs_data);
+                        cgpu_compute_encoder_dispatch(stack.encoder,
+                            (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
+                            (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),
+                            1);
+                    });
+                graph->add_render_pass(
+                    [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                        builder.set_name("lighting_buffer_blit")
+                            .set_pipeline(blit_pipeline)
+                            .read("input_color", lighting_buffer)
+                            .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                    },
+                    [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                        cgpu_render_encoder_set_viewport(stack.encoder,
+                            0.0f, 0.0f,
+                            (float)native_backbuffer->width, (float)native_backbuffer->height,
+                            0.f, 1.f);
+                        cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                        cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                    });
+            }
+            render_graph_imgui_add_render_pass(graph,
+                back_buffer, LOAD_ACTION_LOAD);
+            graph->add_present_pass(
+                [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+                    builder.set_name("present_pass")
+                        .swapchain(swapchain, backbuffer_index)
+                        .texture(back_buffer, true);
                 });
         }
-        else
         {
-            graph->add_compute_pass(
-                [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
-                    builder.set_name("light_pass_cs")
-                        .set_pipeline(lighting_cs_pipeline)
-                        .read("gbuffer_color", gbuffer_color)
-                        .read("gbuffer_normal", gbuffer_normal)
-                        .read("gbuffer_depth", gbuffer_depth)
-                        .readwrite("lighting_output", lighting_buffer);
-                },
-                [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
-                    cgpu_compute_encoder_push_constants(stack.encoder,
-                        lighting_cs_pipeline->root_signature, "root_constants", &lighting_cs_data);
-                    cgpu_compute_encoder_dispatch(stack.encoder,
-                        (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
-                        (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),
-                        1);
-                });
-            graph->add_render_pass(
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                    builder.set_name("lighting_buffer_blit")
-                        .set_pipeline(blit_pipeline)
-                        .read("input_color", lighting_buffer)
-                        .write(0, back_buffer, LOAD_ACTION_CLEAR);
-                },
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
-                    cgpu_render_encoder_set_viewport(stack.encoder,
-                        0.0f, 0.0f,
-                        (float)to_import->width, (float)to_import->height,
-                        0.f, 1.f);
-                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
-                    cgpu_render_encoder_draw(stack.encoder, 6, 0);
-                });
+            ZoneScopedN("GraphCompile");
+            graph->compile();
+            if (frame_index == 0)
+                render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred_cs.gv");
+            if (frame_index == 6)
+                render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred.gv");
         }
-        auto& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2(
-            (float)to_import->width, (float)to_import->height);
-        ImGui::NewFrame();
-        ImGui::Begin(u8"Hello, world!");
-        ImGui::Text(u8"This is some useful text.");
-        ImGui::End();
-        ImGui::Render();
-        render_graph_imgui_add_render_pass(graph,
-            back_buffer, LOAD_ACTION_LOAD);
-        graph->add_present_pass(
-            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present_pass")
-                    .swapchain(swapchain, backbuffer_index)
-                    .texture(back_buffer, true);
-            });
-        graph->compile();
-        if (frame_index == 0)
-            render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred_cs.gv");
-        if (frame_index == 6)
-            render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred.gv");
-
-        frame_index = graph->execute();
+        {
+            ZoneScopedN("GraphExecute");
+            frame_index = graph->execute();
+        }
         // present
-        cgpu_wait_queue_idle(gfx_queue);
-        if (frame_index >= 1)
-            graph->collect_garbage(frame_index - 1);
-        CGpuQueuePresentDescriptor present_desc = {};
-        present_desc.index = backbuffer_index;
-        present_desc.swapchain = swapchain;
-        cgpu_queue_present(gfx_queue, &present_desc);
+        {
+            ZoneScopedN("WaitGPUQueue");
+            cgpu_wait_queue_idle(gfx_queue);
+        }
+        {
+            ZoneScopedN("CollectGarbage");
+            if (frame_index >= 1)
+                graph->collect_garbage(frame_index - 1);
+        }
+        {
+            ZoneScopedN("Present");
+            CGpuQueuePresentDescriptor present_desc = {};
+            present_desc.index = backbuffer_index;
+            present_desc.swapchain = swapchain;
+            cgpu_queue_present(gfx_queue, &present_desc);
+        }
     }
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
