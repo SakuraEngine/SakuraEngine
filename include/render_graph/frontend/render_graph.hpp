@@ -373,7 +373,7 @@ inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapcha
 inline RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(TextureHandle handle, bool is_backbuffer)
 {
     assert(is_backbuffer && "blit to screen mode not supported!");
-    auto&& edge = node.in_edges.emplace_back(
+    auto&& edge = node.in_texture_edges.emplace_back(
         new TextureReadEdge(0, 0, handle, RESOURCE_STATE_PRESENT));
     graph.graph->link(graph.graph->access_node(handle), &node, edge);
     return *this;
@@ -390,14 +390,14 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(
 }
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle)
 {
-    auto&& edge = node.in_edges.emplace_back(
+    auto&& edge = node.in_texture_edges.emplace_back(
         new TextureReadEdge(set, binding, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, TextureSRVHandle handle)
 {
-    auto&& edge = node.in_edges.emplace_back(
+    auto&& edge = node.in_texture_edges.emplace_back(
         new TextureReadEdge(name, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
@@ -406,7 +406,7 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
     uint32_t mrt_index, TextureRTVHandle handle, ECGpuLoadAction load_action,
     ECGpuStoreAction store_action)
 {
-    auto&& edge = node.out_edges.emplace_back(
+    auto&& edge = node.out_texture_edges.emplace_back(
         new TextureRenderEdge(mrt_index, handle._this));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.load_actions[mrt_index] = load_action;
@@ -417,7 +417,7 @@ inline RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth
     ECGpuLoadAction dload_action, ECGpuStoreAction dstore_action,
     ECGpuLoadAction sload_action, ECGpuStoreAction sstore_action)
 {
-    auto&& edge = node.out_edges.emplace_back(
+    auto&& edge = node.out_texture_edges.emplace_back(
         new TextureRenderEdge(
             MAX_MRT_COUNT, handle._this,
             RESOURCE_STATE_DEPTH_WRITE));
@@ -471,28 +471,28 @@ inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_nam
 }
 inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle)
 {
-    auto&& edge = node.in_edges.emplace_back(
+    auto&& edge = node.in_texture_edges.emplace_back(
         new TextureReadEdge(set, binding, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, TextureSRVHandle handle)
 {
-    auto&& edge = node.in_edges.emplace_back(
+    auto&& edge = node.in_texture_edges.emplace_back(
         new TextureReadEdge(name, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle)
 {
-    auto&& edge = node.inout_edges.emplace_back(
+    auto&& edge = node.inout_texture_edges.emplace_back(
         new TextureReadWriteEdge(set, binding, handle));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
 inline RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, TextureUAVHandle handle)
 {
-    auto&& edge = node.inout_edges.emplace_back(
+    auto&& edge = node.inout_texture_edges.emplace_back(
         new TextureReadWriteEdge(name, handle));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
@@ -544,10 +544,10 @@ inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buf
 
 inline RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst)
 {
-    auto&& in_edge = node.in_edges.emplace_back(
+    auto&& in_edge = node.in_texture_edges.emplace_back(
         new TextureReadEdge(0, 0, src._this,
             RESOURCE_STATE_COPY_SOURCE));
-    auto&& out_edge = node.out_edges.emplace_back(
+    auto&& out_edge = node.out_texture_edges.emplace_back(
         new TextureRenderEdge(0, dst._this,
             RESOURCE_STATE_COPY_DEST));
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);

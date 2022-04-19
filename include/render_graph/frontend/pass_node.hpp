@@ -40,22 +40,25 @@ public:
     const bool before(const PassNode* other) const;
     const bool after(const PassNode* other) const;
     const PassHandle get_handle() const;
-    inline gsl::span<TextureReadEdge*> tex_read_edges();
-    inline gsl::span<TextureRenderEdge*> tex_write_edges();
-    inline gsl::span<TextureReadWriteEdge*> readwrite_edges();
 
-    inline gsl::span<BufferReadEdge*> buf_read_edges();
-    inline gsl::span<BufferReadWriteEdge*> buf_readwrite_edges();
-    inline gsl::span<PipelineBufferEdge*> buf_ppl_edges();
+    gsl::span<TextureReadEdge*> tex_read_edges();
+    gsl::span<TextureRenderEdge*> tex_write_edges();
+    gsl::span<TextureReadWriteEdge*> tex_readwrite_edges();
+    void foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)>);
+
+    gsl::span<BufferReadEdge*> buf_read_edges();
+    gsl::span<BufferReadWriteEdge*> buf_readwrite_edges();
+    gsl::span<PipelineBufferEdge*> buf_ppl_edges();
+    void foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)>);
 
     const EPassType pass_type = EPassType::None;
     const uint32_t order;
 
 protected:
     PassNode(EPassType pass_type, uint32_t order);
-    eastl::vector<TextureReadEdge*> in_edges;
-    eastl::vector<TextureRenderEdge*> out_edges;
-    eastl::vector<TextureReadWriteEdge*> inout_edges;
+    eastl::vector<TextureReadEdge*> in_texture_edges;
+    eastl::vector<TextureRenderEdge*> out_texture_edges;
+    eastl::vector<TextureReadWriteEdge*> inout_texture_edges;
 
     eastl::vector<BufferReadEdge*> in_buffer_edges;
     eastl::vector<BufferReadWriteEdge*> out_buffer_edges;
@@ -164,15 +167,24 @@ inline const bool PassNode::after(const PassNode* other) const
 }
 inline gsl::span<TextureReadEdge*> PassNode::tex_read_edges()
 {
-    return gsl::span<TextureReadEdge*>(in_edges.data(), in_edges.size());
+    return gsl::span<TextureReadEdge*>(in_texture_edges.data(), in_texture_edges.size());
 }
 inline gsl::span<TextureRenderEdge*> PassNode::tex_write_edges()
 {
-    return gsl::span<TextureRenderEdge*>(out_edges.data(), out_edges.size());
+    return gsl::span<TextureRenderEdge*>(out_texture_edges.data(), out_texture_edges.size());
 }
-inline gsl::span<TextureReadWriteEdge*> PassNode::readwrite_edges()
+inline gsl::span<TextureReadWriteEdge*> PassNode::tex_readwrite_edges()
 {
-    return gsl::span<TextureReadWriteEdge*>(inout_edges.data(), inout_edges.size());
+    return gsl::span<TextureReadWriteEdge*>(inout_texture_edges.data(), inout_texture_edges.size());
+}
+inline void PassNode::foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)> f)
+{
+    for (auto&& e : tex_read_edges())
+        f(e->get_texture_node(), e);
+    for (auto&& e : tex_write_edges())
+        f(e->get_texture_node(), e);
+    for (auto&& e : tex_readwrite_edges())
+        f(e->get_texture_node(), e);
 }
 inline gsl::span<BufferReadEdge*> PassNode::buf_read_edges()
 {
@@ -186,6 +198,14 @@ inline gsl::span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
 {
     return gsl::span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
 }
-
+inline void PassNode::foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)> f)
+{
+    for (auto&& e : buf_read_edges())
+        f(e->get_buffer_node(), e);
+    for (auto&& e : buf_readwrite_edges())
+        f(e->get_buffer_node(), e);
+    for (auto&& e : buf_ppl_edges())
+        f(e->get_buffer_node(), e);
+}
 } // namespace render_graph
 } // namespace sakura

@@ -59,6 +59,7 @@ inline uint32_t TextureViewPool::erase(CGpuTextureId texture)
     {
         if (it->first.texture == texture)
         {
+            cgpu_free_texture_view(it->second.first);
             it = views.erase(it);
         }
         else
