@@ -20,3 +20,5 @@
             }                                                                \
         } while (0)
 #endif
+
+#define OS_DPI 96

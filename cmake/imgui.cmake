@@ -17,9 +17,12 @@ target_sources(IMGUI PUBLIC ${IMGUI_SOURCES})
 target_include_directories(IMGUI PUBLIC ${IMGUI_INCLUDES_DIR})
 
 sakura_compile_shaders(TARGET ImGuiShaders
-    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/gpu/render_graph/imgui_vertex.vs_6_0.hlsl
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/gpu/render_graph/imgui_fragment.ps_6_0.hlsl
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/imgui/imgui_vertex.vs_6_0.hlsl
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/imgui/imgui_fragment.ps_6_0.hlsl
     DXIL    ${SAKURA_BIN_DIR}/Resources/shaders/
     SPIRV_DXC  ${SAKURA_BIN_DIR}/Resources/shaders/
 )
 add_dependencies(IMGUI ImGuiShaders)
+
+file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/SDKs/SourceSansPro-Regular.ttf
+    DESTINATION ${SAKURA_BIN_DIR}/Resources/font)

@@ -6,6 +6,11 @@ namespace sakura
 namespace render_graph
 {
 // graph builder
+RenderGraph::RenderPassBuilder::RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass) noexcept
+    : graph(graph)
+    , node(pass)
+{
+}
 RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_device(CGpuDeviceId device_)
 {
     device = device_;
@@ -26,30 +31,16 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::frontend_only(
     no_backend = true;
     return *this;
 }
-
-// present pass builder
-RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::set_name(const char* name)
+PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor)
 {
-    if (name)
-    {
-        graph.blackboard.named_passes[name] = &node;
-        node.set_name(name);
-    }
-    return *this;
-}
-RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapchain(CGpuSwapChainId chain, uint32_t index)
-{
-    node.descriptor.swapchain = chain;
-    node.descriptor.index = index;
-    return *this;
-}
-RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(TextureHandle handle, bool is_backbuffer)
-{
-    assert(is_backbuffer && "blit to screen mode not supported!");
-    auto&& edge = node.in_texture_edges.emplace_back(
-        new TextureReadEdge(0, 0, handle, RESOURCE_STATE_PRESENT));
-    graph.graph->link(graph.graph->access_node(handle), &node, edge);
-    return *this;
+    auto newPass = new RenderPassNode(passes.size());
+    passes.emplace_back(newPass);
+    graph->insert(newPass);
+    // build up
+    RenderPassBuilder builder(*this, *newPass);
+    setup(*this, builder);
+    newPass->executor = executor;
+    return newPass->get_handle();
 }
 
 // render pass builder
@@ -132,6 +123,11 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipeline(CGp
 }
 
 // compute pass builder
+RenderGraph::ComputePassBuilder::ComputePassBuilder(RenderGraph& graph, ComputePassNode& pass) noexcept
+    : graph(graph)
+    , node(pass)
+{
+}
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const char* name)
 {
     if (name)
@@ -190,8 +186,24 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_pipeline(C
     node.pipeline = pipeline;
     return *this;
 }
+PassHandle RenderGraph::add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor)
+{
+    auto newPass = new ComputePassNode(passes.size());
+    passes.emplace_back(newPass);
+    graph->insert(newPass);
+    // build up
+    ComputePassBuilder builder(*this, *newPass);
+    setup(*this, builder);
+    newPass->executor = executor;
+    return newPass->get_handle();
+}
 
 // copy pass
+RenderGraph::CopyPassBuilder::CopyPassBuilder(RenderGraph& graph, CopyPassNode& pass) noexcept
+    : graph(graph)
+    , node(pass)
+{
+}
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char* name)
 {
     if (name)
@@ -225,8 +237,66 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
     node.t2ts.emplace_back(src, dst);
     return *this;
 }
+PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup)
+{
+    auto newPass = new CopyPassNode(passes.size());
+    passes.emplace_back(newPass);
+    graph->insert(newPass);
+    // build up
+    CopyPassBuilder builder(*this, *newPass);
+    setup(*this, builder);
+    return newPass->get_handle();
+}
+
+// present pass builder
+RenderGraph::PresentPassBuilder::PresentPassBuilder(RenderGraph& graph, PresentPassNode& present) noexcept
+    : graph(graph)
+    , node(present)
+{
+}
+RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::set_name(const char* name)
+{
+    if (name)
+    {
+        graph.blackboard.named_passes[name] = &node;
+        node.set_name(name);
+    }
+    return *this;
+}
+RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapchain(CGpuSwapChainId chain, uint32_t index)
+{
+    node.descriptor.swapchain = chain;
+    node.descriptor.index = index;
+    return *this;
+}
+RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(TextureHandle handle, bool is_backbuffer)
+{
+    assert(is_backbuffer && "blit to screen mode not supported!");
+    auto&& edge = node.in_texture_edges.emplace_back(
+        new TextureReadEdge(0, 0, handle, RESOURCE_STATE_PRESENT));
+    graph.graph->link(graph.graph->access_node(handle), &node, edge);
+    return *this;
+}
+PassHandle RenderGraph::add_present_pass(const PresentPassSetupFunction& setup)
+{
+    auto newPass = new PresentPassNode(passes.size());
+    passes.emplace_back(newPass);
+    graph->insert(newPass);
+    // build up
+    PresentPassBuilder builder(*this, *newPass);
+    setup(*this, builder);
+    return newPass->get_handle();
+}
 
 // buffer builder
+RenderGraph::BufferBuilder::BufferBuilder(RenderGraph& graph, BufferNode& node) noexcept
+    : graph(graph)
+    , node(node)
+{
+    node.descriptor.descriptors = RT_NONE;
+    node.descriptor.flags = BCF_NONE;
+    node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
+}
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* name)
 {
     node.descriptor.name = name;
@@ -299,8 +369,29 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_index_buffer()
     node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
     return *this;
 }
+BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup)
+{
+    auto newTex = new BufferNode();
+    resources.emplace_back(newTex);
+    graph->insert(newTex);
+    BufferBuilder builder(*this, *newTex);
+    setup(*this, builder);
+    return newTex->get_handle();
+}
+BufferHandle RenderGraph::get_buffer(const char* name)
+{
+    if (blackboard.named_buffers.find(name) != blackboard.named_buffers.end())
+        return blackboard.named_buffers[name]->get_handle();
+    return UINT64_MAX;
+}
 
 // texture builder
+RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& node) noexcept
+    : graph(graph)
+    , node(node)
+{
+    node.descriptor.descriptors = RT_TEXTURE;
+}
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name)
 {
     node.descriptor.name = name;
@@ -375,6 +466,21 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_lone()
 {
     node.canbe_lone = true;
     return *this;
+}
+TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup)
+{
+    auto newTex = new TextureNode();
+    resources.emplace_back(newTex);
+    graph->insert(newTex);
+    TextureBuilder builder(*this, *newTex);
+    setup(*this, builder);
+    return newTex->get_handle();
+}
+TextureHandle RenderGraph::get_texture(const char* name)
+{
+    if (blackboard.named_textures.find(name) != blackboard.named_textures.end())
+        return blackboard.named_textures[name]->get_handle();
+    return UINT64_MAX;
 }
 } // namespace render_graph
 } // namespace sakura
