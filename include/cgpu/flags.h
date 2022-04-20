@@ -512,8 +512,10 @@ typedef enum ECGpuMemoryUsage
     /// Memory will be mapped on host. Could be used for transfer to device.
     MEM_USAGE_CPU_ONLY = 2,
     /// Memory will be used for frequent (dynamic) updates from host and reads on device.
+    /// Memory location (heap) is unsure.
     MEM_USAGE_CPU_TO_GPU = 3,
     /// Memory will be used for writing on device and readback on host.
+    /// Memory location (heap) is unsure.
     MEM_USAGE_GPU_TO_CPU = 4,
     MEM_USAGE_COUNT,
     MEM_USAGE_MAX_ENUM = 0x7FFFFFFF
