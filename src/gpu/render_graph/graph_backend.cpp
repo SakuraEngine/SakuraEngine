@@ -301,11 +301,9 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = buffer_barriers.size();
     }
-    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 1.f, 1.f } };
+    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 0.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
-    CGpuMarkerInfo barrier_marker = { "barriers finish", { 1.f, 1.f, 1.f, 1.f } };
-    cgpu_cmd_set_marker(executor.gfx_cmd_buf, &barrier_marker);
     // dispatch
     CGpuComputePassDescriptor pass_desc = {};
     pass_desc.name = pass->get_name();
@@ -352,10 +350,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = buffer_barriers.size();
     }
-    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 1.f, 1.f } };
+    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
-    CGpuMarkerInfo barrier_marker = { "barriers finish", { 1.f, 1.f, 1.f, 1.f } };
     // color attachments
     // TODO: MSAA
     eastl::vector<CGpuColorAttachment> color_attachments = {};
@@ -453,7 +450,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = buffer_barriers.size();
     }
-    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 1.f, 1.f } };
+    CGpuEventInfo event = { pass->name.c_str(), { 0.f, .5f, 1.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     for (uint32_t i = 0; i < pass->t2ts.size(); i++)
@@ -521,6 +518,12 @@ uint64_t RenderGraphBackend::execute()
         ZoneScopedN("GraphExecutePasses");
         cgpu_reset_command_pool(executor.gfx_cmd_pool);
         cgpu_cmd_begin(executor.gfx_cmd_buf);
+        {
+            eastl::string frameLabel = "Frame";
+            frameLabel.append(eastl::to_string(frame_index));
+            CGpuEventInfo event = { frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
+            cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
+        }
         for (auto& pass : passes)
         {
             if (pass->pass_type == EPassType::Render)
@@ -539,6 +542,9 @@ uint64_t RenderGraphBackend::execute()
             {
                 execute_copy_pass(executor, static_cast<CopyPassNode*>(pass));
             }
+        }
+        {
+            cgpu_cmd_end_event(executor.gfx_cmd_buf);
         }
         cgpu_cmd_end(executor.gfx_cmd_buf);
     }

@@ -14,18 +14,26 @@
 
 UINT64 encode_color_for_pix(const float* color)
 {
-    return PIX_COLOR((BYTE)(color[0] * 255.f), (BYTE)(color[1] * 255.f), (BYTE)(color[2] * 255.f));
+    if (color == nullptr)
+        return PIX_COLOR(0, 0, 0);
+
+    return PIX_COLOR(
+        static_cast<BYTE>(color[0] * 255.f),
+        static_cast<BYTE>(color[1] * 255.f),
+        static_cast<BYTE>(color[2] * 255.f));
 }
 void cgpu_cmd_begin_event_d3d12(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
-    PIXBeginEvent(Cmd->pDxCmdList, encode_color_for_pix(event->color), event->name);
+    const auto eventColor = encode_color_for_pix(event->color);
+    PIXBeginEvent(Cmd->pDxCmdList, eventColor, event->name);
 }
 
 void cgpu_cmd_set_marker_d3d12(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
 {
     CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
-    PIXSetMarker(Cmd->pDxCmdList, encode_color_for_pix(marker->color), marker->name);
+    const auto markerColor = encode_color_for_pix(marker->color);
+    PIXSetMarker(Cmd->pDxCmdList, markerColor, marker->name);
 }
 
 void cgpu_cmd_end_event_d3d12(CGpuCommandBufferId cmd)
