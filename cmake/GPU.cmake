@@ -3,8 +3,11 @@ if(TARGET_WIN)
         ${SAKURA_BIN_DIR}/Debug
         ${SAKURA_BIN_DIR}/Release
     )
-    
     extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/nvapi.zip 
+        ${SAKURA_BIN_DIR}/Debug
+        ${SAKURA_BIN_DIR}/Release
+    )
+    extract_file2(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/WinPixRuntime.zip 
         ${SAKURA_BIN_DIR}/Debug
         ${SAKURA_BIN_DIR}/Release
     )

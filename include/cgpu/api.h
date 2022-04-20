@@ -140,7 +140,6 @@ typedef struct CGpuFormatSupport {
 
 typedef struct CGpuInstanceFeatures {
     bool specialization_constant;
-
 } CGpuInstanceFeatures;
 
 typedef struct CGpuBufferRange {
@@ -341,6 +340,22 @@ typedef void (*CGPUProcRenderEncoderDrawIndexedInstanced)(CGpuRenderPassEncoderI
 RUNTIME_API void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 typedef void (*CGPUProcCmdEndRenderPass)(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder);
 
+// Event & Markers
+typedef struct CGpuEventInfo {
+    const char8_t* name;
+    float color[4];
+} CGpuEventInfo;
+typedef struct CGpuMarkerInfo {
+    const char8_t* name;
+    float color[4];
+} CGpuMarkerInfo;
+RUNTIME_API void cgpu_cmd_begin_event(CGpuCommandBufferId cmd, const CGpuEventInfo* event);
+typedef void (*CGPUProcCmdBeginEvent)(CGpuCommandBufferId cmd, const CGpuEventInfo* event);
+RUNTIME_API void cgpu_cmd_set_marker(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker);
+typedef void (*CGPUProcCmdSetMarker)(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker);
+RUNTIME_API void cgpu_cmd_end_event(CGpuCommandBufferId cmd);
+typedef void (*CGPUProcCmdEndEvent)(CGpuCommandBufferId cmd);
+
 RUNTIME_API CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
     uint64_t size, const char8_t* name, bool device_local_preferred);
 RUNTIME_API CGpuBufferId cgpux_create_mapped_upload_buffer(CGpuDeviceId device,
@@ -448,6 +463,11 @@ typedef struct CGpuProcTable {
     const CGPUProcRenderEncoderDrawIndexed render_encoder_draw_indexed;
     const CGPUProcRenderEncoderDrawIndexedInstanced render_encoder_draw_indexed_instanced;
     const CGPUProcCmdEndRenderPass cmd_end_render_pass;
+
+    // Events & Markers
+    const CGPUProcCmdBeginEvent cmd_begin_event;
+    const CGPUProcCmdSetMarker cmd_set_marker;
+    const CGPUProcCmdEndEvent cmd_end_event;
 } CGpuProcTable;
 
 // surfaces
