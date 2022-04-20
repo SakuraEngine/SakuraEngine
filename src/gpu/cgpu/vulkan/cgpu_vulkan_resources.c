@@ -66,18 +66,33 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
     // Create VkBufferCreateInfo
     VkBufferCreateInfo add_info = VkUtil_CreateBufferCreateInfo(A, desc);
     // VMA Alloc
-    VmaAllocationCreateInfo vma_mem_reqs = { .usage = (VmaMemoryUsage)desc->memory_usage };
+    VmaAllocationCreateInfo vma_mem_reqs = {
+        .usage = (VmaMemoryUsage)desc->memory_usage
+    };
     if (desc->flags & BCF_OWN_MEMORY_BIT)
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     if (desc->flags & BCF_PERSISTENT_MAP_BIT)
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
-    if (desc->flags & BCF_HOST_VISIBLE || desc->flags & BCF_PERSISTENT_MAP_BIT)
+    if ((desc->flags & BCF_HOST_VISIBLE && desc->memory_usage & MEM_USAGE_GPU_ONLY) ||
+        desc->flags & BCF_PERSISTENT_MAP_BIT && desc->memory_usage & MEM_USAGE_GPU_ONLY)
         vma_mem_reqs.preferredFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
     // VMA recommanded
     if (desc->memory_usage == MEM_USAGE_CPU_TO_GPU)
+    {
+        vma_mem_reqs.usage =
+            desc->prefer_on_device ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE :
+            desc->prefer_on_host   ? VMA_MEMORY_USAGE_AUTO_PREFER_HOST :
+                                     VMA_MEMORY_USAGE_AUTO;
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+    }
     if (desc->memory_usage == MEM_USAGE_GPU_TO_CPU)
+    {
+        vma_mem_reqs.usage =
+            desc->prefer_on_device ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE :
+            desc->prefer_on_host   ? VMA_MEMORY_USAGE_AUTO_PREFER_HOST :
+                                     VMA_MEMORY_USAGE_AUTO;
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+    }
 
     DECLARE_ZERO(VmaAllocationInfo, alloc_info)
     VkResult bufferResult =

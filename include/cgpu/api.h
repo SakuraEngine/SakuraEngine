@@ -1082,6 +1082,7 @@ typedef struct CGpuBufferDescriptor {
     const char8_t* name;
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
     CGpuResourceTypes descriptors;
+    /// Memory usage
     /// Decides which memory heap buffer will use (default, upload, readback)
     ECGpuMemoryUsage memory_usage;
     /// Image format
@@ -1096,6 +1097,12 @@ typedef struct CGpuBufferDescriptor {
     uint64_t element_stride;
     /// What state will the texture get created in
     ECGpuResourceState start_state;
+    /// Preferred actual location
+    /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
+    bool prefer_on_device;
+    /// Preferred actual location
+    /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
+    bool prefer_on_host;
 } CGpuBufferDescriptor;
 
 typedef struct CGpuTextureDescriptor {
