@@ -47,6 +47,11 @@ const CGpuProcTable tbl_d3d12 = {
     .free_command_buffer = &cgpu_free_command_buffer_d3d12,
     .free_command_pool = &cgpu_free_command_pool_d3d12,
 
+    // Events & Markers
+    .cmd_begin_event = &cgpu_cmd_begin_event_d3d12,
+    .cmd_set_marker = &cgpu_cmd_set_marker_d3d12,
+    .cmd_end_event = &cgpu_cmd_end_event_d3d12,
+
     // Shader APIs
     .create_shader_library = &cgpu_create_shader_library_d3d12,
     .free_shader_library = &cgpu_free_shader_library_d3d12,

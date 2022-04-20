@@ -8,6 +8,32 @@
 #include <EASTL/vector.h>
 #include <winsock.h>
 
+#define USE_PIX
+#include "cgpu/drivers/WinPixEventRuntime/pix3.h"
+#pragma comment(lib, "WinPixEventRuntime.lib")
+
+UINT64 encode_color_for_pix(const float* color)
+{
+    return PIX_COLOR((BYTE)(color[0] * 255.f), (BYTE)(color[1] * 255.f), (BYTE)(color[2] * 255.f));
+}
+void cgpu_cmd_begin_event_d3d12(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    PIXBeginEvent(Cmd->pDxCmdList, encode_color_for_pix(event->color), event->name);
+}
+
+void cgpu_cmd_set_marker_d3d12(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    PIXSetMarker(Cmd->pDxCmdList, encode_color_for_pix(marker->color), marker->name);
+}
+
+void cgpu_cmd_end_event_d3d12(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    PIXEndEvent(Cmd->pDxCmdList);
+}
+
 void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor)
 {
     if (descriptor->enable_debug_layer)

@@ -65,6 +65,11 @@ RUNTIME_API void cgpu_reset_command_pool_d3d12(CGpuCommandPoolId pool);
 RUNTIME_API void cgpu_free_command_buffer_d3d12(CGpuCommandBufferId cmd);
 RUNTIME_API void cgpu_free_command_pool_d3d12(CGpuCommandPoolId pool);
 
+// Event & Markers
+RUNTIME_API void cgpu_cmd_begin_event_d3d12(CGpuCommandBufferId cmd, const CGpuEventInfo* event);
+RUNTIME_API void cgpu_cmd_set_marker_d3d12(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker);
+RUNTIME_API void cgpu_cmd_end_event_d3d12(CGpuCommandBufferId cmd);
+
 // Shader APIs
 RUNTIME_API CGpuShaderLibraryId cgpu_create_shader_library_d3d12(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc);
 RUNTIME_API void cgpu_free_shader_library_d3d12(CGpuShaderLibraryId shader_module);
