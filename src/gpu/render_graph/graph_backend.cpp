@@ -301,7 +301,11 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = buffer_barriers.size();
     }
+    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 1.f, 1.f } };
+    cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    CGpuMarkerInfo barrier_marker = { "barriers finish", { 1.f, 1.f, 1.f, 1.f } };
+    cgpu_cmd_set_marker(executor.gfx_cmd_buf, &barrier_marker);
     // dispatch
     CGpuComputePassDescriptor pass_desc = {};
     pass_desc.name = pass->get_name();
@@ -316,6 +320,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         pass->executor(*this, stack);
     }
     cgpu_cmd_end_compute_pass(executor.gfx_cmd_buf, stack.encoder);
+    cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
     deallocate_resources(pass);
 }
@@ -347,7 +352,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = buffer_barriers.size();
     }
+    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 1.f, 1.f } };
+    cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    CGpuMarkerInfo barrier_marker = { "barriers finish", { 1.f, 1.f, 1.f, 1.f } };
     // color attachments
     // TODO: MSAA
     eastl::vector<CGpuColorAttachment> color_attachments = {};
@@ -418,6 +426,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         pass->executor(*this, stack);
     }
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
+    cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
     deallocate_resources(pass);
 }
@@ -444,6 +453,8 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = buffer_barriers.size();
     }
+    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 1.f, 1.f } };
+    cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     for (uint32_t i = 0; i < pass->t2ts.size(); i++)
     {
@@ -474,6 +485,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         b2b.size = pass->b2bs[i].first.to - b2b.src_offset;
         cgpu_cmd_transfer_buffer_to_buffer(executor.gfx_cmd_buf, &b2b);
     }
+    cgpu_cmd_end_event(executor.gfx_cmd_buf);
     deallocate_resources(pass);
 }
 
@@ -543,12 +555,12 @@ uint64_t RenderGraphBackend::execute()
         ZoneScopedN("GraphCleanup");
         graph->clear();
         blackboard.clear();
-        for(auto culled_resource : culled_resources)
+        for (auto culled_resource : culled_resources)
         {
             delete culled_resource;
         }
         culled_resources.clear();
-        for(auto culled_pass : culled_passes)
+        for (auto culled_pass : culled_passes)
         {
             delete culled_pass;
         }

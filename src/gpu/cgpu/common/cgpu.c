@@ -713,6 +713,31 @@ void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId e
     Cmd->current_dispatch = PIPELINE_TYPE_NONE;
 }
 
+// Events
+void cgpu_cmd_begin_event(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdBeginEvent fn_begin_event = cmd->device->proc_table_cache->cmd_begin_event;
+    fn_begin_event(cmd, event);
+}
+
+void cgpu_cmd_set_marker(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdSetMarker fn_cmd_set_marker = cmd->device->proc_table_cache->cmd_set_marker;
+    fn_cmd_set_marker(cmd, marker);
+}
+
+void cgpu_cmd_end_event(CGpuCommandBufferId cmd)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdEndEvent fn_end_event = cmd->device->proc_table_cache->cmd_end_event;
+    fn_end_event(cmd);
+}
+
 // Shader APIs
 CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
 {

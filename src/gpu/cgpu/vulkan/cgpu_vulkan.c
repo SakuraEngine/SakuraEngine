@@ -88,6 +88,10 @@ const CGpuProcTable tbl_vk = {
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_end = &cgpu_cmd_end_vulkan,
 
+    // Events
+    .cmd_begin_event = &cgpu_cmd_begin_event_vulkan,
+    .cmd_end_event = &cgpu_cmd_end_event_vulkan,
+
     // Compute CMDs
     .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_vulkan,
     .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_vulkan,
@@ -1578,6 +1582,76 @@ void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd)
     CHECK_VKRESULT(D->mVkDeviceTable.vkEndCommandBuffer(Cmd->pVkCmdBuf));
 }
 
+// Events
+void cgpu_cmd_begin_event_vulkan(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cmd->device->adapter->instance;
+    if (I->debug_report)
+    {
+        DECLARE_ZERO(VkDebugMarkerMarkerInfoEXT, markerInfo)
+        markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+        markerInfo.pMarkerName = event->name;
+        markerInfo.color[0] = event->color[0];
+        markerInfo.color[1] = event->color[1];
+        markerInfo.color[2] = event->color[2];
+        markerInfo.color[3] = event->color[3];
+        D->mVkDeviceTable.vkCmdDebugMarkerBeginEXT(Cmd->pVkCmdBuf, &markerInfo);
+    }
+    if (I->debug_utils)
+    {
+        DECLARE_ZERO(VkDebugUtilsLabelEXT, markerInfo)
+        markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+        markerInfo.pLabelName = event->name;
+        markerInfo.color[0] = event->color[0];
+        markerInfo.color[1] = event->color[1];
+        markerInfo.color[2] = event->color[2];
+        markerInfo.color[3] = event->color[3];
+        vkCmdBeginDebugUtilsLabelEXT(Cmd->pVkCmdBuf, &markerInfo);
+    }
+}
+
+void cgpu_cmd_set_marker_vulkam(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cmd->device->adapter->instance;
+    if (I->debug_utils)
+    {
+        DECLARE_ZERO(VkDebugUtilsLabelEXT, label)
+        label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+        label.pLabelName = marker->name;
+        label.color[0] = marker->color[0];
+        label.color[1] = marker->color[1];
+        label.color[2] = marker->color[2];
+        label.color[3] = marker->color[3];
+        vkCmdInsertDebugUtilsLabelEXT(Cmd->pVkCmdBuf, &label);
+    }
+    if (I->debug_report)
+    {
+        DECLARE_ZERO(VkDebugMarkerMarkerInfoEXT, info)
+        info.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+        info.pMarkerName = marker->name;
+        info.color[0] = marker->color[0];
+        info.color[1] = marker->color[1];
+        info.color[2] = marker->color[2];
+        info.color[3] = marker->color[3];
+        D->mVkDeviceTable.vkCmdDebugMarkerInsertEXT(Cmd->pVkCmdBuf, &info);
+    }
+}
+
+void cgpu_cmd_end_event_vulkan(CGpuCommandBufferId cmd)
+{
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cmd->device->adapter->instance;
+    if (I->debug_report)
+        D->mVkDeviceTable.vkCmdDebugMarkerEndEXT(Cmd->pVkCmdBuf);
+    if (I->debug_utils)
+        vkCmdEndDebugUtilsLabelEXT(Cmd->pVkCmdBuf);
+}
+
 // Compute CMDs
 CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc)
 {
@@ -1945,7 +2019,6 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
     }
 
     // Surface format
-    // Select a surface format, depending on whether HDR is available.
     DECLARE_ZERO(VkSurfaceFormatKHR, surface_format)
     surface_format.format = VK_FORMAT_UNDEFINED;
     uint32_t surfaceFormatCount = 0;
@@ -1970,7 +2043,8 @@ CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwap
             VK_FORMAT_A2B10G10R10_UNORM_PACK32,
             VK_COLOR_SPACE_HDR10_ST2084_EXT
         };
-        VkColorSpaceKHR requested_color_space = requested_format == hdrSurfaceFormat.format ? hdrSurfaceFormat.colorSpace : VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        VkColorSpaceKHR requested_color_space =
+            requested_format == hdrSurfaceFormat.format ? hdrSurfaceFormat.colorSpace : VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         for (uint32_t i = 0; i < surfaceFormatCount; ++i)
         {
             if ((requested_format == formats[i].format) && (requested_color_space == formats[i].colorSpace))
