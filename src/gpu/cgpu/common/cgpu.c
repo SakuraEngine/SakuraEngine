@@ -292,16 +292,18 @@ CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const stru
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_render_pipeline && "create_render_pipeline Proc Missing!");
+    CGpuRenderPipelineDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGpuRenderPipelineDescriptor));
     CGpuRenderPipeline* pipeline = CGPU_NULLPTR;
     if (desc->sample_count == 0)
-        ((CGpuRenderPipelineDescriptor*)desc)->sample_count = 1;
+        new_desc.sample_count = 1;
     if (desc->blend_state == CGPU_NULLPTR)
-        ((CGpuRenderPipelineDescriptor*)desc)->blend_state = &defaultBlendStateDesc;
+        new_desc.blend_state = &defaultBlendStateDesc;
     if (desc->depth_state == CGPU_NULLPTR)
-        ((CGpuRenderPipelineDescriptor*)desc)->depth_state = &defaultDepthStateDesc;
+        new_desc.depth_state = &defaultDepthStateDesc;
     if (desc->rasterizer_state == CGPU_NULLPTR)
-        ((CGpuRenderPipelineDescriptor*)desc)->rasterizer_state = &defaultRasterStateDesc;
-    pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, desc);
+        new_desc.rasterizer_state = &defaultRasterStateDesc;
+    pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, &new_desc);
     pipeline->device = device;
     pipeline->root_signature = desc->root_signature;
     return pipeline;
@@ -773,13 +775,14 @@ CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDesc
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_buffer && "create_buffer Proc Missing!");
+    CGpuBufferDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGpuBufferDescriptor));
     if (desc->flags == 0)
     {
-        CGpuBufferDescriptor* wdesc = (CGpuBufferDescriptor*)desc;
-        wdesc->flags |= BCF_NONE;
+        new_desc.flags |= BCF_NONE;
     }
     CGPUProcCreateBuffer fn_create_buffer = device->proc_table_cache->create_buffer;
-    CGpuBuffer* buffer = (CGpuBuffer*)fn_create_buffer(device, desc);
+    CGpuBuffer* buffer = (CGpuBuffer*)fn_create_buffer(device, &new_desc);
     buffer->device = device;
     return buffer;
 }
@@ -822,13 +825,14 @@ CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureD
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_texture && "create_texture Proc Missing!");
-    CGpuTextureDescriptor* wdesc = (CGpuTextureDescriptor*)desc;
-    if (desc->array_size == 0) wdesc->array_size = 1;
-    if (desc->mip_levels == 0) wdesc->mip_levels = 1;
-    if (desc->depth == 0) wdesc->depth = 1;
-    if (desc->sample_count == 0) wdesc->sample_count = 1;
+    CGpuTextureDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGpuTextureDescriptor));
+    if (desc->array_size == 0) new_desc.array_size = 1;
+    if (desc->mip_levels == 0) new_desc.mip_levels = 1;
+    if (desc->depth == 0) new_desc.depth = 1;
+    if (desc->sample_count == 0) new_desc.sample_count = 1;
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
-    CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, desc);
+    CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, &new_desc);
     texture->device = device;
     texture->sample_count = desc->sample_count;
     return texture;
@@ -870,11 +874,12 @@ CGpuTextureViewId cgpu_create_texture_view(CGpuDeviceId device, const struct CGp
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_texture_view && "create_texture_view Proc Missing!");
-    CGpuTextureViewDescriptor* wdesc = (CGpuTextureViewDescriptor*)desc;
-    if (desc->array_layer_count == 0) wdesc->array_layer_count = 1;
-    if (desc->mip_level_count == 0) wdesc->mip_level_count = 1;
+    CGpuTextureViewDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGpuTextureViewDescriptor));
+    if (desc->array_layer_count == 0) new_desc.array_layer_count = 1;
+    if (desc->mip_level_count == 0) new_desc.mip_level_count = 1;
     CGPUProcCreateTextureView fn_create_texture_view = device->proc_table_cache->create_texture_view;
-    CGpuTextureView* texture_view = (CGpuTextureView*)fn_create_texture_view(device, desc);
+    CGpuTextureView* texture_view = (CGpuTextureView*)fn_create_texture_view(device, &new_desc);
     texture_view->device = device;
     texture_view->info = *desc;
     return texture_view;
