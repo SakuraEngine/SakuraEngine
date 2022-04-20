@@ -553,8 +553,6 @@ uint64_t RenderGraphBackend::execute()
     }
     {
         ZoneScopedN("GraphCleanup");
-        graph->clear();
-        blackboard.clear();
         for (auto culled_resource : culled_resources)
         {
             delete culled_resource;
@@ -583,6 +581,8 @@ uint64_t RenderGraphBackend::execute()
             delete resource;
         }
         resources.clear();
+        graph->clear();
+        blackboard.clear();
     }
     return frame_index++;
 }
