@@ -90,6 +90,7 @@ const CGpuProcTable tbl_vk = {
 
     // Events
     .cmd_begin_event = &cgpu_cmd_begin_event_vulkan,
+    .cmd_set_marker = &cgpu_cmd_set_marker_vulkan,
     .cmd_end_event = &cgpu_cmd_end_event_vulkan,
 
     // Compute CMDs
@@ -1612,7 +1613,7 @@ void cgpu_cmd_begin_event_vulkan(CGpuCommandBufferId cmd, const CGpuEventInfo* e
     }
 }
 
-void cgpu_cmd_set_marker_vulkam(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
+void cgpu_cmd_set_marker_vulkan(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
