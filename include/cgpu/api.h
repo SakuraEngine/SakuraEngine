@@ -103,6 +103,8 @@ typedef const struct CGpuComputePipeline* CGpuComputePipelineId;
 typedef const struct CGpuShaderReflection* CGpuShaderReflectionId;
 typedef const struct CGpuPipelineReflection* CGpuPipelineReflectionId;
 #endif
+static const CGpuBufferId CGPU_BUFFER_OUT_OF_HOST_MEMORY = (CGpuBufferId)1;
+static const CGpuBufferId CGPU_BUFFER_OUT_OF_DEVICE_MEMORY = (CGpuBufferId)3;
 
 typedef enum ECGpuBackend
 {
