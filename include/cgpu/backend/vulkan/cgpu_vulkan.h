@@ -99,7 +99,7 @@ RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
 
 // Events
 RUNTIME_API void cgpu_cmd_begin_event_vulkan(CGpuCommandBufferId cmd, const CGpuEventInfo* event);
-RUNTIME_API void cgpu_cmd_set_marker_vulkam(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker);
+RUNTIME_API void cgpu_cmd_set_marker_vulkan(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker);
 RUNTIME_API void cgpu_cmd_end_event_vulkan(CGpuCommandBufferId cmd);
 
 // Compute CMDs
