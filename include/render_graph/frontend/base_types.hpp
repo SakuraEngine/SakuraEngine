@@ -18,7 +18,6 @@ enum class EObjectType : uint8_t
 
 enum class ERelationshipType : uint8_t
 {
-    SubResource,
     TextureRead,      // SRV
     TextureWrite,     // RTV/DSV
     TextureReadWrite, // UAV
