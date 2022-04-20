@@ -73,6 +73,11 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
     if (desc->flags & BCF_HOST_VISIBLE || desc->flags & BCF_PERSISTENT_MAP_BIT)
         vma_mem_reqs.preferredFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    // VMA recommanded
+    if (desc->memory_usage == MEM_USAGE_CPU_TO_GPU)
+        vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+    if (desc->memory_usage == MEM_USAGE_GPU_TO_CPU)
+        vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
 
     DECLARE_ZERO(VmaAllocationInfo, alloc_info)
     VkResult bufferResult =

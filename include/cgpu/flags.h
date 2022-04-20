@@ -522,7 +522,7 @@ typedef enum ECGpuMemoryUsage
 typedef enum ECGpuBufferCreationFlag
 {
     /// Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
-    BCF_NONE = 0x01,
+    BCF_NONE = 0,
     /// Buffer will allocate its own memory (COMMITTED resource)
     BCF_OWN_MEMORY_BIT = 0x02,
     /// Buffer will be persistently mapped
