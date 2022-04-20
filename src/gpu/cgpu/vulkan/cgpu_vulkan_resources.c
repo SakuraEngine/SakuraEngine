@@ -60,7 +60,6 @@ FORCEINLINE static VkFormatFeatureFlags VkUtil_ImageUsageToFormatFeatures(VkImag
 cgpu_static_assert(sizeof(CGpuBuffer_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
 {
-    CGpuBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGpuBuffer_Vulkan), _Alignof(CGpuBuffer_Vulkan));
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     // Create VkBufferCreateInfo
@@ -76,7 +75,7 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
     if ((desc->flags & BCF_HOST_VISIBLE && desc->memory_usage & MEM_USAGE_GPU_ONLY) ||
         desc->flags & BCF_PERSISTENT_MAP_BIT && desc->memory_usage & MEM_USAGE_GPU_ONLY)
         vma_mem_reqs.preferredFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-    // VMA recommanded
+    // VMA recommanded upload & readback usage
     if (desc->memory_usage == MEM_USAGE_CPU_TO_GPU)
     {
         vma_mem_reqs.usage =
@@ -93,16 +92,27 @@ CGpuBufferId cgpu_create_buffer_vulkan(CGpuDeviceId device, const struct CGpuBuf
                                      VMA_MEMORY_USAGE_AUTO;
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
     }
-
     DECLARE_ZERO(VmaAllocationInfo, alloc_info)
-    VkResult bufferResult =
-        vmaCreateBuffer(D->pVmaAllocator, &add_info, &vma_mem_reqs, &B->pVkBuffer, &B->pVkAllocation, &alloc_info);
-    if (bufferResult != VK_SUCCESS)
+    VkBuffer pVkBuffer = VK_NULL_HANDLE;
+    VmaAllocation mVmaAllocation = VK_NULL_HANDLE;
+    VkResult bufferResult = vmaCreateBuffer(D->pVmaAllocator, &add_info, &vma_mem_reqs, &pVkBuffer, &mVmaAllocation, &alloc_info);
+    if (bufferResult == VK_ERROR_OUT_OF_DEVICE_MEMORY)
     {
-        cgpu_assert(0);
-        return NULL;
+        return CGPU_BUFFER_OUT_OF_DEVICE_MEMORY;
     }
+    else if (bufferResult == VK_ERROR_OUT_OF_HOST_MEMORY)
+    {
+        return CGPU_BUFFER_OUT_OF_HOST_MEMORY;
+    }
+    else if (bufferResult != VK_SUCCESS)
+    {
+        cgpu_assert(0 && "VMA failed to create buffer!");
+        return CGPU_NULLPTR;
+    }
+    CGpuBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGpuBuffer_Vulkan), _Alignof(CGpuBuffer_Vulkan));
     B->super.cpu_mapped_address = alloc_info.pMappedData;
+    B->pVkAllocation = mVmaAllocation;
+    B->pVkBuffer = pVkBuffer;
 
     // Setup Descriptors
     if ((desc->descriptors & RT_UNIFORM_BUFFER) || (desc->descriptors & RT_BUFFER) ||
