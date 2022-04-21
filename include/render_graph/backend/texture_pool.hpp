@@ -2,6 +2,7 @@
 #include <EASTL/unordered_map.h>
 #include <EASTL/deque.h>
 #include "utils/hash.h"
+#include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
 
 namespace sakura
@@ -23,10 +24,10 @@ public:
         ECGpuSampleCount sample_count;
         uint32_t sample_quality;
         CGpuResourceTypes descriptors;
+        bool can_aliasing = 0;
         operator size_t() const;
         friend class TexturePool;
 
-    protected:
         Key(CGpuDeviceId device, const CGpuTextureDescriptor& desc);
     };
     friend class RenderGraphBackend;
@@ -55,6 +56,7 @@ inline TexturePool::Key::Key(CGpuDeviceId device, const CGpuTextureDescriptor& d
     , sample_count(desc.sample_count ? desc.sample_count : SAMPLE_COUNT_1)
     , sample_quality(desc.sample_quality)
     , descriptors(desc.descriptors)
+    , can_aliasing(desc.aliasing_capacity)
 {
 }
 
@@ -85,7 +87,7 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
     eastl::pair<CGpuTextureId, ECGpuResourceState> allocated = {
         nullptr, RESOURCE_STATE_UNDEFINED
     };
-    const TexturePool::Key key(device, desc);
+    auto key = make_zeroed<TexturePool::Key>(device, desc);
     CGpuTextureId new_tex = nullptr;
     // add queue
     if (textures[key].empty())
@@ -101,7 +103,7 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
 
 inline void TexturePool::deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, ECGpuResourceState final_state, uint64_t frame_index)
 {
-    const TexturePool::Key key(device, desc);
+    auto key = make_zeroed<TexturePool::Key>(device, desc);
     textures[key].push_back({ { texture, final_state }, frame_index });
 }
 } // namespace render_graph

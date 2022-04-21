@@ -2,6 +2,7 @@
 #include <EASTL/unordered_map.h>
 #include <EASTL/deque.h>
 #include "utils/hash.h"
+#include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
 
 namespace sakura
@@ -24,7 +25,6 @@ public:
         operator size_t() const;
         friend class BufferPool;
 
-    protected:
         Key(CGpuDeviceId device, const CGpuBufferDescriptor& desc);
     };
     friend class RenderGraphBackend;
@@ -81,7 +81,7 @@ inline eastl::pair<CGpuBufferId, ECGpuResourceState> BufferPool::allocate(const 
     eastl::pair<CGpuBufferId, ECGpuResourceState> allocated = {
         nullptr, RESOURCE_STATE_UNDEFINED
     };
-    const BufferPool::Key key(device, desc);
+    auto key = make_zeroed<BufferPool::Key>(device, desc);
     auto&& queue_iter = buffers.find(key);
     // add queue
     if (queue_iter == buffers.end())
@@ -100,7 +100,7 @@ inline eastl::pair<CGpuBufferId, ECGpuResourceState> BufferPool::allocate(const 
 
 inline void BufferPool::deallocate(const CGpuBufferDescriptor& desc, CGpuBufferId buffer, ECGpuResourceState final_state, uint64_t frame_index)
 {
-    const BufferPool::Key key(device, desc);
+    auto key = make_zeroed<BufferPool::Key>(device, desc);
     buffers[key].push_back({ { buffer, final_state }, frame_index });
 }
 
