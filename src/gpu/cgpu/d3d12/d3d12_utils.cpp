@@ -196,7 +196,7 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
     };
     allocationCallbacks.pFree = +[](void* ptr, void*) { cgpu_free_aligned(ptr); };
     desc.pAllocationCallbacks = &allocationCallbacks;
-    // desc.Flags |= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED;
+    desc.Flags |= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED;
     if (!SUCCEEDED(D3D12MA::CreateAllocator(&desc, &D->pResourceAllocator)))
     {
         cgpu_assert(0 && "DMA Allocator Create Failed!");
