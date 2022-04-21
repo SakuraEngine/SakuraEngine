@@ -37,10 +37,15 @@ protected:
         {
             desc_set_heap.second->destroy();
         }
+        for (auto aliasing_tex : aliasing_textures)
+        {
+            cgpu_free_texture(aliasing_tex);
+        }
     }
     CGpuCommandPoolId gfx_cmd_pool = nullptr;
     CGpuCommandBufferId gfx_cmd_buf = nullptr;
     CGpuFenceId exec_fence = nullptr;
+    eastl::vector<CGpuTextureId> aliasing_textures;
     eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
 };
 
@@ -68,11 +73,11 @@ protected:
     virtual void initialize() final;
     virtual void finalize() final;
 
-    CGpuTextureId resolve(const TextureNode& node);
-    CGpuTextureId try_aliasing_allocate(const TextureNode& node);
-    CGpuBufferId resolve(const BufferNode& node);
+    CGpuTextureId resolve(RenderGraphFrameExecutor& executor, const TextureNode& node);
+    CGpuTextureId try_aliasing_allocate(RenderGraphFrameExecutor& executor, const TextureNode& node);
+    CGpuBufferId resolve(RenderGraphFrameExecutor& executor, const BufferNode& node);
 
-    void calculate_barriers(PassNode* pass,
+    void calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
         eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
         eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers);
     gsl::span<CGpuDescriptorSetId> alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass);

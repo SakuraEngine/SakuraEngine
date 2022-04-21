@@ -18,7 +18,7 @@ thread_local CGpuFenceId present_fence;
 CubeGeometry::InstanceData CubeGeometry::instance_data;
 
 #if _WINDOWS
-thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
+thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #else
 thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #endif
@@ -43,8 +43,8 @@ void create_api_objects()
     // Create instance
     CGpuInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
+    instance_desc.enable_debug_layer = false;
+    instance_desc.enable_gpu_based_validation = false;
     instance_desc.enable_set_name = true;
     instance = cgpu_create_instance(&instance_desc);
 
