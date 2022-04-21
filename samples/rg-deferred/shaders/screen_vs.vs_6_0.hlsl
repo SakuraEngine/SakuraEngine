@@ -25,5 +25,6 @@ VSOut main(in uint VertexIndex : SV_VertexID)
     VSOut vout;
 	vout.uv = uvs[VertexIndex];
 	vout.position = float4(vout.uv.x * 2.f - 1.f, vout.uv.y * 2.f - 1.f, QUAD_Z, 1.f);
+    vout.uv.y = 1.f - vout.uv.y;
     return vout;
 }
