@@ -18,6 +18,9 @@ public:
         if (desc->enable_debug_layer)
         {
             instance_layers.push_back(validation_layer_name);
+        }
+        if (desc->enable_set_name)
+        {
             instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
             instance_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         }
