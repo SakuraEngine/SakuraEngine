@@ -62,6 +62,7 @@ CGpuTextureId RenderGraphBackend::try_aliasing_allocate(
 {
     if (node.frame_aliasing_source)
     {
+        ZoneScopedN("AllocateAliasingResource");
         // allocate & try bind
         auto aliasing_texture = cgpu_create_texture(device, &node.descriptor);
         CGpuTextureAliasingBindDescriptor aliasing_desc = {};
