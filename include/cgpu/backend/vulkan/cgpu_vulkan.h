@@ -83,6 +83,7 @@ RUNTIME_API CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const 
 RUNTIME_API void cgpu_free_texture_vulkan(CGpuTextureId texture);
 RUNTIME_API CGpuTextureViewId cgpu_create_texture_view_vulkan(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc);
 RUNTIME_API void cgpu_free_texture_view_vulkan(CGpuTextureViewId render_target);
+RUNTIME_API bool cgpu_try_bind_aliasing_texture_vulkan(CGpuDeviceId device, const struct CGpuTextureAliasingBindDescriptor* desc);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_vulkan(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);

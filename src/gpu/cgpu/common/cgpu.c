@@ -896,6 +896,14 @@ void cgpu_free_texture_view(CGpuTextureViewId render_target)
     fn_free_texture_view(render_target);
 }
 
+bool cgpu_try_bind_aliasing_texture(CGpuDeviceId device, const struct CGpuTextureAliasingBindDescriptor* desc)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    CGPUProcTryBindAliasingTexture fn_try_bind_aliasing = device->proc_table_cache->try_bind_aliasing_texture;
+    cgpu_assert(fn_try_bind_aliasing && "try_bind_aliasing_texture Proc Missing!");
+    return fn_try_bind_aliasing(device, desc);
+}
+
 // SwapChain APIs
 CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
 {

@@ -42,12 +42,22 @@ public:
     }
     inline const TextureHandle get_handle() const { return TextureHandle(get_id()); }
     inline const CGpuTextureDescriptor& get_desc() const { return descriptor; }
+    inline const uint32_t get_size() const
+    {
+        return descriptor.array_size * descriptor.mip_levels *
+               descriptor.width * descriptor.depth * descriptor.height *
+               FormatUtil_BitSizeOfBlock(descriptor.format);
+    }
+    inline const ECGpuSampleCount get_sample_count() const { return descriptor.sample_count; }
+    inline const TextureNode* get_aliasing_parent() const { return frame_aliasing_source; }
 
 protected:
     CGpuTextureDescriptor descriptor = {};
     // temporal handle with a lifespan of only one frame
+    TextureNode* frame_aliasing_source = nullptr;
     mutable CGpuTextureId frame_texture = nullptr;
     mutable ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
+    mutable bool frame_aliasing = false;
 };
 
 class BufferNode : public ResourceNode
