@@ -519,8 +519,13 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
         // Do allocation (TODO: mGPU)
         D3D12MA::ALLOCATION_DESC alloc_desc = {};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
-        if (desc->flags & TCF_OWN_MEMORY_BIT)
+        if (desc->flags & TCF_OWN_MEMORY_BIT ||
+            desc->sample_count != SAMPLE_COUNT_1 // for smaller alignment that not suitable for MSAA
+        )
+        {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
+            T->super.is_commited = true;
+        }
         CHECK_HRESULT(D->pResourceAllocator->CreateResource(
             &alloc_desc, &res_desc, res_states, pClearValue,
             &T->pDxAllocation, IID_ARGS(&T->pDxResource)));

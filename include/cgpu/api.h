@@ -68,6 +68,7 @@ typedef const host_ptr_t CGpuSwapChainId;
 typedef const host_ptr_t CGpuShaderLibraryId;
 typedef const host_ptr_t CGpuRootSignatureId;
 typedef const host_ptr_t CGpuDescriptorSetId;
+typedef const host_ptr_t CGpuMemoryPoolId;
 typedef const host_ptr_t CGpuBufferId;
 typedef const host_ptr_t CGpuTextureId;
 typedef const host_ptr_t CGpuSamplerId;
@@ -92,6 +93,7 @@ typedef const struct CGpuSwapChain* CGpuSwapChainId;
 typedef const struct CGpuShaderLibrary* CGpuShaderLibraryId;
 typedef const struct CGpuRootSignature* CGpuRootSignatureId;
 typedef const struct CGpuDescriptorSet* CGpuDescriptorSetId;
+typedef const struct CGpuMemoryPool* CGpuMemoryPoolId;
 typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuTexture* CGpuTextureId;
 typedef const struct CGpuSampler* CGpuSamplerId;
@@ -216,6 +218,10 @@ RUNTIME_API CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device
 typedef CGpuRenderPipelineId (*CGPUProcCreateRenderPipeline)(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_render_pipeline(CGpuRenderPipelineId pipeline);
 typedef void (*CGPUProcFreeRenderPipeline)(CGpuRenderPipelineId pipeline);
+RUNTIME_API CGpuMemoryPoolId cgpu_create_memory_pool(CGpuDeviceId, const struct CGpuMemoryPoolDescriptor* desc);
+typedef CGpuMemoryPoolId (*CGPUProcCreateMemoryPool)(CGpuDeviceId, const struct CGpuMemoryPoolDescriptor* desc);
+RUNTIME_API void cgpu_free_memory_pool(CGpuMemoryPoolId pool);
+typedef void (*CGPUProcFreeMemoryPool)(CGpuMemoryPoolId pool);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
@@ -395,6 +401,8 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeComputePipeline free_compute_pipeline;
     const CGPUProcCreateRenderPipeline create_render_pipeline;
     const CGPUProcFreeRenderPipeline free_render_pipeline;
+    const CGPUProcCreateMemoryPool create_memory_pool;
+    const CGPUProcFreeMemoryPool free_memory_pool;
 
     // Queue APIs
     const CGPUProcGetQueue get_queue;
@@ -1032,6 +1040,14 @@ typedef struct CGpuRenderPipelineDescriptor {
     bool enable_indirect_command;
 } CGpuRenderPipelineDescriptor;
 
+typedef struct CGpuMemoryPoolDescriptor {
+    ECGpuMemoryUsage mem_usage;
+    uint64_t block_size;
+    uint32_t min_block_count;
+    uint32_t max_block_count;
+    uint64_t min_alloc_alignment;
+} CGpuMemoryPoolDescriptor;
+
 typedef struct CGpuParameterTable {
     // This should be stored here because shader could be destoryed after RS creation
     CGpuShaderResource* resources;
@@ -1168,6 +1184,7 @@ typedef struct CGpuTexture {
     uint32_t aspect_mask : 4;
     uint32_t node_index : 4;
     uint32_t is_cube : 1;
+    uint32_t is_commited : 1;
     /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
     uint32_t owns_image : 1;
 } CGpuTexture;

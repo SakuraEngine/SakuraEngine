@@ -9,16 +9,6 @@ struct VSOut
     float2 uv : TEXCOORD0;
 };
 
-static const float2 positions[6] = {
-    float2(1.f, 1.f),   //RU   0
-    float2(-1.f, -1.f), // LD  1
-    float2(1.f, -1.f),  // RD  2
-
-    float2(1.f, 1.f),  // RU   3
-    float2(-1.f, 1.f), // LU   4
-    float2(-1.f, -1.f) // LD   5
-};
-
 static const float2 uvs[6] = {
     float2(1.0, 1.0),
     float2(0.0, 0.0),
@@ -33,7 +23,7 @@ static const float2 uvs[6] = {
 VSOut main(in uint VertexIndex : SV_VertexID)
 {
     VSOut vout;
-	vout.position = float4(positions[VertexIndex], 0.f, 1.f);
 	vout.uv = uvs[VertexIndex];
+	vout.position = float4(vout.uv.x * 2.f - 1.f, vout.uv.y * 2.f - 1.f, QUAD_Z, 1.f);
     return vout;
 }

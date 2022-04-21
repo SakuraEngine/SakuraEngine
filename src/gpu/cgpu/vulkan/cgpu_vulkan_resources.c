@@ -453,12 +453,14 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             mem_reqs.pUserData = &exportMemoryInfo;
             // Allocate external (importable / exportable) memory as dedicated memory to avoid adding unnecessary complexity to the Vulkan Memory Allocator
             mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            T->super.is_commited = true;
         }
         VmaAllocationInfo alloc_info = { 0 };
         if (isSinglePlane)
         {
             VkResult res = vmaCreateImage(D->pVmaAllocator,
-                &add_info, &mem_reqs, &T->pVkImage, &T->pVkAllocation, &alloc_info);
+                &add_info, &mem_reqs, &T->pVkImage,
+                &T->pVkAllocation, &alloc_info);
             CHECK_VKRESULT(res);
         }
         else // Multi-planar formats

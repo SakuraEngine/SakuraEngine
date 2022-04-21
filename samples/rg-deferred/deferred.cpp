@@ -384,6 +384,13 @@ int main(int argc, char* argv[])
                         .import(native_backbuffer, RESOURCE_STATE_UNDEFINED)
                         .allow_render_target();
                 });
+            render_graph::TextureHandle composite_buffer = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("composite_buffer")
+                        .extent(native_backbuffer->width, native_backbuffer->height)
+                        .format((ECGpuFormat)native_backbuffer->format)
+                        .allow_render_target();
+                });
             auto gbuffer_color = graph->create_texture(
                 [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                     builder.set_name("gbuffer_color")
@@ -463,7 +470,7 @@ int main(int argc, char* argv[])
                             .read("gbuffer_color", gbuffer_color.read_mip(0, 1))
                             .read("gbuffer_normal", gbuffer_normal)
                             .read("gbuffer_depth", gbuffer_depth)
-                            .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                            .write(0, composite_buffer, LOAD_ACTION_CLEAR);
                     },
                     [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                         cgpu_render_encoder_set_viewport(stack.encoder,
@@ -499,7 +506,7 @@ int main(int argc, char* argv[])
                         builder.set_name("lighting_buffer_blit")
                             .set_pipeline(blit_pipeline)
                             .read("input_color", lighting_buffer)
-                            .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                            .write(0, composite_buffer, LOAD_ACTION_CLEAR);
                     },
                     [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                         cgpu_render_encoder_set_viewport(stack.encoder,
@@ -511,7 +518,22 @@ int main(int argc, char* argv[])
                     });
             }
             render_graph_imgui_add_render_pass(graph,
-                back_buffer, LOAD_ACTION_LOAD);
+                composite_buffer, LOAD_ACTION_LOAD);
+            graph->add_render_pass(
+                [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                    builder.set_name("final_blit")
+                        .set_pipeline(blit_pipeline)
+                        .read("input_color", composite_buffer)
+                        .write(0, back_buffer, LOAD_ACTION_CLEAR);
+                },
+                [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                    cgpu_render_encoder_set_viewport(stack.encoder,
+                        0.0f, 0.0f,
+                        (float)native_backbuffer->width, (float)native_backbuffer->height,
+                        0.f, 1.f);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                    cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                });
             graph->add_present_pass(
                 [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                     builder.set_name("present_pass")

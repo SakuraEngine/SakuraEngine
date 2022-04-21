@@ -8,6 +8,10 @@ namespace render_graph
 {
 const ResourceNode::LifeSpan ResourceNode::lifespan() const
 {
+    if (frame_lifespan.from != UINT32_MAX && frame_lifespan.to != UINT32_MAX)
+    {
+        return frame_lifespan;
+    }
     uint32_t from = UINT32_MAX, to = 0;
     foreach_neighbors([&](const DependencyGraphNode* node) {
         auto rg_node = static_cast<const RenderGraphNode*>(node);
@@ -27,7 +31,8 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const
             to = (to >= pass_node->order) ? to : pass_node->order;
         }
     });
-    return { from, to };
+    frame_lifespan = { from, to };
+    return frame_lifespan;
 }
 
 bool RenderGraph::compile()
@@ -37,7 +42,7 @@ bool RenderGraph::compile()
         eastl::remove_if(resources.begin(), resources.end(),
             [this](ResourceNode* resource) {
                 const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
-                if(lone) culled_resources.emplace_back(resource);
+                if (lone) culled_resources.emplace_back(resource);
                 return lone;
             }),
         resources.end());
@@ -45,7 +50,7 @@ bool RenderGraph::compile()
         eastl::remove_if(passes.begin(), passes.end(),
             [this](PassNode* pass) {
                 const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
-                if(lone) culled_passes.emplace_back(pass);
+                if (lone) culled_passes.emplace_back(pass);
                 return lone;
             }),
         passes.end());

@@ -17,8 +17,8 @@ public:
     }
     virtual ~ResourceNode() = default;
     struct LifeSpan {
-        const uint32_t from;
-        const uint32_t to;
+        uint32_t from;
+        uint32_t to;
     };
     inline const bool is_imported() const { return imported; }
     inline const bool allow_lone() const { return canbe_lone; }
@@ -27,6 +27,7 @@ public:
 protected:
     bool imported : 1;
     bool canbe_lone : 1;
+    mutable LifeSpan frame_lifespan = { UINT32_MAX, UINT32_MAX };
 };
 
 class TextureNode : public ResourceNode
@@ -45,8 +46,8 @@ public:
 protected:
     CGpuTextureDescriptor descriptor = {};
     // temporal handle with a lifespan of only one frame
-    CGpuTextureId frame_texture = nullptr;
-    ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
+    mutable CGpuTextureId frame_texture = nullptr;
+    mutable ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
 };
 
 class BufferNode : public ResourceNode
@@ -65,8 +66,8 @@ public:
 protected:
     CGpuBufferDescriptor descriptor = {};
     // temporal handle with a lifespan of only one frame
-    CGpuBufferId frame_buffer = nullptr;
-    ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
+    mutable CGpuBufferId frame_buffer = nullptr;
+    mutable ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
 };
 } // namespace render_graph
 } // namespace sakura

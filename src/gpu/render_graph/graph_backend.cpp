@@ -51,17 +51,55 @@ void RenderGraphBackend::finalize()
     texture_view_pool.finalize();
 }
 
+// memory aliasing:
+// - lifespan不重叠的资源对象都可以考虑做aliasing处理
+// - aliasing的memory-type有要求，需要检查两个对象之间的内存堆兼容性
+// - 可以撮合两个对象，将它们提升为可alias的，把他们的size和alignment取最大处理即可。
+//  - 首先寻找可以直接alias处理的, cgpu_try_create_aliasing_resource(ResourceId, ResourceDesc)
+//  - 其次再考虑提升合并的行为（此行为在前端无法模拟）
+CGpuTextureId RenderGraphBackend::try_aliasing_allocate(const TextureNode& node)
+{
+    CGpuTextureId aliased = nullptr;
+    for (auto& resource : resources)
+    {
+        if (resource->type == EObjectType::Texture)
+        {
+            TextureNode* target_texture = static_cast<TextureNode*>(resource);
+            auto target_span = target_texture->lifespan();
+            auto self_span = node.lifespan();
+            if (target_span.to < self_span.from &&
+                !target_texture->is_imported() &&
+                target_texture->frame_texture &&
+                target_texture->frame_texture->owns_image &&
+                !target_texture->frame_texture->is_commited) // allocation capacity
+            {
+                if (aliased = nullptr; aliased)
+                    break;
+            }
+        }
+    }
+    return aliased;
+}
+
 CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
 {
     ZoneScopedN("ResolveTexture");
     if (!node.frame_texture)
     {
-        auto& wnode = const_cast<TextureNode&>(node);
-        auto allocated = texture_pool.allocate(node.descriptor, frame_index);
-        wnode.frame_texture = node.imported ?
-                                  node.frame_texture :
-                                  allocated.first;
-        wnode.init_state = allocated.second;
+        if (auto aliased = try_aliasing_allocate(node); aliased)
+        {
+            node.frame_texture = aliased;
+            node.init_state = RESOURCE_STATE_UNDEFINED;
+        }
+        else
+        {
+            auto allocated =
+                texture_pool.allocate(node.descriptor, frame_index);
+            node.frame_texture = node.imported ?
+                                     node.frame_texture :
+                                     allocated.first;
+            node.init_state = allocated.second;
+        }
     }
     return node.frame_texture;
 }
@@ -71,12 +109,11 @@ CGpuBufferId RenderGraphBackend::resolve(const BufferNode& node)
     ZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
     {
-        auto& wnode = const_cast<BufferNode&>(node);
         auto allocated = buffer_pool.allocate(node.descriptor, frame_index);
-        wnode.frame_buffer = node.imported ?
-                                 node.frame_buffer :
-                                 allocated.first;
-        wnode.init_state = allocated.second;
+        node.frame_buffer = node.imported ?
+                                node.frame_buffer :
+                                allocated.first;
+        node.init_state = allocated.second;
     }
     return node.frame_buffer;
 }
