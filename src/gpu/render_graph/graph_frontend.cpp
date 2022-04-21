@@ -44,59 +44,66 @@ inline bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing)
 }
 bool RenderGraph::compile()
 {
-    // 1.cull
-    resources.erase(
-        eastl::remove_if(resources.begin(), resources.end(),
-            [this](ResourceNode* resource) {
-                const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
-                if (lone) culled_resources.emplace_back(resource);
-                return lone;
-            }),
-        resources.end());
-    passes.erase(
-        eastl::remove_if(passes.begin(), passes.end(),
-            [this](PassNode* pass) {
-                const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
-                if (lone) culled_passes.emplace_back(pass);
-                return lone;
-            }),
-        passes.end());
-    // 2.calc aliasing
-    // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
-    // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
-    eastl::vector_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
-    for (auto& resource : resources)
+    ZoneScopedN("RenderGraphCompile");
     {
-        if (resource->type == EObjectType::Texture)
+        ZoneScopedN("ull");
+        // 1.cull
+        resources.erase(
+            eastl::remove_if(resources.begin(), resources.end(),
+                [this](ResourceNode* resource) {
+                    const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
+                    if (lone) culled_resources.emplace_back(resource);
+                    return lone;
+                }),
+            resources.end());
+        passes.erase(
+            eastl::remove_if(passes.begin(), passes.end(),
+                [this](PassNode* pass) {
+                    const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
+                    if (lone) culled_passes.emplace_back(pass);
+                    return lone;
+                }),
+            passes.end());
+    }
+    {
+        ZoneScopedN("CalculateAliasing");
+        // 2.calc aliasing
+        // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
+        // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
+        eastl::vector_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
+        for (auto& resource : resources)
         {
-            TextureNode* texture = static_cast<TextureNode*>(resource);
-            if (texture->imported) continue;
-            for (auto&& aliasing_lifespan : alliasing_lifespans)
+            if (resource->type == EObjectType::Texture)
             {
-                auto&& owner_span = aliasing_lifespan.second;
-                auto&& owner = aliasing_lifespan.first;
-                if (aliasing_capacity(owner, texture) &&
-                    owner_span.to < texture->lifespan().from)
+                TextureNode* texture = static_cast<TextureNode*>(resource);
+                if (texture->imported) continue;
+                for (auto&& aliasing_lifespan : alliasing_lifespans)
                 {
-                    texture->descriptor.is_aliasing = true;
-                    texture->frame_aliasing_source = owner;
-                    owner_span.to = texture->lifespan().to;
-                    break;
-                }
-            }
-            for (auto target_resource : resources)
-            {
-                if (target_resource->type == EObjectType::Texture)
-                {
-                    TextureNode* target_texture = static_cast<TextureNode*>(target_resource);
-                    if (aliasing_capacity(target_texture, texture) &&
-                        target_texture->lifespan().to < texture->lifespan().from) // allocation capacity
+                    auto&& owner_span = aliasing_lifespan.second;
+                    auto&& owner = aliasing_lifespan.first;
+                    if (aliasing_capacity(owner, texture) &&
+                        owner_span.to < texture->lifespan().from)
                     {
-                        target_texture->descriptor.aliasing_capacity = true;
                         texture->descriptor.is_aliasing = true;
-                        texture->frame_aliasing_source = target_texture;
-                        alliasing_lifespans[target_texture].from = target_texture->lifespan().from;
-                        alliasing_lifespans[target_texture].to = texture->lifespan().from;
+                        texture->frame_aliasing_source = owner;
+                        owner_span.to = texture->lifespan().to;
+                        break;
+                    }
+                }
+                for (auto target_resource : resources)
+                {
+                    if (target_resource->type == EObjectType::Texture)
+                    {
+                        TextureNode* target_texture = static_cast<TextureNode*>(target_resource);
+                        if (aliasing_capacity(target_texture, texture) &&
+                            target_texture->lifespan().to < texture->lifespan().from) // allocation capacity
+                        {
+                            target_texture->descriptor.aliasing_capacity = true;
+                            texture->descriptor.is_aliasing = true;
+                            texture->frame_aliasing_source = target_texture;
+                            alliasing_lifespans[target_texture].from = target_texture->lifespan().from;
+                            alliasing_lifespans[target_texture].to = texture->lifespan().from;
+                        }
                     }
                 }
             }
