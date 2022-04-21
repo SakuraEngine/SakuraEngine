@@ -54,7 +54,7 @@
 - mimalloc v2.0.3 (MIT)
 - xxhash 0.8.1 (BSD)
 - VulkanMemoryAllocator 3.0.0, release
-- D3D12MemoryAllocator 23e4d91, org.fork (MIT)
+- D3D12MemoryAllocator 2.0.1 release
 - SPIRV-Reflect 173ae4d (Apache-2.0)
 - wasm3 a3abb3f, org.fork (MIT)
 - DirectXMath 596aa5d (MIT)
