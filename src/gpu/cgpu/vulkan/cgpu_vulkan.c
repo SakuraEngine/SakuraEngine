@@ -70,6 +70,7 @@ const CGpuProcTable tbl_vk = {
     .free_texture = &cgpu_free_texture_vulkan,
     .create_texture_view = &cgpu_create_texture_view_vulkan,
     .free_texture_view = &cgpu_free_texture_view_vulkan,
+    .try_bind_aliasing_texture = &cgpu_try_bind_aliasing_texture_vulkan,
 
     // Sampler APIs
     .create_sampler = &cgpu_create_sampler_vulkan,

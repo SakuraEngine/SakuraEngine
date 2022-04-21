@@ -99,8 +99,12 @@ public:
                 color = is_imported ? "grey35" : "grey70";
                 label = "texture: ";
                 label.append(rg_node->get_name());
-                label.append("\nrefs: ")
+                label.append("\\nrefs: ")
                     .append(is_imported ? "imported" : eastl::to_string(tex_node->outgoing_edges()));
+                if (auto aliasing_parent = tex_node->get_aliasing_parent(); aliasing_parent)
+                {
+                    label.append("\\naliasing: ").append(aliasing_parent->get_name());
+                }
                 shape = "box";
             }
             break;
@@ -110,7 +114,7 @@ public:
                 color = is_imported ? "limegreen" : "lightgreen";
                 label = "buffer: ";
                 label.append(rg_node->get_name());
-                label.append("\nrefs: ")
+                label.append("\\nrefs: ")
                     .append(is_imported ? "imported" : eastl::to_string(buf_node->outgoing_edges()));
                 shape = "box";
             }

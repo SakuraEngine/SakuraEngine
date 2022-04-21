@@ -59,26 +59,25 @@ void RenderGraphBackend::finalize()
 //  - 其次再考虑提升合并的行为（此行为在前端无法模拟）
 CGpuTextureId RenderGraphBackend::try_aliasing_allocate(const TextureNode& node)
 {
-    CGpuTextureId aliased = nullptr;
-    for (auto& resource : resources)
+    if (node.frame_aliasing_source)
     {
-        if (resource->type == EObjectType::Texture)
+        // allocate & try bind
+        auto aliasing_texture =
+            texture_pool.allocate(node.descriptor, frame_index);
+        CGpuTextureAliasingBindDescriptor aliasing_desc = {};
+        aliasing_desc.aliased = resolve(*node.frame_aliasing_source);
+        aliasing_desc.aliasing = aliasing_texture.first;
+        node.frame_aliasing = cgpu_try_bind_aliasing_texture(device, &aliasing_desc);
+
+        if (!node.frame_aliasing)
         {
-            TextureNode* target_texture = static_cast<TextureNode*>(resource);
-            auto target_span = target_texture->lifespan();
-            auto self_span = node.lifespan();
-            if (target_span.to < self_span.from &&
-                !target_texture->is_imported() &&
-                target_texture->frame_texture &&
-                target_texture->frame_texture->owns_image &&
-                !target_texture->frame_texture->is_commited) // allocation capacity
-            {
-                if (aliased = nullptr; aliased)
-                    break;
-            }
+            texture_pool.deallocate(node.descriptor,
+                aliasing_texture.first, aliasing_texture.second, frame_index);
+            return nullptr;
         }
+        return aliasing_texture.first;
     }
-    return aliased;
+    return nullptr;
 }
 
 CGpuTextureId RenderGraphBackend::resolve(const TextureNode& node)
@@ -285,10 +284,12 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
                     }
                 });
             if (is_last_user)
+            {
                 texture_pool.deallocate(texture->descriptor,
                     texture->frame_texture,
                     edge->requested_state,
                     frame_index);
+            }
         });
     pass->foreach_buffers(
         [this, pass](BufferNode* buffer, BufferEdge* edge) {

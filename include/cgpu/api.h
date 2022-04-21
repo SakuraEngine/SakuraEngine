@@ -31,6 +31,7 @@ struct CGpuRenderPipelineDescriptor;
 struct CGpuBufferDescriptor;
 struct CGpuTextureDescriptor;
 struct CGpuTextureViewDescriptor;
+struct CGpuTextureAliasingBindDescriptor;
 struct CGpuSamplerDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuAcquireNextDescriptor;
@@ -279,6 +280,8 @@ RUNTIME_API CGpuTextureViewId cgpu_create_texture_view(CGpuDeviceId device, cons
 typedef CGpuTextureViewId (*CGPUProcCreateTextureView)(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc);
 RUNTIME_API void cgpu_free_texture_view(CGpuTextureViewId render_target);
 typedef void (*CGPUProcFreeTextureView)(CGpuTextureViewId render_target);
+RUNTIME_API bool cgpu_try_bind_aliasing_texture(CGpuDeviceId device, const struct CGpuTextureAliasingBindDescriptor* desc);
+typedef bool (*CGPUProcTryBindAliasingTexture)(CGpuDeviceId device, const struct CGpuTextureAliasingBindDescriptor* desc);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const struct CGpuSwapChainDescriptor* desc);
@@ -437,6 +440,7 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeTexture free_texture;
     const CGPUProcCreateTextureView create_texture_view;
     const CGPUProcFreeTextureView free_texture_view;
+    const CGPUProcTryBindAliasingTexture try_bind_aliasing_texture;
 
     // Swapchain APIs
     const CGPUProcCreateSwapChain create_swapchain;
@@ -1154,6 +1158,9 @@ typedef struct CGpuTextureDescriptor {
     ECGpuResourceState start_state;
     /// Descriptor creation
     CGpuResourceTypes descriptors;
+    /// Memory Aliasing
+    uint32_t aliasing_capacity : 1;
+    uint32_t is_aliasing : 1;
 } CGpuTextureDescriptor;
 
 typedef struct CGpuTextureViewDescriptor {
@@ -1169,6 +1176,11 @@ typedef struct CGpuTextureViewDescriptor {
     uint32_t base_mip_level : 8;
     uint32_t mip_level_count : 8;
 } CGpuTextureViewDescriptor;
+
+typedef struct CGpuTextureAliasingBindDescriptor {
+    CGpuTextureId aliased;
+    CGpuTextureId aliasing;
+} CGpuTextureAliasingBindDescriptor;
 
 typedef struct CGpuTexture {
     CGpuDeviceId device;
@@ -1187,6 +1199,9 @@ typedef struct CGpuTexture {
     uint32_t is_commited : 1;
     /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
     uint32_t owns_image : 1;
+    /// In CGPU concept aliasing resource owns no memory
+    uint32_t is_aliasing : 1;
+    uint32_t can_alias : 1;
 } CGpuTexture;
 
 typedef struct CGpuTextureView {

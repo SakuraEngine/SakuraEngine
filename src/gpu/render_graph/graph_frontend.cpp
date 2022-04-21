@@ -1,5 +1,6 @@
 #include "render_graph/frontend/render_graph.hpp"
 #include "../cgpu/common/common_utils.h"
+#include <EASTL/vector_map.h>
 #include "tracy/Tracy.hpp"
 
 namespace sakura
@@ -35,6 +36,12 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const
     return frame_lifespan;
 }
 
+inline bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing)
+{
+    return !aliased->is_imported() &&
+           aliased->get_size() >= aliasing->get_size() &&
+           aliased->get_sample_count() == aliasing->get_sample_count();
+}
 bool RenderGraph::compile()
 {
     // 1.cull
@@ -54,18 +61,46 @@ bool RenderGraph::compile()
                 return lone;
             }),
         passes.end());
-    // 2.calc lifespan
-    for (auto& pass : passes)
+    // 2.calc aliasing
+    // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
+    // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
+    eastl::vector_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
+    for (auto& resource : resources)
     {
-        graph->foreach_incoming_edges(pass,
-            [=](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* edge) {
-                auto rg_from = static_cast<RenderGraphNode*>(from);
-                // auto rg_to = static_cast<RenderGraphNode*>(to);
-                if (rg_from->type == EObjectType::Texture)
+        if (resource->type == EObjectType::Texture)
+        {
+            TextureNode* texture = static_cast<TextureNode*>(resource);
+            if (texture->imported) continue;
+            for (auto&& aliasing_lifespan : alliasing_lifespans)
+            {
+                auto&& owner_span = aliasing_lifespan.second;
+                auto&& owner = aliasing_lifespan.first;
+                if (aliasing_capacity(owner, texture) &&
+                    owner_span.to < texture->lifespan().from)
                 {
-                    // auto texture_from = static_cast<TextureNode*>(rg_from);
+                    texture->descriptor.is_aliasing = true;
+                    texture->frame_aliasing_source = owner;
+                    owner_span.to = texture->lifespan().to;
+                    break;
                 }
-            });
+            }
+            for (auto target_resource : resources)
+            {
+                if (target_resource->type == EObjectType::Texture)
+                {
+                    TextureNode* target_texture = static_cast<TextureNode*>(target_resource);
+                    if (aliasing_capacity(target_texture, texture) &&
+                        target_texture->lifespan().to < texture->lifespan().from) // allocation capacity
+                    {
+                        target_texture->descriptor.aliasing_capacity = true;
+                        texture->descriptor.is_aliasing = true;
+                        texture->frame_aliasing_source = target_texture;
+                        alliasing_lifespans[target_texture].from = target_texture->lifespan().from;
+                        alliasing_lifespans[target_texture].to = texture->lifespan().from;
+                    }
+                }
+            }
+        }
     }
     return true;
 }
