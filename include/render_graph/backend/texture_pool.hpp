@@ -23,7 +23,6 @@ public:
         ECGpuSampleCount sample_count;
         uint32_t sample_quality;
         CGpuResourceTypes descriptors;
-        uint32_t can_aliasing;
         operator size_t() const;
         friend class TexturePool;
 
@@ -56,7 +55,6 @@ inline TexturePool::Key::Key(CGpuDeviceId device, const CGpuTextureDescriptor& d
     , sample_count(desc.sample_count ? desc.sample_count : SAMPLE_COUNT_1)
     , sample_quality(desc.sample_quality)
     , descriptors(desc.descriptors)
-    , can_aliasing(desc.aliasing_capacity)
 {
 }
 
@@ -89,12 +87,7 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
     };
     const TexturePool::Key key(device, desc);
     CGpuTextureId new_tex = nullptr;
-    auto&& queue_iter = textures.find(key);
     // add queue
-    if (queue_iter == textures.end())
-    {
-        textures[key] = {};
-    }
     if (textures[key].empty())
     {
         new_tex = cgpu_create_texture(device, &desc);
