@@ -1172,6 +1172,26 @@ void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
     cgpu_free(RP);
 }
 
+CGpuMemoryPoolId cgpu_create_memory_pool_vulkan(CGpuDeviceId device, const struct CGpuMemoryPoolDescriptor* desc)
+{
+    VmaPool vmaPool;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    VmaPoolCreateInfo poolInfo = {
+        .minBlockCount = desc->min_block_count,
+        .maxBlockCount = desc->max_block_count,
+        .minAllocationAlignment = desc->min_alloc_alignment,
+        .blockSize = desc->block_size,
+        .memoryTypeIndex = 0,
+        .flags = 0
+    };
+    vmaCreatePool(D->pVmaAllocator, &poolInfo, &vmaPool);
+    return NULL;
+}
+
+void cgpu_free_memory_pool_vulkan(CGpuMemoryPoolId pool)
+{
+}
+
 // Queue APIs
 CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
 {

@@ -69,6 +69,7 @@ protected:
     virtual void finalize() final;
 
     CGpuTextureId resolve(const TextureNode& node);
+    CGpuTextureId try_aliasing_allocate(const TextureNode& node);
     CGpuBufferId resolve(const BufferNode& node);
 
     void calculate_barriers(PassNode* pass,
