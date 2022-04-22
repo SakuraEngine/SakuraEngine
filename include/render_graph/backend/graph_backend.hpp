@@ -14,7 +14,6 @@ class RenderGraphFrameExecutor
 public:
     friend class RenderGraphBackend;
 
-protected:
     RenderGraphFrameExecutor() = default;
     void initialize(CGpuQueueId gfx_queue, CGpuDeviceId device)
     {
@@ -25,23 +24,31 @@ protected:
         gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
         exec_fence = cgpu_create_fence(device);
     }
-    void set_query_enabled(bool enable)
+    void commit(CGpuQueueId gfx_queue)
     {
-        if (enable && !query_pool)
+        CGpuQueueSubmitDescriptor submit_desc = {};
+        submit_desc.cmds = &gfx_cmd_buf;
+        submit_desc.cmds_count = 1;
+        submit_desc.signal_fence = exec_fence;
+        cgpu_submit_queue(gfx_queue, &submit_desc);
+    }
+    void reset_begin(TextureViewPool& texture_view_pool)
+    {
+        for (auto desc_heap : desc_set_pool)
         {
-            CGpuQueryPoolDescriptor desc = {};
-            desc.query_count = 512;
-            desc.type = QUERY_TYPE_TIMESTAMP;
-            query_pool = cgpu_create_query_pool(gfx_cmd_buf->device, &desc);
+            desc_heap.second->reset();
         }
-        if (!enable && query_pool)
+        for (auto aliasing_texture : aliasing_textures)
         {
-            cgpu_free_query_pool(query_pool);
+            texture_view_pool.erase(aliasing_texture);
+            cgpu_free_texture(aliasing_texture);
         }
+        aliasing_textures.clear();
+        cgpu_reset_command_pool(gfx_cmd_pool);
+        cgpu_cmd_begin(gfx_cmd_buf);
     }
     void finalize()
     {
-        if (query_pool) cgpu_free_query_pool(query_pool);
         if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
         if (gfx_cmd_pool) cgpu_free_command_pool(gfx_cmd_pool);
         if (exec_fence) cgpu_free_fence(exec_fence);
@@ -62,7 +69,6 @@ protected:
     CGpuFenceId exec_fence = nullptr;
     eastl::vector<CGpuTextureId> aliasing_textures;
     eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
-    CGpuQueryPoolId query_pool = nullptr;
 };
 
 class RenderGraphBackend : public RenderGraph
@@ -71,7 +77,7 @@ public:
     void devirtualize(TextureNode* node);
     void devirtualize(PassNode* node);
 
-    virtual uint64_t execute() final;
+    virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) final;
     virtual CGpuDeviceId get_backend_device() final;
     inline virtual CGpuQueueId get_gfx_queue() final { return gfx_queue; }
     virtual uint32_t collect_garbage(uint64_t critical_frame) final;

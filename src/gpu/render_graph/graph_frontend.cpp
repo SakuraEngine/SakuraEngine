@@ -272,7 +272,7 @@ const ECGpuResourceState RenderGraph::get_lastest_state(
     return result;
 }
 
-uint64_t RenderGraph::execute()
+uint64_t RenderGraph::execute(RenderGraphProfiler* profiler)
 {
     graph->clear();
     return frame_index++;

@@ -8,6 +8,8 @@
 #include "imgui/imgui.h"
 #include "platform/window.h"
 #include "tracy/Tracy.hpp"
+#include "pass_profiler.h"
+#include <iostream>
 
 thread_local SWindowHandle window;
 thread_local CGpuSurfaceId surface;
@@ -43,8 +45,8 @@ void create_api_objects()
     // Create instance
     CGpuInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = false;
-    instance_desc.enable_gpu_based_validation = false;
+    instance_desc.enable_debug_layer = true;
+    instance_desc.enable_gpu_based_validation = true;
     instance_desc.enable_set_name = true;
     instance = cgpu_create_instance(&instance_desc);
 
@@ -261,6 +263,11 @@ int main(int argc, char* argv[])
                 .with_gfx_queue(gfx_queue)
                 .enable_memory_aliasing();
         });
+    PassProfiler profilers[RG_MAX_FRAME_IN_FLIGHT];
+    for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
+    {
+        profilers[i].initialize(device);
+    }
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
     {
@@ -362,10 +369,33 @@ int main(int argc, char* argv[])
                 (float)swapchain->back_buffers[0]->width,
                 (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
-            ImGui::Begin(u8"Hello, world!");
-            ImGui::Text(u8"This is some useful text.");
+            ImGui::Begin(u8"RenderGraphProfile");
+            if (frame_index > RG_MAX_FRAME_IN_FLIGHT)
+            {
+                auto profiler_index = (frame_index - 1) % RG_MAX_FRAME_IN_FLIGHT;
+                auto&& profiler = profilers[profiler_index];
+                // text
+                ImGui::Text("frame: %d(%d frames before)",
+                    profiler.frame_index,
+                    frame_index - profiler.frame_index);
+                for (uint32_t i = 1; i < profiler.times_ms.size(); i++)
+                {
+                    auto text = profiler.query_names[i];
+                    text = text.append(": %.4f ms");
+                    ImGui::Text(text.c_str(), profiler.times_ms[i]);
+                }
+                // plot
+                auto max_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
+                auto min_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
+                ImVec2 size = { 200, 200 };
+                ImGui::PlotHistogram("##ms",
+                    profiler.times_ms.data() + 1,
+                    profiler.times_ms.size() - 1,
+                    0, NULL,
+                    0.0001, *max_scale * 1.1, size);
+                std::cout << std::endl;
+            }
             ImGui::End();
-            ImGui::Render();
         }
         {
             // acquire frame
@@ -557,7 +587,8 @@ int main(int argc, char* argv[])
         }
         {
             ZoneScopedN("GraphExecute");
-            frame_index = graph->execute();
+            auto profiler_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
+            frame_index = graph->execute(profilers + profiler_index);
         }
         // present
         {
@@ -575,6 +606,10 @@ int main(int argc, char* argv[])
     }
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
+    for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
+    {
+        profilers[i].finalize();
+    }
     render_graph::RenderGraph::destroy(graph);
     render_graph_imgui_finalize();
     // clean up

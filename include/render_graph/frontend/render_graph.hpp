@@ -12,6 +12,19 @@ namespace sakura
 {
 namespace render_graph
 {
+class RenderGraphProfiler
+{
+public:
+    virtual ~RenderGraphProfiler() = default;
+    virtual void on_acquire_executor(class RenderGraph&, class RenderGraphFrameExecutor&) {}
+    virtual void on_cmd_begin(class RenderGraph&, class RenderGraphFrameExecutor&) {}
+    virtual void on_cmd_end(class RenderGraph&, class RenderGraphFrameExecutor&) {}
+    virtual void on_pass_begin(class RenderGraph&, class RenderGraphFrameExecutor&, class PassNode& pass) {}
+    virtual void on_pass_end(class RenderGraph&, class RenderGraphFrameExecutor&, class PassNode& pass) {}
+    virtual void before_commit(class RenderGraph&, class RenderGraphFrameExecutor&) {}
+    virtual void after_commit(class RenderGraph&, class RenderGraphFrameExecutor&) {}
+};
+
 class RenderGraph
 {
 public:
@@ -180,7 +193,7 @@ public:
     const ECGpuResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const;
 
     bool compile();
-    virtual uint64_t execute();
+    virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr);
     virtual CGpuDeviceId get_backend_device() { return nullptr; }
     virtual CGpuQueueId get_gfx_queue() { return nullptr; }
     virtual uint32_t collect_garbage(uint64_t critical_frame)
@@ -193,6 +206,7 @@ public:
     inline BufferNode* resolve(BufferHandle hdl) { return static_cast<BufferNode*>(graph->node_at(hdl)); }
     inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
     inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }
+    inline uint32_t get_frame_index() const { return frame_index; }
 
     inline bool enable_memory_aliasing(bool enabled)
     {
