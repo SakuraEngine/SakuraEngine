@@ -556,29 +556,19 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
 }
 
-uint64_t RenderGraphBackend::execute()
+uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler)
 {
     const auto executor_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
     RenderGraphFrameExecutor& executor = executors[executor_index];
     {
         ZoneScopedN("AcquireExecutor");
         cgpu_wait_fences(&executor.exec_fence, 1);
-        for (auto desc_heap : executor.desc_set_pool)
-        {
-            desc_heap.second->reset();
-        }
-        for (auto aliasing_texture : executor.aliasing_textures)
-        {
-            texture_view_pool.erase(aliasing_texture);
-            cgpu_free_texture(aliasing_texture);
-        }
-        executor.set_query_enabled(true);
-        executor.aliasing_textures.clear();
+        if (profiler) profiler->on_acquire_executor(*this, executor);
     }
     {
         ZoneScopedN("GraphExecutePasses");
-        cgpu_reset_command_pool(executor.gfx_cmd_pool);
-        cgpu_cmd_begin(executor.gfx_cmd_buf);
+        executor.reset_begin(texture_view_pool);
+        if (profiler) profiler->on_cmd_begin(*this, executor);
         {
             eastl::string frameLabel = "Frame";
             frameLabel.append(eastl::to_string(frame_index));
@@ -589,34 +579,41 @@ uint64_t RenderGraphBackend::execute()
         {
             if (pass->pass_type == EPassType::Render)
             {
+                if (profiler) profiler->on_pass_begin(*this, executor, *pass);
                 execute_render_pass(executor, static_cast<RenderPassNode*>(pass));
+                if (profiler) profiler->on_pass_end(*this, executor, *pass);
             }
             else if (pass->pass_type == EPassType::Present)
             {
+                if (profiler) profiler->on_pass_begin(*this, executor, *pass);
                 execute_present_pass(executor, static_cast<PresentPassNode*>(pass));
+                if (profiler) profiler->on_pass_end(*this, executor, *pass);
             }
             else if (pass->pass_type == EPassType::Compute)
             {
+                if (profiler) profiler->on_pass_begin(*this, executor, *pass);
                 execute_compute_pass(executor, static_cast<ComputePassNode*>(pass));
+                if (profiler) profiler->on_pass_end(*this, executor, *pass);
             }
             else if (pass->pass_type == EPassType::Copy)
             {
+                if (profiler) profiler->on_pass_begin(*this, executor, *pass);
                 execute_copy_pass(executor, static_cast<CopyPassNode*>(pass));
+                if (profiler) profiler->on_pass_end(*this, executor, *pass);
             }
         }
         {
             cgpu_cmd_end_event(executor.gfx_cmd_buf);
         }
+        if (profiler) profiler->on_cmd_end(*this, executor);
         cgpu_cmd_end(executor.gfx_cmd_buf);
     }
     {
         // submit
         ZoneScopedN("GraphQueueSubmit");
-        CGpuQueueSubmitDescriptor submit_desc = {};
-        submit_desc.cmds = &executor.gfx_cmd_buf;
-        submit_desc.cmds_count = 1;
-        submit_desc.signal_fence = executor.exec_fence;
-        cgpu_submit_queue(gfx_queue, &submit_desc);
+        if (profiler) profiler->before_commit(*this, executor);
+        executor.commit(gfx_queue);
+        if (profiler) profiler->after_commit(*this, executor);
     }
     {
         ZoneScopedN("GraphCleanup");

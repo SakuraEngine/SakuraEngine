@@ -50,6 +50,7 @@ RUNTIME_API void render_graph_imgui_add_render_pass(
     sakura::render_graph::TextureRTVHandle target,
     ECGpuLoadAction load_action)
 {
+    ImGui::Render();
     ImDrawData* draw_data = ImGui::GetDrawData();
     if (!draw_data)
         return;
