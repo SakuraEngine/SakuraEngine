@@ -32,6 +32,8 @@ struct CGpuBufferDescriptor;
 struct CGpuTextureDescriptor;
 struct CGpuTextureViewDescriptor;
 struct CGpuTextureAliasingBindDescriptor;
+struct CGpuQueryPoolDescriptor;
+struct CGpuQueryDescriptor;
 struct CGpuMemoryPoolDescriptor;
 struct CGpuSamplerDescriptor;
 struct CGpuSwapChainDescriptor;
@@ -75,6 +77,7 @@ typedef const host_ptr_t CGpuBufferId;
 typedef const host_ptr_t CGpuTextureId;
 typedef const host_ptr_t CGpuSamplerId;
 typedef const host_ptr_t CGpuTextureViewId;
+typedef const host_ptr_t CGpuQueryPoolId;
 typedef const host_ptr_t CGpuRenderPassEncoderId;
 typedef const host_ptr_t CGpuComputePassEncoderId;
 typedef const host_ptr_t CGpuRenderPipelineId;
@@ -100,6 +103,7 @@ typedef const struct CGpuBuffer* CGpuBufferId;
 typedef const struct CGpuTexture* CGpuTextureId;
 typedef const struct CGpuSampler* CGpuSamplerId;
 typedef const struct CGpuTextureView* CGpuTextureViewId;
+typedef const struct CGpuQueryPool* CGpuQueryPoolId;
 typedef const struct CGpuRenderPassEncoder* CGpuRenderPassEncoderId;
 typedef const struct CGpuComputePassEncoder* CGpuComputePassEncoderId;
 typedef const struct CGpuRenderPipeline* CGpuRenderPipelineId;
@@ -224,6 +228,10 @@ RUNTIME_API CGpuMemoryPoolId cgpu_create_memory_pool(CGpuDeviceId, const struct 
 typedef CGpuMemoryPoolId (*CGPUProcCreateMemoryPool)(CGpuDeviceId, const struct CGpuMemoryPoolDescriptor* desc);
 RUNTIME_API void cgpu_free_memory_pool(CGpuMemoryPoolId pool);
 typedef void (*CGPUProcFreeMemoryPool)(CGpuMemoryPoolId pool);
+RUNTIME_API CGpuQueryPoolId cgpu_create_query_pool(CGpuDeviceId, const struct CGpuQueryPoolDescriptor* desc);
+typedef CGpuQueryPoolId (*CGPUProcCreateQueryPool)(CGpuDeviceId, const struct CGpuQueryPoolDescriptor* desc);
+RUNTIME_API void cgpu_free_query_pool(CGpuQueryPoolId);
+typedef void (*CGPUProcFreeQueryPool)(CGpuQueryPoolId);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
@@ -303,6 +311,14 @@ RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, co
 typedef void (*CGPUProcCmdTransferBufferToTexture)(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
 typedef void (*CGPUProcCmdResourceBarrier)(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
+RUNTIME_API void cgpu_cmd_begin_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc);
+typedef void (*CGPUProcCmdBeginQuery)(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc);
+typedef void (*CGPUProcCmdEndQuery)(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc);
+RUNTIME_API void cgpu_cmd_reset_query_pool(CGpuCommandBufferId cmd, CGpuQueryPoolId, uint32_t start_query, uint32_t query_count);
+typedef void (*CGPUProcCmdResetQueryPool)(CGpuCommandBufferId cmd, CGpuQueryPoolId, uint32_t start_query, uint32_t query_count);
+RUNTIME_API void cgpu_cmd_resolve_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, CGpuBufferId readback, uint32_t start_query, uint32_t query_count);
+typedef void (*CGPUProcCmdResolveQuery)(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, CGpuBufferId readback, uint32_t start_query, uint32_t query_count);
 RUNTIME_API void cgpu_cmd_end(CGpuCommandBufferId cmd);
 typedef void (*CGPUProcCmdEnd)(CGpuCommandBufferId cmd);
 
@@ -407,6 +423,8 @@ typedef struct CGpuProcTable {
     const CGPUProcFreeRenderPipeline free_render_pipeline;
     const CGPUProcCreateMemoryPool create_memory_pool;
     const CGPUProcFreeMemoryPool free_memory_pool;
+    const CGPUProcCreateQueryPool create_query_pool;
+    const CGPUProcFreeQueryPool free_query_pool;
 
     // Queue APIs
     const CGPUProcGetQueue get_queue;
@@ -454,6 +472,10 @@ typedef struct CGpuProcTable {
     const CGPUProcCmdTransferBufferToTexture cmd_transfer_buffer_to_texture;
     const CGPUProcCmdTransferTextureToTexture cmd_transfer_texture_to_texture;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
+    const CGPUProcCmdBeginQuery cmd_begin_query;
+    const CGPUProcCmdEndQuery cmd_end_query;
+    const CGPUProcCmdResetQueryPool cmd_reset_query_pool;
+    const CGPUProcCmdResolveQuery cmd_resolve_query;
     const CGPUProcCmdEnd cmd_end;
 
     // Compute CMDs
@@ -527,6 +549,7 @@ typedef struct CGpuAdapterDetail {
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
     uint32_t host_visible_vram_budget;
+    float timestamp_period;
     bool support_host_visible_vram : 1;
     bool multidraw_indirect : 1;
     bool support_geom_shader : 1;
@@ -589,6 +612,11 @@ typedef struct CGpuCommandBuffer {
     CGpuCommandPoolId pool;
     ECGpuPipelineType current_dispatch;
 } CGpuCommandBuffer;
+
+typedef struct CGpuQueryPool {
+    CGpuDeviceId device;
+    uint32_t count;
+} CGpuQueryPool;
 
 // Notice that we must keep this header same with CGpuCommandBuffer
 // because Vulkan & D3D12 Backend simply use command buffer handle as encoder handle
@@ -783,6 +811,16 @@ typedef struct CGpuQueuePresentDescriptor {
     uint32_t wait_semaphore_count;
     uint8_t index;
 } CGpuQueuePresentDescriptor;
+
+typedef struct CGpuQueryPoolDescriptor {
+    ECGpuQueryType type;
+    uint32_t query_count;
+} CGpuQueryPoolDescriptor;
+
+typedef struct CGpuQueryDescriptor {
+    uint32_t index;
+    ECGpuShaderStage stage;
+} CGpuQueryDescriptor;
 
 typedef struct CGpuAcquireNextDescriptor {
     CGpuSemaphoreId signal_semaphore;

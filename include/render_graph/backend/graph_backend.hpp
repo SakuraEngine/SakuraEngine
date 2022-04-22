@@ -25,8 +25,23 @@ protected:
         gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
         exec_fence = cgpu_create_fence(device);
     }
+    void set_query_enabled(bool enable)
+    {
+        if (enable && !query_pool)
+        {
+            CGpuQueryPoolDescriptor desc = {};
+            desc.query_count = 512;
+            desc.type = QUERY_TYPE_TIMESTAMP;
+            query_pool = cgpu_create_query_pool(gfx_cmd_buf->device, &desc);
+        }
+        if (!enable && query_pool)
+        {
+            cgpu_free_query_pool(query_pool);
+        }
+    }
     void finalize()
     {
+        if (query_pool) cgpu_free_query_pool(query_pool);
         if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
         if (gfx_cmd_pool) cgpu_free_command_pool(gfx_cmd_pool);
         if (exec_fence) cgpu_free_fence(exec_fence);
@@ -47,6 +62,7 @@ protected:
     CGpuFenceId exec_fence = nullptr;
     eastl::vector<CGpuTextureId> aliasing_textures;
     eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
+    CGpuQueryPoolId query_pool = nullptr;
 };
 
 class RenderGraphBackend : public RenderGraph

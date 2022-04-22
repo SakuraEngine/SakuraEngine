@@ -318,6 +318,25 @@ void cgpu_free_render_pipeline(CGpuRenderPipelineId pipeline)
     device->proc_table_cache->free_render_pipeline(pipeline);
 }
 
+CGpuQueryPoolId cgpu_create_query_pool(CGpuDeviceId device, const struct CGpuQueryPoolDescriptor* desc)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    CGPUProcCreateQueryPool fn_create_query_pool = device->proc_table_cache->create_query_pool;
+    cgpu_assert(fn_create_query_pool && "create_query_pool Proc Missing!");
+    CGpuQueryPool* query_pool = (CGpuQueryPool*)fn_create_query_pool(device, desc);
+    query_pool->device = device;
+    return query_pool;
+}
+
+void cgpu_free_query_pool(CGpuQueryPoolId pool)
+{
+    cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
+    cgpu_assert(pool->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    CGPUProcFreeQueryPool fn_free_query_pool = pool->device->proc_table_cache->free_query_pool;
+    cgpu_assert(fn_free_query_pool && "free_query_pool Proc Missing!");
+    fn_free_query_pool(pool);
+}
+
 void cgpu_free_device(CGpuDeviceId device)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -510,6 +529,42 @@ void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourc
     const CGPUProcCmdResourceBarrier fn_cmd_resource_barrier = cmd->device->proc_table_cache->cmd_resource_barrier;
     cgpu_assert(fn_cmd_resource_barrier && "cmd_resource_barrier Proc Missing!");
     fn_cmd_resource_barrier(cmd, desc);
+}
+
+void cgpu_cmd_begin_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdBeginQuery fn_cmd_begin_query = cmd->device->proc_table_cache->cmd_begin_query;
+    cgpu_assert(fn_cmd_begin_query && "cmd_begin_query Proc Missing!");
+    fn_cmd_begin_query(cmd, pool, desc);
+}
+
+void cgpu_cmd_end_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdEndQuery fn_cmd_end_query = cmd->device->proc_table_cache->cmd_end_query;
+    cgpu_assert(fn_cmd_end_query && "cmd_end_query Proc Missing!");
+    fn_cmd_end_query(cmd, pool, desc);
+}
+
+void cgpu_cmd_reset_query_pool(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, uint32_t start_query, uint32_t query_count)
+{
+    cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
+    cgpu_assert(pool->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    CGPUProcCmdResetQueryPool fn_reset_query_pool = pool->device->proc_table_cache->cmd_reset_query_pool;
+    cgpu_assert(fn_reset_query_pool && "reset_query_pool Proc Missing!");
+    fn_reset_query_pool(cmd, pool, start_query, query_count);
+}
+
+void cgpu_cmd_resolve_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, CGpuBufferId readback, uint32_t start_query, uint32_t query_count)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcCmdResolveQuery fn_cmd_resolve_query = cmd->device->proc_table_cache->cmd_resolve_query;
+    cgpu_assert(fn_cmd_resolve_query && "cmd_resolve_query Proc Missing!");
+    fn_cmd_resolve_query(cmd, pool, readback, start_query, query_count);
 }
 
 void cgpu_cmd_end(CGpuCommandBufferId cmd)

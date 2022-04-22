@@ -49,6 +49,8 @@ RUNTIME_API CGpuComputePipelineId cgpu_create_compute_pipeline_vulkan(CGpuDevice
 RUNTIME_API void cgpu_free_compute_pipeline_vulkan(CGpuComputePipelineId pipeline);
 RUNTIME_API CGpuRenderPipelineId cgpu_create_render_pipeline_vulkan(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline);
+RUNTIME_API CGpuQueryPoolId cgpu_create_query_pool_vulkan(CGpuDeviceId device, const struct CGpuQueryPoolDescriptor* desc);
+RUNTIME_API void cgpu_free_query_pool_vulkan(CGpuQueryPoolId pool);
 
 // Queue APIs
 RUNTIME_API CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
@@ -96,6 +98,10 @@ RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_vulkan(CGpuCommandBufferId c
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_transfer_texture_to_texture_vulkan(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc);
+RUNTIME_API void cgpu_cmd_begin_query_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_query_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc);
+RUNTIME_API void cgpu_cmd_reset_query_pool_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId, uint32_t start_query, uint32_t query_count);
+RUNTIME_API void cgpu_cmd_resolve_query_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, CGpuBufferId readback, uint32_t start_query, uint32_t query_count);
 RUNTIME_API void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd);
 
 // Events
@@ -224,7 +230,6 @@ typedef struct CGpuSemaphore_Vulkan {
 typedef struct CGpuQueue_Vulkan {
     const CGpuQueue super;
     VkQueue pVkQueue;
-    float mTimestampPeriod;
     uint32_t mVkQueueFamilyIndex : 5;
     // Cmd pool for inner usage like resource transition
     CGpuCommandPoolId pInnerCmdPool;
@@ -238,6 +243,12 @@ typedef struct CGpuCommandPool_Vulkan {
     CGpuCommandPool super;
     VkCommandPool pVkCmdPool;
 } CGpuCommandPool_Vulkan;
+
+typedef struct CGpuQueryPool_Vulkan {
+    CGpuQueryPool super;
+    VkQueryPool pVkQueryPool;
+    VkQueryType mType;
+} CGpuQueryPool_Vulkan;
 
 typedef struct CGpuCommandBuffer_Vulkan {
     CGpuCommandBuffer super;

@@ -584,6 +584,7 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
         (uint32_t)prop->limits.optimalBufferCopyOffsetAlignment;
     adapter_detail->upload_buffer_texture_row_alignment =
         (uint32_t)prop->limits.optimalBufferCopyRowPitchAlignment;
+    adapter_detail->timestamp_period = prop->limits.timestampPeriod;
     adapter_detail->max_vertex_input_bindings = prop->limits.maxVertexInputBindings;
     adapter_detail->multidraw_indirect = prop->limits.maxDrawIndirectCount > 1;
     adapter_detail->wave_lane_count = VkAdapter->mSubgroupProperties.subgroupSize;
