@@ -65,11 +65,7 @@ public:
     friend class RenderGraph;
 
 protected:
-    RenderGraphBackend(CGpuQueueId gfx_queue, CGpuDeviceId device)
-        : gfx_queue(gfx_queue)
-        , device(device)
-    {
-    }
+    RenderGraphBackend(const RenderGraphBuilder& builder);
     virtual void initialize() final;
     virtual void finalize() final;
 

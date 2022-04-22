@@ -7,6 +7,11 @@ namespace sakura
 {
 namespace render_graph
 {
+RenderGraph::RenderGraph(const RenderGraphBuilder& builder)
+    : aliasing_enabled(builder.memory_aliasing)
+{
+}
+
 const ResourceNode::LifeSpan ResourceNode::lifespan() const
 {
     if (frame_lifespan.from != UINT32_MAX && frame_lifespan.to != UINT32_MAX)
@@ -65,6 +70,7 @@ bool RenderGraph::compile()
                 }),
             passes.end());
     }
+    if (aliasing_enabled)
     {
         ZoneScopedN("CalculateAliasing");
         // 2.calc aliasing

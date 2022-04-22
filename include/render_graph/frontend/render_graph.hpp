@@ -20,12 +20,15 @@ public:
     {
     public:
         friend class RenderGraph;
+        friend class RenderGraphBackend;
         RenderGraphBuilder& frontend_only();
         RenderGraphBuilder& backend_api(ECGpuBackend backend);
         RenderGraphBuilder& with_device(CGpuDeviceId device);
         RenderGraphBuilder& with_gfx_queue(CGpuQueueId queue);
+        RenderGraphBuilder& enable_memory_aliasing();
 
     protected:
+        bool memory_aliasing = false;
         bool no_backend;
         ECGpuBackend api;
         CGpuDeviceId device;
@@ -191,6 +194,13 @@ public:
     inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
     inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }
 
+    inline bool enable_memory_aliasing(bool enabled)
+    {
+        aliasing_enabled = enabled;
+        return aliasing_enabled;
+    }
+
+protected:
     uint32_t foreach_writer_passes(TextureHandle texture,
         eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const;
     uint32_t foreach_reader_passes(TextureHandle texture,
@@ -202,8 +212,11 @@ public:
 
     virtual void initialize();
     virtual void finalize();
+
+    RenderGraph(const RenderGraphBuilder& builder);
     virtual ~RenderGraph() = default;
 
+    bool aliasing_enabled;
     uint64_t frame_index = 0;
     Blackboard blackboard;
     eastl::unique_ptr<DependencyGraph> graph =
