@@ -1160,7 +1160,7 @@ typedef struct CGpuTextureDescriptor {
     /// Descriptor creation
     CGpuResourceTypes descriptors;
     /// Memory Aliasing
-    uint32_t aliasing_capacity : 1;
+    uint32_t is_dedicated : 1;
     uint32_t is_aliasing : 1;
 } CGpuTextureDescriptor;
 
@@ -1197,7 +1197,7 @@ typedef struct CGpuTexture {
     uint32_t aspect_mask : 4;
     uint32_t node_index : 4;
     uint32_t is_cube : 1;
-    uint32_t is_commited : 1;
+    uint32_t is_dedicated : 1;
     /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
     uint32_t owns_image : 1;
     /// In CGPU concept aliasing resource owns no memory

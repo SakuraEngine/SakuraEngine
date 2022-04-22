@@ -24,7 +24,7 @@ public:
         ECGpuSampleCount sample_count;
         uint32_t sample_quality;
         CGpuResourceTypes descriptors;
-        bool can_aliasing = 0;
+        bool is_dedicated = 0;
         operator size_t() const;
         friend class TexturePool;
 
@@ -56,7 +56,7 @@ inline TexturePool::Key::Key(CGpuDeviceId device, const CGpuTextureDescriptor& d
     , sample_count(desc.sample_count ? desc.sample_count : SAMPLE_COUNT_1)
     , sample_quality(desc.sample_quality)
     , descriptors(desc.descriptors)
-    , can_aliasing(desc.aliasing_capacity)
+    , is_dedicated(desc.is_dedicated)
 {
 }
 

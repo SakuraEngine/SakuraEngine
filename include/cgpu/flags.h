@@ -551,6 +551,10 @@ typedef enum ECGpuTextureCreationFlag
     /// Default flag (Texture will use default allocation strategy decided by the api specific allocator)
     TCF_NONE = 0,
     /// Texture will allocate its own memory (COMMITTED resource)
+    /// Note that this flag is not restricted Commited/Dedicated Allocation
+    /// Actually VMA/D3D12MA allocate dedicated memories with ALLOW_ALIAS flag with specific loacl heaps
+    /// If the texture needs to be restricted Committed/Dedicated(thus you want to keep its priority high)
+    /// Toogle is_dedicated flag in CGpuTextureDescriptor
     TCF_OWN_MEMORY_BIT = 0x01,
     /// Texture will be allocated in memory which can be shared among multiple processes
     TCF_EXPORT_BIT = 0x02,
@@ -570,8 +574,6 @@ typedef enum ECGpuTextureCreationFlag
     TCF_FORCE_3D = 0x100,
     /// Display target
     TCF_ALLOW_DISPLAY_TARGET = 0x200,
-    /// Create an sRGB texture.
-    TCF_SRGB = 0x400,
     /// Create a normal map texture
     TCF_NORMAL_MAP = 0x800,
     /// Fragment mask

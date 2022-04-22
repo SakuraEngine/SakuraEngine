@@ -201,6 +201,7 @@ public:
     }
 
 protected:
+    uint32_t foreach_textures(eastl::function<void(TextureNode*)> texture);
     uint32_t foreach_writer_passes(TextureHandle texture,
         eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const;
     uint32_t foreach_reader_passes(TextureHandle texture,
