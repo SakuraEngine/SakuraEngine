@@ -16,6 +16,11 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_device(CG
     device = device_;
     return *this;
 }
+RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::enable_memory_aliasing()
+{
+    memory_aliasing = true;
+    return *this;
+}
 RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_gfx_queue(CGpuQueueId queue)
 {
     gfx_queue = queue;

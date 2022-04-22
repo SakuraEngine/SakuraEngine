@@ -258,7 +258,8 @@ int main(int argc, char* argv[])
     auto graph = render_graph::RenderGraph::create(
         [=](render_graph::RenderGraphBuilder& builder) {
             builder.with_device(device)
-                .with_gfx_queue(gfx_queue);
+                .with_gfx_queue(gfx_queue)
+                .enable_memory_aliasing();
         });
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
@@ -556,8 +557,6 @@ int main(int argc, char* argv[])
         // present
         {
             ZoneScopedN("CollectGarbage");
-            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
-                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
         }
         {
             ZoneScopedN("Present");

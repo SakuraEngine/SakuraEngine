@@ -6,17 +6,24 @@ namespace sakura
 {
 namespace render_graph
 {
+RenderGraphBackend::RenderGraphBackend(const RenderGraphBuilder& builder)
+    : RenderGraph(builder)
+    , gfx_queue(builder.gfx_queue)
+    , device(builder.device)
+{
+}
+
 RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup)
 {
     RenderGraphBuilder builder = {};
     RenderGraph* graph = nullptr;
     setup(builder);
     if (builder.no_backend)
-        graph = new RenderGraph();
+        graph = new RenderGraph(builder);
     else
     {
         if (!builder.gfx_queue) assert(0 && "not supported!");
-        graph = new RenderGraphBackend(builder.gfx_queue, builder.device);
+        graph = new RenderGraphBackend(builder);
     }
     graph->initialize();
     return graph;
