@@ -355,6 +355,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     // dispatch
     CGpuComputePassDescriptor pass_desc = {};
     pass_desc.name = pass->get_name();
+    stack.cmd = executor.gfx_cmd_buf;
     stack.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
     cgpu_compute_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
@@ -462,6 +463,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.name = pass->get_name();
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = &ds_attachment;
+    stack.cmd = executor.gfx_cmd_buf;
     stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
     cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
@@ -570,6 +572,7 @@ uint64_t RenderGraphBackend::execute()
             texture_view_pool.erase(aliasing_texture);
             cgpu_free_texture(aliasing_texture);
         }
+        executor.set_query_enabled(true);
         executor.aliasing_textures.clear();
     }
     {

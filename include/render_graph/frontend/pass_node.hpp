@@ -11,6 +11,7 @@ namespace render_graph
 {
 
 struct PassContext {
+    CGpuCommandBufferId cmd;
     gsl::span<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers;
     gsl::span<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures;
 

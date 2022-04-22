@@ -40,6 +40,8 @@ const CGpuProcTable tbl_vk = {
     .free_compute_pipeline = &cgpu_free_compute_pipeline_vulkan,
     .create_render_pipeline = &cgpu_create_render_pipeline_vulkan,
     .free_render_pipeline = &cgpu_free_render_pipeline_vulkan,
+    .create_query_pool = &cgpu_create_query_pool_vulkan,
+    .free_query_pool = &cgpu_free_query_pool_vulkan,
 
     // Queue APIs
     .get_queue = &cgpu_get_queue_vulkan,
@@ -87,6 +89,10 @@ const CGpuProcTable tbl_vk = {
     .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_vulkan,
     .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_vulkan,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
+    .cmd_begin_query = &cgpu_cmd_begin_query_vulkan,
+    .cmd_end_query = &cgpu_cmd_end_query_vulkan,
+    .cmd_reset_query_pool = &cgpu_cmd_reset_query_pool_vulkan,
+    .cmd_resolve_query = &cgpu_cmd_resolve_query_vulkan,
     .cmd_end = &cgpu_cmd_end_vulkan,
 
     // Events
@@ -1173,6 +1179,48 @@ void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
     cgpu_free(RP);
 }
 
+VkQueryType VkUtil_ToVkQueryType(ECGpuQueueType type)
+{
+    switch (type)
+    {
+        case QUERY_TYPE_TIMESTAMP:
+            return VK_QUERY_TYPE_TIMESTAMP;
+        case QUERY_TYPE_PIPELINE_STATISTICS:
+            return VK_QUERY_TYPE_PIPELINE_STATISTICS;
+        case QUERY_TYPE_OCCLUSION:
+            return VK_QUERY_TYPE_OCCLUSION;
+        default:
+            cgpu_assert(false && "Invalid query heap type");
+            return VK_QUERY_TYPE_MAX_ENUM;
+    }
+}
+CGpuQueryPoolId cgpu_create_query_pool_vulkan(CGpuDeviceId device, const struct CGpuQueryPoolDescriptor* desc)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
+    CGpuQueryPool_Vulkan* P = (CGpuQueryPool_Vulkan*)cgpu_calloc(1, sizeof(CGpuQueryPool_Vulkan));
+    P->mType = VkUtil_ToVkQueryType(desc->type);
+    P->super.count = desc->query_count;
+    VkQueryPoolCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    createInfo.pNext = NULL;
+    createInfo.queryCount = desc->query_count;
+    createInfo.queryType = P->mType;
+    createInfo.flags = 0;
+    createInfo.pipelineStatistics = 0;
+    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateQueryPool(
+        D->pVkDevice, &createInfo, GLOBAL_VkAllocationCallbacks, &P->pVkQueryPool));
+    return &P->super;
+}
+
+void cgpu_free_query_pool_vulkan(CGpuQueryPoolId pool)
+{
+    CGpuQueryPool_Vulkan* P = (CGpuQueryPool_Vulkan*)pool;
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pool->device;
+    D->mVkDeviceTable.vkDestroyQueryPool(
+        D->pVkDevice, P->pVkQueryPool, GLOBAL_VkAllocationCallbacks);
+    cgpu_free(P);
+}
+
 CGpuMemoryPoolId cgpu_create_memory_pool_vulkan(CGpuDeviceId device, const struct CGpuMemoryPoolDescriptor* desc)
 {
     VmaPool vmaPool;
@@ -1208,7 +1256,6 @@ CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueType type, uint
     };
     D->mVkDeviceTable.vkGetDeviceQueue(D->pVkDevice, (uint32_t)A->mQueueFamilyIndices[type], index, &Q.pVkQueue);
     Q.mVkQueueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[type];
-    Q.mTimestampPeriod = A->mPhysicalDeviceProps.properties.limits.timestampPeriod;
 
     CGpuQueue_Vulkan* RQ = (CGpuQueue_Vulkan*)cgpu_calloc(1, sizeof(CGpuQueue_Vulkan));
     memcpy(RQ, &Q, sizeof(Q));
@@ -1597,6 +1644,73 @@ void cgpu_cmd_resource_barrier_vulkan(CGpuCommandBufferId cmd, const struct CGpu
     }
 }
 
+VkPipelineStageFlagBits VkUtil_ShaderStagesToPipelineStage(ECGpuShaderStage stage)
+{
+    if (stage == SHADER_STAGE_ALL_GRAPHICS) return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    if (stage == SHADER_STAGE_NONE) return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    if (stage == SHADER_STAGE_VERT) return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+    if (stage == SHADER_STAGE_TESC) return VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;
+    if (stage == SHADER_STAGE_TESE) return VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
+    if (stage == SHADER_STAGE_GEOM) return VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
+    if (stage == SHADER_STAGE_FRAG) return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    if (stage == SHADER_STAGE_COMPUTE) return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+    if (stage == SHADER_STAGE_RAYTRACING) return VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+    return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+}
+
+void cgpu_cmd_begin_query_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cmd->device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuQueryPool_Vulkan* P = (CGpuQueryPool_Vulkan*)pool;
+    switch (P->mType)
+    {
+        case VK_QUERY_TYPE_TIMESTAMP:
+            D->mVkDeviceTable.vkCmdWriteTimestamp(
+                Cmd->pVkCmdBuf,
+                VkUtil_ShaderStagesToPipelineStage(desc->stage),
+                P->pVkQueryPool, desc->index);
+            break;
+        case VK_QUERY_TYPE_PIPELINE_STATISTICS:
+            break;
+        case VK_QUERY_TYPE_OCCLUSION:
+            break;
+        default:
+            break;
+    }
+}
+
+void cgpu_cmd_reset_query_pool_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, uint32_t start_query, uint32_t query_count)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pool->device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuQueryPool_Vulkan* P = (CGpuQueryPool_Vulkan*)pool;
+    D->mVkDeviceTable.vkCmdResetQueryPool(Cmd->pVkCmdBuf, P->pVkQueryPool, start_query, query_count);
+}
+
+void cgpu_cmd_end_query_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc)
+{
+    cgpu_cmd_begin_query(cmd, pool, desc);
+}
+
+void cgpu_cmd_resolve_query_vulkan(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, CGpuBufferId readback, uint32_t start_query, uint32_t query_count)
+{
+    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pool->device;
+    CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
+    CGpuQueryPool_Vulkan* P = (CGpuQueryPool_Vulkan*)pool;
+    CGpuBuffer_Vulkan* B = (CGpuBuffer_Vulkan*)readback;
+    VkQueryResultFlags flags = VK_QUERY_RESULT_64_BIT;
+#ifdef ANDROID
+    flags |= VK_QUERY_RESULT_WITH_AVAILABILITY_BIT;
+#else
+    flags |= VK_QUERY_RESULT_WAIT_BIT;
+#endif
+    D->mVkDeviceTable.vkCmdCopyQueryPoolResults(
+        Cmd->pVkCmdBuf, P->pVkQueryPool,
+        start_query, query_count, B->pVkBuffer, 0,
+        sizeof(uint64_t), flags);
+}
+
 void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
@@ -1604,7 +1718,7 @@ void cgpu_cmd_end_vulkan(CGpuCommandBufferId cmd)
     CHECK_VKRESULT(D->mVkDeviceTable.vkEndCommandBuffer(Cmd->pVkCmdBuf));
 }
 
-// Events
+// Events & Markser
 void cgpu_cmd_begin_event_vulkan(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
 {
     CGpuCommandBuffer_Vulkan* Cmd = (CGpuCommandBuffer_Vulkan*)cmd;
