@@ -390,7 +390,7 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
 {
     CGpuDevice_D3D12* D = (CGpuDevice_D3D12*)device;
     bool can_alias_allocation = true;
-    bool is_commited = false;
+    bool is_dedicated = false;
     ID3D12Resource* pDxResource = nullptr;
     D3D12MA::Allocation* pDxAllocation = nullptr;
     // add to gpu
@@ -535,7 +535,7 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
         }
-        if (desc->aliasing_capacity)
+        if (!desc->is_dedicated)
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
         }
@@ -546,7 +546,7 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
                 &alloc_desc, &resDesc, res_states, pClearValue,
                 &pDxAllocation, IID_ARGS(&pDxResource)));
         }
-        is_commited = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
+        is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
         can_alias_allocation = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
     }
     else
@@ -572,7 +572,7 @@ CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const struct CGpuTe
     T->pDxAllocation = pDxAllocation;
     T->pDxResource = pDxResource;
     T->super.is_aliasing = desc->is_aliasing;
-    T->super.is_commited = is_commited;
+    T->super.is_dedicated = is_dedicated;
     T->super.can_alias = can_alias_allocation || desc->is_aliasing;
     T->super.width = desc->width;
     T->super.height = desc->height;
@@ -603,7 +603,7 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGpuDeviceId device, const struct CGpu
         cgpu_assert(Aliasing->super.is_aliasing && "aliasing texture need to be created as aliasing!");
         if (Aliased->pDxResource != nullptr &&
             Aliased->pDxAllocation != nullptr &&
-            !Aliased->super.is_commited &&
+            !Aliased->super.is_dedicated &&
             Aliasing->super.is_aliasing)
         {
             result = D->pResourceAllocator->CreateAliasingResource(Aliased->pDxAllocation,

@@ -323,7 +323,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     bool owns_image = false;
-    bool is_commited = false;
+    bool is_dedicated = false;
     bool can_alias_alloc = false;
     VkImageType mImageType;
     VkImage pVkImage = VK_NULL_HANDLE;
@@ -424,7 +424,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
         VkFormatFeatureFlags flags = format_props.optimalTilingFeatures & format_features;
         cgpu_assert((0 != flags) && "Format is not supported for GPU local images (i.e. not host visible images)");
         VmaAllocationCreateInfo mem_reqs = { 0 };
-        if (desc->aliasing_capacity)
+        if (!desc->is_dedicated)
             mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
         if (desc->is_aliasing)
         {
@@ -469,7 +469,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             VmaAllocationInfo alloc_info = { 0 };
             if (isSinglePlane)
             {
-                if (desc->aliasing_capacity)
+                if (!desc->is_dedicated)
                     mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
                 VkResult res = vmaCreateImage(D->pVmaAllocator,
                     &imageCreateInfo, &mem_reqs, &pVkImage,
@@ -480,7 +480,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             {
                 // TODO: Planar formats
             }
-            is_commited = mem_reqs.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            is_dedicated = mem_reqs.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
             can_alias_alloc = mem_reqs.flags & VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
         }
     }
@@ -488,7 +488,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     cgpu_assert(T);
     T->super.owns_image = owns_image;
     T->super.aspect_mask = aspect_mask;
-    T->super.is_commited = is_commited;
+    T->super.is_dedicated = is_dedicated;
     T->super.is_aliasing = desc->is_aliasing;
     T->super.can_alias = can_alias_alloc || desc->is_aliasing;
     T->pVkImage = pVkImage;
@@ -672,7 +672,7 @@ bool cgpu_try_bind_aliasing_texture_vulkan(CGpuDeviceId device, const struct CGp
         if (Aliased->pVkImage != VK_NULL_HANDLE &&
             Aliased->pVkAllocation != VK_NULL_HANDLE &&
             Aliasing->pVkImage != VK_NULL_HANDLE &&
-            !Aliased->super.is_commited &&
+            !Aliased->super.is_dedicated &&
             Aliasing->super.is_aliasing)
         {
             VkMemoryRequirements aliasingMemReq;

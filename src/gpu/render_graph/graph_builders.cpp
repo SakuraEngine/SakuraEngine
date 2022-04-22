@@ -396,6 +396,7 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
     , node(node)
 {
     node.descriptor.descriptors = RT_TEXTURE;
+    node.descriptor.is_dedicated = false;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name)
 {

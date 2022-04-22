@@ -19,3 +19,4 @@ _deps
 /.cache
 /out
 /.VSCodeCounter
+/xcode

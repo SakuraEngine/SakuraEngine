@@ -390,6 +390,7 @@ int main(int argc, char* argv[])
                     builder.set_name("composite_buffer")
                         .extent(native_backbuffer->width, native_backbuffer->height)
                         .format((ECGpuFormat)native_backbuffer->format)
+                        .owns_memory()
                         .allow_render_target();
                 });
             auto gbuffer_color = graph->create_texture(
@@ -397,6 +398,7 @@ int main(int argc, char* argv[])
                     builder.set_name("gbuffer_color")
                         .extent(native_backbuffer->width, native_backbuffer->height)
                         .format(gbuffer_formats[0])
+                        .owns_memory()
                         .allow_render_target();
                 });
             auto gbuffer_depth = graph->create_texture(
@@ -404,6 +406,7 @@ int main(int argc, char* argv[])
                     builder.set_name("gbuffer_depth")
                         .extent(native_backbuffer->width, native_backbuffer->height)
                         .format(gbuffer_depth_format)
+                        .owns_memory()
                         .allow_depth_stencil();
                 });
             auto gbuffer_normal = graph->create_texture(
@@ -411,6 +414,7 @@ int main(int argc, char* argv[])
                     builder.set_name("gbuffer_normal")
                         .extent(native_backbuffer->width, native_backbuffer->height)
                         .format(gbuffer_formats[1])
+                        .owns_memory()
                         .allow_render_target();
                 });
             auto lighting_buffer = graph->create_texture(
@@ -418,6 +422,7 @@ int main(int argc, char* argv[])
                     builder.set_name("lighting_buffer")
                         .extent(native_backbuffer->width, native_backbuffer->height)
                         .format(lighting_buffer_format)
+                        .owns_memory()
                         .allow_readwrite();
                 });
             // camera

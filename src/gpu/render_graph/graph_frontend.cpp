@@ -44,6 +44,7 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const
 inline bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing)
 {
     return !aliased->is_imported() &&
+           !aliased->get_desc().is_dedicated &&
            aliased->get_size() >= aliasing->get_size() &&
            aliased->get_sample_count() == aliasing->get_sample_count();
 }
@@ -77,46 +78,56 @@ bool RenderGraph::compile()
         // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
         // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
         eastl::vector_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
-        for (auto& resource : resources)
-        {
-            if (resource->type == EObjectType::Texture)
+        foreach_textures([&](TextureNode* texture) {
+            if (texture->imported) return;
+            for (auto&& [aliased, aliaed_span] : alliasing_lifespans)
             {
-                TextureNode* texture = static_cast<TextureNode*>(resource);
-                if (texture->imported) continue;
-                for (auto&& aliasing_lifespan : alliasing_lifespans)
+                if (aliasing_capacity(aliased, texture) &&
+                    aliaed_span.to < texture->lifespan().from)
                 {
-                    auto&& owner_span = aliasing_lifespan.second;
-                    auto&& owner = aliasing_lifespan.first;
-                    if (aliasing_capacity(owner, texture) &&
-                        owner_span.to < texture->lifespan().from)
+                    if (!texture->frame_aliasing_source ||
+                        texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
+                    )
                     {
                         texture->descriptor.is_aliasing = true;
-                        texture->frame_aliasing_source = owner;
-                        owner_span.to = texture->lifespan().to;
-                        break;
-                    }
-                }
-                for (auto target_resource : resources)
-                {
-                    if (target_resource->type == EObjectType::Texture)
-                    {
-                        TextureNode* target_texture = static_cast<TextureNode*>(target_resource);
-                        if (aliasing_capacity(target_texture, texture) &&
-                            target_texture->lifespan().to < texture->lifespan().from) // allocation capacity
-                        {
-                            target_texture->descriptor.aliasing_capacity = true;
-                            texture->descriptor.is_aliasing = true;
-                            texture->frame_aliasing_source = target_texture;
-                            alliasing_lifespans[target_texture].from = target_texture->lifespan().from;
-                            alliasing_lifespans[target_texture].to = texture->lifespan().from;
-                            break;
-                        }
+                        texture->frame_aliasing_source = aliased;
+                        aliaed_span.to = texture->lifespan().to;
                     }
                 }
             }
-        }
+            if (texture->frame_aliasing_source) return;
+            foreach_textures([&](TextureNode* aliased) {
+                if (aliasing_capacity(aliased, texture) &&
+                    aliased->lifespan().to < texture->lifespan().from)
+                {
+                    if (!texture->frame_aliasing_source ||
+                        texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
+                    )
+                    {
+                        texture->descriptor.is_aliasing = true;
+                        texture->frame_aliasing_source = aliased;
+                        alliasing_lifespans[aliased].from = aliased->lifespan().from;
+                        alliasing_lifespans[aliased].to = aliased->lifespan().from;
+                    }
+                }
+            });
+        });
     }
     return true;
+}
+
+uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f)
+{
+    uint32_t num = 0;
+    for (auto&& resource : resources)
+    {
+        if (resource->type == EObjectType::Texture)
+        {
+            f((TextureNode*)resource);
+            num++;
+        }
+    }
+    return num;
 }
 
 uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
