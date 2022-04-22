@@ -324,7 +324,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
     bool owns_image = false;
     bool is_commited = false;
-    bool can_alias = false;
+    bool can_alias_alloc = false;
     VkImageType mImageType;
     VkImage pVkImage = VK_NULL_HANDLE;
     uint32_t aspect_mask = 0;
@@ -469,7 +469,8 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
             VmaAllocationInfo alloc_info = { 0 };
             if (isSinglePlane)
             {
-                mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
+                if (desc->aliasing_capacity)
+                    mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
                 VkResult res = vmaCreateImage(D->pVmaAllocator,
                     &imageCreateInfo, &mem_reqs, &pVkImage,
                     &vmaAllocation, &alloc_info);
@@ -480,7 +481,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
                 // TODO: Planar formats
             }
             is_commited = mem_reqs.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-            can_alias = mem_reqs.flags & VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
+            can_alias_alloc = mem_reqs.flags & VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
         }
     }
     CGpuTexture_Vulkan* T = (CGpuTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGpuTexture_Vulkan));
@@ -489,7 +490,7 @@ CGpuTextureId cgpu_create_texture_vulkan(CGpuDeviceId device, const struct CGpuT
     T->super.aspect_mask = aspect_mask;
     T->super.is_commited = is_commited;
     T->super.is_aliasing = desc->is_aliasing;
-    T->super.can_alias = can_alias;
+    T->super.can_alias = can_alias_alloc || desc->is_aliasing;
     T->pVkImage = pVkImage;
     T->pVkAllocation = vmaAllocation;
     T->mImageType = mImageType;
@@ -669,6 +670,7 @@ bool cgpu_try_bind_aliasing_texture_vulkan(CGpuDeviceId device, const struct CGp
         CGpuTexture_Vulkan* Aliasing = (CGpuTexture_Vulkan*)desc->aliasing;
         cgpu_assert(Aliasing->super.is_aliasing && "aliasing texture need to be created as aliasing!");
         if (Aliased->pVkImage != VK_NULL_HANDLE &&
+            Aliased->pVkAllocation != VK_NULL_HANDLE &&
             Aliasing->pVkImage != VK_NULL_HANDLE &&
             !Aliased->super.is_commited &&
             Aliasing->super.is_aliasing)

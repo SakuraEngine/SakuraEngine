@@ -109,6 +109,7 @@ bool RenderGraph::compile()
                             texture->frame_aliasing_source = target_texture;
                             alliasing_lifespans[target_texture].from = target_texture->lifespan().from;
                             alliasing_lifespans[target_texture].to = texture->lifespan().from;
+                            break;
                         }
                     }
                 }

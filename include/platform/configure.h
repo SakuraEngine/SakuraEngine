@@ -365,3 +365,4 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
 // TODO: move this anywhere else
 #define USE_DXMATH
 #define TRACY_ENABLE
+#define TRACY_ON_DEMAND
