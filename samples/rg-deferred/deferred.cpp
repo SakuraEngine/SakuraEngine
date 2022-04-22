@@ -18,7 +18,7 @@ thread_local CGpuFenceId present_fence;
 CubeGeometry::InstanceData CubeGeometry::instance_data;
 
 #if _WINDOWS
-thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
+thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
 #else
 thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #endif
@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
                     cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "root_constants", &view_proj);
                     cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
                 });
-            if ((frame_index % 11) > 5)
+            if (fragmentLightingPass)
             {
                 graph->add_render_pass(
                     [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
@@ -557,6 +557,8 @@ int main(int argc, char* argv[])
         // present
         {
             ZoneScopedN("CollectGarbage");
+            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
+                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
         }
         {
             ZoneScopedN("Present");

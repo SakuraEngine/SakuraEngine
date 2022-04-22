@@ -61,6 +61,7 @@ const CGpuProcTable tbl_d3d12 = {
     .free_texture = &cgpu_free_texture_d3d12,
     .create_texture_view = &cgpu_create_texture_view_d3d12,
     .free_texture_view = &cgpu_free_texture_view_d3d12,
+    .try_bind_aliasing_texture = &cgpu_try_bind_aliasing_texture_d3d12,
 
     // Buffer APIs
     .create_buffer = &cgpu_create_buffer_d3d12,

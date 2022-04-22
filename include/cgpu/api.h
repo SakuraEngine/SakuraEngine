@@ -32,6 +32,7 @@ struct CGpuBufferDescriptor;
 struct CGpuTextureDescriptor;
 struct CGpuTextureViewDescriptor;
 struct CGpuTextureAliasingBindDescriptor;
+struct CGpuMemoryPoolDescriptor;
 struct CGpuSamplerDescriptor;
 struct CGpuSwapChainDescriptor;
 struct CGpuAcquireNextDescriptor;

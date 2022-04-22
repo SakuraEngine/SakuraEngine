@@ -89,6 +89,7 @@ RUNTIME_API CGpuTextureId cgpu_create_texture_d3d12(CGpuDeviceId device, const s
 RUNTIME_API void cgpu_free_texture_d3d12(CGpuTextureId texture);
 RUNTIME_API CGpuTextureViewId cgpu_create_texture_view_d3d12(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc);
 RUNTIME_API void cgpu_free_texture_view_d3d12(CGpuTextureViewId render_target);
+RUNTIME_API bool cgpu_try_bind_aliasing_texture_d3d12(CGpuDeviceId device, const struct CGpuTextureAliasingBindDescriptor* desc);
 
 // Swapchain APIs
 RUNTIME_API CGpuSwapChainId cgpu_create_swapchain_d3d12(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc);
@@ -289,6 +290,7 @@ typedef struct CGpuTexture_D3D12 {
     ID3D12Resource* pDxResource;
 #ifdef __cplusplus
     D3D12MA::Allocation* pDxAllocation;
+    CGpuTexture_D3D12();
 #else
     struct DMA_Allocation* pDxAllocation;
 #endif
