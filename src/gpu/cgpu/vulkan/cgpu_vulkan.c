@@ -48,6 +48,7 @@ const CGpuProcTable tbl_vk = {
     .submit_queue = &cgpu_submit_queue_vulkan,
     .wait_queue_idle = &cgpu_wait_queue_idle_vulkan,
     .queue_present = &cgpu_queue_present_vulkan,
+    .queue_get_timestamp_period = &cgpu_queue_get_timestamp_period_ns_vulkan,
     .free_queue = &cgpu_free_queue_vulkan,
 
     // Command APIs
@@ -1395,6 +1396,12 @@ void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentD
             cgpu_assert(0 && "Present failed!");
         }
     }
+}
+
+float cgpu_queue_get_timestamp_period_ns_vulkan(CGpuQueueId queue)
+{
+    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)queue->device->adapter;
+    return A->mPhysicalDeviceProps.properties.limits.timestampPeriod;
 }
 
 void cgpu_free_queue_vulkan(CGpuQueueId queue)
