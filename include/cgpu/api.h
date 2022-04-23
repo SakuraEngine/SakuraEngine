@@ -243,6 +243,8 @@ RUNTIME_API void cgpu_queue_present(CGpuQueueId queue, const struct CGpuQueuePre
 typedef void (*CGPUProcQueuePresent)(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc);
 RUNTIME_API void cgpu_wait_queue_idle(CGpuQueueId queue);
 typedef void (*CGPUProcWaitQueueIdle)(CGpuQueueId queue);
+RUNTIME_API float cgpu_queue_get_timestamp_period_ns(CGpuQueueId queue);
+typedef float (*CGPUProcQueueGetTimestampPeriodNS)(CGpuQueueId queue);
 RUNTIME_API void cgpu_free_queue(CGpuQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGpuQueueId queue);
 
@@ -431,6 +433,7 @@ typedef struct CGpuProcTable {
     const CGPUProcSubmitQueue submit_queue;
     const CGPUProcWaitQueueIdle wait_queue_idle;
     const CGPUProcQueuePresent queue_present;
+    const CGPUProcQueueGetTimestampPeriodNS queue_get_timestamp_period;
     const CGPUProcFreeQueue free_queue;
 
     // Command APIs
@@ -549,7 +552,6 @@ typedef struct CGpuAdapterDetail {
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
     uint32_t host_visible_vram_budget;
-    float timestamp_period;
     bool support_host_visible_vram : 1;
     bool multidraw_indirect : 1;
     bool support_geom_shader : 1;

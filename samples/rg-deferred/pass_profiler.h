@@ -27,12 +27,11 @@ public:
     {
         return gsl::span<uint64_t>((uint64_t*)query_buffer->cpu_mapped_address, query_cursor);
     }
-    virtual void on_acquire_executor(class sakura::render_graph::RenderGraph& g, class sakura::render_graph::RenderGraphFrameExecutor&)
+    virtual void on_acquire_executor(class sakura::render_graph::RenderGraph& g, class sakura::render_graph::RenderGraphFrameExecutor& e)
     {
         auto timestamps = readback_query_data();
         times_ms.resize(timestamps.size());
-        auto detail = cgpu_query_adapter_detail(query_pool->device->adapter);
-        auto ns_period = detail->timestamp_period;
+        auto ns_period = cgpu_queue_get_timestamp_period_ns(g.get_gfx_queue());
         for (uint32_t i = 1; i < times_ms.size(); i++)
         {
             times_ms[i] = ((timestamps[i] - timestamps[i - 1]) * ns_period) * 1e-6;

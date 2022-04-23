@@ -57,6 +57,7 @@ RUNTIME_API CGpuQueueId cgpu_get_queue_vulkan(CGpuDeviceId device, ECGpuQueueTyp
 RUNTIME_API void cgpu_submit_queue_vulkan(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc);
 RUNTIME_API void cgpu_wait_queue_idle_vulkan(CGpuQueueId queue);
 RUNTIME_API void cgpu_queue_present_vulkan(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc);
+RUNTIME_API float cgpu_queue_get_timestamp_period_ns_vulkan(CGpuQueueId queue);
 RUNTIME_API void cgpu_free_queue_vulkan(CGpuQueueId queue);
 
 // Command APIs

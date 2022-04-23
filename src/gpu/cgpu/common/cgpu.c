@@ -399,6 +399,16 @@ void cgpu_wait_queue_idle(CGpuQueueId queue)
     wait_queue_idle(queue);
 }
 
+float cgpu_queue_get_timestamp_period_ns(CGpuQueueId queue)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcQueueGetTimestampPeriodNS fn_get_timestamp_period = queue->device->proc_table_cache->queue_get_timestamp_period;
+    cgpu_assert(fn_get_timestamp_period && "queue_get_timestamp_period Proc Missing!");
+
+    return fn_get_timestamp_period(queue);
+}
+
 void cgpu_free_queue(CGpuQueueId queue)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
