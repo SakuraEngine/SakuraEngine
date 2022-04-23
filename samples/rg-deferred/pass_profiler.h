@@ -35,7 +35,7 @@ public:
         auto ns_period = detail->timestamp_period;
         for (uint32_t i = 1; i < times_ms.size(); i++)
         {
-            times_ms[i] = ((timestamps[i] - timestamps[i - 1]) / ns_period) * 1e-6;
+            times_ms[i] = ((timestamps[i] - timestamps[i - 1]) * ns_period) * 1e-6;
         }
         frame_index = g.get_frame_index() - RG_MAX_FRAME_IN_FLIGHT;
     }
