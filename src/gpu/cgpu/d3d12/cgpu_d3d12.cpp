@@ -426,9 +426,9 @@ CGpuRootSignatureId cgpu_create_root_signature_d3d12(CGpuDeviceId device, const 
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     if (!(shaderStages & SHADER_STAGE_VERT))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
-    if (!(shaderStages & SHADER_STAGE_ALL_HULL))
+    if (!(shaderStages & SHADER_STAGE_HULL))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
-    if (!(shaderStages & SHADER_STAGE_ALL_DOMAIN))
+    if (!(shaderStages & SHADER_STAGE_DOMAIN))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
     if (!(shaderStages & SHADER_STAGE_GEOM))
         rootSignatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;

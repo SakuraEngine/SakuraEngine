@@ -282,11 +282,11 @@ FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGpuS
     res = D3D12_SHADER_VISIBILITY_GEOMETRY;
     ++stageCount;
   }
-  if (stages & SHADER_STAGE_ALL_HULL) {
+  if (stages & SHADER_STAGE_HULL) {
     res = D3D12_SHADER_VISIBILITY_HULL;
     ++stageCount;
   }
-  if (stages & SHADER_STAGE_ALL_DOMAIN) {
+  if (stages & SHADER_STAGE_DOMAIN) {
     res = D3D12_SHADER_VISIBILITY_DOMAIN;
     ++stageCount;
   }
