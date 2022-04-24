@@ -121,11 +121,11 @@ void MetalUtil_QueryVendorIdAndDeviceId(id<MTLDevice> device, uint32_t* outVende
 
                 // The Intel GPU will always be marked as integrated.
                 // Return on a match of either Intel && low power, or non-Intel and non-low-power.
-                uint32_t vendorID = mtlGetEntryProperty(entry, CFSTR("vendor-id"));
-                if ((vendorID == kIntelVendorId) == isIntegrated)
+                uint32_t _vendorID = mtlGetEntryProperty(entry, CFSTR("vendor-id"));
+                if ((_vendorID == kIntelVendorId) == isIntegrated)
                 {
                     isFound = true;
-                    vendorID = vendorID;
+                    vendorID = _vendorID;
                     deviceID = mtlGetEntryProperty(entry, CFSTR("device-id"));
                 }
             }

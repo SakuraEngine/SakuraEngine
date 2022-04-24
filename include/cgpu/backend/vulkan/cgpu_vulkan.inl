@@ -9,6 +9,7 @@ FORCEINLINE static VkSampleCountFlagBits VkUtil_SampleCountTranslateToVk(const E
 		case SAMPLE_COUNT_4: result = VK_SAMPLE_COUNT_4_BIT; break;
 		case SAMPLE_COUNT_8: result = VK_SAMPLE_COUNT_8_BIT; break;
 		case SAMPLE_COUNT_16: result = VK_SAMPLE_COUNT_16_BIT; break;
+		default:return result;
 	}
 	return result;
 }
@@ -452,6 +453,7 @@ switch (fmt) {
 	case VK_FORMAT_PVRTC2_2BPP_SRGB_BLOCK_IMG:
 	case VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG:
 		return PF_UNDEFINED;
+	default: return PF_UNDEFINED;
 	}
 	return PF_UNDEFINED;
 }
