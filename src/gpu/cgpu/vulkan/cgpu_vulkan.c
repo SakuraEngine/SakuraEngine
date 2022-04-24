@@ -1180,7 +1180,7 @@ void cgpu_free_render_pipeline_vulkan(CGpuRenderPipelineId pipeline)
     cgpu_free(RP);
 }
 
-VkQueryType VkUtil_ToVkQueryType(ECGpuQueueType type)
+VkQueryType VkUtil_ToVkQueryType(ECGpuQueryType type)
 {
     switch (type)
     {
