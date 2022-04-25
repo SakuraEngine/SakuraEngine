@@ -28,7 +28,7 @@
 #elif defined _WIN32 || defined _WIN64
 #endif
 
-CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
+RUNTIME_API CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
 {
     cgpu_assert((desc->backend == CGPU_BACKEND_VULKAN || desc->backend == CGPU_BACKEND_D3D12 || desc->backend == CGPU_BACKEND_METAL) && "CGPU support only vulkan & d3d12 & metal currently!");
     const CGpuProcTable* tbl = CGPU_NULLPTR;
@@ -80,7 +80,7 @@ RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CG
     instance->proc_table->query_instance_features(instance, features);
 }
 
-void cgpu_free_instance(CGpuInstanceId instance)
+RUNTIME_API void cgpu_free_instance(CGpuInstanceId instance)
 {
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->free_instance && "free_instance Proc Missing!");
@@ -1073,6 +1073,7 @@ CGpuSurfaceId cgpu_surface_from_native_view(CGpuDeviceId device, void* view)
 #elif defined(SAKURA_TARGET_PLATFORM_WIN)
     return cgpu_surface_from_hwnd(device, (HWND)view);
 #endif
+    return CGPU_NULLPTR;
 }
 
 void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)

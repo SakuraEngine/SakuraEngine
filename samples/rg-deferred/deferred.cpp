@@ -9,7 +9,6 @@
 #include "platform/window.h"
 #include "tracy/Tracy.hpp"
 #include "pass_profiler.h"
-#include <iostream>
 
 thread_local SWindowHandle window;
 thread_local CGpuSurfaceId surface;
@@ -393,7 +392,6 @@ int main(int argc, char* argv[])
                     profiler.times_ms.size() - 1,
                     0, NULL,
                     0.0001, *max_scale * 1.1, size);
-                std::cout << std::endl;
             }
             ImGui::End();
         }

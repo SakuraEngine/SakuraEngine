@@ -44,7 +44,7 @@ include(WASM3) # Set WASM3 ENVS
 
 if(RUNTIME_SHARED)
     add_library(SakuraRuntime SHARED)
-    target_compile_definitions(SakuraRuntime PUBLIC -DRUNTIME_SHARED)
+    add_definitions(-DRUNTIME_SHARED)
     # mimalloc
     target_compile_definitions(SakuraRuntime PUBLIC -DMI_SHARED_LIB)
     target_compile_definitions(SakuraRuntime PRIVATE -DMI_SHARED_LIB_EXPORT)
@@ -138,9 +138,6 @@ target_link_libraries(SakuraRuntime
     IMGUI
 )
 
-if(RUNTIME_SHARED)
-    add_definitions(-DRUNTIME_DLL)
-endif()
 if(BUILD_SAMPLES)
     add_subdirectory(samples)
 endif()

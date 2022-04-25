@@ -124,7 +124,7 @@ namespace ImGui
 }
 */
 
-#ifndef RUNTIME_API
+#if !defined(RUNTIME_API) || !defined(RUNTIME_EXPORT)
     #define RUNTIME_API
 #endif
 struct ImGuiContext;

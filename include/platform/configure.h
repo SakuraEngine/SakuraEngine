@@ -51,7 +51,7 @@
 #endif
 
 #ifndef RUNTIME_API // If the build file hasn't already defined this to be dllexport...
-    #ifdef RUNTIME_DLL
+    #ifdef RUNTIME_SHARED
         #if defined(_MSC_VER)
             #define RUNTIME_API __declspec(dllimport)
             #define RUNTIME_LOCAL
