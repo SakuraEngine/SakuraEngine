@@ -59,6 +59,8 @@ inline static void read_shader_bytes(
         case CGPU_BACKEND_XBOX_D3D12:
             strcat(shader_file, ".dxil");
             break;
+        default:
+            break;
     }
     read_bytes(shader_file, (char8_t**)bytes, length);
 }

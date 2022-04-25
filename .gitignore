@@ -16,6 +16,7 @@ _deps
 /build-wasi
 /.vs
 /.vscode
+/.xmake
 /.cache
 /out
 /.VSCodeCounter
