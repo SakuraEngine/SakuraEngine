@@ -37,3 +37,12 @@ jobs:
         cmake --build build --target all
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+   - name: Test
+     working-directory: ${{runner.workspace}}/build
+     run: GTEST_OUTPUT=xml:test-results/ GTEST_COLOR=1 ctest -V
+   - name: Upload test results
+     uses: actions/upload-artifact@v2
+     if: failure()
+     with:
+        name: test_results_xml
+        path: ${{runner.workspace}}/build/test-results/**/*.xml
