@@ -66,7 +66,7 @@ if(APPLE)
     set(PLATFORM_FRAMEWORKS ${FoundationLib} ${CocoaLib} ${MetalLib} ${IOKitLib})
 elseif(WIN32)
     # libuv uses these frameworks
-    set(PLATFORM_FRAMEWORKS psapi user32 advapi32 iphlpapi userenv ws2_32)
+    set(PLATFORM_FRAMEWORKS psapi user32 advapi32 iphlpapi userenv ws2_32 Shcore)
 endif()
 
 # MSVC natvis
