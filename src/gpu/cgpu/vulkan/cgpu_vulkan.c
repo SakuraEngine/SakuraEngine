@@ -494,9 +494,9 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                     break;
                 }
             }
+            uint32_t bindings_count = param_table ? param_table->resources_count + desc->static_sampler_count : 0 + desc->static_sampler_count;
             VkDescriptorSetLayoutBinding* vkbindings = (VkDescriptorSetLayoutBinding*)cgpu_calloc(
-                param_table ? param_table->resources_count : 0 + desc->static_sampler_count,
-                sizeof(VkDescriptorSetLayoutBinding));
+                bindings_count, sizeof(VkDescriptorSetLayoutBinding));
             uint32_t i_binding = 0;
             // bindings
             if (param_table)
@@ -535,7 +535,8 @@ CGpuRootSignatureId cgpu_create_root_signature_vulkan(CGpuDeviceId device,
                 &RS->pSetLayouts[set_index].layout));
             VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
                 &RS->pSetLayouts[set_index].layout, &RS->pSetLayouts[set_index].pEmptyDescSet, 1);
-            cgpu_free(vkbindings);
+
+            if (bindings_count) cgpu_free(vkbindings);
         }
         set_index++;
         set_index_mask >>= 1;
