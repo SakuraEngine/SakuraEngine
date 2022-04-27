@@ -1,0 +1,50 @@
+name: macos-xmake-build
+
+on: [push, pull_request]
+env:
+  VulkanSDKVersion: 1.2.162.1
+  
+jobs:
+ build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+       lfs: 'true'
+    - uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
+    - name: Set env
+      id: env
+      run: |
+        brew install SDL2
+        brew install googletest
+        VULKAN_SDK=$GITHUB_WORKSPACE/../vulkansdk-macos-${{env.VulkanSDKVersion}}/macOS
+        echo ::set-output name=VULKAN_SDK::$VULKAN_SDK
+        echo "VK_LAYER_PATH=$VULKAN_SDK/etc/vulkan/explicit_layer.d" >> $GITHUB_ENV
+        echo "VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json" >> $GITHUB_ENV
+    - name: Cache
+      id: cache
+      uses: actions/cache@v1.1.2
+      with:
+        path: ${{steps.env.outputs.VULKAN_SDK}}
+        key: VulkanSdk${{env.VulkanSDKVersion}}ExtractedMacos
+    - name: Download & Extract Vulkan SDK
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        wget --no-cookies -O ../vulkansdk-macos-${{env.VulkanSDKVersion}}.dmg https://sdk.lunarg.com/sdk/download/${{env.VulkanSDKVersion}}/mac/vulkansdk-macos-${{env.VulkanSDKVersion}}.dmg?u=
+        hdiutil attach ../vulkansdk-macos-${{env.VulkanSDKVersion}}.dmg
+        cp -r /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}} $GITHUB_WORKSPACE/..
+        hdiutil detach /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}}
+    - name: Debug
+      run: |
+        xmake f -m debug
+        xmake
+      env:
+        VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+    - name: Release
+      run: |
+        xmake f -m release
+        xmake
+      env:
+        VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
