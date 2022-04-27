@@ -10,8 +10,17 @@
     #define SAKURA_RUNTIME_OS_UNIX
 #endif
 
-#if defined(__MACOSX__)
-    #define SAKURA_RUNTIME_OS_MACOSX
+#if defined(__APPLE__) && defined(__MACH__)
+/* Apple OSX and iOS (Darwin). */
+    #include <TargetConditionals.h>
+    #if TARGET_IPHONE_SIMULATOR == 1
+    /* iOS in Xcode simulator */
+    #elif TARGET_OS_IPHONE == 1
+    /* iOS */
+    #elif TARGET_OS_MAC == 1
+        /* macOS */
+        #define SAKURA_RUNTIME_OS_MACOSX
+    #endif
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)

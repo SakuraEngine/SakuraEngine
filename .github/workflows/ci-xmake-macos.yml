@@ -38,13 +38,13 @@ jobs:
         hdiutil detach /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}}
     - name: Debug
       run: |
-        xmake f -m debug
-        xmake
+        xmake f -m debug -y -v --build_tests=n
+        xmake -y -v
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
     - name: Release
       run: |
-        xmake f -m release
-        xmake
+        xmake f -m release -y --build_tests=n
+        xmake -y -v
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}

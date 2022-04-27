@@ -1,4 +1,4 @@
-name: windows-build
+name: windows-cmake-build
 
 on: [push, pull_request]
 env:
