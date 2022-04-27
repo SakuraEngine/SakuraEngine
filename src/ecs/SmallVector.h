@@ -89,8 +89,8 @@ public:
     }
 
     // todo: inline short arrays, pool normal arrays, heap huge arrays
-    static void* allocate(size_t size) { return dual_malloc(size); }
-    static void free(void* ptr) { return dual_free(ptr); }
+    static void* allocate(size_t size) { return ::dual_malloc(size); }
+    static void free(void* ptr) { return ::dual_free(ptr); }
 
     LLVM_VECSMALL_NODISCARD bool empty() const { return BeginX == EndX; }
 };
