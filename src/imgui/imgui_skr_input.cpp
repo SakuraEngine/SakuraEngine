@@ -11,7 +11,7 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
     // (rarely used, mostly when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
     if (io.WantSetMousePos)
     {
-        skr_set_cursor_pos(io.MousePos.x, io.MousePos.y);
+        skr_set_cursor_pos((uint32_t)io.MousePos.x, (uint32_t)io.MousePos.y);
     }
     else
     {

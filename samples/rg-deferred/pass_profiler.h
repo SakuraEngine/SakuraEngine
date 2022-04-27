@@ -34,7 +34,7 @@ public:
         auto ns_period = cgpu_queue_get_timestamp_period_ns(g.get_gfx_queue());
         for (uint32_t i = 1; i < times_ms.size(); i++)
         {
-            times_ms[i] = ((timestamps[i] - timestamps[i - 1]) * ns_period) * 1e-6;
+            times_ms[i] = ((timestamps[i] - timestamps[i - 1]) * ns_period) * 1e-6f;
         }
         frame_index = g.get_frame_index() - RG_MAX_FRAME_IN_FLIGHT;
     }
@@ -73,5 +73,5 @@ public:
     uint32_t query_cursor = 0;
     eastl::vector<float> times_ms;
     eastl::vector<eastl::string> query_names;
-    uint32_t frame_index;
+    uint64_t frame_index;
 };

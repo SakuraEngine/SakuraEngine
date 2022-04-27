@@ -27,6 +27,7 @@ set_warnings("all")
 if (is_os("windows")) then 
     add_defines("UNICODE")
     add_defines("NOMINMAX")
+    add_defines("_CRT_SECURE_NO_WARNINGS")
     if (is_mode("release")) then
         set_runtimes("MD")
     else

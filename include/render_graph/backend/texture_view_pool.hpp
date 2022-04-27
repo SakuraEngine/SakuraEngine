@@ -54,7 +54,7 @@ inline TextureViewPool::Key::Key(CGpuDeviceId device, const CGpuTextureViewDescr
 
 inline uint32_t TextureViewPool::erase(CGpuTextureId texture)
 {
-    auto prev_size = views.size();
+    auto prev_size = (uint32_t)views.size();
     for (auto it = views.begin(); it != views.end();)
     {
         if (it->first.texture == texture)
@@ -65,7 +65,7 @@ inline uint32_t TextureViewPool::erase(CGpuTextureId texture)
         else
             ++it;
     }
-    return prev_size - views.size();
+    return prev_size - (uint32_t)views.size();
 }
 
 inline TextureViewPool::Key::operator size_t() const

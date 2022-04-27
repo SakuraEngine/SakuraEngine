@@ -268,7 +268,7 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Re
         if (update_count)
         {
             cgpu_update_descriptor_set(desc_sets[set_idx],
-                desc_set_updates.data(), desc_set_updates.size());
+                desc_set_updates.data(), (uint32_t)desc_set_updates.size());
         }
     }
     return desc_sets;
@@ -342,12 +342,12 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     if (!tex_barriers.empty())
     {
         barriers.texture_barriers = tex_barriers.data();
-        barriers.texture_barriers_count = tex_barriers.size();
+        barriers.texture_barriers_count = (uint32_t)tex_barriers.size();
     }
     if (!buffer_barriers.empty())
     {
         barriers.buffer_barriers = buffer_barriers.data();
-        barriers.buffer_barriers_count = buffer_barriers.size();
+        barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
     CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 0.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
@@ -394,12 +394,12 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     if (!tex_barriers.empty())
     {
         barriers.texture_barriers = tex_barriers.data();
-        barriers.texture_barriers_count = tex_barriers.size();
+        barriers.texture_barriers_count = (uint32_t)tex_barriers.size();
     }
     if (!buffer_barriers.empty())
     {
         barriers.buffer_barriers = buffer_barriers.data();
-        barriers.buffer_barriers_count = buffer_barriers.size();
+        barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
     CGpuEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
@@ -458,7 +458,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         }
     }
     CGpuRenderPassDescriptor pass_desc = {};
-    pass_desc.render_target_count = color_attachments.size();
+    pass_desc.render_target_count = (uint32_t)color_attachments.size();
     pass_desc.sample_count = SAMPLE_COUNT_1;
     pass_desc.name = pass->get_name();
     pass_desc.color_attachments = color_attachments.data();
@@ -497,12 +497,12 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     if (!tex_barriers.empty())
     {
         barriers.texture_barriers = tex_barriers.data();
-        barriers.texture_barriers_count = tex_barriers.size();
+        barriers.texture_barriers_count = (uint32_t)tex_barriers.size();
     }
     if (!buffer_barriers.empty())
     {
         barriers.buffer_barriers = buffer_barriers.data();
-        barriers.buffer_barriers_count = buffer_barriers.size();
+        barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
     CGpuEventInfo event = { pass->name.c_str(), { 0.f, .5f, 1.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
@@ -675,14 +675,14 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame)
             }
         }
         using ElementType = decltype(queue.front());
-        uint32_t prev_count = queue.size();
+        uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
             eastl::remove_if(queue.begin(), queue.end(),
                 [&](ElementType& element) {
                     return element.first.first == nullptr;
                 }),
             queue.end());
-        total_count += prev_count - queue.size();
+        total_count += prev_count - (uint32_t)queue.size();
     }
     return total_count;
 }
@@ -702,14 +702,14 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame)
             }
         }
         using ElementType = decltype(queue.front());
-        uint32_t prev_count = queue.size();
+        uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
             eastl::remove_if(queue.begin(), queue.end(),
                 [&](ElementType& element) {
                     return element.first.first == nullptr;
                 }),
             queue.end());
-        total_count += prev_count - queue.size();
+        total_count += prev_count - (uint32_t)queue.size();
     }
     return total_count;
 }

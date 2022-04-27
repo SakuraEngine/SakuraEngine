@@ -38,7 +38,7 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::frontend_only(
 }
 PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor)
 {
-    auto newPass = new RenderPassNode(passes.size());
+    auto newPass = new RenderPassNode((uint32_t)passes.size());
     passes.emplace_back(newPass);
     graph->insert(newPass);
     // build up
@@ -193,7 +193,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_pipeline(C
 }
 PassHandle RenderGraph::add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor)
 {
-    auto newPass = new ComputePassNode(passes.size());
+    auto newPass = new ComputePassNode((uint32_t)passes.size());
     passes.emplace_back(newPass);
     graph->insert(newPass);
     // build up
@@ -244,7 +244,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
 }
 PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup)
 {
-    auto newPass = new CopyPassNode(passes.size());
+    auto newPass = new CopyPassNode((uint32_t)passes.size());
     passes.emplace_back(newPass);
     graph->insert(newPass);
     // build up
@@ -284,7 +284,7 @@ RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(Textur
 }
 PassHandle RenderGraph::add_present_pass(const PresentPassSetupFunction& setup)
 {
-    auto newPass = new PresentPassNode(passes.size());
+    auto newPass = new PresentPassNode((uint32_t)passes.size());
     passes.emplace_back(newPass);
     graph->insert(newPass);
     // build up
