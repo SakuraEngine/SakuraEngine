@@ -1201,7 +1201,7 @@ CGpuQueryPoolId cgpu_create_query_pool_vulkan(CGpuDeviceId device, const struct 
     CGpuQueryPool_Vulkan* P = (CGpuQueryPool_Vulkan*)cgpu_calloc(1, sizeof(CGpuQueryPool_Vulkan));
     P->mType = VkUtil_ToVkQueryType(desc->type);
     P->super.count = desc->query_count;
-    VkQueryPoolCreateInfo createInfo = {};
+    DECLARE_ZERO(VkQueryPoolCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.queryCount = desc->query_count;
