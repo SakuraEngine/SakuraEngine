@@ -24,14 +24,14 @@ void* pool_t::allocate()
     void* block;
     if (blocks.try_dequeue(block))
         return block;
-    return dual_malloc(blockSize);
+    return ::dual_malloc(blockSize);
 }
 
 void pool_t::free(void* block)
 {
     if (blocks.try_enqueue(block))
         return;
-    dual_free(block);
+    ::dual_free(block);
 }
 
 fixed_pool_t::fixed_pool_t(size_t blockSize, size_t blockCount)

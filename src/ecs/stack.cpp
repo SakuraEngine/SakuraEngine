@@ -9,7 +9,7 @@ fixed_stack_t::fixed_stack_t(size_t cap)
     : size(0)
     , capacity(cap)
 {
-    buffer = dual_malloc(cap);
+    buffer = ::dual_malloc(cap);
 }
 fixed_stack_t::~fixed_stack_t()
 {

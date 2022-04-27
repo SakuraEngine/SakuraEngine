@@ -6,7 +6,7 @@
 namespace dual
 {
 fixed_arena_t::fixed_arena_t(size_t capacity)
-    : buffer(dual_malloc(capacity))
+    : buffer(::dual_malloc(capacity))
     , size()
     , capacity(capacity)
 {
@@ -15,7 +15,7 @@ fixed_arena_t::fixed_arena_t(size_t capacity)
 fixed_arena_t::~fixed_arena_t()
 {
     if (buffer)
-        dual_free(buffer);
+        ::dual_free(buffer);
 }
 
 void fixed_arena_t::forget()

@@ -472,9 +472,9 @@ struct ConcurrentQueueDefaultTraits {
     #else
     static inline void* malloc(size_t size)
     {
-        return dual_malloc(size);
+        return ::dual_malloc(size);
     }
-    static inline void free(void* ptr) { return dual_free(ptr); }
+    static inline void free(void* ptr) { return ::dual_free(ptr); }
     #endif
 #else
     // Debug versions when running under the Relacy race detector (ignore
@@ -625,7 +625,7 @@ struct nomove_if<false> {
 };
 
 template <typename It>
-static inline auto deref_noexcept(It& it) MOODYCAMEL_NOEXCEPT->decltype(*it)
+static inline auto deref_noexcept(It& it) MOODYCAMEL_NOEXCEPT -> decltype(*it)
 {
     return *it;
 }

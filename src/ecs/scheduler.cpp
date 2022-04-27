@@ -360,7 +360,7 @@ dual_ecs_job_t* dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, E
                 batch_t batch;
                 dual_ecs_job_t* job;
             };
-            task_payload_t* payloads = (task_payload_t*)dual_malloc(sizeof(task_payload_t) * batchs.size());
+            task_payload_t* payloads = (task_payload_t*)::dual_malloc(sizeof(task_payload_t) * batchs.size());
             uint32_t payloadIndex = 0;
             for (auto& batch : batchs)
             {
@@ -410,7 +410,7 @@ dual_job_t* dual::scheduler_t::schedule_job(uint32_t count, dual_for_callback_t 
         dual_simple_job_t* job;
         uint32_t index;
     };
-    task_payload_t* payloads = (task_payload_t*)dual_malloc(sizeof(task_payload_t) * count);
+    task_payload_t* payloads = (task_payload_t*)::dual_malloc(sizeof(task_payload_t) * count);
     forloop(i, 0, count)
         payloads[i] = { job, i };
     job->payloads = payloads;
@@ -436,12 +436,12 @@ dual_job_t::~dual_job_t()
 
 dual_simple_job_t::~dual_simple_job_t()
 {
-    dual_free(payloads);
+    ::dual_free(payloads);
 }
 
 dual_ecs_job_t::~dual_ecs_job_t()
 {
-    dual_free(payloads);
+    ::dual_free(payloads);
 }
 
 extern "C" {
