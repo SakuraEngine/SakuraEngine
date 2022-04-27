@@ -239,7 +239,7 @@ bool DPIAware = false;
 
 int main(int argc, char* argv[])
 {
-#ifdef SAKURA_TARGET_PLATFORM_WIN
+#ifdef SAKURA_RUNTIME_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
