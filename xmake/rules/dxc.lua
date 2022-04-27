@@ -7,13 +7,13 @@ rule("utils.dxc")
 
         -- get target profile
         target_profile = sourcefile_hlsl:match("^.+%.(.+)%.")
-        basename = sourcefile_hlsl:match(".+/(.+)%..+%..+")
+        hlsl_basename = path.filename(sourcefile_hlsl):match("(.+)%..+%..+")
 
         -- hlsl to spv
         local targetenv = target:extraconf("rules", "utils.dxc", "targetenv") or "vulkan1.1"
         local spv_outputdir =  path.join(target:autogendir(), "rules", "utils", "dxc-spv")
-        local spvfilepath = path.join(spv_outputdir, basename .. ".spv")
-        batchcmds:show_progress(opt.progress, "${color.build.object}generating.spirv %s -> %s", sourcefile_hlsl, basename .. ".spv")
+        local spvfilepath = path.join(spv_outputdir, hlsl_basename .. ".spv")
+        batchcmds:show_progress(opt.progress, "${color.build.object}generating.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
         batchcmds:mkdir(spv_outputdir)
         batchcmds:vrunv(dxc.program, 
             {"-Wno-ignored-attributes",
@@ -25,8 +25,8 @@ rule("utils.dxc")
 
         -- hlsl to dxil
         local dxil_outputdir = path.join(target:autogendir(), "rules", "utils", "dxc-dxil")
-        local dxilfilepath = path.join(dxil_outputdir, basename .. ".dxil")
-        batchcmds:show_progress(opt.progress, "${color.build.object}generating.dxil %s -> %s", sourcefile_hlsl, basename .. ".dxil")
+        local dxilfilepath = path.join(dxil_outputdir, hlsl_basename .. ".dxil")
+        batchcmds:show_progress(opt.progress, "${color.build.object}generating.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
         batchcmds:mkdir(dxil_outputdir)
         batchcmds:vrunv(dxc.program, 
             {"-Wno-ignored-attributes", 
