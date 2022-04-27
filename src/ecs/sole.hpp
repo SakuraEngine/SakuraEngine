@@ -280,7 +280,9 @@ namespace sole {
 
     inline std::string printftime( uint64_t timestamp_secs = 0, const std::string &locale = std::string() ) {
         std::string timef;
+        #if defined(__EXCEPTIONS)
         try {
+        #endif
             // Taken from parameter
             //std::string locale; // = "es-ES", "Chinese_China.936", "en_US.UTF8", etc...
             std::time_t t = timestamp_secs;
@@ -301,10 +303,12 @@ namespace sole {
             ss << std::put_time( &tm, "\"%c\"" );
 
             timef = ss.str();
+        #if defined(__EXCEPTIONS)
         }
         catch(...) {
             timef = "\"\"";
         }
+        #endif
         return timef;
     }
 
