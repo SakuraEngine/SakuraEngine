@@ -8,7 +8,7 @@
     #endif
 #endif
 
-#if defined(_WINDOWS) || defined(XBOX)
+#if defined(_WIN32) || defined(XBOX)
     #define CHECK_HRESULT(exp)                                               \
         do                                                                   \
         {                                                                    \

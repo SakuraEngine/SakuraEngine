@@ -342,7 +342,7 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
 #ifdef __APPLE__
     #include "apple/configure.h"
 #endif
-#ifdef _WINDOWS
+#ifdef _WIN32
     #include "win/configure.h"
 #endif
 #ifndef OS_DPI

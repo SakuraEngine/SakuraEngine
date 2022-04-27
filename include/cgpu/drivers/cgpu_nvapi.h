@@ -1,6 +1,6 @@
 #pragma once
 #ifdef __cplusplus
-    #if defined(_WINDOWS) && !defined(DURANGO)
+    #if defined(_WIN32) && !defined(DURANGO)
         #include "nvapi/nvapi.h"
         #define NVAPI
     #endif

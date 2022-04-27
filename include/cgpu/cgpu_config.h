@@ -3,7 +3,7 @@
 
 #define CGPU_USE_VULKAN
 
-#ifdef _WINDOWS
+#ifdef _WIN32
     #define CGPU_USE_D3D12
 #endif
 #ifdef __APPLE__

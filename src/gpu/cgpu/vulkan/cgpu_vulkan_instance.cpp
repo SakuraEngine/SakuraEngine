@@ -157,7 +157,7 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
                 Adapter.dedicated_allocation = Table[VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME];
                 Adapter.memory_req2 = Table[VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME];
                 Adapter.external_memory = Table[VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME];
-#ifdef _WINDOWS
+#ifdef _WIN32
                 Adapter.external_memory_win32 = Table[VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME];
                 Adapter.external_memory &= Adapter.external_memory_win32;
 #endif

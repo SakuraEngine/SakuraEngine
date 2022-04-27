@@ -8,7 +8,7 @@ thread_local CGpuSwapChainId swapchain;
 thread_local uint32_t backbuffer_index;
 thread_local CGpuFenceId present_fence;
 
-#if _WINDOWS
+#if _WIN32
 thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
 #else
 thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
