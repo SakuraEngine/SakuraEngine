@@ -12,5 +12,8 @@ task("unzip-gfx-sdk")
             archive.extract(ags_sdkdir, outputdir)
             archive.extract(nvapi_sdkdir, outputdir)
             archive.extract(pix3_sdkdir, outputdir)
+
+            sdl2_sdkdir = path.join(os.projectdir(), "SDKs/SDL2-win.zip")
+            archive.extract(sdl2_sdkdir, outputdir)
         end
 end)
