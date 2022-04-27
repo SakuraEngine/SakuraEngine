@@ -21,7 +21,7 @@ add_dependencies(CGpu3D CGpu3DShaders)
 file(COPY 
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/scene.gltf 
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/scene.bin
-    DESTINATION ${SAKURA_BIN_DIR}/Resources
+    DESTINATION ${SAKURA_BIN_DIR}/resources
     FOLLOW_SYMLINK_CHAIN)
 
 file(COPY 
