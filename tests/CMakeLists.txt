@@ -46,8 +46,6 @@ if(BUILD_TEST)
     )
 
     add_subdirectory(math)
-    add_subdirectory(memory)
-    add_subdirectory(window-exts)
     add_subdirectory(cgpu)
     add_subdirectory(wasm)
 endif()
