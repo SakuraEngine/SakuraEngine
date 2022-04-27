@@ -1,6 +1,7 @@
 
 #include "stack.hpp"
 #include "utils.hpp"
+#include "stdlib.h"
 
 namespace dual
 {
@@ -12,7 +13,7 @@ fixed_stack_t::fixed_stack_t(size_t cap)
 }
 fixed_stack_t::~fixed_stack_t()
 {
-    dual_free(buffer);
+    ::dual_free(buffer);
 }
 
 void* fixed_stack_t::allocate(size_t inSize)

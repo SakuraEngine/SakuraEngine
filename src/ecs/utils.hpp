@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/configure.h"
+
 #ifdef _CRTDBG_MAP_ALLOC
     #include <crtdbg.h>
 FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t alignment)
