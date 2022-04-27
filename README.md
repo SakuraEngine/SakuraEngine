@@ -59,6 +59,10 @@
 - wasm3 a3abb3f, org.fork (MIT)
 - DirectXMath 596aa5d (MIT)
 - GSL 4.0.0 Release (MIT)
+- FiberTaskingLib 9d7b27d (Apache-2.0)
+- sole 1.0.1 (zlib License)
+- parallel-hashmap 1.3.4 (Apache-2.0)
+- folly (Apache-2.0)
 
 ## 接入的扩展API以及版本
 - nvapi R510
