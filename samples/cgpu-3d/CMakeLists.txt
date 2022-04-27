@@ -13,8 +13,8 @@ target_link_libraries(CGpu3D PUBLIC SakuraRuntime)
 sakura_compile_shaders(TARGET CGpu3DShaders
     SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vertex_shader.vs_6_0.hlsl
             ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fragment_shader.ps_6_0.hlsl
-    DXIL    ${SAKURA_BIN_DIR}/Resources/shaders/cgpu-3d
-    SPIRV_DXC  ${SAKURA_BIN_DIR}/Resources/shaders/cgpu-3d
+    DXIL    ${SAKURA_BIN_DIR}/resources/shaders/cgpu-3d
+    SPIRV_DXC  ${SAKURA_BIN_DIR}/resources/shaders/cgpu-3d
 )
 add_dependencies(CGpu3D CGpu3DShaders)
 
@@ -28,5 +28,5 @@ file(COPY
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures/lambert5SG_baseColor.png
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures/lambert6SG_baseColor.png
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures/lambert7SG_baseColor.png
-    DESTINATION ${SAKURA_BIN_DIR}/Resources/textures
+    DESTINATION ${SAKURA_BIN_DIR}/resources/textures
     FOLLOW_SYMLINK_CHAIN)

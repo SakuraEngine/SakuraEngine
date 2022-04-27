@@ -47,7 +47,7 @@ inline static void read_shader_bytes(
     ECGpuBackend backend)
 {
     char shader_file[256];
-    const char* shader_path = "./../Resources/shaders/";
+    const char* shader_path = "./../resources/shaders/";
     strcpy(shader_file, shader_path);
     strcat(shader_file, virtual_path);
     switch (backend)

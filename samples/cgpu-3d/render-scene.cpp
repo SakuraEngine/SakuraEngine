@@ -355,7 +355,7 @@ void RenderScene::AsyncCreateTextureMemory(class RenderDevice* device, struct Re
     {
         auto&& material = materials_.at(i).second;
         auto uri = material.base_color_uri_.c_str();
-        auto path = eastl::string("./../Resources/").append(uri);
+        auto path = eastl::string("./../resources/").append(uri);
         auto tex = RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
         if (tex != nullptr && !tex->Ready())
         {
