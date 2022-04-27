@@ -83,7 +83,6 @@ auto window_class(WNDPROC wndproc) -> const wchar_t*
         const ATOM result = ::RegisterClassExW(&wcx);
         if (!result)
         {
-            throw last_error("failed to register window class");
         }
         return wcx.lpszClassName;
     }();
@@ -106,7 +105,7 @@ auto set_shadow(HWND handle, bool enabled) -> void
 {
     if (composition_enabled())
     {
-        static const MARGINS shadow_state[2]{{0, 0, 0, 0}, {1, 1, 1, 1}};
+        static const MARGINS shadow_state[2]{ { 0, 0, 0, 0 }, { 1, 1, 1, 1 } };
         ::DwmExtendFrameIntoClientArea(handle, &shadow_state[enabled]);
     }
 }
@@ -119,9 +118,8 @@ auto create_window(WNDPROC wndproc, void* userdata) -> unique_handle
         1280, 720, nullptr, nullptr, nullptr, userdata);
     if (!handle)
     {
-        throw last_error("failed to create window");
     }
-    return unique_handle{handle};
+    return unique_handle{ handle };
 }
 } // namespace
 
@@ -131,7 +129,7 @@ BorderlessWindow::BorderlessWindow(
     , resizable(resizable)
     , dragable(dragable)
     , with_shadow(with_shadow)
-    , handle{create_window(&BorderlessWindow::WndProc, this)}
+    , handle{ create_window(&BorderlessWindow::WndProc, this) }
 {
     set_borderless(borderless);
     set_borderless_shadow(with_shadow);
@@ -197,7 +195,7 @@ auto CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
                 {
                     return window.hit_test(POINT{
                         GET_X_LPARAM(lparam),
-                        GET_Y_LPARAM(lparam)});
+                        GET_Y_LPARAM(lparam) });
                 }
                 break;
             }
@@ -258,7 +256,8 @@ auto BorderlessWindow::hit_test(POINT cursor) const -> LRESULT
     // This implementation does not replicate that behavior.
     const POINT border{
         ::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER),
-        ::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)};
+        ::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)
+    };
     RECT window;
     if (!::GetWindowRect(handle.get(), &window))
     {
