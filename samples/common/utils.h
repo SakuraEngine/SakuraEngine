@@ -1,5 +1,7 @@
 #pragma once
+#include "platform/configure.h"
 #include "stdbool.h"
+#include "stdlib.h"
 #ifdef TARGET_MACOS
     #include "platform/apple/macos/window.h"
 #endif
