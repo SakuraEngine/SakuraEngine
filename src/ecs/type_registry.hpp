@@ -6,7 +6,6 @@
 #include <map>
 #include <string_view>
 #include <unordered_map>
-#include <vcruntime.h>
 #include <vector>
 #include <string>
 #include <array>
