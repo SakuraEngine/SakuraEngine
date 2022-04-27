@@ -1,7 +1,7 @@
 #pragma once
 #include "configure.h"
 
-#if defined(_WINDOWS) || defined(XBOX)
+#if defined(_WIN32) || defined(XBOX)
 typedef unsigned long SThreadID;
     #define THREAD_ID_MAX ULONG_MAX
     #define THREAD_ID_MIN ((unsigned long)0)
@@ -16,7 +16,7 @@ typedef uint32_t SThreadID;
 
 #define INVALID_THREAD_ID 0
 
-#if defined(_WINDOWS) || defined(XBOX)
+#if defined(_WIN32) || defined(XBOX)
     #define WIN32_LEAN_AND_MEAN
     #include "windows.h"
     #include "synchapi.h"
@@ -31,7 +31,7 @@ typedef pthread_once_t SCallOnceGuard;
 
 #define INVALID_THREAD_ID 0
 
-#if defined(_WINDOWS) || defined(XBOX)
+#if defined(_WIN32) || defined(XBOX)
     #define THREAD_LOCAL __declspec(thread)
     #define INIT_CALL_ONCE_GUARD INIT_ONCE_STATIC_INIT
 typedef INIT_ONCE SCallOnceGuard;
@@ -49,7 +49,7 @@ extern "C" {
 typedef void (*SCallOnceFn)(void);
 
 typedef struct SMutex {
-#if defined(_WINDOWS) || defined(XBOX)
+#if defined(_WIN32) || defined(XBOX)
     CRITICAL_SECTION mHandle;
 #elif defined(NX64)
     MutexTypeNX mMutexPlatformNX;
@@ -61,7 +61,7 @@ typedef struct SMutex {
 } SMutex;
 
 typedef struct SConditionVariable {
-#if defined(_WINDOWS) || defined(XBOX)
+#if defined(_WIN32) || defined(XBOX)
     void* pHandle;
 #elif defined(NX64)
     ConditionVariableTypeNX mCondPlatformNX;
@@ -84,14 +84,14 @@ typedef struct SThreadDesc {
     void* pData;
 } SThreadDesc;
 
-#if defined(_WINDOWS) || defined(XBOX)
+#if defined(_WIN32) || defined(XBOX)
 typedef void* SThreadHandle;
 #elif !defined(NX64)
 typedef pthread_t SThreadHandle;
 #endif
 
 #define MUTEX_DEFAULT_SPIN_COUNT 1500
-#if defined(_WINDOWS)
+#if defined(_WIN32)
     #include "win/thread.inl"
 #elif defined(__APPLE__)
     #include "apple/thread.inl"

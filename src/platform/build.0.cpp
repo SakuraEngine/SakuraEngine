@@ -1,5 +1,5 @@
 #include "platform/configure.h"
-#ifdef _WINDOWS
+#ifdef _WIN32
     #include "win/window.cpp"
 #endif
 

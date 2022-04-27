@@ -1002,7 +1002,7 @@ void cgpu_queue_present_d3d12(CGpuQueueId queue, const struct CGpuQueuePresentDe
     HRESULT hr = S->pDxSwapChain->Present(S->mDxSyncInterval, S->mFlags /*desc->index*/);
     if (FAILED(hr))
     {
-#if defined(_WINDOWS)
+#if defined(_WIN32)
         ID3D12Device* device = NULL;
         S->pDxSwapChain->GetDevice(IID_ARGS(&device));
         HRESULT removeHr = device->GetDeviceRemovedReason();

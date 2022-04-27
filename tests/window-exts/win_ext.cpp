@@ -13,7 +13,7 @@
     #endif // __WIN32__
 #endif
 
-#ifdef _WINDOWS
+#ifdef _WIN32
     #include "platform/win/window.h"
 #endif
 
@@ -37,7 +37,7 @@ int main(int, char*[])
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdl_window, &wmInfo);
-#ifdef _WINDOWS
+#ifdef _WIN32
     BorderlessWindow window;
     auto platform_child = window.get_hwnd();
     auto sdl_child = SDL_CreateWindowFrom(platform_child);

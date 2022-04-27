@@ -25,7 +25,7 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
 {
     DECLARE_ZERO(CGpuVulkanInstanceDescriptor, vkDesc)
     const char* exts[] = {
-    #ifdef _WINDOWS
+    #ifdef _WIN32
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
     #elif defined(__APPLE__)
         VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
@@ -34,7 +34,7 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     };
     vkDesc.mInstanceExtensionCount = 2;
     vkDesc.ppInstanceExtensions = exts;
-    #ifdef _WINDOWS
+    #ifdef _WIN32
     const char* dexts[] = {
         VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME
     };
