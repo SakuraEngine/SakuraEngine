@@ -21,10 +21,10 @@ task("unzip-gfx-sdk")
             zipped_dxc = "dxc-win.zip"
             dxcdir = path.join(os.projectdir(), "SDKs/"..zipped_dxc)
         else 
-            zipped_dxc = "dxc-macos.zip"
-            zipped_dxc = "tracyclient_d-win.zip"
+            zipped_dxc = "dxc-macos-amd64.zip"
             dxcdir = path.join(os.projectdir(), "SDKs/"..zipped_dxc)
         end
         local outputdir = path.join(os.projectdir(), vformat("$(buildir)/$(os)/$(arch)/$(mode)"))
+        print("unzip dxc "..zipped_dxc.." -> "..outputdir)
         archive.extract(dxcdir, outputdir)
 end)

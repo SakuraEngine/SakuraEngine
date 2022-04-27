@@ -9,6 +9,7 @@ option("ftl_fiber_canary_bytes")
     set_default(false)
     set_showmenu(true)
     set_description("Enable canary bytes in fiber switching logic, to help debug errors")
+option_end()
 
 target("ftl")
     set_kind("static")

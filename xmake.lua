@@ -1,6 +1,21 @@
 set_project("SakuraRuntime")
 
 add_rules("mode.debug", "mode.release")
+
+option("build_samples")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Toggle to build samples of SakuraRuntime")
+option_end()
+add_options("build_samples")
+
+option("build_tests")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Toggle to build tests of SakuraRuntime")
+option_end()
+add_options("build_tests")
+
 set_languages("c11", "cxx17")
 
 include_dir_list = {"include"}
@@ -78,6 +93,11 @@ target("SkrRT")
     add_links(links_list)
     add_links("TracyClient")
     add_links("m3", "uv_a", "uvwasi_a")
+target_end()
 
-includes("samples/xmake.lua")
-includes("tests/xmake.lua")
+if(has_config("build_samples")) then
+    includes("samples/xmake.lua")
+end
+if(has_config("build_tests")) then
+    includes("tests/xmake.lua")
+end

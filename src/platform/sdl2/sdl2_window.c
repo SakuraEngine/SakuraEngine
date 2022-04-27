@@ -43,7 +43,7 @@ void* skr_window_get_native_handle(SWindowHandle window)
     SDL_GetWindowWMInfo((SDL_Window*)window, &wmInfo);
 #ifdef SAKURA_RUNTIME_OS_WINDOWS
     return wmInfo.info.win.window;
-#elif SAKURA_RUNTIME_OS_MACOSX
+#elif defined(SAKURA_RUNTIME_OS_MACOSX)
     return wmInfo.info.cocoa.window;
 #endif
     return NULL;
