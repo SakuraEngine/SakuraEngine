@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
-        const char* font_path = "./../Resources/font/SourceSansPro-Regular.ttf";
+        const char* font_path = "./../resources/font/SourceSansPro-Regular.ttf";
         uint32_t *font_bytes, font_length;
         read_bytes(font_path, (char**)&font_bytes, &font_length);
         float dpi_scaling = 1.f;

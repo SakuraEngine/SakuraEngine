@@ -5,12 +5,14 @@ set_languages("c11", "cxx17")
 
 add_requires("vulkan")
 
-includes("xmake/options_detect.lua")
-
 include_dir_list = {"include"}
 source_list = {}
 packages_list = {"vulkan"}
 deps_list = {}
+
+includes("xmake/rules.lua")
+includes("xmake/options_detect.lua")
+
 includes("xmake/mimalloc.lua")
 includes("xmake/boost.lua")
 includes("xmake/gsl.lua")
@@ -24,13 +26,15 @@ includes("xmake/wasm3.lua")
 set_warnings("all")
 
 target("SkrRT")
-    add_rules("c++")
+    add_rules("utils.dxc", {
+        spv_outdir = "/../resources/", dxil_outdir = "/../resources/"})
     set_kind("static")
     add_deps(deps_list)
     add_packages(packages_list, {public = true})
     add_includedirs(include_dir_list, {public = true})
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
+    add_files("src/**/*.hlsl")
     add_cxflags(project_cxflags)
     if (is_os("macosx")) then 
         add_defines("SAKURA_TARGET_PLATFORM_MACOS")

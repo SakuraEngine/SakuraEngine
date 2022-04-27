@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
     auto render_device = CreateAndInitialize<RenderDevice>(cmdBackend, &render_window);
     auto renderer = CreateAndInitialize<SceneRenderer>(render_device.get());
     // scene
-    auto render_scene = CreateAndInitialize<RenderScene>("./../Resources/scene.gltf");
+    auto render_scene = CreateAndInitialize<RenderScene>("./../resources/scene.gltf");
     renderer->PrepareRenderResourceMemory(render_scene.get());
     // wvp
     auto world = smath::make_transform(

@@ -15,8 +15,8 @@ target_link_libraries(CGpuTriangle PUBLIC SakuraRuntime)
 sakura_compile_shaders(TARGET CGpuTriangleShaders
     SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vertex_shader.vs_6_0.hlsl
             ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fragment_shader.ps_6_0.hlsl
-    DXIL    ${SAKURA_BIN_DIR}/Resources/shaders/hot-triangle
-    SPIRV_DXC  ${SAKURA_BIN_DIR}/Resources/shaders/hot-triangle
+    DXIL    ${SAKURA_BIN_DIR}/resources/shaders/hot-triangle
+    SPIRV_DXC  ${SAKURA_BIN_DIR}/resources/shaders/hot-triangle
 )
 add_dependencies(CGpuTriangle CGpuTriangleShaders)
 endif()
