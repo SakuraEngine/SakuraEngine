@@ -19,7 +19,7 @@ thread_local CGpuFenceId present_fence;
 CubeGeometry::InstanceData CubeGeometry::instance_data;
 
 #if _WIN32
-thread_local ECGpuBackend backend = CGPU_BACKEND_D3D12;
+thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #else
 thread_local ECGpuBackend backend = CGPU_BACKEND_VULKAN;
 #endif
