@@ -1,5 +1,4 @@
 #pragma once
-#include "platform/adaptive_types.h"
 #include "stdbool.h"
 #ifdef TARGET_MACOS
     #include "platform/apple/macos/window.h"
