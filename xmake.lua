@@ -7,6 +7,7 @@ include_dir_list = {"include"}
 source_list = {}
 packages_list = {"vulkan"}
 deps_list = {}
+links_list = {}
 
 includes("xmake/rules.lua")
 includes("xmake/options_detect.lua")
@@ -64,6 +65,7 @@ target("SkrRT")
         task.run("unzip-wasm3")
         task.run("unzip-gfx-sdk")
     end)
+    add_links(links_list)
     add_links("TracyClient")
     add_links("m3", "uv_a", "uvwasi_a")
 
