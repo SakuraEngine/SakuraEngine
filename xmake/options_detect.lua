@@ -4,7 +4,8 @@ option("is_msvc")
     add_cxxsnippets("is_msvc", 'if(_MSC_VER) return 0;', {tryrun = true})
 option("is_unix")
     add_cxxsnippets("is_unix", 'if(__unix__) return 0;', {tryrun = true})
-
+option("pointer-size")
+    add_cxxsnippets("VOID_P_SIZE", 'printf("%d", sizeof(void*)); return 0;', {output = true, number = true})
 
 project_cxflags = {}
 project_mxflags = {}

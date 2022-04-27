@@ -22,6 +22,8 @@ includes("xmake/imgui.lua")
 includes("xmake/tracy.lua")
 includes("xmake/gfx-sdk.lua")
 includes("xmake/wasm3.lua")
+includes("xmake/parallel_hashmap.lua")
+includes("xmake/FiberTaskingLib.lua")
 
 set_warnings("all")
 if (is_os("windows")) then 
@@ -72,3 +74,4 @@ target("SkrRT")
     add_links("m3", "uv_a", "uvwasi_a")
 
 includes("samples/xmake.lua")
+includes("tests/xmake.lua")
