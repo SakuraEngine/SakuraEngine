@@ -1068,9 +1068,9 @@ CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window)
 
 CGpuSurfaceId cgpu_surface_from_native_view(CGpuDeviceId device, void* view)
 {
-#ifdef SAKURA_TARGET_PLATFORM_MACOS
+#ifdef SAKURA_RUNTIME_OS_MACOSX
     return cgpu_surface_from_ns_view(device, (CGpuNSView*)view);
-#elif defined(SAKURA_TARGET_PLATFORM_WIN)
+#elif defined(SAKURA_RUNTIME_OS_WINDOWS)
     return cgpu_surface_from_hwnd(device, (HWND)view);
 #endif
     return CGPU_NULLPTR;

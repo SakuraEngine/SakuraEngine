@@ -16,4 +16,15 @@ task("unzip-gfx-sdk")
             sdl2_sdkdir = path.join(os.projectdir(), "SDKs/SDL2-win.zip")
             archive.extract(sdl2_sdkdir, outputdir)
         end
+        -- dxc
+        if(os.host() == "windows") then
+            zipped_dxc = "dxc-win.zip"
+            dxcdir = path.join(os.projectdir(), "SDKs/"..zipped_dxc)
+        else 
+            zipped_dxc = "dxc-macos.zip"
+            zipped_dxc = "tracyclient_d-win.zip"
+            dxcdir = path.join(os.projectdir(), "SDKs/"..zipped_dxc)
+        end
+        local outputdir = path.join(os.projectdir(), vformat("$(buildir)/$(os)/$(arch)/$(mode)"))
+        archive.extract(dxcdir, outputdir)
 end)

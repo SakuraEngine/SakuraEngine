@@ -10,10 +10,10 @@
 #pragma once
 #include "configure.h"
 
-#if defined(SAKURA_TARGET_PLATFORM_UNIX)
+#if defined(SAKURA_RUNTIME_OS_UNIX)
     #include <dlfcn.h>
 using NativeLibHandle = void*;
-#elif defined(SAKURA_TARGET_PLATFORM_WIN)
+#elif defined(SAKURA_RUNTIME_OS_WINDOWS)
     #include <windows.h>
 using NativeLibHandle = HMODULE;
 #endif
@@ -144,7 +144,7 @@ private:
     eastl::string _lastError;
     NativeLibHandle _handle = nullptr;
     // Linux implementation
-#if defined(SAKURA_TARGET_PLATFORM_UNIX)
+#if defined(SAKURA_RUNTIME_OS_UNIX)
     bool loadImpl(const char* path)
     {
         _lastError.clear();
@@ -184,7 +184,7 @@ private:
         }
         return symbol;
     }
-#elif defined(SAKURA_TARGET_PLATFORM_WIN) // Windows implementation
+#elif defined(SAKURA_RUNTIME_OS_WINDOWS) // Windows implementation
 
     // Return a string explaining the last error
     eastl::string getWindowsError()

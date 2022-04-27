@@ -6,6 +6,18 @@
     #include <stdint.h>
 #endif
 
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+    #define SAKURA_RUNTIME_OS_UNIX
+#endif
+
+#if defined(__MACOSX__)
+    #define SAKURA_RUNTIME_OS_MACOSX
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+    #define SAKURA_RUNTIME_OS_WINDOWS
+#endif
+
 #if defined(_MSC_VER)
     #define FORCEINLINE __forceinline
 #else
