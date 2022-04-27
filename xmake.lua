@@ -29,16 +29,18 @@ if (is_os("windows")) then
     else
         set_runtimes("MDd")
     end
+else 
+    add_requires("vulkan")
 end
 
 target("SkrRT")
     add_rules("utils.dxc", {
-        spv_outdir = "/../resources/", dxil_outdir = "/../resources/"})
+        spv_outdir = "/../resources/shaders", 
+        dxil_outdir = "/../resources/shaders"})
     set_kind("static")
     add_deps(deps_list)
     add_packages(packages_list, {public = true})
     add_includedirs(include_dir_list, {public = true})
-    add_includedirs(path.join("$(env VULKAN_SDK)", "Include"))
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     add_files("src/**/*.hlsl")
@@ -47,6 +49,7 @@ target("SkrRT")
         add_defines("SAKURA_TARGET_PLATFORM_WIN")
         add_defines("UNICODE")
         add_links("advapi32")
+        add_includedirs(path.join("$(env VULKAN_SDK)", "Include"))
     end
     if (is_os("macosx")) then 
         add_defines("SAKURA_TARGET_PLATFORM_MACOS")
