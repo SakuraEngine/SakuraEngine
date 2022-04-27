@@ -25,6 +25,8 @@ includes("xmake/wasm3.lua")
 
 set_warnings("all")
 if (is_os("windows")) then 
+    add_defines("UNICODE")
+    add_defines("NOMINMAX")
     if (is_mode("release")) then
         set_runtimes("MD")
     else
@@ -48,7 +50,6 @@ target("SkrRT")
     add_cxflags(project_cxflags)
     if (is_os("windows")) then 
         add_defines("SAKURA_TARGET_PLATFORM_WIN")
-        add_defines("UNICODE")
         add_links("advapi32")
         add_includedirs(path.join("$(env VULKAN_SDK)", "Include"))
     end

@@ -2,7 +2,9 @@ rule("utils.dxc")
     set_extensions(".hlsl")
     before_buildcmd_file(function (target, batchcmds, sourcefile_hlsl, opt)
         import("lib.detect.find_tool")
-        local dxc = find_tool("dxc")
+        local outputdir = path.join(os.projectdir(), "build/"..os.host().."/"..os.arch().."/"..vformat("$(mode)"))
+        print(outputdir)
+        local dxc = find_tool("dxc", {pathes = {outputdir}})
         assert(dxc, "dxc not found!")
 
         -- get target profile
