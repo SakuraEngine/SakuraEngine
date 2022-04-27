@@ -52,7 +52,7 @@ target("SkrRT")
     add_files("src/**/*.hlsl")
     add_cxflags(project_cxflags)
     if (is_os("windows")) then 
-        add_links("advapi32")
+        add_links("advapi32", "Shcore")
         add_includedirs(path.join("$(env VULKAN_SDK)", "Include"))
     end
     if (is_os("macosx")) then 
