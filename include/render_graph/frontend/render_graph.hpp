@@ -206,7 +206,7 @@ public:
     inline BufferNode* resolve(BufferHandle hdl) { return static_cast<BufferNode*>(graph->node_at(hdl)); }
     inline TextureNode* resolve(TextureHandle hdl) { return static_cast<TextureNode*>(graph->node_at(hdl)); }
     inline PassNode* resolve(PassHandle hdl) { return static_cast<PassNode*>(graph->node_at(hdl)); }
-    inline uint32_t get_frame_index() const { return frame_index; }
+    inline uint64_t get_frame_index() const { return frame_index; }
 
     inline bool enable_memory_aliasing(bool enabled)
     {

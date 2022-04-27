@@ -155,7 +155,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
         }
     }
     // Slice
-    RS->table_count = valid_sets.size();
+    RS->table_count = (uint32_t)valid_sets.size();
     RS->tables = (CGpuParameterTable*)cgpu_calloc(RS->table_count, sizeof(CGpuParameterTable));
     uint32_t table_index = 0;
     for (auto set_index : valid_sets)
@@ -182,7 +182,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
         table_index++;
     }
     // push constants
-    RS->push_constant_count = all_root_constants.size();
+    RS->push_constant_count = (uint32_t)all_root_constants.size();
     RS->push_constants = (CGpuShaderResource*)cgpu_calloc(
         RS->push_constant_count, sizeof(CGpuShaderResource));
     for (uint32_t i = 0; i < all_root_constants.size(); i++)
@@ -190,7 +190,7 @@ void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSign
         RS->push_constants[i] = all_root_constants[i];
     }
     // static samplers
-    RS->static_sampler_count = all_static_samplers.size();
+    RS->static_sampler_count = (uint32_t)all_static_samplers.size();
     RS->static_samplers = (CGpuShaderResource*)cgpu_calloc(
         RS->static_sampler_count, sizeof(CGpuShaderResource));
     for (uint32_t i = 0; i < all_static_samplers.size(); i++)

@@ -360,7 +360,7 @@ int main(int argc, char* argv[])
             }
         }
         ZoneScopedN("FrameTime");
-        static uint32_t frame_index = 0;
+        static uint64_t frame_index = 0;
         {
             ZoneScopedN("ImGui");
             auto& io = ImGui::GetIO();
@@ -389,9 +389,9 @@ int main(int argc, char* argv[])
                 ImVec2 size = { 200, 200 };
                 ImGui::PlotHistogram("##ms",
                     profiler.times_ms.data() + 1,
-                    profiler.times_ms.size() - 1,
+                    (int)profiler.times_ms.size() - 1,
                     0, NULL,
-                    0.0001, *max_scale * 1.1, size);
+                    0.0001f, *max_scale * 1.1f, size);
             }
             ImGui::End();
         }
