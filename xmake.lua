@@ -1,6 +1,7 @@
 set_project("SakuraRuntime")
 
 add_rules("mode.debug", "mode.release")
+add_moduledirs("xmake/modules")
 
 option("build_samples")
     set_default(true)
