@@ -21,3 +21,5 @@ _deps
 /out
 /.VSCodeCounter
 /xcode
+/SDKs/grpc
+/SDKs/reflector-win

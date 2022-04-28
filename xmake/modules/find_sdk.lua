@@ -1,9 +1,9 @@
 find_sdk = find_sdk or {}
 
-function find_program(name)
+function find_program(name, sdkdir)
     import("lib.detect.find_file")
     import("lib.detect.find_program")
-    local sdkdir = path.join(os.projectdir(), "build/sdk")
+    local sdkdir = sdkdir or path.join(os.projectdir(), "build/sdk")
     local dxc = find_program(name, {pathes = {sdkdir}})
     local dxcf = find_file(name, {sdkdir})
     
