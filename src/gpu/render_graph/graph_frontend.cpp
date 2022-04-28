@@ -7,8 +7,8 @@ namespace sakura
 {
 namespace render_graph
 {
-RenderGraph::RenderGraph(const RenderGraphBuilder& builder)
-    : aliasing_enabled(builder.memory_aliasing)
+RenderGraph::RenderGraph(const RenderGraphBuilder& builder) :
+    aliasing_enabled(builder.memory_aliasing)
 {
 }
 

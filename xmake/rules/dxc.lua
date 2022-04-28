@@ -1,13 +1,23 @@
 rule("utils.dxc")
     set_extensions(".hlsl")
-    before_buildcmd_file(function (target, batchcmds, sourcefile_hlsl, opt)
-        import("lib.detect.find_tool")
-        local outputdir = path.join(os.projectdir(),
-            "build/"..os.host().."/"..os.arch().."/"..vformat("$(mode)"))
-        local dxc = find_tool("dxc", {pathes = {outputdir}})
+    on_buildcmd_file(function (target, batchcmds, sourcefile_hlsl, opt)
+        import("lib.detect.find_file")
+        import("lib.detect.find_program")
+        local sdkdir = path.join(os.projectdir(), "build/sdk")
+        local dxc = find_program("dxc", {pathes = {sdkdir}})
+        local dxcf = find_file("dxc", {sdkdir})
+        
         if(dxc == nil) then
-            print("dxc not found! under "..outputdir)
-            return
+            print("dxc not found! under "..sdkdir)
+            if(dxcf == nil) then
+                print("dxcf not found! under "..sdkdir)
+                return
+            else
+                dxc = dxcf
+                vexec = "cd "..sdkdir.." && "..dxc
+            end
+        else
+            vexec = dxc
         end
 
         -- get target profile
@@ -20,24 +30,24 @@ rule("utils.dxc")
         local spvfilepath = path.join(spv_outputdir, hlsl_basename .. ".spv")
         batchcmds:show_progress(opt.progress, "${color.build.object}generating.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
         batchcmds:mkdir(spv_outputdir)
-        batchcmds:vrunv(dxc.program, 
+        batchcmds:vrunv(vexec, 
             {"-Wno-ignored-attributes",
             "-spirv",
             vformat("-fspv-target-env=vulkan1.1"), 
-            "-Fo", spvfilepath, 
+            "-Fo", path.join(os.projectdir(), spvfilepath), 
             "-T", target_profile,
-            sourcefile_hlsl})
+            path.join(os.projectdir(), sourcefile_hlsl)})
 
         -- hlsl to dxil
         local dxil_outputdir = path.join(target:autogendir(), "rules", "utils", "dxc-dxil")
         local dxilfilepath = path.join(dxil_outputdir, hlsl_basename .. ".dxil")
         batchcmds:show_progress(opt.progress, "${color.build.object}generating.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
         batchcmds:mkdir(dxil_outputdir)
-        batchcmds:vrunv(dxc.program, 
+        batchcmds:vrunv(vexec, 
             {"-Wno-ignored-attributes", 
-            "-Fo ", dxilfilepath, 
+            "-Fo ", path.join(os.projectdir(), dxilfilepath), 
             "-T ", target_profile,
-            sourcefile_hlsl})
+            path.join(os.projectdir(), sourcefile_hlsl)})
 
         -- add deps
         batchcmds:add_depfiles(sourcefile_hlsl)
