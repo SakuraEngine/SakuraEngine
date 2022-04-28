@@ -24,7 +24,25 @@ task("unzip-gfx-sdk")
             zipped_dxc = "dxc-macos-amd64.zip"
             dxcdir = path.join(os.projectdir(), "SDKs/"..zipped_dxc)
         end
-        local outputdir = path.join(os.projectdir(), vformat("$(buildir)/$(os)/$(arch)/$(mode)"))
+        local outputdir = path.join(os.projectdir(), vformat("$(buildir)/sdk"))
         print("unzip dxc "..zipped_dxc.." -> "..outputdir)
         archive.extract(dxcdir, outputdir)
+        if(os.host() ~= "windows") then
+            os.exec("chmod a+x "..outputdir.."/dxc")
+        end
+        -- reflector
+        if(os.host() == "windows") then
+            zipped_reflector = "reflector-win.zip"
+            refldir = path.join(os.projectdir(), "SDKs/"..zipped_reflector)
+        else 
+            zipped_reflector = "reflector-macos-amd64.zip"
+            refldir = path.join(os.projectdir(), "SDKs/"..zipped_reflector)
+        end
+        print("unzip reflector "..zipped_reflector.." -> "..outputdir)
+        archive.extract(refldir, outputdir)
+        if(os.host() ~= "windows") then
+            os.exec("chmod a+x "..outputdir.."/meta")
+            print("chmod a+x "..outputdir.."/meta")
+        end
+        os.addenv("PATH", outputdir)
 end)
