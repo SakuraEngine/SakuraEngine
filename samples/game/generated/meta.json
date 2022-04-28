@@ -1,0 +1,62 @@
+{
+    "records": {
+        "config_backend_t": {
+            "bases": [],
+            "attrs": {
+                "guid": "b537f7b1-6d2d-44f6-b313-bcb559d3f490"
+            },
+            "fields": {
+                "backend": {
+                    "type": "ECGPUBackEnd",
+                    "rawType": "enum ECGPUBackEnd",
+                    "attrs": {},
+                    "comment": "",
+                    "line": 15
+                }
+            },
+            "methods": [],
+            "comment": "",
+            "fileName": "samples\\game\\generated/../backend_config.h",
+            "line": 13
+        }
+    },
+    "functions": [],
+    "enums": {
+        "ECGPUBackEnd": {
+            "attrs": {
+                "guid": "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1",
+                "asdsad": true,
+                "fuck": {
+                    "dddd": [
+                        true,
+                        false
+                    ]
+                }
+            },
+            "values": {
+                "Vulkan": {
+                    "attrs": {},
+                    "value": 0,
+                    "comment": "",
+                    "line": 10
+                },
+                "DX12": {
+                    "attrs": {},
+                    "value": 1,
+                    "comment": "",
+                    "line": 10
+                },
+                "Metal": {
+                    "attrs": {},
+                    "value": 2,
+                    "comment": "",
+                    "line": 10
+                }
+            },
+            "comment": "",
+            "fileName": "samples\\game\\generated/../backend_config.h",
+            "line": 10
+        }
+    },
+    "attrs": {}
+}
