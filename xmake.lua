@@ -60,19 +60,13 @@ target("SkrRT")
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     add_cxflags(project_cxflags)
+    -- fetch vk includes
+    add_rules("utils.fetch-vk-includes")
     -- add internal shaders
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders", 
         dxil_outdir = "/../resources/shaders"})
     add_files("src/**/*.hlsl")
-    on_load(function (target)
-        -- find vulkan includes dir
-        import("lib.detect.find_path")
-        vk_include_dirs = find_path("vulkan/vulkan.h", 
-            { "/usr/include", "/usr/local/include", "$(env PATH)", "$(env VULKAN_SDK)/Include"})
-        print("found vulkan include dir: "..vk_include_dirs)
-        target:add("includedirs", vk_include_dirs)
-    end)
     -- link system libs/frameworks
     if (is_os("windows")) then 
         add_links("advapi32", "Shcore")
