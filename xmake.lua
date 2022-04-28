@@ -61,6 +61,8 @@ target("SkrRT")
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     add_cxflags(project_cxflags)
+    -- cxx reflection
+    add_rules("c++.reflection")
     -- fetch vk includes
     add_rules("utils.fetch-vk-includes")
     -- add internal shaders
