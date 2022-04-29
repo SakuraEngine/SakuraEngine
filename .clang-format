@@ -50,4 +50,6 @@ BraceWrapping:
   AfterControlStatement: true
 Cpp11BracedListStyle: false
 
+AttributeMacros : ["DUAL_UNLIKELY", "DUAL_FORCEINLINE", "FORCEINLINE"]
+
 SortIncludes: false
