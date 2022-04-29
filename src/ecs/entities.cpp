@@ -3,7 +3,9 @@
 #include "chunk.hpp"
 #include "entity.hpp"
 #include <cstring>
-#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#ifndef forloop
+    #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 namespace dual
 {

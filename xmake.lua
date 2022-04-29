@@ -40,6 +40,7 @@ includes("xmake/gfx-sdk.lua")
 includes("xmake/wasm3.lua")
 includes("xmake/parallel_hashmap.lua")
 includes("xmake/FiberTaskingLib.lua")
+includes("xmake/grpc.lua")
 
 set_warnings("all")
 if (is_os("windows")) then 
@@ -60,7 +61,7 @@ target("SkrRT")
     add_includedirs(include_dir_list, {public = true})
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
-    add_cxflags(project_cxflags)
+    add_cxflags(project_cxflags, {public = true})
     -- cxx reflection
     add_rules("c++.reflection")
     -- fetch vk includes
@@ -75,7 +76,7 @@ target("SkrRT")
         add_links("advapi32", "Shcore")
     end
     if (is_os("macosx")) then 
-        add_mxflags(project_mxflags)
+        add_mxflags(project_cxflags, project_mxflags, {public = true})
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit")
         add_files("src/**/build.*.m", "src/**/build.*.mm")
