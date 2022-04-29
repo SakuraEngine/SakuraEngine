@@ -42,7 +42,15 @@ task("unzip-gfx-sdk")
         archive.extract(refldir, outputdir)
         if(os.host() ~= "windows") then
             os.exec("chmod a+x "..outputdir.."/meta")
-            print("chmod a+x "..outputdir.."/meta")
         end
-        os.addenv("PATH", outputdir)
+        -- grpc
+        if(os.host() == "windows") then
+            zipped_grpc = "grpc_r-win.zip"
+            grpcdir = path.join(os.projectdir(), "SDKs/"..zipped_grpc)
+        else 
+            zipped_grpc = "grpc_r-macos-amd64.zip"
+            grpcdir = path.join(os.projectdir(), "SDKs/"..zipped_grpc)
+        end
+        print("unzip grpc "..zipped_grpc.." -> "..path.join(os.projectdir(), "SDKs/"))
+        archive.extract(grpcdir, path.join(os.projectdir(), "SDKs/"))
 end)
