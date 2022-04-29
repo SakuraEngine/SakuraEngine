@@ -8,3 +8,8 @@ if (os.host() =="macosx") then
     os.exec("brew install grpc")
     os.exec("brew install googletest")
 end
+import("find_sdk")
+find_sdk.install_tool("dxc")
+find_sdk.install_tool("reflector")
+find_sdk.install_tool("wasm-clang")
+find_sdk.install_tool("grpcc")
