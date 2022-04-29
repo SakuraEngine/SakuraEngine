@@ -53,8 +53,12 @@ function find_program(name, sdkdir)
     local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
     local prog = find_program(name, {pathes = {sdkdir, "/usr/local/bin"}})
     if(prog == nil) then
-        local outdata, errdata = os.iorun("which grpc_cpp_plugin")
-        prog = string.gsub(outdata, "%s+", "")
+        if(os.host() ~= "windows") then
+            local outdata, errdata = os.iorun("which "..name)
+            if(errdata ~= "") then
+                prog = string.gsub(outdata, "%s+", "")
+            end
+        end
     end
     
     if(prog == nil) then
