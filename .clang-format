@@ -3,7 +3,7 @@ TabWidth: 4
 AccessModifierOffset: -4
 IndentWidth: 4
 ObjCBlockIndentWidth: 4
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 0
 MaxEmptyLinesToKeep: 1
 
 AllowShortIfStatementsOnASingleLine: true
@@ -50,6 +50,8 @@ BraceWrapping:
   AfterControlStatement: true
 Cpp11BracedListStyle: false
 
+
 AttributeMacros : ["DUAL_UNLIKELY", "DUAL_FORCEINLINE", "FORCEINLINE"]
+WhitespaceSensitiveMacros : ["attr", "push_attr"]
 
 SortIncludes: false
