@@ -12,25 +12,27 @@
 #include "storage.hpp"
 #include <algorithm>
 #include <bitset>
-#define forloop(i, z, n) for(auto i = std::decay_t<decltype(n)>(z); i<(n); ++i)
+#ifndef forloop
+    #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 namespace dual
 {
-    
-    fixed_stack_t localStack(4096 * 8);
 
-    SIndex archetype_t::index(dual_type_index_t inType) const noexcept
-    {
-        auto end = type.data + type.length;
-        const dual_type_index_t* result = std::lower_bound(type.data, end, inType);
-        if(result != end && *result == inType)
-            return (SIndex)(result - type.data);
-        else
-            return kInvalidSIndex;
-    }
+fixed_stack_t localStack(4096 * 8);
+
+SIndex archetype_t::index(dual_type_index_t inType) const noexcept
+{
+    auto end = type.data + type.length;
+    const dual_type_index_t* result = std::lower_bound(type.data, end, inType);
+    if (result != end && *result == inType)
+        return (SIndex)(result - type.data);
+    else
+        return kInvalidSIndex;
 }
+} // namespace dual
 
-dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t &inType)
+dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& inType)
 {
     using namespace dual;
     fixed_stack_scope_t _(localStack);
@@ -58,7 +60,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t &in
     forloop(i, 0, proto.type.length)
     {
         auto t = proto.type.data[i];
-        if(t == kMaskComponent)
+        if (t == kMaskComponent)
             proto.withMask = true;
         auto& desc = registry.descriptions[type_index_t(t).index()];
         proto.sizes[i] = desc.size;
@@ -68,11 +70,10 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t &in
         stableOrder[i] = i;
         proto.entitySize += desc.size;
         padding += desc.alignment;
-        if(desc.entityFieldsCount != 0)
+        if (desc.entityFieldsCount != 0)
             proto.sizeToPatch += desc.size;
     }
-    std::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs)
-    {
+    std::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
     size_t caps[] = { kSmallBinSize, kFastBinSize, kLargeBinSize };
@@ -94,47 +95,47 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t &in
         }
     }
 
-    return archetypes.insert({proto.type, &proto}).first->second;
+    return archetypes.insert({ proto.type, &proto }).first->second;
 }
 
-dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t &inType)
+dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
 {
     using namespace dual;
     fixed_stack_scope_t _(localStack);
     dual_type_set_t structure;
     SIndex firstTag = 0;
-    for(; firstTag<inType.type.length; ++firstTag)
-        if(type_index_t(inType.type.data[firstTag]).is_tag())
+    for (; firstTag < inType.type.length; ++firstTag)
+        if (type_index_t(inType.type.data[firstTag]).is_tag())
             break;
     structure.data = inType.type.data;
     structure.length = firstTag;
     archetype_t* archetype = get_archetype(structure);
-    assert((sizeof(dual_group_t)+data_size(inType)) < kGroupBlockSize); 
+    assert((sizeof(dual_group_t) + data_size(inType)) < kGroupBlockSize);
     char* buffer = (char*)groupPool.allocate();
     dual_group_t& proto = *(dual_group_t*)buffer;
     buffer += sizeof(dual_group_t);
     dual_entity_type_t type = clone(inType, buffer);
     proto.type = type;
-    auto toClean = localStack.allocate<TIndex>(proto.type.type.length+1);
+    auto toClean = localStack.allocate<TIndex>(proto.type.type.length + 1);
     toClean[0] = kDeadComponent;
     SIndex toCleanCount = 1;
-    auto toClone = localStack.allocate<TIndex>(proto.type.type.length+1);
+    auto toClone = localStack.allocate<TIndex>(proto.type.type.length + 1);
     SIndex toCloneCount = 0;
     proto.isDead = false;
     proto.disabled = false;
     forloop(i, 0, proto.type.type.length)
     {
         type_index_t t = proto.type.type.data[i];
-        if(t.is_tracked())
+        if (t.is_tracked())
             toClean[toCleanCount++] = t;
         else
             toClone[toCloneCount++] = t;
-        if(t == kDeadComponent)
+        if (t == kDeadComponent)
             proto.isDead = true;
-        if(t == kDisableComponent)
+        if (t == kDisableComponent)
             proto.disabled = true;
     }
-    //std::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
+    // std::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
     proto.archetype = archetype;
     proto.size = 0;
     proto.timestamp = 0;
@@ -142,68 +143,66 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t &inType)
     proto.firstChunk = proto.lastChunk = proto.firstFree = nullptr;
     proto.dead = nullptr;
     proto.cloned = proto.isDead ? nullptr : &proto;
-    groups.insert({type, &proto});
-    if(toCleanCount != 1 && !proto.isDead)
+    groups.insert({ type, &proto });
+    if (toCleanCount != 1 && !proto.isDead)
     {
         dual_entity_type_t deadType;
-        deadType.type = {toClean, toCleanCount};
+        deadType.type = { toClean, toCleanCount };
         proto.dead = try_get_group(deadType);
         dual_entity_type_t cloneType;
-        cloneType.type = {toClone, toCloneCount};
+        cloneType.type = { toClone, toCloneCount };
         proto.cloned = try_get_group(cloneType);
     }
     return &proto;
 }
 
-dual::archetype_t* dual_storage_t::try_get_archetype(const dual_type_set_t &type) const
+dual::archetype_t* dual_storage_t::try_get_archetype(const dual_type_set_t& type) const
 {
-    if(auto i = archetypes.find(type); i != archetypes.end())
+    if (auto i = archetypes.find(type); i != archetypes.end())
         return i->second;
     return nullptr;
 }
 
-dual_group_t* dual_storage_t::try_get_group(const dual_entity_type_t &type) const
+dual_group_t* dual_storage_t::try_get_group(const dual_entity_type_t& type) const
 {
-    if(auto i = groups.find(type); i != groups.end())
+    if (auto i = groups.find(type); i != groups.end())
         return i->second;
     return nullptr;
 }
 
-dual::archetype_t* dual_storage_t::get_archetype(const dual_type_set_t &type)
+dual::archetype_t* dual_storage_t::get_archetype(const dual_type_set_t& type)
 {
     archetype_t* archetype = try_get_archetype(type);
-    if(!archetype)
+    if (!archetype)
         archetype = construct_archetype(type);
     return archetype;
 }
 
-dual_group_t* dual_storage_t::get_group(const dual_entity_type_t &type)
+dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
 {
     using namespace dual;
-    if(type.type.length == 1 && type.type.data[0] == kDeadComponent) DUAL_UNLIKELY
-        return nullptr;
+    if (type.type.length == 1 && type.type.data[0] == kDeadComponent) DUAL_UNLIKELY
+    return nullptr;
     dual_group_t* group = try_get_group(type);
-    if(!group)
+    if (!group)
         group = construct_group(type);
     return group;
 }
 
-void dual_storage_t::destruct_group(dual_group_t *group)
+void dual_storage_t::destruct_group(dual_group_t* group)
 {
     groups.erase(group->type);
     groupPool.free(group);
 }
-
-
 
 dual_chunk_t* dual_group_t::new_chunk(uint32_t hint)
 {
     using namespace dual;
     size_t sizeHint = hint * archetype->entitySize;
     pool_type_t pt;
-    if(chunkCount < kSmallBinThreshold && sizeHint < kSmallBinSize)
+    if (chunkCount < kSmallBinThreshold && sizeHint < kSmallBinSize)
         pt = PT_small;
-    else if(sizeHint > kFastBinSize * 8u)
+    else if (sizeHint > kFastBinSize * 8u)
         pt = PT_large;
     else
         pt = PT_default;
@@ -212,7 +211,7 @@ dual_chunk_t* dual_group_t::new_chunk(uint32_t hint)
     return chunk;
 }
 
-void dual_group_t::add_chunk(dual_chunk_t *chunk)
+void dual_group_t::add_chunk(dual_chunk_t* chunk)
 {
     using namespace dual;
     size += chunk->count;
@@ -241,14 +240,14 @@ void dual_group_t::resize_chunk(dual_chunk_t* chunk, EIndex newSize)
     using namespace dual;
     size = size + newSize - chunk->count;
     chunk->count = newSize;
-    if(newSize == 0)
+    if (newSize == 0)
     {
         remove_chunk(chunk);
         dual_chunk_t::destroy(chunk);
     }
     else
     {
-        if(chunk->get_capacity() == newSize)
+        if (chunk->get_capacity() == newSize)
             mark_full(chunk);
         else
             mark_free(chunk);
@@ -264,7 +263,7 @@ void remove(dual_chunk_t*& h, dual_chunk_t*& t, dual_chunk_t* c)
     c->unlink();
 }
 
-void dual_group_t::remove_chunk(dual_chunk_t *chunk)
+void dual_group_t::remove_chunk(dual_chunk_t* chunk)
 {
     using namespace dual;
     size -= chunk->count;
@@ -275,11 +274,11 @@ void dual_group_t::remove_chunk(dual_chunk_t *chunk)
     chunk->group = nullptr;
 }
 
-void dual_group_t::mark_free(dual_chunk_t *chunk)
+void dual_group_t::mark_free(dual_chunk_t* chunk)
 {
     using namespace dual;
     remove(firstChunk, lastChunk, chunk);
-    if(lastChunk)
+    if (lastChunk)
         lastChunk->link(chunk);
     lastChunk = chunk;
     if (firstFree == nullptr)
@@ -288,7 +287,7 @@ void dual_group_t::mark_free(dual_chunk_t *chunk)
         firstChunk = chunk;
 }
 
-void dual_group_t::mark_full(dual_chunk_t *chunk)
+void dual_group_t::mark_full(dual_chunk_t* chunk)
 {
     using namespace dual;
     if (firstFree == chunk)
@@ -311,7 +310,7 @@ void dual_group_t::clear()
 {
     using namespace dual;
     auto chunk = firstChunk;
-    while(chunk != nullptr)
+    while (chunk != nullptr)
     {
         auto next = chunk->next;
         destruct_view({ chunk, 0, chunk->count });
@@ -324,12 +323,12 @@ void dual_group_t::clear()
     size = 0;
 }
 
- SIndex dual_group_t::index(dual_type_index_t inType) const noexcept
+SIndex dual_group_t::index(dual_type_index_t inType) const noexcept
 {
     using namespace dual;
     auto end = type.type.data + type.type.length;
     const dual_type_index_t* result = std::lower_bound(type.type.data, end, inType);
-    if(result != end && *result == inType)
+    if (result != end && *result == inType)
         return (SIndex)(result - type.type.data);
     else
         return kInvalidSIndex;
@@ -339,12 +338,12 @@ bool dual_group_t::share(dual_type_index_t t) const noexcept
 {
     using namespace dual;
     auto storage = archetype->storage;
-    for(EIndex i=0; i<type.meta.length; ++i)
+    for (EIndex i = 0; i < type.meta.length; ++i)
     {
         auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
-        if(metaGroup->index(t)  != kInvalidSIndex)
+        if (metaGroup->index(t) != kInvalidSIndex)
             return true;
-        if(metaGroup->share(t))
+        if (metaGroup->share(t))
             return true;
     }
     return false;
@@ -359,12 +358,12 @@ bool dual_group_t::share(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
     auto storage = archetype->storage;
-    for(EIndex i=0; i<type.meta.length; ++i)
+    for (EIndex i = 0; i < type.meta.length; ++i)
     {
         auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
-        if(metaGroup->own(subtype))
+        if (metaGroup->own(subtype))
             return true;
-        if(metaGroup->share(subtype))
+        if (metaGroup->share(subtype))
             return true;
     }
     return false;
@@ -374,9 +373,9 @@ dual_mask_component_t dual_group_t::get_shared_mask(const dual_type_set_t& subty
 {
     using namespace dual;
     std::bitset<32> mask;
-    for(SIndex i=0; i<subtype.length; ++i)
+    for (SIndex i = 0; i < subtype.length; ++i)
     {
-        if(share(subtype.data[i]))
+        if (share(subtype.data[i]))
         {
             mask.set(i);
             break;
@@ -389,17 +388,17 @@ void dual_group_t::get_shared_type(dual_type_set_t& result, void* buffer) const 
 {
     using namespace dual;
     auto storage = archetype->storage;
-    for(EIndex i=0; i<type.meta.length; ++i)
+    for (EIndex i = 0; i < type.meta.length; ++i)
     {
         auto view = storage->entity_view(type.meta.data[i]);
         auto metaGroup = view.chunk->group;
         dual_type_set_t merged;
-        if(metaGroup->archetype->withMask)
+        if (metaGroup->archetype->withMask)
         {
             auto mask = *(dual_mask_component_t*)dualV_get_owned_ro(&view, kMaskComponent);
             merged = set_utils<dual_type_index_t>::merge_with_mask(result, metaGroup->type.type, mask, buffer);
         }
-        else 
+        else
         {
             merged = set_utils<dual_type_index_t>::merge(result, metaGroup->type.type, buffer);
         }
@@ -409,17 +408,16 @@ void dual_group_t::get_shared_type(dual_type_set_t& result, void* buffer) const 
     }
 }
 
-
 const dual_group_t* dual_group_t::get_owner(dual_type_index_t t) const noexcept
 {
     using namespace dual;
-    if(index(t) != kInvalidSIndex)
+    if (index(t) != kInvalidSIndex)
         return this;
     auto storage = archetype->storage;
-    for(EIndex i=0; i<type.meta.length; ++i)
+    for (EIndex i = 0; i < type.meta.length; ++i)
     {
         auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
-        if(auto g = metaGroup->get_owner(t))
+        if (auto g = metaGroup->get_owner(t))
             return g;
     }
     return nullptr;
@@ -429,61 +427,61 @@ const void* dual_group_t::get_shared_ro(dual_type_index_t t) const noexcept
 {
     using namespace dual;
     auto storage = archetype->storage;
-    for(EIndex i=0; i<type.meta.length; ++i)
+    for (EIndex i = 0; i < type.meta.length; ++i)
     {
         auto view = storage->entity_view(type.meta.data[i]);
-        if(auto data = dualV_get_component_ro(&view, t))
+        if (auto data = dualV_get_component_ro(&view, t))
             return data;
         return view.chunk->group->get_shared_ro(t);
     }
     return nullptr;
 }
 
-dual_mask_component_t dual_group_t::get_mask(const dual_type_set_t &subtype) const noexcept
+dual_mask_component_t dual_group_t::get_mask(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
     std::bitset<32> mask;
-    SIndex i=0, j=0;
+    SIndex i = 0, j = 0;
     auto stype = type.type;
-    while(i < stype.length && j < subtype.length)
+    while (i < stype.length && j < subtype.length)
     {
-        if(stype.data[i] > subtype.data[j])
+        if (stype.data[i] > subtype.data[j])
             ++j;
-        else if(stype.data[i] < subtype.data[j])
+        else if (stype.data[i] < subtype.data[j])
             ++i;
         else
         {
             mask.set(i);
-            ++i; ++j;
+            ++i;
+            ++j;
         }
     }
     return mask.to_ulong();
 }
 
-extern "C"
+extern "C" {
+int dualG_has_components(const dual_group_t* group, const dual_type_set_t* types)
 {
-    int dualG_has_components(const dual_group_t *group, const dual_type_set_t *types)
-    {
-       return group->own(*types) || group->share(*types);
-    }
+    return group->own(*types) || group->share(*types);
+}
 
-    int dualG_own_components(const dual_group_t *group, const dual_type_set_t *types)
-    {
-       return group->own(*types);
-    }
+int dualG_own_components(const dual_group_t* group, const dual_type_set_t* types)
+{
+    return group->own(*types);
+}
 
-    int dualG_share_components(const dual_group_t *group, const dual_type_set_t *types)
-    {
-       return group->share(*types);
-    }
+int dualG_share_components(const dual_group_t* group, const dual_type_set_t* types)
+{
+    return group->share(*types);
+}
 
-    void dualG_get_type(const dual_group_t *group, dual_entity_type_t *type)
-    {
-        *type = group->type;
-    }
+void dualG_get_type(const dual_group_t* group, dual_entity_type_t* type)
+{
+    *type = group->type;
+}
 
-    const void* dualG_get_shared_ro(const dual_group_t *group, dual_type_index_t type)
-    {
-        return group->get_shared_ro(type);
-    }
+const void* dualG_get_shared_ro(const dual_group_t* group, dual_type_index_t type)
+{
+    return group->get_shared_ro(type);
+}
 }

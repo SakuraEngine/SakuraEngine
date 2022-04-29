@@ -16,6 +16,7 @@ class CompileResourceImpl final : public skrcompiler::CompileResource::Service
         using namespace grpc;
         response->set_errorcode(0);
         response->set_errormessage("fuck");
+        (void)stub;
 
         return Status::OK;
     }
@@ -31,7 +32,7 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
         return Status::OK;
     }
 
-    ::grpc::Status Register(::grpc::ServerContext* context, const ::skrcompiler::Port* request, ::google::protobuf::Empty* response)
+    ::grpc::Status Register(::grpc::ServerContext* context, const ::skrcompiler::Port* request, ::google::protobuf::Empty* response) override
     {
         using namespace grpc;
         std::cout << "Worker registering on localhost:" << request->number() << std::endl;

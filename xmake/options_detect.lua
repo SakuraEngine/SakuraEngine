@@ -18,8 +18,11 @@ add_options("pointer-size")
 project_cxflags = {}
 project_mxflags = {}
 if(has_config("is_clang")) then
-    table.insert(project_cxflags, "-Wno-nullability-completeness")
+    table.insert(project_cxflags, "-Wno-format")
+    table.insert(project_cxflags, "-Wno-switch")
+    table.insert(project_cxflags, "-Wno-unknown-pragmas")
     table.insert(project_cxflags, "-Wno-ignored-attributes")
-    table.insert(project_mxflags, "-Wno-nullability-completeness")
-    table.insert(project_mxflags, "-Wno-ignored-attributes")
+    table.insert(project_cxflags, "-Wno-ignored-attributes")
+    table.insert(project_cxflags, "-Wno-deprecated-declarations")
+    table.insert(project_cxflags, "-Wno-nullability-completeness")
 end

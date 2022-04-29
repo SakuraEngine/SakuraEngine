@@ -30,13 +30,12 @@ public:
             dual_entity_type_t entityType;
             entityType.type = { &type_test, 1 };
             entityType.meta = { nullptr, 0 };
-            auto callback = [&](dual_chunk_view_t* inView) 
-            { 
-                view = *inView; 
+            auto callback = [&](dual_chunk_view_t* inView) {
+                view = *inView;
                 *(test*)dualV_get_owned_rw(&view, type_test) = 123;
             };
             dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
-            
+
             e1 = dualV_get_entities(&view)[0];
         }
     }
@@ -50,7 +49,7 @@ public:
     dual_entity_t e1;
 };
 
-template<class T>
+template <class T>
 void zero(T& t)
 {
     std::memset(&t, 0, sizeof(T));
@@ -67,15 +66,15 @@ TEST_F(APITest, allocate_100000)
     dual_entity_type_t entityType;
     entityType.type = { &type_test, 1 };
     entityType.meta = { nullptr, 0 };
-    auto callback = [&](dual_chunk_view_t* inView) 
-    { 
-        view = *inView; 
+    auto callback = [&](dual_chunk_view_t* inView) {
+        view = *inView;
         auto t = (test*)dualV_get_owned_rw(&view, type_test);
-        std::fill(t, t+inView->count, 123);
+        std::fill(t, t + inView->count, 123);
     };
     dualS_allocate_type(storage, &entityType, 100000, DUAL_LAMBDA(callback));
-    
+
     auto e2 = dualV_get_entities(&view)[0];
+    (void)e2;
     auto data = (const test*)dualV_get_owned_ro(&view, type_test);
     EXPECT_EQ(data[0], 123);
     EXPECT_EQ(data[10], 123);
@@ -110,11 +109,11 @@ TEST_F(APITest, instantiate_group)
         dual_chunk_view_t view[2];
         int n = 0;
         auto callback = [&](dual_chunk_view_t* inView) { view[n++] = *inView; };
-        dual_entity_t group[] = {e1, e2};
+        dual_entity_t group[] = { e1, e2 };
         dualS_instantiate_entities(storage, group, 2, 10, DUAL_LAMBDA(callback));
         auto ents = dualV_get_entities(&view[0]);
         auto refs = (const ref*)dualV_get_owned_ro(&view[1], type_ref);
-        EXPECT_TRUE(std::equal(ents, ents+10, refs));
+        EXPECT_TRUE(std::equal(ents, ents + 10, refs));
     }
 }
 
@@ -144,7 +143,7 @@ TEST_F(APITest, add_component)
     EXPECT_EQ(dualV_get_owned_ro(&view, type_test2), nullptr);
     dual_delta_type_t deltaType;
     zero(deltaType);
-    deltaType.added = {{&type_test2, 1}};
+    deltaType.added = { { &type_test2, 1 } };
     dualS_cast_view_delta(storage, &view, &deltaType, nullptr, nullptr);
     dualS_access(storage, e1, &view);
     EXPECT_NE(dualV_get_owned_ro(&view, type_test2), nullptr);
@@ -157,7 +156,7 @@ TEST_F(APITest, remove_component)
     EXPECT_NE(dualV_get_owned_ro(&view, type_test), nullptr);
     dual_delta_type_t deltaType;
     zero(deltaType);
-    deltaType.removed = {{&type_test, 1}};
+    deltaType.removed = { { &type_test, 1 } };
     dualS_cast_view_delta(storage, &view, &deltaType, nullptr, nullptr);
     dualS_access(storage, e1, &view);
     EXPECT_EQ(dualV_get_owned_ro(&view, type_test), nullptr);
@@ -170,9 +169,8 @@ TEST_F(APITest, batch)
         dual_entity_type_t entityType;
         entityType.type = { &type_test, 1 };
         entityType.meta = { nullptr, 0 };
-        auto callback = [&](dual_chunk_view_t* inView) 
-        { 
-            view[0] = *inView; 
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view[0] = *inView;
         };
         dualS_allocate_type(storage, &entityType, 10, DUAL_LAMBDA(callback));
     }
@@ -180,19 +178,17 @@ TEST_F(APITest, batch)
         dual_entity_type_t entityType;
         entityType.type = { &type_test2, 1 };
         entityType.meta = { nullptr, 0 };
-        auto callback = [&](dual_chunk_view_t* inView) 
-        { 
-            view[1] = *inView; 
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view[1] = *inView;
         };
-        dualS_allocate_type(storage, &entityType, 10, DUAL_LAMBDA(callback));                               
+        dualS_allocate_type(storage, &entityType, 10, DUAL_LAMBDA(callback));
     }
     std::vector<dual_entity_t> es;
     es.resize(20);
     std::memcpy(es.data(), dualV_get_entities(&view[0]), 10 * sizeof(dual_entity_t));
     std::memcpy(es.data() + 10, dualV_get_entities(&view[1]), 10 * sizeof(dual_entity_t));
-    int i=0;
-    auto callback2 = [&](dual_chunk_view_t* inView) 
-    { 
+    int i = 0;
+    auto callback2 = [&](dual_chunk_view_t* inView) {
         EXPECT_EQ(view[i].chunk, inView->chunk);
         EXPECT_EQ(view[i].start, inView->start);
         EXPECT_EQ(view[i].count, inView->count);
@@ -208,9 +204,8 @@ TEST_F(APITest, filter)
     dual_meta_filter_t meta;
     zero(meta);
     dual_chunk_view_t view;
-    auto callback = [&](dual_chunk_view_t* inView) 
-    { 
-        view = *inView; 
+    auto callback = [&](dual_chunk_view_t* inView) {
+        view = *inView;
     };
     dualS_query(storage, &filter, &meta, DUAL_LAMBDA(callback));
     EXPECT_EQ(*dualV_get_entities(&view), e1);
@@ -219,11 +214,10 @@ TEST_F(APITest, filter)
 TEST_F(APITest, query)
 {
     auto query = dualQ_from_literal(storage, "[in]test");
-    
+
     dual_chunk_view_t view;
-    auto callback = [&](dual_chunk_view_t* inView) 
-    { 
-        view = *inView; 
+    auto callback = [&](dual_chunk_view_t* inView) {
+        view = *inView;
     };
     dualQ_get_views(query, DUAL_LAMBDA(callback));
     EXPECT_EQ(*dualV_get_entities(&view), e1);
@@ -251,7 +245,7 @@ void register_test_component()
     }
 
     {
-        
+
         dual_type_description_t desc;
         desc.name = "test2";
         desc.size = sizeof(test);
@@ -276,7 +270,7 @@ auto register_ref_component()
     desc.name = "ref";
     desc.size = sizeof(ref);
     desc.entityFieldsCount = 1;
-    intptr_t fields[1] = {0};
+    intptr_t fields[1] = { 0 };
     desc.entityFields = (intptr_t)fields;
     desc.guid = "{4BEC235F-63DF-4A49-8F5E-5431890F61DD}"_guid;
     desc.callback = {};
@@ -301,18 +295,14 @@ auto register_managed_component()
     desc.flags = 0;
     desc.elementSize = 0;
     desc.alignment = alignof(managed);
-    desc.callback = 
-    {
-        +[](dual_chunk_t* chunk, EIndex index, char* data) { new(data) managed; },
-        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src)
-        { *(managed*)dst = *(const managed*)src; },
+    desc.callback = {
+        +[](dual_chunk_t* chunk, EIndex index, char* data) { new (data) managed; },
+        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) { *(managed*)dst = *(const managed*)src; },
         +[](dual_chunk_t* chunk, EIndex index, char* data) { ((managed*)data)->~managed(); },
-        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src)
-        { *(managed*)dst = std::move(*(managed*)src); },
-        +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, const dual_serializer_v* v, void* s)
-        { 
-            if(!v->is_serialize(s))
-                new(data) managed;
+        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) { *(managed*)dst = std::move(*(managed*)src); },
+        +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, const dual_serializer_v* v, void* s) {
+            if (!v->is_serialize(s))
+                new (data) managed;
         },
         nullptr
     };
@@ -349,7 +339,7 @@ extern "C" dual_context_t* dual_get_context()
     return ctx;
 }
 
-int main(int argc, char**argv)
+int main(int argc, char** argv)
 {
     ctx = dual_initialize();
     ::testing::InitGoogleTest(&argc, argv);

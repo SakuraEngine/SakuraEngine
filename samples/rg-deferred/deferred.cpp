@@ -390,6 +390,7 @@ int main(int argc, char* argv[])
                 // plot
                 auto max_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
                 auto min_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
+                (void)min_scale;
                 ImVec2 size = { 200, 200 };
                 ImGui::PlotHistogram("##ms",
                     profiler.times_ms.data() + 1,
