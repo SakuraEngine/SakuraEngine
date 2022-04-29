@@ -1005,7 +1005,9 @@ struct XXH64_state_s {
    XXH64_hash_t reserved64;   /*!< Reserved field. Do not read or write to it, it may be removed. */
 };   /* typedef'd to XXH64_state_t */
 
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) /* >= C11 */
+#if defined(_MSC_VER)
+#  define XXH_ALIGN(n)      __declspec(align(n))
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) /* >= C11 */
 #  include <stdalign.h>
 #  define XXH_ALIGN(n)      alignas(n)
 #elif defined(__cplusplus) && (__cplusplus >= 201103L) /* >= C++11 */
@@ -1013,8 +1015,6 @@ struct XXH64_state_s {
 #  define XXH_ALIGN(n)      alignas(n)
 #elif defined(__GNUC__)
 #  define XXH_ALIGN(n)      __attribute__ ((aligned(n)))
-#elif defined(_MSC_VER)
-#  define XXH_ALIGN(n)      __declspec(align(n))
 #else
 #  define XXH_ALIGN(n)   /* disabled */
 #endif
