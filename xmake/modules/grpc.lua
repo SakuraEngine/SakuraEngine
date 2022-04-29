@@ -28,13 +28,11 @@ function _get_protoc(target, sourcekind)
     local outputdir = path.join(os.projectdir(), "SDKs/grpc/bin")
     local protoc = target:data("protobuf.protoc")
     if not protoc and sourcekind == "cxx" then
-        protoc = find_sdk.find_program("protoc.exe", outputdir)
+        protoc = find_sdk.find_program("protoc", outputdir)
         if protoc then
             target:data_set("protobuf.protoc", protoc)
         end
     end
-
-
     -- get protoc
     return assert(protoc, "protoc not found! under " .. outputdir)
 end
@@ -43,12 +41,16 @@ function _get_grpc_cpp_plugin(target, sourcekind)
     local outputdir = path.join(os.projectdir(), "SDKs/grpc/bin")
     local grpc_cpp_plugin = target:data("grpc.grpc_cpp_plugin")
     if not grpc_cpp_plugin and sourcekind == "cxx" then
-        grpc_cpp_plugin = find_sdk.find_program("grpc_cpp_plugin.exe", outputdir)
+        grpc_cpp_plugin = find_sdk.find_program("grpc_cpp_plugin", outputdir)
+        if (grpc_cpp_plugin == nil) then
+            local outdata, errdata = os.iorun("which grpc_cpp_plugin")
+            grpc_cpp_plugin =  {program = string.gsub(outdata, "%s+", "")}
+        end
         if grpc_cpp_plugin then
             target:data_set("grpc.grpc_cpp_plugin", grpc_cpp_plugin)
         end
     end
-    return assert(grpc_cpp_plugin, "grpc_cpp_plugin not found! under " .. outputdir)
+    return grpc_cpp_plugin
 end
 
 -- we need add some configs to export includedirs to other targets in on_load
@@ -87,6 +89,7 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
     -- get protoc
     local protoc = _get_protoc(target, sourcekind)
     local grpc_cpp_plugin = _get_grpc_cpp_plugin(target, sourcekind)
+    
 
     -- get c/c++ source file for protobuf
     local prefixdir
@@ -114,7 +117,7 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
 
     -- add commands
     batchcmds:mkdir(sourcefile_dir)
-    batchcmds:show_progress(opt.progress, "${color.build.object}compiling.proto %s", sourcefile_proto)
+    batchcmds:show_progress(opt.program, "${color.build.object}compiling.proto %s", sourcefile_proto)
     batchcmds:vrunv(protoc.program, {sourcefile_proto,
         "-I" .. (prefixdir and prefixdir or path.directory(sourcefile_proto)),
         "--grpc_out=" .. sourcefile_dir,

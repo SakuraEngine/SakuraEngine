@@ -4,20 +4,29 @@ function find_program(name, sdkdir)
     import("lib.detect.find_file")
     import("lib.detect.find_program")
     local sdkdir = sdkdir or path.join(os.projectdir(), "build/sdk")
-    local dxc = find_program(name, {pathes = {sdkdir}})
-    local dxcf = find_file(name, {sdkdir})
+    local prog = find_program(name, {pathes = {sdkdir, "/usr/local/bin"}})
+    if(prog == nil) then
+        local outdata, errdata = os.iorun("which grpc_cpp_plugin")
+        prog = string.gsub(outdata, "%s+", "")
+    end
     
-    if(dxc == nil) then
+    if(prog == nil) then
         print(name.." not found! under "..sdkdir)
-        if(dxcf == nil) then
+        local progf = find_file(name, {sdkdir})
+        if(os.host() == "windows") then
+            if(progf == nil) then
+                progf = find_file(name..".exe", {sdkdir})
+            end
+        end
+        if(progf == nil) then
             print(name.."_f not found! under "..sdkdir)
             return
         else
-            dxc = dxcf
-            vexec = "cd "..sdkdir.." && "..dxc
+            prog = progf
+            vexec = "cd "..sdkdir.." && "..prog
         end
     else
-        vexec = dxc
+        vexec = prog
     end
-    return {program = dxc, vexec = vexec}
+    return {program = prog, vexec = vexec}
 end
