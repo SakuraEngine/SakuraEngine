@@ -1,6 +1,6 @@
 rule("utils.dxc")
     set_extensions(".hlsl")
-    on_buildcmd_file(function (target, batchcmds, sourcefile_hlsl, opt)
+    before_buildcmd_file(function (target, batchcmds, sourcefile_hlsl, opt)
         import("find_sdk")
         dxc = find_sdk.find_program("dxc")
 

@@ -24,3 +24,5 @@ _deps
 /SDKs/grpc
 /SDKs/reflector-win
 /SDKs/tools
+/SDKs/*.zip
+/SDKs/*.ttf
