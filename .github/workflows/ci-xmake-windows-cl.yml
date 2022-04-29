@@ -16,7 +16,9 @@ jobs:
       xmake-version: latest
    - name: Set env
      id: env
-     run: echo "::set-output name=VULKAN_SDK::C:\VulkanSDK\${{env.VulkanSDKVersion}}"
+     run: |
+        echo "::set-output name=VULKAN_SDK::C:\VulkanSDK\${{env.VulkanSDKVersion}}"
+        xmake l setup.lua
    - name: Cache
      id: cache
      uses: actions/cache@v1.1.2

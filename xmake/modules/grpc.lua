@@ -25,23 +25,21 @@ import("module_parser")
 import("find_sdk")
 -- get protoc
 function _get_protoc(target, sourcekind)
-    local outputdir = path.join(os.projectdir(), "SDKs/grpc/bin")
     local protoc = target:data("protobuf.protoc")
     if not protoc and sourcekind == "cxx" then
-        protoc = find_sdk.find_program("protoc", outputdir)
+        protoc = find_sdk.find_program("protoc")
         if protoc then
             target:data_set("protobuf.protoc", protoc)
         end
     end
     -- get protoc
-    return assert(protoc, "protoc not found! under " .. outputdir)
+    return assert(protoc, "protoc not found!")
 end
 
 function _get_grpc_cpp_plugin(target, sourcekind)
-    local outputdir = path.join(os.projectdir(), "SDKs/grpc/bin")
     local grpc_cpp_plugin = target:data("grpc.grpc_cpp_plugin")
     if not grpc_cpp_plugin and sourcekind == "cxx" then
-        grpc_cpp_plugin = find_sdk.find_program("grpc_cpp_plugin", outputdir)
+        grpc_cpp_plugin = find_sdk.find_program("grpc_cpp_plugin", nil, true)
         if (grpc_cpp_plugin == nil) then
             local outdata, errdata = os.iorun("which grpc_cpp_plugin")
             grpc_cpp_plugin =  {program = string.gsub(outdata, "%s+", "")}
@@ -120,6 +118,7 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
     batchcmds:show_progress(opt.program, "${color.build.object}compiling.proto %s", sourcefile_proto)
     batchcmds:vrunv(protoc.program, {sourcefile_proto,
         "-I" .. (prefixdir and prefixdir or path.directory(sourcefile_proto)),
+        "-I" .. vformat("$(projectdir)/thirdparty/grpc/include"),
         "--grpc_out=" .. sourcefile_dir,
         "--plugin=protoc-gen-grpc=" .. grpc_cpp_plugin.program,
         (sourcekind == "cxx" and "--cpp_out=" or "--c_out=") .. sourcefile_dir})
