@@ -19,8 +19,8 @@ inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* 
 }
 
 inline static void read_shader_bytes(
-    const char* virtual_path, uint32_t** bytes, uint32_t* length,
-    ECGpuBackend backend)
+const char* virtual_path, uint32_t** bytes, uint32_t* length,
+ECGPUBackend backend)
 {
     char shader_file[256];
     const char* shader_path = "./../resources/shaders/";
@@ -55,101 +55,101 @@ typedef struct Pixel {
 
 void ComputeFunc(void* usrdata)
 {
-    ECGpuBackend backend = *(ECGpuBackend*)usrdata;
+    ECGPUBackend backend = *(ECGPUBackend*)usrdata;
     // Create instance
-    CGpuInstanceDescriptor instance_desc = {
+    CGPUInstanceDescriptor instance_desc = {
         .backend = backend,
         .enable_debug_layer = true,
         .enable_gpu_based_validation = true,
         .enable_set_name = true
     };
-    CGpuInstanceId instance = cgpu_create_instance(&instance_desc);
+    CGPUInstanceId instance = cgpu_create_instance(&instance_desc);
 
     // Filter adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, CGPU_NULLPTR, &adapters_count);
-    DECLARE_ZERO_VLA(CGpuAdapterId, adapters, adapters_count);
+    DECLARE_ZERO_VLA(CGPUAdapterId, adapters, adapters_count);
     cgpu_enum_adapters(instance, adapters, &adapters_count);
-    CGpuAdapterId adapter = adapters[0];
+    CGPUAdapterId adapter = adapters[0];
 
     // Create device
-    CGpuQueueGroupDescriptor G = {
+    CGPUQueueGroupDescriptor G = {
         .queueType = QUEUE_TYPE_GRAPHICS,
         .queueCount = 1
     };
-    CGpuDeviceDescriptor device_desc = {
+    CGPUDeviceDescriptor device_desc = {
         .queueGroups = &G,
         .queueGroupCount = 1
     };
-    CGpuDeviceId device = cgpu_create_device(adapter, &device_desc);
+    CGPUDeviceId device = cgpu_create_device(adapter, &device_desc);
 
     // Create compute shader
     uint32_t *shader_bytes, shader_length;
     read_shader_bytes("cgpu-mandelbrot/mandelbrot",
-        &shader_bytes, &shader_length, backend);
-    CGpuShaderLibraryDescriptor shader_desc = {
+    &shader_bytes, &shader_length, backend);
+    CGPUShaderLibraryDescriptor shader_desc = {
         .code = shader_bytes,
         .code_size = shader_length,
         .name = "ComputeShaderLibrary",
         .stage = SHADER_STAGE_COMPUTE
     };
-    CGpuShaderLibraryId compute_shader = cgpu_create_shader_library(device, &shader_desc);
+    CGPUShaderLibraryId compute_shader = cgpu_create_shader_library(device, &shader_desc);
     free(shader_bytes);
 
     // Create root signature
-    CGpuPipelineShaderDescriptor compute_shader_entry = {
+    CGPUPipelineShaderDescriptor compute_shader_entry = {
         .entry = "main",
         .stage = SHADER_STAGE_COMPUTE,
         .library = compute_shader
     };
-    CGpuShaderReflection* entry_reflection = &compute_shader->entry_reflections[0];
-    CGpuRootSignatureDescriptor root_desc = {
+    CGPUShaderReflection* entry_reflection = &compute_shader->entry_reflections[0];
+    CGPURootSignatureDescriptor root_desc = {
         .shaders = &compute_shader_entry,
         .shader_count = 1
     };
-    CGpuRootSignatureId signature = cgpu_create_root_signature(device, &root_desc);
+    CGPURootSignatureId signature = cgpu_create_root_signature(device, &root_desc);
 
     // Create compute pipeline
-    CGpuComputePipelineDescriptor pipeline_desc = {
+    CGPUComputePipelineDescriptor pipeline_desc = {
         .compute_shader = &compute_shader_entry,
         .root_signature = signature
     };
-    CGpuComputePipelineId pipeline = cgpu_create_compute_pipeline(device, &pipeline_desc);
+    CGPUComputePipelineId pipeline = cgpu_create_compute_pipeline(device, &pipeline_desc);
 
-    CGpuDescriptorSetDescriptor set_desc = {
+    CGPUDescriptorSetDescriptor set_desc = {
         .root_signature = signature,
         .set_index = 0
     };
-    CGpuDescriptorSetId set = cgpu_create_descriptor_set(device, &set_desc);
+    CGPUDescriptorSetId set = cgpu_create_descriptor_set(device, &set_desc);
 
     // Create data buffer
-    CGpuBufferDescriptor buffer_desc = {
+    CGPUBufferDescriptor buffer_desc = {
         .name = "DataBuffer",
-        .flags = BCF_NONE,
-        .descriptors = RT_RW_BUFFER,
+        .flags = CGPU_BCF_NONE,
+        .descriptors = CGPU_RT_RW_BUFFER,
         .start_state = RESOURCE_STATE_UNORDERED_ACCESS,
-        .memory_usage = MEM_USAGE_GPU_ONLY,
+        .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Pixel),
         .elemet_count = MANDELBROT_WIDTH * MANDELBROT_HEIGHT,
         .size = sizeof(Pixel) * MANDELBROT_WIDTH * MANDELBROT_HEIGHT
     };
-    CGpuBufferId data_buffer = cgpu_create_buffer(device, &buffer_desc);
+    CGPUBufferId data_buffer = cgpu_create_buffer(device, &buffer_desc);
 
     // Create readback buffer
-    CGpuBufferDescriptor rb_desc = {
+    CGPUBufferDescriptor rb_desc = {
         .name = "ReadbackBuffer",
-        .flags = BCF_OWN_MEMORY_BIT,
-        .descriptors = RT_NONE,
+        .flags = CGPU_BCF_OWN_MEMORY_BIT,
+        .descriptors = CGPU_RT_NONE,
         .start_state = RESOURCE_STATE_COPY_DEST,
-        .memory_usage = MEM_USAGE_GPU_TO_CPU,
+        .memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU,
         .element_stride = buffer_desc.element_stride,
         .elemet_count = buffer_desc.elemet_count,
         .size = buffer_desc.size
     };
-    CGpuBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);
+    CGPUBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);
 
     // Update descriptor set
-    CGpuDescriptorData descriptor_data = {
+    CGPUDescriptorData descriptor_data = {
         .name = "buf",
         .buffers = &data_buffer,
         .count = 1
@@ -157,37 +157,37 @@ void ComputeFunc(void* usrdata)
     cgpu_update_descriptor_set(set, &descriptor_data, 1);
 
     // Create command objects
-    CGpuQueueId gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
-    CGpuCommandPoolId pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
-    CGpuCommandBufferDescriptor cmd_desc = { .is_secondary = false };
-    CGpuCommandBufferId cmd = cgpu_create_command_buffer(pool, &cmd_desc);
+    CGPUQueueId gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+    CGPUCommandPoolId pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
+    CGPUCommandBufferDescriptor cmd_desc = { .is_secondary = false };
+    CGPUCommandBufferId cmd = cgpu_create_command_buffer(pool, &cmd_desc);
 
     // Dispatch
     {
         cgpu_cmd_begin(cmd);
         // Begin dispatch compute pass
-        CGpuComputePassDescriptor pass_desc = { .name = "ComputePass" };
-        CGpuComputePassEncoderId encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
+        CGPUComputePassDescriptor pass_desc = { .name = "ComputePass" };
+        CGPUComputePassEncoderId encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
         cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
         cgpu_compute_encoder_bind_descriptor_set(encoder, set);
         cgpu_compute_encoder_dispatch(encoder,
-            (uint32_t)ceil(MANDELBROT_WIDTH / (float)entry_reflection->thread_group_sizes[0]),
-            (uint32_t)ceil(MANDELBROT_HEIGHT / (float)entry_reflection->thread_group_sizes[1]),
-            1);
+        (uint32_t)ceil(MANDELBROT_WIDTH / (float)entry_reflection->thread_group_sizes[0]),
+        (uint32_t)ceil(MANDELBROT_HEIGHT / (float)entry_reflection->thread_group_sizes[1]),
+        1);
         cgpu_cmd_end_compute_pass(cmd, encoder);
         // Barrier UAV buffer to transfer source
-        CGpuBufferBarrier buffer_barrier = {
+        CGPUBufferBarrier buffer_barrier = {
             .buffer = data_buffer,
             .src_state = RESOURCE_STATE_UNORDERED_ACCESS,
             .dst_state = RESOURCE_STATE_COPY_SOURCE
         };
-        CGpuResourceBarrierDescriptor barriers_desc = {
+        CGPUResourceBarrierDescriptor barriers_desc = {
             .buffer_barriers = &buffer_barrier,
             .buffer_barriers_count = 1
         };
         cgpu_cmd_resource_barrier(cmd, &barriers_desc);
         // Copy buffer to readback
-        CGpuBufferToBufferTransfer cpy_desc = {
+        CGPUBufferToBufferTransfer cpy_desc = {
             .src = data_buffer,
             .src_offset = 0,
             .dst = readback_buffer,
@@ -196,7 +196,7 @@ void ComputeFunc(void* usrdata)
         };
         cgpu_cmd_transfer_buffer_to_buffer(cmd, &cpy_desc);
         cgpu_cmd_end(cmd);
-        CGpuQueueSubmitDescriptor submit_desc = {
+        CGPUQueueSubmitDescriptor submit_desc = {
             .cmds = &cmd,
             .cmds_count = 1
         };
@@ -207,7 +207,7 @@ void ComputeFunc(void* usrdata)
     // Map buffer and readback
     unsigned char* image;
     {
-        CGpuBufferRange map_range = {
+        CGPUBufferRange map_range = {
             .offset = 0,
             .size = buffer_desc.size
         };
@@ -250,14 +250,14 @@ void ComputeFunc(void* usrdata)
 int main(void)
 {
     // When we support more add them here
-    ECGpuBackend backends[] = {
+    ECGPUBackend backends[] = {
         CGPU_BACKEND_VULKAN
 #ifdef CGPU_USE_D3D12
         ,
         CGPU_BACKEND_D3D12
 #endif
     };
-    const uint32_t CGPU_BACKEND_COUNT = sizeof(backends) / sizeof(ECGpuBackend);
+    const uint32_t CGPU_BACKEND_COUNT = sizeof(backends) / sizeof(ECGPUBackend);
     DECLARE_ZERO_VLA(SThreadHandle, hdls, CGPU_BACKEND_COUNT)
     DECLARE_ZERO_VLA(SThreadDesc, thread_descs, CGPU_BACKEND_COUNT)
     for (uint32_t i = 0; i < CGPU_BACKEND_COUNT; i++)

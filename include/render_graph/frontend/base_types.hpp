@@ -140,19 +140,19 @@ struct ObjectHandle<EObjectType::Texture> {
         friend class TextureReadEdge;
         ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
         ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
-        ShaderReadHandle dimension(ECGpuTextureDimension dim) const;
+        ShaderReadHandle dimension(ECGPUTextureDimension dim) const;
         const handle_t _this;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
     protected:
         ShaderReadHandle(const handle_t _this,
-            const uint32_t mip_base = 0, const uint32_t mip_count = 1,
-            const uint32_t array_base = 0, const uint32_t array_count = 1);
+        const uint32_t mip_base = 0, const uint32_t mip_count = 1,
+        const uint32_t array_base = 0, const uint32_t array_count = 1);
         uint32_t mip_base = 0;
         uint32_t mip_count = 1;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
-        ECGpuTextureDimension dim = TEX_DIMENSION_2D;
+        ECGPUTextureDimension dim = CGPU_TEX_DIMENSION_2D;
     };
     struct ShaderWriteHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
@@ -202,7 +202,7 @@ struct ObjectHandle<EObjectType::Texture> {
         uint32_t mip_level = 0;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
-        CGpuTextureViewAspects aspects = TVA_COLOR;
+        CGPUTextureViewAspects aspects = CGPU_TVA_COLOR;
         SubresourceHandle(const handle_t _this);
     };
     inline operator handle_t() const { return handle; }
@@ -291,7 +291,7 @@ inline TextureSRVHandle TextureSRVHandle::read_array(uint32_t base, uint32_t cou
     return _;
 }
 
-inline TextureSRVHandle TextureSRVHandle::dimension(ECGpuTextureDimension dim) const
+inline TextureSRVHandle TextureSRVHandle::dimension(ECGPUTextureDimension dim) const
 {
     ShaderReadHandle _ = *this;
     _.dim = dim;
@@ -299,10 +299,10 @@ inline TextureSRVHandle TextureSRVHandle::dimension(ECGpuTextureDimension dim) c
 }
 
 inline TextureSRVHandle::ShaderReadHandle(const handle_t _this,
-    const uint32_t mip_base,
-    const uint32_t mip_count,
-    const uint32_t array_base,
-    const uint32_t array_count)
+const uint32_t mip_base,
+const uint32_t mip_count,
+const uint32_t array_base,
+const uint32_t array_count)
     : _this(_this)
     , mip_base(mip_base)
     , mip_count(mip_count)

@@ -11,12 +11,12 @@ namespace cgpux
 namespace eastl
 {
 template <>
-struct hash<CGpuVertexLayout> {
-    size_t operator()(const CGpuVertexLayout& val) const { return skr_hash(&val, sizeof(CGpuVertexLayout), 0); }
+struct hash<CGPUVertexLayout> {
+    size_t operator()(const CGPUVertexLayout& val) const { return skr_hash(&val, sizeof(CGPUVertexLayout), 0); }
 };
 template <>
-struct equal_to<CGpuVertexLayout> {
-    size_t operator()(const CGpuVertexLayout& a, const CGpuVertexLayout& b) const
+struct equal_to<CGPUVertexLayout> {
+    size_t operator()(const CGPUVertexLayout& a, const CGPUVertexLayout& b) const
     {
         if (a.attribute_count != b.attribute_count) return false;
         for (uint32_t i = 0; i < a.attribute_count; i++)

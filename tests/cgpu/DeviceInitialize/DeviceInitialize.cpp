@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
 
-class CGpuTest : public ::testing::TestWithParam<ECGpuBackend>
+class Test : public ::testing::TestWithParam<EBackend>
 {
 protected:
     void SetUp() override
@@ -10,16 +10,16 @@ protected:
 
     const char* GetBackendName()
     {
-        ECGpuBackend backend = GetParam();
+        EBackend backend = GetParam();
         switch (backend)
         {
-            case ECGpuBackend::CGPU_BACKEND_D3D12:
+            case EBackend::CGPU_BACKEND_D3D12:
                 return "D3D12";
-            case ECGpuBackend::CGPU_BACKEND_METAL:
+            case EBackend::CGPU_BACKEND_METAL:
                 return "Metal";
-            case ECGpuBackend::CGPU_BACKEND_VULKAN:
+            case EBackend::CGPU_BACKEND_VULKAN:
                 return "Vulkan";
-            case ECGpuBackend::CGPU_BACKEND_AGC:
+            case EBackend::CGPU_BACKEND_AGC:
                 return "AGC";
             default:
                 return "UNKNOWN";
@@ -27,41 +27,41 @@ protected:
     }
 };
 
-CGpuInstanceId init_instance(ECGpuBackend backend, bool enable_debug_layer, bool enableGPUValidation)
+InstanceId init_instance(EBackend backend, bool enable_debug_layer, bool enableGPUValidation)
 {
-    DECLARE_ZERO(CGpuInstanceDescriptor, desc)
+    DECLARE_ZERO(InstanceDescriptor, desc)
     desc.backend = backend;
     desc.enable_debug_layer = enable_debug_layer;
     desc.enable_gpu_based_validation = enableGPUValidation;
-    CGpuInstanceId instance = cgpu_create_instance(&desc);
-    DECLARE_ZERO(CGpuInstanceFeatures, instance_features)
+    InstanceId instance = cgpu_create_instance(&desc);
+    DECLARE_ZERO(InstanceFeatures, instance_features)
     cgpu_query_instance_features(instance, &instance_features);
-    if (backend == ECGpuBackend::CGPU_BACKEND_VULKAN)
+    if (backend == EBackend::CGPU_BACKEND_VULKAN)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
-    else if (backend == ECGpuBackend::CGPU_BACKEND_D3D12)
+    else if (backend == EBackend::CGPU_BACKEND_D3D12)
     {
         EXPECT_FALSE(instance_features.specialization_constant);
     }
-    else if (backend == ECGpuBackend::CGPU_BACKEND_METAL)
+    else if (backend == EBackend::CGPU_BACKEND_METAL)
     {
         EXPECT_TRUE(instance_features.specialization_constant);
     }
     return instance;
 }
 
-int enum_adapters(CGpuInstanceId instance)
+int enum_adapters(InstanceId instance)
 {
     // enum adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGpuAdapterId> adapters;
+    std::vector<AdapterId> adapters;
     adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
     {
-        const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+        const AdapterDetail* prop = cgpu_query_adapter_detail(adapter);
         const auto& VendorInfo = prop->vendor_preset;
         std::cout << " device id: " << VendorInfo.device_id
                   << " vendor id: " << VendorInfo.vendor_id << "\n"
@@ -72,12 +72,12 @@ int enum_adapters(CGpuInstanceId instance)
     return adapters_count;
 }
 
-void test_create_device(CGpuInstanceId instance, bool enable_debug_layer, bool enableGPUValidation)
+void test_create_device(InstanceId instance, bool enable_debug_layer, bool enableGPUValidation)
 {
     // enum adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGpuAdapterId> adapters;
+    std::vector<AdapterId> adapters;
     adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
@@ -86,11 +86,11 @@ void test_create_device(CGpuInstanceId instance, bool enable_debug_layer, bool e
         auto cQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_COMPUTE);
         auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
 
-        std::vector<CGpuQueueGroupDescriptor> queueGroup;
-        if (gQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_GRAPHICS, 1 });
-        if (cQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_COMPUTE, 1 });
-        if (tQueue > 0) queueGroup.push_back(CGpuQueueGroupDescriptor{ QUEUE_TYPE_TRANSFER, 1 });
-        DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
+        std::vector<QueueGroupDescriptor> queueGroup;
+        if (gQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_GRAPHICS, 1 });
+        if (cQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_COMPUTE, 1 });
+        if (tQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_TRANSFER, 1 });
+        DECLARE_ZERO(DeviceDescriptor, descriptor)
         descriptor.queueGroups = queueGroup.data();
         descriptor.queueGroupCount = (uint32_t)queueGroup.size();
 
@@ -101,73 +101,73 @@ void test_create_device(CGpuInstanceId instance, bool enable_debug_layer, bool e
     }
 }
 
-TEST_P(CGpuTest, InstanceCreationDbgGpu)
+TEST_P(Test, InstanceCreationDbgGpu)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto inst = init_instance(backend, true, true);
     EXPECT_NE(inst, CGPU_NULLPTR);
     cgpu_free_instance(inst);
 }
-TEST_P(CGpuTest, InstanceCreationDbg)
+TEST_P(Test, InstanceCreationDbg)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto inst = init_instance(backend, true, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     cgpu_free_instance(inst);
 }
-TEST_P(CGpuTest, InstanceCreation)
+TEST_P(Test, InstanceCreation)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto inst = init_instance(backend, false, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     cgpu_free_instance(inst);
 }
 
-TEST_P(CGpuTest, AdapterEnum)
+TEST_P(Test, AdapterEnum)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto instance = init_instance(backend, true, true);
     EXPECT_GT(enum_adapters(instance), 0);
     cgpu_free_instance(instance);
 }
 
-TEST_P(CGpuTest, CreateDeviceDbgGpu)
+TEST_P(Test, CreateDeviceDbgGpu)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto inst = init_instance(backend, true, true);
     EXPECT_NE(inst, CGPU_NULLPTR);
     test_create_device(inst, false, false);
     cgpu_free_instance(inst);
 }
-TEST_P(CGpuTest, CreateDevice)
+TEST_P(Test, CreateDevice)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto inst = init_instance(backend, false, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     test_create_device(inst, false, false);
     cgpu_free_instance(inst);
 }
-TEST_P(CGpuTest, CreateDeviceDbg)
+TEST_P(Test, CreateDeviceDbg)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto inst = init_instance(backend, true, false);
     EXPECT_NE(inst, CGPU_NULLPTR);
     test_create_device(inst, false, false);
     cgpu_free_instance(inst);
 }
 
-TEST_P(CGpuTest, QueryQueueCount)
+TEST_P(Test, QueryQueueCount)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto instance = init_instance(backend, true, true);
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGpuAdapterId> adapters;
+    std::vector<AdapterId> adapters;
     adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
     {
-        const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+        const AdapterDetail* prop = cgpu_query_adapter_detail(adapter);
         auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
         auto cQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_COMPUTE);
         auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
@@ -180,18 +180,18 @@ TEST_P(CGpuTest, QueryQueueCount)
     cgpu_free_instance(instance);
 }
 
-TEST_P(CGpuTest, QueryVendorInfo)
+TEST_P(Test, QueryVendorInfo)
 {
-    ECGpuBackend backend = GetParam();
+    EBackend backend = GetParam();
     auto instance = init_instance(backend, true, true);
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGpuAdapterId> adapters;
+    std::vector<AdapterId> adapters;
     adapters.resize(adapters_count);
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
     {
-        const CGpuAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+        const AdapterDetail* prop = cgpu_query_adapter_detail(adapter);
         std::cout << prop->vendor_preset.gpu_name << " Vendor Information (" << GetBackendName() << ")  \n"
                   << "    GPU Name: " << prop->vendor_preset.gpu_name << "\n"
                   << "    Is UMA: " << prop->is_uma << "\n"
@@ -205,16 +205,16 @@ TEST_P(CGpuTest, QueryVendorInfo)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    CGPU_BACKEND_VULKAN
+CGPU_BACKEND_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
-    ,
-    CGPU_BACKEND_D3D12
+,
+CGPU_BACKEND_D3D12
 #endif
 #ifdef CGPU_USE_METAL
-    ,
-    CGPU_BACKEND_METAL
+,
+CGPU_BACKEND_METAL
 #endif
 );
 
-INSTANTIATE_TEST_SUITE_P(DeviceInitialization, CGpuTest, allPlatforms);
+INSTANTIATE_TEST_SUITE_P(DeviceInitialization, Test, allPlatforms);

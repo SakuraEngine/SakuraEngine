@@ -5,13 +5,13 @@
 extern "C" {
 #endif
 
-struct CGpuRuntimeTable* cgpu_create_runtime_table();
-void cgpu_free_runtime_table(struct CGpuRuntimeTable* table);
-void cgpu_runtime_table_add_queue(CGpuQueueId queue, ECGpuQueueType type, uint32_t index);
-CGpuQueueId cgpu_runtime_table_try_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index);
+struct CGPURuntimeTable* cgpu_create_runtime_table();
+void cgpu_free_runtime_table(struct CGPURuntimeTable* table);
+void cgpu_runtime_table_add_queue(CGPUQueueId queue, ECGPUQueueType type, uint32_t index);
+CGPUQueueId cgpu_runtime_table_try_get_queue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
 
-void CGpuUtil_InitRSParamTables(CGpuRootSignature* RS, const struct CGpuRootSignatureDescriptor* desc);
-void CGpuUtil_FreeRSParamTables(CGpuRootSignature* RS);
+void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSignatureDescriptor* desc);
+void CGPUUtil_FreeRSParamTables(CGPURootSignature* RS);
 
 #ifdef __cplusplus
 } // end extern "C"

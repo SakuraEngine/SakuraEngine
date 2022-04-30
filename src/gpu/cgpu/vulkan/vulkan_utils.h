@@ -13,66 +13,66 @@ extern "C" {
 struct VkUtil_DescriptorPool;
 
 // Environment Setup
-bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst);
-void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst);
+bool VkUtil_InitializeEnvironment(struct CGPUInstance* Inst);
+void VkUtil_DeInitializeEnvironment(struct CGPUInstance* Inst);
 
 // Instance Helpers
 void VkUtil_EnableValidationLayer(
-    CGpuInstance_Vulkan* I,
-    const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
-    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr);
-void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
-    const char* const* device_layers, uint32_t device_layers_count,
-    const char* const* device_extensions, uint32_t device_extension_count);
+CGPUInstance_Vulkan* I,
+const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
+const VkDebugReportCallbackCreateInfoEXT* report_info_ptr);
+void VkUtil_QueryAllAdapters(CGPUInstance_Vulkan* I,
+const char* const* device_layers, uint32_t device_layers_count,
+const char* const* device_extensions, uint32_t device_extension_count);
 
 // Device Helpers
-void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D);
-void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
-void VkUtil_FreeVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
-void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D);
+void VkUtil_CreatePipelineCache(CGPUDevice_Vulkan* D);
+void VkUtil_CreateVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CGPUDevice_Vulkan* D);
+void VkUtil_FreeVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CGPUDevice_Vulkan* D);
+void VkUtil_FreePipelineCache(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CGPUDevice_Vulkan* D);
 
 // API Objects Helpers
-struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D);
+struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGPUDevice_Vulkan* D);
 void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool, const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets);
 void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescriptorSet* pSets, uint32_t numDescriptorSets);
 void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool);
-VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGpuDevice_Vulkan* D, const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count);
-void VkUtil_FreeDescriptorSetLayout(CGpuDevice_Vulkan* D, VkDescriptorSetLayout layout);
-void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vulkan* library, const struct CGpuShaderLibraryDescriptor* desc);
-void VkUtil_FreeShaderReflection(CGpuShaderLibrary_Vulkan* library);
+VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGPUDevice_Vulkan* D, const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count);
+void VkUtil_FreeDescriptorSetLayout(CGPUDevice_Vulkan* D, VkDescriptorSetLayout layout);
+void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vulkan* library, const struct CGPUShaderLibraryDescriptor* desc);
+void VkUtil_FreeShaderReflection(CGPUShaderLibrary_Vulkan* library);
 
 // Feature Select Helpers
-void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter);
-void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter);
-void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter);
-void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* VkInstance,
-    const char* const* instance_layers, uint32_t instance_layers_count);
-void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
-    const char* const* instance_extensions, uint32_t instance_extension_count);
-void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
-    const char* const* device_layers, uint32_t device_layers_count);
-void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
-    const char* const* device_extensions, uint32_t device_extension_count);
+void VkUtil_SelectQueueIndices(CGPUAdapter_Vulkan* VkAdapter);
+void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter);
+void VkUtil_EnumFormatSupports(CGPUAdapter_Vulkan* VkAdapter);
+void VkUtil_SelectInstanceLayers(struct CGPUInstance_Vulkan* VkInstance,
+const char* const* instance_layers, uint32_t instance_layers_count);
+void VkUtil_SelectInstanceExtensions(struct CGPUInstance_Vulkan* VkInstance,
+const char* const* instance_extensions, uint32_t instance_extension_count);
+void VkUtil_SelectPhysicalDeviceLayers(struct CGPUAdapter_Vulkan* VkAdapter,
+const char* const* device_layers, uint32_t device_layers_count);
+void VkUtil_SelectPhysicalDeviceExtensions(struct CGPUAdapter_Vulkan* VkAdapter,
+const char* const* device_extensions, uint32_t device_extension_count);
 
 // Table Helpers
 struct VkUtil_RenderPassDesc;
 struct VkUtil_FramebufferDesc;
-VkRenderPass VkUtil_RenderPassTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc);
-void VkUtil_RenderPassTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass);
-VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_FramebufferDesc* desc);
-void VkUtil_FramebufferTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_FramebufferDesc* desc, VkFramebuffer framebuffer);
+VkRenderPass VkUtil_RenderPassTableTryFind(struct CGPUVkPassTable* table, const struct VkUtil_RenderPassDesc* desc);
+void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass);
+VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, const struct VkUtil_FramebufferDesc* desc);
+void VkUtil_FramebufferTableAdd(struct CGPUVkPassTable* table, const struct VkUtil_FramebufferDesc* desc, VkFramebuffer framebuffer);
 
 // Debug Helpers
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData);
+VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+VkDebugUtilsMessageTypeFlagsEXT messageType,
+const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+void* pUserData);
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
-    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-    uint64_t object, size_t location, int32_t messageCode,
-    const char* pLayerPrefix, const char* pMessage, void* pUserData);
-void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
+VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+uint64_t object, size_t location, int32_t messageCode,
+const char* pLayerPrefix, const char* pMessage, void* pUserData);
+void VkUtil_OptionalSetObjectName(struct CGPUDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
 
 #define CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1)
 static const VkDescriptorPoolSize gDescriptorPoolSizes[CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE] = {
@@ -89,7 +89,7 @@ static const VkDescriptorPoolSize gDescriptorPoolSizes[CGPU_VK_DESCRIPTOR_TYPE_R
     { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 },
 };
 typedef struct VkUtil_DescriptorPool {
-    CGpuDevice_Vulkan* Device;
+    CGPUDevice_Vulkan* Device;
     VkDescriptorPool pVkDescPool;
     VkDescriptorPoolCreateFlags mFlags;
     /// Lock for multi-threaded descriptor allocations
@@ -97,19 +97,19 @@ typedef struct VkUtil_DescriptorPool {
 } VkUtil_DescriptorPool;
 
 typedef struct VkUtil_RenderPassDesc {
-    ECGpuFormat pColorFormats[MAX_MRT_COUNT];
-    ECGpuLoadAction pLoadActionsColor[MAX_MRT_COUNT];
-    ECGpuStoreAction pStoreActionsColor[MAX_MRT_COUNT];
-    ECGpuLoadAction pLoadActionsColorResolve[MAX_MRT_COUNT];
-    ECGpuStoreAction pStoreActionsColorResolve[MAX_MRT_COUNT];
+    ECGPUFormat pColorFormats[MAX_MRT_COUNT];
+    ECGPULoadAction pLoadActionsColor[MAX_MRT_COUNT];
+    ECGPUStoreAction pStoreActionsColor[MAX_MRT_COUNT];
+    ECGPULoadAction pLoadActionsColorResolve[MAX_MRT_COUNT];
+    ECGPUStoreAction pStoreActionsColorResolve[MAX_MRT_COUNT];
     bool pResolveMasks[MAX_MRT_COUNT];
     uint32_t mColorAttachmentCount;
-    ECGpuSampleCount mSampleCount;
-    ECGpuFormat mDepthStencilFormat;
-    ECGpuLoadAction mLoadActionDepth;
-    ECGpuStoreAction mStoreActionDepth;
-    ECGpuLoadAction mLoadActionStencil;
-    ECGpuStoreAction mStoreActionStencil;
+    ECGPUSampleCount mSampleCount;
+    ECGPUFormat mDepthStencilFormat;
+    ECGPULoadAction mLoadActionDepth;
+    ECGPUStoreAction mStoreActionDepth;
+    ECGPULoadAction mLoadActionStencil;
+    ECGPUStoreAction mStoreActionStencil;
 } VkUtil_RenderPassDesc;
 
 typedef struct VkUtil_FramebufferDesc {

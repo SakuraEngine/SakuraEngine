@@ -1,20 +1,20 @@
 #include "metal_utils.h"
 #import "cgpu/backend/metal/cgpu_metal_types.h"
 
-uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGpuAdapter_Metal* MAdapter);
-void MetalUtilInner_EnumFormatShaderWriteSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier);
-void MetalUtilInner_EnumFormatShaderReadSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier);
-void MetalUtilInner_EnumFormatRenderTargetWriteSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier);
+uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGPUAdapter_Metal* MAdapter);
+void MetalUtilInner_EnumFormatShaderWriteSupports(struct CGPUAdapter_Metal* MAdapter, uint32_t familyTier);
+void MetalUtilInner_EnumFormatShaderReadSupports(struct CGPUAdapter_Metal* MAdapter, uint32_t familyTier);
+void MetalUtilInner_EnumFormatRenderTargetWriteSupports(struct CGPUAdapter_Metal* MAdapter, uint32_t familyTier);
 
-#define CAN_SHADER_READ(x) MAdapter->adapter_detail.format_supports[PF_##x].shader_read = true;
-#define SET_SHADER_READ(x, opt) MAdapter->adapter_detail.format_supports[PF_##x].shader_read = (opt);
-#define CAN_SHADER_WRITE(x) MAdapter->adapter_detail.format_supports[PF_##x].shader_write = true;
-#define SET_SHADER_WRITE(x, opt) MAdapter->adapter_detail.format_supports[PF_##x].shader_write = (opt);
-#define CAN_RENDER_TARGET_WRITE(x) MAdapter->adapter_detail.format_supports[PF_##x].render_target_write = true;
-#define SET_RENDER_TARGET_WRITE(x, opt) MAdapter->adapter_detail.format_supports[PF_##x].render_target_write = (opt);
-void MetalUtil_EnumFormatSupports(struct CGpuAdapter_Metal* MAdapter)
+#define CAN_SHADER_READ(x) MAdapter->adapter_detail.format_supports[CGPU_FORMAT_##x].shader_read = true;
+#define SET_SHADER_READ(x, opt) MAdapter->adapter_detail.format_supports[CGPU_FORMAT_##x].shader_read = (opt);
+#define CAN_SHADER_WRITE(x) MAdapter->adapter_detail.format_supports[CGPU_FORMAT_##x].shader_write = true;
+#define SET_SHADER_WRITE(x, opt) MAdapter->adapter_detail.format_supports[CGPU_FORMAT_##x].shader_write = (opt);
+#define CAN_RENDER_TARGET_WRITE(x) MAdapter->adapter_detail.format_supports[CGPU_FORMAT_##x].render_target_write = true;
+#define SET_RENDER_TARGET_WRITE(x, opt) MAdapter->adapter_detail.format_supports[CGPU_FORMAT_##x].render_target_write = (opt);
+void MetalUtil_EnumFormatSupports(struct CGPUAdapter_Metal* MAdapter)
 {
-    for (uint32_t i = 0; i < PF_COUNT; ++i)
+    for (uint32_t i = 0; i < CGPU_FORMAT_COUNT; ++i)
     {
         MAdapter->adapter_detail.format_supports[i].shader_read = 0;
         MAdapter->adapter_detail.format_supports[i].shader_write = 0;
@@ -28,7 +28,7 @@ void MetalUtil_EnumFormatSupports(struct CGpuAdapter_Metal* MAdapter)
 }
 
 // Inner Utils
-uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGpuAdapter_Metal* MAdapter)
+uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGPUAdapter_Metal* MAdapter)
 {
     uint32_t familyTier = 0;
 #ifdef TARGET_MACOS
@@ -76,11 +76,11 @@ uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGpuAdapter_Metal* MAdapter)
     return familyTier;
 }
 
-void MetalUtilInner_EnumFormatShaderReadSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier)
+void MetalUtilInner_EnumFormatShaderReadSupports(struct CGPUAdapter_Metal* MAdapter, uint32_t familyTier)
 {
-    for (uint32_t i = 0; i < PF_COUNT; ++i)
+    for (uint32_t i = 0; i < CGPU_FORMAT_COUNT; ++i)
     {
-        MTLPixelFormat mformat = MetalUtil_TranslatePixelFormat((ECGpuFormat)i);
+        MTLPixelFormat mformat = MetalUtil_TranslatePixelFormat((ECGPUFormat)i);
         if (mformat != MTLPixelFormatInvalid)
         {
 #ifndef TARGET_IOS
@@ -136,7 +136,7 @@ void MetalUtilInner_EnumFormatShaderReadSupports(struct CGpuAdapter_Metal* MAdap
 #endif
 }
 
-void MetalUtilInner_EnumFormatShaderWriteSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier)
+void MetalUtilInner_EnumFormatShaderWriteSupports(struct CGPUAdapter_Metal* MAdapter, uint32_t familyTier)
 {
 #if defined(ENABLE_TEXTURE_READ_WRITE)
     if (@available(macOS 10.13, iOS 11.0, *))
@@ -176,7 +176,7 @@ void MetalUtilInner_EnumFormatShaderWriteSupports(struct CGpuAdapter_Metal* MAda
 #endif
 }
 
-void MetalUtilInner_EnumFormatRenderTargetWriteSupports(struct CGpuAdapter_Metal* MAdapter, uint32_t familyTier)
+void MetalUtilInner_EnumFormatRenderTargetWriteSupports(struct CGPUAdapter_Metal* MAdapter, uint32_t familyTier)
 {
 #ifndef TARGET_IOS
     if (familyTier >= 1)

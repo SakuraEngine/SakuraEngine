@@ -10,7 +10,7 @@ FORCEINLINE static void D3D12Util_CopyDescriptorHandle(D3D12Util_DescriptorHeap 
                                         srcHandle, pHeap->mDesc.Type);
 }
 
-FORCEINLINE static void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+FORCEINLINE static void D3D12Util_CreateSRV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
     const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
     if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
@@ -18,7 +18,7 @@ FORCEINLINE static void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource*
     D->pDxDevice->CreateShaderResourceView(pResource, pSrvDesc, *pHandle);
 }
 
-FORCEINLINE static void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
+FORCEINLINE static void D3D12Util_CreateUAV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
     ID3D12Resource* pCounterResource,
     const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
@@ -27,7 +27,7 @@ FORCEINLINE static void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource*
     D->pDxDevice->CreateUnorderedAccessView(pResource, pCounterResource, pSrvDesc, *pHandle);
 }
 
-FORCEINLINE static void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
+FORCEINLINE static void D3D12Util_CreateCBV(CGPUDevice_D3D12* D,
     const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
     if (D3D12_GPU_VIRTUAL_ADDRESS_NULL == pHandle->ptr)
@@ -35,7 +35,7 @@ FORCEINLINE static void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
     D->pDxDevice->CreateConstantBufferView(pSrvDesc, *pHandle);
 }
 
-FORCEINLINE static void D3D12Util_CreateRTV(CGpuDevice_D3D12* D,
+FORCEINLINE static void D3D12Util_CreateRTV(CGPUDevice_D3D12* D,
     ID3D12Resource* pResource,
     const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
@@ -44,7 +44,7 @@ FORCEINLINE static void D3D12Util_CreateRTV(CGpuDevice_D3D12* D,
     D->pDxDevice->CreateRenderTargetView(pResource, pRtvDesc, *pHandle);
 }
 
-FORCEINLINE static void D3D12Util_CreateDSV(CGpuDevice_D3D12* D,
+FORCEINLINE static void D3D12Util_CreateDSV(CGPUDevice_D3D12* D,
     ID3D12Resource* pResource,
     const D3D12_DEPTH_STENCIL_VIEW_DESC* pDsvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle)
 {
@@ -53,19 +53,19 @@ FORCEINLINE static void D3D12Util_CreateDSV(CGpuDevice_D3D12* D,
     D->pDxDevice->CreateDepthStencilView(pResource, pDsvDesc, *pHandle);
 }
 
-FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescriptorRangeType(ECGpuResourceType type) {
+FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescriptorRangeType(ECGPUResourceType type) {
   switch (type) {
-  case RT_UNIFORM_BUFFER:
-  case RT_ROOT_CONSTANT:
+  case CGPU_RT_UNIFORM_BUFFER:
+  case CGPU_RT_ROOT_CONSTANT:
     return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-  case RT_RW_BUFFER:
-  case RT_RW_TEXTURE:
+  case CGPU_RT_RW_BUFFER:
+  case CGPU_RT_RW_TEXTURE:
     return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-  case RT_SAMPLER:
+  case CGPU_RT_SAMPLER:
     return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-  case RT_RAY_TRACING:
-  case RT_TEXTURE:
-  case RT_BUFFER:
+  case CGPU_RT_RAY_TRACING:
+  case CGPU_RT_TEXTURE:
+  case CGPU_RT_BUFFER:
     return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
   default:
     cgpu_assert(false && "Invalid DescriptorInfo Type");
@@ -73,7 +73,7 @@ FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescripto
   }
 }
 
-FORCEINLINE static D3D12_BLEND_DESC D3D12Util_TranslateBlendState(const CGpuBlendStateDescriptor* pDesc)
+FORCEINLINE static D3D12_BLEND_DESC D3D12Util_TranslateBlendState(const CGPUBlendStateDescriptor* pDesc)
 {
   int blendDescIndex = 0;
   D3D12_BLEND_DESC ret = {};
@@ -111,8 +111,8 @@ FORCEINLINE static D3D12_BLEND_DESC D3D12Util_TranslateBlendState(const CGpuBlen
   return ret;
 }
 
-FORCEINLINE static D3D12_FILTER D3D12Util_TranslateFilter(ECGpuFilterType minFilter, ECGpuFilterType magFilter,
-    ECGpuMipMapMode mipMapMode, bool aniso, bool comparisonFilterEnabled) 
+FORCEINLINE static D3D12_FILTER D3D12Util_TranslateFilter(ECGPUFilterType minFilter, ECGPUFilterType magFilter,
+    ECGPUMipMapMode mipMapMode, bool aniso, bool comparisonFilterEnabled) 
 {
   if (aniso)
     return (comparisonFilterEnabled ? D3D12_FILTER_COMPARISON_ANISOTROPIC
@@ -129,30 +129,30 @@ FORCEINLINE static D3D12_FILTER D3D12Util_TranslateFilter(ECGpuFilterType minFil
   return (D3D12_FILTER)(baseFilter + filter);
 }
 
-D3D12_TEXTURE_ADDRESS_MODE D3D12Util_TranslateAddressMode(ECGpuAddressMode addressMode) 
+D3D12_TEXTURE_ADDRESS_MODE D3D12Util_TranslateAddressMode(ECGPUAddressMode addressMode) 
 {
   switch (addressMode) {
-  case ADDRESS_MODE_MIRROR:
+  case CGPU_ADDRESS_MODE_MIRROR:
     return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
-  case ADDRESS_MODE_REPEAT:
+  case CGPU_ADDRESS_MODE_REPEAT:
     return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-  case ADDRESS_MODE_CLAMP_TO_EDGE:
+  case CGPU_ADDRESS_MODE_CLAMP_TO_EDGE:
     return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-  case ADDRESS_MODE_CLAMP_TO_BORDER:
+  case CGPU_ADDRESS_MODE_CLAMP_TO_BORDER:
     return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
   default:
     return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
   }
 }
 
-FORCEINLINE static D3D12_RASTERIZER_DESC D3D12Util_TranslateRasterizerState(const CGpuRasterizerStateDescriptor *pDesc) {
+FORCEINLINE static D3D12_RASTERIZER_DESC D3D12Util_TranslateRasterizerState(const CGPURasterizerStateDescriptor *pDesc) {
   cgpu_assert(pDesc->fill_mode < FILL_MODE_COUNT);
-  cgpu_assert(pDesc->cull_mode < CULL_MODE_COUNT);
-  cgpu_assert(pDesc->front_face == FRONT_FACE_CCW ||  pDesc->front_face == FRONT_FACE_CW);
+  cgpu_assert(pDesc->cull_mode < CGPU_CULL_MODE_COUNT);
+  cgpu_assert(pDesc->front_face == CGPU_FRONT_FACE_CCW ||  pDesc->front_face == CGPU_FRONT_FACE_CW);
   D3D12_RASTERIZER_DESC ret = {};
   ret.FillMode = gDx12FillModeTranslator[pDesc->fill_mode];
   ret.CullMode = gDx12CullModeTranslator[pDesc->cull_mode];
-  ret.FrontCounterClockwise = pDesc->front_face == FRONT_FACE_CCW;
+  ret.FrontCounterClockwise = pDesc->front_face == CGPU_FRONT_FACE_CCW;
   ret.DepthBias = pDesc->depth_bias;
   ret.DepthBiasClamp = 0.0f;
   ret.SlopeScaledDepthBias = pDesc->slope_scaled_depth_bias;
@@ -164,16 +164,16 @@ FORCEINLINE static D3D12_RASTERIZER_DESC D3D12Util_TranslateRasterizerState(cons
   return ret;
 }
 
-FORCEINLINE static  D3D12_DEPTH_STENCIL_DESC D3D12Util_TranslateDephStencilState(const CGpuDepthStateDescriptor *pDesc) {
+FORCEINLINE static  D3D12_DEPTH_STENCIL_DESC D3D12Util_TranslateDephStencilState(const CGPUDepthStateDescriptor *pDesc) {
   cgpu_assert(pDesc->depth_func < CMP_COUNT);
   cgpu_assert(pDesc->stencil_front_func < CMP_COUNT);
-  cgpu_assert(pDesc->stencil_front_fail < STENCIL_OP_COUNT);
-  cgpu_assert(pDesc->depth_front_fail < STENCIL_OP_COUNT);
-  cgpu_assert(pDesc->stencil_front_pass < STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->stencil_front_fail < CGPU_STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->depth_front_fail < CGPU_STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->stencil_front_pass < CGPU_STENCIL_OP_COUNT);
   cgpu_assert(pDesc->stencil_back_func < CMP_COUNT);
-  cgpu_assert(pDesc->stencil_back_fail < STENCIL_OP_COUNT);
-  cgpu_assert(pDesc->depth_back_fail < STENCIL_OP_COUNT);
-  cgpu_assert(pDesc->stencil_back_pass < STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->stencil_back_fail < CGPU_STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->depth_back_fail < CGPU_STENCIL_OP_COUNT);
+  cgpu_assert(pDesc->stencil_back_pass < CGPU_STENCIL_OP_COUNT);
 
   D3D12_DEPTH_STENCIL_DESC ret = {};
   ret.DepthEnable = (BOOL)pDesc->depth_test;
@@ -203,23 +203,23 @@ FORCEINLINE static  D3D12_DEPTH_STENCIL_DESC D3D12Util_TranslateDephStencilState
   return ret;
 }
 
-FORCEINLINE static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12Util_TranslatePrimitiveTopology(ECGpuPrimitiveTopology topology) {
+FORCEINLINE static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12Util_TranslatePrimitiveTopology(ECGPUPrimitiveTopology topology) {
   switch (topology) {
-  case PRIM_TOPO_POINT_LIST:
+  case CGPU_PRIM_TOPO_POINT_LIST:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
-  case PRIM_TOPO_LINE_LIST:
-  case PRIM_TOPO_LINE_STRIP:
+  case CGPU_PRIM_TOPO_LINE_LIST:
+  case CGPU_PRIM_TOPO_LINE_STRIP:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-  case PRIM_TOPO_TRI_LIST:
-  case PRIM_TOPO_TRI_STRIP:
+  case CGPU_PRIM_TOPO_TRI_LIST:
+  case CGPU_PRIM_TOPO_TRI_STRIP:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-  case PRIM_TOPO_PATCH_LIST:
+  case CGPU_PRIM_TOPO_PATCH_LIST:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
   }
   return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 }
 
-FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_TranslateResourceState(CGpuResourceStates state)
+FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_TranslateResourceState(CGPUResourceStates state)
 {
     D3D12_RESOURCE_STATES ret = D3D12_RESOURCE_STATE_COMMON;
 
@@ -268,7 +268,7 @@ FORCEINLINE static D3D12_RESOURCE_STATES D3D12Util_TranslateResourceState(CGpuRe
     return ret;
 }
 
-FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGpuShaderStages stages) {
+FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGPUShaderStages stages) {
   D3D12_SHADER_VISIBILITY res = D3D12_SHADER_VISIBILITY_ALL;
   uint32_t stageCount = 0;
   if (stages == SHADER_STAGE_COMPUTE) {
@@ -302,7 +302,7 @@ FORCEINLINE static D3D12_SHADER_VISIBILITY D3D12Util_TranslateShaderStages(CGpuS
 }
 
 
-FORCEINLINE static DXGI_FORMAT DXGIUtil_TranslatePixelFormat(const ECGpuFormat fmt, bool ShaderResource = false)
+FORCEINLINE static DXGI_FORMAT DXGIUtil_TranslatePixelFormat(const ECGPUFormat fmt, bool ShaderResource = false)
 {
 	switch (fmt) {
 	case PF_R1_UNORM: return DXGI_FORMAT_R1_UNORM;

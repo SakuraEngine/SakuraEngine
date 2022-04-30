@@ -6,14 +6,14 @@
 class VkUtil_Blackboard
 {
 public:
-    VkUtil_Blackboard(CGpuInstanceDescriptor const* desc)
+    VkUtil_Blackboard(CGPUInstanceDescriptor const* desc)
     {
-        const CGpuVulkanInstanceDescriptor* exts_desc = (const CGpuVulkanInstanceDescriptor*)desc->chained;
+        const CGPUVulkanInstanceDescriptor* exts_desc = (const CGPUVulkanInstanceDescriptor*)desc->chained;
         // default
         device_extensions.insert(device_extensions.end(),
-            eastl::begin(cgpu_wanted_device_exts), eastl::end(cgpu_wanted_device_exts));
+        eastl::begin(cgpu_wanted_device_exts), eastl::end(cgpu_wanted_device_exts));
         instance_extensions.insert(instance_extensions.end(),
-            eastl::begin(cgpu_wanted_instance_exts), eastl::end(cgpu_wanted_instance_exts));
+        eastl::begin(cgpu_wanted_instance_exts), eastl::end(cgpu_wanted_instance_exts));
         // from desc
         if (desc->enable_debug_layer)
         {
@@ -40,20 +40,20 @@ public:
                 if (exts_desc->ppInstanceExtensions != NULL && exts_desc->mInstanceExtensionCount != 0)
                 {
                     instance_extensions.insert(instance_extensions.end(),
-                        exts_desc->ppInstanceExtensions, exts_desc->ppInstanceExtensions + exts_desc->mInstanceExtensionCount);
+                    exts_desc->ppInstanceExtensions, exts_desc->ppInstanceExtensions + exts_desc->mInstanceExtensionCount);
                 }
                 // Merge Instance Layer Names
                 if (exts_desc->ppInstanceLayers != NULL && exts_desc->mInstanceLayerCount != 0)
                 {
                     instance_layers.insert(instance_layers.end(),
-                        exts_desc->ppInstanceLayers, exts_desc->ppInstanceLayers + exts_desc->mInstanceLayerCount);
+                    exts_desc->ppInstanceLayers, exts_desc->ppInstanceLayers + exts_desc->mInstanceLayerCount);
                 }
                 // Merge Device Extension Names
                 if (exts_desc->ppDeviceExtensions != NULL && exts_desc->mDeviceExtensionCount != 0)
                 {
                     device_extensions.insert(device_extensions.end(),
-                        exts_desc->ppDeviceExtensions,
-                        exts_desc->ppDeviceExtensions + exts_desc->mDeviceExtensionCount);
+                    exts_desc->ppDeviceExtensions,
+                    exts_desc->ppDeviceExtensions + exts_desc->mDeviceExtensionCount);
                 }
             }
         }
@@ -66,23 +66,23 @@ public:
     eastl::vector<const char*> device_layers;
 };
 
-struct CGpuCachedRenderPass {
+struct CGPUCachedRenderPass {
     VkRenderPass pass;
     size_t timestamp;
 };
 
-struct CGpuCachedFramebuffer {
+struct CGPUCachedFramebuffer {
     VkFramebuffer framebuffer;
     size_t timestamp;
 };
 
-struct CGpuVkPassTable //
+struct CGPUVkPassTable //
 {
-    eastl::unordered_map<size_t, CGpuCachedRenderPass> cached_renderpasses;
-    eastl::unordered_map<size_t, CGpuCachedFramebuffer> cached_framebuffers;
+    eastl::unordered_map<size_t, CGPUCachedRenderPass> cached_renderpasses;
+    eastl::unordered_map<size_t, CGPUCachedFramebuffer> cached_framebuffers;
 };
 
-VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGpuVkPassTable* table, const VkUtil_FramebufferDesc* desc)
+VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, const VkUtil_FramebufferDesc* desc)
 {
     size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
     const auto& iter = table->cached_framebuffers.find(hash);
@@ -93,7 +93,7 @@ VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGpuVkPassTable* table, cons
     return VK_NULL_HANDLE;
 }
 
-void VkUtil_FramebufferTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_FramebufferDesc* desc, VkFramebuffer framebuffer)
+void VkUtil_FramebufferTableAdd(struct CGPUVkPassTable* table, const struct VkUtil_FramebufferDesc* desc, VkFramebuffer framebuffer)
 {
     size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
     const auto& iter = table->cached_framebuffers.find(hash);
@@ -102,11 +102,11 @@ void VkUtil_FramebufferTableAdd(struct CGpuVkPassTable* table, const struct VkUt
         cgpu_warn("Vulkan Framebuffer with this desc already exists!");
     }
     // TODO: Add timestamp
-    CGpuCachedFramebuffer new_fb = { framebuffer, 0 };
+    CGPUCachedFramebuffer new_fb = { framebuffer, 0 };
     table->cached_framebuffers[hash] = new_fb;
 }
 
-VkRenderPass VkUtil_RenderPassTableTryFind(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc)
+VkRenderPass VkUtil_RenderPassTableTryFind(struct CGPUVkPassTable* table, const struct VkUtil_RenderPassDesc* desc)
 {
     size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
     const auto& iter = table->cached_renderpasses.find(hash);
@@ -117,7 +117,7 @@ VkRenderPass VkUtil_RenderPassTableTryFind(struct CGpuVkPassTable* table, const 
     return VK_NULL_HANDLE;
 }
 
-void VkUtil_RenderPassTableAdd(struct CGpuVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass)
+void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass)
 {
     size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
     const auto& iter = table->cached_renderpasses.find(hash);
@@ -126,13 +126,13 @@ void VkUtil_RenderPassTableAdd(struct CGpuVkPassTable* table, const struct VkUti
         cgpu_warn("Vulkan Pass with this desc already exists!");
     }
     // TODO: Add timestamp
-    CGpuCachedRenderPass new_pass = { pass, 0 };
+    CGPUCachedRenderPass new_pass = { pass, 0 };
     table->cached_renderpasses[hash] = new_pass;
 }
 
-struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> //
+struct CGPUVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> //
 {
-    static void ConstructForAllAdapters(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
         // enum physical devices & store informations.
         auto wanted_device_extensions = blackboard.device_extensions.data();
@@ -141,7 +141,7 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
         {
             auto& Adapter = I->pVulkanAdapters[i];
-            Adapter.pExtensionsTable = new CGpuVkExtensionsTable();
+            Adapter.pExtensionsTable = new CGPUVkExtensionsTable();
             auto& Table = *Adapter.pExtensionsTable;
             for (uint32_t j = 0; j < wanted_device_extensions_count; j++)
             {
@@ -171,13 +171,13 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
             }
         }
     }
-    static void ConstructForInstance(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    static void ConstructForInstance(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
         // enum physical devices & store informations.
         auto wanted_instance_extensions = blackboard.instance_extensions.data();
         const auto wanted_instance_extensions_count = (uint32_t)blackboard.instance_extensions.size();
         // construct extensions table
-        I->pExtensionsTable = new CGpuVkExtensionsTable();
+        I->pExtensionsTable = new CGPUVkExtensionsTable();
         auto& Table = *I->pExtensionsTable;
         for (uint32_t j = 0; j < wanted_instance_extensions_count; j++)
         {
@@ -196,9 +196,9 @@ struct CGpuVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
     }
 };
 
-struct CGpuVkLayersTable : public eastl::unordered_map<eastl::string, bool> //
+struct CGPUVkLayersTable : public eastl::unordered_map<eastl::string, bool> //
 {
-    static void ConstructForAllAdapters(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
         // enum physical devices & store informations.
         auto wanted_device_layers = blackboard.device_layers.data();
@@ -207,7 +207,7 @@ struct CGpuVkLayersTable : public eastl::unordered_map<eastl::string, bool> //
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
         {
             auto& Adapter = I->pVulkanAdapters[i];
-            Adapter.pLayersTable = new CGpuVkLayersTable();
+            Adapter.pLayersTable = new CGPUVkLayersTable();
             auto& Table = *Adapter.pLayersTable;
             for (uint32_t j = 0; j < wanted_device_layers_count; j++)
             {
@@ -219,13 +219,13 @@ struct CGpuVkLayersTable : public eastl::unordered_map<eastl::string, bool> //
             }
         }
     }
-    static void ConstructForInstance(struct CGpuInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
+    static void ConstructForInstance(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
         // enum physical devices & store informations.
         auto wanted_instance_layers = blackboard.instance_layers.data();
         const auto wanted_instance_layers_count = (uint32_t)blackboard.instance_layers.size();
         // construct layers table
-        I->pLayersTable = new CGpuVkLayersTable();
+        I->pLayersTable = new CGPUVkLayersTable();
         auto& Table = *I->pLayersTable;
         for (uint32_t j = 0; j < wanted_instance_layers_count; j++)
         {
@@ -238,14 +238,14 @@ struct CGpuVkLayersTable : public eastl::unordered_map<eastl::string, bool> //
     }
 };
 
-CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
+CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
 {
     // Merge All Parameters into one blackboard
     const VkUtil_Blackboard blackboard(desc);
 
     // Memory Alloc
-    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)cgpu_calloc(1, sizeof(CGpuInstance_Vulkan));
-    ::memset(I, 0, sizeof(CGpuInstance_Vulkan));
+    CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)cgpu_calloc(1, sizeof(CGPUInstance_Vulkan));
+    ::memset(I, 0, sizeof(CGPUInstance_Vulkan));
 
     // Initialize Environment
     VkUtil_InitializeEnvironment(&I->super);
@@ -261,12 +261,12 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
 
     // Select Instance Layers & Layer Extensions
     VkUtil_SelectInstanceLayers(I,
-        blackboard.instance_layers.data(),
-        (uint32_t)blackboard.instance_layers.size());
+    blackboard.instance_layers.data(),
+    (uint32_t)blackboard.instance_layers.size());
     // Select Instance Extensions
     VkUtil_SelectInstanceExtensions(I,
-        blackboard.instance_extensions.data(),
-        (uint32_t)blackboard.instance_extensions.size());
+    blackboard.instance_extensions.data(),
+    (uint32_t)blackboard.instance_extensions.size());
 
     DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -302,8 +302,8 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     {
         cgpu_assert(0 && "Vulkan: failed to create instance!");
     }
-    CGpuVkLayersTable::ConstructForInstance(I, blackboard);
-    CGpuVkExtensionsTable::ConstructForInstance(I, blackboard);
+    CGPUVkLayersTable::ConstructForInstance(I, blackboard);
+    CGPUVkExtensionsTable::ConstructForInstance(I, blackboard);
 
 #if defined(NX64)
     loadExtensionsNX(result->pVkInstance);
@@ -318,11 +318,11 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     const char* const* wanted_device_layers = blackboard.device_layers.data();
     const auto wanted_device_layers_count = (uint32_t)blackboard.device_layers.size();
     VkUtil_QueryAllAdapters(I,
-        wanted_device_layers, wanted_device_layers_count,
-        wanted_device_extensions, wanted_device_extensions_count);
+    wanted_device_layers, wanted_device_layers_count,
+    wanted_device_extensions, wanted_device_extensions_count);
     // construct extensions table
-    CGpuVkLayersTable::ConstructForAllAdapters(I, blackboard);
-    CGpuVkExtensionsTable::ConstructForAllAdapters(I, blackboard);
+    CGPUVkLayersTable::ConstructForAllAdapters(I, blackboard);
+    CGPUVkExtensionsTable::ConstructForAllAdapters(I, blackboard);
 
     // Open validation layer.
     if (desc->enable_debug_layer)
@@ -333,9 +333,9 @@ CGpuInstanceId cgpu_create_instance_vulkan(CGpuInstanceDescriptor const* desc)
     return &(I->super);
 }
 
-void cgpu_free_instance_vulkan(CGpuInstanceId instance)
+void cgpu_free_instance_vulkan(CGPUInstanceId instance)
 {
-    CGpuInstance_Vulkan* to_destroy = (CGpuInstance_Vulkan*)instance;
+    CGPUInstance_Vulkan* to_destroy = (CGPUInstance_Vulkan*)instance;
     VkUtil_DeInitializeEnvironment(&to_destroy->super);
     if (to_destroy->pVkDebugUtilsMessenger)
     {
@@ -377,13 +377,13 @@ const float queuePriorities[] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, //
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, //
 };
-CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
+CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc)
 {
-    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)adapter->instance;
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)cgpu_calloc(1, sizeof(CGpuDevice_Vulkan));
-    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)adapter;
+    CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)adapter->instance;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)cgpu_calloc(1, sizeof(CGPUDevice_Vulkan));
+    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)adapter;
 
-    *const_cast<CGpuAdapterId*>(&D->super.adapter) = adapter;
+    *const_cast<CGPUAdapterId*>(&D->super.adapter) = adapter;
 
     // Prepare Create Queues
     eastl::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -391,7 +391,7 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
     for (uint32_t i = 0; i < desc->queueGroupCount; i++)
     {
         VkDeviceQueueCreateInfo& info = queueCreateInfos[i];
-        CGpuQueueGroupDescriptor& descriptor = desc->queueGroups[i];
+        CGPUQueueGroupDescriptor& descriptor = desc->queueGroups[i];
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         info.queueCount = descriptor.queueCount;
         info.queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[descriptor.queueType];
@@ -431,15 +431,15 @@ CGpuDeviceId cgpu_create_device_vulkan(CGpuAdapterId adapter, const CGpuDeviceDe
     // Create Descriptor Heap
     D->pDescriptorPool = VkUtil_CreateDescriptorPool(D);
     // Create pass table
-    D->pPassTable = cgpu_new<CGpuVkPassTable>();
+    D->pPassTable = cgpu_new<CGPUVkPassTable>();
     return &D->super;
 }
 
-void cgpu_free_device_vulkan(CGpuDeviceId device)
+void cgpu_free_device_vulkan(CGPUDeviceId device)
 {
-    CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)device;
-    CGpuAdapter_Vulkan* A = (CGpuAdapter_Vulkan*)device->adapter;
-    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->adapter->instance;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
+    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
+    CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)device->adapter->instance;
 
     for (auto& iter : D->pPassTable->cached_renderpasses)
     {

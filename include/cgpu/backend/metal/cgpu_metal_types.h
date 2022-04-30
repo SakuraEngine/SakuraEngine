@@ -6,60 +6,60 @@ static_assert(0, "This Header Should Only Be Included By OBJC SOURCES!!!!!");
 #import <MetalKit/MetalKit.h>
 
 // Types
-typedef struct CGpuDevice_Metal {
-    CGpuDevice super;
+typedef struct CGPUDevice_Metal {
+    CGPUDevice super;
     id<MTLDevice> pDevice;
     id<MTLCommandQueue>* __strong ppMtlQueues[QUEUE_TYPE_COUNT];
     uint32_t pMtlQueueCounts[QUEUE_TYPE_COUNT];
-} CGpuDevice_Metal;
+} CGPUDevice_Metal;
 
-typedef struct CGpuFence_Metal {
-    CGpuFence super;
+typedef struct CGPUFence_Metal {
+    CGPUFence super;
     dispatch_semaphore_t pMtlSemaphore;
     uint32_t mSubmitted : 1;
-} CGpuFence_Metal;
+} CGPUFence_Metal;
 
-typedef struct CGpuAdapter_Metal {
-    CGpuAdapter super;
-    CGpuDevice_Metal device;
+typedef struct CGPUAdapter_Metal {
+    CGPUAdapter super;
+    CGPUDevice_Metal device;
 
-    CGpuAdapterDetail adapter_detail;
-} CGpuAdapter_Metal;
+    CGPUAdapterDetail adapter_detail;
+} CGPUAdapter_Metal;
 
-typedef struct CGpuInstance_Metal {
-    CGpuInstance super;
-    CGpuAdapter_Metal* adapters;
+typedef struct CGPUInstance_Metal {
+    CGPUInstance super;
+    CGPUAdapter_Metal* adapters;
     uint32_t adapters_count;
-} CGpuInstance_Metal;
+} CGPUInstance_Metal;
 
-typedef struct CGpuQueue_Metal {
-    CGpuQueue super;
+typedef struct CGPUQueue_Metal {
+    CGPUQueue super;
     id<MTLCommandQueue> mtlCommandQueue;
     id<MTLFence> mtlQueueFence API_AVAILABLE(macos(10.13), ios(10.0));
     uint32_t mBarrierFlags;
-} CGpuQueue_Metal;
+} CGPUQueue_Metal;
 
-typedef struct CGpuCommandPool_Metal {
-    CGpuCommandPool super;
-} CGpuCommandPool_Metal;
+typedef struct CGPUCommandPool_Metal {
+    CGPUCommandPool super;
+} CGPUCommandPool_Metal;
 
-typedef struct CGpuRenderPassEncoder_Metal {
-    struct CGpuCommandBuffer_Metal* cmdBuffer;
+typedef struct CGPURenderPassEncoder_Metal {
+    struct CGPUCommandBuffer_Metal* cmdBuffer;
     id<MTLRenderCommandEncoder> mtlRenderEncoder;
-} CGpuRenderPassEncoder_Metal;
+} CGPURenderPassEncoder_Metal;
 
-typedef struct CGpuComputePassEncoder_Metal {
-    struct CGpuCommandBuffer_Metal* cmdBuffer;
+typedef struct CGPUComputePassEncoder_Metal {
+    struct CGPUCommandBuffer_Metal* cmdBuffer;
     id<MTLComputeCommandEncoder> mtlComputeEncoder;
-} CGpuComputePassEncoder_Metal;
+} CGPUComputePassEncoder_Metal;
 
-typedef struct CGpuCommandBuffer_Metal {
-    CGpuCommandBuffer super;
+typedef struct CGPUCommandBuffer_Metal {
+    CGPUCommandBuffer super;
     id<MTLCommandBuffer> mtlCommandBuffer;
     id<MTLBlitCommandEncoder> mtlBlitEncoder;
-    CGpuRenderPassEncoder_Metal renderEncoder;
-    CGpuComputePassEncoder_Metal cmptEncoder;
-} CGpuCommandBuffer_Metal;
+    CGPURenderPassEncoder_Metal renderEncoder;
+    CGPUComputePassEncoder_Metal cmptEncoder;
+} CGPUCommandBuffer_Metal;
 
 // Mac Catalyst does not support feature sets, so we redefine them to GPU families in MVKDevice.h.
 #if TARGET_MACCAT
@@ -77,124 +77,124 @@ typedef struct CGpuCommandBuffer_Metal {
 #endif
 
 /* clang-format off */
-FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGpuFormat fmt)
+FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGPUFormat fmt)
 {
     switch (fmt) {
-	case PF_A8_UNORM: 		return MTLPixelFormatA8Unorm;
-	case PF_R8_UNORM: 		return MTLPixelFormatR8Unorm;
-	case PF_R8_SNORM: 		return MTLPixelFormatR8Snorm;
-	case PF_R8_UINT: 		return MTLPixelFormatR8Uint;
-	case PF_R8_SINT: 		return MTLPixelFormatR8Sint;
-	case PF_R8_SRGB: 		return MTLPixelFormatR8Unorm_sRGB;
-	case PF_UNDEFINED: return MTLPixelFormatInvalid;
-	case PF_R4G4B4A4_UNORM: return MTLPixelFormatABGR4Unorm;
-	case PF_R5G6B5_UNORM: return MTLPixelFormatB5G6R5Unorm;;
-	case PF_R5G5B5A1_UNORM: return MTLPixelFormatA1BGR5Unorm;
-	case PF_R8G8_UNORM:		return MTLPixelFormatRG8Unorm;
-	case PF_R8G8_SNORM:		return MTLPixelFormatRG8Snorm;
-	case PF_R8G8_UINT:			return MTLPixelFormatRG8Uint;
-	case PF_R8G8_SINT:			return MTLPixelFormatRG8Sint;
-	case PF_R8G8_SRGB:			return MTLPixelFormatRG8Unorm_sRGB;
-	case PF_R8G8B8A8_UNORM:		return MTLPixelFormatRGBA8Unorm;
-	case PF_R8G8B8A8_SNORM:		return MTLPixelFormatRGBA8Snorm;
-	case PF_R8G8B8A8_UINT:			return MTLPixelFormatRGBA8Uint;
-	case PF_R8G8B8A8_SINT:			return MTLPixelFormatRGBA8Sint;
-	case PF_R8G8B8A8_SRGB:			return MTLPixelFormatRGBA8Unorm_sRGB;
-	case PF_B8G8R8A8_UNORM: 							return MTLPixelFormatBGRA8Unorm;
-	case PF_B8G8R8A8_SRGB:								return MTLPixelFormatBGRA8Unorm_sRGB;
-	case PF_B10G10R10A2_UNORM:		return MTLPixelFormatBGR10A2Unorm;
-	case PF_R10G10B10A2_UNORM:		return MTLPixelFormatRGB10A2Unorm;
-	case PF_R10G10B10A2_UINT:			return MTLPixelFormatRGB10A2Uint;
-	case PF_R16_UNORM:			return MTLPixelFormatR16Unorm;
-	case PF_R16_SNORM:			return MTLPixelFormatR16Snorm;
-	case PF_R16_UINT:			return MTLPixelFormatR16Uint;
-	case PF_R16_SINT:			return MTLPixelFormatR16Sint;
-	case PF_R16_SFLOAT:		return MTLPixelFormatR16Float;
-	case PF_R16G16_UNORM:	return MTLPixelFormatRG16Unorm;
-	case PF_R16G16_SNORM:	return MTLPixelFormatRG16Snorm;
-	case PF_R16G16_UINT:		return MTLPixelFormatRG16Uint;
-	case PF_R16G16_SINT:		return MTLPixelFormatRG16Sint;
-	case PF_R16G16_SFLOAT:	return MTLPixelFormatRG16Float;
-	case PF_R16G16B16A16_UNORM:	return MTLPixelFormatRGBA16Unorm;
-	case PF_R16G16B16A16_SNORM:	return MTLPixelFormatRGBA16Snorm;
-	case PF_R16G16B16A16_UINT:		return MTLPixelFormatRGBA16Uint;
-	case PF_R16G16B16A16_SINT:		return MTLPixelFormatRGBA16Sint;
-	case PF_R16G16B16A16_SFLOAT:	return MTLPixelFormatRGBA16Float;
-	case PF_R32_UINT:						return MTLPixelFormatR32Uint;
-	case PF_R32_SINT:						return MTLPixelFormatR32Sint;
-	case PF_R32_SFLOAT:					return MTLPixelFormatR32Float;
-	case PF_R32G32_UINT:					return MTLPixelFormatRG32Uint;
-	case PF_R32G32_SINT:					return MTLPixelFormatRG32Sint;
-	case PF_R32G32_SFLOAT:				return MTLPixelFormatRG32Float;
-	case PF_R32G32B32A32_UINT:		return MTLPixelFormatRGBA32Uint;
-	case PF_R32G32B32A32_SINT:		return MTLPixelFormatRGBA32Sint;
-	case PF_R32G32B32A32_SFLOAT:	return MTLPixelFormatRGBA32Float;
-	case PF_B10G11R11_UFLOAT: return MTLPixelFormatRG11B10Float;
-	case PF_E5B9G9R9_UFLOAT:	return MTLPixelFormatRGB9E5Float;
-	case PF_D16_UNORM:								return MTLPixelFormatDepth16Unorm;
-	case PF_X8_D24_UNORM:			return MTLPixelFormatDepth24Unorm_Stencil8;
-	case PF_D32_SFLOAT:							return MTLPixelFormatDepth32Float;
-	case PF_S8_UINT:									return MTLPixelFormatStencil8;
-	case PF_D24_UNORM_S8_UINT:				return MTLPixelFormatDepth24Unorm_Stencil8;
-	case PF_D32_SFLOAT_S8_UINT:			return MTLPixelFormatDepth32Float_Stencil8;
-	case PF_DXBC1_RGB_UNORM:			return MTLPixelFormatBC1_RGBA;
-	case PF_DXBC1_RGB_SRGB:			return MTLPixelFormatBC1_RGBA_sRGB;
-	case PF_DXBC1_RGBA_UNORM:		return MTLPixelFormatBC1_RGBA;
-	case PF_DXBC1_RGBA_SRGB:			return MTLPixelFormatBC1_RGBA_sRGB;
-	case PF_DXBC2_UNORM:					return MTLPixelFormatBC2_RGBA;
-	case PF_DXBC2_SRGB:					return MTLPixelFormatBC2_RGBA_sRGB;
-	case PF_DXBC3_UNORM:					return MTLPixelFormatBC3_RGBA;
-	case PF_DXBC3_SRGB:					return MTLPixelFormatBC3_RGBA_sRGB;
-	case PF_DXBC4_UNORM:					return MTLPixelFormatBC4_RUnorm;
-	case PF_DXBC4_SNORM:					return MTLPixelFormatBC4_RSnorm;
-	case PF_DXBC5_UNORM:					return MTLPixelFormatBC5_RGUnorm;
-	case PF_DXBC5_SNORM:					return MTLPixelFormatBC5_RGSnorm;
-	case PF_DXBC6H_UFLOAT:				return MTLPixelFormatBC6H_RGBUfloat;
-	case PF_DXBC6H_SFLOAT:				return MTLPixelFormatBC6H_RGBFloat;
-	case PF_DXBC7_UNORM:					return MTLPixelFormatBC7_RGBAUnorm;
-	case PF_DXBC7_SRGB:					return MTLPixelFormatBC7_RGBAUnorm_sRGB;
-	case PF_PVRTC1_2BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_2BPP;
-	case PF_PVRTC1_4BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_4BPP;
-	case PF_PVRTC1_2BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_2BPP_sRGB;
-	case PF_PVRTC1_4BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_4BPP_sRGB;
-	case PF_ETC2_R8G8B8_UNORM:	return MTLPixelFormatETC2_RGB8;
-	case PF_ETC2_R8G8B8A1_UNORM:return MTLPixelFormatETC2_RGB8A1;
-	case PF_ETC2_R8G8B8A8_UNORM: return MTLPixelFormatEAC_RGBA8;
-	case PF_ETC2_R8G8B8_SRGB:		return MTLPixelFormatETC2_RGB8_sRGB;
-	case PF_ETC2_R8G8B8A1_SRGB:	return MTLPixelFormatETC2_RGB8A1_sRGB;
-	case PF_ETC2_R8G8B8A8_SRGB:	return MTLPixelFormatEAC_RGBA8_sRGB;
-	case PF_ETC2_EAC_R11_UNORM:				return MTLPixelFormatEAC_R11Unorm;
-	case PF_ETC2_EAC_R11G11_UNORM:		return MTLPixelFormatEAC_RG11Unorm;
-	case PF_ETC2_EAC_R11_SNORM:				return MTLPixelFormatEAC_R11Snorm;
-	case PF_ETC2_EAC_R11G11_SNORM:		return MTLPixelFormatEAC_RG11Snorm;
-	case PF_ASTC_4x4_UNORM:			return MTLPixelFormatASTC_4x4_LDR;
-	case PF_ASTC_4x4_SRGB:				return MTLPixelFormatASTC_4x4_sRGB;
-	case PF_ASTC_5x4_UNORM:			return MTLPixelFormatASTC_5x4_LDR;
-	case PF_ASTC_5x4_SRGB:				return MTLPixelFormatASTC_5x4_sRGB;
-	case PF_ASTC_5x5_UNORM:			return MTLPixelFormatASTC_5x5_LDR;
-	case PF_ASTC_5x5_SRGB:				return MTLPixelFormatASTC_5x5_sRGB;
-	case PF_ASTC_6x5_UNORM:			return MTLPixelFormatASTC_6x5_LDR;
-	case PF_ASTC_6x5_SRGB:				return MTLPixelFormatASTC_6x5_sRGB;
-	case PF_ASTC_6x6_UNORM:			return MTLPixelFormatASTC_6x6_LDR;
-	case PF_ASTC_6x6_SRGB:				return MTLPixelFormatASTC_6x6_sRGB;
-	case PF_ASTC_8x5_UNORM:			return MTLPixelFormatASTC_8x5_LDR;
-	case PF_ASTC_8x5_SRGB:				return MTLPixelFormatASTC_8x5_sRGB;
-	case PF_ASTC_8x6_UNORM:			return MTLPixelFormatASTC_8x6_LDR;
-	case PF_ASTC_8x6_SRGB:				return MTLPixelFormatASTC_8x6_sRGB;
-	case PF_ASTC_8x8_UNORM:			return MTLPixelFormatASTC_8x8_LDR;
-	case PF_ASTC_8x8_SRGB:				return MTLPixelFormatASTC_8x8_sRGB;
-	case PF_ASTC_10x5_UNORM:			return MTLPixelFormatASTC_10x5_LDR;
-	case PF_ASTC_10x5_SRGB:			return MTLPixelFormatASTC_10x5_sRGB;
-	case PF_ASTC_10x6_UNORM:			return MTLPixelFormatASTC_10x6_LDR;
-	case PF_ASTC_10x6_SRGB:			return MTLPixelFormatASTC_10x6_sRGB;
-	case PF_ASTC_10x8_UNORM:			return MTLPixelFormatASTC_10x8_LDR;
-	case PF_ASTC_10x8_SRGB:			return MTLPixelFormatASTC_10x8_sRGB;
-	case PF_ASTC_10x10_UNORM:		return MTLPixelFormatASTC_10x10_LDR;
-	case PF_ASTC_10x10_SRGB:			return MTLPixelFormatASTC_10x10_sRGB;
-	case PF_ASTC_12x10_UNORM:		return MTLPixelFormatASTC_12x10_LDR;
-	case PF_ASTC_12x10_SRGB:			return MTLPixelFormatASTC_12x10_sRGB;
-	case PF_ASTC_12x12_UNORM:		return MTLPixelFormatASTC_12x12_LDR;
-	case PF_ASTC_12x12_SRGB:			return MTLPixelFormatASTC_12x12_sRGB;
+	case CGPU_FORMAT_A8_UNORM: 		return MTLPixelFormatA8Unorm;
+	case CGPU_FORMAT_R8_UNORM: 		return MTLPixelFormatR8Unorm;
+	case CGPU_FORMAT_R8_SNORM: 		return MTLPixelFormatR8Snorm;
+	case CGPU_FORMAT_R8_UINT: 		return MTLPixelFormatR8Uint;
+	case CGPU_FORMAT_R8_SINT: 		return MTLPixelFormatR8Sint;
+	case CGPU_FORMAT_R8_SRGB: 		return MTLPixelFormatR8Unorm_sRGB;
+	case CGPU_FORMAT_UNDEFINED: return MTLPixelFormatInvalid;
+	case CGPU_FORMAT_R4G4B4A4_UNORM: return MTLPixelFormatABGR4Unorm;
+	case CGPU_FORMAT_R5G6B5_UNORM: return MTLPixelFormatB5G6R5Unorm;;
+	case CGPU_FORMAT_R5G5B5A1_UNORM: return MTLPixelFormatA1BGR5Unorm;
+	case CGPU_FORMAT_R8G8_UNORM:		return MTLPixelFormatRG8Unorm;
+	case CGPU_FORMAT_R8G8_SNORM:		return MTLPixelFormatRG8Snorm;
+	case CGPU_FORMAT_R8G8_UINT:			return MTLPixelFormatRG8Uint;
+	case CGPU_FORMAT_R8G8_SINT:			return MTLPixelFormatRG8Sint;
+	case CGPU_FORMAT_R8G8_SRGB:			return MTLPixelFormatRG8Unorm_sRGB;
+	case CGPU_FORMAT_R8G8B8A8_UNORM:		return MTLPixelFormatRGBA8Unorm;
+	case CGPU_FORMAT_R8G8B8A8_SNORM:		return MTLPixelFormatRGBA8Snorm;
+	case CGPU_FORMAT_R8G8B8A8_UINT:			return MTLPixelFormatRGBA8Uint;
+	case CGPU_FORMAT_R8G8B8A8_SINT:			return MTLPixelFormatRGBA8Sint;
+	case CGPU_FORMAT_R8G8B8A8_SRGB:			return MTLPixelFormatRGBA8Unorm_sRGB;
+	case CGPU_FORMAT_B8G8R8A8_UNORM: 							return MTLPixelFormatBGRA8Unorm;
+	case CGPU_FORMAT_B8G8R8A8_SRGB:								return MTLPixelFormatBGRA8Unorm_sRGB;
+	case CGPU_FORMAT_B10G10R10A2_UNORM:		return MTLPixelFormatBGR10A2Unorm;
+	case CGPU_FORMAT_R10G10B10A2_UNORM:		return MTLPixelFormatRGB10A2Unorm;
+	case CGPU_FORMAT_R10G10B10A2_UINT:			return MTLPixelFormatRGB10A2Uint;
+	case CGPU_FORMAT_R16_UNORM:			return MTLPixelFormatR16Unorm;
+	case CGPU_FORMAT_R16_SNORM:			return MTLPixelFormatR16Snorm;
+	case CGPU_FORMAT_R16_UINT:			return MTLPixelFormatR16Uint;
+	case CGPU_FORMAT_R16_SINT:			return MTLPixelFormatR16Sint;
+	case CGPU_FORMAT_R16_SFLOAT:		return MTLPixelFormatR16Float;
+	case CGPU_FORMAT_R16G16_UNORM:	return MTLPixelFormatRG16Unorm;
+	case CGPU_FORMAT_R16G16_SNORM:	return MTLPixelFormatRG16Snorm;
+	case CGPU_FORMAT_R16G16_UINT:		return MTLPixelFormatRG16Uint;
+	case CGPU_FORMAT_R16G16_SINT:		return MTLPixelFormatRG16Sint;
+	case CGPU_FORMAT_R16G16_SFLOAT:	return MTLPixelFormatRG16Float;
+	case CGPU_FORMAT_R16G16B16A16_UNORM:	return MTLPixelFormatRGBA16Unorm;
+	case CGPU_FORMAT_R16G16B16A16_SNORM:	return MTLPixelFormatRGBA16Snorm;
+	case CGPU_FORMAT_R16G16B16A16_UINT:		return MTLPixelFormatRGBA16Uint;
+	case CGPU_FORMAT_R16G16B16A16_SINT:		return MTLPixelFormatRGBA16Sint;
+	case CGPU_FORMAT_R16G16B16A16_SFLOAT:	return MTLPixelFormatRGBA16Float;
+	case CGPU_FORMAT_R32_UINT:						return MTLPixelFormatR32Uint;
+	case CGPU_FORMAT_R32_SINT:						return MTLPixelFormatR32Sint;
+	case CGPU_FORMAT_R32_SFLOAT:					return MTLPixelFormatR32Float;
+	case CGPU_FORMAT_R32G32_UINT:					return MTLPixelFormatRG32Uint;
+	case CGPU_FORMAT_R32G32_SINT:					return MTLPixelFormatRG32Sint;
+	case CGPU_FORMAT_R32G32_SFLOAT:				return MTLPixelFormatRG32Float;
+	case CGPU_FORMAT_R32G32B32A32_UINT:		return MTLPixelFormatRGBA32Uint;
+	case CGPU_FORMAT_R32G32B32A32_SINT:		return MTLPixelFormatRGBA32Sint;
+	case CGPU_FORMAT_R32G32B32A32_SFLOAT:	return MTLPixelFormatRGBA32Float;
+	case CGPU_FORMAT_B10G11R11_UFLOAT: return MTLPixelFormatRG11B10Float;
+	case CGPU_FORMAT_E5B9G9R9_UFLOAT:	return MTLPixelFormatRGB9E5Float;
+	case CGPU_FORMAT_D16_UNORM:								return MTLPixelFormatDepth16Unorm;
+	case CGPU_FORMAT_X8_D24_UNORM:			return MTLPixelFormatDepth24Unorm_Stencil8;
+	case CGPU_FORMAT_D32_SFLOAT:							return MTLPixelFormatDepth32Float;
+	case CGPU_FORMAT_S8_UINT:									return MTLPixelFormatStencil8;
+	case CGPU_FORMAT_D24_UNORM_S8_UINT:				return MTLPixelFormatDepth24Unorm_Stencil8;
+	case CGPU_FORMAT_D32_SFLOAT_S8_UINT:			return MTLPixelFormatDepth32Float_Stencil8;
+	case CGPU_FORMAT_DXBC1_RGB_UNORM:			return MTLPixelFormatBC1_RGBA;
+	case CGPU_FORMAT_DXBC1_RGB_SRGB:			return MTLPixelFormatBC1_RGBA_sRGB;
+	case CGPU_FORMAT_DXBC1_RGBA_UNORM:		return MTLPixelFormatBC1_RGBA;
+	case CGPU_FORMAT_DXBC1_RGBA_SRGB:			return MTLPixelFormatBC1_RGBA_sRGB;
+	case CGPU_FORMAT_DXBC2_UNORM:					return MTLPixelFormatBC2_RGBA;
+	case CGPU_FORMAT_DXBC2_SRGB:					return MTLPixelFormatBC2_RGBA_sRGB;
+	case CGPU_FORMAT_DXBC3_UNORM:					return MTLPixelFormatBC3_RGBA;
+	case CGPU_FORMAT_DXBC3_SRGB:					return MTLPixelFormatBC3_RGBA_sRGB;
+	case CGPU_FORMAT_DXBC4_UNORM:					return MTLPixelFormatBC4_RUnorm;
+	case CGPU_FORMAT_DXBC4_SNORM:					return MTLPixelFormatBC4_RSnorm;
+	case CGPU_FORMAT_DXBC5_UNORM:					return MTLPixelFormatBC5_RGUnorm;
+	case CGPU_FORMAT_DXBC5_SNORM:					return MTLPixelFormatBC5_RGSnorm;
+	case CGPU_FORMAT_DXBC6H_UFLOAT:				return MTLPixelFormatBC6H_RGBUfloat;
+	case CGPU_FORMAT_DXBC6H_SFLOAT:				return MTLPixelFormatBC6H_RGBFloat;
+	case CGPU_FORMAT_DXBC7_UNORM:					return MTLPixelFormatBC7_RGBAUnorm;
+	case CGPU_FORMAT_DXBC7_SRGB:					return MTLPixelFormatBC7_RGBAUnorm_sRGB;
+	case CGPU_FORMAT_PVRTC1_2BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_2BPP;
+	case CGPU_FORMAT_PVRTC1_4BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_4BPP;
+	case CGPU_FORMAT_PVRTC1_2BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_2BPP_sRGB;
+	case CGPU_FORMAT_PVRTC1_4BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_4BPP_sRGB;
+	case CGPU_FORMAT_ETC2_R8G8B8_UNORM:	return MTLPixelFormatETC2_RGB8;
+	case CGPU_FORMAT_ETC2_R8G8B8A1_UNORM:return MTLPixelFormatETC2_RGB8A1;
+	case CGPU_FORMAT_ETC2_R8G8B8A8_UNORM: return MTLPixelFormatEAC_RGBA8;
+	case CGPU_FORMAT_ETC2_R8G8B8_SRGB:		return MTLPixelFormatETC2_RGB8_sRGB;
+	case CGPU_FORMAT_ETC2_R8G8B8A1_SRGB:	return MTLPixelFormatETC2_RGB8A1_sRGB;
+	case CGPU_FORMAT_ETC2_R8G8B8A8_SRGB:	return MTLPixelFormatEAC_RGBA8_sRGB;
+	case CGPU_FORMAT_ETC2_EAC_R11_UNORM:				return MTLPixelFormatEAC_R11Unorm;
+	case CGPU_FORMAT_ETC2_EAC_R11G11_UNORM:		return MTLPixelFormatEAC_RG11Unorm;
+	case CGPU_FORMAT_ETC2_EAC_R11_SNORM:				return MTLPixelFormatEAC_R11Snorm;
+	case CGPU_FORMAT_ETC2_EAC_R11G11_SNORM:		return MTLPixelFormatEAC_RG11Snorm;
+	case CGPU_FORMAT_ASTC_4x4_UNORM:			return MTLPixelFormatASTC_4x4_LDR;
+	case CGPU_FORMAT_ASTC_4x4_SRGB:				return MTLPixelFormatASTC_4x4_sRGB;
+	case CGPU_FORMAT_ASTC_5x4_UNORM:			return MTLPixelFormatASTC_5x4_LDR;
+	case CGPU_FORMAT_ASTC_5x4_SRGB:				return MTLPixelFormatASTC_5x4_sRGB;
+	case CGPU_FORMAT_ASTC_5x5_UNORM:			return MTLPixelFormatASTC_5x5_LDR;
+	case CGPU_FORMAT_ASTC_5x5_SRGB:				return MTLPixelFormatASTC_5x5_sRGB;
+	case CGPU_FORMAT_ASTC_6x5_UNORM:			return MTLPixelFormatASTC_6x5_LDR;
+	case CGPU_FORMAT_ASTC_6x5_SRGB:				return MTLPixelFormatASTC_6x5_sRGB;
+	case CGPU_FORMAT_ASTC_6x6_UNORM:			return MTLPixelFormatASTC_6x6_LDR;
+	case CGPU_FORMAT_ASTC_6x6_SRGB:				return MTLPixelFormatASTC_6x6_sRGB;
+	case CGPU_FORMAT_ASTC_8x5_UNORM:			return MTLPixelFormatASTC_8x5_LDR;
+	case CGPU_FORMAT_ASTC_8x5_SRGB:				return MTLPixelFormatASTC_8x5_sRGB;
+	case CGPU_FORMAT_ASTC_8x6_UNORM:			return MTLPixelFormatASTC_8x6_LDR;
+	case CGPU_FORMAT_ASTC_8x6_SRGB:				return MTLPixelFormatASTC_8x6_sRGB;
+	case CGPU_FORMAT_ASTC_8x8_UNORM:			return MTLPixelFormatASTC_8x8_LDR;
+	case CGPU_FORMAT_ASTC_8x8_SRGB:				return MTLPixelFormatASTC_8x8_sRGB;
+	case CGPU_FORMAT_ASTC_10x5_UNORM:			return MTLPixelFormatASTC_10x5_LDR;
+	case CGPU_FORMAT_ASTC_10x5_SRGB:			return MTLPixelFormatASTC_10x5_sRGB;
+	case CGPU_FORMAT_ASTC_10x6_UNORM:			return MTLPixelFormatASTC_10x6_LDR;
+	case CGPU_FORMAT_ASTC_10x6_SRGB:			return MTLPixelFormatASTC_10x6_sRGB;
+	case CGPU_FORMAT_ASTC_10x8_UNORM:			return MTLPixelFormatASTC_10x8_LDR;
+	case CGPU_FORMAT_ASTC_10x8_SRGB:			return MTLPixelFormatASTC_10x8_sRGB;
+	case CGPU_FORMAT_ASTC_10x10_UNORM:		return MTLPixelFormatASTC_10x10_LDR;
+	case CGPU_FORMAT_ASTC_10x10_SRGB:			return MTLPixelFormatASTC_10x10_sRGB;
+	case CGPU_FORMAT_ASTC_12x10_UNORM:		return MTLPixelFormatASTC_12x10_LDR;
+	case CGPU_FORMAT_ASTC_12x10_SRGB:			return MTLPixelFormatASTC_12x10_sRGB;
+	case CGPU_FORMAT_ASTC_12x12_UNORM:		return MTLPixelFormatASTC_12x12_LDR;
+	case CGPU_FORMAT_ASTC_12x12_SRGB:			return MTLPixelFormatASTC_12x12_sRGB;
 
 	default: return MTLPixelFormatInvalid;
 	}

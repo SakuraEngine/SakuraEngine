@@ -9,24 +9,24 @@
 #include <EASTL/vector.h>
 
 #define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, \
-    ArraySize)                                                              \
+ArraySize)                                                                  \
     ((MipSlice) + ((ArraySlice) * (MipLevels)) +                            \
-        ((PlaneSlice) * (MipLevels) * (ArraySize)))
+     ((PlaneSlice) * (MipLevels) * (ArraySize)))
 
 // Instance Helpers
-void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* I, uint32_t* count, bool* foundSoftwareAdapter);
-void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor);
+void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* I, uint32_t* count, bool* foundSoftwareAdapter);
+void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstanceDescriptor const* descriptor);
 
 // Device Helpers
-void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, CGpuDevice_D3D12* D);
+void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D);
 
 // API Objects Helpers
-void D3D12Util_SignalFence(CGpuQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue);
-void D3D12Util_InitializeShaderReflection(CGpuDevice_D3D12* device, CGpuShaderLibrary_D3D12* library, const struct CGpuShaderLibraryDescriptor* desc);
-void D3D12Util_FreeShaderReflection(CGpuShaderLibrary_D3D12* library);
+void D3D12Util_SignalFence(CGPUQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue);
+void D3D12Util_InitializeShaderReflection(CGPUDevice_D3D12* device, CGPUShaderLibrary_D3D12* library, const struct CGPUShaderLibraryDescriptor* desc);
+void D3D12Util_FreeShaderReflection(CGPUShaderLibrary_D3D12* library);
 
 // Feature Select Helpers
-void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter);
+void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter);
 
 // Descriptor Heap Helpers
 
@@ -37,25 +37,25 @@ typedef struct D3D12Util_DescriptorHandle {
 } D3D12Util_DescriptorHandle;
 
 void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
-    const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap);
+const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap);
 void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
 void D3D12Util_FreeDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
 // Consume & Return
 D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(
-    struct D3D12Util_DescriptorHeap* pHeap, uint32_t count);
+struct D3D12Util_DescriptorHeap* pHeap, uint32_t count);
 void D3D12Util_ReturnDescriptorHandles(
-    struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count);
+struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count);
 
 // Use Views
-void D3D12Util_CreateSRV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
-    const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
-void D3D12Util_CreateUAV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
-    ID3D12Resource* pCounterResource,
-    const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
-void D3D12Util_CreateCBV(CGpuDevice_D3D12* D,
-    const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
-void D3D12Util_CreateRTV(CGpuDevice_D3D12* D, ID3D12Resource* pResource,
-    const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+void D3D12Util_CreateSRV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
+const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+void D3D12Util_CreateUAV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
+ID3D12Resource* pCounterResource,
+const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+void D3D12Util_CreateCBV(CGPUDevice_D3D12* D,
+const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+void D3D12Util_CreateRTV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
+const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 
 typedef struct D3D12Util_DescriptorHeap {
     /// DX Heap
@@ -93,7 +93,7 @@ static const DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIP
     { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
 };
 
-static const D3D12_BLEND_OP gDx12BlendOpTranslator[BLEND_MODE_COUNT] = {
+static const D3D12_BLEND_OP gDx12BlendOpTranslator[CGPU_BLEND_MODE_COUNT] = {
     D3D12_BLEND_OP_ADD,
     D3D12_BLEND_OP_SUBTRACT,
     D3D12_BLEND_OP_REV_SUBTRACT,
@@ -101,7 +101,7 @@ static const D3D12_BLEND_OP gDx12BlendOpTranslator[BLEND_MODE_COUNT] = {
     D3D12_BLEND_OP_MAX,
 };
 
-static const D3D12_BLEND gDx12BlendConstantTranslator[BLEND_CONST_COUNT] = {
+static const D3D12_BLEND gDx12BlendConstantTranslator[CGPU_BLEND_CONST_COUNT] = {
     D3D12_BLEND_ZERO,
     D3D12_BLEND_ONE,
     D3D12_BLEND_SRC_COLOR,
@@ -117,13 +117,13 @@ static const D3D12_BLEND gDx12BlendConstantTranslator[BLEND_CONST_COUNT] = {
     D3D12_BLEND_INV_BLEND_FACTOR,
 };
 
-static const D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE gDx12PassBeginOpTranslator[LOAD_ACTION_COUNT] = {
+static const D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE gDx12PassBeginOpTranslator[CGPU_LOAD_ACTION_COUNT] = {
     D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_DISCARD,
     D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_PRESERVE,
     D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR
 };
 
-static const D3D12_RENDER_PASS_ENDING_ACCESS_TYPE gDx12PassEndOpTranslator[STORE_ACTION_COUNT] = {
+static const D3D12_RENDER_PASS_ENDING_ACCESS_TYPE gDx12PassEndOpTranslator[CGPU_STORE_ACTION_COUNT] = {
     D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE,
     D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_DISCARD
 };
@@ -139,7 +139,7 @@ static const D3D12_COMPARISON_FUNC gDx12ComparisonFuncTranslator[CMP_COUNT] = {
     D3D12_COMPARISON_FUNC_ALWAYS,
 };
 
-static const D3D12_STENCIL_OP gDx12StencilOpTranslator[STENCIL_OP_COUNT] = {
+static const D3D12_STENCIL_OP gDx12StencilOpTranslator[CGPU_STENCIL_OP_COUNT] = {
     D3D12_STENCIL_OP_KEEP,
     D3D12_STENCIL_OP_ZERO,
     D3D12_STENCIL_OP_REPLACE,
@@ -150,7 +150,7 @@ static const D3D12_STENCIL_OP gDx12StencilOpTranslator[STENCIL_OP_COUNT] = {
     D3D12_STENCIL_OP_DECR_SAT,
 };
 
-D3D12_CULL_MODE gDx12CullModeTranslator[CULL_MODE_COUNT] = {
+D3D12_CULL_MODE gDx12CullModeTranslator[CGPU_CULL_MODE_COUNT] = {
     D3D12_CULL_MODE_NONE,
     D3D12_CULL_MODE_BACK,
     D3D12_CULL_MODE_FRONT,

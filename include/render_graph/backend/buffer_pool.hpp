@@ -13,35 +13,35 @@ class BufferPool
 {
 public:
     struct Key {
-        const CGpuDeviceId device;
+        const CGPUDeviceId device;
         uint64_t size;
-        CGpuResourceTypes descriptors;
-        ECGpuMemoryUsage memory_usage;
-        ECGpuFormat format;
-        CGpuBufferCreationFlags flags;
+        CGPUResourceTypes descriptors;
+        ECGPUMemoryUsage memory_usage;
+        ECGPUFormat format;
+        CGPUBufferCreationFlags flags;
         uint64_t first_element;
         uint64_t elemet_count;
         uint64_t element_stride;
         operator size_t() const;
         friend class BufferPool;
 
-        Key(CGpuDeviceId device, const CGpuBufferDescriptor& desc);
+        Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc);
     };
     friend class RenderGraphBackend;
-    void initialize(CGpuDeviceId device);
+    void initialize(CGPUDeviceId device);
     void finalize();
-    eastl::pair<CGpuBufferId, ECGpuResourceState> allocate(const CGpuBufferDescriptor& desc, uint64_t frame_index);
-    void deallocate(const CGpuBufferDescriptor& desc, CGpuBufferId buffer, ECGpuResourceState final_state, uint64_t frame_index);
+    eastl::pair<CGPUBufferId, ECGPUResourceState> allocate(const CGPUBufferDescriptor& desc, uint64_t frame_index);
+    void deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, uint64_t frame_index);
 
 protected:
-    CGpuDeviceId device;
+    CGPUDeviceId device;
     eastl::unordered_map<Key,
-        eastl::deque<eastl::pair<
-            eastl::pair<CGpuBufferId, ECGpuResourceState>, uint64_t>>>
-        buffers;
+    eastl::deque<eastl::pair<
+    eastl::pair<CGPUBufferId, ECGPUResourceState>, uint64_t>>>
+    buffers;
 };
 
-inline BufferPool::Key::Key(CGpuDeviceId device, const CGpuBufferDescriptor& desc)
+inline BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
     : device(device)
     , size(desc.size)
     , descriptors(desc.descriptors)
@@ -59,7 +59,7 @@ inline BufferPool::Key::operator size_t() const
     return skr_hash(this, sizeof(*this), (size_t)device);
 }
 
-inline void BufferPool::initialize(CGpuDeviceId device_)
+inline void BufferPool::initialize(CGPUDeviceId device_)
 {
     device = device_;
 }
@@ -76,10 +76,10 @@ inline void BufferPool::finalize()
     }
 }
 
-inline eastl::pair<CGpuBufferId, ECGpuResourceState> BufferPool::allocate(const CGpuBufferDescriptor& desc, uint64_t frame_index)
+inline eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, uint64_t frame_index)
 {
-    eastl::pair<CGpuBufferId, ECGpuResourceState> allocated = {
-        nullptr, RESOURCE_STATE_UNDEFINED
+    eastl::pair<CGPUBufferId, ECGPUResourceState> allocated = {
+        nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<BufferPool::Key>(device, desc);
     auto&& queue_iter = buffers.find(key);
@@ -98,7 +98,7 @@ inline eastl::pair<CGpuBufferId, ECGpuResourceState> BufferPool::allocate(const 
     return allocated;
 }
 
-inline void BufferPool::deallocate(const CGpuBufferDescriptor& desc, CGpuBufferId buffer, ECGpuResourceState final_state, uint64_t frame_index)
+inline void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, uint64_t frame_index)
 {
     auto key = make_zeroed<BufferPool::Key>(device, desc);
     buffers[key].push_back({ { buffer, final_state }, frame_index });

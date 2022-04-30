@@ -35,17 +35,17 @@ public:
         friend class RenderGraph;
         friend class RenderGraphBackend;
         RenderGraphBuilder& frontend_only();
-        RenderGraphBuilder& backend_api(ECGpuBackend backend);
-        RenderGraphBuilder& with_device(CGpuDeviceId device);
-        RenderGraphBuilder& with_gfx_queue(CGpuQueueId queue);
+        RenderGraphBuilder& backend_api(ECGPUBackend backend);
+        RenderGraphBuilder& with_device(CGPUDeviceId device);
+        RenderGraphBuilder& with_gfx_queue(CGPUQueueId queue);
         RenderGraphBuilder& enable_memory_aliasing();
 
     protected:
         bool memory_aliasing = false;
         bool no_backend;
-        ECGpuBackend api;
-        CGpuDeviceId device;
-        CGpuQueueId gfx_queue;
+        ECGPUBackend api;
+        CGPUDeviceId device;
+        CGPUQueueId gfx_queue;
     };
     using RenderGraphSetupFunction = eastl::function<void(class RenderGraph::RenderGraphBuilder&)>;
     static RenderGraph* create(const RenderGraphSetupFunction& setup);
@@ -59,21 +59,21 @@ public:
         RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle);
         RenderPassBuilder& read(const char8_t* name, TextureSRVHandle handle);
         RenderPassBuilder& write(uint32_t mrt_index, TextureRTVHandle handle,
-            ECGpuLoadAction load_action = LOAD_ACTION_CLEAR,
-            ECGpuStoreAction store_action = STORE_ACTION_STORE);
+        ECGPULoadAction load_action = CGPU_LOAD_ACTION_CLEAR,
+        ECGPUStoreAction store_action = CGPU_STORE_ACTION_STORE);
         RenderPassBuilder& set_depth_stencil(TextureDSVHandle handle,
-            ECGpuLoadAction dload_action = LOAD_ACTION_CLEAR,
-            ECGpuStoreAction dstore_action = STORE_ACTION_STORE,
-            ECGpuLoadAction sload_action = LOAD_ACTION_CLEAR,
-            ECGpuStoreAction sstore_action = STORE_ACTION_STORE);
+        ECGPULoadAction dload_action = CGPU_LOAD_ACTION_CLEAR,
+        ECGPUStoreAction dstore_action = CGPU_STORE_ACTION_STORE,
+        ECGPULoadAction sload_action = CGPU_LOAD_ACTION_CLEAR,
+        ECGPUStoreAction sstore_action = CGPU_STORE_ACTION_STORE);
         // buffers
         RenderPassBuilder& read(const char8_t* name, BufferHandle handle);
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle);
         RenderPassBuilder& write(const char8_t* name, BufferHandle handle);
-        RenderPassBuilder& use_buffer(PipelineBufferHandle buffer, ECGpuResourceState requested_state);
+        RenderPassBuilder& use_buffer(PipelineBufferHandle buffer, ECGPUResourceState requested_state);
 
-        RenderPassBuilder& set_pipeline(CGpuRenderPipelineId pipeline);
+        RenderPassBuilder& set_pipeline(CGPURenderPipelineId pipeline);
 
     protected:
         RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass) noexcept;
@@ -96,7 +96,7 @@ public:
         ComputePassBuilder& read(const char8_t* name, BufferHandle handle);
         ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, BufferHandle handle);
         ComputePassBuilder& readwrite(const char8_t* name, BufferHandle handle);
-        ComputePassBuilder& set_pipeline(CGpuComputePipelineId pipeline);
+        ComputePassBuilder& set_pipeline(CGPUComputePipelineId pipeline);
 
     protected:
         ComputePassBuilder(RenderGraph& graph, ComputePassNode& pass) noexcept;
@@ -128,7 +128,7 @@ public:
         friend class RenderGraph;
 
         PresentPassBuilder& set_name(const char* name);
-        PresentPassBuilder& swapchain(CGpuSwapChainId chain, uint32_t idnex);
+        PresentPassBuilder& swapchain(CGPUSwapChainId chain, uint32_t idnex);
         PresentPassBuilder& texture(TextureHandle texture, bool is_backbuffer = true);
 
     protected:
@@ -144,11 +144,11 @@ public:
     public:
         friend class RenderGraph;
         BufferBuilder& set_name(const char* name);
-        BufferBuilder& import(CGpuBufferId buffer, ECGpuResourceState init_state);
+        BufferBuilder& import(CGPUBufferId buffer, ECGPUResourceState init_state);
         BufferBuilder& owns_memory();
         BufferBuilder& structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride);
         BufferBuilder& size(uint64_t size);
-        BufferBuilder& memory_usage(ECGpuMemoryUsage mem_usage);
+        BufferBuilder& memory_usage(ECGPUMemoryUsage mem_usage);
         BufferBuilder& allow_shader_readwrite();
         BufferBuilder& allow_shader_read();
         BufferBuilder& as_upload_buffer();
@@ -163,18 +163,18 @@ public:
     using BufferSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::BufferBuilder&)>;
     BufferHandle create_buffer(const BufferSetupFunction& setup);
     inline BufferHandle get_buffer(const char* name);
-    const ECGpuResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const;
+    const ECGPUResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const;
 
     class TextureBuilder
     {
     public:
         friend class RenderGraph;
         TextureBuilder& set_name(const char* name);
-        TextureBuilder& import(CGpuTextureId texture, ECGpuResourceState init_state);
+        TextureBuilder& import(CGPUTextureId texture, ECGPUResourceState init_state);
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1);
-        TextureBuilder& format(ECGpuFormat format);
+        TextureBuilder& format(ECGPUFormat format);
         TextureBuilder& array(uint32_t size);
-        TextureBuilder& sample_count(ECGpuSampleCount count);
+        TextureBuilder& sample_count(ECGPUSampleCount count);
         TextureBuilder& allow_render_target();
         TextureBuilder& allow_depth_stencil();
         TextureBuilder& allow_readwrite();
@@ -185,17 +185,17 @@ public:
         TextureBuilder(RenderGraph& graph, TextureNode& node) noexcept;
         RenderGraph& graph;
         TextureNode& node;
-        CGpuTextureId imported = nullptr;
+        CGPUTextureId imported = nullptr;
     };
     using TextureSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::TextureBuilder&)>;
     TextureHandle create_texture(const TextureSetupFunction& setup);
     TextureHandle get_texture(const char* name);
-    const ECGpuResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const;
+    const ECGPUResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const;
 
     bool compile();
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr);
-    virtual CGpuDeviceId get_backend_device() { return nullptr; }
-    virtual CGpuQueueId get_gfx_queue() { return nullptr; }
+    virtual CGPUDeviceId get_backend_device() { return nullptr; }
+    virtual CGPUQueueId get_gfx_queue() { return nullptr; }
     virtual uint32_t collect_garbage(uint64_t critical_frame)
     {
         return collect_texture_garbage(critical_frame) + collect_buffer_garbage(critical_frame);
@@ -217,13 +217,13 @@ public:
 protected:
     uint32_t foreach_textures(eastl::function<void(TextureNode*)> texture);
     uint32_t foreach_writer_passes(TextureHandle texture,
-        eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const;
+    eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const;
     uint32_t foreach_reader_passes(TextureHandle texture,
-        eastl::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const;
+    eastl::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const;
     uint32_t foreach_writer_passes(BufferHandle buffer,
-        eastl::function<void(PassNode* writer, BufferNode* buf, RenderGraphEdge* edge)>) const;
+    eastl::function<void(PassNode* writer, BufferNode* buf, RenderGraphEdge* edge)>) const;
     uint32_t foreach_reader_passes(BufferHandle buffer,
-        eastl::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const;
+    eastl::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const;
 
     virtual void initialize();
     virtual void finalize();
@@ -235,7 +235,7 @@ protected:
     uint64_t frame_index = 0;
     Blackboard blackboard;
     eastl::unique_ptr<DependencyGraph> graph =
-        eastl::unique_ptr<DependencyGraph>(DependencyGraph::Create());
+    eastl::unique_ptr<DependencyGraph>(DependencyGraph::Create());
     eastl::vector<PassNode*> passes;
     eastl::vector<ResourceNode*> resources;
     eastl::vector<PassNode*> culled_passes;

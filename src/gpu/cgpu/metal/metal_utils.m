@@ -15,7 +15,7 @@ static const uint32_t kAMDRadeonRX6700DeviceId = 0x73df;
 
 void MetalUtil_QueryVendorIdAndDeviceId(id<MTLDevice> device, uint32_t* outVenderId, uint32_t* outDeviceId);
 
-void MetalUtil_RecordAdapterDetail(struct CGpuAdapter_Metal* MAdapter)
+void MetalUtil_RecordAdapterDetail(struct CGPUAdapter_Metal* MAdapter)
 {
     MAdapter->adapter_detail.is_cpu = false;
     MAdapter->adapter_detail.is_uma = isMTLDeviceUMA(MAdapter->device.pDevice);
@@ -37,11 +37,11 @@ static uint32_t mtlGetEntryProperty(io_registry_entry_t entry, CFStringRef prope
 {
     uint32_t value = 0;
     CFTypeRef cfProp = IORegistryEntrySearchCFProperty(entry,
-        kIOServicePlane,
-        propertyName,
-        kCFAllocatorDefault,
-        kIORegistryIterateRecursively |
-            kIORegistryIterateParents);
+    kIOServicePlane,
+    propertyName,
+    kCFAllocatorDefault,
+    kIORegistryIterateRecursively |
+    kIORegistryIterateParents);
     if (cfProp)
     {
         const uint32_t* pValue = (uint32_t*)CFDataGetBytePtr((CFDataRef)cfProp);
@@ -111,8 +111,8 @@ void MetalUtil_QueryVendorIdAndDeviceId(id<MTLDevice> device, uint32_t* outVende
     // The match dictionary is consumed by IOServiceGetMatchingServices and does not need to be released.
     io_iterator_t entryIterator;
     if (!isFound && IOServiceGetMatchingServices(IOPort,
-                        IOServiceMatching("IOPCIDevice"),
-                        &entryIterator) == kIOReturnSuccess)
+                    IOServiceMatching("IOPCIDevice"),
+                    &entryIterator) == kIOReturnSuccess)
     {
         while (!isFound && (entry = IOIteratorNext(entryIterator)))
         {

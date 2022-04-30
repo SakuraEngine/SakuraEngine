@@ -13,38 +13,38 @@ class TexturePool
 {
 public:
     struct Key {
-        const CGpuDeviceId device;
-        const CGpuTextureCreationFlags flags;
+        const CGPUDeviceId device;
+        const CGPUTextureCreationFlags flags;
         uint32_t width;
         uint32_t height;
         uint32_t depth;
         uint32_t array_size;
-        ECGpuFormat format;
+        ECGPUFormat format;
         uint32_t mip_levels;
-        ECGpuSampleCount sample_count;
+        ECGPUSampleCount sample_count;
         uint32_t sample_quality;
-        CGpuResourceTypes descriptors;
+        CGPUResourceTypes descriptors;
         bool is_dedicated = 0;
         operator size_t() const;
         friend class TexturePool;
 
-        Key(CGpuDeviceId device, const CGpuTextureDescriptor& desc);
+        Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc);
     };
     friend class RenderGraphBackend;
-    void initialize(CGpuDeviceId device);
+    void initialize(CGPUDeviceId device);
     void finalize();
-    eastl::pair<CGpuTextureId, ECGpuResourceState> allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index);
-    void deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, ECGpuResourceState final_state, uint64_t frame_index);
+    eastl::pair<CGPUTextureId, ECGPUResourceState> allocate(const CGPUTextureDescriptor& desc, uint64_t frame_index);
+    void deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, uint64_t frame_index);
 
 protected:
-    CGpuDeviceId device;
+    CGPUDeviceId device;
     eastl::unordered_map<Key,
-        eastl::deque<eastl::pair<
-            eastl::pair<CGpuTextureId, ECGpuResourceState>, uint64_t>>>
-        textures;
+    eastl::deque<eastl::pair<
+    eastl::pair<CGPUTextureId, ECGPUResourceState>, uint64_t>>>
+    textures;
 };
 
-inline TexturePool::Key::Key(CGpuDeviceId device, const CGpuTextureDescriptor& desc)
+inline TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
     : device(device)
     , flags(desc.flags)
     , width(desc.width)
@@ -53,7 +53,7 @@ inline TexturePool::Key::Key(CGpuDeviceId device, const CGpuTextureDescriptor& d
     , array_size(desc.array_size ? desc.array_size : 1)
     , format(desc.format)
     , mip_levels(desc.mip_levels ? desc.mip_levels : 1)
-    , sample_count(desc.sample_count ? desc.sample_count : SAMPLE_COUNT_1)
+    , sample_count(desc.sample_count ? desc.sample_count : CGPU_SAMPLE_COUNT_1)
     , sample_quality(desc.sample_quality)
     , descriptors(desc.descriptors)
     , is_dedicated(desc.is_dedicated)
@@ -65,7 +65,7 @@ inline TexturePool::Key::operator size_t() const
     return skr_hash(this, sizeof(*this), (size_t)device);
 }
 
-inline void TexturePool::initialize(CGpuDeviceId device_)
+inline void TexturePool::initialize(CGPUDeviceId device_)
 {
     device = device_;
 }
@@ -82,13 +82,13 @@ inline void TexturePool::finalize()
     }
 }
 
-inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(const CGpuTextureDescriptor& desc, uint64_t frame_index)
+inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, uint64_t frame_index)
 {
-    eastl::pair<CGpuTextureId, ECGpuResourceState> allocated = {
-        nullptr, RESOURCE_STATE_UNDEFINED
+    eastl::pair<CGPUTextureId, ECGPUResourceState> allocated = {
+        nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<TexturePool::Key>(device, desc);
-    CGpuTextureId new_tex = nullptr;
+    CGPUTextureId new_tex = nullptr;
     // add queue
     if (textures[key].empty())
     {
@@ -101,7 +101,7 @@ inline eastl::pair<CGpuTextureId, ECGpuResourceState> TexturePool::allocate(cons
     return allocated;
 }
 
-inline void TexturePool::deallocate(const CGpuTextureDescriptor& desc, CGpuTextureId texture, ECGpuResourceState final_state, uint64_t frame_index)
+inline void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, uint64_t frame_index)
 {
     auto key = make_zeroed<TexturePool::Key>(device, desc);
     textures[key].push_back({ { texture, final_state }, frame_index });

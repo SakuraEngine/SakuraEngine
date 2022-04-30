@@ -9,7 +9,7 @@ class PassNode;
 class TextureEdge : public RenderGraphEdge
 {
 public:
-    inline TextureEdge(ERelationshipType type, ECGpuResourceState requested_state)
+    inline TextureEdge(ERelationshipType type, ECGPUResourceState requested_state)
         : RenderGraphEdge(type)
         , requested_state(requested_state)
     {
@@ -17,7 +17,7 @@ public:
     virtual ~TextureEdge() = default;
     virtual TextureNode* get_texture_node() = 0;
     virtual PassNode* get_pass_node() = 0;
-    const ECGpuResourceState requested_state;
+    const ECGPUResourceState requested_state;
 };
 
 class TextureReadEdge : public TextureEdge
@@ -37,16 +37,16 @@ public:
     inline uint32_t get_array_count() const { return handle.array_count; }
     inline uint32_t get_mip_base() const { return handle.mip_base; }
     inline uint32_t get_mip_count() const { return handle.mip_count; }
-    inline ECGpuTextureDimension get_dimension() const { return handle.dim; }
+    inline ECGPUTextureDimension get_dimension() const { return handle.dim; }
 
 protected:
     const TextureSRVHandle handle;
     TextureReadEdge(
-        uint32_t set, uint32_t binding, TextureSRVHandle handle,
-        ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE);
+    uint32_t set, uint32_t binding, TextureSRVHandle handle,
+    ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
     TextureReadEdge(
-        const char8_t* name, TextureSRVHandle handle,
-        ECGpuResourceState state = RESOURCE_STATE_SHADER_RESOURCE);
+    const char8_t* name, TextureSRVHandle handle,
+    ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
 };
 
 class TextureReadWriteEdge : public TextureEdge
@@ -66,11 +66,11 @@ public:
 protected:
     const TextureUAVHandle handle;
     TextureReadWriteEdge(
-        uint32_t set, uint32_t binding, TextureUAVHandle handle,
-        ECGpuResourceState state = RESOURCE_STATE_UNORDERED_ACCESS);
+    uint32_t set, uint32_t binding, TextureUAVHandle handle,
+    ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
     TextureReadWriteEdge(
-        const char8_t* name, TextureUAVHandle handle,
-        ECGpuResourceState state = RESOURCE_STATE_UNORDERED_ACCESS);
+    const char8_t* name, TextureUAVHandle handle,
+    ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
 };
 
 class TextureRenderEdge : public TextureEdge
@@ -90,7 +90,7 @@ public:
 
 protected:
     TextureRenderEdge(uint32_t mrt_index, TextureRTVHandle handle,
-        ECGpuResourceState state = RESOURCE_STATE_RENDER_TARGET)
+    ECGPUResourceState state = CGPU_RESOURCE_STATE_RENDER_TARGET)
         : TextureEdge(ERelationshipType::TextureWrite, state)
         , mrt_index(mrt_index)
         , handle(handle)
@@ -102,7 +102,7 @@ protected:
 class BufferEdge : public RenderGraphEdge
 {
 public:
-    inline BufferEdge(ERelationshipType type, ECGpuResourceState requested_state)
+    inline BufferEdge(ERelationshipType type, ECGPUResourceState requested_state)
         : RenderGraphEdge(type)
         , requested_state(requested_state)
     {
@@ -111,7 +111,7 @@ public:
 
     virtual BufferNode* get_buffer_node() = 0;
     virtual PassNode* get_pass_node() = 0;
-    const ECGpuResourceState requested_state;
+    const ECGPUResourceState requested_state;
 };
 
 class BufferReadEdge : public BufferEdge
@@ -125,7 +125,7 @@ public:
     PassNode* get_pass_node() final;
 
 protected:
-    BufferReadEdge(BufferRangeHandle handle, ECGpuResourceState state)
+    BufferReadEdge(BufferRangeHandle handle, ECGPUResourceState state)
         : BufferEdge(ERelationshipType::BufferRead, state)
         , handle(handle)
     {
@@ -144,7 +144,7 @@ public:
     PassNode* get_pass_node() final;
 
 protected:
-    BufferReadWriteEdge(BufferRangeHandle handle, ECGpuResourceState state)
+    BufferReadWriteEdge(BufferRangeHandle handle, ECGPUResourceState state)
         : BufferEdge(ERelationshipType::BufferReadWrite, state)
         , handle(handle)
     {
@@ -163,7 +163,7 @@ public:
     PassNode* get_pass_node() final;
 
 protected:
-    PipelineBufferEdge(PipelineBufferHandle handle, ECGpuResourceState state)
+    PipelineBufferEdge(PipelineBufferHandle handle, ECGPUResourceState state)
         : BufferEdge(ERelationshipType::PipelineBuffer, state)
         , handle(handle)
     {
@@ -172,8 +172,8 @@ protected:
 };
 
 inline TextureReadEdge::TextureReadEdge(
-    uint32_t set, uint32_t binding, TextureSRVHandle handle,
-    ECGpuResourceState state)
+uint32_t set, uint32_t binding, TextureSRVHandle handle,
+ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureRead, state)
     , set(set)
     , binding(binding)
@@ -182,8 +182,8 @@ inline TextureReadEdge::TextureReadEdge(
 {
 }
 inline TextureReadEdge::TextureReadEdge(
-    const char8_t* name, TextureSRVHandle handle,
-    ECGpuResourceState state)
+const char8_t* name, TextureSRVHandle handle,
+ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureRead, state)
     , set(UINT32_MAX)
     , binding(UINT32_MAX)
@@ -210,8 +210,8 @@ inline PassNode* TextureRenderEdge::get_pass_node()
 
 // UAV
 inline TextureReadWriteEdge::TextureReadWriteEdge(
-    uint32_t set, uint32_t binding, TextureUAVHandle handle,
-    ECGpuResourceState state)
+uint32_t set, uint32_t binding, TextureUAVHandle handle,
+ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureReadWrite, state)
     , set(set)
     , binding(binding)
@@ -221,8 +221,8 @@ inline TextureReadWriteEdge::TextureReadWriteEdge(
 }
 
 inline TextureReadWriteEdge::TextureReadWriteEdge(
-    const char8_t* name, TextureUAVHandle handle,
-    ECGpuResourceState state)
+const char8_t* name, TextureUAVHandle handle,
+ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureReadWrite, state)
     , set(UINT32_MAX)
     , binding(UINT32_MAX)

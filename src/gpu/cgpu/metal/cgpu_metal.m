@@ -2,7 +2,7 @@
 #include "cgpu/backend/metal/cgpu_metal.h"
 #include "cgpu/backend/metal/cgpu_metal_types.h"
 
-const CGpuProcTable tbl_metal = {
+const CGPUProcTable tbl_metal = {
     // Instance APIs
     .create_instance = &cgpu_create_instance_metal,
     .query_instance_features = &cgpu_query_instance_features_metal,
@@ -34,7 +34,7 @@ const CGpuProcTable tbl_metal = {
     .free_command_pool = &cgpu_free_command_pool_metal
 };
 
-const CGpuProcTable* CGPU_MetalProcTable()
+const CGPUProcTable* CGPU_MetalProcTable()
 {
     return &tbl_metal;
 }
@@ -42,13 +42,13 @@ const CGpuProcTable* CGPU_MetalProcTable()
 NSArray<id<MTLDevice>>* MetalUtil_GetAvailableMTLDeviceArray();
 
 // Instance APIs
-CGpuInstanceId cgpu_create_instance_metal(CGpuInstanceDescriptor const* descriptor)
+CGPUInstanceId cgpu_create_instance_metal(CGPUInstanceDescriptor const* descriptor)
 {
-    CGpuInstance_Metal* MI = (CGpuInstance_Metal*)cgpu_calloc(1, sizeof(CGpuInstance_Metal));
+    CGPUInstance_Metal* MI = (CGPUInstance_Metal*)cgpu_calloc(1, sizeof(CGPUInstance_Metal));
     @autoreleasepool
     {
         NSArray<id<MTLDevice>>* mtlDevices = MetalUtil_GetAvailableMTLDeviceArray();
-        MI->adapters = cgpu_calloc(mtlDevices.count, sizeof(CGpuAdapter_Metal));
+        MI->adapters = cgpu_calloc(mtlDevices.count, sizeof(CGPUAdapter_Metal));
         MI->adapters_count = mtlDevices.count;
         for (uint32_t i = 0; i < MI->adapters_count; i++)
         {
@@ -64,14 +64,14 @@ CGpuInstanceId cgpu_create_instance_metal(CGpuInstanceDescriptor const* descript
     return &MI->super;
 }
 
-void cgpu_query_instance_features_metal(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
+void cgpu_query_instance_features_metal(CGPUInstanceId instance, struct CGPUInstanceFeatures* features)
 {
     features->specialization_constant = true;
 }
 
-void cgpu_free_instance_metal(CGpuInstanceId instance)
+void cgpu_free_instance_metal(CGPUInstanceId instance)
 {
-    CGpuInstance_Metal* MI = (CGpuInstance_Metal*)instance;
+    CGPUInstance_Metal* MI = (CGPUInstance_Metal*)instance;
     for (uint32_t i = 0; i < MI->adapters_count; i++)
     {
         MI->adapters[i].device.pDevice = nil;
@@ -81,9 +81,9 @@ void cgpu_free_instance_metal(CGpuInstanceId instance)
 }
 
 // Adapter APIs
-void cgpu_enum_adapters_metal(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
+void cgpu_enum_adapters_metal(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num)
 {
-    CGpuInstance_Metal* MI = (CGpuInstance_Metal*)instance;
+    CGPUInstance_Metal* MI = (CGPUInstance_Metal*)instance;
 
     *adapters_num = MI->adapters_count;
     if (adapters != CGPU_NULLPTR)
@@ -95,26 +95,26 @@ void cgpu_enum_adapters_metal(CGpuInstanceId instance, CGpuAdapterId* const adap
     }
 }
 
-const CGpuAdapterDetail* cgpu_query_adapter_detail_metal(const CGpuAdapterId adapter)
+const CGPUAdapterDetail* cgpu_query_adapter_detail_metal(const CGPUAdapterId adapter)
 {
-    CGpuAdapter_Metal* MA = (CGpuAdapter_Metal*)adapter;
+    CGPUAdapter_Metal* MA = (CGPUAdapter_Metal*)adapter;
     return &MA->adapter_detail;
 }
 
-uint32_t cgpu_query_queue_count_metal(const CGpuAdapterId adapter, const ECGpuQueueType type)
+uint32_t cgpu_query_queue_count_metal(const CGPUAdapterId adapter, const ECGPUQueueType type)
 {
     return UINT32_MAX;
 }
 
 // Device APIs
-CGpuDeviceId cgpu_create_device_metal(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
+CGPUDeviceId cgpu_create_device_metal(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc)
 {
-    CGpuAdapter_Metal* MA = (CGpuAdapter_Metal*)adapter;
+    CGPUAdapter_Metal* MA = (CGPUAdapter_Metal*)adapter;
     // Create Requested Queues
     for (uint32_t i = 0; i < desc->queueGroupCount; i++)
     {
-        const CGpuQueueGroupDescriptor* queueGroup = desc->queueGroups + i;
-        const ECGpuQueueType type = queueGroup->queueType;
+        const CGPUQueueGroupDescriptor* queueGroup = desc->queueGroups + i;
+        const ECGPUQueueType type = queueGroup->queueType;
         MA->device.ppMtlQueues[type] = cgpu_calloc(queueGroup->queueCount, sizeof(id<MTLCommandQueue>));
         MA->device.pMtlQueueCounts[type] = queueGroup->queueCount;
         for (uint32_t j = 0u; j < queueGroup->queueCount; j++)
@@ -125,9 +125,9 @@ CGpuDeviceId cgpu_create_device_metal(CGpuAdapterId adapter, const CGpuDeviceDes
     return &MA->device.super;
 }
 
-void cgpu_free_device_metal(CGpuDeviceId device)
+void cgpu_free_device_metal(CGPUDeviceId device)
 {
-    CGpuDevice_Metal* MD = (CGpuDevice_Metal*)device;
+    CGPUDevice_Metal* MD = (CGPUDevice_Metal*)device;
     for (uint32_t i = 0; i < QUEUE_TYPE_COUNT; i++)
     {
         if (MD->ppMtlQueues[i] != NULL && MD->pMtlQueueCounts[i] != 0)
@@ -143,26 +143,26 @@ void cgpu_free_device_metal(CGpuDeviceId device)
 }
 
 // API Objects APIs
-CGpuFenceId cgpu_create_fence_metal(CGpuDeviceId device)
+CGPUFenceId cgpu_create_fence_metal(CGPUDeviceId device)
 {
-    CGpuFence_Metal* MF = (CGpuFence_Metal*)cgpu_calloc(1, sizeof(CGpuFence_Metal));
+    CGPUFence_Metal* MF = (CGPUFence_Metal*)cgpu_calloc(1, sizeof(CGPUFence_Metal));
     MF->pMtlSemaphore = dispatch_semaphore_create(0);
     MF->mSubmitted = false;
     return &MF->super;
 }
 
-RUNTIME_API void cgpu_free_fence_metal(CGpuFenceId fence)
+RUNTIME_API void cgpu_free_fence_metal(CGPUFenceId fence)
 {
-    CGpuFence_Metal* MF = (CGpuFence_Metal*)fence;
+    CGPUFence_Metal* MF = (CGPUFence_Metal*)fence;
     MF->pMtlSemaphore = nil;
     cgpu_free(MF);
 }
 
 // Queue APIs
-CGpuQueueId cgpu_get_queue_metal(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
+CGPUQueueId cgpu_get_queue_metal(CGPUDeviceId device, ECGPUQueueType type, uint32_t index)
 {
-    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)cgpu_calloc(1, sizeof(CGpuQueue_Metal));
-    CGpuDevice_Metal* MD = (CGpuDevice_Metal*)cgpu_calloc(1, sizeof(CGpuDevice_Metal));
+    CGPUQueue_Metal* MQ = (CGPUQueue_Metal*)cgpu_calloc(1, sizeof(CGPUQueue_Metal));
+    CGPUDevice_Metal* MD = (CGPUDevice_Metal*)cgpu_calloc(1, sizeof(CGPUDevice_Metal));
     MQ->mtlCommandQueue = MD->ppMtlQueues[type][index];
 #if defined(ENABLE_FENCES)
     if (@available(macOS 10.13, iOS 10.0, *))
@@ -174,25 +174,25 @@ CGpuQueueId cgpu_get_queue_metal(CGpuDeviceId device, ECGpuQueueType type, uint3
     return &MQ->super;
 }
 
-void cgpu_submit_queue_metal(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
+void cgpu_submit_queue_metal(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc)
 {
     cgpu_assert(0 && "No impl!");
 }
 
-void cgpu_wait_queue_idle_metal(CGpuQueueId queue)
+void cgpu_wait_queue_idle_metal(CGPUQueueId queue)
 {
-    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)queue;
+    CGPUQueue_Metal* MQ = (CGPUQueue_Metal*)queue;
     id<MTLCommandBuffer> waitCmdBuf =
-        [MQ->mtlCommandQueue commandBufferWithUnretainedReferences];
+    [MQ->mtlCommandQueue commandBufferWithUnretainedReferences];
 
     [waitCmdBuf commit];
     [waitCmdBuf waitUntilCompleted];
     waitCmdBuf = nil;
 }
 
-void cgpu_free_queue_metal(CGpuQueueId queue)
+void cgpu_free_queue_metal(CGPUQueueId queue)
 {
-    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)queue;
+    CGPUQueue_Metal* MQ = (CGPUQueue_Metal*)queue;
     MQ->mtlCommandQueue = nil;
 #if defined(ENABLE_FENCES)
     if (@available(macOS 10.13, iOS 10.0, *))
@@ -203,23 +203,23 @@ void cgpu_free_queue_metal(CGpuQueueId queue)
 }
 
 // Command APIs
-CGpuCommandPoolId cgpu_create_command_pool_metal(CGpuQueueId queue, const CGpuCommandPoolDescriptor* desc)
+CGPUCommandPoolId cgpu_create_command_pool_metal(CGPUQueueId queue, const CGPUCommandPoolDescriptor* desc)
 {
-    CGpuCommandPool_Metal* PQ = (CGpuCommandPool_Metal*)cgpu_calloc(1, sizeof(CGpuCommandPool_Metal));
+    CGPUCommandPool_Metal* PQ = (CGPUCommandPool_Metal*)cgpu_calloc(1, sizeof(CGPUCommandPool_Metal));
     return &PQ->super;
 }
 
-CGpuCommandBufferId cgpu_create_command_buffer_metal(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
+CGPUCommandBufferId cgpu_create_command_buffer_metal(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc)
 {
-    CGpuCommandBuffer_Metal* MB = (CGpuCommandBuffer_Metal*)cgpu_calloc(1, sizeof(CGpuCommandBuffer_Metal));
-    CGpuQueue_Metal* MQ = (CGpuQueue_Metal*)pool->queue;
+    CGPUCommandBuffer_Metal* MB = (CGPUCommandBuffer_Metal*)cgpu_calloc(1, sizeof(CGPUCommandBuffer_Metal));
+    CGPUQueue_Metal* MQ = (CGPUQueue_Metal*)pool->queue;
     MB->mtlCommandBuffer = [MQ->mtlCommandQueue commandBuffer];
     return &MB->super;
 }
 
-void cgpu_free_command_buffer_metal(CGpuCommandBufferId cmd)
+void cgpu_free_command_buffer_metal(CGPUCommandBufferId cmd)
 {
-    CGpuCommandBuffer_Metal* MB = (CGpuCommandBuffer_Metal*)cmd;
+    CGPUCommandBuffer_Metal* MB = (CGPUCommandBuffer_Metal*)cmd;
     MB->mtlCommandBuffer = nil;
     MB->mtlBlitEncoder = nil;
     MB->cmptEncoder.mtlComputeEncoder = nil;
@@ -227,9 +227,9 @@ void cgpu_free_command_buffer_metal(CGpuCommandBufferId cmd)
     cgpu_free(MB);
 }
 
-void cgpu_free_command_pool_metal(CGpuCommandPoolId pool)
+void cgpu_free_command_pool_metal(CGPUCommandPoolId pool)
 {
-    CGpuCommandPool_Metal* PQ = (CGpuCommandPool_Metal*)pool;
+    CGPUCommandPool_Metal* PQ = (CGPUCommandPool_Metal*)pool;
     cgpu_free(PQ);
 }
 

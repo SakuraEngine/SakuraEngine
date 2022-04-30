@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
+bool VkUtil_InitializeEnvironment(struct CGPUInstance* Inst)
 {
     // AGS
     bool AGS_started = false;
@@ -33,7 +33,7 @@ bool VkUtil_InitializeEnvironment(struct CGpuInstance* Inst)
     return true;
 }
 
-void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst)
+void VkUtil_DeInitializeEnvironment(struct CGPUInstance* Inst)
 {
     cgpu_ags_exit();
     Inst->ags_status = CGPU_AGS_NONE;
@@ -43,9 +43,9 @@ void VkUtil_DeInitializeEnvironment(struct CGpuInstance* Inst)
 
 // Instance APIs
 void VkUtil_EnableValidationLayer(
-    CGpuInstance_Vulkan* I,
-    const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
-    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
+CGPUInstance_Vulkan* I,
+const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
+const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
 {
     if (I->debug_utils)
     {
@@ -53,22 +53,22 @@ void VkUtil_EnableValidationLayer(
             .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
             .pfnUserCallback = VkUtil_DebugUtilsCallback,
             .messageSeverity =
-                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-                VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
             .messageType =
-                VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
             .flags = 0,
             .pUserData = NULL
         };
         const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr =
-            (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
+        (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
 
         cgpu_assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
         VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
-            messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
-            &(I->pVkDebugUtilsMessenger));
+        messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
+        &(I->pVkDebugUtilsMessenger));
         if (VK_SUCCESS != res)
         {
             cgpu_assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
@@ -82,15 +82,15 @@ void VkUtil_EnableValidationLayer(
             .pfnCallback = VkUtil_DebugReportCallback,
             .flags =
 #if defined(NX64) || defined(__ANDROID__)
-                VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // Performance warnings are not very vaild on desktop
+            VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // Performance warnings are not very vaild on desktop
 #endif
-                VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT /* | VK_DEBUG_REPORT_INFORMATION_BIT_EXT*/
+            VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT /* | VK_DEBUG_REPORT_INFORMATION_BIT_EXT*/
         };
         const VkDebugReportCallbackCreateInfoEXT* reportInfoPtr =
-            (report_info_ptr != CGPU_NULLPTR) ? report_info_ptr : &reportInfo;
+        (report_info_ptr != CGPU_NULLPTR) ? report_info_ptr : &reportInfo;
         VkResult res = vkCreateDebugReportCallbackEXT(I->pVkInstance,
-            reportInfoPtr, GLOBAL_VkAllocationCallbacks,
-            &(I->pVkDebugReport));
+        reportInfoPtr, GLOBAL_VkAllocationCallbacks,
+        &(I->pVkDebugReport));
         cgpu_assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugReportCallbackEXT failed!");
         if (VK_SUCCESS != res)
         {
@@ -100,9 +100,9 @@ void VkUtil_EnableValidationLayer(
 }
 #ifdef __clang__
 #endif
-void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
-    const char* const* device_layers, uint32_t device_layers_count,
-    const char* const* device_extensions, uint32_t device_extension_count)
+void VkUtil_QueryAllAdapters(CGPUInstance_Vulkan* I,
+const char* const* device_layers, uint32_t device_layers_count,
+const char* const* device_extensions, uint32_t device_extension_count)
 {
     cgpu_assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
 
@@ -110,14 +110,14 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
     if (I->mPhysicalDeviceCount != 0)
     {
         I->pVulkanAdapters =
-            (CGpuAdapter_Vulkan*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(CGpuAdapter_Vulkan));
+        (CGPUAdapter_Vulkan*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(CGPUAdapter_Vulkan));
         DECLARE_ZERO_VLA(VkPhysicalDevice, pysicalDevices, I->mPhysicalDeviceCount)
         vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount,
-            pysicalDevices);
+        pysicalDevices);
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
         {
             // Alloc & Zero Adapter
-            CGpuAdapter_Vulkan* VkAdapter = &I->pVulkanAdapters[i];
+            CGPUAdapter_Vulkan* VkAdapter = &I->pVulkanAdapters[i];
             for (uint32_t q = 0; q < QUEUE_TYPE_COUNT; q++)
             {
                 VkAdapter->mQueueFamilyIndices[q] = -1;
@@ -155,7 +155,7 @@ void VkUtil_QueryAllAdapters(CGpuInstance_Vulkan* I,
 }
 
 // Device APIs
-void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D)
+void VkUtil_CreatePipelineCache(CGPUDevice_Vulkan* D)
 {
     cgpu_assert((D->pPipelineCache == VK_NULL_HANDLE) && "VkUtil_CreatePipelineCache should be called only once!");
 
@@ -167,43 +167,43 @@ void VkUtil_CreatePipelineCache(CGpuDevice_Vulkan* D)
         .pInitialData = NULL
     };
     D->mVkDeviceTable.vkCreatePipelineCache(D->pVkDevice,
-        &info, GLOBAL_VkAllocationCallbacks, &D->pPipelineCache);
+    &info, GLOBAL_VkAllocationCallbacks, &D->pPipelineCache);
 }
 
 // Shader Reflection
-static const ECGpuResourceType RTLut[] = {
-    RT_SAMPLER,                // SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
-    RT_COMBINED_IMAGE_SAMPLER, // SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-    RT_TEXTURE,                // SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
-    RT_RW_TEXTURE,             // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
-    RT_TEXEL_BUFFER,           // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER
-    RT_RW_TEXEL_BUFFER,        // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
-    RT_UNIFORM_BUFFER,         // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-    RT_RW_BUFFER,              // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER
-    RT_UNIFORM_BUFFER,         // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
-    RT_RW_BUFFER,              // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
-    RT_INPUT_ATTACHMENT,       // SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
-    RT_RAY_TRACING             // SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
+static const ECGPUResourceType RTLut[] = {
+    CGPU_RT_SAMPLER,                // SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER
+    CGPU_RT_COMBINED_IMAGE_SAMPLER, // SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+    CGPU_RT_TEXTURE,                // SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE
+    CGPU_RT_RW_TEXTURE,             // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
+    CGPU_RT_TEXEL_BUFFER,           // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER
+    CGPU_RT_RW_TEXEL_BUFFER,        // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
+    CGPU_RT_UNIFORM_BUFFER,         // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+    CGPU_RT_RW_BUFFER,              // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER
+    CGPU_RT_UNIFORM_BUFFER,         // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
+    CGPU_RT_RW_BUFFER,              // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
+    CGPU_RT_INPUT_ATTACHMENT,       // SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
+    CGPU_RT_RAY_TRACING             // SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
 };
-static ECGpuTextureDimension DIMLut[SpvDimSubpassData + 1] = {
-    TEX_DIMENSION_1D,        // SpvDim1D
-    TEX_DIMENSION_2D,        // SpvDim2D
-    TEX_DIMENSION_3D,        // SpvDim3D
-    TEX_DIMENSION_CUBE,      // SpvDimCube
-    TEX_DIMENSION_UNDEFINED, // SpvDimRect
-    TEX_DIMENSION_UNDEFINED, // SpvDimBuffer
-    TEX_DIMENSION_UNDEFINED  // SpvDimSubpassData
+static ECGPUTextureDimension DIMLut[SpvDimSubpassData + 1] = {
+    CGPU_TEX_DIMENSION_1D,        // SpvDim1D
+    CGPU_TEX_DIMENSION_2D,        // SpvDim2D
+    CGPU_TEX_DIMENSION_3D,        // SpvDim3D
+    CGPU_TEX_DIMENSION_CUBE,      // SpvDimCube
+    CGPU_TEX_DIMENSION_UNDEFINED, // SpvDimRect
+    CGPU_TEX_DIMENSION_UNDEFINED, // SpvDimBuffer
+    CGPU_TEX_DIMENSION_UNDEFINED  // SpvDimSubpassData
 };
-static ECGpuTextureDimension ArrDIMLut[SpvDimSubpassData + 1] = {
-    TEX_DIMENSION_1D_ARRAY,   // SpvDim1D
-    TEX_DIMENSION_2D_ARRAY,   // SpvDim2D
-    TEX_DIMENSION_UNDEFINED,  // SpvDim3D
-    TEX_DIMENSION_CUBE_ARRAY, // SpvDimCube
-    TEX_DIMENSION_UNDEFINED,  // SpvDimRect
-    TEX_DIMENSION_UNDEFINED,  // SpvDimBuffer
-    TEX_DIMENSION_UNDEFINED   // SpvDimSubpassData
+static ECGPUTextureDimension ArrDIMLut[SpvDimSubpassData + 1] = {
+    CGPU_TEX_DIMENSION_1D_ARRAY,   // SpvDim1D
+    CGPU_TEX_DIMENSION_2D_ARRAY,   // SpvDim2D
+    CGPU_TEX_DIMENSION_UNDEFINED,  // SpvDim3D
+    CGPU_TEX_DIMENSION_CUBE_ARRAY, // SpvDimCube
+    CGPU_TEX_DIMENSION_UNDEFINED,  // SpvDimRect
+    CGPU_TEX_DIMENSION_UNDEFINED,  // SpvDimBuffer
+    CGPU_TEX_DIMENSION_UNDEFINED   // SpvDimSubpassData
 };
-void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vulkan* S, const struct CGpuShaderLibraryDescriptor* desc)
+void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vulkan* S, const struct CGPUShaderLibraryDescriptor* desc)
 {
     S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
     SpvReflectResult spvRes = spvReflectCreateShaderModule(desc->code_size, desc->code, S->pReflect);
@@ -211,16 +211,16 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
     cgpu_assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
     uint32_t entry_count = S->pReflect->entry_point_count;
     S->super.entrys_count = entry_count;
-    S->super.entry_reflections = cgpu_calloc(entry_count, sizeof(CGpuShaderReflection));
+    S->super.entry_reflections = cgpu_calloc(entry_count, sizeof(CGPUShaderReflection));
     for (uint32_t i = 0; i < entry_count; i++)
     {
         // Initialize Common Reflection Data
-        CGpuShaderReflection* reflection = &S->super.entry_reflections[i];
+        CGPUShaderReflection* reflection = &S->super.entry_reflections[i];
         // ATTENTION: We have only one entry point now
         const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[i].name);
         reflection->entry_name = (const char8_t*)entry->name;
-        reflection->stage = (ECGpuShaderStage)entry->shader_stage;
-        if (reflection->stage == SHADER_STAGE_COMPUTE)
+        reflection->stage = (ECGPUShaderStage)entry->shader_stage;
+        if (reflection->stage == CGPU_SHADER_STAGE_COMPUTE)
         {
             reflection->thread_group_sizes[0] = entry->local_size.x;
             reflection->thread_group_sizes[1] = entry->local_size.y;
@@ -239,15 +239,15 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
             if ((entry->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT))
             {
                 reflection->vertex_inputs_count = icount;
-                reflection->vertex_inputs = cgpu_calloc(icount, sizeof(CGpuVertexInput));
+                reflection->vertex_inputs = cgpu_calloc(icount, sizeof(CGPUVertexInput));
                 // Handle Vertex Inputs
                 for (uint32_t i = 0; i < icount; i++)
                 {
                     // We use semantic for HLSL sources because DXC is a piece of shit.
                     reflection->vertex_inputs[i].name =
-                        bHLSL ? input_vars[i]->semantic : input_vars[i]->name;
+                    bHLSL ? input_vars[i]->semantic : input_vars[i]->name;
                     reflection->vertex_inputs[i].format =
-                        VkUtil_FormatTranslateToCGPU((VkFormat)input_vars[i]->format);
+                    VkUtil_FormatTranslateToCGPU((VkFormat)input_vars[i]->format);
                 }
             }
         }
@@ -269,7 +269,7 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
             }
             bcount += ccount;
             reflection->shader_resources_count = bcount;
-            reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGpuShaderResource));
+            reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGPUShaderResource));
             // Fill Shader Resources
             uint32_t i_res = 0;
             for (uint32_t i_set = 0; i_set < scount; i_set++)
@@ -278,14 +278,14 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
                 for (uint32_t i_binding = 0; i_binding < current_set->binding_count; i_binding++, i_res++)
                 {
                     SpvReflectDescriptorBinding* current_binding = current_set->bindings[i_binding];
-                    CGpuShaderResource* current_res = &reflection->shader_resources[i_res];
+                    CGPUShaderResource* current_res = &reflection->shader_resources[i_res];
                     current_res->set = current_binding->set;
                     current_res->binding = current_binding->binding;
                     current_res->stages = S->pReflect->shader_stage;
                     current_res->type = RTLut[current_binding->descriptor_type];
                     current_res->name = current_binding->name;
                     current_res->name_hash =
-                        cgpu_hash(current_binding->name, strlen(current_binding->name), (size_t)device);
+                    cgpu_hash(current_binding->name, strlen(current_binding->name), (size_t)device);
                     current_res->size = current_binding->count;
                     // Solve Dimension
                     if ((current_binding->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE) ||
@@ -297,8 +297,8 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
                             current_res->dim = DIMLut[current_binding->image.dim];
                         if (current_binding->image.ms)
                         {
-                            current_res->dim = current_res->dim & TEX_DIMENSION_2D ? TEX_DIMENSION_2DMS : current_res->dim;
-                            current_res->dim = current_res->dim & TEX_DIMENSION_2D_ARRAY ? TEX_DIMENSION_2DMS_ARRAY : current_res->dim;
+                            current_res->dim = current_res->dim & CGPU_TEX_DIMENSION_2D ? CGPU_TEX_DIMENSION_2DMS : current_res->dim;
+                            current_res->dim = current_res->dim & CGPU_TEX_DIMENSION_2D_ARRAY ? CGPU_TEX_DIMENSION_2DMS_ARRAY : current_res->dim;
                         }
                     }
                 }
@@ -306,13 +306,13 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
             // Fill Push Constants
             for (uint32_t i = 0; i < ccount; i++)
             {
-                CGpuShaderResource* current_res = &reflection->shader_resources[i_res + i];
+                CGPUShaderResource* current_res = &reflection->shader_resources[i_res + i];
                 current_res->set = 0;
-                current_res->type = RT_ROOT_CONSTANT;
+                current_res->type = CGPU_RT_ROOT_CONSTANT;
                 current_res->binding = 0;
                 current_res->name = root_sets[i]->name;
                 current_res->name_hash =
-                    cgpu_hash(current_res->name, strlen(current_res->name), (size_t)device);
+                cgpu_hash(current_res->name, strlen(current_res->name), (size_t)device);
                 current_res->stages = S->pReflect->shader_stage;
                 current_res->size = root_sets[i]->size;
                 current_res->offset = root_sets[i]->offset;
@@ -321,14 +321,14 @@ void VkUtil_InitializeShaderReflection(CGpuDeviceId device, CGpuShaderLibrary_Vu
     }
 }
 
-void VkUtil_FreeShaderReflection(CGpuShaderLibrary_Vulkan* S)
+void VkUtil_FreeShaderReflection(CGPUShaderLibrary_Vulkan* S)
 {
     spvReflectDestroyShaderModule(S->pReflect);
     if (S->super.entry_reflections)
     {
         for (uint32_t i = 0; i < S->super.entrys_count; i++)
         {
-            CGpuShaderReflection* reflection = S->super.entry_reflections + i;
+            CGPUShaderReflection* reflection = S->super.entry_reflections + i;
             if (reflection->vertex_inputs) cgpu_free(reflection->vertex_inputs);
             if (reflection->shader_resources) cgpu_free(reflection->shader_resources);
         }
@@ -338,8 +338,8 @@ void VkUtil_FreeShaderReflection(CGpuShaderLibrary_Vulkan* S)
 }
 
 // VMA
-void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A,
-    CGpuDevice_Vulkan* D)
+void VkUtil_CreateVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A,
+CGPUDevice_Vulkan* D)
 {
     VmaVulkanFunctions vulkanFunctions = {
         .vkAllocateMemory = D->mVkDeviceTable.vkAllocateMemory,
@@ -379,22 +379,22 @@ void VkUtil_CreateVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A,
     }
 }
 
-void VkUtil_FreeVMAAllocator(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D)
+void VkUtil_FreeVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CGPUDevice_Vulkan* D)
 {
     vmaDestroyAllocator(D->pVmaAllocator);
 }
 
-void VkUtil_FreePipelineCache(CGpuInstance_Vulkan* I, CGpuAdapter_Vulkan* A, CGpuDevice_Vulkan* D)
+void VkUtil_FreePipelineCache(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CGPUDevice_Vulkan* D)
 {
     if (D->pPipelineCache != VK_NULL_HANDLE)
     {
         D->mVkDeviceTable.vkDestroyPipelineCache(
-            D->pVkDevice, D->pPipelineCache, GLOBAL_VkAllocationCallbacks);
+        D->pVkDevice, D->pPipelineCache, GLOBAL_VkAllocationCallbacks);
     }
 }
 
 // API Objects Helpers
-struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D)
+struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGPUDevice_Vulkan* D)
 {
     VkUtil_DescriptorPool* Pool = (VkUtil_DescriptorPool*)cgpu_calloc(1, sizeof(VkUtil_DescriptorPool));
 #ifdef CGPU_THREAD_SAFETY
@@ -415,18 +415,18 @@ struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGpuDevice_Vulkan* D)
         .maxSets = 8192
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorPool(
-        D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
+    D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
     return Pool;
 }
 
 void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool,
-    const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
+const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
 {
 #ifdef CGPU_THREAD_SAFETY
     skr_acquire_mutex(pPool->pMutex);
 #endif
     {
-        CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pPool->Device;
+        CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)pPool->Device;
         VkDescriptorSetAllocateInfo alloc_info = {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
             .pNext = NULL,
@@ -454,7 +454,7 @@ void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescript
         // TODO: It is possible to avoid using that flag by updating descriptor sets instead of deleting them.
         // The application can keep track of recycled descriptor sets and re-use one of them when a new one is requested.
         // Reference: https://arm-software.github.io/vulkan_best_practice_for_mobile_developers/samples/performance/descriptor_management/descriptor_management_tutorial.html
-        CGpuDevice_Vulkan* D = (CGpuDevice_Vulkan*)pPool->Device;
+        CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)pPool->Device;
         D->mVkDeviceTable.vkFreeDescriptorSets(D->pVkDevice, pPool->pVkDescPool, numDescriptorSets, pSets);
     }
 #ifdef CGPU_THREAD_SAFETY
@@ -464,7 +464,7 @@ void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescript
 
 void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool)
 {
-    CGpuDevice_Vulkan* D = DescPool->Device;
+    CGPUDevice_Vulkan* D = DescPool->Device;
     D->mVkDeviceTable.vkDestroyDescriptorPool(D->pVkDevice, DescPool->pVkDescPool, GLOBAL_VkAllocationCallbacks);
 #ifdef CGPU_THREAD_SAFETY
     if (DescPool->pMutex)
@@ -476,8 +476,8 @@ void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool)
     cgpu_free(DescPool);
 }
 
-VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGpuDevice_Vulkan* D,
-    const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count)
+VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGPUDevice_Vulkan* D,
+const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count)
 {
     VkDescriptorSetLayout out_layout = VK_NULL_HANDLE;
     VkDescriptorSetLayoutCreateInfo layout_info = {
@@ -488,19 +488,19 @@ VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGpuDevice_Vulkan* D,
         .flags = 0
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(
-        D->pVkDevice, &layout_info, GLOBAL_VkAllocationCallbacks, &out_layout));
+    D->pVkDevice, &layout_info, GLOBAL_VkAllocationCallbacks, &out_layout));
     return out_layout;
 }
 
-void VkUtil_FreeDescriptorSetLayout(CGpuDevice_Vulkan* D, VkDescriptorSetLayout layout)
+void VkUtil_FreeDescriptorSetLayout(CGPUDevice_Vulkan* D, VkDescriptorSetLayout layout)
 {
     D->mVkDeviceTable.vkDestroyDescriptorSetLayout(D->pVkDevice, layout, GLOBAL_VkAllocationCallbacks);
 }
 
 // Select Helpers
-void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
+void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
 {
-    CGpuAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
+    CGPUAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
     adapter_detail->support_host_visible_vram = false;
 #ifdef VK_EXT_memory_budget
     #if VK_EXT_memory_budget
@@ -519,16 +519,16 @@ void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
             if (mem_prop.memoryHeaps[heap_index].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
             {
                 const bool isDeviceLocal =
-                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
                 const bool isHostVisible =
-                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
                 if (isDeviceLocal && isHostVisible)
                 {
                     adapter_detail->support_host_visible_vram = true;
                     adapter_detail->host_visible_vram_budget =
-                        budget.heapBudget[heap_index] ?
-                            budget.heapBudget[heap_index] :
-                            mem_prop.memoryHeaps[heap_index].size;
+                    budget.heapBudget[heap_index] ?
+                    budget.heapBudget[heap_index] :
+                    mem_prop.memoryHeaps[heap_index].size;
                     break;
                 }
             }
@@ -546,9 +546,9 @@ void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
             if (mem_prop.memoryHeaps[heap_index].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
             {
                 const bool isDeviceLocal =
-                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
                 const bool isHostVisible =
-                    mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+                mem_prop.memoryTypes[j].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
                 if (isDeviceLocal && isHostVisible)
                 {
                     adapter_detail->support_host_visible_vram = true;
@@ -561,9 +561,9 @@ void VkUtil_QueryHostVisbleVramInfo(CGpuAdapter_Vulkan* VkAdapter)
     }
 }
 
-void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
+void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
 {
-    CGpuAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
+    CGPUAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
     VkPhysicalDeviceProperties* prop = &VkAdapter->mPhysicalDeviceProps.properties;
     adapter_detail->is_cpu = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
     adapter_detail->is_virtual = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
@@ -579,11 +579,11 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
 
     // some features
     adapter_detail->uniform_buffer_alignment =
-        (uint32_t)prop->limits.minUniformBufferOffsetAlignment;
+    (uint32_t)prop->limits.minUniformBufferOffsetAlignment;
     adapter_detail->upload_buffer_texture_alignment =
-        (uint32_t)prop->limits.optimalBufferCopyOffsetAlignment;
+    (uint32_t)prop->limits.optimalBufferCopyOffsetAlignment;
     adapter_detail->upload_buffer_texture_row_alignment =
-        (uint32_t)prop->limits.optimalBufferCopyRowPitchAlignment;
+    (uint32_t)prop->limits.optimalBufferCopyRowPitchAlignment;
     adapter_detail->max_vertex_input_bindings = prop->limits.maxVertexInputBindings;
     adapter_detail->multidraw_indirect = prop->limits.maxDrawIndirectCount > 1;
     adapter_detail->wave_lane_count = VkAdapter->mSubgroupProperties.subgroupSize;
@@ -593,16 +593,16 @@ void VkUtil_RecordAdapterDetail(CGpuAdapter_Vulkan* VkAdapter)
     VkUtil_QueryHostVisbleVramInfo(VkAdapter);
 }
 
-void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
+void VkUtil_SelectQueueIndices(CGPUAdapter_Vulkan* VkAdapter)
 {
     // Query Queue Information.
     vkGetPhysicalDeviceQueueFamilyProperties(
-        VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamiliesCount,
-        CGPU_NULLPTR);
+    VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamiliesCount,
+    CGPU_NULLPTR);
     VkAdapter->pQueueFamilyProperties = (VkQueueFamilyProperties*)cgpu_calloc(
-        VkAdapter->mQueueFamiliesCount, sizeof(VkQueueFamilyProperties));
+    VkAdapter->mQueueFamiliesCount, sizeof(VkQueueFamilyProperties));
     vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
-        &VkAdapter->mQueueFamiliesCount, VkAdapter->pQueueFamilyProperties);
+    &VkAdapter->mQueueFamiliesCount, VkAdapter->pQueueFamilyProperties);
 
     for (uint32_t j = 0; j < VkAdapter->mQueueFamiliesCount; j++)
     {
@@ -625,32 +625,32 @@ void VkUtil_SelectQueueIndices(CGpuAdapter_Vulkan* VkAdapter)
     }
 }
 
-void VkUtil_EnumFormatSupports(CGpuAdapter_Vulkan* VkAdapter)
+void VkUtil_EnumFormatSupports(CGPUAdapter_Vulkan* VkAdapter)
 {
-    CGpuAdapterDetail* adapter_detail = (CGpuAdapterDetail*)&VkAdapter->adapter_detail;
-    for (uint32_t i = 0; i < PF_COUNT; ++i)
+    CGPUAdapterDetail* adapter_detail = (CGPUAdapterDetail*)&VkAdapter->adapter_detail;
+    for (uint32_t i = 0; i < CGPU_FORMAT_COUNT; ++i)
     {
         VkFormatProperties formatSupport;
         adapter_detail->format_supports[i].shader_read = 0;
         adapter_detail->format_supports[i].shader_write = 0;
         adapter_detail->format_supports[i].render_target_write = 0;
-        VkFormat fmt = (VkFormat)VkUtil_FormatTranslateToVk((ECGpuFormat)i);
+        VkFormat fmt = (VkFormat)VkUtil_FormatTranslateToVk((ECGPUFormat)i);
         if (fmt == VK_FORMAT_UNDEFINED) continue;
 
         vkGetPhysicalDeviceFormatProperties(VkAdapter->pPhysicalDevice, fmt, &formatSupport);
         adapter_detail->format_supports[i].shader_read =
-            (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0;
+        (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0;
         adapter_detail->format_supports[i].shader_write =
-            (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) != 0;
+        (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) != 0;
         adapter_detail->format_supports[i].render_target_write =
-            (formatSupport.optimalTilingFeatures &
-                (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) != 0;
+        (formatSupport.optimalTilingFeatures &
+         (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) != 0;
     }
     return;
 }
 
-void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* vkInstance,
-    const char* const* instance_layers, uint32_t instance_layers_count)
+void VkUtil_SelectInstanceLayers(struct CGPUInstance_Vulkan* vkInstance,
+const char* const* instance_layers, uint32_t instance_layers_count)
 {
     uint32_t count = 0;
     vkEnumerateInstanceLayerProperties(&count, NULL);
@@ -680,8 +680,8 @@ void VkUtil_SelectInstanceLayers(struct CGpuInstance_Vulkan* vkInstance,
     return;
 }
 
-void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
-    const char* const* instance_extensions, uint32_t instance_extension_count)
+void VkUtil_SelectInstanceExtensions(struct CGPUInstance_Vulkan* VkInstance,
+const char* const* instance_extensions, uint32_t instance_extension_count)
 {
     const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
     uint32_t count = 0;
@@ -712,8 +712,8 @@ void VkUtil_SelectInstanceExtensions(struct CGpuInstance_Vulkan* VkInstance,
     return;
 }
 
-void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
-    const char* const* device_layers, uint32_t device_layers_count)
+void VkUtil_SelectPhysicalDeviceLayers(struct CGPUAdapter_Vulkan* VkAdapter,
+const char* const* device_layers, uint32_t device_layers_count)
 {
     uint32_t count;
     vkEnumerateDeviceLayerProperties(VkAdapter->pPhysicalDevice, &count, NULL);
@@ -743,8 +743,8 @@ void VkUtil_SelectPhysicalDeviceLayers(struct CGpuAdapter_Vulkan* VkAdapter,
     return;
 }
 
-void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
-    const char* const* device_extensions, uint32_t device_extension_count)
+void VkUtil_SelectPhysicalDeviceExtensions(struct CGPUAdapter_Vulkan* VkAdapter,
+const char* const* device_extensions, uint32_t device_extension_count)
 {
     const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
     uint32_t count = 0;
@@ -777,7 +777,7 @@ void VkUtil_SelectPhysicalDeviceExtensions(struct CGpuAdapter_Vulkan* VkAdapter,
 
 // Debug Callback
 FORCEINLINE static void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
-    VkObjectType type, const char* pName)
+VkObjectType type, const char* pName)
 {
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
@@ -789,7 +789,7 @@ FORCEINLINE static void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_
 }
 
 FORCEINLINE static void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
-    VkDebugReportObjectTypeEXT type, const char* pName)
+VkDebugReportObjectTypeEXT type, const char* pName)
 {
     VkDebugMarkerObjectNameInfoEXT nameInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
@@ -800,9 +800,9 @@ FORCEINLINE static void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64
     vkDebugMarkerSetObjectNameEXT(pDevice, &nameInfo);
 }
 
-void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name)
+void VkUtil_OptionalSetObjectName(struct CGPUDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name)
 {
-    CGpuInstance_Vulkan* I = (CGpuInstance_Vulkan*)device->super.adapter->instance;
+    CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)device->super.adapter->instance;
     if (I->super.enable_set_name && name)
     {
         if (I->debug_report)
@@ -819,9 +819,9 @@ void VkUtil_OptionalSetObjectName(struct CGpuDevice_Vulkan* device, uint64_t han
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData)
+VkDebugUtilsMessageTypeFlagsEXT messageType,
+const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+void* pUserData)
 {
     switch (messageSeverity)
     {
@@ -845,9 +845,9 @@ VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VkUtil_DebugReportCallback(
-    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-    uint64_t object, size_t location, int32_t messageCode,
-    const char* pLayerPrefix, const char* pMessage, void* pUserData)
+VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+uint64_t object, size_t location, int32_t messageCode,
+const char* pLayerPrefix, const char* pMessage, void* pUserData)
 {
     switch (flags)
     {

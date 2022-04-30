@@ -6,18 +6,18 @@
 extern "C" {
 #endif
 
-typedef struct CGpuDREDSettings {
+typedef struct DREDSettings {
     ID3D12DeviceRemovedExtendedDataSettings* pDredSettings;
-} CGpuDREDSettings;
-typedef CGpuDREDSettings* CGpuDREDSettingsId;
+} DREDSettings;
+typedef DREDSettings* DREDSettingsId;
 
 // Modifications to DRED settings have no effect on devices already created.
 // But subsequent calls to D3D12CreateDevice use the most recent DRED settings.
-RUNTIME_API CGpuDREDSettingsId cgpu_d3d12_enable_DRED();
+RUNTIME_API DREDSettingsId cgpu_d3d12_enable_DRED();
 
 // Modifications to DRED settings have no effect on devices already created.
 // But subsequent calls to D3D12CreateDevice use the most recent DRED settings.
-RUNTIME_API void cgpu_d3d12_disable_DRED(CGpuDREDSettingsId settings);
+RUNTIME_API void cgpu_d3d12_disable_DRED(DREDSettingsId settings);
 
 #ifdef __cplusplus
 } // end extern "C"

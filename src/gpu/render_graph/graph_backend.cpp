@@ -64,15 +64,15 @@ void RenderGraphBackend::finalize()
 // - 可以撮合两个对象，将它们提升为可alias的，把他们的size和alignment取最大处理即可。
 //  - 首先寻找可以直接alias处理的, cgpu_try_create_aliasing_resource(ResourceId, ResourceDesc)
 //  - 其次再考虑提升合并的行为（此行为在前端无法模拟）
-CGpuTextureId RenderGraphBackend::try_aliasing_allocate(
-    RenderGraphFrameExecutor& executor, const TextureNode& node)
+CGPUTextureId RenderGraphBackend::try_aliasing_allocate(
+RenderGraphFrameExecutor& executor, const TextureNode& node)
 {
     if (node.frame_aliasing_source)
     {
         ZoneScopedN("AllocateAliasingResource");
         // allocate & try bind
         auto aliasing_texture = cgpu_create_texture(device, &node.descriptor);
-        CGpuTextureAliasingBindDescriptor aliasing_desc = {};
+        CGPUTextureAliasingBindDescriptor aliasing_desc = {};
         aliasing_desc.aliased = resolve(executor, *node.frame_aliasing_source);
         aliasing_desc.aliasing = aliasing_texture;
         node.frame_aliasing = cgpu_try_bind_aliasing_texture(device, &aliasing_desc);
@@ -88,7 +88,7 @@ CGpuTextureId RenderGraphBackend::try_aliasing_allocate(
     return nullptr;
 }
 
-CGpuTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const TextureNode& node)
+CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const TextureNode& node)
 {
     ZoneScopedN("ResolveTexture");
     if (!node.frame_texture)
@@ -96,37 +96,37 @@ CGpuTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, co
         if (auto aliased = try_aliasing_allocate(executor, node); aliased)
         {
             node.frame_texture = aliased;
-            node.init_state = RESOURCE_STATE_UNDEFINED;
+            node.init_state = CGPU_RESOURCE_STATE_UNDEFINED;
         }
         else
         {
             auto allocated = texture_pool.allocate(node.descriptor, frame_index);
             node.frame_texture = node.imported ?
-                                     node.frame_texture :
-                                     allocated.first;
+                                 node.frame_texture :
+                                 allocated.first;
             node.init_state = allocated.second;
         }
     }
     return node.frame_texture;
 }
 
-CGpuBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const BufferNode& node)
+CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const BufferNode& node)
 {
     ZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
     {
         auto allocated = buffer_pool.allocate(node.descriptor, frame_index);
         node.frame_buffer = node.imported ?
-                                node.frame_buffer :
-                                allocated.first;
+                            node.frame_buffer :
+                            allocated.first;
         node.init_state = allocated.second;
     }
     return node.frame_buffer;
 }
 
 void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-    eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
-    eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers)
+eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers)
 {
     ZoneScopedN("CalculateBarriers");
     tex_barriers.reserve(pass->textures_count());
@@ -134,34 +134,34 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
     buf_barriers.reserve(pass->buffers_count());
     resolved_buffers.reserve(pass->buffers_count());
     pass->foreach_textures(
-        [&](TextureNode* texture, TextureEdge* edge) {
-            auto tex_resolved = resolve(executor, *texture);
-            resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
-            const auto current_state = get_lastest_state(texture, pass);
-            const auto dst_state = edge->requested_state;
-            if (current_state == dst_state) return;
-            CGpuTextureBarrier barrier = {};
-            barrier.src_state = current_state;
-            barrier.dst_state = dst_state;
-            barrier.texture = tex_resolved;
-            tex_barriers.emplace_back(barrier);
-        });
+    [&](TextureNode* texture, TextureEdge* edge) {
+        auto tex_resolved = resolve(executor, *texture);
+        resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
+        const auto current_state = get_lastest_state(texture, pass);
+        const auto dst_state = edge->requested_state;
+        if (current_state == dst_state) return;
+        CGPUTextureBarrier barrier = {};
+        barrier.src_state = current_state;
+        barrier.dst_state = dst_state;
+        barrier.texture = tex_resolved;
+        tex_barriers.emplace_back(barrier);
+    });
     pass->foreach_buffers(
-        [&](BufferNode* buffer, BufferEdge* edge) {
-            auto buf_resolved = resolve(executor, *buffer);
-            resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
-            const auto current_state = get_lastest_state(buffer, pass);
-            const auto dst_state = edge->requested_state;
-            if (current_state == dst_state) return;
-            CGpuBufferBarrier barrier = {};
-            barrier.src_state = current_state;
-            barrier.dst_state = dst_state;
-            barrier.buffer = buf_resolved;
-            buf_barriers.emplace_back(barrier);
-        });
+    [&](BufferNode* buffer, BufferEdge* edge) {
+        auto buf_resolved = resolve(executor, *buffer);
+        resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
+        const auto current_state = get_lastest_state(buffer, pass);
+        const auto dst_state = edge->requested_state;
+        if (current_state == dst_state) return;
+        CGPUBufferBarrier barrier = {};
+        barrier.src_state = current_state;
+        barrier.dst_state = dst_state;
+        barrier.buffer = buf_resolved;
+        buf_barriers.emplace_back(barrier);
+    });
 }
 
-eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGpuRootSignatureId root_sig)
+eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURootSignatureId root_sig)
 {
     uint32_t set = 0, binding = 0;
     auto name_hash = cgpu_hash(name, strlen(name), (size_t)root_sig->device);
@@ -180,10 +180,10 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGpuRoot
     return { UINT32_MAX, UINT32_MAX };
 }
 
-gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass)
+gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass)
 {
     ZoneScopedN("UpdateBindings");
-    CGpuRootSignatureId root_sig = nullptr;
+    CGPURootSignatureId root_sig = nullptr;
     auto read_edges = pass->tex_read_edges();
     auto rw_edges = pass->tex_readwrite_edges();
     if (pass->pass_type == EPassType::Render)
@@ -196,37 +196,37 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Re
     auto desc_sets = executor.desc_set_pool[root_sig]->pop();
     for (uint32_t set_idx = 0; set_idx < desc_sets.size(); set_idx++)
     {
-        eastl::vector<CGpuDescriptorData> desc_set_updates;
+        eastl::vector<CGPUDescriptorData> desc_set_updates;
         // SRVs
-        eastl::vector<CGpuTextureViewId> srvs(read_edges.size());
+        eastl::vector<CGPUTextureViewId> srvs(read_edges.size());
         for (uint32_t e_idx = 0; e_idx < read_edges.size(); e_idx++)
         {
             auto& read_edge = read_edges[e_idx];
             auto read_set_binding =
-                read_edge->name.empty() ?
-                    eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
-                    calculate_bind_set(read_edge->name.c_str(), root_sig);
+            read_edge->name.empty() ?
+            eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
+            calculate_bind_set(read_edge->name.c_str(), root_sig);
             if (read_set_binding.first == set_idx)
             {
                 auto texture_readed = read_edge->get_texture_node();
-                CGpuDescriptorData update = {};
+                CGPUDescriptorData update = {};
                 update.count = 1;
                 update.binding = read_set_binding.second;
-                update.binding_type = RT_TEXTURE;
-                CGpuTextureViewDescriptor view_desc = {};
+                update.binding_type = CGPU_RT_TEXTURE;
+                CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readed);
                 view_desc.base_array_layer = read_edge->get_array_base();
                 view_desc.array_layer_count = read_edge->get_array_count();
                 view_desc.base_mip_level = read_edge->get_mip_base();
                 view_desc.mip_level_count = read_edge->get_mip_count();
-                view_desc.format = (ECGpuFormat)view_desc.texture->format;
+                view_desc.format = (ECGPUFormat)view_desc.texture->format;
                 const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 const bool is_depth_only = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 view_desc.aspects =
-                    is_depth_stencil ?
-                        is_depth_only ? TVA_DEPTH : TVA_DEPTH | TVA_STENCIL :
-                        TVA_COLOR;
-                view_desc.usages = TVU_SRV;
+                is_depth_stencil ?
+                is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL :
+                CGPU_TVA_COLOR;
+                view_desc.usages = CGPU_TVU_SRV;
                 view_desc.dims = read_edge->get_dimension();
                 srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
                 update.textures = &srvs[e_idx];
@@ -234,31 +234,31 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Re
             }
         }
         // UAVs
-        eastl::vector<CGpuTextureViewId> uavs(rw_edges.size());
+        eastl::vector<CGPUTextureViewId> uavs(rw_edges.size());
         for (uint32_t e_idx = 0; e_idx < rw_edges.size(); e_idx++)
         {
             auto& rw_edge = rw_edges[e_idx];
             auto rw_set_binding =
-                rw_edge->name.empty() ?
-                    eastl::pair<uint32_t, uint32_t>(rw_edge->set, rw_edge->binding) :
-                    calculate_bind_set(rw_edge->name.c_str(), root_sig);
+            rw_edge->name.empty() ?
+            eastl::pair<uint32_t, uint32_t>(rw_edge->set, rw_edge->binding) :
+            calculate_bind_set(rw_edge->name.c_str(), root_sig);
             if (rw_set_binding.first == set_idx)
             {
                 auto texture_readwrite = rw_edge->get_texture_node();
-                CGpuDescriptorData update = {};
+                CGPUDescriptorData update = {};
                 update.count = 1;
                 update.binding = rw_set_binding.second;
-                update.binding_type = RT_RW_TEXTURE;
-                CGpuTextureViewDescriptor view_desc = {};
+                update.binding_type = CGPU_RT_RW_TEXTURE;
+                CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readwrite);
                 view_desc.base_array_layer = 0;
                 view_desc.array_layer_count = 1;
                 view_desc.base_mip_level = 0;
                 view_desc.mip_level_count = 1;
-                view_desc.aspects = TVA_COLOR;
-                view_desc.format = (ECGpuFormat)view_desc.texture->format;
-                view_desc.usages = TVU_UAV;
-                view_desc.dims = TEX_DIMENSION_2D;
+                view_desc.aspects = CGPU_TVA_COLOR;
+                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.usages = CGPU_TVU_UAV;
+                view_desc.dims = CGPU_TEX_DIMENSION_2D;
                 uavs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
                 update.textures = &uavs[e_idx];
                 desc_set_updates.emplace_back(update);
@@ -268,7 +268,7 @@ gsl::span<CGpuDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Re
         if (update_count)
         {
             cgpu_update_descriptor_set(desc_sets[set_idx],
-                desc_set_updates.data(), (uint32_t)desc_set_updates.size());
+            desc_set_updates.data(), (uint32_t)desc_set_updates.size());
         }
     }
     return desc_sets;
@@ -278,46 +278,46 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
 {
     ZoneScopedN("VirtualDeallocate");
     pass->foreach_textures(
-        [this, pass](TextureNode* texture, TextureEdge* edge) {
-            if (texture->imported) return;
-            bool is_last_user = true;
-            texture->foreach_neighbors(
-                [&](DependencyGraphNode* neig) {
-                    RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                    if (rg_node->type == EObjectType::Pass)
-                    {
-                        PassNode* other_pass = (PassNode*)rg_node;
-                        is_last_user = is_last_user && (pass->order >= other_pass->order);
-                    }
-                });
-            if (is_last_user)
+    [this, pass](TextureNode* texture, TextureEdge* edge) {
+        if (texture->imported) return;
+        bool is_last_user = true;
+        texture->foreach_neighbors(
+        [&](DependencyGraphNode* neig) {
+            RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+            if (rg_node->type == EObjectType::Pass)
             {
-                if (!texture->frame_aliasing)
-                    texture_pool.deallocate(texture->descriptor,
-                        texture->frame_texture,
-                        edge->requested_state,
-                        frame_index);
+                PassNode* other_pass = (PassNode*)rg_node;
+                is_last_user = is_last_user && (pass->order >= other_pass->order);
             }
         });
+        if (is_last_user)
+        {
+            if (!texture->frame_aliasing)
+                texture_pool.deallocate(texture->descriptor,
+                texture->frame_texture,
+                edge->requested_state,
+                frame_index);
+        }
+    });
     pass->foreach_buffers(
-        [this, pass](BufferNode* buffer, BufferEdge* edge) {
-            if (buffer->imported) return;
-            bool is_last_user = true;
-            buffer->foreach_neighbors(
-                [&](DependencyGraphNode* neig) {
-                    RenderGraphNode* rg_node = (RenderGraphNode*)neig;
-                    if (rg_node->type == EObjectType::Pass)
-                    {
-                        PassNode* other_pass = (PassNode*)rg_node;
-                        is_last_user = is_last_user && (pass->order >= other_pass->order);
-                    }
-                });
-            if (is_last_user)
-                buffer_pool.deallocate(buffer->descriptor,
-                    buffer->frame_buffer,
-                    edge->requested_state,
-                    frame_index);
+    [this, pass](BufferNode* buffer, BufferEdge* edge) {
+        if (buffer->imported) return;
+        bool is_last_user = true;
+        buffer->foreach_neighbors(
+        [&](DependencyGraphNode* neig) {
+            RenderGraphNode* rg_node = (RenderGraphNode*)neig;
+            if (rg_node->type == EObjectType::Pass)
+            {
+                PassNode* other_pass = (PassNode*)rg_node;
+                is_last_user = is_last_user && (pass->order >= other_pass->order);
+            }
         });
+        if (is_last_user)
+            buffer_pool.deallocate(buffer->descriptor,
+            buffer->frame_buffer,
+            edge->requested_state,
+            frame_index);
+    });
 }
 
 void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass)
@@ -326,19 +326,19 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     ZoneName(pass->name.c_str(), pass->name.size());
     ComputePassContext stack = {};
     // resource de-virtualize
-    eastl::vector<CGpuTextureBarrier> tex_barriers = {};
-    eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures = {};
-    eastl::vector<CGpuBufferBarrier> buffer_barriers = {};
-    eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
+    eastl::vector<CGPUTextureBarrier> tex_barriers = {};
+    eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
+    eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
-        tex_barriers, resolved_textures,
-        buffer_barriers, resolved_buffers);
+    tex_barriers, resolved_textures,
+    buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     stack.desc_sets = alloc_update_pass_descsets(executor, pass);
     stack.resolved_buffers = resolved_buffers;
     stack.resolved_textures = resolved_textures;
     // call cgpu apis
-    CGpuResourceBarrierDescriptor barriers = {};
+    CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
     {
         barriers.texture_barriers = tex_barriers.data();
@@ -349,11 +349,11 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
-    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 0.f, 1.f } };
+    CGPUEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 0.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     // dispatch
-    CGpuComputePassDescriptor pass_desc = {};
+    CGPUComputePassDescriptor pass_desc = {};
     pass_desc.name = pass->get_name();
     stack.cmd = executor.gfx_cmd_buf;
     stack.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
@@ -378,19 +378,19 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     ZoneName(pass->name.c_str(), pass->name.size());
     RenderPassContext stack = {};
     // resource de-virtualize
-    eastl::vector<CGpuTextureBarrier> tex_barriers = {};
-    eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures = {};
-    eastl::vector<CGpuBufferBarrier> buffer_barriers = {};
-    eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
+    eastl::vector<CGPUTextureBarrier> tex_barriers = {};
+    eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
+    eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
-        tex_barriers, resolved_textures,
-        buffer_barriers, resolved_buffers);
+    tex_barriers, resolved_textures,
+    buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     stack.desc_sets = alloc_update_pass_descsets(executor, pass);
     stack.resolved_buffers = resolved_buffers;
     stack.resolved_textures = resolved_textures;
     // call cgpu apis
-    CGpuResourceBarrierDescriptor barriers = {};
+    CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
     {
         barriers.texture_barriers = tex_barriers.data();
@@ -401,35 +401,35 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
-    CGpuEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
+    CGPUEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     // color attachments
     // TODO: MSAA
-    eastl::vector<CGpuColorAttachment> color_attachments = {};
-    CGpuDepthStencilAttachment ds_attachment = {};
+    eastl::vector<CGPUColorAttachment> color_attachments = {};
+    CGPUDepthStencilAttachment ds_attachment = {};
     auto write_edges = pass->tex_write_edges();
     for (auto& write_edge : write_edges)
     {
         // TODO: MSAA
         auto texture_target = write_edge->get_texture_node();
         const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(
-            (ECGpuFormat)resolve(executor, *texture_target)->format);
+        (ECGPUFormat)resolve(executor, *texture_target)->format);
         const bool is_depth_only = FormatUtil_IsDepthStencilFormat(
-            (ECGpuFormat)resolve(executor, *texture_target)->format);
-        if (write_edge->requested_state == RESOURCE_STATE_DEPTH_WRITE && is_depth_stencil)
+        (ECGPUFormat)resolve(executor, *texture_target)->format);
+        if (write_edge->requested_state == CGPU_RESOURCE_STATE_DEPTH_WRITE && is_depth_stencil)
         {
-            CGpuTextureViewDescriptor view_desc = {};
+            CGPUTextureViewDescriptor view_desc = {};
             view_desc.texture = resolve(executor, *texture_target);
             view_desc.base_array_layer = write_edge->get_array_base();
             view_desc.array_layer_count = write_edge->get_array_count();
             view_desc.base_mip_level = write_edge->get_mip_level();
             view_desc.mip_level_count = 1;
             view_desc.aspects =
-                is_depth_only ? TVA_DEPTH : TVA_DEPTH | TVA_STENCIL;
-            view_desc.format = (ECGpuFormat)view_desc.texture->format;
-            view_desc.usages = TVU_RTV_DSV;
-            view_desc.dims = TEX_DIMENSION_2D;
+            is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL;
+            view_desc.format = (ECGPUFormat)view_desc.texture->format;
+            view_desc.usages = CGPU_TVU_RTV_DSV;
+            view_desc.dims = CGPU_TEX_DIMENSION_2D;
             ds_attachment.view = texture_view_pool.allocate(view_desc, frame_index);
             ds_attachment.depth_load_action = pass->depth_load_action;
             ds_attachment.depth_store_action = pass->depth_store_action;
@@ -440,26 +440,26 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         }
         else
         {
-            CGpuColorAttachment attachment = {};
-            CGpuTextureViewDescriptor view_desc = {};
+            CGPUColorAttachment attachment = {};
+            CGPUTextureViewDescriptor view_desc = {};
             view_desc.texture = resolve(executor, *texture_target);
             view_desc.base_array_layer = write_edge->get_array_base();
             view_desc.array_layer_count = write_edge->get_array_count();
             view_desc.base_mip_level = write_edge->get_mip_level();
             view_desc.mip_level_count = 1;
-            view_desc.format = (ECGpuFormat)view_desc.texture->format;
-            view_desc.aspects = TVA_COLOR;
-            view_desc.usages = TVU_RTV_DSV;
-            view_desc.dims = TEX_DIMENSION_2D;
+            view_desc.format = (ECGPUFormat)view_desc.texture->format;
+            view_desc.aspects = CGPU_TVA_COLOR;
+            view_desc.usages = CGPU_TVU_RTV_DSV;
+            view_desc.dims = CGPU_TEX_DIMENSION_2D;
             attachment.view = texture_view_pool.allocate(view_desc, frame_index);
             attachment.load_action = pass->load_actions[write_edge->mrt_index];
             attachment.store_action = pass->store_actions[write_edge->mrt_index];
             color_attachments.emplace_back(attachment);
         }
     }
-    CGpuRenderPassDescriptor pass_desc = {};
+    CGPURenderPassDescriptor pass_desc = {};
     pass_desc.render_target_count = (uint32_t)color_attachments.size();
-    pass_desc.sample_count = SAMPLE_COUNT_1;
+    pass_desc.sample_count = CGPU_SAMPLE_COUNT_1;
     pass_desc.name = pass->get_name();
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = &ds_attachment;
@@ -485,15 +485,15 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     ZoneScopedC(tracy::Color::LightYellow);
     ZoneName(pass->name.c_str(), pass->name.size());
     // resource de-virtualize
-    eastl::vector<CGpuTextureBarrier> tex_barriers = {};
-    eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures = {};
-    eastl::vector<CGpuBufferBarrier> buffer_barriers = {};
-    eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers = {};
+    eastl::vector<CGPUTextureBarrier> tex_barriers = {};
+    eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
+    eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
-        tex_barriers, resolved_textures,
-        buffer_barriers, resolved_buffers);
+    tex_barriers, resolved_textures,
+    buffer_barriers, resolved_buffers);
     // call cgpu apis
-    CGpuResourceBarrierDescriptor barriers = {};
+    CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
     {
         barriers.texture_barriers = tex_barriers.data();
@@ -504,14 +504,14 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
-    CGpuEventInfo event = { pass->name.c_str(), { 0.f, .5f, 1.f, 1.f } };
+    CGPUEventInfo event = { pass->name.c_str(), { 0.f, .5f, 1.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     for (uint32_t i = 0; i < pass->t2ts.size(); i++)
     {
         auto src_node = RenderGraph::resolve(pass->t2ts[i].first);
         auto dst_node = RenderGraph::resolve(pass->t2ts[i].second);
-        CGpuTextureToTextureTransfer t2t = {};
+        CGPUTextureToTextureTransfer t2t = {};
         t2t.src = resolve(executor, *src_node);
         t2t.src_subresource.aspects = pass->t2ts[i].first.aspects;
         t2t.src_subresource.mip_level = pass->t2ts[i].first.mip_level;
@@ -528,7 +528,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     {
         auto src_node = RenderGraph::resolve(pass->b2bs[i].first);
         auto dst_node = RenderGraph::resolve(pass->b2bs[i].second);
-        CGpuBufferToBufferTransfer b2b = {};
+        CGPUBufferToBufferTransfer b2b = {};
         b2b.src = resolve(executor, *src_node);
         b2b.src_offset = pass->b2bs[i].first.from;
         b2b.dst = resolve(executor, *dst_node);
@@ -546,11 +546,11 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
     auto&& read_edge = read_edges[0];
     auto texture_target = read_edge->get_texture_node();
     auto back_buffer = pass->descriptor.swapchain->back_buffers[pass->descriptor.index];
-    CGpuTextureBarrier present_barrier = {};
+    CGPUTextureBarrier present_barrier = {};
     present_barrier.texture = back_buffer;
     present_barrier.src_state = get_lastest_state(texture_target, pass);
-    present_barrier.dst_state = RESOURCE_STATE_PRESENT;
-    CGpuResourceBarrierDescriptor barriers = {};
+    present_barrier.dst_state = CGPU_RESOURCE_STATE_PRESENT;
+    CGPUResourceBarrierDescriptor barriers = {};
     barriers.texture_barriers = &present_barrier;
     barriers.texture_barriers_count = 1;
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
@@ -572,7 +572,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler)
         {
             eastl::string frameLabel = "Frame";
             frameLabel.append(eastl::to_string(frame_index));
-            CGpuEventInfo event = { frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
+            CGPUEventInfo event = { frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
             cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
         }
         for (auto& pass : passes)
@@ -630,13 +630,13 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler)
         for (auto pass : passes)
         {
             pass->foreach_textures(
-                +[](TextureNode* t, TextureEdge* e) {
-                    delete e;
-                });
+            +[](TextureNode* t, TextureEdge* e) {
+                delete e;
+            });
             pass->foreach_buffers(
-                +[](BufferNode* t, BufferEdge* e) {
-                    delete e;
-                });
+            +[](BufferNode* t, BufferEdge* e) {
+                delete e;
+            });
             delete pass;
         }
         passes.clear();
@@ -651,7 +651,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler)
     return frame_index++;
 }
 
-CGpuDeviceId RenderGraphBackend::get_backend_device() { return device; }
+CGPUDeviceId RenderGraphBackend::get_backend_device() { return device; }
 
 uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame)
 {
@@ -677,11 +677,11 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame)
         using ElementType = decltype(queue.front());
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-            eastl::remove_if(queue.begin(), queue.end(),
-                [&](ElementType& element) {
-                    return element.first.first == nullptr;
-                }),
-            queue.end());
+        eastl::remove_if(queue.begin(), queue.end(),
+        [&](ElementType& element) {
+            return element.first.first == nullptr;
+        }),
+        queue.end());
         total_count += prev_count - (uint32_t)queue.size();
     }
     return total_count;
@@ -704,11 +704,11 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame)
         using ElementType = decltype(queue.front());
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-            eastl::remove_if(queue.begin(), queue.end(),
-                [&](ElementType& element) {
-                    return element.first.first == nullptr;
-                }),
-            queue.end());
+        eastl::remove_if(queue.begin(), queue.end(),
+        [&](ElementType& element) {
+            return element.first.first == nullptr;
+        }),
+        queue.end());
         total_count += prev_count - (uint32_t)queue.size();
     }
     return total_count;

@@ -45,8 +45,8 @@ inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* 
 }
 
 inline static void read_shader_bytes(
-    const char* virtual_path, uint32_t** bytes, uint32_t* length,
-    ECGpuBackend backend)
+const char* virtual_path, uint32_t** bytes, uint32_t* length,
+ECGPUBackend backend)
 {
     char shader_file[256];
     const char* shader_path = "./../resources/shaders/";
@@ -72,7 +72,7 @@ template <typename Pipeline>
 inline static void free_pipeline_and_signature(Pipeline* pipeline)
 {
     auto sig = pipeline->root_signature;
-    if constexpr (std::is_same_v<Pipeline*, CGpuRenderPipelineId>)
+    if constexpr (std::is_same_v<Pipeline*, CGPURenderPipelineId>)
     {
         cgpu_free_render_pipeline(pipeline);
     }

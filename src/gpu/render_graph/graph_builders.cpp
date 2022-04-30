@@ -11,7 +11,7 @@ RenderGraph::RenderPassBuilder::RenderPassBuilder(RenderGraph& graph, RenderPass
     , node(pass)
 {
 }
-RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_device(CGpuDeviceId device_)
+RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_device(CGPUDeviceId device_)
 {
     device = device_;
     return *this;
@@ -21,12 +21,12 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::enable_memory_
     memory_aliasing = true;
     return *this;
 }
-RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_gfx_queue(CGpuQueueId queue)
+RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_gfx_queue(CGPUQueueId queue)
 {
     gfx_queue = queue;
     return *this;
 }
-RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::backend_api(ECGpuBackend backend)
+RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::backend_api(ECGPUBackend backend)
 {
     api = backend;
     return *this;
@@ -61,36 +61,36 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const c
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle)
 {
     auto&& edge = node.in_texture_edges.emplace_back(
-        new TextureReadEdge(set, binding, handle));
+    new TextureReadEdge(set, binding, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, TextureSRVHandle handle)
 {
     auto&& edge = node.in_texture_edges.emplace_back(
-        new TextureReadEdge(name, handle));
+    new TextureReadEdge(name, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
-    uint32_t mrt_index, TextureRTVHandle handle, ECGpuLoadAction load_action,
-    ECGpuStoreAction store_action)
+uint32_t mrt_index, TextureRTVHandle handle, ECGPULoadAction load_action,
+ECGPUStoreAction store_action)
 {
     auto&& edge = node.out_texture_edges.emplace_back(
-        new TextureRenderEdge(mrt_index, handle._this));
+    new TextureRenderEdge(mrt_index, handle._this));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.load_actions[mrt_index] = load_action;
     node.store_actions[mrt_index] = store_action;
     return *this;
 }
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stencil(TextureDSVHandle handle,
-    ECGpuLoadAction dload_action, ECGpuStoreAction dstore_action,
-    ECGpuLoadAction sload_action, ECGpuStoreAction sstore_action)
+ECGPULoadAction dload_action, ECGPUStoreAction dstore_action,
+ECGPULoadAction sload_action, ECGPUStoreAction sstore_action)
 {
     auto&& edge = node.out_texture_edges.emplace_back(
-        new TextureRenderEdge(
-            MAX_MRT_COUNT, handle._this,
-            RESOURCE_STATE_DEPTH_WRITE));
+    new TextureRenderEdge(
+    MAX_MRT_COUNT, handle._this,
+    CGPU_RESOURCE_STATE_DEPTH_WRITE));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.depth_load_action = dload_action;
     node.depth_store_action = dstore_action;
@@ -114,14 +114,14 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(const char
 {
     return *this;
 }
-RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::use_buffer(PipelineBufferHandle buffer, ECGpuResourceState requested_state)
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::use_buffer(PipelineBufferHandle buffer, ECGPUResourceState requested_state)
 {
     auto&& edge = node.ppl_buffer_edges.emplace_back(
-        new PipelineBufferEdge(buffer, requested_state));
+    new PipelineBufferEdge(buffer, requested_state));
     graph.graph->link(graph.graph->access_node(buffer._this), &node, edge);
     return *this;
 }
-RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipeline(CGpuRenderPipelineId pipeline)
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipeline(CGPURenderPipelineId pipeline)
 {
     node.pipeline = pipeline;
     return *this;
@@ -145,28 +145,28 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle)
 {
     auto&& edge = node.in_texture_edges.emplace_back(
-        new TextureReadEdge(set, binding, handle));
+    new TextureReadEdge(set, binding, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, TextureSRVHandle handle)
 {
     auto&& edge = node.in_texture_edges.emplace_back(
-        new TextureReadEdge(name, handle));
+    new TextureReadEdge(name, handle));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle)
 {
     auto&& edge = node.inout_texture_edges.emplace_back(
-        new TextureReadWriteEdge(set, binding, handle));
+    new TextureReadWriteEdge(set, binding, handle));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, TextureUAVHandle handle)
 {
     auto&& edge = node.inout_texture_edges.emplace_back(
-        new TextureReadWriteEdge(name, handle));
+    new TextureReadWriteEdge(name, handle));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
@@ -186,7 +186,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(cons
 {
     return *this;
 }
-RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_pipeline(CGpuComputePipelineId pipeline)
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_pipeline(CGPUComputePipelineId pipeline)
 {
     node.pipeline = pipeline;
     return *this;
@@ -221,9 +221,9 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char*
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst)
 {
     auto&& in_edge = node.in_buffer_edges.emplace_back(
-        new BufferReadEdge(src, RESOURCE_STATE_COPY_SOURCE));
+    new BufferReadEdge(src, CGPU_RESOURCE_STATE_COPY_SOURCE));
     auto&& out_edge = node.out_buffer_edges.emplace_back(
-        new BufferReadWriteEdge(dst, RESOURCE_STATE_COPY_DEST));
+    new BufferReadWriteEdge(dst, CGPU_RESOURCE_STATE_COPY_DEST));
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
     node.b2bs.emplace_back(src, dst);
@@ -232,11 +232,11 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(Buf
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst)
 {
     auto&& in_edge = node.in_texture_edges.emplace_back(
-        new TextureReadEdge(0, 0, src._this,
-            RESOURCE_STATE_COPY_SOURCE));
+    new TextureReadEdge(0, 0, src._this,
+    CGPU_RESOURCE_STATE_COPY_SOURCE));
     auto&& out_edge = node.out_texture_edges.emplace_back(
-        new TextureRenderEdge(0, dst._this,
-            RESOURCE_STATE_COPY_DEST));
+    new TextureRenderEdge(0, dst._this,
+    CGPU_RESOURCE_STATE_COPY_DEST));
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
     node.t2ts.emplace_back(src, dst);
@@ -268,7 +268,7 @@ RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::set_name(const
     }
     return *this;
 }
-RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapchain(CGpuSwapChainId chain, uint32_t index)
+RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::swapchain(CGPUSwapChainId chain, uint32_t index)
 {
     node.descriptor.swapchain = chain;
     node.descriptor.index = index;
@@ -278,7 +278,7 @@ RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(Textur
 {
     assert(is_backbuffer && "blit to screen mode not supported!");
     auto&& edge = node.in_texture_edges.emplace_back(
-        new TextureReadEdge(0, 0, handle, RESOURCE_STATE_PRESENT));
+    new TextureReadEdge(0, 0, handle, CGPU_RESOURCE_STATE_PRESENT));
     graph.graph->link(graph.graph->access_node(handle), &node, edge);
     return *this;
 }
@@ -298,9 +298,9 @@ RenderGraph::BufferBuilder::BufferBuilder(RenderGraph& graph, BufferNode& node) 
     : graph(graph)
     , node(node)
 {
-    node.descriptor.descriptors = RT_NONE;
-    node.descriptor.flags = BCF_NONE;
-    node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
+    node.descriptor.descriptors = CGPU_RT_NONE;
+    node.descriptor.flags = CGPU_BCF_NONE;
+    node.descriptor.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* name)
 {
@@ -310,19 +310,19 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* nam
     node.set_name(name);
     return *this;
 }
-RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::import(CGpuBufferId buffer, ECGpuResourceState init_state)
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::import(CGPUBufferId buffer, ECGPUResourceState init_state)
 {
     node.imported = buffer;
     node.frame_buffer = buffer;
     node.init_state = init_state;
     node.descriptor.descriptors = buffer->descriptors;
     node.descriptor.size = buffer->size;
-    node.descriptor.memory_usage = (ECGpuMemoryUsage)buffer->memory_usage;
+    node.descriptor.memory_usage = (ECGPUMemoryUsage)buffer->memory_usage;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::owns_memory()
 {
-    node.descriptor.flags |= BCF_OWN_MEMORY_BIT;
+    node.descriptor.flags |= CGPU_BCF_OWN_MEMORY_BIT;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride)
@@ -337,41 +337,41 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::size(uint64_t size)
     node.descriptor.size = size;
     return *this;
 }
-RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::memory_usage(ECGpuMemoryUsage mem_usage)
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::memory_usage(ECGPUMemoryUsage mem_usage)
 {
     node.descriptor.memory_usage = mem_usage;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allow_shader_readwrite()
 {
-    node.descriptor.descriptors |= RT_RW_BUFFER;
+    node.descriptor.descriptors |= CGPU_RT_RW_BUFFER;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allow_shader_read()
 {
-    node.descriptor.descriptors |= RT_BUFFER;
-    node.descriptor.descriptors |= RT_UNIFORM_BUFFER;
+    node.descriptor.descriptors |= CGPU_RT_BUFFER;
+    node.descriptor.descriptors |= CGPU_RT_UNIFORM_BUFFER;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_upload_buffer()
 {
-    node.descriptor.flags |= BCF_PERSISTENT_MAP_BIT;
-    node.descriptor.start_state = RESOURCE_STATE_COPY_SOURCE;
-    node.descriptor.memory_usage = MEM_USAGE_CPU_ONLY;
+    node.descriptor.flags |= CGPU_BCF_PERSISTENT_MAP_BIT;
+    node.descriptor.start_state = CGPU_RESOURCE_STATE_COPY_SOURCE;
+    node.descriptor.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_vertex_buffer()
 {
-    node.descriptor.descriptors |= RT_VERTEX_BUFFER;
-    node.descriptor.start_state = RESOURCE_STATE_COPY_DEST;
-    node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
+    node.descriptor.descriptors |= CGPU_RT_VERTEX_BUFFER;
+    node.descriptor.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    node.descriptor.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_index_buffer()
 {
-    node.descriptor.descriptors |= RT_INDEX_BUFFER;
-    node.descriptor.start_state = RESOURCE_STATE_COPY_DEST;
-    node.descriptor.memory_usage = MEM_USAGE_GPU_ONLY;
+    node.descriptor.descriptors |= CGPU_RT_INDEX_BUFFER;
+    node.descriptor.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    node.descriptor.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     return *this;
 }
 BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup)
@@ -395,7 +395,7 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
     : graph(graph)
     , node(node)
 {
-    node.descriptor.descriptors = RT_TEXTURE;
+    node.descriptor.descriptors = CGPU_RT_TEXTURE;
     node.descriptor.is_dedicated = false;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name)
@@ -406,7 +406,7 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* n
     node.set_name(name);
     return *this;
 }
-RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId texture, ECGpuResourceState init_state)
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGPUTextureId texture, ECGPUResourceState init_state)
 {
     node.imported = texture;
     node.frame_texture = texture;
@@ -414,13 +414,13 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGpuTextureId t
     node.descriptor.width = texture->width;
     node.descriptor.height = texture->height;
     node.descriptor.depth = texture->depth;
-    node.descriptor.format = (ECGpuFormat)texture->format;
+    node.descriptor.format = (ECGPUFormat)texture->format;
     node.descriptor.array_size = texture->array_size_minus_one + 1;
     node.descriptor.sample_count = texture->sample_count;
     return *this;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(
-    uint32_t width, uint32_t height, uint32_t depth)
+uint32_t width, uint32_t height, uint32_t depth)
 {
     node.descriptor.width = width;
     node.descriptor.height = height;
@@ -428,7 +428,7 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(
     return *this;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::format(
-    ECGpuFormat format)
+ECGPUFormat format)
 {
     node.descriptor.format = format;
     return *this;
@@ -439,33 +439,33 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::array(uint32_t size)
     return *this;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::sample_count(
-    ECGpuSampleCount count)
+ECGPUSampleCount count)
 {
     node.descriptor.sample_count = count;
     return *this;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_readwrite()
 {
-    node.descriptor.descriptors |= RT_RW_TEXTURE;
-    node.descriptor.start_state = RESOURCE_STATE_UNDEFINED;
+    node.descriptor.descriptors |= CGPU_RT_RW_TEXTURE;
+    node.descriptor.start_state = CGPU_RESOURCE_STATE_UNDEFINED;
     return *this;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_render_target()
 {
-    node.descriptor.descriptors |= RT_RENDER_TARGET;
-    node.descriptor.start_state = RESOURCE_STATE_UNDEFINED;
+    node.descriptor.descriptors |= CGPU_RT_RENDER_TARGET;
+    node.descriptor.start_state = CGPU_RESOURCE_STATE_UNDEFINED;
     return *this;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_depth_stencil()
 {
-    node.descriptor.descriptors |= RT_DEPTH_STENCIL;
-    node.descriptor.start_state = RESOURCE_STATE_UNDEFINED;
+    node.descriptor.descriptors |= CGPU_RT_DEPTH_STENCIL;
+    node.descriptor.start_state = CGPU_RESOURCE_STATE_UNDEFINED;
     return *this;
 }
 
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::owns_memory()
 {
-    node.descriptor.flags |= TCF_OWN_MEMORY_BIT;
+    node.descriptor.flags |= CGPU_TCF_OWN_MEMORY_BIT;
     return *this;
 }
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_lone()

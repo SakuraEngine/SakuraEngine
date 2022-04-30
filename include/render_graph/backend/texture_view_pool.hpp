@@ -11,12 +11,12 @@ class TextureViewPool
 {
 public:
     struct Key {
-        CGpuDeviceId device;
-        CGpuTextureId texture;
-        ECGpuFormat format;
-        CGpuTexutreViewUsages usages;
-        CGpuTextureViewAspects aspects;
-        ECGpuTextureDimension dims;
+        CGPUDeviceId device;
+        CGPUTextureId texture;
+        ECGPUFormat format;
+        CGPUTexutreViewUsages usages;
+        CGPUTextureViewAspects aspects;
+        ECGPUTextureDimension dims;
         uint32_t base_array_layer;
         uint32_t array_layer_count;
         uint32_t base_mip_level;
@@ -25,20 +25,20 @@ public:
         friend class TextureViewPool;
 
     protected:
-        Key(CGpuDeviceId device, const CGpuTextureViewDescriptor& desc);
+        Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc);
     };
     friend class RenderGraphBackend;
-    void initialize(CGpuDeviceId device);
+    void initialize(CGPUDeviceId device);
     void finalize();
-    uint32_t erase(CGpuTextureId texture);
-    CGpuTextureViewId allocate(const CGpuTextureViewDescriptor& desc, uint64_t frame_index);
+    uint32_t erase(CGPUTextureId texture);
+    CGPUTextureViewId allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index);
 
 protected:
-    CGpuDeviceId device;
-    eastl::unordered_map<Key, eastl::pair<CGpuTextureViewId, uint64_t>> views;
+    CGPUDeviceId device;
+    eastl::unordered_map<Key, eastl::pair<CGPUTextureViewId, uint64_t>> views;
 };
 
-inline TextureViewPool::Key::Key(CGpuDeviceId device, const CGpuTextureViewDescriptor& desc)
+inline TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc)
     : device(device)
     , texture(desc.texture)
     , format(desc.format)
@@ -52,7 +52,7 @@ inline TextureViewPool::Key::Key(CGpuDeviceId device, const CGpuTextureViewDescr
 {
 }
 
-inline uint32_t TextureViewPool::erase(CGpuTextureId texture)
+inline uint32_t TextureViewPool::erase(CGPUTextureId texture)
 {
     auto prev_size = (uint32_t)views.size();
     for (auto it = views.begin(); it != views.end();)
@@ -73,7 +73,7 @@ inline TextureViewPool::Key::operator size_t() const
     return skr_hash(this, sizeof(*this), (size_t)device);
 }
 
-inline void TextureViewPool::initialize(CGpuDeviceId device_)
+inline void TextureViewPool::initialize(CGPUDeviceId device_)
 {
     device = device_;
 }
@@ -87,7 +87,7 @@ inline void TextureViewPool::finalize()
     views.clear();
 }
 
-inline CGpuTextureViewId TextureViewPool::allocate(const CGpuTextureViewDescriptor& desc, uint64_t frame_index)
+inline CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index)
 {
     const TextureViewPool::Key key(device, desc);
     auto&& found = views.find(key);
@@ -98,7 +98,7 @@ inline CGpuTextureViewId TextureViewPool::allocate(const CGpuTextureViewDescript
     }
     else
     {
-        CGpuTextureViewId new_view = cgpu_create_texture_view(device, &desc);
+        CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
         views[key] = { new_view, frame_index };
         return new_view;
     }

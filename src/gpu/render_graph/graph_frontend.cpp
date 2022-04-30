@@ -7,8 +7,8 @@ namespace sakura
 {
 namespace render_graph
 {
-RenderGraph::RenderGraph(const RenderGraphBuilder& builder) :
-    aliasing_enabled(builder.memory_aliasing)
+RenderGraph::RenderGraph(const RenderGraphBuilder& builder)
+    : aliasing_enabled(builder.memory_aliasing)
 {
 }
 
@@ -55,21 +55,21 @@ bool RenderGraph::compile()
         ZoneScopedN("ull");
         // 1.cull
         resources.erase(
-            eastl::remove_if(resources.begin(), resources.end(),
-                [this](ResourceNode* resource) {
-                    const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
-                    if (lone) culled_resources.emplace_back(resource);
-                    return lone;
-                }),
-            resources.end());
+        eastl::remove_if(resources.begin(), resources.end(),
+        [this](ResourceNode* resource) {
+            const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
+            if (lone) culled_resources.emplace_back(resource);
+            return lone;
+        }),
+        resources.end());
         passes.erase(
-            eastl::remove_if(passes.begin(), passes.end(),
-                [this](PassNode* pass) {
-                    const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
-                    if (lone) culled_passes.emplace_back(pass);
-                    return lone;
-                }),
-            passes.end());
+        eastl::remove_if(passes.begin(), passes.end(),
+        [this](PassNode* pass) {
+            const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
+            if (lone) culled_passes.emplace_back(pass);
+            return lone;
+        }),
+        passes.end());
     }
     if (aliasing_enabled)
     {
@@ -131,59 +131,59 @@ uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f)
 }
 
 uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
-    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
 {
     return graph->foreach_incoming_edges(
-        texture,
-        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
-            PassNode* pass = static_cast<PassNode*>(from);
-            TextureNode* texture = static_cast<TextureNode*>(to);
-            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
-            f(pass, texture, edge);
-        });
+    texture,
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+        PassNode* pass = static_cast<PassNode*>(from);
+        TextureNode* texture = static_cast<TextureNode*>(to);
+        RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+        f(pass, texture, edge);
+    });
 }
 
 uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
-    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
 {
     return graph->foreach_outgoing_edges(
-        texture,
-        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
-            PassNode* pass = static_cast<PassNode*>(to);
-            TextureNode* texture = static_cast<TextureNode*>(from);
-            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
-            f(pass, texture, edge);
-        });
+    texture,
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+        PassNode* pass = static_cast<PassNode*>(to);
+        TextureNode* texture = static_cast<TextureNode*>(from);
+        RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+        f(pass, texture, edge);
+    });
 }
 
 uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
-    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
 {
     return graph->foreach_incoming_edges(
-        buffer,
-        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
-            PassNode* pass = static_cast<PassNode*>(from);
-            BufferNode* buffer = static_cast<BufferNode*>(to);
-            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
-            f(pass, buffer, edge);
-        });
+    buffer,
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+        PassNode* pass = static_cast<PassNode*>(from);
+        BufferNode* buffer = static_cast<BufferNode*>(to);
+        RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+        f(pass, buffer, edge);
+    });
 }
 
 uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
-    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
 {
     return graph->foreach_outgoing_edges(
-        buffer,
-        [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
-            PassNode* pass = static_cast<PassNode*>(to);
-            BufferNode* buffer = static_cast<BufferNode*>(from);
-            RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
-            f(pass, buffer, edge);
-        });
+    buffer,
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+        PassNode* pass = static_cast<PassNode*>(to);
+        BufferNode* buffer = static_cast<BufferNode*>(from);
+        RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
+        f(pass, buffer, edge);
+    });
 }
 
-const ECGpuResourceState RenderGraph::get_lastest_state(
-    const TextureNode* texture, const PassNode* pending_pass) const
+const ECGPUResourceState RenderGraph::get_lastest_state(
+const TextureNode* texture, const PassNode* pending_pass) const
 {
     ZoneScopedN("CaclulateLatestState-Texture");
 
@@ -192,43 +192,43 @@ const ECGpuResourceState RenderGraph::get_lastest_state(
     PassNode* pass_iter = nullptr;
     auto result = texture->init_state;
     foreach_writer_passes(texture->get_handle(),
-        [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
-            if (edge->type == ERelationshipType::TextureWrite)
+    [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
+        if (edge->type == ERelationshipType::TextureWrite)
+        {
+            auto write_edge = static_cast<TextureRenderEdge*>(edge);
+            if (pass->after(pass_iter) && pass->before(pending_pass))
             {
-                auto write_edge = static_cast<TextureRenderEdge*>(edge);
-                if (pass->after(pass_iter) && pass->before(pending_pass))
-                {
-                    pass_iter = pass;
-                    result = write_edge->requested_state;
-                }
+                pass_iter = pass;
+                result = write_edge->requested_state;
             }
-            else if (edge->type == ERelationshipType::TextureReadWrite)
+        }
+        else if (edge->type == ERelationshipType::TextureReadWrite)
+        {
+            auto rw_edge = static_cast<TextureReadWriteEdge*>(edge);
+            if (pass->after(pass_iter) && pass->before(pending_pass))
             {
-                auto rw_edge = static_cast<TextureReadWriteEdge*>(edge);
-                if (pass->after(pass_iter) && pass->before(pending_pass))
-                {
-                    pass_iter = pass;
-                    result = rw_edge->requested_state;
-                }
+                pass_iter = pass;
+                result = rw_edge->requested_state;
             }
-        });
+        }
+    });
     foreach_reader_passes(texture->get_handle(),
-        [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
-            if (edge->type == ERelationshipType::TextureRead)
+    [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
+        if (edge->type == ERelationshipType::TextureRead)
+        {
+            auto read_edge = static_cast<TextureRenderEdge*>(edge);
+            if (pass->after(pass_iter) && pass->before(pending_pass))
             {
-                auto read_edge = static_cast<TextureRenderEdge*>(edge);
-                if (pass->after(pass_iter) && pass->before(pending_pass))
-                {
-                    pass_iter = pass;
-                    result = read_edge->requested_state;
-                }
+                pass_iter = pass;
+                result = read_edge->requested_state;
             }
-        });
+        }
+    });
     return result;
 }
 
-const ECGpuResourceState RenderGraph::get_lastest_state(
-    const BufferNode* buffer, const PassNode* pending_pass) const
+const ECGPUResourceState RenderGraph::get_lastest_state(
+const BufferNode* buffer, const PassNode* pending_pass) const
 {
     ZoneScopedN("CaclulateLatestState-Buffer");
 
@@ -237,38 +237,38 @@ const ECGpuResourceState RenderGraph::get_lastest_state(
     PassNode* pass_iter = nullptr;
     auto result = buffer->init_state;
     foreach_writer_passes(buffer->get_handle(),
-        [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
-            if (edge->type == ERelationshipType::BufferReadWrite)
+    [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
+        if (edge->type == ERelationshipType::BufferReadWrite)
+        {
+            auto write_edge = static_cast<BufferReadWriteEdge*>(edge);
+            if (pass->after(pass_iter) && pass->before(pending_pass))
             {
-                auto write_edge = static_cast<BufferReadWriteEdge*>(edge);
-                if (pass->after(pass_iter) && pass->before(pending_pass))
-                {
-                    pass_iter = pass;
-                    result = write_edge->requested_state;
-                }
+                pass_iter = pass;
+                result = write_edge->requested_state;
             }
-        });
+        }
+    });
     foreach_reader_passes(buffer->get_handle(),
-        [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
-            if (edge->type == ERelationshipType::BufferRead)
+    [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
+        if (edge->type == ERelationshipType::BufferRead)
+        {
+            auto read_edge = static_cast<BufferReadEdge*>(edge);
+            if (pass->after(pass_iter) && pass->before(pending_pass))
             {
-                auto read_edge = static_cast<BufferReadEdge*>(edge);
-                if (pass->after(pass_iter) && pass->before(pending_pass))
-                {
-                    pass_iter = pass;
-                    result = read_edge->requested_state;
-                }
+                pass_iter = pass;
+                result = read_edge->requested_state;
             }
-            else if (edge->type == ERelationshipType::PipelineBuffer)
+        }
+        else if (edge->type == ERelationshipType::PipelineBuffer)
+        {
+            auto ppl_edge = static_cast<PipelineBufferEdge*>(edge);
+            if (pass->after(pass_iter) && pass->before(pending_pass))
             {
-                auto ppl_edge = static_cast<PipelineBufferEdge*>(edge);
-                if (pass->after(pass_iter) && pass->before(pending_pass))
-                {
-                    pass_iter = pass;
-                    result = ppl_edge->requested_state;
-                }
+                pass_iter = pass;
+                result = ppl_edge->requested_state;
             }
-        });
+        }
+    });
     return result;
 }
 
