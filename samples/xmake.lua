@@ -30,6 +30,10 @@ target("cgpu-3d")
     add_files("cgpu-3d/**.bin", "cgpu-3d/**.gltf", "cgpu-3d/**.png")
 
 target("game")
+    -- cxx reflection
+    add_rules("c++.reflection", {
+        files = {"game/*.h", "game/*.hpp"}
+    })
     set_kind("binary")
     add_deps("SkrRT")
     add_files("game/**.cpp")
@@ -44,4 +48,3 @@ target("compiler")
     if(is_os("windows")) then 
         add_links("zlibstatic")
     end
-
