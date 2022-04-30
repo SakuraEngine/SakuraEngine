@@ -3,7 +3,6 @@ import("core.project.depend")
 function cmd_compile(sourcefile, objectfile, target, opt)
     import("core.base.option")
     import("core.base.object")
-    import("core.project.depend")
     import("core.tool.compiler")
     import("core.language.language")
     -- bind target if exists

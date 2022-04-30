@@ -25,22 +25,9 @@ packages_list = {}
 deps_list = {}
 links_list = {}
 
-includes("xmake/rules.lua")
 includes("xmake/options_detect.lua")
-
-includes("xmake/mimalloc.lua")
-includes("xmake/boost.lua")
-includes("xmake/gsl.lua")
-includes("xmake/EASTL.lua")
-includes("xmake/DirectXMath.lua")
-includes("xmake/SDL2.lua")
-includes("xmake/imgui.lua")
-includes("xmake/tracy.lua")
-includes("xmake/gfx-sdk.lua")
-includes("xmake/wasm3.lua")
-includes("xmake/parallel_hashmap.lua")
-includes("xmake/FiberTaskingLib.lua")
-includes("xmake/grpc.lua")
+includes("xmake/rules.lua")
+includes("xmake/thirdparty.lua")
 
 set_warnings("all")
 if (is_os("windows")) then 
