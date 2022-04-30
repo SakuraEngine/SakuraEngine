@@ -3,16 +3,16 @@
 class PassProfiler : public sakura::render_graph::RenderGraphProfiler
 {
 public:
-    void initialize(CGpuDeviceId device)
+    void initialize(CGPUDeviceId device)
     {
-        CGpuQueryPoolDescriptor desc = {};
+        CGPUQueryPoolDescriptor desc = {};
         desc.query_count = 512;
-        desc.type = QUERY_TYPE_TIMESTAMP;
+        desc.type = CGPU_QUERY_TYPE_TIMESTAMP;
         query_pool = cgpu_create_query_pool(device, &desc);
-        CGpuBufferDescriptor buf_desc = {};
+        CGPUBufferDescriptor buf_desc = {};
         buf_desc.name = "RenderGraphQueryBuffer";
-        buf_desc.flags = BCF_PERSISTENT_MAP_BIT;
-        buf_desc.memory_usage = MEM_USAGE_GPU_TO_CPU;
+        buf_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
+        buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;
         buf_desc.size = sizeof(uint64_t) * 512;
         query_buffer = cgpu_create_buffer(device, &buf_desc);
     }
@@ -43,33 +43,33 @@ public:
         query_cursor = 0;
         query_names.clear();
         cgpu_cmd_reset_query_pool(executor.gfx_cmd_buf, query_pool, 0, 512);
-        CGpuQueryDescriptor query_desc = {};
+        CGPUQueryDescriptor query_desc = {};
         query_desc.index = query_cursor++;
-        query_desc.stage = SHADER_STAGE_NONE;
+        query_desc.stage = CGPU_SHADER_STAGE_NONE;
         query_names.emplace_back("cmd_begin");
         cgpu_cmd_begin_query(executor.gfx_cmd_buf, query_pool, &query_desc);
     }
     virtual void on_cmd_end(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor& executor)
     {
         cgpu_cmd_resolve_query(executor.gfx_cmd_buf, query_pool,
-            query_buffer, 0, query_cursor);
+        query_buffer, 0, query_cursor);
     }
     virtual void on_pass_begin(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor&, class sakura::render_graph::PassNode& pass)
     {
     }
     virtual void on_pass_end(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor& executor, class sakura::render_graph::PassNode& pass)
     {
-        CGpuQueryDescriptor query_desc = {};
+        CGPUQueryDescriptor query_desc = {};
         query_desc.index = query_cursor++;
-        query_desc.stage = SHADER_STAGE_ALL_GRAPHICS;
+        query_desc.stage = CGPU_SHADER_STAGE_ALL_GRAPHICS;
         query_names.emplace_back(pass.get_name());
         cgpu_cmd_begin_query(executor.gfx_cmd_buf, query_pool, &query_desc);
     }
     virtual void before_commit(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor&) {}
     virtual void after_commit(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor&) {}
 
-    CGpuQueryPoolId query_pool = nullptr;
-    CGpuBufferId query_buffer = nullptr;
+    CGPUQueryPoolId query_pool = nullptr;
+    CGPUBufferId query_buffer = nullptr;
     uint32_t query_cursor = 0;
     eastl::vector<float> times_ms;
     eastl::vector<eastl::string> query_names;

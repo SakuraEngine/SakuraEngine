@@ -11,11 +11,11 @@ namespace render_graph
 {
 
 struct PassContext {
-    CGpuCommandBufferId cmd;
-    gsl::span<eastl::pair<BufferHandle, CGpuBufferId>> resolved_buffers;
-    gsl::span<eastl::pair<TextureHandle, CGpuTextureId>> resolved_textures;
+    CGPUCommandBufferId cmd;
+    gsl::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
+    gsl::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
 
-    inline CGpuBufferId resolve(BufferHandle buffer_handle) const
+    inline CGPUBufferId resolve(BufferHandle buffer_handle) const
     {
         for (auto iter : resolved_buffers)
         {
@@ -23,7 +23,7 @@ struct PassContext {
         }
         return nullptr;
     }
-    inline CGpuTextureId resolve(TextureHandle tex_handle) const
+    inline CGPUTextureId resolve(TextureHandle tex_handle) const
     {
         for (auto iter : resolved_textures)
         {
@@ -75,11 +75,11 @@ protected:
 };
 
 struct RenderPassContext : public PassContext {
-    CGpuRenderPassEncoderId encoder;
-    gsl::span<CGpuDescriptorSetId> desc_sets;
+    CGPURenderPassEncoderId encoder;
+    gsl::span<CGPUDescriptorSetId> desc_sets;
 };
 using RenderPassExecuteFunction = eastl::function<
-    void(class RenderGraph&, RenderPassContext&)>;
+void(class RenderGraph&, RenderPassContext&)>;
 class RenderPassNode : public PassNode
 {
 public:
@@ -92,21 +92,21 @@ protected:
     {
     }
     RenderPassExecuteFunction executor;
-    CGpuRenderPipelineId pipeline;
-    ECGpuLoadAction load_actions[MAX_MRT_COUNT + 1];
-    ECGpuStoreAction store_actions[MAX_MRT_COUNT + 1];
-    ECGpuLoadAction depth_load_action;
-    ECGpuStoreAction depth_store_action;
-    ECGpuLoadAction stencil_load_action;
-    ECGpuStoreAction stencil_store_action;
+    CGPURenderPipelineId pipeline;
+    ECGPULoadAction load_actions[MAX_MRT_COUNT + 1];
+    ECGPUStoreAction store_actions[MAX_MRT_COUNT + 1];
+    ECGPULoadAction depth_load_action;
+    ECGPUStoreAction depth_store_action;
+    ECGPULoadAction stencil_load_action;
+    ECGPUStoreAction stencil_store_action;
 };
 
 struct ComputePassContext : public PassContext {
-    CGpuComputePassEncoderId encoder;
-    gsl::span<CGpuDescriptorSetId> desc_sets;
+    CGPUComputePassEncoderId encoder;
+    gsl::span<CGPUDescriptorSetId> desc_sets;
 };
 using ComputePassExecuteFunction = eastl::function<
-    void(class RenderGraph&, ComputePassContext&)>;
+void(class RenderGraph&, ComputePassContext&)>;
 class ComputePassNode : public PassNode
 {
 public:
@@ -119,7 +119,7 @@ protected:
     {
     }
     ComputePassExecuteFunction executor;
-    CGpuComputePipelineId pipeline;
+    CGPUComputePipelineId pipeline;
 };
 
 class CopyPassNode : public PassNode
@@ -148,7 +148,7 @@ protected:
         : PassNode(EPassType::Present, order)
     {
     }
-    CGpuQueuePresentDescriptor descriptor;
+    CGPUQueuePresentDescriptor descriptor;
 };
 
 // pass node impl

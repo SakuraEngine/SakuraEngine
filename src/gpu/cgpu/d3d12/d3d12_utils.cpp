@@ -18,31 +18,31 @@ UINT64 encode_color_for_pix(const float* color)
         return PIX_COLOR(0, 0, 0);
 
     return PIX_COLOR(
-        static_cast<BYTE>(color[0] * 255.f),
-        static_cast<BYTE>(color[1] * 255.f),
-        static_cast<BYTE>(color[2] * 255.f));
+    static_cast<BYTE>(color[0] * 255.f),
+    static_cast<BYTE>(color[1] * 255.f),
+    static_cast<BYTE>(color[2] * 255.f));
 }
-void cgpu_cmd_begin_event_d3d12(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
+void cgpu_cmd_begin_event_d3d12(CGPUCommandBufferId cmd, const CGPUEventInfo* event)
 {
-    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
     const auto eventColor = encode_color_for_pix(event->color);
     PIXBeginEvent(Cmd->pDxCmdList, eventColor, event->name);
 }
 
-void cgpu_cmd_set_marker_d3d12(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
+void cgpu_cmd_set_marker_d3d12(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker)
 {
-    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
     const auto markerColor = encode_color_for_pix(marker->color);
     PIXSetMarker(Cmd->pDxCmdList, markerColor, marker->name);
 }
 
-void cgpu_cmd_end_event_d3d12(CGpuCommandBufferId cmd)
+void cgpu_cmd_end_event_d3d12(CGPUCommandBufferId cmd)
 {
-    CGpuCommandBuffer_D3D12* Cmd = (CGpuCommandBuffer_D3D12*)cmd;
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
     PIXEndEvent(Cmd->pDxCmdList);
 }
 
-void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstanceDescriptor const* descriptor)
+void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstanceDescriptor const* descriptor)
 {
     if (descriptor->enable_debug_layer)
     {
@@ -66,7 +66,7 @@ void D3D12Util_Optionalenable_debug_layer(CGpuInstance_D3D12* result, CGpuInstan
     }
 }
 
-void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* instance, uint32_t* count, bool* foundSoftwareAdapter)
+void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, bool* foundSoftwareAdapter)
 {
     cgpu_assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
     cgpu_assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
@@ -78,8 +78,8 @@ void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* instance, uint32_t* count, b
     // exports
     for (UINT i = 0;
          instance->pDXGIFactory->EnumAdapterByGpuPreference(i,
-             DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-             IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND;
+         DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+         IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND;
          i++)
     {
         DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
@@ -93,7 +93,7 @@ void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* instance, uint32_t* count, b
                 // Make sure the adapter can support a D3D12 device
                 if (SUCCEEDED(D3D12CreateDevice(adapter, d3d_feature_levels[level], __uuidof(ID3D12Device), NULL)))
                 {
-                    DECLARE_ZERO(CGpuAdapter_D3D12, cgpuAdapter)
+                    DECLARE_ZERO(CGPUAdapter_D3D12, cgpuAdapter)
                     HRESULT hres = adapter->QueryInterface(IID_PPV_ARGS(&cgpuAdapter.pDxActiveGPU));
                     if (SUCCEEDED(hres))
                     {
@@ -116,7 +116,7 @@ void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* instance, uint32_t* count, b
         }
     }
     *count = instance->mAdaptersCount;
-    instance->pAdapters = (CGpuAdapter_D3D12*)cgpu_malloc(sizeof(CGpuAdapter_D3D12) * instance->mAdaptersCount);
+    instance->pAdapters = (CGPUAdapter_D3D12*)cgpu_malloc(sizeof(CGPUAdapter_D3D12) * instance->mAdaptersCount);
     for (uint32_t i = 0; i < *count; i++)
     {
         auto& adapter = instance->pAdapters[i];
@@ -128,9 +128,9 @@ void D3D12Util_QueryAllAdapters(CGpuInstance_D3D12* instance, uint32_t* count, b
     }
 }
 
-void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter)
+void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
 {
-    CGpuInstance_D3D12* I = (CGpuInstance_D3D12*)D3D12Adapter->super.instance;
+    CGPUInstance_D3D12* I = (CGPUInstance_D3D12*)D3D12Adapter->super.instance;
     auto& adapter = *D3D12Adapter;
     auto& adapter_detail = adapter.adapter_detail;
     auto& vendor_preset = adapter_detail.vendor_preset;
@@ -183,7 +183,7 @@ void D3D12Util_RecordAdapterDetail(struct CGpuAdapter_D3D12* D3D12Adapter)
     SAFE_RELEASE(pCheckDevice);
 }
 
-void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, CGpuDevice_D3D12* D)
+void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D)
 {
     D3D12MA::ALLOCATOR_DESC desc = {};
     desc.Flags = D3D12MA::ALLOCATOR_FLAG_NONE;
@@ -203,45 +203,45 @@ void D3D12Util_CreateDMAAllocator(CGpuInstance_D3D12* I, CGpuAdapter_D3D12* A, C
     }
 }
 
-void D3D12Util_SignalFence(CGpuQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue)
+void D3D12Util_SignalFence(CGPUQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue)
 {
     Q->pCommandQueue->Signal(DxF, fenceValue);
 }
 
 // Shader Reflection
 const char8_t* D3DShaderEntryName = "FuckD3D";
-static ECGpuResourceType gD3D12_TO_DESCRIPTOR[] = {
-    RT_UNIFORM_BUFFER, // D3D_SIT_CBUFFER
-    RT_BUFFER,         // D3D_SIT_TBUFFER
-    RT_TEXTURE,        // D3D_SIT_TEXTURE
-    RT_SAMPLER,        // D3D_SIT_SAMPLER
-    RT_RW_TEXTURE,     // D3D_SIT_UAV_RWTYPED
-    RT_BUFFER,         // D3D_SIT_STRUCTURED
-    RT_RW_BUFFER,      // D3D_SIT_RWSTRUCTURED
-    RT_BUFFER,         // D3D_SIT_BYTEADDRESS
-    RT_RW_BUFFER,      // D3D_SIT_UAV_RWBYTEADDRESS
-    RT_RW_BUFFER,      // D3D_SIT_UAV_APPEND_STRUCTURED
-    RT_RW_BUFFER,      // D3D_SIT_UAV_CONSUME_STRUCTURED
-    RT_RW_BUFFER,      // D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER
-    RT_RAY_TRACING,    // D3D_SIT_RTACCELERATIONSTRUCTURE
+static ECGPUResourceType gD3D12_TO_DESCRIPTOR[] = {
+    CGPU_RT_UNIFORM_BUFFER, // D3D_SIT_CBUFFER
+    CGPU_RT_BUFFER,         // D3D_SIT_TBUFFER
+    CGPU_RT_TEXTURE,        // D3D_SIT_TEXTURE
+    CGPU_RT_SAMPLER,        // D3D_SIT_SAMPLER
+    CGPU_RT_RW_TEXTURE,     // D3D_SIT_UAV_RWTYPED
+    CGPU_RT_BUFFER,         // D3D_SIT_STRUCTURED
+    CGPU_RT_RW_BUFFER,      // D3D_SIT_RWSTRUCTURED
+    CGPU_RT_BUFFER,         // D3D_SIT_BYTEADDRESS
+    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_RWBYTEADDRESS
+    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_APPEND_STRUCTURED
+    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_CONSUME_STRUCTURED
+    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER
+    CGPU_RT_RAY_TRACING,    // D3D_SIT_RTACCELERATIONSTRUCTURE
 };
 
-static ECGpuTextureDimension gD3D12_TO_RESOURCE_DIM[D3D_SRV_DIMENSION_BUFFEREX + 1] = {
-    TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_UNKNOWN
-    TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFER
-    TEX_DIMENSION_1D,         // D3D_SRV_DIMENSION_TEXTURE1D
-    TEX_DIMENSION_1D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE1DARRAY
-    TEX_DIMENSION_2D,         // D3D_SRV_DIMENSION_TEXTURE2D
-    TEX_DIMENSION_2D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE2DARRAY
-    TEX_DIMENSION_2DMS,       // D3D_SRV_DIMENSION_TEXTURE2DMS
-    TEX_DIMENSION_2DMS_ARRAY, // D3D_SRV_DIMENSION_TEXTURE2DMSARRAY
-    TEX_DIMENSION_3D,         // D3D_SRV_DIMENSION_TEXTURE3D
-    TEX_DIMENSION_CUBE,       // D3D_SRV_DIMENSION_TEXTURECUBE
-    TEX_DIMENSION_CUBE_ARRAY, // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
-    TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFEREX
+static ECGPUTextureDimension gD3D12_TO_RESOURCE_DIM[D3D_SRV_DIMENSION_BUFFEREX + 1] = {
+    CGPU_TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_UNKNOWN
+    CGPU_TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFER
+    CGPU_TEX_DIMENSION_1D,         // D3D_SRV_DIMENSION_TEXTURE1D
+    CGPU_TEX_DIMENSION_1D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE1DARRAY
+    CGPU_TEX_DIMENSION_2D,         // D3D_SRV_DIMENSION_TEXTURE2D
+    CGPU_TEX_DIMENSION_2D_ARRAY,   // D3D_SRV_DIMENSION_TEXTURE2DARRAY
+    CGPU_TEX_DIMENSION_2DMS,       // D3D_SRV_DIMENSION_TEXTURE2DMS
+    CGPU_TEX_DIMENSION_2DMS_ARRAY, // D3D_SRV_DIMENSION_TEXTURE2DMSARRAY
+    CGPU_TEX_DIMENSION_3D,         // D3D_SRV_DIMENSION_TEXTURE3D
+    CGPU_TEX_DIMENSION_CUBE,       // D3D_SRV_DIMENSION_TEXTURECUBE
+    CGPU_TEX_DIMENSION_CUBE_ARRAY, // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
+    CGPU_TEX_DIMENSION_UNDEFINED,  // D3D_SRV_DIMENSION_BUFFEREX
 };
 
-static ECGpuFormat gD3D12_TO_VERTEX_FORMAT[] = {
+static ECGPUFormat gD3D12_TO_VERTEX_FORMAT[] = {
     PF_UNDEFINED,  // 0
     PF_R32_UINT,   // 1 D3D_REGISTER_COMPONENT_UINT32
     PF_R32_SINT,   // 2 D3D_REGISTER_COMPONENT_SINT32
@@ -261,15 +261,15 @@ static ECGpuFormat gD3D12_TO_VERTEX_FORMAT[] = {
 };
 
 template <typename ID3D12ReflectionT, typename D3D12_SHADER_DESC_T>
-void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGpuShaderStage stage, const D3D12_SHADER_DESC_T& shaderDesc, CGpuShaderLibrary_D3D12* S)
+void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGPUShaderStage stage, const D3D12_SHADER_DESC_T& shaderDesc, CGPUShaderLibrary_D3D12* S)
 {
     // Get the number of bound resources
     S->super.entrys_count = 1;
-    S->super.entry_reflections = (CGpuShaderReflection*)cgpu_calloc(S->super.entrys_count, sizeof(CGpuShaderReflection));
-    CGpuShaderReflection* Reflection = S->super.entry_reflections;
+    S->super.entry_reflections = (CGPUShaderReflection*)cgpu_calloc(S->super.entrys_count, sizeof(CGPUShaderReflection));
+    CGPUShaderReflection* Reflection = S->super.entry_reflections;
     Reflection->entry_name = D3DShaderEntryName;
     Reflection->shader_resources_count = shaderDesc.BoundResources;
-    Reflection->shader_resources = (CGpuShaderResource*)cgpu_calloc(shaderDesc.BoundResources, sizeof(CGpuShaderResource));
+    Reflection->shader_resources = (CGPUShaderResource*)cgpu_calloc(shaderDesc.BoundResources, sizeof(CGPUShaderResource));
 
     // Count string sizes of the bound resources for the name pool
     for (UINT i = 0; i < shaderDesc.BoundResources; ++i)
@@ -298,29 +298,29 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGpuSh
         // RWTyped is considered as DESCRIPTOR_TYPE_TEXTURE by default so we handle the case for RWBuffer here
         if (bindDesc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_UAV_RWTYPED && bindDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
         {
-            Reflection->shader_resources[i].type = RT_RW_BUFFER;
+            Reflection->shader_resources[i].type = CGPU_RT_RW_BUFFER;
         }
         // Buffer<> is considered as DESCRIPTOR_TYPE_TEXTURE by default so we handle the case for Buffer<> here
         if (bindDesc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_TEXTURE && bindDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
         {
-            Reflection->shader_resources[i].type = RT_BUFFER;
+            Reflection->shader_resources[i].type = CGPU_RT_BUFFER;
         }
     }
 }
 
-FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d3d12reflection, ECGpuShaderStage stage, CGpuShaderLibrary_D3D12* S)
+FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d3d12reflection, ECGPUShaderStage stage, CGPUShaderLibrary_D3D12* S)
 {
     // Get a description of this shader
     D3D12_SHADER_DESC shaderDesc;
     d3d12reflection->GetDesc(&shaderDesc);
     reflectionRecordShaderResources(d3d12reflection, stage, shaderDesc, S);
-    CGpuShaderReflection* Reflection = S->super.entry_reflections;
+    CGPUShaderReflection* Reflection = S->super.entry_reflections;
     Reflection->stage = stage;
     // Collect vertex inputs
     if (stage == SHADER_STAGE_VERT)
     {
         Reflection->vertex_inputs_count = shaderDesc.InputParameters;
-        Reflection->vertex_inputs = (CGpuVertexInput*)cgpu_calloc(Reflection->vertex_inputs_count, sizeof(CGpuVertexInput));
+        Reflection->vertex_inputs = (CGPUVertexInput*)cgpu_calloc(Reflection->vertex_inputs_count, sizeof(CGPUVertexInput));
         // Count the string sizes of the vertex inputs for the name pool
         for (UINT i = 0; i < shaderDesc.InputParameters; ++i)
         {
@@ -342,13 +342,13 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
     else if (stage == SHADER_STAGE_COMPUTE)
     {
         d3d12reflection->GetThreadGroupSize(
-            &Reflection->thread_group_sizes[0],
-            &Reflection->thread_group_sizes[1],
-            &Reflection->thread_group_sizes[2]);
+        &Reflection->thread_group_sizes[0],
+        &Reflection->thread_group_sizes[1],
+        &Reflection->thread_group_sizes[2]);
     }
 }
 
-void D3D12Util_InitializeShaderReflection(CGpuDevice_D3D12* D, CGpuShaderLibrary_D3D12* S, const struct CGpuShaderLibraryDescriptor* desc)
+void D3D12Util_InitializeShaderReflection(CGPUDevice_D3D12* D, CGPUShaderLibrary_D3D12* S, const struct CGPUShaderLibraryDescriptor* desc)
 {
     S->super.device = &D->super;
     ID3D12ShaderReflection* d3d12reflection = nullptr;
@@ -370,13 +370,13 @@ void D3D12Util_InitializeShaderReflection(CGpuDevice_D3D12* D, CGpuShaderLibrary
     d3d12reflection->Release();
 }
 
-void D3D12Util_FreeShaderReflection(CGpuShaderLibrary_D3D12* S)
+void D3D12Util_FreeShaderReflection(CGPUShaderLibrary_D3D12* S)
 {
     if (S->super.entry_reflections)
     {
         for (uint32_t i = 0; i < S->super.entrys_count; i++)
         {
-            CGpuShaderReflection* reflection = S->super.entry_reflections + i;
+            CGPUShaderReflection* reflection = S->super.entry_reflections + i;
             if (reflection->vertex_inputs)
             {
                 for (uint32_t j = 0; j < reflection->vertex_inputs_count; j++)

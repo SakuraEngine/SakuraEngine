@@ -5,17 +5,17 @@
 
 typedef struct RenderGraphImGuiDescriptor {
     sakura::render_graph::RenderGraph* render_graph;
-    CGpuQueueId queue;
-    CGpuSamplerId static_sampler;
-    CGpuPipelineShaderDescriptor vs;
-    CGpuPipelineShaderDescriptor ps;
-    ECGpuFormat backbuffer_format;
+    CGPUQueueId queue;
+    CGPUSamplerId static_sampler;
+    CGPUPipelineShaderDescriptor vs;
+    CGPUPipelineShaderDescriptor ps;
+    ECGPUFormat backbuffer_format;
 } RenderGraphImGuiDescriptor;
 
 RUNTIME_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor* desc);
 RUNTIME_API void render_graph_imgui_add_render_pass(
-    sakura::render_graph::RenderGraph* render_graph,
-    sakura::render_graph::TextureRTVHandle target,
-    ECGpuLoadAction load_action);
+sakura::render_graph::RenderGraph* render_graph,
+sakura::render_graph::TextureRTVHandle target,
+ECGPULoadAction load_action);
 RUNTIME_API void render_graph_imgui_finalize();
 RUNTIME_API void skr_imgui_new_frame(SWindowHandle window, float delta_time);

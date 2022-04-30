@@ -16,14 +16,14 @@ protected:
 };
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData);
+VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+VkDebugUtilsMessageTypeFlagsEXT messageType,
+const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+void* pUserData);
 
 TEST_F(VkDeviceExtsTest, CreateVkInstance)
 {
-    DECLARE_ZERO(CGpuVulkanInstanceDescriptor, vkDesc)
+    DECLARE_ZERO(VulkanInstanceDescriptor, vkDesc)
     const char* exts[] = {
     #ifdef _WIN32
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
@@ -51,11 +51,11 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
     vkDesc.pDebugUtilsMessenger = &debugCreateInfo;
     vkDesc.backend = CGPU_BACKEND_VULKAN;
 
-    CGpuInstanceDescriptor desc;
+    InstanceDescriptor desc;
     desc.backend = CGPU_BACKEND_VULKAN;
     desc.enable_gpu_based_validation = true;
     desc.enable_debug_layer = true;
-    desc.chained = (const CGpuChainedDescriptor*)&vkDesc;
+    desc.chained = (const ChainedDescriptor*)&vkDesc;
 
     auto vulkan_instance = cgpu_create_instance(&desc);
     EXPECT_TRUE(vulkan_instance != nullptr);
@@ -63,9 +63,9 @@ TEST_F(VkDeviceExtsTest, CreateVkInstance)
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData)
+VkDebugUtilsMessageTypeFlagsEXT messageType,
+const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+void* pUserData)
 {
     switch (messageSeverity)
     {

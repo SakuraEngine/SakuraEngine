@@ -15,18 +15,18 @@ public:
     friend class RenderGraphBackend;
 
     RenderGraphFrameExecutor() = default;
-    void initialize(CGpuQueueId gfx_queue, CGpuDeviceId device)
+    void initialize(CGPUQueueId gfx_queue, CGPUDeviceId device)
     {
-        CGpuCommandPoolDescriptor pool_desc = {};
+        CGPUCommandPoolDescriptor pool_desc = {};
         gfx_cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
-        CGpuCommandBufferDescriptor cmd_desc = {};
+        CGPUCommandBufferDescriptor cmd_desc = {};
         cmd_desc.is_secondary = false;
         gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
         exec_fence = cgpu_create_fence(device);
     }
-    void commit(CGpuQueueId gfx_queue)
+    void commit(CGPUQueueId gfx_queue)
     {
-        CGpuQueueSubmitDescriptor submit_desc = {};
+        CGPUQueueSubmitDescriptor submit_desc = {};
         submit_desc.cmds = &gfx_cmd_buf;
         submit_desc.cmds_count = 1;
         submit_desc.signal_fence = exec_fence;
@@ -64,11 +64,11 @@ public:
             cgpu_free_texture(aliasing_tex);
         }
     }
-    CGpuCommandPoolId gfx_cmd_pool = nullptr;
-    CGpuCommandBufferId gfx_cmd_buf = nullptr;
-    CGpuFenceId exec_fence = nullptr;
-    eastl::vector<CGpuTextureId> aliasing_textures;
-    eastl::unordered_map<CGpuRootSignatureId, DescSetHeap*> desc_set_pool;
+    CGPUCommandPoolId gfx_cmd_pool = nullptr;
+    CGPUCommandBufferId gfx_cmd_buf = nullptr;
+    CGPUFenceId exec_fence = nullptr;
+    eastl::vector<CGPUTextureId> aliasing_textures;
+    eastl::unordered_map<CGPURootSignatureId, DescSetHeap*> desc_set_pool;
 };
 
 class RenderGraphBackend : public RenderGraph
@@ -78,8 +78,8 @@ public:
     void devirtualize(PassNode* node);
 
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) final;
-    virtual CGpuDeviceId get_backend_device() final;
-    inline virtual CGpuQueueId get_gfx_queue() final { return gfx_queue; }
+    virtual CGPUDeviceId get_backend_device() final;
+    inline virtual CGPUQueueId get_gfx_queue() final { return gfx_queue; }
     virtual uint32_t collect_garbage(uint64_t critical_frame) final;
     virtual uint32_t collect_texture_garbage(uint64_t critical_frame) final;
     virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) final;
@@ -91,14 +91,14 @@ protected:
     virtual void initialize() final;
     virtual void finalize() final;
 
-    CGpuTextureId resolve(RenderGraphFrameExecutor& executor, const TextureNode& node);
-    CGpuTextureId try_aliasing_allocate(RenderGraphFrameExecutor& executor, const TextureNode& node);
-    CGpuBufferId resolve(RenderGraphFrameExecutor& executor, const BufferNode& node);
+    CGPUTextureId resolve(RenderGraphFrameExecutor& executor, const TextureNode& node);
+    CGPUTextureId try_aliasing_allocate(RenderGraphFrameExecutor& executor, const TextureNode& node);
+    CGPUBufferId resolve(RenderGraphFrameExecutor& executor, const BufferNode& node);
 
     void calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-        eastl::vector<CGpuTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGpuTextureId>>& resolved_textures,
-        eastl::vector<CGpuBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGpuBufferId>>& resolved_buffers);
-    gsl::span<CGpuDescriptorSetId> alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass);
+    eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+    eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers);
+    gsl::span<CGPUDescriptorSetId> alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass);
     void deallocate_resources(PassNode* pass);
 
     void execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass);
@@ -106,9 +106,9 @@ protected:
     void execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass);
     void execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass);
 
-    CGpuQueueId gfx_queue;
-    CGpuDeviceId device;
-    ECGpuBackend backend;
+    CGPUQueueId gfx_queue;
+    CGPUDeviceId device;
+    ECGPUBackend backend;
     RenderGraphFrameExecutor executors[RG_MAX_FRAME_IN_FLIGHT];
     TexturePool texture_pool;
     BufferPool buffer_pool;

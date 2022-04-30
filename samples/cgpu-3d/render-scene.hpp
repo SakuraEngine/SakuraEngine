@@ -29,13 +29,13 @@ struct RenderPrimitive {
     uint32_t vertex_layout_id_;
     uint32_t material_id_;
     AsyncRenderTexture* texture_;
-    CGpuDescriptorSetId desc_set_;
+    CGPUDescriptorSetId desc_set_;
     bool desc_set_updated_;
     // considering some status like wireframe_mode, fetch pipeline with RenderBlackboard::GetRenderPipeline
     // when recording drawcalls may be better
     AsyncRenderPipeline* async_ppl_;
     // set by aux thread callback
-    eastl::vector<CGpuBufferId> vertex_buffers_;
+    eastl::vector<CGPUBufferId> vertex_buffers_;
     eastl::vector<uint32_t> vertex_strides_;
     eastl::vector<uint32_t> vertex_offsets_;
 };
@@ -72,9 +72,9 @@ public:
     std::atomic_bool bufs_creation_ready_ = false;
     std::atomic_uint32_t bufs_creation_counter_ = 0;
     std::atomic_bool bufs_upload_started_ = false;
-    eastl::vector_map<AsyncRenderTexture*, CGpuFenceId> tex_transfers_;
+    eastl::vector_map<AsyncRenderTexture*, CGPUFenceId> tex_transfers_;
 
-    CGpuFenceId gpu_geometry_fence = nullptr;
+    CGPUFenceId gpu_geometry_fence = nullptr;
 
     AsyncRenderBuffer* vertex_buffers_;
     uint32_t vertex_buffer_count_ = 0;

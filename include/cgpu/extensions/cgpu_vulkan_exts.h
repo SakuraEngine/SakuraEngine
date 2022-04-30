@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-typedef struct CGpuVulkanInstanceDescriptor {
+typedef struct CGPUVulkanInstanceDescriptor {
     CGPU_CHAINED_DESCRIPTOR_HEADER
     // Additional Instance Layers
     const char** ppInstanceLayers;
@@ -21,7 +21,7 @@ typedef struct CGpuVulkanInstanceDescriptor {
     uint32_t mDeviceExtensionCount;
     const VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessenger;
     const VkDebugReportCallbackCreateInfoEXT* pDebugReportMessenger;
-} CGpuVulkanInstanceDescriptor;
+} CGPUVulkanInstanceDescriptor;
 
 #ifdef __cplusplus
 } // end extern "C"

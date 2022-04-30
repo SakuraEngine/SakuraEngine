@@ -27,13 +27,13 @@ static uint32_t driverVersion = 0;
     #endif
 #endif
 
-ECGpuAGSReturnCode cgpu_ags_init(struct CGpuInstance* Inst)
+ECGPUAGSReturnCode cgpu_ags_init(struct CGPUInstance* Inst)
 {
 #if defined(AMDAGS)
     AGSConfiguration config = {};
     int apiVersion = AGS_MAKE_VERSION(6, 0, 1);
     auto Status = agsInitialize(apiVersion, &config, &pAgsContext, &gAgsGpuInfo);
-    Inst->ags_status = (ECGpuAGSReturnCode)Status;
+    Inst->ags_status = (ECGPUAGSReturnCode)Status;
     if (Status == AGS_SUCCESS)
     {
         char* stopstring;
@@ -68,14 +68,14 @@ void cgpu_ags_exit()
         #pragma comment(lib, "nvapi_x86.lib")
     #endif
 #endif
-ECGpuNvAPI_Status cgpu_nvapi_init(struct CGpuInstance* Inst)
+ECGPUNvAPI_Status cgpu_nvapi_init(struct CGPUInstance* Inst)
 {
 #if defined(NVAPI)
     auto Status = NvAPI_Initialize();
-    Inst->nvapi_status = (ECGpuNvAPI_Status)Status;
+    Inst->nvapi_status = (ECGPUNvAPI_Status)Status;
     return Inst->nvapi_status;
 #else
-    return ECGpuNvAPI_Status::CGPU_NVAPI_NONE;
+    return ECGPUNvAPI_Status::CGPU_NVAPI_NONE;
 #endif
 }
 
@@ -115,39 +115,39 @@ void cgpu_nvapi_exit()
 }
 
 // Runtime Table
-struct CGpuRuntimeTable {
+struct CGPURuntimeTable {
     struct CreatedQueue {
-        CGpuDeviceId device;
+        CGPUDeviceId device;
         union
         {
             uint64_t type_index;
             struct
             {
-                ECGpuQueueType type;
+                ECGPUQueueType type;
                 uint32_t index;
             };
         };
-        CGpuQueueId queue;
+        CGPUQueueId queue;
         bool operator==(const CreatedQueue& rhs)
         {
             return device == rhs.device && type_index == rhs.type_index;
         }
     };
-    CGpuQueueId TryFindQueue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
+    CGPUQueueId TryFindQueue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index)
     {
         CreatedQueue to_find = {};
         to_find.device = device;
         to_find.type = type;
         to_find.index = index;
         const auto& found = eastl::find(
-            created_queues.begin(), created_queues.end(), to_find);
+        created_queues.begin(), created_queues.end(), to_find);
         if (found != created_queues.end())
         {
             return found->queue;
         }
         return nullptr;
     }
-    void AddNewQueue(CGpuQueueId queue, ECGpuQueueType type, uint32_t index)
+    void AddNewQueue(CGPUQueueId queue, ECGPUQueueType type, uint32_t index)
     {
         CreatedQueue new_queue = {};
         new_queue.device = queue->device;
@@ -159,22 +159,22 @@ struct CGpuRuntimeTable {
     eastl::vector<CreatedQueue> created_queues;
 };
 
-struct CGpuRuntimeTable* cgpu_create_runtime_table()
+struct CGPURuntimeTable* cgpu_create_runtime_table()
 {
-    return new CGpuRuntimeTable();
+    return new CGPURuntimeTable();
 }
 
-void cgpu_free_runtime_table(struct CGpuRuntimeTable* table)
+void cgpu_free_runtime_table(struct CGPURuntimeTable* table)
 {
     delete table;
 }
 
-void cgpu_runtime_table_add_queue(CGpuQueueId queue, ECGpuQueueType type, uint32_t index)
+void cgpu_runtime_table_add_queue(CGPUQueueId queue, ECGPUQueueType type, uint32_t index)
 {
     queue->device->adapter->instance->runtime_table->AddNewQueue(queue, type, index);
 }
 
-CGpuQueueId cgpu_runtime_table_try_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
+CGPUQueueId cgpu_runtime_table_try_get_queue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index)
 {
     return device->adapter->instance->runtime_table->TryFindQueue(device, type, index);
 }

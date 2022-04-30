@@ -93,15 +93,15 @@ public:
                     {
                         render_context->BindPipeline(prim_pipeline->pipeline_);
                         render_context->BindDescriptorSet(
-                            prim.desc_set_updated_ ? prim.desc_set_ : prim_pipeline->desc_set_);
+                        prim.desc_set_updated_ ? prim.desc_set_ : prim_pipeline->desc_set_);
                         render_context->BindIndexBuffer(render_scene->index_buffer_.buffer_,
-                            render_scene->index_stride_, prim.index_offset_);
+                        render_scene->index_stride_, prim.index_offset_);
                         const auto vbc = (uint32_t)prim.vertex_buffers_.size();
                         render_context->BindVertexBuffers(
-                            vbc,
-                            prim.vertex_buffers_.data(),
-                            prim.vertex_strides_.data(),
-                            prim.vertex_offsets_.data());
+                        vbc,
+                        prim.vertex_buffers_.data(),
+                        prim.vertex_strides_.data(),
+                        prim.vertex_offsets_.data());
                         render_context->PushConstants(prim_pipeline->pipeline_->root_signature, "root_constants", &data);
                         render_context->DrawIndexedInstanced(prim.index_count_, prim.first_index_, 1, 0, 0);
                     }
@@ -136,7 +136,7 @@ protected:
 
 int main(int argc, char* argv[])
 {
-    ECGpuBackend cmdBackend;
+    ECGPUBackend cmdBackend;
     if (argc <= 1)
         cmdBackend = CGPU_BACKEND_VULKAN;
     else
@@ -153,16 +153,16 @@ int main(int argc, char* argv[])
     renderer->PrepareRenderResourceMemory(render_scene.get());
     // wvp
     auto world = smath::make_transform(
-        { 0.f, 0.f, 0.f },                                             // translation
-        sakura::math::Vector3f::vector_one(),                          // scale
-        render_scene->nodes_[render_scene->root_node_index_].rotation_ // quat
+    { 0.f, 0.f, 0.f },                                             // translation
+    sakura::math::Vector3f::vector_one(),                          // scale
+    render_scene->nodes_[render_scene->root_node_index_].rotation_ // quat
     );
     // camera
     auto view = smath::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
     auto proj = smath::perspective_fov(
-        3.1415926f / 2.f,
-        (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
-        1.f, 1000.f);
+    3.1415926f / 2.f,
+    (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
+    1.f, 1000.f);
     data.world = smath::transpose(world);
     data.view_proj = smath::transpose(smath::multiply(view, proj));
     // render loop

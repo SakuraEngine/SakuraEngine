@@ -28,11 +28,11 @@
 #elif defined _WIN32 || defined _WIN64
 #endif
 
-RUNTIME_API CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* desc)
+RUNTIME_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
 {
     cgpu_assert((desc->backend == CGPU_BACKEND_VULKAN || desc->backend == CGPU_BACKEND_D3D12 || desc->backend == CGPU_BACKEND_METAL) && "CGPU support only vulkan & d3d12 & metal currently!");
-    const CGpuProcTable* tbl = CGPU_NULLPTR;
-    const CGpuSurfacesProcTable* s_tbl = CGPU_NULLPTR;
+    const CGPUProcTable* tbl = CGPU_NULLPTR;
+    const CGPUSurfacesProcTable* s_tbl = CGPU_NULLPTR;
 
     if (desc->backend == CGPU_BACKEND_COUNT)
     {
@@ -58,7 +58,7 @@ RUNTIME_API CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* de
         s_tbl = CGPU_D3D12SurfacesProcTable();
     }
 #endif
-    CGpuInstance* instance = (CGpuInstance*)tbl->create_instance(desc);
+    CGPUInstance* instance = (CGPUInstance*)tbl->create_instance(desc);
     *(bool*)&instance->enable_set_name = desc->enable_set_name;
     instance->backend = desc->backend;
     instance->proc_table = tbl;
@@ -67,12 +67,12 @@ RUNTIME_API CGpuInstanceId cgpu_create_instance(const CGpuInstanceDescriptor* de
     return instance;
 }
 
-RUNTIME_API ECGpuBackend cgpu_instance_get_backend(CGpuInstanceId instance)
+RUNTIME_API ECGPUBackend cgpu_instance_get_backend(CGPUInstanceId instance)
 {
     return instance->backend;
 }
 
-RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CGpuInstanceFeatures* features)
+RUNTIME_API void cgpu_query_instance_features(CGPUInstanceId instance, struct CGPUInstanceFeatures* features)
 {
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->query_instance_features && "query_instance_features Proc Missing!");
@@ -80,7 +80,7 @@ RUNTIME_API void cgpu_query_instance_features(CGpuInstanceId instance, struct CG
     instance->proc_table->query_instance_features(instance, features);
 }
 
-RUNTIME_API void cgpu_free_instance(CGpuInstanceId instance)
+RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance)
 {
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->free_instance && "free_instance Proc Missing!");
@@ -89,7 +89,7 @@ RUNTIME_API void cgpu_free_instance(CGpuInstanceId instance)
     instance->proc_table->free_instance(instance);
 }
 
-void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, uint32_t* adapters_num)
+void cgpu_enum_adapters(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num)
 {
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->enum_adapters && "enum_adapters Proc Missing!");
@@ -100,24 +100,24 @@ void cgpu_enum_adapters(CGpuInstanceId instance, CGpuAdapterId* const adapters, 
     {
         for (uint32_t i = 0; i < *adapters_num; i++)
         {
-            *(const CGpuProcTable**)&adapters[i]->proc_table_cache = instance->proc_table;
-            *(CGpuInstanceId*)&adapters[i]->instance = instance;
+            *(const CGPUProcTable**)&adapters[i]->proc_table_cache = instance->proc_table;
+            *(CGPUInstanceId*)&adapters[i]->instance = instance;
         }
     }
     // -- proc_table_cache
 }
 
 const char* unknownAdapterName = "UNKNOWN";
-const struct CGpuAdapterDetail* cgpu_query_adapter_detail(const CGpuAdapterId adapter)
+const struct CGPUAdapterDetail* cgpu_query_adapter_detail(const CGPUAdapterId adapter)
 {
     cgpu_assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     cgpu_assert(adapter->proc_table_cache->query_adapter_detail && "query_adapter_detail Proc Missing!");
 
-    CGpuAdapterDetail* detail = (CGpuAdapterDetail*)adapter->proc_table_cache->query_adapter_detail(adapter);
+    CGPUAdapterDetail* detail = (CGPUAdapterDetail*)adapter->proc_table_cache->query_adapter_detail(adapter);
     return detail;
 }
 
-uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueType type)
+uint32_t cgpu_query_queue_count(const CGPUAdapterId adapter, const ECGPUQueueType type)
 {
     cgpu_assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     cgpu_assert(adapter->proc_table_cache->query_queue_count && "query_queue_count Proc Missing!");
@@ -125,37 +125,37 @@ uint32_t cgpu_query_queue_count(const CGpuAdapterId adapter, const ECGpuQueueTyp
     return adapter->proc_table_cache->query_queue_count(adapter, type);
 }
 
-CGpuDeviceId cgpu_create_device(CGpuAdapterId adapter, const CGpuDeviceDescriptor* desc)
+CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc)
 {
     cgpu_assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     cgpu_assert(adapter->proc_table_cache->create_device && "create_device Proc Missing!");
 
-    CGpuDeviceId device = adapter->proc_table_cache->create_device(adapter, desc);
+    CGPUDeviceId device = adapter->proc_table_cache->create_device(adapter, desc);
     // ++ proc_table_cache
     if (device != CGPU_NULLPTR)
     {
-        *(const CGpuProcTable**)&device->proc_table_cache = adapter->proc_table_cache;
+        *(const CGPUProcTable**)&device->proc_table_cache = adapter->proc_table_cache;
     }
     // -- proc_table_cache
     return device;
 }
 
-CGpuFenceId cgpu_create_fence(CGpuDeviceId device)
+CGPUFenceId cgpu_create_fence(CGPUDeviceId device)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_fence && "create_fence Proc Missing!");
-    CGpuFence* fence = (CGpuFence*)device->proc_table_cache->create_fence(device);
+    CGPUFence* fence = (CGPUFence*)device->proc_table_cache->create_fence(device);
     fence->device = device;
     return fence;
 }
 
-void cgpu_wait_fences(const CGpuFenceId* fences, uint32_t fence_count)
+void cgpu_wait_fences(const CGPUFenceId* fences, uint32_t fence_count)
 {
     if (fences == CGPU_NULLPTR || fence_count <= 0)
     {
         return;
     }
-    CGpuFenceId fence = fences[0];
+    CGPUFenceId fence = fences[0];
     cgpu_assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
     cgpu_assert(fence->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcWaitFences fn_wait_fences = fence->device->proc_table_cache->wait_fences;
@@ -163,7 +163,7 @@ void cgpu_wait_fences(const CGpuFenceId* fences, uint32_t fence_count)
     fn_wait_fences(fences, fence_count);
 }
 
-ECGpuFenceStatus cgpu_query_fence_status(CGpuFenceId fence)
+ECGPUFenceStatus cgpu_query_fence_status(CGPUFenceId fence)
 {
     cgpu_assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
     cgpu_assert(fence->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -172,7 +172,7 @@ ECGpuFenceStatus cgpu_query_fence_status(CGpuFenceId fence)
     return fn_query_fence(fence);
 }
 
-void cgpu_free_fence(CGpuFenceId fence)
+void cgpu_free_fence(CGPUFenceId fence)
 {
     cgpu_assert(fence != CGPU_NULLPTR && "fatal: call on NULL fence!");
     cgpu_assert(fence->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -181,16 +181,16 @@ void cgpu_free_fence(CGpuFenceId fence)
     fn_free_fence(fence);
 }
 
-CGpuSemaphoreId cgpu_create_semaphore(CGpuDeviceId device)
+CGPUSemaphoreId cgpu_create_semaphore(CGPUDeviceId device)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_semaphore && "create_semaphore Proc Missing!");
-    CGpuSemaphore* semaphore = (CGpuSemaphore*)device->proc_table_cache->create_semaphore(device);
+    CGPUSemaphore* semaphore = (CGPUSemaphore*)device->proc_table_cache->create_semaphore(device);
     semaphore->device = device;
     return semaphore;
 }
 
-void cgpu_free_semaphore(CGpuSemaphoreId semaphore)
+void cgpu_free_semaphore(CGPUSemaphoreId semaphore)
 {
     cgpu_assert(semaphore != CGPU_NULLPTR && "fatal: call on NULL semaphore!");
     cgpu_assert(semaphore->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -199,102 +199,102 @@ void cgpu_free_semaphore(CGpuSemaphoreId semaphore)
     fn_free_semaphore(semaphore);
 }
 
-CGpuRootSignatureId cgpu_create_root_signature(CGpuDeviceId device, const struct CGpuRootSignatureDescriptor* desc)
+CGPURootSignatureId cgpu_create_root_signature(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_root_signature && "create_root_signature Proc Missing!");
-    CGpuRootSignature* signature = (CGpuRootSignature*)device->proc_table_cache->create_root_signature(device, desc);
+    CGPURootSignature* signature = (CGPURootSignature*)device->proc_table_cache->create_root_signature(device, desc);
     signature->device = device;
     return signature;
 }
 
-void cgpu_free_root_signature(CGpuRootSignatureId signature)
+void cgpu_free_root_signature(CGPURootSignatureId signature)
 {
     cgpu_assert(signature != CGPU_NULLPTR && "fatal: call on NULL signature!");
-    const CGpuDeviceId device = signature->device;
+    const CGPUDeviceId device = signature->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->free_root_signature && "free_root_signature Proc Missing!");
     device->proc_table_cache->free_root_signature(signature);
 }
 
-CGpuDescriptorSetId cgpu_create_descriptor_set(CGpuDeviceId device, const struct CGpuDescriptorSetDescriptor* desc)
+CGPUDescriptorSetId cgpu_create_descriptor_set(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_descriptor_set && "create_descriptor_set Proc Missing!");
-    CGpuDescriptorSet* set = (CGpuDescriptorSet*)device->proc_table_cache->create_descriptor_set(device, desc);
+    CGPUDescriptorSet* set = (CGPUDescriptorSet*)device->proc_table_cache->create_descriptor_set(device, desc);
     set->root_signature = desc->root_signature;
     set->index = desc->set_index;
     return set;
 }
 
-void cgpu_update_descriptor_set(CGpuDescriptorSetId set, const struct CGpuDescriptorData* datas, uint32_t count)
+void cgpu_update_descriptor_set(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count)
 {
     cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL descriptor set!");
-    const CGpuDeviceId device = set->root_signature->device;
+    const CGPUDeviceId device = set->root_signature->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->update_descriptor_set && "update_descriptor_set Proc Missing!");
     device->proc_table_cache->update_descriptor_set(set, datas, count);
 }
 
-void cgpu_free_descriptor_set(CGpuDescriptorSetId set)
+void cgpu_free_descriptor_set(CGPUDescriptorSetId set)
 {
     cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL signature!");
-    const CGpuDeviceId device = set->root_signature->device;
+    const CGPUDeviceId device = set->root_signature->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->free_descriptor_set && "free_descriptor_set Proc Missing!");
     device->proc_table_cache->free_descriptor_set(set);
 }
 
-CGpuComputePipelineId cgpu_create_compute_pipeline(CGpuDeviceId device, const struct CGpuComputePipelineDescriptor* desc)
+CGPUComputePipelineId cgpu_create_compute_pipeline(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_compute_pipeline && "create_compute_pipeline Proc Missing!");
-    CGpuComputePipeline* pipeline = (CGpuComputePipeline*)device->proc_table_cache->create_compute_pipeline(device, desc);
+    CGPUComputePipeline* pipeline = (CGPUComputePipeline*)device->proc_table_cache->create_compute_pipeline(device, desc);
     pipeline->device = device;
     pipeline->root_signature = desc->root_signature;
     return pipeline;
 }
 
-void cgpu_free_compute_pipeline(CGpuComputePipelineId pipeline)
+void cgpu_free_compute_pipeline(CGPUComputePipelineId pipeline)
 {
     cgpu_assert(pipeline != CGPU_NULLPTR && "fatal: call on NULL signature!");
-    const CGpuDeviceId device = pipeline->device;
+    const CGPUDeviceId device = pipeline->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->free_compute_pipeline && "free_compute_pipeline Proc Missing!");
     device->proc_table_cache->free_compute_pipeline(pipeline);
 }
 
-static const CGpuBlendStateDescriptor defaultBlendStateDesc = {
-    .src_factors[0] = BLEND_CONST_ONE,
-    .dst_factors[0] = BLEND_CONST_ZERO,
-    .blend_modes[0] = BLEND_MODE_ADD,
-    .src_alpha_factors[0] = BLEND_CONST_ONE,
-    .dst_alpha_factors[0] = BLEND_CONST_ZERO,
+static const CGPUBlendStateDescriptor defaultBlendStateDesc = {
+    .src_factors[0] = CGPU_BLEND_CONST_ONE,
+    .dst_factors[0] = CGPU_BLEND_CONST_ZERO,
+    .blend_modes[0] = CGPU_BLEND_MODE_ADD,
+    .src_alpha_factors[0] = CGPU_BLEND_CONST_ONE,
+    .dst_alpha_factors[0] = CGPU_BLEND_CONST_ZERO,
     .masks[0] = COLOR_MASK_ALL,
     .independent_blend = false
 };
-static const CGpuRasterizerStateDescriptor defaultRasterStateDesc = {
-    .cull_mode = CULL_MODE_BACK,
-    .fill_mode = FILL_MODE_SOLID,
-    .front_face = FRONT_FACE_CCW,
+static const CGPURasterizerStateDescriptor defaultRasterStateDesc = {
+    .cull_mode = CGPU_CULL_MODE_BACK,
+    .fill_mode = CGPU_FILL_MODE_SOLID,
+    .front_face = CGPU_FRONT_FACE_CCW,
     .slope_scaled_depth_bias = 0.f,
     .enable_depth_clamp = false,
     .enable_scissor = false,
     .enable_multi_sample = false,
     .depth_bias = 0
 };
-static const CGpuDepthStateDescriptor defaultDepthStateDesc = {
+static const CGPUDepthStateDescriptor defaultDepthStateDesc = {
     .depth_test = false,
     .depth_write = false,
     .stencil_test = false
 };
-CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const struct CGpuRenderPipelineDescriptor* desc)
+CGPURenderPipelineId cgpu_create_render_pipeline(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_render_pipeline && "create_render_pipeline Proc Missing!");
-    CGpuRenderPipelineDescriptor new_desc;
-    memcpy(&new_desc, desc, sizeof(CGpuRenderPipelineDescriptor));
-    CGpuRenderPipeline* pipeline = CGPU_NULLPTR;
+    CGPURenderPipelineDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGPURenderPipelineDescriptor));
+    CGPURenderPipeline* pipeline = CGPU_NULLPTR;
     if (desc->sample_count == 0)
         new_desc.sample_count = 1;
     if (desc->blend_state == CGPU_NULLPTR)
@@ -303,32 +303,32 @@ CGpuRenderPipelineId cgpu_create_render_pipeline(CGpuDeviceId device, const stru
         new_desc.depth_state = &defaultDepthStateDesc;
     if (desc->rasterizer_state == CGPU_NULLPTR)
         new_desc.rasterizer_state = &defaultRasterStateDesc;
-    pipeline = (CGpuRenderPipeline*)device->proc_table_cache->create_render_pipeline(device, &new_desc);
+    pipeline = (CGPURenderPipeline*)device->proc_table_cache->create_render_pipeline(device, &new_desc);
     pipeline->device = device;
     pipeline->root_signature = desc->root_signature;
     return pipeline;
 }
 
-void cgpu_free_render_pipeline(CGpuRenderPipelineId pipeline)
+void cgpu_free_render_pipeline(CGPURenderPipelineId pipeline)
 {
     cgpu_assert(pipeline != CGPU_NULLPTR && "fatal: call on NULL signature!");
-    const CGpuDeviceId device = pipeline->device;
+    const CGPUDeviceId device = pipeline->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->free_render_pipeline && "free_render_pipeline Proc Missing!");
     device->proc_table_cache->free_render_pipeline(pipeline);
 }
 
-CGpuQueryPoolId cgpu_create_query_pool(CGpuDeviceId device, const struct CGpuQueryPoolDescriptor* desc)
+CGPUQueryPoolId cgpu_create_query_pool(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     CGPUProcCreateQueryPool fn_create_query_pool = device->proc_table_cache->create_query_pool;
     cgpu_assert(fn_create_query_pool && "create_query_pool Proc Missing!");
-    CGpuQueryPool* query_pool = (CGpuQueryPool*)fn_create_query_pool(device, desc);
+    CGPUQueryPool* query_pool = (CGPUQueryPool*)fn_create_query_pool(device, desc);
     query_pool->device = device;
     return query_pool;
 }
 
-void cgpu_free_query_pool(CGpuQueryPoolId pool)
+void cgpu_free_query_pool(CGPUQueryPoolId pool)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -337,7 +337,7 @@ void cgpu_free_query_pool(CGpuQueryPoolId pool)
     fn_free_query_pool(pool);
 }
 
-void cgpu_free_device(CGpuDeviceId device)
+void cgpu_free_device(CGPUDeviceId device)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->free_device && "free_device Proc Missing!");
@@ -346,12 +346,12 @@ void cgpu_free_device(CGpuDeviceId device)
     return;
 }
 
-CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t index)
+CGPUQueueId cgpu_get_queue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->free_device && "free_device Proc Missing!");
 
-    CGpuQueueId created = cgpu_runtime_table_try_get_queue(device, type, index);
+    CGPUQueueId created = cgpu_runtime_table_try_get_queue(device, type, index);
     if (created != NULL)
     {
         cgpu_warn("You should not call cgpu_get_queue "
@@ -359,7 +359,7 @@ CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t in
                   "       Please get for only once and reuse the handle!\n");
         return created;
     }
-    CGpuQueue* queue = (CGpuQueue*)device->proc_table_cache->get_queue(device, type, index);
+    CGPUQueue* queue = (CGPUQueue*)device->proc_table_cache->get_queue(device, type, index);
     queue->index = index;
     queue->type = type;
     queue->device = device;
@@ -367,7 +367,7 @@ CGpuQueueId cgpu_get_queue(CGpuDeviceId device, ECGpuQueueType type, uint32_t in
     return queue;
 }
 
-void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor* desc)
+void cgpu_submit_queue(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc)
 {
     cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL desc!");
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -378,7 +378,7 @@ void cgpu_submit_queue(CGpuQueueId queue, const struct CGpuQueueSubmitDescriptor
     submit_queue(queue, desc);
 }
 
-void cgpu_queue_present(CGpuQueueId queue, const struct CGpuQueuePresentDescriptor* desc)
+void cgpu_queue_present(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc)
 {
     cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL desc!");
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -389,7 +389,7 @@ void cgpu_queue_present(CGpuQueueId queue, const struct CGpuQueuePresentDescript
     fn_queue_present(queue, desc);
 }
 
-void cgpu_wait_queue_idle(CGpuQueueId queue)
+void cgpu_wait_queue_idle(CGPUQueueId queue)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -399,7 +399,7 @@ void cgpu_wait_queue_idle(CGpuQueueId queue)
     wait_queue_idle(queue);
 }
 
-float cgpu_queue_get_timestamp_period_ns(CGpuQueueId queue)
+float cgpu_queue_get_timestamp_period_ns(CGPUQueueId queue)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -409,7 +409,7 @@ float cgpu_queue_get_timestamp_period_ns(CGpuQueueId queue)
     return fn_get_timestamp_period(queue);
 }
 
-void cgpu_free_queue(CGpuQueueId queue)
+void cgpu_free_queue(CGPUQueueId queue)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -419,34 +419,34 @@ void cgpu_free_queue(CGpuQueueId queue)
     return;
 }
 
-RUNTIME_API CGpuCommandPoolId cgpu_create_command_pool(CGpuQueueId queue,
-    const CGpuCommandPoolDescriptor* desc)
+RUNTIME_API CGPUCommandPoolId cgpu_create_command_pool(CGPUQueueId queue,
+const CGPUCommandPoolDescriptor* desc)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(queue->device->proc_table_cache->create_command_pool && "create_command_pool Proc Missing!");
 
-    CGpuCommandPool* pool = (CGpuCommandPool*)queue->device->proc_table_cache->create_command_pool(queue, desc);
+    CGPUCommandPool* pool = (CGPUCommandPool*)queue->device->proc_table_cache->create_command_pool(queue, desc);
     pool->queue = queue;
     return pool;
 }
 
-RUNTIME_API CGpuCommandBufferId cgpu_create_command_buffer(CGpuCommandPoolId pool, const struct CGpuCommandBufferDescriptor* desc)
+RUNTIME_API CGPUCommandBufferId cgpu_create_command_buffer(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
-    const CGpuDeviceId device = pool->queue->device;
+    const CGPUDeviceId device = pool->queue->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCreateCommandBuffer fn_create_cmd = device->proc_table_cache->create_command_buffer;
     cgpu_assert(fn_create_cmd && "create_command_buffer Proc Missing!");
 
-    CGpuCommandBuffer* cmd = (CGpuCommandBuffer*)fn_create_cmd(pool, desc);
+    CGPUCommandBuffer* cmd = (CGPUCommandBuffer*)fn_create_cmd(pool, desc);
     cmd->pool = pool;
     cmd->device = device;
     return cmd;
 }
 
-RUNTIME_API void cgpu_reset_command_pool(CGpuCommandPoolId pool)
+RUNTIME_API void cgpu_reset_command_pool(CGPUCommandPoolId pool)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -457,13 +457,13 @@ RUNTIME_API void cgpu_reset_command_pool(CGpuCommandPoolId pool)
     return;
 }
 
-RUNTIME_API void cgpu_free_command_buffer(CGpuCommandBufferId cmd)
+RUNTIME_API void cgpu_free_command_buffer(CGPUCommandBufferId cmd)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    CGpuCommandPoolId pool = cmd->pool;
+    CGPUCommandPoolId pool = cmd->pool;
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
-    const CGpuDeviceId device = pool->queue->device;
+    const CGPUDeviceId device = pool->queue->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcFreeCommandBuffer fn_free_cmd = device->proc_table_cache->free_command_buffer;
     cgpu_assert(fn_free_cmd && "free_command_buffer Proc Missing!");
@@ -471,7 +471,7 @@ RUNTIME_API void cgpu_free_command_buffer(CGpuCommandBufferId cmd)
     fn_free_cmd(cmd);
 }
 
-RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId pool)
+RUNTIME_API void cgpu_free_command_pool(CGPUCommandPoolId pool)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -483,7 +483,7 @@ RUNTIME_API void cgpu_free_command_pool(CGpuCommandPoolId pool)
 }
 
 // CMDs
-void cgpu_cmd_begin(CGpuCommandBufferId cmd)
+void cgpu_cmd_begin(CGPUCommandBufferId cmd)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -492,10 +492,10 @@ void cgpu_cmd_begin(CGpuCommandBufferId cmd)
     fn_cmd_begin(cmd);
 }
 
-void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CGpuBufferToBufferTransfer* desc)
+void cgpu_cmd_transfer_buffer_to_buffer(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
     cgpu_assert(desc->src != CGPU_NULLPTR && "fatal: call on NULL cpy_src!");
@@ -505,10 +505,10 @@ void cgpu_cmd_transfer_buffer_to_buffer(CGpuCommandBufferId cmd, const struct CG
     fn_cmd_transfer_buffer_to_buffer(cmd, desc);
 }
 
-void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct CGpuBufferToTextureTransfer* desc)
+void cgpu_cmd_transfer_buffer_to_texture(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
     cgpu_assert(desc->src != CGPU_NULLPTR && "fatal: call on NULL cpy_src!");
@@ -518,10 +518,10 @@ void cgpu_cmd_transfer_buffer_to_texture(CGpuCommandBufferId cmd, const struct C
     fn_cmd_transfer_buffer_to_texture(cmd, desc);
 }
 
-void cgpu_cmd_transfer_texture_to_texture(CGpuCommandBufferId cmd, const struct CGpuTextureToTextureTransfer* desc)
+void cgpu_cmd_transfer_texture_to_texture(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
     cgpu_assert(desc->src != CGPU_NULLPTR && "fatal: call on NULL cpy_src!");
@@ -531,17 +531,17 @@ void cgpu_cmd_transfer_texture_to_texture(CGpuCommandBufferId cmd, const struct 
     fn_cmd_transfer_texture_to_texture(cmd, desc);
 }
 
-void cgpu_cmd_resource_barrier(CGpuCommandBufferId cmd, const struct CGpuResourceBarrierDescriptor* desc)
+void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
-    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_NONE && "fatal: can't call resource barriers in render/dispatch passes!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_NONE && "fatal: can't call resource barriers in render/dispatch passes!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCmdResourceBarrier fn_cmd_resource_barrier = cmd->device->proc_table_cache->cmd_resource_barrier;
     cgpu_assert(fn_cmd_resource_barrier && "cmd_resource_barrier Proc Missing!");
     fn_cmd_resource_barrier(cmd, desc);
 }
 
-void cgpu_cmd_begin_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc)
+void cgpu_cmd_begin_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -550,7 +550,7 @@ void cgpu_cmd_begin_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const s
     fn_cmd_begin_query(cmd, pool, desc);
 }
 
-void cgpu_cmd_end_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const struct CGpuQueryDescriptor* desc)
+void cgpu_cmd_end_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -559,7 +559,7 @@ void cgpu_cmd_end_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, const str
     fn_cmd_end_query(cmd, pool, desc);
 }
 
-void cgpu_cmd_reset_query_pool(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, uint32_t start_query, uint32_t query_count)
+void cgpu_cmd_reset_query_pool(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, uint32_t start_query, uint32_t query_count)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -568,7 +568,7 @@ void cgpu_cmd_reset_query_pool(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, ui
     fn_reset_query_pool(cmd, pool, start_query, query_count);
 }
 
-void cgpu_cmd_resolve_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, CGpuBufferId readback, uint32_t start_query, uint32_t query_count)
+void cgpu_cmd_resolve_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -577,7 +577,7 @@ void cgpu_cmd_resolve_query(CGpuCommandBufferId cmd, CGpuQueryPoolId pool, CGpuB
     fn_cmd_resolve_query(cmd, pool, readback, start_query, query_count);
 }
 
-void cgpu_cmd_end(CGpuCommandBufferId cmd)
+void cgpu_cmd_end(CGPUCommandBufferId cmd)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -587,201 +587,201 @@ void cgpu_cmd_end(CGpuCommandBufferId cmd)
 }
 
 // Compute CMDs
-CGpuComputePassEncoderId cgpu_cmd_begin_compute_pass(CGpuCommandBufferId cmd, const struct CGpuComputePassDescriptor* desc)
+CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCmdBeginComputePass fn_begin_compute_pass = cmd->device->proc_table_cache->cmd_begin_compute_pass;
     cgpu_assert(fn_begin_compute_pass && "cmd_begin_compute_pass Proc Missing!");
-    CGpuComputePassEncoderId ecd = (CGpuComputePassEncoderId)fn_begin_compute_pass(cmd, desc);
-    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PIPELINE_TYPE_COMPUTE;
+    CGPUComputePassEncoderId ecd = (CGPUComputePassEncoderId)fn_begin_compute_pass(cmd, desc);
+    CGPUCommandBuffer* Cmd = (CGPUCommandBuffer*)cmd;
+    Cmd->current_dispatch = CGPU_PIPELINE_TYPE_COMPUTE;
     return ecd;
 }
 
-void cgpu_compute_encoder_bind_descriptor_set(CGpuComputePassEncoderId encoder, CGpuDescriptorSetId set)
+void cgpu_compute_encoder_bind_descriptor_set(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId set)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
     cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL descriptor!");
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcComputeEncoderBindDescriptorSet fn_bind_descriptor_set = device->proc_table_cache->compute_encoder_bind_descriptor_set;
     cgpu_assert(fn_bind_descriptor_set && "compute_encoder_bind_descriptor_set Proc Missing!");
     fn_bind_descriptor_set(encoder, set);
 }
 
-void cgpu_compute_encoder_push_constants(CGpuComputePassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data)
+void cgpu_compute_encoder_push_constants(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcComputeEncoderPushConstants fn_push_constants = device->proc_table_cache->compute_encoder_push_constants;
     cgpu_assert(fn_push_constants && "compute_encoder_push_constants Proc Missing!");
     fn_push_constants(encoder, rs, name, data);
 }
 
-void cgpu_compute_encoder_bind_pipeline(CGpuComputePassEncoderId encoder, CGpuComputePipelineId pipeline)
+void cgpu_compute_encoder_bind_pipeline(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcComputeEncoderBindPipeline fn_compute_bind_pipeline = device->proc_table_cache->compute_encoder_bind_pipeline;
     cgpu_assert(fn_compute_bind_pipeline && "compute_encoder_bind_pipeline Proc Missing!");
     fn_compute_bind_pipeline(encoder, pipeline);
 }
 
-void cgpu_compute_encoder_dispatch(CGpuComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
+void cgpu_compute_encoder_dispatch(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcComputeEncoderDispatch fn_compute_dispatch = device->proc_table_cache->compute_encoder_dispatch;
     cgpu_assert(fn_compute_dispatch && "compute_encoder_dispatch Proc Missing!");
     fn_compute_dispatch(encoder, X, Y, Z);
 }
 
-void cgpu_cmd_end_compute_pass(CGpuCommandBufferId cmd, CGpuComputePassEncoderId encoder)
+void cgpu_cmd_end_compute_pass(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_COMPUTE && "fatal: can't call end command pass on commnd buffer while not dispatching compute!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_COMPUTE && "fatal: can't call end command pass on commnd buffer while not dispatching compute!");
     const CGPUProcCmdEndComputePass fn_end_compute_pass = cmd->device->proc_table_cache->cmd_end_compute_pass;
     cgpu_assert(fn_end_compute_pass && "cmd_end_compute_pass Proc Missing!");
     fn_end_compute_pass(cmd, encoder);
-    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PIPELINE_TYPE_NONE;
+    CGPUCommandBuffer* Cmd = (CGPUCommandBuffer*)cmd;
+    Cmd->current_dispatch = CGPU_PIPELINE_TYPE_NONE;
 }
 
 // Render CMDs
-CGpuRenderPassEncoderId cgpu_cmd_begin_render_pass(CGpuCommandBufferId cmd, const struct CGpuRenderPassDescriptor* desc)
+CGPURenderPassEncoderId cgpu_cmd_begin_render_pass(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcCmdBeginRenderPass fn_begin_render_pass = cmd->device->proc_table_cache->cmd_begin_render_pass;
     cgpu_assert(fn_begin_render_pass && "cmd_begin_render_pass Proc Missing!");
-    CGpuRenderPassEncoderId ecd = (CGpuRenderPassEncoderId)fn_begin_render_pass(cmd, desc);
-    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PIPELINE_TYPE_GRAPHICS;
+    CGPURenderPassEncoderId ecd = (CGPURenderPassEncoderId)fn_begin_render_pass(cmd, desc);
+    CGPUCommandBuffer* Cmd = (CGPUCommandBuffer*)cmd;
+    Cmd->current_dispatch = CGPU_PIPELINE_TYPE_GRAPHICS;
     return ecd;
 }
 
-void cgpu_render_encoder_bind_descriptor_set(CGpuRenderPassEncoderId encoder, CGpuDescriptorSetId set)
+void cgpu_render_encoder_bind_descriptor_set(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
     cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL descriptor!");
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderBindDescriptorSet fn_bind_descriptor_set = device->proc_table_cache->render_encoder_bind_descriptor_set;
     cgpu_assert(fn_bind_descriptor_set && "render_encoder_bind_descriptor_set Proc Missing!");
     fn_bind_descriptor_set(encoder, set);
 }
 
-void cgpu_render_encoder_bind_vertex_buffers(CGpuRenderPassEncoderId encoder, uint32_t buffer_count,
-    const CGpuBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
+void cgpu_render_encoder_bind_vertex_buffers(CGPURenderPassEncoderId encoder, uint32_t buffer_count,
+const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
     cgpu_assert(buffers != CGPU_NULLPTR && "fatal: call on NULL buffers!");
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRendeEncoderBindVertexBuffers fn_bind_vertex_buffers = device->proc_table_cache->render_encoder_bind_vertex_buffers;
     cgpu_assert(fn_bind_vertex_buffers && "render_encoder_bind_vertex_buffers Proc Missing!");
     fn_bind_vertex_buffers(encoder, buffer_count, buffers, strides, offsets);
 }
 
-RUNTIME_API void cgpu_render_encoder_bind_index_buffer(CGpuRenderPassEncoderId encoder, CGpuBufferId buffer, uint32_t index_stride, uint64_t offset)
+RUNTIME_API void cgpu_render_encoder_bind_index_buffer(CGPURenderPassEncoderId encoder, CGPUBufferId buffer, uint32_t index_stride, uint64_t offset)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
     cgpu_assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRendeEncoderBindIndexBuffer fn_bind_index_buffer = device->proc_table_cache->render_encoder_bind_index_buffer;
     cgpu_assert(fn_bind_index_buffer && "render_encoder_bind_index_buffer Proc Missing!");
     fn_bind_index_buffer(encoder, buffer, index_stride, offset);
 }
 
-void cgpu_render_encoder_set_viewport(CGpuRenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
+void cgpu_render_encoder_set_viewport(CGPURenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderSetViewport fn_render_set_viewport = device->proc_table_cache->render_encoder_set_viewport;
     cgpu_assert(fn_render_set_viewport && "render_encoder_set_viewport Proc Missing!");
     fn_render_set_viewport(encoder, x, y, width, height, min_depth, max_depth);
 }
 
-void cgpu_render_encoder_set_scissor(CGpuRenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+void cgpu_render_encoder_set_scissor(CGPURenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderSetScissor fn_render_set_scissor = device->proc_table_cache->render_encoder_set_scissor;
     cgpu_assert(fn_render_set_scissor && "render_encoder_set_scissor Proc Missing!");
     fn_render_set_scissor(encoder, x, y, width, height);
 }
 
-void cgpu_render_encoder_bind_pipeline(CGpuRenderPassEncoderId encoder, CGpuRenderPipelineId pipeline)
+void cgpu_render_encoder_bind_pipeline(CGPURenderPassEncoderId encoder, CGPURenderPipelineId pipeline)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderBindPipeline fn_render_bind_pipeline = device->proc_table_cache->render_encoder_bind_pipeline;
     cgpu_assert(fn_render_bind_pipeline && "render_encoder_bind_pipeline Proc Missing!");
     fn_render_bind_pipeline(encoder, pipeline);
 }
 
-void cgpu_render_encoder_push_constants(CGpuRenderPassEncoderId encoder, CGpuRootSignatureId rs, const char8_t* name, const void* data)
+void cgpu_render_encoder_push_constants(CGPURenderPassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderPushConstants fn_push_constants = device->proc_table_cache->render_encoder_push_constants;
     cgpu_assert(fn_push_constants && "render_encoder_push_constants Proc Missing!");
     fn_push_constants(encoder, rs, name, data);
 }
 
-void cgpu_render_encoder_draw(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)
+void cgpu_render_encoder_draw(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderDraw fn_draw = device->proc_table_cache->render_encoder_draw;
     cgpu_assert(fn_draw && "render_encoder_draw Proc Missing!");
     fn_draw(encoder, vertex_count, first_vertex);
 }
 
-void cgpu_render_encoder_draw_instanced(CGpuRenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance)
+void cgpu_render_encoder_draw_instanced(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderDrawInstanced fn_draw_instanced = device->proc_table_cache->render_encoder_draw_instanced;
     cgpu_assert(fn_draw_instanced && "render_encoder_draw_instanced Proc Missing!");
     fn_draw_instanced(encoder, vertex_count, first_vertex, instance_count, first_instance);
 }
 
-void cgpu_render_encoder_draw_indexed(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
+void cgpu_render_encoder_draw_indexed(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderDrawIndexed fn_draw_indexed = device->proc_table_cache->render_encoder_draw_indexed;
     cgpu_assert(fn_draw_indexed && "render_encoder_draw_indexed Proc Missing!");
     fn_draw_indexed(encoder, index_count, first_index, first_vertex);
 }
 
-void cgpu_render_encoder_draw_indexed_instanced(CGpuRenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex)
+void cgpu_render_encoder_draw_indexed_instanced(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex)
 {
-    CGpuDeviceId device = encoder->device;
+    CGPUDeviceId device = encoder->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     const CGPUProcRenderEncoderDrawIndexedInstanced fn_draw_indexed_instanced = device->proc_table_cache->render_encoder_draw_indexed_instanced;
     cgpu_assert(fn_draw_indexed_instanced && "render_encoder_draw_indexed_instanced Proc Missing!");
     fn_draw_indexed_instanced(encoder, index_count, first_index, instance_count, first_instance, first_vertex);
 }
 
-void cgpu_cmd_end_render_pass(CGpuCommandBufferId cmd, CGpuRenderPassEncoderId encoder)
+void cgpu_cmd_end_render_pass(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(cmd->current_dispatch == PIPELINE_TYPE_GRAPHICS && "fatal: can't call end command pass on commnd buffer while not dispatching graphics!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_GRAPHICS && "fatal: can't call end command pass on commnd buffer while not dispatching graphics!");
     const CGPUProcCmdEndRenderPass fn_end_render_pass = cmd->device->proc_table_cache->cmd_end_render_pass;
     cgpu_assert(fn_end_render_pass && "cmd_end_render_pass Proc Missing!");
     fn_end_render_pass(cmd, encoder);
-    CGpuCommandBuffer* Cmd = (CGpuCommandBuffer*)cmd;
-    Cmd->current_dispatch = PIPELINE_TYPE_NONE;
+    CGPUCommandBuffer* Cmd = (CGPUCommandBuffer*)cmd;
+    Cmd->current_dispatch = CGPU_PIPELINE_TYPE_NONE;
 }
 
 // Events
-void cgpu_cmd_begin_event(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
+void cgpu_cmd_begin_event(CGPUCommandBufferId cmd, const CGPUEventInfo* event)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -789,7 +789,7 @@ void cgpu_cmd_begin_event(CGpuCommandBufferId cmd, const CGpuEventInfo* event)
     fn_begin_event(cmd, event);
 }
 
-void cgpu_cmd_set_marker(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
+void cgpu_cmd_set_marker(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -797,7 +797,7 @@ void cgpu_cmd_set_marker(CGpuCommandBufferId cmd, const CGpuMarkerInfo* marker)
     fn_cmd_set_marker(cmd, marker);
 }
 
-void cgpu_cmd_end_event(CGpuCommandBufferId cmd)
+void cgpu_cmd_end_event(CGPUCommandBufferId cmd)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -806,13 +806,13 @@ void cgpu_cmd_end_event(CGpuCommandBufferId cmd)
 }
 
 // Shader APIs
-CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct CGpuShaderLibraryDescriptor* desc)
+CGPUShaderLibraryId cgpu_create_shader_library(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_shader_library && "create_shader_library Proc Missing!");
 
     CGPUProcCreateShaderLibrary fn_create_shader_library = device->proc_table_cache->create_shader_library;
-    CGpuShaderLibrary* shader = (CGpuShaderLibrary*)fn_create_shader_library(device, desc);
+    CGPUShaderLibrary* shader = (CGPUShaderLibrary*)fn_create_shader_library(device, desc);
     shader->device = device;
     // handle name string
     const size_t str_len = strlen(desc->name);
@@ -822,10 +822,10 @@ CGpuShaderLibraryId cgpu_create_shader_library(CGpuDeviceId device, const struct
     return shader;
 }
 
-void cgpu_free_shader_library(CGpuShaderLibraryId library)
+void cgpu_free_shader_library(CGPUShaderLibraryId library)
 {
     cgpu_assert(library != CGPU_NULLPTR && "fatal: call on NULL shader library!");
-    const CGpuDeviceId device = library->device;
+    const CGPUDeviceId device = library->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     // handle name string
     cgpu_free((void*)library->name);
@@ -836,26 +836,26 @@ void cgpu_free_shader_library(CGpuShaderLibraryId library)
 }
 
 // Buffer APIs
-CGpuBufferId cgpu_create_buffer(CGpuDeviceId device, const struct CGpuBufferDescriptor* desc)
+CGPUBufferId cgpu_create_buffer(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_buffer && "create_buffer Proc Missing!");
-    CGpuBufferDescriptor new_desc;
-    memcpy(&new_desc, desc, sizeof(CGpuBufferDescriptor));
+    CGPUBufferDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGPUBufferDescriptor));
     if (desc->flags == 0)
     {
-        new_desc.flags |= BCF_NONE;
+        new_desc.flags |= CGPU_BCF_NONE;
     }
     CGPUProcCreateBuffer fn_create_buffer = device->proc_table_cache->create_buffer;
-    CGpuBuffer* buffer = (CGpuBuffer*)fn_create_buffer(device, &new_desc);
+    CGPUBuffer* buffer = (CGPUBuffer*)fn_create_buffer(device, &new_desc);
     buffer->device = device;
     return buffer;
 }
 
-void cgpu_map_buffer(CGpuBufferId buffer, const struct CGpuBufferRange* range)
+void cgpu_map_buffer(CGPUBufferId buffer, const struct CGPUBufferRange* range)
 {
     cgpu_assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
-    const CGpuDeviceId device = buffer->device;
+    const CGPUDeviceId device = buffer->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->map_buffer && "map_buffer Proc Missing!");
 
@@ -863,10 +863,10 @@ void cgpu_map_buffer(CGpuBufferId buffer, const struct CGpuBufferRange* range)
     fn_map_buffer(buffer, range);
 }
 
-void cgpu_unmap_buffer(CGpuBufferId buffer)
+void cgpu_unmap_buffer(CGPUBufferId buffer)
 {
     cgpu_assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
-    const CGpuDeviceId device = buffer->device;
+    const CGPUDeviceId device = buffer->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->unmap_buffer && "unmap_buffer Proc Missing!");
 
@@ -874,10 +874,10 @@ void cgpu_unmap_buffer(CGpuBufferId buffer)
     fn_unmap_buffer(buffer);
 }
 
-void cgpu_free_buffer(CGpuBufferId buffer)
+void cgpu_free_buffer(CGPUBufferId buffer)
 {
     cgpu_assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
-    const CGpuDeviceId device = buffer->device;
+    const CGPUDeviceId device = buffer->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
 
     CGPUProcFreeBuffer fn_free_buffer = device->proc_table_cache->free_buffer;
@@ -886,27 +886,27 @@ void cgpu_free_buffer(CGpuBufferId buffer)
 }
 
 // Texture/TextureView APIs
-CGpuTextureId cgpu_create_texture(CGpuDeviceId device, const struct CGpuTextureDescriptor* desc)
+CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_texture && "create_texture Proc Missing!");
-    CGpuTextureDescriptor new_desc;
-    memcpy(&new_desc, desc, sizeof(CGpuTextureDescriptor));
+    CGPUTextureDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGPUTextureDescriptor));
     if (desc->array_size == 0) new_desc.array_size = 1;
     if (desc->mip_levels == 0) new_desc.mip_levels = 1;
     if (desc->depth == 0) new_desc.depth = 1;
     if (desc->sample_count == 0) new_desc.sample_count = 1;
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
-    CGpuTexture* texture = (CGpuTexture*)fn_create_texture(device, &new_desc);
+    CGPUTexture* texture = (CGPUTexture*)fn_create_texture(device, &new_desc);
     texture->device = device;
     texture->sample_count = desc->sample_count;
     return texture;
 }
 
-void cgpu_free_texture(CGpuTextureId texture)
+void cgpu_free_texture(CGPUTextureId texture)
 {
     cgpu_assert(texture != CGPU_NULLPTR && "fatal: call on NULL texture!");
-    const CGpuDeviceId device = texture->device;
+    const CGPUDeviceId device = texture->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
 
     CGPUProcFreeTexture fn_free_texture = device->proc_table_cache->free_texture;
@@ -914,20 +914,20 @@ void cgpu_free_texture(CGpuTextureId texture)
     fn_free_texture(texture);
 }
 
-CGpuSamplerId cgpu_create_sampler(CGpuDeviceId device, const struct CGpuSamplerDescriptor* desc)
+CGPUSamplerId cgpu_create_sampler(CGPUDeviceId device, const struct CGPUSamplerDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_sampler && "create_sampler Proc Missing!");
     CGPUProcCreateSampler fn_create_sampler = device->proc_table_cache->create_sampler;
-    CGpuSampler* sampler = (CGpuSampler*)fn_create_sampler(device, desc);
+    CGPUSampler* sampler = (CGPUSampler*)fn_create_sampler(device, desc);
     sampler->device = device;
     return sampler;
 }
 
-void cgpu_free_sampler(CGpuSamplerId sampler)
+void cgpu_free_sampler(CGPUSamplerId sampler)
 {
     cgpu_assert(sampler != CGPU_NULLPTR && "fatal: call on NULL sampler!");
-    const CGpuDeviceId device = sampler->device;
+    const CGPUDeviceId device = sampler->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
 
     CGPUProcFreeSampler fn_free_sampler = device->proc_table_cache->free_sampler;
@@ -935,25 +935,25 @@ void cgpu_free_sampler(CGpuSamplerId sampler)
     fn_free_sampler(sampler);
 }
 
-CGpuTextureViewId cgpu_create_texture_view(CGpuDeviceId device, const struct CGpuTextureViewDescriptor* desc)
+CGPUTextureViewId cgpu_create_texture_view(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_texture_view && "create_texture_view Proc Missing!");
-    CGpuTextureViewDescriptor new_desc;
-    memcpy(&new_desc, desc, sizeof(CGpuTextureViewDescriptor));
+    CGPUTextureViewDescriptor new_desc;
+    memcpy(&new_desc, desc, sizeof(CGPUTextureViewDescriptor));
     if (desc->array_layer_count == 0) new_desc.array_layer_count = 1;
     if (desc->mip_level_count == 0) new_desc.mip_level_count = 1;
     CGPUProcCreateTextureView fn_create_texture_view = device->proc_table_cache->create_texture_view;
-    CGpuTextureView* texture_view = (CGpuTextureView*)fn_create_texture_view(device, &new_desc);
+    CGPUTextureView* texture_view = (CGPUTextureView*)fn_create_texture_view(device, &new_desc);
     texture_view->device = device;
     texture_view->info = *desc;
     return texture_view;
 }
 
-void cgpu_free_texture_view(CGpuTextureViewId render_target)
+void cgpu_free_texture_view(CGPUTextureViewId render_target)
 {
     cgpu_assert(render_target != CGPU_NULLPTR && "fatal: call on NULL render_target!");
-    const CGpuDeviceId device = render_target->device;
+    const CGPUDeviceId device = render_target->device;
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
 
     CGPUProcFreeTextureView fn_free_texture_view = device->proc_table_cache->free_texture_view;
@@ -961,7 +961,7 @@ void cgpu_free_texture_view(CGpuTextureViewId render_target)
     fn_free_texture_view(render_target);
 }
 
-bool cgpu_try_bind_aliasing_texture(CGpuDeviceId device, const struct CGpuTextureAliasingBindDescriptor* desc)
+bool cgpu_try_bind_aliasing_texture(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     CGPUProcTryBindAliasingTexture fn_try_bind_aliasing = device->proc_table_cache->try_bind_aliasing_texture;
@@ -970,7 +970,7 @@ bool cgpu_try_bind_aliasing_texture(CGpuDeviceId device, const struct CGpuTextur
 }
 
 // SwapChain APIs
-CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDescriptor* desc)
+CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_swapchain && "create_swapchain Proc Missing!");
@@ -985,13 +985,13 @@ CGpuSwapChainId cgpu_create_swapchain(CGpuDeviceId device, const CGpuSwapChainDe
         cgpu_assert(desc->presentQueuesCount > 0 &&
                     "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
     }
-    CGpuSwapChain* swapchain = (CGpuSwapChain*)device->proc_table_cache->create_swapchain(device, desc);
+    CGPUSwapChain* swapchain = (CGPUSwapChain*)device->proc_table_cache->create_swapchain(device, desc);
     cgpu_assert(swapchain && "fatal cgpu_create_swapchain: NULL swapchain id returned from backend.");
     swapchain->device = device;
     return swapchain;
 }
 
-uint32_t cgpu_acquire_next_image(CGpuSwapChainId swapchain, const struct CGpuAcquireNextDescriptor* desc)
+uint32_t cgpu_acquire_next_image(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc)
 {
     cgpu_assert(swapchain != CGPU_NULLPTR && "fatal: call on NULL swapchain!");
     cgpu_assert(swapchain->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -1000,7 +1000,7 @@ uint32_t cgpu_acquire_next_image(CGpuSwapChainId swapchain, const struct CGpuAcq
     return swapchain->device->proc_table_cache->acquire_next_image(swapchain, desc);
 }
 
-void cgpu_free_swapchain(CGpuSwapChainId swapchain)
+void cgpu_free_swapchain(CGPUSwapChainId swapchain)
 {
     cgpu_assert(swapchain != CGPU_NULLPTR && "fatal: call on NULL swapchain!");
     cgpu_assert(swapchain->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -1010,40 +1010,40 @@ void cgpu_free_swapchain(CGpuSwapChainId swapchain)
 }
 
 // cgpux helpers
-CGpuBufferId cgpux_create_mapped_constant_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name, bool device_local_preferred)
+CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
+uint64_t size, const char8_t* name, bool device_local_preferred)
 {
-    DECLARE_ZERO(CGpuBufferDescriptor, buf_desc)
-    buf_desc.descriptors = RT_BUFFER;
+    DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
+    buf_desc.descriptors = CGPU_RT_BUFFER;
     buf_desc.size = size;
     buf_desc.name = name;
-    const CGpuAdapterDetail* detail = cgpu_query_adapter_detail(device->adapter);
-    buf_desc.memory_usage = MEM_USAGE_CPU_TO_GPU;
-    buf_desc.flags = BCF_PERSISTENT_MAP_BIT | BCF_HOST_VISIBLE;
-    buf_desc.start_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    const CGPUAdapterDetail* detail = cgpu_query_adapter_detail(device->adapter);
+    buf_desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
+    buf_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT | CGPU_BCF_HOST_VISIBLE;
+    buf_desc.start_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
     if (device_local_preferred && detail->support_host_visible_vram)
     {
-        buf_desc.memory_usage = MEM_USAGE_GPU_ONLY;
+        buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     }
     return cgpu_create_buffer(device, &buf_desc);
 }
 
-RUNTIME_API CGpuBufferId cgpux_create_mapped_upload_buffer(CGpuDeviceId device,
-    uint64_t size, const char8_t* name)
+RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
+uint64_t size, const char8_t* name)
 {
-    DECLARE_ZERO(CGpuBufferDescriptor, buf_desc)
-    buf_desc.descriptors = RT_NONE;
+    DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
+    buf_desc.descriptors = CGPU_RT_NONE;
     buf_desc.size = size;
     buf_desc.name = name;
-    buf_desc.memory_usage = MEM_USAGE_CPU_ONLY;
-    buf_desc.flags = BCF_PERSISTENT_MAP_BIT;
-    buf_desc.start_state = RESOURCE_STATE_COPY_DEST;
+    buf_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
+    buf_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
+    buf_desc.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
     return cgpu_create_buffer(device, &buf_desc);
 }
 
 // surfaces
 #if defined(_WIN32) || defined(_WIN64)
-CGpuSurfaceId cgpu_surface_from_hwnd(CGpuDeviceId device, HWND window)
+CGPUSurfaceId cgpu_surface_from_hwnd(CGPUDeviceId device, HWND window)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
@@ -1054,7 +1054,7 @@ CGpuSurfaceId cgpu_surface_from_hwnd(CGpuDeviceId device, HWND window)
     return device->adapter->instance->surfaces_table->from_hwnd(device, window);
 }
 #elif defined(_MACOS)
-CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window)
+CGPUSurfaceId cgpu_surface_from_ns_view(CGPUDeviceId device, CGPUNSView* window)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
@@ -1066,17 +1066,17 @@ CGpuSurfaceId cgpu_surface_from_ns_view(CGpuDeviceId device, CGpuNSView* window)
 }
 #endif
 
-CGpuSurfaceId cgpu_surface_from_native_view(CGpuDeviceId device, void* view)
+CGPUSurfaceId cgpu_surface_from_native_view(CGPUDeviceId device, void* view)
 {
 #ifdef SAKURA_RUNTIME_OS_MACOSX
-    return cgpu_surface_from_ns_view(device, (CGpuNSView*)view);
+    return cgpu_surface_from_ns_view(device, (CGPUNSView*)view);
 #elif defined(SAKURA_RUNTIME_OS_WINDOWS)
     return cgpu_surface_from_hwnd(device, (HWND)view);
 #endif
     return CGPU_NULLPTR;
 }
 
-void cgpu_free_surface(CGpuDeviceId device, CGpuSurfaceId surface)
+void cgpu_free_surface(CGPUDeviceId device, CGPUSurfaceId surface)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");

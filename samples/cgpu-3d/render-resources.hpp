@@ -41,7 +41,7 @@ struct AsyncRenderResource {
     std::atomic_bool resource_handle_ready_ = false;
 };
 using AuxTaskCallback = eastl::function<void()>;
-using AuxThreadTask = eastl::function<void(CGpuDeviceId)>;
+using AuxThreadTask = eastl::function<void(CGPUDeviceId)>;
 using AuxThreadTaskWithCallback = eastl::pair<AuxThreadTask, AuxTaskCallback>;
 static const AuxTaskCallback defaultAuxCallback = +[]() {};
 
@@ -63,7 +63,7 @@ struct AsyncRenderMemoryResource : public AsyncRenderResource {
         return *this;
     }
     std::atomic_bool upload_started_ = false;
-    std::atomic<ECGpuQueueType> queue_type_ = QUEUE_TYPE_TRANSFER;
+    std::atomic<ECGPUQueueType> queue_type_ = QUEUE_TYPE_TRANSFER;
     std::atomic_bool queue_released_ = false;
 };
 
@@ -71,43 +71,43 @@ struct AsyncRenderBuffer final : public AsyncRenderMemoryResource {
     AsyncRenderBuffer() = default;
     AsyncRenderBuffer(AsyncRenderBuffer&&) = default;
 
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuBufferDescriptor& buffer_desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGPUBufferDescriptor& buffer_desc, const AuxTaskCallback& cb = defaultAuxCallback);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
-    CGpuBufferId buffer_;
+    CGPUBufferId buffer_;
 };
 
 struct AsyncRenderTexture final : public AsyncRenderMemoryResource {
     AsyncRenderTexture() = default;
     AsyncRenderTexture(AsyncRenderTexture&&) = default;
 
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const AuxTaskCallback& cb = defaultAuxCallback, bool default_srv = true);
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuTextureDescriptor& tex_desc, const CGpuTextureViewDescriptor& tex_view_desc, const AuxTaskCallback& cb = defaultAuxCallback);
-    void Initialize(struct RenderAuxThread* aux_thread, const eastl::string name, const eastl::string disk_file, ECGpuFormat format, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGPUTextureDescriptor& tex_desc, const AuxTaskCallback& cb = defaultAuxCallback, bool default_srv = true);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGPUTextureDescriptor& tex_desc, const CGPUTextureViewDescriptor& tex_view_desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Initialize(struct RenderAuxThread* aux_thread, const eastl::string name, const eastl::string disk_file, ECGPUFormat format, const AuxTaskCallback& cb = defaultAuxCallback);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
-    CGpuTextureId texture_;
-    CGpuTextureViewId view_;
+    CGPUTextureId texture_;
+    CGPUTextureViewId view_;
     unsigned char* image_bytes_ = nullptr;
-    CGpuBufferId upload_buffer_ = nullptr;
+    CGPUBufferId upload_buffer_ = nullptr;
 };
 
 struct AsyncRenderShader final : public AsyncRenderResource {
     AsyncRenderShader() = default;
     AsyncRenderShader(AsyncRenderShader&&) = default;
 
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuShaderLibraryDescriptor& desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGPUShaderLibraryDescriptor& desc, const AuxTaskCallback& cb = defaultAuxCallback);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
-    CGpuShaderLibraryId shader_;
+    CGPUShaderLibraryId shader_;
 };
 
 struct PipelineKey {
     uint32_t vertex_layout_id_;
-    CGpuRootSignatureId root_sig_;
+    CGPURootSignatureId root_sig_;
     bool wireframe_mode_;
-    ECGpuFormat screen_format_;
-    ECGpuSampleCount sample_count_;
+    ECGPUFormat screen_format_;
+    ECGPUSampleCount sample_count_;
 };
 
 namespace eastl
@@ -121,11 +121,11 @@ struct equal_to<PipelineKey> {
     size_t operator()(const PipelineKey& a, const PipelineKey& b) const
     {
         const bool equal =
-            (a.vertex_layout_id_ == b.vertex_layout_id_) &&
-            (a.wireframe_mode_ == b.wireframe_mode_) &&
-            (a.root_sig_ == b.root_sig_) &&
-            (a.screen_format_ == b.screen_format_) &&
-            (a.sample_count_ == b.sample_count_);
+        (a.vertex_layout_id_ == b.vertex_layout_id_) &&
+        (a.wireframe_mode_ == b.wireframe_mode_) &&
+        (a.root_sig_ == b.root_sig_) &&
+        (a.screen_format_ == b.screen_format_) &&
+        (a.sample_count_ == b.sample_count_);
         return equal;
     }
 };
@@ -135,11 +135,11 @@ struct AsyncRenderPipeline final : public AsyncRenderResource {
     AsyncRenderPipeline() = default;
     AsyncRenderPipeline(AsyncRenderPipeline&&) = default;
 
-    void Initialize(struct RenderAuxThread* aux_thread, const CGpuRenderPipelineDescriptor& desc, const AuxTaskCallback& cb = defaultAuxCallback);
+    void Initialize(struct RenderAuxThread* aux_thread, const CGPURenderPipelineDescriptor& desc, const AuxTaskCallback& cb = defaultAuxCallback);
     void Destroy(struct RenderAuxThread* aux_thread = nullptr, const AuxTaskCallback& cb = defaultAuxCallback);
 
-    CGpuRenderPipelineId pipeline_;
-    CGpuDescriptorSetId desc_set_;
+    CGPURenderPipelineId pipeline_;
+    CGPUDescriptorSetId desc_set_;
 };
 
 namespace eastl
@@ -152,12 +152,12 @@ struct RenderBlackboard {
     static void Initialize();
     static void Finalize(struct RenderAuxThread* aux_thread = nullptr);
 
-    static const eastl::cached_hashset<CGpuVertexLayout>* GetVertexLayouts();
-    static size_t AddVertexLayout(const CGpuVertexLayout& layout);
+    static const eastl::cached_hashset<CGPUVertexLayout>* GetVertexLayouts();
+    static size_t AddVertexLayout(const CGPUVertexLayout& layout);
 
     static AsyncRenderTexture* GetTexture(const char* name);
-    static AsyncRenderTexture* AddTexture(const char* name, struct RenderAuxThread* aux_thread, uint32_t width, uint32_t height, ECGpuFormat format = PF_R8G8B8A8_UNORM, const AuxTaskCallback& cb = defaultAuxCallback);
-    static AsyncRenderTexture* AddTexture(const char* name, const char* disk_file, struct RenderAuxThread* aux_thread, ECGpuFormat format, const AuxTaskCallback& cb = defaultAuxCallback);
+    static AsyncRenderTexture* AddTexture(const char* name, struct RenderAuxThread* aux_thread, uint32_t width, uint32_t height, ECGPUFormat format = CGPU_FORMAT_R8G8B8A8_UNORM, const AuxTaskCallback& cb = defaultAuxCallback);
+    static AsyncRenderTexture* AddTexture(const char* name, const char* disk_file, struct RenderAuxThread* aux_thread, ECGPUFormat format, const AuxTaskCallback& cb = defaultAuxCallback);
 
     static AsyncRenderPipeline* AddRenderPipeline(RenderAuxThread* aux_thread, const PipelineKey& key, const AuxTaskCallback& cb = defaultAuxCallback);
     static AsyncRenderPipeline* GetRenderPipeline(const PipelineKey& key);
@@ -165,15 +165,15 @@ struct RenderBlackboard {
 protected:
     static eastl::vector_map<eastl::string, AsyncRenderTexture*> textures_;
     static eastl::unordered_map<PipelineKey, AsyncRenderPipeline*> pipelines_;
-    static eastl::cached_hashset<CGpuVertexLayout> vertex_layouts_;
+    static eastl::cached_hashset<CGPUVertexLayout> vertex_layouts_;
 };
 
-FORCEINLINE const eastl::cached_hashset<CGpuVertexLayout>* RenderBlackboard::GetVertexLayouts()
+FORCEINLINE const eastl::cached_hashset<CGPUVertexLayout>* RenderBlackboard::GetVertexLayouts()
 {
     return &vertex_layouts_;
 }
 
-FORCEINLINE size_t RenderBlackboard::AddVertexLayout(const CGpuVertexLayout& layout)
+FORCEINLINE size_t RenderBlackboard::AddVertexLayout(const CGPUVertexLayout& layout)
 {
     const auto hash = vertex_layouts_.get_hash_code(layout);
     auto iter = vertex_layouts_.find_by_hash(hash);

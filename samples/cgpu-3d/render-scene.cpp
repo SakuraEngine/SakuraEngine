@@ -3,7 +3,7 @@
 #include "thirdparty/cgltf.h"
 #include "thirdparty/lodepng.h"
 
-static FORCEINLINE ECGpuFormat GLTFUtil_ComponentTypeToFormat(cgltf_type type, cgltf_component_type comp_type)
+static FORCEINLINE ECGPUFormat GLTFUtil_ComponentTypeToFormat(cgltf_type type, cgltf_component_type comp_type)
 {
     switch (type)
     {
@@ -11,82 +11,82 @@ static FORCEINLINE ECGpuFormat GLTFUtil_ComponentTypeToFormat(cgltf_type type, c
             switch (comp_type)
             {
                 case cgltf_component_type_r_8:
-                    return PF_R8_SNORM;
+                    return CGPU_FORMAT_R8_SNORM;
                 case cgltf_component_type_r_8u:
-                    return PF_R8_UNORM;
+                    return CGPU_FORMAT_R8_UNORM;
                 case cgltf_component_type_r_16:
-                    return PF_R16_SINT;
+                    return CGPU_FORMAT_R16_SINT;
                 case cgltf_component_type_r_16u:
-                    return PF_R16_UINT;
+                    return CGPU_FORMAT_R16_UINT;
                 case cgltf_component_type_r_32u:
-                    return PF_R32_UINT;
+                    return CGPU_FORMAT_R32_UINT;
                 case cgltf_component_type_r_32f:
-                    return PF_R32_SFLOAT;
+                    return CGPU_FORMAT_R32_SFLOAT;
                 default:
-                    return PF_R8_SNORM;
+                    return CGPU_FORMAT_R8_SNORM;
             }
         }
         case cgltf_type_vec2: {
             switch (comp_type)
             {
                 case cgltf_component_type_r_8:
-                    return PF_R8G8_SNORM;
+                    return CGPU_FORMAT_R8G8_SNORM;
                 case cgltf_component_type_r_8u:
-                    return PF_R8G8_UNORM;
+                    return CGPU_FORMAT_R8G8_UNORM;
                 case cgltf_component_type_r_16:
-                    return PF_R16G16_SINT;
+                    return CGPU_FORMAT_R16G16_SINT;
                 case cgltf_component_type_r_16u:
-                    return PF_R16G16_UINT;
+                    return CGPU_FORMAT_R16G16_UINT;
                 case cgltf_component_type_r_32u:
-                    return PF_R32G32_UINT;
+                    return CGPU_FORMAT_R32G32_UINT;
                 case cgltf_component_type_r_32f:
-                    return PF_R32G32_SFLOAT;
+                    return CGPU_FORMAT_R32G32_SFLOAT;
                 default:
-                    return PF_R8_SNORM;
+                    return CGPU_FORMAT_R8_SNORM;
             }
         }
         case cgltf_type_vec3: {
             switch (comp_type)
             {
                 case cgltf_component_type_r_8:
-                    return PF_R8G8B8_SNORM;
+                    return CGPU_FORMAT_R8G8B8_SNORM;
                 case cgltf_component_type_r_8u:
-                    return PF_R8G8B8_UNORM;
+                    return CGPU_FORMAT_R8G8B8_UNORM;
                 case cgltf_component_type_r_16:
-                    return PF_R16G16B16_SINT;
+                    return CGPU_FORMAT_R16G16B16_SINT;
                 case cgltf_component_type_r_16u:
-                    return PF_R16G16B16_UINT;
+                    return CGPU_FORMAT_R16G16B16_UINT;
                 case cgltf_component_type_r_32u:
-                    return PF_R32G32B32_UINT;
+                    return CGPU_FORMAT_R32G32B32_UINT;
                 case cgltf_component_type_r_32f:
-                    return PF_R32G32B32_SFLOAT;
+                    return CGPU_FORMAT_R32G32B32_SFLOAT;
                 default:
-                    return PF_R8_SNORM;
+                    return CGPU_FORMAT_R8_SNORM;
             }
         }
         case cgltf_type_vec4: {
             switch (comp_type)
             {
                 case cgltf_component_type_r_8:
-                    return PF_R8G8B8A8_SNORM;
+                    return CGPU_FORMAT_R8G8B8A8_SNORM;
                 case cgltf_component_type_r_8u:
-                    return PF_R8G8B8A8_UNORM;
+                    return CGPU_FORMAT_R8G8B8A8_UNORM;
                 case cgltf_component_type_r_16:
-                    return PF_R16G16B16A16_SINT;
+                    return CGPU_FORMAT_R16G16B16A16_SINT;
                 case cgltf_component_type_r_16u:
-                    return PF_R16G16B16A16_UINT;
+                    return CGPU_FORMAT_R16G16B16A16_UINT;
                 case cgltf_component_type_r_32u:
-                    return PF_R32G32B32A32_UINT;
+                    return CGPU_FORMAT_R32G32B32A32_UINT;
                 case cgltf_component_type_r_32f:
-                    return PF_R32G32B32A32_SFLOAT;
+                    return CGPU_FORMAT_R32G32B32A32_SFLOAT;
                 default:
-                    return PF_R8_SNORM;
+                    return CGPU_FORMAT_R8_SNORM;
             }
         }
         default:
-            return PF_R8_SNORM;
+            return CGPU_FORMAT_R8_SNORM;
     }
-    return PF_R8_SNORM;
+    return CGPU_FORMAT_R8_SNORM;
 }
 
 static const char8_t* gGLTFAttributeTypeLUT[] = {
@@ -124,7 +124,7 @@ int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_c
         newPrim.vertex_offsets_.emplace_back((uint32_t)attrib->data->offset);
     }
     // Create vertex layout
-    CGpuVertexLayout layout = {};
+    CGPUVertexLayout layout = {};
     uint32_t binding = 0;
     layout.attribute_count = (uint32_t)src->attributes_count;
     for (uint32_t i = 0; i < src->attributes_count; i++)
@@ -132,13 +132,13 @@ int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_c
         const auto gltf_attrib = src->attributes + i;
         const char8_t* attr_name = gGLTFAttributeTypeLUT[gltf_attrib->type];
         strcpy(layout.attributes[i].semantic_name, attr_name);
-        layout.attributes[i].rate = INPUT_RATE_VERTEX;
+        layout.attributes[i].rate = CGPU_INPUT_RATE_VERTEX;
         layout.attributes[i].array_size = 1;
         layout.attributes[i].format = GLTFUtil_ComponentTypeToFormat(gltf_attrib->data->type, gltf_attrib->data->component_type);
         layout.attributes[i].binding = binding++;
         layout.attributes[i].offset = 0;
         layout.attributes[i].elem_stride =
-            FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
+        FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
     }
     newPrim.vertex_layout_id_ = (uint32_t)RenderBlackboard::AddVertexLayout(layout);
     primitives_.emplace_back(eastl::move(newPrim));
@@ -188,11 +188,11 @@ int32_t RenderScene::loadNode(struct cgltf_node* src, int32_t parent_idx)
         newNode.children_.emplace_back(&nodes_[child_idx]);
     }
     newNode.translation_ = sakura::math::Vector3f(
-        src->translation[0], src->translation[1], src->translation[2]);
+    src->translation[0], src->translation[1], src->translation[2]);
     newNode.rotation_ = sakura::math::Quaternion(
-        src->rotation[0], src->rotation[1], src->rotation[2], src->rotation[3]);
+    src->rotation[0], src->rotation[1], src->rotation[2], src->rotation[3]);
     newNode.scale_ = sakura::math::Vector3f(
-        src->scale[0], src->scale[1], src->scale[2]);
+    src->scale[0], src->scale[1], src->scale[2]);
     return newNode.index_;
 }
 
@@ -311,10 +311,10 @@ void RenderScene::AsyncCreateGeometryMemory(class RenderDevice* device, struct R
     {
         staging_size += gltf_data_->buffers[i].size;
     }
-    CGpuBufferDescriptor staging_buffer_desc = {};
-    staging_buffer_desc.flags = BCF_OWN_MEMORY_BIT | BCF_PERSISTENT_MAP_BIT;
-    staging_buffer_desc.descriptors = RT_NONE;
-    staging_buffer_desc.memory_usage = MEM_USAGE_CPU_ONLY;
+    CGPUBufferDescriptor staging_buffer_desc = {};
+    staging_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
+    staging_buffer_desc.descriptors = CGPU_RT_NONE;
+    staging_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     staging_buffer_desc.element_stride = staging_size;
     staging_buffer_desc.elemet_count = 1;
     staging_buffer_desc.size = staging_size;
@@ -323,13 +323,13 @@ void RenderScene::AsyncCreateGeometryMemory(class RenderDevice* device, struct R
     for (uint32_t i = 0, vb_idx = 0; i < gltf_data_->buffer_views_count; i++)
     {
         cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
-        CGpuBufferDescriptor buffer_desc = {};
-        buffer_desc.flags = BCF_OWN_MEMORY_BIT;
-        buffer_desc.memory_usage = MEM_USAGE_GPU_ONLY;
+        CGPUBufferDescriptor buffer_desc = {};
+        buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+        buffer_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
         buffer_desc.descriptors =
-            buf_view->type == cgltf_buffer_view_type_indices ?
-                RT_INDEX_BUFFER :
-                RT_VERTEX_BUFFER;
+        buf_view->type == cgltf_buffer_view_type_indices ?
+        CGPU_RT_INDEX_BUFFER :
+        CGPU_RT_VERTEX_BUFFER;
         buffer_desc.element_stride = buf_view->stride ? buf_view->stride : buf_view->size;
         buffer_desc.elemet_count = buf_view->size / buffer_desc.element_stride;
         buffer_desc.size = buf_view->size;
@@ -356,7 +356,7 @@ void RenderScene::AsyncCreateTextureMemory(class RenderDevice* device, struct Re
         auto&& material = materials_.at(i).second;
         auto uri = material.base_color_uri_.c_str();
         auto path = eastl::string("./../resources/").append(uri);
-        auto tex = RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, PF_R8G8B8A8_UNORM);
+        auto tex = RenderBlackboard::AddTexture(uri, path.c_str(), aux_thread, CGPU_FORMAT_R8G8B8A8_UNORM);
         if (tex != nullptr && !tex->Ready())
         {
             if (tex_transfers_.find(tex) == tex_transfers_.end())
@@ -399,7 +399,7 @@ void RenderScene::TryAsyncUploadBuffers(RenderContext* context, struct AsyncTran
                 address_cursor += gltf_data_->buffers[i].size;
             }
         }
-        eastl::vector<ECGpuResourceState> dst_states(viewVBIdxMap.size() + 1);
+        eastl::vector<ECGPUResourceState> dst_states(viewVBIdxMap.size() + 1);
         eastl::vector<AsyncBufferToBufferTransfer> transfers(viewVBIdxMap.size() + 1);
         // transfer
         transfers[0].src = &staging_buffer_;
@@ -407,7 +407,7 @@ void RenderScene::TryAsyncUploadBuffers(RenderContext* context, struct AsyncTran
         transfers[0].dst = &index_buffer_;
         transfers[0].dst_offset = 0;
         transfers[0].size = indices_view->size;
-        dst_states[0] = RESOURCE_STATE_INDEX_BUFFER;
+        dst_states[0] = CGPU_RESOURCE_STATE_INDEX_BUFFER;
         for (uint32_t i = 1; i < viewVBIdxMap.size() + 1; i++)
         {
             const cgltf_buffer_view* cgltfBufferView = viewVBIdxMap.at(i - 1).first;
@@ -419,7 +419,7 @@ void RenderScene::TryAsyncUploadBuffers(RenderContext* context, struct AsyncTran
             transfers[i].size = cgltfBufferView->size;
         }
         aux_thread->AsyncTransfer(
-            transfers.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
+        transfers.data(), (uint32_t)transfers.size(), gpu_geometry_fence);
         bufs_upload_started_ = true;
     }
 }
@@ -447,7 +447,7 @@ void RenderScene::TryAsyncUploadTextures(RenderContext* context, struct AsyncTra
             }
             if (target->Ready() && !target->queue_released_ &&
                 tex_transfers_[target] &&
-                (cgpu_query_fence_status(tex_transfers_[target]) == FENCE_STATUS_COMPLETE))
+                (cgpu_query_fence_status(tex_transfers_[target]) == CGPU_FENCE_STATUS_COMPLETE))
             {
                 // TODO: impl this as callback in AsyncTransferThread::asyncTransfer
                 target->queue_released_ = true;
@@ -468,7 +468,7 @@ void RenderScene::TryAsyncUploadTextures(RenderContext* context, struct AsyncTra
             {
                 if (!meshes_[i].primitives_[j].desc_set_updated_)
                 {
-                    CGpuDescriptorData arguments[1];
+                    CGPUDescriptorData arguments[1];
                     arguments[0].name = "sampled_texture";
                     arguments[0].count = 1;
                     arguments[0].textures = &rdrTex->view_;
@@ -486,9 +486,9 @@ bool RenderScene::AsyncGeometryUploadReady()
     if (gpu_geometry_fence)
     {
         auto status = cgpu_query_fence_status(gpu_geometry_fence);
-        if (status == FENCE_STATUS_NOTSUBMITTED)
+        if (status == CGPU_FENCE_STATUS_NOTSUBMITTED)
             return false;
-        return status == FENCE_STATUS_COMPLETE;
+        return status == CGPU_FENCE_STATUS_COMPLETE;
     }
     return false;
 }

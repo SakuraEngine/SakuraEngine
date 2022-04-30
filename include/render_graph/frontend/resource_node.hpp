@@ -41,22 +41,22 @@ public:
     {
     }
     inline const TextureHandle get_handle() const { return TextureHandle(get_id()); }
-    inline const CGpuTextureDescriptor& get_desc() const { return descriptor; }
+    inline const CGPUTextureDescriptor& get_desc() const { return descriptor; }
     inline const uint32_t get_size() const
     {
         return descriptor.array_size * descriptor.mip_levels *
                descriptor.width * descriptor.depth * descriptor.height *
                FormatUtil_BitSizeOfBlock(descriptor.format);
     }
-    inline const ECGpuSampleCount get_sample_count() const { return descriptor.sample_count; }
+    inline const ECGPUSampleCount get_sample_count() const { return descriptor.sample_count; }
     inline const TextureNode* get_aliasing_parent() const { return frame_aliasing_source; }
 
 protected:
-    CGpuTextureDescriptor descriptor = {};
+    CGPUTextureDescriptor descriptor = {};
     // temporal handle with a lifespan of only one frame
     TextureNode* frame_aliasing_source = nullptr;
-    mutable CGpuTextureId frame_texture = nullptr;
-    mutable ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
+    mutable CGPUTextureId frame_texture = nullptr;
+    mutable ECGPUResourceState init_state = CGPU_RESOURCE_STATE_UNDEFINED;
     mutable bool frame_aliasing = false;
 };
 
@@ -71,13 +71,13 @@ public:
     {
     }
     inline const BufferHandle get_handle() const { return BufferHandle(get_id()); }
-    inline const CGpuBufferDescriptor& get_desc() const { return descriptor; }
+    inline const CGPUBufferDescriptor& get_desc() const { return descriptor; }
 
 protected:
-    CGpuBufferDescriptor descriptor = {};
+    CGPUBufferDescriptor descriptor = {};
     // temporal handle with a lifespan of only one frame
-    mutable CGpuBufferId frame_buffer = nullptr;
-    mutable ECGpuResourceState init_state = RESOURCE_STATE_UNDEFINED;
+    mutable CGPUBufferId frame_buffer = nullptr;
+    mutable ECGPUResourceState init_state = CGPU_RESOURCE_STATE_UNDEFINED;
 };
 } // namespace render_graph
 } // namespace sakura

@@ -1,12 +1,12 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12_surfaces.h"
 
-void cgpu_free_surface_d3d12(CGpuDeviceId device, CGpuSurfaceId surface)
+void cgpu_free_surface_d3d12(CGPUDeviceId device, CGPUSurfaceId surface)
 {
     return;
 }
 
-CGpuSurfaceId cgpu_surface_from_hwnd_d3d12(CGpuDeviceId device, HWND window)
+CGPUSurfaceId cgpu_surface_from_hwnd_d3d12(CGPUDeviceId device, HWND window)
 {
-    CGpuSurfaceId res = *(CGpuSurfaceId*)&window;
+    CGPUSurfaceId res = *(CGPUSurfaceId*)&window;
     return res;
 }

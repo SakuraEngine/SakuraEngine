@@ -1,7 +1,7 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12_surfaces.h"
 
-const CGpuProcTable tbl_d3d12 = {
+const CGPUProcTable tbl_d3d12 = {
     // Instance APIs
     .create_instance = &cgpu_create_instance_d3d12,
     .query_instance_features = &cgpu_query_instance_features_d3d12,
@@ -110,12 +110,12 @@ const CGpuProcTable tbl_d3d12 = {
     .cmd_end_render_pass = &cgpu_cmd_end_render_pass_d3d12
 };
 
-const CGpuProcTable* CGPU_D3D12ProcTable()
+const CGPUProcTable* CGPU_D3D12ProcTable()
 {
     return &tbl_d3d12;
 }
 
-const CGpuSurfacesProcTable s_tbl_d3d12 = {
+const CGPUSurfacesProcTable s_tbl_d3d12 = {
     //
     .free_surface = cgpu_free_surface_d3d12,
 #if defined(_WIN32) || defined(_WIN64)
@@ -124,7 +124,7 @@ const CGpuSurfacesProcTable s_tbl_d3d12 = {
     //
 };
 
-const CGpuSurfacesProcTable* CGPU_D3D12SurfacesProcTable()
+const CGPUSurfacesProcTable* CGPU_D3D12SurfacesProcTable()
 {
     return &s_tbl_d3d12;
 }

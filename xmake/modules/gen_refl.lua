@@ -19,7 +19,6 @@ function cmd_compile(sourcefile, rootdir, target, opt)
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
     import("find_sdk")
     meta = find_sdk.find_program("meta")
-    print(rootdir)
     argv2 = {sourcefile, "--output="..path.directory(sourcefile), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
@@ -30,10 +29,9 @@ end
 
 function _merge_reflfile(target, rootdir, sourcefile_refl, headerfiles, opt)
     local dependfile = target:dependfile(sourcefile_refl)
+    -- generate dummy .cpp file
     depend.on_changed(function ()
-        -- trace
         cprint("${cyan}generating.reflection ${clear}%s", sourcefile_refl)
-        -- do merge
         local reflfile = io.open(sourcefile_refl, "w")
         for _, headerfile in ipairs(headerfiles) do
             headerfile = path.absolute(headerfile)
@@ -42,6 +40,7 @@ function _merge_reflfile(target, rootdir, sourcefile_refl, headerfiles, opt)
             reflfile:print("#include \"%s\"", headerfile)
         end
         reflfile:close()
+        -- build generated cpp to json
         cmd_compile(sourcefile_refl, rootdir, target)
     end, {dependfile = dependfile, files = headerfiles})
 end

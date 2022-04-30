@@ -11,13 +11,13 @@ HWND createWin32Window();
     #include "platform/apple/macos/window.h"
 #endif
 
-class SwapChainCreation : public ::testing::TestWithParam<ECGpuBackend>
+class SwapChainCreation : public ::testing::TestWithParam<EBackend>
 {
 protected:
     void SetUp() override
     {
-        ECGpuBackend backend = GetParam();
-        DECLARE_ZERO(CGpuInstanceDescriptor, desc)
+        EBackend backend = GetParam();
+        DECLARE_ZERO(InstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
         desc.enable_gpu_based_validation = true;
@@ -28,13 +28,13 @@ protected:
 
         uint32_t adapters_count = 0;
         cgpu_enum_adapters(instance, nullptr, &adapters_count);
-        std::vector<CGpuAdapterId> adapters;
+        std::vector<AdapterId> adapters;
         adapters.resize(adapters_count);
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         adapter = adapters[0];
 
-        CGpuQueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
-        DECLARE_ZERO(CGpuDeviceDescriptor, descriptor)
+        QueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
+        DECLARE_ZERO(DeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
         device = cgpu_create_device(adapter, &descriptor);
@@ -48,10 +48,10 @@ protected:
 #endif
     }
 
-    CGpuSwapChainId CreateSwapChainWithSurface(CGpuSurfaceId surface)
+    SwapChainId CreateSwapChainWithSurface(SurfaceId surface)
     {
         auto mainQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
-        DECLARE_ZERO(CGpuSwapChainDescriptor, descriptor)
+        DECLARE_ZERO(SwapChainDescriptor, descriptor)
         descriptor.presentQueues = &mainQueue;
         descriptor.presentQueuesCount = 1;
         descriptor.surface = surface;
@@ -69,9 +69,9 @@ protected:
         cgpu_free_instance(instance);
     }
 
-    CGpuInstanceId instance;
-    CGpuAdapterId adapter;
-    CGpuDeviceId device;
+    InstanceId instance;
+    AdapterId adapter;
+    DeviceId device;
 #ifdef _WIN32
     HWND hwnd;
 #elif defined(_MACOS)
@@ -101,8 +101,8 @@ TEST_P(SwapChainCreation, CreateFromHWND)
 
 TEST_P(SwapChainCreation, CreateFromNSView)
 {
-    auto ns_view = (struct CGpuNSView*)nswindow_get_content_view(
-        nswin);
+    auto ns_view = (struct NSView*)nswindow_get_content_view(
+    nswin);
     auto surface = cgpu_surface_from_ns_view(device, ns_view);
 
     EXPECT_NE(surface, CGPU_NULLPTR);
@@ -120,11 +120,11 @@ TEST_P(SwapChainCreation, CreateFromNSView)
 
 static const auto allPlatforms = testing::Values(
 #ifdef CGPU_USE_VULKAN
-    CGPU_BACKEND_VULKAN
+CGPU_BACKEND_VULKAN
 #endif
 #ifdef CGPU_USE_D3D12
-    ,
-    CGPU_BACKEND_D3D12
+,
+CGPU_BACKEND_D3D12
 #endif
 );
 
@@ -161,8 +161,8 @@ HWND createWin32Window()
     if (bRegistered)
     {
         HWND window = CreateWindowEx(0, myclass, TEXT("title"),
-            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(0), 0);
+        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(0), 0);
         if (window)
         {
             ShowWindow(window, SW_SHOWDEFAULT);
