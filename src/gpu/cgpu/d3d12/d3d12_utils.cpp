@@ -242,22 +242,22 @@ static ECGPUTextureDimension gD3D12_TO_RESOURCE_DIM[D3D_SRV_DIMENSION_BUFFEREX +
 };
 
 static ECGPUFormat gD3D12_TO_VERTEX_FORMAT[] = {
-    PF_UNDEFINED,  // 0
-    PF_R32_UINT,   // 1 D3D_REGISTER_COMPONENT_UINT32
-    PF_R32_SINT,   // 2 D3D_REGISTER_COMPONENT_SINT32
-    PF_R32_SFLOAT, // 3 D3D_REGISTER_COMPONENT_FLOAT32
+    CGPU_FORMAT_UNDEFINED,  // 0
+    CGPU_FORMAT_R32_UINT,   // 1 D3D_REGISTER_COMPONENT_UINT32
+    CGPU_FORMAT_R32_SINT,   // 2 D3D_REGISTER_COMPONENT_SINT32
+    CGPU_FORMAT_R32_SFLOAT, // 3 D3D_REGISTER_COMPONENT_FLOAT32
 
-    PF_R32G32_UINT,   // 1 + 3 * 1
-    PF_R32G32_SINT,   // 2 * 3 * 1
-    PF_R32G32_SFLOAT, // 2 * 3 * 1
+    CGPU_FORMAT_R32G32_UINT,   // 1 + 3 * 1
+    CGPU_FORMAT_R32G32_SINT,   // 2 * 3 * 1
+    CGPU_FORMAT_R32G32_SFLOAT, // 2 * 3 * 1
 
-    PF_R32G32B32_UINT,   // 1 + 3 * 2
-    PF_R32G32B32_SINT,   // 2 * 3 * 2
-    PF_R32G32B32_SFLOAT, // 3 * 3 * 2
+    CGPU_FORMAT_R32G32B32_UINT,   // 1 + 3 * 2
+    CGPU_FORMAT_R32G32B32_SINT,   // 2 * 3 * 2
+    CGPU_FORMAT_R32G32B32_SFLOAT, // 3 * 3 * 2
 
-    PF_R32G32B32A32_UINT,  // 1 + 3 * 3
-    PF_R32G32B32A32_SINT,  // 2 * 3 * 3
-    PF_R32G32B32A32_SFLOAT // 3 * 3 * 3
+    CGPU_FORMAT_R32G32B32A32_UINT,  // 1 + 3 * 3
+    CGPU_FORMAT_R32G32B32A32_SINT,  // 2 * 3 * 3
+    CGPU_FORMAT_R32G32B32A32_SFLOAT // 3 * 3 * 3
 };
 
 template <typename ID3D12ReflectionT, typename D3D12_SHADER_DESC_T>
@@ -317,7 +317,7 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
     CGPUShaderReflection* Reflection = S->super.entry_reflections;
     Reflection->stage = stage;
     // Collect vertex inputs
-    if (stage == SHADER_STAGE_VERT)
+    if (stage == CGPU_SHADER_STAGE_VERT)
     {
         Reflection->vertex_inputs_count = shaderDesc.InputParameters;
         Reflection->vertex_inputs = (CGPUVertexInput*)cgpu_calloc(Reflection->vertex_inputs_count, sizeof(CGPUVertexInput));
@@ -339,7 +339,7 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
             Reflection->vertex_inputs[i].format = gD3D12_TO_VERTEX_FORMAT[paramDesc.ComponentType + 3 * Comps];
         }
     }
-    else if (stage == SHADER_STAGE_COMPUTE)
+    else if (stage == CGPU_SHADER_STAGE_COMPUTE)
     {
         d3d12reflection->GetThreadGroupSize(
         &Reflection->thread_group_sizes[0],

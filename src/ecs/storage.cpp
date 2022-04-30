@@ -146,7 +146,7 @@ void dual_storage_t::linked_to_prefab(const dual_entity_t* src, uint32_t size, b
     m.source = src;
     m.keepExternal = keepExternal;
     forloop(i, 0, size)
-        iterator_ref_view(entity_view(src[i]), m);
+    iterator_ref_view(entity_view(src[i]), m);
 }
 
 void dual_storage_t::prefab_to_linked(const dual_entity_t* src, uint32_t size)
@@ -168,7 +168,7 @@ void dual_storage_t::prefab_to_linked(const dual_entity_t* src, uint32_t size)
     m.count = size;
     m.source = src;
     forloop(i, 0, size)
-        iterator_ref_view(entity_view(src[i]), m);
+    iterator_ref_view(entity_view(src[i]), m);
 }
 
 void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size, uint32_t count, dual_view_callback_t callback, void* u)
@@ -176,7 +176,7 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
     using namespace dual;
     std::vector<dual_entity_t> ents;
     ents.resize(count * size);
-    entities.new_entities(ents.data(), ents.size());
+    entities.new_entities(ents.data(), (EIndex)ents.size());
     struct mapper_t {
         dual_entity_t* base;
         dual_entity_t* curr;
@@ -196,7 +196,7 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
     forloop(i, 0, size)
     {
         forloop(j, 0, count)
-            localEnts[j] = ents[j * size + i];
+        localEnts[j] = ents[j * size + i];
         auto view = entity_view(src[i]);
         auto group = view.chunk->group->cloned;
         auto localCount = 0;
@@ -302,7 +302,7 @@ void dual_storage_t::validate(dual_entity_set_t& meta)
     auto end = std::remove_if(meta.data, meta.data + meta.length, [&](dual_entity_t e) {
         return !exist(e);
     });
-    meta.length = end - meta.data;
+    meta.length = (SIndex)(end - meta.data);
 }
 
 void dual_storage_t::defragment()
@@ -357,7 +357,7 @@ void dual_storage_t::defragment()
         // step 3 : reaverage data into new layout
         std::vector<dual_chunk_t*> newChunks;
         int o = 0;
-        int j = chunks.size() - 1;
+        int j = (int)(chunks.size() - 1);
         auto fillChunk = [&](dual_chunk_t* chunk) {
             while (chunk->get_capacity() != chunk->count)
             {
@@ -380,7 +380,7 @@ void dual_storage_t::defragment()
             }
         };
         auto fillType = [&](uint32_t count, pool_type_t type) {
-            for (int i = 0; i < count; ++i)
+            for (uint32_t i = 0; i < count; ++i)
             {
                 if (o < chunks.size() && chunks[o]->pt == type) // reuse chunk
                 {
@@ -397,7 +397,7 @@ void dual_storage_t::defragment()
         fillType(smallCount, PT_small);
 
         // step 4 : rebuild group chunk data
-        g->chunkCount = newChunks.size();
+        g->chunkCount = (uint16_t)newChunks.size();
         for (auto chunk : newChunks)
             g->add_chunk(chunk);
     }
@@ -444,7 +444,7 @@ void dual_storage_t::pack_entities()
             iterator_ref_view({ c, 0, c->count }, m);
         auto meta = g->type.meta;
         forloop(i, 0, meta.length)
-            m.map((meta.data)[i]);
+        m.map((meta.data)[i]);
         std::sort(meta.data, meta.data + meta.length);
         groups.insert({ g->type, g });
     }
@@ -524,7 +524,7 @@ dual_group_t* dual_storage_t::cast(dual_group_t* srcGroup, const dual_delta_type
 
 void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_callback_t callback, void* u)
 {
-    int current = 0;
+    EIndex current = 0;
     auto view = entity_view(ents[current++]);
     while (current < count)
     {
@@ -577,7 +577,7 @@ void dual_storage_t::merge(dual_storage_t& src)
             e = data[e_id(e)];
         }
     } m;
-    m.count = map.size();
+    m.count = (uint32_t)map.size();
     m.data = map.data();
     std::vector<dual_chunk_t*> chunks;
     struct payload_t {
@@ -604,7 +604,7 @@ void dual_storage_t::merge(dual_storage_t& src)
             auto sizeToPatch = c->count * c->type->sizeToPatch;
             if (sizeRemain < sizeToPatch)
             {
-                payload.end = chunks.size();
+                payload.end = (uint32_t)chunks.size();
                 payloads.push_back(payload);
                 payload.start = payload.end;
                 sizeRemain = sizeToPatch;
@@ -615,7 +615,7 @@ void dual_storage_t::merge(dual_storage_t& src)
     }
     if (payload.end != payloads.size())
     {
-        payload.end = chunks.size();
+        payload.end = (uint32_t)chunks.size();
         payloads.push_back(payload);
     }
     ftl::Task* tasks = new ftl::Task[payloads.size()];
@@ -626,21 +626,21 @@ void dual_storage_t::merge(dual_storage_t& src)
             auto c = payload->chunks[i];
             auto ents = (dual_entity_t*)c->get_entities();
             forloop(j, 0, c->count)
-                payload->m->map(ents[j]);
+            payload->m->map(ents[j]);
             iterator_ref_view({ c, 0, c->count }, *payload->m);
         }
     };
     forloop(i, 0, payloads.size())
-        tasks[i] = { taskBody, &payloads[i] };
+    tasks[i] = { taskBody, &payloads[i] };
     ftl::TaskCounter counter(&scheduler->schedular);
-    scheduler->schedular.AddTasks(payloads.size(), tasks, ftl::TaskPriority::High, &counter);
+    scheduler->schedular.AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, &counter);
     scheduler->schedular.WaitForCounter(&counter);
     for (auto& i : src.groups)
     {
         dual_group_t* g = i.second;
         auto type = g->type;
         forloop(j, 0, type.meta.length)
-            m.map((dual_entity_t&)type.meta.data[j]);
+        m.map((dual_entity_t&)type.meta.data[j]);
         dual_group_t* dstG = get_group(type);
         dual_chunk_t* c = g->firstChunk;
         while (c)

@@ -418,7 +418,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             operations.push_back(operation);
         }
 
-        partBegin += part.size();
+        partBegin += (int)part.size();
     }
 
     // parse finished, save result into query
@@ -599,7 +599,7 @@ DUAL_FORCEINLINE int CountLeadingZeros64(uint64_t n)
     //  ARM64: clz
     //  PPC: cntlzd
     static_assert(sizeof(unsigned long long) == sizeof(n), // NOLINT(runtime/int)
-        "__builtin_clzll does not take 64-bit arg");
+    "__builtin_clzll does not take 64-bit arg");
 
     // Handle 0 as a special case because __builtin_clzll(0) is undefined.
     if (n == 0)

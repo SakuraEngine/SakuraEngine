@@ -104,7 +104,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     {
         intptr_t* efs = (intptr_t*)desc.entityFields;
         desc.entityFields = entityFields.size();
-        for (int i = 0; i < desc.entityFieldsCount; ++i)
+        for (uint32_t i = 0; i < desc.entityFieldsCount; ++i)
             entityFields.push_back(efs[i]);
     }
     bool tag = false;

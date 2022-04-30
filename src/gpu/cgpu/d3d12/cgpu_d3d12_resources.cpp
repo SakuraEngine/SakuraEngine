@@ -23,11 +23,11 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     ECGPUResourceState start_state = desc->start_state;
     if (desc->memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU || desc->memory_usage == CGPU_MEM_USAGE_CPU_ONLY)
     {
-        start_state = RESOURCE_STATE_GENERIC_READ;
+        start_state = CGPU_RESOURCE_STATE_GENERIC_READ;
     }
     else if (desc->memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU)
     {
-        start_state = RESOURCE_STATE_COPY_DEST;
+        start_state = CGPU_RESOURCE_STATE_COPY_DEST;
     }
     D3D12_RESOURCE_STATES res_states = D3D12Util_TranslateResourceState(start_state);
 
@@ -119,7 +119,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             srvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
             if (CGPU_RT_BUFFER_RAW == (desc->descriptors & CGPU_RT_BUFFER_RAW))
             {
-                if (desc->format != PF_UNDEFINED)
+                if (desc->format != CGPU_FORMAT_UNDEFINED)
                     cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
                 srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 srvDesc.Buffer.Flags |= D3D12_BUFFER_SRV_FLAG_RAW;
@@ -146,12 +146,12 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
             if (CGPU_RT_RW_BUFFER_RAW == (desc->descriptors & CGPU_RT_RW_BUFFER_RAW))
             {
-                if (desc->format != PF_UNDEFINED)
+                if (desc->format != CGPU_FORMAT_UNDEFINED)
                     cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
                 uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 uavDesc.Buffer.Flags |= D3D12_BUFFER_UAV_FLAG_RAW;
             }
-            else if (desc->format != PF_UNDEFINED)
+            else if (desc->format != CGPU_FORMAT_UNDEFINED)
             {
                 uavDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
                 D3D12_FEATURE_DATA_FORMAT_SUPPORT FormatSupport = { uavDesc.Format, D3D12_FORMAT_SUPPORT1_NONE,
@@ -334,7 +334,7 @@ CGPUSamplerId cgpu_create_sampler_d3d12(CGPUDeviceId device, const struct CGPUSa
     add_desc.Filter = D3D12Util_TranslateFilter(
     desc->min_filter, desc->mag_filter,
     desc->mipmap_mode, desc->max_anisotropy > 0.0f,
-    (desc->compare_func != CMP_NEVER ? true : false));
+    (desc->compare_func != CGPU_CMP_NEVER ? true : false));
     add_desc.AddressU = D3D12Util_TranslateAddressMode(desc->address_u);
     add_desc.AddressV = D3D12Util_TranslateAddressMode(desc->address_v);
     add_desc.AddressW = D3D12Util_TranslateAddressMode(desc->address_w);
@@ -461,7 +461,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
             resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         }
         //
-        if (desc->start_state & RESOURCE_STATE_COPY_DEST)
+        if (desc->start_state & CGPU_RESOURCE_STATE_COPY_DEST)
         {
             actualStartState = D3D12_RESOURCE_STATE_COMMON;
         }
@@ -475,17 +475,17 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         {
             resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
         }
-        if (desc->start_state & RESOURCE_STATE_RENDER_TARGET)
+        if (desc->start_state & CGPU_RESOURCE_STATE_RENDER_TARGET)
         {
-            actualStartState = (desc->start_state > RESOURCE_STATE_RENDER_TARGET) ?
-                               (desc->start_state & (ECGPUResourceState)~RESOURCE_STATE_RENDER_TARGET) :
-                               RESOURCE_STATE_RENDER_TARGET;
+            actualStartState = (desc->start_state > CGPU_RESOURCE_STATE_RENDER_TARGET) ?
+                               (desc->start_state & (ECGPUResourceState)~CGPU_RESOURCE_STATE_RENDER_TARGET) :
+                               CGPU_RESOURCE_STATE_RENDER_TARGET;
         }
-        else if (desc->start_state & RESOURCE_STATE_DEPTH_WRITE)
+        else if (desc->start_state & CGPU_RESOURCE_STATE_DEPTH_WRITE)
         {
-            actualStartState = (desc->start_state > RESOURCE_STATE_DEPTH_WRITE) ?
-                               (desc->start_state & (ECGPUResourceState)~RESOURCE_STATE_DEPTH_WRITE) :
-                               RESOURCE_STATE_DEPTH_WRITE;
+            actualStartState = (desc->start_state > CGPU_RESOURCE_STATE_DEPTH_WRITE) ?
+                               (desc->start_state & (ECGPUResourceState)~CGPU_RESOURCE_STATE_DEPTH_WRITE) :
+                               CGPU_RESOURCE_STATE_DEPTH_WRITE;
         }
         // Decide sharing flags
         if (desc->flags & CGPU_TCF_EXPORT_ADAPTER_BIT)
@@ -495,7 +495,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         }
         if (desc->flags & CGPU_TCF_ALLOW_DISPLAY_TARGET)
         {
-            actualStartState = RESOURCE_STATE_PRESENT;
+            actualStartState = CGPU_RESOURCE_STATE_PRESENT;
         }
         // Decide clear value
         DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValue);

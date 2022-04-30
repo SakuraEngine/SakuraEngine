@@ -113,7 +113,7 @@ void dual::scheduler_t::clean_jobs()
             delete job;
         return done;
     }),
-        allJobs.end());
+    allJobs.end());
 }
 
 namespace dual
@@ -147,7 +147,7 @@ void update_entry(job_dependency_entry_t& entry, dual_job_t* job, bool readonly,
 } // namespace dual
 
 dual_ecs_job_t* dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-    dual_system_init_callback_t init, dual_resource_operation_t* resources)
+dual_system_init_callback_t init, dual_resource_operation_t* resources)
 {
     assert(query->parameters.length < 32);
     llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
@@ -156,7 +156,7 @@ dual_ecs_job_t* dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, E
     };
     auto& params = query->parameters;
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
-    auto groupCount = groups.size();
+    auto groupCount = (uint32_t)groups.size();
     size_t arenaSize = 0;
     arenaSize += sizeof(dual_job_t);
     arenaSize += resources->count * (sizeof(dual_entity_t) + sizeof(int)); // job.resources
@@ -268,7 +268,7 @@ dual_ecs_job_t* dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, E
     }
 
     job->dependencies = new dual_job_t*[dependencies.size()];
-    job->dependencyCount = dependencies.size();
+    job->dependencyCount = (int)dependencies.size();
     uint32_t dependencyIndex = 0;
     for (auto dependency : dependencies)
         job->dependencies[dependencyIndex++] = dependency;
@@ -276,7 +276,7 @@ dual_ecs_job_t* dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, E
     auto body = +[](ftl::TaskScheduler*, void* data) {
         auto job = (dual_ecs_job_t*)data;
         forloop(i, 0, job->dependencyCount)
-            job->scheduler->wait_job(job->dependencies[i]);
+        job->scheduler->wait_job(job->dependencies[i]);
         job->init(job->userdata, job);
         auto query = job->query;
         fixed_stack_scope_t _(localStack);
@@ -378,8 +378,8 @@ dual_ecs_job_t* dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, E
             };
             auto _tasks = new ftl::Task[batchs.size()];
             forloop(i, 0, batchs.size())
-                _tasks[i] = { taskBody, &payloads[i] };
-            job->scheduler->schedular.AddTasks(batchs.size(), _tasks, ftl::TaskPriority::Normal, &job->counter);
+            _tasks[i] = { taskBody, &payloads[i] };
+            job->scheduler->schedular.AddTasks((unsigned int)batchs.size(), _tasks, ftl::TaskPriority::Normal, &job->counter);
             delete[] _tasks;
         }
     };
@@ -401,7 +401,7 @@ dual_job_t* dual::scheduler_t::schedule_job(uint32_t count, dual_for_callback_t 
     }
 
     job->dependencies = new dual_job_t*[dependencies.size()];
-    job->dependencyCount = dependencies.size();
+    job->dependencyCount = (int)dependencies.size();
     uint32_t dependencyIndex = 0;
     for (auto dependency : dependencies)
         job->dependencies[dependencyIndex++] = dependency;
@@ -412,17 +412,17 @@ dual_job_t* dual::scheduler_t::schedule_job(uint32_t count, dual_for_callback_t 
     };
     task_payload_t* payloads = (task_payload_t*)::dual_malloc(sizeof(task_payload_t) * count);
     forloop(i, 0, count)
-        payloads[i] = { job, i };
+    payloads[i] = { job, i };
     job->payloads = payloads;
     auto taskBody = +[](ftl::TaskScheduler* taskScheduler, void* data) {
         auto payload = (task_payload_t*)data;
         forloop(i, 0, payload->job->dependencyCount)
-            payload->job->scheduler->wait_job(payload->job->dependencies[i]);
+        payload->job->scheduler->wait_job(payload->job->dependencies[i]);
         payload->job->callback(payload->job->userdata, payload->job, payload->index);
     };
     auto tasks = new ftl::Task[count];
     forloop(i, 0, count)
-        tasks[i] = { taskBody, &payloads[i] };
+    tasks[i] = { taskBody, &payloads[i] };
 
     schedular.AddTasks(count, tasks, ftl::TaskPriority::Normal, &job->counter);
     delete[] tasks;
@@ -456,7 +456,7 @@ void dualJ_remove_resource(dual_entity_t id)
 }
 
 dual_job_t* dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-    dual_system_init_callback_t init, dual_resource_operation_t* resources)
+dual_system_init_callback_t init, dual_resource_operation_t* resources)
 {
     return dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, resources);
 }
