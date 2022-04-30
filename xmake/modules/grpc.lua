@@ -115,7 +115,7 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
 
     -- add commands
     batchcmds:mkdir(sourcefile_dir)
-    batchcmds:show_progress(opt.program, "${color.build.object}compiling.proto %s", sourcefile_proto)
+    batchcmds:show_progress(opt.progress, "${color.build.object}compiling.proto %s", sourcefile_proto)
     batchcmds:vrunv(protoc.program, {sourcefile_proto,
         "-I" .. (prefixdir and prefixdir or path.directory(sourcefile_proto)),
         "-I" .. vformat("$(projectdir)/thirdparty/grpc/include"),
@@ -124,7 +124,6 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
         (sourcekind == "cxx" and "--cpp_out=" or "--c_out=") .. sourcefile_dir})
     batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = sourcefile_dir, languages = (sourcekind == "cxx" and "c++11")}})
     batchcmds:compile(sourcefile_cx2, objectfile2, {configs = {includedirs = sourcefile_dir, languages = (sourcekind == "cxx" and "c++11")}})
-
     -- add deps
     batchcmds:add_depfiles(sourcefile_proto)
     batchcmds:set_depmtime(os.mtime(objectfile))
