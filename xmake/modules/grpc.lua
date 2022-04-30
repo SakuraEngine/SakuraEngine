@@ -40,10 +40,6 @@ function _get_grpc_cpp_plugin(target, sourcekind)
     local grpc_cpp_plugin = target:data("grpc.grpc_cpp_plugin")
     if not grpc_cpp_plugin and sourcekind == "cxx" then
         grpc_cpp_plugin = find_sdk.find_program("grpc_cpp_plugin", nil, true)
-        if (grpc_cpp_plugin == nil) then
-            local outdata, errdata = os.iorun("which grpc_cpp_plugin")
-            grpc_cpp_plugin =  {program = string.gsub(outdata, "%s+", "")}
-        end
         if grpc_cpp_plugin then
             target:data_set("grpc.grpc_cpp_plugin", grpc_cpp_plugin)
         end
@@ -87,7 +83,6 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
     -- get protoc
     local protoc = _get_protoc(target, sourcekind)
     local grpc_cpp_plugin = _get_grpc_cpp_plugin(target, sourcekind)
-    
 
     -- get c/c++ source file for protobuf
     local prefixdir

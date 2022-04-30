@@ -78,7 +78,7 @@ function find_program(name, sdkdir, use_which)
     if(prog == nil) then
         if(os.host() ~= "windows" and use_which ~= nil and use_which == true) then
             local outdata, errdata = os.iorun("which "..name)
-            if(errdata ~= "") then
+            if(errdata~= nil or errdata ~= "") then
                 prog = string.gsub(outdata, "%s+", "")
             end
         end
