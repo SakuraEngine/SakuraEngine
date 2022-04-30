@@ -1,6 +1,6 @@
 import("core.project.depend")
 
-function cmd_compile(sourcefile, objectfile, target, opt)
+function cmd_compile(sourcefile, rootdir, target, opt)
     import("core.base.option")
     import("core.base.object")
     import("core.tool.compiler")
@@ -15,11 +15,12 @@ function cmd_compile(sourcefile, objectfile, target, opt)
         sourcekind = language.sourcekind_of(sourcefile)
     end
     local compiler_inst = compiler.load(sourcekind, opt)
-    local program, argv = compiler_inst:compargv(sourcefile, objectfile, opt)
+    local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
     import("find_sdk")
     meta = find_sdk.find_program("meta")
-    argv2 = {sourcefile, "--output="..sourcefile..".json", "--"}
+    print(rootdir)
+    argv2 = {sourcefile, "--output="..path.directory(sourcefile), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
@@ -27,7 +28,7 @@ function cmd_compile(sourcefile, objectfile, target, opt)
     return argv
 end
 
-function _merge_reflfile(target, sourcefile_refl, headerfiles, opt)
+function _merge_reflfile(target, rootdir, sourcefile_refl, headerfiles, opt)
     local dependfile = target:dependfile(sourcefile_refl)
     depend.on_changed(function ()
         -- trace
@@ -41,11 +42,11 @@ function _merge_reflfile(target, sourcefile_refl, headerfiles, opt)
             reflfile:print("#include \"%s\"", headerfile)
         end
         reflfile:close()
-        cmd_compile(sourcefile_refl, sourcefile_refl..".o", target)
+        cmd_compile(sourcefile_refl, rootdir, target)
     end, {dependfile = dependfile, files = headerfiles})
 end
 
-function generate_refl_files(target, opt)
+function generate_refl_files(target, rootdir, opt)
     local refl_batch = target:data("reflection.batch")
     if refl_batch then
         for _, batch in ipairs(refl_batch) do
@@ -54,7 +55,7 @@ function generate_refl_files(target, opt)
                 local headerfiles = sourceinfo.headerfiles
                 local sourcefile_refl = sourceinfo.sourcefile
                 if headerfiles then
-                    _merge_reflfile(target, sourcefile_refl, headerfiles, opt)
+                    _merge_reflfile(target, rootdir, sourcefile_refl, headerfiles, opt)
                 end
             end
         end
