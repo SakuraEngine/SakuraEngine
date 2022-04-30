@@ -31,7 +31,7 @@ function _merge_reflfile(target, sourcefile_refl, headerfiles, opt)
     local dependfile = target:dependfile(sourcefile_refl)
     depend.on_changed(function ()
         -- trace
-        vprint("generating.reflection %s", sourcefile_refl)
+        cprint("${cyan}generating.reflection ${clear}%s", sourcefile_refl)
         -- do merge
         local reflfile = io.open(sourcefile_refl, "w")
         for _, headerfile in ipairs(headerfiles) do
