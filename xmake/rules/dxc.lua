@@ -35,10 +35,10 @@ rule("utils.dxc")
 
         -- add deps
         batchcmds:add_depfiles(sourcefile_hlsl)
-        batchcmds:set_depmtime(os.mtime(spv_outputdir))
-        batchcmds:set_depcache(target:dependfile(spv_outputdir))
-        batchcmds:set_depmtime(os.mtime(dxil_outputdir))
-        batchcmds:set_depcache(target:dependfile(dxil_outputdir))
+        batchcmds:set_depmtime(os.mtime(spvfilepath))
+        batchcmds:set_depcache(target:dependfile(spvfilepath))
+        batchcmds:set_depmtime(os.mtime(dxilfilepath))
+        batchcmds:set_depcache(target:dependfile(dxilfilepath))
     end)
     
     after_build(function(target)
