@@ -63,6 +63,7 @@
 - sole 1.0.1 (zlib License)
 - parallel-hashmap 1.3.4 (Apache-2.0)
 - folly (Apache-2.0)
+- simdjson v1.0.2 (Apache-2.0)
 
 ## 接入的扩展API以及版本
 - nvapi R510
