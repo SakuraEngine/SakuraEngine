@@ -152,7 +152,7 @@ int32_t RenderScene::loadMaterial(struct cgltf_material* src)
     if (src->pbr_metallic_roughness.base_color_texture.texture)
     {
         newMaterial.base_color_uri_ = src->pbr_metallic_roughness.base_color_texture.texture->image->uri;
-        newMaterial.id_in_scene_ = materials_.size();
+        newMaterial.id_in_scene_ = (uint32_t)materials_.size();
     }
     materials_.emplace_back(src->name, newMaterial);
     return (int32_t)materials_.size() - 1;
@@ -456,7 +456,7 @@ void RenderScene::TryAsyncUploadTextures(RenderContext* context, struct AsyncTra
             }
         }
     }
-    context->AcquireResources(textures_to_acquire.data(), textures_to_acquire.size(), nullptr, 0);
+    context->AcquireResources(textures_to_acquire.data(), (uint32_t)textures_to_acquire.size(), nullptr, 0);
     for (uint32_t i = 0; i < gltf_data_->meshes_count; i++)
     {
         auto gltf_mesh = gltf_data_->meshes + i;
