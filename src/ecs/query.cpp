@@ -229,7 +229,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         operation.phase = -1;
         enum
         {
-            OPTIONAL,
+            OPT,
             ALL,
             ANY,
             NONE
@@ -325,7 +325,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             else if (part[i] == '!')
                 selector = NONE;
             else if (part[i] == '?')
-                selector = OPTIONAL;
+                selector = OPT;
             else
             {
                 errorPos = partBegin + i;
