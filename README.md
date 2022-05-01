@@ -64,6 +64,7 @@
 - parallel-hashmap 1.3.4 (Apache-2.0)
 - folly (Apache-2.0)
 - simdjson v1.0.2 (Apache-2.0)
+- bitsery v5.2.2 (MIT)
 
 ## 接入的扩展API以及版本
 - nvapi R510

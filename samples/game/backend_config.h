@@ -15,7 +15,3 @@ config_backend_t
     enum ECGPUBackEnd backend;
 }
 config_backend_t;
-
-struct config_resource_header_t {
-    skr_guid_t configType;
-};

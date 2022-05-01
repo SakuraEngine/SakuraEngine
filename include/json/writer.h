@@ -21,6 +21,7 @@ extern "C" class skr_json_writer_t
 public:
     using TChar = char;
     using TSize = size_t;
+    // TODO: stringstream is slow
     using TStream = std::basic_stringstream<TChar, std::char_traits<TChar>, skr::mi_allocator<TChar>>;
     TStream& _os;
 

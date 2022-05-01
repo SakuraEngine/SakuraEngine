@@ -5,6 +5,8 @@
 
 namespace skr
 {
+namespace asset
+{
 struct reflect SImporter {
     skr_guid_t assetGuid;
     virtual void* Import() = 0;
@@ -14,4 +16,5 @@ struct SImporterFactory {
     virtual skr_guid_t GetResourceType() = 0;
     virtual SImporter* CreateImporter(skr_guid_t assetGuid) = 0;
 };
+} // namespace asset
 } // namespace skr
