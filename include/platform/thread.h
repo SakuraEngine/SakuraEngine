@@ -1,5 +1,6 @@
 #pragma once
 #include "configure.h"
+#include "platform/memory.h"
 
 #if defined(_WIN32) || defined(XBOX)
 typedef unsigned long SThreadID;
