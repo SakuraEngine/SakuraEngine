@@ -37,7 +37,7 @@ void Write(skr_json_writer_t* writer, const ${record.name}& record)
     writer->StartObject();
     %for field in record.fields:
     writer->Key("${field.name}", ${len(field.name)});
-    skr::json::Write(writer, (TParamType<${field.type}>)record.${field.name});
+    skr::json::Write<TParamType<${field.type}>>(writer, record.${field.name});
     %endfor
     writer->EndObject();
 } 
@@ -47,7 +47,7 @@ void Write(skr_json_writer_t* writer, const ${record.name}& record)
 #ifdef __cplusplus
 extern "C" {
 #endif
-void skr_serialize_json_${record.name}(${record.name}* record, skr_json_writer_t* writer) { skr::json::Write(writer, *record); }
+void skr_serialize_json_${record.name}(${record.name}* record, skr_json_writer_t* writer) { skr::json::Write<const ${record.name}&>(writer, *record); }
 #ifdef __cplusplus
 }
 #endif
