@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/configure.h"
+#include "platform/memory.h"
 
 namespace skr
 {

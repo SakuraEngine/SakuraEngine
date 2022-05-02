@@ -347,49 +347,6 @@ typedef int64_t host_ptr_t;
 // By Default we use cpp-standard above 2011XXL
 #define RUNTIME_NOEXCEPT noexcept
 
-// Alloc Configure
-#if !defined(RUNTIME_PLATFORM_WA) && !defined(__APPLE__)
-    #ifdef __cplusplus
-extern "C" {
-    #endif
-RUNTIME_API void* mi_malloc(size_t size);
-RUNTIME_API void* mi_calloc(size_t count, size_t size);
-RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment);
-RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment);
-RUNTIME_API void* mi_new_aligned(size_t size, size_t alignment);
-RUNTIME_API void mi_free(void* p);
-RUNTIME_API void mi_free_aligned(void* p, size_t alignment);
-    #ifdef __cplusplus
-}
-    #endif
-    #define sakura_malloc mi_malloc
-    #define sakura_calloc mi_calloc
-    #define sakura_calloc_aligned mi_calloc_aligned
-    #define sakura_malloc_aligned mi_malloc_aligned
-    #define sakura_new_aligned mi_new_aligned
-    #define sakura_free mi_free
-    #define sakura_free_aligned mi_free_aligned
-#elif defined(RUNTIME_PLATFORM_WA)
-
-#else
-    #include <stdlib.h>
-    #include <string.h>
-FORCEINLINE static void*
-calloc_aligned(size_t count, size_t size, size_t alignment)
-{
-    void* ptr = aligned_alloc(alignment, size * count);
-    memset(ptr, 0, size * count);
-    return ptr;
-}
-    #define sakura_malloc malloc
-    #define sakura_calloc calloc
-    #define sakura_calloc_aligned calloc_aligned
-    #define sakura_malloc_aligned(size, alignment) aligned_alloc((alignment), (size))
-    #define sakura_new_aligned(size, alignment) aligned_alloc((alignment), (size))
-    #define sakura_free free
-    #define sakura_free_aligned free_aligned
-#endif
-
 // Platform Specific Configure
 #ifdef __APPLE__
     #include "apple/configure.h"
@@ -413,11 +370,6 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
 #ifndef THRESH_VECTOR_NORMALIZED
     #define THRESH_VECTOR_NORMALIZED 0.01
 #endif
-
-// TODO: move this anywhere else
-#define USE_DXMATH
-#define TRACY_ENABLE
-#define TRACY_ON_DEMAND
 
 #if SKR_SHIPPING
 // Platform specific, need to be defined in Platform/Defines_XXX.h
@@ -446,23 +398,7 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
     #define SKR_UNREACHABLE_CODE() SKR_TRACE_ASSERT("Unreachable code encountered!\n")
 #endif
 
-#if defined(__cplusplus)
-    #include <type_traits>
-template <typename T, typename... TArgs>
-[[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
-{
-    void* pMemory = sakura_malloc_aligned(sizeof(T), alignof(T));
-    SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) T(std::forward<TArgs>(params)...);
-}
-
-template <typename T>
-FORCEINLINE void SkrDelete(T*& pType)
-{
-    if (pType != nullptr)
-    {
-        pType->~T();
-        sakura_free((void*&)pType);
-    }
-}
-#endif
+// TODO: move this anywhere else
+#define USE_DXMATH
+#define TRACY_ENABLE
+#define TRACY_ON_DEMAND

@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/configure.h"
+#include "platform/memory.h"
 
 #ifdef _CRTDBG_MAP_ALLOC
     #include <crtdbg.h>
