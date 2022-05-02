@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "platform/debug.h"
 
 #if !defined(RUNTIME_PLATFORM_WA) && !defined(__APPLE__)
     #ifdef __cplusplus
