@@ -5,9 +5,9 @@ typedef struct SCallOnceFnWrapper {
 } SCallOnceFnWrapper;
 
 FORCEINLINE static BOOL callOnceImpl(
-    PINIT_ONCE initOnce,
-    PVOID pWrapper,
-    PVOID* ppContext)
+PINIT_ONCE initOnce,
+PVOID pWrapper,
+PVOID* ppContext)
 {
     SCallOnceFn fn = ((SCallOnceFnWrapper*)pWrapper)->fn;
     if (fn)
