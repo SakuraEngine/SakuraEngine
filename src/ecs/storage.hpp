@@ -21,85 +21,80 @@
 
 namespace dual
 {
-    extern fixed_stack_t localStack;
+extern fixed_stack_t localStack;
 
-    // template<class T>
-    // struct blob_ref_T
-    // {
-    //     intptr_t offset;
-    //     size_t count;
-    //     T& resolve(void* store) { return *(T*)((char*)store + offset); }
-    // };
-    // struct storage_delta_t
-    // {
-    //     using array_delta = std::vector<blob_ref_T<char>>;
-    //     struct vector_delta
-    //     {
-    //         size_t length;
-    //         array_delta content;
-    //     };
-    //     using component_delta = std::unique_ptr<array_delta[]>;
-    //     using buffer_delta = std::unique_ptr<std::vector<vector_delta>[]>;
-    //     struct slice_delta
-    //     {
-    //         dual_entity_type_t type;
-    //         blob_ref_T<guid_t> ents;
-    //         component_delta diffs;
-    //         buffer_delta bufferDiffs;
-    //     };
-    //     struct slice_data
-    //     {
-    //         dual_entity_type_t type;
-    //         intptr_t offset;
-    //     };
-    //     std::vector<slice_delta> changed;
-    //     std::vector<slice_data> created;
-    //     std::vector<dual_entity_t> destroyed;
-    //     std::vector<char> store;
-    // };
+// template<class T>
+// struct blob_ref_T
+// {
+//     intptr_t offset;
+//     size_t count;
+//     T& resolve(void* store) { return *(T*)((char*)store + offset); }
+// };
+// struct storage_delta_t
+// {
+//     using array_delta = std::vector<blob_ref_T<char>>;
+//     struct vector_delta
+//     {
+//         size_t length;
+//         array_delta content;
+//     };
+//     using component_delta = std::unique_ptr<array_delta[]>;
+//     using buffer_delta = std::unique_ptr<std::vector<vector_delta>[]>;
+//     struct slice_delta
+//     {
+//         dual_entity_type_t type;
+//         blob_ref_T<guid_t> ents;
+//         component_delta diffs;
+//         buffer_delta bufferDiffs;
+//     };
+//     struct slice_data
+//     {
+//         dual_entity_type_t type;
+//         intptr_t offset;
+//     };
+//     std::vector<slice_delta> changed;
+//     std::vector<slice_data> created;
+//     std::vector<dual_entity_t> destroyed;
+//     std::vector<char> store;
+// };
 
-    template<class T>
-    struct hasher
+template <class T>
+struct hasher {
+    size_t operator()(const T& value) const
     {
-        size_t operator()(const T& value) const
-        {
-            return hash(value);
-        }
-    };
+        return hash(value);
+    }
+};
 
-    template<class T>
-    struct equalto
+template <class T>
+struct equalto {
+    size_t operator()(const T& a, const T& b) const
     {
-        size_t operator()(const T& a, const T& b) const
-        {
-            return equal(a, b);
-        }
-    };
+        return equal(a, b);
+    }
+};
 
-    struct query_cache_hasher
+struct query_cache_hasher {
+    size_t operator()(const dual_filter_t& value) const
     {
-        size_t operator()(const dual_filter_t& value) const
-        {
-            size_t result = hash(value.all);
-            result = hash(value.any, result);
-            result = hash(value.none, result);
-            return result;
-        }
-    };
+        size_t result = hash(value.all);
+        result = hash(value.any, result);
+        result = hash(value.none, result);
+        return result;
+    }
+};
 
-    struct query_cache_equal
+struct query_cache_equal {
+    bool operator()(const dual_filter_t& a, const dual_filter_t& b) const
     {
-        bool operator()(const dual_filter_t& a, const dual_filter_t& b) const
-        {
-            return equal(a.all, b.all) && equal(a.any, b.any) && equal(a.none, b.none);
-        }
-    };
+        return equal(a.all, b.all) && equal(a.any, b.any) && equal(a.none, b.none);
+    }
+};
 
-    struct scheduler_t;
-}
+struct scheduler_t;
+} // namespace dual
 
-extern "C" struct dual_storage_t
-{
+struct dual_storage_t {
     using query_cache_t = dual::query_cache_t;
     using archetype_t = dual::archetype_t;
     using serializer_t = dual::serializer_t;
@@ -111,7 +106,7 @@ extern "C" struct dual_storage_t
     queries_t queries;
     groups_t groups;
     query_caches_t queryCaches;
-    dual::block_arena_t arena;        
+    dual::block_arena_t arena;
     dual::block_arena_t queryBuildArena;
     dual::fixed_pool_t groupPool;
     dual::entity_registry_t entities;
@@ -140,7 +135,6 @@ extern "C" struct dual_storage_t
 
     bool components_enabled(const dual_entity_t src, const dual_type_set_t& type);
     bool exist(dual_entity_t e) const noexcept;
-
 
     using batchmap_t = phmap::flat_hash_map<dual_chunk_t*, dual_chunk_view_t>;
     void destroy(const dual_chunk_view_t& view);

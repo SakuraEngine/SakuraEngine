@@ -2,7 +2,7 @@
 #include "resource/resource_factory.h"
 #include "type/type_registry.h"
 
-extern "C" struct reflect attr("guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74")
+struct reflect attr("guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74")
 skr_config_resource_t
 {
     skr_type_id_t configType;
