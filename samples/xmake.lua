@@ -32,7 +32,7 @@ target("cgpu-3d")
 target("game")
     -- cxx reflection
     add_rules("c++.reflection", {
-        files = {"game/*.h", "game/*.hpp"},
+        files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
     set_kind("binary")

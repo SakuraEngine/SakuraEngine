@@ -28,9 +28,7 @@
 #endif
 #include "windows.h"
 #if !SKR_SHIPPING
-    #include "utils/macros.h"
-    #define SKR_DISABLE_OPTIMIZATION __pragma(optimize("", off))
-    #define SKR_ENABLE_OPTIMIZATION __pragma(optimize("", on))
+    #include "platform/macros.h"
 
     #define SKR_TRACE_MSG(msg)   \
         OutputDebugStringA(msg); \

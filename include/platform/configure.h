@@ -27,6 +27,14 @@
     #define SAKURA_RUNTIME_OS_UNIX
 #endif
 
+#if defined(_MSC_VER)
+    #define SKR_DISABLE_OPTIMIZATION __pragma(optimize("", off))
+    #define SKR_ENABLE_OPTIMIZATION __pragma(optimize("", on))
+#elif defined(__clang__)
+    #define SKR_DISABLE_OPTIMIZATION #pragma clang optimize off
+    #define SKR_ENABLE_OPTIMIZATION #pragma clang optimize on
+#endif
+
 #if defined(__APPLE__) && defined(__MACH__)
 /* Apple OSX and iOS (Darwin). */
     #include <TargetConditionals.h>
@@ -433,7 +441,7 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
 #endif
 
 #if defined(__cplusplus)
-
+    #include <type_traits>
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
 {
@@ -448,7 +456,7 @@ FORCEINLINE void SkrDelete(T*& pType)
     if (pType != nullptr)
     {
         pType->~T();
-        Free((void*&)pType);
+        sakura_free((void*&)pType);
     }
 }
 #endif
