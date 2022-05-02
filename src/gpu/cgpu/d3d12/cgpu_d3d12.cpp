@@ -939,6 +939,61 @@ void cgpu_free_render_pipeline_d3d12(CGPURenderPipelineId pipeline)
     cgpu_delete(PPL);
 }
 
+D3D12_QUERY_TYPE D3D12Util_ToD3D12QueryType(ECGPUQueryType type)
+{
+    switch (type)
+    {
+        case CGPU_QUERY_TYPE_TIMESTAMP:
+            return D3D12_QUERY_TYPE_TIMESTAMP;
+        case CGPU_QUERY_TYPE_PIPELINE_STATISTICS:
+            return D3D12_QUERY_TYPE_PIPELINE_STATISTICS;
+        case CGPU_QUERY_TYPE_OCCLUSION:
+            return D3D12_QUERY_TYPE_OCCLUSION;
+        default:
+            cgpu_assert(false && "Invalid query heap type");
+            return D3D12_QUERY_TYPE_OCCLUSION;
+    }
+}
+
+D3D12_QUERY_HEAP_TYPE D3D12Util_ToD3D12QueryHeapType(ECGPUQueryType type)
+{
+    switch (type)
+    {
+        case CGPU_QUERY_TYPE_TIMESTAMP:
+            return D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
+        case CGPU_QUERY_TYPE_PIPELINE_STATISTICS:
+            return D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS;
+        case CGPU_QUERY_TYPE_OCCLUSION:
+            return D3D12_QUERY_HEAP_TYPE_OCCLUSION;
+        default:
+            cgpu_assert(false && "Invalid query heap type");
+            return D3D12_QUERY_HEAP_TYPE_OCCLUSION;
+    }
+}
+
+CGPUQueryPoolId cgpu_create_query_pool_d3d12(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc)
+{
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    CGPUQueryPool_D3D12* pQueryPool = cgpu_new<CGPUQueryPool_D3D12>();
+    pQueryPool->mType = D3D12Util_ToD3D12QueryType(desc->type);
+    pQueryPool->super.count = desc->query_count;
+
+    D3D12_QUERY_HEAP_DESC Desc = {};
+    Desc.Count = desc->query_count;
+    Desc.NodeMask = SINGLE_GPU_NODE_MASK;
+    Desc.Type = D3D12Util_ToD3D12QueryHeapType(desc->type);
+    D->pDxDevice->CreateQueryHeap(&Desc, IID_ARGS(&pQueryPool->pDxQueryHeap));
+
+    return &pQueryPool->super;
+}
+
+void cgpu_free_query_pool_d3d12(CGPUQueryPoolId pool)
+{
+    CGPUQueryPool_D3D12* QP = (CGPUQueryPool_D3D12*)pool;
+    SAFE_RELEASE(QP->pDxQueryHeap);
+    cgpu_delete(QP);
+}
+
 // Queue APIs
 CGPUQueueId cgpu_get_queue_d3d12(CGPUDeviceId device, ECGPUQueueType type, uint32_t index)
 {
@@ -1033,6 +1088,17 @@ void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDe
 #endif
         cgpu_error("Failed to present swapchain render target!");
     }
+}
+
+float cgpu_queue_get_timestamp_period_ns_d3d12(CGPUQueueId queue)
+{
+    CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
+    UINT64 freq = 0;
+    // ticks per second
+    Q->pCommandQueue->GetTimestampFrequency(&freq);
+    // ns per tick
+    const double ms_period = 1e9 / (double)freq;
+    return ms_period;
 }
 
 void cgpu_free_queue_d3d12(CGPUQueueId queue)
@@ -1251,6 +1317,44 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
     }
     if (transitionCount)
         Cmd->pDxCmdList->ResourceBarrier(transitionCount, barriers);
+}
+
+void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc)
+{
+    auto Cmd = (CGPUCommandBuffer_D3D12*)cmd;
+    auto pQueryPool = (CGPUQueryPool_D3D12*)pool;
+    D3D12_QUERY_TYPE type = pQueryPool->mType;
+    switch (type)
+    {
+        case D3D12_QUERY_TYPE_OCCLUSION:
+        case D3D12_QUERY_TYPE_PIPELINE_STATISTICS:
+        case D3D12_QUERY_TYPE_BINARY_OCCLUSION:
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM0:
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM1:
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM2:
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM3:
+            break;
+        case D3D12_QUERY_TYPE_TIMESTAMP:
+            Cmd->pDxCmdList->EndQuery(pQueryPool->pDxQueryHeap, type, desc->index);
+            break;
+    }
+}
+
+void cgpu_cmd_end_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc)
+{
+    cgpu_cmd_begin_query(cmd, pool, desc);
+}
+
+void cgpu_cmd_reset_query_pool_d3d12(CGPUCommandBufferId, CGPUQueryPoolId, uint32_t, uint32_t) {}
+
+void cgpu_cmd_resolve_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count)
+{
+    auto Cmd = (CGPUCommandBuffer_D3D12*)cmd;
+    auto pQueryPool = (CGPUQueryPool_D3D12*)pool;
+    auto pReadbackBuffer = (CGPUBuffer_D3D12*)readback;
+    Cmd->pDxCmdList->ResolveQueryData(
+    pQueryPool->pDxQueryHeap, pQueryPool->mType, start_query, query_count,
+    pReadbackBuffer->pDxResource, start_query * 8);
 }
 
 void cgpu_cmd_end_d3d12(CGPUCommandBufferId cmd)
