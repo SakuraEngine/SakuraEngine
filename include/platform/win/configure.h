@@ -26,9 +26,8 @@
 #if !SKR_SHIPPING
     #include "platform/macros.h"
 
-    #define SKR_TRACE_MSG(msg)   \
-        OutputDebugStringA(msg); \
-        OutputDebugStringA("\r\n")
+    #define SKR_TRACE_MSG(msg) \
+        skr_debug_output(msg);
     #define SKR_ASSERT(cond)                                                      \
         do                                                                        \
         {                                                                         \
