@@ -1,4 +1,9 @@
 #include "type/type_registry.h"
+#include "fmt/core.h"
+#include "fmt/format.h"
+#include "utils/hash.h"
+#include "utils/format.hpp"
+#include <charconv>
 
 namespace skr
 {
@@ -161,7 +166,6 @@ size_t skr_type_t::Align() const
     }
     return 0;
 }
-
 eastl::string skr_type_t::Name() const
 {
     using namespace skr::type;
@@ -187,26 +191,26 @@ eastl::string skr_type_t::Name() const
             return "eastl::string_view";
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (ArrayType&)(*this);
-            return "{}[{}]" SKR_TYPE_CATEGORY_OBJ.format(arr.elementType->Name(), (int)arr.num);
+            return format("{}[{}]", arr.elementType->Name(), (int)arr.num);
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
             auto& arr = (DynArrayType&)(*this);
-            return "eastl::vector<{}>" SKR_TYPE_CATEGORY_OBJ.format(arr.elementType->Name());
+            return format("eastl::vector<{}>", arr.elementType->Name());
         }
         case SKR_TYPE_CATEGORY_ARRV: {
             auto& arr = (ArrayViewType&)(*this);
-            return "gsl::span<{}>" SKR_TYPE_CATEGORY_OBJ.format(arr.elementType->Name());
+            return format("gsl::span<{}>", arr.elementType->Name());
         }
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->name;
+            return eastl::string(((RecordType*)this)->name);
         case SKR_TYPE_CATEGORY_ENUM:
-            return ((EnumType*)this)->name;
+            return eastl::string(((EnumType*)this)->name);
         case SKR_TYPE_CATEGORY_REF: {
             auto& ref = (ReferenceType&)(*this);
             switch (ref.ownership)
             {
                 case ReferenceType::Observed:
-                    return "std::shared_ptr<{}>" SKR_TYPE_CATEGORY_OBJ.format(ref.pointee->Name());
+                    return format("std::shared_ptr<{}>", ref.pointee->Name());
                 case ReferenceType::Shared:
                     return ref.pointee->Name() + " *";
             }
@@ -415,7 +419,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
     return false;
 }
 
-void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, struct ValueSerializePolicy* policy) const
+void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy) const
 {
     using namespace skr::type;
     if (Same(srcType))
@@ -785,37 +789,29 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
     }
 }
 
-eastl::string skr_type_t::ToString(const void* dst, ValueSerializePolicy* policy) const
+eastl::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolicy* policy) const
 {
     using namespace skr::type;
     if (policy)
         return policy->format(policy, dst, this);
     else
     {
-        std::u16string string;
         switch (type)
         {
             case SKR_TYPE_CATEGORY_BOOL:
-                eastl::ofmt::to_string((int)*(bool*)dst, "", string);
-                return string;
+                return *(bool*)dst == true ? "true" : "false";
             case SKR_TYPE_CATEGORY_I32:
-                eastl::ofmt::to_string((int)*(int32_t*)dst, "", string);
-                return string;
+                return format("{}", *(int32_t*)dst);
             case SKR_TYPE_CATEGORY_I64:
-                eastl::ofmt::to_string((int)*(int64_t*)dst, "", string);
-                return string;
+                return format("{}", *(int64_t*)dst);
             case SKR_TYPE_CATEGORY_U32:
-                eastl::ofmt::to_string((int)*(uint32_t*)dst, "", string);
-                return string;
+                return format("{}", *(uint32_t*)dst);
             case SKR_TYPE_CATEGORY_U64:
-                eastl::ofmt::to_string((int)*(uint64_t*)dst, "", string);
-                return string;
+                return format("{}", *(uint64_t*)dst);
             case SKR_TYPE_CATEGORY_F32:
-                eastl::ofmt::to_string(*(float*)dst, "", string);
-                return string;
+                return format("{}", *(float*)dst);
             case SKR_TYPE_CATEGORY_F64:
-                eastl::ofmt::to_string((float)*(double*)dst, "", string);
-                return string;
+                return format("{}", *(double*)dst);
             case SKR_TYPE_CATEGORY_ENUM:
                 return ((const EnumType*)this)->ToString(dst);
             default:
@@ -825,7 +821,7 @@ eastl::string skr_type_t::ToString(const void* dst, ValueSerializePolicy* policy
     }
 }
 
-void skr_type_t::FromString(void* dst, eastl::string_view str, ValueSerializePolicy* policy) const
+void skr_type_t::FromString(void* dst, eastl::string_view str, skr::type::ValueSerializePolicy* policy) const
 {
     using namespace skr::type;
     if (policy)
@@ -835,21 +831,32 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, ValueSerializePol
         switch (type)
         {
             case SKR_TYPE_CATEGORY_BOOL:
-                *(bool*)dst = str.to_bool();
+                if (str.compare("true") == 0)
+                    *(bool*)dst = true;
+                else
+                    *(bool*)dst = false;
+                break;
             case SKR_TYPE_CATEGORY_I32:
-                *(int32_t*)dst = str.to_int();
+                std::from_chars(str.begin(), str.end(), *(int32_t*)dst);
+                break;
             case SKR_TYPE_CATEGORY_I64:
-                *(int64_t*)dst = str.to_int();
+                std::from_chars(str.begin(), str.end(), *(int64_t*)dst);
+                break;
             case SKR_TYPE_CATEGORY_U32:
-                *(uint32_t*)dst = str.to_int();
+                std::from_chars(str.begin(), str.end(), *(uint32_t*)dst);
+                break;
             case SKR_TYPE_CATEGORY_U64:
-                *(uint64_t*)dst = str.to_int();
+                std::from_chars(str.begin(), str.end(), *(uint64_t*)dst);
+                break;
             case SKR_TYPE_CATEGORY_F32:
-                *(float*)dst = str.to_float();
+                std::from_chars(str.begin(), str.end(), *(float*)dst);
+                break;
             case SKR_TYPE_CATEGORY_F64:
-                *(double*)dst = str.to_float();
+                std::from_chars(str.begin(), str.end(), *(double*)dst);
+                break;
             case SKR_TYPE_CATEGORY_ENUM:
                 ((const EnumType*)this)->FromString(dst, str);
+                break;
             default:
                 break;
         }
@@ -858,35 +865,44 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, ValueSerializePol
 
 size_t Hash(bool value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    uint8_t v = value;
+    return skr_hash(&value, 1, base);
 }
 size_t Hash(int32_t value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(int64_t value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(uint32_t value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(uint64_t value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(float value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(double value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(void* value, size_t base)
 {
-    return Fnv1a_append_value(base, value);
+    return skr_hash((void*)&value, sizeof(value), base);
+}
+size_t Hash(const eastl::string& value, size_t base)
+{
+    return skr_hash(value.data(), value.size(), base);
+}
+size_t Hash(const eastl::string_view& value, size_t base)
+{
+    return skr_hash(value.data(), value.size(), base);
 }
 
 template <class T>
@@ -915,9 +931,9 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
         case SKR_TYPE_CATEGORY_F64:
             return HashImpl<double>(dst, base);
         case SKR_TYPE_CATEGORY_STR:
-            return (*(eastl::string*)dst).get_hash();
+            return HashImpl<eastl::string>(dst, base);
         case SKR_TYPE_CATEGORY_STRV:
-            return (*(eastl::string_view*)dst).get_hash();
+            return HashImpl<eastl::string_view>(dst, base);
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
             switch (enm.underlyingType->type)
@@ -999,7 +1015,7 @@ void skr_type_t::Destruct(void* address) const
                 obj.nativeMethods.dtor(address);
         }
         case SKR_TYPE_CATEGORY_STR: {
-            ((eastl::string*)address)->~string();
+            ((eastl::string*)address)->~basic_string();
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
@@ -1259,7 +1275,7 @@ void skr_type_t::Delete()
     }
 }
 
-bool RecordType::IsBaseOf(const RecordType& other) const
+bool skr::type::RecordType::IsBaseOf(const RecordType& other) const
 {
 
     for (auto ptr = other.base; ptr; ptr = base->base)

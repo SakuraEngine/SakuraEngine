@@ -431,3 +431,24 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
     #define SKR_UNIMPLEMENTED_FUNCTION() SKR_TRACE_ASSERT("Function not implemented!\n")
     #define SKR_UNREACHABLE_CODE() SKR_TRACE_ASSERT("Unreachable code encountered!\n")
 #endif
+
+#if defined(__cplusplus)
+
+template <typename T, typename... TArgs>
+[[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
+{
+    void* pMemory = sakura_malloc_aligned(sizeof(T), alignof(T));
+    SKR_ASSERT(pMemory != nullptr);
+    return new (pMemory) T(std::forward<TArgs>(params)...);
+}
+
+template <typename T>
+FORCEINLINE void SkrDelete(T*& pType)
+{
+    if (pType != nullptr)
+    {
+        pType->~T();
+        Free((void*&)pType);
+    }
+}
+#endif
