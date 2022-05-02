@@ -72,9 +72,11 @@ end
 function find_program(name, sdkdir, use_which)
     import("lib.detect.find_file")
     import("lib.detect.find_program")
+    import("lib.detect.find_tool")
 
     local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
-    local prog = find_program(name, {pathes = {sdkdir, "/usr/local/bin"}})
+    local tool = find_tool(name, {pathes = {sdkdir, "/usr/local/bin"}})
+    local prog = tool and tool.program or find_program(name, {pathes = {sdkdir, "/usr/local/bin"}})
     if(prog == nil) then
         if(os.host() ~= "windows" and use_which ~= nil and use_which == true) then
             local outdata, errdata = os.iorun("which "..name)
