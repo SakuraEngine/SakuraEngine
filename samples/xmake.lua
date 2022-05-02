@@ -1,3 +1,5 @@
+set_project("Sakura.Samples")
+
 target("rg-deferred")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-deferred",

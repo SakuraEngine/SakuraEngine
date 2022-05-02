@@ -1,4 +1,4 @@
-set_project("SakuraRuntime")
+set_project("Sakura.Runtime")
 
 add_rules("mode.debug", "mode.release")
 add_moduledirs("xmake/modules")
@@ -8,14 +8,12 @@ option("build_samples")
     set_showmenu(true)
     set_description("Toggle to build samples of SakuraRuntime")
 option_end()
-add_options("build_samples")
 
 option("build_tests")
     set_default(true)
     set_showmenu(true)
     set_description("Toggle to build tests of SakuraRuntime")
 option_end()
-add_options("build_tests")
 
 set_languages("c11", "cxx17")
 
@@ -78,6 +76,7 @@ target("SkrRT")
     add_links("m3", "uv_a", "uvwasi_a")
 target_end()
 
+includes("tools/xmake.lua")
 if(has_config("build_samples")) then
     includes("samples/xmake.lua")
 end
