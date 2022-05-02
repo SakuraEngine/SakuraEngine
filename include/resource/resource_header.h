@@ -14,12 +14,12 @@ typedef struct skr_resource_header_t skr_resource_header_t;
 
 #if defined(__cplusplus)
     #include "bitsery/brief_syntax.h"
-    #include "bitsery/ext/growable.h"
+    #include "utils/serialize.hpp"
     #include "EASTL/fixed_vector.h"
 
 typedef struct skr_resource_header_t {
-    skr_guid_t guid;
     uint32_t version;
+    skr_guid_t guid;
     skr_type_id_t type;
     eastl::fixed_vector<skr_guid_t, 4> dependencies;
 } skr_resource_header_t;
@@ -31,9 +31,9 @@ void serialize(S& s, skr_resource_header_t& header)
     uint32_t version = 0; // version of this function
     s.value4b(version);
     s.value4b(header.version);
-    s.value16b(header.guid);
-    s.value16b(header.type);
-    s.container16b(header.dependencies);
+    s.object(header.guid);
+    s.object(header.type);
+    s.container(header.dependencies, 1024);
 }
 } // namespace bitsery
 #endif

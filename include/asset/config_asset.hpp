@@ -8,10 +8,10 @@ namespace skr
 namespace asset
 {
 struct reflect
-SJsonConfigImporter : public SImporter {
+SJsonConfigImporter final : public SImporter {
     void* Import() override;
 };
-struct SJsonConfigImporterFactory : public SImporterFactory {
+struct SJsonConfigImporterFactory final : public SImporterFactory {
     void CanImport(skr_guid_t assetGuid) override;
     skr_guid_t GetResourceType() override;
     SImporter* CreateImporter(skr_guid_t assetGuid) override;

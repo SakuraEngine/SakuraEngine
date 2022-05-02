@@ -1,7 +1,6 @@
 #pragma once
 #include "platform/guid.h"
 #include "platform/configure.h"
-#include <type_traits>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -31,20 +30,6 @@ typedef enum skr_type_category_t
     SKR_TYPE_CATEGORY_REF,
 } skr_type_category_t;
 
-typedef struct skr_any_t {
-    skr_type_t* type;
-    union
-    {
-        void* _ptr;
-        uint8_t _smallObj[24];
-    };
-} skr_any_t;
-
-typedef struct skr_any_ref_t {
-    skr_type_t* type;
-    void* _ptr;
-} skr_any_ref_t;
-
 skr_type_t* skr_get_type(const skr_type_id_t* id);
 void skr_get_derived_types(const skr_type_t* type, void (*callback)(void* u, skr_type_t* type), void* u);
 void skr_get_type_id(const skr_type_t* type, skr_type_id_t* id);
@@ -69,6 +54,16 @@ void skr_typeid_xxxx(skr_type_id_t* id);
     #include "gsl/span"
     #include "EASTL/vector.h"
     #include <memory>
+    #include <type_traits>
+    #include <new>
+
+namespace skr
+{
+namespace type
+{
+struct ValueSerializePolicy;
+}
+} // namespace skr
 
 extern "C" struct RUNTIME_API skr_type_t {
     skr_type_category_t type;
@@ -77,9 +72,9 @@ extern "C" struct RUNTIME_API skr_type_t {
     eastl::string Name() const;
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
-    void Convert(void* dst, const void* src, const skr_type_t* srcType, struct ValueSerializePolicy* policy = nullptr) const;
-    eastl::string ToString(const void* dst, struct ValueSerializePolicy* policy = nullptr) const;
-    void FromString(void* dst, eastl::string_view str, struct ValueSerializePolicy* policy = nullptr) const;
+    void Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    eastl::string ToString(const void* dst, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    void FromString(void* dst, eastl::string_view str, skr::type::ValueSerializePolicy* policy = nullptr) const;
     size_t Hash(const void* dst, size_t base) const;
     // lifetime operator
     void Destruct(void* dst) const;
@@ -251,13 +246,13 @@ struct RecordType : skr_type_t {
     const eastl::string_view name;
     const RecordType* base;
     ObjectMethodTable nativeMethods;
-    const gsl::span<struct Field> fields;
-    const gsl::span<struct Method> methods;
+    const gsl::span<struct skr_field_t> fields;
+    const gsl::span<struct skr_method_t> methods;
     bool IsBaseOf(const RecordType& other) const;
     static const RecordType* FromName(eastl::string_view name);
     static void Register(const RecordType* type);
     RecordType(size_t size, size_t align, eastl::string_view name, const RecordType* base, ObjectMethodTable nativeMethods,
-    const gsl::span<struct Field> fields, const gsl::span<struct Method> methods)
+    const gsl::span<struct skr_field_t> fields, const gsl::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
         , size(size)
         , align(align)
@@ -320,7 +315,7 @@ template <class T>
 struct type_of<const T> {
     static const skr_type_t* Get()
     {
-        return type_of<T>::Get();
+        return type_of<T>::get();
     }
 };
 
@@ -328,7 +323,7 @@ template <class T>
 struct type_of<volatile T> {
     static const skr_type_t* Get()
     {
-        return type_of<T>::Get();
+        return type_of<T>::get();
     }
 };
 
@@ -339,7 +334,7 @@ struct type_of<T*> {
         static ReferenceType type{
             ReferenceType::Observed,
             true,
-            type_of<T>::Get()
+            type_of<T>::get()
         };
         return &type;
     }
@@ -352,7 +347,7 @@ struct type_of<T&> {
         static ReferenceType type{
             ReferenceType::Observed,
             false,
-            type_of<T>::Get()
+            type_of<T>::get()
         };
         return &type;
     }
@@ -365,7 +360,7 @@ struct type_of<std::shared_ptr<T>> {
         static ReferenceType type{
             ReferenceType::Shared,
             true,
-            type_of<T>::Get()
+            type_of<T>::get()
         };
         return &type;
     }
@@ -376,7 +371,7 @@ struct type_of_vector {
     static const skr_type_t* Get()
     {
         static DynArrayType type{
-            type_of<T>::Get(),
+            type_of<T>::get(),
             DynArrayMethodTable{
             +[](void* self) { ((V*)(self))->~vector(); },                                                                              // dtor
             +[](void* self) { new (self) V(); },                                                                                       // ctor
@@ -404,7 +399,7 @@ struct type_of<T[num]> {
     static const skr_type_t* Get()
     {
         static ArrayType type{
-            type_of<T>::Get(),
+            type_of<T>::get(),
             num,
             sizeof(T[num])
         };
@@ -418,9 +413,356 @@ struct type_of<gsl::span<T, size>> {
     {
         static_assert(size == -1, "only dynamic extent is supported.");
         static ArrayViewType type{
-            type_of<T>::Get()
+            type_of<T>::get()
         };
         return &type;
+    }
+};
+
+struct RUNTIME_API alignas(16) Value {
+    const skr_type_t* type;
+    union
+    {
+        void* _ptr;
+        uint8_t _smallObj[24];
+    };
+
+    static constexpr size_t smallSize = sizeof(_smallObj);
+
+    Value();
+    Value(Value&& other);
+    Value(const Value& other);
+
+    Value& operator=(Value&& other);
+    Value& operator=(const Value& other);
+
+    operator bool() const { return HasValue(); }
+
+    bool HasValue() const { return type != nullptr; }
+
+    template <class T, class... Args>
+    std::enable_if_t<!std::is_reference_v<T> && std::is_constructible_v<T, Args...>, void>
+    Emplace(Args&&... args)
+    {
+        Reset();
+        type = type_of<T>::get();
+        void* ptr = _Alloc();
+        new (ptr) T(std::forward<Args>(args)...);
+    }
+
+    template <class T, class V>
+    std::enable_if_t<std::is_reference_v<T>, void>
+    Emplace(const V& v)
+    {
+        Reset();
+        type = type_of<T>::get();
+        void* ptr = _Alloc();
+        *(std::remove_reference_t<T>**)ptr = &(V&)v;
+    }
+
+    template <class T>
+    bool Is() const
+    {
+        return type_of<T>::get() == type;
+    }
+
+    template <class T>
+    T& As()
+    {
+        return *(T*)Ptr();
+    }
+
+    template <class T>
+    bool Convertible() const
+    {
+        if (!type)
+            return false;
+        return type_of<T>::get()->Convertible(type);
+    }
+
+    template <class T>
+    T Convert()
+    {
+        std::aligned_storage_t<sizeof(T), alignof(T)> storage;
+        type_of<T>::get()->Convert(&storage, Ptr(), type);
+        return std::move(*std::launder(reinterpret_cast<T*>(&storage)));
+    }
+
+    void* Ptr();
+    const void* Ptr() const;
+
+    size_t Hash() const;
+    eastl::string ToString() const;
+
+    void Reset();
+
+    ~Value() { Reset(); }
+
+private:
+    void* _Alloc();
+    void _Copy(const Value& other);
+    void _Move(Value&& other);
+};
+
+struct RUNTIME_API ValueRef {
+    void* ptr = nullptr;
+    const skr_type_t* type = nullptr;
+    ValueRef() = default;
+    template <class T>
+    ValueRef(T& t)
+        : ptr(&t)
+        , type(type_of<T>::get())
+    {
+    }
+    ValueRef(Value& v)
+        : ptr(v.Ptr())
+        , type(v.type)
+    {
+    }
+    ValueRef(ValueRef&& other) = default;
+    ValueRef(ValueRef& other)
+        : ptr(other.ptr)
+        , type(other.type)
+    {
+    }
+    ValueRef(const ValueRef& other)
+        : ptr(other.ptr)
+        , type(other.type)
+    {
+    }
+    ValueRef& operator=(const ValueRef& other)
+    {
+        ptr = other.ptr;
+        type = other.type;
+        return *this;
+    }
+    ValueRef& operator=(ValueRef& other)
+    {
+        ptr = other.ptr;
+        type = other.type;
+        return *this;
+    }
+    ValueRef& operator=(ValueRef&& other) = default;
+    template <class T>
+    ValueRef& operator=(T& t)
+    {
+        ptr = (void*)&t;
+        type = type_of<T>::get();
+        return *this;
+    }
+    bool operator==(const ValueRef& other)
+    {
+        return ptr == other.ptr && type == other.type;
+    }
+    bool operator!=(const ValueRef& other)
+    {
+        return !((*this) == other);
+    }
+    operator bool() const { return HasValue(); }
+    bool HasValue() const { return type != nullptr; }
+    template <class T>
+    bool Is() const
+    {
+        return type_of<T>::get() == type;
+    }
+    template <class T>
+    T& As()
+    {
+        return *(T*)ptr;
+    }
+    template <class T>
+    bool Convertible() const
+    {
+        if (!type)
+            return false;
+        return type_of<T>::get()->Convertible(type);
+    }
+
+    template <class T>
+    T Convert()
+    {
+        std::aligned_storage_t<sizeof(T), alignof(T)> storage;
+        type_of<T>::get()->Convert(&storage, ptr, type);
+        return std::move(*std::launder(reinterpret_cast<T*>(&storage)));
+    }
+
+    size_t Hash() const;
+    eastl::string ToString() const;
+    void Reset();
+    ~ValueRef() { Reset(); }
+};
+
+} // namespace type
+} // namespace skr
+extern "C" struct skr_field_t {
+    eastl::string_view name;
+    const skr_type_t* type;
+    size_t offset;
+};
+
+extern "C" struct skr_method_t {
+    eastl::string_view name;
+    const skr_type_t* retType;
+    const skr_field_t* parameters;
+    Value (*execute)(void* self, Value* args, size_t nargs);
+};
+
+namespace skr
+{
+namespace type
+{
+struct ValueSerializePolicy {
+    eastl::string (*format)(void* self, const void* data, const struct skr_type_t* type);
+    void (*parse)(void* self, eastl::string_view str, void* data, const struct skr_type_t* type);
+};
+
+/*
+struct Serializer
+{
+    void BeginSerialize();
+    eastl::string EndSerialize();
+    void BeginDeserialize(eastl::string_view str);
+    void EndDeserialize();
+    void Raw(eastl::string_view);
+    void Bool(bool&);
+    void Int32(int32_t&);
+    ....
+    bool Defined(const RecordType*);
+    void Object(void* data, const RecordType*);
+    void BeginObject(const RecordType* type);
+    void EndObject();
+    void BeginField(const skr_field_t* field);
+    void EndField();
+    void BeginArray(); void EndArray();
+};
+*/
+template <class Serializer>
+struct TValueSerializePolicy : ValueSerializePolicy {
+    Serializer s;
+    TValueSerializePolicy(Serializer s)
+        : s(s)
+    {
+        format = +[](void* self, const void* data, const struct skr_type_t* type) {
+            auto& s = ((TValueSerializePolicy*)self)->s;
+            s.BeginSerialize();
+            serializeImpl(&s, data, type);
+            return s.EndSerialize();
+        };
+        parse = +[](void* self, eastl::string_view str, void* data, const struct skr_type_t* type) {
+            auto& s = ((TValueSerializePolicy*)self)->s;
+            s.BeginDeserialize(str);
+            serializeImpl(&s, data, type);
+            s.EndSerialize();
+        };
+    }
+
+    static void serializeImpl(void* self, void* data, const struct skr_type_t* type)
+    {
+        auto& ctx = *(Serializer*)self;
+        switch (type->type)
+        {
+            case SKR_TYPE_CATEGORY_BOOL:
+                ctx.Bool(*(bool*)data);
+                break;
+            case SKR_TYPE_CATEGORY_I32:
+                ctx.Int32(*(int32_t*)data);
+                break;
+            case SKR_TYPE_CATEGORY_I64:
+                ctx.Int64(*(int64_t*)data);
+                break;
+            case SKR_TYPE_CATEGORY_U32:
+                ctx.UInt32(*(uint32_t*)data);
+                break;
+            case SKR_TYPE_CATEGORY_U64:
+                ctx.UInt64(*(uint64_t*)data);
+                break;
+            case SKR_TYPE_CATEGORY_F32:
+                ctx.Float32(*(float*)data);
+                break;
+            case SKR_TYPE_CATEGORY_F64:
+                ctx.Float64(*(double*)data);
+                break;
+            case SKR_TYPE_CATEGORY_STR:
+                ctx.String(*(eastl::string*)data);
+                break;
+            case SKR_TYPE_CATEGORY_STRV:
+                ctx.StringView(*(eastl::string_view*)data);
+                break;
+            case SKR_TYPE_CATEGORY_ARR: {
+                ctx.BeginArray();
+                auto& arr = (const ArrayType&)(*type);
+                auto element = arr.elementType;
+                auto d = (char*)data;
+                auto size = element->Size();
+                for (int i = 0; i < arr.num; ++i)
+                    formatImpl(&ctx, d + i * size, element);
+                ctx.EndArray();
+                break;
+            }
+            case SKR_TYPE_CATEGORY_DYNARR: {
+                ctx.BeginArray();
+                auto& arr = (const DynArrayType&)(*type);
+                auto element = arr.elementType;
+                auto d = (char*)arr.operations.data(data);
+                auto n = arr.operations.size(data);
+                auto size = element->Size();
+                for (int i = 0; i < n; ++i)
+                    formatImpl(&ctx, d + i * size, element);
+                ctx.EndArray();
+                break;
+            }
+            case SKR_TYPE_CATEGORY_ARRV: {
+                ctx.BeginArray();
+                auto& arr = (const ArrayViewType&)(*type);
+                auto& element = arr.elementType;
+                auto size = element->Size();
+                auto v = *(gsl::span<char>*)data;
+                auto n = v.size();
+                auto d = v.data();
+                for (int i = 0; i < n; ++i)
+                    formatImpl(&ctx, d + i * size, element);
+                ctx.EndArray();
+                break;
+            }
+            case SKR_TYPE_CATEGORY_OBJ: {
+                auto obj = (const RecordType*)type;
+                if (ctx.Defined(obj)) // object can be predefined
+                {
+                    ctx.Object((const RecordType*)type, data);
+                }
+                else
+                {
+                    ctx.BeginObject(obj);
+                    auto d = (char*)data;
+                    for (const auto& field : obj->fields)
+                    {
+                        ctx.BeginField(field);
+                        formatImpl(&ctx, d + field.offset, field.type);
+                        ctx.EndField();
+                    }
+                    ctx.EndObject();
+                }
+            }
+            case SKR_TYPE_CATEGORY_ENUM: {
+                auto enm = (const EnumType*)type;
+                ctx.Raw(enm->ToString(data));
+            }
+            case SKR_TYPE_CATEGORY_REF: {
+                void* address;
+                switch (((const ReferenceType*)type)->ownership)
+                {
+                    case ReferenceType::Observed:
+                        address = *(void**)data;
+                        break;
+                    case ReferenceType::Shared:
+                        address = (*(std::shared_ptr<void>*)data).get();
+                        break;
+                }
+                // TODO: 可选是否递归序列化
+                ctx.Reference(address);
+                break;
+            }
+        }
     }
 };
 } // namespace type
