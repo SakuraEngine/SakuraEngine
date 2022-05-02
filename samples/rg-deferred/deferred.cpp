@@ -19,7 +19,7 @@ thread_local CGPUFenceId present_fence;
 CubeGeometry::InstanceData CubeGeometry::instance_data;
 
 #if _WIN32
-thread_local ECGPUBackend backend = CGPU_BACKEND_VULKAN;
+thread_local ECGPUBackend backend = CGPU_BACKEND_D3D12;
 #else
 thread_local ECGPUBackend backend = CGPU_BACKEND_VULKAN;
 #endif
@@ -381,12 +381,15 @@ int main(int argc, char* argv[])
                 ImGui::Text("frame: %d(%d frames before)",
                 profiler.frame_index,
                 frame_index - profiler.frame_index);
+                float total_ms = 0.f;
                 for (uint32_t i = 1; i < profiler.times_ms.size(); i++)
                 {
                     auto text = profiler.query_names[i];
                     text = text.append(": %.4f ms");
                     ImGui::Text(text.c_str(), profiler.times_ms[i]);
+                    total_ms += profiler.times_ms[i];
                 }
+                ImGui::Text("GPU Time: %f(ms)", total_ms);
                 // plot
                 auto max_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
                 auto min_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());

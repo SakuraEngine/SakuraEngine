@@ -32,12 +32,15 @@ const CGPUProcTable tbl_d3d12 = {
     .free_compute_pipeline = &cgpu_free_compute_pipeline_d3d12,
     .create_render_pipeline = &cgpu_create_render_pipeline_d3d12,
     .free_render_pipeline = &cgpu_free_render_pipeline_d3d12,
+    .create_query_pool = &cgpu_create_query_pool_d3d12,
+    .free_query_pool = &cgpu_free_query_pool_d3d12,
 
     // Queue APIs
     .get_queue = &cgpu_get_queue_d3d12,
     .submit_queue = &cgpu_submit_queue_d3d12,
     .wait_queue_idle = &cgpu_wait_queue_idle_d3d12,
     .queue_present = &cgpu_queue_present_d3d12,
+    .queue_get_timestamp_period = &cgpu_queue_get_timestamp_period_ns_d3d12,
     .free_queue = &cgpu_free_queue_d3d12,
 
     // Command APIs
@@ -84,6 +87,10 @@ const CGPUProcTable tbl_d3d12 = {
     .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_d3d12,
     .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_d3d12,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_d3d12,
+    .cmd_begin_query = &cgpu_cmd_begin_query_d3d12,
+    .cmd_end_query = &cgpu_cmd_end_query_d3d12,
+    .cmd_reset_query_pool = &cgpu_cmd_reset_query_pool_d3d12,
+    .cmd_resolve_query = &cgpu_cmd_resolve_query_d3d12,
     .cmd_end = &cgpu_cmd_end_d3d12,
 
     // Compute Pass

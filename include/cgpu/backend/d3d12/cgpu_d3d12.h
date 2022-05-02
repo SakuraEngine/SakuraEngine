@@ -50,12 +50,15 @@ RUNTIME_API CGPUComputePipelineId cgpu_create_compute_pipeline_d3d12(CGPUDeviceI
 RUNTIME_API void cgpu_free_compute_pipeline_d3d12(CGPUComputePipelineId pipeline);
 RUNTIME_API CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
 RUNTIME_API void cgpu_free_render_pipeline_d3d12(CGPURenderPipelineId pipeline);
+RUNTIME_API CGPUQueryPoolId cgpu_create_query_pool_d3d12(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc);
+RUNTIME_API void cgpu_free_query_pool_d3d12(CGPUQueryPoolId pool);
 
 // Queue APIs
 RUNTIME_API CGPUQueueId cgpu_get_queue_d3d12(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue_d3d12(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc);
 RUNTIME_API void cgpu_wait_queue_idle_d3d12(CGPUQueueId queue);
 RUNTIME_API void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
+RUNTIME_API float cgpu_queue_get_timestamp_period_ns_d3d12(CGPUQueueId queue);
 RUNTIME_API void cgpu_free_queue_d3d12(CGPUQueueId queue);
 
 // Command APIs
@@ -102,6 +105,10 @@ RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGPUCommandBufferId cm
 RUNTIME_API void cgpu_cmd_transfer_texture_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 RUNTIME_API void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
+RUNTIME_API void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
+RUNTIME_API void cgpu_cmd_end_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
+RUNTIME_API void cgpu_cmd_reset_query_pool_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId, uint32_t start_query, uint32_t query_count);
+RUNTIME_API void cgpu_cmd_resolve_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count);
 RUNTIME_API void cgpu_cmd_end_d3d12(CGPUCommandBufferId cmd);
 
 // Compute CMDs
@@ -208,6 +215,12 @@ typedef struct CGPUCommandPool_D3D12 {
     CGPUCommandPool super;
     struct ID3D12CommandAllocator* pDxCmdAlloc;
 } CGPUCommandPool_D3D12;
+
+typedef struct CGPUQueryPool_D3D12 {
+    CGPUQueryPool super;
+    struct ID3D12QueryHeap* pDxQueryHeap;
+    D3D12_QUERY_TYPE mType;
+} CGPUQueryPool_D3D12;
 
 typedef struct CGPUCommandBuffer_D3D12 {
     CGPUCommandBuffer super;
