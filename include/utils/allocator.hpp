@@ -1,10 +1,11 @@
 #pragma once
+#include "platform/configure.h"
 #include "mimalloc.h"
 
 namespace skr
 {
 template <class _Ty>
-class mi_allocator
+class RUNTIME_API mi_allocator
 {
 public:
     static_assert(!std::is_const_v<_Ty>, "The C++ Standard forbids containers of const elements "
@@ -33,7 +34,7 @@ public:
         ::mi_free_size_aligned(_Ptr, sizeof(_Ty) * _Count, alignof(_Ty));
     }
 
-    __declspec(allocator) _Ty* allocate(const size_t _Count)
+    _Ty* allocate(const size_t _Count)
     {
         return static_cast<_Ty*>(::mi_new_aligned(sizeof(_Ty) * _Count, alignof(_Ty)));
     }

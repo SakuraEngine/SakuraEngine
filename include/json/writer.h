@@ -1,6 +1,6 @@
 #pragma once
-
 #include <stdint.h>
+
 typedef enum ESkrJsonType
 {
     SKR_JSONTYPE_BOOL,
@@ -12,11 +12,11 @@ typedef enum ESkrJsonType
 
 #if defined(__cplusplus)
 
-    #include "EASTL/vector.h"
+    #include <EASTL/vector.h>
     #include <sstream>
     #include "utils/allocator.hpp"
 
-extern "C" class skr_json_writer_t
+class RUNTIME_API skr_json_writer_t
 {
 public:
     using TChar = char;
@@ -40,35 +40,35 @@ public:
 
     bool IsComplete();
 
-    bool Bool(bool b);
-    bool Int(int32_t i);
-    bool UInt(uint32_t i);
-    bool Int64(int64_t i);
-    bool UInt64(uint64_t i);
-    bool Double(double d);
-    bool RawNumber(const TChar* str, TSize length);
-    bool String(const TChar* str, TSize length);
-    bool StartObject();
-    bool Key(const TChar* str, TSize length);
-    bool EndObject();
-    bool StartArray();
-    bool EndArray();
-    bool RawValue(const TChar* str, TSize length, ESkrJsonType type);
+    bool Bool(bool b) { return false; }
+    bool Int(int32_t i) { return false; }
+    bool UInt(uint32_t i) { return false; }
+    bool Int64(int64_t i) { return false; }
+    bool UInt64(uint64_t i) { return false; }
+    bool Double(double d) { return false; }
+    bool RawNumber(const TChar* str, TSize length) { return false; }
+    bool String(const TChar* str, TSize length) { return false; }
+    bool StartObject() { return false; }
+    bool Key(const TChar* str, TSize length) { return false; }
+    bool EndObject() { return false; }
+    bool StartArray() { return false; }
+    bool EndArray() { return false; }
+    bool RawValue(const TChar* str, TSize length, ESkrJsonType type) { return false; }
 
-    bool _WriteBool(bool b);
-    bool _WriteInt(int32_t i);
-    bool _WriteUInt(uint32_t i);
-    bool _WriteInt64(int64_t i);
-    bool _WriteUInt64(uint64_t i);
-    bool _WriteDouble(double d);
-    bool _WriteString(const TChar* str, TSize length);
-    bool _WriteStartObject();
-    bool _WriteEndObject();
-    bool _WriteStartArray();
-    bool _WriteEndArray();
-    bool _WriteRawValue(const TChar* str, TSize length);
-    bool _Prefix(ESkrJsonType type);
-    bool _EndValue(bool ret);
+    bool _WriteBool(bool b) { return false; }
+    bool _WriteInt(int32_t i) { return false; }
+    bool _WriteUInt(uint32_t i) { return false; }
+    bool _WriteInt64(int64_t i) { return false; }
+    bool _WriteUInt64(uint64_t i) { return false; }
+    bool _WriteDouble(double d) { return false; }
+    bool _WriteString(const TChar* str, TSize length) { return false; }
+    bool _WriteStartObject() { return false; }
+    bool _WriteEndObject() { return false; }
+    bool _WriteStartArray() { return false; }
+    bool _WriteEndArray() { return false; }
+    bool _WriteRawValue(const TChar* str, TSize length) { return false; }
+    bool _Prefix(ESkrJsonType type) { return false; }
+    bool _EndValue(bool ret) { return false; }
 };
 #else
 typedef struct skr_json_writer_t skr_json_writer_t;
@@ -86,7 +86,9 @@ using TSize = skr_json_writer_t::TSize;
 template <class T>
 using TParamType = std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v<T>, T, const T&>;
 template <class T>
-void Write(skr_json_writer_t* writer, T value);
+void Write(skr_json_writer_t* writer, T value)
+{
+}
 } // namespace json
 } // namespace skr
 #endif
