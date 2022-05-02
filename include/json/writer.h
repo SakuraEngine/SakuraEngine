@@ -11,7 +11,6 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
-
     #include <EASTL/vector.h>
     #include <sstream>
     #include "utils/allocator.hpp"
