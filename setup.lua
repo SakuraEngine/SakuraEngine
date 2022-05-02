@@ -9,8 +9,9 @@ if (os.host() =="macosx") then
     os.exec("brew install grpc")
     os.exec("brew install googletest")
 end
-os.exec("pip install mako")
 import("find_sdk")
+pip = find_sdk.find_program("pip3") or find_sdk.find_program("pip")
+os.runv(pip.program, {"install", "mako"})
 
 find_sdk.sdk_from_github("SourceSansPro-Regular.ttf")
 if (os.host() == "windows") then
