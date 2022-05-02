@@ -7,21 +7,19 @@
 
 namespace dual
 {
-    struct query_cache_t
-    {
-		std::unique_ptr<char[]> data;
-        bool includeDisabled;
-        bool includeDead;
-        dual_filter_t filter;
-        llvm_vecsmall::SmallVector<dual_group_t*, 32> groups;
-		using iterator = std::vector<dual_group_t*>::iterator;
-    };
+struct query_cache_t {
+    std::unique_ptr<char[]> data;
+    bool includeDisabled;
+    bool includeDead;
+    dual_filter_t filter;
+    llvm_vecsmall::SmallVector<dual_group_t*, 32> groups;
+    using iterator = std::vector<dual_group_t*>::iterator;
+};
 
-    std::string& get_error();
-}
+std::string& get_error();
+} // namespace dual
 
-extern "C" struct dual_query_t
-{
+struct dual_query_t {
     dual_storage_t* storage;
     dual_filter_t filter;
     dual_meta_filter_t meta;

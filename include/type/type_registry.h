@@ -65,7 +65,7 @@ struct ValueSerializePolicy;
 }
 } // namespace skr
 
-extern "C" struct RUNTIME_API skr_type_t {
+struct RUNTIME_API skr_type_t {
     skr_type_category_t type;
     size_t Size() const;
     size_t Align() const;
@@ -594,13 +594,13 @@ struct RUNTIME_API ValueRef {
 
 } // namespace type
 } // namespace skr
-extern "C" struct skr_field_t {
+struct skr_field_t {
     eastl::string_view name;
     const skr_type_t* type;
     size_t offset;
 };
 
-extern "C" struct skr_method_t {
+struct skr_method_t {
     eastl::string_view name;
     const skr_type_t* retType;
     const skr_field_t* parameters;

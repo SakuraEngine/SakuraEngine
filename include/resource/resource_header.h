@@ -53,7 +53,7 @@ typedef struct skr_resource_record_t skr_resource_record_t;
 
 #if defined(__cplusplus)
     #include "EASTL/vector.h"
-extern "C" struct skr_resource_record_t {
+struct skr_resource_record_t {
     void* resource;
     void (*destructor)(void*);
     ESkrLoadingStatus loadingStatus;
