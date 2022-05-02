@@ -356,7 +356,9 @@ RUNTIME_API void* mi_malloc(size_t size);
 RUNTIME_API void* mi_calloc(size_t count, size_t size);
 RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment);
 RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment);
+RUNTIME_API void* mi_new_aligned(size_t size, size_t alignment);
 RUNTIME_API void mi_free(void* p);
+RUNTIME_API void mi_free_aligned(void* p, size_t alignment);
     #ifdef __cplusplus
 }
     #endif
@@ -364,7 +366,9 @@ RUNTIME_API void mi_free(void* p);
     #define sakura_calloc mi_calloc
     #define sakura_calloc_aligned mi_calloc_aligned
     #define sakura_malloc_aligned mi_malloc_aligned
+    #define sakura_new_aligned mi_new_aligned
     #define sakura_free mi_free
+    #define sakura_free_aligned mi_free_aligned
 #elif defined(RUNTIME_PLATFORM_WA)
 
 #else
@@ -381,7 +385,9 @@ calloc_aligned(size_t count, size_t size, size_t alignment)
     #define sakura_calloc calloc
     #define sakura_calloc_aligned calloc_aligned
     #define sakura_malloc_aligned(size, alignment) aligned_alloc((alignment), (size))
+    #define sakura_new_aligned(size, alignment) aligned_alloc((alignment), (size))
     #define sakura_free free
+    #define sakura_free_aligned free_aligned
 #endif
 
 // Platform Specific Configure

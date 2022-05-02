@@ -1,6 +1,5 @@
 #pragma once
 #include "platform/configure.h"
-#include "mimalloc.h"
 
 namespace skr
 {
@@ -31,12 +30,12 @@ public:
     void deallocate(_Ty* const _Ptr, const size_t _Count)
     {
         // no overflow check on the following multiply; we assume _Allocate did that check
-        ::mi_free_size_aligned(_Ptr, sizeof(_Ty) * _Count, alignof(_Ty));
+        sakura_free_aligned(_Ptr, sizeof(_Ty) * _Count, alignof(_Ty));
     }
 
     _Ty* allocate(const size_t _Count)
     {
-        return static_cast<_Ty*>(::mi_new_aligned(sizeof(_Ty) * _Count, alignof(_Ty)));
+        return static_cast<_Ty*>(sakura_new_aligned(sizeof(_Ty) * _Count, alignof(_Ty)));
     }
 };
 } // namespace skr
