@@ -72,7 +72,8 @@ def main():
     db = Binding()
     root = sys.argv[1]
     outdir = sys.argv[2]
-    metas = glob.glob(os.path.join(root, "*.h.meta"), recursive=True)
+    metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
+    print(metas)
     for meta in metas:
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
@@ -108,18 +109,18 @@ def main():
                     key2, value2["value"]))
             db.enums.append(Enum(key, enumerators))
 
-    template = os.path.join(BASE, "serialize_json.cpp.mako")
+    template = os.path.join(BASE, "json_writer.cpp.mako")
     content = render(template, db=db)
     output = os.path.join(outdir, "json_writer.generated.cpp")
     write(output, content)
-    template = os.path.join(BASE, "serialize_json.h.mako")
+    template = os.path.join(BASE, "json_writer.h.mako")
     content = render(template, db=db)
     output = os.path.join(outdir, "json_writer.generated.h")
     write(output, content)
 
 
 def GetInclude(path):
-    return path.replace("\\", "/").rsplit("include/", 1)[-1]
+    return os.path.normpath(path).replace(os.sep, "/")
 
 
 def render(filename, **context):

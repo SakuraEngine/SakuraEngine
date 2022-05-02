@@ -28,21 +28,26 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
 end
 
 function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, headerfiles, opt)
-    local dependfile = target:dependfile(sourcefile_refl)
-    -- generate dummy .cpp file
-    depend.on_changed(function ()
-        cprint("${cyan}generating.reflection ${clear}%s", sourcefile_refl)
-        local reflfile = io.open(sourcefile_refl, "w")
-        for _, headerfile in ipairs(headerfiles) do
-            headerfile = path.absolute(headerfile)
-            sourcefile_refl = path.absolute(sourcefile_refl)
-            headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
-            reflfile:print("#include \"%s\"", headerfile)
-        end
-        reflfile:close()
-        -- build generated cpp to json
-        cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
-    end, {dependfile = dependfile, files = headerfiles})
+    
+    local changedfiles = {}
+    for _, headerfile in ipairs(headerfiles) do
+        -- generate dummy .cpp file
+        local dependfile = target:dependfile(headerfile.."meta")
+        depend.on_changed(function ()
+            table.insert(changedfiles, headerfile);
+            cprint("${cyan}generating.reflection ${clear}%s", headerfile)
+            -- build generated cpp to json
+        end, {dependfile = dependfile, files = {headerfile}})
+    end
+    local reflfile = io.open(sourcefile_refl, "w")
+    for _, headerfile in ipairs(changedfiles) do
+        headerfile = path.absolute(headerfile)
+        sourcefile_refl = path.absolute(sourcefile_refl)
+        headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
+        reflfile:print("#include \"%s\"", headerfile)
+    end
+    reflfile:close()
+    cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
     import("find_sdk")
     local python = find_sdk.find_program("python3")
     os.iorunv(python.program, {
