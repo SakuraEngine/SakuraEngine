@@ -9,7 +9,7 @@ if (os.host() =="macosx") then
     os.exec("brew install grpc")
     os.exec("brew install googletest")
 end
-os.exec("pip3 install mako")
+os.exec("pip install mako")
 import("find_sdk")
 
 find_sdk.sdk_from_github("SourceSansPro-Regular.ttf")

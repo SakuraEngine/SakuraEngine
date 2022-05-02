@@ -47,7 +47,7 @@ function _merge_reflfile(target, rootdir, sourceinfo, opt)
         -- build generated cpp to json
         cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
     end, {dependfile = dependfile, files = headerfiles})
-    os.execv("python3", {
+    os.execv("python", {
         os.projectdir()..vformat("/SDKs/codegen/serialize_json.py"),
         path.absolute(metadir), path.absolute(gendir)
     })
