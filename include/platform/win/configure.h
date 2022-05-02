@@ -23,10 +23,6 @@
 
 #define OS_DPI 96
 
-#ifndef WIN32_LEAN_AND_MEAN
-    #define WIN32_LEAN_AND_MEAN
-#endif
-#include "windows.h"
 #if !SKR_SHIPPING
     #include "platform/macros.h"
 
