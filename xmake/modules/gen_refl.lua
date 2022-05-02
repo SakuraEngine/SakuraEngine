@@ -1,6 +1,6 @@
 import("core.project.depend")
 
-function cmd_compile(sourcefile, rootdir, target, opt)
+function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     import("core.base.option")
     import("core.base.object")
     import("core.tool.compiler")
@@ -19,7 +19,7 @@ function cmd_compile(sourcefile, rootdir, target, opt)
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
     import("find_sdk")
     meta = find_sdk.find_program("meta")
-    argv2 = {sourcefile, "--output="..path.directory(sourcefile), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
+    argv2 = {sourcefile, "--output="..path.absolute(metadir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
@@ -27,8 +27,12 @@ function cmd_compile(sourcefile, rootdir, target, opt)
     return argv
 end
 
-function _merge_reflfile(target, rootdir, sourcefile_refl, headerfiles, opt)
+function _merge_reflfile(target, rootdir, sourceinfo, opt)
     local dependfile = target:dependfile(sourcefile_refl)
+    local headerfiles = sourceinfo.headerfiles
+    local metadir = sourceinfo.metadir
+    local gendir = sourceinfo.gendir
+    local sourcefile_refl = sourceinfo.sourcefile
     -- generate dummy .cpp file
     depend.on_changed(function ()
         cprint("${cyan}generating.reflection ${clear}%s", sourcefile_refl)
@@ -41,20 +45,21 @@ function _merge_reflfile(target, rootdir, sourcefile_refl, headerfiles, opt)
         end
         reflfile:close()
         -- build generated cpp to json
-        cmd_compile(sourcefile_refl, rootdir, target)
+        cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
     end, {dependfile = dependfile, files = headerfiles})
+    os.execv("python3", {
+        os.projectdir()..vformat("/SDKs/codegen/serialize_json.py"),
+        path.absolute(metadir), path.absolute(gendir)
+    })
 end
 
 function generate_refl_files(target, rootdir, opt)
     local refl_batch = target:data("reflection.batch")
     if refl_batch then
-        for _, batch in ipairs(refl_batch) do
-            local sourceinfo = batch
+        for _, sourceinfo in ipairs(refl_batch) do
             if sourceinfo then
-                local headerfiles = sourceinfo.headerfiles
-                local sourcefile_refl = sourceinfo.sourcefile
-                if headerfiles then
-                    _merge_reflfile(target, rootdir, sourcefile_refl, headerfiles, opt)
+                if sourceinfo.headerfiles then
+                    _merge_reflfile(target, rootdir, sourceinfo, opt)
                 end
             end
         end
@@ -65,7 +70,8 @@ function main(target, headerfiles)
     local batchsize = extraconf and extraconf.batchsize
     local extraconf = target:extraconf("rules", "c++.reflection")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
-    local incdir = path.join(target:autogendir({root = true}), target:plat(), "reflection/include")
+    local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
+    local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
     local reflection_batch = {}
     local id = 1
     local count = 0
@@ -83,6 +89,8 @@ function main(target, headerfiles)
             if not sourceinfo then
                 sourceinfo = {}
                 sourceinfo.sourcefile = sourcefile_reflection
+                sourceinfo.metadir = metadir
+                sourceinfo.gendir = gendir
                 reflection_batch[id] = sourceinfo
             end
             sourceinfo.headerfiles = sourceinfo.headerfiles or {}

@@ -90,3 +90,25 @@ extern "C" {
 #endif //  __cplusplus
 
 #define OS_DPI 72
+
+#if !SKR_SHIPPING
+    #include "platform/macros.h"
+    #include "stdio.h"
+
+    #define SKR_TRACE_MSG(msg) \
+        printf(msg);           \
+        printf("\n");
+
+    #define SKR_ASSERT(cond)                                                      \
+        do                                                                        \
+        {                                                                         \
+            if (!(cond))                                                          \
+            {                                                                     \
+                SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
+                __builtin_debugtrap();                                            \
+            }                                                                     \
+        } while (0)
+    #define SKR_BREAK() __builtin_debugtrap()
+    #define SKR_HALT() __builtin_debugtrap()
+
+#endif

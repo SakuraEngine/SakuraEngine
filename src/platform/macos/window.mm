@@ -28,10 +28,10 @@ void* nswindow_create()
     graphicsRect = NSMakeRect(100.0, 350.0, 400.0, 400.0);
 
     myWindow = [[NSWindow alloc] // create the window
-        initWithContentRect:graphicsRect
-                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable
-                    backing:NSBackingStoreBuffered
-                      defer:NO];
+    initWithContentRect:graphicsRect
+              styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable
+                backing:NSBackingStoreBuffered
+                  defer:NO];
 
     [myWindow setTitle:@"Tiny Application Window"];
 
@@ -52,7 +52,7 @@ void* nswindow_get_content_view(void* window)
     NSBundle* bundle = [NSBundle bundleWithPath:@"/System/Library/Frameworks/QuartzCore.framework"];
     if (!bundle)
     {
-        log_fatal("Cocoa: Failed to find QuartzCore.framework\n");
+        SKR_LOG_FATAL("Cocoa: Failed to find QuartzCore.framework\n");
         return nullptr;
     }
 
@@ -60,7 +60,7 @@ void* nswindow_get_content_view(void* window)
     nsview.layer = [[bundle classNamed:@"CAMetalLayer"] layer];
     if (!nsview.layer)
     {
-        log_fatal("Cocoa: Failed to create layer for view\n");
+        SKR_LOG_FATAL("Cocoa: Failed to create layer for view\n");
         return nullptr;
     }
     [nsview setWantsLayer:YES];

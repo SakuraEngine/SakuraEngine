@@ -3,6 +3,7 @@
 #include "fmt/format.h"
 #include "utils/hash.h"
 #include "utils/format.hpp"
+#include "utils/fast_float.h"
 #include <charconv>
 
 namespace skr
@@ -849,10 +850,10 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, skr::type::ValueS
                 std::from_chars(str.begin(), str.end(), *(uint64_t*)dst);
                 break;
             case SKR_TYPE_CATEGORY_F32:
-                std::from_chars(str.begin(), str.end(), *(float*)dst);
+                fast_float::from_chars(str.begin(), str.end(), *(float*)dst);
                 break;
             case SKR_TYPE_CATEGORY_F64:
-                std::from_chars(str.begin(), str.end(), *(double*)dst);
+                fast_float::from_chars(str.begin(), str.end(), *(double*)dst);
                 break;
             case SKR_TYPE_CATEGORY_ENUM:
                 ((const EnumType*)this)->FromString(dst, str);
@@ -865,7 +866,6 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, skr::type::ValueS
 
 size_t Hash(bool value, size_t base)
 {
-    uint8_t v = value;
     return skr_hash(&value, 1, base);
 }
 size_t Hash(int32_t value, size_t base)

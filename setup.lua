@@ -4,10 +4,12 @@ if (os.host() =="macosx") then
     if(brew == nil) then
         os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
     end
+    os.exec("brew install python")
     os.exec("brew install sdl2")
     os.exec("brew install grpc")
     os.exec("brew install googletest")
 end
+os.exec("pip3 install mako")
 import("find_sdk")
 
 find_sdk.sdk_from_github("SourceSansPro-Regular.ttf")
