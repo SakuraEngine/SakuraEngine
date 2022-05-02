@@ -23,7 +23,7 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-    os.runv(meta.vexec, argv)
+    os.execv(meta.vexec, argv)
     return argv
 end
 
@@ -45,8 +45,8 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
     end, {dependfile = dependfile, files = headerfiles})
     import("find_sdk")
     local python = find_sdk.find_program("python3")
-    os.execv(python.program, {
-        os.projectdir()..vformat("/SDKs/codegen/serialize_json.py"),
+    os.iorunv(python.program, {
+        os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
         path.absolute(metadir), path.absolute(gendir)
     })
 end
