@@ -27,12 +27,8 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     return argv
 end
 
-function _merge_reflfile(target, rootdir, sourceinfo, opt)
+function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, headerfiles, opt)
     local dependfile = target:dependfile(sourcefile_refl)
-    local headerfiles = sourceinfo.headerfiles
-    local metadir = sourceinfo.metadir
-    local gendir = sourceinfo.gendir
-    local sourcefile_refl = sourceinfo.sourcefile
     -- generate dummy .cpp file
     depend.on_changed(function ()
         cprint("${cyan}generating.reflection ${clear}%s", sourcefile_refl)
@@ -60,8 +56,12 @@ function generate_refl_files(target, rootdir, opt)
     if refl_batch then
         for _, sourceinfo in ipairs(refl_batch) do
             if sourceinfo then
-                if sourceinfo.headerfiles then
-                    _merge_reflfile(target, rootdir, sourceinfo, opt)
+                local headerfiles = sourceinfo.headerfiles
+                local sourcefile_refl = sourceinfo.sourcefile
+                local metadir = sourceinfo.metadir
+                local gendir = sourceinfo.gendir
+                if headerfiles then
+                    _merge_reflfile(target, rootdir, metadir, gendir, sourcefile_refl, headerfiles, opt)
                 end
             end
         end
