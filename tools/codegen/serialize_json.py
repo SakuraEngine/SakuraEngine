@@ -121,6 +121,10 @@ def main():
     content = render(template, db=db)
     output = os.path.join(outdir, "json_writer.generated.h")
     write(output, content)
+    template = os.path.join(BASE, "json_reader.h.mako")
+    content = render(template, db=db)
+    output = os.path.join(outdir, "json_reader.generated.h")
+    write(output, content)
 
 
 def GetInclude(path):

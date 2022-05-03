@@ -30,14 +30,28 @@ end
 function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, headerfiles, opt)
     
     local changedfiles = {}
-    for _, headerfile in ipairs(headerfiles) do
-        -- generate dummy .cpp file
-        local dependfile = target:dependfile(headerfile.."meta")
+    local generators = {
+        os.projectdir()..vformat("/tools/codegen/serialize_json.py")
+    }
+    local incremental = true
+    for _, generator in ipairs(generators) do
+        local dependfile = target:dependfile(generator)
         depend.on_changed(function ()
-            table.insert(changedfiles, headerfile);
-            cprint("${cyan}generating.reflection ${clear}%s", headerfile)
-            -- build generated cpp to json
-        end, {dependfile = dependfile, files = {headerfile}})
+            incremental = false
+        end, {dependfile = dependfile, files = {generator}});
+    end
+    if incremental then
+    for _, headerfile in ipairs(headerfiles) do
+            -- generate dummy .cpp file
+            local dependfile = target:dependfile(headerfile.."meta")
+            depend.on_changed(function ()
+                table.insert(changedfiles, headerfile);
+                cprint("${cyan}generating.reflection ${clear}%s", headerfile)
+                -- build generated cpp to json
+            end, {dependfile = dependfile, files = {headerfile}})
+        end
+    else
+        changedfiles = headerfiles
     end
     local reflfile = io.open(sourcefile_refl, "w")
     for _, headerfile in ipairs(changedfiles) do
@@ -50,13 +64,15 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
     cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
     -- compile jsons to c++
     if(#changedfiles > 0) then
-        cprint("${cyan}generating.jsonwriter ${clear}%s", sourcefile_refl)
+        for _, generator in ipairs(generators) do
+            cprint("${cyan}generating.%s${clear} %s", path.filename(generator), sourcefile_refl)
             import("find_sdk")
             local python = find_sdk.find_program("python3")
             os.iorunv(python.program, {
-                os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
+                generator,
                 path.absolute(metadir), path.absolute(gendir)
             })
+        end
     end
 end
 

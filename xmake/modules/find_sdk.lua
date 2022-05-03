@@ -87,7 +87,6 @@ function find_program(name, sdkdir, use_which)
         end
     end
     if(prog == nil) then
-        print(name.." not found! under "..sdkdir)
         local progf = find_file(name, {sdkdir})
         if(os.host() == "windows") then
             if(progf == nil) then
