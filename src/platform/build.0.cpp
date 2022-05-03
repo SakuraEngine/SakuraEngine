@@ -1,7 +1,4 @@
 #include "platform/configure.h"
-#ifdef _WIN32
-    #include "win/window.cpp"
-#endif
 #include "debug.cpp"
 
 #ifdef RUNTIME_SHARED
