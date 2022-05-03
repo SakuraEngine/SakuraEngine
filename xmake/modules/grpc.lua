@@ -24,10 +24,10 @@ import("private.utils.batchcmds")
 import("module_parser")
 import("find_sdk")
 -- get protoc
-function _get_protoc(target, sourcekind)
+function _get_protoc(target)
     local protoc = target:data("protobuf.protoc")
-    if not protoc and sourcekind == "cxx" then
-        protoc = find_sdk.find_program("protoc")
+    if not protoc then
+        protoc = find_sdk.find_program("protoc", nil, true)
         if protoc then
             target:data_set("protobuf.protoc", protoc)
         end
@@ -36,23 +36,23 @@ function _get_protoc(target, sourcekind)
     return assert(protoc, "protoc not found!")
 end
 
-function _get_grpc_cpp_plugin(target, sourcekind)
+function _get_grpc_cpp_plugin(target)
     local grpc_cpp_plugin = target:data("grpc.grpc_cpp_plugin")
-    if not grpc_cpp_plugin and sourcekind == "cxx" then
+    if not grpc_cpp_plugin then
         grpc_cpp_plugin = find_sdk.find_program("grpc_cpp_plugin", nil, true)
         if grpc_cpp_plugin then
             target:data_set("grpc.grpc_cpp_plugin", grpc_cpp_plugin)
         end
     end
-    return grpc_cpp_plugin
+    return assert(grpc_cpp_plugin, "grpc_cpp_plugin not found!")
 end
 
 -- we need add some configs to export includedirs to other targets in on_load
 -- @see https://github.com/xmake-io/xmake/issues/2256
-function load(target, sourcekind)
+function load(target)
     -- get the first sourcefile
     local sourcefile_proto
-    local sourcebatch = target:sourcebatches()[sourcekind == "cxx" and "protobuf.cpp" or "protobuf.c"]
+    local sourcebatch = target:sourcebatches()["grpc.cpp"]
     if sourcebatch then
         sourcefile_proto = sourcebatch.sourcefiles[1]
     end
@@ -60,7 +60,7 @@ function load(target, sourcekind)
         return
     end
 
-    -- get c/c++ source file for protobuf
+    -- get c/c++ source file for grpc
     local prefixdir
     local public
     local fileconfig = target:fileconfig(sourcefile_proto)
@@ -68,23 +68,61 @@ function load(target, sourcekind)
         public = fileconfig.proto_public
         prefixdir = fileconfig.proto_rootdir
     end
-    local rootdir = path.join(target:autogendir(), "rules", "protobuf")
-    local filename = path.basename(sourcefile_proto) .. ".pb" .. (sourcekind == "cxx" and ".cc" or "-c.c")
+    local rootdir = path.join(target:autogendir(), "rules", "grpc")
+    local filename = path.basename(sourcefile_proto) .. ".pb.cc"
     local sourcefile_cx = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename})
     local sourcefile_dir = prefixdir and path.join(rootdir, prefixdir) or path.directory(sourcefile_cx)
 
     -- add includedirs
     target:add("includedirs", sourcefile_dir, {public = public})
 end
+import("core.project.depend")
+function generate_grpc_files(target, opt)
+    local sourcebatch = target:sourcebatches()["grpc.cpp"]
+    
+    -- get protoc
+    local protoc = _get_protoc(target)
+    local grpc_cpp_plugin = _get_grpc_cpp_plugin(target)
+    for _, sourcefile_proto in ipairs(sourcebatch.sourcefiles) do
+            local dependfile = target:dependfile(sourcefile_proto)
+            depend.on_changed(function ()
+                -- get c/c++ source file for grpc
+                local prefixdir
+                local public
+                local fileconfig = target:fileconfig(sourcefile_proto)
+                if fileconfig then
+                    public = fileconfig.proto_public
+                    prefixdir = fileconfig.proto_rootdir
+                end
+                local rootdir = path.join(target:autogendir(), "rules", "grpc")
+                local filename = path.basename(sourcefile_proto) .. ".pb.cc"
+                local filename2 = path.basename(sourcefile_proto) .. ".grpc.pb.cc"
+                local sourcefile_cx = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename})
+                local sourcefile_cx2 = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename2})
+                local sourcefile_dir = prefixdir and path.join(rootdir, prefixdir) or path.directory(sourcefile_cx)
+                
+                os.mkdir(sourcefile_dir)
+                cprint("${cyan}compiling.proto ${clear}%s", sourcefile_proto)
+                os.vrunv(protoc.program, {sourcefile_proto,
+                    "-I" .. (prefixdir and prefixdir or path.directory(sourcefile_proto)),
+                    "-I" .. vformat("$(projectdir)/thirdparty/grpc/include"),
+                    "--grpc_out=" .. sourcefile_dir,
+                    "--plugin=protoc-gen-grpc=" .. grpc_cpp_plugin.program,
+                    "--cpp_out=" .. sourcefile_dir})
+
+                target:add("files", sourcefile_cx, sourcefile_cx2)
+            end, {dependfile = dependfile, files = {sourcefile_proto}})
+    end
+end
 
 -- generate build commands
-function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
+function buildcmd(target, batchcmds, sourcefile_proto, opt)
 
     -- get protoc
-    local protoc = _get_protoc(target, sourcekind)
-    local grpc_cpp_plugin = _get_grpc_cpp_plugin(target, sourcekind)
+    local protoc = _get_protoc(target)
+    local grpc_cpp_plugin = _get_grpc_cpp_plugin(target)
 
-    -- get c/c++ source file for protobuf
+    -- get c/c++ source file for grpc
     local prefixdir
     local public
     local fileconfig = target:fileconfig(sourcefile_proto)
@@ -92,9 +130,9 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
         public = fileconfig.proto_public
         prefixdir = fileconfig.proto_rootdir
     end
-    local rootdir = path.join(target:autogendir(), "rules", "protobuf")
-    local filename = path.basename(sourcefile_proto) .. ".pb" .. (sourcekind == "cxx" and ".cc" or "-c.c")
-    local filename2 = path.basename(sourcefile_proto) .. ".grpc.pb" .. (sourcekind == "cxx" and ".cc" or "-c.c")
+    local rootdir = path.join(target:autogendir(), "rules", "grpc")
+    local filename = path.basename(sourcefile_proto) .. ".pb.cc"
+    local filename2 = path.basename(sourcefile_proto) .. ".grpc.pb.cc"
     local sourcefile_cx = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename})
     local sourcefile_cx2 = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename2})
     local sourcefile_dir = prefixdir and path.join(rootdir, prefixdir) or path.directory(sourcefile_cx)
@@ -116,9 +154,9 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
         "-I" .. vformat("$(projectdir)/thirdparty/grpc/include"),
         "--grpc_out=" .. sourcefile_dir,
         "--plugin=protoc-gen-grpc=" .. grpc_cpp_plugin.program,
-        (sourcekind == "cxx" and "--cpp_out=" or "--c_out=") .. sourcefile_dir})
-    batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = sourcefile_dir, languages = (sourcekind == "cxx" and "c++11")}})
-    batchcmds:compile(sourcefile_cx2, objectfile2, {configs = {includedirs = sourcefile_dir, languages = (sourcekind == "cxx" and "c++11")}})
+        "--cpp_out=" .. sourcefile_dir})
+    batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = sourcefile_dir, languages = "c++11"}})
+    batchcmds:compile(sourcefile_cx2, objectfile2, {configs = {includedirs = sourcefile_dir, languages = "c++11"}})
     -- add deps
     batchcmds:add_depfiles(sourcefile_proto)
     batchcmds:set_depmtime(os.mtime(objectfile))
@@ -126,9 +164,9 @@ function buildcmd(target, batchcmds, sourcefile_proto, opt, sourcekind)
 end
 
 -- build batch jobs
-function build_batchjobs(target, batchjobs, sourcebatch, opt, sourcekind)
+function build_batchjobs(target, batchjobs, sourcebatch, opt)
 
-    -- get the root directory of protobuf
+    -- get the root directory of grpc
     local proto_rootdir
     if #sourcebatch.sourcefiles > 0 then
         local sourcefile = sourcebatch.sourcefiles[1]
@@ -151,7 +189,7 @@ function build_batchjobs(target, batchjobs, sourcebatch, opt, sourcekind)
         -- make build job
         moduleinfo.job = batchjobs:newjob(sourcefile, function (index, total)
             local batchcmds_ = batchcmds.new({target = target})
-            buildcmd(target, batchcmds_, sourcefile, {progress = (index * 100) / total}, sourcekind)
+            buildcmd(target, batchcmds_, sourcefile, {progress = (index * 100) / total})
             batchcmds_:runcmds({dryrun = option.get("dry-run")})
         end)
     end
