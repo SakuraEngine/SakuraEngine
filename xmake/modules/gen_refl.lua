@@ -48,12 +48,16 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
     end
     reflfile:close()
     cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
-    import("find_sdk")
-    local python = find_sdk.find_program("python3")
-    os.iorunv(python.program, {
-        os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
-        path.absolute(metadir), path.absolute(gendir)
-    })
+    -- compile jsons to c++
+    if(#changedfiles > 0) then
+        cprint("${cyan}generating.jsonwriter ${clear}%s", sourcefile_refl)
+            import("find_sdk")
+            local python = find_sdk.find_program("python3")
+            os.iorunv(python.program, {
+                os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
+                path.absolute(metadir), path.absolute(gendir)
+            })
+    end
 end
 
 function generate_refl_files(target, rootdir, opt)
