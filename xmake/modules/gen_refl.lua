@@ -23,7 +23,7 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-    os.execv(meta.vexec, argv)
+    os.runv(meta.vexec, argv)
     return argv
 end
 
