@@ -4,8 +4,8 @@
 #include "${header}"
 %endfor
 
-%for enum in db.enums:
 namespace skr::json {
+%for enum in db.enums:
 template<>
 void Write(skr_json_writer_t* writer, ${enum.name} e)
 {
@@ -16,21 +16,9 @@ void Write(skr_json_writer_t* writer, ${enum.name} e)
     %endfor
     }
 } 
-}
-
-%if enum.export_to_c:
-#ifdef __cplusplus
-extern "C" {
-#endif
-void skr_serialize_json_${enum.name}(uint64_t e, skr_json_writer_t* writer) { skr::json::Write(writer, (${enum.name})e); }
-#ifdef __cplusplus
-}
-#endif
-%endif
 %endfor
 
 %for record in db.records:
-namespace skr::json {
 template<>
 void Write(skr_json_writer_t* writer, const ${record.name}& record)
 {
@@ -41,15 +29,22 @@ void Write(skr_json_writer_t* writer, const ${record.name}& record)
     %endfor
     writer->EndObject();
 } 
+%endfor
 }
 
-%if record.export_to_c:
 #ifdef __cplusplus
 extern "C" {
 #endif
+%for enum in db.enums:
+%if enum.export_to_c:
+void skr_serialize_json_${enum.name}(uint64_t e, skr_json_writer_t* writer) { skr::json::Write(writer, (${enum.name})e); }
+%endif
+%endfor
+%for record in db.records:
+%if record.export_to_c:
 void skr_serialize_json_${record.name}(${record.name}* record, skr_json_writer_t* writer) { skr::json::Write<const ${record.name}&>(writer, *record); }
+%endif
+%endfor
 #ifdef __cplusplus
 }
 #endif
-%endif
-%endfor

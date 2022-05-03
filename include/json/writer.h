@@ -85,9 +85,7 @@ using TSize = skr_json_writer_t::TSize;
 template <class T>
 using TParamType = std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v<T>, T, const T&>;
 template <class T>
-void Write(skr_json_writer_t* writer, T value)
-{
-}
+void Write(skr_json_writer_t* writer, T value);
 } // namespace json
 } // namespace skr
 #endif

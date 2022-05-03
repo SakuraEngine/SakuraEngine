@@ -6,7 +6,9 @@
     #include <stdint.h>
 #endif
 
+#ifndef STRINGIFY
 #define STRINGIFY(...) #__VA_ARGS__
+#endif
 #ifdef __meta__
     #define reflect __attribute__((annotate("__reflect__")))
     #define full_reflect __attribute__((annotate("__full_reflect__")))
