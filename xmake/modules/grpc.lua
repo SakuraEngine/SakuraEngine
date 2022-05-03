@@ -85,22 +85,21 @@ function generate_grpc_files(target, opt)
     local grpc_cpp_plugin = _get_grpc_cpp_plugin(target)
     for _, sourcefile_proto in ipairs(sourcebatch.sourcefiles) do
             local dependfile = target:dependfile(sourcefile_proto)
+             -- get c/c++ source file for grpc
+             local prefixdir
+             local public
+             local fileconfig = target:fileconfig(sourcefile_proto)
+             if fileconfig then
+                 public = fileconfig.proto_public
+                 prefixdir = fileconfig.proto_rootdir
+             end
+             local rootdir = path.join(target:autogendir(), "rules", "grpc")
+             local filename = path.basename(sourcefile_proto) .. ".pb.cc"
+             local filename2 = path.basename(sourcefile_proto) .. ".grpc.pb.cc"
+             local sourcefile_cx = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename})
+             local sourcefile_cx2 = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename2})
+             local sourcefile_dir = prefixdir and path.join(rootdir, prefixdir) or path.directory(sourcefile_cx)
             depend.on_changed(function ()
-                -- get c/c++ source file for grpc
-                local prefixdir
-                local public
-                local fileconfig = target:fileconfig(sourcefile_proto)
-                if fileconfig then
-                    public = fileconfig.proto_public
-                    prefixdir = fileconfig.proto_rootdir
-                end
-                local rootdir = path.join(target:autogendir(), "rules", "grpc")
-                local filename = path.basename(sourcefile_proto) .. ".pb.cc"
-                local filename2 = path.basename(sourcefile_proto) .. ".grpc.pb.cc"
-                local sourcefile_cx = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename})
-                local sourcefile_cx2 = target:autogenfile(sourcefile_proto, {rootdir = rootdir, filename = filename2})
-                local sourcefile_dir = prefixdir and path.join(rootdir, prefixdir) or path.directory(sourcefile_cx)
-                
                 os.mkdir(sourcefile_dir)
                 cprint("${cyan}compiling.proto ${clear}%s", sourcefile_proto)
                 os.vrunv(protoc.program, {sourcefile_proto,
@@ -109,9 +108,8 @@ function generate_grpc_files(target, opt)
                     "--grpc_out=" .. sourcefile_dir,
                     "--plugin=protoc-gen-grpc=" .. grpc_cpp_plugin.program,
                     "--cpp_out=" .. sourcefile_dir})
-
-                target:add("files", sourcefile_cx, sourcefile_cx2)
             end, {dependfile = dependfile, files = {sourcefile_proto}})
+            target:add("files", sourcefile_cx, sourcefile_cx2)
     end
 end
 
