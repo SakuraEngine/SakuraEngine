@@ -47,26 +47,26 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
             -- generate dummy .cpp file
             local dependfile = target:dependfile(headerfile.."meta")
             depend.on_changed(function ()
+                cprint("${cyan}generating.reflection ${clear}%s", headerfile)
                 table.insert(changedfiles, headerfile);
-                -- build generated cpp to json
             end, {dependfile = dependfile, files = {headerfile}})
         end
     else
         changedfiles = headerfiles
     end
     local reflfile = io.open(sourcefile_refl, "w")
-    for _, headerfile in ipairs(changedfiles) do
+    for _, headerfile in ipairs(headerfiles) do
         headerfile = path.absolute(headerfile)
-        sourcefile_refl = path.absolute(sourcefile_refl)
+        sourcefile_refl =
+         path.absolute(sourcefile_refl)
         headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
-        cprint("${cyan}generating.reflection ${clear}%s", headerfile)
         reflfile:print("#include \"%s\"", headerfile)
     end
     reflfile:close()
-    -- compile headers to json
-    cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
-    -- compile jsons to c++
     if(#changedfiles > 0) then
+        -- build generated cpp to json
+        cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
+        -- compile jsons to c++
         for _, generator in ipairs(generators) do
             cprint("${cyan}generating.%s${clear} %s", path.filename(generator), sourcefile_refl)
             import("find_sdk")
@@ -97,7 +97,7 @@ function generate_refl_files(target, rootdir, opt)
 end
 
 function main(target, headerfiles)
-    local batchsize = extraconf and extraconf.batchsize
+    local batchsize = extraconf and extraconf.batchsize or 1
     local extraconf = target:extraconf("rules", "c++.reflection")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
