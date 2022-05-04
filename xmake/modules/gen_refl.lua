@@ -28,25 +28,26 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
 end
 
 function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, headerfiles, opt)
-    
+    -- generate headers dummy
     local changedfiles = {}
     local generators = {
         os.projectdir()..vformat("/tools/codegen/serialize_json.py")
     }
     local incremental = true
+    -- generator version has changed
     for _, generator in ipairs(generators) do
         local dependfile = target:dependfile(generator)
         depend.on_changed(function ()
             incremental = false
         end, {dependfile = dependfile, files = {generator}});
     end
+    -- record incremental header files
     if incremental then
     for _, headerfile in ipairs(headerfiles) do
             -- generate dummy .cpp file
             local dependfile = target:dependfile(headerfile.."meta")
             depend.on_changed(function ()
                 table.insert(changedfiles, headerfile);
-                cprint("${cyan}generating.reflection ${clear}%s", headerfile)
                 -- build generated cpp to json
             end, {dependfile = dependfile, files = {headerfile}})
         end
@@ -58,9 +59,11 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
         headerfile = path.absolute(headerfile)
         sourcefile_refl = path.absolute(sourcefile_refl)
         headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
+        cprint("${cyan}generating.reflection ${clear}%s", headerfile)
         reflfile:print("#include \"%s\"", headerfile)
     end
     reflfile:close()
+    -- compile headers to json
     cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
     -- compile jsons to c++
     if(#changedfiles > 0) then
