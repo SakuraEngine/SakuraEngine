@@ -16,7 +16,6 @@
 #include "asset/config_asset.hpp"
 #include "bitsery/serializer.h"
 #include "resource/resource_header.h"
-#include "SkrCompiler/serialize.generated.h"
 #include "SkrTool/serialize.generated.h"
 #include "SkrRT/serialize.generated.h"
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
