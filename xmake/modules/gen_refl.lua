@@ -55,7 +55,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
         changedfiles = headerfiles
     end
     local reflfile = io.open(sourcefile_refl, "w")
-    for _, headerfile in ipairs(headerfiles) do
+    for _, headerfile in ipairs(changedfiles) do
         headerfile = path.absolute(headerfile)
         sourcefile_refl =
          path.absolute(sourcefile_refl)
@@ -97,7 +97,7 @@ function generate_refl_files(target, rootdir, opt)
 end
 
 function main(target, headerfiles)
-    local batchsize = extraconf and extraconf.batchsize or 1
+    local batchsize = extraconf and extraconf.batchsize or 10
     local extraconf = target:extraconf("rules", "c++.reflection")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
