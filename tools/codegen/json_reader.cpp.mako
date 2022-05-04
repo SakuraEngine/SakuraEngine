@@ -11,7 +11,7 @@ namespace skr::json {
 template<>
 void Read(simdjson::ondemand::value&& json, ${enum.name}& e)
 {
-    std::string_view enumStr = json.get_string();
+    std::string_view enumStr = json.get_string().value_unsafe();
     auto hash = hash_crc32(enumStr);
     switch(hash)
     {
@@ -28,7 +28,7 @@ template<>
 void Read(simdjson::ondemand::value&& json, ${record.name}& record)
 {
     %for field in record.fields:
-    skr::json::Read<${field.type}>(json.find_field("${field.name}").value(), record.${field.name});
+    skr::json::Read<${field.type}>(json.find_field("${field.name}").value_unsafe(), record.${field.name});
     %endfor
 } 
 %endfor
