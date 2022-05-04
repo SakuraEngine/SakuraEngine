@@ -5,7 +5,7 @@ namespace skr::json
 {
 // TODO: error handling
 template <>
-void Read(simdjson::ondemand::value&& json, bool& b) { b = json.get_bool().value(); }
+void Read(simdjson::ondemand::value&& json, bool& b) { b = json.get_bool().value_unsafe(); }
 template <>
 void Read(simdjson::ondemand::value&& json, int32_t& b) { b = json.get_int64().value_unsafe(); }
 template <>
