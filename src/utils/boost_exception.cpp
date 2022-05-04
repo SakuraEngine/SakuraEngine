@@ -3,10 +3,12 @@
 
 namespace boost
 {
-void throw_exception(std::exception const& e, const struct boost::source_location&)
+BOOST_NORETURN void throw_exception(std::exception const& e, const struct boost::source_location&)
 {
+    abort();
 }
-void throw_exception(std::exception const& e)
+BOOST_NORETURN void throw_exception(std::exception const& e)
 {
+    abort();
 }
 } // namespace boost
