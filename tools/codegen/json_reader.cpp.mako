@@ -27,7 +27,7 @@ void Read(simdjson::ondemand::value&& json, ${enum.name}& e)
 template<>
 void Read(simdjson::ondemand::value&& json, ${record.name}& record)
 {
-    %for field in record.fields:
+    %for field in record.allFields():
     skr::json::Read<${field.type}>(json.find_field("${field.name}").value(), record.${field.name});
     %endfor
 } 

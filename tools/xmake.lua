@@ -21,6 +21,6 @@ target("SkrCompiler")
         add_links("zlibstatic")
     end
     add_rules("c++.reflection", {
-        files = {"core/**.h", "core/**.hpp"},
-        rootdir = "core/"
+        files = {"compiler/**.h", "compiler/**.hpp"},
+        rootdir = "compiler/"
     })

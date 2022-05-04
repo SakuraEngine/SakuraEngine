@@ -12,7 +12,7 @@ namespace asset
 struct SAssetRecord {
     skr_guid_t guid;
     SPath path;
-    simdjson::ondemand::object meta;
+    simdjson::ondemand::document meta;
 };
 struct SAssetRegistry {
     const SAssetRecord* GetAssetRecord(const skr_guid_t& guid);

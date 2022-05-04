@@ -16,7 +16,7 @@ bool SJsonConfigImporterFactory::CanImport(const SAssetRecord* record)
 }
 skr_guid_t SJsonConfigImporterFactory::GetResourceType()
 {
-    return get_type_id_skr_config_resource_t();
+    return skr_get_type_id_skr_config_resource_t();
 }
 SImporter* SJsonConfigImporterFactory::CreateImporter(const SAssetRecord* record)
 {

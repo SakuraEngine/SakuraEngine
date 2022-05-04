@@ -1,5 +1,6 @@
 #include "json/reader.h"
 #include "EASTL/string.h"
+#include "platform/guid.h"
 
 namespace skr::json
 {
@@ -21,5 +22,11 @@ void Read(simdjson::ondemand::value&& json, eastl::string& str)
 {
     std::string_view view = json.get_string();
     str = eastl::string(view.data(), view.length());
+}
+template <>
+void Read(simdjson::ondemand::value&& json, skr_guid_t& guid)
+{
+    std::string_view view = json.get_string();
+    skr::guid::make_guid(view);
 }
 } // namespace skr::json

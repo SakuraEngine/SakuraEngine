@@ -23,7 +23,7 @@ template<>
 void Write(skr_json_writer_t* writer, const ${record.name}& record)
 {
     writer->StartObject();
-    %for field in record.fields:
+    %for field in record.allFields():
     writer->Key("${field.name}", ${len(field.name)});
     skr::json::Write<TParamType<${field.type}>>(writer, record.${field.name});
     %endfor

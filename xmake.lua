@@ -41,6 +41,10 @@ end
 
 target("SkrRT") 
     set_kind("static")
+    add_rules("c++.reflection", {
+        files = {"include/resource/**.h", "include/resource/**.hpp"},
+        rootdir = "include/"
+    })
     add_deps(deps_list)
     add_packages(packages_list, {public = true})
     add_includedirs(include_dir_list, {public = true})

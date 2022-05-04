@@ -1,4 +1,9 @@
+#include "asset/importer.hpp"
+#include "bitsery/adapter/buffer.h"
 #include "google/protobuf/empty.pb.h"
+#include "platform/guid.h"
+#include "resource/config_resource.h"
+#include "resource/resource_header.h"
 #include "skrcompiler.grpc.pb.h"
 #include "skrcompiler.pb.h"
 #include <grpcpp/completion_queue.h>
@@ -8,7 +13,12 @@
 #include <grpcpp/create_channel.h>
 #include <memory>
 #include <sstream>
-
+#include "asset/config_asset.hpp"
+#include "bitsery/serializer.h"
+#include "resource/resource_header.h"
+#include "SkrCompiler/serialize.generated.h"
+#include "SkrTool/serialize.generated.h"
+#include "SkrRT/serialize.generated.h"
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
     ::grpc::Status Compile(::grpc::ServerContext* context, const ::skrcompiler::CompileInfo* request, ::skrcompiler::CompileResult* response) override
@@ -43,6 +53,26 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     }
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
+
+void compile_config(skd::asset::SAssetRecord* record)
+{
+    using namespace skd;
+    asset::SAssetRegistry registry; // TODO: get registry
+    asset::SImporterFactory* factory = new asset::SJsonConfigImporterFactory;
+    simdjson::ondemand::parser parser;
+    auto importer = factory->LoadImporter(record, record->meta.find_field("importer").value());
+    auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
+    skr_resource_header_t header;
+    header.guid = skr::guid::make_guid("F3449319-F2C8-4874-9394-E82CE15503DD");
+    header.type = skr_get_type_id_skr_config_resource_t();
+    header.version = 0;
+    eastl::vector<uint8_t> buffer;
+    skr::resource::SBinarySerializer archive(buffer);
+    bitsery::serialize(archive, header);
+    skr::resource::SConfigFactory::Serialize(*resource, archive);
+    // TODO: make dir
+    /// TODO: output
+}
 
 int main(int argc, char** argv)
 {
