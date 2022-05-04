@@ -3,9 +3,9 @@
 #include "asset/importer.hpp"
 #include "platform/configure.h"
 
-namespace skd
+namespace skd reflect
 {
-namespace asset
+namespace asset reflect
 {
 struct reflect attr("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6")
 SJsonConfigImporter final : public SImporter
@@ -19,5 +19,5 @@ struct SJsonConfigImporterFactory final : public SImporterFactory {
     SImporter* CreateImporter(const SAssetRecord* record) override;
     SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object) override;
 };
-} // namespace asset
-} // namespace skd
+} // namespace reflect
+} // namespace reflect

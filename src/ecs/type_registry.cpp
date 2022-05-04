@@ -23,7 +23,7 @@ type_registry_t::type_registry_t(pool_t& pool)
 {
     {
         type_description_t desc;
-        desc.guid = guid_parse::make_guid("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.guid = skr::guid::make_guid("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
         desc.name = "disable";
         desc.size = 0;
         desc.elementSize = 0;
@@ -34,7 +34,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     }
     {
         type_description_t desc;
-        desc.guid = guid_parse::make_guid("{C0471B12-5462-48BB-B8C4-9983036ECC6C}");
+        desc.guid = skr::guid::make_guid("{C0471B12-5462-48BB-B8C4-9983036ECC6C}");
         desc.name = "dead";
         desc.size = 0;
         desc.elementSize = 0;
@@ -45,7 +45,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     }
     {
         type_description_t desc;
-        desc.guid = guid_parse::make_guid("{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
+        desc.guid = skr::guid::make_guid("{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
         desc.name = "link";
         desc.size = sizeof(dual_entity_t) * kLinkComponentSize;
         desc.elementSize = sizeof(dual_entity_t);
@@ -59,7 +59,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         assert(descriptions.size() == kMaskComponent);
         type_description_t desc;
-        desc.guid = guid_parse::make_guid("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.guid = skr::guid::make_guid("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
         desc.name = "mask";
         desc.size = sizeof(dual_mask_component_t);
         desc.elementSize = 0;
@@ -71,7 +71,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         assert(descriptions.size() == kGuidComponent);
         type_description_t desc;
-        desc.guid = guid_parse::make_guid("{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
+        desc.guid = skr::guid::make_guid("{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
         desc.name = "guid";
         desc.size = 0;
         desc.elementSize = 0;

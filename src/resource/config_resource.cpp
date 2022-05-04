@@ -2,6 +2,7 @@
 #include "bitsery/deserializer.h"
 #include "bitsery/details/adapter_common.h"
 #include "platform/configure.h"
+#include "platform/memory.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_header.h"
 #include "type/type_registry.h"
@@ -10,7 +11,7 @@ namespace skr
 {
 namespace resource
 {
-bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryArchive& archive)
+bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)
 {
     if (!SResourceFactory::Deserialize(record, archive))
         return false;

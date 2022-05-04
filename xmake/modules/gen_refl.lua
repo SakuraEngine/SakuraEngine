@@ -1,4 +1,5 @@
 import("core.project.depend")
+import("private.async.runjobs")
 
 function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     import("core.base.option")
@@ -16,10 +17,13 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     end
     local compiler_inst = compiler.load(sourcekind, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
+    if opt.cl then
+        table.insert(argv, "--driver-mode=cl")
+    end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
     import("find_sdk")
-    meta = find_sdk.find_program("meta")
-    argv2 = {sourcefile, "--output="..path.absolute(metadir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
+    local meta = find_sdk.find_program("meta")
+    local argv2 = {sourcefile, "--output="..path.absolute(metadir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
@@ -31,28 +35,40 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
     
     local changedfiles = {}
     local generators = {
-        os.projectdir()..vformat("/tools/codegen/serialize_json.py")
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
+            os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_reader.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_writer.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_writer.cpp.mako")
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize.py"),
+            os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/typeid.py"),
+            os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
+        }
     }
-    local incremental = true
+    local rebuild = false
     for _, generator in ipairs(generators) do
-        local dependfile = target:dependfile(generator)
+        local dependfile = target:dependfile(generator[1])
         depend.on_changed(function ()
-            incremental = false
-        end, {dependfile = dependfile, files = {generator}});
+            rebuild = true
+        end, {dependfile = dependfile, files = generator});
     end
-    if incremental then
     for _, headerfile in ipairs(headerfiles) do
-            -- generate dummy .cpp file
-            local dependfile = target:dependfile(headerfile.."meta")
-            depend.on_changed(function ()
-                table.insert(changedfiles, headerfile);
-                cprint("${cyan}generating.reflection ${clear}%s", headerfile)
-                -- build generated cpp to json
-            end, {dependfile = dependfile, files = {headerfile}})
-        end
-    else
+        local dependfile = target:dependfile(headerfile.."meta")
+        depend.on_changed(function ()
+            table.insert(changedfiles, headerfile);
+            cprint("${cyan}generating.reflection ${clear}%s", headerfile)
+        end, {dependfile = dependfile, files = {headerfile}})
+    end
+    if rebuild then
         changedfiles = headerfiles
     end
+    -- generate dummy .cpp file
     local reflfile = io.open(sourcefile_refl, "w")
     for _, headerfile in ipairs(changedfiles) do
         headerfile = path.absolute(headerfile)
@@ -61,10 +77,12 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
         reflfile:print("#include \"%s\"", headerfile)
     end
     reflfile:close()
+    -- build generated cpp to json
     cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
     -- compile jsons to c++
     if(#changedfiles > 0) then
-        for _, generator in ipairs(generators) do
+        local function task(index)
+            local generator = generators[index][1]
             cprint("${cyan}generating.%s${clear} %s", path.filename(generator), sourcefile_refl)
             import("find_sdk")
             local python = find_sdk.find_program("python3")
@@ -73,6 +91,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
                 path.absolute(metadir), path.absolute(gendir)
             })
         end
+        runjobs("codegen.cpp", task, {total = #generators})
     end
 end
 
@@ -98,7 +117,7 @@ function main(target, headerfiles)
     local extraconf = target:extraconf("rules", "c++.reflection")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
-    local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
+    local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated", target:name())
     local reflection_batch = {}
     local id = 1
     local count = 0

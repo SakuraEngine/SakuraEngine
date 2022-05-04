@@ -10,11 +10,17 @@ typedef enum ESkrInstallStatus
 
 #if defined(__cplusplus)
     #include "utils/serialize.hpp"
+    #include "bitsery/serializer.h"
 namespace skr
 {
 namespace resource
 {
-using SBinaryArchive = bitsery::Deserializer<bitsery::InputBufferAdapter<eastl::vector<uint8_t>>>;
+using SBinaryDeserializer = bitsery::Deserializer<bitsery::InputBufferAdapter<eastl::vector<uint8_t>>>;
+using SBinarySerializer = bitsery::Serializer<bitsery::OutputBufferAdapter<eastl::vector<uint8_t>>>;
+struct SBinaryArchive {
+    SBinaryDeserializer* deserializer;
+    SBinarySerializer* serializer;
+};
 /*
     resource load phase:
     Unloaded => request -> load binary -> deserialize header -> deserialize => Loaded
@@ -22,7 +28,7 @@ using SBinaryArchive = bitsery::Deserializer<bitsery::InputBufferAdapter<eastl::
 */
 struct SResourceFactory {
     virtual skr_type_id_t GetResourceType() = 0;
-    virtual bool Deserialize(skr_resource_record_t* record, SBinaryArchive& archive);
+    virtual bool Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive);
     virtual bool Unload(skr_resource_record_t* record);
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
     virtual bool Uninstall(skr_resource_record_t* record) { return true; }
