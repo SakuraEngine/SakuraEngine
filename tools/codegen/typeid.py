@@ -73,7 +73,7 @@ def write(path, content):
     RE_PYTHON_ADDR = re.compile(r"<.+? object at 0x[0-9a-fA-F]+>")
     directory = os.path.dirname(path)
     if not os.path.exists(directory):
-        os.makedirs(directory)
+        os.makedirs(directory, exist_ok=True)
     open(path, "wb").write(content.encode("utf-8"))
 
     python_addr = RE_PYTHON_ADDR.search(content)
