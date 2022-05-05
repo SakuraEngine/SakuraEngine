@@ -59,7 +59,7 @@ void compile_config(skd::asset::SAssetRecord* record)
     asset::SAssetRegistry registry; // TODO: get registry
     asset::SImporterFactory* factory = new asset::SJsonConfigImporterFactory;
     simdjson::ondemand::parser parser;
-    auto importer = factory->LoadImporter(record, record->meta.find_field("importer").value());
+    auto importer = factory->LoadImporter(record, record->meta.find_field("importer").value_unsafe());
     auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
     skr_resource_header_t header;
     header.guid = skr::guid::make_guid("F3449319-F2C8-4874-9394-E82CE15503DD");
