@@ -3,6 +3,12 @@ set_project("Sakura.Runtime")
 add_rules("mode.debug", "mode.release")
 add_moduledirs("xmake/modules")
 
+option("build_tools")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Toggle to build tools of SakuraRuntime")
+option_end()
+
 option("build_samples")
     set_default(true)
     set_showmenu(true)
