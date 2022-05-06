@@ -1,5 +1,6 @@
 #include "asset/importer.hpp"
 #include "bitsery/adapter/buffer.h"
+#include "ghc/filesystem.hpp"
 #include "google/protobuf/empty.pb.h"
 #include "platform/guid.h"
 #include "resource/config_resource.h"
@@ -11,10 +12,9 @@
 #include <grpcpp/server_builder.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/create_channel.h>
-#include <memory>
-#include <sstream>
 #include "asset/config_asset.hpp"
 #include "bitsery/serializer.h"
+#include "utils/defer.hpp"
 #include "resource/resource_header.h"
 #include "SkrTool/serialize.generated.h"
 #include "SkrRT/serialize.generated.h"
@@ -53,10 +53,19 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
 
+namespace skd::asset
+{
+SAssetRegistry* GetAssetRegistry()
+{
+    static SAssetRegistry registry;
+    return &registry;
+}
+} // namespace skd::asset
+
 void compile_config(skd::asset::SAssetRecord* record)
 {
     using namespace skd;
-    asset::SAssetRegistry registry; // TODO: get registry
+    asset::SAssetRegistry& registry = *asset::GetAssetRegistry();
     asset::SImporterFactory* factory = new asset::SJsonConfigImporterFactory;
     simdjson::ondemand::parser parser;
     auto importer = factory->LoadImporter(record, record->meta.find_field("importer").value_unsafe());
@@ -69,12 +78,19 @@ void compile_config(skd::asset::SAssetRecord* record)
     skr::resource::SBinarySerializer archive(buffer);
     bitsery::serialize(archive, header);
     skr::resource::SConfigFactory::Serialize(*resource, archive);
-    // TODO: make dir
-    /// TODO: output
+    ghc::filesystem::path output = "F:\\Sakura.Runtime\\samples\\game\\resource";
+    ghc::filesystem::create_directories(output);
+    output.append(record->path.filename().replace_extension("bin"));
+    auto file = fopen(output.u8string().c_str(), "wb");
+    fwrite(buffer.data(), 1, buffer.size(), file);
+    SKR_DEFER({ fclose(file); });
 }
 
 int main(int argc, char** argv)
 {
+    auto& registry = *skd::asset::GetAssetRegistry();
+    compile_config(registry.ImportAsset("F:\\Sakura.Runtime\\samples\\game\\assets\\myConfig.json"));
+    return 0;
     using namespace grpc;
     if (argc != 1)
     {
