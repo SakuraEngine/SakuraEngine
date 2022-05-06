@@ -6,3 +6,5 @@
 #endif
 #include "resource_factory.cpp"
 #include "resource_system.cpp"
+#include "config_resource.cpp"
+#include "local_resource_registry.cpp"

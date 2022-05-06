@@ -61,6 +61,14 @@ SAssetRegistry* GetAssetRegistry()
     return &registry;
 }
 } // namespace skd::asset
+namespace skr::resource
+{
+SConfigRegistry* GetConfigRegistry()
+{
+    static SConfigRegistry registry;
+    return &registry;
+}
+} // namespace skr::resource
 
 void compile_config(skd::asset::SAssetRecord* record)
 {

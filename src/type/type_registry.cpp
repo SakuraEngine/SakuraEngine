@@ -210,10 +210,10 @@ eastl::string skr_type_t::Name() const
             auto& ref = (ReferenceType&)(*this);
             switch (ref.ownership)
             {
-                case ReferenceType::Observed:
-                    return format("std::shared_ptr<{}>", ref.pointee->Name());
                 case ReferenceType::Shared:
-                    return ref.pointee->Name() + " *";
+                    return format("std::shared_ptr<{}>", ref.pointee ? ref.pointee->Name() : "void");
+                case ReferenceType::Observed:
+                    return ref.pointee ? (ref.pointee->Name() + " *") : "void*";
             }
         }
     }
@@ -247,12 +247,17 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
         case SKR_TYPE_CATEGORY_ENUM:
             return this == srcType; //对象类型直接比较地址
         case SKR_TYPE_CATEGORY_REF: {
-            return ((ReferenceType*)this)->ownership == ((ReferenceType*)srcType)->ownership && ((ReferenceType*)this)->nullable == ((ReferenceType*)srcType)->nullable && ((ReferenceType*)this)->pointee->Same(((ReferenceType*)srcType)->pointee);
+            {
+                auto ptr = ((ReferenceType*)this);
+                auto sptr = ((ReferenceType*)srcType);
+                if ((ptr->pointee == nullptr || sptr->pointee == nullptr) && ptr->pointee != sptr->pointee)
+                    return false;
+                return ptr->ownership == sptr->ownership && ptr->nullable == sptr->nullable && ptr->pointee->Same(sptr->pointee);
+            }
         }
+            return false;
     }
-    return false;
 }
-
 bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
 {
     using namespace skr::type;
@@ -263,7 +268,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
     if (srcType->type == SKR_TYPE_CATEGORY_REF)
     {
         auto& sptr = (const ReferenceType&)(*srcType);
-        if (!sptr.nullable && Convertible(sptr.pointee))
+        if (!sptr.nullable && sptr.pointee != nullptr && Convertible(sptr.pointee))
         {
             return true;
         }
@@ -387,6 +392,8 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                     return false;
                 if (sptr.ownership != ptr.ownership && ptr.ownership != ReferenceType::Observed)
                     return false;
+                if (ptr.pointee == nullptr || sptr.pointee == nullptr)
+                    return true;
                 if (ptr.pointee->Same(sptr.pointee))
                 {
                     return true;
@@ -409,7 +416,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 else
                     return false;
             }
-            else if (ptr.ownership == ReferenceType::Observed && ptr.pointee->Same(srcType))
+            else if (ptr.ownership == ReferenceType::Observed && ptr.pointee && ptr.pointee->Same(srcType))
                 return true;
             else
                 return false;
@@ -434,7 +441,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
     if (srcType->type == SKR_TYPE_CATEGORY_REF)
     {
         auto& sptr = (const ReferenceType&)(*srcType);
-        if (!sptr.nullable && Convertible(sptr.pointee))
+        if (!sptr.nullable && sptr.pointee != nullptr && Convertible(sptr.pointee))
             Convert(dst, *(void**)src, srcType, policy); // dereference and convert
     }
 
@@ -1282,4 +1289,13 @@ bool skr::type::RecordType::IsBaseOf(const RecordType& other) const
         if (ptr == this)
             return true;
     return false;
+}
+
+skr_type_t* skr_get_type(const skr_type_id_t* id)
+{
+    auto& types = skr::type::GetTypeRegistry()->types;
+    auto iter = types.find(*id);
+    if (iter == types.end())
+        return nullptr;
+    return (skr_type_t*)iter->second;
 }
