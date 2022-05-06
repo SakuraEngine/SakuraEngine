@@ -56,7 +56,7 @@ target("SkrRT")
     add_includedirs(include_dir_list, {public = true})
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
-    add_cxflags(project_cxflags, {public = true})
+    add_cxflags(project_cxflags, {public = true, force = true})
     -- fetch vk includes
     add_rules("utils.fetch-vk-includes")
     -- add internal shaders
@@ -69,7 +69,7 @@ target("SkrRT")
         add_links("advapi32", "Shcore")
     end
     if (is_os("macosx")) then 
-        add_mxflags(project_cxflags, project_mxflags, {public = true})
+        add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit")
         add_files("src/**/build.*.m", "src/**/build.*.mm")
