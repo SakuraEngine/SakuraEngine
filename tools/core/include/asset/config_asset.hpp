@@ -10,15 +10,19 @@ namespace asset reflect
 {
 
 struct SConfigTypeInfo {
-    void (*Import)(void* address, simdjson::ondemand::value&& json);
+    void* (*Import)(simdjson::ondemand::value&& json);
 };
 struct SConfigRegistry {
     phmap::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
 RUNTIME_API SConfigRegistry* GetConfigRegistry();
-struct reflect attr("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6")
+struct reflect attr(
+"guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
+"serialize" : true
+)
 SJsonConfigImporter final : public SImporter
 {
+    skr_guid_t configType;
     using SImporter::SImporter;
     void* Import(const SAssetRecord* record) override;
 };

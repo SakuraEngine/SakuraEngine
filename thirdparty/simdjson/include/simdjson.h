@@ -162,8 +162,8 @@ use a 64-bit target such as x64, 64-bit ARM or 64-bit PPC.")
 // this is almost standard?
 #undef STRINGIFY_IMPLEMENTATION_
 #undef STRINGIFY
-#define STRINGIFY_IMPLEMENTATION_(a) #a
-#define STRINGIFY(a) STRINGIFY_IMPLEMENTATION_(a)
+#define STRINGIFY_IMPLEMENTATION_(...) #__VA_ARGS__
+#define STRINGIFY(...) STRINGIFY_IMPLEMENTATION_(__VA_ARGS__)
 
 // Our fast kernels require 64-bit systems.
 //

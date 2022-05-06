@@ -40,6 +40,8 @@ def main():
         meta = json.load(open(meta))
         for key, value in itertools.chain(meta["records"].items(), meta["enums"].items()):
             file = value["fileName"]
+            if not "guid" in value["attrs"]:
+                continue
             guid = value["attrs"]["guid"]
             db.headers.add(GetInclude(file))
             db.types.append(Type(key, guid))

@@ -41,7 +41,7 @@ TEST_F(FSTest, read)
     abs_fs_desc.app_name = "fs-test";
     abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
     const auto current_path = ghc::filesystem::current_path();
-    abs_fs_desc.override_mount_dir = current_path.c_str();
+    abs_fs_desc.override_mount_dir = current_path.u8string().c_str();
     auto abs_fs = skr_create_vfs(&abs_fs_desc);
     EXPECT_NE(abs_fs, nullptr);
     EXPECT_NE(abs_fs->mount_dir, nullptr);

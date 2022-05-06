@@ -2,7 +2,6 @@
 #include "platform/guid.h"
 #include "resource/resource_header.h"
 #include "platform/configure.h"
-#include "utils/path.hpp"
 #include "simdjson.h"
 #include "asset_registry.hpp"
 
