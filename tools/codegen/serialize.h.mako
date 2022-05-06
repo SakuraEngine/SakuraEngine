@@ -7,15 +7,15 @@
 namespace bitsery {
 %for enum in db.enums:
 template<class S>
-void serialize(S& s, ${enum.name} e)
+void serialize(S& s, ${enum.name}& e)
 {
-    serialize(s, std::underlying_type_t<${enum.name}>(e));
+    serialize(s, (std::underlying_type_t<${enum.name}>&)(e));
 } 
 %endfor
 
 %for record in db.records:
 template<class S>
-void serialize(S& s, const ${record.name}& record)
+void serialize(S& s, ${record.name}& record)
 {
     s(${",".join( "record."+field.name for field in record.allFields())});
 } 

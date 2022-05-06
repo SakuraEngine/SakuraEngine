@@ -31,12 +31,18 @@ target("cgpu-3d")
     add_files("cgpu-3d/**.hlsl")
     add_files("cgpu-3d/**.bin", "cgpu-3d/**.gltf", "cgpu-3d/**.png")
 
-target("game")
+--独立出来RT以便Tool使用
+target("GameRT")
     -- cxx reflection
     add_rules("c++.reflection", {
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
-    set_kind("binary")
+    set_kind("static")
     add_deps("SkrRT")
-    add_files("game/**.cpp")
+    add_files("game/src/**.cpp")
+
+target("Game")
+    set_kind("binary")
+    add_deps("GameRT")
+    add_files("game/main.cpp")

@@ -25,6 +25,7 @@ rule("c++.reflection")
         local sourcebatches = target:sourcebatches()
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
         target:add("includedirs", gendir, {public = true})
+        target:add("includedirs", path.join(gendir, target:name()))
         local cppfiles = os.files(path.join(gendir, "/**.cpp"))
         for _, file in ipairs(cppfiles) do
             target:add("files", file)

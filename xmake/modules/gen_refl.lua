@@ -1,6 +1,5 @@
 import("core.project.depend")
 import("private.async.runjobs")
-
 function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     import("core.base.option")
     import("core.base.object")
@@ -31,7 +30,7 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     return argv
 end
 
-function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, headerfiles, opt)
+function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
     -- generate headers dummy
     local changedfiles = {}
     local generators = {
@@ -49,6 +48,15 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
         {
             os.projectdir()..vformat("/tools/codegen/typeid.py"),
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/config_resource.py"),
+            os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/config_asset.py"),
+            os.projectdir()..vformat("/tools/codegen/config_asset.cpp.mako"),
+            gendir = toolgendir
         }
     }
     local rebuild = false
@@ -89,7 +97,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir,sourcefile_refl, heade
             local python = find_sdk.find_program("python3")
             os.iorunv(python.program, {
                 generator,
-                path.absolute(metadir), path.absolute(gendir)
+                path.absolute(metadir), path.absolute(generators[index].gendir or gendir)
             })
         end
         runjobs("codegen.cpp", task, {total = #generators})
@@ -105,8 +113,9 @@ function generate_refl_files(target, rootdir, opt)
                 local sourcefile_refl = sourceinfo.sourcefile
                 local metadir = sourceinfo.metadir
                 local gendir = sourceinfo.gendir
+                local toolgendir = sourceinfo.toolgendir
                 if headerfiles then
-                    _merge_reflfile(target, rootdir, metadir, gendir, sourcefile_refl, headerfiles, opt)
+                    _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
                 end
             end
         end
@@ -119,6 +128,7 @@ function main(target, headerfiles)
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
     local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated", target:name())
+    local toolgendir = path.join(target:autogendir({root = true}), target:plat(), "tool/generated", target:name())
     local reflection_batch = {}
     local id = 1
     local count = 0
@@ -138,6 +148,7 @@ function main(target, headerfiles)
                 sourceinfo.sourcefile = sourcefile_reflection
                 sourceinfo.metadir = metadir
                 sourceinfo.gendir = gendir
+                sourceinfo.toolgendir = toolgendir
                 reflection_batch[id] = sourceinfo
             end
             sourceinfo.headerfiles = sourceinfo.headerfiles or {}

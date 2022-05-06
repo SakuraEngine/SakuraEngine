@@ -79,7 +79,7 @@ def main():
         for key, value in meta["records"].items():
             file = value["fileName"]
             fields = []
-            if "custom_serialize" in value["attrs"]:
+            if not "serialize" in value["attrs"]:
                 continue
             for key2, value2 in value["fields"].items():
                 attr = value2["attrs"]
