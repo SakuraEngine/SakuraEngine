@@ -4,10 +4,16 @@
 #include "resource/config_resource.h"
 #include "json/reader.h"
 #include "platform/debug.h"
+#include <filesystem>
 namespace skd
 {
 namespace asset
 {
+void* SJsonConfigImporter::Import(const SAssetRecord* record)
+{
+    auto registry = GetConfigRegistry();
+}
+
 bool SJsonConfigImporterFactory::CanImport(const SAssetRecord* record)
 {
     // TODO: Path utils
@@ -16,7 +22,7 @@ bool SJsonConfigImporterFactory::CanImport(const SAssetRecord* record)
 }
 skr_guid_t SJsonConfigImporterFactory::GetResourceType()
 {
-    return skr_get_type_id_skr_config_resource_t();
+    return get_type_id_skr_config_resource_t();
 }
 SImporter* SJsonConfigImporterFactory::CreateImporter(const SAssetRecord* record)
 {

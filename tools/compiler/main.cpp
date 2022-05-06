@@ -63,7 +63,7 @@ void compile_config(skd::asset::SAssetRecord* record)
     auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
     skr_resource_header_t header;
     header.guid = skr::guid::make_guid("F3449319-F2C8-4874-9394-E82CE15503DD");
-    header.type = skr_get_type_id_skr_config_resource_t();
+    header.type = get_type_id_skr_config_resource_t();
     header.version = 0;
     eastl::vector<uint8_t> buffer;
     skr::resource::SBinarySerializer archive(buffer);

@@ -12,8 +12,19 @@ typedef struct skr_guid_t {
     #include <string_view>
     #include <string>
     #include "platform/debug.h"
+    #include "utils/hash.h"
+inline bool operator==(const skr_guid_t& a, const skr_guid_t& b)
+{
+    return std::memcmp(&a, &b, sizeof(skr_guid_t)) == 0;
+}
 namespace skr::guid
 {
+struct hash {
+    size_t operator()(const skr_guid_t& a) const
+    {
+        return skr_hash(&a, sizeof(skr_guid_t), 0);
+    }
+};
 namespace details
 {
 constexpr const size_t short_guid_form_length = 36; // XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
