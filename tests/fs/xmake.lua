@@ -5,5 +5,7 @@ target("fs-test")
     add_files("test/main.cpp")
     set_languages("c++17")
     -- app
-    add_rules("xcode.application")
-    add_files(os.projectdir().."/cmake/Info.plist")
+    if (is_os("macosx")) then 
+        add_rules("xcode.application")
+        add_files(os.projectdir().."/cmake/Info.plist")
+    end
