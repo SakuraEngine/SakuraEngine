@@ -45,16 +45,16 @@ TEST_F(FSTest, readwrite)
     auto abs_fs = skr_create_vfs(&abs_fs_desc);
     EXPECT_NE(abs_fs, nullptr);
     EXPECT_NE(abs_fs->mount_dir, nullptr);
-    auto f = abs_fs->procs.fopen(abs_fs, "testfile",
+    auto f = skr_vfs_fopen(abs_fs, "testfile",
     SKR_FM_READ_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
     const char8_t* string = u8"Hello, World!";
-    abs_fs->procs.fwrite(f, string, 0, strlen(string));
+    skr_vfs_fwrite(f, string, 0, strlen(string));
     char8_t string_out[256];
     std::memset((void*)string_out, 0, 256);
-    abs_fs->procs.fread(f, string_out, 0, strlen(string));
+    skr_vfs_fread(f, string_out, 0, strlen(string));
     EXPECT_EQ(std::string(string_out), std::string(u8"Hello, World!"));
-    EXPECT_EQ(abs_fs->procs.fsize(f), strlen(string));
-    EXPECT_EQ(abs_fs->procs.fclose(f), true);
+    EXPECT_EQ(skr_vfs_fsize(f), strlen(string));
+    EXPECT_EQ(skr_vfs_fclose(f), true);
     skr_free_vfs(abs_fs);
 }
 
