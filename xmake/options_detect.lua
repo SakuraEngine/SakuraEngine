@@ -24,7 +24,9 @@ if(has_config("is_clang")) then
 end
 
 if(has_config("is_msvc")) then
-    add_defines("/EHs", "/GR-")
+    add_defines("/EHsc", "/GR-")
+    table.insert(project_cxflags, "/EHsc")
+    table.insert(project_cxflags, "/GR-")
     if(has_config("is_clang")) then
         table.insert(project_cxflags, "-fexceptions")
         table.insert(project_cxflags, "-fcxx-exceptions")
