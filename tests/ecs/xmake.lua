@@ -1,4 +1,4 @@
-target("api-test")
+target("ecs-test")
     set_kind("binary")
     add_deps("SkrRT")
     add_packages("gtest")

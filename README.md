@@ -66,6 +66,7 @@
 - simdjson v1.0.2 (Apache-2.0)
 - bitsery v5.2.2 (MIT)
 - fast_float v3.4.0
+- llfio 28ed462
 
 ## 接入的扩展API以及版本
 - nvapi R510
