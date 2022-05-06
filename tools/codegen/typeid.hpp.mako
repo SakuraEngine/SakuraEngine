@@ -1,5 +1,4 @@
 #pragma once
-#include "platform/hash.h"
 %for header in db.headers:
 #include "${header}"
 %endfor
