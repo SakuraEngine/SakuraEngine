@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+  <Type Name="outcome_v2_35644f5c::basic_outcome&lt;*&gt;">
+    <DisplayString Condition="(_state._status.status_value &amp; 0xff) == 0">empty</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 1) == 1">value {{{_state._value}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 2) == 2">error {{{_state._error}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 4) == 4">exception {{{_ptr}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 6) == 6">error + exception {{{_state._error}}} + {{{_ptr}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 18) == 18">error (errno) {{{_state._error}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 22) == 22">error (errno) + exception {{{_error}}} + {{{_ptr}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 33) == 33">value (moved from) {{{_state._value}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 35) == 35">error (moved from) {{{_state._error}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 36) == 36">exception (moved from) {{{_ptr}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 38) == 38">error + exception (moved from) {{{_state._error}}} + {{{_ptr}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 50) == 50">error (errno, moved from) {{{_state._error}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 54) == 54">error (errno, moved from) + exception {{{_error}}} + {{{_ptr}}}</DisplayString>
+    <DisplayString>unknown</DisplayString>
+    <Expand>
+      <Item Condition="(_state._status.status_value &amp; 1) == 1" Name="[value]">_state._value</Item>
+      <Item Condition="(_state._status.status_value &amp; 2) == 2" Name="[error]">_state._error</Item>
+      <Item Condition="(_state._status.status_value &amp; 4) == 4" Name="[exception]">_ptr</Item>
+    </Expand>
+  </Type>
+  <Type Name="outcome_v2_35644f5c::basic_result&lt;*&gt;">
+    <DisplayString Condition="(_state._status.status_value &amp; 0xff) == 0">empty</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 1) == 1">value {{{_state._value}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 2) == 2">error {{{_state._error}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 18) == 18">error (errno) {{{_state._error}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 33) == 33">value (moved from) {{{_state._value}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 35) == 35">error (moved from) {{{_state._error}}}</DisplayString>
+    <DisplayString Condition="(_state._status.status_value &amp; 50) == 50">error (errno, moved from) {{{_state._error}}}</DisplayString>
+    <DisplayString>unknown</DisplayString>
+    <Expand>
+      <Item Condition="(_state._status.status_value &amp; 1) == 1" Name="[value]">_state._value</Item>
+      <Item Condition="(_state._status.status_value &amp; 2) == 2" Name="[error]">_state._error</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

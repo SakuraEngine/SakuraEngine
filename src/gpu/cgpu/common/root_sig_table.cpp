@@ -28,7 +28,7 @@ bool CGPUUtil_ShaderResourceIsRootConst(CGPUShaderResource* resource, const stru
     return false;
 }
 
-char8_t* duplicate_string(const char8_t* src_string)
+inline static char8_t* duplicate_string(const char8_t* src_string)
 {
     if (src_string != CGPU_NULLPTR)
     {

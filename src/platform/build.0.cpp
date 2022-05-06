@@ -1,5 +1,10 @@
 #include "platform/configure.h"
 #include "debug.cpp"
+#include "vfs.cpp"
+#include "llfio/llfio_vfs.cpp"
+#ifdef SAKURA_RUNTIME_OS_UNIX
+    #include "unix/unix_vfs.cpp"
+#endif
 
 #ifdef RUNTIME_SHARED
 extern "C" {

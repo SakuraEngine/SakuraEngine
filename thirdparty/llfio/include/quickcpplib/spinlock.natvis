@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+  <Type Name="boost_lite::_415bbcd2::configurable_spinlock::spinlock&lt;*&gt;">
+    <DisplayString Condition="v._My_val == 0">unlocked</DisplayString>
+    <DisplayString Condition="v._My_val == 1">locked {{{v}}}</DisplayString>
+  </Type>
+  <Type Name="boost_lite::_415bbcd2::configurable_spinlock::spinlock&lt;boost_lite::_415bbcd2::configurable_spinlock::lockable_ptr&lt;*&gt;&gt;">
+    <DisplayString Condition="v._My_val&amp;1 == 0">unlocked</DisplayString>
+    <DisplayString Condition="v&amp;1 == 1">locked</DisplayString>
+  </Type>
+  <Type Name="boost_lite::_415bbcd2::configurable_spinlock::shared_spinlock&lt;*&gt;">
+    <DisplayString Condition="_v._My_val == 0">unlocked</DisplayString>
+    <DisplayString Condition="_v._My_val > 1">shared {{{_v}}}</DisplayString>
+    <DisplayString Condition="_v._My_val&amp;1 == 1">exclusive</DisplayString>
+  </Type>
+</AutoVisualizer>

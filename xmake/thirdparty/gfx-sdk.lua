@@ -8,4 +8,5 @@ task("unzip-gfx-sdk")
             find_sdk.install_lib("SDL2")
         end
         find_sdk.install_lib("grpc")
+        find_sdk.install_lib("llfio")
     end)

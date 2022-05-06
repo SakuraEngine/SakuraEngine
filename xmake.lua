@@ -58,10 +58,6 @@ target("SkrRT")
         spv_outdir = "/../resources/shaders", 
         dxil_outdir = "/../resources/shaders"})
     add_files("src/**/*.hlsl")
-    -- disable exceptions
-    if(has_config("is_clang")) then
-        add_cxflags("-fno-exceptions", {force = true})
-    end
     -- link system libs/frameworks
     if (is_os("windows")) then 
         add_links("advapi32", "Shcore")
@@ -84,7 +80,9 @@ target("SkrRT")
     add_links("m3", "uv_a", "uvwasi_a")
 target_end()
 
-includes("tools/xmake.lua")
+if(has_config("build_tools")) then
+    includes("tools/xmake.lua")
+end
 if(has_config("build_samples")) then
     includes("samples/xmake.lua")
 end

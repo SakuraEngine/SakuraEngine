@@ -29,6 +29,7 @@ if (os.host() == "windows") then
     find_sdk.sdk_from_github("SDL2-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient_d-windows-x64.zip")
+    find_sdk.sdk_from_github("llfio-windows-x64.zip")
 end
 
 if (os.host() == "macosx") then
@@ -39,6 +40,7 @@ if (os.host() == "macosx") then
         find_sdk.sdk_from_github("m3_d-macosx-x86_64.zip")
         find_sdk.sdk_from_github("reflector-macosx-x86_64.zip")
         find_sdk.sdk_from_github("tracyclient-macosx-x86_64.zip")
+        find_sdk.sdk_from_github("llfio-macosx-x86_64.zip")
     else
         find_sdk.sdk_from_github("dxc-macosx-arm64.zip")
         find_sdk.sdk_from_github("m3-macosx-arm64.zip")
