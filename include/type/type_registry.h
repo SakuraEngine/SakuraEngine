@@ -1,4 +1,5 @@
 #pragma once
+#include "phmap.h"
 #include "platform/guid.h"
 #include "platform/configure.h"
 
@@ -62,7 +63,8 @@ namespace skr
 namespace type
 {
 struct ValueSerializePolicy;
-}
+struct Value;
+} // namespace type
 } // namespace skr
 
 struct RUNTIME_API skr_type_t {
@@ -78,7 +80,7 @@ struct RUNTIME_API skr_type_t {
     size_t Hash(const void* dst, size_t base) const;
     // lifetime operator
     void Destruct(void* dst) const;
-    void Construct(void* dst, struct Value* args, size_t nargs) const;
+    void Construct(void* dst, skr::type::Value* args, size_t nargs) const;
     // copy construct
     void Copy(void* dst, const void* src) const;
     // move construct
@@ -110,7 +112,7 @@ struct DynArrayMethodTable {
 };
 struct ObjectMethodTable {
     void (*dtor)(void* self);
-    void (*ctor)(void* self, struct Value* param, size_t nparam);
+    void (*ctor)(void* self, Value* param, size_t nparam);
     void (*copy)(void* self, const void* other);
     void (*move)(void* self, void* other);
     size_t (*Hash)(const void* self, size_t base);
@@ -243,6 +245,7 @@ struct ArrayViewType : skr_type_t {
 struct RecordType : skr_type_t {
     size_t size;
     size_t align;
+    skr_guid_t guid;
     const eastl::string_view name;
     const RecordType* base;
     ObjectMethodTable nativeMethods;
@@ -251,11 +254,12 @@ struct RecordType : skr_type_t {
     bool IsBaseOf(const RecordType& other) const;
     static const RecordType* FromName(eastl::string_view name);
     static void Register(const RecordType* type);
-    RecordType(size_t size, size_t align, eastl::string_view name, const RecordType* base, ObjectMethodTable nativeMethods,
+    RecordType(size_t size, size_t align, eastl::string_view name, skr_guid_t guid, const RecordType* base, ObjectMethodTable nativeMethods,
     const gsl::span<struct skr_field_t> fields, const gsl::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
         , size(size)
         , align(align)
+        , guid(guid)
         , name(name)
         , base(base)
         , nativeMethods(nativeMethods)
@@ -268,6 +272,7 @@ struct RecordType : skr_type_t {
 struct EnumType : skr_type_t {
     const skr_type_t* underlyingType;
     const eastl::string_view name;
+    skr_guid_t guid;
     void (*FromString)(void* self, eastl::string_view str);
     eastl::string (*ToString)(const void* self);
     struct Enumerator {
@@ -277,17 +282,26 @@ struct EnumType : skr_type_t {
     const gsl::span<Enumerator> enumerators;
     static const EnumType* FromName(eastl::string_view name);
     static void Register(const EnumType* type);
-    EnumType(const skr_type_t* underlyingType, const eastl::string_view name, void (*FromString)(void* self, eastl::string_view str),
+    EnumType(const skr_type_t* underlyingType, const eastl::string_view name,
+    skr_guid_t guid, void (*FromString)(void* self, eastl::string_view str),
     eastl::string (*ToString)(const void* self), const gsl::span<Enumerator> enumerators)
         : skr_type_t{ SKR_TYPE_CATEGORY_ENUM }
         , underlyingType(underlyingType)
         , name(name)
+        , guid(guid)
         , FromString(FromString)
         , ToString(ToString)
         , enumerators(enumerators)
     {
     }
 };
+
+struct TypeRegistry {
+    phmap::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
+};
+
+RUNTIME_API TypeRegistry* GetTypeRegistry();
+
 // T*, T&, std::unique_ptr<T>, std::shared_ptr<T>
 struct ReferenceType : skr_type_t {
     enum Ownership
@@ -308,12 +322,25 @@ struct ReferenceType : skr_type_t {
 
 template <class T>
 struct type_of {
-    RUNTIME_API const skr_type_t* get();
+    RUNTIME_API static const skr_type_t* get();
+};
+
+template <>
+struct type_of<void*> {
+    static const skr_type_t* get()
+    {
+        static ReferenceType type{
+            ReferenceType::Observed,
+            true,
+            nullptr
+        };
+        return &type;
+    }
 };
 
 template <class T>
 struct type_of<const T> {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         return type_of<T>::get();
     }
@@ -321,7 +348,7 @@ struct type_of<const T> {
 
 template <class T>
 struct type_of<volatile T> {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         return type_of<T>::get();
     }
@@ -329,7 +356,7 @@ struct type_of<volatile T> {
 
 template <class T>
 struct type_of<T*> {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -342,7 +369,7 @@ struct type_of<T*> {
 
 template <class T>
 struct type_of<T&> {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -355,7 +382,7 @@ struct type_of<T&> {
 
 template <class T>
 struct type_of<std::shared_ptr<T>> {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Shared,
@@ -368,7 +395,7 @@ struct type_of<std::shared_ptr<T>> {
 
 template <class V, class T>
 struct type_of_vector {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         static DynArrayType type{
             type_of<T>::get(),
@@ -396,7 +423,7 @@ struct type_of<eastl::vector<T, Allocator>> : type_of_vector<eastl::vector<T, Al
 
 template <class T, size_t num>
 struct type_of<T[num]> {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         static ArrayType type{
             type_of<T>::get(),
@@ -409,7 +436,7 @@ struct type_of<T[num]> {
 
 template <class T, size_t size>
 struct type_of<gsl::span<T, size>> {
-    static const skr_type_t* Get()
+    static const skr_type_t* get()
     {
         static_assert(size == -1, "only dynamic extent is supported.");
         static ArrayViewType type{
@@ -604,7 +631,7 @@ struct skr_method_t {
     eastl::string_view name;
     const skr_type_t* retType;
     const skr_field_t* parameters;
-    Value (*execute)(void* self, Value* args, size_t nargs);
+    skr::type::Value (*execute)(void* self, skr::type::ValueRef* args, size_t nargs);
 };
 
 namespace skr

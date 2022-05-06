@@ -32,7 +32,6 @@ target("SkrCompiler")
                 target:add("includedirs", toolgendir)
                 local cppfiles = os.files(path.join(toolgendir, "/**.cpp"))
                 for _, file in ipairs(cppfiles) do
-                    print(file)
                     target:add("files", file)
                 end
             end

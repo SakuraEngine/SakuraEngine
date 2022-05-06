@@ -5,8 +5,7 @@
 #include "type/type_registry.h"
 
 typedef struct reflect attr(
-    "guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74",
-    "custom_serialize" : true
+    "guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
 )
 skr_config_resource_t
 {

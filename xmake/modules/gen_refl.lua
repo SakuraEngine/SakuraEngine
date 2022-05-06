@@ -52,6 +52,9 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         {
             os.projectdir()..vformat("/tools/codegen/config_resource.py"),
             os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
+        },{
+            os.projectdir()..vformat("/tools/codegen/rtti.py"),
+            os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/config_asset.py"),
