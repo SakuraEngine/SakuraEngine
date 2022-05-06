@@ -1,5 +1,4 @@
 #pragma once
-#include "asset/asset_registry.hpp"
 #include "platform/guid.h"
 #include "utils/path.hpp"
 #include "simdjson.h"
@@ -11,7 +10,7 @@ namespace asset
 {
 struct SAssetRecord {
     skr_guid_t guid;
-    SPath path;
+    ghc::filesystem::path path;
     simdjson::ondemand::document meta;
 };
 struct SAssetRegistry {

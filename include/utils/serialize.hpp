@@ -7,6 +7,7 @@
 #include "EASTL/fixed_vector.h"
 #include "gsl/span"
 #include "platform/guid.h"
+#include "utils/te.hpp"
 
 namespace bitsery
 {
@@ -54,4 +55,61 @@ void serialize(S& s, skr_guid_t& guid)
     for (int i = 0; i < 8; ++i)
         s.value1b(guid.Data4[i]);
 }
+} // namespace bitsery
+
+namespace bitsery
+{
+struct OutputArchive : public boost::te::poly<OutputArchive>, public details::OutputAdapterBaseCRTP<OutputArchive> {
+    using TValue = uint8_t;
+    void writeInternalBuffer(const TValue* data, size_t size)
+    {
+        boost::te::call([](auto const& self, const TValue* data, size_t size) { self.writeInternalBuffer(data, size); }, *this, data, size);
+    }
+    void flush()
+    {
+        boost::te::call([](auto const& self) { self.flush(); }, *this);
+    }
+};
+struct InputArchive : public boost::te::poly<InputArchive>, public details::OutputAdapterBaseCRTP<InputArchive> {
+    using TValue = uint8_t;
+    void readInternalBuffer(TValue* data, size_t size)
+    {
+        boost::te::call([](auto const& self, TValue* data, size_t size) { self.readInternalBuffer(data, size); }, *this, data, size);
+    }
+
+    ReaderError error() const
+    {
+        return boost::te::call<ReaderError>([](auto const& self) { return self.error(); }, *this);
+    }
+
+    bool isCompletedSuccessfully() const
+    {
+        return boost::te::call<bool>([](auto const& self) { return self.isCompletedSuccessfully(); }, *this);
+    }
+
+    void error(ReaderError error)
+    {
+        boost::te::call([](auto const& self, ReaderError error) { self.error(error); }, *this, error);
+    }
+
+    void currentReadPos(size_t size)
+    {
+        boost::te::call([](auto const& self, size_t size) { self.currentReadPos(size); }, *this, size);
+    }
+
+    size_t currentReadPos() const
+    {
+        return boost::te::call<size_t>([](auto const& self) { return self.currentReadPos(); }, *this);
+    }
+
+    void currentReadEndPos(size_t size)
+    {
+        boost::te::call([](auto const& self, size_t size) { self.currentReadPos(size); }, *this, size);
+    }
+
+    size_t currentReadEndPos() const
+    {
+        return boost::te::call<size_t>([](auto const& self) { return self.currentReadPos(); }, *this);
+    }
+};
 } // namespace bitsery

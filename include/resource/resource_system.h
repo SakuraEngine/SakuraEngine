@@ -3,7 +3,6 @@
 #include "EASTL/fixed_vector.h"
 #include "phmap.h"
 #include "resource/resource_header.h"
-#include "utils/path.hpp"
 typedef enum ESkrLoadingPhase
 {
     SKR_LOADING_PHASE_NONE = -1,
@@ -29,6 +28,7 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_COMPLETE,
 } ESkrLoadingPhase;
 #if defined(__cplusplus)
+    #include "ghc/filesystem.hpp"
 namespace skr
 {
 struct SResourceFactory;
@@ -39,7 +39,7 @@ struct SResourceRequst {
     SResourceSystem* system;
     skr_resource_record_t* resourceRecord;
     SResourceFactory* factory;
-    SPath path;
+    ghc::filesystem::path path;
 
     eastl::fixed_vector<skr_guid_t, 4> dependencies;
     ESkrLoadingPhase currentPhase;
