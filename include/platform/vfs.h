@@ -29,12 +29,13 @@ typedef enum ESkrFileMode
     SKR_FM_READ_APPEND_BINARY_ALLOW_READ = SKR_FM_READ | SKR_FM_APPEND | SKR_FM_BINARY | SKR_FM_ALLOW_READ
 } ESkrFileMode;
 
-typedef enum ESkrSeekBaseOffset
+typedef enum ESkrFileCreation
 {
-    SKR_SBO_START_OF_FILE = 0,
-    SKR_SBO_CURRENT_POSITION,
-    SKR_SBO_END_OF_FILE,
-} ESkrSeekBaseOffset;
+    SKR_FILE_CREATION_OPEN_EXISTING,
+    SKR_FILE_CREATION_NOT_EXIST,
+    SKR_FILE_CREATION_IF_NEEDED,
+    SKR_FILE_CREATION_ALWAYS_NEW
+} ESkrFileCreation;
 
 typedef enum ESkrMountType
 {
@@ -66,25 +67,15 @@ typedef struct skr_memory_stream_t {
 typedef struct skr_vfile_t {
     struct skr_vfs_t* fs;
     struct skr_vfile_t* base; // for chaining streams
-    union
-    {
-        FILE* cfile;
-        skr_memory_stream_t memory;
-        void* usr;
-    };
     ssize_t size;
     ESkrFileMode mode;
 } skr_vfile_t;
 
-typedef bool (*SkrVFSProcFOpen)(struct skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, const char8_t* password, skr_vfile_t* out_file);
+typedef skr_vfile_t* (*SkrVFSProcFOpen)(struct skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation);
 typedef bool (*SkrVFSProcFClose)(skr_vfile_t* file);
-typedef size_t (*SkrVFSProcFRead)(skr_vfile_t* file, void* out_buffer, size_t size_in_bytes);
-typedef size_t (*SkrVFSProcFWrite)(skr_vfile_t* file, const void* in_buffer, size_t byte_count);
-typedef bool (*SkrVFSProcFSeek)(skr_vfile_t* file, ESkrSeekBaseOffset offset, ssize_t seekOffset);
-typedef ssize_t (*SkrVFSProcFGetSeekPos)(const skr_vfile_t* file);
-typedef ssize_t (*SkrVFSProcFGetFileSize)(const skr_vfile_t* file);
-typedef bool (*SkrVFSProcFFlush)(skr_vfile_t* file);
-typedef bool (*SkrVFSProcFIsAtEnd)(const skr_vfile_t* file);
+typedef size_t (*SkrVFSProcFRead)(skr_vfile_t* file, void* out_buffer, size_t offset, size_t size_in_bytes);
+typedef size_t (*SkrVFSProcFWrite)(skr_vfile_t* file, const void* in_buffer, size_t offset, size_t byte_count);
+typedef ssize_t (*SkrVFSProcFSize)(const skr_vfile_t* file);
 typedef bool (*SkrVFSProcFGetPropI64)(skr_vfile_t* file, int32_t prop, int64_t* out_value);
 typedef bool (*SkrVFSProcFSetPropI64)(skr_vfile_t* file, int32_t prop, int64_t value);
 
@@ -93,11 +84,7 @@ typedef struct skr_vfs_proctable_t {
     SkrVFSProcFClose fclose;
     SkrVFSProcFRead fread;
     SkrVFSProcFWrite fwrite;
-    SkrVFSProcFSeek fseek;
-    SkrVFSProcFGetSeekPos fget_seek_pos;
-    SkrVFSProcFGetFileSize fget_file_size;
-    SkrVFSProcFFlush fflush;
-    SkrVFSProcFIsAtEnd fis_at_end;
+    SkrVFSProcFSize fsize;
     SkrVFSProcFGetPropI64 fget_prop_i64;
     SkrVFSProcFSetPropI64 fset_prop_i64;
 } skr_vfs_proctable_t;
