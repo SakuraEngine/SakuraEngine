@@ -22,3 +22,13 @@ if(has_config("is_clang")) then
     table.insert(project_cxflags, "-Wno-deprecated-declarations")
     table.insert(project_cxflags, "-Wno-nullability-completeness")
 end
+
+if(has_config("is_msvc")) then
+    add_defines("/EHsc", "/GR-")
+    table.insert(project_cxflags, "/EHsc")
+    table.insert(project_cxflags, "/GR-")
+    if(has_config("is_clang")) then
+        table.insert(project_cxflags, "-fexceptions")
+        table.insert(project_cxflags, "-fcxx-exceptions")
+    end
+end
