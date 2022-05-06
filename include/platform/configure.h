@@ -7,7 +7,7 @@
 #endif
 
 #ifndef STRINGIFY
-#define STRINGIFY(...) #__VA_ARGS__
+    #define STRINGIFY(...) #__VA_ARGS__
 #endif
 #ifdef __meta__
     #define reflect __attribute__((annotate("__reflect__")))
@@ -158,30 +158,31 @@ typedef char char8_t;
     #error unsupported platform
 #endif
 
-#if defined(_MSC_VER) && !defined(__clang__)
-    #if !defined(_DEBUG) && !defined(NDEBUG)
-        #define NDEBUG
-    #endif
-
-    #define UNREF_PARAM(x) (x)
-    #define ALIGNAS(x) __declspec(align(x))
-    #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
-    #define FORGE_CALLCONV __cdecl
-
+#if defined(_MSC_VER)
     #include <crtdbg.h>
     #define COMPILE_ASSERT(exp) _STATIC_ASSERT(exp)
 
     #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
+    #if !defined(__clang__)
+        #if !defined(_DEBUG) && !defined(NDEBUG)
+            #define NDEBUG
+        #endif
 
-    #if defined(_M_X64)
-        #define ARCH_X64
-        #define ARCH_X86_FAMILY
-    #elif defined(_M_IX86)
-        #define ARCH_X86
-        #define ARCH_X86_FAMILY
-    #else
-        #error "Unsupported architecture for msvc compiler"
+        #define UNREF_PARAM(x) (x)
+        #define ALIGNAS(x) __declspec(align(x))
+        #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
+        #define FORGE_CALLCONV __cdecl
+
+        #if defined(_M_X64)
+            #define ARCH_X64
+            #define ARCH_X86_FAMILY
+        #elif defined(_M_IX86)
+            #define ARCH_X86
+            #define ARCH_X86_FAMILY
+        #else
+            #error "Unsupported architecture for msvc compiler"
+        #endif
     #endif
 #elif defined(RUNTIME_PLATFORM_WA32)
     #define size_t uint32_t;
