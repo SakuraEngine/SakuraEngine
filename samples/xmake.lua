@@ -77,8 +77,8 @@ target("GameRT")
         rootdir = "game/"
     })
     add_includedirs("game/include", {public=true})
-    add_defines("GAME_IMPL")
-    set_kind("static")
+    add_defines("GAMERT_IMPL")
+    set_kind("shared")
     add_deps("SkrRT")
     add_files("game/src/**.cpp")
 
