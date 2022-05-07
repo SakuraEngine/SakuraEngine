@@ -47,7 +47,10 @@ class Record(object):
         self.guid = guid
         self.luaName = name.replace("::", ".")
         self.id = name.replace("::", "_")
-        self.short_name = str.rsplit(name, "::", 1)[-1]
+        var = str.rsplit(name, "::", 1)
+        self.short_name = var[-1]
+        if len(var) > 1:
+            self.namespace = var[0]
         self.fields = fields
         self.methods = methods
         self.bases = bases
@@ -81,10 +84,16 @@ class Enumerator(object):
 
 
 class Enum(object):
-    def __init__(self, name, guid, enumerators, comment):
+    def __init__(self, name, guid, underlying_type, enumerators, comment):
         self.name = name
         self.guid = guid
-        self.short_name = str.rsplit(name, "::", 1)[-1]
+        if underlying_type == "unfixed":
+            abort(name + " is not fixed enum!")
+        self.postfix = ": " + underlying_type
+        var = str.rsplit(name, "::", 1)
+        self.short_name = var[-1]
+        if len(var) > 1:
+            self.namespace = var[0]
         self.id = name.replace("::", "_")
         self.enumerators = enumerators
         self.comment = comment
@@ -120,9 +129,13 @@ def main():
     db = Binding()
     root = sys.argv[1]
     outdir = sys.argv[2]
+    api = sys.argv[3]
+    api = api.upper()+"_API"
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     print(metas)
     for meta in metas:
+        db2 = Binding()
+        filename = os.path.split(meta)[1][:-7]
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
             if not "guid" in value["attrs"]:
@@ -143,8 +156,10 @@ def main():
                       key, file=sys.stderr)
                 continue
             db.headers.add(GetInclude(file))
-            db.add_record(Record(key, value["attrs"]["guid"], fields, functions,
-                          bases, value["comment"]))
+            record = Record(key, value["attrs"]["guid"], fields, functions,
+                            bases, value["comment"])
+            db.add_record(record)
+            db2.add_record(record)
         for key, value in meta["enums"].items():
             attr = value["attrs"]
             if not "guid" in attr:
@@ -159,11 +174,19 @@ def main():
             for key2, value2 in value["values"].items():
                 enumerators.append(Enumerator(
                     key2, value2["value"], value2["comment"]))
-            db.enums.append(
-                Enum(key, value["attrs"]["guid"], enumerators, value["comment"]))
+            enum = Enum(key, value["attrs"]["guid"], value["underlying_type"],
+                        enumerators, value["comment"])
+            db.enums.append(enum)
+            db2.enums.append(enum)
+        db2.resolve_base()
+        template = os.path.join(BASE, "rtti.hpp.mako")
+        content = render(template, db=db2, api=api)
+        db.headers.add("%s.generated.hpp" % filename)
+        output = os.path.join(outdir, "%s.generated.hpp" % filename)
+        write(output, content)
     db.resolve_base()
     template = os.path.join(BASE, "rtti.cpp.mako")
-    content = render(template, db=db)
+    content = render(template, db=db, api=api)
     output = os.path.join(outdir, "rtti.generated.cpp")
     write(output, content)
 
