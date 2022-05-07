@@ -164,15 +164,14 @@ typedef char char8_t;
 
     #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
-    #if !defined(__clang__)
-        #if !defined(_DEBUG) && !defined(NDEBUG)
-            #define NDEBUG
-        #endif
-
         #define UNREF_PARAM(x) (x)
         #define ALIGNAS(x) __declspec(align(x))
         #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
         #define FORGE_CALLCONV __cdecl
+    #if !defined(__clang__)
+        #if !defined(_DEBUG) && !defined(NDEBUG)
+            #define NDEBUG
+        #endif
 
         #if defined(_M_X64)
             #define ARCH_X64
