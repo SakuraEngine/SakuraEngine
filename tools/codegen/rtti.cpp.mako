@@ -113,16 +113,16 @@ namespace skr::type
         return type_of_${record.id};
     }
 }
-    static struct Register${record.id}Helper
+    static struct RegisterRTTI${record.id}Helper
     {
-        Register${record.id}Helper()
+        RegisterRTTI${record.id}Helper()
         {
             using namespace skr::type;
             auto registry = GetTypeRegistry();
             constexpr skr_guid_t guid = {${record.guidConstant}};
             registry->types.insert(std::make_pair(guid, type_of<${record.name}>::get()));
         }
-    } _Register${record.id}Helper;
+    } _RegisterRTTI${record.id}Helper;
 %endfor
 
 %for enum in db.enums: 
@@ -170,14 +170,14 @@ namespace skr::type
         return &type;
     }
 }
-    static struct Register${enum.id}Helper
+    static struct RegisterRTTI${enum.id}Helper
     {
-        Register${enum.id}Helper()
+        RegisterRTTI${enum.id}Helper()
         {
             using namespace skr::type;
             auto registry = GetTypeRegistry();
             constexpr skr_guid_t guid = {${enum.guidConstant}};
             registry->types.insert(std::make_pair(guid, type_of<${enum.name}>::get()));
         }
-    } _Register${enum.id}Helper;
+    } _RegisterRTTI${enum.id}Helper;
 %endfor
