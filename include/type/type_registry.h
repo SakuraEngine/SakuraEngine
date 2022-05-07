@@ -331,6 +331,23 @@ struct type_of {
     static const skr_type_t* get();
 };
 
+    #define BASE_TYPE(name)                             \
+        template <>                                     \
+        struct type_of<name> {                          \
+            RUNTIME_API static const skr_type_t* get(); \
+        }
+BASE_TYPE(bool);
+BASE_TYPE(uint32_t);
+BASE_TYPE(uint64_t);
+BASE_TYPE(int32_t);
+BASE_TYPE(int64_t);
+BASE_TYPE(float);
+BASE_TYPE(double);
+BASE_TYPE(skr_guid_t);
+BASE_TYPE(eastl::string);
+BASE_TYPE(eastl::string_view);
+    #undef BASE_TYPE
+
 template <>
 struct type_of<void*> {
     RUNTIME_API static const skr_type_t* get()
