@@ -10,4 +10,4 @@ typedef enum reflect attr(
 "asdsad" : true,
 "fuck" : {
     "dddd" : [ true, false ]
-}) ECGPUBackEnd2 : uint8_t{ Vulkan_2, DX12_2, Metal_2 } ECGPUBackEnd2;
+}) ECGPUBackEnd2 : uint32_t{ Vulkan_2, DX12_2, Metal_2 } ECGPUBackEnd2;
