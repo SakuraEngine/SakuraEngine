@@ -54,36 +54,6 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
 
-namespace skd::asset
-{
-SAssetRegistry* GetAssetRegistry()
-{
-    static SAssetRegistry registry;
-    return &registry;
-}
-SConfigRegistry* GetConfigRegistry()
-{
-    static SConfigRegistry registry;
-    return &registry;
-}
-} // namespace skd::asset
-namespace skr::resource
-{
-SConfigRegistry* GetConfigRegistry()
-{
-    static SConfigRegistry registry;
-    return &registry;
-}
-} // namespace skr::resource
-namespace skr::type
-{
-STypeRegistry* GetTypeRegistry()
-{
-    static STypeRegistry registry;
-    return &registry;
-}
-} // namespace skr::type
-
 void compile_config(skd::asset::SAssetRecord* record)
 {
     using namespace skd;

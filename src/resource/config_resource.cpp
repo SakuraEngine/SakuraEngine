@@ -7,6 +7,15 @@
 #include "resource/resource_header.h"
 #include "type/type_registry.h"
 
+namespace skr::resource
+{
+RUNTIME_API SConfigRegistry* GetConfigRegistry()
+{
+    static SConfigRegistry registry;
+    return &registry;
+}
+} // namespace skr::resource
+
 namespace skr
 {
 namespace resource

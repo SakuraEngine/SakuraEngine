@@ -90,7 +90,7 @@ typedef struct skr_vfs_proctable_t {
 } skr_vfs_proctable_t;
 
 typedef struct skr_vfs_async_proctable_t {
-
+    void* __useless_currently__;
 } skr_vfs_async_proctable_t;
 
 typedef struct skr_vfs_t {

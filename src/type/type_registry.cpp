@@ -6,6 +6,15 @@
 #include "utils/fast_float.h"
 #include <charconv>
 
+namespace skr::type
+{
+RUNTIME_API STypeRegistry* GetTypeRegistry()
+{
+    static STypeRegistry registry;
+    return &registry;
+}
+} // namespace skr::type
+
 namespace skr
 {
 namespace type
@@ -56,6 +65,13 @@ template <>
 const skr_type_t* type_of<double>::get()
 {
     static Float64Type type;
+    return &type;
+}
+
+template <>
+const skr_type_t* type_of<skr_guid_t>::get()
+{
+    static GUIDType type;
     return &type;
 }
 
