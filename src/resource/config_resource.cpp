@@ -12,21 +12,28 @@ namespace skr
 namespace resource
 {
 skr_guid_t SConfigFactory::GetResourceType() { return get_type_id_skr_config_resource_t(); }
-bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)
+
+skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
 {
-    if (!SResourceFactory::Deserialize(record, archive))
-        return false;
-    skr_type_id_t typeId;
-    archive(typeId);
-    auto type = skr_get_type(&typeId);
+    auto type = skr_get_type(&id);
     auto align = type->Align();
     auto baseSize = sizeof(skr_config_resource_t);
     auto offset = ((baseSize + align - 1) / align) * align;
     auto size = offset + type->Size();
     auto mem = sakura_malloc(size);
     auto res = new (mem) skr_config_resource_t;
-    res->configType = typeId;
+    res->configType = id;
     res->configData = (char*)mem + offset;
+    return res;
+}
+
+bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)
+{
+    if (!SResourceFactory::Deserialize(record, archive))
+        return false;
+    skr_type_id_t typeId;
+    archive(typeId);
+    auto res = NewConfig(typeId);
     DeserializeConfig(typeId, res->configData, archive);
     record->resource = res;
     record->destructor = [](void* mem) {

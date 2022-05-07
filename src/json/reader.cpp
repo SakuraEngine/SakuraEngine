@@ -27,6 +27,6 @@ template <>
 void Read(simdjson::ondemand::value&& json, skr_guid_t& guid)
 {
     std::string_view view = json.get_string().value_unsafe();
-    skr::guid::make_guid(view);
+    guid = skr::guid::make_guid(view);
 }
 } // namespace skr::json

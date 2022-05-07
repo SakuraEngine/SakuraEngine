@@ -99,6 +99,14 @@ class Binding(object):
         self.name_to_record = {}
         self.headers = set()
 
+    def resolve_base(self):
+        for record in self.records:
+            bases = []
+            for base in record.bases:
+                if base in self.name_to_record:
+                    bases.append(self.name_to_record[base])
+            record.bases = bases
+
     def add_record(self, record):
         self.records.append(record)
         self.name_to_record[record.name] = record
@@ -129,8 +137,7 @@ def main():
             functions = parseFunctions(value["methods"])
             bases = []
             for value3 in value["bases"]:
-                if value3 in db.name_to_record:
-                    bases.append(db.name_to_record[value3])
+                bases.append(value3)
             if str.endswith(file, ".cpp"):
                 print("unable to gen rtti for records in cpp, name:%s" %
                       key, file=sys.stderr)
@@ -154,7 +161,7 @@ def main():
                     key2, value2["value"], value2["comment"]))
             db.enums.append(
                 Enum(key, value["attrs"]["guid"], enumerators, value["comment"]))
-
+    db.resolve_base()
     template = os.path.join(BASE, "rtti.cpp.mako")
     content = render(template, db=db)
     output = os.path.join(outdir, "rtti.generated.cpp")

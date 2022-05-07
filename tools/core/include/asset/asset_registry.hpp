@@ -12,7 +12,7 @@ namespace asset
 struct SAssetRecord {
     skr_guid_t guid;
     ghc::filesystem::path path;
-    simdjson::ondemand::document meta;
+    simdjson::padded_string meta;
 };
 struct SAssetRegistry {
     ~SAssetRegistry();

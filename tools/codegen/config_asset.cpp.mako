@@ -15,11 +15,9 @@ static struct Register${type.id}Helper
         auto registry = skd::asset::GetConfigRegistry();
         constexpr skr_guid_t guid = {${type.guidConstant}};
         skd::asset::SConfigTypeInfo typeInfo {
-            +[](simdjson::ondemand::value&& json) -> void*
+            +[](simdjson::ondemand::value&& json, void* address)
             {
-                auto obj = SkrNew<${type.name}>();
-                skr::json::Read(std::move(json), *obj);
-                return obj;
+                skr::json::Read(std::move(json), *(${type.name}*)address);
             }
         };
         registry->typeInfos.insert(std::make_pair(guid, typeInfo));
