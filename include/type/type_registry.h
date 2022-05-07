@@ -350,7 +350,7 @@ BASE_TYPE(eastl::string_view);
 
 template <>
 struct type_of<void*> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -363,7 +363,7 @@ struct type_of<void*> {
 
 template <class T>
 struct type_of<const T> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         return type_of<T>::get();
     }
@@ -371,7 +371,7 @@ struct type_of<const T> {
 
 template <class T>
 struct type_of<volatile T> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         return type_of<T>::get();
     }
@@ -379,7 +379,7 @@ struct type_of<volatile T> {
 
 template <class T>
 struct type_of<T*> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -392,7 +392,7 @@ struct type_of<T*> {
 
 template <class T>
 struct type_of<T&> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -405,7 +405,7 @@ struct type_of<T&> {
 
 template <class T>
 struct type_of<std::shared_ptr<T>> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Shared,
@@ -418,7 +418,7 @@ struct type_of<std::shared_ptr<T>> {
 
 template <class V, class T>
 struct type_of_vector {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         static DynArrayType type{
             type_of<T>::get(),
@@ -446,7 +446,7 @@ struct type_of<eastl::vector<T, Allocator>> : type_of_vector<eastl::vector<T, Al
 
 template <class T, size_t num>
 struct type_of<T[num]> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         static ArrayType type{
             type_of<T>::get(),
@@ -459,7 +459,7 @@ struct type_of<T[num]> {
 
 template <class T, size_t size>
 struct type_of<gsl::span<T, size>> {
-    RUNTIME_API static const skr_type_t* get()
+    static const skr_type_t* get()
     {
         static_assert(size == -1, "only dynamic extent is supported.");
         static ArrayViewType type{
