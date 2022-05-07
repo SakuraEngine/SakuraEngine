@@ -29,7 +29,8 @@ TEST_F(FSTest, mount)
     abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
     auto abs_fs = skr_create_vfs(&abs_fs_desc);
     EXPECT_NE(abs_fs, nullptr);
-    EXPECT_EQ(abs_fs->mount_dir, nullptr);
+    const auto current_path = ghc::filesystem::current_path().u8string();
+    EXPECT_EQ(std::string(abs_fs->mount_dir), current_path);
 
     skr_free_vfs(fs);
     skr_free_vfs(abs_fs);
@@ -40,7 +41,7 @@ TEST_F(FSTest, readwrite)
     skr_vfs_desc_t abs_fs_desc = {};
     abs_fs_desc.app_name = "fs-test";
     abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
-    const auto current_path = ghc::filesystem::current_path();
+    const auto current_path = ghc::filesystem::current_path().u8string();
     abs_fs_desc.override_mount_dir = current_path.c_str();
     auto abs_fs = skr_create_vfs(&abs_fs_desc);
     EXPECT_NE(abs_fs, nullptr);

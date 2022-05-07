@@ -1,4 +1,4 @@
-// fast_float by Daniel Lemire
+﻿// fast_float by Daniel Lemire
 // fast_float by João Paulo Magalhaes
 //
 // with contributions from Eugene Golushkov

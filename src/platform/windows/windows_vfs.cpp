@@ -56,23 +56,23 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc)
     }
     else if (desc->mount_type == SKR_MOUNT_TYPE_DOCUMENTS)
     {
-        const char8_t documentPath[WIN_FS_MAX_PATH] = {};
+        char8_t documentPath[WIN_FS_MAX_PATH] = {};
         PWSTR userDocuments = NULL;
         SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &userDocuments);
         WideCharToMultiByte(CP_UTF8, 0, userDocuments, -1, documentPath, WIN_FS_MAX_PATH, NULL, NULL);
         CoTaskMemFree(userDocuments);
-        fs->mount_dir = duplicate_string(userDocuments);
+        fs->mount_dir = duplicate_string(documentPath);
     }
     else
     {
         // Get application directory
         wchar_t utf16Path[WIN_FS_MAX_PATH];
         GetModuleFileNameW(0, utf16Path, WIN_FS_MAX_PATH);
-        const char8_t applicationFilePath[WIN_FS_MAX_PATH] = {};
+        char8_t applicationFilePath[WIN_FS_MAX_PATH] = {};
         WideCharToMultiByte(CP_UTF8, 0, utf16Path, -1, applicationFilePath, WIN_FS_MAX_PATH, NULL, NULL);
         const ghc::filesystem::path p(applicationFilePath);
-        const auto parentPath = p.parent_path();
-        fs->mount_dir = duplicate_string(parentPath);
+        const auto parentPath = p.parent_path().u8string();
+        fs->mount_dir = duplicate_string(parentPath.c_str());
     }
     return fs;
 }
