@@ -64,7 +64,7 @@ void create_api_objects()
     chain_desc.height = BACK_BUFFER_HEIGHT;
     chain_desc.surface = surface;
     chain_desc.imageCount = 3;
-    chain_desc.format = PF_R8G8B8A8_UNORM;
+    chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     chain_desc.enableVsync = true;
     swapchain = cgpu_create_swapchain(device, &chain_desc);
 }
@@ -76,13 +76,13 @@ void create_render_pipeline()
     read_shader_bytes("rg-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
     read_shader_bytes("rg-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.stage = SHADER_STAGE_VERT;
+    vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.name = "VertexShaderLibrary";
     vs_desc.code = vs_bytes;
     vs_desc.code_size = vs_length;
     CGPUShaderLibraryDescriptor ps_desc = {};
     ps_desc.name = "FragmentShaderLibrary";
-    ps_desc.stage = SHADER_STAGE_FRAG;
+    ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
     ps_desc.code = fs_bytes;
     ps_desc.code_size = fs_length;
     CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
@@ -90,10 +90,10 @@ void create_render_pipeline()
     free(vs_bytes);
     free(fs_bytes);
     CGPUPipelineShaderDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = SHADER_STAGE_VERT;
+    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = SHADER_STAGE_FRAG;
+    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
     CGPURootSignatureDescriptor rs_desc = {};
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
         auto back_buffer = graph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
             builder.set_name("backbuffer")
-            .import(to_import, RESOURCE_STATE_PRESENT)
+            .import(to_import, CGPU_RESOURCE_STATE_PRESENT)
             .allow_render_target();
         });
         graph->add_render_pass(

@@ -2,6 +2,7 @@
 #include "math.h"
 #include "lodepng.h"
 #include "platform/configure.h"
+#include "platform/memory.h"
 #include "cgpu/api.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -91,7 +92,7 @@ void ComputeFunc(void* usrdata)
         .code = shader_bytes,
         .code_size = shader_length,
         .name = "ComputeShaderLibrary",
-        .stage = SHADER_STAGE_COMPUTE
+        .stage = CGPU_SHADER_STAGE_COMPUTE
     };
     CGPUShaderLibraryId compute_shader = cgpu_create_shader_library(device, &shader_desc);
     free(shader_bytes);
@@ -99,7 +100,7 @@ void ComputeFunc(void* usrdata)
     // Create root signature
     CGPUPipelineShaderDescriptor compute_shader_entry = {
         .entry = "main",
-        .stage = SHADER_STAGE_COMPUTE,
+        .stage = CGPU_SHADER_STAGE_COMPUTE,
         .library = compute_shader
     };
     CGPUShaderReflection* entry_reflection = &compute_shader->entry_reflections[0];
@@ -127,7 +128,7 @@ void ComputeFunc(void* usrdata)
         .name = "DataBuffer",
         .flags = CGPU_BCF_NONE,
         .descriptors = CGPU_RT_RW_BUFFER,
-        .start_state = RESOURCE_STATE_UNORDERED_ACCESS,
+        .start_state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS,
         .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Pixel),
         .elemet_count = MANDELBROT_WIDTH * MANDELBROT_HEIGHT,
@@ -140,7 +141,7 @@ void ComputeFunc(void* usrdata)
         .name = "ReadbackBuffer",
         .flags = CGPU_BCF_OWN_MEMORY_BIT,
         .descriptors = CGPU_RT_NONE,
-        .start_state = RESOURCE_STATE_COPY_DEST,
+        .start_state = CGPU_RESOURCE_STATE_COPY_DEST,
         .memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU,
         .element_stride = buffer_desc.element_stride,
         .elemet_count = buffer_desc.elemet_count,
@@ -178,8 +179,8 @@ void ComputeFunc(void* usrdata)
         // Barrier UAV buffer to transfer source
         CGPUBufferBarrier buffer_barrier = {
             .buffer = data_buffer,
-            .src_state = RESOURCE_STATE_UNORDERED_ACCESS,
-            .dst_state = RESOURCE_STATE_COPY_SOURCE
+            .src_state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS,
+            .dst_state = CGPU_RESOURCE_STATE_COPY_SOURCE
         };
         CGPUResourceBarrierDescriptor barriers_desc = {
             .buffer_barriers = &buffer_barrier,

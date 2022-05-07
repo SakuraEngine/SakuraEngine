@@ -39,9 +39,9 @@ void create_sampled_texture()
         .address_v = CGPU_ADDRESS_MODE_REPEAT,
         .address_w = CGPU_ADDRESS_MODE_REPEAT,
         .mipmap_mode = CGPU_MIPMAP_MODE_LINEAR,
-        .min_filter = FILTER_TYPE_LINEAR,
-        .mag_filter = FILTER_TYPE_LINEAR,
-        .compare_func = CMP_NEVER
+        .min_filter = CGPU_FILTER_TYPE_LINEAR,
+        .mag_filter = CGPU_FILTER_TYPE_LINEAR,
+        .compare_func = CGPU_CMP_NEVER
     };
     sampler_state = cgpu_create_sampler(device, &sampler_desc);
     // Texture
@@ -51,10 +51,10 @@ void create_sampled_texture()
         .width = TEXTURE_WIDTH,
         .height = TEXTURE_HEIGHT,
         .depth = 1,
-        .format = PF_R8G8B8A8_UNORM,
+        .format = CGPU_FORMAT_R8G8B8A8_UNORM,
         .array_size = 1,
         .owner_queue = gfx_queue,
-        .start_state = RESOURCE_STATE_COPY_DEST
+        .start_state = CGPU_RESOURCE_STATE_COPY_DEST
     };
     sampled_texture = cgpu_create_texture(device, &tex_desc);
     CGPUTextureViewDescriptor sview_desc = {
@@ -145,8 +145,8 @@ void upload_resources()
     cgpu_cmd_transfer_buffer_to_texture(cmds[0], &b2t);
     CGPUTextureBarrier srv_barrier = {
         .texture = sampled_texture,
-        .src_state = RESOURCE_STATE_COPY_DEST,
-        .dst_state = RESOURCE_STATE_SHADER_RESOURCE
+        .src_state = CGPU_RESOURCE_STATE_COPY_DEST,
+        .dst_state = CGPU_RESOURCE_STATE_SHADER_RESOURCE
     };
     CGPUResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &srv_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmds[0], &barrier_desc1);
@@ -170,8 +170,8 @@ void upload_resources()
     cgpu_cmd_transfer_buffer_to_buffer(cmds[0], &b2v);
     CGPUBufferBarrier vb_barrier = {
         .buffer = vertex_buffer,
-        .src_state = RESOURCE_STATE_COPY_DEST,
-        .dst_state = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+        .src_state = CGPU_RESOURCE_STATE_COPY_DEST,
+        .dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
     };
     CGPUResourceBarrierDescriptor barrier_desc2 = {
         .buffer_barriers = &vb_barrier, .buffer_barriers_count = 1
@@ -196,8 +196,8 @@ void upload_resources()
     cgpu_cmd_transfer_buffer_to_buffer(cmds[0], &b2i);
     CGPUBufferBarrier ib_barrier = {
         .buffer = index_buffer,
-        .src_state = RESOURCE_STATE_COPY_DEST,
-        .dst_state = RESOURCE_STATE_INDEX_BUFFER
+        .src_state = CGPU_RESOURCE_STATE_COPY_DEST,
+        .dst_state = CGPU_RESOURCE_STATE_INDEX_BUFFER
     };
     CGPUResourceBarrierDescriptor barrier_desc3 = {
         .buffer_barriers = &ib_barrier, .buffer_barriers_count = 1
@@ -229,13 +229,13 @@ void create_render_pipeline()
     &fs_bytes, &fs_length, backend);
     CGPUShaderLibraryDescriptor vs_desc = {
         .name = "VertexShaderLibrary",
-        .stage = SHADER_STAGE_VERT,
+        .stage = CGPU_SHADER_STAGE_VERT,
         .code = vs_bytes,
         .code_size = vs_length
     };
     CGPUShaderLibraryDescriptor ps_desc = {
         .name = "FragmentShaderLibrary",
-        .stage = SHADER_STAGE_FRAG,
+        .stage = CGPU_SHADER_STAGE_FRAG,
         .code = fs_bytes,
         .code_size = fs_length
     };
@@ -245,10 +245,10 @@ void create_render_pipeline()
     free(fs_bytes);
     // Create RS
     CGPUPipelineShaderDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = SHADER_STAGE_VERT;
+    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = SHADER_STAGE_FRAG;
+    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
     const char8_t* sampler_name = "texture_sampler";
@@ -279,9 +279,9 @@ void create_render_pipeline()
     }
     CGPUVertexLayout vertex_layout = {
         .attributes = {
-        { "POSITION", 1, PF_R32G32B32_SFLOAT, 0, 0, sizeof(float) * 3, CGPU_INPUT_RATE_VERTEX },
-        { "COLOR", 1, PF_R32G32B32_SFLOAT, 0, sizeof(float) * 3, sizeof(float) * 3, CGPU_INPUT_RATE_VERTEX },
-        { "TEXCOORD", 1, PF_R32G32_SFLOAT, 0, sizeof(float) * 6, sizeof(float) * 2, CGPU_INPUT_RATE_VERTEX },
+        { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(float) * 3, CGPU_INPUT_RATE_VERTEX },
+        { "COLOR", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, sizeof(float) * 3, sizeof(float) * 3, CGPU_INPUT_RATE_VERTEX },
+        { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, sizeof(float) * 6, sizeof(float) * 2, CGPU_INPUT_RATE_VERTEX },
         },
         .attribute_count = 3
     };
@@ -384,7 +384,7 @@ void initialize(void* usrdata)
         .height = BACK_BUFFER_HEIGHT,
         .surface = surface,
         .imageCount = BACK_BUFFER_COUNT,
-        .format = PF_R8G8B8A8_UNORM,
+        .format = CGPU_FORMAT_R8G8B8A8_UNORM,
         .enableVsync = true
     };
     swapchain = cgpu_create_swapchain(device, &descriptor);
@@ -450,8 +450,8 @@ void raster_redraw()
     };
     CGPUTextureBarrier draw_barrier = {
         .texture = back_buffer,
-        .src_state = RESOURCE_STATE_UNDEFINED,
-        .dst_state = RESOURCE_STATE_RENDER_TARGET
+        .src_state = CGPU_RESOURCE_STATE_UNDEFINED,
+        .dst_state = CGPU_RESOURCE_STATE_RENDER_TARGET
     };
     CGPUResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
@@ -474,8 +474,8 @@ void raster_redraw()
     cgpu_cmd_end_render_pass(cmd, rp_encoder);
     CGPUTextureBarrier present_barrier = {
         .texture = back_buffer,
-        .src_state = RESOURCE_STATE_RENDER_TARGET,
-        .dst_state = RESOURCE_STATE_PRESENT
+        .src_state = CGPU_RESOURCE_STATE_RENDER_TARGET,
+        .dst_state = CGPU_RESOURCE_STATE_PRESENT
     };
     CGPUResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &present_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
