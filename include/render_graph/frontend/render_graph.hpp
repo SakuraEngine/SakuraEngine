@@ -12,7 +12,7 @@ namespace sakura
 {
 namespace render_graph
 {
-class RenderGraphProfiler
+class RUNTIME_API RenderGraphProfiler
 {
 public:
     virtual ~RenderGraphProfiler() = default;
@@ -25,11 +25,11 @@ public:
     virtual void after_commit(class RenderGraph&, class RenderGraphFrameExecutor&) {}
 };
 
-class RenderGraph
+class RUNTIME_API RenderGraph
 {
 public:
     friend class RenderGraphViz;
-    class RenderGraphBuilder
+    class RUNTIME_API RenderGraphBuilder
     {
     public:
         friend class RenderGraph;
@@ -50,7 +50,7 @@ public:
     using RenderGraphSetupFunction = eastl::function<void(class RenderGraph::RenderGraphBuilder&)>;
     static RenderGraph* create(const RenderGraphSetupFunction& setup);
     static void destroy(RenderGraph* g);
-    class RenderPassBuilder
+    class RUNTIME_API RenderPassBuilder
     {
     public:
         friend class RenderGraph;
@@ -83,7 +83,7 @@ public:
     using RenderPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
     PassHandle add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor);
 
-    class ComputePassBuilder
+    class RUNTIME_API ComputePassBuilder
     {
     public:
         friend class RenderGraph;
@@ -106,7 +106,7 @@ public:
     using ComputePassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::ComputePassBuilder&)>;
     PassHandle add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor);
 
-    class CopyPassBuilder
+    class RUNTIME_API CopyPassBuilder
     {
     public:
         friend class RenderGraph;
@@ -122,7 +122,7 @@ public:
     using CopyPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
     PassHandle add_copy_pass(const CopyPassSetupFunction& setup);
 
-    class PresentPassBuilder
+    class RUNTIME_API PresentPassBuilder
     {
     public:
         friend class RenderGraph;
@@ -139,7 +139,7 @@ public:
     using PresentPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::PresentPassBuilder&)>;
     PassHandle add_present_pass(const PresentPassSetupFunction& setup);
 
-    class BufferBuilder
+    class RUNTIME_API BufferBuilder
     {
     public:
         friend class RenderGraph;
@@ -165,7 +165,7 @@ public:
     inline BufferHandle get_buffer(const char* name);
     const ECGPUResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const;
 
-    class TextureBuilder
+    class RUNTIME_API TextureBuilder
     {
     public:
         friend class RenderGraph;
@@ -255,7 +255,7 @@ using TextureBuilder = RenderGraph::TextureBuilder;
 using BufferSetupFunction = RenderGraph::BufferSetupFunction;
 using BufferBuilder = RenderGraph::BufferBuilder;
 
-class RenderGraphViz
+class RUNTIME_API RenderGraphViz
 {
 public:
     static void write_graphviz(RenderGraph& graph, const char* outf);

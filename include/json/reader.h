@@ -1,9 +1,12 @@
+#pragma once
+#include "platform/configure.h"
 #include "simdjson.h"
 
 #if defined(__cplusplus)
-struct skr_json_reader_t {
+struct RUNTIME_API skr_json_reader_t {
     simdjson::ondemand::value* json;
 };
+typedef struct skr_guid_t skr_guid_t;
 // utils for codegen
 namespace skr
 {
@@ -11,6 +14,21 @@ namespace json
 {
 template <class T>
 void Read(simdjson::ondemand::value&& json, T& value);
+
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, bool& b);
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, int32_t& b);
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, uint32_t& b);
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, int64_t& b);
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, uint64_t& b);
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, double& b);
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, struct skr_guid_t& guid);
 } // namespace json
 } // namespace skr
 #else

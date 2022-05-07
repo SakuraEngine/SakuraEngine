@@ -69,7 +69,7 @@ target("SkrRT")
     add_files("src/**/*.hlsl")
     -- link system libs/frameworks
     if (is_os("windows")) then 
-        add_links("advapi32", "Shcore", "user32", "shell32", "Ole32")
+        add_links("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})
     end
     if (is_os("macosx")) then 
         add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
@@ -84,9 +84,7 @@ target("SkrRT")
         task.run("unzip-wasm3")
         task.run("unzip-gfx-sdk")
     end)
-    add_links(links_list)
-    add_links("TracyClient")
-    add_links("m3", "uv_a", "uvwasi_a")
+    add_links(links_list, {public = true})
 target_end()
 
 if(has_config("build_tools")) then

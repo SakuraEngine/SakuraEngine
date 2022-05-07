@@ -48,7 +48,7 @@ struct SResourceRequst {
 
     void Update();
 };
-struct SResourceRegistry {
+struct RUNTIME_API SResourceRegistry {
 public:
     virtual void RequestResource(SResourceRequst* request) = 0;
     virtual void CancelRequest(SResourceRequst* requst) = 0;
@@ -69,7 +69,7 @@ struct SResourceSystem {
     skr_resource_record_t* _GetRecord(const skr_guid_t& guid);
 
     SResourceRegistry* resourceProvider;
-    phmap::flat_hash_map<skr_guid_t, skr_resource_record_t*> resourceRecords;
+    phmap::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
     phmap::flat_hash_map<skr_type_id_t, SResourceFactory*> resourceFactories;
 };
 } // namespace resource

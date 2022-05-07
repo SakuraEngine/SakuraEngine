@@ -10,7 +10,7 @@ namespace sakura
 namespace render_graph
 {
 
-struct PassContext {
+struct RUNTIME_API PassContext {
     CGPUCommandBufferId cmd;
     gsl::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
     gsl::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
@@ -32,7 +32,7 @@ struct PassContext {
         return nullptr;
     }
 };
-class PassNode : public RenderGraphNode
+class RUNTIME_API PassNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
@@ -80,7 +80,7 @@ struct RenderPassContext : public PassContext {
 };
 using RenderPassExecuteFunction = eastl::function<
 void(class RenderGraph&, RenderPassContext&)>;
-class RenderPassNode : public PassNode
+class RUNTIME_API RenderPassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -101,13 +101,13 @@ protected:
     ECGPUStoreAction stencil_store_action;
 };
 
-struct ComputePassContext : public PassContext {
+struct RUNTIME_API ComputePassContext : public PassContext {
     CGPUComputePassEncoderId encoder;
     gsl::span<CGPUDescriptorSetId> desc_sets;
 };
 using ComputePassExecuteFunction = eastl::function<
 void(class RenderGraph&, ComputePassContext&)>;
-class ComputePassNode : public PassNode
+class RUNTIME_API ComputePassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -122,7 +122,7 @@ protected:
     CGPUComputePipelineId pipeline;
 };
 
-class CopyPassNode : public PassNode
+class RUNTIME_API CopyPassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -137,7 +137,7 @@ protected:
     eastl::vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>> b2bs;
 };
 
-class PresentPassNode : public PassNode
+class RUNTIME_API PresentPassNode : public PassNode
 {
 public:
     friend class RenderGraph;

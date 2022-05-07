@@ -9,14 +9,14 @@ namespace skd reflect
 {
 namespace asset reflect
 {
-struct SConfigTypeInfo {
+struct TOOL_API SConfigTypeInfo {
     void (*Import)(simdjson::ondemand::value&& json, void* address);
 };
-struct SConfigRegistry {
+struct TOOL_API SConfigRegistry {
     phmap::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
-struct reflect attr(
+struct TOOL_API reflect attr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
 "serialize" : true
 )
@@ -26,7 +26,7 @@ SJsonConfigImporter final : public SImporter
     using SImporter::SImporter;
     void* Import(const SAssetRecord* record) override;
 };
-struct SJsonConfigImporterFactory final : public SImporterFactory {
+struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override;
     skr_guid_t GetResourceType() override;
     SImporter* CreateImporter(const SAssetRecord* record) override;
