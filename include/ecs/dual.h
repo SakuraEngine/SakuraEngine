@@ -186,13 +186,13 @@ typedef uint32_t dual_mask_component_t;
  * @see dual_get_context
  * @return dual_context_t*
  */
-dual_context_t* dual_initialize();
+RUNTIME_API dual_context_t* dual_initialize();
 /**
  * @brief get context, used by library, implemented by user
  * @see dual_initialize
  * @return dual_context_t*
  */
-dual_context_t* dual_get_context();
+RUNTIME_API dual_context_t* dual_get_context();
 /**
  * @brief destroy context, shutdown library
  *
