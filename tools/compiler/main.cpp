@@ -78,7 +78,7 @@ void compile_config(skd::asset::SAssetRecord* record)
     //------write resource object
     skr::resource::SConfigFactory::Serialize(*resource, archive);
     //------save resource to disk
-    ghc::filesystem::path output = "F:\\Sakura.Runtime\\samples\\game\\resource";
+    ghc::filesystem::path output = "C:\\Users\\BenzzZX\\Desktop\\Development\\Sakura.Runtime\\samples\\game\\resource";
     ghc::filesystem::create_directories(output);
     output.append(record->path.filename().replace_extension("bin"));
     auto file = fopen(output.u8string().c_str(), "wb");
@@ -89,8 +89,8 @@ void compile_config(skd::asset::SAssetRecord* record)
 int main(int argc, char** argv)
 {
     auto& registry = *skd::asset::GetAssetRegistry();
-    registry.ImportAsset("F:\\Sakura.Runtime\\samples\\game\\assets\\myConfig.json");
-    compile_config(registry.ImportAsset("F:\\Sakura.Runtime\\samples\\game\\assets\\myConfig.config.meta"));
+    registry.ImportAsset("C:\\Users\\BenzzZX\\Desktop\\Development\\Sakura.Runtime\\samples\\game\\assets\\myConfig.json");
+    compile_config(registry.ImportAsset("C:\\Users\\BenzzZX\\Desktop\\Development\\Sakura.Runtime\\samples\\game\\assets\\myConfig.config.meta"));
     return 0;
     using namespace grpc;
     if (argc != 1)

@@ -16,11 +16,11 @@ struct TOOL_API SConfigRegistry {
     phmap::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
-struct TOOL_API reflect attr(
+struct reflect attr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
 "serialize" : true
 )
-SJsonConfigImporter final : public SImporter
+TOOL_API SJsonConfigImporter final : public SImporter
 {
     skr_guid_t configType;
     using SImporter::SImporter;

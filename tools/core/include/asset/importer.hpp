@@ -14,7 +14,7 @@ struct reflect attr(
 "guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
 "serialize" : true
 )
-SImporter
+TOOL_API SImporter
 {
     skr_guid_t assetGuid;
     SImporter(skr_guid_t inAsset)
