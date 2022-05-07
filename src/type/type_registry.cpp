@@ -280,8 +280,10 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
                 return ptr->ownership == sptr->ownership && ptr->nullable == sptr->nullable && ptr->pointee->Same(sptr->pointee);
             }
         }
+        default:
             return false;
     }
+    return false;
 }
 bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
 {
