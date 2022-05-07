@@ -4,6 +4,8 @@
 #include "llfio/llfio_vfs.cpp"
 #ifdef SAKURA_RUNTIME_OS_UNIX
     #include "unix/unix_vfs.cpp"
+#elif defined(SAKURA_RUNTIME_OS_WINDOWS)
+    #include "windows/windows_vfs.cpp"
 #endif
 
 #ifdef RUNTIME_SHARED

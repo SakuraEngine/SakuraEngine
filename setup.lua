@@ -10,7 +10,7 @@ if (os.host() =="macosx") then
     os.exec("brew install googletest")
 end
 import("find_sdk")
-pip = find_sdk.find_program("pip3") or find_sdk.find_program("pip")
+pip = find_sdk.find_program("pip3") or find_sdk.find_program("pip") or {program = "pip"}
 os.runv(pip.program, {"install", "mako"})
 
 find_sdk.sdk_from_github("SourceSansPro-Regular.ttf")

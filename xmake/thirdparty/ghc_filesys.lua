@@ -11,3 +11,4 @@ target("ghc_fs")
         add_links("shell32")
     end
     add_includedirs(ghc_fs_include_dir)
+    add_cxflags(project_cxflags, {public = true})

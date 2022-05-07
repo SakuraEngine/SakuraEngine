@@ -1,8 +1,13 @@
 #include "platform/vfs.h"
 #include "utils/log.h"
 #include <ghc/filesystem.hpp>
+#include "platform/memory.h"
 
-bool skr_unix_fopen(skr_vfs_t* fs, const char8_t* path,
+struct skr_vfile_cfile_t : public skr_vfile_t {
+    FILE* cfile;
+};
+
+skr_vfile_t* skr_unix_fopen(skr_vfs_t* fs, const char8_t* path,
 ESkrFileMode mode, const char8_t* password, skr_vfile_t* out_file)
 {
     ghc::filesystem::path filePath(fs->mount_dir ? fs->mount_dir : "");
@@ -23,10 +28,11 @@ ESkrFileMode mode, const char8_t* password, skr_vfile_t* out_file)
     {
         SKR_LOG_ERROR("Error opening file: %s -- %s (error: %s)",
         filePath.c_str(), modeStr, strerror(errno));
-        return false;
+        return nullptr;
     }
-    out_file->mode = mode;
-    out_file->fs = fs;
-    out_file->cfile = cfile;
-    return true;
+    skr_vfile_cfile_t* vfile = SkrNew<skr_vfile_cfile_t>();
+    vfile->mode = mode;
+    vfile->fs = fs;
+    vfile->cfile = cfile;
+    return vfile;
 }

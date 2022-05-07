@@ -69,13 +69,27 @@ function install_lib(lib_name)
     end
 end
 
+function Split(s, delimiter)
+    result = {};
+    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+        table.insert(result, match);
+    end
+    return result;
+end
+
+split_string = Split("Hello World!", " ")
+
 function find_program(name, sdkdir, use_which)
     import("lib.detect.find_file")
     import("lib.detect.find_program")
     import("lib.detect.find_tool")
 
     local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
-    local tool = find_tool(name, {pathes = {sdkdir, "/usr/local/bin"}})
+    local paths = nil
+    if(os.host() == "windows") then
+        paths = Split(os.getenv("PATH"), ";")
+    end
+    local tool = find_tool(name, {pathes = {sdkdir, "/usr/local/bin", paths}})
     local prog = tool and tool.program or find_program(name, {pathes = {sdkdir, "/usr/local/bin"}})
     local vexec
     if(prog == nil) then
@@ -87,6 +101,7 @@ function find_program(name, sdkdir, use_which)
         end
     end
     if(prog == nil) then
+        vprint(name.." not found! under "..sdkdir)
         local progf = find_file(name, {sdkdir})
         if(os.host() == "windows") then
             if(progf == nil) then
@@ -94,7 +109,7 @@ function find_program(name, sdkdir, use_which)
             end
         end
         if(progf == nil) then
-            print(name.."_f not found! under "..sdkdir)
+            vprint(name.."_f not found! under "..sdkdir)
             return
         else
             prog = progf
