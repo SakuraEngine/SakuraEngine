@@ -1,3 +1,5 @@
+#define TOOL_IMPL
+#include "tool_configure.h"
 #include "asset/asset_registry.hpp"
 #include "ghc/filesystem.hpp"
 #include "platform/debug.h"
@@ -10,7 +12,7 @@
 
 namespace skd::asset
 {
-RUNTIME_EXPORT SAssetRegistry* GetAssetRegistry()
+TOOL_API SAssetRegistry* GetAssetRegistry()
 {
     static SAssetRegistry registry;
     return &registry;

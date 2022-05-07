@@ -1,4 +1,5 @@
 #pragma once
+#include "tool_configure.h"
 #include "platform/guid.h"
 #include "ghc/filesystem.hpp"
 #include "simdjson.h"
@@ -9,6 +10,8 @@ namespace skd
 using namespace skr;
 namespace asset
 {
+TOOL_API struct SAssetRegistry* GetAssetRegistry();
+
 struct SAssetRecord {
     skr_guid_t guid;
     ghc::filesystem::path path;
