@@ -21,70 +21,60 @@ namespace skr
 {
 namespace type
 {
-template <>
 const skr_type_t* type_of<bool>::get()
 {
     static BoolType type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<int32_t>::get()
 {
     static Int32Type type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<int64_t>::get()
 {
     static Int64Type type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<uint32_t>::get()
 {
     static UInt32Type type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<uint64_t>::get()
 {
     static UInt64Type type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<float>::get()
 {
     static Float32Type type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<double>::get()
 {
     static Float64Type type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<skr_guid_t>::get()
 {
     static GUIDType type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<eastl::string>::get()
 {
     static StringType type;
     return &type;
 }
 
-template <>
 const skr_type_t* type_of<eastl::string_view>::get()
 {
     static StringViewType type;
