@@ -20,7 +20,10 @@ class Record(object):
     def __init__(self, name, fields, bases):
         self.name = name
         self.luaName = name.replace("::", ".")
-        self.short_name = str.rsplit(name, "::", 1)[-1]
+        var = str.rsplit(name, "::", 1)
+        self.short_name = var[-1]
+        if len(var) > 1:
+            self.namespace = var[0]
         self.export_to_c = not "::" in name
         self.fields = fields
         self.bases = bases
@@ -42,9 +45,15 @@ class Enumerator(object):
 
 
 class Enum(object):
-    def __init__(self, name, enumerators):
+    def __init__(self, name, underlying_type, enumerators):
         self.name = name
-        self.short_name = str.rsplit(name, "::", 1)[-1]
+        if underlying_type == "unfixed":
+            abort(name + " is not fixed enum!")
+        self.postfix = ": " + underlying_type
+        var = str.rsplit(name, "::", 1)
+        self.short_name = var[-1]
+        if len(var) > 1:
+            self.namespace = var[0]
         self.enumerators = enumerators
         self.export_to_c = not "::" in name
         for enumerator in enumerators:
@@ -80,6 +89,9 @@ def main():
     db = Binding()
     root = sys.argv[1]
     outdir = sys.argv[2]
+    api = sys.argv[3]
+    config = api.lower()+"_configure.h"
+    api = api.upper()+"_API"
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     print(metas)
     for meta in metas:
@@ -116,7 +128,7 @@ def main():
             for key2, value2 in value["values"].items():
                 enumerators.append(Enumerator(
                     key2, value2["value"]))
-            db.enums.append(Enum(key, enumerators))
+            db.enums.append(Enum(key, value["underlying_type"], enumerators))
     db.resolve_base()
     template = os.path.join(BASE, "json_writer.cpp.mako")
     content = render(template, db=db)
@@ -127,11 +139,11 @@ def main():
     output = os.path.join(outdir, "json_reader.generated.cpp")
     write(output, content)
     template = os.path.join(BASE, "json_writer.h.mako")
-    content = render(template, db=db)
+    content = render(template, db=db, api=api, config=config)
     output = os.path.join(outdir, "json_writer.generated.h")
     write(output, content)
     template = os.path.join(BASE, "json_reader.h.mako")
-    content = render(template, db=db)
+    content = render(template, db=db, api=api, config=config)
     output = os.path.join(outdir, "json_reader.generated.h")
     write(output, content)
 
