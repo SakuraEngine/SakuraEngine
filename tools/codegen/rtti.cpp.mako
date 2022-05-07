@@ -7,17 +7,6 @@
 #include "${header}"
 %endfor
 
-namespace skr::type {
-%for record in db.records:
-template<>
-const skr_type_t* type_of<${record.name}>::get();
-%endfor
-%for enum in db.enums:
-template<>
-const skr_type_t* type_of<${enum.name}>::get();
-%endfor
-}
-
 %for record in db.records:
 namespace skr::type
 {
@@ -32,7 +21,6 @@ namespace skr::type
 %endif
 
     static skr_type_t* type_of_${record.id};
-    template<>
     const skr_type_t* type_of<${record.name}>::get()
     {
         static struct DoOnce
@@ -140,7 +128,6 @@ namespace skr::type
 %for enum in db.enums:
 namespace skr::type
 {
-    template<>
     const skr_type_t* type_of<${enum.name}>::get()
     {
         static EnumType::Enumerator enumerators[] = 

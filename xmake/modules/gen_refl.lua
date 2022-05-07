@@ -55,6 +55,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         },{
             os.projectdir()..vformat("/tools/codegen/rtti.py"),
             os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/config_asset.py"),
@@ -100,7 +101,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             local python = find_sdk.find_program("python3")
             os.iorunv(python.program, {
                 generator,
-                path.absolute(metadir), path.absolute(generators[index].gendir or gendir)
+                path.absolute(metadir), path.absolute(generators[index].gendir or gendir), target:name()
             })
         end
         runjobs("codegen.cpp", task, {total = #generators})
