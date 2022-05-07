@@ -7,9 +7,9 @@
 %endfor
 
 %for type in db.types:
-static struct Register${type.id}Helper
+static struct RegisterConfigResource${type.id}Helper
 {
-    Register${type.id}Helper()
+    RegisterConfigResource${type.id}Helper()
     {
         auto registry = skr::resource::GetConfigRegistry();
         constexpr skr_guid_t guid = {${type.guidConstant}};
@@ -26,5 +26,5 @@ static struct Register${type.id}Helper
         };
         registry->typeInfos.insert(std::make_pair(guid, typeInfo));
     }
-} _Register${type.id}Helper;
+} _RegisterConfigResource${type.id}Helper;
 %endfor
