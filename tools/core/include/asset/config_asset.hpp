@@ -9,15 +9,13 @@ namespace skd reflect
 {
 namespace asset reflect
 {
-TOOL_API struct SConfigRegistry* GetConfigRegistry();
-
 struct SConfigTypeInfo {
     void (*Import)(simdjson::ondemand::value&& json, void* address);
 };
 struct SConfigRegistry {
     phmap::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
-RUNTIME_API SConfigRegistry* GetConfigRegistry();
+TOOL_API struct SConfigRegistry* GetConfigRegistry();
 struct reflect attr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
 "serialize" : true

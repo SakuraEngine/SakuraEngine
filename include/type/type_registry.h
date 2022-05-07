@@ -6,7 +6,6 @@
 extern "C" {
 #endif
 
-typedef struct skr_type_t skr_type_t;
 typedef struct skr_field_t skr_field_t;
 typedef struct skr_method_t skr_method_t;
 typedef skr_guid_t skr_type_id_t;
@@ -31,12 +30,12 @@ typedef enum skr_type_category_t
     SKR_TYPE_CATEGORY_REF,
 } skr_type_category_t;
 
-skr_type_t* skr_get_type(const skr_type_id_t* id);
-void skr_get_derived_types(const skr_type_t* type, void (*callback)(void* u, skr_type_t* type), void* u);
-void skr_get_type_id(const skr_type_t* type, skr_type_id_t* id);
-uint32_t skr_get_type_size(const skr_type_t* type);
-void skr_get_fields(const skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
-skr_type_t* skr_get_field_type(const skr_field_t* field);
+struct skr_type_t* skr_get_type(const skr_type_id_t* id);
+void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
+void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
+uint32_t skr_get_type_size(const struct skr_type_t* type);
+void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
+struct skr_type_t* skr_get_field_type(const skr_field_t* field);
 const char* skr_get_field_name(const skr_field_t* field);
 
 /*
@@ -44,7 +43,6 @@ generated:
 skr_type_t* skr_typeof_xxxx();
 void skr_typeid_xxxx(skr_type_id_t* id);
 */
-
 #if defined(__cplusplus)
 }
 #endif
@@ -330,7 +328,7 @@ struct ReferenceType : skr_type_t {
 
 template <class T>
 struct type_of {
-    RUNTIME_API static const skr_type_t* get();
+    static const skr_type_t* get();
 };
 
 template <>

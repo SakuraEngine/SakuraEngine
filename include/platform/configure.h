@@ -68,7 +68,7 @@
 
 #ifndef RUNTIME_EXPORT
     #if defined(_MSC_VER)
-        #define RUNTIME_EXPORT __declspec(dllexport) RUNTIME_EXTERN_C
+        #define RUNTIME_EXPORT __declspec(dllexport)
     #else
         #define RUNTIME_EXPORT
     #endif
