@@ -8,9 +8,9 @@ namespace skr::json
 template <>
 void Read(simdjson::ondemand::value&& json, bool& b) { b = json.get_bool().value_unsafe(); }
 template <>
-void Read(simdjson::ondemand::value&& json, int32_t& b) { b = json.get_int64().value_unsafe(); }
+void Read(simdjson::ondemand::value&& json, int32_t& b) { b = (int32_t)json.get_int64().value_unsafe(); }
 template <>
-void Read(simdjson::ondemand::value&& json, uint32_t& b) { b = json.get_uint64().value_unsafe(); }
+void Read(simdjson::ondemand::value&& json, uint32_t& b) { b = (uint32_t)json.get_uint64().value_unsafe(); }
 template <>
 void Read(simdjson::ondemand::value&& json, int64_t& b) { b = json.get_int64().value_unsafe(); }
 template <>
