@@ -1,7 +1,7 @@
 //DO NOT MODIFY THIS FILE
-#include "json/reader.h"
 #include "utils/hash.h"
 #include "platform/debug.h"
+#include "json_reader.generated.h"
 %for header in db.headers:
 #include "${header}"
 %endfor

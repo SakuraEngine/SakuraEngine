@@ -1,5 +1,5 @@
 //DO NOT MODIFY THIS FILE
-#include "json/writer.h"
+#include "json_writer.generated.h"
 %for header in db.headers:
 #include "${header}"
 %endfor
