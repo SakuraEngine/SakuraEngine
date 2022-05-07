@@ -1098,7 +1098,7 @@ float cgpu_queue_get_timestamp_period_ns_d3d12(CGPUQueueId queue)
     Q->pCommandQueue->GetTimestampFrequency(&freq);
     // ns per tick
     const double ms_period = 1e9 / (double)freq;
-    return ms_period;
+    return (float)ms_period;
 }
 
 void cgpu_free_queue_d3d12(CGPUQueueId queue)

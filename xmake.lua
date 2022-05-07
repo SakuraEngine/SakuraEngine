@@ -66,7 +66,7 @@ target("SkrRT")
     add_files("src/**/*.hlsl")
     -- link system libs/frameworks
     if (is_os("windows")) then 
-        add_links("advapi32", "Shcore")
+        add_links("advapi32", "Shcore", "user32", "shell32", "Ole32")
     end
     if (is_os("macosx")) then 
         add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
