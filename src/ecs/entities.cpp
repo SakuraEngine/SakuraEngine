@@ -20,7 +20,7 @@ void entity_registry_t::shrink()
 {
     if (entries.size() == 0)
         return;
-    EIndex lastValid = entries.size() - 1;
+    EIndex lastValid = (EIndex)(entries.size() - 1);
     while (lastValid != 0 && entries[lastValid].chunk == nullptr)
         --lastValid;
     if (entries[lastValid].indexInChunk == 0)

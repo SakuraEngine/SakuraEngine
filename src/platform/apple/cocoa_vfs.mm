@@ -26,19 +26,25 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc)
     auto fs = (skr_vfs_t*)sakura_calloc(1, sizeof(skr_vfs_t));
     fs->mount_type = desc->mount_type;
     skr_vfs_get_native_procs(&fs->procs);
+    NSError* error = nil;
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
+    // override url
+    if (desc->override_mount_dir)
+    {
+        if (fs->mount_dir) sakura_free(fs->mount_dir);
+        fs->mount_dir = duplicate_string(desc->override_mount_dir);
+    }
     // get application directory
-    if (desc->mount_type == SKR_MOUNT_TYPE_CONTENT)
+    else if (desc->mount_type == SKR_MOUNT_TYPE_CONTENT)
     {
         fs->mount_dir = duplicate_string(
         [[[[[NSBundle mainBundle] resourceURL] absoluteURL] path] UTF8String]);
         if (!fs->mount_dir)
             [fileManager changeCurrentDirectoryPath:[[NSBundle mainBundle] bundlePath]];
     }
-    NSError* error = nil;
     // save url
-    if (desc->mount_type == SKR_MOUNT_TYPE_DOCUMENTS)
+    else if (desc->mount_type == SKR_MOUNT_TYPE_DOCUMENTS)
     {
         auto documentUrl = [fileManager URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:true error:&error];
         if (!error)
@@ -53,7 +59,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc)
         }
     }
     // debug url
-    if (desc->mount_type == SKR_MOUNT_TYPE_DEBUG || desc->mount_type == SKR_MOUNT_TYPE_SAVE_0)
+    else if (desc->mount_type == SKR_MOUNT_TYPE_DEBUG || desc->mount_type == SKR_MOUNT_TYPE_SAVE_0)
     {
 #ifdef TARGET_IOS
         // Place log files in the application support directory on iOS.
@@ -73,11 +79,13 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc)
         fs->mount_dir = duplicate_string(p.parent_path().c_str());
 #endif
     }
-    // override url
-    if (desc->override_mount_dir)
+    else if (desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE)
     {
-        fs->mount_dir = duplicate_string(desc->override_mount_dir);
+        const char8_t* path = [[[NSBundle mainBundle] bundlePath] UTF8String];
+        const ghc::filesystem::path p(path);
+        fs->mount_dir = duplicate_string(p.parent_path().c_str());
     }
+
     success &= fs->mount_dir or desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE;
     if (!success) goto fatal;
     return fs;
