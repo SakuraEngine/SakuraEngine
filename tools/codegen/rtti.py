@@ -229,6 +229,8 @@ def parseFunctions(dict):
     functionsDict = {}
     for value in dict:
         attr = value["attrs"]
+        if not "rtti" in attr:
+            continue
         name = value["name"]
         function = functionsDict.setdefault(name, Function(name))
         fields = []
