@@ -1,6 +1,8 @@
 #include "type/type_registry.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
+#include "platform/guid.h"
+#include "platform/memory.h"
 #include "utils/hash.h"
 #include "utils/format.hpp"
 #include "utils/fast_float.h"
@@ -111,6 +113,8 @@ size_t skr_type_t::Size() const
             return sizeof(float);
         case SKR_TYPE_CATEGORY_F64:
             return sizeof(double);
+        case SKR_TYPE_CATEGORY_GUID:
+            return sizeof(skr_guid_t);
         case SKR_TYPE_CATEGORY_STR:
             return sizeof(eastl::string);
         case SKR_TYPE_CATEGORY_STRV:
@@ -157,6 +161,8 @@ size_t skr_type_t::Align() const
             return alignof(float);
         case SKR_TYPE_CATEGORY_F64:
             return alignof(double);
+        case SKR_TYPE_CATEGORY_GUID:
+            return alignof(skr_guid_t);
         case SKR_TYPE_CATEGORY_STR:
             return alignof(eastl::string);
         case SKR_TYPE_CATEGORY_STRV:
@@ -202,6 +208,8 @@ eastl::string skr_type_t::Name() const
             return "float";
         case SKR_TYPE_CATEGORY_F64:
             return "double";
+        case SKR_TYPE_CATEGORY_GUID:
+            return "guid";
         case SKR_TYPE_CATEGORY_STR:
             return "eastl::string";
         case SKR_TYPE_CATEGORY_STRV:
@@ -250,6 +258,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
         case SKR_TYPE_CATEGORY_U64:
         case SKR_TYPE_CATEGORY_F32:
         case SKR_TYPE_CATEGORY_F64:
+        case SKR_TYPE_CATEGORY_GUID:
         case SKR_TYPE_CATEGORY_STR:
         case SKR_TYPE_CATEGORY_STRV:
             return true;
@@ -328,6 +337,11 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 acceptIndices = accept;
             }
             break;
+        case SKR_TYPE_CATEGORY_GUID: {
+            static size_t accept[] = { SKR_TYPE_CATEGORY_GUID, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+            acceptIndices = accept;
+            break;
+        }
         case SKR_TYPE_CATEGORY_STRV: {
             static size_t accept[] = { SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
             acceptIndices = accept;
@@ -608,6 +622,16 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             }
             break;
         }
+        case SKR_TYPE_CATEGORY_GUID: {
+            using T = skr_guid_t;
+            switch (srcType->type)
+            {
+                STR_CONVERT
+                default:
+                    break;
+            }
+            break;
+        }
         case SKR_TYPE_CATEGORY_STR: {
             auto& dstV = *(eastl::string*)dst;
             switch (srcType->type)
@@ -836,6 +860,8 @@ eastl::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePol
                 return format("{}", *(float*)dst);
             case SKR_TYPE_CATEGORY_F64:
                 return format("{}", *(double*)dst);
+            case SKR_TYPE_CATEGORY_GUID:
+                return format("{}", *(skr_guid_t*)dst);
             case SKR_TYPE_CATEGORY_ENUM:
                 return ((const EnumType*)this)->ToString(dst);
             default:
@@ -878,6 +904,9 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, skr::type::ValueS
             case SKR_TYPE_CATEGORY_F64:
                 fast_float::from_chars(str.begin(), str.end(), *(double*)dst);
                 break;
+            case SKR_TYPE_CATEGORY_GUID:
+                *(skr_guid_t*)dst = skr::guid::make_guid({ str.data(), str.size() });
+                break;
             case SKR_TYPE_CATEGORY_ENUM:
                 ((const EnumType*)this)->FromString(dst, str);
                 break;
@@ -912,6 +941,10 @@ size_t Hash(float value, size_t base)
     return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(double value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_guid_t& value, size_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
@@ -953,6 +986,8 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
             return HashImpl<float>(dst, base);
         case SKR_TYPE_CATEGORY_F64:
             return HashImpl<double>(dst, base);
+        case SKR_TYPE_CATEGORY_GUID:
+            return HashImpl<skr_guid_t>(dst, base);
         case SKR_TYPE_CATEGORY_STR:
             return HashImpl<eastl::string>(dst, base);
         case SKR_TYPE_CATEGORY_STRV:
@@ -1099,6 +1134,9 @@ void skr_type_t::Copy(void* dst, const void* src) const
         case SKR_TYPE_CATEGORY_F64:
             CopyImpl<double>(dst, src);
             break;
+        case SKR_TYPE_CATEGORY_GUID:
+            CopyImpl<skr_guid_t>(dst, src);
+            break;
         case SKR_TYPE_CATEGORY_STR:
             CopyImpl<eastl::string>(dst, src);
             break;
@@ -1195,6 +1233,9 @@ void skr_type_t::Move(void* dst, void* src) const
         case SKR_TYPE_CATEGORY_F64:
             MoveImpl<double>(dst, src);
             break;
+        case SKR_TYPE_CATEGORY_GUID:
+            MoveImpl<skr_guid_t>(dst, src);
+            break;
         case SKR_TYPE_CATEGORY_STR:
             MoveImpl<eastl::string>(dst, src);
             break;
@@ -1266,35 +1307,37 @@ void skr_type_t::Delete()
     switch (type)
     {
         case SKR_TYPE_CATEGORY_BOOL:
-            delete (BoolType*)this;
+            SkrDelete((BoolType*)this);
         case SKR_TYPE_CATEGORY_I32:
-            delete (Int32Type*)this;
+            SkrDelete((Int32Type*)this);
         case SKR_TYPE_CATEGORY_I64:
-            delete (Int64Type*)this;
+            SkrDelete((Int64Type*)this);
         case SKR_TYPE_CATEGORY_U32:
-            delete (UInt32Type*)this;
+            SkrDelete((UInt32Type*)this);
         case SKR_TYPE_CATEGORY_U64:
-            delete (UInt64Type*)this;
+            SkrDelete((UInt64Type*)this);
         case SKR_TYPE_CATEGORY_F32:
-            delete (Float32Type*)this;
+            SkrDelete((Float32Type*)this);
         case SKR_TYPE_CATEGORY_F64:
-            delete (Float64Type*)this;
+            SkrDelete((Float64Type*)this);
+        case SKR_TYPE_CATEGORY_GUID:
+            SkrDelete((GUIDType*)this);
         case SKR_TYPE_CATEGORY_STR:
-            delete (StringType*)this;
+            SkrDelete((StringType*)this);
         case SKR_TYPE_CATEGORY_STRV:
-            delete (StringViewType*)this;
+            SkrDelete((StringViewType*)this);
         case SKR_TYPE_CATEGORY_ARR:
-            delete (ArrayType*)this;
+            SkrDelete((ArrayType*)this);
         case SKR_TYPE_CATEGORY_DYNARR:
-            delete (DynArrayType*)this;
+            SkrDelete((DynArrayType*)this);
         case SKR_TYPE_CATEGORY_ARRV:
-            delete (ArrayViewType*)this;
+            SkrDelete((ArrayViewType*)this);
         case SKR_TYPE_CATEGORY_OBJ:
-            delete (RecordType*)this;
+            SkrDelete((RecordType*)this);
         case SKR_TYPE_CATEGORY_ENUM:
-            delete (EnumType*)this;
+            SkrDelete((EnumType*)this);
         case SKR_TYPE_CATEGORY_REF:
-            delete (ReferenceType*)this;
+            SkrDelete((ReferenceType*)this);
     }
 }
 
@@ -1315,3 +1358,135 @@ skr_type_t* skr_get_type(const skr_type_id_t* id)
         return nullptr;
     return (skr_type_t*)iter->second;
 }
+
+namespace skr::type
+{
+Value::Value()
+    : type(nullptr)
+{
+}
+
+Value::Value(const Value& other)
+{
+    _Copy(other);
+}
+
+Value::Value(Value&& other)
+{
+    _Move(std::move(other));
+}
+
+Value& Value::operator=(const Value& other)
+{
+    Reset();
+    _Copy(other);
+    return *this;
+}
+
+Value& Value::operator=(Value&& other)
+{
+    Reset();
+    _Move(std::move(other));
+    return *this;
+}
+
+void* Value::Ptr()
+{
+    if (!type)
+        return nullptr;
+    if (type->Size() < smallSize)
+        return &_smallObj[0];
+    else
+        return _ptr;
+}
+
+const void* Value::Ptr() const
+{
+    if (!type)
+        return nullptr;
+    if (type->Size() < smallSize)
+        return &_smallObj[0];
+    else
+        return _ptr;
+}
+
+void Value::Reset()
+{
+    if (!type)
+        return;
+    if (type->Size() < smallSize)
+        type->Destruct(&_smallObj[0]);
+    else
+    {
+        type->Destruct(_ptr);
+        free(_ptr);
+    }
+    if (type->temp)
+        ((Type*)type)->Delete();
+    type = nullptr;
+}
+
+size_t Value::Hash() const
+{
+    if (!type)
+        return 0;
+    return type->Hash(Ptr(), FNV_offset_basis);
+}
+
+ostr::string Value::ToString() const
+{
+    if (!type)
+        return {};
+    return type->ToString(Ptr());
+}
+
+void* Value::_Alloc()
+{
+    if (!type)
+        return nullptr;
+    auto size = type->Size();
+    if (size < smallSize)
+        return &_smallObj[0];
+    else
+        return _ptr = malloc(size);
+}
+
+void Value::_Copy(const Value& other)
+{
+    type = other.type;
+    if (!type)
+        return;
+    auto ptr = _Alloc();
+    type->Copy(ptr, other.Ptr());
+}
+
+void Value::_Move(Value&& other)
+{
+    type = other.type;
+    if (!type)
+        return;
+    auto ptr = _Alloc();
+    type->Move(ptr, other.Ptr());
+    other.Reset();
+}
+
+void ValueRef::Reset()
+{
+    type = nullptr;
+    ptr = nullptr;
+}
+
+size_t ValueRef::Hash() const
+{
+    if (!type)
+        return 0;
+    return type->Hash(ptr, FNV_offset_basis);
+}
+
+ostr::string ValueRef::ToString() const
+{
+    if (!type)
+        return {};
+    return type->ToString(ptr);
+}
+} // namespace skr::type

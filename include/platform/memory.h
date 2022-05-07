@@ -59,12 +59,12 @@ template <typename T, typename... TArgs>
 }
 
 template <typename T>
-FORCEINLINE void SkrDelete(T*& pType)
+FORCEINLINE void SkrDelete(T* pType)
 {
     if (pType != nullptr)
     {
         pType->~T();
-        sakura_free((void*&)pType);
+        sakura_free((void*)pType);
     }
 }
 #endif
