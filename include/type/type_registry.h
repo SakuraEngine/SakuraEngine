@@ -20,6 +20,7 @@ typedef enum skr_type_category_t
     SKR_TYPE_CATEGORY_U64,
     SKR_TYPE_CATEGORY_F32,
     SKR_TYPE_CATEGORY_F64,
+    SKR_TYPE_CATEGORY_GUID,
     SKR_TYPE_CATEGORY_STR,
     SKR_TYPE_CATEGORY_STRV,
     SKR_TYPE_CATEGORY_ARR,
@@ -53,6 +54,7 @@ void skr_typeid_xxxx(skr_type_id_t* id);
     #include "EASTL/string.h"
     #include "gsl/span"
     #include "EASTL/vector.h"
+    #include "phmap.h"
     #include <memory>
     #include <type_traits>
     #include <new>
@@ -193,6 +195,13 @@ struct Float64Type : skr_type_t {
     {
     }
 };
+// guid
+struct GUIDType : skr_type_t {
+    GUIDType()
+        : skr_type_t{ SKR_TYPE_CATEGORY_GUID }
+    {
+    }
+};
 // eastl::string
 struct StringType : skr_type_t {
     StringType()
@@ -326,7 +335,7 @@ struct type_of {
 
 template <>
 struct type_of<void*> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -339,7 +348,7 @@ struct type_of<void*> {
 
 template <class T>
 struct type_of<const T> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         return type_of<T>::get();
     }
@@ -347,7 +356,7 @@ struct type_of<const T> {
 
 template <class T>
 struct type_of<volatile T> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         return type_of<T>::get();
     }
@@ -355,7 +364,7 @@ struct type_of<volatile T> {
 
 template <class T>
 struct type_of<T*> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -368,7 +377,7 @@ struct type_of<T*> {
 
 template <class T>
 struct type_of<T&> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Observed,
@@ -381,7 +390,7 @@ struct type_of<T&> {
 
 template <class T>
 struct type_of<std::shared_ptr<T>> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Shared,
@@ -394,7 +403,7 @@ struct type_of<std::shared_ptr<T>> {
 
 template <class V, class T>
 struct type_of_vector {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         static DynArrayType type{
             type_of<T>::get(),
@@ -422,7 +431,7 @@ struct type_of<eastl::vector<T, Allocator>> : type_of_vector<eastl::vector<T, Al
 
 template <class T, size_t num>
 struct type_of<T[num]> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         static ArrayType type{
             type_of<T>::get(),
@@ -435,7 +444,7 @@ struct type_of<T[num]> {
 
 template <class T, size_t size>
 struct type_of<gsl::span<T, size>> {
-    static const skr_type_t* get()
+    RUNTIME_API static const skr_type_t* get()
     {
         static_assert(size == -1, "only dynamic extent is supported.");
         static ArrayViewType type{

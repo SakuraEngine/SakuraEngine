@@ -10,6 +10,15 @@
 
 namespace skd::asset
 {
+RUNTIME_EXPORT SAssetRegistry* GetAssetRegistry()
+{
+    static SAssetRegistry registry;
+    return &registry;
+}
+} // namespace skd::asset
+
+namespace skd::asset
+{
 SAssetRecord* SAssetRegistry::ImportAsset(ghc::filesystem::path path)
 {
     auto metaPath = path;

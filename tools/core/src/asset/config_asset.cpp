@@ -8,6 +8,16 @@
 #include "type/type_registry.h"
 #include "utils/log.h"
 #include "utils/defer.hpp"
+
+namespace skd::asset
+{
+RUNTIME_EXPORT SConfigRegistry* GetConfigRegistry()
+{
+    static SConfigRegistry registry;
+    return &registry;
+}
+} // namespace skd::asset
+
 namespace skd
 {
 namespace asset
@@ -33,6 +43,7 @@ bool SJsonConfigImporterFactory::CanImport(const SAssetRecord* record)
 {
     if (record->path.extension() == ".json")
         return true;
+    return false;
 }
 skr_guid_t SJsonConfigImporterFactory::GetResourceType()
 {

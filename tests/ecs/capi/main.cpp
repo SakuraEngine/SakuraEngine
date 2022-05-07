@@ -332,16 +332,8 @@ auto register_pinned_component()
     type_pinned_arr = dualT_register_type(&desc);
 }
 
-dual_context_t* ctx = nullptr;
-
-extern "C" dual_context_t* dual_get_context()
-{
-    return ctx;
-}
-
 int main(int argc, char** argv)
 {
-    ctx = dual_initialize();
     ::testing::InitGoogleTest(&argc, argv);
     register_test_component();
     register_ref_component();

@@ -46,7 +46,7 @@ if (is_os("windows")) then
 end
 
 target("SkrRT") 
-    set_kind("static")
+    set_kind("shared")
     add_rules("c++.reflection", {
         files = {"include/resource/**.h", "include/resource/**.hpp"},
         rootdir = "include/"
@@ -57,6 +57,9 @@ target("SkrRT")
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     add_cxflags(project_cxflags, {public = true, force = true})
+    -- runtime compile definitions
+    add_defines("MI_SHARED_LIB", "RUNTIME_SHARED", {public = true})
+    add_defines("MI_SHARED_LIB_EXPORT", "RUNTIME_API=RUNTIME_EXPORT", "EASTL_API=EA_EXPORT")
     -- fetch vk includes
     add_rules("utils.fetch-vk-includes")
     -- add internal shaders
