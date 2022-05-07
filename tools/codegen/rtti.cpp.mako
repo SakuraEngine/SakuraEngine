@@ -125,7 +125,7 @@ namespace skr::type
     } _Register${record.id}Helper;
 %endfor
 
-%for enum in db.enums:
+%for enum in db.enums: 
 namespace skr::type
 {
     const skr_type_t* type_of<${enum.name}>::get()

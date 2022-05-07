@@ -9,7 +9,8 @@ target("SkrTool")
     add_includedirs("core/include", {public = true})
     add_rules("c++.reflection", {
         files = {"core/**.h", "core/**.hpp"},
-        rootdir = "core/"
+        rootdir = "core/",
+        api = "TOOL"
     })
 
 target("SkrCompiler")

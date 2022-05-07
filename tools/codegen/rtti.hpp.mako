@@ -1,5 +1,5 @@
 #pragma once
-#include "configure.h"
+#include "${config}"
 #include "type/type_registry.h"
 
 %for record in db.records:
