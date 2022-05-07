@@ -1,4 +1,5 @@
 #pragma once
+#include "tool_configure.h"
 #include "platform/guid.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
@@ -8,6 +9,7 @@ namespace skd reflect
 {
 namespace asset reflect
 {
+TOOL_API struct SConfigRegistry* GetConfigRegistry();
 
 struct SConfigTypeInfo {
     void (*Import)(simdjson::ondemand::value&& json, void* address);

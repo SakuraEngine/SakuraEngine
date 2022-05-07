@@ -1,3 +1,5 @@
+#define TOOL_IMPL
+#include "tool_configure.h"
 #include "asset/config_asset.hpp"
 #include "platform/configure.h"
 #include "platform/memory.h"
@@ -11,7 +13,7 @@
 
 namespace skd::asset
 {
-RUNTIME_EXPORT SConfigRegistry* GetConfigRegistry()
+TOOL_API SConfigRegistry* GetConfigRegistry()
 {
     static SConfigRegistry registry;
     return &registry;
