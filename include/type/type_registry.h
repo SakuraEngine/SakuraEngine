@@ -296,11 +296,11 @@ struct EnumType : skr_type_t {
     }
 };
 
-struct TypeRegistry {
+struct STypeRegistry {
     phmap::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
 };
 
-RUNTIME_API TypeRegistry* GetTypeRegistry();
+RUNTIME_API STypeRegistry* GetTypeRegistry();
 
 // T*, T&, std::unique_ptr<T>, std::shared_ptr<T>
 struct ReferenceType : skr_type_t {

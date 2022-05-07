@@ -10,7 +10,7 @@ namespace asset reflect
 {
 
 struct SConfigTypeInfo {
-    void* (*Import)(simdjson::ondemand::value&& json);
+    void (*Import)(simdjson::ondemand::value&& json, void* address);
 };
 struct SConfigRegistry {
     phmap::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;

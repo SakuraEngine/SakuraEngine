@@ -12,7 +12,7 @@ void Write(skr_json_writer_t* writer, ${enum.name} e)
     switch(e)
     {
     %for enumerator in enum.enumerators:
-        case ${enumerator.name}: writer->String("${enumerator.name}", ${len(enumerator.name)}); break;
+        case ${enumerator.name}: writer->String("${enumerator.name}", ${len(enumerator.name)}); return;
     %endfor
     }
 } 

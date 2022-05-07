@@ -16,7 +16,7 @@ void Read(simdjson::ondemand::value&& json, ${enum.name}& e)
     switch(hash)
     {
     %for enumerator in enum.enumerators:
-        case hash_crc32<char>("${enumerator.name}"): if( enumStr == "${enumerator.name}") e = ${enumerator.name}; break;
+        case hash_crc32<char>("${enumerator.name}"): if( enumStr == "${enumerator.name}") e = ${enumerator.name}; return;
     %endfor
     }
     SKR_UNREACHABLE_CODE();

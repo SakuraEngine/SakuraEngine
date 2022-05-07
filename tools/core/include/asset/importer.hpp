@@ -10,7 +10,10 @@ namespace skd reflect
 using namespace skr;
 namespace asset reflect
 {
-struct reflect attr("guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847")
+struct reflect attr(
+"guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
+"serialize" : true
+)
 SImporter
 {
     skr_guid_t assetGuid;

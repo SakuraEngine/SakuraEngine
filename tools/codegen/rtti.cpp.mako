@@ -124,16 +124,17 @@ namespace skr::type
         } once;
         return type_of_${record.id};
     }
+}
     static struct Register${record.id}Helper
     {
         Register${record.id}Helper()
         {
+            using namespace skr::type;
             auto registry = GetTypeRegistry();
             constexpr skr_guid_t guid = {${record.guidConstant}};
             registry->types.insert(std::make_pair(guid, type_of<${record.name}>::get()));
         }
     } _Register${record.id}Helper;
-}
 %endfor
 
 %for enum in db.enums:
@@ -160,7 +161,7 @@ namespace skr::type
                 switch(hash)
                 {
                 %for enumerator in enum.enumerators:
-                    case hash_crc32<char>("${enumerator.name}"): if( enumStr.compare("${enumerator.name}") == 0) This = ${enumerator.name}; break;
+                    case hash_crc32<char>("${enumerator.name}"): if( enumStr.compare("${enumerator.name}") == 0) This = ${enumerator.name}; return;
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
@@ -181,14 +182,15 @@ namespace skr::type
         };
         return &type;
     }
+}
     static struct Register${enum.id}Helper
     {
         Register${enum.id}Helper()
         {
+            using namespace skr::type;
             auto registry = GetTypeRegistry();
             constexpr skr_guid_t guid = {${enum.guidConstant}};
             registry->types.insert(std::make_pair(guid, type_of<${enum.name}>::get()));
         }
     } _Register${enum.id}Helper;
-}
 %endfor
