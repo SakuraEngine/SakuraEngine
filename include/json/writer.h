@@ -15,8 +15,7 @@ typedef enum ESkrJsonType
     #include <sstream>
     #include "utils/allocator.hpp"
 
-class RUNTIME_API skr_json_writer_t
-{
+struct RUNTIME_API skr_json_writer_t {
 public:
     using TChar = char;
     using TSize = size_t;
