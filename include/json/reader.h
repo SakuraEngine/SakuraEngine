@@ -3,6 +3,7 @@
 #include "simdjson.h"
 
 #if defined(__cplusplus)
+    #include "EASTL/string.h"
 struct RUNTIME_API skr_json_reader_t {
     simdjson::ondemand::value* json;
 };
@@ -27,6 +28,8 @@ template <>
 RUNTIME_API void Read(simdjson::ondemand::value&& json, uint64_t& b);
 template <>
 RUNTIME_API void Read(simdjson::ondemand::value&& json, double& b);
+template <>
+RUNTIME_API void Read(simdjson::ondemand::value&& json, eastl::string& guid);
 template <>
 RUNTIME_API void Read(simdjson::ondemand::value&& json, struct skr_guid_t& guid);
 } // namespace json
