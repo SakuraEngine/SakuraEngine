@@ -1421,8 +1421,6 @@ void Value::Reset()
         type->Destruct(_ptr);
         free(_ptr);
     }
-    if (type->temp)
-        ((Type*)type)->Delete();
     type = nullptr;
 }
 
@@ -1430,10 +1428,10 @@ size_t Value::Hash() const
 {
     if (!type)
         return 0;
-    return type->Hash(Ptr(), FNV_offset_basis);
+    return type->Hash(Ptr(), 0);
 }
 
-ostr::string Value::ToString() const
+eastl::string Value::ToString() const
 {
     if (!type)
         return {};
@@ -1480,10 +1478,10 @@ size_t ValueRef::Hash() const
 {
     if (!type)
         return 0;
-    return type->Hash(ptr, FNV_offset_basis);
+    return type->Hash(ptr, 0);
 }
 
-ostr::string ValueRef::ToString() const
+eastl::string ValueRef::ToString() const
 {
     if (!type)
         return {};
