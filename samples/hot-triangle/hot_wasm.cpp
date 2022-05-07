@@ -11,15 +11,15 @@ struct WasmWatcher {
     {
         auto cpath = std::filesystem::absolute("triangle_module32.wasm");
         watcher = new filewatch::FileWatch<std::filesystem::path>(cpath,
-            [this](const std::filesystem::path& path, const filewatch::Event change_type) {
-                if (change_type == filewatch::Event::renamed_new)
-                {
-                    skr_thread_sleep(50);
-                    std::ifstream ifs(path.c_str());
-                    this->content = std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-                    updated = true;
-                }
-            });
+        [this](const std::filesystem::path& path, const filewatch::Event change_type) {
+            if (change_type == filewatch::Event::renamed_new)
+            {
+                skr_thread_sleep(50);
+                std::ifstream ifs(path.c_str());
+                this->content = std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+                updated = true;
+            }
+        });
         std::ifstream ifs(cpath.c_str());
         content = std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
         updated = true;
@@ -104,16 +104,16 @@ struct SourceWatcher {
         : watch_path(path)
     {
         watcher = new filewatch::FileWatch<std::filesystem::path>(path,
-            [this](const std::filesystem::path& path, const filewatch::Event change_type) {
-                if (change_type == filewatch::Event::modified)
+        [this](const std::filesystem::path& path, const filewatch::Event change_type) {
+            if (change_type == filewatch::Event::modified)
+            {
+                auto pathstr = path.string();
+                if (pathstr.find(".wa.") != std::string::npos)
                 {
-                    auto pathstr = path.string();
-                    if (pathstr.find(".wa.") != std::string::npos)
-                    {
-                        Compile();
-                    }
+                    Compile();
                 }
-            });
+            }
+        });
         Compile();
     }
     ~SourceWatcher()

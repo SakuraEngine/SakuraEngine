@@ -31,14 +31,14 @@ void create_render_pipeline()
     read_shader_bytes("hot-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
     read_shader_bytes("hot-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
     CGPUShaderLibraryDescriptor vs_desc = {
-        .stage = SHADER_STAGE_VERT,
+        .stage = CGPU_SHADER_STAGE_VERT,
         .name = "VertexShaderLibrary",
         .code = vs_bytes,
         .code_size = vs_length
     };
     CGPUShaderLibraryDescriptor ps_desc = {
         .name = "FragmentShaderLibrary",
-        .stage = SHADER_STAGE_FRAG,
+        .stage = CGPU_SHADER_STAGE_FRAG,
         .code = fs_bytes,
         .code_size = fs_length
     };
@@ -47,10 +47,10 @@ void create_render_pipeline()
     free(vs_bytes);
     free(fs_bytes);
     CGPUPipelineShaderDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = SHADER_STAGE_VERT;
+    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = SHADER_STAGE_FRAG;
+    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
     CGPURootSignatureDescriptor rs_desc = {
@@ -131,7 +131,7 @@ void initialize(void* usrdata)
         .height = BACK_BUFFER_HEIGHT,
         .surface = surface,
         .imageCount = 3,
-        .format = PF_R8G8B8A8_UNORM,
+        .format = CGPU_FORMAT_R8G8B8A8_UNORM,
         .enableVsync = true
     };
     swapchain = cgpu_create_swapchain(device, &descriptor);
@@ -141,6 +141,7 @@ void initialize(void* usrdata)
         CGPUTextureViewDescriptor view_desc = {
             .texture = swapchain->back_buffers[i],
             .aspects = CGPU_TVA_COLOR,
+            .array_layer_count = 1,
             .dims = CGPU_TEX_DIMENSION_2D,
             .format = swapchain->back_buffers[i]->format,
             .usages = CGPU_TVU_RTV_DSV
@@ -177,8 +178,8 @@ void raster_redraw()
     };
     CGPUTextureBarrier draw_barrier = {
         .texture = back_buffer,
-        .src_state = RESOURCE_STATE_UNDEFINED,
-        .dst_state = RESOURCE_STATE_RENDER_TARGET
+        .src_state = CGPU_RESOURCE_STATE_UNDEFINED,
+        .dst_state = CGPU_RESOURCE_STATE_RENDER_TARGET
     };
     CGPUResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
@@ -212,8 +213,8 @@ void raster_redraw()
     }
     CGPUTextureBarrier present_barrier = {
         .texture = back_buffer,
-        .src_state = RESOURCE_STATE_RENDER_TARGET,
-        .dst_state = RESOURCE_STATE_PRESENT
+        .src_state = CGPU_RESOURCE_STATE_RENDER_TARGET,
+        .dst_state = CGPU_RESOURCE_STATE_PRESENT
     };
     cgpu_cmd_end_render_pass(cmd, rp_encoder);
     CGPUResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &present_barrier, .texture_barriers_count = 1 };
