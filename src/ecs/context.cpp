@@ -2,7 +2,7 @@
 #include "ecs/dual.h"
 #include "type_registry.hpp"
 
-RUNTIME_EXPORT extern "C" dual_context_t* dual_get_context()
+RUNTIME_API dual_context_t* dual_get_context()
 {
     static dual_context_t* ctx = dual_initialize();
     return ctx;
