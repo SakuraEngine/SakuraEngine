@@ -6,7 +6,7 @@ namespace sakura
 {
 typedef uint64_t dep_graph_handle_t;
 class DependencyGraphEdge;
-class DependencyGraphNode
+class RUNTIME_API DependencyGraphNode
 {
     friend class DependencyGraphImpl;
 
@@ -31,7 +31,7 @@ private:
     dep_graph_handle_t id;
 };
 
-class DependencyGraphEdge
+class RUNTIME_API DependencyGraphEdge
 {
     friend class DependencyGraphImpl;
 
@@ -52,7 +52,7 @@ protected:
     dep_graph_handle_t to_node;
 };
 
-class DependencyGraph
+class RUNTIME_API DependencyGraph
 {
 public:
     using Node = DependencyGraphNode;
@@ -83,15 +83,15 @@ public:
     virtual uint32_t outgoing_edges(const Node* node) = 0;
     virtual uint32_t outgoing_edges(dep_graph_handle_t id) = 0;
     virtual uint32_t foreach_outgoing_edges(dep_graph_handle_t node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
+    eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t foreach_outgoing_edges(Node* node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
+    eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t incoming_edges(const Node* node) = 0;
     virtual uint32_t incoming_edges(dep_graph_handle_t id) = 0;
     virtual uint32_t foreach_incoming_edges(Node* node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
+    eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t foreach_incoming_edges(dep_graph_handle_t node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
+    eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
     virtual uint32_t foreach_edges(eastl::function<void(Node* from, Node* to, Edge* edge)>) = 0;
 };
 

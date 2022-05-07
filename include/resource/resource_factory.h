@@ -26,7 +26,7 @@ struct SBinaryArchive {
     Unloaded => request -> load binary -> deserialize header -> deserialize => Loaded
     Loaded  => requst & wait dependencies -> install/update install => Installed
 */
-struct SResourceFactory {
+struct RUNTIME_API SResourceFactory {
     virtual skr_type_id_t GetResourceType() = 0;
     virtual bool Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive);
     virtual bool Unload(skr_resource_record_t* record);

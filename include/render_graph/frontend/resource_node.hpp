@@ -6,7 +6,7 @@ namespace sakura
 {
 namespace render_graph
 {
-class ResourceNode : public RenderGraphNode
+class RUNTIME_API ResourceNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
@@ -30,7 +30,7 @@ protected:
     mutable LifeSpan frame_lifespan = { UINT32_MAX, UINT32_MAX };
 };
 
-class TextureNode : public ResourceNode
+class RUNTIME_API TextureNode : public ResourceNode
 {
 public:
     friend class RenderGraph;
@@ -60,7 +60,7 @@ protected:
     mutable bool frame_aliasing = false;
 };
 
-class BufferNode : public ResourceNode
+class RUNTIME_API BufferNode : public ResourceNode
 {
 public:
     friend class RenderGraph;

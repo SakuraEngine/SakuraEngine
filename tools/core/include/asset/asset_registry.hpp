@@ -17,7 +17,7 @@ struct SAssetRecord {
     ghc::filesystem::path path;
     simdjson::padded_string meta;
 };
-struct SAssetRegistry {
+struct TOOL_API SAssetRegistry {
     ~SAssetRegistry();
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(ghc::filesystem::path path);
