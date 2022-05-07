@@ -130,6 +130,7 @@ def main():
     root = sys.argv[1]
     outdir = sys.argv[2]
     api = sys.argv[3]
+    config = api.lower()+"_configure.h"
     api = api.upper()+"_API"
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     print(metas)
@@ -180,13 +181,13 @@ def main():
             db2.enums.append(enum)
         db2.resolve_base()
         template = os.path.join(BASE, "rtti.hpp.mako")
-        content = render(template, db=db2, api=api)
+        content = render(template, db=db2, api=api,  config=config)
         db.headers.add("%s.generated.hpp" % filename)
         output = os.path.join(outdir, "%s.generated.hpp" % filename)
         write(output, content)
     db.resolve_base()
     template = os.path.join(BASE, "rtti.cpp.mako")
-    content = render(template, db=db, api=api)
+    content = render(template, db=db)
     output = os.path.join(outdir, "rtti.generated.cpp")
     write(output, content)
 

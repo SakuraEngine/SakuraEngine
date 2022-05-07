@@ -76,7 +76,7 @@ target("GameRT")
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
-    add_includedirs("game/include")
+    add_includedirs("game/include", {public=true})
     add_defines("GAME_IMPL")
     set_kind("static")
     add_deps("SkrRT")

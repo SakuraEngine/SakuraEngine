@@ -94,6 +94,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
     cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
     -- compile jsons to c++
     if(#changedfiles > 0) then
+        local api = target:extraconf("rules", "c++.reflection", "api")
         local function task(index)
             local generator = generators[index][1]
             cprint("${cyan}generating.%s${clear} %s", path.filename(generator), sourcefile_refl)
@@ -101,7 +102,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             local python = find_sdk.find_program("python3")
             os.iorunv(python.program, {
                 generator,
-                path.absolute(metadir), path.absolute(generators[index].gendir or gendir), target:name()
+                path.absolute(metadir), path.absolute(generators[index].gendir or gendir), api or target:name()
             })
         end
         runjobs("codegen.cpp", task, {total = #generators})

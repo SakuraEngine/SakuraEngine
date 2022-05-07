@@ -49,7 +49,8 @@ target("SkrRT")
     set_kind("shared")
     add_rules("c++.reflection", {
         files = {"include/resource/**.h", "include/resource/**.hpp"},
-        rootdir = "include/"
+        rootdir = "include/",
+        api = "RUNTIME"
     })
     add_deps(deps_list)
     add_packages(packages_list, {public = true})
