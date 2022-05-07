@@ -5,6 +5,7 @@ target("SkrTool")
     set_kind("shared")
     add_files("core/src/**.cpp")
     add_deps("SkrRT")
+    add_defines("TOOL_IMPL", {public = false})
     add_includedirs("core/include", {public = true})
     add_rules("c++.reflection", {
         files = {"core/**.h", "core/**.hpp"},
