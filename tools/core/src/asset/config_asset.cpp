@@ -1,5 +1,3 @@
-#define TOOL_IMPL
-#include "tool_configure.h"
 #include "asset/config_asset.hpp"
 #include "platform/configure.h"
 #include "platform/memory.h"
