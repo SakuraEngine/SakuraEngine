@@ -1,8 +1,14 @@
 #pragma once
 
+#ifdef __cplusplus
+    #define TOOL_EXTERN_C extern "C"
+#else
+    #define TOOL_EXTERN_C
+#endif
+
 #ifndef TOOL_EXPORT
     #if defined(_MSC_VER)
-        #define TOOL_EXPORT __declspec(dllexport) TOOL_EXTERN_C
+        #define TOOL_EXPORT __declspec(dllexport)
     #else
         #define TOOL_EXPORT
     #endif
