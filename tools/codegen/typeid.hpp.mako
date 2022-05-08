@@ -1,7 +1,4 @@
 #pragma once
-%for header in db.headers:
-#include "${header}"
-%endfor
 
 %for type in db.types:
 %if hasattr(type, 'namespace'):
