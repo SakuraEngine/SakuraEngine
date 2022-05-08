@@ -16,9 +16,6 @@ skr_config_resource_t;
 
 #if defined(__cplusplus)
     #include "simdjson.h"
-    #ifndef __meta__
-        #include "SkrRT/typeid.generated.hpp"
-    #endif
 namespace skr
 {
 namespace resource

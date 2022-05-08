@@ -19,6 +19,8 @@
 #include "resource/resource_header.h"
 #include "SkrTool/serialize.generated.h"
 #include "SkrRT/serialize.generated.h"
+#include "SkrRT/typeid.generated.hpp"
+
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
     ::grpc::Status Compile(::grpc::ServerContext* context, const ::skrcompiler::CompileInfo* request, ::skrcompiler::CompileResult* response) override
@@ -68,7 +70,7 @@ void compile_config(skd::asset::SAssetRecord* record)
     //-----import resource object
     auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
     //-----cook resource
-    //no cook needed for config, just binarize it
+    // no cook needed for config, just binarize it
     //-----fetch runtime dependencies
     skr_resource_header_t header;
     header.guid = record->guid;
@@ -76,12 +78,12 @@ void compile_config(skd::asset::SAssetRecord* record)
     header.version = 0;
     header.dependencies = {};
     auto type = (skr::type::RecordType*)skr_get_type(&resource->configType);
-    for(auto& field : type->fields)
+    for (auto& field : type->fields)
     {
-        if(field.type->Same(skr::type::type_of<skr_resource_handle_t>::get()))
+        if (field.type->Same(skr::type::type_of<skr_resource_handle_t>::get()))
         {
             auto handle = (skr_resource_handle_t*)((char*)resource->configData + field.offset);
-            if(handle->is_null())
+            if (handle->is_null())
                 continue;
             header.dependencies.push_back(handle->get_serialized());
         }
