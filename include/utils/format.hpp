@@ -14,6 +14,15 @@ struct formatter<eastl::basic_string<Char>, Char> : formatter<basic_string_view<
         return formatter<basic_string_view<Char>, Char>::format(basic_string_view<Char>(val.data(), val.size()), ctx);
     }
 };
+template <typename Char>
+struct formatter<eastl::basic_string_view<Char>, Char> : formatter<basic_string_view<Char>, Char> {
+    template <typename FormatContext>
+    auto format(eastl::basic_string_view<Char> const& val, FormatContext& ctx) const
+    -> decltype(ctx.out())
+    {
+        return formatter<basic_string_view<Char>, Char>::format(basic_string_view<Char>(val.data(), val.size()), ctx);
+    }
+};
 template <>
 struct formatter<skr_guid_t> {
     constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
