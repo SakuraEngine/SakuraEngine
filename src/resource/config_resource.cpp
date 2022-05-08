@@ -6,6 +6,7 @@
 #include "resource/resource_factory.h"
 #include "resource/resource_header.h"
 #include "type/type_registry.h"
+#include "SkrRT/typeid.generated.hpp"
 
 namespace skr::resource
 {
