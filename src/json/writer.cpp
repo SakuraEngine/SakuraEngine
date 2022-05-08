@@ -26,4 +26,9 @@ void Write(skr_json_writer_t* writer, const skr_guid_t& guid)
     guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
     writer->String(str.data(), (TSize)str.size());
 }
+template <>
+void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle)
+{
+    Write(writer, handle.get_serialized());
+}
 } // namespace skr::json

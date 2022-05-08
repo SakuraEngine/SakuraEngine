@@ -14,6 +14,7 @@ typedef enum ESkrJsonType
     #include <EASTL/vector.h>
     #include <sstream>
     #include "utils/allocator.hpp"
+    #include "resource/resource_handle.h"
 
 struct RUNTIME_API skr_json_writer_t {
 public:
@@ -103,6 +104,13 @@ template <>
 RUNTIME_API void Write(skr_json_writer_t* writer, const eastl::string& str);
 template <>
 RUNTIME_API void Write(skr_json_writer_t* writer, const skr_guid_t& guid);
+template <>
+RUNTIME_API void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
+template <class T>
+void Write(skr_json_writer_t* writer, const skr::resource::TResourceHandle<T>& handle)
+{
+    Write(writer, (const skr_resource_handle_t&)handle);
+}
 } // namespace json
 } // namespace skr
 #endif
