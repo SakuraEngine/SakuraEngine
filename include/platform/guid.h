@@ -9,8 +9,8 @@ typedef struct skr_guid_t {
 } skr_guid_t;
 
 #if defined(__cplusplus)
+    #include <EASTL/string.h>
     #include <string_view>
-    #include <string>
     #include "platform/debug.h"
     #include "utils/hash.h"
 inline bool operator==(const skr_guid_t& a, const skr_guid_t& b)
@@ -33,7 +33,7 @@ constexpr const size_t long_guid_form_length = 38;  // {XXXXXXXX-XXXX-XXXX-XXXX-
 //
 constexpr int parse_hex_digit(const char c)
 {
-    using namespace std::string_literals;
+    using namespace eastl::string_literals;
     if ('0' <= c && c <= '9')
         return c - '0';
     else if ('a' <= c && c <= 'f')
@@ -76,7 +76,7 @@ constexpr skr_guid_t make_guid_helper(const char* begin)
 template <size_t N>
 constexpr skr_guid_t make_guid(const char (&str)[N])
 {
-    using namespace std::string_literals;
+    using namespace eastl::string_literals;
     static_assert(N == (long_guid_form_length + 1) || N == (short_guid_form_length + 1), "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
     if constexpr (N == (long_guid_form_length + 1))
@@ -89,7 +89,7 @@ constexpr skr_guid_t make_guid(const char (&str)[N])
 }
 constexpr skr_guid_t make_guid(const std::string_view& str)
 {
-    using namespace std::string_literals;
+    using namespace eastl::string_literals;
     if (str.size() != (long_guid_form_length + 1) && str.size() == (short_guid_form_length + 1))
         SKR_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
@@ -108,7 +108,7 @@ namespace literals
 {
 constexpr skr_guid_t operator""_guid(const char* str, size_t N)
 {
-    using namespace std::string_literals;
+    using namespace eastl::string_literals;
     using namespace details;
 
     if (!(N == long_guid_form_length || N == short_guid_form_length))

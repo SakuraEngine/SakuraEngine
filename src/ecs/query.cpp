@@ -23,7 +23,7 @@
 #endif
 #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
 
-namespace std
+namespace eastl
 {
 inline void split(const string_view& s, vector<string_view>& tokens, const string_view& delimiters = " ")
 {
@@ -49,7 +49,7 @@ inline bool starts_with(std::string_view const& value, std::string_view const& s
     if (starting.size() > value.size()) return false;
     return std::equal(starting.begin(), starting.end(), value.begin());
 }
-} // namespace std
+} // namespace eastl
 
 namespace dual
 {
@@ -194,15 +194,15 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
 dual_query_t* dual_storage_t::make_query(const char* inDesc)
 {
     using namespace dual;
-    std::string desc(inDesc);
+    eastl::string desc(inDesc);
 #ifdef _WIN32
     desc.erase(std::remove_if(desc.begin(), desc.end(), std::isspace), desc.end());
 #else
     desc.erase(std::remove_if(desc.begin(), desc.end(), isspace), desc.end());
 #endif
-    std::vector<std::string_view> parts;
+    eastl::vector<eastl::string_view> parts;
     std::stringstream ss;
-    std::split(desc, parts, ",");
+    eastl::split(desc, parts, ",");
     // todo: errorMsg? global error code?
     auto& error = get_error();
     int errorPos = 0;
@@ -248,21 +248,21 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             }
             auto attr = part.substr(j, i - j);
             errorPos = partBegin + j;
-            if (attr == "in")
+            if (attr.compare("in") == 0)
                 operation.readonly = true;
-            else if (attr == "inout")
+            else if (attr.compare("inout") == 0)
                 operation.readonly = false;
-            else if (attr == "out")
+            else if (attr.compare("out") == 0)
             {
                 operation.readonly = false;
                 operation.phase = 0;
             }
-            else if (attr == "atomic")
+            else if (attr.compare("atomic") == 0)
             {
                 operation.readonly = false;
                 operation.atomic = true;
             }
-            else if (attr == "has")
+            else if (attr.compare("has") == 0)
                 filterOnly = true;
             else
             {
@@ -286,9 +286,9 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             }
             auto attr = part.substr(j, j - i);
             errorPos = partBegin + j;
-            if (attr == "rand")
+            if (attr.compare("rand") == 0)
                 operation.randomAccess = DOS_GLOBAL;
-            else if (attr == "seq")
+            else if (attr.compare("seq") == 0)
                 operation.randomAccess = DOS_SEQ;
             else
             {
@@ -352,7 +352,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             if (type == kInvalidTypeIndex)
             {
                 errorPos = partBegin + i;
-                ss << "unknown type name '" << name << "', loc " << errorPos << ".";
+                ss << "unknown type name '" << std::string_view(name.data(), name.size()) << "', loc " << errorPos << ".";
                 error = ss.str();
                 return nullptr;
             }
