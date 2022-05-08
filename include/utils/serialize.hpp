@@ -1,5 +1,6 @@
 
 #pragma once
+#include "bitsery/brief_syntax.h"
 #include "bitsery/deserializer.h"
 #include "bitsery/adapter/buffer.h"
 #include "bitsery/traits/core/std_defaults.h"
@@ -8,6 +9,7 @@
 #include "gsl/span"
 #include "platform/guid.h"
 #include "utils/te.hpp"
+#include "resource/resource_handle.h"
 
 namespace bitsery
 {
@@ -54,6 +56,21 @@ void serialize(S& s, skr_guid_t& guid)
     s.value2b(guid.Data3);
     for (int i = 0; i < 8; ++i)
         s.value1b(guid.Data4[i]);
+}
+template <class S>
+void serialize(S& s, skr_resource_handle_t& handle)
+{
+    if(s.is_serialize())
+    {
+        auto guid = handle.get_serialized();
+        serialize(s, guid);
+    }
+    else 
+    {
+        skr_guid_t guid;
+        serialize(s, guid);
+        handle.set_guid(guid);
+    }
 }
 } // namespace bitsery
 
