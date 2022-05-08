@@ -34,11 +34,11 @@ RUNTIME_API void Read(simdjson::ondemand::value&& json, eastl::string& guid);
 template <>
 RUNTIME_API void Read(simdjson::ondemand::value&& json, struct skr_guid_t& guid);
 template <>
-RUNTIME_API void Read(simdjson::ondemand::value&& json, struct skr_resource_handle_t& handle);
+RUNTIME_API void Read(simdjson::ondemand::value&& json, skr_resource_handle_t& handle);
 template <class T>
 void Read(simdjson::ondemand::value&& json, skr::resource::TResourceHandle<T>& handle)
 {
-    Read(json, (skr_resource_handle_t&)handle);
+    Read(std::forward<simdjson::ondemand::value>(json), (skr_resource_handle_t&)handle);
 }
 } // namespace json
 } // namespace skr
