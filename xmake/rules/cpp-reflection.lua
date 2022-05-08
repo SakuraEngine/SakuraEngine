@@ -10,9 +10,13 @@ rule("c++.reflection")
             end
         end
         gen_refl(target, headerfiles)
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
+        if os.exists(gendir) then
+            target:add("includedirs", gendir, {public = true})
+            target:add("includedirs", path.join(gendir, target:name()))
+        end
     end)
     on_config(function (target, opt)
-        
         import("gen_refl")
         local rootdir = target:extraconf("rules", "c++.reflection", "rootdir")
         local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
@@ -24,10 +28,6 @@ rule("c++.reflection")
         -- add to sourcebatch
         local sourcebatches = target:sourcebatches()
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
-        if os.exists(gendir) then
-            target:add("includedirs", gendir, {public = true})
-            target:add("includedirs", path.join(gendir, target:name()))
-        end
         local cppfiles = os.files(path.join(gendir, "/**.cpp"))
         for _, file in ipairs(cppfiles) do
             target:add("files", file)

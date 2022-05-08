@@ -1,6 +1,5 @@
 set_project("SakuraTool")
 
-
 target("SkrTool")
     set_kind("shared")
     add_files("core/src/**.cpp")
