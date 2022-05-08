@@ -122,8 +122,8 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     pin = (desc.flags & DTF_PIN) != 0;
     type_index_t index{ (TIndex)descriptions.size(), pin, buffer, managed, tag };
     descriptions.push_back(desc);
-    guid2type.insert(std::make_pair(desc.guid, index));
-    name2type.insert(std::make_pair(desc.name, index));
+    guid2type.insert(eastl::make_pair(desc.guid, index));
+    name2type.insert(eastl::make_pair(desc.name, index));
     return index;
 }
 
@@ -135,7 +135,7 @@ type_index_t type_registry_t::get_type(const guid_t& guid)
     return kInvalidTypeIndex;
 }
 
-type_index_t type_registry_t::get_type(std::string_view name)
+type_index_t type_registry_t::get_type(eastl::string_view name)
 {
     auto i = name2type.find(name);
     if (i != name2type.end())
