@@ -29,6 +29,6 @@ void Write(skr_json_writer_t* writer, const skr_guid_t& guid)
 template <>
 void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle)
 {
-    Write(writer, handle.get_serialized());
+    Write<const skr_guid_t&>(writer, handle.get_serialized());
 }
 } // namespace skr::json
