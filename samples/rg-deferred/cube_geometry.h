@@ -1,6 +1,6 @@
 #include <math/vectormath.hpp>
 
-namespace smath = sakura::math;
+namespace smath = skr::math;
 
 struct CubeGeometry {
     struct InstanceData {
@@ -8,7 +8,7 @@ struct CubeGeometry {
     };
     static InstanceData instance_data;
 
-    const sakura::math::Vector3f g_Positions[24] = {
+    const skr::math::Vector3f g_Positions[24] = {
         { -0.5f, 0.5f, -0.5f }, // front face
         { 0.5f, -0.5f, -0.5f },
         { -0.5f, -0.5f, -0.5f },
@@ -39,7 +39,7 @@ struct CubeGeometry {
         { 0.5f, -0.5f, -0.5f },
         { -0.5f, -0.5f, 0.5f },
     };
-    const sakura::math::Vector2f g_TexCoords[24] = {
+    const skr::math::Vector2f g_TexCoords[24] = {
         { 0.0f, 0.0f }, // front face
         { 1.0f, 1.0f },
         { 0.0f, 1.0f },
@@ -71,66 +71,66 @@ struct CubeGeometry {
         { 0.0f, 1.0f },
     };
     const uint32_t g_Normals[24] = {
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)), // front face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)), // front face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)), // right side face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)), // right side face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)), // left side face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)), // left side face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)), // back face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)), // back face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)), // top face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)), // top face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)), // bottom face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)), // bottom face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
     };
     const uint32_t g_Tangents[24] = {
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)), // front face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)), // front face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)), // right side face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)), // right side face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)), // left side face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)), // left side face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 1.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)), // back face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)), // back face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 1.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)), // top face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)), // top face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
 
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)), // bottom face
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
-        sakura::math::vector_to_snorm8(sakura::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)), // bottom face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 1.0f)),
     };
     static constexpr uint32_t g_Indices[] = {
         0, 1, 2, 0, 3, 1,       // front face

@@ -3,7 +3,7 @@
 #include <EASTL/list.h>
 #include <boost/graph/adjacency_list.hpp>
 #include "utils/dependency_graph.hpp"
-namespace sakura
+namespace skr
 {
 namespace DAG
 {
@@ -16,52 +16,52 @@ struct pmrListS {
 } // namespace ____
 
 template <class VertexProperty = boost::no_property,
-    class EdgeProperty = boost::no_property,
-    class GraphProperty = boost::no_property,
-    class EdgeListS = boost::listS>
+class EdgeProperty = boost::no_property,
+class GraphProperty = boost::no_property,
+class EdgeListS = boost::listS>
 using Graph = boost::adjacency_list<boost::vecS, boost::vecS,
-    boost::bidirectionalS,
-    VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
+boost::bidirectionalS,
+VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
 
 template <class VertexProperty = boost::no_property,
-    class EdgeProperty = boost::no_property,
-    class GraphProperty = boost::no_property,
-    class EdgeListS = boost::listS>
+class EdgeProperty = boost::no_property,
+class GraphProperty = boost::no_property,
+class EdgeListS = boost::listS>
 using GraphVertex =
-    typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
-        vertex_descriptor;
+typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
+vertex_descriptor;
 
 template <class VertexProperty = boost::no_property,
-    class EdgeProperty = boost::no_property,
-    class GraphProperty = boost::no_property,
-    class EdgeListS = boost::listS>
+class EdgeProperty = boost::no_property,
+class GraphProperty = boost::no_property,
+class EdgeListS = boost::listS>
 using GraphEdge =
-    typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
-        edge_descriptor;
+typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
+edge_descriptor;
 
 template <class VertexProperty = boost::no_property,
-    class EdgeProperty = boost::no_property,
-    class GraphProperty = boost::no_property,
-    class EdgeListS = boost::listS>
+class EdgeProperty = boost::no_property,
+class GraphProperty = boost::no_property,
+class EdgeListS = boost::listS>
 using MutableGraph = boost::adjacency_list<boost::listS, boost::listS,
-    boost::bidirectionalS,
-    VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
+boost::bidirectionalS,
+VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
 
 template <class VertexProperty = boost::no_property,
-    class EdgeProperty = boost::no_property,
-    class GraphProperty = boost::no_property,
-    class EdgeListS = boost::listS>
+class EdgeProperty = boost::no_property,
+class GraphProperty = boost::no_property,
+class EdgeListS = boost::listS>
 using MutableGraphVertex =
-    typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
-        vertex_descriptor;
+typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
+vertex_descriptor;
 
 template <class VertexProperty = boost::no_property,
-    class EdgeProperty = boost::no_property,
-    class GraphProperty = boost::no_property,
-    class EdgeListS = boost::listS>
+class EdgeProperty = boost::no_property,
+class GraphProperty = boost::no_property,
+class EdgeListS = boost::listS>
 using MutableGraphEdge =
-    typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
-        edge_descriptor;
+typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
+edge_descriptor;
 
 // returns the num of edges in the graph
 using boost::num_edges;
@@ -105,10 +105,10 @@ using boost::clear_vertex;
 using boost::remove_vertex;
 
 template <typename... Ts,
-    typename bidirGraph = boost::adjacency_list<Ts...>,
-    typename bidirVertex = typename bidirGraph::vertex_descriptor,
-    typename IndexMap =
-        typename boost::property_map<bidirGraph, boost::vertex_index_t>::type>
+typename bidirGraph = boost::adjacency_list<Ts...>,
+typename bidirVertex = typename bidirGraph::vertex_descriptor,
+typename IndexMap =
+typename boost::property_map<bidirGraph, boost::vertex_index_t>::type>
 auto vertex_number(bidirVertex vert, bidirGraph g)
 {
     IndexMap index = get(boost::vertex_index, g);
@@ -116,10 +116,10 @@ auto vertex_number(bidirVertex vert, bidirGraph g)
 }
 
 template <typename prop_name_t, typename... Ts,
-    typename bidirGraph = boost::adjacency_list<Ts...>,
-    typename bidirVertex = typename bidirGraph::vertex_descriptor,
-    typename PropMap =
-        typename boost::property_map<bidirGraph, prop_name_t>::type>
+typename bidirGraph = boost::adjacency_list<Ts...>,
+typename bidirVertex = typename bidirGraph::vertex_descriptor,
+typename PropMap =
+typename boost::property_map<bidirGraph, prop_name_t>::type>
 auto get_vertex_property(bidirVertex vert, bidirGraph& g)
 {
     PropMap prop = get(prop_name_t(), g);
@@ -127,10 +127,10 @@ auto get_vertex_property(bidirVertex vert, bidirGraph& g)
 }
 
 template <typename prop_name_t, typename Val, typename... Ts,
-    typename bidirGraph = boost::adjacency_list<Ts...>,
-    typename bidirVertex = typename bidirGraph::vertex_descriptor,
-    typename PropMap =
-        typename boost::property_map<bidirGraph, prop_name_t>::type>
+typename bidirGraph = boost::adjacency_list<Ts...>,
+typename bidirVertex = typename bidirGraph::vertex_descriptor,
+typename PropMap =
+typename boost::property_map<bidirGraph, prop_name_t>::type>
 void set_vertex_property(bidirVertex vert, bidirGraph& g, Val&& x)
 {
     PropMap prop = get(prop_name_t(), g);
@@ -140,44 +140,44 @@ void set_vertex_property(bidirVertex vert, bidirGraph& g, Val&& x)
 }
 
 template <typename prop_name_t, typename... Ts,
-    typename bidirGraph = boost::adjacency_list<Ts...>,
-    typename bidirEdge = typename bidirGraph::edge_descriptor,
-    typename PropMap =
-        typename boost::property_map<bidirGraph, prop_name_t>::type>
+typename bidirGraph = boost::adjacency_list<Ts...>,
+typename bidirEdge = typename bidirGraph::edge_descriptor,
+typename PropMap =
+typename boost::property_map<bidirGraph, prop_name_t>::type>
 auto get_edge_property(bidirEdge vert, bidirGraph& g)
 {
     PropMap prop = get(prop_name_t(), g);
     return prop[vert];
 }
 } // namespace DAG
-} // namespace sakura
+} // namespace skr
 
 namespace boost
 {
 template <class T>
-struct container_gen<sakura::DAG::____::pmrVecS, T> {
+struct container_gen<skr::DAG::____::pmrVecS, T> {
     using type = eastl::vector<T>;
 };
 
 template <class T>
-struct container_gen<sakura::DAG::____::pmrListS, T> {
+struct container_gen<skr::DAG::____::pmrListS, T> {
     using type = eastl::list<T>;
 };
 
 template <>
-struct parallel_edge_traits<sakura::DAG::____::pmrVecS> {
+struct parallel_edge_traits<skr::DAG::____::pmrVecS> {
     using type = allow_parallel_edge_tag;
 };
 
 template <>
-struct parallel_edge_traits<sakura::DAG::____::pmrListS> {
+struct parallel_edge_traits<skr::DAG::____::pmrListS> {
     using type = allow_parallel_edge_tag;
 };
 
 namespace detail
 {
 template <>
-struct is_random_access<sakura::DAG::____::pmrVecS> {
+struct is_random_access<skr::DAG::____::pmrVecS> {
     enum
     {
         value = true
@@ -186,7 +186,7 @@ struct is_random_access<sakura::DAG::____::pmrVecS> {
 };
 
 template <>
-struct is_random_access<sakura::DAG::____::pmrListS> {
+struct is_random_access<skr::DAG::____::pmrListS> {
     enum
     {
         value = true
@@ -196,7 +196,7 @@ struct is_random_access<sakura::DAG::____::pmrListS> {
 } // namespace detail
 } // namespace boost
 
-namespace sakura
+namespace skr
 {
 class DependencyGraphBase : public DAG::Graph<DependencyGraph::Node*, DependencyGraph::Edge*>
 {
@@ -206,4 +206,4 @@ public:
 
     static DependencyGraphBase* as(DependencyGraph* interface);
 };
-} // namespace sakura
+} // namespace skr

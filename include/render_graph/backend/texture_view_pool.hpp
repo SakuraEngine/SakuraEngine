@@ -3,7 +3,7 @@
 #include "utils/hash.h"
 #include "cgpu/api.h"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -104,4 +104,4 @@ inline CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescript
     }
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

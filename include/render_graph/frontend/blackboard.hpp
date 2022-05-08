@@ -2,7 +2,7 @@
 #include <EASTL/string_map.h>
 #include "render_graph/frontend/base_types.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -22,4 +22,4 @@ protected:
     eastl::string_map<class BufferNode*> named_buffers;
 };
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

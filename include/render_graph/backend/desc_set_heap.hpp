@@ -2,7 +2,7 @@
 #include <gsl/span>
 #include "render_graph/frontend/render_graph.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -48,4 +48,4 @@ protected:
     eastl::vector<CGPUDescriptorSetId> heap;
 };
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

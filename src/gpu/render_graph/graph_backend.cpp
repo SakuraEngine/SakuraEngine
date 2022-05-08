@@ -2,7 +2,7 @@
 #include "../cgpu/common/common_utils.h"
 #include "tracy/Tracy.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -714,4 +714,4 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame)
     return total_count;
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

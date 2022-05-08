@@ -2,7 +2,7 @@
 #include "platform/configure.h"
 #include "containers/span.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -10,11 +10,11 @@ namespace math
 template <typename T, size_t R, size_t L>
 struct Matrix {
 public:
-    sakura::span<T, R * L> data_view()
+    skr::span<T, R * L> data_view()
     {
         return M2;
     }
-    const sakura::span<const T, R * L> data_view() const
+    const skr::span<const T, R * L> data_view() const
     {
         return M2;
     }
@@ -32,11 +32,11 @@ struct alignas(16) Matrix<float, 4, 4> {
     FORCEINLINE Matrix() = default;
     FORCEINLINE Matrix(const float* data);
 
-    sakura::span<float, 16> data_view()
+    skr::span<float, 16> data_view()
     {
         return M16;
     }
-    const sakura::span<const float, 16> data_view() const
+    const skr::span<const float, 16> data_view() const
     {
         return M16;
     }
@@ -58,11 +58,11 @@ struct alignas(16) Matrix<float, 2, 2> {
     FORCEINLINE Matrix() = default;
     FORCEINLINE Matrix(const float* data);
 
-    sakura::span<float, 4> data_view()
+    skr::span<float, 4> data_view()
     {
         return M4;
     }
-    const sakura::span<const float, 4> data_view() const
+    const skr::span<const float, 4> data_view() const
     {
         return M4;
     }
@@ -112,4 +112,4 @@ FORCEINLINE Matrix<float, 2, 2>::Matrix(const float* data)
 }
 
 } // namespace math
-} // namespace sakura
+} // namespace skr

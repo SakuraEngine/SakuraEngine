@@ -2,7 +2,7 @@
 #include "quaternion.hpp"
 #include "vector.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -24,7 +24,7 @@ struct alignas(16) Transform {
 
 public:
     FORCEINLINE Transform(
-        const Quaternion& rotation, const Vector3f& translation, const Vector3f& scale = Vector3f::vector_one())
+    const Quaternion& rotation, const Vector3f& translation, const Vector3f& scale = Vector3f::vector_one())
     {
         rotation_ = __vector::load_aligned(rotation.data_view());
         translation_ = __vector::load_float3_w0(translation.data_view());
@@ -32,18 +32,18 @@ public:
     }
 
     FORCEINLINE Transform(
-        const VectorStorage& rotation, const VectorStorage& translation, const VectorStorage& scale)
+    const VectorStorage& rotation, const VectorStorage& translation, const VectorStorage& scale)
         : rotation_(rotation)
         , translation_(translation)
         , scale_(scale)
     {
     }
 
-    sakura::span<float, 16> data_view()
+    skr::span<float, 16> data_view()
     {
         return M16;
     }
-    const sakura::span<const float, 16> data_view() const
+    const skr::span<const float, 16> data_view() const
     {
         return M16;
     }
@@ -74,7 +74,7 @@ protected:
 };
 
 } // namespace math
-} // namespace sakura
+} // namespace skr
 
 #ifdef USE_DXMATH
     #include "DirectXMath/SDXMathTransform.hpp"

@@ -151,9 +151,9 @@ void create_resources()
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
     // wvp
     auto world = smath::make_transform(
-    { 0.f, 0.f, 0.f },                        // translation
-    2 * sakura::math::Vector3f::vector_one(), // scale
-    sakura::math::Quaternion::identity()      // quat
+    { 0.f, 0.f, 0.f },                     // translation
+    2 * skr::math::Vector3f::vector_one(), // scale
+    skr::math::Quaternion::identity()      // quat
     );
     CubeGeometry::instance_data.world = world;
     {
@@ -259,9 +259,9 @@ int main(int argc, char* argv[])
     create_resources();
     create_render_pipeline();
     // initialize
-    namespace render_graph = sakura::render_graph;
+    namespace render_graph = skr::render_graph;
     auto graph = render_graph::RenderGraph::create(
-    [=](sakura::render_graph::RenderGraphBuilder& builder) {
+    [=](skr::render_graph::RenderGraphBuilder& builder) {
         builder.with_device(device)
         .with_gfx_queue(gfx_queue)
         .enable_memory_aliasing();
@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
                     vertex_buffer, instance_buffer
                 };
                 const uint32_t strides[5] = {
-                    sizeof(sakura::math::Vector3f), sizeof(sakura::math::Vector2f),
+                    sizeof(skr::math::Vector3f), sizeof(skr::math::Vector2f),
                     sizeof(uint32_t), sizeof(uint32_t),
                     sizeof(CubeGeometry::InstanceData::world)
                 };

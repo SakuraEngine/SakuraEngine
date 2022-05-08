@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     create_api_objects();
     create_render_pipeline();
     // initialize
-    namespace render_graph = sakura::render_graph;
+    namespace render_graph = skr::render_graph;
     auto graph = render_graph::RenderGraph::create(
     [=](render_graph::RenderGraphBuilder& builder) {
         builder.with_device(device)

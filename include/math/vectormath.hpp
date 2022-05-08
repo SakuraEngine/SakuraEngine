@@ -5,15 +5,15 @@
 #include "quaternion.hpp"
 #include "transform.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
 // Implementations
 FORCEINLINE float4x4 make_transform(
-    const Vector3f translation,
-    const Vector3f scale = Vector3f::vector_one(),
-    const Quaternion quaternion = Quaternion::identity())
+const Vector3f translation,
+const Vector3f scale = Vector3f::vector_one(),
+const Quaternion quaternion = Quaternion::identity())
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(), __matrix::make_transform_trs(translation, scale, quaternion));
@@ -21,7 +21,7 @@ FORCEINLINE float4x4 make_transform(
 }
 
 FORCEINLINE float4x4 make_transform_t(
-    const Vector3f translation)
+const Vector3f translation)
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(), __matrix::make_transform_t(translation));
@@ -29,32 +29,32 @@ FORCEINLINE float4x4 make_transform_t(
 }
 
 FORCEINLINE float4x4 perspective_fov(
-    float FovAngleY,
-    float AspectRatio,
-    float NearZ,
-    float FarZ)
+float FovAngleY,
+float AspectRatio,
+float NearZ,
+float FarZ)
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(),
-        __matrix::perspective_fov(FovAngleY, AspectRatio, NearZ, FarZ));
+    __matrix::perspective_fov(FovAngleY, AspectRatio, NearZ, FarZ));
     return res;
 }
 
 FORCEINLINE float4x4 ortho_projection(
-    float ViewWidth,
-    float ViewHeight,
-    float NearZ,
-    float FarZ)
+float ViewWidth,
+float ViewHeight,
+float NearZ,
+float FarZ)
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(),
-        __matrix::ortho_projection(ViewWidth, ViewHeight, NearZ, FarZ));
+    __matrix::ortho_projection(ViewWidth, ViewHeight, NearZ, FarZ));
     return res;
 }
 
 FORCEINLINE float4x4 look_at_matrix(
-    const Vector3f Eye,
-    const Vector3f At)
+const Vector3f Eye,
+const Vector3f At)
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(), __matrix::look_at(Eye, At));
@@ -62,58 +62,58 @@ FORCEINLINE float4x4 look_at_matrix(
 }
 
 FORCEINLINE float4x4 multiply(
-    const float4x4 a,
-    const float4x4 b)
+const float4x4 a,
+const float4x4 b)
 {
     float4x4 res;
     __matrix::store_aligned(
-        res.data_view(),
-        __matrix::multiply(__matrix::load_aligned(a.data_view()), __matrix::load_aligned(b.data_view())));
+    res.data_view(),
+    __matrix::multiply(__matrix::load_aligned(a.data_view()), __matrix::load_aligned(b.data_view())));
     return res;
 }
 
 FORCEINLINE Vector4f multiply(
-    const Vector4f a,
-    const float4x4 b)
+const Vector4f a,
+const float4x4 b)
 {
     Vector4f res;
     __vector::store_aligned(
-        res.data_view(),
-        __matrix::multiply(__vector::load_aligned(a.data_view()), __matrix::load_aligned(b.data_view())));
+    res.data_view(),
+    __matrix::multiply(__vector::load_aligned(a.data_view()), __matrix::load_aligned(b.data_view())));
     return res;
 }
 
 FORCEINLINE float4x4 inverse(
-    const float4x4 a)
+const float4x4 a)
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(),
-        __matrix::inverse(__matrix::load_aligned(a.data_view())));
+    __matrix::inverse(__matrix::load_aligned(a.data_view())));
     return res;
 }
 
 FORCEINLINE float4x4 transpose(
-    const float4x4 a)
+const float4x4 a)
 {
     float4x4 res;
     __matrix::store_aligned(res.data_view(),
-        __matrix::transpose(__matrix::load_aligned(a.data_view())));
+    __matrix::transpose(__matrix::load_aligned(a.data_view())));
     return res;
 }
 
 // Wrappers
 
 FORCEINLINE Quaternion quaternion_from_rotator(
-    const Rotator rot)
+const Rotator rot)
 {
     Quaternion res;
     __vector::store_aligned(res.data_view(),
-        __quaternion::quaternion_from_euler(rot.pitch(), rot.yaw(), rot.roll()));
+    __quaternion::quaternion_from_euler(rot.pitch(), rot.yaw(), rot.roll()));
     return res;
 }
 
 FORCEINLINE Quaternion quaternion_from_euler(
-    const float pitch, const float yaw, const float roll)
+const float pitch, const float yaw, const float roll)
 {
     Quaternion res;
     __vector::store_aligned(res.data_view(), __quaternion::quaternion_from_euler(pitch, yaw, roll));
@@ -121,7 +121,7 @@ FORCEINLINE Quaternion quaternion_from_euler(
 }
 
 FORCEINLINE Quaternion quaternion_from_rotation(
-    const float4x4 rotation)
+const float4x4 rotation)
 {
     Quaternion res;
     __vector::store_aligned(res.data_view(), __quaternion::quaternion_from_rotation(rotation));
@@ -129,13 +129,13 @@ FORCEINLINE Quaternion quaternion_from_rotation(
 }
 
 FORCEINLINE Quaternion look_at_quaternion(
-    const Vector3f direction)
+const Vector3f direction)
 {
     return quaternion_from_rotation(look_at_matrix(Vector3f::vector_zero(), direction));
 }
 
 FORCEINLINE Quaternion quaternion_from_axis(
-    const Vector3f axis, const float angle)
+const Vector3f axis, const float angle)
 {
     Quaternion res;
     __vector::store_aligned(res.data_view(), __quaternion::quaternion_from_axis(__vector::load_float3_w0(axis.data_view()), angle));
@@ -143,7 +143,7 @@ FORCEINLINE Quaternion quaternion_from_axis(
 }
 
 FORCEINLINE float4x4 make_transform_2d(
-    Vector2f pos2d, float rot2d, Vector2f scale2d)
+Vector2f pos2d, float rot2d, Vector2f scale2d)
 {
     Vector3f pos{ pos2d.X, pos2d.Y, 0 };
     // TODO: rotate pivot is left bottom now
@@ -175,4 +175,4 @@ FORCEINLINE uint32_t vector_to_snorm8(const Vector4f& v)
 }
 
 } // namespace math
-} // namespace sakura
+} // namespace skr

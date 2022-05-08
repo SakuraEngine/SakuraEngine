@@ -2,7 +2,7 @@
 #include "rotator.hpp"
 #include "vector.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -42,7 +42,7 @@ FORCEINLINE Quaternion Quaternion::conjugate() const
 }
 
 } // namespace math
-} // namespace sakura
+} // namespace skr
 
 #ifdef USE_DXMATH
     #include "DirectXMath/SDXMathQuaternion.hpp"

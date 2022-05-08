@@ -43,7 +43,7 @@ inline CGPURenderPipelineId create_gbuffer_render_pipeline(CGPUDeviceId device)
     const char* root_const_name = "root_constants";
     rs_desc.root_constant_names = &root_const_name;
     auto gbuffer_root_sig = cgpu_create_root_signature(device, &rs_desc);
-    namespace smath = sakura::math;
+    namespace smath = skr::math;
     CGPUVertexLayout vertex_layout = {};
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(smath::Vector3f), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(smath::Vector2f), CGPU_INPUT_RATE_VERTEX };

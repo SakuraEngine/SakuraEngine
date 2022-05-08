@@ -19,7 +19,7 @@ using NativeLibHandle = HMODULE;
 #endif
 #include <EASTL/string.h>
 
-namespace sakura
+namespace skr
 {
 /**
  * @description: Provides cross-platform low-level
@@ -194,12 +194,12 @@ private:
         if (lastError != 0)
         {
             FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
-                nullptr,
-                lastError,
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                buffer,
-                256 - 1,
-                nullptr);
+            nullptr,
+            lastError,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            buffer,
+            256 - 1,
+            nullptr);
 
             return eastl::string(buffer);
         }
@@ -244,4 +244,4 @@ private:
 #endif
 };
 
-} // namespace sakura
+} // namespace skr

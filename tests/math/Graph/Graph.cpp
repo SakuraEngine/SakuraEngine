@@ -23,7 +23,7 @@ protected:
     {
     }
 };
-namespace DAG = sakura::DAG;
+namespace DAG = skr::DAG;
 
 struct vertex_prop_map_key_t {
     using kind = boost::vertex_property_tag;
@@ -159,7 +159,7 @@ TEST(GraphTest, GraphTest0)
 
 #include "utils/dependency_graph.hpp"
 
-class TestRDGNode : public sakura::DependencyGraphNode
+class TestRDGNode : public skr::DependencyGraphNode
 {
 public:
     TestRDGNode(const char* n)
@@ -173,11 +173,11 @@ public:
 
 TEST(GraphTest, DependencyGraph)
 {
-    sakura::DependencyGraphEdge edge;
+    skr::DependencyGraphEdge edge;
     TestRDGNode node0("node0");
     TestRDGNode node1("node1");
     TestRDGNode node2("node2");
-    auto rdg = sakura::DependencyGraph::Create();
+    auto rdg = skr::DependencyGraph::Create();
     rdg->insert(&node0);
     rdg->insert(&node1);
     rdg->insert(&node2);
@@ -186,8 +186,8 @@ TEST(GraphTest, DependencyGraph)
     rdg->link(&node1, &node2, &edge);
     std::cout << rdg->outgoing_edges(&node0) << std::endl;
     std::cout << rdg->incoming_edges(&node2) << std::endl;
-    using Node = sakura::DependencyGraphNode;
-    using Edge = sakura::DependencyGraphEdge;
+    using Node = skr::DependencyGraphNode;
+    using Edge = skr::DependencyGraphEdge;
     rdg->foreach_incoming_edges(&node1, [](Node* from, Node* to, Edge* e) {
         std::cout << "edge: " << ((TestRDGNode*)from)->name.c_str()
                   << " -> " << ((TestRDGNode*)to)->name.c_str() << std::endl;
@@ -199,7 +199,7 @@ TEST(GraphTest, DependencyGraph)
 
 TEST(GraphTest, RenderGraphFrontEnd)
 {
-    namespace render_graph = sakura::render_graph;
+    namespace render_graph = skr::render_graph;
     auto graph = render_graph::RenderGraph::create(
     [](render_graph::RenderGraphBuilder& builder) {
         builder.frontend_only();

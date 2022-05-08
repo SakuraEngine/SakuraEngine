@@ -12,9 +12,9 @@ struct RenderNode {
     eastl::vector<RenderNode*> children_;
     int32_t index_;
     struct RenderMesh* mesh_ = nullptr;
-    sakura::math::Vector3f translation_ = {};
-    sakura::math::Vector3f scale_ = { 1.f, 1.f, 1.f };
-    sakura::math::Quaternion rotation_ = {};
+    skr::math::Vector3f translation_ = {};
+    skr::math::Vector3f scale_ = { 1.f, 1.f, 1.f };
+    skr::math::Quaternion rotation_ = {};
 };
 
 struct RenderMaterial {

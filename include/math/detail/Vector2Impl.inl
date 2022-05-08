@@ -1,4 +1,4 @@
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -9,7 +9,7 @@ FORCEINLINE constexpr Vector<T, 2>::Vector(const T x, const T y)
 }
 
 template <typename T>
-FORCEINLINE constexpr Vector<T, 2>::Vector(const sakura::array<T, 2> v)
+FORCEINLINE constexpr Vector<T, 2>::Vector(const skr::array<T, 2> v)
     : m_(v)
 {
 }
@@ -197,4 +197,4 @@ FORCEINLINE bool Vector<T, 2>::is_normalized() const
     return (math::abs(1.f - length_squared()) < THRESH_VECTOR_NORMALIZED);
 }
 } // namespace math
-} // namespace sakura
+} // namespace skr

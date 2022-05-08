@@ -1,7 +1,7 @@
 #include "render_graph/frontend/render_graph.hpp"
 #include "../cgpu/common/common_utils.h"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -489,4 +489,4 @@ TextureHandle RenderGraph::get_texture(const char* name)
     return UINT64_MAX;
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

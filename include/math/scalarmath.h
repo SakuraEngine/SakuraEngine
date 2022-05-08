@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
     #include <cmath>
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -243,7 +243,7 @@ FORCEINLINE float mod(float X, float Y)
     return Result;
 }
 } // namespace math
-} // namespace sakura
+} // namespace skr
 #endif // __cplusplus
 
 #define smath_round_up(value, multiple) ((((value) + (multiple)-1) / (multiple)) * (multiple))

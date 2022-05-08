@@ -7,7 +7,7 @@
 #pragma warning(pop)
 #include <DirectXPackedVector.h>
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -58,72 +58,72 @@ static VectorRegister register_zero = DirectX::XMVectorZero();
 static VectorRegister register_one = DirectX::g_XMOne.v;
 static const VectorRegister float4_infinity = vector_register((uint32_t)0x7F800000, (uint32_t)0x7F800000, (uint32_t)0x7F800000, (uint32_t)0x7F800000);
 
-FORCEINLINE VectorRegister load(const sakura::span<const float, 4> vec)
+FORCEINLINE VectorRegister load(const skr::span<const float, 4> vec)
 {
     return DirectX::XMLoadFloat4(reinterpret_cast<const DirectX::XMFLOAT4*>(vec.data()));
 }
 
-FORCEINLINE VectorRegister load_uint1(const sakura::span<const uint32_t, 1> vec)
+FORCEINLINE VectorRegister load_uint1(const skr::span<const uint32_t, 1> vec)
 {
     return vector_register(vec[0], vec[1], vec[0], vec[1]);
 }
 
-FORCEINLINE VectorRegister load_float1(const sakura::span<const float, 1> vec)
+FORCEINLINE VectorRegister load_float1(const skr::span<const float, 1> vec)
 {
     return vector_register(vec[0], vec[1], vec[0], vec[1]);
 }
 
-FORCEINLINE VectorRegister load_float2(const sakura::span<const float, 2> vec)
+FORCEINLINE VectorRegister load_float2(const skr::span<const float, 2> vec)
 {
     return vector_register(vec[0], vec[1], vec[0], vec[1]);
 }
 
-FORCEINLINE VectorRegister load_uint2(const sakura::span<const uint32_t, 2> vec)
+FORCEINLINE VectorRegister load_uint2(const skr::span<const uint32_t, 2> vec)
 {
     return vector_register(vec[0], vec[1], vec[0], vec[1]);
 }
 
-FORCEINLINE VectorRegister load_float3_w0(const sakura::span<const float, 3> vec)
+FORCEINLINE VectorRegister load_float3_w0(const skr::span<const float, 3> vec)
 {
     return vector_register(vec[0], vec[1], vec[2], 0.f);
 }
 
-FORCEINLINE VectorRegister load_float3_w1(const sakura::span<const float, 3> vec)
+FORCEINLINE VectorRegister load_float3_w1(const skr::span<const float, 3> vec)
 {
     return vector_register(vec[0], vec[1], vec[2], 1.f);
 }
 
-FORCEINLINE VectorRegister load_uint3_w0(const sakura::span<const uint32_t, 3> vec)
+FORCEINLINE VectorRegister load_uint3_w0(const skr::span<const uint32_t, 3> vec)
 {
     return vector_register(vec[0], vec[1], vec[2], 0u);
 }
 
-FORCEINLINE VectorRegister load_uint3_w1(const sakura::span<const uint32_t, 3> vec)
+FORCEINLINE VectorRegister load_uint3_w1(const skr::span<const uint32_t, 3> vec)
 {
     return vector_register(vec[0], vec[1], vec[2], 1u);
 }
 
-FORCEINLINE VectorRegister load_aligned(const sakura::span<const float, 4> vec)
+FORCEINLINE VectorRegister load_aligned(const skr::span<const float, 4> vec)
 {
     return DirectX::XMLoadFloat4A(reinterpret_cast<const DirectX::XMFLOAT4A*>(vec.data()));
 }
 
-FORCEINLINE void store_aligned(sakura::span<float, 4> target, const VectorRegister vector)
+FORCEINLINE void store_aligned(skr::span<float, 4> target, const VectorRegister vector)
 {
     return DirectX::XMStoreFloat4A(reinterpret_cast<DirectX::XMFLOAT4A*>(target.data()), vector);
 }
 
-FORCEINLINE void store(sakura::span<float, 4> target, const VectorRegister vector)
+FORCEINLINE void store(skr::span<float, 4> target, const VectorRegister vector)
 {
     return DirectX::XMStoreFloat4(reinterpret_cast<DirectX::XMFLOAT4*>(target.data()), vector);
 }
 
-FORCEINLINE void store_float3(sakura::span<float, 3> target, const VectorRegister vector)
+FORCEINLINE void store_float3(skr::span<float, 3> target, const VectorRegister vector)
 {
     return DirectX::XMStoreFloat3(reinterpret_cast<DirectX::XMFLOAT3*>(target.data()), vector);
 }
 
-FORCEINLINE void store_float1(sakura::span<float, 3> target, const VectorRegister vector)
+FORCEINLINE void store_float1(skr::span<float, 3> target, const VectorRegister vector)
 {
     return DirectX::XMStoreFloat(static_cast<float*>(target.data()), vector);
 }
@@ -477,4 +477,4 @@ FORCEINLINE VectorRegister mod(const VectorRegister& X, const VectorRegister& Y)
 }
 } // namespace __vector
 } // namespace math
-} // namespace sakura
+} // namespace skr

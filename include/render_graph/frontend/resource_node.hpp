@@ -2,7 +2,7 @@
 #include <atomic>
 #include "render_graph/frontend/base_types.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -80,4 +80,4 @@ protected:
     mutable ECGPUResourceState init_state = CGPU_RESOURCE_STATE_UNDEFINED;
 };
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

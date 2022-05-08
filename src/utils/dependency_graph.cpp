@@ -2,7 +2,7 @@
 #include "utils/DAG.boost.hpp"
 #include "utils/dependency_graph.hpp"
 
-namespace sakura
+namespace skr
 {
 class DependencyGraphImpl : public DependencyGraph, public DependencyGraphBase
 {
@@ -157,12 +157,12 @@ public:
         return count;
     }
     virtual uint32_t foreach_outgoing_edges(Node* node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
     {
         return foreach_outgoing_edges(node->id, func);
     }
     virtual uint32_t foreach_outgoing_edges(dep_graph_handle_t node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
     {
         auto oedges = DAG::out_edges((vertex_descriptor)node, *this);
         uint32_t count = 0;
@@ -188,12 +188,12 @@ public:
         return count;
     }
     virtual uint32_t foreach_incoming_edges(Node* node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
     {
         return foreach_incoming_edges(node->id, func);
     }
     virtual uint32_t foreach_incoming_edges(dep_graph_handle_t node,
-        eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
     {
         auto oedges = DAG::in_edges((vertex_descriptor)node, *this);
         uint32_t count = 0;
@@ -252,9 +252,9 @@ uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(const D
 {
     return graph->foreach_inv_neighbors(this, f);
 }
-} // namespace sakura
+} // namespace skr
 
-namespace sakura
+namespace skr
 {
 DependencyGraph* DependencyGraph::Create() RUNTIME_NOEXCEPT
 {
@@ -265,4 +265,4 @@ DependencyGraphBase* DependencyGraphBase::as(DependencyGraph* interface)
 {
     return (DependencyGraphImpl*)interface;
 }
-} // namespace sakura
+} // namespace skr

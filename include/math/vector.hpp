@@ -3,7 +3,7 @@
 #include "containers/array.hpp"
 #include "scalarmath.h"
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -13,15 +13,15 @@ struct Vector {
     constexpr Vector(const Vector& rhs) = default;
     Vector& operator=(const Vector& rhs) = default;
 
-    constexpr Vector(const sakura::array<T, N> v)
+    constexpr Vector(const skr::array<T, N> v)
         : m_(v)
     {
     }
-    sakura::span<T, N> data_view()
+    skr::span<T, N> data_view()
     {
         return m_;
     }
-    sakura::span<const T, N> data_view() const
+    skr::span<const T, N> data_view() const
     {
         return m_;
     }
@@ -56,18 +56,18 @@ struct Vector {
     static constexpr Vector<T, N> vector_one();
     static constexpr Vector<T, N> vector_zero();
 
-    sakura::array<T, N> m_ = sakura::create_array<T, N>(0);
+    skr::array<T, N> m_ = skr::create_array<T, N>(0);
 };
 
 template <typename T, size_t N>
 constexpr Vector<T, N> Vector<T, N>::vector_one()
 {
-    return Vector<T, N>(sakura::create_array<T, N>(1));
+    return Vector<T, N>(skr::create_array<T, N>(1));
 }
 template <typename T, size_t N>
 constexpr Vector<T, N> Vector<T, N>::vector_zero()
 {
-    return Vector<T, N>(sakura::create_array<T, N>(0));
+    return Vector<T, N>(skr::create_array<T, N>(0));
 }
 
 // Vector2
@@ -76,9 +76,9 @@ struct Vector<T, 2> {
 public:
     FORCEINLINE constexpr Vector() = default;
     FORCEINLINE constexpr Vector(const T x, const T y);
-    FORCEINLINE constexpr Vector(const sakura::array<T, 2> v);
-    FORCEINLINE sakura::span<T, 2> data_view();
-    FORCEINLINE sakura::span<const T, 2> data_view() const;
+    FORCEINLINE constexpr Vector(const skr::array<T, 2> v);
+    FORCEINLINE skr::span<T, 2> data_view();
+    FORCEINLINE skr::span<const T, 2> data_view() const;
     FORCEINLINE static constexpr Vector<T, 2> vector_one();
     FORCEINLINE static constexpr Vector<T, 2> vector_zero();
 
@@ -167,7 +167,7 @@ public:
         struct {
             T x, y;
         };
-        sakura::array<T, 2> m_ = { 0, 0 };
+        skr::array<T, 2> m_ = { 0, 0 };
     };
 };
 using Vector2f = Vector<float, 2u>;
@@ -189,9 +189,9 @@ struct Vector<T, 3> {
 public:
     FORCEINLINE constexpr Vector() = default;
     FORCEINLINE constexpr Vector(const T x, const T y, const T z);
-    FORCEINLINE constexpr Vector(const sakura::array<T, 3> v);
-    FORCEINLINE sakura::span<T, 3> data_view();
-    FORCEINLINE sakura::span<const T, 3> data_view() const;
+    FORCEINLINE constexpr Vector(const skr::array<T, 3> v);
+    FORCEINLINE skr::span<T, 3> data_view();
+    FORCEINLINE skr::span<const T, 3> data_view() const;
     FORCEINLINE static constexpr Vector<T, 3> vector_one();
     FORCEINLINE static constexpr Vector<T, 3> vector_zero();
 
@@ -289,7 +289,7 @@ public:
         struct {
             T x, y, z;
         };
-        sakura::array<T, 3> m_ = { 0, 0, 0 };
+        skr::array<T, 3> m_ = { 0, 0, 0 };
     };
 };
 using Vector3f = Vector<float, 3>;
@@ -306,15 +306,15 @@ public:
         : m_({ x, y, z, w })
     {
     }
-    FORCEINLINE constexpr Vector(const sakura::array<float, 4> v)
+    FORCEINLINE constexpr Vector(const skr::array<float, 4> v)
         : m_(v)
     {
     }
-    FORCEINLINE sakura::span<float, 4> data_view()
+    FORCEINLINE skr::span<float, 4> data_view()
     {
         return m_.mValue;
     }
-    FORCEINLINE sakura::span<const float, 4> data_view() const
+    FORCEINLINE skr::span<const float, 4> data_view() const
     {
         return m_.mValue;
     }
@@ -396,7 +396,7 @@ public:
         struct alignas(16) {
             float x, y, z, w;
         };
-        alignas(16) sakura::array<float, 4> m_ = { 0.f, 0.f, 0.f, 0.f };
+        alignas(16) skr::array<float, 4> m_ = { 0.f, 0.f, 0.f, 0.f };
     };
 };
 using Color4u = Vector<uint8_t, 4u>;
@@ -415,10 +415,10 @@ FORCEINLINE constexpr Vector4f Vector4f::vector_zero()
 }
 using Vector4lf = Vector<double, 4>;
 } // namespace math
-} // namespace sakura
+} // namespace skr
 
 // Common Vector Math
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -475,7 +475,7 @@ FORCEINLINE T distance(const Vector<T, N> a, const Vector<T, N> b)
     return length(subtract(a, b));
 }
 } // namespace math
-} // namespace sakura
+} // namespace skr
 
 #include "detail/Vector2Impl.inl"
 #include "detail/Vector3Impl.inl"

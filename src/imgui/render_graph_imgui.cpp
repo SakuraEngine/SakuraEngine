@@ -2,15 +2,15 @@
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"
 
-namespace sakura::imgui
+namespace skr::imgui
 {
 RUNTIME_API CGPUTextureId font_texture;
 RUNTIME_API CGPURootSignatureId root_sig;
 RUNTIME_API CGPURenderPipelineId render_pipeline;
-RUNTIME_API sakura::render_graph::TextureHandle font_handle;
-RUNTIME_API sakura::render_graph::BufferHandle vertex_buffer_handle;
-RUNTIME_API sakura::render_graph::BufferHandle index_buffer_handle;
-RUNTIME_API sakura::render_graph::BufferHandle upload_buffer_handle;
+RUNTIME_API skr::render_graph::TextureHandle font_handle;
+RUNTIME_API skr::render_graph::BufferHandle vertex_buffer_handle;
+RUNTIME_API skr::render_graph::BufferHandle index_buffer_handle;
+RUNTIME_API skr::render_graph::BufferHandle upload_buffer_handle;
 RUNTIME_API CGPUBufferId upload_buffer;
 
 RUNTIME_API ImGuiContext*& imgui_context()
@@ -19,14 +19,14 @@ RUNTIME_API ImGuiContext*& imgui_context()
     return ctx;
 }
 
-namespace rg = sakura::render_graph;
+namespace rg = skr::render_graph;
 
 void imgui_create_fonts(CGPUQueueId queue);
 void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc);
 void imgui_render_window(ImGuiViewport* viewport, void*);
-} // namespace sakura::imgui
+} // namespace skr::imgui
 
-using namespace sakura::imgui;
+using namespace skr::imgui;
 RUNTIME_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor* desc)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -47,8 +47,8 @@ RUNTIME_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor*
 }
 
 RUNTIME_API void render_graph_imgui_add_render_pass(
-sakura::render_graph::RenderGraph* render_graph,
-sakura::render_graph::TextureRTVHandle target,
+skr::render_graph::RenderGraph* render_graph,
+skr::render_graph::TextureRTVHandle target,
 ECGPULoadAction load_action)
 {
     ImGui::Render();
@@ -203,7 +203,7 @@ RUNTIME_API void render_graph_imgui_finalize()
     cgpu_free_root_signature(root_sig);
 }
 
-namespace sakura::imgui
+namespace skr::imgui
 {
 void imgui_create_fonts(CGPUQueueId queue)
 {
@@ -328,4 +328,4 @@ void imgui_render_window(ImGuiViewport* viewport, void*)
     }
 }
 
-} // namespace sakura::imgui
+} // namespace skr::imgui

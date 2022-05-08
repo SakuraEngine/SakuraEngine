@@ -5,7 +5,7 @@
 #include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -107,4 +107,4 @@ inline void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextu
     textures[key].push_back({ { texture, final_state }, frame_index });
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr
