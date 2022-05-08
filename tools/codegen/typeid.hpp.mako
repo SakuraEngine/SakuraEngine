@@ -1,5 +1,5 @@
 #pragma once
-
+#include "platform/guid.h"
 %for type in db.types:
 %if hasattr(type, 'namespace'):
 namespace ${type.namespace} {
