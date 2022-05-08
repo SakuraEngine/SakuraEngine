@@ -3,6 +3,7 @@
 #include "fmt/format.h"
 #include "platform/guid.h"
 #include "platform/memory.h"
+#include "resource/resource_handle.h"
 #include "utils/hash.h"
 #include "utils/format.hpp"
 #include "utils/fast_float.h"
@@ -69,6 +70,12 @@ const skr_type_t* type_of<skr_guid_t>::get()
     return &type;
 }
 
+const skr_type_t* type_of<skr_resource_handle_t>::get()
+{
+    static HandleType type{nullptr};
+    return &type;
+}
+
 const skr_type_t* type_of<eastl::string>::get()
 {
     static StringType type;
@@ -105,6 +112,8 @@ size_t skr_type_t::Size() const
             return sizeof(double);
         case SKR_TYPE_CATEGORY_GUID:
             return sizeof(skr_guid_t);
+        case SKR_TYPE_CATEGORY_HANDLE:
+            return sizeof(skr_resource_handle_t);
         case SKR_TYPE_CATEGORY_STR:
             return sizeof(eastl::string);
         case SKR_TYPE_CATEGORY_STRV:
@@ -153,6 +162,8 @@ size_t skr_type_t::Align() const
             return alignof(double);
         case SKR_TYPE_CATEGORY_GUID:
             return alignof(skr_guid_t);
+        case SKR_TYPE_CATEGORY_HANDLE:
+            return alignof(skr_resource_handle_t);
         case SKR_TYPE_CATEGORY_STR:
             return alignof(eastl::string);
         case SKR_TYPE_CATEGORY_STRV:
@@ -200,6 +211,8 @@ eastl::string skr_type_t::Name() const
             return "double";
         case SKR_TYPE_CATEGORY_GUID:
             return "guid";
+        case SKR_TYPE_CATEGORY_HANDLE:
+            return "handle";
         case SKR_TYPE_CATEGORY_STR:
             return "eastl::string";
         case SKR_TYPE_CATEGORY_STRV:
@@ -249,6 +262,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
         case SKR_TYPE_CATEGORY_F32:
         case SKR_TYPE_CATEGORY_F64:
         case SKR_TYPE_CATEGORY_GUID:
+        case SKR_TYPE_CATEGORY_HANDLE:
         case SKR_TYPE_CATEGORY_STR:
         case SKR_TYPE_CATEGORY_STRV:
             return true;
@@ -329,10 +343,24 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 acceptIndices = accept;
             }
             break;
+        case SKR_TYPE_CATEGORY_HANDLE: {
+            if(stype == SKR_TYPE_CATEGORY_REF)
+            {
+                auto sptr = (const ReferenceType*)srcType;
+                //TODO: check if this is asset?
+                if(sptr->pointee->type == SKR_TYPE_CATEGORY_OBJ)
+                    return true;
+            }
+        }
         case SKR_TYPE_CATEGORY_GUID: {
-            static size_t accept[] = { SKR_TYPE_CATEGORY_GUID, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
-            acceptIndices = accept;
-            break;
+            if (format)
+            {
+                static size_t accept[] = { SKR_TYPE_CATEGORY_GUID, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+                acceptIndices = accept;
+                break;
+            }
+            else
+                return false;
         }
         case SKR_TYPE_CATEGORY_STRV: {
             static size_t accept[] = { SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
@@ -417,9 +445,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 if (ptr.pointee == nullptr || sptr.pointee == nullptr)
                     return true;
                 if (ptr.pointee->Same(sptr.pointee))
-                {
                     return true;
-                }
                 else if (ptr.pointee->type == SKR_TYPE_CATEGORY_ENUM || sptr.pointee->type == SKR_TYPE_CATEGORY_ENUM)
                 {
                     auto type1 = ptr.pointee->type == SKR_TYPE_CATEGORY_ENUM ? ((EnumType*)ptr.pointee)->underlyingType : ptr.pointee;
@@ -437,6 +463,24 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 }
                 else
                     return false;
+            }
+            if(ptr.ownership == ReferenceType::Observed && stype == SKR_TYPE_CATEGORY_HANDLE) //TODO: handle's ownership?
+            {
+                auto& sptr = (const HandleType&)(*srcType);
+                if (ptr.pointee == nullptr || sptr.pointee == nullptr)
+                    return true;
+                if (ptr.pointee->type == SKR_TYPE_CATEGORY_OBJ)
+                {
+                    if (ptr.pointee->Same(sptr.pointee))
+                        return true;
+                    auto& sobj = (const RecordType&)(*sptr.pointee);
+                    auto& obj = (const RecordType&)(*ptr.pointee);
+                    if (obj.IsBaseOf(sobj))
+                        return true;
+                    else
+                        return false;
+                }
+                return false;
             }
             else if (ptr.ownership == ReferenceType::Observed && ptr.pointee && ptr.pointee->Same(srcType))
                 return true;
@@ -615,14 +659,30 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_GUID: {
-            using T = skr_guid_t;
             switch (srcType->type)
             {
                 STR_CONVERT
+                case SKR_TYPE_CATEGORY_HANDLE:
+                    *(skr_guid_t*)dst = (*(skr_resource_handle_t*)src).get_serialized();
+                    break;
                 default:
                     break;
             }
             break;
+        }
+        case SKR_TYPE_CATEGORY_HANDLE: {
+            switch (srcType->type)
+            {
+                STR_CONVERT
+                case SKR_TYPE_CATEGORY_GUID:
+                    (*(skr_resource_handle_t*)dst).set_guid(*(skr_guid_t*)src);
+                    break;
+                case SKR_TYPE_CATEGORY_REF:
+                    (*(skr_resource_handle_t*)dst).set_ptr(*(void**)src);
+                    break;
+                default:
+                    break;
+            }
         }
         case SKR_TYPE_CATEGORY_STR: {
             auto& dstV = *(eastl::string*)dst;
@@ -818,6 +878,11 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     }
                 }
             }
+            else if (srcType->type == SKR_TYPE_CATEGORY_HANDLE)
+            {
+                auto& handle = *(skr_resource_handle_t*)src;
+                *(void**)dst = handle.get_resolved();
+            }
             else if (ptr.ownership == ReferenceType::Observed)
             {
                 auto& dstV = *(void**)dst;
@@ -854,6 +919,8 @@ eastl::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePol
                 return format("{}", *(double*)dst);
             case SKR_TYPE_CATEGORY_GUID:
                 return format("{}", *(skr_guid_t*)dst);
+            case SKR_TYPE_CATEGORY_HANDLE:
+                return format("{}", (*(skr_resource_handle_t*)dst).get_serialized());
             case SKR_TYPE_CATEGORY_ENUM:
                 return ((const EnumType*)this)->ToString(dst);
             default:
@@ -899,6 +966,8 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, skr::type::ValueS
             case SKR_TYPE_CATEGORY_GUID:
                 *(skr_guid_t*)dst = skr::guid::make_guid({ str.data(), str.size() });
                 break;
+            case SKR_TYPE_CATEGORY_HANDLE:
+                (*(skr_resource_handle_t*)dst).set_guid(skr::guid::make_guid({ str.data(), str.size() }));
             case SKR_TYPE_CATEGORY_ENUM:
                 ((const EnumType*)this)->FromString(dst, str);
                 break;
@@ -940,6 +1009,11 @@ size_t Hash(const skr_guid_t& value, size_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
+size_t Hash(const skr_resource_handle_t& value, size_t base)
+{
+    auto guid = value.get_guid();
+    return skr_hash(&guid, sizeof(guid), base);
+}
 size_t Hash(void* value, size_t base)
 {
     return skr_hash((void*)&value, sizeof(value), base);
@@ -980,6 +1054,8 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
             return HashImpl<double>(dst, base);
         case SKR_TYPE_CATEGORY_GUID:
             return HashImpl<skr_guid_t>(dst, base);
+        case SKR_TYPE_CATEGORY_HANDLE:
+            return HashImpl<skr_resource_handle_t>(dst, base);
         case SKR_TYPE_CATEGORY_STR:
             return HashImpl<eastl::string>(dst, base);
         case SKR_TYPE_CATEGORY_STRV:
@@ -1129,6 +1205,9 @@ void skr_type_t::Copy(void* dst, const void* src) const
         case SKR_TYPE_CATEGORY_GUID:
             CopyImpl<skr_guid_t>(dst, src);
             break;
+        case SKR_TYPE_CATEGORY_HANDLE:
+            CopyImpl<skr_resource_handle_t>(dst, src);
+            break;
         case SKR_TYPE_CATEGORY_STR:
             CopyImpl<eastl::string>(dst, src);
             break;
@@ -1228,6 +1307,9 @@ void skr_type_t::Move(void* dst, void* src) const
         case SKR_TYPE_CATEGORY_GUID:
             MoveImpl<skr_guid_t>(dst, src);
             break;
+        case SKR_TYPE_CATEGORY_HANDLE:
+            MoveImpl<skr_resource_handle_t>(dst, src);
+            break;
         case SKR_TYPE_CATEGORY_STR:
             MoveImpl<eastl::string>(dst, src);
             break;
@@ -1314,6 +1396,8 @@ void skr_type_t::Delete()
             SkrDelete((Float64Type*)this);
         case SKR_TYPE_CATEGORY_GUID:
             SkrDelete((GUIDType*)this);
+        case SKR_TYPE_CATEGORY_HANDLE:
+            SkrDelete((HandleType*)this);
         case SKR_TYPE_CATEGORY_STR:
             SkrDelete((StringType*)this);
         case SKR_TYPE_CATEGORY_STRV:

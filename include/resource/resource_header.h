@@ -2,16 +2,6 @@
 #include "platform/guid.h"
 #include "type/type_registry.h"
 
-typedef struct skr_resource_handle_t {
-    union
-    {
-        skr_guid_t guid;
-        void* pointer;
-    };
-} skr_resource_handle_t;
-
-typedef struct skr_resource_header_t skr_resource_header_t;
-
 #if defined(__cplusplus)
     #include "bitsery/brief_syntax.h"
     #include "utils/serialize.hpp"
@@ -37,7 +27,7 @@ void serialize(S& s, skr_resource_header_t& header)
 }
 } // namespace bitsery
 #endif
-typedef enum ESkrLoadingStatus
+typedef enum ESkrLoadingStatus : uint32_t
 {
     SKR_LOADING_STATUS_UNLOADED,
     SKR_LOADING_STATUS_LOADING,    // file io & deserialize

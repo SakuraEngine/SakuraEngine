@@ -29,6 +29,7 @@ SAssetRecord* SAssetRegistry::ImportAsset(ghc::filesystem::path path)
         return nullptr;
     }
     auto record = SkrNew<SAssetRecord>();
+    // TODO: replace file load with skr api
     record->meta = simdjson::padded_string::load(metaPath.u8string());
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);

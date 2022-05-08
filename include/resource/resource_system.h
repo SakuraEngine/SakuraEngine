@@ -53,7 +53,7 @@ public:
     virtual void RequestResource(SResourceRequst* request) = 0;
     virtual void CancelRequest(SResourceRequst* requst) = 0;
 };
-struct SResourceSystem {
+struct RUNTIME_API SResourceSystem {
     void Initialize(SResourceRegistry* provider);
     bool IsInitialized();
     void Shutdown();
@@ -62,16 +62,19 @@ struct SResourceSystem {
     void RegisterResourceFactory(SResourceFactory* factory);
     void UnregisterResourceFactory(SResourceFactory* factory);
 
-    void LoadResource(skr_resource_handle_t& handle, uint64_t requester = 0);
-    void UnloadResource(skr_resource_handle_t& handle);
+    void LoadResource(skr_guid_t& handle, bool requireInstalled = true, uint32_t requester = 0);
+    void UnloadResource(skr_guid_t& handle);
 
     skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid);
     skr_resource_record_t* _GetRecord(const skr_guid_t& guid);
+    skr_resource_record_t* _GetRecord(void* resource);
 
-    SResourceRegistry* resourceProvider;
+    SResourceRegistry* resourceProvider = nullptr;
     phmap::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
-    phmap::flat_hash_map<skr_type_id_t, SResourceFactory*> resourceFactories;
+    phmap::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
+    phmap::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
 };
+RUNTIME_API SResourceSystem* GetResourceSystem();
 } // namespace resource
 } // namespace skr
 #endif
