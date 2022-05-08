@@ -15,7 +15,7 @@
 #include "callback.hpp"
 #include <algorithm>
 #include <numeric>
-#include <sstream>
+#include "utils/format.hpp"
 #include <string>
 #include <string_view>
 #if __SSE2__
@@ -201,7 +201,6 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     desc.erase(std::remove_if(desc.begin(), desc.end(), isspace), desc.end());
 #endif
     eastl::vector<eastl::string_view> parts;
-    std::stringstream ss;
     eastl::split(desc, parts, ",");
     // todo: errorMsg? global error code?
     auto& error = get_error();
@@ -242,8 +241,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 ++i;
             if (i == part.size())
             {
-                ss << "unexpected [ without ], loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unexpected [ without ], loc {}.", errorPos);
                 return nullptr;
             }
             auto attr = part.substr(j, i - j);
@@ -266,8 +264,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 filterOnly = true;
             else
             {
-                ss << "unknown access modifier, loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unknown access modifier, loc {}.", errorPos);
                 return nullptr;
             }
             i++;
@@ -280,8 +277,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 ++i;
             if (i == part.size())
             {
-                ss << "unexpected [ without ], loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unexpected [ without ], loc {}.", errorPos);
                 return nullptr;
             }
             auto attr = part.substr(j, j - i);
@@ -292,8 +288,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 operation.randomAccess = DOS_SEQ;
             else
             {
-                ss << "unknown sequence modifier, loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unknown sequence modifier, loc {}.", errorPos);
                 return nullptr;
             }
             i++;
@@ -301,8 +296,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         if (i == part.size())
         {
             errorPos = partBegin + i;
-            ss << "unexpected end of part, loc " << errorPos << ".";
-            error = ss.str();
+            error = fmt::format("unexpected end of part, loc {}.", errorPos);
             return nullptr;
         }
         if (!std::isalpha(part[i]))
@@ -312,8 +306,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 if (!operation.readonly)
                 {
                     errorPos = partBegin + i;
-                    ss << "shared component is readonly, loc " << errorPos << ".";
-                    error = ss.str();
+                    error = fmt::format("shared component is readonly, loc {}.", errorPos);
                     return nullptr;
                 }
                 operation.randomAccess = DOS_GLOBAL;
@@ -329,8 +322,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             else
             {
                 errorPos = partBegin + i;
-                ss << "unknown selector '" << part[i] << "', loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unknown selector '{}', loc {}.", part[i], errorPos);
                 return nullptr;
             }
             ++i;
@@ -338,8 +330,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         if (i == part.size() || !std::isalpha(part[i]))
         {
             errorPos = partBegin + i;
-            ss << "no type specified, loc " << errorPos << ".";
-            error = ss.str();
+            error = fmt::format("no type specified, loc {}.", errorPos);
             return nullptr;
         }
         else
@@ -352,8 +343,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             if (type == kInvalidTypeIndex)
             {
                 errorPos = partBegin + i;
-                ss << "unknown type name '" << std::string_view(name.data(), name.size()) << "', loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unknown type name '{}', loc {}.", name, errorPos);
                 return nullptr;
             }
         }
@@ -364,15 +354,13 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             if (i < part.size())
             {
                 errorPos = partBegin + i;
-                ss << "unexpected character, ',' expected, loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unexpected character, ',' expected, loc {}.", errorPos);
                 return nullptr;
             }
             if (operation.phase == 0)
             {
                 errorPos = partBegin + j;
-                ss << "unexpected phase modifier.([out] is always phase 0), loc " << errorPos << ".";
-                error = ss.str();
+                error = fmt::format("unexpected phase modifier.([out] is always phase 0), loc {}.", errorPos);
                 return nullptr;
             }
             operation.phase = j - i;
