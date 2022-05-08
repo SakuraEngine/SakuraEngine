@@ -3,7 +3,7 @@
 #include <EASTL/vector_map.h>
 #include "tracy/Tracy.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -286,4 +286,4 @@ void RenderGraph::finalize()
 {
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

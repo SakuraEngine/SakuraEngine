@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "platform/configure.h"
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -15,4 +15,4 @@ using fixed64 = fixed<int64_t, 32u>;
 using fixed32 = fixed<int32_t, 16u>;
 
 } // namespace math
-} // namespace sakura
+} // namespace skr

@@ -1,7 +1,7 @@
 #pragma once
 #include "render_graph/frontend/resource_node.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -271,4 +271,4 @@ inline PassNode* BufferReadWriteEdge::get_pass_node()
 }
 
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

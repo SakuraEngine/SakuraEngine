@@ -1,7 +1,7 @@
 #pragma once
 #include <EASTL/array.h>
 
-namespace sakura
+namespace skr
 {
 using eastl::array;
 namespace arrayDetail
@@ -20,4 +20,4 @@ constexpr eastl::array<T, N> create_array(T&& value)
 {
     return arrayDetail::create_array(std::forward<T>(value), std::make_index_sequence<N>());
 }
-} // namespace sakura
+} // namespace skr

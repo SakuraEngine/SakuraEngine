@@ -1,4 +1,4 @@
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -10,7 +10,7 @@ FORCEINLINE constexpr Vector<T, 3>::Vector(const T x, const T y, const T z)
 }
 
 template <typename T>
-FORCEINLINE constexpr Vector<T, 3>::Vector(const sakura::array<T, 3> v)
+FORCEINLINE constexpr Vector<T, 3>::Vector(const skr::array<T, 3> v)
     : m_(v)
 {
 }
@@ -43,9 +43,9 @@ template <typename T>
 FORCEINLINE Vector<T, 3> Vector<T, 3>::operator^(const Vector V) const
 {
     return Vector(
-        Y * V.Z - Z * V.Y,
-        Z * V.X - X * V.Z,
-        X * V.Y - Y * V.X);
+    Y * V.Z - Z * V.Y,
+    Z * V.X - X * V.Z,
+    X * V.Y - Y * V.X);
 }
 
 template <typename T>
@@ -216,4 +216,4 @@ FORCEINLINE bool Vector<T, 3>::is_normalized() const
 }
 
 } // namespace math
-} // namespace sakura
+} // namespace skr

@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "vector.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -53,7 +53,7 @@ struct Rotator : public Vector3f {
     FORCEINLINE static float clamp_axis(float Angle)
     {
         // returns Angle in the range (-360,360)
-        Angle = sakura::math::mod(Angle, 360.f);
+        Angle = skr::math::mod(Angle, 360.f);
 
         if (Angle < 0.f)
         {
@@ -79,4 +79,4 @@ struct Rotator : public Vector3f {
     }
 };
 } // namespace math
-} // namespace sakura
+} // namespace skr

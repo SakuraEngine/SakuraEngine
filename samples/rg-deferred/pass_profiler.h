@@ -1,6 +1,6 @@
 #include "render_graph/backend/graph_backend.hpp"
 
-class PassProfiler : public sakura::render_graph::RenderGraphProfiler
+class PassProfiler : public skr::render_graph::RenderGraphProfiler
 {
 public:
     void initialize(CGPUDeviceId device)
@@ -27,7 +27,7 @@ public:
     {
         return gsl::span<uint64_t>((uint64_t*)query_buffer->cpu_mapped_address, query_cursor);
     }
-    virtual void on_acquire_executor(class sakura::render_graph::RenderGraph& g, class sakura::render_graph::RenderGraphFrameExecutor& e)
+    virtual void on_acquire_executor(class skr::render_graph::RenderGraph& g, class skr::render_graph::RenderGraphFrameExecutor& e)
     {
         auto timestamps = readback_query_data();
         times_ms.resize(timestamps.size());
@@ -38,7 +38,7 @@ public:
         }
         frame_index = g.get_frame_index() - RG_MAX_FRAME_IN_FLIGHT;
     }
-    virtual void on_cmd_begin(class sakura::render_graph::RenderGraph& g, class sakura::render_graph::RenderGraphFrameExecutor& executor)
+    virtual void on_cmd_begin(class skr::render_graph::RenderGraph& g, class skr::render_graph::RenderGraphFrameExecutor& executor)
     {
         query_cursor = 0;
         query_names.clear();
@@ -49,15 +49,15 @@ public:
         query_names.emplace_back("cmd_begin");
         cgpu_cmd_begin_query(executor.gfx_cmd_buf, query_pool, &query_desc);
     }
-    virtual void on_cmd_end(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor& executor)
+    virtual void on_cmd_end(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor& executor)
     {
         cgpu_cmd_resolve_query(executor.gfx_cmd_buf, query_pool,
         query_buffer, 0, query_cursor);
     }
-    virtual void on_pass_begin(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor&, class sakura::render_graph::PassNode& pass)
+    virtual void on_pass_begin(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor&, class skr::render_graph::PassNode& pass)
     {
     }
-    virtual void on_pass_end(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor& executor, class sakura::render_graph::PassNode& pass)
+    virtual void on_pass_end(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor& executor, class skr::render_graph::PassNode& pass)
     {
         CGPUQueryDescriptor query_desc = {};
         query_desc.index = query_cursor++;
@@ -65,8 +65,8 @@ public:
         query_names.emplace_back(pass.get_name());
         cgpu_cmd_begin_query(executor.gfx_cmd_buf, query_pool, &query_desc);
     }
-    virtual void before_commit(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor&) {}
-    virtual void after_commit(class sakura::render_graph::RenderGraph&, class sakura::render_graph::RenderGraphFrameExecutor&) {}
+    virtual void before_commit(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor&) {}
+    virtual void after_commit(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor&) {}
 
     CGPUQueryPoolId query_pool = nullptr;
     CGPUBufferId query_buffer = nullptr;

@@ -128,9 +128,9 @@ namespace ImGui
     #define RUNTIME_API
 #endif
 struct ImGuiContext;
-namespace sakura::imgui
+namespace skr::imgui
 {
 RUNTIME_API ImGuiContext*& imgui_context();
 }
 
-#define GImGui sakura::imgui::imgui_context()
+#define GImGui skr::imgui::imgui_context()

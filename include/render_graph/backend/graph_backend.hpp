@@ -5,7 +5,7 @@
 #include "texture_view_pool.hpp"
 #include "desc_set_heap.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -115,4 +115,4 @@ protected:
     TextureViewPool texture_view_pool;
 };
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

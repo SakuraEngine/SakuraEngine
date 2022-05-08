@@ -2,7 +2,7 @@
 #include "platform/configure.h"
 #include <EASTL/functional.h>
 
-namespace sakura
+namespace skr
 {
 typedef uint64_t dep_graph_handle_t;
 class DependencyGraphEdge;
@@ -104,4 +104,4 @@ inline DependencyGraphNode* DependencyGraphEdge::to()
     return graph->node_at(to_node);
 }
 
-} // namespace sakura
+} // namespace skr

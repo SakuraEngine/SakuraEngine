@@ -9,7 +9,7 @@
 #include <boost/graph/graphviz.hpp>
 #include "render_graph/frontend/render_graph.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -34,8 +34,8 @@ public:
                 {
                     label = "SRV:s";
                     label.append(eastl::to_string(SRV->set))
-                        .append("b")
-                        .append(eastl::to_string(SRV->binding));
+                    .append("b")
+                    .append(eastl::to_string(SRV->binding));
                 }
                 else
                 {
@@ -50,8 +50,8 @@ public:
                 {
                     label = "UAV:s";
                     label.append(eastl::to_string(UAV->set))
-                        .append("b")
-                        .append(eastl::to_string(UAV->binding));
+                    .append("b")
+                    .append(eastl::to_string(UAV->binding));
                 }
                 else
                 {
@@ -100,7 +100,7 @@ public:
                 label = "texture: ";
                 label.append(rg_node->get_name());
                 label.append("\\nrefs: ")
-                    .append(is_imported ? "imported" : eastl::to_string(tex_node->outgoing_edges()));
+                .append(is_imported ? "imported" : eastl::to_string(tex_node->outgoing_edges()));
                 if (auto aliasing_parent = tex_node->get_aliasing_parent(); aliasing_parent)
                 {
                     label.append("\\naliasing: ").append(aliasing_parent->get_name());
@@ -115,7 +115,7 @@ public:
                 label = "buffer: ";
                 label.append(rg_node->get_name());
                 label.append("\\nrefs: ")
-                    .append(is_imported ? "imported" : eastl::to_string(buf_node->outgoing_edges()));
+                .append(is_imported ? "imported" : eastl::to_string(buf_node->outgoing_edges()));
                 shape = "box";
             }
             break;
@@ -167,7 +167,7 @@ void RenderGraphViz::write_graphviz(RenderGraph& graph, const char* outf)
     boost::write_graphviz(ofstm, g, v, w);
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr
 
 #if defined(__clang__)
     #pragma clang diagnostic pop

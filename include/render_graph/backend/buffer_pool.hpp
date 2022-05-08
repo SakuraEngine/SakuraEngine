@@ -5,7 +5,7 @@
 #include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -105,4 +105,4 @@ inline void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferI
 }
 
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

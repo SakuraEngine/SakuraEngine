@@ -8,7 +8,7 @@
 
 #define RG_MAX_FRAME_IN_FLIGHT 3
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -261,4 +261,4 @@ public:
     static void write_graphviz(RenderGraph& graph, const char* outf);
 };
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

@@ -7,7 +7,7 @@
 #include <EASTL/unique_ptr.h>
 #include <EASTL/string.h>
 
-namespace smath = sakura::math;
+namespace smath = skr::math;
 
 typedef struct PushConstants {
     smath::float4x4 world;
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
     // wvp
     auto world = smath::make_transform(
     { 0.f, 0.f, 0.f },                                             // translation
-    sakura::math::Vector3f::vector_one(),                          // scale
+    skr::math::Vector3f::vector_one(),                             // scale
     render_scene->nodes_[render_scene->root_node_index_].rotation_ // quat
     );
     // camera

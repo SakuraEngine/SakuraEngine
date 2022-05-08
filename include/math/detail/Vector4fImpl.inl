@@ -1,4 +1,4 @@
-namespace sakura
+namespace skr
 {
 namespace math
 {
@@ -142,4 +142,4 @@ FORCEINLINE bool Vector<float, 4>::is_normalized() const
 }
 
 } // namespace math
-} // namespace sakura
+} // namespace skr

@@ -3,7 +3,7 @@
 #include "utils/dependency_graph.hpp"
 #include <EASTL/string.h>
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -369,4 +369,4 @@ inline PipelineBufferHandle::PipelineReferenceHandle(const handle_t _this)
 {
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

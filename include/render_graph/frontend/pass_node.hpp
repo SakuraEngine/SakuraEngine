@@ -5,7 +5,7 @@
 #include "render_graph/frontend/resource_node.hpp"
 #include "render_graph/frontend/resource_edge.hpp"
 
-namespace sakura
+namespace skr
 {
 namespace render_graph
 {
@@ -217,4 +217,4 @@ inline void PassNode::foreach_buffers(eastl::function<void(BufferNode*, BufferEd
         f(e->get_buffer_node(), e);
 }
 } // namespace render_graph
-} // namespace sakura
+} // namespace skr

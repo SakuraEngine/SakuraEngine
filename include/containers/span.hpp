@@ -1,7 +1,7 @@
 #pragma once
 #include <gsl/span>
 
-namespace sakura
+namespace skr
 {
 using gsl::span;
 }
