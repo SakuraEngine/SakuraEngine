@@ -31,6 +31,7 @@ void* SJsonConfigImporter::Import(const SAssetRecord* record)
         SKR_LOG_ERROR("import resource %s failed, type is not registered as config", record->path.u8string().c_str());
         return nullptr;
     }
+    // TODO: replace file load with skr api
     auto jsonString = simdjson::padded_string::load(record->path.u8string());
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);

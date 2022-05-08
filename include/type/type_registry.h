@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "platform/guid.h"
 #include "platform/configure.h"
+#include "resource/resource_handle.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -20,6 +21,7 @@ typedef enum skr_type_category_t
     SKR_TYPE_CATEGORY_F32,
     SKR_TYPE_CATEGORY_F64,
     SKR_TYPE_CATEGORY_GUID,
+    SKR_TYPE_CATEGORY_HANDLE,
     SKR_TYPE_CATEGORY_STR,
     SKR_TYPE_CATEGORY_STRV,
     SKR_TYPE_CATEGORY_ARR,
@@ -30,13 +32,13 @@ typedef enum skr_type_category_t
     SKR_TYPE_CATEGORY_REF,
 } skr_type_category_t;
 
-struct skr_type_t* skr_get_type(const skr_type_id_t* id);
-void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
-void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
-uint32_t skr_get_type_size(const struct skr_type_t* type);
-void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
-struct skr_type_t* skr_get_field_type(const skr_field_t* field);
-const char* skr_get_field_name(const skr_field_t* field);
+RUNTIME_API struct skr_type_t* skr_get_type(const skr_type_id_t* id);
+RUNTIME_API void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
+RUNTIME_API void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
+RUNTIME_API uint32_t skr_get_type_size(const struct skr_type_t* type);
+RUNTIME_API void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
+RUNTIME_API struct skr_type_t* skr_get_field_type(const skr_field_t* field);
+RUNTIME_API const char* skr_get_field_name(const skr_field_t* field);
 
 /*
 generated:
@@ -200,6 +202,13 @@ struct GUIDType : skr_type_t {
     {
     }
 };
+//handle
+struct HandleType : skr_type_t {
+    const struct skr_type_t* pointee;
+    HandleType(skr_type_t* pointee)
+        : skr_type_t{ SKR_TYPE_CATEGORY_HANDLE }, pointee(pointee)
+        {}
+};
 // eastl::string
 struct StringType : skr_type_t {
     StringType()
@@ -344,6 +353,7 @@ BASE_TYPE(int64_t);
 BASE_TYPE(float);
 BASE_TYPE(double);
 BASE_TYPE(skr_guid_t);
+BASE_TYPE(skr_resource_handle_t);
 BASE_TYPE(eastl::string);
 BASE_TYPE(eastl::string_view);
     #undef BASE_TYPE
@@ -356,6 +366,18 @@ struct type_of<void*> {
             ReferenceType::Observed,
             true,
             nullptr
+        };
+        return &type;
+    }
+};
+
+template <class T>
+struct type_of<resource::TResourceHandle<T>>
+{
+    static const skr_type_t* get()
+    {
+        static HandleType type{
+            type_of<T>::get()
         };
         return &type;
     }
