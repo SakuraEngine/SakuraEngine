@@ -601,7 +601,6 @@ int main(int argc, char* argv[])
         }
         {
             ZoneScopedN("Present");
-            cgpu_wait_fences(&present_fence, 1);
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
