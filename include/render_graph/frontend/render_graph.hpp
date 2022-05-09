@@ -148,12 +148,15 @@ public:
         BufferBuilder& owns_memory();
         BufferBuilder& structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride);
         BufferBuilder& size(uint64_t size);
+        BufferBuilder& with_flags(CGPUBufferCreationFlags flags);
         BufferBuilder& memory_usage(ECGPUMemoryUsage mem_usage);
         BufferBuilder& allow_shader_readwrite();
         BufferBuilder& allow_shader_read();
         BufferBuilder& as_upload_buffer();
         BufferBuilder& as_vertex_buffer();
         BufferBuilder& as_index_buffer();
+        BufferBuilder& prefer_on_device();
+        BufferBuilder& prefer_on_host();
 
     protected:
         BufferBuilder(RenderGraph& graph, BufferNode& node) noexcept;
