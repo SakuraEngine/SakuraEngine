@@ -126,12 +126,16 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
         ImGui::GetIO().Fonts->Build();
         free(font_bytes);
     }
-    auto vsfile = skr_vfs_fopen(skg::Core::resource_vfs, u8"shaders/imgui_vertex.spv", SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    eastl::string vsname = u8"shaders/imgui_vertex";
+    eastl::string fsname = u8"shaders/imgui_fragment";
+    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    auto vsfile = skr_vfs_fopen(skg::Core::resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t im_vs_length = skr_vfs_fsize(vsfile);
     uint32_t* im_vs_bytes = (uint32_t*)sakura_malloc(im_vs_length);
     skr_vfs_fread(vsfile, im_vs_bytes, 0, im_vs_length);
     skr_vfs_fclose(vsfile);
-    auto fsfile = skr_vfs_fopen(skg::Core::resource_vfs, u8"shaders/imgui_fragment.spv", SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto fsfile = skr_vfs_fopen(skg::Core::resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t im_fs_length = skr_vfs_fsize(fsfile);
     uint32_t* im_fs_bytes = (uint32_t*)sakura_malloc(im_fs_length);
     skr_vfs_fread(fsfile, im_fs_bytes, 0, im_fs_length);

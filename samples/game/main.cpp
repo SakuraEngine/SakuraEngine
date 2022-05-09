@@ -102,6 +102,7 @@ int main(int argc, char** argv)
         cgpu_queue_present(gfx_queue, &present_desc);
     }
     // clean up
+    cgpu_wait_queue_idle(gfx_queue);
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
     free_api_objects();
