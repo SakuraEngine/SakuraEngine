@@ -66,6 +66,12 @@
     #define RUNTIME_EXTERN_C
 #endif
 
+#if defined(__cplusplus)
+#define SKRENUM(inttype) : inttype
+#else
+#define SKRENUM(inttype)
+#endif
+
 #ifndef RUNTIME_EXPORT
     #if defined(_MSC_VER)
         #define RUNTIME_EXPORT __declspec(dllexport)
