@@ -23,6 +23,8 @@ extern void create_api_objects();
 extern void free_api_objects();
 extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph);
 
+#include "gamert.h"
+
 int main(int argc, char** argv)
 {
 #ifdef SAKURA_RUNTIME_OS_WINDOWS
@@ -30,6 +32,7 @@ int main(int argc, char** argv)
     DPIAware = true;
 #endif
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
+    skg::Core::initialize();
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
     window_desc.resizable = true;
