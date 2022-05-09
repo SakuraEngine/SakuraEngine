@@ -3,6 +3,9 @@
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
+#include "gamert.h"
+#include "platform/memory.h"
+#include "utils/log.h"
 
 SWindowHandle window;
 uint32_t backbuffer_index;
@@ -123,12 +126,16 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
         ImGui::GetIO().Fonts->Build();
         free(font_bytes);
     }
-    uint32_t *im_vs_bytes, im_vs_length;
-    read_shader_bytes("imgui_vertex", &im_vs_bytes, &im_vs_length,
-    device->adapter->instance->backend);
-    uint32_t *im_fs_bytes, im_fs_length;
-    read_shader_bytes("imgui_fragment", &im_fs_bytes, &im_fs_length,
-    device->adapter->instance->backend);
+    auto vsfile = skr_vfs_fopen(skg::Core::resource_vfs, u8"shaders/imgui_vertex.spv", SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    uint32_t im_vs_length = skr_vfs_fsize(vsfile);
+    uint32_t* im_vs_bytes = (uint32_t*)sakura_malloc(im_vs_length);
+    skr_vfs_fread(vsfile, im_vs_bytes, 0, im_vs_length);
+    skr_vfs_fclose(vsfile);
+    auto fsfile = skr_vfs_fopen(skg::Core::resource_vfs, u8"shaders/imgui_fragment.spv", SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    uint32_t im_fs_length = skr_vfs_fsize(fsfile);
+    uint32_t* im_fs_bytes = (uint32_t*)sakura_malloc(im_fs_length);
+    skr_vfs_fread(fsfile, im_fs_bytes, 0, im_fs_length);
+    skr_vfs_fclose(fsfile);
     CGPUShaderLibraryDescriptor vs_desc = {};
     vs_desc.name = "imgui_vertex_shader";
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
@@ -141,8 +148,8 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
     fs_desc.code_size = im_fs_length;
     CGPUShaderLibraryId imgui_vs = cgpu_create_shader_library(device, &vs_desc);
     CGPUShaderLibraryId imgui_fs = cgpu_create_shader_library(device, &fs_desc);
-    free(im_vs_bytes);
-    free(im_fs_bytes);
+    sakura_free(im_vs_bytes);
+    sakura_free(im_fs_bytes);
     RenderGraphImGuiDescriptor imgui_graph_desc = {};
     imgui_graph_desc.render_graph = renderGraph;
     imgui_graph_desc.backbuffer_format = (ECGPUFormat)swapchain->back_buffers[backbuffer_index]->format;
