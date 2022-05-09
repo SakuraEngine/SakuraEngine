@@ -10,11 +10,7 @@ bool DPIAware = false;
 CGPUSurfaceId surface;
 CGPUSwapChainId swapchain;
 CGPUFenceId present_fence;
-#if _WIN32
-ECGPUBackend backend = CGPU_BACKEND_D3D12;
-#else
 ECGPUBackend backend = CGPU_BACKEND_VULKAN;
-#endif
 CGPUInstanceId instance;
 CGPUAdapterId adapter;
 CGPUDeviceId device;
