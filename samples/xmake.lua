@@ -82,7 +82,7 @@ target("GameRT")
     add_deps("SkrRT")
     add_files("game/src/**.cpp")
 
---[[target("Game")
+target("Game")
     set_kind("binary")
     add_deps("GameRT")
-    add_files("game/main.cpp")]]--
+    add_files("game/main.cpp", "game/src/**.c", "game/src/**.cpp")

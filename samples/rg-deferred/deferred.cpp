@@ -309,9 +309,6 @@ int main(int argc, char* argv[])
         font_length, cfg.SizePixels, &cfg);
         ImGui::GetIO().Fonts->Build();
         free(font_bytes);
-        style.AntiAliasedFill = true;
-        style.AntiAliasedLines = true;
-        style.AntiAliasedLinesUseTex = true;
     }
     uint32_t *im_vs_bytes, im_vs_length;
     read_shader_bytes("imgui_vertex", &im_vs_bytes, &im_vs_length,
@@ -604,14 +601,13 @@ int main(int argc, char* argv[])
         }
         {
             ZoneScopedN("Present");
+            cgpu_wait_fences(&present_fence, 1);
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
             cgpu_queue_present(gfx_queue, &present_desc);
         }
     }
-    cgpu_wait_queue_idle(gfx_queue);
-    cgpu_wait_fences(&present_fence, 1);
     for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
     {
         profilers[i].finalize();
