@@ -208,6 +208,7 @@ void create_render_pipeline()
 void finalize()
 {
     // Free cgpu objects
+    cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
     cgpu_free_buffer(index_buffer);
     cgpu_free_buffer(vertex_buffer);
