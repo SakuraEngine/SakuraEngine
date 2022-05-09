@@ -8,7 +8,6 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     -- bind target if exists
     opt = opt or {}
     opt.target = target
-
     -- load compiler and get compilation command
     local sourcekind = opt.sourcekind
     if not sourcekind and type(sourcefile) == "string" then
@@ -26,6 +25,7 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
+    cprint("${cyan}generating.meta ${clear}%s", path.absolute(metadir))
     os.runv(meta.vexec, argv)
     return argv
 end
@@ -74,26 +74,26 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         local dependfile = target:dependfile(headerfile.."meta")
         depend.on_changed(function ()
             table.insert(changedfiles, headerfile);
-            cprint("${cyan}generating.reflection ${clear}%s", headerfile)
+            cprint("${cyan}reflection.header ${clear}%s", headerfile)
         end, {dependfile = dependfile, files = {headerfile}})
     end
     if rebuild then
         changedfiles = headerfiles
     end
     -- generate dummy .cpp file
-    local reflfile = io.open(sourcefile_refl, "w")
-    for _, headerfile in ipairs(changedfiles) do
-        headerfile = path.absolute(headerfile)
-        sourcefile_refl =
-         path.absolute(sourcefile_refl)
-        headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
-        reflfile:print("#include \"%s\"", headerfile)
-    end
-    reflfile:close()
-    -- build generated cpp to json
-    cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
-    -- compile jsons to c++
     if(#changedfiles > 0) then
+        local reflfile = io.open(sourcefile_refl, "w")
+        for _, headerfile in ipairs(changedfiles) do
+            headerfile = path.absolute(headerfile)
+            sourcefile_refl =
+            path.absolute(sourcefile_refl)
+            headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
+            reflfile:print("#include \"%s\"", headerfile)
+        end
+        reflfile:close()
+        -- build generated cpp to json
+        cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
+        -- compile jsons to c++
         local api = target:extraconf("rules", "c++.reflection", "api")
         local function task(index)
             local generator = generators[index][1]
