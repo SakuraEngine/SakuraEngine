@@ -607,6 +607,7 @@ int main(int argc, char* argv[])
             cgpu_queue_present(gfx_queue, &present_desc);
         }
     }
+    cgpu_wait_queue_idle(gfx_queue);
     for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
     {
         profilers[i].finalize();
