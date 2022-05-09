@@ -56,6 +56,11 @@ ECGPULoadAction load_action)
     if (!draw_data)
         return;
 
+    bool useCVV = true;
+#ifdef SAKURA_RUNTIME_OS_MACOSX
+    useCVV = false;
+#endif
+
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
     int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
     int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
@@ -72,53 +77,61 @@ ECGPULoadAction load_action)
             builder.set_name("imgui_font_texture")
             .import(font_texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
         });
-        if ((!upload_buffer || upload_buffer->size < index_size + vertex_size) && device)
-        {
-            if (upload_buffer)
-            {
-                cgpu_wait_queue_idle(render_graph->get_gfx_queue());
-                cgpu_free_buffer(upload_buffer);
-            }
-            upload_buffer = cgpux_create_mapped_upload_buffer(
-            device, index_size + vertex_size,
-            "imgui_upload_buffer");
-        }
-        // upload
-        ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
-        ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
-        for (int n = 0; n < draw_data->CmdListsCount; n++)
-        {
-            const ImDrawList* cmd_list = draw_data->CmdLists[n];
-            memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
-            memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
-            vtx_dst += cmd_list->VtxBuffer.Size;
-            idx_dst += cmd_list->IdxBuffer.Size;
-        }
+        // vb & ib
         vertex_buffer_handle = render_graph->create_buffer(
         [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
             builder.set_name("imgui_vertex_buffer")
             .size(vertex_size)
-            .memory_usage(CGPU_MEM_USAGE_GPU_ONLY)
+            .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+            .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+            .prefer_on_device()
             .as_vertex_buffer();
         });
         index_buffer_handle = render_graph->create_buffer(
         [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
             builder.set_name("imgui_index_buffer")
             .size(index_size)
-            .memory_usage(CGPU_MEM_USAGE_GPU_ONLY)
+            .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+            .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+            .prefer_on_device()
             .as_index_buffer();
         });
-        upload_buffer_handle = render_graph->create_buffer(
-        [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-            builder.set_name("imgui_upload_buffer")
-            .import(upload_buffer, CGPU_RESOURCE_STATE_COPY_SOURCE);
-        });
-        render_graph->add_copy_pass(
-        [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-            builder.set_name("imgui_geom_transfer")
-            .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
-            .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
-        });
+        if (!useCVV)
+        {
+            if ((!upload_buffer || upload_buffer->size < index_size + vertex_size) && device)
+            {
+                if (upload_buffer)
+                {
+                    cgpu_wait_queue_idle(render_graph->get_gfx_queue());
+                    cgpu_free_buffer(upload_buffer);
+                }
+                upload_buffer = cgpux_create_mapped_upload_buffer(
+                device, index_size + vertex_size,
+                "imgui_upload_buffer");
+            }
+            // upload
+            ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
+            ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
+            for (int n = 0; n < draw_data->CmdListsCount; n++)
+            {
+                const ImDrawList* cmd_list = draw_data->CmdLists[n];
+                memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+                memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+                vtx_dst += cmd_list->VtxBuffer.Size;
+                idx_dst += cmd_list->IdxBuffer.Size;
+            }
+            upload_buffer_handle = render_graph->create_buffer(
+            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                builder.set_name("imgui_upload_buffer")
+                .import(upload_buffer, CGPU_RESOURCE_STATE_COPY_SOURCE);
+            });
+            render_graph->add_copy_pass(
+            [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+                builder.set_name("imgui_geom_transfer")
+                .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
+                .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
+            });
+        }
         // add pass
         render_graph->add_render_pass(
         [=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
@@ -129,7 +142,7 @@ ECGPULoadAction load_action)
             .read("texture0", font_handle)
             .write(0, target, load_action);
         },
-        [target](rg::RenderGraph& g, rg::RenderPassContext& context) {
+        [target, useCVV](rg::RenderGraph& g, rg::RenderPassContext& context) {
             auto target_node = g.resolve(target);
             const auto& target_desc = target_node->get_desc();
             struct {
@@ -176,10 +189,25 @@ ECGPULoadAction load_action)
                         (uint32_t)clip_rect.x, (uint32_t)clip_rect.y,
                         (uint32_t)(clip_rect.z - clip_rect.x),
                         (uint32_t)(clip_rect.w - clip_rect.y));
-                        cgpu_render_encoder_bind_index_buffer(context.encoder,
-                        context.resolve(index_buffer_handle), sizeof(uint16_t), 0);
-                        const uint32_t stride = sizeof(ImDrawVert);
+                        auto resolved_ib = context.resolve(index_buffer_handle);
                         auto resolved_vb = context.resolve(vertex_buffer_handle);
+                        if (useCVV)
+                        {
+                            // upload
+                            ImDrawVert* vtx_dst = (ImDrawVert*)resolved_vb->cpu_mapped_address;
+                            ImDrawIdx* idx_dst = (ImDrawIdx*)resolved_ib->cpu_mapped_address;
+                            for (int n = 0; n < draw_data->CmdListsCount; n++)
+                            {
+                                const ImDrawList* cmd_list = draw_data->CmdLists[n];
+                                memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+                                memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+                                vtx_dst += cmd_list->VtxBuffer.Size;
+                                idx_dst += cmd_list->IdxBuffer.Size;
+                            }
+                        }
+                        cgpu_render_encoder_bind_index_buffer(context.encoder,
+                        resolved_ib, sizeof(uint16_t), 0);
+                        const uint32_t stride = sizeof(ImDrawVert);
                         cgpu_render_encoder_bind_vertex_buffers(context.encoder,
                         1, &resolved_vb, &stride, NULL);
                         cgpu_render_encoder_draw_indexed(context.encoder,
