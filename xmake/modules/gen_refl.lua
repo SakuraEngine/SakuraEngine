@@ -97,7 +97,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         local api = target:extraconf("rules", "c++.reflection", "api")
         local function task(index)
             local generator = generators[index][1]
-            cprint("${cyan}generating.%s${clear} %s", path.filename(generator), sourcefile_refl)
+            cprint("${cyan}generating.%s${clear} %s", path.filename(generator), path.absolute(metadir))
             import("find_sdk")
             local python = find_sdk.find_program("python3")
             os.iorunv(python.program, {
