@@ -3,6 +3,9 @@
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
+#ifdef SAKURA_RUNTIME_OS_WINDOWS
+    #include <shellscalingapi.h>
+#endif
 
 extern SWindowHandle window;
 extern uint32_t backbuffer_index;
