@@ -31,11 +31,18 @@ jobs:
         Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/${{env.VulkanSDKVersion}}/windows/VulkanSDK-${{env.VulkanSDKVersion}}-Installer.exe?u= -OutFile ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe
         $installer = Start-Process -FilePath ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe -Wait -PassThru -ArgumentList @("/S");
         $installer.WaitForExit();
+   - name: ConfigureDebug
+     run: xmake f -m debug -y -v --build_tests=n --build_tools=n -c
+     env:
+        VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+   - name: UploadMeta
+     uses: actions/upload-artifact@v3
+     with:
+        name: meta-files
+        path: build/.gens
    - name: Debug
      shell: cmd
-     run: |
-        xmake f -m debug -y -c -v --build_tests=n --build_tools=n
-        xmake -y -v
+     run: xmake -y -v
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
    - name: Release

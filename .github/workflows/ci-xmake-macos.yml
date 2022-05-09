@@ -35,21 +35,22 @@ jobs:
         hdiutil attach ../vulkansdk-macos-${{env.VulkanSDKVersion}}.dmg
         cp -r /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}} $GITHUB_WORKSPACE/..
         hdiutil detach /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}}
+    - name: ConfigureDebug
+      run: xmake f -m debug -y -v --build_tests=n --build_tools=n -c
+      env:
+        VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+    - name: UploadMeta
+      uses: actions/upload-artifact@v3
+      with:
+        name: meta-files
+        path: build/.gens
     - name: Debug
-      run: |
-        xmake f -m debug -y -v --build_tests=n --build_tools=n
-        xmake -y -v
-        xmake lua lib.detect.find_file meta
+      run: xmake -y -v
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
     - name: Release
       run: |
-        xmake f -m release -y --build_tests=n --build_tools=n
+        xmake f -m release -y --build_tests=n --build_tools=n -c
         xmake -y -v
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
-    - name: UploadBuild
-      uses: actions/upload-artifact@v3
-      with:
-        name: dist-without-markdown
-        path: build/**/*.meta

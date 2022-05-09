@@ -29,7 +29,6 @@ class Binding(object):
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
-
 def main():
     db = Binding()
     root = sys.argv[1]
