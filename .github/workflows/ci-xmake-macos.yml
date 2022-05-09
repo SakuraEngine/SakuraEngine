@@ -48,3 +48,8 @@ jobs:
         xmake -y -v
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+    - name: UploadBuild
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist-without-markdown
+        path: build/**/*.meta
