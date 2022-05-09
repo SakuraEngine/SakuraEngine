@@ -72,6 +72,7 @@ void create_api_objects()
 void free_api_objects()
 {
     // Free cgpu objects
+    cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
