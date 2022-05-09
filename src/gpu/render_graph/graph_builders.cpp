@@ -337,6 +337,11 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::size(uint64_t size)
     node.descriptor.size = size;
     return *this;
 }
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::with_flags(CGPUBufferCreationFlags flags)
+{
+    node.descriptor.flags |= flags;
+    return *this;
+}
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::memory_usage(ECGPUMemoryUsage mem_usage)
 {
     node.descriptor.memory_usage = mem_usage;
@@ -364,14 +369,22 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_vertex_buffer()
 {
     node.descriptor.descriptors |= CGPU_RT_VERTEX_BUFFER;
     node.descriptor.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
-    node.descriptor.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     return *this;
 }
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_index_buffer()
 {
     node.descriptor.descriptors |= CGPU_RT_INDEX_BUFFER;
     node.descriptor.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
-    node.descriptor.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    return *this;
+}
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::prefer_on_device()
+{
+    node.descriptor.prefer_on_device = true;
+    return *this;
+}
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::prefer_on_host()
+{
+    node.descriptor.prefer_on_device = true;
     return *this;
 }
 BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup)
