@@ -61,6 +61,10 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             os.projectdir()..vformat("/tools/codegen/config_asset.py"),
             os.projectdir()..vformat("/tools/codegen/config_asset.cpp.mako"),
             gendir = toolgendir
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/importer.py"),
+            os.projectdir()..vformat("/tools/codegen/importer.cpp.mako"),
         }
     }
     local rebuild = false
