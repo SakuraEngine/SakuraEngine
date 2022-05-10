@@ -43,7 +43,7 @@ typedef volatile ALIGNAS(PTR_SIZE) uintptr_t SAtomicPtr;
 	#define skr_atomic64_cas_relaxed(dst, cmp_val, new_val) __sync_val_compare_and_swap( (volatile int64_t*)(dst), (cmp_val), (new_val) )
 #endif
 
-FORCEINLINE static uint32_t skr_atomic32_load_acquire(SAtomic32* pVar)
+FORCEINLINE static uint32_t skr_atomic32_load_acquire(const SAtomic32* pVar)
 {
 	uint32_t value = skr_atomic32_load_relaxed(pVar);
 	skr_memorybarrier_acquire();
@@ -63,7 +63,7 @@ FORCEINLINE static uint32_t skr_atomic32_max_relaxed(SAtomic32* dst, uint32_t va
     return prev_val;
 }
 
-FORCEINLINE static uint64_t skr_atomic64_load_acquire(SAtomic64* pVar)
+FORCEINLINE static uint64_t skr_atomic64_load_acquire(const SAtomic64* pVar)
 {
 	uint64_t value = skr_atomic64_load_relaxed(pVar);
 	skr_memorybarrier_acquire();

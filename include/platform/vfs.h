@@ -95,6 +95,7 @@ typedef struct skr_vfs_async_proctable_t {
 
 typedef struct skr_vfs_t {
     skr_vfs_proctable_t procs;
+    skr_vfs_async_proctable_t async_procs;
     void* pUser;
     ESkrMountType mount_type;
     char8_t* mount_dir;
