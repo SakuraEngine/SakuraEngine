@@ -1,0 +1,5 @@
+target("resource-design")
+    set_kind("binary")
+    add_deps("SkrRT")
+    add_files("design/main.cpp")
+    set_languages("c++17")
