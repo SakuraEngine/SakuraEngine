@@ -8,7 +8,7 @@
 
 skr_resource_handle_t::skr_resource_handle_t()
 {
-    reset();
+    std::memset(this, 0, sizeof(skr_resource_handle_t));
 }
 
 skr_resource_handle_t::skr_resource_handle_t(const skr_resource_handle_t& other)
@@ -33,6 +33,7 @@ void skr_resource_handle_t::set_ptr(void* ptr)
 
 void skr_resource_handle_t::set_guid(const skr_guid_t& inGUID)
 {
+    reset();
     guid = inGUID;
     SKR_ASSERT(padding != 0 || is_null());
 }
@@ -86,24 +87,18 @@ void skr_resource_handle_t::resolve(bool requireInstalled, uint32_t inRequester)
     if (padding != 0)
     {
         auto system = skr::resource::GetResourceSystem();
-        system->LoadResource(guid, requireInstalled, inRequester);
-        auto record = system->_GetRecord(guid);
-        reset();
-        if (record)
-        {
-            requester = inRequester;
-            pointer = (int64_t)record;
-        }
+        system->LoadResource(*this, requireInstalled, inRequester);
+        requester = inRequester;
     }
 }
 
-void skr_resource_handle_t::serialize()
+void skr_resource_handle_t::unload()
 {
     SKR_ASSERT(!is_null());
     if (padding != 0)
         return;
-    auto record = ((skr_resource_record_t*)pointer);
-    guid = record->header.guid;
+    auto system = skr::resource::GetResourceSystem();
+    system->UnloadResource(*this);
 }
 
 bool skr_resource_handle_t::is_null() const
@@ -113,6 +108,8 @@ bool skr_resource_handle_t::is_null() const
 
 void skr_resource_handle_t::reset()
 {
+    if (is_resolved())
+        unload();
     std::memset(this, 0, sizeof(skr_resource_handle_t));
 }
 

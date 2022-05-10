@@ -31,7 +31,7 @@ RUNTIME_API SConfigRegistry* GetConfigRegistry();
 struct RUNTIME_API SConfigFactory : public SResourceFactory {
     skr_type_id_t GetResourceType() override;
     static skr_config_resource_t* NewConfig(skr_type_id_t& id);
-    bool Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive) override;
+    bool Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive);
     static void Serialize(const skr_config_resource_t& config, SBinarySerializer& archive);
     static void DeserializeConfig(const skr_type_id_t& id, void* address, SBinaryDeserializer& archive);
     static void SerializeConfig(const skr_type_id_t& id, void* address, SBinarySerializer& archive);

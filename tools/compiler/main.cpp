@@ -20,6 +20,7 @@
 #include "SkrTool/serialize.generated.h"
 #include "SkrRT/serialize.generated.h"
 #include "SkrRT/typeid.generated.hpp"
+#include "utils/format.hpp"
 
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
@@ -56,7 +57,7 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
 
-static ghc::filesystem::path projectDir = "C:\\Users\\BenzzZX\\Desktop\\Development\\Sakura.Runtime\\samples\\game";
+static ghc::filesystem::path projectDir = "F:\\Sakura.Runtime\\samples\\game";
 
 void compile_config(skd::asset::SAssetRecord* record)
 {
@@ -69,6 +70,7 @@ void compile_config(skd::asset::SAssetRecord* record)
     auto importer = factory->LoadImporter(record, doc.find_field("importer").value_unsafe());
     //-----import resource object
     auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
+    //-----emit dependencies
     //-----cook resource
     // no cook needed for config, just binarize it
     //-----fetch runtime dependencies
@@ -97,7 +99,7 @@ void compile_config(skd::asset::SAssetRecord* record)
     //------save resource to disk
     auto output = projectDir / "resource";
     ghc::filesystem::create_directories(output);
-    output.append(record->path.filename().replace_extension("bin"));
+    output = output / fmt::format("{}.bin", record->guid);
     auto file = fopen(output.u8string().c_str(), "wb");
     SKR_DEFER({ fclose(file); });
     fwrite(buffer.data(), 1, buffer.size(), file);
