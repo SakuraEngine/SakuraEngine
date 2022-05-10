@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <ghc/filesystem.hpp>
+#include "utils/io.hpp"
 
 class FSTest : public ::testing::Test
 {
@@ -56,6 +57,26 @@ TEST_F(FSTest, readwrite)
     EXPECT_EQ(std::string(string_out), std::string(u8"Hello, World!"));
     EXPECT_EQ(skr_vfs_fsize(f), strlen(string));
     EXPECT_EQ(skr_vfs_fclose(f), true);
+    skr_free_vfs(abs_fs);
+}
+
+TEST_F(FSTest, asyncread)
+{
+    skr_vfs_desc_t abs_fs_desc = {};
+    abs_fs_desc.app_name = "fs-test";
+    abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
+    const auto current_path = ghc::filesystem::current_path().u8string();
+    abs_fs_desc.override_mount_dir = current_path.c_str();
+    auto abs_fs = skr_create_vfs(&abs_fs_desc);
+    EXPECT_NE(abs_fs, nullptr);
+    EXPECT_NE(abs_fs->mount_dir, nullptr);
+    skr::io::RAM::initialize();
+    uint8_t bytes[1024];
+    skr_async_io_request_t request;
+    skr::io::RAM::request(abs_fs, "testfile", bytes, 0, 1024, &request);
+    std::cout << (const char*)bytes << std::endl;
+    while (!request.is_ready()) {}
+    std::cout << (const char*)bytes << std::endl;
     skr_free_vfs(abs_fs);
 }
 
