@@ -1,8 +1,11 @@
 #include "../common/utils.h"
+#include "ghc/filesystem.hpp"
 #include "platform/window.h"
+#include "resource/local_resource_registry.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
+#include "resource/resource_system.h"
 #ifdef SAKURA_RUNTIME_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
@@ -27,6 +30,9 @@ extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 
 int main(int argc, char** argv)
 {
+    ghc::filesystem::path resourceRoot = ghc::filesystem::path(__FILE__).parent_path() / "resource";
+    skr::resource::SLocalResourceRegistry resourceRegistry(resourceRoot);
+    skr::resource::GetResourceSystem()->Initialize(&resourceRegistry);
 #ifdef SAKURA_RUNTIME_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;

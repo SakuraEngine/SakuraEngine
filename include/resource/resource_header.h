@@ -43,11 +43,16 @@ typedef struct skr_resource_record_t skr_resource_record_t;
 
 #if defined(__cplusplus)
     #include "EASTL/vector.h"
+namespace skr::resource
+{
+struct SResourceRequest;
+}
 struct skr_resource_record_t {
     void* resource;
     void (*destructor)(void*);
     ESkrLoadingStatus loadingStatus;
-    eastl::vector<uint64_t> references;
+    eastl::vector<uint32_t> references;
     skr_resource_header_t header;
+    skr::resource::SResourceRequest* activeRequest;
 };
 #endif

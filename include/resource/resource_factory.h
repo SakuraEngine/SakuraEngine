@@ -7,6 +7,12 @@ typedef enum ESkrInstallStatus
     SKR_INSTALL_STATUS_SUCCEED,
     SKR_INSTALL_STATUS_FAILED,
 } ESkrInstallStatus;
+typedef enum ESkrLoadStatus
+{
+    SKR_LOAD_STATUS_INPROGRESS,
+    SKR_LOAD_STATUS_SUCCEED,
+    SKR_LOAD_STATUS_FAILED,
+} ESkrLoadStatus;
 
 #if defined(__cplusplus)
     #include "utils/serialize.hpp"
@@ -23,12 +29,13 @@ struct SBinaryArchive {
 };
 /*
     resource load phase:
-    Unloaded => request -> load binary -> deserialize header -> deserialize => Loaded
-    Loaded  => requst & wait dependencies -> install/update install => Installed
+    Unloaded => request -> load binary -> deserialize => Loaded
+    Loaded  => [requst & wait dependencies -> install/update install] => Installed
 */
 struct RUNTIME_API SResourceFactory {
     virtual skr_type_id_t GetResourceType() = 0;
-    virtual bool Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive);
+    virtual ESkrLoadStatus Load(skr_resource_record_t* record);
+    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record);
     virtual bool Unload(skr_resource_record_t* record);
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
     virtual bool Uninstall(skr_resource_record_t* record) { return true; }
