@@ -1,4 +1,6 @@
 #include "asset/config_asset.hpp"
+#include "asset/asset_registry.hpp"
+#include "asset/importer.hpp"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "resource/config_resource.h"
@@ -41,6 +43,53 @@ void* SJsonConfigImporter::Import(const SAssetRecord* record)
     return resource; //导入具体数据
 }
 
+bool SConfigCooker::Cook(SCookContext* ctx)
+{
+    auto outputPath = ctx->output;
+    auto record = ctx->record;
+    SAssetRegistry& registry = *GetAssetRegistry();
+    //-----load importer
+    simdjson::ondemand::parser parser;
+    auto doc = parser.iterate(record->meta);
+    auto importer = GetImporterRegistry()->LoadImporter(record, doc.find_field("importer").value_unsafe());
+    //-----load config
+    // no cook config for config, skipping
+    //-----import resource object
+    auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
+    SKR_DEFER({ SkrDelete(resource); });
+    //-----emit dependencies
+    //-----cook resource
+    // no cook needed for config, just binarize it
+    //-----fetch runtime dependencies
+    skr_resource_header_t header;
+    header.guid = record->guid;
+    header.type = get_type_id_skr_config_resource_t();
+    header.version = 0;
+    header.dependencies = {};
+    auto type = (skr::type::RecordType*)skr_get_type(&resource->configType);
+    for (auto& field : type->fields)
+    {
+        if (field.type->Same(skr::type::type_of<skr_resource_handle_t>::get()))
+        {
+            auto handle = (skr_resource_handle_t*)((char*)resource->configData + field.offset);
+            if (handle->is_null())
+                continue;
+            header.dependencies.push_back(handle->get_serialized());
+        }
+    }
+    //-----write resource header
+    eastl::vector<uint8_t> buffer;
+    skr::resource::SBinarySerializer archive(buffer);
+    bitsery::serialize(archive, header);
+    //------write resource object
+    skr::resource::SConfigFactory::Serialize(*resource, archive);
+    //------save resource to disk
+    auto file = fopen(outputPath.u8string().c_str(), "wb");
+    SKR_DEFER({ fclose(file); });
+    fwrite(buffer.data(), 1, buffer.size(), file);
+    return true;
+}
+
 bool SJsonConfigImporterFactory::CanImport(const SAssetRecord* record)
 {
     if (record->path.extension() == ".json")
@@ -56,12 +105,6 @@ SImporter* SJsonConfigImporterFactory::CreateImporter(const SAssetRecord* record
     // TODO: invoke user interface?
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
-}
-SImporter* SJsonConfigImporterFactory::LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object)
-{
-    auto importer = SkrNew<SJsonConfigImporter>(record->guid);
-    skr::json::Read(std::move(object), *importer); //读取导入器本身的数据
-    return importer;
 }
 } // namespace asset
 } // namespace skd

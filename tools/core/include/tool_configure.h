@@ -35,8 +35,6 @@
             #define TOOL_API
             #define TOOL_LOCAL
         #endif
-
-        #define EA_DLL
     #else
         #define TOOL_API
         #define TOOL_LOCAL
