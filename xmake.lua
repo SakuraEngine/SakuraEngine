@@ -95,5 +95,5 @@ if(has_config("build_samples")) then
     includes("samples/xmake.lua")
 end
 if(has_config("build_tests")) then
-    --includes("tests/xmake.lua")
+    includes("tests/xmake.lua")
 end

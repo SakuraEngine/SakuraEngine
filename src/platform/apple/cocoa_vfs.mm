@@ -83,7 +83,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc)
     {
         const char8_t* path = [[[NSBundle mainBundle] bundlePath] UTF8String];
         const ghc::filesystem::path p(path);
-        fs->mount_dir = duplicate_string(p.parent_path().c_str());
+        fs->mount_dir = duplicate_string(p.c_str());
     }
 
     success &= fs->mount_dir or desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE;
