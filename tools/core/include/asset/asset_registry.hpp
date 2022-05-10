@@ -27,7 +27,7 @@ struct SAssetRecord {
 struct TOOL_API SAssetRegistry {
     ~SAssetRegistry();
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
-    SAssetRecord* ImportAsset(ghc::filesystem::path path);
+    SAssetRecord* ImportAsset(SProject* project, ghc::filesystem::path path);
     void* ImportResource(const skr_guid_t& guid, skr_guid_t& resourceType);
     eastl::vector<SProject*> projects;
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
