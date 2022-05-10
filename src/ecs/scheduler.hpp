@@ -24,7 +24,7 @@ struct scheduler_t {
     std::vector<dual_job_t*> allJobs;
     std::vector<dual::job_dependency_entry_t> allResources;
     std::vector<uint32_t> freeResources;
-    phmap::flat_hash_map<dual::archetype_t*, std::unique_ptr<dual::job_dependency_entry_t[]>> dependencyEntries;
+    skr::flat_hash_map<dual::archetype_t*, std::unique_ptr<dual::job_dependency_entry_t[]>> dependencyEntries;
 
     scheduler_t();
     static scheduler_t& get();

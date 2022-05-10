@@ -9,11 +9,6 @@ namespace skr
 {
 namespace resource
 {
-bool SResourceFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)
-{
-    bitsery::serialize(archive, record->header);
-    return archive.adapter().error() != bitsery::ReaderError::NoError;
-}
 
 bool SResourceFactory::Unload(skr_resource_record_t* record)
 {

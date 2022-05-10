@@ -3,7 +3,7 @@
 #include "platform/guid.h"
 #include "ghc/filesystem.hpp"
 #include "simdjson.h"
-#include "phmap.h"
+#include "utils/hashmap.hpp"
 
 namespace skd
 {
@@ -22,7 +22,8 @@ struct TOOL_API SAssetRegistry {
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(ghc::filesystem::path path);
     void* ImportResource(const skr_guid_t& guid, skr_guid_t& resourceType);
-    phmap::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
+    skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
+    skr::flat_hash_map<skr_guid_t, struct SImporterFactory*, skr::guid::hash> importerFactories;
 };
 } // namespace asset
 } // namespace skd

@@ -98,10 +98,10 @@ struct dual_storage_t {
     using query_cache_t = dual::query_cache_t;
     using archetype_t = dual::archetype_t;
     using serializer_t = dual::serializer_t;
-    using query_caches_t = phmap::flat_hash_map<dual_filter_t, query_cache_t, dual::query_cache_hasher, dual::query_cache_equal>;
+    using query_caches_t = skr::flat_hash_map<dual_filter_t, query_cache_t, dual::query_cache_hasher, dual::query_cache_equal>;
     using queries_t = std::vector<dual_query_t*>;
-    using groups_t = phmap::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
-    using archetypes_t = phmap::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
+    using groups_t = skr::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
+    using archetypes_t = skr::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
     archetypes_t archetypes;
     queries_t queries;
     groups_t groups;
@@ -136,7 +136,7 @@ struct dual_storage_t {
     bool components_enabled(const dual_entity_t src, const dual_type_set_t& type);
     bool exist(dual_entity_t e) const noexcept;
 
-    using batchmap_t = phmap::flat_hash_map<dual_chunk_t*, dual_chunk_view_t>;
+    using batchmap_t = skr::flat_hash_map<dual_chunk_t*, dual_chunk_view_t>;
     void destroy(const dual_chunk_view_t& view);
     void destroy(const dual_meta_filter_t& meta);
     void free(const dual_chunk_view_t& view);

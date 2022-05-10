@@ -54,7 +54,7 @@ void skr_typeid_xxxx(skr_type_id_t* id);
     #include "EASTL/string.h"
     #include "gsl/span"
     #include "EASTL/vector.h"
-    #include "phmap.h"
+    #include "utils/hashmap.hpp"
     #include <memory>
     #include <type_traits>
     #include <new>
@@ -202,12 +202,14 @@ struct GUIDType : skr_type_t {
     {
     }
 };
-//handle
+// handle
 struct HandleType : skr_type_t {
     const struct skr_type_t* pointee;
     HandleType(skr_type_t* pointee)
-        : skr_type_t{ SKR_TYPE_CATEGORY_HANDLE }, pointee(pointee)
-        {}
+        : skr_type_t{ SKR_TYPE_CATEGORY_HANDLE }
+        , pointee(pointee)
+    {
+    }
 };
 // eastl::string
 struct StringType : skr_type_t {
@@ -312,7 +314,7 @@ struct EnumType : skr_type_t {
 };
 
 struct STypeRegistry {
-    phmap::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
+    skr::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
 };
 
 RUNTIME_API STypeRegistry* GetTypeRegistry();
@@ -372,8 +374,7 @@ struct type_of<void*> {
 };
 
 template <class T>
-struct type_of<resource::TResourceHandle<T>>
-{
+struct type_of<resource::TResourceHandle<T>> {
     static const skr_type_t* get()
     {
         static HandleType type{

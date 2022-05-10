@@ -67,9 +67,9 @@
 #endif
 
 #if defined(__cplusplus)
-#define SKRENUM(inttype) : inttype
+    #define SKRENUM(inttype) : inttype
 #else
-#define SKRENUM(inttype)
+    #define SKRENUM(inttype)
 #endif
 
 #ifndef RUNTIME_EXPORT
@@ -170,10 +170,10 @@ typedef char char8_t;
 
     #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
-        #define UNREF_PARAM(x) (x)
-        #define ALIGNAS(x) __declspec(align(x))
-        #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
-        #define FORGE_CALLCONV __cdecl
+    #define UNREF_PARAM(x) (x)
+    #define ALIGNAS(x) __declspec(align(x))
+    #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
+    #define FORGE_CALLCONV __cdecl
     #if !defined(__clang__)
         #if !defined(_DEBUG) && !defined(NDEBUG)
             #define NDEBUG
@@ -352,8 +352,12 @@ typedef int64_t host_ptr_t;
     #endif
 #endif
 #define RUNTIME_INLINE inline
-// By Default we use cpp-standard above 2011XXL
-#define RUNTIME_NOEXCEPT noexcept
+#ifdef __cplusplus
+    // By Default we use cpp-standard above 2011XXL
+    #define RUNTIME_NOEXCEPT noexcept
+#else
+    #define RUNTIME_NOEXCEPT
+#endif
 
 // Platform Specific Configure
 #ifdef __APPLE__

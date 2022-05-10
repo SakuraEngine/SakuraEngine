@@ -3,7 +3,7 @@
 #include "platform/guid.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
-#include "phmap.h"
+#include "utils/hashmap.hpp"
 
 namespace skd reflect
 {
@@ -13,7 +13,7 @@ struct TOOL_API SConfigTypeInfo {
     void (*Import)(simdjson::ondemand::value&& json, void* address);
 };
 struct TOOL_API SConfigRegistry {
-    phmap::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
+    skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
 struct reflect attr(

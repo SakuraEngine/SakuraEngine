@@ -1,6 +1,6 @@
 #pragma once
 #include "EASTL/vector.h"
-#include "phmap.h"
+#include "utils/hashmap.hpp"
 #include "resource/resource_factory.h"
 #include "type/type_registry.h"
 
@@ -24,7 +24,7 @@ struct SConfigTypeInfo {
     void (*Serialize)(void* address, SBinaryArchive& archive);
 };
 struct SConfigRegistry {
-    phmap::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
+    skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
 RUNTIME_API SConfigRegistry* GetConfigRegistry();
 
