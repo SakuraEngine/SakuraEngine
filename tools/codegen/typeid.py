@@ -29,6 +29,7 @@ class Binding(object):
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
+
 def main():
     db = Binding()
     root = sys.argv[1]
@@ -44,11 +45,11 @@ def main():
             guid = value["attrs"]["guid"]
             db.headers.add(GetInclude(file))
             db.types.append(Type(key, guid))
-
-    template = os.path.join(BASE, "typeid.hpp.mako")
-    content = render(template, db=db)
-    output = os.path.join(outdir, "typeid.generated.hpp")
-    write(output, content)
+    if db.types:
+        template = os.path.join(BASE, "typeid.hpp.mako")
+        content = render(template, db=db)
+        output = os.path.join(outdir, "typeid.generated.hpp")
+        write(output, content)
 
 
 def GetInclude(path):

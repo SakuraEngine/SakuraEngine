@@ -12,9 +12,10 @@ static struct RegisterConfigAsset${type.id}Helper
 {
     RegisterConfigAsset${type.id}Helper()
     {
-        auto registry = skd::asset::GetConfigRegistry();
+        using namespace skd::asset;
+        auto registry = GetConfigRegistry();
         constexpr skr_guid_t guid = {${type.guidConstant}};
-        skd::asset::SConfigTypeInfo typeInfo {
+        SConfigTypeInfo typeInfo {
             +[](simdjson::ondemand::value&& json, void* address)
             {
                 skr::json::Read(std::move(json), *(${type.name}*)address);

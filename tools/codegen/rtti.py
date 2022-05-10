@@ -179,17 +179,19 @@ def main():
                         enumerators, value["comment"])
             db.enums.append(enum)
             db2.enums.append(enum)
-        db2.resolve_base()
-        template = os.path.join(BASE, "rtti.hpp.mako")
-        content = render(template, db=db2, api=api,  config=config)
-        db.headers.add("%s.generated.hpp" % filename)
-        output = os.path.join(outdir, "%s.generated.hpp" % filename)
+        if db2.enums or db2.records:
+            db2.resolve_base()
+            template = os.path.join(BASE, "rtti.hpp.mako")
+            content = render(template, db=db2, api=api,  config=config)
+            db.headers.add("%s.generated.hpp" % filename)
+            output = os.path.join(outdir, "%s.generated.hpp" % filename)
+            write(output, content)
+    if db.enums or db.records:
+        db.resolve_base()
+        template = os.path.join(BASE, "rtti.cpp.mako")
+        content = render(template, db=db)
+        output = os.path.join(outdir, "rtti.generated.cpp")
         write(output, content)
-    db.resolve_base()
-    template = os.path.join(BASE, "rtti.cpp.mako")
-    content = render(template, db=db)
-    output = os.path.join(outdir, "rtti.generated.cpp")
-    write(output, content)
 
 
 def render(filename, **context):
