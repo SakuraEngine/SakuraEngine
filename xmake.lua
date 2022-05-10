@@ -59,8 +59,8 @@ target("SkrRT")
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     add_cxflags(project_cxflags, {public = true, force = true})
     -- runtime compile definitions
-    add_defines("MI_SHARED_LIB", "RUNTIME_SHARED", {public = true})
-    add_defines("MI_SHARED_LIB_EXPORT", "RUNTIME_API=RUNTIME_EXPORT", "EASTL_API=EA_EXPORT")
+    add_defines("MI_SHARED_LIB", "RUNTIME_SHARED", "EA_DLL", {public = true})
+    add_defines("MI_SHARED_LIB_EXPORT", "RUNTIME_API=RUNTIME_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT")
     -- fetch vk includes
     add_rules("utils.fetch-vk-includes")
     -- add internal shaders

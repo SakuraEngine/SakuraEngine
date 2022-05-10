@@ -9,19 +9,25 @@
 
 #include <chrono>
 
-#define EASTDC_API
+#include "../internal/config.h"
 
-namespace EA {
-namespace StdC {
 
-inline EASTDC_API uint64_t GetTime()
+#define EASTDC_API EASTL_EASTDC_API
+
+namespace EA
 {
-	using namespace std::chrono;
-	nanoseconds ns = duration_cast<nanoseconds>(system_clock::now().time_since_epoch());
-	return ns.count();
-}
+	namespace StdC
+	{
 
-}} // namespace EA::StdC
+		inline EASTDC_API uint64_t GetTime()
+		{
+			using namespace std::chrono;
+			nanoseconds ns = duration_cast<nanoseconds>(system_clock::now().time_since_epoch());
+			return ns.count();
+		}
+
+	} // namespace StdC
+} // namespace EA
 
 
-#endif  // EASTDC_EADATETIME_H
+#endif // EASTDC_EADATETIME_H

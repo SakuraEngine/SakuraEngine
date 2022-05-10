@@ -35,8 +35,6 @@
             #define GAMERT_API
             #define GAMERT_LOCAL
         #endif
-
-        #define EA_DLL
     #else
         #define GAMERT_API
         #define GAMERT_LOCAL
