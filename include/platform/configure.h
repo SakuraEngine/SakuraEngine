@@ -119,8 +119,6 @@
             #define RUNTIME_API
             #define RUNTIME_LOCAL
         #endif
-
-        #define EA_DLL
     #else
         #define RUNTIME_API
         #define RUNTIME_LOCAL

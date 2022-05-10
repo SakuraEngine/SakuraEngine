@@ -19,7 +19,7 @@ struct TOOL_API SCooker {
     virtual bool Cook(SCookContext* ctx) = 0;
     SCookSystem* system;
 };
-struct SCookSystem {
+struct TOOL_API SCookSystem {
     ftl::TaskScheduler scheduler;
     void AddCookTask(SAssetRecord* metaAsset, ftl::TaskCounter* counter = nullptr);
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
