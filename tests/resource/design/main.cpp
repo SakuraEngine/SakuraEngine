@@ -10,7 +10,7 @@
 using ResourceState = std::atomic_uint32_t;
 using ResourceType = uint32_t;
 template <typename T>
-using ResourceRequest = std::future<T>;
+using ResourceRequest = std::shared_future<T>;
 
 struct Header {
     ResourceType type;
@@ -38,16 +38,48 @@ struct CoutResource : public Resource {
     const char* data = "cout io";
 };
 
-struct ResourceLoader {
-    virtual ResourceRequest<Resource*> request(const char* path) = 0;
-    virtual ResourceType type() const = 0;
+CoutResource res0;
+PrintResource res1;
+eastl::vector_map<eastl::string, Resource*> resources = {
+    eastl::make_pair("cout", &res0),
+    eastl::make_pair("print", &res1)
 };
+eastl::vector<ResourceRequest<Resource*>> async_resources;
+
+struct ResourceLoader {
+    virtual ResourceRequest<Resource*> on_request(const char* path, const Header& header) = 0;
+    virtual ResourceType type() const = 0;
+    template <typename Loader>
+    static void register_loader()
+    {
+        loaders.emplace_back(new Loader());
+    }
+    static ResourceRequest<Resource*> request(const char* path)
+    {
+        auto to_load = resources.find(path);
+        for (auto&& loader : loaders)
+        {
+            if (loader->type() == to_load->second->header.type)
+            {
+                // request
+                auto&& request = loader->on_request("cout", to_load->second->header);
+                async_resources.emplace_back(request);
+                return request;
+            }
+        }
+        return ResourceRequest<Resource*>();
+    }
+    static eastl::vector<ResourceLoader*> loaders;
+};
+eastl::vector<ResourceLoader*> ResourceLoader::loaders = {};
 
 struct PrintResourceLoader : ResourceLoader {
-    virtual ResourceRequest<Resource*> request(const char* path) override
+    virtual ResourceRequest<Resource*> on_request(const char* path, const Header& header) override
     {
-        return std::async([]() {
-            auto resource = new PrintResource();
+        const void* location = &header;
+        return std::async([location]() {
+            auto resource = (PrintResource*)malloc(sizeof(PrintResource));
+            std::memcpy(resource, location, sizeof(PrintResource));
             printf("%s\n", resource->data);
             return (Resource*)resource;
         });
@@ -59,10 +91,12 @@ struct PrintResourceLoader : ResourceLoader {
 };
 
 struct CoutResourceLoader : ResourceLoader {
-    virtual ResourceRequest<Resource*> request(const char* path) override
+    virtual ResourceRequest<Resource*> on_request(const char* path, const Header& header) override
     {
-        return std::async([]() {
-            auto resource = new CoutResource();
+        const void* location = &header;
+        return std::async([location]() {
+            auto resource = (CoutResource*)malloc(sizeof(CoutResource));
+            std::memcpy(resource, location, sizeof(CoutResource));
             std::cout << resource->data << std::endl;
             return (Resource*)resource;
         });
@@ -73,32 +107,12 @@ struct CoutResourceLoader : ResourceLoader {
     }
 };
 
-CoutResource res0;
-PrintResource res1;
-eastl::vector_map<eastl::string, Resource*> resources = {
-    eastl::make_pair("cout", &res0),
-    eastl::make_pair("print", &res1)
-};
-PrintResourceLoader pLoader;
-CoutResourceLoader cLoader;
-ResourceLoader* loaders[2] = { &pLoader, &cLoader };
-eastl::vector<ResourceRequest<Resource*>> async_resources;
-
 int main()
 {
-    auto to_load = resources.find("cout");
-    // load header
-    auto header = to_load->second->header;
-    // locate loader
-    for (auto loader : loaders)
-    {
-        if (loader->type() == header.type)
-        {
-            // request
-            async_resources.emplace_back(loader->request("cout"));
-        }
-    }
     // acquire the print resource
-    std::cout << async_resources[0].get()->header.type << std::endl;
+    ResourceLoader::register_loader<PrintResourceLoader>();
+    ResourceLoader::register_loader<CoutResourceLoader>();
+    auto req = ResourceLoader::request("cout");
+    std::cout << req.get()->header.type << std::endl;
     return 0;
 }
