@@ -39,7 +39,9 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
 
 bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)
 {
-    if (!SResourceFactory::Deserialize(record, archive))
+
+    bitsery::serialize(archive, record->header);
+    if (archive.adapter().error() != bitsery::ReaderError::NoError)
         return false;
     skr_type_id_t typeId;
     archive(typeId);

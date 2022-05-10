@@ -118,7 +118,7 @@ void dual::scheduler_t::clean_jobs()
 
 namespace dual
 {
-void update_entry(job_dependency_entry_t& entry, dual_job_t* job, bool readonly, bool atomic, phmap::flat_hash_set<dual_job_t*>& dependencies)
+void update_entry(job_dependency_entry_t& entry, dual_job_t* job, bool readonly, bool atomic, skr::flat_hash_set<dual_job_t*>& dependencies)
 {
     if (readonly)
     {
@@ -197,8 +197,8 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         ++groupIndex;
     }
 
-    phmap::flat_hash_set<dual_job_t*> dependencies;
-    phmap::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+    skr::flat_hash_set<dual_job_t*> dependencies;
+    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
     auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
         if (localType == kInvalidTypeIndex)
             return;
@@ -391,7 +391,7 @@ dual_job_t* dual::scheduler_t::schedule_job(uint32_t count, dual_for_callback_t 
 {
     dual_simple_job_t* job = new dual_simple_job_t(*this);
     job->type = dual_job_type::simple;
-    phmap::flat_hash_set<dual_job_t*> dependencies;
+    skr::flat_hash_set<dual_job_t*> dependencies;
     forloop(i, 0, resources->count)
     {
         auto& entry = allResources[e_id(resources->resources[i])];

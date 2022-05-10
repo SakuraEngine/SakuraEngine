@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EASTL/fixed_vector.h"
-#include "phmap.h"
+#include "utils/hashmap.hpp"
 #include "resource/resource_header.h"
 typedef enum ESkrLoadingPhase
 {
@@ -66,9 +66,6 @@ struct RUNTIME_API SResourceSystem {
     void Shutdown();
     void Update();
 
-    void RegisterResourceFactory(SResourceFactory* factory);
-    void UnregisterResourceFactory(SResourceFactory* factory);
-
     void LoadResource(skr_resource_handle_t& handle, bool requireInstalled = true, uint32_t requester = 0);
     void UnloadResource(skr_resource_handle_t& handle);
 
@@ -79,9 +76,9 @@ struct RUNTIME_API SResourceSystem {
 
     SResourceRegistry* resourceProvider = nullptr;
     eastl::vector<SResourceRequest*> requests;
-    phmap::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
-    phmap::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
-    phmap::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+    skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
+    skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
+    skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
 };
 RUNTIME_API SResourceSystem* GetResourceSystem();
 } // namespace resource
