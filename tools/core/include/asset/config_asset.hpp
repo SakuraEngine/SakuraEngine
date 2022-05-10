@@ -2,6 +2,7 @@
 #include "tool_configure.h"
 #include "platform/guid.h"
 #include "asset/importer.hpp"
+#include "asset/cooker.hpp"
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
 
@@ -26,11 +27,15 @@ TOOL_API SJsonConfigImporter final : public SImporter
     using SImporter::SImporter;
     void* Import(const SAssetRecord* record) override;
 };
+
+struct TOOL_API SConfigCooker final : public SCooker {
+    bool Cook(SCookContext* ctx) override;
+};
+
 struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override;
     skr_guid_t GetResourceType() override;
     SImporter* CreateImporter(const SAssetRecord* record) override;
-    SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object) override;
 };
 } // namespace reflect
 } // namespace reflect

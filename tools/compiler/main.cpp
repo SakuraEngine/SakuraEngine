@@ -1,3 +1,4 @@
+#include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "bitsery/adapter/buffer.h"
 #include "ghc/filesystem.hpp"
@@ -18,8 +19,6 @@
 #include "utils/defer.hpp"
 #include "resource/resource_header.h"
 #include "SkrTool/serialize.generated.h"
-#include "SkrRT/serialize.generated.h"
-#include "SkrRT/typeid.generated.hpp"
 #include "utils/format.hpp"
 
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
@@ -59,57 +58,12 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
 
 static ghc::filesystem::path projectDir = "F:\\Sakura.Runtime\\samples\\game";
 
-void compile_config(skd::asset::SAssetRecord* record)
-{
-    using namespace skd;
-    asset::SAssetRegistry& registry = *asset::GetAssetRegistry();
-    asset::SImporterFactory* factory = new asset::SJsonConfigImporterFactory;
-    //-----load importer
-    simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(record->meta);
-    auto importer = factory->LoadImporter(record, doc.find_field("importer").value_unsafe());
-    //-----import resource object
-    auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
-    //-----emit dependencies
-    //-----cook resource
-    // no cook needed for config, just binarize it
-    //-----fetch runtime dependencies
-    skr_resource_header_t header;
-    header.guid = record->guid;
-    header.type = get_type_id_skr_config_resource_t();
-    header.version = 0;
-    header.dependencies = {};
-    auto type = (skr::type::RecordType*)skr_get_type(&resource->configType);
-    for (auto& field : type->fields)
-    {
-        if (field.type->Same(skr::type::type_of<skr_resource_handle_t>::get()))
-        {
-            auto handle = (skr_resource_handle_t*)((char*)resource->configData + field.offset);
-            if (handle->is_null())
-                continue;
-            header.dependencies.push_back(handle->get_serialized());
-        }
-    }
-    //-----write resource header
-    eastl::vector<uint8_t> buffer;
-    skr::resource::SBinarySerializer archive(buffer);
-    bitsery::serialize(archive, header);
-    //------write resource object
-    skr::resource::SConfigFactory::Serialize(*resource, archive);
-    //------save resource to disk
-    auto output = projectDir / "resource";
-    ghc::filesystem::create_directories(output);
-    output = output / fmt::format("{}.bin", record->guid);
-    auto file = fopen(output.u8string().c_str(), "wb");
-    SKR_DEFER({ fclose(file); });
-    fwrite(buffer.data(), 1, buffer.size(), file);
-}
-
 int main(int argc, char** argv)
 {
     auto& registry = *skd::asset::GetAssetRegistry();
     registry.ImportAsset(projectDir / "assets/myConfig.json");
-    compile_config(registry.ImportAsset(projectDir / "assets/myConfig.config.meta"));
+    skd::asset::SCookSystem system;
+    system.AddCookTask(registry.ImportAsset(projectDir / "assets/myConfig.config.meta"));
     return 0;
     using namespace grpc;
     if (argc != 1)

@@ -33,11 +33,10 @@ SAssetRecord* SAssetRegistry::ImportAsset(ghc::filesystem::path path)
     record->meta = simdjson::padded_string::load(metaPath.u8string());
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
-    skr_guid_t guid;
-    skr::json::Read(doc.find_field("guid").value(), guid);
-    record->guid = guid;
+    skr::json::Read(doc.find_field("guid").value_unsafe(), record->guid);
+    skr::json::Read(doc.find_field("type").value_unsafe(), record->type);
     record->path = path;
-    assets.insert(std::make_pair(guid, record));
+    assets.insert(std::make_pair(record->guid, record));
     return record;
 }
 SAssetRecord* SAssetRegistry::GetAssetRecord(const skr_guid_t& guid)
