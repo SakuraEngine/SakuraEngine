@@ -137,6 +137,9 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
         case SKR_LOADING_PHASE_COMPLETE:
             currentPhase = SKR_LOADING_PHASE_REQUEST_RESOURCE;
             break;
+        case SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST:
+            currentPhase = SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST;
+            break;
         case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
             currentPhase = SKR_LOADING_PHASE_COMPLETE;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLED;
@@ -268,13 +271,26 @@ void SResourceRequest::Update()
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES;
             }
         }
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE:
+        case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
+            auto status = factory->UpdateLoad(resourceRecord);
+            if (status == SKR_LOAD_STATUS_FAILED)
+            {
+                SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
+                currentPhase = SKR_LOADING_PHASE_COMPLETE;
+                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+            }
+            else if (status == SKR_LOAD_STATUS_SUCCEED)
+            {
+                currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES;
+            }
+        }
         case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES:
         case SKR_LOADING_PHASE_INSTALL_RESOURCE:
         case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE:
         case SKR_LOADING_PHASE_UNINSTALL_RESOURCE:
         case SKR_LOADING_PHASE_UNLOAD_RESOURCE:
         case SKR_LOADING_PHASE_UNLOAD_FAILED_RESOURCE:
+        case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE:
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES:
         case SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST:
         case SKR_LOADING_PHASE_COMPLETE:

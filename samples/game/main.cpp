@@ -1,4 +1,6 @@
 #include "../common/utils.h"
+#include "ftl/task.h"
+#include "ftl/task_scheduler.h"
 #include "ghc/filesystem.hpp"
 #include "platform/window.h"
 #include "resource/local_resource_registry.h"
@@ -6,6 +8,8 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
+#include <thread>
+#include <chrono>
 #ifdef SAKURA_RUNTIME_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif

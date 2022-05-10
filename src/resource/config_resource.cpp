@@ -2,6 +2,7 @@
 #include "bitsery/deserializer.h"
 #include "bitsery/details/adapter_common.h"
 #include "platform/configure.h"
+#include "platform/debug.h"
 #include "platform/memory.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_header.h"
@@ -37,9 +38,20 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
     return res;
 }
 
+ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED;
+}
+
+ESkrLoadStatus SConfigFactory::UpdateLoad(skr_resource_record_t* record)
+{
+    SKR_UNREACHABLE_CODE();
+    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED;
+}
+
 bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)
 {
-
     bitsery::serialize(archive, record->header);
     if (archive.adapter().error() != bitsery::ReaderError::NoError)
         return false;

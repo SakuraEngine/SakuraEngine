@@ -34,8 +34,8 @@ struct SBinaryArchive {
 */
 struct RUNTIME_API SResourceFactory {
     virtual skr_type_id_t GetResourceType() = 0;
-    virtual ESkrLoadStatus Load(skr_resource_record_t* record);
-    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record);
+    virtual ESkrLoadStatus Load(skr_resource_record_t* record) = 0;
+    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) = 0;
     virtual bool Unload(skr_resource_record_t* record);
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
     virtual bool Uninstall(skr_resource_record_t* record) { return true; }
