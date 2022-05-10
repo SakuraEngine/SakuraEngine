@@ -117,11 +117,12 @@ def main():
                 enumerators.append(Enumerator(
                     key2, value2["value"]))
             db.enums.append(Enum(key, enumerators))
-    db.resolve_base()
-    template = os.path.join(BASE, "serialize.h.mako")
-    content = render(template, db=db)
-    output = os.path.join(outdir, "serialize.generated.h")
-    write(output, content)
+    if db.records or db.enums:
+        db.resolve_base()
+        template = os.path.join(BASE, "serialize.h.mako")
+        content = render(template, db=db)
+        output = os.path.join(outdir, "serialize.generated.h")
+        write(output, content)
 
 
 def GetInclude(path):

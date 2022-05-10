@@ -44,11 +44,11 @@ def main():
             guid = value["attrs"]["guid"]
             db.headers.add(GetInclude(file))
             db.types.append(Type(key, guid))
-
-    template = os.path.join(BASE, "config_resource.cpp.mako")
-    content = render(template, db=db)
-    output = os.path.join(outdir, "config_resource.generated.cpp")
-    write(output, content)
+    if db.types:
+        template = os.path.join(BASE, "config_resource.cpp.mako")
+        content = render(template, db=db)
+        output = os.path.join(outdir, "config_resource.generated.cpp")
+        write(output, content)
 
 
 def GetInclude(path):

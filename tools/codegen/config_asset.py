@@ -23,6 +23,8 @@ class Type(object):
 class Binding(object):
     def __init__(self):
         self.types = []
+        self.importers = []
+        self.cookers = []
         self.headers = set()
 
 
@@ -35,20 +37,20 @@ def main():
     outdir = sys.argv[2]
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     print(metas)
+
     for meta in metas:
         meta = json.load(open(meta))
         for key, value in itertools.chain(meta["records"].items(), meta["enums"].items()):
             file = value["fileName"]
-            if not "config" in value["attrs"]:
-                continue
-            guid = value["attrs"]["guid"]
-            db.headers.add(GetInclude(file))
-            db.types.append(Type(key, guid))
-
-    template = os.path.join(BASE, "config_asset.cpp.mako")
-    content = render(template, db=db)
-    output = os.path.join(outdir, "config_asset.generated.cpp")
-    write(output, content)
+            if "config" in value["attrs"]:
+                guid = value["attrs"]["guid"]
+                db.headers.add(GetInclude(file))
+                db.types.append(Type(key, guid))
+    if db.types:
+        template = os.path.join(BASE, "config_asset.cpp.mako")
+        content = render(template, db=db)
+        output = os.path.join(outdir, "config_asset.generated.cpp")
+        write(output, content)
 
 
 def GetInclude(path):
