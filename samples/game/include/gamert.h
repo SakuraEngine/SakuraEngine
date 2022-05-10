@@ -5,8 +5,8 @@
 namespace skg
 {
 struct GAMERT_API Core {
-    GAMERT_API static skr_vfs_t* resource_vfs;
-    GAMERT_API static void initialize();
+    static skr_vfs_t* resource_vfs;
+    static void initialize();
 };
 
 } // namespace skg
