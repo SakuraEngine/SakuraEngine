@@ -19,8 +19,10 @@ TOOL_API SAssetRegistry* GetAssetRegistry()
 
 namespace skd::asset
 {
-SAssetRecord* SAssetRegistry::ImportAsset(ghc::filesystem::path path)
+SAssetRecord* SAssetRegistry::ImportAsset(SProject* project, ghc::filesystem::path path)
 {
+    if (path.is_relative())
+        path = project->assetPath / path;
     auto metaPath = path;
     metaPath.replace_extension(".meta");
     if (!ghc::filesystem::exists(metaPath))
@@ -33,9 +35,14 @@ SAssetRecord* SAssetRegistry::ImportAsset(ghc::filesystem::path path)
     record->meta = simdjson::padded_string::load(metaPath.u8string());
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
-    skr::json::Read(doc.find_field("guid").value_unsafe(), record->guid);
-    skr::json::Read(doc.find_field("type").value_unsafe(), record->type);
+    skr::json::Read(doc["guid"].value_unsafe(), record->guid);
+    auto otype = doc["type"];
+    if (otype.error() == simdjson::SUCCESS)
+        skr::json::Read(std::move(otype).value_unsafe(), record->type);
+    else
+        std::memset(&record->type, 0, sizeof(skr_guid_t));
     record->path = path;
+    record->project = project;
     assets.insert(std::make_pair(record->guid, record));
     return record;
 }

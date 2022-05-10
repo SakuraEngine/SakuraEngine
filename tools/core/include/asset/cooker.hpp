@@ -20,8 +20,11 @@ struct TOOL_API SCooker {
     SCookSystem* system;
 };
 struct TOOL_API SCookSystem {
+    SCookSystem();
     ftl::TaskScheduler scheduler;
     void AddCookTask(SAssetRecord* metaAsset, ftl::TaskCounter* counter = nullptr);
+    void RegisterCooker(skr_guid_t type, SCooker* cooker);
+    void UnregisterCooker(skr_guid_t type);
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
 };
 } // namespace skd::assetreflect

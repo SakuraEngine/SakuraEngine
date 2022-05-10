@@ -7,6 +7,10 @@
 
 namespace skd::asset
 {
+SCookSystem::SCookSystem()
+{
+    scheduler.Init();
+}
 void SCookSystem::AddCookTask(SAssetRecord* metaAsset, ftl::TaskCounter* counter)
 {
     SCookContext* jobContext = SkrNew<SCookContext>();
@@ -23,5 +27,14 @@ void SCookSystem::AddCookTask(SAssetRecord* metaAsset, ftl::TaskCounter* counter
         iter->second->Cook(jobContext);
     };
     scheduler.AddTask({ Task, jobContext }, ftl::TaskPriority::Normal, counter);
+}
+
+void SCookSystem::RegisterCooker(skr_guid_t guid, SCooker* cooker)
+{
+    cookers.insert(std::make_pair(guid, cooker));
+}
+void SCookSystem::UnregisterCooker(skr_guid_t guid)
+{
+    cookers.erase(guid);
 }
 } // namespace skd::asset

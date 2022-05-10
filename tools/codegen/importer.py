@@ -38,21 +38,10 @@ def main():
     print(metas)
 
     for meta in metas:
-        def is_importer(value):
-            if not "bases" in value:
-                return False
-            for base in value["bases"]:
-                if base in meta:
-                    base = meta[base]
-                    if base["attrs"]["guid"] == "76044661-E2C9-43A7-A4DE-AEDD8FB5C847":
-                        return True
-                    if is_importer(base):
-                        return True
-            return False
         meta = json.load(open(meta))
-        for key, value in itertools.chain(meta["records"].items(), meta["enums"].items()):
+        for key, value in meta["records"].items():
             file = value["fileName"]
-            if is_importer(value):
+            if "importer" in value["attrs"]:
                 guid = value["attrs"]["guid"]
                 db.headers.add(GetInclude(file))
                 db.types.append(Type(key, guid))

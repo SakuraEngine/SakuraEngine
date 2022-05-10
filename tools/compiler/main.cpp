@@ -1,6 +1,8 @@
+#include "asset/asset_registry.hpp"
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "bitsery/adapter/buffer.h"
+#include "ftl/task_counter.h"
 #include "ghc/filesystem.hpp"
 #include "google/protobuf/empty.pb.h"
 #include "platform/guid.h"
@@ -20,6 +22,7 @@
 #include "resource/resource_header.h"
 #include "SkrTool/serialize.generated.h"
 #include "utils/format.hpp"
+#include "SkrRT/typeid.generated.hpp"
 
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
@@ -56,14 +59,26 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
 
-static ghc::filesystem::path projectDir = "F:\\Sakura.Runtime\\samples\\game";
-
 int main(int argc, char** argv)
 {
     auto& registry = *skd::asset::GetAssetRegistry();
-    registry.ImportAsset(projectDir / "assets/myConfig.json");
+    //----- register project
+    // TODO: project discover?
+    auto project = SkrNew<skd::asset::SProject>();
+    project->assetPath = (ghc::filesystem::current_path().parent_path() / "../../../samples/game/assets").lexically_normal();
+    project->outputPath = (ghc::filesystem::current_path().parent_path() / "resources/game").lexically_normal();
+    registry.projects.push_back(project);
+    //----- resource discover
+    registry.ImportAsset(project, "myConfig.json");
+    auto config = registry.ImportAsset(project, "myConfig.config.meta");
+    //----- register cooker
     skd::asset::SCookSystem system;
-    system.AddCookTask(registry.ImportAsset(projectDir / "assets/myConfig.config.meta"));
+    auto configCooker = SkrNew<skd::asset::SConfigCooker>();
+    system.RegisterCooker(get_type_id_skr_config_resource_t(), configCooker);
+    //----- add cook tasks
+    ftl::TaskCounter counter(&system.scheduler);
+    system.AddCookTask(config, &counter);
+    system.scheduler.WaitForCounter(&counter);
     return 0;
     using namespace grpc;
     if (argc != 1)
