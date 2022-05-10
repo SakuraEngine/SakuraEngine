@@ -197,7 +197,7 @@ RUNTIME_API dual_context_t* dual_get_context();
  * @brief destroy context, shutdown library
  *
  */
-void dual_shutdown();
+RUNTIME_API void dual_shutdown();
 
 RUNTIME_API void* dualA_begin(dual_array_component_t* array);
 RUNTIME_API void* dualA_end(dual_array_component_t* array);

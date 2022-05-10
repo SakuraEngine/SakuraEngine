@@ -9,6 +9,7 @@
 #include <bitset>
 #include <phmap.h>
 #include "entities.hpp"
+#include "utils/hashmap.hpp"
 
 struct dual_ecs_job_t;
 namespace dual

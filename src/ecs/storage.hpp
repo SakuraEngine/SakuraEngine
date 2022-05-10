@@ -18,6 +18,7 @@
 #include "cache.hpp"
 #include "type.hpp"
 #include "set.hpp"
+#include "utils/hashmap.hpp"
 
 namespace dual
 {
