@@ -45,18 +45,24 @@ public:
     };
 
     ~RAMServiceImpl() = default;
-    RAMServiceImpl() = default;
+    RAMServiceImpl(uint32_t sleep_time)
+        : _sleepTime(sleep_time)
+    {
+    }
     void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT final;
     bool try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT final;
     void drain() RUNTIME_NOEXCEPT final;
+    void set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT final;
 
     SMutex taskMutex;
     SThreadDesc threadItem = {};
     SThreadHandle serviceThread;
     eastl::deque<Task> tasks;
-    SAtomic32 running;
+    SAtomic32 _running;
+    SAtomic32 _sleepTime = 30 /*ms*/;
+    const bool criticalTaskCount = false;
     const eastl::string name;
-    bool criticalTaskCount = false;
+    // state
     RAMServiceImpl::Task current;
 };
 
@@ -65,11 +71,19 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
     // try fetch a new task
     {
         SMutexLock lock(service->taskMutex);
+        // empty sleep
         if (!service->tasks.size())
         {
-            skr_thread_sleep(1);
+            const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
+            if (sleepTimeVal != SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER)
+            {
+                auto sleepTime = eastl::min(sleepTimeVal, 100u);
+                sleepTime = eastl::max(sleepTimeVal, 1u);
+                skr_thread_sleep(sleepTime);
+            }
             return;
         }
+        // pop current task
         service->current = service->tasks.front();
         service->tasks.pop_front();
     }
@@ -85,7 +99,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 void ioThreadTask(void* arg)
 {
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
-    for (; skr_atomic32_load_acquire(&service->running);)
+    for (; skr_atomic32_load_acquire(&service->_running);)
     {
         ioThreadTask_execute(service);
     }
@@ -118,11 +132,11 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
 
 skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) RUNTIME_NOEXCEPT
 {
-    auto service = SkrNew<skr::io::RAMServiceImpl>();
+    auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time);
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
     skr_init_mutex(&service->taskMutex);
-    skr_atomic32_store_relaxed(&service->running, true);
+    skr_atomic32_store_relaxed(&service->_running, true);
     skr_init_thread(&service->threadItem, &service->serviceThread);
     return service;
 }
@@ -131,7 +145,7 @@ void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
 {
     auto service = static_cast<skr::io::RAMServiceImpl*>(s);
     s->drain();
-    skr_atomic32_store_relaxed(&service->running, false);
+    skr_atomic32_store_relaxed(&service->_running, false);
     skr_join_thread(service->serviceThread);
     skr_destroy_mutex(&service->taskMutex);
     skr_destroy_thread(service->serviceThread);
@@ -180,6 +194,11 @@ void skr::io::RAMServiceImpl::drain() RUNTIME_NOEXCEPT
             skr_release_mutex(&taskMutex);
         }
     }
+}
+
+void skr::io::RAMServiceImpl::set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT
+{
+    skr_atomic32_store_relaxed(&_sleepTime, time);
 }
 
 } // namespace io

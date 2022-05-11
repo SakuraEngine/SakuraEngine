@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 #define SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT 32
+#define SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER UINT32_MAX
 
 typedef enum SkrAsyncIOStatus
 {
@@ -40,6 +41,7 @@ typedef struct RUNTIME_API skr_async_io_request_t {
 
 typedef struct RUNTIME_API skr_ram_io_service_desc_t {
     const char8_t* name;
+    uint32_t sleep_time;
 } skr_ram_io_service_desc_t;
 
 typedef struct RUNTIME_API skr_ram_io_t {

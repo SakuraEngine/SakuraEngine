@@ -23,6 +23,9 @@ public:
     // block & finish up all requests
     virtual void drain() RUNTIME_NOEXCEPT = 0;
 
+    // set sleep time when io queue is detected to be idle
+    virtual void set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT = 0;
+
     virtual ~RAMService() = default;
     RAMService() = default;
 } RAMService;
