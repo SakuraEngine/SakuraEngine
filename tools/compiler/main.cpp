@@ -66,6 +66,7 @@ int main(int argc, char** argv)
     auto root = ghc::filesystem::current_path();
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameTool", true);
+    moduleManager->init_module_graph();
 
     auto& registry = *skd::asset::GetAssetRegistry();
     //----- register project
@@ -85,6 +86,7 @@ int main(int argc, char** argv)
     ftl::TaskCounter counter(&system.scheduler);
     system.AddCookTask(config, &counter);
     system.scheduler.WaitForCounter(&counter);
+    moduleManager->destroy_module_graph();
     return 0;
     using namespace grpc;
     if (argc != 1)
