@@ -62,16 +62,17 @@ public:
 
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
-    skr_acquire_mutex(&service->taskMutex);
-    if (!service->tasks.size())
+    // try fetch a new task
     {
-        skr_release_mutex(&service->taskMutex);
-        skr_thread_sleep(1);
-        return;
+        SMutexLock lock(service->taskMutex);
+        if (!service->tasks.size())
+        {
+            skr_thread_sleep(1);
+            return;
+        }
+        service->current = service->tasks.front();
+        service->tasks.pop_front();
     }
-    service->current = service->tasks.front();
-    service->tasks.pop_front();
-    skr_release_mutex(&service->taskMutex);
     // do io work
     auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
     ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
@@ -92,29 +93,27 @@ void ioThreadTask(void* arg)
 
 void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT
 {
-    skr_acquire_mutex(&taskMutex);
+    // try push back new request
+    SMutexLock lock(taskMutex);
+    if (tasks.size() >= SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT)
     {
-        if (tasks.size() >= SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT)
+        SKR_LOG_WARN(
+        "ioRAMService %s enqueued too many tasks(over %d)!",
+        name.c_str(), SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT);
+        if (criticalTaskCount)
         {
-            SKR_LOG_WARN(
-            "ioRAMService %s enqueued too many tasks(over %d)!",
-            name.c_str(), SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT);
-            if (criticalTaskCount)
-            {
-                skr_release_mutex(&taskMutex);
-                return;
-            }
+            skr_release_mutex(&taskMutex);
+            return;
         }
-        auto& back = tasks.push_back();
-        back.vfs = vfs;
-        back.path = info->path;
-        back.bytes = info->bytes;
-        back.offset = info->offset;
-        back.size = info->size;
-        back.status = &async_request->status;
-        skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
     }
-    skr_release_mutex(&taskMutex);
+    auto& back = tasks.push_back();
+    back.vfs = vfs;
+    back.path = info->path;
+    back.bytes = info->bytes;
+    back.offset = info->offset;
+    back.size = info->size;
+    back.status = &async_request->status;
+    skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
 }
 
 skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) RUNTIME_NOEXCEPT
@@ -143,8 +142,8 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
 {
     if (request->is_enqueued())
     {
+        SMutexLock lock(taskMutex);
         bool cancel = false;
-        skr_acquire_mutex(&taskMutex);
         // erase cancelled task
         tasks.erase(
         eastl::remove_if(tasks.begin(), tasks.end(),
@@ -155,7 +154,6 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
             return cancel;
         }),
         tasks.end());
-        skr_release_mutex(&taskMutex);
         return cancel;
     }
     return false;
