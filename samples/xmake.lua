@@ -71,7 +71,6 @@ target("rg-deferred")
 
 --独立出来RT以便Tool使用
 target("GameRT")
-    -- cxx reflection
     add_rules("c++.reflection", {
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
@@ -82,6 +81,30 @@ target("GameRT")
     set_kind("shared")
     add_deps("SkrRT")
     add_files("game/src/**.cpp")
+
+target("GameTool")
+    set_kind("shared")
+    add_rules("c++.reflection", {
+        files = {"game/tools/**.h", "game/tools/**.hpp"},
+        rootdir = "game/tools"
+    })
+    add_includedirs("game/tools/include", {public=true})
+    add_defines("GAMETOOL_SHARED", {public=true})
+    add_defines("GAMETOOL_IMPL")
+    add_deps("SkrTool", "GameRT")
+    add_files("game/tools/src/**.cpp")
+    on_config(function (target, opt)
+        local dep = target:dep("GameRT");
+        local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "tool/generated", dep:name())
+        if os.exists(toolgendir) then
+            target:add("includedirs", toolgendir)
+            local cppfiles = os.files(path.join(toolgendir, "/**.cpp"))
+            for _, file in ipairs(cppfiles) do
+                target:add("files", file)
+            end
+        end
+    end)
+
 
 target("Game")
     set_kind("binary")
