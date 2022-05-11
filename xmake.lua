@@ -38,6 +38,7 @@ includes("tools/codegen/xmake.lua")
 set_warnings("all")
 if (is_os("windows")) then 
     add_defines("UNICODE")
+    add_defines("_UNICODE")
     add_defines("NOMINMAX")
     add_defines("_CRT_SECURE_NO_WARNINGS")
     if (is_mode("release")) then
