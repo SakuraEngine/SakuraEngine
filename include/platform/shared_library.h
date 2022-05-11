@@ -15,6 +15,7 @@
 using NativeLibHandle = void*;
 #elif defined(SAKURA_RUNTIME_OS_WINDOWS)
     #include <windows.h>
+    #include <ghc/filesystem.hpp>
 using NativeLibHandle = HMODULE;
 #endif
 #include <EASTL/string.h>
@@ -220,7 +221,8 @@ private:
     bool loadImpl(const char* path)
     {
         _lastError.clear();
-        _handle = LoadLibrary(path);
+        auto wpath = ghc::filesystem::path(path);
+        _handle = LoadLibrary(wpath.c_str());
         if (!_handle)
         {
             _lastError = getWindowsError();
