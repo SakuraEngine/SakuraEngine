@@ -261,8 +261,8 @@ DependencyGraph* DependencyGraph::Create() RUNTIME_NOEXCEPT
     return new DependencyGraphImpl();
 }
 
-DependencyGraphBase* DependencyGraphBase::as(DependencyGraph* interface)
+DependencyGraphBase* DependencyGraphBase::as(DependencyGraph* graph)
 {
-    return (DependencyGraphImpl*)interface;
+    return (DependencyGraphImpl*)graph;
 }
 } // namespace skr
