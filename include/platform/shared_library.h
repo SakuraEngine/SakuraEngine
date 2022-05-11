@@ -185,12 +185,23 @@ private:
         return symbol;
     }
 #elif defined(SAKURA_RUNTIME_OS_WINDOWS) // Windows implementation
+    void tchar_to_utf8(const TCHAR* str, char* str8)
+    {
+    #ifdef _UNICODE
+        int size = WideCharToMultiByte(CP_UTF8, 0, str, wcslen(str), NULL, 0, NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, str, wcslen(str), str8, size, NULL, NULL);
+        str8[size] = '\0';
+    #else
+        return strcpy(str8, str);
+    #endif
+    }
 
     // Return a string explaining the last error
     eastl::string getWindowsError()
     {
         DWORD lastError = GetLastError();
         TCHAR buffer[256];
+        char8_t u8str[256];
         if (lastError != 0)
         {
             FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
@@ -200,8 +211,8 @@ private:
             buffer,
             256 - 1,
             nullptr);
-
-            return eastl::string(buffer);
+            tchar_to_utf8(buffer, u8str);
+            return eastl::string(u8str);
         }
         return eastl::string();
     }
