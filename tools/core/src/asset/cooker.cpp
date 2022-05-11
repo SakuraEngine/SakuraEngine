@@ -2,7 +2,7 @@
 #include "utils/format.hpp"
 #include "ftl/task_scheduler.h"
 #include "platform/memory.h"
-#include "platform/win/configure.h"
+#include "platform/configure.h"
 #include "json/reader.h"
 
 namespace skd::asset

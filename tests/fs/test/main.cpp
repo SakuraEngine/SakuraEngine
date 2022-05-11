@@ -60,6 +60,13 @@ TEST_F(FSTest, readwrite)
     skr_free_vfs(abs_fs);
 }
 
+#include "llfio.hpp"
+
+namespace llfio = LLFIO_V2_NAMESPACE;
+TEST_F(FSTest, llf_asyncread)
+{
+}
+
 TEST_F(FSTest, asyncread)
 {
     skr_vfs_desc_t abs_fs_desc = {};
@@ -75,7 +82,7 @@ TEST_F(FSTest, asyncread)
     skr_async_io_request_t request;
     skr::io::RAM::request(abs_fs, "testfile", bytes, 0, 1024, &request);
     std::cout << (const char*)bytes << std::endl;
-    while (!request.is_ready()) {}
+    // while (!request.is_ready()) {}
     std::cout << (const char*)bytes << std::endl;
     skr_free_vfs(abs_fs);
 }
