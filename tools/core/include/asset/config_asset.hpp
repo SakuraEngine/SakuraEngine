@@ -20,7 +20,7 @@ TOOL_API struct SConfigRegistry* GetConfigRegistry();
 struct reflect attr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
 "serialize" : true,
-"importer" : true
+"importer" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
 )
 TOOL_API SJsonConfigImporter final : public SImporter
 {
@@ -29,8 +29,12 @@ TOOL_API SJsonConfigImporter final : public SImporter
     void* Import(const SAssetRecord* record) override;
 };
 
-struct TOOL_API SConfigCooker final : public SCooker {
-    bool Cook(SCookContext* ctx) override;
+struct reflect attr(
+"cooker" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
+)
+TOOL_API SConfigCooker final : public SCooker
+{
+    bool Cook(SCookContext * ctx) override;
 };
 
 struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {

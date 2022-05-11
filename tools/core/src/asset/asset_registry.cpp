@@ -51,10 +51,27 @@ SAssetRecord* SAssetRegistry::GetAssetRecord(const skr_guid_t& guid)
     auto iter = assets.find(guid);
     return iter != assets.end() ? iter->second : nullptr;
 }
-void* SAssetRegistry::ImportResource(const skr_guid_t& guid, skr_guid_t& resourceType)
+void SAssetRegistry::AddProject(SProject* project)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
+    projects.push_back(project);
+    ghc::filesystem::recursive_directory_iterator iter(project->assetPath);
+    // discover assets.
+    // TODO: async?
+    for (auto& entry : iter)
+    {
+        if (entry.is_regular_file())
+        {
+            auto path = entry.path();
+            if (path.extension() == ".meta")
+            {
+                path.replace_extension();
+                if (!path.has_extension()) // skip asset meta
+                    continue;
+            }
+            ImportAsset(project, entry.path());
+        }
+    }
+    // TODO: asset watcher
 }
 SAssetRegistry::~SAssetRegistry()
 {

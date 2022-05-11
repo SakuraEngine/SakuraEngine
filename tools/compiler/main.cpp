@@ -74,17 +74,16 @@ int main(int argc, char** argv)
     auto project = SkrNew<skd::asset::SProject>();
     project->assetPath = (root.parent_path() / "../../../samples/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
-    registry.projects.push_back(project);
-    //----- resource discover
-    registry.ImportAsset(project, "myConfig.json");
-    auto config = registry.ImportAsset(project, "myConfig.config.meta");
-    //----- register cooker
+    registry.AddProject(project);
+    //----- run cook tasks
     skd::asset::SCookSystem system;
-    auto configCooker = SkrNew<skd::asset::SConfigCooker>();
-    system.RegisterCooker(get_type_id_skr_config_resource_t(), configCooker);
-    //----- add cook tasks
+    // TODO: incremental cook & dependency management
     ftl::TaskCounter counter(&system.scheduler);
-    system.AddCookTask(config, &counter);
+    for (auto& pair : registry.assets)
+    {
+        if (!(pair.second->type == skr_guid_t()))
+            system.AddCookTask(pair.second, &counter);
+    }
     system.scheduler.WaitForCounter(&counter);
     moduleManager->destroy_module_graph();
     return 0;

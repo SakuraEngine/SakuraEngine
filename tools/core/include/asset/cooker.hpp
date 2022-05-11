@@ -1,4 +1,5 @@
 #pragma once
+#include "EASTL/vector.h"
 #include "tool_configure.h"
 #include "asset/asset_registry.hpp"
 #include "ftl/task_counter.h"
@@ -26,5 +27,6 @@ struct TOOL_API SCookSystem {
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
+    static void RegisterGlobalCooker(void (*)(SCookSystem* system));
 };
 } // namespace skd::assetreflect

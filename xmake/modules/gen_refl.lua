@@ -66,6 +66,10 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         {
             os.projectdir()..vformat("/tools/codegen/importer.py"),
             os.projectdir()..vformat("/tools/codegen/importer.cpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/cooker.py"),
+            os.projectdir()..vformat("/tools/codegen/cooker.cpp.mako"),
         }
     }
     local rebuild = false

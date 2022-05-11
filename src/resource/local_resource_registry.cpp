@@ -11,7 +11,7 @@ SLocalResourceRegistry::SLocalResourceRegistry(ghc::filesystem::path root)
     : rootDirectory(root)
 {
     skr_vfs_desc_t abs_fs_desc = {};
-    abs_fs_desc.app_name = "fs-test";
+    abs_fs_desc.app_name = "skr-resource-local";
     abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
     abs_fs = skr_create_vfs(&abs_fs_desc);
     ghc::filesystem::recursive_directory_iterator iter(root);

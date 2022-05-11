@@ -7,9 +7,20 @@
 
 namespace skd::asset
 {
+auto& GetCookerRegisters()
+{
+    static eastl::vector<void (*)(SCookSystem*)> insts;
+    return insts;
+}
 SCookSystem::SCookSystem()
 {
     scheduler.Init();
+    for (auto cookerRegister : GetCookerRegisters())
+        cookerRegister(this);
+}
+void SCookSystem::RegisterGlobalCooker(void (*f)(SCookSystem*))
+{
+    GetCookerRegisters().push_back(f);
 }
 void SCookSystem::AddCookTask(SAssetRecord* metaAsset, ftl::TaskCounter* counter)
 {
@@ -31,6 +42,8 @@ void SCookSystem::AddCookTask(SAssetRecord* metaAsset, ftl::TaskCounter* counter
 
 void SCookSystem::RegisterCooker(skr_guid_t guid, SCooker* cooker)
 {
+    SKR_ASSERT(cooker->system == nullptr);
+    cooker->system = this;
     cookers.insert(std::make_pair(guid, cooker));
 }
 void SCookSystem::UnregisterCooker(skr_guid_t guid)
