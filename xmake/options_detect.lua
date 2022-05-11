@@ -21,6 +21,7 @@ if(has_config("is_clang")) then
     table.insert(project_cxflags, "-Wno-ignored-attributes")
     table.insert(project_cxflags, "-Wno-deprecated-declarations")
     table.insert(project_cxflags, "-Wno-nullability-completeness")
+    table.insert(project_cxflags, "-Werror=return-type")
 end
 
 if(has_config("is_msvc")) then

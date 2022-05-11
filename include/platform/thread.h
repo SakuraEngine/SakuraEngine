@@ -130,7 +130,7 @@ void skr_destroy_thread(SThreadHandle handle);
 void skr_join_thread(SThreadHandle handle);
 
 SThreadID skr_current_thread_id(void);
-void skr_thread_sleep(unsigned mSec);
+void skr_thread_sleep(unsigned mMilliSecs);
 unsigned int skr_cpu_cores_count(void);
 
 #ifdef __cplusplus
