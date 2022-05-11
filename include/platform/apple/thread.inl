@@ -79,7 +79,7 @@ FORCEINLINE static void skr_wake_condition_var(SConditionVariable* pCv) { pthrea
 
 FORCEINLINE static void skr_wake_all_condition_vars(SConditionVariable* pCv) { pthread_cond_broadcast(&pCv->pHandle); }
 
-FORCEINLINE static void skr_thread_sleep(unsigned mSec) { usleep(mSec * 1000); }
+FORCEINLINE static void skr_thread_sleep(unsigned mMilliSecs) { usleep(mMilliSecs * 1000); }
 
 // threading class (Static functions)
 FORCEINLINE static unsigned int skr_cpu_cores_count(void)

@@ -58,7 +58,7 @@ FORCEINLINE static void skr_wake_condition_var(SConditionVariable* cv) { WakeCon
 
 FORCEINLINE static void skr_wake_all_condition_vars(SConditionVariable* cv) { WakeAllConditionVariable((PCONDITION_VARIABLE)cv->pHandle); }
 
-FORCEINLINE static void skr_thread_sleep(unsigned mSec) { Sleep(mSec); }
+FORCEINLINE static void skr_thread_sleep(unsigned mMilliSecs) { Sleep(mMilliSecs); }
 
 FORCEINLINE static unsigned int skr_cpu_cores_count(void)
 {
