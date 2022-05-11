@@ -22,7 +22,8 @@ public:
     ModuleManagerImpl() = default;
     ~ModuleManagerImpl() = default;
     virtual IModule* get_module(const eastl::string& name) final;
-    virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = false) final;
+    virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = true) final;
+    virtual bool patch_module_graph(const eastl::string& name, bool shared = true) final;
     virtual bool init_module_graph(void) final;
     virtual bool destroy_module_graph(void) final;
     virtual void mount(const char8_t* path) final;
@@ -195,33 +196,6 @@ bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename
     return true;
 }
 
-void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, bool shared)
-{
-    if (nodeMap.find(entry) != nodeMap.end())
-        return;
-    IModule* _module = shared ?
-                       spawnDynamicModule(entry) :
-                       spawnStaticModule(entry);
-    static int nodeNum = 0;
-    nodeMap[entry] = nodeNum++;
-    ModuleProperty prop;
-    prop.name = entry;
-    prop.bActive = false;
-    DAG::add_vertex(prop, moduleDependecyGraph);
-    if (_module->get_module_info()->dependencies.size() == 0)
-        roots.push_back(entry);
-    for (auto i = 0u; i < _module->get_module_info()->dependencies.size(); i++)
-    {
-        const char* iterName = _module->get_module_info()->dependencies[i].name.c_str();
-        // Static
-        if (initializeMap.find(iterName) != initializeMap.end())
-            __internal_MakeModuleGraph(iterName, false);
-        else
-            __internal_MakeModuleGraph(iterName, true);
-        DAG::add_edge(nodeMap[entry], nodeMap[iterName], moduleDependecyGraph);
-    }
-}
-
 bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& nodename)
 {
     if (!get_module_property(nodename).bActive)
@@ -245,8 +219,6 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& noden
 
 bool ModuleManagerImpl::init_module_graph(void)
 {
-    if (get_module_property(mainModuleName).bActive)
-        return true;
     if (!__internal_InitModuleGraph(mainModuleName))
         return false;
     get_module(mainModuleName)->main_module_exec();
@@ -263,11 +235,45 @@ bool ModuleManagerImpl::destroy_module_graph(void)
     return true;
 }
 
+void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, bool shared)
+{
+    if (nodeMap.find(entry) != nodeMap.end())
+        return;
+    IModule* _module = shared ?
+                       spawnDynamicModule(entry) :
+                       spawnStaticModule(entry);
+    nodeMap[entry] = nodeMap.size();
+    ModuleProperty prop;
+    prop.name = entry;
+    prop.bActive = false;
+    DAG::add_vertex(prop, moduleDependecyGraph);
+    if (_module->get_module_info()->dependencies.size() == 0)
+        roots.push_back(entry);
+    for (auto i = 0u; i < _module->get_module_info()->dependencies.size(); i++)
+    {
+        const char* iterName = _module->get_module_info()->dependencies[i].name.c_str();
+        // Static
+        if (initializeMap.find(iterName) != initializeMap.end())
+            __internal_MakeModuleGraph(iterName, false);
+        else
+            __internal_MakeModuleGraph(iterName, true);
+        DAG::add_edge(nodeMap[entry], nodeMap[iterName], moduleDependecyGraph);
+    }
+}
+
 const ModuleGraph* ModuleManagerImpl::make_module_graph(const eastl::string& entry, bool shared /*=false*/)
 {
     mainModuleName = entry;
     __internal_MakeModuleGraph(entry, shared);
     return (struct ModuleGraph*)&moduleDependecyGraph;
+}
+
+bool ModuleManagerImpl::patch_module_graph(const eastl::string& entry, bool shared)
+{
+    __internal_MakeModuleGraph(entry, shared);
+    if (!__internal_InitModuleGraph(entry))
+        return false;
+    return true;
 }
 
 void ModuleManagerImpl::mount(const char8_t* rootdir)
