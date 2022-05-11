@@ -102,4 +102,4 @@ struct IStaticModule : public IModule {
 };
 } // namespace skr
 
-#define SKR_MODULE_METADATA(stringdec, ModuleName) RUNTIME_EXTERN_C const char* __skr_module_meta__##ModuleName = stringdec;
+#define SKR_MODULE_METADATA(stringdec, ModuleName) RUNTIME_EXTERN_C RUNTIME_EXPORT const char* __skr_module_meta__##ModuleName = stringdec;

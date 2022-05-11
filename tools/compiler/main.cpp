@@ -23,7 +23,7 @@
 #include "SkrTool/serialize.generated.h"
 #include "utils/format.hpp"
 #include "SkrRT/typeid.generated.hpp"
-#include "gametool_configure.h"
+#include "module/module_manager.hpp"
 
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
@@ -60,17 +60,19 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
 
-GAMETOOL_API void dummy();
-
 int main(int argc, char** argv)
 {
-    dummy();
+    auto moduleManager = skr_get_module_manager();
+    auto root = ghc::filesystem::current_path();
+    moduleManager->mount(root.u8string().c_str());
+    moduleManager->make_module_graph("GameTool", true);
+
     auto& registry = *skd::asset::GetAssetRegistry();
     //----- register project
     // TODO: project discover?
     auto project = SkrNew<skd::asset::SProject>();
-    project->assetPath = (ghc::filesystem::current_path().parent_path() / "../../../samples/game/assets").lexically_normal();
-    project->outputPath = (ghc::filesystem::current_path().parent_path() / "resources/game").lexically_normal();
+    project->assetPath = (root.parent_path() / "../../../samples/game/assets").lexically_normal();
+    project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     registry.projects.push_back(project);
     //----- resource discover
     registry.ImportAsset(project, "myConfig.json");
