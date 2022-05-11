@@ -9,6 +9,7 @@ typedef struct reflect attr(
 )
 skr_config_resource_t
 {
+    typedef struct skr_config_resource_t RawData;
     skr_type_id_t configType;
     void* configData;
 }
