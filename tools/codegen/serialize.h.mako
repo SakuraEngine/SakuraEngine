@@ -17,7 +17,10 @@ void serialize(S& s, ${enum.name}& e)
 template<class S>
 void serialize(S& s, ${record.name}& record)
 {
-    s(${",".join( "record."+field.name for field in record.allFields())});
+    %for base in record.bases:
+    serialize(s, (${base}&)record);
+    %endfor
+    s(${",".join( "record."+field.name for field in record.fields)});
 } 
 %endfor
 }

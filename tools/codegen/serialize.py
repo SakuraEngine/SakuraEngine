@@ -25,13 +25,6 @@ class Record(object):
         self.fields = fields
         self.bases = bases
 
-    def allFields(self):
-        result = []
-        result.extend(self.fields)
-        for base in self.bases:
-            result.extend(base.allFields())
-        return result
-
 
 class Enumerator(object):
     def __init__(self, name, value):
@@ -60,14 +53,6 @@ class Binding(object):
         self.name_to_record = {}
         self.headers = set()
 
-    def resolve_base(self):
-        for record in self.records:
-            bases = []
-            for base in record.bases:
-                if base in self.name_to_record:
-                    bases.append(self.name_to_record[base])
-            record.bases = bases
-
     def add_record(self, record):
         self.records.append(record)
         self.name_to_record[record.name] = record
@@ -81,7 +66,6 @@ def main():
     root = sys.argv[1]
     outdir = sys.argv[2]
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
-    print(metas)
     for meta in metas:
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
@@ -98,19 +82,11 @@ def main():
             bases = []
             for value3 in value["bases"]:
                 bases.append(value3)
-            if str.endswith(file, ".cpp"):
-                print("unable to gen rtti for records in cpp, name:%s" %
-                      key, file=sys.stderr)
-                continue
             db.headers.add(GetInclude(file))
             db.add_record(Record(key, fields, bases))
         for key, value in meta["enums"].items():
             attr = value["attrs"]
             file = value["fileName"]
-            if str.endswith(file, ".cpp"):
-                print("unable to gen rtti for enums in cpp, name:%s" %
-                      value["name"], file=sys.stderr)
-                continue
             db.headers.add(GetInclude(file))
             enumerators = []
             for key2, value2 in value["values"].items():
@@ -118,7 +94,6 @@ def main():
                     key2, value2["value"]))
             db.enums.append(Enum(key, enumerators))
     if db.records or db.enums:
-        db.resolve_base()
         template = os.path.join(BASE, "serialize.h.mako")
         content = render(template, db=db)
         output = os.path.join(outdir, "serialize.generated.h")

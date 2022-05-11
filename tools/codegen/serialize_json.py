@@ -17,7 +17,7 @@ class Field(object):
 
 
 class Record(object):
-    def __init__(self, name, fields, bases):
+    def __init__(self, name, fields, bases, fileName):
         self.name = name
         self.luaName = name.replace("::", ".")
         var = str.rsplit(name, "::", 1)
@@ -27,6 +27,7 @@ class Record(object):
         self.export_to_c = not "::" in name
         self.fields = fields
         self.bases = bases
+        self.fileName = fileName
 
     def allFields(self):
         result = []
@@ -34,6 +35,22 @@ class Record(object):
         for base in self.bases:
             result.extend(base.allFields())
         return result
+
+
+def parseRecord(name, json):
+    fields = []
+    if not "serialize" in json["attrs"]:
+        return
+    for key, value in json["fields"].items():
+        attr = value["attrs"]
+        if "transient" in attr:
+            continue
+        field = Field(key, value["type"])
+        fields.append(field)
+    bases = []
+    for value in json["bases"]:
+        bases.append(value)
+    return Record(name, fields, bases, json["fileName"])
 
 
 class Enumerator(object):
@@ -45,7 +62,7 @@ class Enumerator(object):
 
 
 class Enum(object):
-    def __init__(self, name, underlying_type, enumerators):
+    def __init__(self, name, underlying_type, enumerators, fileName):
         self.name = name
         if underlying_type == "unfixed":
             abort(name + " is not fixed enum!")
@@ -56,18 +73,29 @@ class Enum(object):
             self.namespace = var[0]
         self.enumerators = enumerators
         self.export_to_c = not "::" in name
+        self.fileName = fileName
         for enumerator in enumerators:
             if not enumerator.export_to_c:
                 self.export_to_c = False
                 break
 
 
-class Binding(object):
+def parseEnum(name, json):
+    if not "serialize" in json["attrs"]:
+        return
+    enumerators = []
+    for key2, value2 in json["values"].items():
+        enumerators.append(Enumerator(
+            key2, value2["value"]))
+    return Enum(name, json["underlying_type"], enumerators, json["fileName"])
+
+
+class Database(object):
     def __init__(self):
         self.records = []
         self.enums = []
         self.name_to_record = {}
-        self.headers = set()
+        self.name_to_enum = {}
 
     def resolve_base(self):
         for record in self.records:
@@ -78,72 +106,76 @@ class Binding(object):
             record.bases = bases
 
     def add_record(self, record):
+        if not record:
+            return
         self.records.append(record)
         self.name_to_record[record.name] = record
+
+    def add_enum(self, enum):
+        if not enum:
+            return
+        self.enums.append(enum)
+        self.name_to_enum[enum.name] = enum
+
+
+class Binding(object):
+    def __init__(self):
+        self.records = []
+        self.enums = []
+        self.headers = set()
 
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 
 def main():
-    db = Binding()
+    db = Database()
+    data = Binding()
     root = sys.argv[1]
     outdir = sys.argv[2]
     api = sys.argv[3]
     config = api.lower()+"_configure.h"
     api = api.upper()+"_API"
+    includes = sys.argv[4:].copy()
+    includes.append(root)
+
+    for path in includes:
+        metas = glob.glob(os.path.join(path, "**", "*.h.meta"), recursive=True)
+        for meta in metas:
+            meta = json.load(open(meta))
+            for key, value in meta["records"].items():
+                db.add_record(parseRecord(key, value))
+            for key, value in meta["enums"].items():
+                db.add_enum(parseEnum(key, value))
+    db.resolve_base()
+
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
-    print(metas)
     for meta in metas:
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
-            file = value["fileName"]
-            fields = []
-            if not "serialize" in value["attrs"]:
-                continue
-            for key2, value2 in value["fields"].items():
-                attr = value2["attrs"]
-                if "transient" in attr:
-                    continue
-                field = Field(key2, value2["type"])
-                fields.append(field)
-            bases = []
-            for value3 in value["bases"]:
-                bases.append(value3)
-            if str.endswith(file, ".cpp"):
-                print("unable to gen rtti for records in cpp, name:%s" %
-                      key, file=sys.stderr)
-                continue
-            db.headers.add(GetInclude(file))
-            db.add_record(Record(key, fields, bases))
+            if key in db.name_to_record:
+                record = db.name_to_record[key]
+                data.records.append(record)
+                data.headers.add(GetInclude(record.fileName))
         for key, value in meta["enums"].items():
-            attr = value["attrs"]
-            file = value["fileName"]
-            if str.endswith(file, ".cpp"):
-                print("unable to gen rtti for enums in cpp, name:%s" %
-                      value["name"], file=sys.stderr)
-                continue
-            db.headers.add(GetInclude(file))
-            enumerators = []
-            for key2, value2 in value["values"].items():
-                enumerators.append(Enumerator(
-                    key2, value2["value"]))
-            db.enums.append(Enum(key, value["underlying_type"], enumerators))
-    db.resolve_base()
+            if key in db.name_to_enum:
+                enum = db.name_to_enum[key]
+                data.enums.append(enum)
+                data.headers.add(GetInclude(enum.fileName))
     template = os.path.join(BASE, "json_writer.cpp.mako")
-    content = render(template, db=db)
+    content = render(template, db=data)
     output = os.path.join(outdir, "json_writer.generated.cpp")
     write(output, content)
     template = os.path.join(BASE, "json_reader.cpp.mako")
-    content = render(template, db=db)
+    content = render(template, db=data)
     output = os.path.join(outdir, "json_reader.generated.cpp")
     write(output, content)
     template = os.path.join(BASE, "json_writer.h.mako")
-    content = render(template, db=db, api=api, config=config)
+    content = render(template, db=data, api=api, config=config)
     output = os.path.join(outdir, "json_writer.generated.h")
     write(output, content)
     template = os.path.join(BASE, "json_reader.h.mako")
-    content = render(template, db=db, api=api, config=config)
+    content = render(template, db=data, api=api, config=config)
     output = os.path.join(outdir, "json_reader.generated.h")
     write(output, content)
 
