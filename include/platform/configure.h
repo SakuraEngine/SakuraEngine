@@ -358,6 +358,7 @@ typedef int64_t host_ptr_t;
 #endif
 
 // Platform Specific Configure
+#define SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
 #ifdef __APPLE__
     #include "apple/configure.h"
 #endif
@@ -367,6 +368,7 @@ typedef int64_t host_ptr_t;
 #ifndef OS_DPI
     #define OS_DPI 72
 #endif
+#undef SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
 
 // Numbers
 #ifndef KINDA_SMALL_NUMBER
