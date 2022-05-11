@@ -23,6 +23,7 @@
 #include "SkrTool/serialize.generated.h"
 #include "utils/format.hpp"
 #include "SkrRT/typeid.generated.hpp"
+#include "gametool_configure.h"
 
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
@@ -59,8 +60,11 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
 
+GAMETOOL_API void dummy();
+
 int main(int argc, char** argv)
 {
+    dummy();
     auto& registry = *skd::asset::GetAssetRegistry();
     //----- register project
     // TODO: project discover?
