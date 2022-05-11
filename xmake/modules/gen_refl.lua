@@ -52,7 +52,8 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         {
             os.projectdir()..vformat("/tools/codegen/config_resource.py"),
             os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
-        },{
+        },
+        {
             os.projectdir()..vformat("/tools/codegen/rtti.py"),
             os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
@@ -97,6 +98,13 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         reflfile:close()
         -- build generated cpp to json
         cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
+        local depsmeta = {}
+        for _, dep in ipairs(target:deps()) do
+            local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
+            if os.exists(depmetadir) then
+                table.insert(depsmeta, depmetadir)
+            end
+        end
         -- compile jsons to c++
         local api = target:extraconf("rules", "c++.reflection", "api")
         local function task(index)
@@ -104,10 +112,14 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             cprint("${cyan}generating.%s${clear} %s", path.filename(generator), path.absolute(metadir))
             import("find_sdk")
             local python = find_sdk.find_program("python3")
-            os.iorunv(python.program, {
+            local command = {
                 generator,
                 path.absolute(metadir), path.absolute(generators[index].gendir or gendir), api or target:name()
-            })
+            }
+            for _, dep in ipairs(depsmeta) do
+                table.insert(command, dep)
+            end
+            os.iorunv(python.program, command)
         end
         runjobs("codegen.cpp", task, {total = #generators})
     end

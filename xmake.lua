@@ -28,10 +28,12 @@ source_list = {}
 packages_list = {}
 deps_list = {}
 links_list = {}
+generator_list = {}
 
 includes("xmake/options_detect.lua")
 includes("xmake/rules.lua")
 includes("xmake/thirdparty.lua")
+includes("tools/codegen/xmake.lua")
 
 set_warnings("all")
 if (is_os("windows")) then 
@@ -88,11 +90,11 @@ target("SkrRT")
     add_links(links_list, {public = true})
 target_end()
 
-if(has_config("build_tools")) then
-    includes("tools/xmake.lua")
-end
 if(has_config("build_samples")) then
     includes("samples/xmake.lua")
+end
+if(has_config("build_tools")) then
+    includes("tools/xmake.lua")
 end
 if(has_config("build_tests")) then
     includes("tests/xmake.lua")
