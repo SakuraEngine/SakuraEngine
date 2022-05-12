@@ -80,53 +80,57 @@ TEST_F(FSTest, asyncread)
     skr_async_io_request_t request;
     ioService->request(abs_fs, &ramIO, &request);
     std::cout << (const char*)bytes << std::endl;
-    // while (!request.is_ready()) {}
-    ioService->drain();
+    while (!request.is_ready()) {}
+    // ioService->drain();
     std::cout << (const char*)bytes << std::endl;
     skr::io::RAMService::destroy(ioService);
 }
 
 TEST_F(FSTest, cancel)
 {
-    skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.name = "Test";
-    ioServiceDesc.sleep_time = SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER /*ms*/;
-    auto ioService = skr::io::RAMService::create(&ioServiceDesc);
-    uint8_t bytes[1024];
-    uint8_t bytes2[1024];
-    memset(bytes, 0, 1024);
-    memset(bytes2, 0, 1024);
-    skr_ram_io_t ramIO = {};
-    ramIO.bytes = bytes;
-    ramIO.offset = 0;
-    ramIO.size = 1024;
-    ramIO.path = "testfile2";
-    skr_ram_io_t anotherRamIO = {};
-    anotherRamIO.bytes = bytes2;
-    anotherRamIO.offset = 0;
-    anotherRamIO.size = 1024;
-    anotherRamIO.path = "testfile";
-    skr_async_io_request_t request;
-    ioService->request(abs_fs, &ramIO, &request);
-    skr_async_io_request_t anotherRequest;
-    ioService->request(abs_fs, &anotherRamIO, &anotherRequest);
-    // try cancel io of testfile
-    bool cancelled = ioService->try_cancel(&anotherRequest);
-    ioService->drain();
-    if (cancelled)
+    for (uint32_t i = 0; i < 100; i++)
     {
-        SKR_LOG_INFO("request to testfile cancelled!");
-        uint8_t bytes0[1024];
-        memset(bytes0, 0, 1024);
-        EXPECT_EQ(memcmp(bytes2, bytes0, 1024), 0);
+        SKR_LOG_INFO("cancel");
+        skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.name = "Test";
+        ioServiceDesc.sleep_time = SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER /*ms*/;
+        auto ioService = skr::io::RAMService::create(&ioServiceDesc);
+        uint8_t bytes[1024];
+        uint8_t bytes2[1024];
+        memset(bytes, 0, 1024);
+        memset(bytes2, 0, 1024);
+        skr_ram_io_t ramIO = {};
+        ramIO.bytes = bytes;
+        ramIO.offset = 0;
+        ramIO.size = 1024;
+        ramIO.path = "testfile2";
+        skr_ram_io_t anotherRamIO = {};
+        anotherRamIO.bytes = bytes2;
+        anotherRamIO.offset = 0;
+        anotherRamIO.size = 1024;
+        anotherRamIO.path = "testfile";
+        skr_async_io_request_t request;
+        ioService->request(abs_fs, &ramIO, &request);
+        skr_async_io_request_t anotherRequest;
+        ioService->request(abs_fs, &anotherRamIO, &anotherRequest);
+        // try cancel io of testfile
+        bool cancelled = ioService->try_cancel(&anotherRequest);
+        // while (!request.is_ready()) {}
+        // while (!cancelled && !anotherRequest.is_ready()) {}
+        ioService->drain();
+        if (cancelled)
+        {
+            uint8_t bytes0[1024];
+            memset(bytes0, 0, 1024);
+            EXPECT_EQ(memcmp(bytes2, bytes0, 1024), 0);
+        }
+        else
+        {
+            EXPECT_EQ(std::string((const char8_t*)bytes2), std::string(u8"Hello, World!"));
+        }
+        EXPECT_EQ(std::string((const char8_t*)bytes), std::string(u8"Hello, World2!"));
+        skr::io::RAMService::destroy(ioService);
     }
-    else
-    {
-        SKR_LOG_INFO("request to testfile not cancelled!");
-        EXPECT_EQ(std::string((const char8_t*)bytes2), std::string(u8"Hello, World!"));
-    }
-    EXPECT_EQ(std::string((const char8_t*)bytes), std::string(u8"Hello, World2!"));
-    skr::io::RAMService::destroy(ioService);
 }
 
 int main(int argc, char** argv)
