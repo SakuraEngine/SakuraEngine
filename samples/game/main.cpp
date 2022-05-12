@@ -34,15 +34,16 @@ extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 
 int main(int argc, char** argv)
 {
-    ghc::filesystem::path resourceRoot = ghc::filesystem::path(__FILE__).parent_path() / "resource";
-    skr::resource::SLocalResourceRegistry resourceRegistry(resourceRoot);
-    skr::resource::GetResourceSystem()->Initialize(&resourceRegistry);
+    auto moduleManager = skr_get_module_manager();
+    auto root = ghc::filesystem::current_path();
+    moduleManager->mount(root.u8string().c_str());
+    moduleManager->make_module_graph("GameRT", true);
+    moduleManager->init_module_graph();
 #ifdef SAKURA_RUNTIME_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-    skg::Core::initialize();
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
     window_desc.resizable = true;
@@ -60,6 +61,7 @@ int main(int argc, char** argv)
     create_render_resources(renderGraph);
     // loop
     bool quit = false;
+    skg::GameContext ctx;
     while (!quit)
     {
         SDL_Event event;
@@ -79,8 +81,7 @@ int main(int argc, char** argv)
         (float)swapchain->back_buffers[0]->width,
         (float)swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
-        ImGui::Begin(u8"Game");
-        ImGui::End();
+        quit |= skg::GameLoop(ctx);
         {
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);

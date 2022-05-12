@@ -7,11 +7,9 @@ struct skr_vfs_t;
 namespace skr::resource
 {
 struct RUNTIME_API SLocalResourceRegistry : SResourceRegistry {
-    SLocalResourceRegistry(ghc::filesystem::path root);
+    SLocalResourceRegistry(skr_vfs_t* vfs);
     void RequestResourceFile(SResourceRequest* request) override;
     void CancelRequestFile(SResourceRequest* requst) override;
-    ghc::filesystem::path rootDirectory;
-    skr::flat_hash_map<skr_guid_t, ghc::filesystem::path, skr::guid::hash> resources;
-    skr_vfs_t* abs_fs;
+    skr_vfs_t* vfs;
 };
 } // namespace skr::resource
