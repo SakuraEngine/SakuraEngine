@@ -55,6 +55,7 @@ typedef struct skr_ram_io_service_desc_t {
     uint32_t sleep_time;
 } skr_ram_io_service_desc_t;
 
+typedef void (*skr_async_io_callback_t)(void* data);
 typedef struct skr_ram_io_t {
     const char8_t* path;
     uint8_t* bytes;
@@ -62,6 +63,8 @@ typedef struct skr_ram_io_t {
     uint64_t size;
     SkrIOServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
+    skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
+    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
 } skr_ram_io_t;
 
 #ifdef __cplusplus

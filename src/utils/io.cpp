@@ -57,6 +57,8 @@ public:
         SAtomic32* _status;
         SkrIOServicePriority priority;
         float sub_priority;
+        skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
+        void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
         bool operator<(const Task& rhs) const
         {
             if (rhs.priority != priority)
@@ -70,6 +72,8 @@ public:
         void setTaskStatus(SkrAsyncIOStatus value)
         {
             skr_atomic32_store_relaxed(_status, value);
+            if(callbacks[value] != nullptr)
+                callbacks[value](callback_datas[value]);
         }
     };
     ~RAMServiceImpl() RUNTIME_NOEXCEPT = default;
@@ -192,6 +196,11 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     back._status = &async_request->status;
     back.priority = info->priority;
     back.sub_priority = info->sub_priority;
+    for(uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
+    {
+        back.callbacks[i] = info->callbacks[i];
+        back.callback_datas[i] = info->callback_datas[i];
+    }
     skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
 }
 
