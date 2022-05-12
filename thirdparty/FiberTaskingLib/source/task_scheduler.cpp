@@ -804,7 +804,9 @@ void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBu
 {
     if (pinnedThreadIndex == kNoThreadPinning)
     {
-        ThreadLocalStorage* tls = &m_tls[GetCurrentThreadIndex()];
+        auto threadIndex = GetCurrentThreadIndex();
+        threadIndex = threadIndex == kInvalidIndex ? 0 : threadIndex;
+        ThreadLocalStorage* tls = &m_tls[threadIndex];
 
         // Push a dummy task to the high priority queue
         Task task{};
