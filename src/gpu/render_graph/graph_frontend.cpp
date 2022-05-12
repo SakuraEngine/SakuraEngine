@@ -7,12 +7,12 @@ namespace skr
 {
 namespace render_graph
 {
-RenderGraph::RenderGraph(const RenderGraphBuilder& builder)
+RenderGraph::RenderGraph(const RenderGraphBuilder& builder) RUNTIME_NOEXCEPT
     : aliasing_enabled(builder.memory_aliasing)
 {
 }
 
-const ResourceNode::LifeSpan ResourceNode::lifespan() const
+const ResourceNode::LifeSpan ResourceNode::lifespan() const RUNTIME_NOEXCEPT
 {
     if (frame_lifespan.from != UINT32_MAX && frame_lifespan.to != UINT32_MAX)
     {
@@ -41,14 +41,14 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const
     return frame_lifespan;
 }
 
-inline bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing)
+inline bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing) RUNTIME_NOEXCEPT
 {
     return !aliased->is_imported() &&
            !aliased->get_desc().is_dedicated &&
            aliased->get_size() >= aliasing->get_size() &&
            aliased->get_sample_count() == aliasing->get_sample_count();
 }
-bool RenderGraph::compile()
+bool RenderGraph::compile() RUNTIME_NOEXCEPT
 {
     ZoneScopedN("RenderGraphCompile");
     {
@@ -78,7 +78,7 @@ bool RenderGraph::compile()
         // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
         // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
         eastl::vector_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
-        foreach_textures([&](TextureNode* texture) {
+        foreach_textures([&](TextureNode* texture) RUNTIME_NOEXCEPT {
             if (texture->imported) return;
             for (auto&& [aliased, aliaed_span] : alliasing_lifespans)
             {
@@ -96,7 +96,7 @@ bool RenderGraph::compile()
                 }
             }
             if (texture->frame_aliasing_source) return;
-            foreach_textures([&](TextureNode* aliased) {
+            foreach_textures([&](TextureNode* aliased) RUNTIME_NOEXCEPT {
                 if (aliasing_capacity(aliased, texture) &&
                     aliased->lifespan().to < texture->lifespan().from)
                 {
@@ -116,7 +116,7 @@ bool RenderGraph::compile()
     return true;
 }
 
-uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f)
+uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f) RUNTIME_NOEXCEPT
 {
     uint32_t num = 0;
     for (auto&& resource : resources)
@@ -131,7 +131,7 @@ uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f)
 }
 
 uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
-eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const RUNTIME_NOEXCEPT
 {
     return graph->foreach_incoming_edges(
     texture,
@@ -144,11 +144,11 @@ eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
 }
 
 uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
-eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const RUNTIME_NOEXCEPT
 {
     return graph->foreach_outgoing_edges(
     texture,
-    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) RUNTIME_NOEXCEPT {
         PassNode* pass = static_cast<PassNode*>(to);
         TextureNode* texture = static_cast<TextureNode*>(from);
         RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
@@ -157,11 +157,11 @@ eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const
 }
 
 uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
-eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const RUNTIME_NOEXCEPT
 {
     return graph->foreach_incoming_edges(
     buffer,
-    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) RUNTIME_NOEXCEPT {
         PassNode* pass = static_cast<PassNode*>(from);
         BufferNode* buffer = static_cast<BufferNode*>(to);
         RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
@@ -170,7 +170,7 @@ eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
 }
 
 uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
-eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
+eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const RUNTIME_NOEXCEPT
 {
     return graph->foreach_outgoing_edges(
     buffer,
@@ -183,7 +183,7 @@ eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const
 }
 
 const ECGPUResourceState RenderGraph::get_lastest_state(
-const TextureNode* texture, const PassNode* pending_pass) const
+const TextureNode* texture, const PassNode* pending_pass) const RUNTIME_NOEXCEPT
 {
     ZoneScopedN("CaclulateLatestState-Texture");
 
@@ -228,7 +228,7 @@ const TextureNode* texture, const PassNode* pending_pass) const
 }
 
 const ECGPUResourceState RenderGraph::get_lastest_state(
-const BufferNode* buffer, const PassNode* pending_pass) const
+const BufferNode* buffer, const PassNode* pending_pass) const RUNTIME_NOEXCEPT
 {
     ZoneScopedN("CaclulateLatestState-Buffer");
 
@@ -237,7 +237,7 @@ const BufferNode* buffer, const PassNode* pending_pass) const
     PassNode* pass_iter = nullptr;
     auto result = buffer->init_state;
     foreach_writer_passes(buffer->get_handle(),
-    [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
+    [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) RUNTIME_NOEXCEPT {
         if (edge->type == ERelationshipType::BufferReadWrite)
         {
             auto write_edge = static_cast<BufferReadWriteEdge*>(edge);
@@ -249,7 +249,7 @@ const BufferNode* buffer, const PassNode* pending_pass) const
         }
     });
     foreach_reader_passes(buffer->get_handle(),
-    [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) {
+    [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) RUNTIME_NOEXCEPT {
         if (edge->type == ERelationshipType::BufferRead)
         {
             auto read_edge = static_cast<BufferReadEdge*>(edge);
@@ -272,17 +272,17 @@ const BufferNode* buffer, const PassNode* pending_pass) const
     return result;
 }
 
-uint64_t RenderGraph::execute(RenderGraphProfiler* profiler)
+uint64_t RenderGraph::execute(RenderGraphProfiler* profiler) RUNTIME_NOEXCEPT
 {
     graph->clear();
     return frame_index++;
 }
 
-void RenderGraph::initialize()
+void RenderGraph::initialize() RUNTIME_NOEXCEPT
 {
 }
 
-void RenderGraph::finalize()
+void RenderGraph::finalize() RUNTIME_NOEXCEPT
 {
 }
 } // namespace render_graph

@@ -13,7 +13,7 @@ RenderGraphBackend::RenderGraphBackend(const RenderGraphBuilder& builder)
 {
 }
 
-RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup)
+RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup) RUNTIME_NOEXCEPT
 {
     RenderGraphBuilder builder = {};
     RenderGraph* graph = nullptr;
@@ -29,13 +29,13 @@ RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup)
     return graph;
 }
 
-void RenderGraph::destroy(RenderGraph* g)
+void RenderGraph::destroy(RenderGraph* g) RUNTIME_NOEXCEPT
 {
     g->finalize();
     delete g;
 }
 
-void RenderGraphBackend::initialize()
+void RenderGraphBackend::initialize() RUNTIME_NOEXCEPT
 {
     backend = device->adapter->instance->backend;
     for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
@@ -47,7 +47,7 @@ void RenderGraphBackend::initialize()
     texture_view_pool.initialize(device);
 }
 
-void RenderGraphBackend::finalize()
+void RenderGraphBackend::finalize() RUNTIME_NOEXCEPT
 {
     for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
     {
@@ -65,7 +65,7 @@ void RenderGraphBackend::finalize()
 //  - 首先寻找可以直接alias处理的, cgpu_try_create_aliasing_resource(ResourceId, ResourceDesc)
 //  - 其次再考虑提升合并的行为（此行为在前端无法模拟）
 CGPUTextureId RenderGraphBackend::try_aliasing_allocate(
-RenderGraphFrameExecutor& executor, const TextureNode& node)
+RenderGraphFrameExecutor& executor, const TextureNode& node) RUNTIME_NOEXCEPT
 {
     if (node.frame_aliasing_source)
     {
@@ -88,7 +88,7 @@ RenderGraphFrameExecutor& executor, const TextureNode& node)
     return nullptr;
 }
 
-CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const TextureNode& node)
+CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const TextureNode& node) RUNTIME_NOEXCEPT
 {
     ZoneScopedN("ResolveTexture");
     if (!node.frame_texture)
@@ -110,7 +110,7 @@ CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, co
     return node.frame_texture;
 }
 
-CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const BufferNode& node)
+CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const BufferNode& node) RUNTIME_NOEXCEPT
 {
     ZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
@@ -126,7 +126,7 @@ CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, con
 
 void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
 eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers)
+eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) RUNTIME_NOEXCEPT
 {
     ZoneScopedN("CalculateBarriers");
     tex_barriers.reserve(pass->textures_count());
@@ -180,7 +180,8 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURoot
     return { UINT32_MAX, UINT32_MAX };
 }
 
-gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass)
+gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
+RenderGraphFrameExecutor& executor, PassNode* pass) RUNTIME_NOEXCEPT
 {
     ZoneScopedN("UpdateBindings");
     CGPURootSignatureId root_sig = nullptr;
@@ -274,7 +275,7 @@ gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(Re
     return desc_sets;
 }
 
-void RenderGraphBackend::deallocate_resources(PassNode* pass)
+void RenderGraphBackend::deallocate_resources(PassNode* pass) RUNTIME_NOEXCEPT
 {
     ZoneScopedN("VirtualDeallocate");
     pass->foreach_textures(
@@ -320,7 +321,7 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass)
     });
 }
 
-void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass)
+void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass) RUNTIME_NOEXCEPT
 {
     ZoneScopedC(tracy::Color::LightBlue);
     ZoneName(pass->name.c_str(), pass->name.size());
@@ -372,7 +373,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     deallocate_resources(pass);
 }
 
-void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass)
+void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass) RUNTIME_NOEXCEPT
 {
     ZoneScopedC(tracy::Color::LightPink);
     ZoneName(pass->name.c_str(), pass->name.size());
@@ -480,7 +481,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     deallocate_resources(pass);
 }
 
-void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass)
+void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass) RUNTIME_NOEXCEPT
 {
     ZoneScopedC(tracy::Color::LightYellow);
     ZoneName(pass->name.c_str(), pass->name.size());
@@ -540,7 +541,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     deallocate_resources(pass);
 }
 
-void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass)
+void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass) RUNTIME_NOEXCEPT
 {
     auto read_edges = pass->tex_read_edges();
     auto&& read_edge = read_edges[0];
@@ -556,7 +557,7 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
 }
 
-uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler)
+uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) RUNTIME_NOEXCEPT
 {
     const auto executor_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
     RenderGraphFrameExecutor& executor = executors[executor_index];
@@ -651,15 +652,15 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler)
     return frame_index++;
 }
 
-CGPUDeviceId RenderGraphBackend::get_backend_device() { return device; }
+CGPUDeviceId RenderGraphBackend::get_backend_device() RUNTIME_NOEXCEPT { return device; }
 
-uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame)
+uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame) RUNTIME_NOEXCEPT
 {
     return collect_texture_garbage(critical_frame) +
            collect_buffer_garbage(critical_frame);
 }
 
-uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame)
+uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame) RUNTIME_NOEXCEPT
 {
     uint32_t total_count = 0;
     for (auto&& iter : texture_pool.textures)
@@ -687,7 +688,7 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame)
     return total_count;
 }
 
-uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame)
+uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame) RUNTIME_NOEXCEPT
 {
     uint32_t total_count = 0;
     for (auto&& iter : buffer_pool.buffers)
