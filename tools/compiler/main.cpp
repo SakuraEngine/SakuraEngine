@@ -88,10 +88,20 @@ int main(int argc, char** argv)
     //----- run cook tasks
     auto& system = *skd::asset::GetCookSystem();
     system.Initialize();
-    for (auto& pair : registry.assets)
     {
-        if (!(pair.second->type == skr_guid_t()))
-            system.EnsureCooked(pair.second->guid);
+        ftl::TaskCounter counter(&system.scheduler);
+        for (auto& pair : registry.assets)
+        {
+            if (!(pair.second->type == skr_guid_t()))
+            {
+                auto Task = [](ftl::TaskScheduler* scheduler, void* data) {
+                    auto& system = *skd::asset::GetCookSystem();
+                    system.EnsureCooked(((skd::asset::SAssetRecord*)data)->guid);
+                };
+                system.scheduler.AddTask({ Task, pair.second }, ftl::TaskPriority::High, &counter);
+            }
+        }
+        system.scheduler.WaitForCounter(&counter);
     }
     //----- wait
     while (1)
