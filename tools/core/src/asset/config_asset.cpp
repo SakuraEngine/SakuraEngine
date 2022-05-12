@@ -42,30 +42,22 @@ void* SJsonConfigImporter::Import(const SAssetRecord* record)
     iter->second.Import(doc.value(), resource->configData);
     return resource; //导入具体数据
 }
-
+uint32_t SConfigCooker::Version()
+{
+    return 0;
+}
 bool SConfigCooker::Cook(SCookContext* ctx)
 {
-    auto outputPath = ctx->output;
-    auto record = ctx->record;
-    SAssetRegistry& registry = *GetAssetRegistry();
-    //-----load importer
-    simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(record->meta);
-    auto importer = GetImporterRegistry()->LoadImporter(record, doc.find_field("importer").value_unsafe());
     //-----load config
     // no cook config for config, skipping
     //-----import resource object
-    auto resource = (skr_config_resource_t*)importer->Import(registry.GetAssetRecord(importer->assetGuid));
+    auto resource = ctx->Import<skr_config_resource_t>();
     SKR_DEFER({ SkrDelete(resource); });
     //-----emit dependencies
+    // no static dependencies
     //-----cook resource
     // no cook needed for config, just binarize it
     //-----fetch runtime dependencies
-    skr_resource_header_t header;
-    header.guid = record->guid;
-    header.type = get_type_id_skr_config_resource_t();
-    header.version = 0;
-    header.dependencies = {};
     auto type = (skr::type::RecordType*)skr_get_type(&resource->configType);
     for (auto& field : type->fields)
     {
@@ -74,17 +66,17 @@ bool SConfigCooker::Cook(SCookContext* ctx)
             auto handle = (skr_resource_handle_t*)((char*)resource->configData + field.offset);
             if (handle->is_null())
                 continue;
-            header.dependencies.push_back(handle->get_serialized());
+            ctx->AddRuntimeDependency(handle->get_guid());
         }
     }
     //-----write resource header
     eastl::vector<uint8_t> buffer;
     skr::resource::SBinarySerializer archive(buffer);
-    bitsery::serialize(archive, header);
+    ctx->WriteHeader(archive, this);
     //------write resource object
     skr::resource::SConfigFactory::Serialize(*resource, archive);
     //------save resource to disk
-    auto file = fopen(outputPath.u8string().c_str(), "wb");
+    auto file = fopen(ctx->output.u8string().c_str(), "wb");
     SKR_DEFER({ fclose(file); });
     fwrite(buffer.data(), 1, buffer.size(), file);
     return true;

@@ -15,6 +15,7 @@ TOOL_API struct SAssetRegistry* GetAssetRegistry();
 struct SProject {
     ghc::filesystem::path assetPath;
     ghc::filesystem::path outputPath;
+    ghc::filesystem::path dependencyPath;
 };
 
 struct SAssetRecord {
@@ -29,9 +30,12 @@ struct TOOL_API SAssetRegistry {
     ~SAssetRegistry();
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(SProject* project, ghc::filesystem::path path);
+    eastl::vector<SAssetRecord*> PullChangedAssets();
+    bool HasChangedAssets();
     void AddProject(SProject* project);
     eastl::vector<SProject*> projects;
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
+    eastl::vector<SAssetRecord*> changedAssets;
     skr::flat_hash_map<skr_guid_t, struct SImporterFactory*, skr::guid::hash> importerFactories;
 };
 } // namespace asset
