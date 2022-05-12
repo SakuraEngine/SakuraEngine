@@ -18,6 +18,8 @@
 #include "json/writer.h"
 #include <mutex>
 #include <stdio.h>
+#include "utils/io.hpp"
+#include "platform/vfs.h"
 
 namespace skd::asset
 {
@@ -26,18 +28,65 @@ auto& GetCookerRegisters()
     static eastl::vector<void (*)(SCookSystem*)> insts;
     return insts;
 }
-SCookSystem::SCookSystem()
-    : scheduler()
-    , taskMutex(&scheduler)
+
+ftl::TaskScheduler SCookSystem::scheduler;
+SCookSystem::SCookSystem() noexcept
+    : taskMutex(&scheduler)
 {
-    scheduler.Init();
+    static bool schedulerInitialized = false;
+    if(!schedulerInitialized)
+    {
+        scheduler.Init();
+        schedulerInitialized = true;
+    }
     for (auto cookerRegister : GetCookerRegisters())
         cookerRegister(this);
+
+    for(auto& ioService : ioServices)
+        ioService = nullptr;
 }
+SCookSystem::~SCookSystem() noexcept
+{
+    for(auto ioService : ioServices)
+    {
+        if(ioService) skr::io::RAMService::destroy(ioService);
+    }
+}
+
 void SCookSystem::RegisterGlobalCooker(void (*f)(SCookSystem*))
 {
     GetCookerRegisters().push_back(f);
 }
+
+skr::io::RAMService* SCookSystem::getIOService()
+{
+    for(auto& ioService : ioServices)
+    {
+        // all used up
+        if(ioService == nullptr)
+        {
+            skr_ram_io_service_desc_t desc = {};
+            // cook system runs quick so there is no need to sleep long
+            desc.sleep_time = 1; 
+            ioService = skr::io::RAMService::create(&desc);
+            return ioService;
+
+        }
+        // find a sleep one
+        else
+        {
+            if(ioService->get_service_status() == SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING)
+            {
+                return ioService;
+            }
+            else continue;
+        }
+    }
+    static uint32_t cursor = 0;
+    cursor = (cursor % ioServicesMaxCount);
+    return ioServices[cursor++];
+}
+
 eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
 {
     std::lock_guard<ftl::Fibtex> lock(taskMutex);
@@ -47,6 +96,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
     SCookContext* jobContext = SkrNew<SCookContext>();
     jobContext->record = GetAssetRegistry()->GetAssetRecord(guid);
     jobContext->system = this;
+    jobContext->ioService = getIOService();
     auto counter = eastl::make_shared<ftl::TaskCounter>(&scheduler);
     jobContext->counter = counter;
     auto Task = +[](ftl::TaskScheduler* scheduler, void* userdata) {
@@ -213,8 +263,7 @@ void* SCookContext::_Import()
         //-----import raw data
         auto asset = registry.GetAssetRecord(importer->assetGuid);
         staticDependencies.push_back(asset->guid);
-        auto rawData = importer->Import(asset);
-
+        auto rawData = importer->Import(ioService, asset);
         return rawData;
     }
     auto parentJson = doc["parent"]; // derived from resource

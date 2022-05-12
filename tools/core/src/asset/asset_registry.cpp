@@ -7,9 +7,15 @@
 #include "platform/memory.h"
 #include "utils/defer.hpp"
 #include "json/reader.h"
+#include "platform/vfs.h"
 
 namespace skd::asset
 {
+SProject::~SProject() noexcept
+{
+    if(vfs) skr_free_vfs(vfs);    
+}
+
 TOOL_API SAssetRegistry* GetAssetRegistry()
 {
     static SAssetRegistry registry;
@@ -79,5 +85,7 @@ SAssetRegistry::~SAssetRegistry()
 {
     for (auto& pair : assets)
         SkrDelete(pair.second);
+    for (auto& project : projects)
+        SkrDelete(project);
 }
 } // namespace skd::asset

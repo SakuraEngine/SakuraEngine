@@ -40,6 +40,8 @@ typedef enum SkrIOServicePriority
 
 typedef struct skr_async_io_request_t {
     SAtomic32 status;
+    char8_t* bytes;
+    uint64_t size;
 #ifdef __cplusplus
     bool is_ready() const RUNTIME_NOEXCEPT;
     bool is_enqueued() const RUNTIME_NOEXCEPT;

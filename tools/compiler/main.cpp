@@ -25,6 +25,7 @@
 #include "utils/format.hpp"
 #include "SkrRT/typeid.generated.hpp"
 #include "module/module_manager.hpp"
+#include "platform/vfs.h"
 
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
@@ -73,6 +74,12 @@ int main(int argc, char** argv)
     //----- register project
     // TODO: project discover?
     auto project = SkrNew<skd::asset::SProject>();
+    auto parentPath = root.parent_path().u8string();
+    skr_vfs_desc_t vfs_desc = {};
+    vfs_desc.app_name = "Projejct";
+    vfs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
+    vfs_desc.override_mount_dir = parentPath.c_str();
+    project->vfs = skr_create_vfs(&vfs_desc);
     project->assetPath = (root.parent_path() / "../../../samples/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
