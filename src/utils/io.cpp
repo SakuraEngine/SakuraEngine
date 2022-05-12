@@ -141,7 +141,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         else // do sort
         {
             service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
-            eastl::sort(service->tasks.begin(), service->tasks.end());
+            eastl::stable_sort(service->tasks.begin(), service->tasks.end());
         }
         // pop current task
         service->current = service->tasks.front();
