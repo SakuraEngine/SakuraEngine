@@ -136,6 +136,48 @@ TEST_F(FSTest, cancel)
     SKR_LOG_INFO("cancel tested for %d times", 100);
 }
 
+TEST_F(FSTest, sort)
+{
+    for (uint32_t i = 0; i < 100; i++)
+    {
+        skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.name = "Test";
+        ioServiceDesc.sleep_time = SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER /*ms*/;
+        auto ioService = skr::io::RAMService::create(&ioServiceDesc);
+        ioService->stop(true);
+        uint8_t bytes[1024];
+        uint8_t bytes2[1024];
+        memset(bytes, 0, 1024);
+        memset(bytes2, 0, 1024);
+        skr_ram_io_t ramIO = {};
+        ramIO.bytes = bytes;
+        ramIO.offset = 0;
+        ramIO.size = 1024;
+        ramIO.priority = ::SKR_IO_SERVICE_PRIORITY_NORMAL;
+        ramIO.path = "testfile2";
+        skr_ram_io_t anotherRamIO = {};
+        anotherRamIO.bytes = bytes2;
+        anotherRamIO.offset = 0;
+        anotherRamIO.size = 1024;
+        anotherRamIO.priority = ::SKR_IO_SERVICE_PRIORITY_URGENT;
+        anotherRamIO.path = "testfile";
+        skr_async_io_request_t request;
+        ioService->request(abs_fs, &ramIO, &request);
+        skr_async_io_request_t anotherRequest;
+        ioService->request(abs_fs, &anotherRamIO, &anotherRequest);
+        ioService->run();
+        while (!anotherRequest.is_ready())
+        {
+            EXPECT_TRUE(!request.is_ready());
+        }
+        // while (!cancelled && !anotherRequest.is_ready()) {}
+        ioService->drain();
+        EXPECT_EQ(std::string((const char8_t*)bytes), std::string(u8"Hello, World2!"));
+        skr::io::RAMService::destroy(ioService);
+    }
+    SKR_LOG_INFO("sorts tested for %d times", 100);
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

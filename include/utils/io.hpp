@@ -19,6 +19,12 @@ public:
     // returns false if the request is under LOADING status
     virtual bool try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT = 0;
 
+    // stop service and hang up underground thread
+    virtual void stop(bool wait_drain = false) RUNTIME_NOEXCEPT = 0;
+
+    // start & run service
+    virtual void run() RUNTIME_NOEXCEPT = 0;
+
     // block & finish up all requests
     virtual void drain() RUNTIME_NOEXCEPT = 0;
 
