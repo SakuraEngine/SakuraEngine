@@ -46,6 +46,7 @@ typedef struct RUNTIME_API skr_async_io_request_t {
     bool is_cancelled() const;
     bool is_ram_loading() const;
     bool is_vram_loading() const;
+    SkrAsyncIOStatus get_status() const;
 #endif
 } skr_async_io_request_t;
 

@@ -26,6 +26,9 @@ public:
     // set sleep time when io queue is detected to be idle
     virtual void set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT = 0;
 
+    // get service status
+    virtual SkrAsyncIOServiceStatus get_service_status() const RUNTIME_NOEXCEPT = 0;
+
     virtual ~RAMService() = default;
     RAMService() = default;
 } RAMService;
