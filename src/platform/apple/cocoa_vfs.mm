@@ -4,7 +4,7 @@
 #include "ghc/filesystem.hpp"
 #import <Foundation/Foundation.h>
 
-inline static char8_t* duplicate_string(const char8_t* src_string)
+inline static char8_t* duplicate_string(const char8_t* src_string) RUNTIME_NOEXCEPT
 {
     if (src_string != nullptr)
     {
@@ -20,7 +20,7 @@ inline static char8_t* duplicate_string(const char8_t* src_string)
     return nullptr;
 }
 
-skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc)
+skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) RUNTIME_NOEXCEPT
 {
     bool success = true;
     auto fs = (skr_vfs_t*)sakura_calloc(1, sizeof(skr_vfs_t));
@@ -94,7 +94,7 @@ fatal:
     return nullptr;
 }
 
-void skr_free_vfs(skr_vfs_t* fs)
+void skr_free_vfs(skr_vfs_t* fs) RUNTIME_NOEXCEPT
 {
     if (fs)
     {

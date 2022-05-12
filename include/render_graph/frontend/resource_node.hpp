@@ -10,19 +10,19 @@ class RUNTIME_API ResourceNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
-    inline ResourceNode(EObjectType type)
-        : RenderGraphNode(type)
-        , imported(false)
+    inline ResourceNode(EObjectType type) RUNTIME_NOEXCEPT
+        : RenderGraphNode(type),
+          imported(false)
     {
     }
-    virtual ~ResourceNode() = default;
+    virtual ~ResourceNode() RUNTIME_NOEXCEPT = default;
     struct LifeSpan {
         uint32_t from;
         uint32_t to;
     };
-    inline const bool is_imported() const { return imported; }
-    inline const bool allow_lone() const { return canbe_lone; }
-    const LifeSpan lifespan() const;
+    inline const bool is_imported() const RUNTIME_NOEXCEPT { return imported; }
+    inline const bool allow_lone() const RUNTIME_NOEXCEPT { return canbe_lone; }
+    const LifeSpan lifespan() const RUNTIME_NOEXCEPT;
 
 protected:
     bool imported : 1;
@@ -36,20 +36,20 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    TextureNode()
+    TextureNode() RUNTIME_NOEXCEPT
         : ResourceNode(EObjectType::Texture)
     {
     }
-    inline const TextureHandle get_handle() const { return TextureHandle(get_id()); }
-    inline const CGPUTextureDescriptor& get_desc() const { return descriptor; }
-    inline const uint32_t get_size() const
+    inline const TextureHandle get_handle() const RUNTIME_NOEXCEPT { return TextureHandle(get_id()); }
+    inline const CGPUTextureDescriptor& get_desc() const RUNTIME_NOEXCEPT { return descriptor; }
+    inline const uint32_t get_size() const RUNTIME_NOEXCEPT
     {
         return descriptor.array_size * descriptor.mip_levels *
                descriptor.width * descriptor.depth * descriptor.height *
                FormatUtil_BitSizeOfBlock(descriptor.format);
     }
-    inline const ECGPUSampleCount get_sample_count() const { return descriptor.sample_count; }
-    inline const TextureNode* get_aliasing_parent() const { return frame_aliasing_source; }
+    inline const ECGPUSampleCount get_sample_count() const RUNTIME_NOEXCEPT { return descriptor.sample_count; }
+    inline const TextureNode* get_aliasing_parent() const RUNTIME_NOEXCEPT { return frame_aliasing_source; }
 
 protected:
     CGPUTextureDescriptor descriptor = {};
@@ -66,12 +66,12 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    BufferNode()
+    BufferNode() RUNTIME_NOEXCEPT
         : ResourceNode(EObjectType::Buffer)
     {
     }
-    inline const BufferHandle get_handle() const { return BufferHandle(get_id()); }
-    inline const CGPUBufferDescriptor& get_desc() const { return descriptor; }
+    inline const BufferHandle get_handle() const RUNTIME_NOEXCEPT { return BufferHandle(get_id()); }
+    inline const CGPUBufferDescriptor& get_desc() const RUNTIME_NOEXCEPT { return descriptor; }
 
 protected:
     CGPUBufferDescriptor descriptor = {};
