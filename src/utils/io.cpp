@@ -38,9 +38,13 @@ namespace skr
 {
 namespace io
 {
-#define SKR_IO_THREAD_STATUS_RUNNING 0
-#define SKR_IO_THREAD_STATUS_QUIT 1
-#define SKR_IO_THREAD_STATUS_SUSPEND 2
+typedef enum _SkrIOThreadStatus
+{
+    _SKR_IO_THREAD_STATUS_RUNNING = 0,
+    _SKR_IO_THREAD_STATUS_QUIT = 1,
+    _SKR_IO_THREAD_STATUS_SUSPEND = 2
+} _SkrIOThreadStatus;
+
 class RAMServiceImpl final : public RAMService
 {
 public:
@@ -94,12 +98,21 @@ public:
         return (SkrAsyncIOServiceStatus)skr_atomic32_load_acquire(&_running_status);
     }
 
+    void setThreadStatus(_SkrIOThreadStatus status)
+    {
+        skr_atomic32_store_relaxed(&_thread_status, status);
+    }
+    _SkrIOThreadStatus getThreadStatus() const
+    {
+        return (_SkrIOThreadStatus)skr_atomic32_load_acquire(&_thread_status);
+    }
+
     SMutex taskMutex;
     SThreadDesc threadItem = {};
     SThreadHandle serviceThread;
     eastl::deque<Task> tasks;
     SAtomic32 _running_status /*SkrAsyncIOServiceStatus*/;
-    SAtomic32 _thread_status = SKR_IO_THREAD_STATUS_RUNNING /*IOThreadStatus*/;
+    SAtomic32 _thread_status = _SKR_IO_THREAD_STATUS_RUNNING /*IOThreadStatus*/;
     SAtomic32 _sleepTime = 30 /*ms*/;
     const bool criticalTaskCount = false;
     const eastl::string name;
@@ -146,9 +159,9 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 void ioThreadTask(void* arg)
 {
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
-    for (; skr_atomic32_load_acquire(&service->_thread_status) != SKR_IO_THREAD_STATUS_QUIT;)
+    for (; service->getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {
-        for (; skr_atomic32_load_acquire(&service->_thread_status) == SKR_IO_THREAD_STATUS_SUSPEND;)
+        for (; service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND;)
         {
         }
         ioThreadTask_execute(service);
@@ -189,7 +202,7 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     service->threadItem.pFunc = &ioThreadTask;
     skr_init_mutex(&service->taskMutex);
     service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
-    skr_atomic32_store_relaxed(&service->_thread_status, SKR_IO_THREAD_STATUS_RUNNING);
+    service->setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     skr_init_thread(&service->threadItem, &service->serviceThread);
     return service;
 }
@@ -198,7 +211,7 @@ void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
 {
     auto service = static_cast<skr::io::RAMServiceImpl*>(s);
     s->drain();
-    skr_atomic32_store_relaxed(&service->_thread_status, SKR_IO_THREAD_STATUS_QUIT);
+    service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
     skr_join_thread(service->serviceThread);
     skr_destroy_mutex(&service->taskMutex);
     skr_destroy_thread(service->serviceThread);
@@ -242,18 +255,17 @@ void skr::io::RAMServiceImpl::set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT
 
 void skr::io::RAMServiceImpl::stop(bool wait_drain) RUNTIME_NOEXCEPT
 {
-    auto destroyed = skr_atomic32_load_acquire(&_thread_status);
-    if (destroyed) return;
+    if (getThreadStatus() != _SKR_IO_THREAD_STATUS_RUNNING) return;
     if (wait_drain) drain(); // sleep -> hung
     // else running -> hung
-    skr_atomic32_store_relaxed(&_thread_status, SKR_IO_THREAD_STATUS_SUSPEND);
+    setThreadStatus(_SKR_IO_THREAD_STATUS_SUSPEND);
 }
 
 void skr::io::RAMServiceImpl::run() RUNTIME_NOEXCEPT
 {
-    if (skr_atomic32_load_acquire(&_thread_status) != SKR_IO_THREAD_STATUS_SUSPEND)
+    if (getThreadStatus() != _SKR_IO_THREAD_STATUS_SUSPEND)
         return;
-    skr_atomic32_store_relaxed(&_thread_status, SKR_IO_THREAD_STATUS_RUNNING);
+    setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
 }
 
 } // namespace io
