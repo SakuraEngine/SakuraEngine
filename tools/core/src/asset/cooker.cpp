@@ -6,6 +6,7 @@
 #include "ghc/filesystem.hpp"
 #include "platform/debug.h"
 #include "platform/guid.h"
+#include "platform/vfs.h"
 #include "simdjson.h"
 #include "utils/defer.hpp"
 #include "utils/format.hpp"
@@ -145,6 +146,20 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
             return false;
         }
+        {
+            auto iter = cookers.find(metaAsset->type);
+            SKR_ASSERT(iter != cookers.end());
+            auto resourceFile = fopen(resourcePath.u8string().c_str(), "rb");
+            SKR_DEFER({ fclose(resourceFile); });
+            uint32_t version[2];
+            fread(&version, 1, sizeof(uint32_t) * 2, resourceFile);
+            if (version[1] != iter->second->Version())
+            {
+                SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] cooker version changed! resource guid: {}", guid);
+                return false;
+            }
+        }
+
         for (auto depFile : deps.get_array().value_unsafe())
         {
             skr_guid_t depGuid;
@@ -207,7 +222,7 @@ void* SCookContext::_Import()
             auto rawData = importer->Import(asset);
             counter.Clear();
         });
-        system->scheduler.wait_counter(&counter);
+        system->scheduler.WaitForCounter(&counter);
         */
         return rawData;
     }
