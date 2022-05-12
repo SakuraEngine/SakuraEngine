@@ -1,10 +1,13 @@
 #include "asset/config_asset.hpp"
 #include "asset/asset_registry.hpp"
+#include "asset/cooker.hpp"
 #include "asset/importer.hpp"
+#include "ftl/fibtex.h"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "resource/config_resource.h"
 #include "json/reader.h"
+#include <mutex>
 #include "platform/debug.h"
 #include "simdjson.h"
 #include "type/type_registry.h"
@@ -35,8 +38,8 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
         SKR_LOG_ERROR("import resource %s failed, type is not registered as config", record->path.u8string().c_str());
         return nullptr;
     }
-    
-    ftl::AtomicFlag counter(&SCookSystem::scheduler);
+
+    ftl::AtomicFlag counter(&GetCookSystem()->scheduler);
     counter.Set();
     skr_ram_io_t ramIO = {};
     ramIO.bytes = nullptr;
@@ -45,15 +48,14 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     // TODO: replace path with skr api
     auto u8Path = record->path.u8string();
     ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](void* data) noexcept
-    {
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](void* data) noexcept {
         auto pCounter = (ftl::AtomicFlag*)data;
         pCounter->Clear();
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_io_request_t ioRequest = {};
     ioService->request(record->project->vfs, &ramIO, &ioRequest);
-    SCookSystem::scheduler.WaitForCounter(&counter);
+    GetCookSystem()->scheduler.WaitForCounter(&counter, true);
     auto jsonString = simdjson::padded_string(ioRequest.bytes, ioRequest.size);
     sakura_free(ioRequest.bytes);
     simdjson::ondemand::parser parser;

@@ -85,7 +85,8 @@ int main(int argc, char** argv)
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
     registry.AddProject(project);
     //----- run cook tasks
-    skd::asset::SCookSystem system;
+    auto& system = *skd::asset::GetCookSystem();
+    system.Initialize();
     for (auto& pair : registry.assets)
     {
         if (!(pair.second->type == skr_guid_t()))
