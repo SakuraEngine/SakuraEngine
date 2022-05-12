@@ -140,8 +140,8 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
             return false;
         }
-        auto deps = doc["files"];
-        if (deps.error() != simdjson::SUCCESS || deps.get_array().error() != simdjson::SUCCESS)
+        auto deps = doc["files"].get_array();
+        if (deps.error() != simdjson::SUCCESS)
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
             return false;
@@ -160,7 +160,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
             }
         }
 
-        for (auto depFile : deps.get_array().value_unsafe())
+        for (auto depFile : deps.value_unsafe())
         {
             skr_guid_t depGuid;
             skr::json::Read(std::move(depFile).value_unsafe(), depGuid);
@@ -214,16 +214,7 @@ void* SCookContext::_Import()
         auto asset = registry.GetAssetRecord(importer->assetGuid);
         staticDependencies.push_back(asset->guid);
         auto rawData = importer->Import(asset);
-        /*
-        ftl::AtomicFlag counter(system->scheduler);
-        counter.Set();
-        std::thread importerThread([&]()
-        {
-            auto rawData = importer->Import(asset);
-            counter.Clear();
-        });
-        system->scheduler.WaitForCounter(&counter);
-        */
+
         return rawData;
     }
     auto parentJson = doc["parent"]; // derived from resource
