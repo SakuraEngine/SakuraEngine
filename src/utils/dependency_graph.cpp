@@ -10,33 +10,33 @@ class DependencyGraphImpl : public DependencyGraph, public DependencyGraphBase
     using DAGEdge = DependencyGraphBase::DAGEdge;
 
 public:
-    virtual dep_graph_handle_t insert(Node* node) final
+    virtual dep_graph_handle_t insert(Node* node) RUNTIME_NOEXCEPT final
     {
         node->id = (dep_graph_handle_t)DAG::add_vertex(node, *this);
         node->graph = this;
         node->on_insert();
         return node->id;
     }
-    virtual Node* access_node(dep_graph_handle_t handle) final
+    virtual Node* access_node(dep_graph_handle_t handle) RUNTIME_NOEXCEPT final
     {
         return (*this)[DAGVertex(handle)];
     }
-    virtual bool remove(dep_graph_handle_t node) final
+    virtual bool remove(dep_graph_handle_t node) RUNTIME_NOEXCEPT final
     {
         boost::remove_vertex(node, *this);
         (*this)[node]->on_remove();
         return true;
     }
-    virtual bool remove(Node* node) final
+    virtual bool remove(Node* node) RUNTIME_NOEXCEPT final
     {
         return remove(node->id);
     }
-    virtual bool clear() final
+    virtual bool clear() RUNTIME_NOEXCEPT final
     {
         DAG::Graph<DependencyGraph::Node*, DependencyGraph::Edge*>::clear();
         return true;
     }
-    virtual bool link(Node* from, Node* to, Edge* edge) final
+    virtual bool link(Node* from, Node* to, Edge* edge) RUNTIME_NOEXCEPT final
     {
         auto&& result = DAG::add_edge(get_descriptor(from), get_descriptor(to), edge, *this);
         edge->graph = this;
@@ -45,11 +45,11 @@ public:
         edge->on_link();
         return result.second;
     }
-    virtual Edge* linkage(Node* from, Node* to) final
+    virtual Edge* linkage(Node* from, Node* to) RUNTIME_NOEXCEPT final
     {
         return linkage(from->id, to->id);
     }
-    virtual Edge* linkage(dep_graph_handle_t from, dep_graph_handle_t to) final
+    virtual Edge* linkage(dep_graph_handle_t from, dep_graph_handle_t to) RUNTIME_NOEXCEPT final
     {
         auto find_edge = boost::edge((vertex_descriptor)from, (vertex_descriptor)to, *this);
         if (find_edge.second)
@@ -58,11 +58,11 @@ public:
         }
         return nullptr;
     }
-    virtual bool unlink(Node* from, Node* to) final
+    virtual bool unlink(Node* from, Node* to) RUNTIME_NOEXCEPT final
     {
         return unlink(from->id, to->id);
     }
-    virtual bool unlink(dep_graph_handle_t from, dep_graph_handle_t to) final
+    virtual bool unlink(dep_graph_handle_t from, dep_graph_handle_t to) RUNTIME_NOEXCEPT final
     {
         auto find_edge = boost::edge((vertex_descriptor)from, (vertex_descriptor)to, *this);
         if (!find_edge.second) return false;
@@ -70,23 +70,23 @@ public:
         boost::remove_edge(find_edge.first, *this);
         return true;
     }
-    virtual Node* node_at(dep_graph_handle_t ID) final
+    virtual Node* node_at(dep_graph_handle_t ID) RUNTIME_NOEXCEPT final
     {
         return (*this)[DAGVertex(ID)];
     }
-    virtual Node* from_node(Edge* edge) final
+    virtual Node* from_node(Edge* edge) RUNTIME_NOEXCEPT final
     {
         return node_at(edge->from_node);
     }
-    virtual Node* to_node(Edge* edge) final
+    virtual Node* to_node(Edge* edge) RUNTIME_NOEXCEPT final
     {
         return node_at(edge->to_node);
     }
-    virtual uint32_t foreach_neighbors(Node* node, eastl::function<void(DependencyGraphNode*)> f) final
+    virtual uint32_t foreach_neighbors(Node* node, eastl::function<void(DependencyGraphNode*)> f) RUNTIME_NOEXCEPT final
     {
         return foreach_neighbors(node->get_id(), f);
     }
-    virtual uint32_t foreach_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) final
+    virtual uint32_t foreach_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) RUNTIME_NOEXCEPT final
     {
         DAGVertex vert(node);
         auto neigs = DAG::adjacent_vertices(vert, *this);
@@ -97,11 +97,11 @@ public:
         }
         return count;
     }
-    virtual uint32_t foreach_neighbors(const Node* node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    virtual uint32_t foreach_neighbors(const Node* node, eastl::function<void(const DependencyGraphNode*)> f) const RUNTIME_NOEXCEPT final
     {
         return foreach_neighbors(node->get_id(), f);
     }
-    virtual uint32_t foreach_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    virtual uint32_t foreach_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const RUNTIME_NOEXCEPT final
     {
         DAGVertex vert(node);
         auto neigs = DAG::adjacent_vertices(vert, *this);
@@ -112,11 +112,11 @@ public:
         }
         return count;
     }
-    virtual uint32_t foreach_inv_neighbors(Node* node, eastl::function<void(DependencyGraphNode*)> f) final
+    virtual uint32_t foreach_inv_neighbors(Node* node, eastl::function<void(DependencyGraphNode*)> f) RUNTIME_NOEXCEPT final
     {
         return foreach_inv_neighbors(node->get_id(), f);
     }
-    virtual uint32_t foreach_inv_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) final
+    virtual uint32_t foreach_inv_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) RUNTIME_NOEXCEPT final
     {
         DAGVertex vert(node);
         auto neigs = DAG::inv_adjacent_vertices(vert, *this);
@@ -127,11 +127,11 @@ public:
         }
         return count;
     }
-    virtual uint32_t foreach_inv_neighbors(const Node* node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    virtual uint32_t foreach_inv_neighbors(const Node* node, eastl::function<void(const DependencyGraphNode*)> f) const RUNTIME_NOEXCEPT final
     {
         return foreach_inv_neighbors(node->get_id(), f);
     }
-    virtual uint32_t foreach_inv_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const final
+    virtual uint32_t foreach_inv_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const RUNTIME_NOEXCEPT final
     {
         DAGVertex vert(node);
         auto neigs = DAG::inv_adjacent_vertices(vert, *this);
@@ -142,11 +142,11 @@ public:
         }
         return count;
     }
-    virtual uint32_t outgoing_edges(const Node* node) final
+    virtual uint32_t outgoing_edges(const Node* node) RUNTIME_NOEXCEPT final
     {
         return outgoing_edges(node->id);
     }
-    virtual uint32_t outgoing_edges(dep_graph_handle_t id) final
+    virtual uint32_t outgoing_edges(dep_graph_handle_t id) RUNTIME_NOEXCEPT final
     {
         auto oedges = DAG::out_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
@@ -157,12 +157,12 @@ public:
         return count;
     }
     virtual uint32_t foreach_outgoing_edges(Node* node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) RUNTIME_NOEXCEPT final
     {
         return foreach_outgoing_edges(node->id, func);
     }
     virtual uint32_t foreach_outgoing_edges(dep_graph_handle_t node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) RUNTIME_NOEXCEPT final
     {
         auto oedges = DAG::out_edges((vertex_descriptor)node, *this);
         uint32_t count = 0;
@@ -173,11 +173,11 @@ public:
         }
         return count;
     }
-    virtual uint32_t incoming_edges(const Node* node) final
+    virtual uint32_t incoming_edges(const Node* node) RUNTIME_NOEXCEPT final
     {
         return incoming_edges(node->id);
     }
-    virtual uint32_t incoming_edges(dep_graph_handle_t id) final
+    virtual uint32_t incoming_edges(dep_graph_handle_t id) RUNTIME_NOEXCEPT final
     {
         auto iedges = DAG::in_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
@@ -188,12 +188,12 @@ public:
         return count;
     }
     virtual uint32_t foreach_incoming_edges(Node* node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) RUNTIME_NOEXCEPT final
     {
         return foreach_incoming_edges(node->id, func);
     }
     virtual uint32_t foreach_incoming_edges(dep_graph_handle_t node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    eastl::function<void(Node* from, Node* to, Edge* edge)> func) RUNTIME_NOEXCEPT final
     {
         auto oedges = DAG::in_edges((vertex_descriptor)node, *this);
         uint32_t count = 0;
@@ -204,7 +204,7 @@ public:
         }
         return count;
     }
-    virtual uint32_t foreach_edges(eastl::function<void(Node* from, Node* to, Edge* edge)> func) final
+    virtual uint32_t foreach_edges(eastl::function<void(Node* from, Node* to, Edge* edge)> func) RUNTIME_NOEXCEPT final
     {
         auto edges = boost::edges(*this);
         uint32_t count = 0;
@@ -223,32 +223,32 @@ protected:
     }
 };
 
-uint32_t DependencyGraphNode::outgoing_edges()
+uint32_t DependencyGraphNode::outgoing_edges() RUNTIME_NOEXCEPT
 {
     return graph->outgoing_edges(this);
 }
 
-uint32_t DependencyGraphNode::incoming_edges()
+uint32_t DependencyGraphNode::incoming_edges() RUNTIME_NOEXCEPT
 {
     return graph->incoming_edges(this);
 }
 
-uint32_t DependencyGraphNode::foreach_neighbors(eastl::function<void(DependencyGraphNode* neig)> f)
+uint32_t DependencyGraphNode::foreach_neighbors(eastl::function<void(DependencyGraphNode* neig)> f) RUNTIME_NOEXCEPT
 {
     return graph->foreach_neighbors(this, f);
 }
 
-uint32_t DependencyGraphNode::foreach_neighbors(eastl::function<void(const DependencyGraphNode* neig)> f) const
+uint32_t DependencyGraphNode::foreach_neighbors(eastl::function<void(const DependencyGraphNode* neig)> f) const RUNTIME_NOEXCEPT
 {
     return graph->foreach_neighbors(this, f);
 }
 
-uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(DependencyGraphNode* inv_neig)> f)
+uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(DependencyGraphNode* inv_neig)> f) RUNTIME_NOEXCEPT
 {
     return graph->foreach_inv_neighbors(this, f);
 }
 
-uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(const DependencyGraphNode* inv_neig)> f) const
+uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(const DependencyGraphNode* inv_neig)> f) const RUNTIME_NOEXCEPT
 {
     return graph->foreach_inv_neighbors(this, f);
 }
@@ -261,7 +261,7 @@ DependencyGraph* DependencyGraph::Create() RUNTIME_NOEXCEPT
     return new DependencyGraphImpl();
 }
 
-DependencyGraphBase* DependencyGraphBase::as(DependencyGraph* graph)
+DependencyGraphBase* DependencyGraphBase::as(DependencyGraph* graph) RUNTIME_NOEXCEPT
 {
     return (DependencyGraphImpl*)graph;
 }
