@@ -6,6 +6,7 @@
 #include "ghc/filesystem.hpp"
 #include "google/protobuf/empty.pb.h"
 #include "platform/guid.h"
+#include "platform/thread.h"
 #include "resource/config_resource.h"
 #include "resource/resource_header.h"
 #include "skrcompiler.grpc.pb.h"
@@ -97,7 +98,7 @@ int main(int argc, char** argv)
     {
         eastl::shared_ptr<ftl::TaskCounter> counter;
         {
-            std::lock_guard<ftl::Fibtex> lock(system.taskMutex);
+            SMutexLock lock(system.taskMutex);
             if (system.cooking.empty())
                 break;
             counter = system.cooking.begin()->second->counter;

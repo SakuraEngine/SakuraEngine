@@ -32,11 +32,6 @@ def main():
         write(os.path.join(BASE, "stressTest", fileName + ".config.meta"),
               resource.format(resourceGuid, assetGuid))
 
-    for i in range(0, 1000):
-        resourceGuid = uuid.uuid1()
-        write(os.path.join(BASE, "stressTest", fileName + ".config.meta"),
-              resource.format(resourceGuid, "5F47668A-2C6B-448B-9E58-42B138F0D303"))
-
 
 def write(path, content):
     directory = os.path.dirname(path)

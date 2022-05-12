@@ -66,8 +66,7 @@ struct TOOL_API SCookSystem {
     void UnregisterCooker(skr_guid_t type);
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     skr::flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash> cooking;
-    ftl::Fibtex taskMutex;
-    ftl::Fibtex ioMutex;
+    SMutex taskMutex;
 
     class skr::io::RAMService* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 32;

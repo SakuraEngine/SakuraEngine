@@ -7,6 +7,7 @@
 #include "platform/debug.h"
 #include "platform/guid.h"
 #include "platform/vfs.h"
+#include "platform/thread.h"
 #include "simdjson.h"
 #include "utils/defer.hpp"
 #include "utils/format.hpp"
@@ -29,10 +30,8 @@ SCookSystem* GetCookSystem()
     return &instance;
 }
 SCookSystem::SCookSystem() noexcept
-    : taskMutex(&scheduler)
-    , ioMutex(&scheduler)
 {
-
+    skr_init_mutex(&taskMutex);
     for (auto& ioService : ioServices)
         ioService = nullptr;
 }
@@ -42,6 +41,7 @@ void SCookSystem::Initialize()
 }
 SCookSystem::~SCookSystem() noexcept
 {
+    skr_destroy_mutex(&taskMutex);
     for (auto ioService : ioServices)
     {
         if (ioService) skr::io::RAMService::destroy(ioService);
@@ -79,11 +79,16 @@ skr::io::RAMService* SCookSystem::getIOService()
 
 eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
 {
-    std::lock_guard<ftl::Fibtex> lock(taskMutex);
-    auto iter = cooking.find(guid);
-    if (iter != cooking.end())
-        return iter->second->counter;
-    SCookContext* jobContext = SkrNew<SCookContext>();
+    SCookContext* jobContext;
+    {
+        SMutexLock lock(taskMutex);
+        auto iter = cooking.find(guid);
+        if (iter != cooking.end())
+            return iter->second->counter;
+        jobContext = SkrNew<SCookContext>();
+        cooking.insert(std::make_pair(guid, jobContext));
+    }
+
     jobContext->record = GetAssetRegistry()->GetAssetRecord(guid);
     jobContext->ioService = getIOService();
     auto counter = eastl::make_shared<ftl::TaskCounter>(&scheduler);
@@ -117,13 +122,13 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         SCookContext* jobContext = (SCookContext*)userdata;
         auto system = GetCookSystem();
         system->scheduler.WaitForCounter(jobContext->counter.get());
+        auto guid = jobContext->record->guid;
         {
-            std::lock_guard<ftl::Fibtex> lock(system->taskMutex);
-            system->cooking.erase(jobContext->record->guid);
-            SkrDelete(jobContext);
+            SMutexLock lock(system->taskMutex);
+            system->cooking.erase(guid);
         }
+        SkrDelete(jobContext);
     };
-    cooking.insert(std::make_pair(guid, jobContext));
     scheduler.AddTask({ Task, jobContext }, ftl::TaskPriority::Normal, counter.get());
     scheduler.AddTask({ TearDownTask, jobContext }, ftl::TaskPriority::Normal);
     return counter;
@@ -142,7 +147,7 @@ void SCookSystem::UnregisterCooker(skr_guid_t guid)
 eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
 {
     {
-        std::lock_guard<ftl::Fibtex> lock(taskMutex);
+        SMutexLock lock(taskMutex);
         auto iter = cooking.find(guid);
         if (iter != cooking.end())
             return iter->second->counter;

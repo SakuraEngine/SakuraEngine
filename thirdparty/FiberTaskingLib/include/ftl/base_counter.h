@@ -44,7 +44,7 @@ class TaskScheduler;
  * set(FTL_NUM_WAITING_FIBER_SLOTS <value> CACHE STRING "Number of slots within ftl::TaskCounter for fibers to wait" FORCE)
  */
 #ifndef NUM_WAITING_FIBER_SLOTS
-    #define NUM_WAITING_FIBER_SLOTS 8
+    #define NUM_WAITING_FIBER_SLOTS 16
 #endif
 
 /**
