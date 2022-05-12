@@ -545,12 +545,12 @@ class I,
 class... Ts>
 constexpr auto call(
 const TExpr expr,
-const I& interface,
+const I& itf,
 Ts&&... args)
 {
     static_assert(std::is_empty<TExpr>{});
     return detail::call_impl<I>(
-    reinterpret_cast<const detail::poly_base&>(interface),
+    reinterpret_cast<const detail::poly_base&>(itf),
     std::integral_constant<std::size_t, detail::mappings_size<I, class call>() + 1>{},
     detail::type_list<R>{},
     expr,
