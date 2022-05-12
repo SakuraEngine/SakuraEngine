@@ -1,5 +1,5 @@
 rule("utils.fetch-vk-includes")
-    before_build(function (target)
+    on_config(function (target)
         -- find vulkan includes dir
         import("lib.detect.find_path")
         local vk_from_env = os.getenv("VULKAN_SDK")
