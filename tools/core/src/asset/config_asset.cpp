@@ -48,13 +48,12 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](void* data) noexcept
     {
         auto pCounter = (ftl::AtomicFlag*)data;
-        // pCounter->Clear();
+        pCounter->Clear();
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_io_request_t ioRequest = {};
     ioService->request(record->project->vfs, &ramIO, &ioRequest);
-    while(!ioRequest.is_ready()){}
-    // SCookSystem::scheduler.WaitForCounter(&counter);
+    SCookSystem::scheduler.WaitForCounter(&counter);
     auto jsonString = simdjson::padded_string(ioRequest.bytes, ioRequest.size);
     sakura_free(ioRequest.bytes);
     simdjson::ondemand::parser parser;
