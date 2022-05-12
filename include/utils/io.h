@@ -38,7 +38,7 @@ typedef enum SkrIOServicePriority
     SKR_IO_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
 } SkrIOServicePriority;
 
-typedef struct RUNTIME_API skr_async_io_request_t {
+typedef struct skr_async_io_request_t {
     SAtomic32 status;
 #ifdef __cplusplus
     bool is_ready() const RUNTIME_NOEXCEPT;
@@ -50,12 +50,12 @@ typedef struct RUNTIME_API skr_async_io_request_t {
 #endif
 } skr_async_io_request_t;
 
-typedef struct RUNTIME_API skr_ram_io_service_desc_t {
+typedef struct skr_ram_io_service_desc_t {
     const char8_t* name;
     uint32_t sleep_time;
 } skr_ram_io_service_desc_t;
 
-typedef struct RUNTIME_API skr_ram_io_t {
+typedef struct skr_ram_io_t {
     const char8_t* path;
     uint8_t* bytes;
     uint64_t offset;
