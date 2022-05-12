@@ -26,7 +26,7 @@ TOOL_API SJsonConfigImporter final : public SImporter
 {
     skr_guid_t configType;
     using SImporter::SImporter;
-    void* Import(const SAssetRecord* record) override;
+    void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
 
 struct reflect attr(

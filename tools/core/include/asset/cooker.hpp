@@ -11,6 +11,11 @@
 #include "platform/guid.h"
 #include "ftl/fibtex.h"
 
+struct skr_vfs_t;
+namespace skr::io
+{
+    class RAMService;
+}
 namespace skd::asset reflect
 {
 struct SCookSystem;
@@ -25,6 +30,7 @@ struct TOOL_API SCooker {
 struct TOOL_API SCookContext { // context per job
     SAssetRecord* record;
     SCookSystem* system;
+    class skr::io::RAMService* ioService;
     eastl::shared_ptr<ftl::TaskCounter> counter;
     ghc::filesystem::path output;
     eastl::vector<skr_guid_t> staticDependencies;
@@ -50,8 +56,9 @@ struct TOOL_API SCookContext { // context per job
 };
 
 struct TOOL_API SCookSystem {
-    SCookSystem();
-    ftl::TaskScheduler scheduler;
+    SCookSystem() noexcept;
+    ~SCookSystem() noexcept;
+    static ftl::TaskScheduler scheduler;
     eastl::shared_ptr<ftl::TaskCounter> AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
     eastl::shared_ptr<ftl::TaskCounter> EnsureCooked(skr_guid_t resource);
@@ -61,5 +68,9 @@ struct TOOL_API SCookSystem {
     skr::flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash> cooking;
     static void RegisterGlobalCooker(void (*)(SCookSystem* system));
     ftl::Fibtex taskMutex;
+
+    class skr::io::RAMService* getIOService();
+    static constexpr uint32_t ioServicesMaxCount = 32;
+    class skr::io::RAMService* ioServices[ioServicesMaxCount];
 };
 } // namespace skd::assetreflect

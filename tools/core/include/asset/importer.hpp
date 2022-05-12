@@ -9,6 +9,11 @@
 #include "tool_configure.h"
 #include "utils/hashmap.hpp"
 
+namespace skr::io
+{
+    class RAMService;
+}
+
 namespace skd reflect
 {
 using namespace skr;
@@ -26,7 +31,7 @@ TOOL_API SImporter
     {
     }
     virtual ~SImporter() {}
-    virtual void* Import(const SAssetRecord* record) = 0;
+    virtual void* Import(skr::io::RAMService*, const SAssetRecord* record) = 0;
 };
 struct SImporterRegistry {
     SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object);

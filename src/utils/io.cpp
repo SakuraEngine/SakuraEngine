@@ -50,11 +50,9 @@ class RAMServiceImpl final : public RAMService
 public:
     struct Task {
         skr_vfs_t* vfs;
-        eastl::string path;
-        uint8_t* bytes;
+        std::string path;
         uint64_t offset;
-        uint64_t size;
-        SAtomic32* _status;
+        skr_async_io_request_t* request;
         SkrIOServicePriority priority;
         float sub_priority;
         skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
@@ -67,11 +65,11 @@ public:
         }
         SkrAsyncIOStatus getTaskStatus() const
         {
-            return (SkrAsyncIOStatus)skr_atomic32_load_acquire(_status);
+            return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&request->status);
         }
         void setTaskStatus(SkrAsyncIOStatus value)
         {
-            skr_atomic32_store_relaxed(_status, value);
+            skr_atomic32_store_relaxed(&request->status, value);
             if(callbacks[value] != nullptr)
                 callbacks[value](callback_datas[value]);
         }
@@ -155,7 +153,14 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
     service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
     auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
     ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
-    skr_vfs_fread(vf, service->current.bytes, service->current.offset, service->current.size);
+    if(service->current.request->bytes == nullptr)
+    {
+        // allocate
+        auto fsize = skr_vfs_fsize(vf);
+        service->current.request->size = fsize;
+        service->current.request->bytes = (char8_t*)sakura_malloc(fsize);
+    }
+    skr_vfs_fread(vf, service->current.request->bytes, service->current.offset, service->current.request->size);
     service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
     skr_vfs_fclose(vf);
 }
@@ -189,11 +194,11 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     }
     auto& back = tasks.push_back();
     back.vfs = vfs;
-    back.path = info->path;
-    back.bytes = info->bytes;
+    back.path = std::string(info->path);
     back.offset = info->offset;
-    back.size = info->size;
-    back._status = &async_request->status;
+    back.request = async_request;
+    back.request->bytes = (char8_t*)info->bytes;
+    back.request->size = info->size;
     back.priority = info->priority;
     back.sub_priority = info->sub_priority;
     for(uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
@@ -237,7 +242,7 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
         tasks.erase(
         eastl::remove_if(tasks.begin(), tasks.end(),
         [=, &cancel](Task& t) {
-            cancel = t._status == &request->status;
+            cancel = t.request == request;
             if (cancel)
                 t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
             return cancel;

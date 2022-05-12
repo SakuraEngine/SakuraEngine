@@ -49,9 +49,19 @@ inline static llfio::file_handle::creation skr_vfs_filecreation_to_llfio_creatio
 skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path,
 ESkrFileMode mode, ESkrFileCreation creation) RUNTIME_NOEXCEPT
 {
-    ghc::filesystem::path p(fs->mount_dir ? fs->mount_dir : path);
-    if (fs->mount_dir)
-        p /= path;
+    ghc::filesystem::path p;
+    if(auto in_p = ghc::filesystem::path(path); in_p.is_absolute())
+    {
+        p = in_p;
+    } 
+    else
+    {
+        p = fs->mount_dir ? fs->mount_dir : path;
+        if(fs->mount_dir)
+        {
+            p /= path;
+        }
+    }
     skr_vfile_llfio_t* vfile = SkrNew<skr_vfile_llfio_t>();
     try
     {

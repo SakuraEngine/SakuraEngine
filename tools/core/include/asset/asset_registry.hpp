@@ -6,6 +6,7 @@
 #include "utils/hashmap.hpp"
 #include "EASTL/vector.h"
 
+struct skr_vfs_t;
 namespace skd
 {
 using namespace skr;
@@ -16,6 +17,8 @@ struct SProject {
     ghc::filesystem::path assetPath;
     ghc::filesystem::path outputPath;
     ghc::filesystem::path dependencyPath;
+    skr_vfs_t* vfs = nullptr;
+    ~SProject() noexcept;
 };
 
 struct SAssetRecord {

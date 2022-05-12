@@ -11,6 +11,7 @@
 #include "utils/log.h"
 #include "utils/defer.hpp"
 #include "SkrRT/typeid.generated.hpp"
+#include "utils/io.hpp"
 
 namespace skd::asset
 {
@@ -25,7 +26,7 @@ namespace skd
 {
 namespace asset
 {
-void* SJsonConfigImporter::Import(const SAssetRecord* record)
+void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRecord* record)
 {
     auto registry = GetConfigRegistry();
     auto iter = registry->typeInfos.find(configType);
@@ -34,8 +35,28 @@ void* SJsonConfigImporter::Import(const SAssetRecord* record)
         SKR_LOG_ERROR("import resource %s failed, type is not registered as config", record->path.u8string().c_str());
         return nullptr;
     }
-    // TODO: replace file load with skr api
-    auto jsonString = simdjson::padded_string::load(record->path.u8string());
+    
+    ftl::AtomicFlag counter(&SCookSystem::scheduler);
+    counter.Set();
+    skr_ram_io_t ramIO = {};
+    ramIO.bytes = nullptr;
+    ramIO.offset = 0;
+    ramIO.size = 0;
+    // TODO: replace path with skr api
+    auto u8Path = record->path.u8string();
+    ramIO.path = u8Path.c_str();
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](void* data) noexcept
+    {
+        auto pCounter = (ftl::AtomicFlag*)data;
+        // pCounter->Clear();
+    };
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
+    skr_async_io_request_t ioRequest = {};
+    ioService->request(record->project->vfs, &ramIO, &ioRequest);
+    while(!ioRequest.is_ready()){}
+    // SCookSystem::scheduler.WaitForCounter(&counter);
+    auto jsonString = simdjson::padded_string(ioRequest.bytes, ioRequest.size);
+    sakura_free(ioRequest.bytes);
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     skr_config_resource_t* resource = skr::resource::SConfigFactory::NewConfig(configType);
