@@ -14,7 +14,7 @@
 struct skr_vfs_t;
 namespace skr::io
 {
-    class RAMService;
+class RAMService;
 }
 namespace skd::asset reflect
 {
@@ -29,7 +29,6 @@ struct TOOL_API SCooker {
 };
 struct TOOL_API SCookContext { // context per job
     SAssetRecord* record;
-    SCookSystem* system;
     class skr::io::RAMService* ioService;
     eastl::shared_ptr<ftl::TaskCounter> counter;
     ghc::filesystem::path output;
@@ -58,7 +57,8 @@ struct TOOL_API SCookContext { // context per job
 struct TOOL_API SCookSystem {
     SCookSystem() noexcept;
     ~SCookSystem() noexcept;
-    static ftl::TaskScheduler scheduler;
+    ftl::TaskScheduler scheduler;
+    void Initialize();
     eastl::shared_ptr<ftl::TaskCounter> AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
     eastl::shared_ptr<ftl::TaskCounter> EnsureCooked(skr_guid_t resource);
@@ -66,11 +66,12 @@ struct TOOL_API SCookSystem {
     void UnregisterCooker(skr_guid_t type);
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     skr::flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash> cooking;
-    static void RegisterGlobalCooker(void (*)(SCookSystem* system));
     ftl::Fibtex taskMutex;
+    ftl::Fibtex ioMutex;
 
     class skr::io::RAMService* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 32;
     class skr::io::RAMService* ioServices[ioServicesMaxCount];
 };
+TOOL_API SCookSystem* GetCookSystem();
 } // namespace skd::assetreflect

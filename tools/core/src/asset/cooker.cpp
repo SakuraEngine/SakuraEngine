@@ -23,63 +23,53 @@
 
 namespace skd::asset
 {
-auto& GetCookerRegisters()
+SCookSystem* GetCookSystem()
 {
-    static eastl::vector<void (*)(SCookSystem*)> insts;
-    return insts;
+    static SCookSystem instance;
+    return &instance;
 }
-
-ftl::TaskScheduler SCookSystem::scheduler;
 SCookSystem::SCookSystem() noexcept
     : taskMutex(&scheduler)
+    , ioMutex(&scheduler)
 {
-    static bool schedulerInitialized = false;
-    if(!schedulerInitialized)
-    {
-        scheduler.Init();
-        schedulerInitialized = true;
-    }
-    for (auto cookerRegister : GetCookerRegisters())
-        cookerRegister(this);
 
-    for(auto& ioService : ioServices)
+    for (auto& ioService : ioServices)
         ioService = nullptr;
+}
+void SCookSystem::Initialize()
+{
+    scheduler.Init();
 }
 SCookSystem::~SCookSystem() noexcept
 {
-    for(auto ioService : ioServices)
+    for (auto ioService : ioServices)
     {
-        if(ioService) skr::io::RAMService::destroy(ioService);
+        if (ioService) skr::io::RAMService::destroy(ioService);
     }
-}
-
-void SCookSystem::RegisterGlobalCooker(void (*f)(SCookSystem*))
-{
-    GetCookerRegisters().push_back(f);
 }
 
 skr::io::RAMService* SCookSystem::getIOService()
 {
-    for(auto& ioService : ioServices)
+    for (auto& ioService : ioServices)
     {
         // all used up
-        if(ioService == nullptr)
+        if (ioService == nullptr)
         {
             skr_ram_io_service_desc_t desc = {};
             // cook system runs quick so there is no need to sleep long
-            desc.sleep_time = 1; 
+            desc.sleep_time = 1;
             ioService = skr::io::RAMService::create(&desc);
             return ioService;
-
         }
         // find a sleep one
         else
         {
-            if(ioService->get_service_status() == SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING)
+            if (ioService->get_service_status() == SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING)
             {
                 return ioService;
             }
-            else continue;
+            else
+                continue;
         }
     }
     static uint32_t cursor = 0;
@@ -95,7 +85,6 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         return iter->second->counter;
     SCookContext* jobContext = SkrNew<SCookContext>();
     jobContext->record = GetAssetRegistry()->GetAssetRecord(guid);
-    jobContext->system = this;
     jobContext->ioService = getIOService();
     auto counter = eastl::make_shared<ftl::TaskCounter>(&scheduler);
     jobContext->counter = counter;
@@ -106,8 +95,9 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         ghc::filesystem::create_directories(outputPath);
         // TODO: platform dependent directory
         jobContext->output = outputPath / fmt::format("{}.bin", metaAsset->guid);
-        auto iter = jobContext->system->cookers.find(metaAsset->type);
-        SKR_ASSERT(iter != jobContext->system->cookers.end()); // TODO: error handling
+        auto system = GetCookSystem();
+        auto iter = system->cookers.find(metaAsset->type);
+        SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
         iter->second->Cook(jobContext);
         // write dependencies
         auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
@@ -125,10 +115,11 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
     };
     auto TearDownTask = +[](ftl::TaskScheduler* scheduler, void* userdata) {
         SCookContext* jobContext = (SCookContext*)userdata;
-        jobContext->system->scheduler.WaitForCounter(jobContext->counter.get());
+        auto system = GetCookSystem();
+        system->scheduler.WaitForCounter(jobContext->counter.get());
         {
-            std::lock_guard<ftl::Fibtex> lock(jobContext->system->taskMutex);
-            jobContext->system->cooking.erase(jobContext->record->guid);
+            std::lock_guard<ftl::Fibtex> lock(system->taskMutex);
+            system->cooking.erase(jobContext->record->guid);
             SkrDelete(jobContext);
         }
     };
@@ -278,11 +269,11 @@ void* SCookContext::_Import()
 void SCookContext::AddRuntimeDependency(skr_guid_t resource)
 {
     runtimeDependencies.push_back(resource);
-    system->EnsureCooked(resource); // try launch new cook task, non blocking
+    GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
 }
 void* SCookContext::AddStaticDependency(skr_guid_t resource)
 {
     staticDependencies.push_back(resource);
-    return system->CookOrLoad(resource);
+    return GetCookSystem()->CookOrLoad(resource);
 }
 } // namespace skd::asset

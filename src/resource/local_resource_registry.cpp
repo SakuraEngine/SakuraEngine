@@ -14,6 +14,7 @@ SLocalResourceRegistry::SLocalResourceRegistry(skr_vfs_t* vfs)
 }
 void SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
 {
+    //简单实现，直接在 resource 路径下按 guid 找到文件读信息，没有单独的数据库
     auto guid = request->resourceRecord->header.guid;
     ghc::filesystem::path path = fmt::format("{}.bin", guid);
     // TODO: 检查文件存在？

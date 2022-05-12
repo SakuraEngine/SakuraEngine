@@ -14,13 +14,8 @@ static struct RegisterCooker${type.id}Helper
     {
         using namespace skd::asset;
         static constexpr skr_guid_t guid = {${type.guidConstant}};
-        auto reg = 
-            +[](SCookSystem* system)
-            {
-                static ${type.name} instance;
-                system->RegisterCooker(guid, &instance);
-            };
-        SCookSystem::RegisterGlobalCooker(reg);
+        static ${type.name} instance;
+        GetCookSystem()->cookers.insert(std::make_pair(guid, &instance));
     }
 } _RegisterCooker${type.id}Helper;
 %endfor
