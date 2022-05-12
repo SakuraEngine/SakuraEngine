@@ -71,6 +71,8 @@ void SAssetRegistry::AddProject(SProject* project)
             ImportAsset(project, entry.path());
         }
     }
+    ghc::filesystem::create_directories(project->outputPath);
+    ghc::filesystem::create_directories(project->dependencyPath);
     // TODO: asset watcher
 }
 SAssetRegistry::~SAssetRegistry()

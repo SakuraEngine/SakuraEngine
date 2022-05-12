@@ -15,6 +15,7 @@
 #include <grpcpp/server_builder.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/create_channel.h>
+#include <mutex>
 #include "asset/config_asset.hpp"
 #include "bitsery/serializer.h"
 #include "type/type_registry.h"
@@ -74,17 +75,27 @@ int main(int argc, char** argv)
     auto project = SkrNew<skd::asset::SProject>();
     project->assetPath = (root.parent_path() / "../../../samples/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
+    project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
     registry.AddProject(project);
     //----- run cook tasks
     skd::asset::SCookSystem system;
-    // TODO: incremental cook & dependency management
-    ftl::TaskCounter counter(&system.scheduler);
     for (auto& pair : registry.assets)
     {
         if (!(pair.second->type == skr_guid_t()))
-            system.AddCookTask(pair.second, &counter);
+            system.EnsureCooked(pair.second->guid);
     }
-    system.scheduler.WaitForCounter(&counter);
+    //----- wait
+    while (1)
+    {
+        eastl::shared_ptr<ftl::TaskCounter> counter;
+        {
+            std::lock_guard<ftl::Fibtex> lock(system.taskMutex);
+            if (system.cooking.empty())
+                break;
+            counter = system.cooking.begin()->second->counter;
+        }
+        system.scheduler.WaitForCounter(counter.get());
+    }
     moduleManager->destroy_module_graph();
     return 0;
     using namespace grpc;

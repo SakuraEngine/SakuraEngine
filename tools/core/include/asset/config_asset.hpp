@@ -35,6 +35,7 @@ struct reflect attr(
 TOOL_API SConfigCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
+    uint32_t Version() override;
 };
 
 struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
