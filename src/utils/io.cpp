@@ -7,28 +7,28 @@
 #include <EASTL/deque.h>
 #include <EASTL/sort.h>
 
-bool skr_async_io_request_t::is_ready() const
+bool skr_async_io_request_t::is_ready() const RUNTIME_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_OK;
 }
-bool skr_async_io_request_t::is_enqueued() const
+bool skr_async_io_request_t::is_enqueued() const RUNTIME_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_ENQUEUED;
 }
-bool skr_async_io_request_t::is_cancelled() const
+bool skr_async_io_request_t::is_cancelled() const RUNTIME_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_CANCELLED;
 }
-bool skr_async_io_request_t::is_ram_loading() const
+bool skr_async_io_request_t::is_ram_loading() const RUNTIME_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_RAM_LOADING;
 }
-bool skr_async_io_request_t::is_vram_loading() const
+bool skr_async_io_request_t::is_vram_loading() const RUNTIME_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_VRAM_LOADING;
 }
 
-SkrAsyncIOStatus skr_async_io_request_t::get_status() const
+SkrAsyncIOStatus skr_async_io_request_t::get_status() const RUNTIME_NOEXCEPT
 {
     return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&status);
 }
@@ -64,8 +64,8 @@ public:
             skr_atomic32_store_relaxed(_status, value);
         }
     };
-    ~RAMServiceImpl() = default;
-    RAMServiceImpl(uint32_t sleep_time)
+    ~RAMServiceImpl() RUNTIME_NOEXCEPT = default;
+    RAMServiceImpl(uint32_t sleep_time) RUNTIME_NOEXCEPT
         : _sleepTime(sleep_time)
     {
     }

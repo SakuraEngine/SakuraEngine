@@ -41,12 +41,12 @@ typedef enum SkrIOServicePriority
 typedef struct RUNTIME_API skr_async_io_request_t {
     SAtomic32 status;
 #ifdef __cplusplus
-    bool is_ready() const;
-    bool is_enqueued() const;
-    bool is_cancelled() const;
-    bool is_ram_loading() const;
-    bool is_vram_loading() const;
-    SkrAsyncIOStatus get_status() const;
+    bool is_ready() const RUNTIME_NOEXCEPT;
+    bool is_enqueued() const RUNTIME_NOEXCEPT;
+    bool is_cancelled() const RUNTIME_NOEXCEPT;
+    bool is_ram_loading() const RUNTIME_NOEXCEPT;
+    bool is_vram_loading() const RUNTIME_NOEXCEPT;
+    SkrAsyncIOStatus get_status() const RUNTIME_NOEXCEPT;
 #endif
 } skr_async_io_request_t;
 
