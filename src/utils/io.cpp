@@ -70,7 +70,7 @@ public:
         void setTaskStatus(SkrAsyncIOStatus value)
         {
             skr_atomic32_store_relaxed(&request->status, value);
-            if(callbacks[value] != nullptr)
+            if (callbacks[value] != nullptr)
                 callbacks[value](callback_datas[value]);
         }
     };
@@ -126,10 +126,11 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
     // try fetch a new task
     {
-        SMutexLock lock(service->taskMutex);
+        skr_acquire_mutex(&service->taskMutex);
         // empty sleep
         if (!service->tasks.size())
         {
+            skr_release_mutex(&service->taskMutex);
             service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING);
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
             if (sleepTimeVal != SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER)
@@ -148,12 +149,13 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         // pop current task
         service->current = service->tasks.front();
         service->tasks.pop_front();
+        skr_release_mutex(&service->taskMutex);
     }
     // do io work
     service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
     auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
     ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
-    if(service->current.request->bytes == nullptr)
+    if (service->current.request->bytes == nullptr)
     {
         // allocate
         auto fsize = skr_vfs_fsize(vf);
@@ -201,7 +203,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     back.request->size = info->size;
     back.priority = info->priority;
     back.sub_priority = info->sub_priority;
-    for(uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
+    for (uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
     {
         back.callbacks[i] = info->callbacks[i];
         back.callback_datas[i] = info->callback_datas[i];
