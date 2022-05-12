@@ -9,23 +9,28 @@
 
 bool skr_async_io_request_t::is_ready() const
 {
-    return SKR_ASYNC_IO_STATUS_OK == skr_atomic32_load_acquire(&status);
+    return get_status() == SKR_ASYNC_IO_STATUS_OK;
 }
 bool skr_async_io_request_t::is_enqueued() const
 {
-    return SKR_ASYNC_IO_STATUS_ENQUEUED == skr_atomic32_load_acquire(&status);
+    return get_status() == SKR_ASYNC_IO_STATUS_ENQUEUED;
 }
 bool skr_async_io_request_t::is_cancelled() const
 {
-    return SKR_ASYNC_IO_STATUS_CANCELLED == skr_atomic32_load_acquire(&status);
+    return get_status() == SKR_ASYNC_IO_STATUS_CANCELLED;
 }
 bool skr_async_io_request_t::is_ram_loading() const
 {
-    return SKR_ASYNC_IO_STATUS_RAM_LOADING == skr_atomic32_load_acquire(&status);
+    return get_status() == SKR_ASYNC_IO_STATUS_RAM_LOADING;
 }
 bool skr_async_io_request_t::is_vram_loading() const
 {
-    return SKR_ASYNC_IO_STATUS_VRAM_LOADING == skr_atomic32_load_acquire(&status);
+    return get_status() == SKR_ASYNC_IO_STATUS_VRAM_LOADING;
+}
+
+SkrAsyncIOStatus skr_async_io_request_t::get_status() const
+{
+    return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&status);
 }
 
 // RAM Service
@@ -42,13 +47,21 @@ public:
         uint8_t* bytes;
         uint64_t offset;
         uint64_t size;
-        SAtomic32* status;
+        SAtomic32* _status;
         SkrIOServicePriority priority;
         float sub_priority;
         bool operator<(const Task& rhs) const
         {
             if (rhs.priority != priority) return priority < rhs.priority;
             return sub_priority < rhs.sub_priority;
+        }
+        SkrAsyncIOStatus getTaskStatus() const
+        {
+            return (SkrAsyncIOStatus)skr_atomic32_load_acquire(_status);
+        }
+        void setTaskStatus(SkrAsyncIOStatus value)
+        {
+            skr_atomic32_store_relaxed(_status, value);
         }
     };
     ~RAMServiceImpl() = default;
@@ -60,6 +73,19 @@ public:
     bool try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT final;
     void drain() RUNTIME_NOEXCEPT final;
     void set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT final;
+    SkrAsyncIOServiceStatus get_service_status() const RUNTIME_NOEXCEPT final
+    {
+        return getRunningStatus();
+    }
+
+    void setRunningStatus(SkrAsyncIOServiceStatus status)
+    {
+        skr_atomic32_store_relaxed(&_running_status, status);
+    }
+    SkrAsyncIOServiceStatus getRunningStatus() const
+    {
+        return (SkrAsyncIOServiceStatus)skr_atomic32_load_acquire(&_running_status);
+    }
 
     SMutex taskMutex;
     SThreadDesc threadItem = {};
@@ -82,7 +108,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         // empty sleep
         if (!service->tasks.size())
         {
-            skr_atomic32_store_relaxed(&service->_running_status, SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING);
+            service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING);
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
             if (sleepTimeVal != SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER)
             {
@@ -94,7 +120,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         }
         else // do sort
         {
-            skr_atomic32_store_relaxed(&service->_running_status, SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
+            service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
             eastl::heap_sort(service->tasks.begin(), service->tasks.end());
         }
         // pop current task
@@ -104,9 +130,9 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
     // do io work
     auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
     ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
-    skr_atomic32_store_relaxed(service->current.status, SKR_ASYNC_IO_STATUS_RAM_LOADING);
+    service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
     skr_vfs_fread(vf, service->current.bytes, service->current.offset, service->current.size);
-    skr_atomic32_store_relaxed(service->current.status, SKR_ASYNC_IO_STATUS_OK);
+    service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
     skr_vfs_fclose(vf);
 }
 
@@ -140,7 +166,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     back.bytes = info->bytes;
     back.offset = info->offset;
     back.size = info->size;
-    back.status = &async_request->status;
+    back._status = &async_request->status;
     back.priority = info->priority;
     back.sub_priority = info->sub_priority;
     skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
@@ -152,7 +178,7 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
     skr_init_mutex(&service->taskMutex);
-    skr_atomic32_store_relaxed(&service->_running_status, SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
+    service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
     skr_atomic32_store_relaxed(&service->_stop, false);
     skr_init_thread(&service->threadItem, &service->serviceThread);
     return service;
@@ -179,9 +205,9 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
         tasks.erase(
         eastl::remove_if(tasks.begin(), tasks.end(),
         [=, &cancel](Task& t) {
-            cancel = t.status == &request->status;
+            cancel = t._status == &request->status;
             if (cancel)
-                skr_atomic32_store_relaxed(t.status, SKR_ASYNC_IO_STATUS_CANCELLED);
+                t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
             return cancel;
         }),
         tasks.end());
@@ -193,7 +219,7 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
 void skr::io::RAMServiceImpl::drain() RUNTIME_NOEXCEPT
 {
     // wait for sleep
-    for (; skr_atomic32_load_acquire(&_running_status) != SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING;)
+    for (; getRunningStatus() != SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING;)
     {
         //...
     }
