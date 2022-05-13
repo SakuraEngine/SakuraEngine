@@ -583,7 +583,7 @@ FTL_NOINLINE unsigned TaskScheduler::GetCurrentThreadIndex() const
         }
     }
 
-    return nullptr;
+    return kInvalidIndex;
 }
 
 #endif
