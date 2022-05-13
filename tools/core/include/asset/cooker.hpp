@@ -72,7 +72,7 @@ struct TOOL_API SCookSystem {
     CookingMap cooking;
     SMutex ioMutex;
     class skr::io::RAMService* getIOService();
-    static constexpr uint32_t ioServicesMaxCount = 32;
+    static constexpr uint32_t ioServicesMaxCount = 4;
     class skr::io::RAMService* ioServices[ioServicesMaxCount];
     ftl::TaskScheduler* scheduler;
     ftl::TaskCounter* mainCounter;

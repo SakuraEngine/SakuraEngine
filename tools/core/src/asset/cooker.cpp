@@ -33,7 +33,18 @@ SCookSystem::SCookSystem() noexcept
 {
     skr_init_mutex(&ioMutex);
     for (auto& ioService : ioServices)
-        ioService = nullptr;
+    {
+        // all used up
+        if (ioService == nullptr)
+        {
+            skr_ram_io_service_desc_t desc = {};
+            // cook system runs quick so there is no need to sleep long
+            desc.sleep_time = 1;
+            desc.lockless = true;
+            desc.sort_method = SKR_IO_SERVICE_SORT_METHOD_NEVER;
+            ioService = skr::io::RAMService::create(&desc);
+        }
+    }
 }
 void SCookSystem::Initialize()
 {
@@ -69,33 +80,11 @@ void SCookSystem::WaitForAll()
     scheduler->WaitForCounter(mainCounter);
 }
 
+#include <atomic>
 skr::io::RAMService* SCookSystem::getIOService()
 {
     SMutexLock lock(ioMutex);
-    for (auto& ioService : ioServices)
-    {
-        // all used up
-        if (ioService == nullptr)
-        {
-            skr_ram_io_service_desc_t desc = {};
-            // cook system runs quick so there is no need to sleep long
-            desc.sleep_time = 1;
-            desc.lockless = true;
-            ioService = skr::io::RAMService::create(&desc);
-            return ioService;
-        }
-        // find a sleep one
-        else
-        {
-            if (ioService->get_service_status() == SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING)
-            {
-                return ioService;
-            }
-            else
-                continue;
-        }
-    }
-    static uint32_t cursor = 0;
+    static std::atomic_uint32_t cursor = 0;
     cursor = (cursor % ioServicesMaxCount);
     return ioServices[cursor++];
 }
