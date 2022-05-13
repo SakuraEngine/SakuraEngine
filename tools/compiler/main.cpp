@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     auto project = SkrNew<skd::asset::SProject>();
     auto parentPath = root.parent_path().u8string();
     skr_vfs_desc_t vfs_desc = {};
-    vfs_desc.app_name = "Projejct";
+    vfs_desc.app_name = "Project";
     vfs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
     vfs_desc.override_mount_dir = parentPath.c_str();
     project->vfs = skr_create_vfs(&vfs_desc);
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     auto& system = *skd::asset::GetCookSystem();
     system.Initialize();
     {
-        ftl::TaskCounter counter(&system.scheduler);
+        ftl::TaskCounter counter(&system.GetScheduler());
         for (auto& pair : registry.assets)
         {
             if (!(pair.second->type == skr_guid_t()))
@@ -98,23 +98,14 @@ int main(int argc, char** argv)
                     auto& system = *skd::asset::GetCookSystem();
                     system.EnsureCooked(((skd::asset::SAssetRecord*)data)->guid);
                 };
-                system.scheduler.AddTask({ Task, pair.second }, ftl::TaskPriority::High, &counter);
+                system.GetScheduler().AddTask({ Task, pair.second }, ftl::TaskPriority::High, &counter);
             }
         }
-        system.scheduler.WaitForCounter(&counter);
+        system.GetScheduler().WaitForCounter(&counter);
     }
     //----- wait
-    while (1)
-    {
-        eastl::shared_ptr<ftl::TaskCounter> counter;
-        {
-            SMutexLock lock(system.taskMutex);
-            if (system.cooking.empty())
-                break;
-            counter = system.cooking.begin()->second->counter;
-        }
-        system.scheduler.WaitForCounter(counter.get());
-    }
+    system.WaitForAll();
+    system.Shutdown();
     moduleManager->destroy_module_graph();
     return 0;
     using namespace grpc;

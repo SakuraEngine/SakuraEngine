@@ -43,12 +43,12 @@ typedef struct skr_async_io_request_t {
     char8_t* bytes;
     uint64_t size;
 #ifdef __cplusplus
-    bool is_ready() const RUNTIME_NOEXCEPT;
-    bool is_enqueued() const RUNTIME_NOEXCEPT;
-    bool is_cancelled() const RUNTIME_NOEXCEPT;
-    bool is_ram_loading() const RUNTIME_NOEXCEPT;
-    bool is_vram_loading() const RUNTIME_NOEXCEPT;
-    SkrAsyncIOStatus get_status() const RUNTIME_NOEXCEPT;
+    RUNTIME_API bool is_ready() const RUNTIME_NOEXCEPT;
+    RUNTIME_API bool is_enqueued() const RUNTIME_NOEXCEPT;
+    RUNTIME_API bool is_cancelled() const RUNTIME_NOEXCEPT;
+    RUNTIME_API bool is_ram_loading() const RUNTIME_NOEXCEPT;
+    RUNTIME_API bool is_vram_loading() const RUNTIME_NOEXCEPT;
+    RUNTIME_API SkrAsyncIOStatus get_status() const RUNTIME_NOEXCEPT;
 #endif
 } skr_async_io_request_t;
 

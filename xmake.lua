@@ -1,6 +1,6 @@
 set_project("Sakura.Runtime")
 
-add_rules("mode.debug", "mode.release")
+add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_moduledirs("xmake/modules")
 
 option("build_tools")

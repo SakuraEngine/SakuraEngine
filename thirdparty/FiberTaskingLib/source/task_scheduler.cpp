@@ -220,6 +220,8 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 if (nextTask.Counter != nullptr)
                 {
                     nextTask.Counter->Decrement();
+                    if (nextTask.TaskToExecute.PostFunction)
+                        nextTask.TaskToExecute.PostFunction(nextTask.TaskToExecute.ArgData);
                 }
             }
             else

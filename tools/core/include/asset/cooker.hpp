@@ -10,6 +10,7 @@
 #include "platform/configure.h"
 #include "platform/guid.h"
 #include "ftl/fibtex.h"
+#include "utils/hashmap.hpp"
 
 struct skr_vfs_t;
 namespace skr::io
@@ -57,20 +58,24 @@ struct TOOL_API SCookContext { // context per job
 struct TOOL_API SCookSystem {
     SCookSystem() noexcept;
     ~SCookSystem() noexcept;
-    ftl::TaskScheduler scheduler;
     void Initialize();
+    void Shutdown();
     eastl::shared_ptr<ftl::TaskCounter> AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
     eastl::shared_ptr<ftl::TaskCounter> EnsureCooked(skr_guid_t resource);
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
+    ftl::TaskScheduler& GetScheduler();
+    void WaitForAll();
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
-    skr::flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash> cooking;
-    SMutex taskMutex;
-
+    using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
+    CookingMap cooking;
+    SMutex ioMutex;
     class skr::io::RAMService* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 32;
     class skr::io::RAMService* ioServices[ioServicesMaxCount];
+    ftl::TaskScheduler* scheduler;
+    ftl::TaskCounter* mainCounter;
 };
 TOOL_API SCookSystem* GetCookSystem();
 } // namespace skd::assetreflect
