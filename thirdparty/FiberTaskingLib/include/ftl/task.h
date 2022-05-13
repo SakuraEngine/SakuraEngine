@@ -24,20 +24,24 @@
 
 #pragma once
 
-namespace ftl {
+namespace ftl
+{
 
 class TaskScheduler;
 
-using TaskFunction = void (*)(TaskScheduler *taskScheduler, void *arg);
+using TaskFunction = void (*)(TaskScheduler* taskScheduler, void* arg);
+using TaskPostFunction = void (*)(void* arg);
 
 struct Task {
-	TaskFunction Function;
-	void *ArgData;
+    TaskFunction Function;
+    void* ArgData;
+    TaskPostFunction PostFunction = nullptr;
 };
 
-enum class TaskPriority {
-	High,
-	Normal,
+enum class TaskPriority
+{
+    High,
+    Normal,
 };
 
 } // End of namespace ftl
