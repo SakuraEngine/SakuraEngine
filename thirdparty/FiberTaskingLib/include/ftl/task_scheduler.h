@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "coqueue.h"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"
@@ -33,6 +34,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <shared_mutex>
 #include <vector>
 
 namespace ftl
@@ -178,7 +180,8 @@ private:
      * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
      * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
      */
-    std::atomic<bool>* m_freeFibers{ nullptr };
+    mutable moodycamel::ConcurrentQueue<uint32_t> m_freeFibers;
+    // std::atomic<bool>* m_freeFibers{ nullptr };
     /**
      * An array of ReadyFiberBundle which is used by @WaitForCounter()
      *
@@ -191,7 +194,13 @@ private:
      * simple, we pre-allocate one for each fiber. The struct is small, so this
      * preallocation isn't too bad
      */
-    ReadyFiberBundle* m_readyFiberBundles{ nullptr };
+    moodycamel::ConcurrentQueue<ReadyFiberBundle*> m_readyFiberBundles;
+    ReadyFiberBundle* m_fiberBundleBulks[10]{ nullptr };
+    unsigned m_fiberBundleBulksCount = 1;
+    ReadyFiberBundle* CreateFiberBundle();
+    void ReleaseFiberBundle(ReadyFiberBundle* bundle);
+
+    mutable std::shared_mutex reallocMutex;
 
     Fiber* m_quitFibers{ nullptr };
 
@@ -371,7 +380,7 @@ private:
      *
      * @return    The index of the next available fiber in the pool
      */
-    unsigned GetNextFreeFiberIndex() const;
+    unsigned GetNextFreeFiberIndex();
     /**
      * If necessary, moves the old fiber to the fiber pool or the waiting list
      * The old fiber is the last fiber to run on the thread before the current fiber
