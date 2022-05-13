@@ -89,19 +89,14 @@ int main(int argc, char** argv)
     registry.AddProject(project);
     //----- run cook tasks
     {
-        ftl::TaskCounter counter(&system.GetScheduler());
-        for (auto& pair : registry.assets)
-        {
-            if (!(pair.second->type == skr_guid_t()))
-            {
-                auto Task = [](ftl::TaskScheduler* scheduler, void* data) {
-                    auto& system = *skd::asset::GetCookSystem();
-                    system.EnsureCooked(((skd::asset::SAssetRecord*)data)->guid);
-                };
-                system.GetScheduler().AddTask({ Task, pair.second }, ftl::TaskPriority::High, &counter);
-            }
-        }
-        system.GetScheduler().WaitForCounter(&counter);
+        using iter = typename decltype(registry.assets)::iterator;
+        skd::asset::ParallelFor(registry.assets.begin(), registry.assets.end(), 10,
+        [](iter begin, iter end) {
+            auto& system = *skd::asset::GetCookSystem();
+            for (auto i = begin; i != end; ++i)
+                if (!(i->second->type == skr_guid_t{}))
+                    system.EnsureCooked(i->second->guid);
+        });
     }
     //----- wait
     system.WaitForAll();

@@ -91,20 +91,12 @@ void SAssetRegistry::AddProject(SProject* project)
         }
     }
     SKR_LOG_INFO("Project dir scan finished.");
-    auto& scheduler = GetCookSystem()->GetScheduler();
-    static SProject* sproject;
-    sproject = project;
-    ftl::TaskCounter counter(&scheduler);
-    for (auto& path : paths)
-    {
-        ImportAsset(project, path);
-        ftl::Task Task = { +[](ftl::TaskScheduler*, void* path) {
-                              GetAssetRegistry()->ImportAsset(sproject, *(ghc::filesystem::path*)path);
-                          },
-            &path };
-        scheduler.AddTask(Task, ftl::TaskPriority::Normal, &counter);
-    }
-    scheduler.WaitForCounter(&counter);
+    using iter_t = typename decltype(paths)::iterator;
+    skd::asset::ParallelFor(paths.begin(), paths.end(), 20,
+    [&](iter_t begin, iter_t end) {
+        for (auto i = begin; i != end; ++i)
+            ImportAsset(project, *i);
+    });
     SKR_LOG_INFO("Project asset import finished.");
     ghc::filesystem::create_directories(project->outputPath);
     ghc::filesystem::create_directories(project->dependencyPath);
