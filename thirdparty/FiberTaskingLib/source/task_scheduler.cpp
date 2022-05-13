@@ -109,11 +109,11 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     EndCurrentThread();
     FTL_THREAD_FUNC_END;
 }
-
 // This Task is never used directly
 // However, a function pointer to it is the signal that the task is a Ready fiber, not a "real" task
 // See @FiberStartFunc() for more details
-static void ReadyFiberDummyTask(TaskScheduler* taskScheduler, void* arg)
+static void
+ReadyFiberDummyTask(TaskScheduler* taskScheduler, void* arg)
 {
     (void)taskScheduler;
     (void)arg;
@@ -202,9 +202,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 auto& target = taskScheduler->m_fibers[tls->CurrentFiberIndex];
                 taskScheduler->reallocMutex.unlock_shared();
 
-                TracyFiberEnter(target.name.c_str())
                 task.SwitchToFiber(&target);
-                TracyFiberLeave
             }
 
             if (callbacks.OnFiberAttached != nullptr)
@@ -241,7 +239,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 }
 
                 {
-                    ZoneScoped("Task");
+                    // ZoneScoped("Task");
                     nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
                 }
 
@@ -309,8 +307,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         taskScheduler->reallocMutex.lock_shared();
         auto& task = taskScheduler->m_fibers[taskScheduler->m_tls[index].CurrentFiberIndex];
         taskScheduler->reallocMutex.unlock_shared();
-        TracyFiberLeave
-        TracyFiberEnter(taskScheduler->m_quitFibers[index].name.c_str())
         task.SwitchToFiber(&taskScheduler->m_quitFibers[index]);
     }
 
@@ -332,16 +328,14 @@ void TaskScheduler::ThreadEndFunc(void* arg)
     // Jump to the thread fibers
     unsigned threadIndex = taskScheduler->GetCurrentThreadIndex();
 
-    if (threadIndex == 0)
+    TracyFiberLeave if (threadIndex == 0)
     {
-        TracyFiberLeave
-        // Special case for the main thread fiber
+        //  Special case for the main thread fiber
         taskScheduler->m_quitFibers[threadIndex]
         .SwitchToFiber(&taskScheduler->m_fibers[0]);
     }
     else
     {
-        TracyFiberLeave
         taskScheduler->m_quitFibers[threadIndex]
         .SwitchToFiber(&taskScheduler->m_tls[threadIndex].ThreadFiber);
     }
@@ -504,8 +498,6 @@ TaskScheduler::~TaskScheduler()
             auto& task = m_fibers[m_tls[index].CurrentFiberIndex];
             reallocMutex.unlock_shared();
 
-            TracyFiberLeave
-            TracyFiberEnter(m_quitFibers[index].name.c_str())
             task.SwitchToFiber(&m_quitFibers[index]);
         }
     }
