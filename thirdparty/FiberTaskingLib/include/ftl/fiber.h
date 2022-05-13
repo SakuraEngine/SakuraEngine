@@ -32,112 +32,120 @@
 
 #include "task.h"
 
-namespace ftl {
+#include "runtime_configure.h"
 
-using FiberStartRoutine = void (*)(void *arg);
+namespace ftl
+{
 
-class Fiber {
+using FiberStartRoutine = void (*)(void* arg);
+
+class RUNTIME_API Fiber
+{
 public:
-	/**
-	 * Default constructor
-	 * Nothing is allocated. This can be used as a thread fiber.
-	 */
-	Fiber()
-	{
-		name = std::to_string((int64_t)this);
-	}
-	/**
-	 * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
-	 *
-	 * @param stackSize        The stack size for the fiber. If guard pages are being used, this will be rounded up to
-	 * the next multiple of the system page size
-	 * @param startRoutine     The function to run when the fiber first starts
-	 * @param arg              The argument to pass to 'startRoutine'
-	 */
-	Fiber(size_t stackSize, FiberStartRoutine startRoutine, void *arg);
+    /**
+     * Default constructor
+     * Nothing is allocated. This can be used as a thread fiber.
+     */
+    Fiber()
+    {
+        name = std::to_string((int64_t)this);
+    }
+    /**
+     * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
+     *
+     * @param stackSize        The stack size for the fiber. If guard pages are being used, this will be rounded up to
+     * the next multiple of the system page size
+     * @param startRoutine     The function to run when the fiber first starts
+     * @param arg              The argument to pass to 'startRoutine'
+     */
+    Fiber(size_t stackSize, FiberStartRoutine startRoutine, void* arg);
 
-	/**
-	 * Deleted copy constructor
-	 * It makes no sense to copy a stack and its corresponding context. Therefore, we explicitly forbid it.
-	 */
-	Fiber(Fiber const &other) = delete;
-	/**
-	 * Deleted copy assignment operator
-	 * It makes no sense to copy a stack and its corresponding context. Therefore, we explicitly forbid it.
-	 */
-	Fiber &operator=(Fiber const &other) = delete;
+    /**
+     * Deleted copy constructor
+     * It makes no sense to copy a stack and its corresponding context. Therefore, we explicitly forbid it.
+     */
+    Fiber(Fiber const& other) = delete;
+    /**
+     * Deleted copy assignment operator
+     * It makes no sense to copy a stack and its corresponding context. Therefore, we explicitly forbid it.
+     */
+    Fiber& operator=(Fiber const& other) = delete;
 
-	/**
-	 * Move constructor
-	 * This does a swap() of all the member variables
-	 *
-	 * @param other
-	 *
-	 * @return
-	 */
-	Fiber(Fiber &&other) noexcept
-	        : Fiber() {
-		Swap(*this, other);
-	}
+    /**
+     * Move constructor
+     * This does a swap() of all the member variables
+     *
+     * @param other
+     *
+     * @return
+     */
+    Fiber(Fiber&& other) noexcept
+        : Fiber()
+    {
+        Swap(*this, other);
+    }
 
-	/**
-	 * Move assignment operator
-	 * This does a swap() of all the member variables
-	 *
-	 * @param other    The fiber to move
-	 */
-	Fiber &operator=(Fiber &&other) noexcept {
-		Swap(*this, other);
+    /**
+     * Move assignment operator
+     * This does a swap() of all the member variables
+     *
+     * @param other    The fiber to move
+     */
+    Fiber& operator=(Fiber&& other) noexcept
+    {
+        Swap(*this, other);
 
-		return *this;
-	}
-	~Fiber();
+        return *this;
+    }
+    ~Fiber();
 
-	std::string name;
+    std::string name;
 
 private:
-	void *m_stack{nullptr};
-	size_t m_systemPageSize{0};
-	size_t m_stackSize{0};
-	boost_context::fcontext_t m_context{nullptr};
-	void *m_arg{nullptr};
-	FTL_VALGRIND_ID
+    void* m_stack{ nullptr };
+    size_t m_systemPageSize{ 0 };
+    size_t m_stackSize{ 0 };
+    boost_context::fcontext_t m_context{ nullptr };
+    void* m_arg{ nullptr };
+    FTL_VALGRIND_ID
 
 public:
-	/**
-	 * Saves the current stack context and then switches to the given fiber
-	 * Execution will resume here once another fiber switches to this fiber
-	 *
-	 * @param fiber    The fiber to switch to
-	 */
-	void SwitchToFiber(Fiber *const fiber) {
-		boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
-	}
-	/**
-	 * Re-initializes the stack with a new startRoutine and arg
-	 *
-	 * NOTE: This can NOT be called on a fiber that has m_stack == nullptr || m_stackSize == 0
-	 *       AKA, a default constructed fiber.
-	 *
-	 * @param startRoutine    The function to run when the fiber is next switched to
-	 * @param arg             The arg for 'startRoutine'
-	 *
-	 * @return
-	 */
-	void Reset(FiberStartRoutine const startRoutine, void *const arg) {
-		m_context = boost_context::make_fcontext(static_cast<char *>(m_stack) + m_stackSize, m_stackSize, startRoutine);
-		m_arg = arg;
-	}
+    /**
+     * Saves the current stack context and then switches to the given fiber
+     * Execution will resume here once another fiber switches to this fiber
+     *
+     * @param fiber    The fiber to switch to
+     */
+    void SwitchToFiber(Fiber* const fiber)
+    {
+        boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
+    }
+    /**
+     * Re-initializes the stack with a new startRoutine and arg
+     *
+     * NOTE: This can NOT be called on a fiber that has m_stack == nullptr || m_stackSize == 0
+     *       AKA, a default constructed fiber.
+     *
+     * @param startRoutine    The function to run when the fiber is next switched to
+     * @param arg             The arg for 'startRoutine'
+     *
+     * @return
+     */
+    void Reset(FiberStartRoutine const startRoutine, void* const arg)
+    {
+        m_context = boost_context::make_fcontext(static_cast<char*>(m_stack) + m_stackSize, m_stackSize, startRoutine);
+        m_arg = arg;
+    }
 
 private:
-	/**
-	 * Helper function for the move operators
-	 * Swaps all the member variables
-	 *
-	 * @param first     The first fiber
-	 * @param second    The second fiber
-	 */
-	static void Swap(Fiber &first, Fiber &second) noexcept;
+    /**
+     * Helper function for the move operators
+     * Swaps all the member variables
+     *
+     * @param first     The first fiber
+     * @param second    The second fiber
+     */
+    static void Swap(Fiber& first, Fiber& second) noexcept;
 };
 
 } // End of namespace ftl

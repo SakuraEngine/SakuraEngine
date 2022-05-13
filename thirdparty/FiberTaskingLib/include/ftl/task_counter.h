@@ -26,7 +26,8 @@
 
 #include "base_counter.h"
 
-namespace ftl {
+namespace ftl
+{
 
 class TaskScheduler;
 
@@ -35,59 +36,64 @@ class TaskScheduler;
  * It is used to create dependencies between Tasks, and is how you wait
  * for a set of Tasks to finish.
  */
-class TaskCounter : public BaseCounter {
+class RUNTIME_API TaskCounter : public BaseCounter
+{
 
 public:
-	/**
-	 * Creates a TaskCounter
-	 *
-	 * @param taskScheduler    The TaskScheduler this counter references
-	 * @param initialValue     The initial value of the counter
-	 * @param fiberSlots       This defines how many fibers can wait on this counter.
-	 *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
-	 */
-	explicit TaskCounter(TaskScheduler *taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
-	        : BaseCounter(taskScheduler, initialValue, fiberSlots) {
-	}
+    /**
+     * Creates a TaskCounter
+     *
+     * @param taskScheduler    The TaskScheduler this counter references
+     * @param initialValue     The initial value of the counter
+     * @param fiberSlots       This defines how many fibers can wait on this counter.
+     *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
+     */
+    explicit TaskCounter(TaskScheduler* taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
+        : BaseCounter(taskScheduler, initialValue, fiberSlots)
+    {
+    }
 
-	TaskCounter(TaskCounter const &) = delete;
-	TaskCounter(TaskCounter &&) noexcept = delete;
-	TaskCounter &operator=(TaskCounter const &) = delete;
-	TaskCounter &operator=(TaskCounter &&) noexcept = delete;
-	~TaskCounter() = default;
+    TaskCounter(TaskCounter const&) = delete;
+    TaskCounter(TaskCounter&&) noexcept = delete;
+    TaskCounter& operator=(TaskCounter const&) = delete;
+    TaskCounter& operator=(TaskCounter&&) noexcept = delete;
+    ~TaskCounter() = default;
 
 public:
-	/**
-	 * Adds the value to the counter. It will not check any waiting tasks, since it is assumed they're waiting
-	 * for a final value of 0.
-	 *
-	 * @param x    The value to add to the counter
-	 */
-	void Add(unsigned const x) {
-		m_value.fetch_add(x, std::memory_order_seq_cst);
-	}
+    /**
+     * Adds the value to the counter. It will not check any waiting tasks, since it is assumed they're waiting
+     * for a final value of 0.
+     *
+     * @param x    The value to add to the counter
+     */
+    void Add(unsigned const x)
+    {
+        m_value.fetch_add(x, std::memory_order_seq_cst);
+    }
 
-	bool Done()
-	{
-		return m_value.load(std::memory_order_relaxed) == 0;
-	}
+    bool Done()
+    {
+        return m_value.load(std::memory_order_relaxed) == 0;
+    }
 
-	/**
-	 * Decrement the counter by 1. If the new value would be zero, it will resume the waiting tasks.
-	 */
-	void Decrement() {
-		m_lock.fetch_add(1U, std::memory_order_seq_cst);
+    /**
+     * Decrement the counter by 1. If the new value would be zero, it will resume the waiting tasks.
+     */
+    void Decrement()
+    {
+        m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
-		const unsigned prev = m_value.fetch_sub(1U, std::memory_order_seq_cst);
-		const unsigned newValue = prev - 1;
+        const unsigned prev = m_value.fetch_sub(1U, std::memory_order_seq_cst);
+        const unsigned newValue = prev - 1;
 
-		// TaskCounters are only allowed to wait on 0, so we only need to check when newValue would be zero
-		if (newValue == 0) {
-			CheckWaitingFibers(newValue);
-		}
+        // TaskCounters are only allowed to wait on 0, so we only need to check when newValue would be zero
+        if (newValue == 0)
+        {
+            CheckWaitingFibers(newValue);
+        }
 
-		m_lock.fetch_sub(1U, std::memory_order_seq_cst);
-	}
+        m_lock.fetch_sub(1U, std::memory_order_seq_cst);
+    }
 };
 
 } // End of namespace ftl

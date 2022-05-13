@@ -18,6 +18,7 @@
 #include <mutex>
 #include "asset/config_asset.hpp"
 #include "bitsery/serializer.h"
+#include "tracy/Tracy.hpp"
 #include "type/type_registry.h"
 #include "utils/defer.hpp"
 #include "resource/resource_header.h"
@@ -120,6 +121,7 @@ int main(int argc, char** argv)
         using iter_t = typename decltype(paths)::iterator;
         system.ParallelFor(paths.begin(), paths.end(), 20,
         [&](iter_t begin, iter_t end) {
+            ZoneScopedN("Import");
             for (auto i = begin; i != end; ++i)
                 system.ImportAsset(project, *i);
         });
@@ -132,6 +134,7 @@ int main(int argc, char** argv)
         using iter_t = typename decltype(system.assets)::iterator;
         system.ParallelFor(system.assets.begin(), system.assets.end(), 10,
         [](iter_t begin, iter_t end) {
+            ZoneScopedN("EnsureCooked");
             auto& system = *skd::asset::GetCookSystem();
             for (auto i = begin; i != end; ++i)
                 if (!(i->second->type == skr_guid_t{}))

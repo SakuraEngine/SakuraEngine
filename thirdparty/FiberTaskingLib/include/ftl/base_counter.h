@@ -26,6 +26,7 @@
 
 #include <atomic>
 #include <limits>
+#include "runtime_configure.h"
 
 namespace ftl
 {
@@ -53,7 +54,7 @@ class TaskScheduler;
  *
  * You should never use this class directly. Use the other AtomicCounter-type classes
  */
-class BaseCounter
+class RUNTIME_API BaseCounter
 {
 
 public:

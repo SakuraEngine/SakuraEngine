@@ -36,7 +36,7 @@ void dual::scheduler_t::remove_resource(dual_entity_t id)
 bool dual::scheduler_t::is_main_thread(const dual_storage_t* storage)
 {
     // TODO: support multiple main thread (one main thread per storage)
-    return schedular.GetCurrentFiberIndex() == 0;
+    return schedular.GetCurrentThreadIndex() == 0;
 }
 
 void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
