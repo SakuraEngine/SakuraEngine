@@ -51,7 +51,8 @@ void SCookSystem::Initialize()
     scheduler = SkrNew<ftl::TaskScheduler>();
     mainCounter = SkrNew<ftl::TaskCounter>(scheduler);
     ftl::TaskSchedulerInitOptions options = {};
-    options.FiberPoolSize = 10000;
+    options.Behavior = ftl::EmptyQueueBehavior::Sleep;
+    options.FiberPoolSize = 400;
     scheduler->Init(options);
 }
 void SCookSystem::Shutdown()

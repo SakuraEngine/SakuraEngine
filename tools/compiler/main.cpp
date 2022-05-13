@@ -71,6 +71,8 @@ int main(int argc, char** argv)
     moduleManager->make_module_graph("GameTool", true);
     moduleManager->init_module_graph();
 
+    auto& system = *skd::asset::GetCookSystem();
+    system.Initialize();
     auto& registry = *skd::asset::GetAssetRegistry();
     //----- register project
     // TODO: project discover?
@@ -86,8 +88,6 @@ int main(int argc, char** argv)
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
     registry.AddProject(project);
     //----- run cook tasks
-    auto& system = *skd::asset::GetCookSystem();
-    system.Initialize();
     {
         ftl::TaskCounter counter(&system.GetScheduler());
         for (auto& pair : registry.assets)
