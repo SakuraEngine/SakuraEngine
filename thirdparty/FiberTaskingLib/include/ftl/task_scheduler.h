@@ -173,6 +173,7 @@ private:
     ThreadType* m_threads{ nullptr };
 
     unsigned m_fiberPoolSize{ 0 };
+    unsigned m_fiberBundlePoolSize{ 0 };
     /* The backing storage for the fiber pool */
     Fiber* m_fibers{ nullptr };
     /**
@@ -195,7 +196,7 @@ private:
      * preallocation isn't too bad
      */
     moodycamel::ConcurrentQueue<ReadyFiberBundle*> m_readyFiberBundles;
-    ReadyFiberBundle* m_fiberBundleBulks[10]{ nullptr };
+    ReadyFiberBundle* m_fiberBundleBulks[64]{ nullptr };
     unsigned m_fiberBundleBulksCount = 1;
     ReadyFiberBundle* CreateFiberBundle();
     void ReleaseFiberBundle(ReadyFiberBundle* bundle);
