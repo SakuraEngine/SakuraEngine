@@ -196,12 +196,12 @@ size_t SystemPageSize()
 
 void* AlignedAlloc(size_t size, size_t /*alignment*/)
 {
-    return mi_malloc(size);
+    return sakura_malloc(size);
 }
 
 void AlignedFree(void* block)
 {
-    mi_free(block);
+    sakura_free(block);
 }
 #endif
 
