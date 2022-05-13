@@ -979,7 +979,7 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
             break;
         if (j > 10)
         {
-            printf("No fiber bundle in the pool?");
+            printf("No fiber bundle in the pool? \n");
         }
     }
     readyFiberBundle->FiberIndex = currentFiberIndex;

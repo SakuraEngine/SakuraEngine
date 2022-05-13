@@ -5,6 +5,7 @@
 #include "simdjson.h"
 #include "utils/hashmap.hpp"
 #include "EASTL/vector.h"
+#include "platform/thread.h"
 
 struct skr_vfs_t;
 namespace skd
@@ -30,6 +31,7 @@ struct SAssetRecord {
 };
 
 struct TOOL_API SAssetRegistry {
+    SAssetRegistry();
     ~SAssetRegistry();
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(SProject* project, ghc::filesystem::path path);
@@ -38,6 +40,7 @@ struct TOOL_API SAssetRegistry {
     void AddProject(SProject* project);
     eastl::vector<SProject*> projects;
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
+    SMutex mutex;
     eastl::vector<SAssetRecord*> changedAssets;
     skr::flat_hash_map<skr_guid_t, struct SImporterFactory*, skr::guid::hash> importerFactories;
 };

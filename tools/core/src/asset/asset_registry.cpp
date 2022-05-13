@@ -1,4 +1,8 @@
 #include "asset/asset_registry.hpp"
+#include "EASTL/vector.h"
+#include "asset/cooker.hpp"
+#include "ftl/task.h"
+#include "ftl/task_scheduler.h"
 #include "ghc/filesystem.hpp"
 #include "platform/debug.h"
 #include "platform/guid.h"
@@ -13,7 +17,7 @@ namespace skd::asset
 {
 SProject::~SProject() noexcept
 {
-    if(vfs) skr_free_vfs(vfs);    
+    if (vfs) skr_free_vfs(vfs);
 }
 
 TOOL_API SAssetRegistry* GetAssetRegistry()
@@ -49,6 +53,7 @@ SAssetRecord* SAssetRegistry::ImportAsset(SProject* project, ghc::filesystem::pa
         std::memset(&record->type, 0, sizeof(skr_guid_t));
     record->path = path;
     record->project = project;
+    SMutexLock lock(mutex);
     assets.insert(std::make_pair(record->guid, record));
     return record;
 }
@@ -63,6 +68,7 @@ void SAssetRegistry::AddProject(SProject* project)
     ghc::filesystem::recursive_directory_iterator iter(project->assetPath);
     // discover assets.
     // TODO: async?
+    eastl::vector<ghc::filesystem::path> paths;
     for (auto& entry : iter)
     {
         if (entry.is_regular_file())
@@ -74,15 +80,43 @@ void SAssetRegistry::AddProject(SProject* project)
                 if (!path.has_extension()) // skip asset meta
                     continue;
             }
-            ImportAsset(project, entry.path());
+            else
+            {
+                auto metaPath = path;
+                metaPath.replace_extension(".meta");
+                if (!ghc::filesystem::exists(metaPath))
+                    continue;
+            }
+            paths.push_back(*iter);
         }
     }
+    SKR_LOG_INFO("Project dir scan finished.");
+    auto& scheduler = GetCookSystem()->GetScheduler();
+    static SProject* sproject;
+    sproject = project;
+    ftl::TaskCounter counter(&scheduler);
+    for (auto& path : paths)
+    {
+        ImportAsset(project, path);
+        ftl::Task Task = { +[](ftl::TaskScheduler*, void* path) {
+                              GetAssetRegistry()->ImportAsset(sproject, *(ghc::filesystem::path*)path);
+                          },
+            &path };
+        scheduler.AddTask(Task, ftl::TaskPriority::Normal, &counter);
+    }
+    scheduler.WaitForCounter(&counter);
+    SKR_LOG_INFO("Project asset import finished.");
     ghc::filesystem::create_directories(project->outputPath);
     ghc::filesystem::create_directories(project->dependencyPath);
     // TODO: asset watcher
 }
+SAssetRegistry::SAssetRegistry()
+{
+    skr_init_mutex(&mutex);
+}
 SAssetRegistry::~SAssetRegistry()
 {
+    skr_destroy_mutex(&mutex);
     for (auto& pair : assets)
         SkrDelete(pair.second);
     for (auto& project : projects)
