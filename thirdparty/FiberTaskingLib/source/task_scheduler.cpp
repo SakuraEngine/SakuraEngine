@@ -28,6 +28,7 @@
 #include "ftl/callbacks.h"
 #include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
+#include "tracy/Tracy.hpp"
 #include <memory>
 #include <mutex>
 #include <numeric>
@@ -90,7 +91,10 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
         taskScheduler->reallocMutex.lock_shared();
         auto& target = taskScheduler->m_fibers[freeFiberIndex];
         taskScheduler->reallocMutex.unlock_shared();
-        taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(&target);
+        TracyFiberEnter(target.name.c_str())
+        taskScheduler->m_tls[index]
+        .ThreadFiber.SwitchToFiber(&target);
+        TracyFiberLeave
     }
 
     // And we've returned
@@ -197,7 +201,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 auto& task = taskScheduler->m_fibers[tls->OldFiberIndex];
                 auto& target = taskScheduler->m_fibers[tls->CurrentFiberIndex];
                 taskScheduler->reallocMutex.unlock_shared();
+
+                TracyFiberEnter(target.name.c_str())
                 task.SwitchToFiber(&target);
+                TracyFiberLeave
             }
 
             if (callbacks.OnFiberAttached != nullptr)
@@ -234,6 +241,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 }
 
                 {
+                    ZoneScoped("Task");
                     nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
                 }
 
@@ -301,6 +309,8 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         taskScheduler->reallocMutex.lock_shared();
         auto& task = taskScheduler->m_fibers[taskScheduler->m_tls[index].CurrentFiberIndex];
         taskScheduler->reallocMutex.unlock_shared();
+        TracyFiberLeave
+        TracyFiberEnter(taskScheduler->m_quitFibers[index].name.c_str())
         task.SwitchToFiber(&taskScheduler->m_quitFibers[index]);
     }
 
@@ -324,12 +334,16 @@ void TaskScheduler::ThreadEndFunc(void* arg)
 
     if (threadIndex == 0)
     {
+        TracyFiberLeave
         // Special case for the main thread fiber
-        taskScheduler->m_quitFibers[threadIndex].SwitchToFiber(&taskScheduler->m_fibers[0]);
+        taskScheduler->m_quitFibers[threadIndex]
+        .SwitchToFiber(&taskScheduler->m_fibers[0]);
     }
     else
     {
-        taskScheduler->m_quitFibers[threadIndex].SwitchToFiber(&taskScheduler->m_tls[threadIndex].ThreadFiber);
+        TracyFiberLeave
+        taskScheduler->m_quitFibers[threadIndex]
+        .SwitchToFiber(&taskScheduler->m_tls[threadIndex].ThreadFiber);
     }
 
     // We should never get here
@@ -489,6 +503,9 @@ TaskScheduler::~TaskScheduler()
             reallocMutex.lock_shared();
             auto& task = m_fibers[m_tls[index].CurrentFiberIndex];
             reallocMutex.unlock_shared();
+
+            TracyFiberLeave
+            TracyFiberEnter(m_quitFibers[index].name.c_str())
             task.SwitchToFiber(&m_quitFibers[index]);
         }
     }
@@ -525,7 +542,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter*
     auto threadIndex = GetCurrentThreadIndex();
     threadIndex = threadIndex == kInvalidIndex ? 0 : threadIndex;
     TaskBundle bundle = { task, counter };
-    if(name)
+    if (name)
     {
         bundle.name = name;
     }
@@ -1027,7 +1044,9 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
         auto& current = m_fibers[currentFiberIndex];
         auto& target = m_fibers[freeFiberIndex];
         reallocMutex.unlock_shared();
+        TracyFiberEnter(target.name.c_str())
         current.SwitchToFiber(&target);
+        TracyFiberLeave
     }
 
     if (m_callbacks.OnFiberAttached != nullptr)
