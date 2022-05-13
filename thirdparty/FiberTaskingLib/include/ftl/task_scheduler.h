@@ -57,8 +57,6 @@ enum class EmptyQueueBehavior
 };
 
 struct TaskSchedulerInitOptions {
-    /* The size of the fiber pool.The fiber pool is used to run new tasks when the current task is waiting on a counter */
-    unsigned FiberPoolSize = 400;
     /* The size of the thread pool to run. 0 corresponds to NumHardwareThreads() */
     unsigned ThreadPoolSize = 0;
     /* The behavior of the threads after they have no work to do */
@@ -73,7 +71,7 @@ struct TaskSchedulerInitOptions {
  * Underneath the covers, it uses fibers to allow cores to work on other tasks
  * when the current task is waiting on a synchronization atomic
  */
-class TaskScheduler
+class RUNTIME_API TaskScheduler
 {
 public:
     TaskScheduler();
@@ -108,15 +106,15 @@ private:
         ReadyFiberBundle() = default;
 
         // The fiber
-        unsigned FiberIndex;
+        Fiber* Fiber;
         // A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @CleanUpOldFiber()
         std::atomic<bool> FiberIsSwitched;
     };
 
     struct alignas(kCacheLineSize) ThreadLocalStorage {
         ThreadLocalStorage()
-            : CurrentFiberIndex(kInvalidIndex)
-            , OldFiberIndex(kInvalidIndex)
+            : CurrentFiber(nullptr)
+            , OldFiber(nullptr)
         {
         }
 
@@ -148,9 +146,9 @@ private:
         std::mutex PinnedReadyFibersLock;
 
         /* The index of the current fiber in m_fibers */
-        unsigned CurrentFiberIndex;
+        Fiber* CurrentFiber;
         /* The index of the previously executed fiber in m_fibers */
-        unsigned OldFiberIndex;
+        Fiber* OldFiber;
         /* Where OldFiber should be stored when we call CleanUpPoolAndWaiting() */
         FiberDestination OldFiberDestination{ FiberDestination::None };
 
@@ -173,36 +171,9 @@ private:
     unsigned m_numThreads{ 0 };
     ThreadType* m_threads{ nullptr };
 
-    unsigned m_fiberPoolSize{ 0 };
-    unsigned m_fiberBundlePoolSize{ 0 };
-    /* The backing storage for the fiber pool */
-    Fiber* m_fibers{ nullptr };
-    /**
-     * An array of atomics, which signify if a fiber is available to be used. The indices of m_waitingFibers
-     * correspond 1 to 1 with m_fibers. So, if m_freeFibers[i] == true, then m_fibers[i] can be used.
-     * Each atomic acts as a lock to ensure that threads do not try to use the same fiber at the same time
-     */
-    mutable moodycamel::ConcurrentQueue<uint32_t> m_freeFibers;
-    // std::atomic<bool>* m_freeFibers{ nullptr };
-    /**
-     * An array of ReadyFiberBundle which is used by @WaitForCounter()
-     *
-     * We don't technically need one per fiber. Only one per call to WaitForCounter()
-     * In the past we would dynamically allocate this struct in WaitForCounter() and
-     * then free it when we resumed the fiber.
-     *
-     * However, we want to avoid allocations during runtime. So we pre-allocate
-     * them. At max, we can call WaitForCounter() for each fiber. So, to make things
-     * simple, we pre-allocate one for each fiber. The struct is small, so this
-     * preallocation isn't too bad
-     */
-    moodycamel::ConcurrentQueue<ReadyFiberBundle*> m_readyFiberBundles;
-    ReadyFiberBundle* m_fiberBundleBulks[64]{ nullptr };
-    unsigned m_fiberBundleBulksCount = 1;
+    Fiber m_mainFiber;
     ReadyFiberBundle* CreateFiberBundle();
     void ReleaseFiberBundle(ReadyFiberBundle* bundle);
-
-    mutable std::shared_mutex reallocMutex;
 
     Fiber* m_quitFibers{ nullptr };
 
@@ -314,7 +285,7 @@ public:
      *
      * NOTE: main fiber index is 0
      */
-    unsigned GetCurrentFiberIndex() const;
+    Fiber* GetCurrentFiber() const;
 
     /**
      * Gets the amount of backing threads.
@@ -324,16 +295,6 @@ public:
     unsigned GetThreadCount() const noexcept
     {
         return m_numThreads;
-    }
-
-    /**
-     * Gets the amount of fibers in the fiber pool.
-     *
-     * @return    Fiber pool size
-     */
-    unsigned GetFiberCount() const noexcept
-    {
-        return m_fiberPoolSize;
     }
 
     /**
@@ -382,7 +343,8 @@ private:
      *
      * @return    The index of the next available fiber in the pool
      */
-    unsigned GetNextFreeFiberIndex();
+    Fiber* GetNextFreeFiber();
+    void SetFreeFiber(Fiber* fiber);
     /**
      * If necessary, moves the old fiber to the fiber pool or the waiting list
      * The old fiber is the last fiber to run on the thread before the current fiber

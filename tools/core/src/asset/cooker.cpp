@@ -52,7 +52,6 @@ void SCookSystem::Initialize()
     mainCounter = SkrNew<ftl::TaskCounter>(scheduler);
     ftl::TaskSchedulerInitOptions options = {};
     options.Behavior = ftl::EmptyQueueBehavior::Sleep;
-    options.FiberPoolSize = 400;
     scheduler->Init(options);
 }
 void SCookSystem::Shutdown()
@@ -161,8 +160,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
     mainCounter->Add(1);
     auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
     scheduler->AddTask(
-        { Task, jobContext, TearDown }, ftl::TaskPriority::High, counter.get()
-        FTL_TASK_NAME(, guidName.c_str()));
+    { Task, jobContext, TearDown }, ftl::TaskPriority::High, counter.get() FTL_TASK_NAME(, guidName.c_str()));
     return counter;
 }
 

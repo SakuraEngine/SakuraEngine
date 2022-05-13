@@ -24,36 +24,37 @@
 
 #pragma once
 
-namespace ftl {
-
+namespace ftl
+{
+class Fiber;
 /**
  * @brief Called before worker threads are created
  *
  * @param context        EventCallbacks::Context
  * @param threadCount    The number of threads created
  */
-using ThreadCreationCallback = void (*)(void *context, unsigned threadCount);
+using ThreadCreationCallback = void (*)(void* context, unsigned threadCount);
 /**
  * @brief Called before fibers are created
  *
  * @param context       EventCallbacks::Context
  * @param fiberCount    The number of fibers created
  */
-using FiberCreationCallback = void (*)(void *context, unsigned fiberCount);
+using FiberCreationCallback = void (*)(void* context, unsigned fiberCount);
 /**
  * @brief Called for each thread event
  *
  * @param context        EventCallbacks::Context
  * @param threadIndex    The index of the thread
  */
-using ThreadEventCallback = void (*)(void *context, unsigned threadIndex);
+using ThreadEventCallback = void (*)(void* context, unsigned threadIndex);
 /**
  * @brief Called when a fiber is attached to a thread
  *
  * @param context       EventCallbacks::Context
  * @param fiberIndex    The index of the fiber
  */
-using FiberAttachedCallback = void (*)(void *context, unsigned fiberIndex);
+using FiberAttachedCallback = void (*)(void* context, Fiber* fiberIndex);
 /**
  * @brief Called when a fiber is detached from a thread
  *
@@ -61,19 +62,19 @@ using FiberAttachedCallback = void (*)(void *context, unsigned fiberIndex);
  * @param fiberIndex    The index of the fiber
  * @param isMidTask     True = the fiber was suspended mid-task due to a wait. False = the fiber was suspended for another reason
  */
-using FiberDetachedCallback = void (*)(void *context, unsigned fiberIndex, bool isMidTask);
+using FiberDetachedCallback = void (*)(void* context, Fiber* fiberIndex, bool isMidTask);
 
 struct EventCallbacks {
-	void *Context = nullptr;
+    void* Context = nullptr;
 
-	ThreadCreationCallback OnThreadsCreated = nullptr;
-	FiberCreationCallback OnFibersCreated = nullptr;
+    ThreadCreationCallback OnThreadsCreated = nullptr;
+    FiberCreationCallback OnFibersCreated = nullptr;
 
-	ThreadEventCallback OnWorkerThreadStarted = nullptr;
-	ThreadEventCallback OnWorkerThreadEnded = nullptr;
+    ThreadEventCallback OnWorkerThreadStarted = nullptr;
+    ThreadEventCallback OnWorkerThreadEnded = nullptr;
 
-	FiberAttachedCallback OnFiberAttached = nullptr;
-	FiberDetachedCallback OnFiberDetached = nullptr;
+    FiberAttachedCallback OnFiberAttached = nullptr;
+    FiberDetachedCallback OnFiberDetached = nullptr;
 };
 
 } // End of namespace ftl
