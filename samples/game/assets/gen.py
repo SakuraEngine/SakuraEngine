@@ -6,10 +6,7 @@ BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 def main():
 
-    resource = """{{
-        "guid": "{}",
-        "type": "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74",
-        "importer": {{
+    resource = """{{ "guid": "{}", "type": "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74","importer": {{
             "importerType": "D5970221-1A6B-42C4-B604-DA0559E048D6",
             "configType": "b537f7b1-6d2d-44f6-b313-bcb559d3f490",
             "assetGuid": "{}"

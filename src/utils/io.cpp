@@ -139,6 +139,7 @@ public:
 };
 
 TracyCZoneCtx sleepZone;
+TracyCZoneCtx readZone;
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
     // if lockless dequeue_bulk the requests to vector
@@ -159,14 +160,14 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         {
             service->optionalUnlock();
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
-            if (sleepTimeVal != SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER)
             {
                 TracyCZone(sleepZone, 1);
                 TracyCZoneName(sleepZone, "ioServiceSleep", strlen("ioServiceSleep"));
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
                 sleepTime = eastl::max(sleepTimeVal, 1u);
-                service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING);
-                skr_thread_sleep(sleepTime);
+                service->setRunningStatus(SKR_IO_SERVICE_STATUS_SLEEPING);
+                if (sleepTimeVal != SKR_IO_SERVICE_SLEEP_TIME_NEVER)
+                    skr_thread_sleep(sleepTime);
                 TracyCZoneEnd(sleepZone);
             }
             return;
@@ -174,7 +175,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         else // do sort
         {
             ZoneScopedN("ioServiceSort");
-            service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
+            service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
             switch(service->sortMethod)
             {
                 case SKR_IO_SERVICE_SORT_METHOD_STABLE:
@@ -196,14 +197,14 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         service->optionalUnlock();
     }
     // do io work
-    ZoneScopedNC("ioServiceReadFile", tracy::Color::LightYellow);
+    TracyCZoneC(readZone, tracy::Color::LightYellow, 1);
+    TracyCZoneName(readZone, "ioServiceReadFile", strlen("ioServiceReadFile"));
     service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
     auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
     ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
     if (service->current.request->bytes == nullptr)
     {
         // allocate
-        ZoneScopedNC("ioServiceAllocateBytes", tracy::Color::LightYellow);
         auto fsize = skr_vfs_fsize(vf);
         service->current.request->size = fsize;
         service->current.request->bytes = (char8_t*)sakura_malloc(fsize);
@@ -211,10 +212,17 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
     skr_vfs_fread(vf, service->current.request->bytes, service->current.offset, service->current.request->size);
     service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
     skr_vfs_fclose(vf);
+    TracyCZoneEnd(readZone);
 }
 
 void ioThreadTask(void* arg)
 {
+#ifdef TRACY_ENABLE
+    static uint32_t taskIndex = 0;
+    eastl::string name = "ioRAMServiceThread-";
+    name.append(eastl::to_string(taskIndex++));
+    tracy::SetThreadName(name.c_str());
+#endif
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
     for (; service->getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {
@@ -237,13 +245,13 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     {
         ZoneScopedN("ioRequest(Locked)");
         optionalLock();
-        if (tasks.size() >= SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT)
+        if (tasks.size() >= SKR_IO_SERVICE_MAX_TASK_COUNT)
         {
             if (criticalTaskCount)
             {
                 SKR_LOG_WARN(
                     "ioRAMService %s enqueued too many tasks(over %d)!",
-                    name.c_str(), SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT);
+                    name.c_str(), SKR_IO_SERVICE_MAX_TASK_COUNT);
                 optionalUnlock();
                 return;
             }
@@ -294,7 +302,7 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
     skr_init_mutex(&service->taskMutex);
-    service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
+    service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
     service->setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     skr_init_thread(&service->threadItem, &service->serviceThread);
     return service;
@@ -336,7 +344,7 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
 void skr::io::RAMServiceImpl::drain() RUNTIME_NOEXCEPT
 {
     // wait for sleep
-    for (; getRunningStatus() != SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING;)
+    for (; getRunningStatus() != SKR_IO_SERVICE_STATUS_SLEEPING;)
     {
         //...
     }
