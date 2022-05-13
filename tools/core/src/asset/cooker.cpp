@@ -1,6 +1,5 @@
 #include "asset/cooker.hpp"
 #include "EASTL/shared_ptr.h"
-#include "asset/asset_registry.hpp"
 #include "asset/importer.hpp"
 #include "ftl/task_counter.h"
 #include "ghc/filesystem.hpp"
@@ -32,6 +31,7 @@ SCookSystem* GetCookSystem()
 SCookSystem::SCookSystem() noexcept
 {
     skr_init_mutex(&ioMutex);
+    skr_init_mutex(&assetMutex);
     for (auto& ioService : ioServices)
     {
         // all used up
@@ -75,6 +75,14 @@ SCookSystem::~SCookSystem() noexcept
         if (ioService)
             skr::io::RAMService::destroy(ioService);
     }
+
+    skr_destroy_mutex(&assetMutex);
+    for (auto& pair : assets)
+        SkrDelete(pair.second);
+}
+SProject::~SProject() noexcept
+{
+    if (vfs) skr_free_vfs(vfs);
 }
 void SCookSystem::WaitForAll()
 {
@@ -105,7 +113,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
             return result;
     }
 
-    jobContext->record = GetAssetRegistry()->GetAssetRecord(guid);
+    jobContext->record = GetAssetRecord(guid);
     jobContext->ioService = getIOService();
     auto counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
     jobContext->counter = counter;
@@ -119,8 +127,10 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         auto system = GetCookSystem();
         auto iter = system->cookers.find(metaAsset->type);
         SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
+        SKR_LOG_FMT_INFO("[CookTask] resource {} cook started!", metaAsset->guid);
         if (iter->second->Cook(jobContext))
         {
+            SKR_LOG_FMT_INFO("[CookTask] resource {} cook finished! updating dependencies.", metaAsset->guid);
             // write dependencies
             auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
             skr_json_writer_t writer(2);
@@ -141,7 +151,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
             fwrite(writer.buffer.data(), 1, writer.buffer.size(), file);
         }
     };
-    auto TearDownTask = +[](void* userdata) {
+    auto TearDown = +[](void* userdata) {
         SCookContext* jobContext = (SCookContext*)userdata;
         auto system = GetCookSystem();
         auto guid = jobContext->record->guid;
@@ -149,7 +159,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         system->mainCounter->Decrement();
     };
     mainCounter->Add(1);
-    scheduler->AddTask({ Task, jobContext, TearDownTask }, ftl::TaskPriority::Normal, counter.get());
+    scheduler->AddTask({ Task, jobContext, TearDown }, ftl::TaskPriority::Normal, counter.get());
     return counter;
 }
 
@@ -173,8 +183,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
         if (result)
             return result;
     }
-    auto registry = GetAssetRegistry();
-    auto metaAsset = registry->GetAssetRecord(guid);
+    auto metaAsset = GetAssetRecord(guid);
     if (!metaAsset)
     {
         SKR_LOG_FMT_ERROR("[SCookSystem::EnsureCooked] resource not exist! resource guid: {}", guid);
@@ -231,7 +240,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
         {
             skr_guid_t depGuid;
             skr::json::Read(std::move(depFile).value_unsafe(), depGuid);
-            auto record = registry->GetAssetRecord(depGuid);
+            auto record = GetAssetRecord(depGuid);
             if (!record)
             {
                 SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file {} not exist! resource guid: {}", depGuid, guid);
@@ -269,7 +278,6 @@ void* SCookSystem::CookOrLoad(skr_guid_t resource)
 
 void* SCookContext::_Import()
 {
-    SAssetRegistry& registry = *GetAssetRegistry();
     //-----load importer
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
@@ -278,9 +286,10 @@ void* SCookContext::_Import()
     {
         auto importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe());
         //-----import raw data
-        auto asset = registry.GetAssetRecord(importer->assetGuid);
+        auto asset = GetCookSystem()->GetAssetRecord(importer->assetGuid);
         staticDependencies.push_back(asset->guid);
         auto rawData = importer->Import(ioService, asset);
+        SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset imported for resource {}! path: {}", record->guid, asset->path.u8string());
         return rawData;
     }
     auto parentJson = doc["parent"]; // derived from resource
@@ -301,5 +310,39 @@ void* SCookContext::AddStaticDependency(skr_guid_t resource)
 {
     staticDependencies.push_back(resource);
     return GetCookSystem()->CookOrLoad(resource);
+}
+
+SAssetRecord* SCookSystem::ImportAsset(SProject* project, ghc::filesystem::path path)
+{
+    if (path.is_relative())
+        path = project->assetPath / path;
+    auto metaPath = path;
+    metaPath.replace_extension(".meta");
+    if (!ghc::filesystem::exists(metaPath))
+    {
+        SKR_LOG_ERROR("[SAssetRegistry::ImportAsset] meta file %s not exist", path.u8string().c_str());
+        return nullptr;
+    }
+    auto record = SkrNew<SAssetRecord>();
+    // TODO: replace file load with skr api
+    record->meta = simdjson::padded_string::load(metaPath.u8string());
+    simdjson::ondemand::parser parser;
+    auto doc = parser.iterate(record->meta);
+    skr::json::Read(doc["guid"].value_unsafe(), record->guid);
+    auto otype = doc["type"];
+    if (otype.error() == simdjson::SUCCESS)
+        skr::json::Read(std::move(otype).value_unsafe(), record->type);
+    else
+        std::memset(&record->type, 0, sizeof(skr_guid_t));
+    record->path = path;
+    record->project = project;
+    SMutexLock lock(assetMutex);
+    assets.insert(std::make_pair(record->guid, record));
+    return record;
+}
+SAssetRecord* SCookSystem::GetAssetRecord(const skr_guid_t& guid)
+{
+    auto iter = assets.find(guid);
+    return iter != assets.end() ? iter->second : nullptr;
 }
 } // namespace skd::asset

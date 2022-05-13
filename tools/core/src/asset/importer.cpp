@@ -1,3 +1,4 @@
+#include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "platform/guid.h"
 #include "json/reader.h"

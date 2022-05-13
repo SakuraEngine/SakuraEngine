@@ -5,13 +5,13 @@
 #include "resource/resource_header.h"
 #include "platform/configure.h"
 #include "simdjson.h"
-#include "asset_registry.hpp"
+#include "asset/cooker.hpp"
 #include "tool_configure.h"
 #include "utils/hashmap.hpp"
 
 namespace skr::io
 {
-    class RAMService;
+class RAMService;
 }
 
 namespace skd reflect
