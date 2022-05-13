@@ -185,11 +185,11 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     SMutexLock lock(taskMutex);
     if (tasks.size() >= SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT)
     {
-        SKR_LOG_WARN(
-        "ioRAMService %s enqueued too many tasks(over %d)!",
-        name.c_str(), SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT);
         if (criticalTaskCount)
         {
+             SKR_LOG_WARN(
+                "ioRAMService %s enqueued too many tasks(over %d)!",
+                name.c_str(), SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT);
             skr_release_mutex(&taskMutex);
             return;
         }
