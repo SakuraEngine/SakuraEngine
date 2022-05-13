@@ -1,5 +1,4 @@
 #include "asset/config_asset.hpp"
-#include "asset/asset_registry.hpp"
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "ftl/fibtex.h"

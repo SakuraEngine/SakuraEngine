@@ -1,4 +1,3 @@
-#include "asset/asset_registry.hpp"
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "bitsery/adapter/buffer.h"
@@ -27,6 +26,9 @@
 #include "SkrRT/typeid.generated.hpp"
 #include "module/module_manager.hpp"
 #include "platform/vfs.h"
+#include <string>
+#include <vector>
+#include "utils/log.h"
 
 class CompileResourceImpl final : public skrcompiler::CompileResource::Service
 {
@@ -63,6 +65,24 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
     std::vector<std::unique_ptr<skrcompiler::CompileResource::Stub>> stub;
 };
 
+bool IsAsset(ghc::filesystem::path path)
+{
+    if (path.extension() == ".meta")
+    {
+        path.replace_extension();
+        if (!path.has_extension()) // skip asset meta
+            return false;
+    }
+    else
+    {
+        auto metaPath = path;
+        metaPath.replace_extension(".meta");
+        if (!ghc::filesystem::exists(metaPath)) // skip asset without meta
+            return false;
+    }
+    return true;
+}
+
 int main(int argc, char** argv)
 {
     auto moduleManager = skr_get_module_manager();
@@ -73,10 +93,10 @@ int main(int argc, char** argv)
 
     auto& system = *skd::asset::GetCookSystem();
     system.Initialize();
-    auto& registry = *skd::asset::GetAssetRegistry();
     //----- register project
     // TODO: project discover?
     auto project = SkrNew<skd::asset::SProject>();
+    SKR_DEFER({ SkrDelete(project); });
     auto parentPath = root.parent_path().u8string();
     skr_vfs_desc_t vfs_desc = {};
     vfs_desc.app_name = "Project";
@@ -86,18 +106,38 @@ int main(int argc, char** argv)
     project->assetPath = (root.parent_path() / "../../../samples/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
-    registry.AddProject(project);
-    //----- run cook tasks
+
+    ghc::filesystem::recursive_directory_iterator iter(project->assetPath);
+    //----- scan project directory
+    eastl::vector<ghc::filesystem::path> paths;
+    for (auto& entry : iter)
+        if (entry.is_regular_file() && IsAsset(entry.path()))
+            paths.push_back(*iter);
+    SKR_LOG_INFO("Project dir scan finished.");
+    //----- import project assets (guid & type & path)
     {
-        using iter = typename decltype(registry.assets)::iterator;
-        skd::asset::ParallelFor(registry.assets.begin(), registry.assets.end(), 10,
-        [](iter begin, iter end) {
+        using iter_t = typename decltype(paths)::iterator;
+        system.ParallelFor(paths.begin(), paths.end(), 20,
+        [&](iter_t begin, iter_t end) {
+            for (auto i = begin; i != end; ++i)
+                system.ImportAsset(project, *i);
+        });
+    }
+    SKR_LOG_INFO("Project asset import finished.");
+    ghc::filesystem::create_directories(project->outputPath);
+    ghc::filesystem::create_directories(project->dependencyPath);
+    //----- schedule cook tasks (checking dependencies)
+    {
+        using iter_t = typename decltype(system.assets)::iterator;
+        system.ParallelFor(system.assets.begin(), system.assets.end(), 10,
+        [](iter_t begin, iter_t end) {
             auto& system = *skd::asset::GetCookSystem();
             for (auto i = begin; i != end; ++i)
                 if (!(i->second->type == skr_guid_t{}))
                     system.EnsureCooked(i->second->guid);
         });
     }
+    SKR_LOG_INFO("Project asset import finished.");
     //----- wait
     system.WaitForAll();
     system.Shutdown();
