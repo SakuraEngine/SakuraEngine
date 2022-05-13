@@ -365,7 +365,7 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options)
     }
 
     // Create and populate the fiber pool
-    m_fiberPoolSize = options.FiberPoolSize;
+    m_fiberBundlePoolSize = m_fiberPoolSize = options.FiberPoolSize;
     m_fibers = (Fiber*)malloc(sizeof(Fiber) * options.FiberPoolSize);
     {
         uint32_t* buffer = new uint32_t[options.FiberPoolSize];
@@ -791,14 +791,6 @@ unsigned TaskScheduler::GetNextFreeFiberIndex()
                 m_freeFibers.enqueue_bulk(buffer, newPoolSize - m_fiberPoolSize);
                 delete[] buffer;
             }
-            m_fiberBundleBulks[m_fiberBundleBulksCount] = new ReadyFiberBundle[newPoolSize - m_fiberPoolSize];
-            {
-                ReadyFiberBundle** buffer = new ReadyFiberBundle*[newPoolSize - m_fiberPoolSize];
-                for (unsigned i = 0; i < newPoolSize - m_fiberPoolSize; ++i)
-                    buffer[i] = &m_fiberBundleBulks[m_fiberBundleBulksCount][i];
-                m_readyFiberBundles.enqueue_bulk(buffer, newPoolSize - m_fiberPoolSize);
-                delete[] buffer;
-            }
             free(m_fibers);
             m_fibers = newFibers;
             m_fiberPoolSize = newPoolSize;
@@ -979,7 +971,21 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
             break;
         if (j > 10)
         {
-            printf("No fiber bundle in the pool? \n");
+            auto size = m_fiberBundlePoolSize;
+            std::unique_lock<std::shared_mutex> lock(reallocMutex);
+            if (size != m_fiberBundlePoolSize)
+                continue;
+            printf("No fiber bundle in the pool. growing \n");
+            m_fiberBundleBulks[m_fiberBundleBulksCount] = new ReadyFiberBundle[m_fiberPoolSize - m_fiberBundlePoolSize];
+            {
+                ReadyFiberBundle** buffer = new ReadyFiberBundle*[m_fiberPoolSize - m_fiberBundlePoolSize];
+                for (unsigned i = 0; i < m_fiberPoolSize - m_fiberBundlePoolSize; ++i)
+                    buffer[i] = &m_fiberBundleBulks[m_fiberBundleBulksCount][i];
+                m_readyFiberBundles.enqueue_bulk(buffer, m_fiberPoolSize - m_fiberBundlePoolSize);
+                delete[] buffer;
+            }
+            m_fiberBundlePoolSize = m_fiberPoolSize;
+            ++m_fiberBundleBulksCount;
         }
     }
     readyFiberBundle->FiberIndex = currentFiberIndex;
