@@ -24,6 +24,18 @@
 
 #pragma once
 
+#define TRACY_ENABLE
+#define TRACY_FIBERS
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyC.h"
+#include <string>
+
+#ifdef TRACY_ENABLE
+#define FTL_TASK_NAME(...) __VA_ARGS__
+#else
+#define FTL_TASK_NAME(...)
+#endif
+
 namespace ftl
 {
 

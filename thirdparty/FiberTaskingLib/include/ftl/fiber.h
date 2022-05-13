@@ -30,6 +30,8 @@
 
 #include <stddef.h>
 
+#include "task.h"
+
 namespace ftl {
 
 using FiberStartRoutine = void (*)(void *arg);
@@ -40,7 +42,10 @@ public:
 	 * Default constructor
 	 * Nothing is allocated. This can be used as a thread fiber.
 	 */
-	Fiber() = default;
+	Fiber()
+	{
+		name = std::to_string((int64_t)this);
+	}
 	/**
 	 * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
 	 *
@@ -87,6 +92,8 @@ public:
 		return *this;
 	}
 	~Fiber();
+
+	std::string name;
 
 private:
 	void *m_stack{nullptr};

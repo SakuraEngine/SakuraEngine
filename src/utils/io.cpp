@@ -138,8 +138,6 @@ public:
     SkrIOServiceSortMethod sortMethod;
 };
 
-TracyCZoneCtx sleepZone;
-TracyCZoneCtx readZone;
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
     // if lockless dequeue_bulk the requests to vector
@@ -196,23 +194,25 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         service->tasks.pop_front();
         service->optionalUnlock();
     }
-    // do io work
-    TracyCZoneC(readZone, tracy::Color::LightYellow, 1);
-    TracyCZoneName(readZone, "ioServiceReadFile", strlen("ioServiceReadFile"));
-    service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
-    auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
-    ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
-    if (service->current.request->bytes == nullptr)
     {
-        // allocate
-        auto fsize = skr_vfs_fsize(vf);
-        service->current.request->size = fsize;
-        service->current.request->bytes = (char8_t*)sakura_malloc(fsize);
+        // do io work
+        TracyCZoneC(readZone, tracy::Color::LightYellow, 1);
+        TracyCZoneName(readZone, "ioServiceReadFile", strlen("ioServiceReadFile"));
+        service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
+        auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
+        ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+        if (service->current.request->bytes == nullptr)
+        {
+            // allocate
+            auto fsize = skr_vfs_fsize(vf);
+            service->current.request->size = fsize;
+            service->current.request->bytes = (char8_t*)sakura_malloc(fsize);
+        }
+        skr_vfs_fread(vf, service->current.request->bytes, service->current.offset, service->current.request->size);
+        service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+        skr_vfs_fclose(vf);
+        TracyCZoneEnd(readZone);
     }
-    skr_vfs_fread(vf, service->current.request->bytes, service->current.offset, service->current.request->size);
-    service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
-    skr_vfs_fclose(vf);
-    TracyCZoneEnd(readZone);
 }
 
 void ioThreadTask(void* arg)
@@ -243,8 +243,9 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     // try push back new request
     if(!isLockless)
     {
-        ZoneScopedN("ioRequest(Locked)");
         optionalLock();
+        TracyCZone(requestZone, 1);
+        TracyCZoneName(requestZone, "ioRequest(Locked)", strlen("ioRequest(Locked)"));
         if (tasks.size() >= SKR_IO_SERVICE_MAX_TASK_COUNT)
         {
             if (criticalTaskCount)
@@ -271,11 +272,13 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
             back.callback_datas[i] = info->callback_datas[i];
         }
         skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
+        TracyCZoneEnd(requestZone);
         optionalUnlock();
     }
     else
     {
-        ZoneScopedN("ioRequest(Lockless)");
+        TracyCZone(requestZone, 1);
+        TracyCZoneName(requestZone, "ioRequest(Lockless)", strlen("ioRequest(Lockless)"));
         Task back = {};
         back.vfs = vfs;
         back.path = std::string(info->path);
@@ -292,6 +295,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
         }
         task_requests.enqueue(eastl::move(back));
         skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
+        TracyCZoneEnd(requestZone);
     }
 }
 
