@@ -6,6 +6,7 @@
 #include <EASTL/unique_ptr.h>
 #include <EASTL/deque.h>
 #include <EASTL/sort.h>
+#include "utils/concurrent_queue.h"
 
 bool skr_async_io_request_t::is_ready() const RUNTIME_NOEXCEPT
 {
@@ -75,8 +76,8 @@ public:
         }
     };
     ~RAMServiceImpl() RUNTIME_NOEXCEPT = default;
-    RAMServiceImpl(uint32_t sleep_time) RUNTIME_NOEXCEPT
-        : _sleepTime(sleep_time)
+    RAMServiceImpl(uint32_t sleep_time, bool lockless) RUNTIME_NOEXCEPT
+        : _sleepTime(sleep_time), isLockless(lockless)
     {
     }
     void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT final;
@@ -109,13 +110,25 @@ public:
         return (_SkrIOThreadStatus)skr_atomic32_load_acquire(&_thread_status);
     }
 
+    void optionalLock() RUNTIME_NOEXCEPT
+    {
+        if(!isLockless)
+            skr_acquire_mutex(&taskMutex);
+    }
+    void optionalUnlock() RUNTIME_NOEXCEPT
+    {
+        if(!isLockless)
+            skr_release_mutex(&taskMutex);
+    }
     SMutex taskMutex;
     SThreadDesc threadItem = {};
     SThreadHandle serviceThread;
+    moodycamel::ConcurrentQueue<Task> task_requests;
     eastl::deque<Task> tasks;
     SAtomic32 _running_status /*SkrAsyncIOServiceStatus*/;
     SAtomic32 _thread_status = _SKR_IO_THREAD_STATUS_RUNNING /*IOThreadStatus*/;
     SAtomic32 _sleepTime = 30 /*ms*/;
+    const bool isLockless = false;
     const bool criticalTaskCount = false;
     const eastl::string name;
     // state
@@ -124,13 +137,25 @@ public:
 
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
+    // if lockless dequeue_bulk the requests to vector
+    {
+        //auto bulkSize = service->task_requests.size_approx();
+        //auto oldSize = service->tasks.size();
+        //service->tasks.resize(oldSize + bulkSize);
+        //bool res = service->task_requests.try_dequeue_bulk(&service->tasks[oldSize], bulkSize);
+        RAMServiceImpl::Task tsk;
+        while(service->task_requests.try_dequeue(tsk))
+        {
+            service->tasks.emplace_back(tsk);
+        }
+    }
     // try fetch a new task
     {
-        skr_acquire_mutex(&service->taskMutex);
+        service->optionalLock();
         // empty sleep
         if (!service->tasks.size())
         {
-            skr_release_mutex(&service->taskMutex);
+            service->optionalUnlock();
             service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING);
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
             if (sleepTimeVal != SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER)
@@ -149,7 +174,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         // pop current task
         service->current = service->tasks.front();
         service->tasks.pop_front();
-        skr_release_mutex(&service->taskMutex);
+        service->optionalUnlock();
     }
     // do io work
     service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
@@ -182,38 +207,61 @@ void ioThreadTask(void* arg)
 void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT
 {
     // try push back new request
-    SMutexLock lock(taskMutex);
-    if (tasks.size() >= SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT)
+    if(!isLockless)
     {
-        if (criticalTaskCount)
+        optionalLock();
+        if (tasks.size() >= SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT)
         {
-             SKR_LOG_WARN(
-                "ioRAMService %s enqueued too many tasks(over %d)!",
-                name.c_str(), SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT);
-            skr_release_mutex(&taskMutex);
-            return;
+            if (criticalTaskCount)
+            {
+                SKR_LOG_WARN(
+                    "ioRAMService %s enqueued too many tasks(over %d)!",
+                    name.c_str(), SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT);
+                optionalUnlock();
+                return;
+            }
         }
+        auto& back = tasks.push_back();
+        back.vfs = vfs;
+        back.path = std::string(info->path);
+        back.offset = info->offset;
+        back.request = async_request;
+        back.request->bytes = (char8_t*)info->bytes;
+        back.request->size = info->size;
+        back.priority = info->priority;
+        back.sub_priority = info->sub_priority;
+        for (uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
+        {
+            back.callbacks[i] = info->callbacks[i];
+            back.callback_datas[i] = info->callback_datas[i];
+        }
+        skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
+        optionalUnlock();
     }
-    auto& back = tasks.push_back();
-    back.vfs = vfs;
-    back.path = std::string(info->path);
-    back.offset = info->offset;
-    back.request = async_request;
-    back.request->bytes = (char8_t*)info->bytes;
-    back.request->size = info->size;
-    back.priority = info->priority;
-    back.sub_priority = info->sub_priority;
-    for (uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
+    else
     {
-        back.callbacks[i] = info->callbacks[i];
-        back.callback_datas[i] = info->callback_datas[i];
+        Task back = {};
+        back.vfs = vfs;
+        back.path = std::string(info->path);
+        back.offset = info->offset;
+        back.request = async_request;
+        back.request->bytes = (char8_t*)info->bytes;
+        back.request->size = info->size;
+        back.priority = info->priority;
+        back.sub_priority = info->sub_priority;
+        for (uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
+        {
+            back.callbacks[i] = info->callbacks[i];
+            back.callback_datas[i] = info->callback_datas[i];
+        }
+        task_requests.enqueue(eastl::move(back));
+        skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
     }
-    skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
 }
 
 skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) RUNTIME_NOEXCEPT
 {
-    auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time);
+    auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time, desc->lockless);
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
     skr_init_mutex(&service->taskMutex);
@@ -236,9 +284,9 @@ void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
 
 bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
 {
-    if (request->is_enqueued())
+    if (request->is_enqueued() && !isLockless)
     {
-        SMutexLock lock(taskMutex);
+        optionalLock();
         bool cancel = false;
         // erase cancelled task
         tasks.erase(
@@ -250,6 +298,7 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
             return cancel;
         }),
         tasks.end());
+        optionalUnlock();
         return cancel;
     }
     return false;

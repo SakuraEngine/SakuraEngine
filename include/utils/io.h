@@ -55,6 +55,7 @@ typedef struct skr_async_io_request_t {
 typedef struct skr_ram_io_service_desc_t {
     const char8_t* name;
     uint32_t sleep_time;
+    bool lockless;
 } skr_ram_io_service_desc_t;
 
 typedef void (*skr_async_io_callback_t)(void* data);
