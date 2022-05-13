@@ -80,6 +80,7 @@ skr::io::RAMService* SCookSystem::getIOService()
             skr_ram_io_service_desc_t desc = {};
             // cook system runs quick so there is no need to sleep long
             desc.sleep_time = 1;
+            desc.lockless = true;
             ioService = skr::io::RAMService::create(&desc);
             return ioService;
         }
