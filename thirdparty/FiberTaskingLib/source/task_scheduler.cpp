@@ -82,7 +82,9 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     // Initialize tls
     taskScheduler->m_tls[index].CurrentFiberIndex = freeFiberIndex;
     // Switch
+    TracyFiberEnter(taskScheduler->m_fibers[freeFiberIndex].name.c_str());
     taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(&taskScheduler->m_fibers[freeFiberIndex]);
+    TracyFiberLeave;
 
     // And we've returned
 
@@ -181,7 +183,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             }
 
             // Switch
+            TracyFiberEnter(taskScheduler->m_fibers[tls->CurrentFiberIndex].name.c_str());
             taskScheduler->m_fibers[tls->OldFiberIndex].SwitchToFiber(&taskScheduler->m_fibers[tls->CurrentFiberIndex]);
+            TracyFiberLeave;
+  
 
             if (callbacks.OnFiberAttached != nullptr)
             {
@@ -216,7 +221,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                     tls->FailedQueuePopAttempts = 0;
                 }
 
-                nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
+                {
+                    nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
+                }
+
                 if (nextTask.Counter != nullptr)
                 {
                     nextTask.Counter->Decrement();
@@ -474,7 +482,7 @@ TaskScheduler::~TaskScheduler()
     delete[] m_quitFibers;
 }
 
-void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter* const counter)
+void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter* const counter FTL_TASK_NAME(, const char* name))
 {
     FTL_ASSERT("Task given to TaskScheduler:AddTask has a nullptr Function", task.Function != nullptr);
 
@@ -484,7 +492,11 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter*
     }
     auto threadIndex = GetCurrentThreadIndex();
     threadIndex = threadIndex == kInvalidIndex ? 0 : threadIndex;
-    const TaskBundle bundle = { task, counter };
+    TaskBundle bundle = { task, counter };
+    if(name)
+    {
+        bundle.name = name;
+    }
     if (priority == TaskPriority::High)
     {
         m_tls[threadIndex].HiPriTaskQueue.Push(bundle);
@@ -925,7 +937,9 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     }
 
     // Switch
+    TracyFiberEnter(m_fibers[freeFiberIndex].name.c_str());
     m_fibers[currentFiberIndex].SwitchToFiber(&m_fibers[freeFiberIndex]);
+    TracyFiberLeave;
 
     if (m_callbacks.OnFiberAttached != nullptr)
     {

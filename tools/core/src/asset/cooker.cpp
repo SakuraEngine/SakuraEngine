@@ -39,7 +39,7 @@ SCookSystem::SCookSystem() noexcept
         {
             skr_ram_io_service_desc_t desc = {};
             // cook system runs quick so there is no need to sleep long
-            desc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_NEVER;
+            desc.sleep_time = 1;
             desc.lockless = false;
             desc.sort_method = SKR_IO_SERVICE_SORT_METHOD_NEVER;
             ioService = skr::io::RAMService::create(&desc);
@@ -148,7 +148,10 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         system->mainCounter->Decrement();
     };
     mainCounter->Add(1);
-    scheduler->AddTask({ Task, jobContext, TearDownTask }, ftl::TaskPriority::Normal, counter.get());
+    auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
+    scheduler->AddTask(
+        { Task, jobContext, TearDownTask }, ftl::TaskPriority::High, counter.get()
+        FTL_TASK_NAME(, guidName.c_str()));
     return counter;
 }
 

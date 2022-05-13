@@ -65,6 +65,7 @@ class HostResourceImpl final : public skrcompiler::HostResource::Service
 
 int main(int argc, char** argv)
 {
+    FrameMark;
     auto moduleManager = skr_get_module_manager();
     auto root = ghc::filesystem::current_path();
     moduleManager->mount(root.u8string().c_str());

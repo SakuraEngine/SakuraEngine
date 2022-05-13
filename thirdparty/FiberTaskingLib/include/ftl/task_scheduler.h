@@ -99,6 +99,7 @@ private:
     struct TaskBundle {
         Task TaskToExecute;
         TaskCounter* Counter;
+        std::string name;
     };
 
     struct ReadyFiberBundle {
@@ -246,7 +247,7 @@ public:
      * @param counter     An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
      *                    completes, it will be decremented.
      */
-    void AddTask(Task task, TaskPriority priority, TaskCounter* counter = nullptr);
+    void AddTask(Task task, TaskPriority priority, TaskCounter* counter = nullptr FTL_TASK_NAME(, const char* name = nullptr));
     /**
      * Adds a group of tasks to the internal queue
      *

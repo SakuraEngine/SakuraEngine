@@ -87,3 +87,6 @@ target("ftl")
     add_includedirs(ftl_includes_dir, boost_context_include_dir)
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/*.cpp")
     add_cxflags(project_cxflags, {public = true})
+    -- tracy profile
+    add_includedirs("$(projectdir)/thirdparty/tracy")
+    add_links("TracyClient")
