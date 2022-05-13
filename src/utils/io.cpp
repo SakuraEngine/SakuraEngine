@@ -7,6 +7,8 @@
 #include <EASTL/deque.h>
 #include <EASTL/sort.h>
 #include "utils/concurrent_queue.h"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyC.h"
 
 bool skr_async_io_request_t::is_ready() const RUNTIME_NOEXCEPT
 {
@@ -133,19 +135,19 @@ public:
     const eastl::string name;
     // state
     RAMServiceImpl::Task current;
+    SkrIOServiceSortMethod sortMethod;
 };
 
+TracyCZoneCtx sleepZone;
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
     // if lockless dequeue_bulk the requests to vector
+    if(service->isLockless)
     {
-        //auto bulkSize = service->task_requests.size_approx();
-        //auto oldSize = service->tasks.size();
-        //service->tasks.resize(oldSize + bulkSize);
-        //bool res = service->task_requests.try_dequeue_bulk(&service->tasks[oldSize], bulkSize);
         RAMServiceImpl::Task tsk;
         while(service->task_requests.try_dequeue(tsk))
         {
+            ZoneScopedN("ioServiceDequeueRequests");
             service->tasks.emplace_back(tsk);
         }
     }
@@ -156,20 +158,37 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         if (!service->tasks.size())
         {
             service->optionalUnlock();
-            service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING);
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
             if (sleepTimeVal != SKR_ASYNC_IO_SERVICE_SLEEP_TIME_NEVER)
             {
+                TracyCZone(sleepZone, 1);
+                TracyCZoneName(sleepZone, "ioServiceSleep", strlen("ioServiceSleep"));
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
                 sleepTime = eastl::max(sleepTimeVal, 1u);
+                service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_SLEEPING);
                 skr_thread_sleep(sleepTime);
+                TracyCZoneEnd(sleepZone);
             }
             return;
         }
         else // do sort
         {
+            ZoneScopedN("ioServiceSort");
             service->setRunningStatus(SKR_ASYNC_IO_SERVICE_STATUS_RUNNING);
-            eastl::stable_sort(service->tasks.begin(), service->tasks.end());
+            switch(service->sortMethod)
+            {
+                case SKR_IO_SERVICE_SORT_METHOD_STABLE:
+                    eastl::stable_sort(service->tasks.begin(), service->tasks.end());
+                    break;
+                case SKR_IO_SERVICE_SORT_METHOD_PARTIAL:
+                    eastl::partial_sort(service->tasks.begin(), 
+                    service->tasks.begin() + service->tasks.size() / 2,
+                    service->tasks.end());
+                    break;
+                case SKR_IO_SERVICE_SORT_METHOD_NEVER:
+                default:
+                    break;
+            }
         }
         // pop current task
         service->current = service->tasks.front();
@@ -177,12 +196,14 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         service->optionalUnlock();
     }
     // do io work
+    ZoneScopedNC("ioServiceReadFile", tracy::Color::LightYellow);
     service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
     auto vf = skr_vfs_fopen(service->current.vfs, service->current.path.c_str(),
     ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
     if (service->current.request->bytes == nullptr)
     {
         // allocate
+        ZoneScopedNC("ioServiceAllocateBytes", tracy::Color::LightYellow);
         auto fsize = skr_vfs_fsize(vf);
         service->current.request->size = fsize;
         service->current.request->bytes = (char8_t*)sakura_malloc(fsize);
@@ -197,8 +218,13 @@ void ioThreadTask(void* arg)
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
     for (; service->getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {
-        for (; service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND;)
+        if(service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND)
         {
+            ZoneScopedN("ioServiceSuspend");
+            for (; service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND;)
+            {
+            
+            }
         }
         ioThreadTask_execute(service);
     }
@@ -209,6 +235,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     // try push back new request
     if(!isLockless)
     {
+        ZoneScopedN("ioRequest(Locked)");
         optionalLock();
         if (tasks.size() >= SKR_ASYNC_IO_SERVICE_MAX_TASK_COUNT)
         {
@@ -240,6 +267,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     }
     else
     {
+        ZoneScopedN("ioRequest(Lockless)");
         Task back = {};
         back.vfs = vfs;
         back.path = std::string(info->path);
@@ -262,6 +290,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
 skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) RUNTIME_NOEXCEPT
 {
     auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time, desc->lockless);
+    service->sortMethod = desc->sort_method;
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
     skr_init_mutex(&service->taskMutex);

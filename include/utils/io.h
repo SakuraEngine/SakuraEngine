@@ -38,6 +38,15 @@ typedef enum SkrIOServicePriority
     SKR_IO_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
 } SkrIOServicePriority;
 
+typedef enum SkrIOServiceSortMethod
+{
+    SKR_IO_SERVICE_SORT_METHOD_NEVER = 0,
+    SKR_IO_SERVICE_SORT_METHOD_STABLE = 1,
+    SKR_IO_SERVICE_SORT_METHOD_PARTIAL = 2,
+    SKR_IO_SERVICE_SORT_METHOD_COUNT,
+    SKR_IO_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
+} SkrIOServiceSortMethod;
+
 typedef struct skr_async_io_request_t {
     SAtomic32 status;
     char8_t* bytes;
@@ -56,6 +65,7 @@ typedef struct skr_ram_io_service_desc_t {
     const char8_t* name;
     uint32_t sleep_time;
     bool lockless;
+    SkrIOServiceSortMethod sort_method;
 } skr_ram_io_service_desc_t;
 
 typedef void (*skr_async_io_callback_t)(void* data);
