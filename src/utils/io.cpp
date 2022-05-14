@@ -79,7 +79,8 @@ public:
     };
     ~RAMServiceImpl() RUNTIME_NOEXCEPT = default;
     RAMServiceImpl(uint32_t sleep_time, bool lockless) RUNTIME_NOEXCEPT
-        : _sleepTime(sleep_time), isLockless(lockless)
+        : _sleepTime(sleep_time),
+          isLockless(lockless)
     {
     }
     void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT final;
@@ -114,12 +115,12 @@ public:
 
     void optionalLock() RUNTIME_NOEXCEPT
     {
-        if(!isLockless)
+        if (!isLockless)
             skr_acquire_mutex(&taskMutex);
     }
     void optionalUnlock() RUNTIME_NOEXCEPT
     {
-        if(!isLockless)
+        if (!isLockless)
             skr_release_mutex(&taskMutex);
     }
     SMutex taskMutex;
@@ -141,10 +142,10 @@ public:
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
     // if lockless dequeue_bulk the requests to vector
-    if(service->isLockless)
+    if (service->isLockless)
     {
         RAMServiceImpl::Task tsk;
-        while(service->task_requests.try_dequeue(tsk))
+        while (service->task_requests.try_dequeue(tsk))
         {
             ZoneScopedN("ioServiceDequeueRequests");
             service->tasks.emplace_back(tsk);
@@ -159,28 +160,29 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
             service->optionalUnlock();
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
             {
-                //TracyCZone(sleepZone, 1);
-                //TracyCZoneName(sleepZone, "ioServiceSleep", strlen("ioServiceSleep"));
+                // TracyCZone(sleepZone, 1);
+                // TracyCZoneName(sleepZone, "ioServiceSleep", strlen("ioServiceSleep"));
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
                 sleepTime = eastl::max(sleepTimeVal, 1u);
                 service->setRunningStatus(SKR_IO_SERVICE_STATUS_SLEEPING);
                 if (sleepTimeVal != SKR_IO_SERVICE_SLEEP_TIME_NEVER)
                     skr_thread_sleep(sleepTime);
-                //TracyCZoneEnd(sleepZone);
+                // TracyCZoneEnd(sleepZone);
             }
             return;
         }
         else // do sort
         {
-            ZoneScopedN("ioServiceSort");
+            TracyCZone(sortZone, 1);
+            TracyCZoneName(sortZone, "ioServiceSort", strlen("ioServiceSort"));
             service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
-            switch(service->sortMethod)
+            switch (service->sortMethod)
             {
                 case SKR_IO_SERVICE_SORT_METHOD_STABLE:
                     eastl::stable_sort(service->tasks.begin(), service->tasks.end());
                     break;
                 case SKR_IO_SERVICE_SORT_METHOD_PARTIAL:
-                    eastl::partial_sort(service->tasks.begin(), 
+                    eastl::partial_sort(service->tasks.begin(),
                     service->tasks.begin() + service->tasks.size() / 2,
                     service->tasks.end());
                     break;
@@ -188,6 +190,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
                 default:
                     break;
             }
+            TracyCZoneEnd(sortZone);
         }
         // pop current task
         service->current = service->tasks.front();
@@ -226,12 +229,11 @@ void ioThreadTask(void* arg)
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
     for (; service->getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {
-        if(service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND)
+        if (service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND)
         {
             ZoneScopedN("ioServiceSuspend");
             for (; service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND;)
             {
-            
             }
         }
         ioThreadTask_execute(service);
@@ -241,7 +243,7 @@ void ioThreadTask(void* arg)
 void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT
 {
     // try push back new request
-    if(!isLockless)
+    if (!isLockless)
     {
         optionalLock();
         TracyCZone(requestZone, 1);
@@ -251,8 +253,8 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
             if (criticalTaskCount)
             {
                 SKR_LOG_WARN(
-                    "ioRAMService %s enqueued too many tasks(over %d)!",
-                    name.c_str(), SKR_IO_SERVICE_MAX_TASK_COUNT);
+                "ioRAMService %s enqueued too many tasks(over %d)!",
+                name.c_str(), SKR_IO_SERVICE_MAX_TASK_COUNT);
                 optionalUnlock();
                 return;
             }
