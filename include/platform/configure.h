@@ -385,5 +385,6 @@ typedef int64_t host_ptr_t;
 
 // TODO: move this anywhere else
 #define USE_DXMATH
+#define TRACY_IMPORT
 #define TRACY_ENABLE
 #define TRACY_ON_DEMAND

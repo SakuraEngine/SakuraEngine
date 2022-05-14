@@ -24,10 +24,12 @@
 
 #pragma once
 
+#define TRACY_IMPORT
 #define TRACY_ENABLE
 #define TRACY_FIBERS
-#include "tracy/Tracy.hpp"
+
 #include "tracy/TracyC.h"
+#include "tracy/Tracy.hpp"
 #include <string>
 
 #ifdef TRACY_ENABLE
