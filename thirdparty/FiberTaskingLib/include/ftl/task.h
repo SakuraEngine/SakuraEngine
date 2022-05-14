@@ -24,7 +24,7 @@
 
 #pragma once
 
-#define TRACY_IMPORT
+#define TRACY_IMPORTS
 #define TRACY_ENABLE
 #define TRACY_FIBERS
 
