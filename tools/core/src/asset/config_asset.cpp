@@ -39,25 +39,24 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
         return nullptr;
     }
 
-    auto counter = SkrNew<ftl::AtomicFlag>(&GetCookSystem()->GetScheduler());
-    counter->Set();
+    // TODO: replace path with skr api
+    auto u8Path = record->path.u8string();
+#if 0
+    ftl::AtomicFlag counter(&GetCookSystem()->GetScheduler());
+    counter.Set();
     skr_ram_io_t ramIO = {};
     ramIO.bytes = nullptr;
     ramIO.offset = 0;
     ramIO.size = 0;
-    // TODO: replace path with skr api
-    auto u8Path = record->path.u8string();
     ramIO.path = u8Path.c_str();
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](void* data) noexcept {
         auto pCounter = (ftl::AtomicFlag*)data;
         pCounter->Clear();
     };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)counter;
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_io_request_t ioRequest = {};
-#if 1
     ioService->request(record->project->vfs, &ramIO, &ioRequest);
-    GetCookSystem()->scheduler->WaitForCounter(counter, true);
-    SkrDelete(counter);
+    GetCookSystem()->scheduler->WaitForCounter(&counter, true);
     auto jsonString = simdjson::padded_string(ioRequest.bytes, ioRequest.size);
     sakura_free(ioRequest.bytes);
 #else

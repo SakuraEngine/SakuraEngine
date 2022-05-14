@@ -159,14 +159,14 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
             service->optionalUnlock();
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
             {
-                TracyCZone(sleepZone, 1);
-                TracyCZoneName(sleepZone, "ioServiceSleep", strlen("ioServiceSleep"));
+                //TracyCZone(sleepZone, 1);
+                //TracyCZoneName(sleepZone, "ioServiceSleep", strlen("ioServiceSleep"));
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
                 sleepTime = eastl::max(sleepTimeVal, 1u);
                 service->setRunningStatus(SKR_IO_SERVICE_STATUS_SLEEPING);
                 if (sleepTimeVal != SKR_IO_SERVICE_SLEEP_TIME_NEVER)
                     skr_thread_sleep(sleepTime);
-                TracyCZoneEnd(sleepZone);
+                //TracyCZoneEnd(sleepZone);
             }
             return;
         }
