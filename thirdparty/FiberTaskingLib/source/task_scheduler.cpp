@@ -32,6 +32,8 @@
 #include <memory>
 #include <mutex>
 #include "platform/memory.h"
+#include "tracy/Tracy.hpp"
+#include "utils/log.h"
 
 #if defined(FTL_WIN32_THREADS)
     #ifndef WIN32_LEAN_AND_MEAN
@@ -121,9 +123,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     {
         taskScheduler->m_callbacks.OnFiberAttached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiber());
     }
-    {
-        ThreadLocalStorage* tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
-    }
+    TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str());
 
     // If we just started from the pool, we may need to clean up from another fiber
     taskScheduler->CleanUpOldFiber();
@@ -191,11 +191,12 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             {
                 callbacks.OnFiberDetached(callbacks.Context, tls->OldFiber, false);
             }
-
+            TracyFiberLeave;
             // Switch
             {
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
             }
+            TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str());
 
             if (callbacks.OnFiberAttached != nullptr)
             {
@@ -230,19 +231,14 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 }
 
                 {
-                    //if(!nextTask.name.empty())
-                    //    TracyFiberEnter(nextTask.name.c_str())
-                    {
-                        nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
-                    }
+                    ZoneScopedN("Task");
+                    nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
                     if (nextTask.Counter != nullptr)
                     {
                         nextTask.Counter->Decrement();
                         if (nextTask.TaskToExecute.PostFunction)
                             nextTask.TaskToExecute.PostFunction(nextTask.TaskToExecute.ArgData);
                     }
-                    //if(!nextTask.name.empty())
-                    //    TracyFiberLeave
                 }
             }
             else
@@ -297,6 +293,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         taskScheduler->m_callbacks.OnFiberDetached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiber(), false);
     }
 
+    TracyFiberLeave;
     unsigned index = taskScheduler->GetCurrentThreadIndex();
     {
         taskScheduler->m_tls[index].CurrentFiber->SwitchToFiber(&taskScheduler->m_quitFibers[index]);
@@ -927,13 +924,15 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     }
 
     // Switch
+    if (currentFiber != &m_mainFiber) //不是从主线程来的
+        TracyFiberLeave;
     currentFiber->SwitchToFiber(freeFiber);
 
     if (m_callbacks.OnFiberAttached != nullptr)
     {
         m_callbacks.OnFiberAttached(m_callbacks.Context, GetCurrentFiber());
     }
-
+    TracyFiberEnter(GetCurrentFiber()->name->c_str());
     // And we're back
     CleanUpOldFiber();
 }

@@ -46,10 +46,7 @@ public:
      * Default constructor
      * Nothing is allocated. This can be used as a thread fiber.
      */
-    Fiber()
-    {
-        name = std::to_string((int64_t)this);
-    }
+    Fiber();
     /**
      * Allocates a stack and sets it up to start executing 'startRoutine' when first switched to
      *
@@ -99,7 +96,10 @@ public:
     }
     ~Fiber();
 
-    std::string name;
+#ifdef TRACY_ENABLE
+    std::string* name;
+#endif
+    void InitName();
 
 private:
     void* m_stack{ nullptr };
@@ -108,7 +108,7 @@ private:
     boost_context::fcontext_t m_context{ nullptr };
     void* m_arg{ nullptr };
     FTL_VALGRIND_ID
-    bool isActiveFiber = false;
+    // bool isActiveFiber = false;
 
 public:
     /**
@@ -119,12 +119,7 @@ public:
      */
     void SwitchToFiber(Fiber* const fiber)
     {
-        if(isActiveFiber) TracyFiberLeave
-        TracyFiberEnter(fiber->name.c_str())
-        isActiveFiber = true;
         boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
-        isActiveFiber = false;
-        TracyFiberLeave
     }
     /**
      * Re-initializes the stack with a new startRoutine and arg
