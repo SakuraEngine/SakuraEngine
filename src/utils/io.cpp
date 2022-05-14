@@ -147,8 +147,10 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         RAMServiceImpl::Task tsk;
         while (service->task_requests.try_dequeue(tsk))
         {
-            ZoneScopedN("ioServiceDequeueRequests");
+            TracyCZone(dequeueZone, 1);
+            TracyCZoneName(dequeueZone, "ioServiceDequeueRequests", strlen("ioServiceDequeueRequests"));
             service->tasks.emplace_back(tsk);
+            TracyCZoneEnd(dequeueZone);
         }
     }
     // try fetch a new task
