@@ -4,6 +4,7 @@
 #include "platform/memory.h"
 #include "platform/thread.h"
 #include <EASTL/unique_ptr.h>
+#include <EASTL/vector.h>
 #include <EASTL/deque.h>
 #include <EASTL/sort.h>
 #include "utils/concurrent_queue.h"
@@ -79,12 +80,13 @@ public:
     };
     ~RAMServiceImpl() RUNTIME_NOEXCEPT = default;
     RAMServiceImpl(uint32_t sleep_time, bool lockless) RUNTIME_NOEXCEPT
-        : _sleepTime(sleep_time),
-          isLockless(lockless)
+        :  isLockless(lockless), _sleepTime(sleep_time)
+         
     {
     }
     void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT final;
     bool try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT final;
+    void defer_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT final;
     void drain() RUNTIME_NOEXCEPT final;
     void set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT final;
     void stop(bool wait_drain = false) RUNTIME_NOEXCEPT final;
@@ -123,22 +125,29 @@ public:
         if (!isLockless)
             skr_release_mutex(&taskMutex);
     }
-    SMutex taskMutex;
-    SThreadDesc threadItem = {};
-    SThreadHandle serviceThread;
-    moodycamel::ConcurrentQueue<Task> task_requests;
-    eastl::deque<Task> tasks;
-    SAtomic32 _running_status /*SkrAsyncIOServiceStatus*/;
-    SAtomic32 _thread_status = _SKR_IO_THREAD_STATUS_RUNNING /*IOThreadStatus*/;
-    SAtomic32 _sleepTime = 30 /*ms*/;
     const bool isLockless = false;
     const bool criticalTaskCount = false;
     const eastl::string name;
-    // sleep
+    // thread items
+    SThreadDesc threadItem = {};
+    SThreadHandle serviceThread;
+    // defer cancels
+    SMutex cancelMutex;
+    moodycamel::ConcurrentQueue<skr_async_io_request_t*> lockless_defer_cancels;
+    eastl::vector<skr_async_io_request_t*> defer_cancels;
+    // task containers
+    SMutex taskMutex;
+    moodycamel::ConcurrentQueue<Task> task_requests;
+    eastl::deque<Task> tasks;
+    // for condvar mode sleep
     SMutex sleepMutex;
     SConditionVariable sleepCv;
-    // state
+    // current task
     RAMServiceImpl::Task current;
+    // service settings & states
+    SAtomic32 _running_status /*SkrAsyncIOServiceStatus*/;
+    SAtomic32 _thread_status = _SKR_IO_THREAD_STATUS_RUNNING /*IOThreadStatus*/;
+    SAtomic32 _sleepTime = 30 /*ms*/;
     // running modes
     // can be simply exchanged by atomic vars to support runtime mode modify
     SkrIOServiceSortMethod sortMethod;
@@ -147,7 +156,7 @@ public:
 
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
-    // if lockless dequeue_bulk the requests to vector
+    // 0.if lockless dequeue_bulk the requests to vector
     if (service->isLockless)
     {
         RAMServiceImpl::Task tsk;
@@ -159,7 +168,41 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
             TracyCZoneEnd(dequeueZone);
         }
     }
-    // try fetch a new task
+    // 1.defer cancel tasks
+    {
+        if(service->isLockless)
+        {
+            skr_async_io_request_t* ioRequest;
+            while (service->lockless_defer_cancels.try_dequeue(ioRequest))
+            {
+                TracyCZone(dequeueZone, 1);
+                TracyCZoneName(dequeueZone, "ioServiceDequeueCancels", strlen("ioServiceDequeueCancels"));
+                service->defer_cancels.emplace_back(ioRequest);
+                TracyCZoneEnd(dequeueZone);
+            }
+        }
+        {
+            TracyCZone(cancelZone, 1);
+            TracyCZoneName(cancelZone, "ioServiceCancels", strlen("ioServiceCancels"));
+
+            service->tasks.erase(
+                eastl::remove_if(service->tasks.begin(), service->tasks.end(),
+                [&](RAMServiceImpl::Task& t){
+                    for(auto cancel : service->defer_cancels)
+                    {
+                        bool _ = t.request == cancel;
+                        if (_)
+                            t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+                        return _;
+                    }
+                    return false;
+                }), service->tasks.end());
+            service->defer_cancels.resize(0);
+
+            TracyCZoneEnd(cancelZone);
+        }
+    }
+    // 2.try fetch a new task
     {
         service->optionalLock();
         // empty sleep
@@ -334,6 +377,7 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     service->sleepMode = desc->sleep_mode;
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
+    skr_init_mutex(&service->cancelMutex);
     skr_init_mutex(&service->taskMutex);
     skr_init_mutex(&service->sleepMutex);
     service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
@@ -348,6 +392,7 @@ void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
     s->drain();
     service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
     skr_join_thread(service->serviceThread);
+    skr_destroy_mutex(&service->cancelMutex);
     skr_destroy_mutex(&service->taskMutex);
     skr_destroy_mutex(&service->sleepMutex);
     skr_destroy_thread(service->serviceThread);
@@ -374,6 +419,20 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
         return cancel;
     }
     return false;
+}
+
+void skr::io::RAMServiceImpl::defer_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
+{
+    if(!isLockless)
+    {
+        skr_acquire_mutex(&cancelMutex);
+        defer_cancels.emplace_back(request);
+        skr_release_mutex(&cancelMutex);
+    }
+    else
+    {
+        lockless_defer_cancels.enqueue(request);
+    }
 }
 
 void skr::io::RAMServiceImpl::drain() RUNTIME_NOEXCEPT
