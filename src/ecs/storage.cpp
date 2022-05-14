@@ -133,11 +133,12 @@ void dual_storage_t::linked_to_prefab(const dual_entity_t* src, uint32_t size, b
 
         void map(dual_entity_t& ent)
         {
-            forloop(i, 0, count) if (ent == source[i])
-            {
-                ent = e_make_transient(i);
-                return;
-            }
+            forloop (i, 0, count)
+                if (ent == source[i])
+                {
+                    ent = e_make_transient(i);
+                    return;
+                }
             if (!keepExternal) // todo: use guid for persistent reference?
                 ent = kEntityNull;
         }
@@ -145,8 +146,8 @@ void dual_storage_t::linked_to_prefab(const dual_entity_t* src, uint32_t size, b
     m.count = size;
     m.source = src;
     m.keepExternal = keepExternal;
-    forloop(i, 0, size)
-    iterator_ref_view(entity_view(src[i]), m);
+    forloop (i, 0, size)
+        iterator_ref_view(entity_view(src[i]), m);
 }
 
 void dual_storage_t::prefab_to_linked(const dual_entity_t* src, uint32_t size)
@@ -167,8 +168,8 @@ void dual_storage_t::prefab_to_linked(const dual_entity_t* src, uint32_t size)
     } m;
     m.count = size;
     m.source = src;
-    forloop(i, 0, size)
-    iterator_ref_view(entity_view(src[i]), m);
+    forloop (i, 0, size)
+        iterator_ref_view(entity_view(src[i]), m);
 }
 
 void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size, uint32_t count, dual_view_callback_t callback, void* u)
@@ -193,10 +194,10 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
     m.size = size;
     std::vector<dual_entity_t> localEnts;
     localEnts.resize(count);
-    forloop(i, 0, size)
+    forloop (i, 0, size)
     {
-        forloop(j, 0, count)
-        localEnts[j] = ents[j * size + i];
+        forloop (j, 0, count)
+            localEnts[j] = ents[j * size + i];
         auto view = entity_view(src[i]);
         auto group = view.chunk->group->cloned;
         auto localCount = 0;
@@ -236,7 +237,7 @@ void dual_storage_t::instantiate(const dual_entity_t* src, uint32_t n, uint32_t 
 {
     using namespace dual;
     assert(scheduler->is_main_thread(this));
-    forloop(i, 0, n)
+    forloop (i, 0, n)
     {
         auto view = entity_view(src[i]);
         scheduler->sync_archetype(view.chunk->type); // data is modified by linked to prefab
@@ -413,7 +414,7 @@ void dual_storage_t::pack_entities()
     map.resize(entries.size());
     entities.freeEntries.clear();
     EIndex j = 0;
-    forloop(i, 0, entries.size())
+    forloop (i, 0, entries.size())
     {
         if (entries[i].indexInChunk != 0)
         {
@@ -443,8 +444,8 @@ void dual_storage_t::pack_entities()
         for (dual_chunk_t* c = g->firstChunk; c; c = c->next)
             iterator_ref_view({ c, 0, c->count }, m);
         auto meta = g->type.meta;
-        forloop(i, 0, meta.length)
-        m.map((meta.data)[i]);
+        forloop (i, 0, meta.length)
+            m.map((meta.data)[i]);
         std::sort(meta.data, meta.data + meta.length);
         groups.insert({ g->type, g });
     }
@@ -621,26 +622,26 @@ void dual_storage_t::merge(dual_storage_t& src)
     ftl::Task* tasks = new ftl::Task[payloads.size()];
     auto taskBody = [](ftl::TaskScheduler*, void* data) {
         auto payload = (payload_t*)data;
-        forloop(i, payload->start, payload->end)
+        forloop (i, payload->start, payload->end)
         {
             auto c = payload->chunks[i];
             auto ents = (dual_entity_t*)c->get_entities();
-            forloop(j, 0, c->count)
-            payload->m->map(ents[j]);
+            forloop (j, 0, c->count)
+                payload->m->map(ents[j]);
             iterator_ref_view({ c, 0, c->count }, *payload->m);
         }
     };
-    forloop(i, 0, payloads.size())
-    tasks[i] = { taskBody, &payloads[i] };
-    ftl::TaskCounter counter(&scheduler->schedular);
-    scheduler->schedular.AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, &counter);
-    scheduler->schedular.WaitForCounter(&counter);
+    forloop (i, 0, payloads.size())
+        tasks[i] = { taskBody, &payloads[i] };
+    ftl::TaskCounter counter(&scheduler->scheduler);
+    scheduler->scheduler.AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, &counter);
+    scheduler->scheduler.WaitForCounter(&counter);
     for (auto& i : src.groups)
     {
         dual_group_t* g = i.second;
         auto type = g->type;
-        forloop(j, 0, type.meta.length)
-        m.map((dual_entity_t&)type.meta.data[j]);
+        forloop (j, 0, type.meta.length)
+            m.map((dual_entity_t&)type.meta.data[j]);
         dual_group_t* dstG = get_group(type);
         dual_chunk_t* c = g->firstChunk;
         while (c)

@@ -13,7 +13,7 @@ DUAL_DECLARE(group_t);
 DUAL_DECLARE(chunk_t);
 DUAL_DECLARE(query_t);
 DUAL_DECLARE(storage_delta_t);
-DUAL_DECLARE(job_t);
+DUAL_DECLARE(counter_t);
 #undef DUAL_DECLARE
 
 // structs
@@ -633,8 +633,8 @@ RUNTIME_API dual_entity_t dualJ_add_resource();
  */
 RUNTIME_API void dualJ_remove_resource(dual_entity_t id);
 typedef uint32_t dual_thread_index_t;
-typedef void (*dual_system_callback_t)(void* u, dual_job_t* job, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
-typedef void (*dual_system_init_callback_t)(void* u, dual_job_t* job);
+typedef void (*dual_system_callback_t)(void* u, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
+typedef void (*dual_system_init_callback_t)(void* u, EIndex entityCount);
 struct dual_resource_operation_t {
     dual_entity_t* resources;
     int* readonly;
@@ -652,10 +652,9 @@ struct dual_resource_operation_t {
  * @param resources
  * @return dual_job_t*
  */
-RUNTIME_API dual_job_t* dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_init_callback_t init, dual_resource_operation_t* resources);
-RUNTIME_API uint32_t dualJ_get_entity_count(const dual_job_t* job);
-typedef void (*dual_for_callback_t)(void* u, dual_job_t* job, uint32_t index);
+RUNTIME_API void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+dual_system_init_callback_t init, dual_resource_operation_t* resources, dual_counter_t** counter);
+typedef void (*dual_for_callback_t)(void* u, uint32_t index);
 /**
  * @brief schedule multiple jobs
  *
@@ -664,14 +663,20 @@ typedef void (*dual_for_callback_t)(void* u, dual_job_t* job, uint32_t index);
  * @param u
  * @return dual_job_t*
  */
-RUNTIME_API dual_job_t* dualJ_schedule_for(uint32_t count, dual_for_callback_t callback, void* u, dual_resource_operation_t* resources);
+RUNTIME_API void dualJ_schedule_for(uint32_t count, dual_for_callback_t callback, void* u, dual_resource_operation_t* resources, dual_counter_t** counter);
 /**
  * @brief wait until counter equal to zero (when job is done)
  *
  * @param counter
- * @param pin
+ * @param pin stay on current thread
  */
-RUNTIME_API void dualJ_wait_job(dual_job_t* counter, int pin);
+RUNTIME_API void dualJ_wait_counter(dual_counter_t* counter, int pin);
+/**
+ * @brief release the counter
+ *
+ * @param counter
+ */
+RUNTIME_API void dualJ_release_counter(dual_counter_t* counter);
 /**
  * @brief wait for all jobs are done
  *
@@ -682,11 +687,6 @@ RUNTIME_API void dualJ_wait_all();
  *
  */
 RUNTIME_API void dualJ_wait_storage(dual_storage_t* storage);
-
-/**
- * @brief collect&clean jobs
- */
-RUNTIME_API void dualJ_GC();
 
 #if defined(__cplusplus)
 }
