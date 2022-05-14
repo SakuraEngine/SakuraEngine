@@ -141,6 +141,54 @@ TEST_F(FSTest, cancel)
     SKR_LOG_INFO("cancel tested for %d times", 100);
 }
 
+
+TEST_F(FSTest, defer_cancel)
+{
+    for (uint32_t i = 0; i < 100; i++)
+    {
+        skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.name = "Test";
+        ioServiceDesc.lockless = true;
+        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        auto ioService = skr::io::RAMService::create(&ioServiceDesc);
+        uint8_t bytes[1024];
+        uint8_t bytes2[1024];
+        memset(bytes, 0, 1024);
+        memset(bytes2, 0, 1024);
+        skr_ram_io_t ramIO = {};
+        ramIO.bytes = bytes;
+        ramIO.offset = 0;
+        ramIO.size = 1024;
+        ramIO.path = "testfile2";
+        skr_ram_io_t anotherRamIO = {};
+        anotherRamIO.bytes = bytes2;
+        anotherRamIO.offset = 0;
+        anotherRamIO.size = 1024;
+        anotherRamIO.path = "testfile";
+        skr_async_io_request_t request;
+        ioService->request(abs_fs, &ramIO, &request);
+        skr_async_io_request_t anotherRequest;
+        ioService->request(abs_fs, &anotherRamIO, &anotherRequest);
+        // try cancel io of testfile
+        ioService->defer_cancel(&anotherRequest);
+        ioService->drain();
+        if (anotherRequest.is_cancelled())
+        {
+            uint8_t bytes0[1024];
+            memset(bytes0, 0, 1024);
+            EXPECT_EQ(memcmp(bytes2, bytes0, 1024), 0);
+        }
+        else
+        {
+            EXPECT_TRUE(anotherRequest.is_enqueued() || anotherRequest.is_ram_loading() || anotherRequest.is_ready());
+            EXPECT_EQ(std::string((const char8_t*)bytes2), std::string(u8"Hello, World!"));
+        }
+        EXPECT_EQ(std::string((const char8_t*)bytes), std::string(u8"Hello, World2!"));
+        skr::io::RAMService::destroy(ioService);
+    }
+    SKR_LOG_INFO("defer_cancel tested for %d times", 100);
+}
+
 TEST_F(FSTest, sort)
 {
     for (uint32_t i = 0; i < 100; i++)
@@ -148,6 +196,7 @@ TEST_F(FSTest, sort)
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = "Test";
         ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        ioServiceDesc.sort_method = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr::io::RAMService::create(&ioServiceDesc);
         ioService->stop(true);
         uint8_t bytes[1024];
