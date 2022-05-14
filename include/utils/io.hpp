@@ -5,7 +5,7 @@ namespace skr
 {
 namespace io
 {
-typedef class RUNTIME_API RAMService
+class RUNTIME_API RAMService
 {
 public:
     [[nodiscard]] static RAMService* create(const skr_ram_io_service_desc_t* desc) RUNTIME_NOEXCEPT;
@@ -41,6 +41,6 @@ public:
 
     virtual ~RAMService() RUNTIME_NOEXCEPT = default;
     RAMService() RUNTIME_NOEXCEPT = default;
-} RAMService;
+};
 } // namespace io
 } // namespace skr

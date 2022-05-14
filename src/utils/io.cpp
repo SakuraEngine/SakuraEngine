@@ -157,6 +157,7 @@ public:
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
 {
     // 0.if lockless dequeue_bulk the requests to vector
+    service->optionalLock();
     if (service->isLockless)
     {
         RAMServiceImpl::Task tsk;
@@ -169,6 +170,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         }
     }
     // 1.defer cancel tasks
+    if(service->tasks.size())
     {
         if(service->isLockless)
         {
@@ -181,6 +183,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
                 TracyCZoneEnd(dequeueZone);
             }
         }
+        if(service->defer_cancels.size())
         {
             TracyCZone(cancelZone, 1);
             TracyCZoneName(cancelZone, "ioServiceCancels", strlen("ioServiceCancels"));
@@ -204,7 +207,6 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
     }
     // 2.try fetch a new task
     {
-        service->optionalLock();
         // empty sleep
         if (!service->tasks.size())
         {
@@ -258,10 +260,10 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         // pop current task
         service->current = service->tasks.front();
         service->tasks.pop_front();
-        service->optionalUnlock();
     }
+    service->optionalUnlock();
+    // 3.load file
     {
-        // do io work
         TracyCZoneC(readZone, tracy::Color::LightYellow, 1);
         TracyCZoneName(readZone, "ioServiceReadFile", strlen("ioServiceReadFile"));
         service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
