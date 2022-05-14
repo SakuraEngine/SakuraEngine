@@ -28,6 +28,8 @@
 #include "ftl/config.h"
 
 #include <algorithm>
+#include <atomic>
+#include <vector>
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
     #if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
@@ -49,10 +51,33 @@ size_t SystemPageSize();
 void* AlignedAlloc(size_t size, size_t alignment);
 void AlignedFree(void* block);
 size_t RoundUp(size_t numToRound, size_t multiple);
+#ifdef TRACY_ENABLE
+static std::atomic_size_t counter;
+thread_local std::vector<std::string*> names;
+void Fiber::InitName()
+{
+    if (names.empty())
+        name = new std::string(std::to_string(counter.fetch_add(1)));
+    else
+    {
+        name = std::move(names.back());
+        names.pop_back();
+    }
+}
+#else
+void Fiber::InitName()
+{
+}
+#endif
 
+Fiber::Fiber()
+{
+    InitName();
+}
 Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void* arg)
     : m_arg(arg)
 {
+    InitName();
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
     m_systemPageSize = SystemPageSize();
 #else
@@ -73,6 +98,7 @@ Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void* arg)
 
 Fiber::~Fiber()
 {
+    names.emplace_back(std::move(name));
     if (m_stack != nullptr)
     {
         if (m_systemPageSize != 0)

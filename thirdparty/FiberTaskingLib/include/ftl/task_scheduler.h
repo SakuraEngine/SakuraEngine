@@ -99,7 +99,7 @@ private:
     struct TaskBundle {
         Task TaskToExecute;
         TaskCounter* Counter;
-        std::string name;
+        const char* name;
     };
 
     struct ReadyFiberBundle {
