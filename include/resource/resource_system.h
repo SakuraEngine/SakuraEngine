@@ -1,6 +1,8 @@
 #pragma once
 
 #include "EASTL/fixed_vector.h"
+#include "ecs/entities.hpp"
+#include "resource/resource_handle.h"
 #include "utils/hashmap.hpp"
 #include "resource/resource_header.h"
 typedef enum ESkrLoadingPhase
@@ -19,15 +21,15 @@ typedef enum ESkrLoadingPhase
     // Unload Stages
     SKR_LOADING_PHASE_UNINSTALL_RESOURCE,
     SKR_LOADING_PHASE_UNLOAD_RESOURCE,
-    SKR_LOADING_PHASE_UNLOAD_FAILED_RESOURCE,
 
     // Special Cases
     SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE,
+    SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE,
     SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES,
     // This stage is needed so we can resume correctly when going from load -> unload -> load
     SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST,
 
-    SKR_LOADING_PHASE_COMPLETE,
+    SKR_LOADING_PHASE_FINISHED,
 } ESkrLoadingPhase;
 #if defined(__cplusplus)
     #include "ghc/filesystem.hpp"
@@ -52,8 +54,12 @@ struct SResourceRequest {
     void UpdateLoad(bool requestInstall);
     void UpdateUnload();
     void Update();
+    bool Yielded();
     void OnRequestFileFinished();
     void OnRequestLoadFinished();
+    void _LoadFinished();
+    void _InstallFinished();
+    void _UnloadResource();
 };
 struct RUNTIME_API SResourceRegistry {
 public:
@@ -66,7 +72,7 @@ struct RUNTIME_API SResourceSystem {
     void Shutdown();
     void Update();
 
-    void LoadResource(skr_resource_handle_t& handle, bool requireInstalled = true, uint32_t requester = 0);
+    void LoadResource(skr_resource_handle_t& handle, bool requireInstalled = true, uint32_t requester = 0, ESkrRequesterType = SKR_REQUESTER_UNKNOWN);
     void UnloadResource(skr_resource_handle_t& handle);
 
     skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid);
@@ -76,6 +82,7 @@ struct RUNTIME_API SResourceSystem {
 
     SResourceRegistry* resourceProvider = nullptr;
     eastl::vector<SResourceRequest*> requests;
+    dual::entity_registry_t resourceIds;
     skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
     skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
     skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
