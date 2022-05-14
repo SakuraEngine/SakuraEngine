@@ -97,7 +97,7 @@ TEST_F(FSTest, cancel)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = "Test";
-        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_NEVER /*ms*/;
+        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX /*ms*/;
         auto ioService = skr::io::RAMService::create(&ioServiceDesc);
         uint8_t bytes[1024];
         uint8_t bytes2[1024];
@@ -147,7 +147,7 @@ TEST_F(FSTest, sort)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = "Test";
-        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_NEVER /*ms*/;
+        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX /*ms*/;
         auto ioService = skr::io::RAMService::create(&ioServiceDesc);
         ioService->stop(true);
         uint8_t bytes[1024];

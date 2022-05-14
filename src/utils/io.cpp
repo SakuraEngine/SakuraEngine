@@ -134,9 +134,15 @@ public:
     const bool isLockless = false;
     const bool criticalTaskCount = false;
     const eastl::string name;
+    // sleep
+    SMutex sleepMutex;
+    SConditionVariable sleepCv;
     // state
     RAMServiceImpl::Task current;
+    // running modes
+    // can be simply exchanged by atomic vars to support runtime mode modify
     SkrIOServiceSortMethod sortMethod;
+    SkrAsyncIOServiceSleepMode sleepMode;
 };
 
 void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
@@ -162,14 +168,26 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
             service->optionalUnlock();
             const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
             {
-                // TracyCZone(sleepZone, 1);
-                // TracyCZoneName(sleepZone, "ioServiceSleep", strlen("ioServiceSleep"));
-                auto sleepTime = eastl::min(sleepTimeVal, 100u);
-                sleepTime = eastl::max(sleepTimeVal, 1u);
                 service->setRunningStatus(SKR_IO_SERVICE_STATUS_SLEEPING);
-                if (sleepTimeVal != SKR_IO_SERVICE_SLEEP_TIME_NEVER)
+                if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_SLEEP &&
+                    sleepTimeVal != 0)
+                {
+                    auto sleepTime = eastl::min(sleepTimeVal, 100u);
+                    sleepTime = eastl::max(sleepTimeVal, 1u);
+                    TracyCZone(sleepZone, 1);
+                    TracyCZoneName(sleepZone, "ioServiceSleep(Sleep)", strlen("ioServiceSleep(Sleep)"));
                     skr_thread_sleep(sleepTime);
-                // TracyCZoneEnd(sleepZone);
+                    TracyCZoneEnd(sleepZone);
+                }
+                if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
+                {
+                    // use condition variable to sleep
+                    TracyCZone(sleepZone, 1);
+                    TracyCZoneName(sleepZone, "ioServiceSleep(Cond)", strlen("ioServiceSleep(Cond)"));
+                    SMutexLock sleepLock(service->sleepMutex);
+                    skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);
+                    TracyCZoneEnd(sleepZone);
+                }
             }
             return;
         }
@@ -301,15 +319,23 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
         skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
         TracyCZoneEnd(requestZone);
     }
+    // unlock cv
+    const auto sleepTimeVal = skr_atomic32_load_acquire(&_sleepTime);
+    if(sleepTimeVal == SKR_IO_SERVICE_SLEEP_TIME_MAX)
+    {
+        skr_wake_condition_var(&sleepCv);
+    }
 }
 
 skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) RUNTIME_NOEXCEPT
 {
     auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time, desc->lockless);
     service->sortMethod = desc->sort_method;
+    service->sleepMode = desc->sleep_mode;
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
     skr_init_mutex(&service->taskMutex);
+    skr_init_mutex(&service->sleepMutex);
     service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
     service->setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     skr_init_thread(&service->threadItem, &service->serviceThread);
@@ -323,6 +349,7 @@ void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
     service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
     skr_join_thread(service->serviceThread);
     skr_destroy_mutex(&service->taskMutex);
+    skr_destroy_mutex(&service->sleepMutex);
     skr_destroy_thread(service->serviceThread);
     SkrDelete(service);
 }

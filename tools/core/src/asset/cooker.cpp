@@ -39,9 +39,10 @@ SCookSystem::SCookSystem() noexcept
         {
             skr_ram_io_service_desc_t desc = {};
             // cook system runs quick so there is no need to sleep long
-            desc.sleep_time = 1;
+            desc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX;
             desc.lockless = true;
             desc.sort_method = SKR_IO_SERVICE_SORT_METHOD_NEVER;
+            desc.sleep_mode = SKR_IO_SERVICE_SLEEP_MODE_COND_VAR;
             ioService = skr::io::RAMService::create(&desc);
         }
     }

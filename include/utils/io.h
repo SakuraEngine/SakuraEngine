@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
-#define SKR_IO_SERVICE_SLEEP_TIME_NEVER UINT32_MAX
+#define SKR_IO_SERVICE_SLEEP_TIME_MAX UINT32_MAX
 
 typedef enum SkrAsyncIOServiceStatus
 {
@@ -17,6 +17,14 @@ typedef enum SkrAsyncIOServiceStatus
     SKR_IO_SERVICE_STATUS_COUNT,
     SKR_IO_SERVICE_STATUS_MAX_ENUM = UINT32_MAX
 } SkrAsyncIOServiceStatus;
+
+typedef enum SkrAsyncIOServiceSleepMode
+{
+    SKR_IO_SERVICE_SLEEP_MODE_COND_VAR = 0,
+    SKR_IO_SERVICE_SLEEP_MODE_SLEEP = 1,
+    SKR_IO_SERVICE_SLEEP_MODE_COUNT,
+    SKR_IO_SERVICE_SLEEP_MAX_ENUM = UINT32_MAX
+} SkrAsyncIOServiceSleepMode;
 
 typedef enum SkrAsyncIOStatus
 {
@@ -66,6 +74,7 @@ typedef struct skr_ram_io_service_desc_t {
     uint32_t sleep_time;
     bool lockless;
     SkrIOServiceSortMethod sort_method;
+    SkrAsyncIOServiceSleepMode sleep_mode;
 } skr_ram_io_service_desc_t;
 
 typedef void (*skr_async_io_callback_t)(void* data);
