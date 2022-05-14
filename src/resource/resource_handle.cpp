@@ -6,6 +6,9 @@
 #include "resource/resource_header.h"
 #include "resource/resource_system.h"
 
+static constexpr uint64_t kResourceHandleRequesterTypeMask = ~(alignof(skr_resource_record_t) - 1);
+static constexpr uint64_t kResourceHandleRecordMask = alignof(skr_resource_record_t) - 1;
+
 skr_resource_handle_t::skr_resource_handle_t()
 {
     std::memset(this, 0, sizeof(skr_resource_handle_t));
@@ -28,7 +31,7 @@ void skr_resource_handle_t::set_ptr(void* ptr)
     auto record = system->_GetRecord(ptr);
     if (!record)
         return;
-    pointer = (int64_t)record;
+    set_record(record);
 }
 
 void skr_resource_handle_t::set_guid(const skr_guid_t& inGUID)
@@ -40,13 +43,13 @@ void skr_resource_handle_t::set_guid(const skr_guid_t& inGUID)
 
 bool skr_resource_handle_t::is_resolved() const
 {
-    return padding == 0 && pointer != 0;
+    return padding == 0 && get_record() != nullptr;
 }
 
 void* skr_resource_handle_t::get_ptr() const
 {
     SKR_ASSERT(padding == 0);
-    return pointer != 0 ? ((skr_resource_record_t*)pointer)->resource : nullptr;
+    return get_record() != nullptr ? get_record()->resource : nullptr;
 }
 
 skr_guid_t skr_resource_handle_t::get_guid() const
@@ -59,7 +62,7 @@ void* skr_resource_handle_t::get_resolved(bool requireInstalled) const
 {
     if (is_null())
         return nullptr;
-    auto record = ((skr_resource_record_t*)pointer);
+    auto record = get_record();
     if (!record)
         return nullptr;
     bool statusSatisfied = false;
@@ -76,19 +79,18 @@ skr_guid_t skr_resource_handle_t::get_serialized() const
         return guid;
     if (padding != 0)
         return get_guid();
-    auto record = ((skr_resource_record_t*)pointer);
+    auto record = get_record();
     SKR_ASSERT(record);
     return record->header.guid;
 }
 
-void skr_resource_handle_t::resolve(bool requireInstalled, uint32_t inRequester)
+void skr_resource_handle_t::resolve(bool requireInstalled, uint32_t inRequester, ESkrRequesterType requesterType)
 {
     SKR_ASSERT(!is_null());
     if (padding != 0)
     {
         auto system = skr::resource::GetResourceSystem();
-        system->LoadResource(*this, requireInstalled, inRequester);
-        requester = inRequester;
+        system->LoadResource(*this, requireInstalled, inRequester, requesterType);
     }
 }
 
@@ -103,7 +105,7 @@ void skr_resource_handle_t::unload()
 
 bool skr_resource_handle_t::is_null() const
 {
-    return padding == 0 && pointer == 0;
+    return padding == 0 && get_record() == nullptr;
 }
 
 void skr_resource_handle_t::reset()
@@ -113,10 +115,39 @@ void skr_resource_handle_t::reset()
     std::memset(this, 0, sizeof(skr_resource_handle_t));
 }
 
-ESkrLoadingStatus skr_resource_handle_t::get_status()
+ESkrLoadingStatus skr_resource_handle_t::get_status() const
 {
     if (padding != 0 || is_null())
         return SKR_LOADING_STATUS_UNLOADED;
-    auto record = ((skr_resource_record_t*)pointer);
+    auto record = get_record();
     return record->loadingStatus;
+}
+
+skr_resource_record_t* skr_resource_handle_t::get_record() const
+{
+    return (skr_resource_record_t*)(pointer & kResourceHandleRecordMask);
+}
+
+uint32_t skr_resource_handle_t::get_requester() const
+{
+    SKR_ASSERT(is_resolved());
+    return requester;
+}
+
+ESkrRequesterType skr_resource_handle_t::get_requester_type() const
+{
+    SKR_ASSERT(is_resolved());
+    return (ESkrRequesterType)(pointer & kResourceHandleRequesterTypeMask);
+}
+
+void skr_resource_handle_t::set_record(skr_resource_record_t* record)
+{
+    pointer = (uint64_t)record | (pointer & kResourceHandleRequesterTypeMask);
+}
+
+void skr_resource_handle_t::set_resolved(skr_resource_record_t* record, uint32_t inRequester, ESkrRequesterType requesterType)
+{
+    reset();
+    pointer = (uint64_t)record | (uint64_t(requesterType) & kResourceHandleRequesterTypeMask);
+    requester = inRequester;
 }

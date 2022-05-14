@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/guid.h"
+#include "resource/resource_handle.h"
 #include "type/type_registry.h"
 
 #if defined(__cplusplus)
@@ -11,7 +11,7 @@ typedef struct skr_resource_header_t {
     uint32_t version;
     skr_guid_t guid;
     skr_type_id_t type;
-    eastl::fixed_vector<skr_guid_t, 4> dependencies;
+    eastl::fixed_vector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
 namespace bitsery
 {
@@ -51,7 +51,12 @@ struct skr_resource_record_t {
     void* resource;
     void (*destructor)(void*);
     ESkrLoadingStatus loadingStatus;
-    eastl::vector<uint32_t> references;
+    struct requester_id {
+        uint32_t id;
+        ESkrRequesterType type;
+    };
+    uint32_t id;
+    eastl::vector<requester_id> references;
     skr_resource_header_t header;
     skr::resource::SResourceRequest* activeRequest;
 };
