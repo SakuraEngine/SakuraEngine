@@ -29,7 +29,6 @@
 #include "ftl/fiber.h"
 #include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
-#include "tracy/Tracy.hpp"
 #include <memory>
 #include <mutex>
 #include "platform/memory.h"
@@ -124,7 +123,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     }
     {
         ThreadLocalStorage* tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
-        TracyFiberEnter(tls->CurrentFiber->name.c_str());
     }
 
     // If we just started from the pool, we may need to clean up from another fiber
@@ -196,7 +194,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
             // Switch
             {
-                TracyFiberLeave
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
             }
 
@@ -204,8 +201,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             {
                 callbacks.OnFiberAttached(callbacks.Context, taskScheduler->GetCurrentFiber());
             }
-            TracyFiberEnter(taskScheduler->GetCurrentFiber()->name.c_str());
-
             // And we're back
             taskScheduler->CleanUpOldFiber();
 
@@ -235,15 +230,19 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 }
 
                 {
-                    // ZoneScoped("Task");
-                    nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
-                }
-
-                if (nextTask.Counter != nullptr)
-                {
-                    nextTask.Counter->Decrement();
-                    if (nextTask.TaskToExecute.PostFunction)
-                        nextTask.TaskToExecute.PostFunction(nextTask.TaskToExecute.ArgData);
+                    //if(!nextTask.name.empty())
+                    //    TracyFiberEnter(nextTask.name.c_str())
+                    {
+                        nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
+                    }
+                    if (nextTask.Counter != nullptr)
+                    {
+                        nextTask.Counter->Decrement();
+                        if (nextTask.TaskToExecute.PostFunction)
+                            nextTask.TaskToExecute.PostFunction(nextTask.TaskToExecute.ArgData);
+                    }
+                    //if(!nextTask.name.empty())
+                    //    TracyFiberLeave
                 }
             }
             else
@@ -300,7 +299,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
     unsigned index = taskScheduler->GetCurrentThreadIndex();
     {
-        TracyFiberLeave;
         taskScheduler->m_tls[index].CurrentFiber->SwitchToFiber(&taskScheduler->m_quitFibers[index]);
     }
 
@@ -315,15 +313,12 @@ void TaskScheduler::ThreadEndFunc(void* arg)
     // Jump to the thread fibers
     unsigned threadIndex = taskScheduler->GetCurrentThreadIndex();
 
-    TracyFiberEnter(taskScheduler->m_quitFibers[threadIndex].name.c_str());
-
     // Wait for all other threads to quit
     taskScheduler->m_quitCount.fetch_add(1, std::memory_order_seq_cst);
     while (taskScheduler->m_quitCount.load(std::memory_order_seq_cst) != taskScheduler->m_numThreads)
     {
         SleepThread(50);
     }
-    TracyFiberLeave;
     if (threadIndex == 0)
     {
         //  Special case for the main thread fiber
@@ -495,10 +490,12 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter*
     auto threadIndex = GetCurrentThreadIndex();
     threadIndex = threadIndex == kInvalidIndex ? 0 : threadIndex;
     TaskBundle bundle = { task, counter };
+#ifdef TRACY_ENABLE
     if (name)
     {
         bundle.name = name;
     }
+#endif
     if (priority == TaskPriority::High)
     {
         m_tls[threadIndex].HiPriTaskQueue.Push(bundle);
@@ -930,15 +927,12 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     }
 
     // Switch
-    if (pinnedThreadIndex != 0) //不是从主线程来的
-        TracyFiberLeave;
     currentFiber->SwitchToFiber(freeFiber);
 
     if (m_callbacks.OnFiberAttached != nullptr)
     {
         m_callbacks.OnFiberAttached(m_callbacks.Context, GetCurrentFiber());
     }
-    TracyFiberEnter(GetCurrentFiber()->name.c_str());
 
     // And we're back
     CleanUpOldFiber();
