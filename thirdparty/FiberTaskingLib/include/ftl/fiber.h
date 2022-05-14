@@ -108,6 +108,7 @@ private:
     boost_context::fcontext_t m_context{ nullptr };
     void* m_arg{ nullptr };
     FTL_VALGRIND_ID
+    bool isActiveFiber = false;
 
 public:
     /**
@@ -118,7 +119,12 @@ public:
      */
     void SwitchToFiber(Fiber* const fiber)
     {
+        if(isActiveFiber) TracyFiberLeave
+        TracyFiberEnter(fiber->name.c_str())
+        isActiveFiber = true;
         boost_context::jump_fcontext(&m_context, fiber->m_context, fiber->m_arg);
+        isActiveFiber = false;
+        TracyFiberLeave
     }
     /**
      * Re-initializes the stack with a new startRoutine and arg
