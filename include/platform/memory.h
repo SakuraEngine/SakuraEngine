@@ -55,7 +55,15 @@ template <typename T, typename... TArgs>
 {
     void* pMemory = sakura_malloc_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE T(std::forward<TArgs>(params)...);
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+}
+
+template <typename T>
+[[nodiscard]] FORCEINLINE T* SkrNew()
+{
+    void* pMemory = sakura_malloc_aligned(sizeof(T), alignof(T));
+    SKR_ASSERT(pMemory != nullptr);
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
 
 template <typename T>
