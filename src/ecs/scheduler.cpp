@@ -47,7 +47,7 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
     if (pair == dependencyEntries.end())
         return;
     auto entries = pair->second.data();
-    std::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
     auto count = type->type.length;
     forloop (i, 0, count)
     {
@@ -71,7 +71,7 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
     auto pair = dependencyEntries.find(type);
     if (pair == dependencyEntries.end()) return;
     auto entries = pair->second.data();
-    std::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
     for (auto dep : entries[i].owned)
         deps.push_back(dep);
     for (auto p : entries[i].shared)
@@ -97,7 +97,15 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 
 namespace dual
 {
-void update_entry(job_dependency_entry_t& entry, eastl::shared_ptr<ftl::TaskCounter> job, bool readonly, bool atomic, skr::flat_hash_set<eastl::shared_ptr<ftl::TaskCounter>>& dependencies)
+struct hash_shared_ptr {
+    template <class T>
+    size_t operator()(const eastl::shared_ptr<T>& value) const
+    {
+        return std::hash<void*>{}(value.get());
+    }
+};
+using DependencySet = skr::flat_hash_set<eastl::shared_ptr<ftl::TaskCounter>, hash_shared_ptr>;
+void update_entry(job_dependency_entry_t& entry, eastl::shared_ptr<ftl::TaskCounter> job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     if (readonly)
     {
@@ -176,7 +184,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         ++groupIndex;
     }
 
-    skr::flat_hash_set<eastl::shared_ptr<ftl::TaskCounter>> dependencies;
+    DependencySet dependencies;
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
     auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
         if (localType == kInvalidTypeIndex)
@@ -292,8 +300,8 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
                 intptr_t startTask;
                 intptr_t endTask;
             };
-            std::vector<batch_t> batchs;
-            std::vector<task_t> tasks;
+            eastl::vector<batch_t> batchs;
+            eastl::vector<task_t> tasks;
             batchs.reserve(job->entityCount / job->batchSize);
             tasks.reserve(batchs.capacity());
             {
@@ -389,7 +397,7 @@ eastl::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_job(uint32_t cou
     dual_simple_job_t* job = (dual_simple_job_t*)dual_malloc(sizeof(dual_simple_job_t));
     job = new (job) dual_simple_job_t(*this);
     job->type = dual_job_type::simple;
-    skr::flat_hash_set<eastl::shared_ptr<ftl::TaskCounter>> dependencies;
+    DependencySet dependencies;
     forloop (i, 0, resources->count)
     {
         auto& entry = allResources[e_id(resources->resources[i])];
@@ -463,7 +471,7 @@ void dualJ_remove_resource(dual_entity_t id)
 }
 
 struct dual_counter_t {
-    std::shared_ptr<ftl::TaskCounter> counter;
+    eastl::shared_ptr<ftl::TaskCounter> counter;
 };
 
 void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
