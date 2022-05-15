@@ -57,6 +57,7 @@ typedef enum SkrIOServiceSortMethod
 
 typedef struct skr_async_io_request_t {
     SAtomic32 status;
+    SAtomic32 request_cancel;
     char8_t* bytes;
     uint64_t size;
 #ifdef __cplusplus

@@ -82,7 +82,7 @@ TEST_F(FSTest, asyncread)
         SKR_LOG_INFO("async read of file %s ok", pRamIO->path);
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = &ramIO;
-    skr_async_io_request_t request;
+    skr_async_io_request_t request = {};
     ioService->request(abs_fs, &ramIO, &request);
     std::cout << (const char*)bytes << std::endl;
     while (!request.is_ready()) {}
