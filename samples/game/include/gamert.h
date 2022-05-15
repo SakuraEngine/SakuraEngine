@@ -6,6 +6,10 @@
 #include "render_graph/frontend/render_graph.hpp"
 #include "utils/log.h"
 
+namespace skr::resource
+{
+struct SLocalResourceRegistry;
+}
 class SGameRTModule : public skr::IDynamicModule
 {
     virtual void on_load() override;
@@ -14,6 +18,7 @@ class SGameRTModule : public skr::IDynamicModule
 
 public:
     skr_vfs_t* resource_vfs = nullptr;
+    skr::resource::SLocalResourceRegistry* registry;
 };
 
 namespace skg

@@ -23,10 +23,16 @@ void SResourceFactory::DestroyResource(skr_resource_record_t* record)
         record->destructor(record->resource);
 }
 
+ESkrLoadStatus SResourceFactory::UpdateLoad(skr_resource_record_t* record, const ghc::filesystem::path& path, skr_vfs_t* vfs)
+{
+    SKR_UNREACHABLE_CODE();
+    return SKR_LOAD_STATUS_SUCCEED;
+}
+
 ESkrInstallStatus SResourceFactory::UpdateInstall(skr_resource_record_t* record)
 {
     SKR_UNREACHABLE_CODE();
-    return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED;
+    return SKR_INSTALL_STATUS_SUCCEED;
 }
 } // namespace resource
 } // namespace skr

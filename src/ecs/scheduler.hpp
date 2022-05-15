@@ -8,7 +8,7 @@
 #include "archetype.hpp"
 #include <bitset>
 #include <phmap.h>
-#include "entities.hpp"
+#include "ecs/entities.hpp"
 #include "utils/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
 #include "EASTL/vector.h"

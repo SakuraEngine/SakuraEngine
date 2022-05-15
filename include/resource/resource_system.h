@@ -2,6 +2,8 @@
 
 #include "EASTL/fixed_vector.h"
 #include "ecs/entities.hpp"
+#include "platform/thread.h"
+#include "platform/vfs.h"
 #include "resource/resource_handle.h"
 #include "utils/hashmap.hpp"
 #include "resource/resource_header.h"
@@ -43,13 +45,14 @@ struct SResourceRequest {
     SResourceSystem* system;
     skr_resource_record_t* resourceRecord;
     SResourceFactory* factory;
+    skr_vfs_t* vfs;
     ghc::filesystem::path path;
 
     eastl::fixed_vector<skr_guid_t, 4> dependencies;
     ESkrLoadingPhase currentPhase;
     bool isLoading;
-    bool isHotReload;
-    bool requestInstall;
+    std::atomic_bool requireLoading;
+    std::atomic_bool requestInstall;
 
     void UpdateLoad(bool requestInstall);
     void UpdateUnload();
@@ -67,6 +70,8 @@ public:
     virtual void CancelRequestFile(SResourceRequest* requst) = 0;
 };
 struct RUNTIME_API SResourceSystem {
+    SResourceSystem();
+    ~SResourceSystem();
     void Initialize(SResourceRegistry* provider);
     bool IsInitialized();
     void Shutdown();
@@ -80,9 +85,13 @@ struct RUNTIME_API SResourceSystem {
     skr_resource_record_t* _GetRecord(void* resource);
     void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record);
 
+    void RegisterFactory(skr_type_id_t type, SResourceFactory* factory);
+    void UnregisterFactory(skr_type_id_t type);
+
     SResourceRegistry* resourceProvider = nullptr;
     eastl::vector<SResourceRequest*> requests;
     dual::entity_registry_t resourceIds;
+    SMutex recordMutex;
     skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
     skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
     skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;

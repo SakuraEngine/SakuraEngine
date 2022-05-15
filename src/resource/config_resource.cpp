@@ -1,13 +1,16 @@
 #include "resource/config_resource.h"
+#include "EASTL/vector.h"
 #include "bitsery/deserializer.h"
 #include "bitsery/details/adapter_common.h"
 #include "platform/configure.h"
 #include "platform/debug.h"
 #include "platform/memory.h"
+#include "platform/vfs.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_header.h"
 #include "type/type_registry.h"
 #include "SkrRT/typeid.generated.hpp"
+#include "utils/defer.hpp"
 
 namespace skr::resource
 {
@@ -38,16 +41,18 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
     return res;
 }
 
-ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)
+ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record, const ghc::filesystem::path& path, skr_vfs_t* vfs)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED;
-}
-
-ESkrLoadStatus SConfigFactory::UpdateLoad(skr_resource_record_t* record)
-{
-    SKR_UNREACHABLE_CODE();
-    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED;
+    auto file = skr_vfs_fopen(vfs, path.u8string().c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+    SKR_DEFER({ skr_vfs_fclose(file); });
+    auto size = skr_vfs_fsize(file);
+    eastl::vector<uint8_t> buffer(size);
+    skr_vfs_fread(file, buffer.data(), 0, size);
+    SBinaryDeserializer archive{ buffer.begin(), buffer.end() };
+    if (Deserialize(record, archive))
+        return SKR_LOAD_STATUS_SUCCEED;
+    else
+        return SKR_LOAD_STATUS_FAILED;
 }
 
 bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)

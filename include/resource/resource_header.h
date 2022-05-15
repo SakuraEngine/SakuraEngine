@@ -54,6 +54,7 @@ struct skr_resource_record_t {
     struct requester_id {
         uint32_t id;
         ESkrRequesterType type;
+        bool operator==(const requester_id& other) const { return id == other.id && type == other.type; };
     };
     uint32_t id;
     eastl::vector<requester_id> references;

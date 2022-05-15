@@ -1,4 +1,5 @@
 #pragma once
+#include "ghc/filesystem.hpp"
 #include "platform/configure.h"
 #include "resource/resource_header.h"
 typedef enum ESkrInstallStatus
@@ -13,7 +14,7 @@ typedef enum ESkrLoadStatus
     SKR_LOAD_STATUS_SUCCEED,
     SKR_LOAD_STATUS_FAILED,
 } ESkrLoadStatus;
-
+typedef struct skr_vfs_t skr_vfs_t;
 #if defined(__cplusplus)
     #include "utils/serialize.hpp"
     #include "bitsery/serializer.h"
@@ -34,8 +35,8 @@ struct SBinaryArchive {
 */
 struct RUNTIME_API SResourceFactory {
     virtual skr_type_id_t GetResourceType() = 0;
-    virtual ESkrLoadStatus Load(skr_resource_record_t* record) = 0;
-    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) = 0;
+    virtual ESkrLoadStatus Load(skr_resource_record_t* record, const ghc::filesystem::path& path, skr_vfs_t* vfs) = 0;
+    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record, const ghc::filesystem::path& path, skr_vfs_t* vfs);
     virtual bool Unload(skr_resource_record_t* record);
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
     virtual bool Uninstall(skr_resource_record_t* record) { return true; }

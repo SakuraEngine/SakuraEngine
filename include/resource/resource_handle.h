@@ -25,8 +25,13 @@ typedef struct skr_resource_handle_t {
     };
 #if defined(__cplusplus)
     RUNTIME_API skr_resource_handle_t();
+    RUNTIME_API ~skr_resource_handle_t();
+    RUNTIME_API skr_resource_handle_t(const skr_guid_t& other);
     RUNTIME_API skr_resource_handle_t(const skr_resource_handle_t& other);
     RUNTIME_API skr_resource_handle_t(skr_resource_handle_t&& other);
+    RUNTIME_API skr_resource_handle_t& operator=(const skr_resource_handle_t& other);
+    RUNTIME_API skr_resource_handle_t& operator=(const skr_guid_t& other);
+    RUNTIME_API skr_resource_handle_t& operator=(skr_resource_handle_t&& other);
     RUNTIME_API void set_ptr(void* ptr);
     RUNTIME_API void set_guid(const skr_guid_t& guid);
     RUNTIME_API bool is_resolved() const;

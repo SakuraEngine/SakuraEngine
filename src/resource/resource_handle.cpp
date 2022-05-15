@@ -2,7 +2,6 @@
 #include "platform/debug.h"
 #include "platform/guid.h"
 #include "platform/configure.h"
-#include "resource/config_resource.h"
 #include "resource/resource_header.h"
 #include "resource/resource_system.h"
 
@@ -14,14 +13,46 @@ skr_resource_handle_t::skr_resource_handle_t()
     std::memset(this, 0, sizeof(skr_resource_handle_t));
 }
 
+skr_resource_handle_t::~skr_resource_handle_t()
+{
+    reset();
+}
+
+skr_resource_handle_t::skr_resource_handle_t(const skr_guid_t& other)
+{
+    guid = other;
+    SKR_ASSERT(padding != 0 || is_null());
+}
+
 skr_resource_handle_t::skr_resource_handle_t(const skr_resource_handle_t& other)
 {
-    memcpy(this, &other, sizeof(skr_resource_handle_t));
+    guid = other.get_serialized();
+    SKR_ASSERT(padding != 0 || is_null());
 }
 
 skr_resource_handle_t::skr_resource_handle_t(skr_resource_handle_t&& other)
 {
     memcpy(this, &other, sizeof(skr_resource_handle_t));
+    memset(&other, 0, sizeof(skr_resource_handle_t));
+}
+
+skr_resource_handle_t& skr_resource_handle_t::operator=(const skr_resource_handle_t& other)
+{
+    set_guid(other.get_serialized());
+    return *this;
+}
+
+skr_resource_handle_t& skr_resource_handle_t::operator=(const skr_guid_t& other)
+{
+    set_guid(other);
+    return *this;
+}
+
+skr_resource_handle_t& skr_resource_handle_t::operator=(skr_resource_handle_t&& other)
+{
+    memcpy(this, &other, sizeof(skr_resource_handle_t));
+    memset(&other, 0, sizeof(skr_resource_handle_t));
+    return *this;
 }
 
 void skr_resource_handle_t::set_ptr(void* ptr)
