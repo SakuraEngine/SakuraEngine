@@ -22,9 +22,11 @@ void SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     char buffer[sizeof(skr_resource_header_t)];
     skr_vfs_fread(file, buffer, 0, sizeof(skr_resource_header_t));
     SKR_DEFER({ skr_vfs_fclose(file); });
+    // TODO: 把这些封装起来传过去少暴露一些细节？
     request->resourceRecord->header.type = ((skr_resource_header_t*)buffer)->type;
     request->resourceRecord->header.version = ((skr_resource_header_t*)buffer)->version;
     request->path = path;
+    request->vfs = vfs;
     request->OnRequestFileFinished();
 }
 void SLocalResourceRegistry::CancelRequestFile(SResourceRequest* requst)

@@ -1,5 +1,6 @@
 #include "resource/resource_system.h"
 #include "platform/debug.h"
+#include "platform/thread.h"
 #include "utils/log.h"
 #include "resource/resource_handle.h"
 #include "resource/resource_header.h"
@@ -8,6 +9,14 @@
 
 namespace skr::resource
 {
+SResourceSystem::SResourceSystem()
+{
+    skr_init_mutex(&recordMutex);
+}
+SResourceSystem::~SResourceSystem()
+{
+    skr_destroy_mutex(&recordMutex);
+}
 skr_resource_record_t* SResourceSystem::_GetRecord(const skr_guid_t& guid)
 {
     auto iter = resourceRecords.find(guid);
@@ -18,9 +27,24 @@ skr_resource_record_t* SResourceSystem::_GetRecord(void* resource)
     auto iter = resourceToRecord.find(resource);
     return iter == resourceToRecord.end() ? nullptr : iter->second;
 }
+
+void SResourceSystem::RegisterFactory(skr_type_id_t type, SResourceFactory* factory)
+{
+    auto iter = resourceFactories.find(type);
+    SKR_ASSERT(iter == resourceFactories.end());
+    resourceFactories.insert(std::make_pair(type, factory));
+}
+
+void SResourceSystem::UnregisterFactory(skr_type_id_t type)
+{
+    auto iter = resourceFactories.find(type);
+    SKR_ASSERT(iter != resourceFactories.end());
+    resourceFactories.erase(iter);
+}
+
 void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint32_t requester, ESkrRequesterType requesterType)
 {
-    // TODO: lock
+    SMutexLock lock(recordMutex);
     SKR_ASSERT(!handle.is_resolved());
     auto record = _GetOrCreateRecord(handle.get_guid());
     handle.set_resolved(record, requester, requesterType);
@@ -31,18 +55,18 @@ void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireIn
     auto request = record->activeRequest;
     if (request)
     {
-        request->UpdateLoad(requireInstalled);
+        request->requireLoading = true;
     }
     else
     {
         auto request = SkrNew<SResourceRequest>();
         request->requestInstall = requireInstalled;
         request->resourceRecord = record;
-        request->isLoading = true;
+        request->isLoading = request->requireLoading = true;
         request->system = this;
         request->currentPhase = SKR_LOADING_PHASE_REQUEST_RESOURCE;
-        request->isHotReload = false;
         request->factory = nullptr;
+        request->vfs = nullptr;
         record->activeRequest = request;
         record->loadingStatus = SKR_LOADING_STATUS_LOADING;
         requests.push_back(request);
@@ -50,13 +74,11 @@ void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireIn
 }
 void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
 {
-    // TODO: lock
+    SMutexLock lock(recordMutex);
     SKR_ASSERT(handle.is_resolved() && !handle.is_null());
     auto record = handle.get_record();
     SKR_ASSERT(record->loadingStatus != SKR_LOADING_STATUS_UNLOADED);
-    auto iter = std::find(record->references.begin(), record->references.end(), skr_resource_record_t::requester_id{ handle.get_requester(), handle.get_requester_type() });
-    if (iter != record->references.end())
-        record->references.erase_unsorted(iter);
+    record->references.erase_first_unsorted(skr_resource_record_t::requester_id{ handle.get_requester(), handle.get_requester_type() });
     auto guid = record->header.guid;
     handle.set_guid(guid);
 
@@ -70,15 +92,16 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
         auto request = record->activeRequest;
         if (request)
         {
-            request->UpdateUnload();
+            request->requireLoading = false;
         }
         else // new unload
         {
             auto request = SkrNew<SResourceRequest>();
             request->requestInstall = false;
             request->resourceRecord = record;
-            request->isLoading = false;
+            request->isLoading = request->requireLoading = false;
             request->system = this;
+            request->vfs = nullptr;
             if (record->loadingStatus == SKR_LOADING_STATUS_INSTALLED)
             {
                 request->currentPhase = SKR_LOADING_PHASE_UNINSTALL_RESOURCE;
@@ -91,7 +114,6 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
             }
             else
                 SKR_UNREACHABLE_CODE();
-            request->isHotReload = false;
             request->factory = nullptr;
             record->activeRequest = request;
             requests.push_back(request);
@@ -100,16 +122,20 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
 }
 void SResourceSystem::Initialize(SResourceRegistry* provider)
 {
+    SKR_ASSERT(provider);
     resourceProvider = provider;
 }
 bool SResourceSystem::IsInitialized()
 {
     return resourceProvider != nullptr;
 }
+void SResourceSystem::Shutdown()
+{
+    resourceProvider = nullptr;
+}
 
 skr_resource_record_t* SResourceSystem::_GetOrCreateRecord(const skr_guid_t& guid)
 {
-    // TODO: lock
     auto record = _GetRecord(guid);
     if (!record)
     {
@@ -123,18 +149,48 @@ skr_resource_record_t* SResourceSystem::_GetOrCreateRecord(const skr_guid_t& gui
 
 void SResourceSystem::_DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record)
 {
+    SMutexLock lock(recordMutex);
     auto request = record->activeRequest;
     if (request)
-    {
-        // TODO: lock
-        requests.erase_first_unsorted(request);
-        SkrDelete(request);
-    }
+        request->resourceRecord = nullptr;
     resourceRecords.erase(guid);
     if (record->resource)
         resourceToRecord.erase(record->resource);
     resourceIds.free_entities(&record->id, 1);
     SkrDelete(record);
+}
+
+void SResourceSystem::Update()
+{
+    skr_acquire_mutex(&recordMutex);
+    requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
+        if (request->currentPhase == SKR_LOADING_PHASE_FINISHED)
+        {
+            if (request->resourceRecord)
+            {
+                request->resourceRecord->activeRequest = nullptr;
+                if (!request->isLoading)
+                {
+                    auto guid = request->resourceRecord->header.guid;
+                    _DestroyRecord(guid, request->resourceRecord);
+                }
+            }
+            SkrDelete(request);
+            return true;
+        }
+        return false;
+    }),
+    requests.end());
+    auto currentRequests = requests;
+    skr_release_mutex(&recordMutex);
+    // TODO: time limit
+    for (auto request : currentRequests)
+    {
+        do
+        {
+            request->Update();
+        } while (!request->Yielded());
+    }
 }
 
 void SResourceRequest::UpdateLoad(bool requestInstall)
@@ -245,7 +301,7 @@ void SResourceRequest::UpdateUnload()
 
 void SResourceRequest::OnRequestFileFinished()
 {
-    if (path.empty())
+    if (path.empty() || vfs == nullptr)
     {
         SKR_LOG_FMT_ERROR("Resource {} failed to load, file not found.", resourceRecord->header.guid);
         currentPhase = SKR_LOADING_PHASE_FINISHED;
@@ -280,6 +336,13 @@ void SResourceRequest::_InstallFinished()
 
 void SResourceRequest::Update()
 {
+    if (requireLoading != isLoading)
+    {
+        if (requireLoading)
+            UpdateLoad(requestInstall);
+        else
+            UpdateUnload();
+    }
     switch (currentPhase)
     {
         case SKR_LOADING_PHASE_REQUEST_RESOURCE: {
@@ -299,7 +362,7 @@ void SResourceRequest::Update()
             }
             factory = iter->second;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
-            auto status = factory->Load(resourceRecord);
+            auto status = factory->Load(resourceRecord, path, vfs);
             if (status == SKR_LOAD_STATUS_FAILED)
             {
                 SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
@@ -317,7 +380,7 @@ void SResourceRequest::Update()
         }
         break;
         case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-            auto status = factory->UpdateLoad(resourceRecord);
+            auto status = factory->UpdateLoad(resourceRecord, path, vfs);
             if (status == SKR_LOAD_STATUS_FAILED)
             {
                 SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);

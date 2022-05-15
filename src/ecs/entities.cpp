@@ -1,4 +1,4 @@
-#include "entities.hpp"
+#include "ecs/entities.hpp"
 #include "chunk_view.hpp"
 #include "chunk.hpp"
 #include "entity.hpp"
@@ -33,7 +33,7 @@ void entity_registry_t::shrink()
     freeEntries.erase(std::remove_if(freeEntries.begin(), freeEntries.end(), [&](EIndex i) {
         return i > lastValid;
     }),
-        freeEntries.end());
+    freeEntries.end());
 }
 
 void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
@@ -44,7 +44,7 @@ void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
 
     auto fn = (EIndex)freeEntries.size();
     auto rn = std::min((EIndex)freeEntries.size(), count);
-    forloop(j, 0, rn)
+    forloop (j, 0, rn)
     {
         auto id = freeEntries[fn - rn + j];
         dst[i] = e_version(id, entries[id].version);
@@ -70,7 +70,7 @@ void entity_registry_t::free_entities(const dual_entity_t* dst, EIndex count)
     // build freelist in input order
     freeEntries.reserve(freeEntries.size() + count);
 
-    forloop(i, 0, count)
+    forloop (i, 0, count)
     {
         auto id = e_id(dst[i]);
         entry_t& freeData = entries[id];
@@ -83,7 +83,7 @@ void entity_registry_t::fill_entities(const dual_chunk_view_t& view)
 {
     auto ents = (dual_entity_t*)view.chunk->get_entities() + view.start;
     new_entities(ents, view.count);
-    forloop(i, 0, view.count)
+    forloop (i, 0, view.count)
     {
         entry_t& e = entries[e_id(ents[i])];
         e.indexInChunk = view.start + i;
@@ -95,7 +95,7 @@ void entity_registry_t::fill_entities(const dual_chunk_view_t& view, const dual_
 {
     auto ents = (dual_entity_t*)view.chunk->get_entities() + view.start;
     memcpy(ents, src, view.count * sizeof(dual_entity_t));
-    forloop(i, 0, view.count)
+    forloop (i, 0, view.count)
     {
         entry_t& e = entries[e_id(src[i])];
         e.indexInChunk = view.start + i;
@@ -111,7 +111,7 @@ void entity_registry_t::free_entities(const dual_chunk_view_t& view)
 void entity_registry_t::move_entities(const dual_chunk_view_t& view, const dual_chunk_t* src, EIndex srcIndex)
 {
     const dual_entity_t* toMove = src->get_entities() + srcIndex;
-    forloop(i, 0, view.count)
+    forloop (i, 0, view.count)
     {
         entry_t& e = entries[e_id(toMove[i])];
         e.indexInChunk = view.start + i;
@@ -123,9 +123,9 @@ void entity_registry_t::move_entities(const dual_chunk_view_t& view, const dual_
 void entity_registry_t::move_entities(const dual_chunk_view_t& view, EIndex srcIndex)
 {
     const dual_entity_t* toMove = view.chunk->get_entities() + srcIndex;
-    forloop(i, 0, view.count)
+    forloop (i, 0, view.count)
         entries[e_id(toMove[i])]
-            .indexInChunk = view.start + i;
+        .indexInChunk = view.start + i;
     memcpy((dual_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(dual_entity_t));
 }
 } // namespace dual
