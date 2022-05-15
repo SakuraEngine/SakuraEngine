@@ -125,16 +125,14 @@ public:
         if (!isLockless)
             skr_release_mutex(&taskMutex);
     }
+    bool doCancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT;
+
     const bool isLockless = false;
     const bool criticalTaskCount = false;
     const eastl::string name;
     // thread items
     SThreadDesc threadItem = {};
     SThreadHandle serviceThread;
-    // defer cancels
-    SMutex cancelMutex;
-    moodycamel::ConcurrentQueue<skr_async_io_request_t*> lockless_defer_cancels;
-    eastl::vector<skr_async_io_request_t*> defer_cancels;
     // task containers
     SMutex taskMutex;
     moodycamel::ConcurrentQueue<Task> task_requests;
@@ -172,38 +170,19 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
     // 1.defer cancel tasks
     if(service->tasks.size())
     {
-        if(service->isLockless)
-        {
-            skr_async_io_request_t* ioRequest;
-            while (service->lockless_defer_cancels.try_dequeue(ioRequest))
-            {
-                TracyCZone(dequeueZone, 1);
-                TracyCZoneName(dequeueZone, "ioServiceDequeueCancels", strlen("ioServiceDequeueCancels"));
-                service->defer_cancels.emplace_back(ioRequest);
-                TracyCZoneEnd(dequeueZone);
-            }
-        }
-        if(service->defer_cancels.size())
-        {
-            TracyCZone(cancelZone, 1);
-            TracyCZoneName(cancelZone, "ioServiceCancels", strlen("ioServiceCancels"));
-
-            service->tasks.erase(
-                eastl::remove_if(service->tasks.begin(), service->tasks.end(),
-                [&](RAMServiceImpl::Task& t){
-                    for(auto cancel : service->defer_cancels)
-                    {
-                        bool _ = t.request == cancel;
-                        if (_)
-                            t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
-                        return _;
-                    }
-                    return false;
-                }), service->tasks.end());
-            service->defer_cancels.resize(0);
-
-            TracyCZoneEnd(cancelZone);
-        }
+        TracyCZone(cancelZone, 1);
+        TracyCZoneName(cancelZone, "ioServiceCancels", strlen("ioServiceCancels"));
+        service->tasks.erase(
+            eastl::remove_if(service->tasks.begin(), service->tasks.end(),
+            [](RAMServiceImpl::Task& t) {
+                bool cancelled = skr_atomic32_load_relaxed(&t.request->request_cancel);
+                cancelled &= t.request->is_cancelled() || t.request->is_enqueued();
+                if (cancelled)
+                    t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+                return cancelled;
+            }),
+        service->tasks.end());
+        TracyCZoneEnd(cancelZone);
     }
     // 2.try fetch a new task
     {
@@ -339,6 +318,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
             back.callback_datas[i] = info->callback_datas[i];
         }
         skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
+        skr_atomic32_store_relaxed(&async_request->request_cancel, 0);
         TracyCZoneEnd(requestZone);
         optionalUnlock();
     }
@@ -362,6 +342,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
         }
         task_requests.enqueue(eastl::move(back));
         skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
+        skr_atomic32_store_relaxed(&async_request->request_cancel, 0);
         TracyCZoneEnd(requestZone);
     }
     // unlock cv
@@ -379,7 +360,6 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     service->sleepMode = desc->sleep_mode;
     service->threadItem.pData = service;
     service->threadItem.pFunc = &ioThreadTask;
-    skr_init_mutex(&service->cancelMutex);
     skr_init_mutex(&service->taskMutex);
     skr_init_mutex(&service->sleepMutex);
     service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
@@ -394,11 +374,26 @@ void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
     s->drain();
     service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
     skr_join_thread(service->serviceThread);
-    skr_destroy_mutex(&service->cancelMutex);
     skr_destroy_mutex(&service->taskMutex);
     skr_destroy_mutex(&service->sleepMutex);
     skr_destroy_thread(service->serviceThread);
     SkrDelete(service);
+}
+
+bool skr::io::RAMServiceImpl::doCancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
+{
+    bool cancelled = false;
+    tasks.erase(
+        eastl::remove_if(tasks.begin(), tasks.end(),
+        [&](Task& t) {
+            const bool stateCancellable = request->is_enqueued() || request->is_cancelled();
+            cancelled = (t.request == request || request == nullptr) && stateCancellable;
+            if (cancelled)
+                t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+            return cancelled;
+        }),
+    tasks.end());
+    return cancelled;
 }
 
 bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
@@ -406,17 +401,7 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
     if (request->is_enqueued() && !isLockless)
     {
         optionalLock();
-        bool cancel = false;
-        // erase cancelled task
-        tasks.erase(
-        eastl::remove_if(tasks.begin(), tasks.end(),
-        [=, &cancel](Task& t) {
-            cancel = t.request == request;
-            if (cancel)
-                t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
-            return cancel;
-        }),
-        tasks.end());
+        bool cancel = doCancel(request);
         optionalUnlock();
         return cancel;
     }
@@ -425,16 +410,7 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
 
 void skr::io::RAMServiceImpl::defer_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
 {
-    if(!isLockless)
-    {
-        skr_acquire_mutex(&cancelMutex);
-        defer_cancels.emplace_back(request);
-        skr_release_mutex(&cancelMutex);
-    }
-    else
-    {
-        lockless_defer_cancels.enqueue(request);
-    }
+    skr_atomic32_store_relaxed(&request->request_cancel, 1);
 }
 
 void skr::io::RAMServiceImpl::drain() RUNTIME_NOEXCEPT
