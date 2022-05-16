@@ -7,7 +7,8 @@
 
 enum reflect attr(
 "guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1",
-"serialize" : true
+"serialize" : true,
+"rtti" : true
 )
 ECGPUBackEnd SKRENUM(uint32_t){
     Vulkan,
