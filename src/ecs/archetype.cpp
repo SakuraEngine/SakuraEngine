@@ -149,10 +149,10 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     {
         dual_entity_type_t deadType;
         deadType.type = { toClean, toCleanCount };
-        proto.dead = try_get_group(deadType);
+        proto.dead = get_group(deadType);
         dual_entity_type_t cloneType;
         cloneType.type = { toClone, toCloneCount };
-        proto.cloned = try_get_group(cloneType);
+        proto.cloned = get_group(cloneType);
     }
     return &proto;
 }
