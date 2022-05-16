@@ -17,3 +17,16 @@ SKR_MODULE_METADATA(u8R"(
 }
 )",
 SkrRT);
+
+extern "C" void dualX_register_types();
+void SkrRuntimeModule::on_load()
+{
+    dualX_register_types();
+    
+    SKR_LOG_INFO("SkrRuntime module loaded!");
+}
+void SkrRuntimeModule::on_unload()
+{
+    SKR_LOG_INFO("SkrRuntime module unloaded!");
+}
+    
