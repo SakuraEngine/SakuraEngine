@@ -25,6 +25,7 @@ typedef uint32_t dual_entity_t;
 #define ENTITY_ID_MASK 0x00FFFFFF
 #define ENTITY_VERSION_OFFSET 24
 #define ENTITY_VERSION_MASK 0x000000FF
+#define NULL_ENTITY 0xFFFFFFFF
 
 #ifndef forloop
     #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
