@@ -136,7 +136,7 @@ namespace skr::type
             {"${enumerator.short_name}", ${enumerator.value}},
         %endfor
         };
-        constexpr skr_guid_t guid = {${record.guidConstant}};
+        constexpr skr_guid_t guid = {${enum.guidConstant}};
         static EnumType type{
             type_of<std::underlying_type_t<${enum.name}>>::get(),
             "${enum.name}", guid,

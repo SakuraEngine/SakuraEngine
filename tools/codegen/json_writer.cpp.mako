@@ -7,7 +7,7 @@
 namespace skr::json {
 %for enum in db.enums:
 template<>
-void Write(skr_json_writer_t* writer, ${enum.name} e)
+void WriteValue(skr_json_writer_t* writer, ${enum.name} e)
 {
     switch(e)
     {
@@ -20,7 +20,7 @@ void Write(skr_json_writer_t* writer, ${enum.name} e)
 
 %for record in db.records:
 template<>
-void Write(skr_json_writer_t* writer, const ${record.name}& record)
+void WriteValue(skr_json_writer_t* writer, const ${record.name}& record)
 {
     writer->StartObject();
     %for field in record.allFields():

@@ -39,11 +39,11 @@ namespace skr::json
 {
 %for record in db.records:
     template <>
-    ${api} void Write(skr_json_writer_t* writer, const ${record.name}& v);
+    ${api} void WriteValue(skr_json_writer_t* writer, const ${record.name}& v);
 %endfor
 %for enum in db.enums:
     template <>
-    ${api} void Write(skr_json_writer_t* writer, ${enum.name} v);
+    ${api} void WriteValue(skr_json_writer_t* writer, ${enum.name} v);
 %endfor
 }
 #endif

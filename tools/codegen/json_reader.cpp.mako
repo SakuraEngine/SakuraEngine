@@ -9,7 +9,7 @@
 namespace skr::json {
 %for enum in db.enums:
 template<>
-void Read(simdjson::ondemand::value&& json, ${enum.name}& e)
+void ReadValue(simdjson::ondemand::value&& json, ${enum.name}& e)
 {
     std::string_view enumStr = json.get_string().value_unsafe();
     auto hash = hash_crc32(enumStr);
@@ -25,10 +25,10 @@ void Read(simdjson::ondemand::value&& json, ${enum.name}& e)
 
 %for record in db.records:
 template<>
-void Read(simdjson::ondemand::value&& json, ${record.name}& record)
+void ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
 {
     %for field in record.allFields():
-    skr::json::Read<${field.type}>(json["${field.name}"].value_unsafe(), record.${field.name});
+    skr::json::Read(json["${field.name}"].value_unsafe(), (${field.type}&)record.${field.name});
     %endfor
 } 
 %endfor
