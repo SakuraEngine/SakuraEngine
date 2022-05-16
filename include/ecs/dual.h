@@ -19,7 +19,7 @@ DUAL_DECLARE(counter_t);
 // structs
 typedef TIndex dual_type_index_t;
 
-using dual_guid_t = skr_guid_t;
+typedef skr_guid_t dual_guid_t;
 
 /**
  * @brief guid generation function
@@ -635,12 +635,12 @@ RUNTIME_API void dualJ_remove_resource(dual_entity_t id);
 typedef uint32_t dual_thread_index_t;
 typedef void (*dual_system_callback_t)(void* u, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
 typedef void (*dual_system_init_callback_t)(void* u, EIndex entityCount);
-struct dual_resource_operation_t {
+typedef struct dual_resource_operation_t {
     dual_entity_t* resources;
     int* readonly;
     int* atomic;
     uint32_t count;
-};
+} dual_resource_operation_t;
 /**
  * @brief schedule an ecs job with a query, filter runs in parallel, dependencies between ecs jobs are automatically resolved
  *
