@@ -57,7 +57,7 @@ ECGPULoadAction load_action)
         return;
 
     bool useCVV = true;
-#ifdef SAKURA_RUNTIME_OS_MACOSX
+#ifdef SKR_OS_MACOSX
     useCVV = false;
 #endif
 

@@ -58,7 +58,7 @@ struct CGPUShaderReflection;
 struct CGPUPipelineReflection;
 
 typedef uint32_t CGPUQueueIndex;
-#if defined(RUNTIME_PLATFORM_WA32)
+#if defined(SKR_PLATFORM_WA32)
 typedef const host_ptr_t CGPUSurfaceId;
 typedef const host_ptr_t CGPUInstanceId;
 typedef const host_ptr_t CGPUAdapterId;

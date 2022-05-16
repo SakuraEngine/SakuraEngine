@@ -1,7 +1,7 @@
 #pragma once
 #include "platform/debug.h"
 
-#if !defined(RUNTIME_PLATFORM_WA) && !defined(__APPLE__)
+#if !defined(SKR_PLATFORM_WA) && !defined(__APPLE__)
     #ifdef __cplusplus
 extern "C" {
     #endif
@@ -22,7 +22,7 @@ RUNTIME_API void mi_free_aligned(void* p, size_t alignment) RUNTIME_NOEXCEPT;
     #define sakura_new_aligned mi_new_aligned
     #define sakura_free mi_free
     #define sakura_free_aligned mi_free_aligned
-#elif defined(RUNTIME_PLATFORM_WA)
+#elif defined(SKR_PLATFORM_WA)
 
 #else
     #include <stdlib.h>
