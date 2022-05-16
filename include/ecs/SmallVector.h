@@ -22,7 +22,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <memory>
-#include "utils.hpp"
+#include "ecs/dual_config.h"
 
 // LLVM Macros
 #define LLVM_VECSMALL_NODISCARD
@@ -55,7 +55,7 @@ namespace llvm_vecsmall
 // std::is_pod has been deprecated in C++20.
 template <typename T>
 struct IsPod : std::integral_constant<bool, std::is_standard_layout<T>::value &&
-                                                std::is_trivial<T>::value> {
+                                            std::is_trivial<T>::value> {
 };
 
 /// This is all the non-templated stuff common to all SmallVectors.
@@ -252,7 +252,7 @@ protected:
     static void uninitialized_move(It1 I, It1 E, It2 Dest)
     {
         std::uninitialized_copy(std::make_move_iterator(I),
-            std::make_move_iterator(E), Dest);
+        std::make_move_iterator(E), Dest);
     }
 
     /// Copy the range [I, E) onto the uninitialized memory starting with "Dest",
@@ -355,9 +355,9 @@ protected:
     /// starting with "Dest", constructing elements into it as needed.
     template <typename T1, typename T2>
     static void uninitialized_copy(
-        T1* I, T1* E, T2* Dest,
-        typename std::enable_if<std::is_same<typename std::remove_const<T1>::type,
-            T2>::value>::type* = nullptr)
+    T1* I, T1* E, T2* Dest,
+    typename std::enable_if<std::is_same<typename std::remove_const<T1>::type,
+    T2>::value>::type* = nullptr)
     {
         // Use memcpy for PODs iterated by pointers (which includes SmallVector
         // iterators): std::uninitialized_copy optimizes to memmove, but we can
@@ -650,7 +650,7 @@ public:
         {
             T* OldEnd = this->end();
             append(std::move_iterator<iterator>(this->end() - NumToInsert),
-                std::move_iterator<iterator>(this->end()));
+            std::move_iterator<iterator>(this->end()));
 
             // Copy the existing elements that get replaced.
             std::move_backward(I, OldEnd - NumToInsert, OldEnd);
@@ -707,7 +707,7 @@ public:
         {
             T* OldEnd = this->end();
             append(std::move_iterator<iterator>(this->end() - NumToInsert),
-                std::move_iterator<iterator>(this->end()));
+            std::move_iterator<iterator>(this->end()));
 
             // Copy the existing elements that get replaced.
             std::move_backward(I, OldEnd - NumToInsert, OldEnd);
@@ -769,7 +769,7 @@ public:
     bool operator<(const SmallVectorImpl& RHS) const
     {
         return std::lexicographical_compare(this->begin(), this->end(),
-            RHS.begin(), RHS.end());
+        RHS.begin(), RHS.end());
     }
 
     /// Set the array size to \p N, which the current array must have enough
@@ -878,7 +878,7 @@ operator=(const SmallVectorImpl<T>& RHS)
 
     // Copy construct the new elements in place.
     this->uninitialized_copy(RHS.begin() + CurSize, RHS.end(),
-        this->begin() + CurSize);
+    this->begin() + CurSize);
 
     // Set end.
     this->setEnd(this->begin() + RHSSize);
@@ -944,7 +944,7 @@ SmallVectorImpl<T>& SmallVectorImpl<T>::operator=(SmallVectorImpl<T>&& RHS)
 
     // Move-construct the new elements in place.
     this->uninitialized_move(RHS.begin() + CurSize, RHS.end(),
-        this->begin() + CurSize);
+    this->begin() + CurSize);
 
     // Set end.
     this->setEnd(this->begin() + RHSSize);
@@ -1093,7 +1093,7 @@ namespace llvm_vecsmall
 /// grow_pod - This is an implementation of the grow() method which only works
 /// on POD-like datatypes and is out of line to reduce code duplication.
 inline void SmallVectorBase::grow_pod(void* FirstEl, size_t MinSizeInBytes,
-    size_t TSize)
+size_t TSize)
 {
     size_t CurSizeBytes = size_in_bytes();
     size_t NewCapacityInBytes = 2 * capacity_in_bytes() + TSize; // Always grow.

@@ -1,6 +1,6 @@
 #include "arena.hpp"
 #include "pool.hpp"
-#include "utils.hpp"
+#include "ecs/dual_config.h"
 #include <assert.h>
 
 namespace dual

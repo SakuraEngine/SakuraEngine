@@ -1,4 +1,4 @@
-#include "SmallVector.h"
+#include "ecs/SmallVector.h"
 #include "archetype.hpp"
 #include "chunk_view.hpp"
 
@@ -11,7 +11,7 @@
 #include "type.hpp"
 #include "type_registry.hpp"
 #include "set.hpp"
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "callback.hpp"
 #include <algorithm>
 #include <numeric>
@@ -112,7 +112,7 @@ const dual::query_cache_t& dual_storage_t::get_query_cache(const dual_filter_t& 
     bool includeDisabled = false;
     {
         auto at = filter.all;
-        forloop(i, 0, at.length)
+        forloop (i, 0, at.length)
         {
             if (at.data[i] == kDeadComponent)
                 includeDead = true;
@@ -450,7 +450,7 @@ void dual_storage_t::build_queries()
     for (auto query : queries)
     {
         auto parameters = query->parameters;
-        forloop(i, 0, parameters.length)
+        forloop (i, 0, parameters.length)
         {
             if (parameters.accesses[i].phase >= 0 && !parameters.accesses[i].readonly)
             {

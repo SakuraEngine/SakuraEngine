@@ -1,6 +1,6 @@
 #pragma once
 
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "entity.hpp"
 
 namespace dual

@@ -5,7 +5,7 @@
 #include "archetype.hpp"
 #include "type.hpp"
 
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "set.hpp"
 #include "type_registry.hpp"
 #include "stack.hpp"
@@ -44,20 +44,20 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.sizeToPatch = 0;
 
     proto.sizes = arena.allocate<uint32_t>(proto.type.length);
-    forloop(i, 0, 3)
+    forloop (i, 0, 3)
         proto.offsets[i] = arena.allocate<uint32_t>(proto.type.length);
     proto.elemSizes = arena.allocate<uint32_t>(proto.type.length);
     proto.callbacks = arena.allocate<dual_callback_v>(proto.type.length);
     proto.aligns = arena.allocate<uint32_t>(proto.type.length);
     std::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
     auto& registry = type_registry_t::get();
-    forloop(i, 0, proto.type.length)
+    forloop (i, 0, proto.type.length)
         proto.callbacks[i] = registry.descriptions[type_index_t(proto.type.data[i]).index()].callback;
     auto guids = localStack.allocate<guid_t>(proto.type.length);
     auto stableOrder = localStack.allocate<SIndex>(proto.type.length);
     proto.entitySize = sizeof(dual_entity_t);
     uint32_t padding = 0;
-    forloop(i, 0, proto.type.length)
+    forloop (i, 0, proto.type.length)
     {
         auto t = proto.type.data[i];
         if (t == kMaskComponent)
@@ -78,7 +78,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     });
     size_t caps[] = { kSmallBinSize, kFastBinSize, kLargeBinSize };
     const uint32_t versionSize = sizeof(uint32_t) * proto.type.length;
-    forloop(i, 0, 3)
+    forloop (i, 0, 3)
     {
         uint32_t* offsets = proto.offsets[i];
         uint32_t& capacity = proto.chunkCapacity[i];
@@ -86,7 +86,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         if (capacity == 0)
             continue;
         uint32_t offset = sizeof(dual_entity_t) * capacity;
-        forloop(j, 0, proto.type.length)
+        forloop (j, 0, proto.type.length)
         {
             SIndex id = stableOrder[j];
             offset = (uint32_t)(proto.aligns[id] * ((offset + proto.aligns[id] - 1) / proto.aligns[id]));
@@ -123,7 +123,7 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     SIndex toCloneCount = 0;
     proto.isDead = false;
     proto.disabled = false;
-    forloop(i, 0, proto.type.type.length)
+    forloop (i, 0, proto.type.type.length)
     {
         type_index_t t = proto.type.type.data[i];
         if (t.is_tracked())
@@ -182,7 +182,7 @@ dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
 {
     using namespace dual;
     if (type.type.length == 1 && type.type.data[0] == kDeadComponent) DUAL_UNLIKELY
-    return nullptr;
+        return nullptr;
     dual_group_t* group = try_get_group(type);
     if (!group)
         group = construct_group(type);
