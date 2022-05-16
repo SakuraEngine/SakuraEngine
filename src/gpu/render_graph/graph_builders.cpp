@@ -89,7 +89,7 @@ ECGPULoadAction sload_action, ECGPUStoreAction sstore_action) RUNTIME_NOEXCEPT
 {
     auto&& edge = node.out_texture_edges.emplace_back(
     new TextureRenderEdge(
-    MAX_MRT_COUNT, handle._this,
+    CGPU_MAX_MRT_COUNT, handle._this,
     CGPU_RESOURCE_STATE_DEPTH_WRITE));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.depth_load_action = dload_action;

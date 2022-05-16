@@ -175,9 +175,9 @@ static void VkUtil_FindOrCreateRenderPass(const CGPUDevice_Vulkan* D, const VkUt
     uint32_t colorAttachmentCount = pDesc->mColorAttachmentCount;
     uint32_t colorResolveAttachmentCount = 0;
     uint32_t depthAttachmentCount = (pDesc->mDepthStencilFormat != CGPU_FORMAT_UNDEFINED) ? 1 : 0;
-    VkAttachmentDescription attachments[2 * MAX_MRT_COUNT + 1] = { 0 };
-    VkAttachmentReference color_attachment_refs[MAX_MRT_COUNT] = { 0 };
-    VkAttachmentReference color_resolve_attachment_refs[MAX_MRT_COUNT] = { 0 };
+    VkAttachmentDescription attachments[2 * CGPU_MAX_MRT_COUNT + 1] = { 0 };
+    VkAttachmentReference color_attachment_refs[CGPU_MAX_MRT_COUNT] = { 0 };
+    VkAttachmentReference color_resolve_attachment_refs[CGPU_MAX_MRT_COUNT] = { 0 };
     VkAttachmentReference depth_stencil_attachment_ref[1] = { 0 };
     VkSampleCountFlagBits sample_count = VkUtil_SampleCountTranslateToVk(pDesc->mSampleCount);
     // Fill out attachment descriptions and references
@@ -865,14 +865,14 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
     const VkSpecializationInfo* specializationInfo = VK_NULL_HANDLE;
     // Vertex input state
     uint32_t input_binding_count = 0;
-	DECLARE_ZERO(VkVertexInputBindingDescription, input_bindings[MAX_VERTEX_BINDINGS]) 
+	DECLARE_ZERO(VkVertexInputBindingDescription, input_bindings[CGPU_MAX_VERTEX_BINDINGS]) 
 	uint32_t  input_attribute_count = 0;
-	DECLARE_ZERO(VkVertexInputAttributeDescription, input_attributes[MAX_VERTEX_BINDINGS]) 
+	DECLARE_ZERO(VkVertexInputAttributeDescription, input_attributes[CGPU_MAX_VERTEX_BINDINGS]) 
     // Make sure there's attributes
     if (desc->vertex_layout != NULL)
     {
-        // Ignore everything that's beyond max_vertex_attribs
-        uint32_t attrib_count = desc->vertex_layout->attribute_count > MAX_VERTEX_ATTRIBS ? MAX_VERTEX_ATTRIBS : desc->vertex_layout->attribute_count;
+        // Ignore everything that's beyond CGPU_MAX_VERTEX_ATTRIBS
+        uint32_t attrib_count = desc->vertex_layout->attribute_count > CGPU_MAX_VERTEX_ATTRIBS ? CGPU_MAX_VERTEX_ATTRIBS : desc->vertex_layout->attribute_count;
         uint32_t binding_value = UINT32_MAX;
         // Initial values
         for (uint32_t i = 0; i < attrib_count; ++i)
@@ -1095,10 +1095,10 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
         .lineWidth = 1.f
     };
     // Color blending state
-    DECLARE_ZERO(VkPipelineColorBlendAttachmentState, cb_attachments[MAX_MRT_COUNT])
+    DECLARE_ZERO(VkPipelineColorBlendAttachmentState, cb_attachments[CGPU_MAX_MRT_COUNT])
 	int blendDescIndex = 0;
     const CGPUBlendStateDescriptor* pDesc = desc->blend_state;
-    for (int i = 0; i < MAX_MRT_COUNT; ++i)
+    for (int i = 0; i < CGPU_MAX_MRT_COUNT; ++i)
 	{
         VkBool32 blendEnable =
             (gVkBlendConstantTranslator[pDesc->src_factors[blendDescIndex]] != VK_BLEND_FACTOR_ONE ||
@@ -1975,7 +1975,7 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
         VkUtil_FindOrCreateFrameBuffer(D, &fbDesc, &pFramebuffer);
     }
     // Cmd begin render pass
-    VkClearValue clearValues[2 * MAX_MRT_COUNT + 1] = { 0 };
+    VkClearValue clearValues[2 * CGPU_MAX_MRT_COUNT + 1] = { 0 };
     uint32_t idx = 0;
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {

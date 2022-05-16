@@ -79,7 +79,7 @@ FORCEINLINE static D3D12_BLEND_DESC D3D12Util_TranslateBlendState(const CGPUBlen
   D3D12_BLEND_DESC ret = {};
   ret.AlphaToCoverageEnable = (BOOL)pDesc->alpha_to_coverage;
   ret.IndependentBlendEnable = TRUE;
-  for (int i = 0; i < MAX_MRT_COUNT; i++) {
+  for (int i = 0; i < CGPU_MAX_MRT_COUNT; i++) {
       BOOL blendEnable =
         (gDx12BlendConstantTranslator[pDesc->src_factors[blendDescIndex]] !=
             D3D12_BLEND_ONE ||

@@ -97,12 +97,12 @@ typedef struct VkUtil_DescriptorPool {
 } VkUtil_DescriptorPool;
 
 typedef struct VkUtil_RenderPassDesc {
-    ECGPUFormat pColorFormats[MAX_MRT_COUNT];
-    ECGPULoadAction pLoadActionsColor[MAX_MRT_COUNT];
-    ECGPUStoreAction pStoreActionsColor[MAX_MRT_COUNT];
-    ECGPULoadAction pLoadActionsColorResolve[MAX_MRT_COUNT];
-    ECGPUStoreAction pStoreActionsColorResolve[MAX_MRT_COUNT];
-    bool pResolveMasks[MAX_MRT_COUNT];
+    ECGPUFormat pColorFormats[CGPU_MAX_MRT_COUNT];
+    ECGPULoadAction pLoadActionsColor[CGPU_MAX_MRT_COUNT];
+    ECGPUStoreAction pStoreActionsColor[CGPU_MAX_MRT_COUNT];
+    ECGPULoadAction pLoadActionsColorResolve[CGPU_MAX_MRT_COUNT];
+    ECGPUStoreAction pStoreActionsColorResolve[CGPU_MAX_MRT_COUNT];
+    bool pResolveMasks[CGPU_MAX_MRT_COUNT];
     uint32_t mColorAttachmentCount;
     ECGPUSampleCount mSampleCount;
     ECGPUFormat mDepthStencilFormat;
@@ -115,7 +115,7 @@ typedef struct VkUtil_RenderPassDesc {
 typedef struct VkUtil_FramebufferDesc {
     VkRenderPass pRenderPass;
     uint32_t mAttachmentCount;
-    VkImageView pImageViews[MAX_MRT_COUNT * 2 + 1];
+    VkImageView pImageViews[CGPU_MAX_MRT_COUNT * 2 + 1];
     uint32_t mWidth;
     uint32_t mHeight;
     uint32_t mLayers;

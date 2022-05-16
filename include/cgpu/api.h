@@ -4,15 +4,15 @@
 #include "flags.h"
 
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
-#define MAX_MRT_COUNT 8
-#define MAX_VERTEX_ATTRIBS 15
-#define MAX_VERTEX_BINDINGS 15
-#define COLOR_MASK_RED 0x1
-#define COLOR_MASK_GREEN 0x2
-#define COLOR_MASK_BLUE 0x4
-#define COLOR_MASK_ALPHA 0x8
-#define COLOR_MASK_ALL COLOR_MASK_RED | COLOR_MASK_GREEN | COLOR_MASK_BLUE | COLOR_MASK_ALPHA
-#define COLOR_MASK_NONE 0
+#define CGPU_MAX_MRT_COUNT 8
+#define CGPU_MAX_VERTEX_ATTRIBS 15
+#define CGPU_MAX_VERTEX_BINDINGS 15
+#define CGPU_COLOR_MASK_RED 0x1
+#define CGPU_COLOR_MASK_GREEN 0x2
+#define CGPU_COLOR_MASK_BLUE 0x4
+#define CGPU_COLOR_MASK_ALPHA 0x8
+#define CGPU_COLOR_MASK_ALL CGPU_COLOR_MASK_RED | CGPU_COLOR_MASK_GREEN | CGPU_COLOR_MASK_BLUE | CGPU_COLOR_MASK_ALPHA
+#define CGPU_COLOR_MASK_NONE 0
 
 #ifdef __cplusplus
 extern "C" {
@@ -538,12 +538,12 @@ typedef struct CGPUSurfacesProcTable {
     const CGPUSurfaceProc_Free free_surface;
 } CGPUSurfacesProcTable;
 
-typedef struct GPUVendorPreset {
+typedef struct CGPUVendorPreset {
     uint32_t device_id;
     uint32_t vendor_id;
     uint32_t driver_version;
     char gpu_name[MAX_GPU_VENDOR_STRING_LENGTH]; // If GPU Name is missing then value will be empty string
-} GPUVendorPreset;
+} CGPUVendorPreset;
 
 typedef struct CGPUAdapterDetail {
     uint32_t uniform_buffer_alignment;
@@ -560,7 +560,7 @@ typedef struct CGPUAdapterDetail {
     bool is_virtual : 1;
     bool is_cpu : 1;
     CGPUFormatSupport format_supports[CGPU_FORMAT_COUNT];
-    GPUVendorPreset vendor_preset;
+    CGPUVendorPreset vendor_preset;
 } CGPUAdapterDetail;
 
 // Objects (Heap Safety)
@@ -1001,19 +1001,19 @@ typedef struct CGPUComputePipelineDescriptor {
 
 typedef struct CGPUBlendStateDescriptor {
     /// Source blend factor per render target.
-    ECGPUBlendConstant src_factors[MAX_MRT_COUNT];
+    ECGPUBlendConstant src_factors[CGPU_MAX_MRT_COUNT];
     /// Destination blend factor per render target.
-    ECGPUBlendConstant dst_factors[MAX_MRT_COUNT];
+    ECGPUBlendConstant dst_factors[CGPU_MAX_MRT_COUNT];
     /// Source alpha blend factor per render target.
-    ECGPUBlendConstant src_alpha_factors[MAX_MRT_COUNT];
+    ECGPUBlendConstant src_alpha_factors[CGPU_MAX_MRT_COUNT];
     /// Destination alpha blend factor per render target.
-    ECGPUBlendConstant dst_alpha_factors[MAX_MRT_COUNT];
+    ECGPUBlendConstant dst_alpha_factors[CGPU_MAX_MRT_COUNT];
     /// Blend mode per render target.
-    ECGPUBlendMode blend_modes[MAX_MRT_COUNT];
+    ECGPUBlendMode blend_modes[CGPU_MAX_MRT_COUNT];
     /// Alpha blend mode per render target.
-    ECGPUBlendMode blend_alpha_modes[MAX_MRT_COUNT];
+    ECGPUBlendMode blend_alpha_modes[CGPU_MAX_MRT_COUNT];
     /// Write mask per render target.
-    int32_t masks[MAX_MRT_COUNT];
+    int32_t masks[CGPU_MAX_MRT_COUNT];
     /// Set whether alpha to coverage should be enabled.
     bool alpha_to_coverage;
     /// Set whether each render target has an unique blend function. When false the blend function in slot 0 will be used for all render targets.
@@ -1061,7 +1061,7 @@ typedef struct CGPUVertexAttribute {
 
 typedef struct CGPUVertexLayout {
     uint32_t attribute_count;
-    CGPUVertexAttribute attributes[MAX_VERTEX_ATTRIBS];
+    CGPUVertexAttribute attributes[CGPU_MAX_VERTEX_ATTRIBS];
 } CGPUVertexLayout;
 
 typedef struct CGPURenderPipelineDescriptor {
