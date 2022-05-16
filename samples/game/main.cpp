@@ -43,6 +43,7 @@ int main(int argc, char** argv)
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
+    assert(gamert_get_ecs_world());
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
