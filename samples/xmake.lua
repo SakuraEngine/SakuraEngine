@@ -85,14 +85,14 @@ target("GameRT")
 target("GameTool")
     set_kind("shared")
     add_rules("c++.reflection", {
-        files = {"game/tools/**.h", "game/tools/**.hpp"},
-        rootdir = "game/tools"
+        files = {"gametool/**.h", "gametool/**.hpp"},
+        rootdir = "gametool/"
     })
-    add_includedirs("game/tools/include", {public=true})
+    add_includedirs("gametool/include", {public=true})
     add_defines("GAMETOOL_SHARED", {public=true})
     add_defines("GAMETOOL_IMPL")
     add_deps("SkrTool", "GameRT")
-    add_files("game/tools/src/**.cpp")
+    add_files("gametool/src/**.cpp")
     on_config(function (target, opt)
         local dep = target:dep("GameRT");
         local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "tool/generated", dep:name())
