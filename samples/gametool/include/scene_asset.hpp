@@ -1,4 +1,5 @@
 #pragma once
+#include "EASTL/functional.h"
 #include "gametool_configure.h"
 #include "platform/guid.h"
 #include "asset/importer.hpp"
@@ -13,7 +14,7 @@ namespace asset reflect
 using namespace skd::asset;
 struct reflect attr(
 "guid" : "4F0E4239-A07F-4F48-B54F-FBF406C60DC3",
-"serialize" : true,
+"serialize" : true, "no-rtti" : true,
 "importer" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
 TOOL_API SSceneImporter final : public SImporter
@@ -21,7 +22,7 @@ TOOL_API SSceneImporter final : public SImporter
     eastl::string sceneRoot;
     // mapping from asset path to resource
     // by default importer will resolve the path to find resource if redirector is not exist
-    skr::flat_hash_map<eastl::string, skr_guid_t> redirectors;
+    skr::flat_hash_map<eastl::string, skr_guid_t, eastl::string_hash<eastl::string>> redirectors;
     using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };

@@ -6,7 +6,6 @@
 #include "platform/configure.h"
 #include "simdjson.h"
 #include "asset/cooker.hpp"
-#include "tool_configure.h"
 #include "utils/hashmap.hpp"
 
 namespace skr::io
