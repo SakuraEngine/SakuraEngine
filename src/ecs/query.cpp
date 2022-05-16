@@ -525,15 +525,21 @@ void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_f
     fixed_stack_scope_t _(localStack);
     auto& cache = get_query_cache(filter);
     bool filterShared = (filter.all_shared.length + filter.any_shared.length + filter.none_shared.length) != 0;
-    dual_meta_filter_t validatedMeta;
+    dual_meta_filter_t* validatedMeta = nullptr;
+    if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
     {
+        validatedMeta = localStack.allocate<dual_meta_filter_t>();
         auto data = (char*)localStack.allocate(data_size(meta));
-        validatedMeta = clone(meta, data);
-        validate(validatedMeta.all_meta);
-        validate(validatedMeta.any_meta);
-        validate(validatedMeta.none_meta);
+        *validatedMeta = clone(meta, data);
+        validate(validatedMeta->all_meta);
+        validate(validatedMeta->any_meta);
+        validate(validatedMeta->none_meta);
     }
-    bool filterMeta = (validatedMeta.all_meta.length + validatedMeta.any_meta.length + validatedMeta.none_meta.length) != 0;
+    else
+    {
+        validatedMeta = (dual_meta_filter_t*)&meta;
+    }
+    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
     for (auto& group : cache.groups)
     {
         if (filterShared)
@@ -550,7 +556,7 @@ void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_f
         }
         if (filterMeta)
         {
-            if (!match_group_meta(group->type, validatedMeta))
+            if (!match_group_meta(group->type, *validatedMeta))
                 continue;
         }
         callback(u, group);
@@ -741,15 +747,6 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
 void dual_storage_t::query(const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_view_callback_t callback, void* u)
 {
     using namespace dual;
-    fixed_stack_scope_t _(localStack);
-    dual_meta_filter_t validatedMeta;
-    {
-        auto data = (char*)localStack.allocate(data_size(meta));
-        validatedMeta = clone(meta, data);
-        validate(validatedMeta.all_meta);
-        validate(validatedMeta.any_meta);
-        validate(validatedMeta.none_meta);
-    }
     auto filterChunk = [&](dual_group_t* group) {
         query(group, filter, meta, callback, u);
     };
