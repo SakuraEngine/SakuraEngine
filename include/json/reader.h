@@ -1,10 +1,12 @@
 #pragma once
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
-#include "simdjson.h"
 
 #if defined(__cplusplus)
+    #include "simdjson.h"
     #include "EASTL/string.h"
+    #include "utils/hashmap.hpp"
+
 struct RUNTIME_API skr_json_reader_t {
     simdjson::ondemand::value* json;
 };
@@ -39,6 +41,16 @@ template <class T>
 void Read(simdjson::ondemand::value&& json, skr::resource::TResourceHandle<T>& handle)
 {
     Read(std::forward<simdjson::ondemand::value>(json), (skr_resource_handle_t&)handle);
+}
+template <class K, class V, class Hash, class Eq>
+void Read(simdjson::ondemand::value&& json, skr::flat_hash_map<K, V, Hash, Eq>& map)
+{
+    for (auto pair : json.get_object().value_unsafe())
+    {
+        V value;
+        Read(pair.value_unsafe(), value);
+        map.insert(std::make_pair(pair.key().value_unsafe().raw(), std::move(value)));
+    }
 }
 } // namespace json
 } // namespace skr

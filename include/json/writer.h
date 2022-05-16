@@ -1,6 +1,4 @@
 #pragma once
-#include <iterator>
-#include <stdint.h>
 
 typedef enum ESkrJsonType
 {
@@ -12,11 +10,14 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
+    #include <stdint.h>
+    #include <iterator>
     #include <EASTL/vector.h>
     #include "utils/allocator.hpp"
     #include "resource/resource_handle.h"
     #include "fmt/format.h"
     #include <EASTL/string.h>
+    #include "utils/hashmap.hpp"
 
 struct RUNTIME_API skr_json_writer_t {
 public:
@@ -282,6 +283,17 @@ template <class T>
 void Write(skr_json_writer_t* writer, const skr::resource::TResourceHandle<T>& handle)
 {
     Write(writer, (const skr_resource_handle_t&)handle);
+}
+template <class K, class V, class Hash, class Eq>
+void Write(skr_json_writer_t* json, skr::flat_hash_map<K, V, Hash, Eq>& map)
+{
+    json->StartObject();
+    for (auto& pair : map)
+    {
+        Write(json, pair.first);
+        Write(json, pair.second);
+    }
+    json->EndObject();
 }
 } // namespace json
 } // namespace skr
