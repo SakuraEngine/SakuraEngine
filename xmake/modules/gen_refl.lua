@@ -103,7 +103,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         -- build generated cpp to json
         cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
         local depsmeta = {}
-        for _, dep in ipairs(target:deps()) do
+        for _, dep in pairs(target:deps()) do
             local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
             if os.exists(depmetadir) then
                 table.insert(depsmeta, depmetadir)
