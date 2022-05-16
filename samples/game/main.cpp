@@ -31,6 +31,7 @@ extern void free_api_objects();
 extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph);
 
 #include "gamert.h"
+#include "render-scene.h"
 
 int main(int argc, char** argv)
 {
@@ -44,6 +45,17 @@ int main(int argc, char** argv)
     DPIAware = true;
 #endif
     assert(gamert_get_ecs_world());
+    gfx_shader_set_t set0 = {(CGPUShaderLibraryId)1, (CGPUShaderLibraryId)2, (CGPUShaderLibraryId)3, (CGPUShaderLibraryId)4, (CGPUShaderLibraryId)5};
+    gfx_shader_set_t set2 = {(CGPUShaderLibraryId)2, (CGPUShaderLibraryId)3, (CGPUShaderLibraryId)4, (CGPUShaderLibraryId)5, (CGPUShaderLibraryId)6};
+    auto setId0 = ecsr_register_gfx_shader_set(&set0);
+    auto setId1 = ecsr_register_gfx_shader_set(&set2);
+    auto setId00 = ecsr_register_gfx_shader_set(&set0);
+    assert(setId0 == setId00);
+    assert(ecsr_query_gfx_shader_set(setId0) == ecsr_query_gfx_shader_set(setId00));
+    assert(ecsr_query_gfx_shader_set(setId0));
+    assert(ecsr_query_gfx_shader_set(setId0)->vs == (CGPUShaderLibraryId)1);
+    assert(ecsr_query_gfx_shader_set(setId1)->vs == (CGPUShaderLibraryId)2);
+    
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
