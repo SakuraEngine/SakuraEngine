@@ -14,7 +14,7 @@ SKR_MODULE_METADATA(u8R"(
     "prettyname" : "GameRuntime",
     "version" : "0.0.1",
     "linking" : "shared",
-    "dependencies" : [],
+    "dependencies" : [{"name":"SkrRT", "version":"0.1.0"}],
     "author" : "",
     "url" : "",
     "license" : "",

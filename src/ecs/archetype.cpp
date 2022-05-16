@@ -19,7 +19,7 @@
 namespace dual
 {
 
-fixed_stack_t localStack(4096 * 8);
+thread_local fixed_stack_t localStack(4096 * 8);
 
 SIndex archetype_t::index(dual_type_index_t inType) const noexcept
 {

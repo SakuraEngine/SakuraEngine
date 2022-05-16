@@ -22,7 +22,7 @@
 
 namespace dual
 {
-extern fixed_stack_t localStack;
+extern thread_local fixed_stack_t localStack;
 
 // template<class T>
 // struct blob_ref_T

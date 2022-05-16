@@ -1,6 +1,7 @@
 #include "render-scene.h"
 #include "gamert.h"
 #include "utils/hash.h"
+#include "ecs/dualX.h"
 
 static dual_type_index_t gfx_shader_set_type;
 static dual_type_index_t processor_shader_set_type;
@@ -12,6 +13,9 @@ typedef struct gfx_shader_set_query_exist_t {
     size_t hash;
     dual_storage_t* storage;
 } gfx_shader_set_query_exist_t;
+typedef struct gfx_shader_set_construct_t {
+    const gfx_shader_set_t* value;
+} gfx_shader_set_construct_t;
 void gfx_shader_set_query_exist_callback(void* u, dual_chunk_view_t* view)
 {
     gfx_shader_set_query_exist_t* query = (gfx_shader_set_query_exist_t*)u;
@@ -27,46 +31,26 @@ void gfx_shader_set_query_exist_callback(void* u, dual_chunk_view_t* view)
         }
     }
 }
-typedef struct gfx_shader_set_construct_t {
-    const gfx_shader_set_t* value;
-    gfx_shader_set_id_t ret;
-} gfx_shader_set_construct_t;
 void gfx_shader_set_construct_callback(void* u, dual_chunk_view_t* view)
 {
     gfx_shader_set_construct_t* construct = u;
     *(gfx_shader_set_t*)dualV_get_owned_rw(view, gfx_shader_set_type) = *construct->value;
-    construct->ret = dualV_get_entities(view)[0];
 }
 gfx_shader_set_id_t ecsr_register_gfx_shader_set(const gfx_shader_set_t* set) SKR_NOEXCEPT
 {
     dual_storage_t* storage = gamert_get_ecs_world();
-    dual_filter_t filter = {
-        .all.data = &gfx_shader_set_type,
-        .all.length = 1
+    gfx_shader_set_construct_t construct = {
+        .value = set
     };
-    dual_meta_filter_t meta = {0};
-    gfx_shader_set_query_exist_t query = {
-        .storage = storage,
-        .exist = UINT32_MAX,
-        .hash = skr_hash(set, sizeof(gfx_shader_set_t), (size_t)storage)
+    dual_entity_type_t mat_type = {
+        .type.data = &gfx_shader_set_type,
+        .type.length = 1,
     };
-    dualS_query(storage, &filter, &meta, &gfx_shader_set_query_exist_callback, &query);
-    if(query.exist != UINT32_MAX) 
-        return query.exist;
-    {
-        dual_entity_type_t mat_type = {
-            .type.data = &gfx_shader_set_type,
-            .type.length = 1,
-            .meta.data = NULL,
-            .meta.length = 0
-        };
-        gfx_shader_set_construct_t construct = {
-            .ret = UINT32_MAX,
-            .value = set
-        };
-        dualS_allocate_type(storage, &mat_type, 1, &gfx_shader_set_construct_callback, &construct);
-        return construct.ret;
-    }
+    dual_type_set_t key_set = {
+        .data = &gfx_shader_set_type,
+        .length = 1
+    };
+    return dualX_hashset_insert(storage, &key_set, &mat_type, &gfx_shader_set_construct_callback, &construct);
 }
 gfx_shader_set_t* ecsr_query_gfx_shader_set(gfx_shader_set_id_t id) SKR_NOEXCEPT
 {
