@@ -10,10 +10,10 @@
 #pragma once
 #include "configure.h"
 
-#if defined(SAKURA_RUNTIME_OS_UNIX)
+#if defined(SKR_OS_UNIX)
     #include <dlfcn.h>
 using NativeLibHandle = void*;
-#elif defined(SAKURA_RUNTIME_OS_WINDOWS)
+#elif defined(SKR_OS_WINDOWS)
     #include <windows.h>
     #include <ghc/filesystem.hpp>
 using NativeLibHandle = HMODULE;
@@ -145,7 +145,7 @@ private:
     eastl::string _lastError;
     NativeLibHandle _handle = nullptr;
     // Linux implementation
-#if defined(SAKURA_RUNTIME_OS_UNIX)
+#if defined(SKR_OS_UNIX)
     bool loadImpl(const char* path)
     {
         _lastError.clear();
@@ -185,7 +185,7 @@ private:
         }
         return symbol;
     }
-#elif defined(SAKURA_RUNTIME_OS_WINDOWS) // Windows implementation
+#elif defined(SKR_OS_WINDOWS) // Windows implementation
     void tchar_to_utf8(const TCHAR* str, char* str8)
     {
     #ifdef _UNICODE

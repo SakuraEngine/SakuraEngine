@@ -41,21 +41,21 @@ void* skr_window_get_native_handle(SWindowHandle window)
     SDL_SysWMinfo wmInfo;
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo((SDL_Window*)window, &wmInfo);
-#ifdef SAKURA_RUNTIME_OS_WINDOWS
+#ifdef SKR_OS_WINDOWS
     return wmInfo.info.win.window;
-#elif defined(SAKURA_RUNTIME_OS_MACOSX)
+#elif defined(SKR_OS_MACOSX)
     return wmInfo.info.cocoa.window;
 #endif
     return NULL;
 }
 
-#ifdef SAKURA_RUNTIME_OS_MACOSX
+#ifdef SKR_OS_MACOSX
     #include "platform/apple/macos/window.h"
 #endif
 
 void* skr_window_get_native_view(SWindowHandle window)
 {
-#ifdef SAKURA_RUNTIME_OS_MACOSX
+#ifdef SKR_OS_MACOSX
     void* ns_view =
         nswindow_get_content_view(skr_window_get_native_handle(window));
     return ns_view;

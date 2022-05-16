@@ -86,13 +86,13 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
     eastl::string mName(name);
     initName.append(mName);
     eastl::string filename;
-#if defined(SAKURA_RUNTIME_OS_MACOSX)
+#if defined(SKR_OS_MACOSX)
     filename.append("lib").append(name);
     filename.append(".dylib");
-#elif defined(SAKURA_RUNTIME_OS_UNIX)
+#elif defined(SKR_OS_UNIX)
     filename.append("lib").append(name);
     filename.append(".so");
-#elif defined(SAKURA_RUNTIME_OS_WINDOWS)
+#elif defined(SKR_OS_WINDOWS)
     filename.append(name);
     filename.append(".dll");
 #endif

@@ -238,13 +238,13 @@ static LightingCSPushConstants lighting_cs_data = {};
 const bool fragmentLightingPass = false;
 bool DPIAware = false;
 
-#ifdef SAKURA_RUNTIME_OS_WINDOWS
+#ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
 
 int main(int argc, char* argv[])
 {
-#ifdef SAKURA_RUNTIME_OS_WINDOWS
+#ifdef SKR_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif

@@ -10,7 +10,7 @@
 #include "resource/resource_system.h"
 #include <thread>
 #include <chrono>
-#ifdef SAKURA_RUNTIME_OS_WINDOWS
+#ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameRT", true);
     moduleManager->init_module_graph();
-#ifdef SAKURA_RUNTIME_OS_WINDOWS
+#ifdef SKR_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif

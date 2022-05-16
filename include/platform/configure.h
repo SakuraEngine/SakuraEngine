@@ -6,6 +6,12 @@
     #include <stdint.h>
 #endif
 
+#ifdef __cplusplus
+#define SKR_IF_CPP(...) __VA_ARGS__
+#else
+#define SKR_IF_CPP(...)
+#endif
+
 #ifndef STRINGIFY
     #define STRINGIFY(...) #__VA_ARGS__
 #endif
@@ -26,7 +32,7 @@
 #endif
 
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
-    #define SAKURA_RUNTIME_OS_UNIX
+    #define SKR_OS_UNIX
 #endif
 
 #if defined(_MSC_VER)
@@ -46,12 +52,12 @@
     /* iOS */
     #elif TARGET_OS_MAC == 1
         /* macOS */
-        #define SAKURA_RUNTIME_OS_MACOSX
+        #define SKR_OS_MACOSX
     #endif
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)
-    #define SAKURA_RUNTIME_OS_WINDOWS
+    #define SKR_OS_WINDOWS
 #endif
 
 #if defined(_MSC_VER)
@@ -80,25 +86,25 @@
     #endif
 #endif
 
-#ifndef RUNTIME_MANUAL_CONFIG_CPU_ARCHITECTURE
+#ifndef SKR_MANUAL_CONFIG_CPU_ARCHITECTURE
     #if defined(__x86_64__) || defined(_M_X64) || defined(_AMD64_) || defined(_M_AMD64)
-        #define RUNTIME_PLATFORM_X86_64
+        #define SKR_PLATFORM_X86_64
     #elif defined(__i386) || defined(_M_IX86) || defined(_X86_)
-        #define RUNTIME_PLATFORM_X86
+        #define SKR_PLATFORM_X86
     #elif defined(__aarch64__) || defined(__AARCH64) || defined(_M_ARM64)
-        #define RUNTIME_PLATFORM_ARM64
+        #define SKR_PLATFORM_ARM64
     #elif defined(__arm__) || defined(_M_ARM)
-        #define RUNTIME_PLATFORM_ARM32
+        #define SKR_PLATFORM_ARM32
     #elif defined(__POWERPC64__) || defined(__powerpc64__)
-        #define RUNTIME_PLATFORM_POWERPC64
+        #define SKR_PLATFORM_POWERPC64
     #elif defined(__POWERPC__) || defined(__powerpc__)
-        #define RUNTIME_PLATFORM_POWERPC32
+        #define SKR_PLATFORM_POWERPC32
     #elif defined(__wasm64__)
-        #define RUNTIME_PLATFORM_WA
-        #define RUNTIME_PLATFORM_WA64
+        #define SKR_PLATFORM_WA
+        #define SKR_PLATFORM_WA64
     #elif defined(__wasm__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
-        #define RUNTIME_PLATFORM_WA
-        #define RUNTIME_PLATFORM_WA32
+        #define SKR_PLATFORM_WA
+        #define SKR_PLATFORM_WA32
     #else
         #error Unrecognized CPU was used.
     #endif
@@ -187,10 +193,10 @@ typedef SSIZE_T ssize_t;
             #error "Unsupported architecture for msvc compiler"
         #endif
     #endif
-#elif defined(RUNTIME_PLATFORM_WA32)
+#elif defined(SKR_PLATFORM_WA32)
     #define size_t uint32_t;
 typedef int64_t host_ptr_t;
-#elif defined(RUNTIME_PLATFORM_WA64)
+#elif defined(SKR_PLATFORM_WA64)
     #define size_t uint64_t;
 typedef int64_t host_ptr_t;
 #elif defined(__GNUC__) || defined(__clang__)
@@ -246,46 +252,46 @@ typedef int64_t host_ptr_t;
 
 #ifndef RUNTIME_MANUAL_CONFIG_CPU_TRAITS
     #if defined(__AVX__)
-        #define RUNTIME_PLATFORM_AVX
+        #define SKR_PLATFORM_AVX
     #endif
     #if defined(__AVX2__)
-        #define RUNTIME_PLATFORM_AVX2
+        #define SKR_PLATFORM_AVX2
     #endif
 
-    #if defined(RUNTIME_PLATFORM_X86)
-        #define RUNTIME_PLATFORM_32BIT
-        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
-        #define RUNTIME_PLATFORM_SSE
-        #define RUNTIME_PLATFORM_SSE2
+    #if defined(SKR_PLATFORM_X86)
+        #define SKR_PLATFORM_32BIT
+        #define SKR_PLATFORM_LITTLE_ENDIAN
+        #define SKR_PLATFORM_SSE
+        #define SKR_PLATFORM_SSE2
     #endif
 
-    #if defined(RUNTIME_PLATFORM_X86_64)
-        #define RUNTIME_PLATFORM_64BIT
-        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
-        #define RUNTIME_PLATFORM_SSE
-        #define RUNTIME_PLATFORM_SSE2
+    #if defined(SKR_PLATFORM_X86_64)
+        #define SKR_PLATFORM_64BIT
+        #define SKR_PLATFORM_LITTLE_ENDIAN
+        #define SKR_PLATFORM_SSE
+        #define SKR_PLATFORM_SSE2
     #endif
 
-    #if defined(RUNTIME_PLATFORM_ARM32)
-        #define RUNTIME_PLATFORM_32BIT
-        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
+    #if defined(SKR_PLATFORM_ARM32)
+        #define SKR_PLATFORM_32BIT
+        #define SKR_PLATFORM_LITTLE_ENDIAN
     #endif
 
-    #if defined(RUNTIME_PLATFORM_ARM64)
-        #define RUNTIME_PLATFORM_64BIT
-        #define RUNTIME_PLATFORM_LITTLE_ENDIAN
-        #define RUNTIME_PLATFORM_SSE
-        #define RUNTIME_PLATFORM_SSE2
+    #if defined(SKR_PLATFORM_ARM64)
+        #define SKR_PLATFORM_64BIT
+        #define SKR_PLATFORM_LITTLE_ENDIAN
+        #define SKR_PLATFORM_SSE
+        #define SKR_PLATFORM_SSE2
     #endif
 
-    #if defined(RUNTIME_PLATFORM_POWERPC32)
-        #define RUNTIME_PLATFORM_32BIT
-        #define RUNTIME_PLATFORM_BIG_ENDIAN
+    #if defined(SKR_PLATFORM_POWERPC32)
+        #define SKR_PLATFORM_32BIT
+        #define SKR_PLATFORM_BIG_ENDIAN
     #endif
 
-    #if defined(RUNTIME_PLATFORM_POWERPC64)
-        #define RUNTIME_PLATFORM_64BIT
-        #define RUNTIME_PLATFORM_BIG_ENDIAN
+    #if defined(SKR_PLATFORM_POWERPC64)
+        #define SKR_PLATFORM_64BIT
+        #define SKR_PLATFORM_BIG_ENDIAN
     #endif
 #endif
 

@@ -2,9 +2,9 @@
 #include "debug.cpp"
 #include "vfs.cpp"
 #include "llfio/llfio_vfs.cpp"
-#ifdef SAKURA_RUNTIME_OS_UNIX
+#ifdef SKR_OS_UNIX
     #include "unix/unix_vfs.cpp"
-#elif defined(SAKURA_RUNTIME_OS_WINDOWS)
+#elif defined(SKR_OS_WINDOWS)
     #include "windows/windows_vfs.cpp"
 #endif
 
