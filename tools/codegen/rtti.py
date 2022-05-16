@@ -152,6 +152,8 @@ class Database(object):
             for base in record.bases:
                 if base in self.name_to_record:
                     bases.append(self.name_to_record[base])
+                else:
+                    abort("base %s not reflected" % base)
             record.bases = bases
 
     def add_record(self, record):
@@ -180,7 +182,6 @@ def main():
     api = api.upper()+"_API"
     includes = sys.argv[4:].copy()
     includes.append(root)
-
     for path in includes:
         metas = glob.glob(os.path.join(path, "**", "*.h.meta"), recursive=True)
         for meta in metas:
@@ -198,7 +199,7 @@ def main():
         filename = os.path.split(meta)[1][:-7]
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
-            if not "guid" in value["attrs"]:
+            if not "guid" in value["attrs"] or "no-rtti" in value["attrs"]:
                 continue
             record = db.name_to_record[key]
             data.headers.add(GetInclude(record.fileName))
@@ -206,7 +207,7 @@ def main():
             data2.records.append(record)
 
         for key, value in meta["enums"].items():
-            if not "guid" in value["attrs"]:
+            if not "guid" in value["attrs"] or "no-rtti" in value["attrs"]:
                 continue
             enum = db.name_to_enum[key]
             data.headers.add(GetInclude(enum.fileName))
