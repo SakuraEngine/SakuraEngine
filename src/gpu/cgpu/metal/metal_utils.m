@@ -21,7 +21,7 @@ void MetalUtil_RecordAdapterDetail(struct CGPUAdapter_Metal* MAdapter)
     MAdapter->adapter_detail.is_uma = isMTLDeviceUMA(MAdapter->device.pDevice);
     MAdapter->adapter_detail.is_virtual = false;
 
-    GPUVendorPreset* vendor = &MAdapter->adapter_detail.vendor_preset;
+    CGPUVendorPreset* vendor = &MAdapter->adapter_detail.vendor_preset;
     const char* mDeviceName = [MAdapter->device.pDevice.name UTF8String];
     strncpy(vendor->gpu_name, mDeviceName, MAX_GPU_VENDOR_STRING_LENGTH);
     MetalUtil_QueryVendorIdAndDeviceId(MAdapter->device.pDevice, &vendor->vendor_id, &vendor->device_id);

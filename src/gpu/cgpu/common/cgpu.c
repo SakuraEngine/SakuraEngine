@@ -270,7 +270,7 @@ static const CGPUBlendStateDescriptor defaultBlendStateDesc = {
     .blend_modes[0] = CGPU_BLEND_MODE_ADD,
     .src_alpha_factors[0] = CGPU_BLEND_CONST_ONE,
     .dst_alpha_factors[0] = CGPU_BLEND_CONST_ZERO,
-    .masks[0] = COLOR_MASK_ALL,
+    .masks[0] = CGPU_COLOR_MASK_ALL,
     .independent_blend = false
 };
 static const CGPURasterizerStateDescriptor defaultRasterStateDesc = {

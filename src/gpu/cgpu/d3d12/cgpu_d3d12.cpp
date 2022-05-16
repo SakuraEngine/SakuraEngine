@@ -721,7 +721,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     CGPURenderPipeline_D3D12* PPL = cgpu_new<CGPURenderPipeline_D3D12>();
     CGPURootSignature_D3D12* RS = (CGPURootSignature_D3D12*)desc->root_signature;
     // Vertex input state
-    DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[MAX_VERTEX_ATTRIBS]);
+    DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[CGPU_MAX_VERTEX_ATTRIBS]);
     uint32_t elem_count = 0;
     if (desc->vertex_layout != nullptr)
     {
@@ -1426,7 +1426,7 @@ const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)encoder;
 
     const CGPUBuffer_D3D12** Buffers = (const CGPUBuffer_D3D12**)buffers;
-    DECLARE_ZERO(D3D12_VERTEX_BUFFER_VIEW, views[MAX_VERTEX_ATTRIBS]);
+    DECLARE_ZERO(D3D12_VERTEX_BUFFER_VIEW, views[CGPU_MAX_VERTEX_ATTRIBS]);
     for (uint32_t i = 0; i < buffer_count; ++i)
     {
         cgpu_assert(D3D12_GPU_VIRTUAL_ADDRESS_NULL != Buffers[i]->mDxGpuAddress);
@@ -1478,10 +1478,10 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
 #ifdef __ID3D12GraphicsCommandList4_FWD_DEFINED__
     ID3D12GraphicsCommandList4* CmdList4 = (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList;
-    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValues[MAX_MRT_COUNT]);
+    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValues[CGPU_MAX_MRT_COUNT]);
     DECLARE_ZERO(D3D12_CLEAR_VALUE, clearDepth);
     DECLARE_ZERO(D3D12_CLEAR_VALUE, clearStencil);
-    DECLARE_ZERO(D3D12_RENDER_PASS_RENDER_TARGET_DESC, renderPassRenderTargetDescs[MAX_MRT_COUNT]);
+    DECLARE_ZERO(D3D12_RENDER_PASS_RENDER_TARGET_DESC, renderPassRenderTargetDescs[CGPU_MAX_MRT_COUNT]);
     DECLARE_ZERO(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC, renderPassDepthStencilDesc);
     uint32_t colorTargetCount = 0;
     // color

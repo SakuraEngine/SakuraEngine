@@ -343,7 +343,7 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     blend_state.blend_alpha_modes[0] = CGPU_BLEND_MODE_ADD;
     blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
     blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
-    blend_state.masks[0] = COLOR_MASK_ALL;
+    blend_state.masks[0] = CGPU_COLOR_MASK_ALL;
     blend_state.independent_blend = false;
     rp_desc.blend_state = &blend_state;
     render_pipeline = cgpu_create_render_pipeline(desc->queue->device, &rp_desc);

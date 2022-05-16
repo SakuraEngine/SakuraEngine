@@ -93,8 +93,8 @@ protected:
     }
     RenderPassExecuteFunction executor;
     CGPURenderPipelineId pipeline;
-    ECGPULoadAction load_actions[MAX_MRT_COUNT + 1];
-    ECGPUStoreAction store_actions[MAX_MRT_COUNT + 1];
+    ECGPULoadAction load_actions[CGPU_MAX_MRT_COUNT + 1];
+    ECGPUStoreAction store_actions[CGPU_MAX_MRT_COUNT + 1];
     ECGPULoadAction depth_load_action;
     ECGPUStoreAction depth_store_action;
     ECGPULoadAction stencil_load_action;
