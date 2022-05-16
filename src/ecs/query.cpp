@@ -222,7 +222,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         dual_operation_t operation;
         bool shared = false;
         bool filterOnly = false;
-        operation.randomAccess = DOS_GLOBAL;
+        operation.randomAccess = DOS_SEQ;
         operation.readonly = true;
         operation.atomic = false;
         operation.phase = -1;

@@ -16,7 +16,7 @@ typedef struct skr_resource_handle_t {
         skr_guid_t guid;
         struct
         {
-            uint32_t padding;   // zero, flag for whether resolved
+            uint32_t padding;   // zero, flag for resolved or not
             uint32_t requester; // requester id
             // since resource record is allocated with alignment 8, the lower 3 bits should always be zero
             // so we put requester type into it
