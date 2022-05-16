@@ -80,7 +80,7 @@ target("GameRT")
     add_defines("GAMERT_IMPL")
     set_kind("shared")
     add_deps("SkrRT")
-    add_files("game/src/**.cpp")
+    add_files("game/src/**.cpp", "game/src/**.c")
 
 target("GameTool")
     set_kind("shared")
