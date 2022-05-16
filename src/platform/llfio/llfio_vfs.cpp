@@ -9,7 +9,7 @@ struct skr_vfile_llfio_t : public skr_vfile_t {
     llfio::file_handle fh;
 };
 
-inline static llfio::file_handle::mode skr_vfs_filemode_to_llfio_mode(ESkrFileMode mode) RUNTIME_NOEXCEPT
+inline static llfio::file_handle::mode skr_vfs_filemode_to_llfio_mode(ESkrFileMode mode) SKR_NOEXCEPT
 {
     switch (mode)
     {
@@ -30,7 +30,7 @@ inline static llfio::file_handle::mode skr_vfs_filemode_to_llfio_mode(ESkrFileMo
     }
 }
 
-inline static llfio::file_handle::creation skr_vfs_filecreation_to_llfio_creation(ESkrFileCreation creation) RUNTIME_NOEXCEPT
+inline static llfio::file_handle::creation skr_vfs_filecreation_to_llfio_creation(ESkrFileCreation creation) SKR_NOEXCEPT
 {
     switch (creation)
     {
@@ -47,7 +47,7 @@ inline static llfio::file_handle::creation skr_vfs_filecreation_to_llfio_creatio
 }
 
 skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path,
-ESkrFileMode mode, ESkrFileCreation creation) RUNTIME_NOEXCEPT
+ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT
 {
     ghc::filesystem::path p;
     if(auto in_p = ghc::filesystem::path(path); in_p.is_absolute())
@@ -90,7 +90,7 @@ ESkrFileMode mode, ESkrFileCreation creation) RUNTIME_NOEXCEPT
     }
 }
 
-size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) RUNTIME_NOEXCEPT
+size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT
 {
     if (file)
     {
@@ -112,7 +112,7 @@ size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
     return -1;
 }
 
-size_t skr_llfio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset, size_t byte_count) RUNTIME_NOEXCEPT
+size_t skr_llfio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT
 {
     if (file)
     {
@@ -136,7 +136,7 @@ size_t skr_llfio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset
     return -1;
 }
 
-ssize_t skr_llfio_fsize(const skr_vfile_t* file) RUNTIME_NOEXCEPT
+ssize_t skr_llfio_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
 {
     if (file)
     {
@@ -153,7 +153,7 @@ ssize_t skr_llfio_fsize(const skr_vfile_t* file) RUNTIME_NOEXCEPT
     return -1;
 }
 
-bool skr_llfio_fclose(skr_vfile_t* file) RUNTIME_NOEXCEPT
+bool skr_llfio_fclose(skr_vfile_t* file) SKR_NOEXCEPT
 {
     if (file)
     {
@@ -171,7 +171,7 @@ bool skr_llfio_fclose(skr_vfile_t* file) RUNTIME_NOEXCEPT
     return false;
 }
 
-void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) RUNTIME_NOEXCEPT
+void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) SKR_NOEXCEPT
 {
     procs->fopen = &skr_llfio_fopen;
     procs->fclose = &skr_llfio_fclose;

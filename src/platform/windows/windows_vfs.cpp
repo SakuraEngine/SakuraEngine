@@ -9,7 +9,7 @@
     #include <WinBase.h>
 #endif
 
-inline static char8_t* duplicate_string(const char8_t* src_string) RUNTIME_NOEXCEPT
+inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
 {
     if (src_string != nullptr)
     {
@@ -26,7 +26,7 @@ inline static char8_t* duplicate_string(const char8_t* src_string) RUNTIME_NOEXC
 }
 
 template <typename T>
-static inline T withUTF16Path(const char* path, T (*function)(const wchar_t*)) RUNTIME_NOEXCEPT
+static inline T withUTF16Path(const char* path, T (*function)(const wchar_t*)) SKR_NOEXCEPT
 {
     size_t len = strlen(path);
     wchar_t* buffer = (wchar_t*)alloca((len + 1) * sizeof(wchar_t));
@@ -38,7 +38,7 @@ static inline T withUTF16Path(const char* path, T (*function)(const wchar_t*)) R
 }
 
 #define WIN_FS_MAX_PATH 256
-skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) RUNTIME_NOEXCEPT
+skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
 {
     SKR_ASSERT(desc);
     bool success = true;
@@ -77,7 +77,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) RUNTIME_NOEXCEPT
     return fs;
 }
 
-void skr_free_vfs(skr_vfs_t* fs) RUNTIME_NOEXCEPT
+void skr_free_vfs(skr_vfs_t* fs) SKR_NOEXCEPT
 {
     if (fs)
     {

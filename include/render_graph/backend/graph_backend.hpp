@@ -77,34 +77,34 @@ public:
     void devirtualize(TextureNode* node);
     void devirtualize(PassNode* node);
 
-    virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) RUNTIME_NOEXCEPT final;
-    virtual CGPUDeviceId get_backend_device() RUNTIME_NOEXCEPT final;
-    inline virtual CGPUQueueId get_gfx_queue() RUNTIME_NOEXCEPT final { return gfx_queue; }
-    virtual uint32_t collect_garbage(uint64_t critical_frame) RUNTIME_NOEXCEPT final;
-    virtual uint32_t collect_texture_garbage(uint64_t critical_frame) RUNTIME_NOEXCEPT final;
-    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) RUNTIME_NOEXCEPT final;
+    virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT final;
+    virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT final;
+    inline virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT final { return gfx_queue; }
+    virtual uint32_t collect_garbage(uint64_t critical_frame) SKR_NOEXCEPT final;
+    virtual uint32_t collect_texture_garbage(uint64_t critical_frame) SKR_NOEXCEPT final;
+    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) SKR_NOEXCEPT final;
 
     friend class RenderGraph;
 
 protected:
     RenderGraphBackend(const RenderGraphBuilder& builder);
-    virtual void initialize() RUNTIME_NOEXCEPT final;
-    virtual void finalize() RUNTIME_NOEXCEPT final;
+    virtual void initialize() SKR_NOEXCEPT final;
+    virtual void finalize() SKR_NOEXCEPT final;
 
-    CGPUTextureId resolve(RenderGraphFrameExecutor& executor, const TextureNode& node) RUNTIME_NOEXCEPT;
-    CGPUTextureId try_aliasing_allocate(RenderGraphFrameExecutor& executor, const TextureNode& node) RUNTIME_NOEXCEPT;
-    CGPUBufferId resolve(RenderGraphFrameExecutor& executor, const BufferNode& node) RUNTIME_NOEXCEPT;
+    CGPUTextureId resolve(RenderGraphFrameExecutor& executor, const TextureNode& node) SKR_NOEXCEPT;
+    CGPUTextureId try_aliasing_allocate(RenderGraphFrameExecutor& executor, const TextureNode& node) SKR_NOEXCEPT;
+    CGPUBufferId resolve(RenderGraphFrameExecutor& executor, const BufferNode& node) SKR_NOEXCEPT;
 
     void calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
     eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-    eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) RUNTIME_NOEXCEPT;
-    gsl::span<CGPUDescriptorSetId> alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass) RUNTIME_NOEXCEPT;
-    void deallocate_resources(PassNode* pass) RUNTIME_NOEXCEPT;
+    eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT;
+    gsl::span<CGPUDescriptorSetId> alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT;
+    void deallocate_resources(PassNode* pass) SKR_NOEXCEPT;
 
-    void execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass) RUNTIME_NOEXCEPT;
-    void execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass) RUNTIME_NOEXCEPT;
-    void execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass) RUNTIME_NOEXCEPT;
-    void execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass) RUNTIME_NOEXCEPT;
+    void execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass) SKR_NOEXCEPT;
+    void execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass) SKR_NOEXCEPT;
+    void execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass) SKR_NOEXCEPT;
+    void execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass) SKR_NOEXCEPT;
 
     CGPUQueueId gfx_queue;
     CGPUDeviceId device;

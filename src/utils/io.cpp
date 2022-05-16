@@ -11,28 +11,28 @@
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyC.h"
 
-bool skr_async_io_request_t::is_ready() const RUNTIME_NOEXCEPT
+bool skr_async_io_request_t::is_ready() const SKR_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_OK;
 }
-bool skr_async_io_request_t::is_enqueued() const RUNTIME_NOEXCEPT
+bool skr_async_io_request_t::is_enqueued() const SKR_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_ENQUEUED;
 }
-bool skr_async_io_request_t::is_cancelled() const RUNTIME_NOEXCEPT
+bool skr_async_io_request_t::is_cancelled() const SKR_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_CANCELLED;
 }
-bool skr_async_io_request_t::is_ram_loading() const RUNTIME_NOEXCEPT
+bool skr_async_io_request_t::is_ram_loading() const SKR_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_RAM_LOADING;
 }
-bool skr_async_io_request_t::is_vram_loading() const RUNTIME_NOEXCEPT
+bool skr_async_io_request_t::is_vram_loading() const SKR_NOEXCEPT
 {
     return get_status() == SKR_ASYNC_IO_STATUS_VRAM_LOADING;
 }
 
-SkrAsyncIOStatus skr_async_io_request_t::get_status() const RUNTIME_NOEXCEPT
+SkrAsyncIOStatus skr_async_io_request_t::get_status() const SKR_NOEXCEPT
 {
     return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&status);
 }
@@ -78,21 +78,21 @@ public:
                 callbacks[value](callback_datas[value]);
         }
     };
-    ~RAMServiceImpl() RUNTIME_NOEXCEPT = default;
-    RAMServiceImpl(uint32_t sleep_time, bool lockless) RUNTIME_NOEXCEPT
+    ~RAMServiceImpl() SKR_NOEXCEPT = default;
+    RAMServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
         :  isLockless(lockless), _sleepTime(sleep_time)
          
     {
     }
-    void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT final;
-    bool try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT final;
-    void defer_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT final;
-    void drain() RUNTIME_NOEXCEPT final;
-    void set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT final;
-    void stop(bool wait_drain = false) RUNTIME_NOEXCEPT final;
-    void run() RUNTIME_NOEXCEPT final;
+    void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) SKR_NOEXCEPT final;
+    bool try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
+    void defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
+    void drain() SKR_NOEXCEPT final;
+    void set_sleep_time(uint32_t time) SKR_NOEXCEPT final;
+    void stop(bool wait_drain = false) SKR_NOEXCEPT final;
+    void run() SKR_NOEXCEPT final;
 
-    SkrAsyncIOServiceStatus get_service_status() const RUNTIME_NOEXCEPT final
+    SkrAsyncIOServiceStatus get_service_status() const SKR_NOEXCEPT final
     {
         return getRunningStatus();
     }
@@ -115,17 +115,17 @@ public:
         return (_SkrIOThreadStatus)skr_atomic32_load_acquire(&_thread_status);
     }
 
-    void optionalLock() RUNTIME_NOEXCEPT
+    void optionalLock() SKR_NOEXCEPT
     {
         if (!isLockless)
             skr_acquire_mutex(&taskMutex);
     }
-    void optionalUnlock() RUNTIME_NOEXCEPT
+    void optionalUnlock() SKR_NOEXCEPT
     {
         if (!isLockless)
             skr_release_mutex(&taskMutex);
     }
-    bool doCancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT;
+    bool doCancel(skr_async_io_request_t* request) SKR_NOEXCEPT;
 
     const bool isLockless = false;
     const bool criticalTaskCount = false;
@@ -284,7 +284,7 @@ void ioThreadTask(void* arg)
     }
 }
 
-void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, skr_async_io_request_t* async_request) RUNTIME_NOEXCEPT
+void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, skr_async_io_request_t* async_request) SKR_NOEXCEPT
 {
     // try push back new request
     if (!isLockless)
@@ -353,7 +353,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     }
 }
 
-skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) RUNTIME_NOEXCEPT
+skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
     auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time, desc->lockless);
     service->sortMethod = desc->sort_method;
@@ -368,7 +368,7 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     return service;
 }
 
-void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
+void RAMService::destroy(RAMService* s) SKR_NOEXCEPT
 {
     auto service = static_cast<skr::io::RAMServiceImpl*>(s);
     s->drain();
@@ -380,7 +380,7 @@ void RAMService::destroy(RAMService* s) RUNTIME_NOEXCEPT
     SkrDelete(service);
 }
 
-bool skr::io::RAMServiceImpl::doCancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
+bool skr::io::RAMServiceImpl::doCancel(skr_async_io_request_t* request) SKR_NOEXCEPT
 {
     bool cancelled = false;
     tasks.erase(
@@ -396,7 +396,7 @@ bool skr::io::RAMServiceImpl::doCancel(skr_async_io_request_t* request) RUNTIME_
     return cancelled;
 }
 
-bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
+bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
 {
     if (request->is_enqueued() && !isLockless)
     {
@@ -408,12 +408,12 @@ bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) RUNTIM
     return false;
 }
 
-void skr::io::RAMServiceImpl::defer_cancel(skr_async_io_request_t* request) RUNTIME_NOEXCEPT
+void skr::io::RAMServiceImpl::defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
 {
     skr_atomic32_store_relaxed(&request->request_cancel, 1);
 }
 
-void skr::io::RAMServiceImpl::drain() RUNTIME_NOEXCEPT
+void skr::io::RAMServiceImpl::drain() SKR_NOEXCEPT
 {
     // wait for sleep
     for (; getRunningStatus() != SKR_IO_SERVICE_STATUS_SLEEPING;)
@@ -422,12 +422,12 @@ void skr::io::RAMServiceImpl::drain() RUNTIME_NOEXCEPT
     }
 }
 
-void skr::io::RAMServiceImpl::set_sleep_time(uint32_t time) RUNTIME_NOEXCEPT
+void skr::io::RAMServiceImpl::set_sleep_time(uint32_t time) SKR_NOEXCEPT
 {
     skr_atomic32_store_relaxed(&_sleepTime, time);
 }
 
-void skr::io::RAMServiceImpl::stop(bool wait_drain) RUNTIME_NOEXCEPT
+void skr::io::RAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
 {
     if (getThreadStatus() != _SKR_IO_THREAD_STATUS_RUNNING) return;
     if (wait_drain) drain(); // sleep -> hung
@@ -435,7 +435,7 @@ void skr::io::RAMServiceImpl::stop(bool wait_drain) RUNTIME_NOEXCEPT
     setThreadStatus(_SKR_IO_THREAD_STATUS_SUSPEND);
 }
 
-void skr::io::RAMServiceImpl::run() RUNTIME_NOEXCEPT
+void skr::io::RAMServiceImpl::run() SKR_NOEXCEPT
 {
     if (getThreadStatus() != _SKR_IO_THREAD_STATUS_SUSPEND)
         return;

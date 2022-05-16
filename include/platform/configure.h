@@ -358,9 +358,9 @@ typedef int64_t host_ptr_t;
 #define RUNTIME_INLINE inline
 #ifdef __cplusplus
     // By Default we use cpp-standard above 2011XXL
-    #define RUNTIME_NOEXCEPT noexcept
+    #define SKR_NOEXCEPT noexcept
 #else
-    #define RUNTIME_NOEXCEPT
+    #define SKR_NOEXCEPT
 #endif
 
 // Platform Specific Configure
