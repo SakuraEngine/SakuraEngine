@@ -144,6 +144,7 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     proto.dead = nullptr;
     proto.cloned = proto.isDead ? nullptr : &proto;
     groups.insert({ type, &proto });
+    update_query_cache(&proto, true);
     if (toCleanCount != 1 && !proto.isDead)
     {
         dual_entity_type_t deadType;
@@ -191,6 +192,7 @@ dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
 
 void dual_storage_t::destruct_group(dual_group_t* group)
 {
+    update_query_cache(group, false);
     groups.erase(group->type);
     groupPool.free(group);
 }
