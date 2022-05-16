@@ -14,7 +14,7 @@ namespace asset reflect
 using namespace skd::asset;
 struct reflect attr(
 "guid" : "4F0E4239-A07F-4F48-B54F-FBF406C60DC3",
-"serialize" : true, "no-rtti" : true,
+"serialize" : true,
 "importer" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
 TOOL_API SSceneImporter final : public SImporter
@@ -37,9 +37,9 @@ TOOL_API SSceneCooker final : public SCooker
 };
 
 struct TOOL_API SSceneImporterFactory final : public SImporterFactory {
-    bool CanImport(const SAssetRecord* record) override;
-    skr_guid_t GetResourceType() override;
-    SImporter* CreateImporter(const SAssetRecord* record) override;
+    bool CanImport(const SAssetRecord* record) override { return false; }
+    skr_guid_t GetResourceType() override { return {}; }
+    SImporter* CreateImporter(const SAssetRecord* record) override { return nullptr; }
 };
 } // namespace reflect
 } // namespace reflect
