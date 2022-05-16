@@ -5,13 +5,13 @@
     #ifdef __cplusplus
 extern "C" {
     #endif
-RUNTIME_API void* mi_malloc(size_t size) RUNTIME_NOEXCEPT;
-RUNTIME_API void* mi_calloc(size_t count, size_t size) RUNTIME_NOEXCEPT;
-RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment) RUNTIME_NOEXCEPT;
-RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment) RUNTIME_NOEXCEPT;
+RUNTIME_API void* mi_malloc(size_t size) SKR_NOEXCEPT;
+RUNTIME_API void* mi_calloc(size_t count, size_t size) SKR_NOEXCEPT;
+RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment) SKR_NOEXCEPT;
+RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT;
 RUNTIME_API void* mi_new_aligned(size_t size, size_t alignment);
-RUNTIME_API void mi_free(void* p) RUNTIME_NOEXCEPT;
-RUNTIME_API void mi_free_aligned(void* p, size_t alignment) RUNTIME_NOEXCEPT;
+RUNTIME_API void mi_free(void* p) SKR_NOEXCEPT;
+RUNTIME_API void mi_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT;
     #ifdef __cplusplus
 }
     #endif

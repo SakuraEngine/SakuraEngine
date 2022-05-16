@@ -158,7 +158,7 @@ private:
 };
 
 #include <fstream>
-void RenderGraphViz::write_graphviz(RenderGraph& graph, const char* outf) RUNTIME_NOEXCEPT
+void RenderGraphViz::write_graphviz(RenderGraph& graph, const char* outf) SKR_NOEXCEPT
 {
     DependencyGraphBase& g = *DependencyGraphBase::as(graph.graph.get());
     EdgeWriter<DependencyGraphBase> w(g);
