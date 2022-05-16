@@ -82,6 +82,8 @@ def parseRecord(name, json):
     fields = []
     for key, value in json["fields"].items():
         attr = value["attrs"]
+        if "no-rtti" in attr:
+            continue
         field = Field(key, value["type"],
                       value["offset"], value["comment"])
         fields.append(field)
@@ -199,7 +201,9 @@ def main():
         filename = os.path.split(meta)[1][:-7]
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
-            if not "guid" in value["attrs"] or "no-rtti" in value["attrs"]:
+            if not "guid" in value["attrs"]:
+                continue
+            if not "rtti" in value["attrs"]:
                 continue
             record = db.name_to_record[key]
             data.headers.add(GetInclude(record.fileName))
@@ -207,7 +211,9 @@ def main():
             data2.records.append(record)
 
         for key, value in meta["enums"].items():
-            if not "guid" in value["attrs"] or "no-rtti" in value["attrs"]:
+            if not "guid" in value["attrs"]:
+                continue
+            if not "rtti" in value["attrs"]:
                 continue
             enum = db.name_to_enum[key]
             data.headers.add(GetInclude(enum.fileName))
@@ -263,7 +269,7 @@ def parseFunctions(dict):
     functionsDict = {}
     for value in dict:
         attr = value["attrs"]
-        if not "rtti" in attr:
+        if "no-rtti" in attr:
             continue
         name = value["name"]
         function = functionsDict.setdefault(name, Function(name))
