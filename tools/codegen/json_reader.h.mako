@@ -36,11 +36,11 @@ namespace skr::json
 {
 %for record in db.records:
     template <>
-    ${api} void Read(simdjson::ondemand::value&& json, ${record.name}& v);
+    ${api} void ReadValue(simdjson::ondemand::value&& json, ${record.name}& v);
 %endfor
 %for enum in db.enums:
     template <>
-    ${api} void Read(simdjson::ondemand::value&& json, ${enum.name}& v);
+    ${api} void ReadValue(simdjson::ondemand::value&& json, ${enum.name}& v);
 %endfor
 }
 #endif

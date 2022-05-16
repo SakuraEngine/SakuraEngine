@@ -142,7 +142,11 @@ def main():
     for path in includes:
         metas = glob.glob(os.path.join(path, "**", "*.h.meta"), recursive=True)
         for meta in metas:
-            meta = json.load(open(meta))
+            try:
+                meta = json.load(open(meta))
+            except json.decoder.JSONDecodeError as e:
+                print(e)
+                abort(meta)
             for key, value in meta["records"].items():
                 db.add_record(parseRecord(key, value))
             for key, value in meta["enums"].items():
