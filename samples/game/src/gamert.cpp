@@ -23,6 +23,7 @@ SKR_MODULE_METADATA(u8R"(
 )",
 GameRT)
 
+extern "C" void ecsr_register_types();
 void SGameRTModule::on_load()
 {
     SKR_LOG_INFO("game runtime loaded!");
@@ -36,6 +37,8 @@ void SGameRTModule::on_load()
     skr::resource::GetResourceSystem()->Initialize(registry);
 
     ecs_world = dualS_create();
+    // register render-scene types
+    ecsr_register_types();
 }
 
 void SGameRTModule::main_module_exec()
@@ -56,5 +59,6 @@ void SGameRTModule::on_unload()
 dual_storage_t* gamert_get_ecs_world()
 {
     static auto _module = (SGameRTModule*)skr_get_module_manager()->get_module("GameRT");
-    return _module->ecs_world;
+    static auto ecs_world = _module->ecs_world;
+    return ecs_world;
 }

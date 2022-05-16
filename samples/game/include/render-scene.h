@@ -5,19 +5,23 @@
 #include "scene.h"
 #include "cgpu/api.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // root signatures & pipeline-objects are hidden bardward.
 
 // {909389f9-3850-4be4-af60-4f4b3b128a2b}
-const skr_guid_t pipeline_shader_set_guid = 
+const skr_guid_t gfx_shader_set_guid = 
 {0x909389f9, 0x3850, 0x4be4, {0xaf, 0x60, 0x4f, 0x4b, 0x3b, 0x12, 0x8a, 0x2b}};
-typedef struct pipeline_shader_set_t {
+typedef struct gfx_shader_set_t {
     CGPUShaderLibraryId vs SKR_IF_CPP(= nullptr);
     CGPUShaderLibraryId hs SKR_IF_CPP(= nullptr);
     CGPUShaderLibraryId ds SKR_IF_CPP(= nullptr);
     CGPUShaderLibraryId gs SKR_IF_CPP(= nullptr);
     CGPUShaderLibraryId ps SKR_IF_CPP(= nullptr);
-} pipeline_shader_set_t;
-typedef dual_entity_t pipeline_shader_set_id_t;
+} gfx_shader_set_t;
+typedef dual_entity_t gfx_shader_set_id_t;
 
 // {0b2a2bb5-1a6d-4f63-aee2-ef88174c39ed}
 const skr_guid_t processor_shader_set_guid = 
@@ -31,7 +35,8 @@ typedef dual_entity_t processor_shader_set_id_t;
 const skr_guid_t gfx_material_guid = 
 {0x640a76c0, 0xec8e, 0x46ad, {0x89, 0xf2, 0xbe, 0x88, 0x69, 0x50, 0xb3, 0x15}};
 typedef struct gfx_material_t {
-    pipeline_shader_set_id_t m_gfx;
+    const char8_t* name;
+    gfx_shader_set_id_t m_gfx;
     ECGPUFormat formats[CGPU_MAX_MRT_COUNT];
     uint32_t render_target_count;
     ECGPUFormat depth_stencil_format;
@@ -79,8 +84,14 @@ typedef struct skr_gfx_mat_param_t {
     skr_gfx_mat_param_freq frequency;
 } skr_gfx_mat_param_t;
 
+GAMERT_API gfx_shader_set_id_t ecsr_register_gfx_shader_set(const gfx_shader_set_t*) SKR_NOEXCEPT;
+GAMERT_API gfx_shader_set_t* ecsr_query_gfx_shader_set(gfx_shader_set_id_t) SKR_NOEXCEPT;
 GAMERT_API gfx_material_id_t ecsr_register_gfx_material(const gfx_material_t*) SKR_NOEXCEPT;
 GAMERT_API bool ecsr_unregister_gfx_material(gfx_material_id_t) SKR_NOEXCEPT;
 GAMERT_API processor_material_t ecsr_register_processor_material(const processor_material_t*) SKR_NOEXCEPT;
 GAMERT_API bool ecsr_unregister_processor_material(processor_material_t) SKR_NOEXCEPT;
 GAMERT_API bool ecsr_register_gfx_mat_paramter(gfx_material_id_t mat, const skr_gfx_mat_param_t*) SKR_NOEXCEPT; 
+
+#ifdef __cplusplus
+}
+#endif
