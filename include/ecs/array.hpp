@@ -1,7 +1,7 @@
 #pragma once
-#include "SmallVector.h"
+#include "ecs/SmallVector.h"
 #include "ecs/dual.h"
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 struct dual_array_component_t : llvm_vecsmall::SmallVectorBase {
     using SmallVectorBase::SmallVectorBase;
 };

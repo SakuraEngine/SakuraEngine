@@ -1,6 +1,6 @@
 
 #include "stack.hpp"
-#include "utils.hpp"
+#include "ecs/dual_config.h"
 #include "stdlib.h"
 
 namespace dual

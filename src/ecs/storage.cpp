@@ -1,4 +1,4 @@
-#include "SmallVector.h"
+#include "ecs/SmallVector.h"
 #include "chunk_view.hpp"
 
 #include "ecs/dual.h"
@@ -8,7 +8,7 @@
 #include "query.hpp"
 #include "set.hpp"
 #include "storage.hpp"
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "pool.hpp"
 #include "mask.hpp"
 #include "iterator_ref.hpp"
@@ -571,10 +571,10 @@ void dual_storage_t::merge(dual_storage_t& src)
         void map(dual_entity_t& e)
         {
             if (e_id(e) > count) DUAL_UNLIKELY
-                {
-                    e = kEntityNull;
-                    return;
-                }
+            {
+                e = kEntityNull;
+                return;
+            }
             e = data[e_id(e)];
         }
     } m;
@@ -795,7 +795,7 @@ void dualS_enable_components(const dual_chunk_view_t* view, const dual_type_set_
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
     if (!masks) DUAL_UNLIKELY
-    return;
+        return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_or(newMask);
 }
@@ -808,7 +808,7 @@ void dualS_disable_components(const dual_chunk_view_t* view, const dual_type_set
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
     if (!masks) DUAL_UNLIKELY
-    return;
+        return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_and(~newMask);
 }

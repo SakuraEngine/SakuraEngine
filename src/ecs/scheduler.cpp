@@ -1,9 +1,9 @@
 #include "scheduler.hpp"
-#include "SmallVector.h"
+#include "ecs/SmallVector.h"
 #include "archetype.hpp"
 #include "arena.hpp"
 
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "ecs/dual.h"
 #include "ftl/task.h"
 #include "ftl/task_counter.h"
@@ -14,7 +14,6 @@
 #include "callback.hpp"
 #include "type.hpp"
 #include "set.hpp"
-#include "utils.hpp"
 
 dual::scheduler_t::scheduler_t()
     : allCounter(&scheduler)

@@ -8,9 +8,9 @@
 #include "storage.hpp"
 #include "type.hpp"
 #include "type_registry.hpp"
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "iterator_ref.hpp"
-#include "array.hpp"
+#include "ecs/array.hpp"
 #include "phmap.h"
 #include <atomic>
 #include "set.hpp"
@@ -46,7 +46,7 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
         // array component is pointer based and must be converted to persistent data format
         if (s.is_serialize())
         {
-            forloop(i, 0, view.count)
+            forloop (i, 0, view.count)
             {
                 auto array = (dual_array_component_t*)((size_t)i * size + src);
                 auto temp = *array;
@@ -61,7 +61,7 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
         }
         else
         {
-            forloop(i, 0, view.count)
+            forloop (i, 0, view.count)
             {
                 auto array = (dual_array_component_t*)((size_t)i * size + src);
                 s.archive(*array);
@@ -133,8 +133,8 @@ dual_entity_type_t dual_storage_t::deserialize_type(dual::fixed_stack_t& stack, 
     s.archive(guids, type.type.length);
     type.type.data = stack.allocate<dual_type_index_t>(type.type.length);
     auto reg = type_registry_t::get();
-    forloop(i, 0, type.type.length) // todo: check type existence
-    ((dual_type_index_t*)type.type.data)[i] = reg.guid2type[guids[i]];
+    forloop (i, 0, type.type.length) // todo: check type existence
+        ((dual_type_index_t*)type.type.data)[i] = reg.guid2type[guids[i]];
     std::sort((dual_type_index_t*)type.type.data, (dual_type_index_t*)type.type.data + type.type.length);
     s.archive(type.meta.length);
     if (type.meta.length > 0)
@@ -185,11 +185,11 @@ void dual_storage_t::serialize_prefab(dual_entity_t* es, EIndex n, serializer_t 
     using namespace dual;
     s.archive(n);
     assert(scheduler->is_main_thread(this));
-    forloop(i, 0, n)
-    scheduler->sync_archetype(entity_view(es[i]).chunk->type);
+    forloop (i, 0, n)
+        scheduler->sync_archetype(entity_view(es[i]).chunk->type);
     linked_to_prefab(es, n);
-    forloop(i, 0, n)
-    serialize_single(es[i], s);
+    forloop (i, 0, n)
+        serialize_single(es[i], s);
     prefab_to_linked(es, n);
 }
 
@@ -208,8 +208,8 @@ dual_entity_t dual_storage_t::deserialize_prefab(dual::serializer_t s)
     {
         fixed_stack_scope_t _(localStack);
         auto prefab = localStack.allocate<dual_entity_t>(count);
-        forloop(i, 0, count)
-        prefab[i] = deserialize_single(s);
+        forloop (i, 0, count)
+            prefab[i] = deserialize_single(s);
         prefab_to_linked(prefab, count);
         return prefab[0];
     }
@@ -253,14 +253,14 @@ void dual_storage_t::deserialize(dual::serializer_t s)
     s.archive(entities.size);
     uint32_t groupSize;
     s.archive(groupSize);
-    forloop(i, 0, groupSize)
+    forloop (i, 0, groupSize)
     {
         fixed_stack_scope_t _(localStack);
         auto type = deserialize_type(localStack, s);
         auto group = construct_group(type);
         uint32_t chunkCount;
         s.archive(chunkCount);
-        forloop(j, 0, chunkCount)
+        forloop (j, 0, chunkCount)
         {
             EIndex chunkSize;
             s.peek(chunkSize);

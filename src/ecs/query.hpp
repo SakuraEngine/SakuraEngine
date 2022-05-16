@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ecs/dual.h"
-#include "SmallVector.h"
+#include "ecs/SmallVector.h"
 #include <vector>
 #include <string>
 

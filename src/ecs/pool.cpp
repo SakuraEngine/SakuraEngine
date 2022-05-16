@@ -1,8 +1,8 @@
 #include "pool.hpp"
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include <vector>
 #include <numeric>
-#include "utils.hpp"
+#include "ecs/dual_config.h"
 
 namespace dual
 {

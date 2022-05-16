@@ -1,14 +1,13 @@
-#include "array.hpp"
+#include "ecs/array.hpp"
 
-extern "C"
+extern "C" {
+void* dualA_begin(dual_array_component_t* array)
 {
-    void* dualA_begin(dual_array_component_t* array)
-    {
-        return array->BeginX;
-    }
+    return array->BeginX;
+}
 
-    void* dualA_end(dual_array_component_t *array)
-    {
-        return array->EndX;
-    }
+void* dualA_end(dual_array_component_t* array)
+{
+    return array->EndX;
+}
 }

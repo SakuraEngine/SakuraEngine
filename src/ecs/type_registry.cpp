@@ -5,7 +5,7 @@
 #include "entity.hpp"
 #include <utility>
 #include "type.hpp"
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "type_registry.hpp"
 #include "guid.hpp"
 #include "sole.hpp"

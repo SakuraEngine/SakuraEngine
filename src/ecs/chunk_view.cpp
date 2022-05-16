@@ -4,12 +4,12 @@
 #include <cstddef>
 #include <memory>
 #include "mask.hpp"
-#include "constants.hpp"
+#include "ecs/constants.hpp"
 #include "type.hpp"
 #include "chunk_view.hpp"
 #include "chunk.hpp"
 #include "archetype.hpp"
-#include "array.hpp"
+#include "ecs/array.hpp"
 #include "storage.hpp"
 #include "set.hpp"
 #include "scheduler.hpp"
@@ -37,7 +37,7 @@ static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIn
 {
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
-        forloop(j, 0, view.count)
+        forloop (j, 0, view.count)
         {
             char* buf = (size_t)j * size + src;
             auto array = new_array(buf, size, elemSize, align);
@@ -46,9 +46,10 @@ static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIn
                     constructor(view.chunk, view.start + j, curr);
         }
     else if (type == kMaskComponent)
-        forloop(j, 0, view.count)((mask_t*)src)[j] = maskValue;
+        forloop (j, 0, view.count)
+            ((mask_t*)src)[j] = maskValue;
     else if (constructor)
-        forloop(j, 0, view.count)
+        forloop (j, 0, view.count)
             constructor(view.chunk, view.start + j, (size_t)j * size + src);
     else
         memset(src, 0, (size_t)size * view.count);
@@ -58,7 +59,7 @@ static void destruct_impl(const dual_chunk_view_t& view, type_index_t type, EInd
 {
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
-        forloop(j, 0, view.count)
+        forloop (j, 0, view.count)
         {
             auto array = (dual_array_component_t*)((size_t)j * size + src);
             if (destructor)
@@ -68,7 +69,7 @@ static void destruct_impl(const dual_chunk_view_t& view, type_index_t type, EInd
                 dual_array_component_t::free(array->BeginX);
         }
     else if (destructor)
-        forloop(j, 0, view.count)
+        forloop (j, 0, view.count)
             destructor(view.chunk, view.start + j, (size_t)j * size + src);
 }
 
@@ -80,7 +81,7 @@ static void move_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, u
     {
         if (type.is_buffer())
         {
-            forloop(j, 0, dstV.count)
+            forloop (j, 0, dstV.count)
             {
                 auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
                 auto arraySrc = (dual_array_component_t*)((size_t)j * size + src);
@@ -96,7 +97,7 @@ static void move_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, u
             }
         }
         else
-            forloop(j, 0, dstV.count)
+            forloop (j, 0, dstV.count)
                 move(dstV.chunk, dstV.start + j, (size_t)j * size + dst, (dual_chunk_t*)srcC, srcStart + j, (size_t)j * size + src);
     }
     else
@@ -124,7 +125,7 @@ static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* sr
     {
         auto guidDst = (guid_t*)dst;
         auto registry = type_registry_t::get();
-        forloop(j, 0, dstV.count)
+        forloop (j, 0, dstV.count)
             guidDst[j] = registry.make_guid();
         return;
     }
@@ -132,7 +133,7 @@ static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* sr
     {
         if (type.is_buffer())
         {
-            forloop(j, 0, dstV.count)
+            forloop (j, 0, dstV.count)
             {
                 auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
                 auto arraySrc = (dual_array_component_t*)src;
@@ -155,7 +156,7 @@ static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* sr
             }
         }
         else
-            forloop(j, 0, dstV.count)
+            forloop (j, 0, dstV.count)
                 copy(dstV.chunk, dstV.start + j, (size_t)j * size + dst, (dual_chunk_t*)srcC, srcIndex, src);
     }
     else
@@ -163,7 +164,7 @@ static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* sr
         memdup(dst, src, (size_t)size, (size_t)dstV.count);
         if (type.is_buffer())
         {
-            forloop(j, 0, dstV.count)
+            forloop (j, 0, dstV.count)
             {
                 auto arraySrc = (dual_array_component_t*)src;
                 if (!is_array_small(arraySrc))
@@ -258,9 +259,9 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
         {
             construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, dstType->callbacks[dstI].constructor);
             if (dstMasks)
-                forloop(i, 0, dstV.count)
+                forloop (i, 0, dstV.count)
                     dstMasks[i]
-                        .set(dstI);
+                    .set(dstI);
             ++dstI;
         }
         else
@@ -270,13 +271,13 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
             if (dstMasks)
             {
                 if (srcMasks)
-                    forloop(i, 0, dstV.count)
+                    forloop (i, 0, dstV.count)
                         dstMasks[i]
-                            .set(dstI, srcMasks[i].test(srcI));
+                        .set(dstI, srcMasks[i].test(srcI));
                 else
-                    forloop(i, 0, dstV.count)
+                    forloop (i, 0, dstV.count)
                         dstMasks[i]
-                            .set(dstI);
+                        .set(dstI);
             }
             ++srcI;
             ++dstI;
