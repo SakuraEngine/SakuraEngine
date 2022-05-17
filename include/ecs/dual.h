@@ -691,3 +691,10 @@ RUNTIME_API void dualJ_wait_storage(dual_storage_t* storage);
 #if defined(__cplusplus)
 }
 #endif
+
+#if defined(__cplusplus)
+template <class C>
+struct dual_id_of {
+    static dual_type_index_t get();
+};
+#endif
