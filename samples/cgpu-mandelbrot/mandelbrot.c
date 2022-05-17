@@ -19,6 +19,16 @@ inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* 
     fclose(f);
 }
 
+typedef struct SKR_ALIGNAS(16) skr_float4_tt {
+    struct 
+    {
+        float x;
+        float y;
+        float z;
+        float w;
+    };
+} skr_float4_tt;
+
 inline static void read_shader_bytes(
 const char* virtual_path, uint32_t** bytes, uint32_t* length,
 ECGPUBackend backend)
