@@ -326,6 +326,22 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     }
     // Pick shader reflection data
     CGPUUtil_InitRSParamTables((CGPURootSignature*)RS, desc);
+    // [RS POOL] ALLOCATION
+    if(desc->pool)
+    {
+        CGPURootSignature_D3D12* poolSig = 
+            (CGPURootSignature_D3D12*)CGPUUtil_TryAllocateSignature(desc->pool, &RS->super, desc);
+        if(poolSig != CGPU_NULLPTR)
+        {
+            RS->mRootConstantParam = poolSig->mRootConstantParam;
+            RS->pDxRootSignature = poolSig->pDxRootSignature;
+            RS->mRootParamIndex = poolSig->mRootParamIndex;
+            RS->super.pool = desc->pool;
+            RS->super.pool_sig = &poolSig->super;
+            return &RS->super;
+        }
+    }
+    // [RS POOL] END ALLOCATION
     // Fill resource slots
     // Only support descriptor tables now
     // TODO: Support root CBVs
@@ -468,12 +484,32 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     IID_ARGS(&RS->pDxRootSignature)));
     cgpu_free(rootParams);
     cgpu_free(cbvSrvUavRanges);
+    // [RS POOL] INSERTION
+    if(desc->pool)
+    {
+        const bool result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
+        cgpu_assert(result && "Root signature pool insertion failed!");
+    }
+    // [RS POOL] END INSERTION
     return &RS->super;
 }
 
 void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature)
 {
     CGPURootSignature_D3D12* RS = (CGPURootSignature_D3D12*)signature;
+    // [RS POOL] FREE
+    if(signature->pool)
+    {
+        CGPUUtil_PoolFreeSignature(signature->pool, signature);
+        if (signature->pool_sig) // not root
+        {
+            // Free Reflection Data
+            CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
+            cgpu_delete(RS);
+        }
+        return;
+    }
+    // [RS POOL] END FREE
     CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
     SAFE_RELEASE(RS->pDxRootSignature);
     cgpu_delete(RS);

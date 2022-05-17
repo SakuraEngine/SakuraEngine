@@ -647,9 +647,16 @@ void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature)
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)signature;
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)signature->device;
     // [RS POOL] FREE
-    if(signature->pool && signature->pool_sig)
+    if(signature->pool)
     {
         CGPUUtil_PoolFreeSignature(signature->pool, signature);
+        if (signature->pool_sig) // not root
+        {
+            // Free Reflection Data
+            CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
+            cgpu_free(RS);
+        }
+        return;
     }
     // [RS POOL] END FREE
     // Free Reflection Data
