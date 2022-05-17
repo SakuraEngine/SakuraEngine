@@ -301,7 +301,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
     uint32_t count = 0;
     switch (type)
     {
-        case QUEUE_TYPE_GRAPHICS: {
+        case CGPU_QUEUE_TYPE_GRAPHICS: {
             for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
@@ -312,7 +312,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
             }
         }
         break;
-        case QUEUE_TYPE_COMPUTE: {
+        case CGPU_QUEUE_TYPE_COMPUTE: {
             for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
@@ -326,7 +326,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
             }
         }
         break;
-        case QUEUE_TYPE_TRANSFER: {
+        case CGPU_QUEUE_TYPE_TRANSFER: {
             for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
             {
                 const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];

@@ -1,6 +1,14 @@
 #pragma once
 #include "platform/configure.h"
 
+typedef struct skr_float2_t {
+    struct
+    {
+        float x;
+        float y;
+    };
+} skr_float2_t;
+
 typedef struct skr_float3_t {
     struct
     {

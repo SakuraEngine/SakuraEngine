@@ -352,7 +352,7 @@ void initialize(void* usrdata)
 
     // Create device
     CGPUQueueGroupDescriptor G = {
-        .queueType = QUEUE_TYPE_GRAPHICS,
+        .queueType = CGPU_QUEUE_TYPE_GRAPHICS,
         .queueCount = 1
     };
     CGPUDeviceDescriptor device_desc = {
@@ -361,7 +361,7 @@ void initialize(void* usrdata)
     };
     device = cgpu_create_device(adapter, &device_desc);
     // Create command objects
-    gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+    gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     present_semaphore = cgpu_create_semaphore(device);
     for (uint32_t i = 0; i < FLIGHT_FRAMES; i++)
     {

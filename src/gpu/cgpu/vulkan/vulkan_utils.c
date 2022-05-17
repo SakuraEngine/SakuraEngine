@@ -118,7 +118,7 @@ const char* const* device_extensions, uint32_t device_extension_count)
         {
             // Alloc & Zero Adapter
             CGPUAdapter_Vulkan* VkAdapter = &I->pVulkanAdapters[i];
-            for (uint32_t q = 0; q < QUEUE_TYPE_COUNT; q++)
+            for (uint32_t q = 0; q < CGPU_QUEUE_TYPE_COUNT; q++)
             {
                 VkAdapter->mQueueFamilyIndices[q] = -1;
             }
@@ -607,20 +607,20 @@ void VkUtil_SelectQueueIndices(CGPUAdapter_Vulkan* VkAdapter)
     for (uint32_t j = 0; j < VkAdapter->mQueueFamiliesCount; j++)
     {
         const VkQueueFamilyProperties* prop = &VkAdapter->pQueueFamilyProperties[j];
-        if ((VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_GRAPHICS] == -1) &&
+        if ((VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_GRAPHICS] == -1) &&
             (prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
         {
-            VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_GRAPHICS] = j;
+            VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_GRAPHICS] = j;
         }
-        else if ((VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_COMPUTE] == -1) &&
+        else if ((VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_COMPUTE] == -1) &&
                  (prop->queueFlags & VK_QUEUE_COMPUTE_BIT))
         {
-            VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_COMPUTE] = j;
+            VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_COMPUTE] = j;
         }
-        else if ((VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_TRANSFER] == -1) &&
+        else if ((VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_TRANSFER] == -1) &&
                  (prop->queueFlags & VK_QUEUE_TRANSFER_BIT))
         {
-            VkAdapter->mQueueFamilyIndices[QUEUE_TYPE_TRANSFER] = j;
+            VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_TRANSFER] = j;
         }
     }
 }

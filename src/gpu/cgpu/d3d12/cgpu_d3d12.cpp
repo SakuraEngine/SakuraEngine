@@ -109,9 +109,9 @@ uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, const ECGPUQu
     /*
     switch(type)
     {
-        case QUEUE_TYPE_GRAPHICS: return 1;
-        case QUEUE_TYPE_COMPUTE: return 2;
-        case QUEUE_TYPE_TRANSFER: return 2;
+        case CGPU_QUEUE_TYPE_GRAPHICS: return 1;
+        case CGPU_QUEUE_TYPE_COMPUTE: return 2;
+        case CGPU_QUEUE_TYPE_TRANSFER: return 2;
         default: return 0;
     }
     */
@@ -146,13 +146,13 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
             DECLARE_ZERO(D3D12_COMMAND_QUEUE_DESC, queueDesc)
             switch (type)
             {
-                case QUEUE_TYPE_GRAPHICS:
+                case CGPU_QUEUE_TYPE_GRAPHICS:
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
                     break;
-                case QUEUE_TYPE_COMPUTE:
+                case CGPU_QUEUE_TYPE_COMPUTE:
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
                     break;
-                case QUEUE_TYPE_TRANSFER:
+                case CGPU_QUEUE_TYPE_TRANSFER:
                     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
                     break;
                 default:
@@ -222,7 +222,7 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
 void cgpu_free_device_d3d12(CGPUDeviceId device)
 {
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
-    for (uint32_t t = 0u; t < QUEUE_TYPE_COUNT; t++)
+    for (uint32_t t = 0u; t < CGPU_QUEUE_TYPE_COUNT; t++)
     {
         for (uint32_t i = 0; i < D->pCommandQueueCounts[t]; i++)
         {
@@ -1128,9 +1128,9 @@ ID3D12CommandAllocator* allocate_transient_command_allocator(CGPUCommandPool_D3D
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
 
     D3D12_COMMAND_LIST_TYPE type =
-    queue->type == QUEUE_TYPE_TRANSFER ?
+    queue->type == CGPU_QUEUE_TYPE_TRANSFER ?
     D3D12_COMMAND_LIST_TYPE_COPY :
-    queue->type == QUEUE_TYPE_COMPUTE ?
+    queue->type == CGPU_QUEUE_TYPE_COMPUTE ?
     D3D12_COMMAND_LIST_TYPE_COMPUTE :
     D3D12_COMMAND_LIST_TYPE_DIRECT;
 
@@ -1211,7 +1211,7 @@ void cgpu_cmd_begin_d3d12(CGPUCommandBufferId cmd)
     CGPUCommandPool_D3D12* P = (CGPUCommandPool_D3D12*)Cmd->pCmdPool;
     CHECK_HRESULT(Cmd->pDxCmdList->Reset(P->pDxCmdAlloc, NULL));
 
-    if (Cmd->mType != QUEUE_TYPE_TRANSFER)
+    if (Cmd->mType != CGPU_QUEUE_TYPE_TRANSFER)
     {
         ID3D12DescriptorHeap* heaps[] = {
             Cmd->pBoundHeaps[0]->pCurrentHeap,
@@ -1713,7 +1713,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapC
     CGPUQueue_D3D12* Q = CGPU_NULLPTR;
     if (desc->presentQueues == CGPU_NULLPTR)
     {
-        Q = (CGPUQueue_D3D12*)cgpu_get_queue_d3d12(device, QUEUE_TYPE_GRAPHICS, 0);
+        Q = (CGPUQueue_D3D12*)cgpu_get_queue_d3d12(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     }
     else
     {

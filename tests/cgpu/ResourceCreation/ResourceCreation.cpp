@@ -31,7 +31,7 @@ protected:
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         adapter = adapters[0];
 
-        CGPUQueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
+        CGPUQueueGroupDescriptor G = { CGPU_QUEUE_TYPE_GRAPHICS, 1 };
         DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;

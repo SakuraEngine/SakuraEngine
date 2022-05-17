@@ -230,7 +230,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUA
 
 	switch (queueType)
 	{
-		case QUEUE_TYPE_GRAPHICS:
+		case CGPU_QUEUE_TYPE_GRAPHICS:
 		{
 			if ((accessFlags & (VK_ACCESS_INDEX_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT)) != 0)
 				flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
@@ -266,7 +266,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUA
 				flags |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 			break;
 		}
-		case QUEUE_TYPE_COMPUTE:
+		case CGPU_QUEUE_TYPE_COMPUTE:
 		{
 			if ((accessFlags & (VK_ACCESS_INDEX_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT)) != 0 ||
 				(accessFlags & VK_ACCESS_INPUT_ATTACHMENT_READ_BIT) != 0 ||
@@ -279,7 +279,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUA
 
 			break;
 		}
-		case QUEUE_TYPE_TRANSFER: return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		case CGPU_QUEUE_TYPE_TRANSFER: return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
 		default: break;
 	}
 	// Compatible with both compute and graphics queues

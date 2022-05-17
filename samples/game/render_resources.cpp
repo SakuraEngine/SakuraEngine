@@ -39,13 +39,13 @@ void create_api_objects()
 
     // Create device
     CGPUQueueGroupDescriptor queue_group_desc = {};
-    queue_group_desc.queueType = QUEUE_TYPE_GRAPHICS;
+    queue_group_desc.queueType = CGPU_QUEUE_TYPE_GRAPHICS;
     queue_group_desc.queueCount = 1;
     CGPUDeviceDescriptor device_desc = {};
     device_desc.queueGroups = &queue_group_desc;
     device_desc.queueGroupCount = 1;
     device = cgpu_create_device(adapter, &device_desc);
-    gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+    gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     present_fence = cgpu_create_fence(device);
     // Sampler
     CGPUSamplerDescriptor sampler_desc = {};

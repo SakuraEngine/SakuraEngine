@@ -23,14 +23,14 @@ protected:
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         for (auto a : adapters)
         {
-            auto gQueue = cgpu_query_queue_count(a, QUEUE_TYPE_GRAPHICS);
-            auto cQueue = cgpu_query_queue_count(a, QUEUE_TYPE_COMPUTE);
-            auto tQueue = cgpu_query_queue_count(a, QUEUE_TYPE_TRANSFER);
+            auto gQueue = cgpu_query_queue_count(a, CGPU_QUEUE_TYPE_GRAPHICS);
+            auto cQueue = cgpu_query_queue_count(a, CGPU_QUEUE_TYPE_COMPUTE);
+            auto tQueue = cgpu_query_queue_count(a, CGPU_QUEUE_TYPE_TRANSFER);
 
             std::vector<QueueGroupDescriptor> queueGroup;
-            if (gQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_GRAPHICS, 1 });
-            if (cQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_COMPUTE, 1 });
-            if (tQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_TRANSFER, 1 });
+            if (gQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_GRAPHICS, 1 });
+            if (cQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_COMPUTE, 1 });
+            if (tQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_TRANSFER, 1 });
             DECLARE_ZERO(DeviceDescriptor, descriptor)
             descriptor.queueGroups = queueGroup.data();
             descriptor.queueGroupCount = (uint32_t)queueGroup.size();
@@ -57,10 +57,10 @@ protected:
 TEST_P(QueueOperations, GetGraphicsQueue)
 {
     QueueId graphicsQueue;
-    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
+    auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
     if (gQueue > 0)
     {
-        graphicsQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+        graphicsQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
         EXPECT_NE(graphicsQueue, nullptr);
         cgpu_free_queue(graphicsQueue);
@@ -71,12 +71,12 @@ TEST_P(QueueOperations, GetSameQueue)
 {
     QueueId graphicsQueue;
     QueueId graphicsQueueSame;
-    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
+    auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
     if (gQueue > 0)
     {
-        graphicsQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+        graphicsQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
-        graphicsQueueSame = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+        graphicsQueueSame = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_EQ(graphicsQueue, graphicsQueueSame);
         cgpu_free_queue(graphicsQueue);
     }
@@ -85,10 +85,10 @@ TEST_P(QueueOperations, GetSameQueue)
 TEST_P(QueueOperations, CreateCommands)
 {
     QueueId graphicsQueue;
-    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
+    auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
     if (gQueue > 0)
     {
-        graphicsQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+        graphicsQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         EXPECT_NE(graphicsQueue, CGPU_NULLPTR);
         EXPECT_NE(graphicsQueue, nullptr);
 
@@ -143,14 +143,14 @@ TEST_P(QueueOperations, TransferCmdReadback)
     }
     // Transfer
     QueueId transferQueue;
-    auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
-    auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
+    auto tQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
+    auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
     if (tQueue > 0 || gQueue > 0)
     {
         if (tQueue > 0)
-            transferQueue = cgpu_get_queue(device, QUEUE_TYPE_TRANSFER, 0);
+            transferQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_TRANSFER, 0);
         else if (gQueue > 0)
-            transferQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+            transferQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
 
         EXPECT_NE(transferQueue, CGPU_NULLPTR);
         EXPECT_NE(transferQueue, nullptr);

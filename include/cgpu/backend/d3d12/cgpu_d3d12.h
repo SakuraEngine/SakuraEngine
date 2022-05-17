@@ -177,12 +177,12 @@ typedef struct CGPUDevice_D3D12 {
     struct D3D12Util_DescriptorHeap** pCbvSrvUavHeaps;
     struct D3D12Util_DescriptorHeap** pSamplerHeaps;
     ID3D12Device* pDxDevice;
-    struct ID3D12CommandQueue** const ppCommandQueues[QUEUE_TYPE_COUNT]
+    struct ID3D12CommandQueue** const ppCommandQueues[CGPU_QUEUE_TYPE_COUNT]
 #ifdef __cplusplus
     = {}
 #endif
     ;
-    const uint32_t pCommandQueueCounts[QUEUE_TYPE_COUNT]
+    const uint32_t pCommandQueueCounts[CGPU_QUEUE_TYPE_COUNT]
 #ifdef __cplusplus
     = {}
 #endif
@@ -353,7 +353,7 @@ static const D3D_FEATURE_LEVEL d3d_feature_levels[] = {
     D3D_FEATURE_LEVEL_11_0
 };
 
-static const D3D12_COMMAND_LIST_TYPE gDx12CmdTypeTranslator[QUEUE_TYPE_COUNT] = {
+static const D3D12_COMMAND_LIST_TYPE gDx12CmdTypeTranslator[CGPU_QUEUE_TYPE_COUNT] = {
     D3D12_COMMAND_LIST_TYPE_DIRECT,
     D3D12_COMMAND_LIST_TYPE_COMPUTE,
     D3D12_COMMAND_LIST_TYPE_COPY

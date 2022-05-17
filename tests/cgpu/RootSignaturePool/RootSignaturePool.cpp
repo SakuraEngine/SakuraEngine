@@ -24,7 +24,7 @@ protected:
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         adapter = adapters[0];
 
-        CGPUQueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
+        CGPUQueueGroupDescriptor G = { CGPU_QUEUE_TYPE_GRAPHICS, 1 };
         DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
@@ -35,7 +35,7 @@ protected:
 
     CGPUSwapChainId CreateSwapChainWithSurface(CGPUSurfaceId surface)
     {
-        auto mainQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+        auto mainQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         DECLARE_ZERO(CGPUSwapChainDescriptor, descriptor)
         descriptor.presentQueues = &mainQueue;
         descriptor.presentQueuesCount = 1;

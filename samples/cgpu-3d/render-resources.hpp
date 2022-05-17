@@ -63,7 +63,7 @@ struct AsyncRenderMemoryResource : public AsyncRenderResource {
         return *this;
     }
     std::atomic_bool upload_started_ = false;
-    std::atomic<ECGPUQueueType> queue_type_ = QUEUE_TYPE_TRANSFER;
+    std::atomic<ECGPUQueueType> queue_type_ = CGPU_QUEUE_TYPE_TRANSFER;
     std::atomic_bool queue_released_ = false;
 };
 
