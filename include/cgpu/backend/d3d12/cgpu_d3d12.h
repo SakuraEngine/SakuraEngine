@@ -41,6 +41,8 @@ ECGPUFenceStatus cgpu_query_fence_status_d3d12(CGPUFenceId fence);
 RUNTIME_API void cgpu_free_fence_d3d12(CGPUFenceId fence);
 RUNTIME_API CGPUSemaphoreId cgpu_create_semaphore_d3d12(CGPUDeviceId device);
 RUNTIME_API void cgpu_free_semaphore_d3d12(CGPUSemaphoreId semaphore);
+RUNTIME_API CGPURootSignaturePoolId cgpu_create_root_signature_pool_d3d12(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
+RUNTIME_API void cgpu_free_root_signature_pool_d3d12(CGPURootSignaturePoolId pool);
 RUNTIME_API CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature);
 RUNTIME_API CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);

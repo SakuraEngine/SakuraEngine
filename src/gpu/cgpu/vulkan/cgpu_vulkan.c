@@ -467,11 +467,11 @@ const struct CGPURootSignatureDescriptor* desc)
     sizeof(CGPURootSignature_Vulkan));
     CGPUUtil_InitRSParamTables((CGPURootSignature*)RS, desc);
     // [RS POOL] ALLOCATION
-    if(desc->pool)
+    if (desc->pool)
     {
-        CGPURootSignature_Vulkan* poolSig = 
-            (CGPURootSignature_Vulkan*)CGPUUtil_TryAllocateSignature(desc->pool, &RS->super, desc);
-        if(poolSig != CGPU_NULLPTR)
+        CGPURootSignature_Vulkan* poolSig =
+        (CGPURootSignature_Vulkan*)CGPUUtil_TryAllocateSignature(desc->pool, &RS->super, desc);
+        if (poolSig != CGPU_NULLPTR)
         {
             RS->pPipelineLayout = poolSig->pPipelineLayout;
             RS->pSetLayouts = poolSig->pSetLayouts;
@@ -633,7 +633,7 @@ const struct CGPURootSignatureDescriptor* desc)
     // Free Temporal Memory
     cgpu_free(pSetLayouts);
     // [RS POOL] INSERTION
-    if(desc->pool)
+    if (desc->pool)
     {
         const bool result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
         cgpu_assert(result && "Root signature pool insertion failed!");
@@ -647,7 +647,7 @@ void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature)
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)signature;
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)signature->device;
     // [RS POOL] FREE
-    if(signature->pool)
+    if (signature->pool)
     {
         CGPUUtil_PoolFreeSignature(signature->pool, signature);
         if (signature->pool_sig) // not root
@@ -683,7 +683,7 @@ CGPURootSignaturePoolId cgpu_create_root_signature_pool_vulkan(CGPUDeviceId devi
 
 void cgpu_free_root_signature_pool_vulkan(CGPURootSignaturePoolId pool)
 {
-    return CGPUUtil_FreeRootSignaturePool(pool);
+    CGPUUtil_FreeRootSignaturePool(pool);
 }
 
 CGPUDescriptorSetId cgpu_create_descriptor_set_vulkan(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)
