@@ -107,7 +107,7 @@ uint32_t transfer_count, CGPUSemaphoreId semaphore, CGPUFenceId fence)
     {
         transfers[i].dst->upload_started_ = true;
         transfers[i].dst->queue_released_ = false;
-        transfers[i].dst->queue_type_ = asyncCopy ? QUEUE_TYPE_TRANSFER : QUEUE_TYPE_GRAPHICS;
+        transfers[i].dst->queue_type_ = asyncCopy ? CGPU_QUEUE_TYPE_TRANSFER : CGPU_QUEUE_TYPE_GRAPHICS;
     }
     if (fence)
         async_cpy_cmds_[fence] = cmd;
@@ -143,7 +143,7 @@ uint32_t transfer_count, CGPUSemaphoreId semaphore, CGPUFenceId fence)
     {
         transfers[i].dst->upload_started_ = true;
         transfers[i].dst->queue_released_ = false;
-        transfers[i].dst->queue_type_ = asyncCopy ? QUEUE_TYPE_TRANSFER : QUEUE_TYPE_GRAPHICS;
+        transfers[i].dst->queue_type_ = asyncCopy ? CGPU_QUEUE_TYPE_TRANSFER : CGPU_QUEUE_TYPE_GRAPHICS;
     }
     if (fence)
         async_cpy_cmds_[fence] = cmd;
@@ -215,7 +215,7 @@ AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* targe
     target->upload_started_ = true;
     target->queue_released_ = false;
     const auto asyncCopy = render_device_->AsyncCopyQueueEnabled();
-    target->queue_type_ = asyncCopy ? QUEUE_TYPE_TRANSFER : QUEUE_TYPE_GRAPHICS;
+    target->queue_type_ = asyncCopy ? CGPU_QUEUE_TYPE_TRANSFER : CGPU_QUEUE_TYPE_GRAPHICS;
     return target;
 }
 

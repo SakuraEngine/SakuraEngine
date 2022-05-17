@@ -82,14 +82,14 @@ void test_create_device(InstanceId instance, bool enable_debug_layer, bool enabl
     cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
     for (auto adapter : adapters)
     {
-        auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
-        auto cQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_COMPUTE);
-        auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
+        auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
+        auto cQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE);
+        auto tQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
 
         std::vector<QueueGroupDescriptor> queueGroup;
-        if (gQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_GRAPHICS, 1 });
-        if (cQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_COMPUTE, 1 });
-        if (tQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ QUEUE_TYPE_TRANSFER, 1 });
+        if (gQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_GRAPHICS, 1 });
+        if (cQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_COMPUTE, 1 });
+        if (tQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_TRANSFER, 1 });
         DECLARE_ZERO(DeviceDescriptor, descriptor)
         descriptor.queueGroups = queueGroup.data();
         descriptor.queueGroupCount = (uint32_t)queueGroup.size();
@@ -168,9 +168,9 @@ TEST_P(Test, QueryQueueCount)
     for (auto adapter : adapters)
     {
         const AdapterDetail* prop = cgpu_query_adapter_detail(adapter);
-        auto gQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_GRAPHICS);
-        auto cQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_COMPUTE);
-        auto tQueue = cgpu_query_queue_count(adapter, QUEUE_TYPE_TRANSFER);
+        auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
+        auto cQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE);
+        auto tQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
         std::cout << prop->vendor_preset.gpu_name
                   << " of backend " << GetBackendName() << "  \n"
                   << "    GraphicsQueue: " << gQueue << "  \n"

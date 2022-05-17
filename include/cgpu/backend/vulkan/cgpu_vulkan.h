@@ -173,7 +173,7 @@ typedef struct CGPUAdapter_Vulkan {
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
     /// Queue Families
     uint32_t mQueueFamiliesCount;
-    int64_t mQueueFamilyIndices[QUEUE_TYPE_COUNT];
+    int64_t mQueueFamilyIndices[CGPU_QUEUE_TYPE_COUNT];
     struct VkQueueFamilyProperties* pQueueFamilyProperties;
 
     // Layers of Physical Device

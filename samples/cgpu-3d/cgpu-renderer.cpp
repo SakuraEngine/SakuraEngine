@@ -238,11 +238,11 @@ void RenderDevice::Initialize(ECGPUBackend backend, RenderWindow** pprender_wind
         cgpu_enum_adapters(instance_, adapters, &adapters_count);
         adapter_ = adapters[0];
     }
-    const auto cpy_queue_count_ = cgpu_query_queue_count(adapter_, QUEUE_TYPE_TRANSFER);
+    const auto cpy_queue_count_ = cgpu_query_queue_count(adapter_, CGPU_QUEUE_TYPE_TRANSFER);
     CGPUQueueGroupDescriptor Gs[2];
-    Gs[0].queueType = QUEUE_TYPE_GRAPHICS;
+    Gs[0].queueType = CGPU_QUEUE_TYPE_GRAPHICS;
     Gs[0].queueCount = 1;
-    Gs[1].queueType = QUEUE_TYPE_TRANSFER;
+    Gs[1].queueType = CGPU_QUEUE_TYPE_TRANSFER;
     Gs[1].queueCount = cgpu_min(cpy_queue_count_, MAX_CPY_QUEUE_COUNT);
     if (Gs[1].queueCount)
     {
@@ -250,11 +250,11 @@ void RenderDevice::Initialize(ECGPUBackend backend, RenderWindow** pprender_wind
         device_desc.queueGroups = Gs;
         device_desc.queueGroupCount = 2;
         device_ = cgpu_create_device(adapter_, &device_desc);
-        gfx_queue_ = cgpu_get_queue(device_, QUEUE_TYPE_GRAPHICS, 0);
-        cpy_queue_ = cgpu_get_queue(device_, QUEUE_TYPE_TRANSFER, 0);
+        gfx_queue_ = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_GRAPHICS, 0);
+        cpy_queue_ = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_TRANSFER, 0);
         for (uint32_t i = 1; i < Gs[1].queueCount; i++)
         {
-            extra_cpy_queues_[i - 1] = cgpu_get_queue(device_, QUEUE_TYPE_TRANSFER, i);
+            extra_cpy_queues_[i - 1] = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_TRANSFER, i);
             extra_cpy_queue_count_++;
         }
     }
@@ -264,7 +264,7 @@ void RenderDevice::Initialize(ECGPUBackend backend, RenderWindow** pprender_wind
         device_desc.queueGroups = Gs;
         device_desc.queueGroupCount = 1;
         device_ = cgpu_create_device(adapter_, &device_desc);
-        gfx_queue_ = cgpu_get_queue(device_, QUEUE_TYPE_GRAPHICS, 0);
+        gfx_queue_ = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         cpy_queue_ = gfx_queue_;
     }
     // copy cmd pool
@@ -428,7 +428,7 @@ void GfxContext::ResourceBarrier(const CGPUResourceBarrierDescriptor& barrier_de
 void GfxContext::AcquireResources(AsyncRenderTexture* const* textures, uint32_t textures_count,
 AsyncRenderBuffer* const* buffers, uint32_t buffers_count)
 {
-    const auto theQueueType = QUEUE_TYPE_GRAPHICS;
+    const auto theQueueType = CGPU_QUEUE_TYPE_GRAPHICS;
     eastl::vector<CGPUTextureBarrier> tex_barriers(textures_count);
     eastl::vector<CGPUBufferBarrier> buf_barriers(buffers_count);
     for (uint32_t i = 0; i < textures_count; i++)
@@ -436,7 +436,7 @@ AsyncRenderBuffer* const* buffers, uint32_t buffers_count)
         tex_barriers[i].texture = textures[i]->texture_;
         tex_barriers[i].src_state = CGPU_RESOURCE_STATE_COPY_DEST;
         tex_barriers[i].dst_state = CGPU_RESOURCE_STATE_SHADER_RESOURCE;
-        if (textures[i]->queue_type_.load() == QUEUE_TYPE_TRANSFER)
+        if (textures[i]->queue_type_.load() == CGPU_QUEUE_TYPE_TRANSFER)
         {
             tex_barriers[i].queue_acquire = true;
             tex_barriers[i].queue_type = theQueueType;
@@ -449,7 +449,7 @@ AsyncRenderBuffer* const* buffers, uint32_t buffers_count)
         buf_barriers[i].buffer = buffers[i]->buffer_;
         buf_barriers[i].src_state = CGPU_RESOURCE_STATE_COPY_DEST;
         buf_barriers[i].dst_state = CGPU_RESOURCE_STATE_SHADER_RESOURCE;
-        if (textures[i]->queue_type_.load() == QUEUE_TYPE_TRANSFER)
+        if (textures[i]->queue_type_.load() == CGPU_QUEUE_TYPE_TRANSFER)
         {
             tex_barriers[i].queue_acquire = true;
             buf_barriers[i].queue_type = theQueueType;

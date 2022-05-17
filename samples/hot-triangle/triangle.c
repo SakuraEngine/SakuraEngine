@@ -106,7 +106,7 @@ void initialize(void* usrdata)
 
     // Create device
     CGPUQueueGroupDescriptor G = {
-        .queueType = QUEUE_TYPE_GRAPHICS,
+        .queueType = CGPU_QUEUE_TYPE_GRAPHICS,
         .queueCount = 1
     };
     CGPUDeviceDescriptor device_desc = {
@@ -114,7 +114,7 @@ void initialize(void* usrdata)
         .queueGroupCount = 1
     };
     device = cgpu_create_device(adapter, &device_desc);
-    gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+    gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     present_fence = cgpu_create_fence(device);
 
     // Create swapchain

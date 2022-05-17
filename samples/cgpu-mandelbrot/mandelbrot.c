@@ -85,7 +85,7 @@ void ComputeFunc(void* usrdata)
 
     // Create device
     CGPUQueueGroupDescriptor G = {
-        .queueType = QUEUE_TYPE_GRAPHICS,
+        .queueType = CGPU_QUEUE_TYPE_GRAPHICS,
         .queueCount = 1
     };
     CGPUDeviceDescriptor device_desc = {
@@ -168,7 +168,7 @@ void ComputeFunc(void* usrdata)
     cgpu_update_descriptor_set(set, &descriptor_data, 1);
 
     // Create command objects
-    CGPUQueueId gfx_queue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
+    CGPUQueueId gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     CGPUCommandPoolId pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
     CGPUCommandBufferDescriptor cmd_desc = { .is_secondary = false };
     CGPUCommandBufferId cmd = cgpu_create_command_buffer(pool, &cmd_desc);
