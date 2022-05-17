@@ -359,7 +359,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
                 descRange->RegisterSpace = reflSlot->set;
                 descRange->BaseShaderRegister = reflSlot->binding;
                 descRange->Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
-                descRange->NumDescriptors = (reflSlot->type != CGPU_RT_UNIFORM_BUFFER) ? reflSlot->size : 1;
+                descRange->NumDescriptors = (reflSlot->type != CGPU_RESOURCE_TYPE_UNIFORM_BUFFER) ? reflSlot->size : 1;
                 descRange->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
                 descRange->RangeType = D3D12Util_ResourceTypeToDescriptorRangeType(reflSlot->type);
                 rootParam->DescriptorTable.NumDescriptorRanges++;
@@ -493,16 +493,16 @@ CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const 
     uint32_t SamplerCount = 0;
     for (uint32_t i = 0; i < param_table->resources_count; i++)
     {
-        if (param_table->resources[i].type == CGPU_RT_SAMPLER)
+        if (param_table->resources[i].type == CGPU_RESOURCE_TYPE_SAMPLER)
             SamplerCount++;
-        else if (param_table->resources[i].type == CGPU_RT_TEXTURE ||
-                 param_table->resources[i].type == CGPU_RT_RW_TEXTURE ||
-                 param_table->resources[i].type == CGPU_RT_BUFFER ||
-                 param_table->resources[i].type == CGPU_RT_BUFFER_RAW ||
-                 param_table->resources[i].type == CGPU_RT_RW_BUFFER ||
-                 param_table->resources[i].type == CGPU_RT_RW_BUFFER_RAW ||
-                 param_table->resources[i].type == CGPU_RT_TEXTURE_CUBE ||
-                 param_table->resources[i].type == CGPU_RT_UNIFORM_BUFFER)
+        else if (param_table->resources[i].type == CGPU_RESOURCE_TYPE_TEXTURE ||
+                 param_table->resources[i].type == CGPU_RESOURCE_TYPE_RW_TEXTURE ||
+                 param_table->resources[i].type == CGPU_RESOURCE_TYPE_BUFFER ||
+                 param_table->resources[i].type == CGPU_RESOURCE_TYPE_BUFFER_RAW ||
+                 param_table->resources[i].type == CGPU_RESOURCE_TYPE_RW_BUFFER ||
+                 param_table->resources[i].type == CGPU_RESOURCE_TYPE_RW_BUFFER_RAW ||
+                 param_table->resources[i].type == CGPU_RESOURCE_TYPE_TEXTURE_CUBE ||
+                 param_table->resources[i].type == CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
         {
             CbvSrvUavCount++;
         }
@@ -583,7 +583,7 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
         switch (ResData->type)
         {
-            case CGPU_RT_SAMPLER: {
+            case CGPU_RESOURCE_TYPE_SAMPLER: {
                 cgpu_assert(pParam->samplers && "cgpu_assert: Binding NULL Sampler(s)!");
                 CGPUSampler_D3D12** Samplers = (CGPUSampler_D3D12**)pParam->samplers;
                 for (uint32_t arr = 0; arr < arrayCount; arr++)
@@ -595,8 +595,8 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
                 }
             }
             break;
-            case CGPU_RT_TEXTURE:
-            case CGPU_RT_TEXTURE_CUBE: {
+            case CGPU_RESOURCE_TYPE_TEXTURE:
+            case CGPU_RESOURCE_TYPE_TEXTURE_CUBE: {
                 cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL Textures(s)!");
                 CGPUTextureView_D3D12** Textures = (CGPUTextureView_D3D12**)pParam->textures;
                 for (uint32_t arr = 0; arr < arrayCount; arr++)
@@ -608,21 +608,32 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
                 }
             }
             break;
-            case CGPU_RT_BUFFER:
-            case CGPU_RT_BUFFER_RAW: {
+            case CGPU_RESOURCE_TYPE_BUFFER:
+            case CGPU_RESOURCE_TYPE_BUFFER_RAW: {
                 cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
                 CGPUBuffer_D3D12** Buffers = (CGPUBuffer_D3D12**)pParam->buffers;
                 for (uint32_t arr = 0; arr < arrayCount; arr++)
                 {
-                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Textures!");
+                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
                     D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
                     { Buffers[arr]->mDxDescriptorHandles.ptr + Buffers[arr]->mDxSrvOffset },
                     Set->mCbvSrvUavHandle, arr + HeapOffset);
                 }
-                // TODO: CBV
             }
             break;
-            case CGPU_RT_RW_TEXTURE: {
+            case CGPU_RESOURCE_TYPE_UNIFORM_BUFFER: {
+                cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
+                CGPUBuffer_D3D12** Buffers = (CGPUBuffer_D3D12**)pParam->buffers;
+                for (uint32_t arr = 0; arr < arrayCount; arr++)
+                {
+                    cgpu_assert(pParam->buffers[arr] && "cgpu_assert: Binding NULL Buffer!");
+                    D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap,
+                    { Buffers[arr]->mDxDescriptorHandles.ptr },
+                    Set->mCbvSrvUavHandle, arr + HeapOffset);
+                }
+            }
+            break;
+            case CGPU_RESOURCE_TYPE_RW_TEXTURE: {
                 cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL Texture(s)!");
                 CGPUTextureView_D3D12** Textures = (CGPUTextureView_D3D12**)pParam->textures;
                 for (uint32_t arr = 0; arr < arrayCount; arr++)
@@ -634,8 +645,8 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
                 }
             }
             break;
-            case CGPU_RT_RW_BUFFER:
-            case CGPU_RT_RW_BUFFER_RAW: {
+            case CGPU_RESOURCE_TYPE_RW_BUFFER:
+            case CGPU_RESOURCE_TYPE_RW_BUFFER_RAW: {
                 cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
                 CGPUBuffer_D3D12** Buffers = (CGPUBuffer_D3D12**)pParam->buffers;
                 for (uint32_t arr = 0; arr < arrayCount; arr++)
@@ -1230,7 +1241,7 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
         CGPUBuffer_D3D12* pBuffer = (CGPUBuffer_D3D12*)pTransBarrier->buffer;
         if (pBuffer->super.memory_usage == CGPU_MEM_USAGE_GPU_ONLY ||
             pBuffer->super.memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU ||
-            (pBuffer->super.memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU && (pBuffer->super.descriptors & CGPU_RT_RW_BUFFER)))
+            (pBuffer->super.memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU && (pBuffer->super.descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)))
         {
             if (CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->src_state &&
                 CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->dst_state)

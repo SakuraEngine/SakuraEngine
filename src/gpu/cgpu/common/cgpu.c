@@ -1032,7 +1032,7 @@ CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
 uint64_t size, const char8_t* name, bool device_local_preferred)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
-    buf_desc.descriptors = CGPU_RT_BUFFER;
+    buf_desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
     buf_desc.size = size;
     buf_desc.name = name;
     const CGPUAdapterDetail* detail = cgpu_query_adapter_detail(device->adapter);
@@ -1050,7 +1050,7 @@ RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
 uint64_t size, const char8_t* name)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
-    buf_desc.descriptors = CGPU_RT_NONE;
+    buf_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     buf_desc.size = size;
     buf_desc.name = name;
     buf_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;

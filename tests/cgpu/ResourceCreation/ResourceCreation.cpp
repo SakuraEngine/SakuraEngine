@@ -75,7 +75,7 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
-    desc.descriptors = CGPU_RT_INDEX_BUFFER;
+    desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
@@ -94,7 +94,7 @@ TEST_P(ResourceCreation, CreateTexture)
     desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
     desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     desc.start_state = CGPU_RESOURCE_STATE_COMMON;
-    desc.descriptors = CGPU_RT_TEXTURE;
+    desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
     desc.width = 512;
     desc.height = 512;
     desc.depth = 1;
@@ -107,7 +107,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
-    desc.descriptors = CGPU_RT_INDEX_BUFFER | CGPU_RT_BUFFER;
+    desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
@@ -141,7 +141,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
-    desc.descriptors = CGPU_RT_BUFFER;
+    desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
@@ -157,7 +157,7 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT | CGPU_BCF_HOST_VISIBLE;
-    desc.descriptors = CGPU_RT_BUFFER;
+    desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;

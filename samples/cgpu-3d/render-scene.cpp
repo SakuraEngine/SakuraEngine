@@ -313,7 +313,7 @@ void RenderScene::AsyncCreateGeometryMemory(class RenderDevice* device, struct R
     }
     CGPUBufferDescriptor staging_buffer_desc = {};
     staging_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
-    staging_buffer_desc.descriptors = CGPU_RT_NONE;
+    staging_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     staging_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     staging_buffer_desc.element_stride = staging_size;
     staging_buffer_desc.elemet_count = 1;
@@ -328,8 +328,8 @@ void RenderScene::AsyncCreateGeometryMemory(class RenderDevice* device, struct R
         buffer_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
         buffer_desc.descriptors =
         buf_view->type == cgltf_buffer_view_type_indices ?
-        CGPU_RT_INDEX_BUFFER :
-        CGPU_RT_VERTEX_BUFFER;
+        CGPU_RESOURCE_TYPE_INDEX_BUFFER :
+        CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
         buffer_desc.element_stride = buf_view->stride ? buf_view->stride : buf_view->size;
         buffer_desc.elemet_count = buf_view->size / buffer_desc.element_stride;
         buffer_desc.size = buf_view->size;

@@ -113,7 +113,7 @@ TEST_P(QueueOperations, TransferCmdReadback)
     {
         DECLARE_ZERO(BufferDescriptor, desc)
         desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
-        desc.descriptors = CGPU_RT_BUFFER;
+        desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
         desc.element_stride = sizeof(uint16_t);
         desc.elemet_count = 3;
@@ -130,7 +130,7 @@ TEST_P(QueueOperations, TransferCmdReadback)
     {
         DECLARE_ZERO(BufferDescriptor, desc)
         desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
-        desc.descriptors = CGPU_RT_NONE;
+        desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
         desc.start_state = RESOURCE_STATE_COPY_DEST;
         desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;
         desc.element_stride = sizeof(uint16_t);

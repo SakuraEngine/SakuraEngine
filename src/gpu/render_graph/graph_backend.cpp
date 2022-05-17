@@ -213,7 +213,7 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
                 CGPUDescriptorData update = {};
                 update.count = 1;
                 update.binding = read_set_binding.second;
-                update.binding_type = CGPU_RT_TEXTURE;
+                update.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
                 CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readed);
                 view_desc.base_array_layer = read_edge->get_array_base();
@@ -249,7 +249,7 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
                 CGPUDescriptorData update = {};
                 update.count = 1;
                 update.binding = rw_set_binding.second;
-                update.binding_type = CGPU_RT_RW_TEXTURE;
+                update.binding_type = CGPU_RESOURCE_TYPE_RW_TEXTURE;
                 CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readwrite);
                 view_desc.base_array_layer = 0;

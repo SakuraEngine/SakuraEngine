@@ -88,12 +88,12 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     if (!(desc->flags & CGPU_BCF_NO_DESCRIPTOR_VIEW_CREATION))
     {
         D3D12Util_DescriptorHeap* pHeap = D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-        uint32_t handleCount = ((desc->descriptors & CGPU_RT_UNIFORM_BUFFER) ? 1 : 0) +
-                               ((desc->descriptors & CGPU_RT_BUFFER) ? 1 : 0) +
-                               ((desc->descriptors & CGPU_RT_RW_BUFFER) ? 1 : 0);
+        uint32_t handleCount = ((desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER) ? 1 : 0) +
+                               ((desc->descriptors & CGPU_RESOURCE_TYPE_BUFFER) ? 1 : 0) +
+                               ((desc->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER) ? 1 : 0);
         B->mDxDescriptorHandles = D3D12Util_ConsumeDescriptorHandles(pHeap, handleCount).mCpu;
         // Create CBV
-        if (desc->descriptors & CGPU_RT_UNIFORM_BUFFER)
+        if (desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
         {
             D3D12_CPU_DESCRIPTOR_HANDLE cbv = { B->mDxDescriptorHandles.ptr };
             B->mDxSrvOffset = pHeap->mDescriptorSize * 1;
@@ -104,7 +104,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             D3D12Util_CreateCBV(D, &cbvDesc, &cbv);
         }
         // Create SRV
-        if (desc->descriptors & CGPU_RT_BUFFER)
+        if (desc->descriptors & CGPU_RESOURCE_TYPE_BUFFER)
         {
             D3D12_CPU_DESCRIPTOR_HANDLE srv = { B->mDxDescriptorHandles.ptr + B->mDxSrvOffset };
             B->mDxUavOffset = B->mDxSrvOffset + pHeap->mDescriptorSize * 1;
@@ -117,7 +117,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             srvDesc.Buffer.StructureByteStride = (UINT)(desc->element_stride);
             srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
             srvDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
-            if (CGPU_RT_BUFFER_RAW == (desc->descriptors & CGPU_RT_BUFFER_RAW))
+            if (CGPU_RESOURCE_TYPE_BUFFER_RAW == (desc->descriptors & CGPU_RESOURCE_TYPE_BUFFER_RAW))
             {
                 if (desc->format != CGPU_FORMAT_UNDEFINED)
                     cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
@@ -132,7 +132,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             D3D12Util_CreateSRV(D, B->pDxResource, &srvDesc, &srv);
         }
         // Create UAV
-        if (desc->descriptors & CGPU_RT_RW_BUFFER)
+        if (desc->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)
         {
             D3D12_CPU_DESCRIPTOR_HANDLE uav = { B->mDxDescriptorHandles.ptr + B->mDxUavOffset };
 
@@ -144,7 +144,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             uavDesc.Buffer.StructureByteStride = (UINT)(desc->element_stride);
             uavDesc.Buffer.CounterOffsetInBytes = 0;
             uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-            if (CGPU_RT_RW_BUFFER_RAW == (desc->descriptors & CGPU_RT_RW_BUFFER_RAW))
+            if (CGPU_RESOURCE_TYPE_RW_BUFFER_RAW == (desc->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER_RAW))
             {
                 if (desc->format != CGPU_FORMAT_UNDEFINED)
                     cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
@@ -310,9 +310,9 @@ void cgpu_free_buffer_d3d12(CGPUBufferId buffer)
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)B->super.device;
     if (B->mDxDescriptorHandles.ptr != D3D12_GPU_VIRTUAL_ADDRESS_NULL)
     {
-        uint32_t handleCount = ((B->super.descriptors & CGPU_RT_UNIFORM_BUFFER) ? 1 : 0) +
-                               ((B->super.descriptors & CGPU_RT_BUFFER) ? 1 : 0) +
-                               ((B->super.descriptors & CGPU_RT_RW_BUFFER) ? 1 : 0);
+        uint32_t handleCount = ((B->super.descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER) ? 1 : 0) +
+                               ((B->super.descriptors & CGPU_RESOURCE_TYPE_BUFFER) ? 1 : 0) +
+                               ((B->super.descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER) ? 1 : 0);
         D3D12Util_ReturnDescriptorHandles(
         D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], B->mDxDescriptorHandles,
         handleCount);
@@ -456,7 +456,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
 
         CGPUResourceStates actualStartState = desc->start_state;
         // Decide UAV flags
-        if (descriptors & CGPU_RT_RW_TEXTURE)
+        if (descriptors & CGPU_RESOURCE_TYPE_RW_TEXTURE)
         {
             resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         }
@@ -467,11 +467,11 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         }
         // Decide render target flags
 
-        if (descriptors & CGPU_RT_RENDER_TARGET)
+        if (descriptors & CGPU_RESOURCE_TYPE_RENDER_TARGET)
         {
             resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
         }
-        else if (descriptors & CGPU_RT_DEPTH_STENCIL)
+        else if (descriptors & CGPU_RESOURCE_TYPE_DEPTH_STENCIL)
         {
             resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
         }
@@ -578,7 +578,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     T->super.height = desc->height;
     T->super.depth = desc->depth;
     T->super.mip_levels = desc->mip_levels;
-    T->super.is_cube = (CGPU_RT_TEXTURE_CUBE == (descriptors & CGPU_RT_TEXTURE_CUBE));
+    T->super.is_cube = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE));
     T->super.array_size_minus_one = desc->array_size - 1;
     T->super.format = desc->format;
     // Set debug name
@@ -992,7 +992,7 @@ CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* de
     DECLARE_ZERO(D3D12_RESOURCE_DESC, bufDesc);
     uint64_t allocationSize = desc->size;
     // Align the buffer size to multiples of the dynamic uniform buffer minimum size
-    if (desc->descriptors & CGPU_RT_UNIFORM_BUFFER)
+    if (desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
     {
         uint64_t minAlignment = A->adapter_detail.uniform_buffer_alignment;
         allocationSize = smath_round_up(allocationSize, minAlignment);
@@ -1010,7 +1010,7 @@ CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* de
     bufDesc.SampleDesc.Quality = 0;
     bufDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     bufDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    if (desc->descriptors & CGPU_RT_RW_BUFFER)
+    if (desc->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)
     {
         bufDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     }

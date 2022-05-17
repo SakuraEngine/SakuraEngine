@@ -246,7 +246,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     tex_desc.width = static_cast<uint32_t>(width);
     tex_desc.height = static_cast<uint32_t>(height);
     tex_desc.depth = 1;
-    tex_desc.descriptors = CGPU_RT_TEXTURE;
+    tex_desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
     tex_desc.array_size = 1;
     tex_desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
     tex_desc.mip_levels = 1;
@@ -259,7 +259,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = "IMGUI_FontUploadBuffer";
     upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
-    upload_buffer_desc.descriptors = CGPU_RT_NONE;
+    upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = upload_size;
     CGPUBufferId tex_upload_buffer = cgpu_create_buffer(queue->device, &upload_buffer_desc);

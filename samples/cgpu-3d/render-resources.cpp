@@ -167,7 +167,7 @@ AsyncRenderTexture* AsyncTransferThread::UploadTexture(AsyncRenderTexture* targe
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = eastl::string("Upload-Texture").c_str();
     upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
-    upload_buffer_desc.descriptors = CGPU_RT_NONE;
+    upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     if (!target->upload_buffer_)
     {
@@ -286,7 +286,7 @@ const eastl::string disk_file, ECGPUFormat format, const AuxTaskCallback& cb)
 
          CGPUTextureDescriptor tex_desc = {};
          tex_desc.name = name.c_str();
-         tex_desc.descriptors = CGPU_RT_TEXTURE;
+         tex_desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
          tex_desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
          tex_desc.width = width;
          tex_desc.height = height;
@@ -316,7 +316,7 @@ const eastl::string disk_file, ECGPUFormat format, const AuxTaskCallback& cb)
              auto upload_name = eastl::string("Upload-").append(tex_desc.name ? tex_desc.name : "");
              upload_buffer_desc.name = upload_name.c_str(),
              upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT,
-             upload_buffer_desc.descriptors = CGPU_RT_NONE,
+             upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE,
              upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY,
              upload_buffer_desc.size = data_size;
              upload_buffer_ = cgpu_create_buffer(device, &upload_buffer_desc);
@@ -452,7 +452,7 @@ uint32_t width, uint32_t height, ECGPUFormat format, const AuxTaskCallback& cb)
         return GetTexture(name);
     CGPUTextureDescriptor tex_desc = {};
     tex_desc.name = name;
-    tex_desc.descriptors = CGPU_RT_TEXTURE;
+    tex_desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
     tex_desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
     tex_desc.width = width;
     tex_desc.height = height;
