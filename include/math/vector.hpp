@@ -2,6 +2,7 @@
 #include "containers/span.hpp"
 #include "containers/array.hpp"
 #include "scalarmath.h"
+#include "utils/types.h"
 
 namespace skr
 {
@@ -190,6 +191,7 @@ public:
     FORCEINLINE constexpr Vector() = default;
     FORCEINLINE constexpr Vector(const T x, const T y, const T z);
     FORCEINLINE constexpr Vector(const skr::array<T, 3> v);
+    FORCEINLINE constexpr Vector(const skr_float3_t v);
     FORCEINLINE skr::span<T, 3> data_view();
     FORCEINLINE skr::span<const T, 3> data_view() const;
     FORCEINLINE static constexpr Vector<T, 3> vector_one();
@@ -217,6 +219,26 @@ public:
 
     Vector operator/(T Scale) const;
     bool operator==(const Vector V) const;
+    FORCEINLINE friend bool operator==(const Vector<float, 3> v3, const skr_float3_t f3)
+    {
+        return f3.x == v3.x && f3.y == v3.y && f3.z == v3.z;
+    }
+    FORCEINLINE friend bool operator==(const skr_float3_t f3, const Vector<float, 3> v3)
+    {
+        return f3.x == v3.x && f3.y == v3.y && f3.z == v3.z;
+    }
+    FORCEINLINE friend bool operator!=(const Vector<float, 3> v3, const skr_float3_t f3)
+    {
+        return !(f3 == v3);
+    }
+    FORCEINLINE friend bool operator!=(const skr_float3_t f3, const Vector<float, 3> v3)
+    {
+        return !(f3 == v3);
+    }
+    FORCEINLINE constexpr operator skr_float3_t() const
+    {
+        return {x, y, z};
+    }
     bool operator!=(const Vector V) const;
     bool equals(const Vector V, T Tolerance = KINDA_SMALL_NUMBER) const;
     FORCEINLINE Vector operator-() const;
@@ -306,6 +328,11 @@ public:
         : m_({ x, y, z, w })
     {
     }
+    FORCEINLINE constexpr Vector(const skr_float4_t v)
+        : m_({ v.x, v.y, v.z, v.w })
+    {
+
+    }
     FORCEINLINE constexpr Vector(const skr::array<float, 4> v)
         : m_(v)
     {
@@ -335,6 +362,26 @@ public:
 
     Vector operator/(float Scale) const;
     bool operator==(const Vector V) const;
+    FORCEINLINE friend bool operator==(const Vector<float, 4> v3, const skr_float4_t f3)
+    {
+        return f3.x == v3.x && f3.y == v3.y && f3.z == v3.z && f3.w == v3.w;
+    }
+    FORCEINLINE friend bool operator==(const skr_float4_t f3, const Vector<float, 4> v3)
+    {
+        return f3.x == v3.x && f3.y == v3.y && f3.z == v3.z && f3.w == v3.w;
+    }
+    FORCEINLINE friend bool operator!=(const Vector<float, 4> v3, const skr_float4_t f3)
+    {
+        return !(f3 == v3);
+    }
+    FORCEINLINE friend bool operator!=(const skr_float4_t f3, const Vector<float, 4> v3)
+    {
+        return !(f3 == v3);
+    }
+    FORCEINLINE constexpr operator skr_float4_t() const
+    {
+        return {x, y, z, w};
+    }
     bool operator!=(const Vector V) const;
     bool equals(const Vector V, float Tolerance = KINDA_SMALL_NUMBER) const;
     FORCEINLINE Vector operator-() const;
