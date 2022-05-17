@@ -45,6 +45,7 @@ struct CGPUBufferToTextureTransfer;
 struct CGPUTextureToTextureTransfer;
 struct CGPUTextureToBufferTransfer;
 struct CGPURootSignatureDescriptor;
+struct CGPURootSignaturePoolDescriptor;
 struct CGPUDescriptorSetDescriptor;
 struct CGPURenderPassDescriptor;
 struct CGPUComputePassDescriptor;
@@ -71,6 +72,7 @@ typedef const host_ptr_t CGPUCommandBufferId;
 typedef const host_ptr_t CGPUSwapChainId;
 typedef const host_ptr_t CGPUShaderLibraryId;
 typedef const host_ptr_t CGPURootSignatureId;
+typedef const host_ptr_t CGPURootSignaturePoolId;
 typedef const host_ptr_t CGPUDescriptorSetId;
 typedef const host_ptr_t CGPUMemoryPoolId;
 typedef const host_ptr_t CGPUBufferId;
@@ -97,6 +99,7 @@ typedef const struct CGPUCommandBuffer* CGPUCommandBufferId;
 typedef const struct CGPUSwapChain* CGPUSwapChainId;
 typedef const struct CGPUShaderLibrary* CGPUShaderLibraryId;
 typedef const struct CGPURootSignature* CGPURootSignatureId;
+typedef const struct CGPURootSignaturePool* CGPURootSignaturePoolId;
 typedef const struct CGPUDescriptorSet* CGPUDescriptorSetId;
 typedef const struct CGPUMemoryPool* CGPUMemoryPoolId;
 typedef const struct CGPUBuffer* CGPUBufferId;
@@ -206,6 +209,10 @@ RUNTIME_API CGPUSemaphoreId cgpu_create_semaphore(CGPUDeviceId device);
 typedef CGPUSemaphoreId (*CGPUProcCreateSemaphore)(CGPUDeviceId device);
 RUNTIME_API void cgpu_free_semaphore(CGPUSemaphoreId semaphore);
 typedef void (*CGPUProcFreeSemaphore)(CGPUSemaphoreId semaphore);
+RUNTIME_API CGPURootSignaturePoolId cgpu_create_root_signature_pool(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
+typedef CGPURootSignaturePoolId (*CGPUProcCreateRootSignaturePool)(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
+RUNTIME_API void cgpu_free_root_signature_pool(CGPURootSignaturePoolId pool);
+typedef void (*CGPUProcFreeRootSignaturePool)(CGPURootSignaturePoolId pool);
 RUNTIME_API CGPURootSignatureId cgpu_create_root_signature(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
 typedef CGPURootSignatureId (*CGPUProcCreateRootSignature)(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature(CGPURootSignatureId signature);
@@ -414,6 +421,8 @@ typedef struct CGPUProcTable {
     const CGPUProcFreeFence free_fence;
     const CGPUProcCreateSemaphore create_semaphore;
     const CGPUProcFreeSemaphore free_semaphore;
+    const CGPUProcCreateRootSignaturePool create_root_signature_pool;
+    const CGPUProcFreeRootSignaturePool free_root_signature_pool;
     const CGPUProcCreateRootSignature create_root_signature;
     const CGPUProcFreeRootSignature free_root_signature;
     const CGPUProcCreateDescriptorSet create_descriptor_set;
@@ -979,6 +988,10 @@ typedef struct CGPURenderPassDescriptor {
     uint32_t render_target_count;
 } CGPURenderPassDescriptor;
 
+typedef struct CGPURootSignaturePoolDescriptor {
+    const char8_t* name;
+} CGPURootSignaturePoolDescriptor;
+
 typedef struct CGPURootSignatureDescriptor {
     struct CGPUPipelineShaderDescriptor* shaders;
     uint32_t shader_count;
@@ -987,6 +1000,7 @@ typedef struct CGPURootSignatureDescriptor {
     uint32_t static_sampler_count;
     const char8_t* const* root_constant_names;
     uint32_t root_constant_count;
+    CGPURootSignaturePoolId pool;
 } CGPURootSignatureDescriptor;
 
 typedef struct CGPUDescriptorSetDescriptor {
@@ -1100,6 +1114,11 @@ typedef struct CGPUParameterTable {
     uint32_t set_index;
 } CGPUParameterTable;
 
+typedef struct CGPURootSignaturePool {
+    CGPUDeviceId device;
+    ECGPUPipelineType pipeline_type;
+} CGPURootSignaturePool; 
+
 typedef struct CGPURootSignature {
     CGPUDeviceId device;
     CGPUParameterTable* tables;
@@ -1109,6 +1128,8 @@ typedef struct CGPURootSignature {
     CGPUShaderResource* static_samplers;
     uint32_t static_sampler_count;
     ECGPUPipelineType pipeline_type;
+    CGPURootSignaturePoolId pool;
+    CGPURootSignatureId pool_sig;
 } CGPURootSignature;
 
 typedef struct CGPUDescriptorSet {

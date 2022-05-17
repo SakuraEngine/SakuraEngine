@@ -11,13 +11,13 @@ HWND createWin32Window();
     #include "platform/apple/macos/window.h"
 #endif
 
-class SwapChainCreation : public ::testing::TestWithParam<EBackend>
+class SwapChainCreation : public ::testing::TestWithParam<ECGPUBackend>
 {
 protected:
     void SetUp() override
     {
-        EBackend backend = GetParam();
-        DECLARE_ZERO(InstanceDescriptor, desc)
+        ECGPUBackend backend = GetParam();
+        DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
         desc.enable_gpu_based_validation = true;
@@ -28,13 +28,13 @@ protected:
 
         uint32_t adapters_count = 0;
         cgpu_enum_adapters(instance, nullptr, &adapters_count);
-        std::vector<AdapterId> adapters;
+        std::vector<CGPUAdapterId> adapters;
         adapters.resize(adapters_count);
         cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
         adapter = adapters[0];
 
-        QueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
-        DECLARE_ZERO(DeviceDescriptor, descriptor)
+        CGPUQueueGroupDescriptor G = { QUEUE_TYPE_GRAPHICS, 1 };
+        DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
         descriptor.queueGroups = &G;
         descriptor.queueGroupCount = 1;
         device = cgpu_create_device(adapter, &descriptor);
@@ -48,15 +48,15 @@ protected:
 #endif
     }
 
-    SwapChainId CreateSwapChainWithSurface(SurfaceId surface)
+    CGPUSwapChainId CreateSwapChainWithSurface(CGPUSurfaceId surface)
     {
         auto mainQueue = cgpu_get_queue(device, QUEUE_TYPE_GRAPHICS, 0);
-        DECLARE_ZERO(SwapChainDescriptor, descriptor)
+        DECLARE_ZERO(CGPUSwapChainDescriptor, descriptor)
         descriptor.presentQueues = &mainQueue;
         descriptor.presentQueuesCount = 1;
         descriptor.surface = surface;
         descriptor.imageCount = 3;
-        descriptor.format = PF_R8G8B8A8_UNORM;
+        descriptor.format = CGPU_FORMAT_R8G8B8A8_UNORM;
         descriptor.enableVsync = true;
 
         auto swapchain = cgpu_create_swapchain(device, &descriptor);
@@ -69,9 +69,9 @@ protected:
         cgpu_free_instance(instance);
     }
 
-    InstanceId instance;
-    AdapterId adapter;
-    DeviceId device;
+    CGPUInstanceId instance;
+    CGPUAdapterId adapter;
+    CGPUDeviceId device;
 #ifdef _WIN32
     HWND hwnd;
 #elif defined(_MACOS)
@@ -103,7 +103,7 @@ TEST_P(SwapChainCreation, CreateFromNSView)
 {
     auto ns_view = (struct NSView*)nswindow_get_content_view(
     nswin);
-    auto surface = cgpu_surface_from_ns_view(device, ns_view);
+    auto surface = cgpu_surface_from_ns_view(device, (CGPUNSView*)ns_view);
 
     EXPECT_NE(surface, CGPU_NULLPTR);
     EXPECT_NE(surface, nullptr);
@@ -174,3 +174,10 @@ HWND createWin32Window()
 #endif
 
 // 137900114
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return result;
+}

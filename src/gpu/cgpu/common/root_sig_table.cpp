@@ -3,6 +3,7 @@
 #include "common_utils.h"
 #include <EASTL/vector.h>
 #include <EASTL/set.h>
+#include <EASTL/sort.h>
 
 extern "C" {
 bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)
@@ -154,6 +155,12 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
             RST_resources.emplace_back(shader_resource);
         }
     }
+    eastl::stable_sort(RST_resources.begin(), RST_resources.end(),
+    [](const CGPUShaderResource& lhs, const CGPUShaderResource& rhs){
+        if(lhs.set != rhs.set) return lhs.set < rhs.set;
+        else
+            return lhs.binding < rhs.binding;
+    });
     // Slice
     RS->table_count = (uint32_t)valid_sets.size();
     RS->tables = (CGPUParameterTable*)cgpu_calloc(RS->table_count, sizeof(CGPUParameterTable));
@@ -190,6 +197,12 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
         RS->push_constants[i] = all_root_constants[i];
     }
     // static samplers
+    eastl::stable_sort(all_static_samplers.begin(), all_static_samplers.end(),
+    [](const CGPUShaderResource& lhs, const CGPUShaderResource& rhs){
+        if(lhs.set != rhs.set) return lhs.set < rhs.set;
+        else
+            return lhs.binding < rhs.binding;
+    });
     RS->static_sampler_count = (uint32_t)all_static_samplers.size();
     RS->static_samplers = (CGPUShaderResource*)cgpu_calloc(
     RS->static_sampler_count, sizeof(CGPUShaderResource));
