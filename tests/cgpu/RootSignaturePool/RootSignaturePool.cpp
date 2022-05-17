@@ -155,6 +155,32 @@ TEST_P(RootSignaturePool, PS00)
     cgpu_free_root_signature_pool(pool);
 }
 
+TEST_P(RootSignaturePool, RC)
+{
+    CGPURootSignaturePoolDescriptor pool_desc = {};
+    pool_desc.name = "RSPool";
+    auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
+    auto rs0 = create_root_sig_with_shaders(device, pool, backend, 
+        u8"cgpu-rspool-test/vertex_shader",
+        u8"cgpu-rspool-test/fragment_shader0");
+    auto rs1 = create_root_sig_with_shaders(device, pool, backend, 
+        u8"cgpu-rspool-test/vertex_shader",
+        u8"cgpu-rspool-test/fragment_shader0");
+
+    EXPECT_TRUE(rs1->pool_sig == rs0);
+
+    cgpu_free_root_signature(rs0);
+    cgpu_free_root_signature(rs1);
+
+    auto rs2 = create_root_sig_with_shaders(device, pool, backend, 
+        u8"cgpu-rspool-test/vertex_shader",
+        u8"cgpu-rspool-test/fragment_shader0");
+
+    EXPECT_TRUE(rs2->pool_sig == nullptr);
+
+    cgpu_free_root_signature_pool(pool);
+}
+
 // y
 TEST_P(RootSignaturePool, PS01)
 {

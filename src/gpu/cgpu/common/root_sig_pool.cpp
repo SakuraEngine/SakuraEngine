@@ -114,32 +114,34 @@ public:
         const auto iter = characterMap.find(character);
         if (iter != characterMap.end())
         {
-            auto& counter = counterMap[iter->second];
-            skr_atomic32_add_relaxed(&counter, 1);
+            counterMap[iter->second]++;
             return iter->second;
         }
         return nullptr;
     }
     bool deallocate(CGPURootSignatureId rootsig)
     {
-        auto trueSig = rootsig->pool_sig;
+        auto trueSig = rootsig;
         while(rootsig->pool && trueSig->pool_sig) { 
             trueSig = trueSig->pool_sig;
         }
         auto&& iter = counterMap.find(trueSig);
         if (iter != counterMap.end())
         {
-            auto& counter = iter->second;
-            skr_atomic32_add_relaxed(&counter, -1);
-            const auto oldCounterVal = skr_atomic32_load_acquire(&counter);
+            const auto oldCounterVal = iter->second;
             if(oldCounterVal <= 1)
             {
-                CGPURootSignature* enforceDestroy = (CGPURootSignature*)rootsig;
+                counterMap.erase(trueSig);
+                const auto& character = biCharacterMap[trueSig];
+                characterMap.erase(character);
+                biCharacterMap.erase(trueSig);
+                CGPURootSignature* enforceDestroy = (CGPURootSignature*)trueSig;
                 enforceDestroy->pool = nullptr;
                 enforceDestroy->pool_sig = nullptr;
                 cgpu_free_root_signature(enforceDestroy);
+                return true;
             }
-            skr_atomic32_store_release(&counter, oldCounterVal - 1);
+            iter->second--;
             return true;
         }
         return false;
@@ -154,7 +156,10 @@ public:
             return false;
         }
         characterMap[character] = sig;
-        skr_atomic32_store_release(&counterMap[sig], 0);
+        biCharacterMap[sig] = character;
+        counterMap[sig] = 1;
+        sig->pool = this;
+        sig->pool_sig = nullptr;
         return true;
     }
     ~CGPURootSignaturePoolImpl()
@@ -170,7 +175,8 @@ public:
 protected:
     const eastl::string name;
     eastl::unordered_map<RSCharacteristic, CGPURootSignatureId> characterMap;
-    eastl::unordered_map<CGPURootSignatureId, SAtomic32> counterMap;
+    eastl::unordered_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
+    eastl::unordered_map<CGPURootSignatureId, uint32_t> counterMap;
 };
 
 CGPURootSignaturePoolId CGPUUtil_CreateRootSignaturePool(const CGPURootSignaturePoolDescriptor* desc)
