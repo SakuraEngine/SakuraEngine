@@ -27,12 +27,12 @@ TEST(CommonMath, CommonMath0)
 
 TEST(CommonMath, Cast)
 {
-    skr_float3_t f3 = {1, 2, 3 };
+    skr_float3_t f3 = { 1, 2, 3 };
     skr::math::Vector3f v3 = f3;
     EXPECT_TRUE(v3 == f3);
     EXPECT_FALSE(v3 != f3);
     
-    skr_float4_t f4 = {1, 2, 3, 4 };
+    skr_float4_t f4 = { 1, 2, 3, 4 };
     skr::math::Vector4f v4 = f4;
     EXPECT_TRUE(v4 == f4);
     EXPECT_FALSE(v4 != f4);
