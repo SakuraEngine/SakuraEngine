@@ -2,6 +2,7 @@
 #include "ghc/filesystem.hpp"
 #include "platform/configure.h"
 #include "resource/resource_header.h"
+
 typedef enum ESkrInstallStatus
 {
     SKR_INSTALL_STATUS_INPROGRESS,

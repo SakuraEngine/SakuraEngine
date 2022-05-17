@@ -217,6 +217,24 @@ void cgpu_free_root_signature(CGPURootSignatureId signature)
     device->proc_table_cache->free_root_signature(signature);
 }
 
+CGPURootSignaturePoolId cgpu_create_root_signature_pool(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->create_root_signature_pool && "create_root_signature_pool Proc Missing!");
+    CGPURootSignaturePool* pool = (CGPURootSignaturePool*)device->proc_table_cache->create_root_signature_pool(device, desc);
+    pool->device = device;
+    return pool;
+}
+
+void cgpu_free_root_signature_pool(CGPURootSignaturePoolId pool)
+{
+    cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL signature pool!");
+    const CGPUDeviceId device = pool->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->free_root_signature_pool && "free_root_signature_pool Proc Missing!");
+    device->proc_table_cache->free_root_signature_pool(pool);
+}
+
 CGPUDescriptorSetId cgpu_create_descriptor_set(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");

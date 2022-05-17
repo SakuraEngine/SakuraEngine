@@ -42,6 +42,8 @@ RUNTIME_API CGPUSemaphoreId cgpu_create_semaphore_vulkan(CGPUDeviceId device);
 RUNTIME_API void cgpu_free_semaphore_vulkan(CGPUSemaphoreId semaphore);
 RUNTIME_API CGPURootSignatureId cgpu_create_root_signature_vulkan(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
 RUNTIME_API void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature);
+RUNTIME_API CGPURootSignaturePoolId cgpu_create_root_signature_pool_vulkan(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
+RUNTIME_API void cgpu_free_root_signature_pool_vulkan(CGPURootSignaturePoolId pool);
 RUNTIME_API CGPUDescriptorSetId cgpu_create_descriptor_set_vulkan(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
 RUNTIME_API void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
 RUNTIME_API void cgpu_free_descriptor_set_vulkan(CGPUDescriptorSetId set);

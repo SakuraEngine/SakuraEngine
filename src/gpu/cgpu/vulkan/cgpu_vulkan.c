@@ -33,6 +33,8 @@ const CGPUProcTable tbl_vk = {
     .free_semaphore = &cgpu_free_semaphore_vulkan,
     .create_root_signature = &cgpu_create_root_signature_vulkan,
     .free_root_signature = &cgpu_free_root_signature_vulkan,
+    .create_root_signature_pool = &cgpu_create_root_signature_pool_vulkan,
+    .free_root_signature_pool = &cgpu_free_root_signature_pool_vulkan,
     .create_descriptor_set = &cgpu_create_descriptor_set_vulkan,
     .update_descriptor_set = &cgpu_update_descriptor_set_vulkan,
     .free_descriptor_set = &cgpu_free_descriptor_set_vulkan,
@@ -464,6 +466,23 @@ const struct CGPURootSignatureDescriptor* desc)
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)cgpu_calloc(1,
     sizeof(CGPURootSignature_Vulkan));
     CGPUUtil_InitRSParamTables((CGPURootSignature*)RS, desc);
+    // [RS POOL] ALLOCATION
+    if(desc->pool)
+    {
+        CGPURootSignature_Vulkan* poolSig = 
+            (CGPURootSignature_Vulkan*)CGPUUtil_TryAllocateSignature(desc->pool, &RS->super, desc);
+        if(poolSig != CGPU_NULLPTR)
+        {
+            RS->pPipelineLayout = poolSig->pPipelineLayout;
+            RS->pSetLayouts = poolSig->pSetLayouts;
+            RS->mSetLayoutCount = poolSig->mSetLayoutCount;
+            RS->pPushConstRanges = poolSig->pPushConstRanges;
+            RS->super.pool = desc->pool;
+            RS->super.pool_sig = &poolSig->super;
+            return &RS->super;
+        }
+    }
+    // [RS POOL] END ALLOCATION
     // set index mask. set(0, 1, 2, 3) -> 0000...1111
     uint32_t set_index_mask = 0;
     // tables
@@ -613,6 +632,13 @@ const struct CGPURootSignatureDescriptor* desc)
     }
     // Free Temporal Memory
     cgpu_free(pSetLayouts);
+    // [RS POOL] INSERTION
+    if(desc->pool)
+    {
+        const bool result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
+        cgpu_assert(result && "Root signature pool insertion failed!");
+    }
+    // [RS POOL] END INSERTION
     return &RS->super;
 }
 
@@ -620,6 +646,12 @@ void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature)
 {
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)signature;
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)signature->device;
+    // [RS POOL] FREE
+    if(signature->pool && signature->pool_sig)
+    {
+        CGPUUtil_PoolFreeSignature(signature->pool, signature);
+    }
+    // [RS POOL] END FREE
     // Free Reflection Data
     CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
     // Free Vk Objects
@@ -635,6 +667,16 @@ void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature)
     cgpu_free(RS->pPushConstRanges);
     D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pPipelineLayout, GLOBAL_VkAllocationCallbacks);
     cgpu_free(RS);
+}
+
+CGPURootSignaturePoolId cgpu_create_root_signature_pool_vulkan(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc)
+{
+    return CGPUUtil_CreateRootSignaturePool(desc);
+}
+
+void cgpu_free_root_signature_pool_vulkan(CGPURootSignaturePoolId pool)
+{
+    return CGPUUtil_FreeRootSignaturePool(pool);
 }
 
 CGPUDescriptorSetId cgpu_create_descriptor_set_vulkan(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)

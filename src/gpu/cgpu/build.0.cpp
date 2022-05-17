@@ -1,5 +1,6 @@
 #include "cgpu/cgpu_config.h"
 #include "common/root_sig_table.cpp"
+#include "common/root_sig_pool.cpp"
 #ifdef CGPU_USE_VULKAN
     #include "vulkan/cgpu_vulkan_instance.cpp"
 #endif
