@@ -222,8 +222,8 @@ def main():
         if data2.enums or data2.records:
             template = os.path.join(BASE, "rtti.hpp.mako")
             content = render(template, db=data2, api=api,  config=config)
-            data.headers.add("%s.generated.hpp" % filename)
-            output = os.path.join(outdir, "%s.generated.hpp" % filename)
+            data.headers.add("%s.rtti.generated.hpp" % filename)
+            output = os.path.join(outdir, "%s.rtti.generated.hpp" % filename)
             write(output, content)
     if data.enums or data.records:
         template = os.path.join(BASE, "rtti.cpp.mako")

@@ -70,7 +70,12 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         {
             os.projectdir()..vformat("/tools/codegen/cooker.py"),
             os.projectdir()..vformat("/tools/codegen/cooker.cpp.mako"),
-        }
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/component.py"),
+            os.projectdir()..vformat("/tools/codegen/component.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
+        },
     }
     local rebuild = false
     for _, generator in ipairs(generators) do
