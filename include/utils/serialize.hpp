@@ -8,8 +8,11 @@
 #include "EASTL/fixed_vector.h"
 #include "gsl/span"
 #include "platform/guid.h"
+#include "platform/memory.h"
 #include "utils/te.hpp"
 #include "resource/resource_handle.h"
+#include <limits>
+#include <memory>
 
 namespace bitsery
 {
@@ -42,6 +45,24 @@ struct BufferAdapterTraits<eastl::fixed_vector<T, count>>
     : public StdContainerForBufferAdapter<eastl::fixed_vector<T, count>> {
 };
 
+template <typename T, size_t count>
+struct ContainerTraits<gsl::span<T, count>>
+    : public StdContainer<gsl::span<T, count>, false, true> {
+    static std::enable_if_t<count == gsl::dynamic_extent, void>
+    resize(gsl::span<T, count>& container, size_t size)
+    {
+        SKR_ASSERT(container.data() == nullptr);
+        auto data = (T*)sakura_malloc(sizeof(T) * size);
+        std::uninitialized_default_construct(data, data + size);
+        container = { data, size };
+    }
+};
+
+template <typename T, size_t count>
+struct BufferAdapterTraits<gsl::span<T, count>>
+    : public StdContainerForBufferAdapter<gsl::span<T, count>> {
+};
+
 } // namespace traits
 
 } // namespace bitsery
@@ -60,17 +81,25 @@ void serialize(S& s, skr_guid_t& guid)
 template <class S>
 void serialize(S& s, skr_resource_handle_t& handle)
 {
-    if(s.is_serialize())
+    if (s.is_serialize())
     {
         auto guid = handle.get_serialized();
         serialize(s, guid);
     }
-    else 
+    else
     {
         skr_guid_t guid;
         serialize(s, guid);
         handle.set_guid(guid);
     }
+}
+template <class S, class T, class Size>
+void serializeBin(S& s, T*& pointer, Size& size, Size limit = std::numeric_limits<Size>::max())
+{
+    gsl::span<T> span{ pointer, (size_t)size };
+    s.container(span, (size_t)limit);
+    pointer = span.data();
+    size = (Size)span.size();
 }
 } // namespace bitsery
 
