@@ -14,7 +14,7 @@ namespace asset reflect
 using namespace skd::asset;
 struct reflect attr(
 "guid" : "4F0E4239-A07F-4F48-B54F-FBF406C60DC3",
-"serialize" : true,
+"serialize" : "json",
 "importer" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
 TOOL_API SSceneImporter final : public SImporter

@@ -61,6 +61,20 @@ class Binding(object):
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 
+def shouldSkip(value):
+    attr = value["attrs"]
+    if not "serialize" in attr:
+        return True
+    serialize = attr["serialize"]
+    if isinstance(serialize, list):
+        if not "bin" in serialize:
+            return True
+    else:
+        if serialize != "bin":
+            return True
+    return False
+
+
 def main():
     db = Binding()
     root = sys.argv[1]
@@ -71,7 +85,7 @@ def main():
         for key, value in meta["records"].items():
             file = value["fileName"]
             fields = []
-            if not "serialize" in value["attrs"]:
+            if shouldSkip(value):
                 continue
             for key2, value2 in value["fields"].items():
                 attr = value2["attrs"]
@@ -87,6 +101,8 @@ def main():
         for key, value in meta["enums"].items():
             attr = value["attrs"]
             file = value["fileName"]
+            if shouldSkip(value):
+                continue
             db.headers.add(GetInclude(file))
             enumerators = []
             for key2, value2 in value["values"].items():
