@@ -26,7 +26,8 @@ target("cgpu-texture")
     add_deps("SkrRT")
     add_files("cgpu-texture/*.c")
     add_files("cgpu-texture/**.hlsl")
-
+    
+--[[
 if (os.host() == "windows") then
     target("hot-triangle")
         add_rules("utils.dxc", {
@@ -37,6 +38,7 @@ if (os.host() == "windows") then
         add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
         add_files("hot-triangle/**.hlsl")
 end
+]]--
 
 target("cgpu-3d")
     add_rules("utils.install-resources", {
