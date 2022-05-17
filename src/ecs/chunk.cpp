@@ -63,8 +63,7 @@ const dual_entity_t* dual_chunk_t::get_entities() const
 
 uint32_t* dual_chunk_t::timestamps() noexcept
 {
-    const uint32_t versionSize = sizeof(uint32_t) * type->type.length;
-    return (uint32_t*)data() + type->chunkCapacity[pt] - versionSize;
+    return (uint32_t*)data() + type->versionOffset[pt];
 }
 
 EIndex dual_chunk_t::get_capacity()

@@ -12,6 +12,7 @@ struct archetype_t {
     uint32_t* offsets[3];
     uint32_t* elemSizes;
     uint32_t* aligns;
+    uint32_t versionOffset[3];
     dual_callback_v* callbacks;
     uint32_t chunkCapacity[3];
     uint32_t entitySize;
