@@ -22,7 +22,6 @@
 #include "type/type_registry.h"
 #include "utils/defer.hpp"
 #include "resource/resource_header.h"
-#include "SkrTool/serialize.generated.h"
 #include "utils/format.hpp"
 #include "SkrRT/typeid.generated.hpp"
 #include "module/module_manager.hpp"
