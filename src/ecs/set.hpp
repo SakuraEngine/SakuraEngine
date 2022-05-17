@@ -173,36 +173,36 @@ namespace dual
     
 }
 
-DUAL_FORCEINLINE dual_type_index_t* begin(dual_type_set_t& value)
+DUAL_FORCEINLINE const dual_type_index_t* begin(dual_type_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE dual_type_index_t* end(dual_type_set_t& value)
+DUAL_FORCEINLINE const dual_type_index_t* end(dual_type_set_t& value)
 {
     return value.data + value.length;
 }
 
-DUAL_FORCEINLINE dual_type_index_t* begin(const dual_type_set_t& value)
+DUAL_FORCEINLINE const dual_type_index_t* begin(const dual_type_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE dual_type_index_t* end(const dual_type_set_t& value)
+DUAL_FORCEINLINE const dual_type_index_t* end(const dual_type_set_t& value)
 {
     return value.data + value.length;
 }
-DUAL_FORCEINLINE dual_entity_t* begin(dual_entity_set_t& value)
+DUAL_FORCEINLINE const dual_entity_t* begin(dual_entity_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE dual_entity_t* end(dual_entity_set_t& value)
+DUAL_FORCEINLINE const dual_entity_t* end(dual_entity_set_t& value)
 {
     return value.data + value.length;
 }
-DUAL_FORCEINLINE dual_entity_t* begin(const dual_entity_set_t& value)
+DUAL_FORCEINLINE const dual_entity_t* begin(const dual_entity_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE dual_entity_t* end(const dual_entity_set_t& value)
+DUAL_FORCEINLINE const dual_entity_t* end(const dual_entity_set_t& value)
 {
     return value.data + value.length;
 }

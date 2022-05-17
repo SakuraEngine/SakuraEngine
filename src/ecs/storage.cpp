@@ -300,7 +300,9 @@ void dual_storage_t::validate_meta()
 
 void dual_storage_t::validate(dual_entity_set_t& meta)
 {
-    auto end = std::remove_if(meta.data, meta.data + meta.length, [&](dual_entity_t e) {
+    auto end = std::remove_if(
+    (dual_entity_t*)meta.data, (dual_entity_t*)meta.data + meta.length, 
+    [&](const dual_entity_t e) {
         return !exist(e);
     });
     meta.length = (SIndex)(end - meta.data);
@@ -445,8 +447,8 @@ void dual_storage_t::pack_entities()
             iterator_ref_view({ c, 0, c->count }, m);
         auto meta = g->type.meta;
         forloop (i, 0, meta.length)
-            m.map((meta.data)[i]);
-        std::sort(meta.data, meta.data + meta.length);
+            m.map(((dual_entity_t*)meta.data)[i]);
+        std::sort((dual_entity_t*)meta.data, (dual_entity_t*)meta.data + meta.length);
         groups.insert({ g->type, g });
     }
 }

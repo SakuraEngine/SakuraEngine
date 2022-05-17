@@ -95,7 +95,7 @@ typedef struct dual_chunk_view_t {
  * note. type set does not own the data, and all data should be in order
  */
 typedef struct dual_type_set_t {
-    dual_type_index_t* data;
+    const dual_type_index_t* data;
     SIndex length;
 } dual_type_set_t;
 
@@ -105,7 +105,7 @@ typedef struct dual_type_set_t {
  * note. type set does not own the data, and all data should be in order
  */
 typedef struct dual_entity_set_t {
-    dual_entity_t* data;
+    const dual_entity_t* data;
     SIndex length;
 } dual_entity_set_t;
 

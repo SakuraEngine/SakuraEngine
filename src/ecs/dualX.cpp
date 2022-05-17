@@ -4,6 +4,7 @@
 #include "stack.hpp"
 #include "callback.hpp"
 #include "utils/hash.h"
+#include <iostream>
 
 namespace dual
 {
@@ -59,6 +60,7 @@ dual_entity_t dualX_hashset_insert(
             }
         }
     }
+    std::cout << types[0] << types[1];
     auto actual_alloc_type = make_zeroed<dual_entity_type_t>();
     actual_alloc_type.type.data = types;
     actual_alloc_type.type.length = alloc_type->type.length + 1;
@@ -84,8 +86,10 @@ dual_entity_t dualX_hashset_insert(
     // query exist
     auto filter = make_zeroed<dual_filter_t>();
     filter.all.data = filter_types;
-    filter.all.length = key_set->length;
+    std::cout << filter_types[0] << filter_types[1] << " " << this_hash <<  std::endl;
+    filter.all.length = key_set->length + 1;
     auto meta = make_zeroed<dual_meta_filter_t>();
+    meta.all_meta = alloc_type->meta;
     dual_entity_t result = NULL_ENTITY;
     auto unique_callback = [&](dual_chunk_view_t* inView) {
         if (result != NULL_ENTITY) return;
@@ -97,6 +101,7 @@ dual_entity_t dualX_hashset_insert(
             if(hashes[i].hash == this_hash && ents[i] != temp)
             {
                 result = ents[i];
+                std::cout << " == " << ents[i] << std::endl;
                 return;
             }
         }
