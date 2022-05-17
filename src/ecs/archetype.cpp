@@ -83,6 +83,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         uint32_t* offsets = proto.offsets[i];
         uint32_t& capacity = proto.chunkCapacity[i];
         capacity = (uint32_t)(caps[i] - sizeof(dual_chunk_t) - versionSize - padding) / proto.entitySize;
+        proto.versionOffset[i] = caps[i] - versionSize;
         if (capacity == 0)
             continue;
         uint32_t offset = sizeof(dual_entity_t) * capacity;
@@ -183,7 +184,7 @@ dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
 {
     using namespace dual;
     if (type.type.length == 1 && type.type.data[0] == kDeadComponent) DUAL_UNLIKELY
-        return nullptr;
+    return nullptr;
     dual_group_t* group = try_get_group(type);
     if (!group)
         group = construct_group(type);
@@ -200,11 +201,10 @@ void dual_storage_t::destruct_group(dual_group_t* group)
 dual_chunk_t* dual_group_t::new_chunk(uint32_t hint)
 {
     using namespace dual;
-    size_t sizeHint = hint * archetype->entitySize;
     pool_type_t pt;
-    if (chunkCount < kSmallBinThreshold && sizeHint < kSmallBinSize)
+    if (chunkCount < kSmallBinThreshold && hint < archetype->chunkCapacity[PT_small])
         pt = PT_small;
-    else if (sizeHint > kFastBinSize * 8u)
+    else if (hint > archetype->chunkCapacity[PT_default] * 8u)
         pt = PT_large;
     else
         pt = PT_default;
