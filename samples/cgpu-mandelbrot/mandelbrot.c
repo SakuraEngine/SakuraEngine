@@ -127,7 +127,7 @@ void ComputeFunc(void* usrdata)
     CGPUBufferDescriptor buffer_desc = {
         .name = "DataBuffer",
         .flags = CGPU_BCF_NONE,
-        .descriptors = CGPU_RT_RW_BUFFER,
+        .descriptors = CGPU_RESOURCE_TYPE_RW_BUFFER,
         .start_state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS,
         .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Pixel),
@@ -140,7 +140,7 @@ void ComputeFunc(void* usrdata)
     CGPUBufferDescriptor rb_desc = {
         .name = "ReadbackBuffer",
         .flags = CGPU_BCF_OWN_MEMORY_BIT,
-        .descriptors = CGPU_RT_NONE,
+        .descriptors = CGPU_RESOURCE_TYPE_NONE,
         .start_state = CGPU_RESOURCE_STATE_COPY_DEST,
         .memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU,
         .element_stride = buffer_desc.element_stride,

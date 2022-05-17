@@ -44,7 +44,7 @@ void create_sampled_texture()
     sampler_state = cgpu_create_sampler(device, &sampler_desc);
     // Texture
     CGPUTextureDescriptor tex_desc = {
-        .descriptors = CGPU_RT_TEXTURE,
+        .descriptors = CGPU_RESOURCE_TYPE_TEXTURE,
         .flags = CGPU_TCF_OWN_MEMORY_BIT,
         .width = TEXTURE_WIDTH,
         .height = TEXTURE_HEIGHT,
@@ -70,7 +70,7 @@ void create_sampled_texture()
     CGPUBufferDescriptor upload_buffer_desc = {
         .name = "UploadBuffer",
         .flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT,
-        .descriptors = CGPU_RT_NONE,
+        .descriptors = CGPU_RESOURCE_TYPE_NONE,
         .memory_usage = CGPU_MEM_USAGE_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),
         .elemet_count = 1,

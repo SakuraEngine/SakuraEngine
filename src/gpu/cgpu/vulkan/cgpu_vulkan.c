@@ -748,8 +748,8 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
         const ECGPUResourceType resourceType = (ECGPUResourceType)ResData->type;
         switch (resourceType)
         {
-            case CGPU_RT_RW_TEXTURE:
-            case CGPU_RT_TEXTURE: {
+            case CGPU_RESOURCE_TYPE_RW_TEXTURE:
+            case CGPU_RESOURCE_TYPE_TEXTURE: {
                 cgpu_assert(pParam->textures && "cgpu_assert: Binding NULL texture(s)");
                 CGPUTextureView_Vulkan** TextureViews = (CGPUTextureView_Vulkan**)pParam->textures;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
@@ -758,11 +758,11 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
                     cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL texture!");
                     VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
                     Data->mImageInfo.imageView =
-                    ResData->type == CGPU_RT_RW_TEXTURE ?
+                    ResData->type == CGPU_RESOURCE_TYPE_RW_TEXTURE ?
                     TextureViews[arr]->pVkUAVDescriptor :
                     TextureViews[arr]->pVkSRVDescriptor;
                     Data->mImageInfo.imageLayout =
-                    ResData->type == CGPU_RT_RW_TEXTURE ?
+                    ResData->type == CGPU_RESOURCE_TYPE_RW_TEXTURE ?
                     VK_IMAGE_LAYOUT_GENERAL :
                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     Data->mImageInfo.sampler = VK_NULL_HANDLE;
@@ -770,7 +770,7 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
                 }
                 break;
             }
-            case CGPU_RT_SAMPLER: {
+            case CGPU_RESOURCE_TYPE_SAMPLER: {
                 cgpu_assert(pParam->samplers && "cgpu_assert: Binding NULL Sampler(s)");
                 CGPUSampler_Vulkan** Samplers = (CGPUSampler_Vulkan**)pParam->samplers;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)
@@ -782,10 +782,10 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
                 }
                 break;
             }
-            case CGPU_RT_BUFFER:
-            case CGPU_RT_BUFFER_RAW:
-            case CGPU_RT_RW_BUFFER:
-            case CGPU_RT_RW_BUFFER_RAW: {
+            case CGPU_RESOURCE_TYPE_BUFFER:
+            case CGPU_RESOURCE_TYPE_BUFFER_RAW:
+            case CGPU_RESOURCE_TYPE_RW_BUFFER:
+            case CGPU_RESOURCE_TYPE_RW_BUFFER_RAW: {
                 cgpu_assert(pParam->buffers && "cgpu_assert: Binding NULL Buffer(s)!");
                 CGPUBuffer_Vulkan** Buffers = (CGPUBuffer_Vulkan**)pParam->buffers;
                 for (uint32_t arr = 0; arr < arrayCount; ++arr)

@@ -50,7 +50,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
         CGPUTextureDescriptor resolve_desc = {};
         eastl::string name2 = "MSAAResolve";
         resolve_desc.name = name2.c_str();
-        resolve_desc.descriptors = CGPU_RT_TEXTURE | CGPU_RT_RENDER_TARGET;
+        resolve_desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE | CGPU_RESOURCE_TYPE_RENDER_TARGET;
         resolve_desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
         resolve_desc.width = swapchain_->back_buffers[0]->width;
         resolve_desc.height = swapchain_->back_buffers[0]->height;
@@ -90,7 +90,7 @@ void RenderWindow::Initialize(RenderDevice* render_device)
     CGPUTextureDescriptor ds_desc = {};
     eastl::string name = "DepthStencil";
     ds_desc.name = name.c_str();
-    ds_desc.descriptors = CGPU_RT_TEXTURE | CGPU_RT_DEPTH_STENCIL;
+    ds_desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE | CGPU_RESOURCE_TYPE_DEPTH_STENCIL;
     ds_desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
     ds_desc.width = swapchain_->back_buffers[0]->width;
     ds_desc.height = swapchain_->back_buffers[0]->height;

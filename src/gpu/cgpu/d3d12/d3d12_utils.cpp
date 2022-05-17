@@ -211,19 +211,19 @@ void D3D12Util_SignalFence(CGPUQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceV
 // Shader Reflection
 const char8_t* D3DShaderEntryName = "FuckD3D";
 static ECGPUResourceType gD3D12_TO_DESCRIPTOR[] = {
-    CGPU_RT_UNIFORM_BUFFER, // D3D_SIT_CBUFFER
-    CGPU_RT_BUFFER,         // D3D_SIT_TBUFFER
-    CGPU_RT_TEXTURE,        // D3D_SIT_TEXTURE
-    CGPU_RT_SAMPLER,        // D3D_SIT_SAMPLER
-    CGPU_RT_RW_TEXTURE,     // D3D_SIT_UAV_RWTYPED
-    CGPU_RT_BUFFER,         // D3D_SIT_STRUCTURED
-    CGPU_RT_RW_BUFFER,      // D3D_SIT_RWSTRUCTURED
-    CGPU_RT_BUFFER,         // D3D_SIT_BYTEADDRESS
-    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_RWBYTEADDRESS
-    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_APPEND_STRUCTURED
-    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_CONSUME_STRUCTURED
-    CGPU_RT_RW_BUFFER,      // D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER
-    CGPU_RT_RAY_TRACING,    // D3D_SIT_RTACCELERATIONSTRUCTURE
+    CGPU_RESOURCE_TYPE_UNIFORM_BUFFER, // D3D_SIT_CBUFFER
+    CGPU_RESOURCE_TYPE_BUFFER,         // D3D_SIT_TBUFFER
+    CGPU_RESOURCE_TYPE_TEXTURE,        // D3D_SIT_TEXTURE
+    CGPU_RESOURCE_TYPE_SAMPLER,        // D3D_SIT_SAMPLER
+    CGPU_RESOURCE_TYPE_RW_TEXTURE,     // D3D_SIT_UAV_RWTYPED
+    CGPU_RESOURCE_TYPE_BUFFER,         // D3D_SIT_STRUCTURED
+    CGPU_RESOURCE_TYPE_RW_BUFFER,      // D3D_SIT_RWSTRUCTURED
+    CGPU_RESOURCE_TYPE_BUFFER,         // D3D_SIT_BYTEADDRESS
+    CGPU_RESOURCE_TYPE_RW_BUFFER,      // D3D_SIT_UAV_RWBYTEADDRESS
+    CGPU_RESOURCE_TYPE_RW_BUFFER,      // D3D_SIT_UAV_APPEND_STRUCTURED
+    CGPU_RESOURCE_TYPE_RW_BUFFER,      // D3D_SIT_UAV_CONSUME_STRUCTURED
+    CGPU_RESOURCE_TYPE_RW_BUFFER,      // D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER
+    CGPU_RESOURCE_TYPE_RAY_TRACING,    // D3D_SIT_RTACCELERATIONSTRUCTURE
 };
 
 static ECGPUTextureDimension gD3D12_TO_RESOURCE_DIM[D3D_SRV_DIMENSION_BUFFEREX + 1] = {
@@ -298,12 +298,12 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGPUSh
         // RWTyped is considered as DESCRIPTOR_TYPE_TEXTURE by default so we handle the case for RWBuffer here
         if (bindDesc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_UAV_RWTYPED && bindDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
         {
-            Reflection->shader_resources[i].type = CGPU_RT_RW_BUFFER;
+            Reflection->shader_resources[i].type = CGPU_RESOURCE_TYPE_RW_BUFFER;
         }
         // Buffer<> is considered as DESCRIPTOR_TYPE_TEXTURE by default so we handle the case for Buffer<> here
         if (bindDesc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_TEXTURE && bindDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
         {
-            Reflection->shader_resources[i].type = CGPU_RT_BUFFER;
+            Reflection->shader_resources[i].type = CGPU_RESOURCE_TYPE_BUFFER;
         }
     }
 }

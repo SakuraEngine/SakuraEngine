@@ -12,7 +12,7 @@ FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGPUAdapter_
 {
     uint64_t allocationSize = desc->size;
     // Align the buffer size to multiples of the dynamic uniform buffer minimum size
-    if (desc->descriptors & CGPU_RT_UNIFORM_BUFFER)
+    if (desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
     {
         uint64_t minAlignment = A->adapter_detail.uniform_buffer_alignment;
         allocationSize = smath_round_up(allocationSize, minAlignment);
@@ -115,10 +115,10 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
     B->pVkBuffer = pVkBuffer;
 
     // Setup Descriptors
-    if ((desc->descriptors & CGPU_RT_UNIFORM_BUFFER) || (desc->descriptors & CGPU_RT_BUFFER) ||
-        (desc->descriptors & CGPU_RT_RW_BUFFER))
+    if ((desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER) || (desc->descriptors & CGPU_RESOURCE_TYPE_BUFFER) ||
+        (desc->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER))
     {
-        if ((desc->descriptors & CGPU_RT_BUFFER) || (desc->descriptors & CGPU_RT_RW_BUFFER))
+        if ((desc->descriptors & CGPU_RESOURCE_TYPE_BUFFER) || (desc->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER))
         {
             B->mOffset = desc->element_stride * desc->first_element;
         }
@@ -341,7 +341,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
 
     // Usage flags
     VkImageUsageFlags additionalFlags = 0;
-    if (desc->descriptors & CGPU_RT_RENDER_TARGET)
+    if (desc->descriptors & CGPU_RESOURCE_TYPE_RENDER_TARGET)
         additionalFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     else if (is_depth_stencil)
         additionalFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -365,7 +365,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             mImageType = VK_IMAGE_TYPE_1D;
     }
     CGPUResourceTypes descriptors = desc->descriptors;
-    bool cubemapRequired = (CGPU_RT_TEXTURE_CUBE == (descriptors & CGPU_RT_TEXTURE_CUBE));
+    bool cubemapRequired = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE));
     bool arrayRequired = mImageType == VK_IMAGE_TYPE_3D;
     // TODO: Support stencil format
     const bool isStencilFormat = false;

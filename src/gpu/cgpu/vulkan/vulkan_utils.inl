@@ -6,9 +6,9 @@ extern "C" {
 FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGPUResourceTypes descriptors)
 {
     VkImageUsageFlags result = 0;
-    if (CGPU_RT_TEXTURE == (descriptors & CGPU_RT_TEXTURE))
+    if (CGPU_RESOURCE_TYPE_TEXTURE == (descriptors & CGPU_RESOURCE_TYPE_TEXTURE))
         result |= VK_IMAGE_USAGE_SAMPLED_BIT;
-    if (CGPU_RT_RW_TEXTURE == (descriptors & CGPU_RT_RW_TEXTURE))
+    if (CGPU_RESOURCE_TYPE_RW_TEXTURE == (descriptors & CGPU_RESOURCE_TYPE_RW_TEXTURE))
         result |= VK_IMAGE_USAGE_STORAGE_BIT;
     return result;
 }
@@ -126,34 +126,34 @@ FORCEINLINE static VkImageAspectFlags VkUtil_DeterminAspectMask(VkFormat format,
 FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGPUResourceTypes descriptors, bool texel)
 {
     VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    if (descriptors & CGPU_RT_UNIFORM_BUFFER)
+    if (descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
     {
         result |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     }
-    if (descriptors & CGPU_RT_RW_BUFFER)
+    if (descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)
     {
         result |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         if (texel) result |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
     }
-    if (descriptors & CGPU_RT_BUFFER)
+    if (descriptors & CGPU_RESOURCE_TYPE_BUFFER)
     {
         result |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         if (texel) result |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
     }
-    if (descriptors & CGPU_RT_INDEX_BUFFER)
+    if (descriptors & CGPU_RESOURCE_TYPE_INDEX_BUFFER)
     {
         result |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
     }
-    if (descriptors & CGPU_RT_VERTEX_BUFFER)
+    if (descriptors & CGPU_RESOURCE_TYPE_VERTEX_BUFFER)
     {
         result |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
     }
-    if (descriptors & CGPU_RT_INDIRECT_BUFFER)
+    if (descriptors & CGPU_RESOURCE_TYPE_INDIRECT_BUFFER)
     {
         result |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
     }
 #ifdef ENABLE_RAYTRACING
-    if (descriptors & CGPU_RT_RAY_TRACING)
+    if (descriptors & CGPU_RESOURCE_TYPE_RAY_TRACING)
     {
         result |= VK_BUFFER_USAGE_RAY_TRACING_BIT_NV;
     }
@@ -203,19 +203,19 @@ FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGPUResourceTy
 {
 	switch (type)
 	{
-		case CGPU_RT_NONE: cgpu_assert(0 && "Invalid DescriptorInfo Type"); return VK_DESCRIPTOR_TYPE_MAX_ENUM;
-		case CGPU_RT_SAMPLER: return VK_DESCRIPTOR_TYPE_SAMPLER;
-		case CGPU_RT_TEXTURE: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		case CGPU_RT_UNIFORM_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		case CGPU_RT_RW_TEXTURE: return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		case CGPU_RT_BUFFER:
-		case CGPU_RT_RW_BUFFER: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		case CGPU_RT_INPUT_ATTACHMENT: return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-		case CGPU_RT_TEXEL_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-		case CGPU_RT_RW_TEXEL_BUFFER: return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
-		case CGPU_RT_COMBINED_IMAGE_SAMPLER: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		case CGPU_RESOURCE_TYPE_NONE: cgpu_assert(0 && "Invalid DescriptorInfo Type"); return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+		case CGPU_RESOURCE_TYPE_SAMPLER: return VK_DESCRIPTOR_TYPE_SAMPLER;
+		case CGPU_RESOURCE_TYPE_TEXTURE: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		case CGPU_RESOURCE_TYPE_UNIFORM_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		case CGPU_RESOURCE_TYPE_RW_TEXTURE: return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		case CGPU_RESOURCE_TYPE_BUFFER:
+		case CGPU_RESOURCE_TYPE_RW_BUFFER: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		case CGPU_RESOURCE_TYPE_INPUT_ATTACHMENT: return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+		case CGPU_RESOURCE_TYPE_TEXEL_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+		case CGPU_RESOURCE_TYPE_RW_TEXEL_BUFFER: return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+		case CGPU_RESOURCE_TYPE_COMBINED_IMAGE_SAMPLER: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 #ifdef ENABLE_RAYTRACING
-		case CGPU_RT_RAY_TRACING: return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
+		case CGPU_RESOURCE_TYPE_RAY_TRACING: return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
 #endif
 		default:
 			cgpu_assert(0 && "Invalid DescriptorInfo Type");
