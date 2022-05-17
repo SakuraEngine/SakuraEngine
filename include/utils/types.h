@@ -19,3 +19,8 @@ typedef struct skr_float4_t {
         float w;
     };
 } skr_float4_t;
+
+typedef struct skr_blob_t {
+    uint8_t* bytes;
+    uint64_t size;
+} skr_blob_t;

@@ -9,6 +9,7 @@
 #include "gsl/span"
 #include "platform/guid.h"
 #include "platform/memory.h"
+#include "utils/types.h"
 #include "utils/te.hpp"
 #include "resource/resource_handle.h"
 #include <limits>
@@ -100,6 +101,11 @@ void serializeBin(S& s, T*& pointer, Size& size, Size limit = std::numeric_limit
     s.container(span, (size_t)limit);
     pointer = span.data();
     size = (Size)span.size();
+}
+template <class S>
+void serialize(S& s, skr_blob_t& blob)
+{
+    serializeBin(s, blob.bytes, blob.size);
 }
 } // namespace bitsery
 

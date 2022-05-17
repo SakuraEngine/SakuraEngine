@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/guid.h"
+#include "utils/types.h"
 #include <EASTL/vector.h>
 
 enum ESkrLoadingStatus : uint32_t;
@@ -52,11 +53,6 @@ typedef struct skr_resource_handle_t {
     RUNTIME_API void set_resolved(skr_resource_record_t* record, uint32_t requester, ESkrRequesterType requesterType);
 #endif
 } skr_resource_handle_t;
-
-typedef struct skr_blob_t {
-    uint8_t* bytes;
-    uint64_t size;
-} skr_blob_t;
 
 typedef struct reflect attr(
     "guid" : "069dd448-d61e-4384-8dc1-36ba712bb8e2",
