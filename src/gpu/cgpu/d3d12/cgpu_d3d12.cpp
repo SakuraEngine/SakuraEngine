@@ -309,6 +309,16 @@ void cgpu_free_semaphore_d3d12(CGPUSemaphoreId semaphore)
     return cgpu_free_fence((CGPUFenceId)semaphore);
 }
 
+CGPURootSignaturePoolId cgpu_create_root_signature_pool_d3d12(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc)
+{
+    return CGPUUtil_CreateRootSignaturePool(desc);
+}
+
+void cgpu_free_root_signature_pool_d3d12(CGPURootSignaturePoolId pool)
+{
+    CGPUUtil_FreeRootSignaturePool(pool);
+}
+
 // for example, shader register set: (s0t0) (s0b1) [s0b0[root]] (s1t0) (s1t1) {s2s0{static}}
 // rootParams: |   s0    |   s1    |  [s0b0]  |
 // rootRanges: | s0t0 | s0b1 | s1t0 | s1t1 |
@@ -327,11 +337,11 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     // Pick shader reflection data
     CGPUUtil_InitRSParamTables((CGPURootSignature*)RS, desc);
     // [RS POOL] ALLOCATION
-    if(desc->pool)
+    if (desc->pool)
     {
-        CGPURootSignature_D3D12* poolSig = 
-            (CGPURootSignature_D3D12*)CGPUUtil_TryAllocateSignature(desc->pool, &RS->super, desc);
-        if(poolSig != CGPU_NULLPTR)
+        CGPURootSignature_D3D12* poolSig =
+        (CGPURootSignature_D3D12*)CGPUUtil_TryAllocateSignature(desc->pool, &RS->super, desc);
+        if (poolSig != CGPU_NULLPTR)
         {
             RS->mRootConstantParam = poolSig->mRootConstantParam;
             RS->pDxRootSignature = poolSig->pDxRootSignature;
@@ -485,7 +495,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     cgpu_free(rootParams);
     cgpu_free(cbvSrvUavRanges);
     // [RS POOL] INSERTION
-    if(desc->pool)
+    if (desc->pool)
     {
         const bool result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
         cgpu_assert(result && "Root signature pool insertion failed!");
@@ -498,7 +508,7 @@ void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature)
 {
     CGPURootSignature_D3D12* RS = (CGPURootSignature_D3D12*)signature;
     // [RS POOL] FREE
-    if(signature->pool)
+    if (signature->pool)
     {
         CGPUUtil_PoolFreeSignature(signature->pool, signature);
         if (signature->pool_sig) // not root

@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
+#include "utils/make_zeroed.hpp"
 
 class RootSignaturePool : public ::testing::TestWithParam<ECGPUBackend>
 {
@@ -95,25 +96,23 @@ ECGPUBackend backend)
 }
 
 CGPURootSignatureId create_root_sig_with_shaders(CGPUDeviceId device,
-    CGPURootSignaturePoolId pool, ECGPUBackend backend, 
-    const char8_t* vs, const char8_t* ps)
+CGPURootSignaturePoolId pool, ECGPUBackend backend,
+const char8_t* vs, const char8_t* ps)
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
     read_shader_bytes(vs, &vs_bytes, &vs_length, backend);
     read_shader_bytes(ps, &fs_bytes, &fs_length, backend);
-    CGPUShaderLibraryDescriptor vs_desc = {
-        .stage = CGPU_SHADER_STAGE_VERT,
-        .name = "VertexShaderLibrary",
-        .code = vs_bytes,
-        .code_size = vs_length
-    };
-    CGPUShaderLibraryDescriptor ps_desc = {
-        .name = "FragmentShaderLibrary",
-        .stage = CGPU_SHADER_STAGE_FRAG,
-        .code = fs_bytes,
-        .code_size = fs_length
-    };
+    auto vs_desc = make_zeroed<CGPUShaderLibraryDescriptor>();
+    vs_desc.stage = CGPU_SHADER_STAGE_VERT;
+    vs_desc.name = "VertexShaderLibrary";
+    vs_desc.code = vs_bytes;
+    vs_desc.code_size = vs_length;
+    auto ps_desc = make_zeroed<CGPUShaderLibraryDescriptor>();
+    ps_desc.name = "FragmentShaderLibrary";
+    ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
+    ps_desc.code = fs_bytes;
+    ps_desc.code_size = fs_length;
     CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
     CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
     free(vs_bytes);
@@ -126,13 +125,12 @@ CGPURootSignatureId create_root_sig_with_shaders(CGPUDeviceId device,
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
     const char8_t* push_const_name = u8"root_constants";
-    CGPURootSignatureDescriptor rs_desc = {
-        .shaders = ppl_shaders,
-        .shader_count = 2,
-        .pool = pool,
-        .root_constant_count = 1,
-        .root_constant_names = &push_const_name
-    };
+    auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
+    rs_desc.shaders = ppl_shaders;
+    rs_desc.shader_count = 2;
+    rs_desc.pool = pool;
+    rs_desc.root_constant_count = 1;
+    rs_desc.root_constant_names = &push_const_name;
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
@@ -145,12 +143,12 @@ TEST_P(RootSignaturePool, PS00)
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = "RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
-    auto rs0 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
-    auto rs1 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
+    auto rs0 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
+    auto rs1 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
     EXPECT_TRUE(rs1->pool_sig == rs0);
     cgpu_free_root_signature_pool(pool);
 }
@@ -160,21 +158,21 @@ TEST_P(RootSignaturePool, RC)
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = "RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
-    auto rs0 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
-    auto rs1 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
+    auto rs0 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
+    auto rs1 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
 
     EXPECT_TRUE(rs1->pool_sig == rs0);
 
     cgpu_free_root_signature(rs0);
     cgpu_free_root_signature(rs1);
 
-    auto rs2 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
+    auto rs2 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
 
     EXPECT_TRUE(rs2->pool_sig == nullptr);
 
@@ -187,12 +185,12 @@ TEST_P(RootSignaturePool, PS01)
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = "RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
-    auto rs0 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
-    auto rs1 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader1");
+    auto rs0 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
+    auto rs1 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader1");
     EXPECT_TRUE(rs1->pool_sig == rs0);
     cgpu_free_root_signature_pool(pool);
 }
@@ -203,12 +201,12 @@ TEST_P(RootSignaturePool, PS02)
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = "RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
-    auto rs0 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
-    auto rs1 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader2");
+    auto rs0 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
+    auto rs1 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader2");
     EXPECT_TRUE(rs1->pool_sig != rs0);
     EXPECT_TRUE(rs1->pool_sig == nullptr);
     cgpu_free_root_signature_pool(pool);
@@ -220,12 +218,12 @@ TEST_P(RootSignaturePool, PS03)
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = "RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
-    auto rs0 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader0");
-    auto rs1 = create_root_sig_with_shaders(device, pool, backend, 
-        u8"cgpu-rspool-test/vertex_shader",
-        u8"cgpu-rspool-test/fragment_shader3");
+    auto rs0 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader0");
+    auto rs1 = create_root_sig_with_shaders(device, pool, backend,
+    u8"cgpu-rspool-test/vertex_shader",
+    u8"cgpu-rspool-test/fragment_shader3");
     EXPECT_TRUE(rs1->pool_sig != rs0);
     EXPECT_TRUE(rs1->pool_sig == nullptr);
     cgpu_free_root_signature_pool(pool);

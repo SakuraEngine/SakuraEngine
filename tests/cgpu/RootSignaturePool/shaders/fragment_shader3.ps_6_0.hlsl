@@ -1,8 +1,7 @@
-[[vk::binding(0, 1)]]
-Texture2D<float4> sampled_texture : register(t0, space0);
-
 [[vk::binding(0, 0)]]
 SamplerState texture_sampler : register(s0, space1);
+[[vk::binding(0, 1)]]
+Texture2D<float4> sampled_texture : register(t1, space0);
 
 struct RootConstants
 {
