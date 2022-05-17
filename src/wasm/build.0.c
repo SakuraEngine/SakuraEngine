@@ -1,3 +1,5 @@
+#ifdef SKR_USE_WASM
+
 #if !defined(__wasi__) && !defined(__EMSCRIPTEN__)
     #include "common/swa.c"
     #ifdef USE_M3
@@ -6,4 +8,6 @@
     #ifdef USE_WASM_EDGE
         #include "wasmedge/swa_wasmedge.c"
     #endif
+#endif
+
 #endif

@@ -50,4 +50,3 @@ skr_mesh_resource_t
     struct skr_index_bin_t index_buffer;
     uint32_t index_stride;
 };
-typedef struct skr_mesh_resource_t skr_mesh_resource_t;
