@@ -84,13 +84,22 @@ typedef struct skr_gfx_mat_param_t {
     skr_gfx_mat_param_freq frequency;
 } skr_gfx_mat_param_t;
 
+// gfx-shaders
 GAMERT_API gfx_shader_set_id_t ecsr_register_gfx_shader_set(const gfx_shader_set_t*) SKR_NOEXCEPT;
 GAMERT_API gfx_shader_set_t* ecsr_query_gfx_shader_set(gfx_shader_set_id_t) SKR_NOEXCEPT;
+GAMERT_API bool ecsr_unregister_gfx_shader_set(gfx_shader_set_id_t) SKR_NOEXCEPT;
+
+// gfx-mats
 GAMERT_API gfx_material_id_t ecsr_register_gfx_material(const gfx_material_t*) SKR_NOEXCEPT;
+GAMERT_API gfx_material_t* ecsr_query_gfx_material(gfx_material_id_t) SKR_NOEXCEPT;
 GAMERT_API bool ecsr_unregister_gfx_material(gfx_material_id_t) SKR_NOEXCEPT;
+
+// gfx-parameters
+GAMERT_API bool ecsr_register_gfx_mat_paramter(gfx_material_id_t mat, const skr_gfx_mat_param_t*) SKR_NOEXCEPT; 
+
+// cs-mats
 GAMERT_API processor_material_t ecsr_register_processor_material(const processor_material_t*) SKR_NOEXCEPT;
 GAMERT_API bool ecsr_unregister_processor_material(processor_material_t) SKR_NOEXCEPT;
-GAMERT_API bool ecsr_register_gfx_mat_paramter(gfx_material_id_t mat, const skr_gfx_mat_param_t*) SKR_NOEXCEPT; 
 
 #ifdef __cplusplus
 }
