@@ -2,27 +2,21 @@
 #include "platform/configure.h"
 
 typedef struct skr_float3_t {
-    union
+    struct
     {
-        struct
-        {
-            float x;
-            float y;
-            float z;
-        };
+        float x;
+        float y;
+        float z;
     };
 } skr_float3_t;
 
-typedef struct skr_float4_t {
-    SKR_ALIGNAS(16) union
+typedef struct SKR_ALIGNAS(16) skr_float4_t {
+    struct 
     {
-        struct 
-        {
-            float x;
-            float y;
-            float z;
-            float w;
-        };
+        float x;
+        float y;
+        float z;
+        float w;
     };
 } skr_float4_t;
 

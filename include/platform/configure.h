@@ -8,10 +8,14 @@
 
 #ifdef __cplusplus
 #define SKR_IF_CPP(...) __VA_ARGS__
-#define SKR_ALIGNAS(...) alignas(__VA_ARGS__)
 #else
 #define SKR_IF_CPP(...)
-#define SKR_ALIGNAS(...) _Alignas(__VA_ARGS__)
+#endif
+
+#if defined(_MSC_VER)
+#define SKR_ALIGNAS(x) __declspec(align(x))
+#else
+#define SKR_ALIGNAS(x) __attribute__((aligned(x)))
 #endif
 
 #ifndef STRINGIFY
