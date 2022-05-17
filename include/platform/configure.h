@@ -8,8 +8,10 @@
 
 #ifdef __cplusplus
 #define SKR_IF_CPP(...) __VA_ARGS__
+#define SKR_ALIGNAS(...) alignas(__VA_ARGS__)
 #else
 #define SKR_IF_CPP(...)
+#define SKR_ALIGNAS(...) _Alignas(__VA_ARGS__)
 #endif
 
 #ifndef STRINGIFY

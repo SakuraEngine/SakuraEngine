@@ -1,17 +1,17 @@
 #pragma once
 #include "platform/configure.h"
 #include <EASTL/vector.h>
-#include "math/vectormath.hpp"
 #include "resource/resource_handle.h"
+#include "utils/types.h"
 
 typedef struct skr_mesh_section_t {
     // attachment?
     // skr_mesh_section_t* parent;
     // eastl::vector<skr_mesh_section_t> children;
     uint32_t index;
-    skr::math::Vector3f translation;
-    skr::math::Vector3f scale;
-    skr::math::Quaternion rotation;
+    skr_float3_t translation;
+    skr_float3_t scale;
+    skr_float4_t rotation;
 } skr_mesh_section_t;
 
 typedef struct skr_mesh_primitive_t {
