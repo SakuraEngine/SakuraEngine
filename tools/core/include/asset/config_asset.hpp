@@ -19,7 +19,7 @@ struct TOOL_API SConfigRegistry {
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
 struct reflect attr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
-"serialize" : true,
+"serialize" : "json",
 "importer" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
 )
 TOOL_API SJsonConfigImporter final : public SImporter

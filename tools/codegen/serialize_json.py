@@ -39,7 +39,7 @@ class Record(object):
 
 def parseRecord(name, json):
     fields = []
-    if not "serialize" in json["attrs"]:
+    if shouldSkip(json):
         return
     for key, value in json["fields"].items():
         attr = value["attrs"]
@@ -81,7 +81,7 @@ class Enum(object):
 
 
 def parseEnum(name, json):
-    if not "serialize" in json["attrs"]:
+    if shouldSkip(json):
         return
     enumerators = []
     for key2, value2 in json["values"].items():
@@ -126,6 +126,20 @@ class Binding(object):
 
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
+
+
+def shouldSkip(value):
+    attr = value["attrs"]
+    if not "serialize" in attr:
+        return True
+    serialize = attr["serialize"]
+    if isinstance(serialize, list):
+        if not "json" in serialize:
+            return True
+    else:
+        if serialize != "json":
+            return True
+    return False
 
 
 def main():

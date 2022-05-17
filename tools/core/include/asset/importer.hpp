@@ -20,7 +20,7 @@ namespace asset reflect
 {
 struct reflect attr(
 "guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
-"serialize" : true
+"serialize" : "json"
 )
 TOOL_API SImporter
 {
