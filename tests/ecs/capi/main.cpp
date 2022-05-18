@@ -2,7 +2,7 @@
 #include <memory>
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
-#include "callback.hpp"
+#include "ecs/callback.hpp"
 
 using test = int;
 dual_type_index_t type_test;

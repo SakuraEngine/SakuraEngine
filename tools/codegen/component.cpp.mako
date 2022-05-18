@@ -1,5 +1,6 @@
 
 #include "ecs/dual.h"
+#include "ecs/array.hpp"
 %for header in db.headers:
 #include "${header}"
 %endfor
@@ -13,7 +14,7 @@ static struct RegisterComponent${type.id}Helper
         desc.name = "${type.short_name}";
         
     %if type.buffer:
-        desc.size = sizeof(${type.name}) * ${type.buffer} + 16u;
+        desc.size = sizeof(dual::array_component_T<${type.name}, ${type.buffer}>);
     %else:
         desc.size = sizeof(${type.name});
     %endif

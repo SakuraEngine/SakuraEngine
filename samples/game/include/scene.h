@@ -34,3 +34,13 @@ skr_parent_t
     dual_entity_t entity;
 };
 typedef struct skr_parent_t skr_parent_t;
+
+struct reflect attr(
+    "guid" : "1CD632F6-3149-42E6-9114-647B0C803F32",
+    "component" : true
+)
+skr_name_t
+{
+    char str[32];
+};
+typedef struct skr_name_t skr_name_t;

@@ -12,7 +12,7 @@
 #include "type_registry.hpp"
 #include "set.hpp"
 #include "ecs/constants.hpp"
-#include "callback.hpp"
+#include "ecs/callback.hpp"
 #include <algorithm>
 #include <numeric>
 #include "utils/format.hpp"
@@ -316,7 +316,10 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             if (part[i] == '|')
                 selector = ANY;
             else if (part[i] == '!')
+            {
                 selector = NONE;
+                filterOnly = true;
+            }
             else if (part[i] == '?')
                 selector = OPT;
             else
