@@ -3,7 +3,7 @@ struct Constants
     float2 invDisplaySize;
 };
 [[vk::push_constant]] 
-ConstantBuffer<Constants> root_constants : register(b0);
+ConstantBuffer<Constants> push_constants : register(b0);
 
 struct VSIn
 {
@@ -23,7 +23,7 @@ VSOut main(VSIn input)
 {
     VSOut output;
     output.out_pos.xy = 
-        input.pos.xy * root_constants.invDisplaySize *
+        input.pos.xy * push_constants.invDisplaySize *
         float2(2.0, -2.0) + float2(-1.0, 1.0);
     output.out_pos.zw = float2(0, 1);
     output.out_col = input.col;

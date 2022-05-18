@@ -161,6 +161,12 @@ guid_t type_registry_t::make_guid()
 } // namespace dual
 
 extern "C" {
+
+void dual_make_guid(skr_guid_t* guid)
+{
+    *guid = dual::type_registry_t::get().make_guid();
+}
+
 dual_type_index_t dualT_register_type(dual_type_description_t* description)
 {
     return dual::type_registry_t::get().register_type(*description);

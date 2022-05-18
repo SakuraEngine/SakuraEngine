@@ -18,13 +18,13 @@ struct RootConstants
 };
 
 [[vk::push_constant]]
-ConstantBuffer<RootConstants> root_constants : register(b0);
+ConstantBuffer<RootConstants> push_constants : register(b0);
 
 VSOut main(const VSIn input, uint VertexIndex : SV_VertexID)
 {
     VSOut output;
-    float4 posW = mul(float4(input.position, 1.0f), root_constants.world);
-    float4 posH = mul(posW, root_constants.view_proj);
+    float4 posW = mul(float4(input.position, 1.0f), push_constants.world);
+    float4 posH = mul(posW, push_constants.view_proj);
     output.position = posH;
     output.UV = input.uv;
     return output;

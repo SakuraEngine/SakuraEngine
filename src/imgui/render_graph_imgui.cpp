@@ -156,7 +156,7 @@ ECGPULoadAction load_action)
             (float)target_desc.width,
             (float)target_desc.height,
             0.f, 1.f);
-            cgpu_render_encoder_push_constants(context.encoder, root_sig, "root_constants", &invDisplaySize);
+            cgpu_render_encoder_push_constants(context.encoder, root_sig, "push_constants", &invDisplaySize);
             // drawcalls
             ImDrawData* draw_data = ImGui::GetDrawData();
             // Will project scissor/clipping rectangles into framebuffer space
@@ -302,13 +302,13 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     CGPUPipelineShaderDescriptor ppl_shaders[2];
     ppl_shaders[0] = desc->vs;
     ppl_shaders[1] = desc->ps;
-    const char8_t* root_constant_name = "root_constants";
+    const char8_t* push_constant_name = "push_constants";
     const char8_t* sampler_name = "sampler0";
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
-    rs_desc.root_constant_names = &root_constant_name;
-    rs_desc.root_constant_count = 1;
+    rs_desc.push_constant_names = &push_constant_name;
+    rs_desc.push_constant_count = 1;
     rs_desc.static_sampler_names = &sampler_name;
     rs_desc.static_sampler_count = 1;
     rs_desc.static_samplers = &desc->static_sampler;

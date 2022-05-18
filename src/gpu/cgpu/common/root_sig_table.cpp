@@ -21,9 +21,9 @@ bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const 
 bool CGPUUtil_ShaderResourceIsRootConst(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)
 {
     if (resource->type == CGPU_RESOURCE_TYPE_ROOT_CONSTANT) return true;
-    for (uint32_t i = 0; i < desc->root_constant_count; i++)
+    for (uint32_t i = 0; i < desc->push_constant_count; i++)
     {
-        if (strcmp(resource->name, desc->root_constant_names[i]) == 0)
+        if (strcmp(resource->name, desc->push_constant_names[i]) == 0)
             return true;
     }
     return false;
@@ -78,7 +78,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
     // Collect all resources
     RS->pipeline_type = CGPU_PIPELINE_TYPE_NONE;
     eastl::vector<CGPUShaderResource> all_resources;
-    eastl::vector<CGPUShaderResource> all_root_constants;
+    eastl::vector<CGPUShaderResource> all_push_constants;
     eastl::vector<CGPUShaderResource> all_static_samplers;
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
@@ -89,7 +89,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
             if (CGPUUtil_ShaderResourceIsRootConst(&resource, desc))
             {
                 bool coincided = false;
-                for (auto&& root_const : all_root_constants)
+                for (auto&& root_const : all_push_constants)
                 {
                     if (root_const.name_hash == resource.name_hash &&
                         root_const.set == resource.set &&
@@ -101,7 +101,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
                     }
                 }
                 if (!coincided)
-                    all_root_constants.emplace_back(resource);
+                    all_push_constants.emplace_back(resource);
             }
             else if (CGPUUtil_ShaderResourceIsStaticSampler(&resource, desc))
             {
@@ -189,12 +189,12 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
         table_index++;
     }
     // push constants
-    RS->push_constant_count = (uint32_t)all_root_constants.size();
+    RS->push_constant_count = (uint32_t)all_push_constants.size();
     RS->push_constants = (CGPUShaderResource*)cgpu_calloc(
     RS->push_constant_count, sizeof(CGPUShaderResource));
-    for (uint32_t i = 0; i < all_root_constants.size(); i++)
+    for (uint32_t i = 0; i < all_push_constants.size(); i++)
     {
-        RS->push_constants[i] = all_root_constants[i];
+        RS->push_constants[i] = all_push_constants[i];
     }
     // static samplers
     eastl::stable_sort(all_static_samplers.begin(), all_static_samplers.end(),

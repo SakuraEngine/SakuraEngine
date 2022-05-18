@@ -102,7 +102,7 @@ public:
                         prim.vertex_buffers_.data(),
                         prim.vertex_strides_.data(),
                         prim.vertex_offsets_.data());
-                        render_context->PushConstants(prim_pipeline->pipeline_->root_signature, "root_constants", &data);
+                        render_context->PushConstants(prim_pipeline->pipeline_->root_signature, "push_constants", &data);
                         render_context->DrawIndexedInstanced(prim.index_count_, prim.first_index_, 1, 0, 0);
                     }
                 }

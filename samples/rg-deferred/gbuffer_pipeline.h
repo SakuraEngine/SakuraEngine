@@ -39,9 +39,9 @@ inline CGPURenderPipelineId create_gbuffer_render_pipeline(CGPUDeviceId device)
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
-    rs_desc.root_constant_count = 1;
-    const char* root_const_name = "root_constants";
-    rs_desc.root_constant_names = &root_const_name;
+    rs_desc.push_constant_count = 1;
+    const char* root_const_name = "push_constants";
+    rs_desc.push_constant_names = &root_const_name;
     auto gbuffer_root_sig = cgpu_create_root_signature(device, &rs_desc);
     namespace smath = skr::math;
     CGPUVertexLayout vertex_layout = {};

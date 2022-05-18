@@ -998,8 +998,8 @@ typedef struct CGPURootSignatureDescriptor {
     const CGPUSamplerId* static_samplers;
     const char8_t* const* static_sampler_names;
     uint32_t static_sampler_count;
-    const char8_t* const* root_constant_names;
-    uint32_t root_constant_count;
+    const char8_t* const* push_constant_names;
+    uint32_t push_constant_count;
     CGPURootSignaturePoolId pool;
 } CGPURootSignatureDescriptor;
 

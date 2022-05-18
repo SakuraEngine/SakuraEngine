@@ -36,7 +36,7 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
         dual_type_index_t cursor = hashed_set_type;
         for (uint32_t i = 0, idx = 0; idx < key_set->length + 1; idx++)
         {
-            if (key_set->data[i] < cursor)
+            if (key_set->data[i] <= cursor)
                 filter_types[idx] = key_set->data[i++];
             else
             {
@@ -44,6 +44,7 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
                 cursor = key_set->data[i];
             }
         }
+        filter_types[key_set->length] = cursor;
     }
     // allocate new
     auto types = localStack.allocate<dual_type_index_t>(alloc_type->type.length + 1);
@@ -51,7 +52,7 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
         dual_type_index_t cursor = hashed_set_type;
         for (uint32_t i = 0, idx = 0; idx < alloc_type->type.length + 1; idx++)
         {
-            if (alloc_type->type.data[i] < cursor)
+            if (alloc_type->type.data[i] <= cursor)
                 types[idx] = alloc_type->type.data[i++];
             else
             {
@@ -59,8 +60,8 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
                 cursor = alloc_type->type.data[i];
             }
         }
+        types[alloc_type->type.length] = cursor;
     }
-    std::cout << types[0] << types[1];
     auto actual_alloc_type = make_zeroed<dual_entity_type_t>();
     actual_alloc_type.type.data = types;
     actual_alloc_type.type.length = alloc_type->type.length + 1;
@@ -86,7 +87,6 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
     // query exist
     auto filter = make_zeroed<dual_filter_t>();
     filter.all.data = filter_types;
-    std::cout << filter_types[0] << filter_types[1] << " " << this_hash << std::endl;
     filter.all.length = key_set->length + 1;
     auto meta = make_zeroed<dual_meta_filter_t>();
     meta.all_meta = alloc_type->meta;
@@ -101,7 +101,6 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
             if (hashes[i].hash == this_hash && ents[i] != temp)
             {
                 result = ents[i];
-                std::cout << " == " << ents[i] << std::endl;
                 return;
             }
         }

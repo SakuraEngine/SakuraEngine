@@ -203,6 +203,7 @@ static ECGPUTextureDimension ArrDIMLut[SpvDimSubpassData + 1] = {
     CGPU_TEX_DIMENSION_UNDEFINED,  // SpvDimBuffer
     CGPU_TEX_DIMENSION_UNDEFINED   // SpvDimSubpassData
 };
+const char8_t* push_constants_name = "push_constants";
 void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vulkan* S, const struct CGPUShaderLibraryDescriptor* desc)
 {
     S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
@@ -310,7 +311,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
                 current_res->set = 0;
                 current_res->type = CGPU_RESOURCE_TYPE_ROOT_CONSTANT;
                 current_res->binding = 0;
-                current_res->name = root_sets[i]->name;
+                current_res->name = push_constants_name;
                 current_res->name_hash =
                 cgpu_hash(current_res->name, strlen(current_res->name), (size_t)device);
                 current_res->stages = S->pReflect->shader_stage;

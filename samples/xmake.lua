@@ -111,4 +111,8 @@ target("GameTool")
 target("Game")
     set_kind("binary")
     add_deps("GameRT")
+    add_rules("utils.dxc", {
+        spv_outdir = "/../resources/shaders/Game",
+        dxil_outdir = "/../resources/shaders/Game"})
     add_files("game/main.cpp", "game/render_resources.cpp")
+    add_files("game/shaders/**.hlsl")

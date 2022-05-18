@@ -12,7 +12,7 @@ struct RootConstants
 };
 
 [[vk::push_constant]]
-ConstantBuffer<RootConstants> root_constants : register(b0);
+ConstantBuffer<RootConstants> push_constants : register(b0);
 
 struct VSOut
 {
@@ -24,9 +24,9 @@ struct VSOut
 float4 main(VSOut psIn) : SV_TARGET
 {
     float2 uv = psIn.uv;
-    if(root_constants.bFlipUVX) uv.x = 1 - uv.x;
-    if(root_constants.bFlipUVY) uv.y = 1 - uv.y;
+    if(push_constants.bFlipUVX) uv.x = 1 - uv.x;
+    if(push_constants.bFlipUVY) uv.y = 1 - uv.y;
     return sampled_texture.Sample(texture_sampler, uv) 
-        * root_constants.ColorMultiplier
+        * push_constants.ColorMultiplier
         * float4(psIn.color, 1.f);
 }

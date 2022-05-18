@@ -45,32 +45,6 @@ int main(int argc, char** argv)
     DPIAware = true;
 #endif
     assert(gamert_get_ecs_world());
-    gfx_shader_set_t set0 = {(CGPUShaderLibraryId)1, (CGPUShaderLibraryId)2, (CGPUShaderLibraryId)3, (CGPUShaderLibraryId)4, (CGPUShaderLibraryId)5};
-    gfx_shader_set_t set2 = {(CGPUShaderLibraryId)2, (CGPUShaderLibraryId)3, (CGPUShaderLibraryId)4, (CGPUShaderLibraryId)5, (CGPUShaderLibraryId)6};
-    auto setId0 = ecsr_register_gfx_shader_set(&set0);
-    auto setId1 = ecsr_register_gfx_shader_set(&set2);
-    auto setId00 = ecsr_register_gfx_shader_set(&set0);
-    assert(setId0 == setId00);
-    assert(ecsr_query_gfx_shader_set(setId0) == ecsr_query_gfx_shader_set(setId00));
-    assert(ecsr_query_gfx_shader_set(setId0));
-    assert(ecsr_query_gfx_shader_set(setId0)->vs == (CGPUShaderLibraryId)1);
-    assert(ecsr_query_gfx_shader_set(setId1)->vs == (CGPUShaderLibraryId)2);
-    gfx_material_t mat0 = {0};
-    mat0.m_gfx = setId0;
-    mat0.formats[0] = CGPU_FORMAT_R8G8B8A8_UNORM;
-    auto matId0 = ecsr_register_gfx_material(&mat0);
-    gfx_material_t mat1 = mat0;
-    mat1.formats[0] = CGPU_FORMAT_B8G8R8A8_UNORM;
-    auto matId1 = ecsr_register_gfx_material(&mat1);
-    gfx_material_t mat2 = mat1;
-    mat2.m_gfx = setId1; 
-    auto matId2 = ecsr_register_gfx_material(&mat2);
-    auto matId00 = ecsr_register_gfx_material(&mat0);
-    assert(matId0 != 0);
-    assert(matId0 == matId00);
-    assert(ecsr_query_gfx_material(matId0)->m_gfx == setId0);
-    assert(matId0 != matId1);
-    assert(matId0 != matId2);
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     SWindowDescroptor window_desc = {};
@@ -146,6 +120,7 @@ int main(int argc, char** argv)
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
     free_api_objects();
+    moduleManager->destroy_module_graph();
     skr_free_window(window);
     SDL_Quit();
     return 0;
