@@ -71,6 +71,18 @@ typedef struct SConditionVariable {
 #endif
 } SConditionVariable;
 
+typedef enum SThreadPriority
+{
+    SKR_THREAD_DEFAULT,
+    SKR_THREAD_LOWEST,
+    SKR_THREAD_BELOW_NORMAL,
+    SKR_THREAD_NORMAL,
+    SKR_THREAD_ABOVE_NORMAL,
+    SKR_THREAD_HIGH,
+    SKR_THREAD_TIME_CRITICAL,
+    SKR_THREAD_PRIORITY_COUNT
+} SThreadPriority;
+
 typedef void (*SThreadFunction)(void*);
 typedef struct SThreadDesc {
 #if defined(NX64)
@@ -126,6 +138,7 @@ void skr_wake_condition_var(SConditionVariable* cv);
 
 ///
 void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
+void skr_set_thread_priority(SThreadHandle, SThreadPriority);
 void skr_destroy_thread(SThreadHandle handle);
 void skr_join_thread(SThreadHandle handle);
 

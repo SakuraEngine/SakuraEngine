@@ -365,6 +365,7 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
     service->setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     skr_init_thread(&service->threadItem, &service->serviceThread);
+    skr_set_thread_priority(service->serviceThread, SKR_THREAD_TIME_CRITICAL);
     return service;
 }
 
