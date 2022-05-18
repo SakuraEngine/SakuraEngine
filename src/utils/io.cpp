@@ -80,8 +80,9 @@ public:
     };
     ~RAMServiceImpl() SKR_NOEXCEPT = default;
     RAMServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
-        :  isLockless(lockless), _sleepTime(sleep_time)
-         
+        : isLockless(lockless),
+          _sleepTime(sleep_time)
+
     {
     }
     void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) SKR_NOEXCEPT final;
@@ -168,19 +169,19 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
         }
     }
     // 1.defer cancel tasks
-    if(service->tasks.size())
+    if (service->tasks.size())
     {
         TracyCZone(cancelZone, 1);
         TracyCZoneName(cancelZone, "ioServiceCancels", strlen("ioServiceCancels"));
         service->tasks.erase(
-            eastl::remove_if(service->tasks.begin(), service->tasks.end(),
-            [](RAMServiceImpl::Task& t) {
-                bool cancelled = skr_atomic32_load_relaxed(&t.request->request_cancel);
-                cancelled &= t.request->is_cancelled() || t.request->is_enqueued();
-                if (cancelled)
-                    t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
-                return cancelled;
-            }),
+        eastl::remove_if(service->tasks.begin(), service->tasks.end(),
+        [](RAMServiceImpl::Task& t) {
+            bool cancelled = skr_atomic32_load_relaxed(&t.request->request_cancel);
+            cancelled &= t.request->is_cancelled() || t.request->is_enqueued();
+            if (cancelled)
+                t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+            return cancelled;
+        }),
         service->tasks.end());
         TracyCZoneEnd(cancelZone);
     }
@@ -347,7 +348,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     }
     // unlock cv
     const auto sleepTimeVal = skr_atomic32_load_acquire(&_sleepTime);
-    if(sleepTimeVal == SKR_IO_SERVICE_SLEEP_TIME_MAX)
+    if (sleepTimeVal == SKR_IO_SERVICE_SLEEP_TIME_MAX)
     {
         skr_wake_condition_var(&sleepCv);
     }
@@ -365,7 +366,7 @@ skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t
     service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
     service->setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     skr_init_thread(&service->threadItem, &service->serviceThread);
-    skr_set_thread_priority(service->serviceThread, SKR_THREAD_TIME_CRITICAL);
+    skr_set_thread_priority(service->serviceThread, SKR_THREAD_ABOVE_NORMAL);
     return service;
 }
 
@@ -385,14 +386,14 @@ bool skr::io::RAMServiceImpl::doCancel(skr_async_io_request_t* request) SKR_NOEX
 {
     bool cancelled = false;
     tasks.erase(
-        eastl::remove_if(tasks.begin(), tasks.end(),
-        [&](Task& t) {
-            const bool stateCancellable = request->is_enqueued() || request->is_cancelled();
-            cancelled = (t.request == request || request == nullptr) && stateCancellable;
-            if (cancelled)
-                t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
-            return cancelled;
-        }),
+    eastl::remove_if(tasks.begin(), tasks.end(),
+    [&](Task& t) {
+        const bool stateCancellable = request->is_enqueued() || request->is_cancelled();
+        cancelled = (t.request == request || request == nullptr) && stateCancellable;
+        if (cancelled)
+            t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+        return cancelled;
+    }),
     tasks.end());
     return cancelled;
 }
