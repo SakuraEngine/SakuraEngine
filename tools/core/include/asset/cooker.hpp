@@ -12,6 +12,7 @@
 #include "platform/guid.h"
 #include "ftl/fibtex.h"
 #include "utils/hashmap.hpp"
+#include "utils/parallel_for.hpp"
 #include "ghc/filesystem.hpp"
 #include "simdjson.h"
 
@@ -105,35 +106,7 @@ struct TOOL_API SCookSystem {
     template <class F, class Iter>
     void ParallelFor(Iter begin, Iter end, size_t batch, F f)
     {
-        SKR_ASSERT(scheduler != nullptr);
-        struct Payload {
-            F* f;
-            Iter begin;
-            Iter end;
-        };
-        typename std::iterator_traits<Iter>::difference_type n = std::distance(begin, end);
-        size_t batchCount = (n / batch) + 1;
-        auto payloads = (Payload*)sakura_malloc(batchCount * sizeof(Payload));
-        ftl::Task* tasks = (ftl::Task*)sakura_malloc(batchCount * sizeof(ftl::Task));
-        auto body = +[](ftl::TaskScheduler* task, void* data) {
-            auto payload = (Payload*)data;
-            (*payload->f)(payload->begin, payload->end);
-        };
-        for (size_t i = 0; i < batchCount; ++i)
-        {
-            payloads[i].f = &f;
-            payloads[i].begin = begin;
-            auto toAdvance = std::min((size_t)n, batch);
-            std::advance(begin, toAdvance);
-            n -= toAdvance;
-            payloads[i].end = begin;
-            tasks[i] = { body, &payloads[i] };
-        }
-        ftl::TaskCounter counter(scheduler);
-        scheduler->AddTasks(batchCount, tasks, ftl::TaskPriority::Normal, &counter);
-        sakura_free(tasks);
-        scheduler->WaitForCounter(&counter);
-        sakura_free(payloads);
+        skr::parallel_for(scheduler, std::move(begin), std::move(end), batch, std::move(f));
     }
 };
 TOOL_API SCookSystem* GetCookSystem();
