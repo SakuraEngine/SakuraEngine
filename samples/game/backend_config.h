@@ -20,7 +20,8 @@ typedef enum ECGPUBackEnd ECGPUBackEnd;
 struct reflect attr(
 "guid" : "b537f7b1-6d2d-44f6-b313-bcb559d3f490",
 "serialize" : ["json", "bin"],
-"config" : true
+"config" : true,
+"rtti" : true
 )
 config_backend_t
 {

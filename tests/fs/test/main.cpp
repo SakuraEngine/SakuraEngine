@@ -65,6 +65,23 @@ TEST_F(FSTest, readwrite2)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
+TEST_F(FSTest, seqread)
+{
+    auto f = skr_vfs_fopen(abs_fs, "testfile2",
+    SKR_FM_READ_WRITE, SKR_FILE_CREATION_OPEN_EXISTING);
+    const char8_t* string = u8"Hello, World2!";
+    char8_t string_out[256];
+    char8_t string_out2[256];
+    std::memset((void*)string_out, 0, 256);
+    std::memset((void*)string_out2, 0, 256);
+    skr_vfs_fread(f, string_out, 0, 2);
+    skr_vfs_fread(f, string_out2, 2, 3);
+    EXPECT_EQ(std::string(string_out), std::string(u8"He"));
+    EXPECT_EQ(std::string(string_out2), std::string(u8"llo"));
+    EXPECT_EQ(skr_vfs_fsize(f), strlen(string));
+    EXPECT_EQ(skr_vfs_fclose(f), true);
+}
+
 TEST_F(FSTest, asyncread)
 {
     skr_ram_io_service_desc_t ioServiceDesc = {};

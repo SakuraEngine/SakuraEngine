@@ -98,7 +98,9 @@ Fiber::Fiber(size_t stackSize, FiberStartRoutine startRoutine, void* arg)
 
 Fiber::~Fiber()
 {
+#ifdef TRACY_ENABLE
     names.emplace_back(std::move(name));
+#endif
     if (m_stack != nullptr)
     {
         if (m_systemPageSize != 0)

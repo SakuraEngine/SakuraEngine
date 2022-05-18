@@ -98,9 +98,30 @@ FORCEINLINE static void* ThreadFunctionStatic(void* data)
     return 0;
 }
 
+const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = { 
+    0, 1, 25, 50, 75, 75, 99 
+};
+
+FORCEINLINE static void skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
+{
+    struct sched_param param = {};
+    param.sched_priority = priorities[priority];
+    if (priority == SKR_THREAD_DEFAULT)
+        return;
+    else if(priority > SKR_THREAD_ABOVE_NORMAL)
+    {
+        pthread_setschedparam(handle, SCHED_FIFO, &param);
+    }
+    else
+    {
+        pthread_setschedparam(handle, SCHED_RR, &param);
+    }
+}
+
 FORCEINLINE static void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
 {
     int res = pthread_create(pHandle, NULL, ThreadFunctionStatic, pData);
+    skr_set_thread_priority(*pHandle, SKR_THREAD_NORMAL);
     UNREF_PARAM(res);
     assert(res == 0);
 }

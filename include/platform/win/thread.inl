@@ -82,6 +82,21 @@ FORCEINLINE static void skr_init_thread(SThreadDesc* pDesc, SThreadHandle* pHand
     *pHandle = handle;
 }
 
+const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = { 
+    THREAD_PRIORITY_NORMAL,
+    THREAD_PRIORITY_BELOW_LOWEST,
+    THREAD_PRIORITY_BELOW_NORMAL,
+    THREAD_PRIORITY_NORMAL,
+    THREAD_PRIORITY_ABOVE_NORMAL,
+    THREAD_PRIORITY_HIGHEST,
+    THREAD_PRIORITY_TIME_CRITICAL
+};
+
+FORCEINLINE static void skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
+{
+    SetThreadPriority((HANDLE)handle, priorities[priority]);
+}
+
 FORCEINLINE static void skr_destroy_thread(SThreadHandle handle)
 {
     assert(handle != NULL);
