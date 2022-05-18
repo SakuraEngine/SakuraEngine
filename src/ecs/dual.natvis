@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="skr_guid_t">
+        <DisplayString>{{{Data1,Xb}-{Data2,Xb}-{Data3,Xb}-{((uint16_t*)Data4)[0],Xb}-{((uint16_t*)Data4)[1],Xb}{((uint32_t*)Data4)[1],Xb}}}</DisplayString>
+    </Type>
+    <Type Name="dual_chunk_view_t">
+        <Intrinsic Name="has_value" Expression="count != 0 &amp;&amp; chunk != nullptr"/>
+        <DisplayString Condition="!has_value()">Empty</DisplayString>
+        <DisplayString>{{ start={start}, end={start+count}, chunk={chunk} }}</DisplayString>
+        <Expand>
+          <Item Name="type">((SkrRT.dll!dual_chunk_t*)chunk)->group->type</Item>
+          <Item Name="archetype">((SkrRT.dll!dual_chunk_t*)chunk)->type</Item>
+          <Item Name="group">((SkrRT.dll!dual_chunk_t*)chunk)->group</Item>
+          <Item Name="chunk">(SkrRT.dll!dual_chunk_t*)chunk</Item>
+          <Item Name="[start]" Condition="has_value()">start</Item>
+          <Item Name="[size]" Condition="has_value()">count</Item>
+          <IndexListItems Condition="has_value()">
+            <Size>count</Size>
+            <ValueNode>((SkrRT.dll!dual_entity_debug_proxy_t*)((SkrRT.dll!dual_chunk_t*)chunk+1))[$i+start]</ValueNode>
+          </IndexListItems>
+        </Expand>
+    </Type>
+    <Type Name = "dual_entity_debug_proxy_t">
+        <DisplayString> {{ id={value &amp; 0x00FFFFFF} version={value &gt;&gt; 24} }} </DisplayString>
+    </Type>
+    <Type Name="dual_group_t">
+        <DisplayString Condition="((SkrRT.dll!dual_group_t*)this)->isDead"> Dead {{ chunkCount={((SkrRT.dll!dual_group_t*)this)->chunkCount}, entityCount={((SkrRT.dll!dual_group_t*)this)->size} }}</DisplayString>
+        <DisplayString Condition="((SkrRT.dll!dual_group_t*)this)->disabled"> Disabled {{ chunkCount={((SkrRT.dll!dual_group_t*)this)->chunkCount}, entityCount={((SkrRT.dll!dual_group_t*)this)->size} }}</DisplayString>
+        <DisplayString>{{ chunkCount={((SkrRT.dll!dual_group_t*)this)->chunkCount}, entityCount={((SkrRT.dll!dual_group_t*)this)->size} }}</DisplayString>
+        <Expand>
+            <Item Name="type">((SkrRT.dll!dual_group_t*)this)->type</Item>
+            <Item Name="archetype">((SkrRT.dll!dual_group_t*)this)->archetype</Item>
+            <LinkedListItems>
+                <Size>((SkrRT.dll!dual_group_t*)this)->chunkCount</Size>
+                <HeadPointer>((SkrRT.dll!dual_group_t*)this)->firstChunk</HeadPointer>
+                <NextPointer>next</NextPointer>
+                <ValueNode>(*(SkrRT.dll!dual_chunk_t*)this)</ValueNode>
+            </LinkedListItems>
+        </Expand>
+    </Type>
+    <Type Name="dual_type_set_t">
+        <Intrinsic Name="has_value" Expression="length != 0 &amp;&amp; data != nullptr"/>
+        <DisplayString Condition="!has_value()"> Empty </DisplayString>
+        <DisplayString>{{ size={length} }}</DisplayString>
+        <Expand>
+            <ArrayItems Condition="has_value()">
+                <Size>length</Size>
+                <ValuePointer>(SkrRT.dll!dual::type_index_t*)data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="dual_entity_set_t">
+        <Intrinsic Name="has_value" Expression="length != 0 &amp;&amp; data != nullptr"/>
+        <DisplayString Condition="!has_value()"> Empty </DisplayString>
+        <DisplayString>{{ size={length} }}</DisplayString>
+        <Expand>
+            <ArrayItems Condition="has_value()">
+                <Size>length</Size>
+                <ValuePointer>(SkrRT.dll!dual_entity_debug_proxy_t*)data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="dual_query_t">
+        <DisplayString Condition="!((SkrRT.dll!dual_query_t*)this)->built"> Unbuilt </DisplayString>
+        <DisplayString> {{ params={((SkrRT.dll!dual_query_t*)this)->parameters.length} }} </DisplayString>
+        <Expand>
+            <Item Name="filter" Condition="((SkrRT.dll!dual_query_t*)this)->built">((SkrRT.dll!dual_query_t*)this)->buildedFilter</Item>
+            <Item Name="filter" Condition="!((SkrRT.dll!dual_query_t*)this)->built">((SkrRT.dll!dual_query_t*)this)->filter</Item>
+            <Item Name="metaFilter">((SkrRT.dll!dual_query_t*)this)->meta</Item>
+            <Item Name="parameters">((SkrRT.dll!dual_query_t*)this)->parameters</Item>
+        </Expand>
+    </Type>
+    <Type Name="dual::type_index_t">
+        <DisplayString>{{ {SkrRT.dll!g_dual_ctx->typeRegistry.descriptions.mpBegin[id].name,s} }}</DisplayString>
+        <Expand>
+          <ExpandedItem>SkrRT.dll!g_dual_ctx->typeRegistry.descriptions.mpBegin[id]</ExpandedItem>
+        </Expand>
+    </Type>
+</AutoVisualizer>
