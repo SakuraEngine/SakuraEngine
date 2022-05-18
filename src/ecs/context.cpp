@@ -2,6 +2,8 @@
 #include "ecs/dual.h"
 #include "type_registry.hpp"
 
+dual_context_t* g_dual_ctx;
+
 RUNTIME_API dual_context_t* dual_get_context()
 {
     static dual_context_t* ctx = dual_initialize();
@@ -48,7 +50,7 @@ dual_context_t::dual_context_t()
 extern "C" {
 dual_context_t* dual_initialize()
 {
-    return new dual_context_t;
+    return g_dual_ctx = new dual_context_t;
 }
 
 void dual_shutdown()

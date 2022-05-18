@@ -22,6 +22,10 @@ typedef uint32_t TIndex;
 typedef uint16_t SIndex;
 typedef uint32_t dual_entity_t;
 
+typedef struct dual_entity_debug_proxy_t {
+    dual_entity_t value;
+} dual_entity_debug_proxy_t;
+
 #define ENTITY_ID_MASK 0x00FFFFFF
 #define ENTITY_VERSION_OFFSET 24
 #define ENTITY_VERSION_MASK 0x000000FF
