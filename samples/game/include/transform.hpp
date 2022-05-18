@@ -1,3 +1,5 @@
+#include "ecs/dual.h"
+#include "gamert_configure.h"
 #include "math/matrix.hpp"
 #include "math/vector.hpp"
 #include "math/rotator.hpp"
@@ -9,7 +11,16 @@ struct reflect attr(
     "guid" : "AE2C7477-8A44-4339-BE5D-64D05D7E05B1",
     "component" : true //, "serialize" : "USD"
 )
-skr_transform_t
+skr_l2w_t
+{
+    skr::math::float4x4 matrix;
+};
+
+struct reflect attr(
+    "guid" : "869F46D3-992A-4C18-9538-BDC48F4BED1D",
+    "component" : true
+)
+skr_l2r_t
 {
     skr::math::float4x4 matrix;
 };
@@ -20,7 +31,7 @@ struct reflect attr(
 )
 skr_rotation_t
 {
-    skr::math::Vector3f euler;
+    skr::math::Rotator euler;
 };
 
 struct reflect attr(
@@ -40,3 +51,14 @@ skr_scale_t
 {
     skr::math::Vector3f value;
 };
+
+struct skr_transform_system {
+    dual_query_t* localToWorld;
+    dual_query_t* localToRelative;
+    dual_query_t* relativeToWorld;
+};
+
+extern "C" {
+GAMERT_API void skr_transform_setup(dual_storage_t* world, skr_transform_system* system);
+GAMERT_API void skr_transform_update(skr_transform_system* query);
+}
