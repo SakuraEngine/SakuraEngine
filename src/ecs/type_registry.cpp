@@ -96,7 +96,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
         if (name2type.count(desc.name))
             return kInvalidTypeIndex;
         auto len = std::strlen(desc.name);
-        auto name = (char*)nameArena.allocate(len, 1);
+        auto name = (char*)nameArena.allocate(len + 1, 1);
         std::memcpy(name, desc.name, len + 1);
         desc.name = name;
     }
