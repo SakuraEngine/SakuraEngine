@@ -498,7 +498,7 @@ int main(int argc, char* argv[])
                 };
                 cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
                 cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 5, vertex_buffers, strides, offsets);
-                cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "root_constants", &view_proj);
+                cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "push_constants", &view_proj);
                 cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
             });
             if (fragmentLightingPass)
@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
                     (float)native_backbuffer->width, (float)native_backbuffer->height,
                     0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
-                    cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "root_constants", &lighting_data);
+                    cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "push_constants", &lighting_data);
                     cgpu_render_encoder_draw(stack.encoder, 6, 0);
                 });
             }
@@ -535,7 +535,7 @@ int main(int argc, char* argv[])
                 },
                 [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
                     cgpu_compute_encoder_push_constants(stack.encoder,
-                    lighting_cs_pipeline->root_signature, "root_constants", &lighting_cs_data);
+                    lighting_cs_pipeline->root_signature, "push_constants", &lighting_cs_data);
                     cgpu_compute_encoder_dispatch(stack.encoder,
                     (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
                     (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),

@@ -1,4 +1,5 @@
 #pragma once
+#include <EASTL/internal/move_help.h>
 #include <EASTL/type_traits.h>
 #include <cstring>
 

@@ -77,7 +77,7 @@ public:
         }
         newCharacteristic.push_constant_count = RSTables->push_constant_count;
         newCharacteristic.push_constant_hash = (size_t)this;
-        for(uint32_t i = 0; i < desc->root_constant_count; i++)
+        for(uint32_t i = 0; i < desc->push_constant_count; i++)
         {
             RSCharacteristic::PushConstant p = {};
             p.set = RSTables->push_constants[i].set;

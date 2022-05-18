@@ -290,6 +290,6 @@ eastl::string_view ModuleManagerImpl::get_root(void)
 
 extern "C" RUNTIME_API skr::ModuleManager* __stdcall skr_get_module_manager()
 {
-    static skr::ModuleManager* sModuleManager = SkrNew<skr::ModuleManagerImpl>();
-    return sModuleManager;
+    static auto sModuleManager = eastl::make_unique<skr::ModuleManagerImpl>();
+    return sModuleManager.get();
 }

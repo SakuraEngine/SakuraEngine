@@ -124,13 +124,13 @@ const char8_t* vs, const char8_t* ps)
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
-    const char8_t* push_const_name = u8"root_constants";
+    const char8_t* push_const_name = u8"push_constants";
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
     rs_desc.pool = pool;
-    rs_desc.root_constant_count = 1;
-    rs_desc.root_constant_names = &push_const_name;
+    rs_desc.push_constant_count = 1;
+    rs_desc.push_constant_names = &push_const_name;
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);

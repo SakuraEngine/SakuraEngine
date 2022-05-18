@@ -85,6 +85,8 @@ void free_api_objects()
     cgpu_free_instance(instance);
 }
 
+void create_test_materials();
+
 void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 {
     auto moduleManager = skr_get_module_manager();
@@ -170,4 +172,72 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
     render_graph_imgui_initialize(&imgui_graph_desc);
     cgpu_free_shader_library(imgui_vs);
     cgpu_free_shader_library(imgui_fs);
+
+    // create materials
+    create_test_materials();
+}
+
+#include "utils/make_zeroed.hpp"
+#include "render-scene.h"
+
+void create_test_materials()
+{
+    auto moduleManager = skr_get_module_manager();
+
+    eastl::string vsname = u8"shaders/Game/gbuffer_vs";
+    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
+    auto vsfile = skr_vfs_fopen(gamert->resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    uint32_t _vs_length = skr_vfs_fsize(vsfile);
+    uint32_t* _vs_bytes = (uint32_t*)sakura_malloc(_vs_length);
+    skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
+    skr_vfs_fclose(vsfile);
+
+    eastl::string fsname = u8"shaders/Game/gbuffer_fs";
+    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    auto fsfile = skr_vfs_fopen(gamert->resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    uint32_t _fs_length = skr_vfs_fsize(fsfile);
+    uint32_t* _fs_bytes = (uint32_t*)sakura_malloc(_fs_length);
+    skr_vfs_fread(fsfile, _fs_bytes, 0, _fs_length);
+    skr_vfs_fclose(fsfile);
+
+    CGPUShaderLibraryDescriptor vs_desc = {};
+    vs_desc.name = "gbuffer_vertex_buffer";
+    vs_desc.stage = CGPU_SHADER_STAGE_VERT;
+    vs_desc.code = _vs_bytes;
+    vs_desc.code_size = _vs_length;
+    CGPUShaderLibraryDescriptor fs_desc = {};
+    fs_desc.name = "gbuffer_fragment_buffer";
+    fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
+    fs_desc.code = _fs_bytes;
+    fs_desc.code_size = _fs_length;
+    CGPUShaderLibraryId _vs = cgpu_create_shader_library(device, &vs_desc);
+    CGPUShaderLibraryId _fs = cgpu_create_shader_library(device, &fs_desc);
+    sakura_free(_vs_bytes);
+    sakura_free(_fs_bytes);
+    auto shaderSet = make_zeroed<gfx_shader_set_t>();
+    shaderSet.vs = _vs;
+    shaderSet.ps = _fs;
+    auto setId = ecsr_register_gfx_shader_set(&shaderSet);
+    auto mat = make_zeroed<gfx_material_t>();
+    mat.m_gfx = setId;
+    mat.device = ::device;
+    mat.push_constant_count = 1;
+    const char8_t* push_const_name = u8"push_constants";
+    mat.push_constant_names = &push_const_name;
+    auto matId = ecsr_register_gfx_material(&mat);
+    auto type = ecsr_query_material_parameter_type(matId, "push_constants");
+    assert(type != UINT32_MAX);
+    auto bindingTypeDesc = dualT_get_desc(type);
+    SKR_LOG_FMT_INFO(
+        "ECS Type generated for binding push_constant:"
+        "\n    name:{} size:{}\n    guid: {}", 
+        bindingTypeDesc->name, bindingTypeDesc->size, 
+        bindingTypeDesc->guid);
+    // TODO: shader 预热
+    ecsr_unregister_gfx_shader_set(setId);
+    cgpu_free_shader_library(_vs);
+    cgpu_free_shader_library(_fs);
+    // quit
+    ecsr_unregister_gfx_material(matId);
 }

@@ -138,12 +138,12 @@ void create_render_pipeline()
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
     const char8_t* sampler_name = "texture_sampler";
-    const char8_t* root_constant_name = "root_constants";
+    const char8_t* push_constant_name = "push_constants";
     CGPURootSignatureDescriptor rs_desc = {
         .shaders = ppl_shaders,
         .shader_count = 2,
-        .root_constant_names = &root_constant_name,
-        .root_constant_count = 1
+        .push_constant_names = &push_constant_name,
+        .push_constant_count = 1
     };
     if (bUseStaticSampler)
     {
@@ -328,7 +328,7 @@ void raster_redraw()
         cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
-        cgpu_render_encoder_push_constants(rp_encoder, root_sig, "root_constants", &data);
+        cgpu_render_encoder_push_constants(rp_encoder, root_sig, "push_constants", &data);
         if (desc_set2) cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set2);
         cgpu_render_encoder_draw(rp_encoder, 6, 0);
     }

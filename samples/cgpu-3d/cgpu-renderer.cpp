@@ -311,12 +311,12 @@ void RenderDevice::Initialize(ECGPUBackend backend, RenderWindow** pprender_wind
     ppl_shaders_[1].entry = "main";
     ppl_shaders_[1].library = fs_library_;
     const char8_t* sampler_name = "texture_sampler";
-    const char8_t* root_constant_name = "root_constants";
+    const char8_t* push_constant_name = "push_constants";
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders_;
     rs_desc.shader_count = 2;
-    rs_desc.root_constant_names = &root_constant_name;
-    rs_desc.root_constant_count = 1;
+    rs_desc.push_constant_names = &push_constant_name;
+    rs_desc.push_constant_count = 1;
     rs_desc.static_samplers = &default_sampler_;
     rs_desc.static_sampler_count = 1;
     rs_desc.static_sampler_names = &sampler_name;
