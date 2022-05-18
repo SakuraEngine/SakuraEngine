@@ -633,7 +633,7 @@ RUNTIME_API dual_entity_t dualJ_add_resource();
  */
 RUNTIME_API void dualJ_remove_resource(dual_entity_t id);
 typedef uint32_t dual_thread_index_t;
-typedef void (*dual_system_callback_t)(void* u, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
+typedef void (*dual_system_callback_t)(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
 typedef void (*dual_system_init_callback_t)(void* u, EIndex entityCount);
 typedef struct dual_resource_operation_t {
     dual_entity_t* resources;
@@ -697,4 +697,9 @@ template <class C>
 struct dual_id_of {
     static dual_type_index_t get();
 };
+namespace ftl
+{
+class TaskScheduler;
+}
+RUNTIME_API ftl::TaskScheduler* dualX_get_scheduler();
 #endif
