@@ -92,12 +92,6 @@ void SCookSystem::WaitForAll()
 skr::io::RAMService* SCookSystem::getIOService()
 {
     SMutexLock lock(ioMutex);
-    for(uint32_t i = 0; i < ioServicesMaxCount; i++)
-    {
-        const auto status = ioServices[i]->get_service_status();
-        if(status == SKR_IO_SERVICE_STATUS_SLEEPING)
-            return ioServices[i];
-    }
     static std::atomic_uint32_t cursor = 0;
     cursor = (cursor % ioServicesMaxCount);
     return ioServices[cursor++];
