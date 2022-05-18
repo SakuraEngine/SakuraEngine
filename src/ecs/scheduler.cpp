@@ -11,7 +11,7 @@
 #include "phmap.h"
 #include "query.hpp"
 #include "storage.hpp"
-#include "callback.hpp"
+#include "ecs/callback.hpp"
 #include "type.hpp"
 #include "set.hpp"
 
@@ -214,12 +214,15 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         }
     };
 
-    forloop (i, 0, resources->count)
+    if (resources)
     {
-        auto& entry = allResources[e_id(resources->resources[i])];
-        auto readonly = resources->readonly[i];
-        auto atomic = resources->atomic[i];
-        update_entry(entry, job->counter, readonly, atomic, dependencies);
+        forloop (i, 0, resources->count)
+        {
+            auto& entry = allResources[e_id(resources->resources[i])];
+            auto readonly = resources->readonly[i];
+            auto atomic = resources->atomic[i];
+            update_entry(entry, job->counter, readonly, atomic, dependencies);
+        }
     }
 
     forloop (i, 0, query->parameters.length)
@@ -263,7 +266,8 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         auto job = (dual_ecs_job_t*)data;
         forloop (i, 0, job->dependencyCount)
             job->scheduler->scheduler.WaitForCounter(job->dependencies[i].get());
-        job->init(job->userdata, job->entityCount);
+        if (job->init)
+            job->init(job->userdata, job->entityCount);
         auto query = job->query;
         fixed_stack_scope_t _(localStack);
         dual_meta_filter_t validatedMeta;
@@ -279,7 +283,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         {
             uint32_t startIndex = 0;
             auto processView = [&](dual_chunk_view_t* view) {
-                job->callback(job->userdata, view, job->localTypes, startIndex);
+                job->callback(job->userdata, job->query->storage, view, job->localTypes, startIndex);
                 startIndex += view->count;
             };
             forloop (i, 0, job->groupCount)
@@ -360,7 +364,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
                 task_payload_t* payload = (task_payload_t*)data;
                 auto job = payload->job;
                 for (auto task = (task_t*)payload->batch.startTask; task != (task_t*)payload->batch.endTask; ++task)
-                    job->callback(job->userdata, &task->view, &job->localTypes[job->query->parameters.length * task->groupIndex], task->startIndex);
+                    job->callback(job->userdata, job->query->storage, &task->view, &job->localTypes[job->query->parameters.length * task->groupIndex], task->startIndex);
             };
             auto _tasks = (ftl::Task*)dual_malloc(sizeof(ftl::Task) * batchs.size());
 
@@ -397,12 +401,15 @@ eastl::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_job(uint32_t cou
     job = new (job) dual_simple_job_t(*this);
     job->type = dual_job_type::simple;
     DependencySet dependencies;
-    forloop (i, 0, resources->count)
+    if (resources)
     {
-        auto& entry = allResources[e_id(resources->resources[i])];
-        auto readonly = resources->readonly[i];
-        auto atomic = resources->atomic[i];
-        update_entry(entry, job->counter, readonly, atomic, dependencies);
+        forloop (i, 0, resources->count)
+        {
+            auto& entry = allResources[e_id(resources->resources[i])];
+            auto readonly = resources->readonly[i];
+            auto atomic = resources->atomic[i];
+            update_entry(entry, job->counter, readonly, atomic, dependencies);
+        }
     }
 
     job->dependencies.resize(dependencies.size());
@@ -510,4 +517,9 @@ void dualJ_wait_storage(dual_storage_t* storage)
 {
     dual::scheduler_t::get().sync_storage(storage);
 }
+}
+
+ftl::TaskScheduler* dualX_get_scheduler()
+{
+    return &dual::scheduler_t::get().scheduler;
 }
