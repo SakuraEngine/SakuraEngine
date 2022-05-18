@@ -24,6 +24,8 @@ _deps
 /SDKs/grpc
 /SDKs/reflector-win
 /SDKs/tools
+/SDKs/python
 /SDKs/*.zip
 /SDKs/*.ttf
 stressTest
+/thirdparty/USD
