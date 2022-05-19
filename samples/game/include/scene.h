@@ -24,6 +24,10 @@ struct sreflect sattr(
     dual_entity_t entity;
 };
 typedef struct skr_child_t skr_child_t;
+#ifdef __cplusplus
+#include "ecs/array.hpp"
+using skr_children_t = dual::array_component_T<skr_child_t, 4>;
+#endif
 
 struct sreflect sattr(
     "guid" : "2CAA41D2-54A4-46FB-BE43-68B545F313BF",

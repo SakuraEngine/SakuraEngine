@@ -84,17 +84,34 @@ target("GameRT")
     add_deps("SkrRT")
     add_files("game/src/**.cpp", "game/src/**.c")
 
+
 target("GameTool")
     set_kind("shared")
     add_rules("c++.reflection", {
         files = {"gametool/**.h", "gametool/**.hpp"},
         rootdir = "gametool/"
     })
+    add_includedirs("$(projectdir)/thirdparty/USD/include")
+    add_includedirs("$(projectdir)/SDKs/python/include")
+    add_includedirs("$(projectdir)/thirdparty/USD/include/boost-1_70")
     add_includedirs("gametool/include", {public=true})
     add_defines("GAMETOOL_SHARED", {public=true})
-    add_defines("GAMETOOL_IMPL")
+    add_defines("GAMETOOL_IMPL","BOOST_LIB_TOOLSET=vc141","BOOST_LIB_RT_OPT")
     add_deps("SkrTool", "GameRT")
     add_files("gametool/src/**.cpp")
+    add_linkdirs("$(projectdir)/SDKs/python/libs")
+    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)/USD/lib")
+    before_build(function (target)
+        import("core.project.task")
+        task.run("unzip-usd")
+        local binrayDir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
+        local usdlibs = os.files(path.join(binrayDir, "USD/lib/*.lib"))
+        local links = {}
+        for _, v in ipairs(usdlibs) do 
+            table.insert(links, path.basename(v))
+        end
+        target:add("links", table.unpack(links))
+    end)
     on_config(function (target, opt)
         local dep = target:dep("GameRT");
         local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "tool/generated", dep:name())
