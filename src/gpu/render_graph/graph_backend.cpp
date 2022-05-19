@@ -188,9 +188,9 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
     auto read_edges = pass->tex_read_edges();
     auto rw_edges = pass->tex_readwrite_edges();
     if (pass->pass_type == EPassType::Render)
-        root_sig = ((RenderPassNode*)pass)->pipeline->root_signature;
+        root_sig = ((RenderPassNode*)pass)->root_signature;
     else if (pass->pass_type == EPassType::Compute)
-        root_sig = ((ComputePassNode*)pass)->pipeline->root_signature;
+        root_sig = ((ComputePassNode*)pass)->root_signature;
     auto&& desc_set_heap = executor.desc_set_pool.find(root_sig);
     if (desc_set_heap == executor.desc_set_pool.end())
         executor.desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
@@ -358,7 +358,8 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     pass_desc.name = pass->get_name();
     stack.cmd = executor.gfx_cmd_buf;
     stack.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
-    cgpu_compute_encoder_bind_pipeline(stack.encoder, pass->pipeline);
+    if(pass->pipeline)
+        cgpu_compute_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
         cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
@@ -466,7 +467,8 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.depth_stencil = &ds_attachment;
     stack.cmd = executor.gfx_cmd_buf;
     stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
-    cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
+    if(pass->pipeline)
+        cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
         cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);

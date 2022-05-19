@@ -74,7 +74,7 @@ public:
         RenderPassBuilder& use_buffer(PipelineBufferHandle buffer, ECGPUResourceState requested_state) SKR_NOEXCEPT;
 
         RenderPassBuilder& set_pipeline(CGPURenderPipelineId pipeline) SKR_NOEXCEPT;
-
+        RenderPassBuilder& set_root_signature(CGPURootSignatureId signature) SKR_NOEXCEPT;
     protected:
         RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass) SKR_NOEXCEPT;
         RenderGraph& graph;
@@ -97,6 +97,7 @@ public:
         ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& readwrite(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& set_pipeline(CGPUComputePipelineId pipeline) SKR_NOEXCEPT;
+        ComputePassBuilder& set_root_signature(CGPURootSignatureId signature) SKR_NOEXCEPT;
 
     protected:
         ComputePassBuilder(RenderGraph& graph, ComputePassNode& pass) SKR_NOEXCEPT;

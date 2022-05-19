@@ -8,10 +8,8 @@ struct VSOut
 };
 
 void main(VSOut psIn,     
-    out float4 o_color : SV_Target0,
-    out float4 o_normal : SV_Target1) : SV_TARGET
+    out float4 o_color : SV_Target0) : SV_TARGET
 {
     float2 uv = psIn.uv;
-    o_color = float4(1.f, 1.f, 1.f, 1.f);
-    o_normal = psIn.normal;
+    o_color = float4(1.f, 1.f, 1.f, 1.f) * abs(psIn.normal);
 }
