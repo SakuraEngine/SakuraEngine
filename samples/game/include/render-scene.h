@@ -42,6 +42,16 @@ typedef struct gfx_material_t {
     const char8_t* const* static_sampler_names;
     const CGPUSamplerId* static_samplers;
     uint32_t static_sampler_count;
+    // below: maybe suitable to be placed at otherwhere?
+    CGPUVertexLayout vertex_layout;
+    ECGPUFormat formats[CGPU_MAX_MRT_COUNT];
+    uint32_t render_target_count;
+    ECGPUFormat depth_stencil_format;
+    ECGPUPrimitiveTopology prim_topology;
+    // MSAA
+    ECGPUSampleCount sample_count;
+    uint32_t sample_quality;
+    uint32_t color_resolve_disable_mask;
     // TODO: handle this automatically with spirv-reflect under cook-time
     const char8_t* const* push_constant_names;
     uint32_t push_constant_count;
@@ -64,15 +74,7 @@ typedef struct transform_t {
 const skr_guid_t gfx_material_inst_guid = 
 {0x97e3f0c6, 0x66ad, 0x4bbe, {0x92, 0x7b, 0x1d, 0x5f, 0x2b, 0xaa, 0xce, 0x51}};
 typedef struct gfx_material_inst_t {
-    CGPUVertexLayout vertex_layout;
-    ECGPUFormat formats[CGPU_MAX_MRT_COUNT];
-    uint32_t render_target_count;
-    ECGPUFormat depth_stencil_format;
-    ECGPUPrimitiveTopology prim_topology;
-    // MSAA
-    ECGPUSampleCount sample_count;
-    uint32_t sample_quality;
-    uint32_t color_resolve_disable_mask;
+    gfx_material_id_t material;
 } gfx_material_inst_t;
 typedef dual_entity_t gfx_material_inst_id_t;
 
@@ -125,7 +127,8 @@ GAMERT_API bool ecsr_unregister_gfx_material(gfx_material_id_t) SKR_NOEXCEPT;
 // gfx-parameters
 
 // scene
-GAMERT_API bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, dual_entity_type_t* out_type);
+GAMERT_API bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
+dual_type_index_t* ctypes, uint32_t ctype_count, dual_entity_t* emetas, uint32_t meta_count);
 
 // cs-mats
 // GAMERT_API processor_material_t ecsr_register_processor_material(const processor_material_t*) SKR_NOEXCEPT;
