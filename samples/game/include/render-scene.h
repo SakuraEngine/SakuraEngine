@@ -70,14 +70,6 @@ typedef struct transform_t {
     skr_float4_t rotation;
 } transform_t;
 
-// {97e3f0c6-66ad-4bbe-927b-1d5f2baace51}
-const skr_guid_t gfx_material_inst_guid = 
-{0x97e3f0c6, 0x66ad, 0x4bbe, {0x92, 0x7b, 0x1d, 0x5f, 0x2b, 0xaa, 0xce, 0x51}};
-typedef struct gfx_material_inst_t {
-    gfx_material_id_t material;
-} gfx_material_inst_t;
-typedef dual_entity_t gfx_material_inst_id_t;
-
 // {fde818b7-777d-4d29-8230-cc06550cedee}
 const skr_guid_t cmpt_material_guid =
 {0xfde818b7, 0x777d, 0x4d29, {0x82, 0x30, 0xcc, 0x06, 0x55, 0x0c, 0xed, 0xee}};
@@ -106,7 +98,7 @@ typedef struct skr_gfx_mat_param_t {
 } skr_gfx_mat_param_t;
 
 // scene primitive necessary components:
-// | material_inst | transform | vb(s) | ib | registered_params... |
+// | material | transform | vb(s) | ib | registered_params... |
 typedef struct skr_scene_primitive_desc_t {
     gfx_material_id_t material;
     
@@ -128,7 +120,7 @@ GAMERT_API bool ecsr_unregister_gfx_material(gfx_material_id_t) SKR_NOEXCEPT;
 
 // scene
 GAMERT_API bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
-dual_type_index_t* ctypes, uint32_t ctype_count, dual_entity_t* emetas, uint32_t meta_count);
+dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_t* meta_count);
 
 // cs-mats
 // GAMERT_API processor_material_t ecsr_register_processor_material(const processor_material_t*) SKR_NOEXCEPT;

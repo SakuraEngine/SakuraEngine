@@ -60,3 +60,34 @@ dual_type_index_t ecsr_query_material_parameter_type(gfx_material_id_t mat_id, c
     }
     return 0;
 }
+
+bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
+dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_t* meta_count)
+{
+    *meta_count = 0;
+    *ctype_count = 0;
+    if (desc->material)
+    {
+        *meta_count = 1;
+        if(emetas != NULL) emetas[0] = desc->material;
+        *ctype_count += 4;
+        if(ctypes)
+        {
+            ctypes[0] = gfx_material_type;
+            ctypes[1] = transform_type;
+            ctypes[2] = vertex_buffer_type;
+            ctypes[3] = index_buffer_type;
+        }
+        const uint32_t bcount = matDB.bindingTypeDB[desc->material].size();
+        *ctype_count += bcount;
+        if (ctypes)
+        {
+            for(uint32_t i = 0; i < bcount; i++)
+            {
+                ctypes[*ctype_count + i] = matDB.bindingTypeDB[desc->material].at(i).second;
+            }
+        }
+        return true;
+    }
+    return false;
+}

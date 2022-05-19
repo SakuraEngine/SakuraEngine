@@ -234,6 +234,21 @@ void create_test_materials()
         "\n    name:{} size:{}\n    guid: {}", 
         bindingTypeDesc->name, bindingTypeDesc->size, 
         bindingTypeDesc->guid);
+    auto prim_desc = make_zeroed<skr_scene_primitive_desc_t>();
+    prim_desc.material = matId;
+    uint32_t ctype_count = 0;
+    uint32_t metaent_count = 0;
+    dual_type_index_t ctypes[16];
+    dual_entity_t metas[16];
+    const bool renderable = ecsr_renderable_primitive_type(&prim_desc, &ctype_count, ctypes, &metaent_count, metas);
+    assert(renderable);
+    for(uint32_t i = 0; i < ctype_count; i++)
+    {
+        auto cdesc = dualT_get_desc(ctypes[i]);
+        SKR_LOG_FMT_INFO(
+            "Component {} of rendereable: name: {}",
+        i, cdesc->name);
+    }
     // TODO: shader 预热
     ecsr_unregister_gfx_shader_set(setId);
     cgpu_free_shader_library(_vs);
