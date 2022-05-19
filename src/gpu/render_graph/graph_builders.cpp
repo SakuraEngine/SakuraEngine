@@ -124,6 +124,12 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::use_buffer(Pipel
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_pipeline(CGPURenderPipelineId pipeline) SKR_NOEXCEPT
 {
     node.pipeline = pipeline;
+    node.root_signature = pipeline->root_signature;
+    return *this;
+}
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_root_signature(CGPURootSignatureId signature) SKR_NOEXCEPT
+{
+    node.root_signature = signature;
     return *this;
 }
 
@@ -189,6 +195,12 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(cons
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_pipeline(CGPUComputePipelineId pipeline) SKR_NOEXCEPT
 {
     node.pipeline = pipeline;
+    node.root_signature = pipeline->root_signature;
+    return *this;
+}
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_root_signature(CGPURootSignatureId signature) SKR_NOEXCEPT
+{
+    node.root_signature = signature;
     return *this;
 }
 PassHandle RenderGraph::add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor) SKR_NOEXCEPT

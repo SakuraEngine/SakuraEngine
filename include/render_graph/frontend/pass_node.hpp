@@ -93,6 +93,7 @@ protected:
     }
     RenderPassExecuteFunction executor;
     CGPURenderPipelineId pipeline;
+    CGPURootSignatureId root_signature;
     ECGPULoadAction load_actions[CGPU_MAX_MRT_COUNT + 1];
     ECGPUStoreAction store_actions[CGPU_MAX_MRT_COUNT + 1];
     ECGPULoadAction depth_load_action;
@@ -120,6 +121,7 @@ protected:
     }
     ComputePassExecuteFunction executor;
     CGPUComputePipelineId pipeline;
+    CGPURootSignatureId root_signature;
 };
 
 class RUNTIME_API CopyPassNode : public PassNode

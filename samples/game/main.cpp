@@ -8,6 +8,7 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
+#include "utils/make_zeroed.hpp"
 #include <thread>
 #include <chrono>
 #ifdef SKR_OS_WINDOWS
@@ -32,6 +33,10 @@ extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 
 #include "gamert.h"
 #include "render-scene.h"
+#include "ecs/callback.hpp"
+#include <time.h>
+
+#define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
 int main(int argc, char** argv)
 {
@@ -85,6 +90,29 @@ int main(int argc, char** argv)
         (float)swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
         quit |= skg::GameLoop(ctx);
+        FrameMarkStart(nullptr)
+        // move
+        {
+            auto filter = make_zeroed<dual_filter_t>();
+            auto meta = make_zeroed<dual_meta_filter_t>();
+            filter.all.data = &transform_type;
+            filter.all.length = 1;
+            double lerps[] = { 1.25, 2.0 };
+            auto timer = clock();
+            auto total_sec = (double)timer / CLOCKS_PER_SEC;
+            auto moveFunc = [&](dual_chunk_view_t* view) {
+                auto transforms = (transform_t*)dualV_get_owned_ro(view, transform_type);
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    float lscale = abs(sin(total_sec * 0.5));
+                    lscale = lerp(lerps[0], lerps[1], lscale);
+                    transforms[i].location = { 
+                        ((float)(i % 10) - 4.5f) * lscale,
+                        ((float)(i / 10) - 4.5f) * lscale, 0.f };
+                }
+            };
+            dualS_query(gamert_get_ecs_world(), &filter, &meta, DUAL_LAMBDA(moveFunc));
+        }
         {
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);
@@ -101,7 +129,7 @@ int main(int argc, char** argv)
             .allow_render_target();
         });
         ecsr_draw_scene((struct skr_render_graph_t*)renderGraph);
-        render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
+        render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
             builder.set_name("present_pass")
@@ -115,6 +143,7 @@ int main(int argc, char** argv)
         present_desc.index = backbuffer_index;
         present_desc.swapchain = swapchain;
         cgpu_queue_present(gfx_queue, &present_desc);
+        FrameMarkEnd(nullptr)
     }
     // clean up
     cgpu_wait_queue_idle(gfx_queue);

@@ -114,10 +114,7 @@ dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_
 
 
 // TODO: REFACTOR THIS
-const ECGPUFormat gbuffer_formats[] = {
-    CGPU_FORMAT_R8G8B8A8_UNORM, CGPU_FORMAT_R16G16B16A16_SNORM
-};
-const ECGPUFormat gbuffer_depth_format = CGPU_FORMAT_D32_SFLOAT;
+const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 CGPURenderPipelineId ecsr_create_gbuffer_render_pipeline(
     CGPUDeviceId device, CGPURootSignatureId root_sig,
     const CGPUPipelineShaderDescriptor* vs,
@@ -134,9 +131,10 @@ CGPURenderPipelineId ecsr_create_gbuffer_render_pipeline(
     rp_desc.vertex_layout = &vertex_layout;
     rp_desc.vertex_shader = vs;
     rp_desc.fragment_shader = ps;
-    rp_desc.render_target_count = sizeof(gbuffer_formats) / sizeof(ECGPUFormat);
-    rp_desc.color_formats = gbuffer_formats;
-    rp_desc.depth_stencil_format = gbuffer_depth_format;
+    rp_desc.render_target_count = 1;
+    const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
+    rp_desc.color_formats = &fmt;
+    rp_desc.depth_stencil_format = depth_format;
     CGPURasterizerStateDescriptor raster_desc = {};
     raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
     raster_desc.depth_bias = 0;
@@ -154,14 +152,20 @@ CGPURenderPipelineId ecsr_create_gbuffer_render_pipeline(
 
 void ecsr_draw_scene(struct skr_render_graph_t* graph) SKR_NOEXCEPT
 {
-    const dual_type_index_t draw_filter_all[] = { 
-        transform_type, gfx_material_inst_type, index_buffer_type, 
-        dual_id_of<ecsr_vertex_buffer_t>::get()
-    };
     auto renderGraph = (skr::render_graph::RenderGraph*)graph;
     // TODO: Culling
     // iterate materials
     dual_storage_t* storage = gamert_get_ecs_world();
+    {
+        auto depth = renderGraph->create_texture(
+        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+            builder.set_name("depth")
+            .extent(900, 900)
+            .format(depth_format)
+            .owns_memory()
+            .allow_depth_stencil();
+        });
+    }
     auto filter = make_zeroed<dual_filter_t>();
     filter.all.data = &gfx_material_type;
     filter.all.length = 1;
@@ -170,78 +174,90 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph) SKR_NOEXCEPT
     auto callback = [&](dual_chunk_view_t* inView) {
         auto mats = (gfx_material_t*)dualV_get_owned_ro(inView, gfx_material_type);
         auto ents = dualV_get_entities(inView);
+        // per material
         for(uint32_t i = 0; i < inView->count; i++)
         {
             auto matId = ents[i];
             auto& mat = mats[i];
-            auto draw_filter = make_zeroed<dual_filter_t>();
-            draw_filter.all.data = draw_filter_all;
-            draw_filter.all.length = sizeof(draw_filter_all) / sizeof(dual_type_index_t);
-            auto draw_meta = make_zeroed<dual_meta_filter_t>();
-            draw_meta.all_meta.data = &matId;
-            draw_meta.all_meta.length = 1;
-            // this is a batch
-            auto draw_callback = [&](dual_chunk_view_t* inView) {
-                // find proper render pipeline
-                auto iter = matDB.pipelinePool.find(matId);
-                if (iter == matDB.pipelinePool.end()) // create a new one
-                {
-                    auto view = make_zeroed<dual_chunk_view_t>();
-                    dualS_access(storage, matId, &view);
-                    CGPURootSignatureId RS = ((CGPURootSignatureId*)dualV_get_owned_rw(&view, gfx_root_sig_type))[0];
-                    auto shader_set = ecsr_query_gfx_shader_set(mat.m_gfx);
-                    CGPUPipelineShaderDescriptor vs = {};
-                    vs.library = shader_set->vs;
-                    vs.stage = CGPU_SHADER_STAGE_VERT;
-                    vs.entry = "main";
-                    CGPUPipelineShaderDescriptor ps = {};
-                    ps.library = shader_set->ps;
-                    ps.stage = CGPU_SHADER_STAGE_FRAG;
-                    ps.entry = "main";
-                    matDB.pipelinePool[matId] = 
-                    ecsr_create_gbuffer_render_pipeline(mat.device, RS, &vs, &ps);
-                }
-                auto&& bindingType = matDB.bindingTypeDB[matId];
-                // TODO: update binding data if is not push_const
+            {
+                const dual_type_index_t draw_filter_all[] = { 
+                    transform_type, gfx_material_inst_type, index_buffer_type, 
+                    dual_id_of<ecsr_vertex_buffer_t>::get()
+                };
+                auto draw_filter = make_zeroed<dual_filter_t>();
+                draw_filter.all.data = draw_filter_all;
+                draw_filter.all.length = sizeof(draw_filter_all) / sizeof(dual_type_index_t);
+                auto draw_meta = make_zeroed<dual_meta_filter_t>();
+                draw_meta.all_meta.data = &matId;
+                draw_meta.all_meta.length = 1;
+                
+                auto ppl_callback = [&](dual_chunk_view_t* inView) {
+                    // find proper render pipeline
+                    auto iter = matDB.pipelinePool.find(matId);
+                    if (iter == matDB.pipelinePool.end()) // create a new one
+                    {
+                        auto view = make_zeroed<dual_chunk_view_t>();
+                        dualS_access(storage, matId, &view);
+                        CGPURootSignatureId RS = ((CGPURootSignatureId*)dualV_get_owned_rw(&view, gfx_root_sig_type))[0];
+                        auto shader_set = ecsr_query_gfx_shader_set(mat.m_gfx);
+                        CGPUPipelineShaderDescriptor vs = {};
+                        vs.library = shader_set->vs;
+                        vs.stage = CGPU_SHADER_STAGE_VERT;
+                        vs.entry = "main";
+                        CGPUPipelineShaderDescriptor ps = {};
+                        ps.library = shader_set->ps;
+                        ps.stage = CGPU_SHADER_STAGE_FRAG;
+                        ps.entry = "main";
+                        matDB.pipelinePool[matId] = ecsr_create_gbuffer_render_pipeline(mat.device, RS, &vs, &ps);
+                    }
+                };
+                dualS_query(storage, &draw_filter, &draw_meta, DUAL_LAMBDA(ppl_callback));
+            }
 
-                // draw
-                using vertex_buffers_t = dual::array_component_T<ecsr_vertex_buffer_t, 8>;
-                auto index_buffers = (CGPUBufferId*)dualV_get_owned_ro(inView, index_buffer_type);
-                auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_ro(inView, dual_id_of<ecsr_vertex_buffer_t>::get());
-                auto transforms = (transform_t*)dualV_get_owned_ro(inView, transform_type);
-                for(uint32_t j = 0; j < inView->count; j++)
-                {
-                    struct PushConstants {
-                        skr::math::float4x4 world;
-                        skr::math::float4x4 view_proj;
-                    } data;
-                    auto world = skr::math::make_transform(
-                        transforms[j].location,
-                        transforms[j].scale,
-                        skr::math::Quaternion::identity()
-                    );
-                    auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
-                    auto proj = skr::math::perspective_fov(
-                        3.1415926f / 2.f,
-                        (float)900 / (float)900,
-                        1.f, 1000.f);
-                    data.world = skr::math::transpose(world);
-                    data.view_proj = skr::math::transpose(skr::math::multiply(view, proj));
-                    const auto gbuffer_pipeline = matDB.pipelinePool[matId];
-                    const auto vertex_buffer = vertex_buffers[j];
-                    const auto index_buffer = index_buffers[j];
-                    renderGraph->add_render_pass(
-                    [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
-                        const auto gbuffer_color = renderGraph->get_texture("gbuffer_color");
-                        const auto gbuffer_normal = renderGraph->get_texture("gbuffer_normal");
-                        const auto gbuffer_depth = renderGraph->get_texture("gbuffer_depth");
-                        builder.set_name("gbuffer_pass")
-                        .set_pipeline(gbuffer_pipeline)
-                        .write(0, gbuffer_color, CGPU_LOAD_ACTION_CLEAR)
-                        .write(1, gbuffer_normal, CGPU_LOAD_ACTION_CLEAR)
-                        .set_depth_stencil(gbuffer_depth);
-                    },
-                    [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
+            const auto gbuffer_pipeline = matDB.pipelinePool[matId];
+            renderGraph->add_render_pass(
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+                const auto out_color = renderGraph->get_texture("backbuffer");
+                const auto depth_buffer = renderGraph->get_texture("depth");
+                builder.set_name("forward_pass")
+                .set_pipeline(gbuffer_pipeline)
+                .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
+                .set_depth_stencil(depth_buffer);
+            },
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
+                // this is a batch
+                auto draw_callback = [&](dual_chunk_view_t* inView) {
+                    auto&& bindingType = matDB.bindingTypeDB[matId];
+                    // TODO: update binding data if is not push_const
+
+                    // draw
+                    using vertex_buffers_t = dual::array_component_T<ecsr_vertex_buffer_t, 8>;
+                    auto index_buffers = (CGPUBufferId*)dualV_get_owned_ro(inView, index_buffer_type);
+                    auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_ro(inView, dual_id_of<ecsr_vertex_buffer_t>::get());
+                    auto transforms = (transform_t*)dualV_get_owned_ro(inView, transform_type);
+                    for(uint32_t j = 0; j < inView->count; j++)
+                    {
+                        struct PushConstants {
+                            skr::math::float4x4 world;
+                            skr::math::float4x4 view_proj;
+                        } data;
+                        auto world = skr::math::make_transform(
+                            transforms[j].location,
+                            transforms[j].scale,
+                            skr::math::Quaternion::identity()
+                        );
+                        auto view = skr::math::look_at_matrix(
+                            { 0.f, 0.f, 12.5f } /*eye*/, 
+                            { 0.f, 0.f, 0.f } /*at*/);
+                        auto proj = skr::math::perspective_fov(
+                            3.1415926f / 2.f,
+                            (float)900 / (float)900,
+                            1.f, 1000.f);
+                        data.world = world;
+                        data.view_proj = skr::math::multiply(view, proj);
+                        const auto vertex_buffer = vertex_buffers[j];
+                        const auto index_buffer = index_buffers[j];
+
                         cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
                         (float)900, (float)900,
@@ -252,20 +268,28 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph) SKR_NOEXCEPT
                         };
                         const uint32_t strides[3] = {
                             vertex_buffer[0].stride, vertex_buffer[1].stride, vertex_buffer[2].stride
-                            // sizeof(skr::math::Vector3f), sizeof(skr::math::Vector2f), sizeof(uint32_t)
                         };
                         const uint32_t offsets[3] = {
                             vertex_buffer[0].offset, vertex_buffer[1].offset, vertex_buffer[2].offset
-                            // offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords), offsetof(CubeGeometry, g_Normals)
                         };
                         cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
-                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 5, vertex_buffers, strides, offsets);
+                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                         cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "push_constants", &data);
                         cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
-                    });
-                }
-            };
-            dualS_query(storage, &draw_filter, &draw_meta, DUAL_LAMBDA(draw_callback));
+                    }
+                };
+                const dual_type_index_t draw_filter_all[] = { 
+                    transform_type, gfx_material_inst_type, index_buffer_type, 
+                    dual_id_of<ecsr_vertex_buffer_t>::get()
+                };
+                auto draw_filter = make_zeroed<dual_filter_t>();
+                draw_filter.all.data = draw_filter_all;
+                draw_filter.all.length = sizeof(draw_filter_all) / sizeof(dual_type_index_t);
+                auto draw_meta = make_zeroed<dual_meta_filter_t>();
+                draw_meta.all_meta.data = &matId;
+                draw_meta.all_meta.length = 1;
+                dualS_query(storage, &draw_filter, &draw_meta, DUAL_LAMBDA(draw_callback));
+            });
         }
     };
     dualS_query(storage, &filter, &meta, DUAL_LAMBDA(callback));

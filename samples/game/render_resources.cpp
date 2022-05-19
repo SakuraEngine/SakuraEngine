@@ -69,7 +69,7 @@ void create_api_objects()
     chain_desc.height = BACK_BUFFER_HEIGHT;
     chain_desc.surface = surface;
     chain_desc.imageCount = 2;
-    chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+    chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enableVsync = false;
     swapchain = cgpu_create_swapchain(device, &chain_desc);
 }
@@ -456,15 +456,16 @@ void create_test_materials()
     renderableT.meta.length = metaent_count;
     auto primSetup = [&](dual_chunk_view_t* view) {
         using vertex_buffers_t = dual::array_component_T<ecsr_vertex_buffer_t, 8>;
-        auto index_buffers = (CGPUBufferId*)dualV_get_owned_rw(view, index_buffer_type);
-        auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_rw(view, dual_id_of<ecsr_vertex_buffer_t>::get());
-        auto material_instances = (gfx_material_inst_t*)dualV_get_owned_rw(view, gfx_material_inst_type);
-        auto transforms = (transform_t*)dualV_get_owned_rw(view, transform_type);
+        auto index_buffers = (CGPUBufferId*)dualV_get_owned_ro(view, index_buffer_type);
+        auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_ro(view, dual_id_of<ecsr_vertex_buffer_t>::get());
+        auto material_instances = (gfx_material_inst_t*)dualV_get_owned_ro(view, gfx_material_inst_type);
+        auto transforms = (transform_t*)dualV_get_owned_ro(view, transform_type);
         for (uint32_t i = 0; i < view->count; i++)
         {
-            transforms[i].location = { (float)i, 0.f, 0.f };
+            transforms[i].location = { 
+                (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f, 0.f };
             transforms[i].scale = { 1.f, 1.f, 1.f };
-            transforms[i].rotation = { 0.f, 0.f, 0.f };
+            transforms[i].rotation = { 0.f, 0.f, 0.f, 1.f };
             index_buffers[i] = index_buffer;
             vertex_buffers[i].emplace_back(vertex_buffer, sizeof(skr::math::Vector3f), offsetof(CubeGeometry, g_Positions));
             vertex_buffers[i].emplace_back(vertex_buffer, sizeof(skr::math::Vector2f), offsetof(CubeGeometry, g_TexCoords));
