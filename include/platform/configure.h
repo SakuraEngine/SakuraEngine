@@ -7,15 +7,15 @@
 #endif
 
 #ifdef __cplusplus
-#define SKR_IF_CPP(...) __VA_ARGS__
+    #define SKR_IF_CPP(...) __VA_ARGS__
 #else
-#define SKR_IF_CPP(...)
+    #define SKR_IF_CPP(...)
 #endif
 
 #if defined(_MSC_VER)
-#define SKR_ALIGNAS(x) __declspec(align(x))
+    #define SKR_ALIGNAS(x) __declspec(align(x))
 #else
-#define SKR_ALIGNAS(x) __attribute__((aligned(x)))
+    #define SKR_ALIGNAS(x) __attribute__((aligned(x)))
 #endif
 
 #ifndef STRINGIFY
@@ -400,3 +400,4 @@ typedef int64_t host_ptr_t;
 #define TRACY_IMPORTS
 #define TRACY_ENABLE
 #define TRACY_ON_DEMAND
+#define TRACY_FIBERS

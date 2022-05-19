@@ -90,7 +90,6 @@ int main(int argc, char** argv)
         (float)swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
         quit |= skg::GameLoop(ctx);
-        FrameMarkStart(nullptr)
         // move
         {
             auto filter = make_zeroed<dual_filter_t>();
@@ -106,9 +105,10 @@ int main(int argc, char** argv)
                 {
                     float lscale = abs(sin(total_sec * 0.5));
                     lscale = lerp(lerps[0], lerps[1], lscale);
-                    transforms[i].location = { 
+                    transforms[i].location = {
                         ((float)(i % 10) - 4.5f) * lscale,
-                        ((float)(i / 10) - 4.5f) * lscale, 0.f };
+                        ((float)(i / 10) - 4.5f) * lscale, 0.f
+                    };
                 }
             };
             dualS_query(gamert_get_ecs_world(), &filter, &meta, DUAL_LAMBDA(moveFunc));
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
         present_desc.index = backbuffer_index;
         present_desc.swapchain = swapchain;
         cgpu_queue_present(gfx_queue, &present_desc);
-        FrameMarkEnd(nullptr)
+        FrameMark
     }
     // clean up
     cgpu_wait_queue_idle(gfx_queue);
