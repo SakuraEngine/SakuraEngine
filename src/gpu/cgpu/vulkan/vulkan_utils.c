@@ -309,7 +309,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
             {
                 CGPUShaderResource* current_res = &reflection->shader_resources[i_res + i];
                 current_res->set = 0;
-                current_res->type = CGPU_RESOURCE_TYPE_ROOT_CONSTANT;
+                current_res->type = CGPU_RESOURCE_TYPE_PUSH_CONSTANT;
                 current_res->binding = 0;
                 current_res->name = push_constants_name;
                 current_res->name_hash =
