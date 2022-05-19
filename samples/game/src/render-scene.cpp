@@ -43,6 +43,7 @@ dual_type_index_t ecsr_query_material_parameter_type(gfx_material_id_t mat_id, c
                 eastl::string unique_string = eastl::to_string(mat_id).append(res->name);
                 type_desc.name = unique_string.c_str();
                 type_desc.size = res->size;
+                type_desc.alignment = alignof(char8_t);
                 dual_make_guid(&type_desc.guid);
                 db[res->name] = dualT_register_type(&type_desc);
             }
@@ -57,6 +58,7 @@ dual_type_index_t ecsr_query_material_parameter_type(gfx_material_id_t mat_id, c
             eastl::string unique_string = eastl::to_string(mat_id).append("-").append(res->name);
             type_desc.name = unique_string.c_str();
             type_desc.size = res->size;
+            type_desc.alignment = alignof(char8_t);
             dual_make_guid(&type_desc.guid);
             db[res->name] = dualT_register_type(&type_desc);
         }
