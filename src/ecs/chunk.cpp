@@ -63,7 +63,7 @@ const dual_entity_t* dual_chunk_t::get_entities() const
 
 uint32_t* dual_chunk_t::timestamps() noexcept
 {
-    return (uint32_t*)data() + type->versionOffset[pt];
+    return (uint32_t*)(data() + type->versionOffset[pt]);
 }
 
 EIndex dual_chunk_t::get_capacity()
