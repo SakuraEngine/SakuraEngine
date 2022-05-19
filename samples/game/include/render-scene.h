@@ -75,7 +75,7 @@ typedef struct transform_t {
     skr_float4_t rotation;
 } transform_t;
 
-struct reflect attr(
+struct sreflect sattr(
     "guid" : "2a661e86-4dc0-4fb6-808f-ce9f4ffd0448",
     "component" : 
     {
