@@ -31,11 +31,11 @@ using children_t = llvm_vecsmall::SmallVector<dual_entity_t, 10>;
 void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, bool hasParent, children_t* children)
 {
     auto usdChildren = prim.GetChildren();
-    children_t ecsChildren;
-    for(auto child : usdChildren)
-        ImportTraversal(child, ctx, true, &ecsChildren);
     if(prim.IsA<pxr::UsdGeomXformable>())
     {
+        children_t ecsChildren;
+        for(auto child : usdChildren)
+            ImportTraversal(child, ctx, true, &ecsChildren);
         pxr::UsdGeomXformable xform(prim);
         pxr::GfMatrix4d transform;
         bool resetsXformStack;
@@ -88,12 +88,16 @@ void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, bool hasParent, c
         };
         dualS_allocate_type(ctx.world, &type, 1, DUAL_LAMBDA(Init));
     }
+    else {
+        for(auto child : usdChildren)
+            ImportTraversal(child, ctx, false, nullptr);
+    }
 }
 
 void* SSceneImporter::Import(skr::io::RAMService*, const SAssetRecord* record)
 {
     auto u8Path = record->path.u8string();
-    auto stage = pxr::UsdStage::Open(u8Path.c_str());
+    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path.c_str());
     auto world = dualS_create();
     TranverseContext ctx;
     ctx.world = world;
@@ -129,10 +133,10 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     serializer.is_serialize = +[](void*){return 1;};
     serializer.stream = +[](void* u, void* data, uint32_t size)
     {
-        auto buffer = *(eastl::vector<uint8_t>*)u;
-        auto dst = buffer.data() + buffer.size();
+        auto& buffer = *(eastl::vector<uint8_t>*)u;
+        auto dst = buffer.size();
         buffer.resize(buffer.size() + size);
-        std::memcpy(dst, data, size);
+        std::memcpy(buffer.data() + dst, data, size);
     };
     serializer.peek = +[](void* u, void* data, uint32_t size) {};
     dualS_serialize(world, &serializer, &buffer);
