@@ -147,7 +147,7 @@ bool ecsr_unregister_gfx_material(gfx_material_id_t ent) SKR_NOEXCEPT
 bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
 dual_type_index_t* ctypes, uint32_t ctype_count, dual_entity_t* emetas, uint32_t meta_count)
 {
-    
+    return false;   
 }
 
 /*
