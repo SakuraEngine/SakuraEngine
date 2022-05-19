@@ -9,7 +9,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+struct skr_render_graph_t;
 // root signatures & pipeline-objects are hidden bardward.
 
 // {909389f9-3850-4be4-af60-4f4b3b128a2b}
@@ -60,6 +60,14 @@ typedef struct gfx_material_t {
 } gfx_material_t;
 typedef dual_entity_t gfx_material_id_t;
 // scene primitives use gfx_material entity as meta ent for automatic batch
+
+// {97e3f0c6-66ad-4bbe-927b-1d5f2baace51}
+const skr_guid_t gfx_material_inst_guid = 
+{0x97e3f0c6, 0x66ad, 0x4bbe, {0x92, 0x7b, 0x1d, 0x5f, 0x2b, 0xaa, 0xce, 0x51}};
+typedef struct gfx_material_inst_t {
+    gfx_material_id_t material;
+} gfx_material_inst_t;
+typedef dual_entity_t gfx_material_inst_id_t;
 
 // {2bd63472-32dc-4be3-b984-0e08d763b61b}
 const skr_guid_t transform_guid =
@@ -120,7 +128,8 @@ GAMERT_API bool ecsr_unregister_gfx_material(gfx_material_id_t) SKR_NOEXCEPT;
 
 // scene
 GAMERT_API bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
-dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_t* meta_count);
+dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_t* meta_count) SKR_NOEXCEPT;
+GAMERT_API void ecsr_draw_scene(struct skr_render_graph_t* graph) SKR_NOEXCEPT;
 
 // cs-mats
 // GAMERT_API processor_material_t ecsr_register_processor_material(const processor_material_t*) SKR_NOEXCEPT;
@@ -131,6 +140,8 @@ extern GAMERT_API dual_type_index_t processor_shader_set_type;
 extern GAMERT_API dual_type_index_t gfx_material_type;
 extern GAMERT_API dual_type_index_t gfx_root_sig_type;
 extern GAMERT_API dual_type_index_t processor_material_type;
+
+extern GAMERT_API dual_type_index_t gfx_material_inst_type; 
 // index/vertex buffers
 extern GAMERT_API dual_type_index_t index_buffer_type; 
 extern GAMERT_API dual_type_index_t vertex_buffer_type; 
