@@ -39,7 +39,6 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
         return nullptr;
     }
 
-    // TODO: replace path with skr api
     auto u8Path = record->path.u8string();
 #if 1
     ftl::AtomicFlag counter(&GetCookSystem()->GetScheduler());

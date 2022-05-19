@@ -29,3 +29,4 @@ _deps
 /SDKs/*.ttf
 stressTest
 /thirdparty/USD
+/thirdparty/*.zip

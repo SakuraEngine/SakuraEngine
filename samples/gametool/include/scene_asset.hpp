@@ -19,7 +19,6 @@ struct sreflect sattr(
 )
 TOOL_API SSceneImporter final : public SImporter
 {
-    eastl::string sceneRoot;
     // mapping from asset path to resource
     // by default importer will resolve the path to find resource if redirector is not exist
     skr::flat_hash_map<eastl::string, skr_guid_t, eastl::string_hash<eastl::string>> redirectors;
