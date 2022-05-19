@@ -238,14 +238,4 @@ void ecsr_register_types()
         };
         index_buffer_type = dualT_register_type(&desc);
     }
-    {
-        dual_type_description_t desc = {
-            .name = "vertex_buffer",
-            .size = 5 * sizeof(CGPUBufferId),
-            .guid = {0xcd550555, 0x71ec, 0x4df9, {0x90, 0xc6, 0x60, 0x0a, 0x35, 0x1c, 0xe3, 0x83}},
-            .alignment = _Alignof(CGPUBufferId),
-            .elementSize = 5
-        };
-        vertex_buffer_type = dualT_register_type(&desc);
-    }
 }

@@ -19,6 +19,8 @@ CGPUAdapterId adapter;
 CGPUDeviceId device;
 CGPUQueueId gfx_queue;
 CGPUSamplerId sampler;
+CGPUBufferId index_buffer;
+CGPUBufferId vertex_buffer;
 
 void create_api_objects()
 {
@@ -184,10 +186,193 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 #include "utils/make_zeroed.hpp"
 #include "render-scene.h"
 #include "ecs/callback.hpp"
+#include "ecs/array.hpp"
 #include "EASTL/sort.h"
+#include <math/vectormath.hpp>
+
+namespace smath = skr::math;
 
 ::gfx_material_id_t material_id;
 ::gfx_shader_set_id_t shaderset_id;
+struct CubeGeometry {
+    const skr::math::Vector3f g_Positions[24] = {
+        { -0.5f, 0.5f, -0.5f }, // front face
+        { 0.5f, -0.5f, -0.5f },
+        { -0.5f, -0.5f, -0.5f },
+        { 0.5f, 0.5f, -0.5f },
+
+        { 0.5f, -0.5f, -0.5f }, // right side face
+        { 0.5f, 0.5f, 0.5f },
+        { 0.5f, -0.5f, 0.5f },
+        { 0.5f, 0.5f, -0.5f },
+
+        { -0.5f, 0.5f, 0.5f }, // left side face
+        { -0.5f, -0.5f, -0.5f },
+        { -0.5f, -0.5f, 0.5f },
+        { -0.5f, 0.5f, -0.5f },
+
+        { 0.5f, 0.5f, 0.5f }, // back face
+        { -0.5f, -0.5f, 0.5f },
+        { 0.5f, -0.5f, 0.5f },
+        { -0.5f, 0.5f, 0.5f },
+
+        { -0.5f, 0.5f, -0.5f }, // top face
+        { 0.5f, 0.5f, 0.5f },
+        { 0.5f, 0.5f, -0.5f },
+        { -0.5f, 0.5f, 0.5f },
+
+        { 0.5f, -0.5f, 0.5f }, // bottom face
+        { -0.5f, -0.5f, -0.5f },
+        { 0.5f, -0.5f, -0.5f },
+        { -0.5f, -0.5f, 0.5f },
+    };
+    const skr::math::Vector2f g_TexCoords[24] = {
+        { 0.0f, 0.0f }, // front face
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 0.0f },
+
+        { 0.0f, 1.0f }, // right side face
+        { 1.0f, 0.0f },
+        { 1.0f, 1.0f },
+        { 0.0f, 0.0f },
+
+        { 0.0f, 0.0f }, // left side face
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 0.0f },
+
+        { 0.0f, 0.0f }, // back face
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 0.0f },
+
+        { 0.0f, 1.0f }, // top face
+        { 1.0f, 0.0f },
+        { 1.0f, 1.0f },
+        { 0.0f, 0.0f },
+
+        { 1.0f, 1.0f }, // bottom face
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
+        { 0.0f, 1.0f },
+    };
+    const uint32_t g_Normals[24] = {
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)), // front face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
+
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)), // right side face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
+
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)), // left side face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
+
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)), // back face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
+
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)), // top face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
+
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)), // bottom face
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
+        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
+    };
+    static constexpr uint32_t g_Indices[] = {
+        0, 1, 2, 0, 3, 1,       // front face
+        4, 5, 6, 4, 7, 5,       // left face
+        8, 9, 10, 8, 11, 9,     // right face
+        12, 13, 14, 12, 15, 13, // back face
+        16, 17, 18, 16, 19, 17, // top face
+        20, 21, 22, 20, 23, 21, // bottom face
+    };
+};
+
+void create_geom_resources()
+{
+    // upload
+    CGPUBufferDescriptor upload_buffer_desc = {};
+    upload_buffer_desc.name = "UploadBuffer";
+    upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
+    upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
+    upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
+    upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
+    auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
+    CGPUBufferDescriptor vb_desc = {};
+    vb_desc.name = "VertexBuffer";
+    vb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
+    vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    vb_desc.size = sizeof(CubeGeometry);
+    vertex_buffer = cgpu_create_buffer(device, &vb_desc);
+    CGPUBufferDescriptor ib_desc = {};
+    ib_desc.name = "IndexBuffer";
+    ib_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
+    ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    ib_desc.size = sizeof(CubeGeometry::g_Indices);
+    index_buffer = cgpu_create_buffer(device, &ib_desc);
+    auto pool_desc = CGPUCommandPoolDescriptor();
+    auto cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
+    auto cmd_desc = CGPUCommandBufferDescriptor();
+    auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
+    {
+        auto geom = CubeGeometry();
+        memcpy(upload_buffer->cpu_mapped_address, &geom, upload_buffer_desc.size);
+    }
+    cgpu_cmd_begin(cpy_cmd);
+    CGPUBufferToBufferTransfer vb_cpy = {};
+    vb_cpy.dst = vertex_buffer;
+    vb_cpy.dst_offset = 0;
+    vb_cpy.src = upload_buffer;
+    vb_cpy.src_offset = 0;
+    vb_cpy.size = sizeof(CubeGeometry);
+    cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &vb_cpy);
+    {
+        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry),
+        CubeGeometry::g_Indices, sizeof(CubeGeometry::g_Indices));
+    }
+    CGPUBufferToBufferTransfer ib_cpy = {};
+    ib_cpy.dst = index_buffer;
+    ib_cpy.dst_offset = 0;
+    ib_cpy.src = upload_buffer;
+    ib_cpy.src_offset = sizeof(CubeGeometry);
+    ib_cpy.size = sizeof(CubeGeometry::g_Indices);
+    cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
+    // barriers
+    CGPUBufferBarrier barriers[2] = {};
+    CGPUBufferBarrier& vb_barrier = barriers[0];
+    vb_barrier.buffer = vertex_buffer;
+    vb_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    vb_barrier.dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    CGPUBufferBarrier& ib_barrier = barriers[1];
+    ib_barrier.buffer = index_buffer;
+    ib_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    ib_barrier.dst_state = CGPU_RESOURCE_STATE_INDEX_BUFFER;
+    CGPUResourceBarrierDescriptor barrier_desc = {};
+    barrier_desc.buffer_barriers = barriers;
+    barrier_desc.buffer_barriers_count = 2;
+    cgpu_cmd_resource_barrier(cpy_cmd, &barrier_desc);
+    cgpu_cmd_end(cpy_cmd);
+    CGPUQueueSubmitDescriptor cpy_submit = {};
+    cpy_submit.cmds = &cpy_cmd;
+    cpy_submit.cmds_count = 1;
+    cgpu_submit_queue(gfx_queue, &cpy_submit);
+    cgpu_wait_queue_idle(gfx_queue);
+    cgpu_free_buffer(upload_buffer);
+    cgpu_free_command_buffer(cpy_cmd);
+    cgpu_free_command_pool(cmd_pool);
+}
 
 void create_test_materials()
 {
@@ -260,6 +445,8 @@ void create_test_materials()
             "Component {} of rendereable: name: {}",
         i, cdesc->name);
     }
+    // create vbs & ib
+    create_geom_resources();
     // allocate renderable
     eastl::stable_sort(ctypes, ctypes + ctype_count);
     dual_entity_type_t renderableT = {};
@@ -268,7 +455,22 @@ void create_test_materials()
     renderableT.meta.data = metas;
     renderableT.meta.length = metaent_count;
     auto primSetup = [&](dual_chunk_view_t* view) {
-        
+        using vertex_buffers_t = dual::array_component_T<ecsr_vertex_buffer_t, 8>;
+        auto index_buffers = (CGPUBufferId*)dualV_get_owned_rw(view, index_buffer_type);
+        auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_rw(view, dual_id_of<ecsr_vertex_buffer_t>::get());
+        auto material_instances = (gfx_material_inst_t*)dualV_get_owned_rw(view, gfx_material_inst_type);
+        auto transforms = (transform_t*)dualV_get_owned_rw(view, transform_type);
+        for (uint32_t i = 0; i < view->count; i++)
+        {
+            transforms[i].location = { (float)i, 0.f, 0.f };
+            transforms[i].scale = { 1.f, 1.f, 1.f };
+            transforms[i].rotation = { 0.f, 0.f, 0.f };
+            index_buffers[i] = index_buffer;
+            vertex_buffers[i].emplace_back(vertex_buffer, sizeof(skr::math::Vector3f), offsetof(CubeGeometry, g_Positions));
+            vertex_buffers[i].emplace_back(vertex_buffer, sizeof(skr::math::Vector2f), offsetof(CubeGeometry, g_TexCoords));
+            vertex_buffers[i].emplace_back(vertex_buffer, sizeof(uint32_t), offsetof(CubeGeometry, g_Normals));
+            material_instances[i].material = material_id;
+        }
     };
     dualS_allocate_type(gamert->ecs_world, &renderableT, 100, DUAL_LAMBDA(primSetup));
 }

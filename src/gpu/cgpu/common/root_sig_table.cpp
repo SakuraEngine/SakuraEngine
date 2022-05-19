@@ -20,7 +20,7 @@ bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const 
 
 bool CGPUUtil_ShaderResourceIsRootConst(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)
 {
-    if (resource->type == CGPU_RESOURCE_TYPE_ROOT_CONSTANT) return true;
+    if (resource->type == CGPU_RESOURCE_TYPE_PUSH_CONSTANT) return true;
     for (uint32_t i = 0; i < desc->push_constant_count; i++)
     {
         if (strcmp(resource->name, desc->push_constant_names[i]) == 0)

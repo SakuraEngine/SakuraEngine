@@ -6,9 +6,6 @@
 #include "cgpu/api.h"
 #include "utils/types.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 struct skr_render_graph_t;
 // root signatures & pipeline-objects are hidden bardward.
 
@@ -78,6 +75,24 @@ typedef struct transform_t {
     skr_float4_t rotation;
 } transform_t;
 
+struct reflect attr(
+    "guid" : "2a661e86-4dc0-4fb6-808f-ce9f4ffd0448",
+    "component" : 
+    {
+        "buffer" : 8
+    }
+) ecsr_vertex_buffer_t {
+    CGPUBufferId buffer;
+    uint32_t stride;
+    uint32_t offset;
+#ifdef __cplusplus
+    ecsr_vertex_buffer_t(CGPUBufferId buffer, uint32_t stride, uint32_t offset)
+        : buffer(buffer), stride(stride), offset(offset){}
+    ecsr_vertex_buffer_t() = default;
+#endif
+};
+typedef struct ecsr_vertex_buffer_t ecsr_vertex_buffer_t;
+
 // {fde818b7-777d-4d29-8230-cc06550cedee}
 const skr_guid_t cmpt_material_guid =
 {0xfde818b7, 0x777d, 0x4d29, {0x82, 0x30, 0xcc, 0x06, 0x55, 0x0c, 0xed, 0xee}};
@@ -89,28 +104,16 @@ typedef cmpt_material_t processor_material_t;
 typedef dual_entity_t cmpt_material_id_t;
 typedef cmpt_material_id_t processor_material_id_t;
 
-typedef enum skr_gfx_mat_param_freq {
-    SKR_GFX_MAT_PARM_FREQ_PUSH_CONST,
-    SKR_GFX_MAT_PARM_FREQ_PER_INST,
-    SKR_GFX_MAT_PARM_FREQ_PER_BATCH,
-    SKR_GFX_MAT_PARM_FREQ_PER_FRAME,
-    SKR_GFX_MAT_PARM_FREQ_COUNT,
-    SKR_GFX_MAT_PARM_PER_MAX_ENUM = 0x7FFFFFFF
-} skr_gfx_mat_param_freq;
-
-typedef struct skr_gfx_mat_param_t {
-    CGPUShaderStages out_visiblity;
-    skr_guid_t parameter_t;
-    const char8_t* name;
-    skr_gfx_mat_param_freq frequency;
-} skr_gfx_mat_param_t;
-
 // scene primitive necessary components:
 // | material | transform | vb(s) | ib | registered_params... |
 typedef struct skr_scene_primitive_desc_t {
     gfx_material_id_t material;
     
 } skr_scene_primitive_desc_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // gfx-shaders
 GAMERT_API gfx_shader_set_id_t ecsr_register_gfx_shader_set(const gfx_shader_set_t*) SKR_NOEXCEPT;
