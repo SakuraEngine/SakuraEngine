@@ -21,7 +21,7 @@ namespace skr::io
 {
 class RAMService;
 }
-namespace skd::asset reflect
+namespace skd::asset sreflect
 {
 struct SCookSystem;
 struct SCooker;
@@ -110,4 +110,4 @@ struct TOOL_API SCookSystem {
     }
 };
 TOOL_API SCookSystem* GetCookSystem();
-} // namespace skd::assetreflect
+} // namespace skd::assetsreflect

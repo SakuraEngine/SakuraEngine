@@ -7,34 +7,34 @@
 #endif
 
 #ifdef __cplusplus
-#define SKR_IF_CPP(...) __VA_ARGS__
+    #define SKR_IF_CPP(...) __VA_ARGS__
 #else
-#define SKR_IF_CPP(...)
+    #define SKR_IF_CPP(...)
 #endif
 
 #if defined(_MSC_VER)
-#define SKR_ALIGNAS(x) __declspec(align(x))
+    #define SKR_ALIGNAS(x) __declspec(align(x))
 #else
-#define SKR_ALIGNAS(x) __attribute__((aligned(x)))
+    #define SKR_ALIGNAS(x) __attribute__((aligned(x)))
 #endif
 
 #ifndef STRINGIFY
     #define STRINGIFY(...) #__VA_ARGS__
 #endif
 #ifdef __meta__
-    #define reflect __attribute__((annotate("__reflect__")))
-    #define full_reflect __attribute__((annotate("__full_reflect__")))
-    #define noreflect __attribute__((annotate("__noreflect__")))
-    #define attr(...) __attribute__((annotate(STRINGIFY(__VA_ARGS__))))
-    #define push_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
-    #define pop_attr() __attribute__((annotate("__pop__")))
+    #define sreflect __attribute__((annotate("__reflect__")))
+    #define sfull_reflect __attribute__((annotate("__full_reflect__")))
+    #define snoreflect __attribute__((annotate("__noreflect__")))
+    #define sattr(...) __attribute__((annotate(STRINGIFY(__VA_ARGS__))))
+    #define spush_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
+    #define spop_attr() __attribute__((annotate("__pop__")))
 #else
-    #define reflect
-    #define full_reflect
-    #define noreflect
-    #define attr(...)
-    #define push_attr(...)
-    #define pop_attr()
+    #define sreflect
+    #define sfull_reflect
+    #define snoreflect
+    #define sattr(...)
+    #define spush_attr(...)
+    #define spop_attr()
 #endif
 
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
@@ -215,7 +215,7 @@ typedef int64_t host_ptr_t;
             #define NDEBUG
         #endif
     #elif !defined(_MSC_VER)
-        #define _DEBUG
+        #define _DEBUG 1
     #endif
 
     #ifdef __APPLE__

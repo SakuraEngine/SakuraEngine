@@ -7,12 +7,12 @@
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
 
-namespace game reflect
+namespace game sreflect
 {
-namespace asset reflect
+namespace asset sreflect
 {
 using namespace skd::asset;
-struct reflect attr(
+struct sreflect sattr(
 "guid" : "4F0E4239-A07F-4F48-B54F-FBF406C60DC3",
 "serialize" : "json",
 "importer" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
@@ -27,7 +27,7 @@ TOOL_API SSceneImporter final : public SImporter
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
 
-struct reflect attr(
+struct sreflect sattr(
 "cooker" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
 TOOL_API SSceneCooker final : public SCooker
@@ -41,5 +41,5 @@ struct TOOL_API SSceneImporterFactory final : public SImporterFactory {
     skr_guid_t GetResourceType() override { return {}; }
     SImporter* CreateImporter(const SAssetRecord* record) override { return nullptr; }
 };
-} // namespace reflect
-} // namespace reflect
+} // namespace sreflect
+} // namespace sreflect
