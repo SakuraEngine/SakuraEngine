@@ -15,7 +15,7 @@ dual_type_index_t transform_type = UINT32_MAX;
 
 static struct 
 {
-
+    dual_storage_t* storage;
 } ecsRenderer;
 
 void __gfx_shader_set_construct_callback(void* u, dual_chunk_view_t* view)
@@ -112,8 +112,8 @@ gfx_material_id_t ecsr_register_gfx_material(const gfx_material_t* mat) SKR_NOEX
     dual_entity_type_t alloc_type = {
         .type.data = types,
         .type.length = 2,
-        .meta.data = &mat->m_gfx,
-        .meta.length = 1
+        //.meta.data = &mat->m_gfx,
+        //.meta.length = 1
     };
     dual_type_set_t key_set = {
         .data = &gfx_material_type,
@@ -144,10 +144,10 @@ bool ecsr_unregister_gfx_material(gfx_material_id_t ent) SKR_NOEXCEPT
     return true;
 }
 
-bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, dual_entity_type_t* out_type)
+bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
+dual_type_index_t* ctypes, uint32_t ctype_count, dual_entity_t* emetas, uint32_t meta_count)
 {
-
-    return false;
+    
 }
 
 /*
