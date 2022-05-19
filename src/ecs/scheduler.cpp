@@ -18,7 +18,9 @@
 dual::scheduler_t::scheduler_t()
     : allCounter(&scheduler)
 {
-    scheduler.Init();
+    ftl::TaskSchedulerInitOptions option = {};
+    option.Behavior = ftl::EmptyQueueBehavior::Sleep;
+    scheduler.Init(option);
 }
 
 dual_entity_t dual::scheduler_t::add_resource()
