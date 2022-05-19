@@ -2,7 +2,7 @@
 #include "platform/configure.h"
 #include "platform/guid.h"
 
-typedef enum reflect attr(
+typedef enum sreflect sattr(
 "guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1",
 "asdsad" : true,
 "fuck" : {

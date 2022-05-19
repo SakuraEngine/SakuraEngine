@@ -22,23 +22,25 @@ typedef struct skr_mesh_primitive_t {
     skr_guid_t material_inst;
 } skr_mesh_primitive_t;
 
-struct reflect attr(
+struct sreflect sattr(
     "guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca",
     "serialize" : "bin"
 )
-skr_vertex_bin_t {
+skr_vertex_bin_t
+{
     skr_bin_t blob;
 };
 
-struct reflect attr(
+struct sreflect sattr(
     "guid" : "6ac5f946-dd65-4710-8725-ab4273fe13e6",
     "serialize" : "bin"
 )
-skr_index_bin_t {
+skr_index_bin_t
+{
     skr_bin_t blob;
 };
 
-struct reflect attr(
+struct sreflect sattr(
     "guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1",
     "serialize" : "bin"
 )

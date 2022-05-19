@@ -6,9 +6,9 @@
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
 
-namespace skd reflect
+namespace skd sreflect
 {
-namespace asset reflect
+namespace asset sreflect
 {
 struct TOOL_API SConfigTypeInfo {
     void (*Import)(simdjson::ondemand::value&& json, void* address);
@@ -17,7 +17,7 @@ struct TOOL_API SConfigRegistry {
     skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
-struct reflect attr(
+struct sreflect sattr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
 "serialize" : "json",
 "importer" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
@@ -29,7 +29,7 @@ TOOL_API SJsonConfigImporter final : public SImporter
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
 
-struct reflect attr(
+struct sreflect sattr(
 "cooker" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
 )
 TOOL_API SConfigCooker final : public SCooker
@@ -43,5 +43,5 @@ struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     skr_guid_t GetResourceType() override;
     SImporter* CreateImporter(const SAssetRecord* record) override;
 };
-} // namespace reflect
-} // namespace reflect
+} // namespace sreflect
+} // namespace sreflect
