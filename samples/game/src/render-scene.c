@@ -8,6 +8,8 @@ dual_type_index_t processor_shader_set_type = UINT32_MAX;
 dual_type_index_t gfx_material_type = UINT32_MAX;  
 dual_type_index_t gfx_root_sig_type = UINT32_MAX;  
 dual_type_index_t processor_material_type = UINT32_MAX;  
+
+dual_type_index_t gfx_material_inst_type = UINT32_MAX;  
 // index/vertex buffers
 dual_type_index_t index_buffer_type = UINT32_MAX;  
 dual_type_index_t vertex_buffer_type = UINT32_MAX; 
@@ -45,16 +47,22 @@ gfx_shader_set_t* ecsr_query_gfx_shader_set(gfx_shader_set_id_t id) SKR_NOEXCEPT
     return (gfx_shader_set_t*)dualV_get_owned_rw(&view, gfx_shader_set_type);
 }
 
-bool ecsr_unregister_gfx_shader_set(gfx_shader_set_id_t ent) SKR_NOEXCEPT
+bool ecsr_unregister_gfx_shader_set(gfx_shader_set_id_t id) SKR_NOEXCEPT
 {
     dual_storage_t* storage = gamert_get_ecs_world();
+    gfx_shader_set_t* set = ecsr_query_gfx_shader_set(id);
+    if(set->vs) cgpu_free_shader_library(set->vs);
+    if(set->hs) cgpu_free_shader_library(set->hs);
+    if(set->ds) cgpu_free_shader_library(set->ds);
+    if(set->gs) cgpu_free_shader_library(set->gs);
+    if(set->ps) cgpu_free_shader_library(set->ps);
     dual_chunk_view_t cv = {0};
-    dualS_access(storage, ent, &cv);
+    dualS_access(storage, id, &cv);
     dualS_destroy(storage, &cv);
     return true;
 }
 
-const char8_t* entry = "material";
+const char8_t* entry = "main";
 void __gfx_material_construct_callback(void* u, dual_chunk_view_t* view)
 {
     const gfx_material_t* mat = u;
@@ -145,65 +153,14 @@ bool ecsr_unregister_gfx_material(gfx_material_id_t ent) SKR_NOEXCEPT
     return true;
 }
 
-// TODO: REFACTOR THIS
-const ECGPUFormat gbuffer_formats[] = {
-    CGPU_FORMAT_R8G8B8A8_UNORM, CGPU_FORMAT_R16G16B16A16_SNORM
-};
-const ECGPUFormat gbuffer_depth_format = CGPU_FORMAT_D32_SFLOAT;
-CGPURenderPipelineId create_gbuffer_render_pipeline(
-    CGPUDeviceId device, CGPURootSignatureId root_sig,
-    const CGPUPipelineShaderDescriptor* vs,
-    const CGPUPipelineShaderDescriptor* ps)
+bool ecsr_finalize()
 {
-    CGPUVertexLayout vertex_layout = {
-        .attributes = {
-            { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX },
-            { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX },
-            { "NORMAL", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 2, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX },
-            { "TANGENT", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 3, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX },
-            { "MODEL", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE }
-        },
-        .attribute_count = 5
-    };
-    CGPURenderPipelineDescriptor rp_desc = {
-        .root_signature = root_sig,
-        .prim_topology = CGPU_PRIM_TOPO_TRI_LIST,
-        .vertex_layout = &vertex_layout,
-        .vertex_shader = vs,
-        .fragment_shader = ps,
-        .render_target_count = sizeof(gbuffer_formats) / sizeof(ECGPUFormat),
-        .color_formats = gbuffer_formats,
-        .depth_stencil_format = gbuffer_depth_format,
-    };
-    CGPURasterizerStateDescriptor raster_desc = {0};
-    raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
-    raster_desc.depth_bias = 0;
-    raster_desc.fill_mode = CGPU_FILL_MODE_SOLID;
-    raster_desc.front_face = CGPU_FRONT_FACE_CCW;
-    rp_desc.rasterizer_state = &raster_desc;
-    CGPUDepthStateDescriptor ds_desc = {0};
-    ds_desc.depth_func = CGPU_CMP_LEQUAL;
-    ds_desc.depth_write = true;
-    ds_desc.depth_test = true;
-    rp_desc.depth_state = &ds_desc;
-    return cgpu_create_render_pipeline(device, &rp_desc);
-}
-// END TODO: REFACTOR THIS
+    // destroy shaders
 
-/*
-void ecsr_draw_with_gfx_mat_inst(dual_entity_type_t type, gfx_material_inst_id_t mat_id) SKR_NOEXCEPT
-{
-    dual_storage_t* storage = gamert_get_ecs_world();
-    dual_chunk_view_t view = {0};
-    dualS_access(storage, mat_id, &view);
-    CGPURootSignatureId* pRS = (CGPURootSignatureId*)dualV_get_owned_rw(&view, gfx_root_sig_type);
-    if(!pRS) // create a new one and attaches it
-    {
+    // destroy rootsignatures
 
-    }
-    // fetch vertex buffer & index buffer
+    return true;
 }
-*/
 
 void ecsr_register_types()
 {
@@ -262,6 +219,15 @@ void ecsr_register_types()
             .alignment = _Alignof(transform_t)
         };
         transform_type = dualT_register_type(&desc);
+    }
+    {
+        dual_type_description_t desc = {
+            .name = "material_inst",
+            .size = sizeof(gfx_material_inst_t),
+            .guid = gfx_material_inst_guid,
+            .alignment = _Alignof(gfx_material_inst_t)
+        };
+        gfx_material_inst_type = dualT_register_type(&desc);
     }
     {
         dual_type_description_t desc = {

@@ -100,6 +100,7 @@ int main(int argc, char** argv)
             .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
         });
+        ecsr_draw_scene((struct skr_render_graph_t*)renderGraph);
         render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {

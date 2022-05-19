@@ -72,10 +72,16 @@ void create_api_objects()
     swapchain = cgpu_create_swapchain(device, &chain_desc);
 }
 
+void create_test_materials();
+void free_test_materials();
+
 void free_api_objects()
 {
     // Free cgpu objects
     cgpu_wait_fences(&present_fence, 1);
+
+    free_test_materials();
+
     cgpu_free_fence(present_fence);
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
@@ -84,8 +90,6 @@ void free_api_objects()
     cgpu_free_device(device);
     cgpu_free_instance(instance);
 }
-
-void create_test_materials();
 
 void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 {
@@ -179,11 +183,17 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 
 #include "utils/make_zeroed.hpp"
 #include "render-scene.h"
+#include "ecs/callback.hpp"
+#include "EASTL/sort.h"
+
+::gfx_material_id_t material_id;
+::gfx_shader_set_id_t shaderset_id;
 
 void create_test_materials()
 {
     auto moduleManager = skr_get_module_manager();
 
+    // read shaders
     eastl::string vsname = u8"shaders/Game/gbuffer_vs";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
@@ -201,6 +211,7 @@ void create_test_materials()
     skr_vfs_fread(fsfile, _fs_bytes, 0, _fs_length);
     skr_vfs_fclose(fsfile);
 
+    // create default deferred material
     CGPUShaderLibraryDescriptor vs_desc = {};
     vs_desc.name = "gbuffer_vertex_buffer";
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
@@ -218,15 +229,15 @@ void create_test_materials()
     auto shaderSet = make_zeroed<gfx_shader_set_t>();
     shaderSet.vs = _vs;
     shaderSet.ps = _fs;
-    auto setId = ecsr_register_gfx_shader_set(&shaderSet);
+    shaderset_id = ecsr_register_gfx_shader_set(&shaderSet);
     auto mat = make_zeroed<gfx_material_t>();
-    mat.m_gfx = setId;
+    mat.m_gfx = shaderset_id;
     mat.device = ::device;
     mat.push_constant_count = 1;
     const char8_t* push_const_name = u8"push_constants";
     mat.push_constant_names = &push_const_name;
-    auto matId = ecsr_register_gfx_material(&mat);
-    auto type = ecsr_query_material_parameter_type(matId, "push_constants");
+    material_id = ecsr_register_gfx_material(&mat);
+    auto type = ecsr_query_material_parameter_type(material_id, "push_constants");
     assert(type != UINT32_MAX);
     auto bindingTypeDesc = dualT_get_desc(type);
     SKR_LOG_FMT_INFO(
@@ -235,7 +246,7 @@ void create_test_materials()
         bindingTypeDesc->name, bindingTypeDesc->size, 
         bindingTypeDesc->guid);
     auto prim_desc = make_zeroed<skr_scene_primitive_desc_t>();
-    prim_desc.material = matId;
+    prim_desc.material = material_id;
     uint32_t ctype_count = 0;
     uint32_t metaent_count = 0;
     dual_type_index_t ctypes[16];
@@ -249,10 +260,21 @@ void create_test_materials()
             "Component {} of rendereable: name: {}",
         i, cdesc->name);
     }
-    // TODO: shader 预热
-    ecsr_unregister_gfx_shader_set(setId);
-    cgpu_free_shader_library(_vs);
-    cgpu_free_shader_library(_fs);
-    // quit
-    ecsr_unregister_gfx_material(matId);
+    // allocate renderable
+    eastl::stable_sort(ctypes, ctypes + ctype_count);
+    dual_entity_type_t renderableT = {};
+    renderableT.type.data = ctypes;
+    renderableT.type.length = ctype_count;
+    renderableT.meta.data = metas;
+    renderableT.meta.length = metaent_count;
+    auto primSetup = [&](dual_chunk_view_t* view) {
+        
+    };
+    dualS_allocate_type(gamert->ecs_world, &renderableT, 100, DUAL_LAMBDA(primSetup));
+}
+
+void free_test_materials()
+{
+    ecsr_unregister_gfx_shader_set(shaderset_id);
+    ecsr_unregister_gfx_material(material_id);
 }
