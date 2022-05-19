@@ -66,33 +66,33 @@ void __gfx_material_construct_callback(void* u, dual_chunk_view_t* view)
     CGPUPipelineShaderDescriptor gshaders[5];
     if(set->vs)
     {
+        gshaders[sindex].entry = entry;
+        gshaders[sindex].stage = CGPU_SHADER_STAGE_VERT;
         gshaders[sindex++].library = set->vs;
-        gshaders->entry = entry;
-        gshaders->stage = CGPU_SHADER_STAGE_VERT;
     } 
     if(set->hs)
     {
+        gshaders[sindex].entry = entry;
+        gshaders[sindex].stage = CGPU_SHADER_STAGE_HULL;
         gshaders[sindex++].library = set->hs;
-        gshaders->entry = entry;
-        gshaders->stage = CGPU_SHADER_STAGE_HULL;
     } 
     if(set->ds)
     {
+        gshaders[sindex].entry = entry;
+        gshaders[sindex].stage = CGPU_SHADER_STAGE_DOMAIN;
         gshaders[sindex++].library = set->ds;
-        gshaders->entry = entry;
-        gshaders->stage = CGPU_SHADER_STAGE_DOMAIN;
     }
     if(set->gs)
     {
+        gshaders[sindex].entry = entry;
+        gshaders[sindex].stage = CGPU_SHADER_STAGE_GEOM;
         gshaders[sindex++].library = set->gs;
-        gshaders->entry = entry;
-        gshaders->stage = CGPU_SHADER_STAGE_GEOM;
     }
     if(set->ps)
     {
+        gshaders[sindex].entry = entry;
+        gshaders[sindex].stage = CGPU_SHADER_STAGE_FRAG;
         gshaders[sindex++].library = set->ps;
-        gshaders->entry = entry;
-        gshaders->stage = CGPU_SHADER_STAGE_FRAG;
     }
     CGPURootSignatureDescriptor rs_desc = {
         .shader_count = sindex,
@@ -144,6 +144,51 @@ bool ecsr_unregister_gfx_material(gfx_material_id_t ent) SKR_NOEXCEPT
     dualS_destroy(storage, &cv);
     return true;
 }
+
+// TODO: REFACTOR THIS
+const ECGPUFormat gbuffer_formats[] = {
+    CGPU_FORMAT_R8G8B8A8_UNORM, CGPU_FORMAT_R16G16B16A16_SNORM
+};
+const ECGPUFormat gbuffer_depth_format = CGPU_FORMAT_D32_SFLOAT;
+CGPURenderPipelineId create_gbuffer_render_pipeline(
+    CGPUDeviceId device, CGPURootSignatureId root_sig,
+    const CGPUPipelineShaderDescriptor* vs,
+    const CGPUPipelineShaderDescriptor* ps)
+{
+    CGPUVertexLayout vertex_layout = {
+        .attributes = {
+            { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX },
+            { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX },
+            { "NORMAL", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 2, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX },
+            { "TANGENT", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 3, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX },
+            { "MODEL", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE }
+        },
+        .attribute_count = 5
+    };
+    CGPURenderPipelineDescriptor rp_desc = {
+        .root_signature = root_sig,
+        .prim_topology = CGPU_PRIM_TOPO_TRI_LIST,
+        .vertex_layout = &vertex_layout,
+        .vertex_shader = vs,
+        .fragment_shader = ps,
+        .render_target_count = sizeof(gbuffer_formats) / sizeof(ECGPUFormat),
+        .color_formats = gbuffer_formats,
+        .depth_stencil_format = gbuffer_depth_format,
+    };
+    CGPURasterizerStateDescriptor raster_desc = {0};
+    raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
+    raster_desc.depth_bias = 0;
+    raster_desc.fill_mode = CGPU_FILL_MODE_SOLID;
+    raster_desc.front_face = CGPU_FRONT_FACE_CCW;
+    rp_desc.rasterizer_state = &raster_desc;
+    CGPUDepthStateDescriptor ds_desc = {0};
+    ds_desc.depth_func = CGPU_CMP_LEQUAL;
+    ds_desc.depth_write = true;
+    ds_desc.depth_test = true;
+    rp_desc.depth_state = &ds_desc;
+    return cgpu_create_render_pipeline(device, &rp_desc);
+}
+// END TODO: REFACTOR THIS
 
 /*
 void ecsr_draw_with_gfx_mat_inst(dual_entity_type_t type, gfx_material_inst_id_t mat_id) SKR_NOEXCEPT

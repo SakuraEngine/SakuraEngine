@@ -43,7 +43,7 @@ typedef struct gfx_material_t {
     const CGPUSamplerId* static_samplers;
     uint32_t static_sampler_count;
     // below: maybe suitable to be placed at otherwhere?
-    CGPUVertexLayout vertex_layout;
+    // CGPUVertexLayout vertex_layout;
     ECGPUFormat formats[CGPU_MAX_MRT_COUNT];
     uint32_t render_target_count;
     ECGPUFormat depth_stencil_format;
