@@ -19,12 +19,12 @@ namespace dual
         template<class T>
         void archive(T& data)
         {
-            archive(&data, sizeof(T));
+            archive((void*)&data, sizeof(T));
         }
         template<class T>
         void archive(const T& data)
         {
-            archive(&data, sizeof(T));
+            archive((void*)&data, sizeof(T));
         }
         template<class T>
         void archive(T* data, uint32_t size)
