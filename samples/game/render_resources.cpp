@@ -240,7 +240,7 @@ void create_test_materials()
     uint32_t metaent_count = 0;
     dual_type_index_t ctypes[16];
     dual_entity_t metas[16];
-    const bool renderable = ecsr_renderable_primitive_type(&prim_desc, &ctype_count, ctypes, &metaent_count, metas);
+    const bool renderable = ecsr_renderable_primitive_type(&prim_desc, ctypes, &ctype_count, metas, &metaent_count);
     assert(renderable);
     for(uint32_t i = 0; i < ctype_count; i++)
     {
