@@ -133,13 +133,11 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     serializer.is_serialize = +[](void*){return 1;};
     serializer.stream = +[](void* u, void* data, uint32_t size)
     {
-        auto& buffer = *(eastl::vector<uint8_t>*)u;
-        auto dst = buffer.size();
-        buffer.resize(buffer.size() + size);
-        std::memcpy(buffer.data() + dst, data, size);
+        auto& archive = *(skr::resource::SBinarySerializer*)u;
+        archive.adapter().writeBuffer<1>((uint8_t*)data, size);
     };
     serializer.peek = +[](void* u, void* data, uint32_t size) {};
-    dualS_serialize(world, &serializer, &buffer);
+    dualS_serialize(world, &serializer, &archive);
     //------save resource to disk
     auto file = fopen(ctx->output.u8string().c_str(), "wb");
     if (!file)
@@ -148,7 +146,7 @@ bool SSceneCooker::Cook(SCookContext* ctx)
         return false;
     }
     SKR_DEFER({ fclose(file); });
-    fwrite(buffer.data(), 1, buffer.size(), file);
+    fwrite(buffer.data(), 1, archive.adapter().writtenBytesCount(), file);
     return true;
 }
 } // namespace game::asset

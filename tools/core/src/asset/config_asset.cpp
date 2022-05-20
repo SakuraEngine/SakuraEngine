@@ -115,7 +115,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
         return false;
     }
     SKR_DEFER({ fclose(file); });
-    fwrite(buffer.data(), 1, buffer.size(), file);
+    fwrite(buffer.data(), 1, archive.adapter().writtenBytesCount(), file);
     return true;
 }
 
