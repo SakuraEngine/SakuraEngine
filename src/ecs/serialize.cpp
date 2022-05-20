@@ -51,14 +51,14 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
             forloop (i, 0, view.count)
             {
                 auto array = (dual_array_component_t*)((size_t)i * size + src);
-                auto temp = *array;
-                *(intptr_t*)temp.BeginX = ((char*)temp.BeginX - (char*)(array + 1)); // padding
-                *(intptr_t*)temp.EndX = ((char*)temp.EndX - (char*)temp.BeginX);     // length
-                s.archive(temp);
+                intptr_t padding = ((char*)array->BeginX - (char*)(array + 1));
+                intptr_t length = ((char*)array->EndX - (char*)array->BeginX);
+                s.archive((uint32_t)padding);
+                s.archive((uint32_t)length);
                 if (serialize)
-                    serialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(((char*)array->EndX - (char*)array->BeginX) / elemSize), s.v, s.t);
+                    serialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(length / elemSize), s.v, s.t);
                 else
-                    s.archive(array->BeginX, (uint32_t)((char*)array->EndX - (char*)array->BeginX));
+                    s.archive(array->BeginX, length);
             }
         }
         else
@@ -66,9 +66,9 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
             forloop (i, 0, view.count)
             {
                 auto array = (dual_array_component_t*)((size_t)i * size + src);
-                s.archive(*array);
-                auto padding = (intptr_t)array->BeginX;
-                auto length = (intptr_t)array->EndX;
+                uint32_t padding, length;
+                s.archive(padding);
+                s.archive(length);
                 if (padding > elemSize) // array on heap
                 {
                     array->BeginX = llvm_vecsmall::SmallVectorBase::allocate(length);
@@ -256,7 +256,7 @@ void dual_storage_t::deserialize(dual::serializer_t s)
         fixed_stack_scope_t _(localStack);
         auto type = deserialize_type(localStack, s);
         auto group = construct_group(type);
-        uint32_t chunkCount;
+        uint16_t chunkCount;
         s.archive(chunkCount);
         forloop (j, 0, chunkCount)
         {
