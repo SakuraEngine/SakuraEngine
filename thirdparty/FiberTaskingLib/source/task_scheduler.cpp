@@ -713,7 +713,7 @@ bool TaskScheduler::GetNextLoPriTask(TaskBundle* nextTask)
 
 Fiber* TaskScheduler::GetNextFreeFiber()
 {
-    return SkrNew<Fiber>(524288ull, FiberStartFunc, this);
+    return SkrNew<Fiber>(524288ull * 128, FiberStartFunc, this);
 }
 
 void TaskScheduler::SetFreeFiber(Fiber* fiber)
