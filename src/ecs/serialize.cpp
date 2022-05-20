@@ -2,6 +2,8 @@
 
 #include "archetype.hpp"
 #include "chunk_view.hpp"
+#include "ecs/dual.h"
+#include "ecs/entities.hpp"
 #include "pool.hpp"
 #include "serialize.hpp"
 #include "stack.hpp"
@@ -220,12 +222,10 @@ void dual_storage_t::serialize(dual::serializer_t s)
     using namespace dual;
     assert(scheduler->is_main_thread(this));
     scheduler->sync_storage(this);
-    s.archive(entities.entries.size());
-    s.archive(entities.entries.data(), entities.entries.size());
-    s.archive(entities.freeEntries.size());
+    s.archive((uint32_t)entities.entries.size());
+    s.archive((uint32_t)entities.freeEntries.size());
     s.archive(entities.freeEntries.data(), entities.freeEntries.size());
-    s.archive(entities.size);
-    s.archive(groups.size());
+    s.archive((uint32_t)groups.size());
     for (auto& pair : groups)
     {
         auto group = pair.second;
@@ -245,12 +245,10 @@ void dual_storage_t::deserialize(dual::serializer_t s)
     uint32_t size;
     s.archive(size);
     entities.entries.resize(size);
-    s.archive(entities.entries.data(), size);
     uint32_t freeSize;
     s.archive(freeSize);
     entities.freeEntries.resize(freeSize);
     s.archive(entities.freeEntries.data(), freeSize);
-    s.archive(entities.size);
     uint32_t groupSize;
     s.archive(groupSize);
     forloop (i, 0, groupSize)
@@ -266,6 +264,15 @@ void dual_storage_t::deserialize(dual::serializer_t s)
             s.peek(chunkSize);
             auto view = allocate_view_strict(group, chunkSize);
             serialize_view(view, s, true);
+            auto ents = dualV_get_entities(&view);
+            forloop(k, 0, view.count)
+            {
+                entity_registry_t::entry_t entry;
+                entry.chunk = view.chunk;
+                entry.indexInChunk = k + view.start;
+                entry.version = e_version(ents[k]);
+                entities.entries[e_id(ents[k])] = entry;
+            }
         }
     }
 }

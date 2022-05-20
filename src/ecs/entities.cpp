@@ -13,7 +13,6 @@ void entity_registry_t::reset()
 {
     entries.clear();
     freeEntries.clear();
-    size = 0;
 }
 
 void entity_registry_t::shrink()
@@ -38,7 +37,6 @@ void entity_registry_t::shrink()
 
 void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
 {
-    size += count;
     EIndex i = 0;
     // recycle entities
 
@@ -66,7 +64,6 @@ void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
 
 void entity_registry_t::free_entities(const dual_entity_t* dst, EIndex count)
 {
-    size -= count;
     // build freelist in input order
     freeEntries.reserve(freeEntries.size() + count);
 
