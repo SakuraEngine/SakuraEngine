@@ -271,7 +271,7 @@ bool dual_storage_t::components_enabled(const dual_entity_t src, const dual_type
 bool dual_storage_t::exist(dual_entity_t e) const noexcept
 {
     using namespace dual;
-    return entities.size > e_id(e) && entities.entries[e_id(e)].version == e_version(e);
+    return entities.entries.size() > e_id(e) && entities.entries[e_id(e)].version == e_version(e);
 }
 
 void dual_storage_t::validate_meta()
