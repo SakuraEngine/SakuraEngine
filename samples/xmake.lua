@@ -1,4 +1,7 @@
-set_project("Sakura.Samples")
+add_requires("vcpkg::usd", {debug=true,configs={shared=true }})
+if(has_config("build_usdtool")) then
+    set_project("Sakura.Samples")
+end
 
 target("cgpu-mandelbrot")
     add_rules("utils.dxc", {
@@ -84,6 +87,20 @@ target("GameRT")
     add_deps("SkrRT")
     add_files("game/src/**.cpp", "game/src/**.c")
 
+if(has_config("build_usdtool")) then
+target("UsdTool")
+    set_kind("shared")
+    add_rules("c++.reflection", {
+        files = {"usdtool/**.h", "usdtool/**.hpp"},
+        rootdir = "usdtool/"
+    })
+    add_includedirs("usdtool/include", {public=true})
+    add_packages("vcpkg::usd")
+    add_defines("USDTOOL_SHARED", {public=true})
+    add_defines("USDTOOL_IMPL")
+    add_deps("SkrTool", "GameRT")
+    add_files("usdtool/src/**.cpp")
+end 
 
 target("GameTool")
     set_kind("shared")
@@ -91,27 +108,11 @@ target("GameTool")
         files = {"gametool/**.h", "gametool/**.hpp"},
         rootdir = "gametool/"
     })
-    add_includedirs("$(projectdir)/thirdparty/USD/include")
-    add_includedirs("$(projectdir)/SDKs/python/include")
-    add_includedirs("$(projectdir)/thirdparty/USD/include/boost-1_70")
     add_includedirs("gametool/include", {public=true})
     add_defines("GAMETOOL_SHARED", {public=true})
-    add_defines("GAMETOOL_IMPL","BOOST_LIB_TOOLSET=vc142","BOOST_LIB_RT_OPT")
+    add_defines("GAMETOOL_IMPL")
     add_deps("SkrTool", "GameRT")
     add_files("gametool/src/**.cpp")
-    add_linkdirs("$(projectdir)/SDKs/python/libs")
-    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)/USD/lib")
-    before_build(function (target)
-        import("core.project.task")
-        --task.run("unzip-usd")
-        local binrayDir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
-        local usdlibs = os.files(path.join(binrayDir, "USD/lib/*.lib"))
-        local links = {}
-        for _, v in ipairs(usdlibs) do 
-            table.insert(links, path.basename(v))
-        end
-        target:add("links", table.unpack(links))
-    end)
     on_config(function (target, opt)
         local dep = target:dep("GameRT");
         local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "tool/generated", dep:name())
