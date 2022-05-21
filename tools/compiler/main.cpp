@@ -1,6 +1,7 @@
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "bitsery/adapter/buffer.h"
+#include "ecs/dual.h"
 #include "ftl/task_counter.h"
 #include "ghc/filesystem.hpp"
 #include "platform/guid.h"
@@ -134,9 +135,12 @@ int main(int argc, char** argv)
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameTool", true);
     moduleManager->init_module_graph();
-
+    #ifdef WITH_USDTOOL
+    moduleManager->patch_module_graph("UsdTool", true);
+    #endif
     auto& system = *skd::asset::GetCookSystem();
     system.Initialize();
+    dualJ_initialize((dual_scheduler_t*)&system.GetScheduler());
     //----- register project
     // TODO: project discover?
     auto project = SkrNew<skd::asset::SProject>();

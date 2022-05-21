@@ -1,6 +1,6 @@
 #pragma once
 #include "EASTL/functional.h"
-#include "gametool_configure.h"
+#include "usdtool_configure.h"
 #include "platform/guid.h"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"
@@ -17,7 +17,7 @@ struct sreflect sattr(
 "serialize" : "json",
 "importer" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
-GAMETOOL_API SSceneImporter final : public SImporter
+USDTOOL_API SSceneImporter final : public SImporter
 {
     // mapping from asset path to resource
     // by default importer will resolve the path to find resource if redirector is not exist
@@ -25,17 +25,17 @@ GAMETOOL_API SSceneImporter final : public SImporter
     using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
-GAMETOOL_API void Fuck();
+USDTOOL_API void Fuck();
 struct sreflect sattr(
 "cooker" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
-GAMETOOL_API SSceneCooker final : public SCooker
+USDTOOL_API SSceneCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 };
 
-struct GAMETOOL_API SSceneImporterFactory final : public SImporterFactory {
+struct USDTOOL_API SSceneImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override { return false; }
     skr_guid_t GetResourceType() override { return {}; }
     SImporter* CreateImporter(const SAssetRecord* record) override { return nullptr; }

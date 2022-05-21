@@ -139,7 +139,6 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     };
     serializer.peek = +[](void* u, void* data, uint32_t size) {};
     dualS_serialize(world, &serializer, &archive);
-    SKR_LOG_ERROR("Fuck!!!!");
     //------save resource to disk
     auto file = fopen(ctx->output.u8string().c_str(), "wb");
     if (!file)
