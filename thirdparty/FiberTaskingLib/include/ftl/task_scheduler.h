@@ -286,6 +286,7 @@ public:
      * NOTE: main fiber index is 0
      */
     Fiber* GetCurrentFiber() const;
+    const Fiber* GetMainFiber() const;
 
     /**
      * Gets the amount of backing threads.

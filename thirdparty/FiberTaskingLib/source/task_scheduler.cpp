@@ -588,6 +588,11 @@ Fiber* TaskScheduler::GetCurrentFiber() const
     return tls.CurrentFiber;
 }
 
+const Fiber* TaskScheduler::GetMainFiber() const
+{
+    return &m_mainFiber;
+}
+
 inline bool TaskScheduler::TaskIsReadyToExecute(TaskBundle* bundle) const
 {
     // "Real" tasks are always ready to execute

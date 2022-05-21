@@ -19,7 +19,7 @@ dual_storage_t::dual_storage_t()
     : arena(dual::get_default_pool())
     , queryBuildArena(dual::get_default_pool())
     , groupPool(dual::kGroupBlockSize, dual::kGroupBlockCount)
-    , scheduler(&dual::scheduler_t::get())
+    , scheduler(nullptr)
 {
 }
 
@@ -46,8 +46,11 @@ void dual_storage_t::reset()
 void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callback_t callback, void* u)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_archetype(group->archetype);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(group->archetype);
+    }
     while (count != 0)
     {
         dual_chunk_view_t v = allocate_view(group, count);
@@ -88,8 +91,11 @@ void dual_storage_t::destroy(const dual_chunk_view_t& view)
 {
     using namespace dual;
     auto group = view.chunk->group;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_archetype(group->archetype);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(group->archetype);
+    }
     assert(!group->isDead);
     auto dead = group->dead;
     if (dead)
@@ -220,8 +226,11 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_v
     using namespace dual;
     auto view = entity_view(src);
     auto group = view.chunk->group->cloned;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_archetype(group->archetype);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(group->archetype);
+    }
     while (count != 0)
     {
         dual_chunk_view_t v = allocate_view(group, count);
@@ -236,12 +245,15 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_v
 void dual_storage_t::instantiate(const dual_entity_t* src, uint32_t n, uint32_t count, dual_view_callback_t callback, void* u)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    forloop (i, 0, n)
+    if (scheduler)
     {
-        auto view = entity_view(src[i]);
-        scheduler->sync_archetype(view.chunk->type); // data is modified by linked to prefab
-        scheduler->sync_archetype(view.chunk->group->cloned->archetype);
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        forloop (i, 0, n)
+        {
+            auto view = entity_view(src[i]);
+            scheduler->sync_archetype(view.chunk->type); // data is modified by linked to prefab
+            scheduler->sync_archetype(view.chunk->group->cloned->archetype);
+        }
     }
     linked_to_prefab(src, n);
     instantiate_prefab(src, n, count, callback, u);
@@ -301,7 +313,7 @@ void dual_storage_t::validate_meta()
 void dual_storage_t::validate(dual_entity_set_t& meta)
 {
     auto end = std::remove_if(
-    (dual_entity_t*)meta.data, (dual_entity_t*)meta.data + meta.length, 
+    (dual_entity_t*)meta.data, (dual_entity_t*)meta.data + meta.length,
     [&](const dual_entity_t e) {
         return !exist(e);
     });
@@ -311,8 +323,11 @@ void dual_storage_t::validate(dual_entity_set_t& meta)
 void dual_storage_t::defragment()
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_storage(this);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_storage(this);
+    }
     for (auto& pair : groups)
     {
         auto g = pair.second;
@@ -409,8 +424,11 @@ void dual_storage_t::defragment()
 void dual_storage_t::pack_entities()
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_storage(this);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_storage(this);
+    }
     std::vector<EIndex> map;
     auto& entries = entities.entries;
     map.resize(entries.size());
@@ -473,8 +491,11 @@ void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, du
 {
     using namespace dual;
     auto srcGroup = view.chunk->group;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_archetype(srcGroup->archetype);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(srcGroup->archetype);
+    }
     if (!group)
     {
         entities.free_entities(view);
@@ -547,8 +568,11 @@ void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_ca
 void dual_storage_t::merge(dual_storage_t& src)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_storage(&src);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_storage(&src);
+    }
     auto& sents = src.entities;
     std::vector<dual_entity_t> map;
     map.resize(sents.entries.size());
@@ -573,10 +597,10 @@ void dual_storage_t::merge(dual_storage_t& src)
         void map(dual_entity_t& e)
         {
             if (e_id(e) > count) DUAL_UNLIKELY
-            {
-                e = kEntityNull;
-                return;
-            }
+                {
+                    e = kEntityNull;
+                    return;
+                }
             e = data[e_id(e)];
         }
     } m;
@@ -635,9 +659,9 @@ void dual_storage_t::merge(dual_storage_t& src)
     };
     forloop (i, 0, payloads.size())
         tasks[i] = { taskBody, &payloads[i] };
-    ftl::TaskCounter counter(&scheduler->scheduler);
-    scheduler->scheduler.AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, &counter);
-    scheduler->scheduler.WaitForCounter(&counter);
+    ftl::TaskCounter counter(scheduler->scheduler);
+    scheduler->scheduler->AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, &counter);
+    scheduler->scheduler->WaitForCounter(&counter);
     for (auto& i : src.groups)
     {
         dual_group_t* g = i.second;
@@ -797,7 +821,7 @@ void dualS_enable_components(const dual_chunk_view_t* view, const dual_type_set_
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
     if (!masks) DUAL_UNLIKELY
-        return;
+    return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_or(newMask);
 }
@@ -810,7 +834,7 @@ void dualS_disable_components(const dual_chunk_view_t* view, const dual_type_set
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
     if (!masks) DUAL_UNLIKELY
-        return;
+    return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_and(~newMask);
 }

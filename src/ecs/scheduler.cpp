@@ -7,6 +7,7 @@
 #include "ecs/dual.h"
 #include "ftl/task.h"
 #include "ftl/task_counter.h"
+#include "ftl/task_scheduler.h"
 #include "mask.hpp"
 #include "phmap.h"
 #include "query.hpp"
@@ -16,9 +17,15 @@
 #include "set.hpp"
 
 dual::scheduler_t::scheduler_t()
-    : allCounter(&scheduler)
 {
-    scheduler.Init();
+    ftl::TaskSchedulerInitOptions options;
+    options.Behavior = ftl::EmptyQueueBehavior::Yield;
+}
+
+void dual::scheduler_t::initialize(ftl::TaskScheduler* inScheduler)
+{
+    scheduler = inScheduler;
+    allCounter = eastl::make_shared<ftl::TaskCounter>(scheduler);
 }
 
 dual_entity_t dual::scheduler_t::add_resource()
@@ -35,18 +42,28 @@ void dual::scheduler_t::remove_resource(dual_entity_t id)
 
 bool dual::scheduler_t::is_main_thread(const dual_storage_t* storage)
 {
-    // TODO: support multiple main thread (one main thread per storage)
-    return scheduler.GetCurrentThreadIndex() == 0;
+    SKR_ASSERT(storage->scheduler == this);
+    auto mainFiber = storage->mainFiber != nullptr ? storage->mainFiber : scheduler->GetMainFiber();
+    return scheduler->GetCurrentFiber() == mainFiber;
+}
+
+void dual::scheduler_t::set_main_thread(const dual_storage_t* storage)
+{
+    SKR_ASSERT(storage->scheduler == this);
+    sync_storage(storage);
+    storage->mainFiber = scheduler->GetCurrentFiber();
 }
 
 void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
 {
+    SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
+    skr_acquire_mutex(&entryMutex.mMutex);
     auto pair = dependencyEntries.find(type);
     if (pair == dependencyEntries.end())
         return;
     auto entries = pair->second.data();
-    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
     auto count = type->type.length;
     forloop (i, 0, count)
     {
@@ -60,38 +77,45 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
         entries[i].owned.clear();
     }
     dependencyEntries.erase(pair);
+    skr_release_mutex(&entryMutex.mMutex);
     for (auto dep : deps)
-        scheduler.WaitForCounter(dep.get());
+        scheduler->WaitForCounter(dep.get());
 }
 
 void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
 {
+    SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
+    skr_acquire_mutex(&entryMutex.mMutex);
     auto pair = dependencyEntries.find(type);
     if (pair == dependencyEntries.end()) return;
     auto entries = pair->second.data();
-    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
     for (auto dep : entries[i].owned)
         deps.push_back(dep);
     for (auto p : entries[i].shared)
         deps.push_back(p);
     entries[i].shared.clear();
     entries[i].owned.clear();
+    skr_release_mutex(&entryMutex.mMutex);
     for (auto dep : deps)
-        scheduler.WaitForCounter(dep.get());
+        scheduler->WaitForCounter(dep.get());
 }
 
 void dual::scheduler_t::sync_all()
 {
-    scheduler.WaitForCounter(&allCounter);
+    SKR_ASSERT(scheduler->GetCurrentThreadIndex() == 0);
+    scheduler->WaitForCounter(allCounter.get());
 }
 
 void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 {
-    auto iter = ecsCounter.find(storage);
-    if (iter == ecsCounter.end())
+    if (!storage->counter)
         return;
-    scheduler.WaitForCounter(iter->second.get());
+    scheduler->WaitForCounter(storage->counter.get());
+    storage->counter.reset();
+    storage->scheduler = nullptr;
+    storage->mainFiber = nullptr;
 }
 
 namespace dual
@@ -135,7 +159,13 @@ void update_entry(job_dependency_entry_t& entry, eastl::shared_ptr<ftl::TaskCoun
 eastl::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_init_callback_t init, dual_resource_operation_t* resources)
 {
-    assert(query->parameters.length < 32);
+    if (query->storage->scheduler == nullptr)
+    {
+        query->storage->scheduler = this;
+        set_main_thread(query->storage);
+    }
+    SKR_ASSERT(is_main_thread(query->storage));
+    SKR_ASSERT(query->parameters.length < 32);
     llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
     auto add_group = [&](dual_group_t* group) {
         groups.push_back(group);
@@ -193,6 +223,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         if (syncedEntry.find(pair) != syncedEntry.end())
             return;
         syncedEntry.insert(pair);
+        skr_acquire_mutex(&entryMutex.mMutex);
         auto iter = dependencyEntries.find(at);
         if (iter == dependencyEntries.end())
         {
@@ -203,6 +234,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         auto entries = (*iter).second.data();
         auto& entry = entries[localType];
         update_entry(entry, job->counter, readonly, atomic, dependencies);
+        skr_release_mutex(&entryMutex.mMutex);
     };
 
     auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
@@ -216,6 +248,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
 
     if (resources)
     {
+        skr_acquire_mutex(&resourceMutex.mMutex);
         forloop (i, 0, resources->count)
         {
             auto& entry = allResources[e_id(resources->resources[i])];
@@ -223,6 +256,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             auto atomic = resources->atomic[i];
             update_entry(entry, job->counter, readonly, atomic, dependencies);
         }
+        skr_release_mutex(&resourceMutex.mMutex);
     }
 
     forloop (i, 0, query->parameters.length)
@@ -265,7 +299,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
     auto body = +[](ftl::TaskScheduler*, void* data) {
         auto job = (dual_ecs_job_t*)data;
         forloop (i, 0, job->dependencyCount)
-            job->scheduler->scheduler.WaitForCounter(job->dependencies[i].get());
+            job->scheduler->scheduler->WaitForCounter(job->dependencies[i].get());
         if (job->init)
             job->init(job->userdata, job->entityCount);
         auto query = job->query;
@@ -371,6 +405,8 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             auto TearDown = +[](void* data) {
                 task_payload_t* payload = (task_payload_t*)data;
                 auto job = payload->job;
+                job->scheduler->allCounter->Decrement();
+                job->query->storage->counter->Decrement();
                 if (job->counter->Done())
                 {
                     job->~dual_ecs_job_t();
@@ -379,85 +415,59 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             };
             forloop (i, 0, batchs.size())
                 _tasks[i] = { taskBody, &payloads[i], TearDown };
-            job->scheduler->scheduler.AddTasks((unsigned int)batchs.size(), _tasks, ftl::TaskPriority::Normal, job->counter.get());
+            job->scheduler->allCounter->Add(batchs.size());
+            job->query->storage->counter->Add(batchs.size());
+            job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks, ftl::TaskPriority::Normal, job->counter.get());
             dual_free(_tasks);
         }
     };
     auto TearDown = +[](void* data) {
         dual_ecs_job_t* job = (dual_ecs_job_t*)data;
+        job->scheduler->allCounter->Decrement();
         if (job->counter->Done())
         {
             job->~dual_ecs_job_t();
             dual_free(job);
         }
     };
-    scheduler.AddTask({ body, job, TearDown }, ftl::TaskPriority::High, job->counter.get());
+    allCounter->Add(1);
+    if (!query->storage->counter)
+        query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
+    query->storage->counter->Add(1);
+    scheduler->AddTask({ body, job, TearDown }, ftl::TaskPriority::High, job->counter.get());
     return job->counter;
 }
 
-eastl::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_job(uint32_t count, dual_for_callback_t callback, void* u, dual_resource_operation_t* resources)
+eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resources(eastl::shared_ptr<ftl::TaskCounter> counter, dual_resource_operation_t* resources)
 {
-    dual_simple_job_t* job = (dual_simple_job_t*)dual_malloc(sizeof(dual_simple_job_t));
-    job = new (job) dual_simple_job_t(*this);
-    job->type = dual_job_type::simple;
     DependencySet dependencies;
-    if (resources)
+    skr_acquire_mutex(&resourceMutex.mMutex);
+    forloop (i, 0, resources->count)
     {
-        forloop (i, 0, resources->count)
-        {
-            auto& entry = allResources[e_id(resources->resources[i])];
-            auto readonly = resources->readonly[i];
-            auto atomic = resources->atomic[i];
-            update_entry(entry, job->counter, readonly, atomic, dependencies);
-        }
+        auto& entry = allResources[e_id(resources->resources[i])];
+        auto readonly = resources->readonly[i];
+        auto atomic = resources->atomic[i];
+        update_entry(entry, counter, readonly, atomic, dependencies);
     }
+    skr_release_mutex(&resourceMutex.mMutex);
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> result;
 
-    job->dependencies.resize(dependencies.size());
-    job->dependencyCount = (int)dependencies.size();
+    result.resize(dependencies.size());
     uint32_t dependencyIndex = 0;
     for (auto dependency : dependencies)
-        job->dependencies[dependencyIndex++] = dependency;
+        result[dependencyIndex++] = dependency;
 
-    struct task_payload_t {
-        dual_simple_job_t* job;
-        uint32_t index;
-    };
-    task_payload_t* payloads = (task_payload_t*)::dual_malloc(sizeof(task_payload_t) * count);
-    forloop (i, 0, count)
-        payloads[i] = { job, i };
-    job->payloads = payloads;
-    auto taskBody = +[](ftl::TaskScheduler* taskScheduler, void* data) {
-        auto payload = (task_payload_t*)data;
-        auto job = payload->job;
-        forloop (i, 0, job->dependencyCount)
-            job->scheduler->scheduler.WaitForCounter(job->dependencies[i].get());
-        job->callback(job->userdata, payload->index);
-    };
-    auto TearDown = +[](void* data) {
-        task_payload_t* payload = (task_payload_t*)data;
-        auto job = payload->job;
-        if (job->counter->Done())
-        {
-            job->~dual_simple_job_t();
-            dual_free(job);
-        }
-    };
-    auto tasks = (ftl::Task*)dual_malloc(sizeof(ftl::Task) * count);
-    forloop (i, 0, count)
-        tasks[i] = { taskBody, &payloads[i], TearDown };
-
-    scheduler.AddTasks(count, tasks, ftl::TaskPriority::Normal, job->counter.get());
-    dual_free(tasks);
-    return job->counter;
+    return result;
 }
 
 dual_job_t::~dual_job_t()
 {
 }
 
-dual_simple_job_t::~dual_simple_job_t()
+dual_job_t::dual_job_t(dual::scheduler_t& scheduler)
+    : scheduler(&scheduler)
+    , counter(eastl::make_shared<ftl::TaskCounter>(scheduler.scheduler))
 {
-    ::dual_free(payloads);
 }
 
 dual_ecs_job_t::~dual_ecs_job_t()
@@ -493,14 +503,9 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources, dual_cou
     }
 }
 
-void dualJ_schedule_for(uint32_t count, dual_for_callback_t callback, void* u, dual_resource_operation_t* resources, dual_counter_t** counter)
-{
-    auto result = dual::scheduler_t::get().schedule_job(count, callback, u, resources);
-}
-
 void dualJ_wait_counter(dual_counter_t* counter, int pin)
 {
-    dual::scheduler_t::get().scheduler.WaitForCounter(counter->counter.get(), pin);
+    dual::scheduler_t::get().scheduler->WaitForCounter(counter->counter.get(), pin);
 }
 
 void dualJ_release_counter(dual_counter_t* counter)
@@ -519,7 +524,12 @@ void dualJ_wait_storage(dual_storage_t* storage)
 }
 }
 
-ftl::TaskScheduler* dualX_get_scheduler()
+void dualJ_initialize(dual_scheduler_t* scheduler)
 {
-    return &dual::scheduler_t::get().scheduler;
+    dual::scheduler_t::get().initialize((ftl::TaskScheduler*)scheduler);
+}
+
+dual_scheduler_t* dualJ_get_scheduler()
+{
+    return (dual_scheduler_t*)dual::scheduler_t::get().scheduler;
 }

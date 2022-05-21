@@ -9,6 +9,7 @@
 #include <bitset>
 #include <phmap.h>
 #include "ecs/entities.hpp"
+#include "platform/thread.h"
 #include "utils/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
 #include "EASTL/vector.h"
@@ -22,16 +23,19 @@ struct job_dependency_entry_t {
 };
 
 struct scheduler_t {
-    ftl::TaskScheduler scheduler;
+    ftl::TaskScheduler *scheduler;
     dual::entity_registry_t registry;
-    skr::flat_hash_map<dual_storage_t*, std::shared_ptr<ftl::TaskCounter>> ecsCounter;
-    ftl::TaskCounter allCounter;
+    eastl::shared_ptr<ftl::TaskCounter> allCounter;
     eastl::vector<dual::job_dependency_entry_t> allResources;
     skr::flat_hash_map<dual::archetype_t*, eastl::vector<job_dependency_entry_t>> dependencyEntries;
+    SMutexObject entryMutex;
+    SMutexObject resourceMutex;
 
     scheduler_t();
     static scheduler_t& get();
+    void initialize(ftl::TaskScheduler *scheduler);
     bool is_main_thread(const dual_storage_t* storage);
+    void set_main_thread(const dual_storage_t* storage);
     dual_entity_t add_resource();
     void remove_resource(dual_entity_t id);
     void sync_archetype(dual::archetype_t* type);
@@ -39,7 +43,7 @@ struct scheduler_t {
     void sync_all();
     void sync_storage(const dual_storage_t* storage);
     eastl::shared_ptr<ftl::TaskCounter> schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_init_callback_t init, dual_resource_operation_t* resources);
-    eastl::shared_ptr<ftl::TaskCounter> schedule_job(uint32_t count, dual_for_callback_t callback, void* u, dual_resource_operation_t* resources);
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> sync_resources(eastl::shared_ptr<ftl::TaskCounter> counter, dual_resource_operation_t* resources);
 };
 } // namespace dual
 
@@ -55,20 +59,8 @@ struct dual_job_t {
     eastl::shared_ptr<ftl::TaskCounter> counter;
     eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dependencies;
     int dependencyCount;
-    dual_job_t(dual::scheduler_t& scheduler)
-        : scheduler(&scheduler)
-        , counter(eastl::make_shared<ftl::TaskCounter>(&scheduler.scheduler))
-    {
-    }
+    dual_job_t(dual::scheduler_t& scheduler);
     virtual ~dual_job_t();
-};
-
-struct dual_simple_job_t : dual_job_t {
-    using dual_job_t::dual_job_t;
-    dual_for_callback_t callback;
-    void* userdata;
-    void* payloads;
-    ~dual_simple_job_t();
 };
 
 struct dual_ecs_job_t : dual_job_t {

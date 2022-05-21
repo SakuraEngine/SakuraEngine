@@ -163,4 +163,15 @@ struct SMutexLock {
 
     SMutex& mMutex;
 };
+struct SMutexObject {
+    SMutex mMutex;
+    SMutexObject()
+    {
+        skr_init_mutex(&mMutex);
+    }
+    ~SMutexObject()
+    {
+        skr_destroy_mutex(&mMutex);
+    }
+};
 #endif
