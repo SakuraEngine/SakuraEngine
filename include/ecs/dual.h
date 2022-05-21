@@ -1,5 +1,6 @@
 #pragma once
 #include "dual_config.h"
+#include "ecs/dual.h"
 #include "platform/guid.h"
 
 #if defined(__cplusplus)
@@ -690,6 +691,10 @@ RUNTIME_API void dualJ_wait_all();
  */
 RUNTIME_API void dualJ_wait_storage(dual_storage_t* storage);
 
+typedef struct dual_scheduler_t dual_scheduler_t;
+RUNTIME_API void dualJ_initialize(dual_scheduler_t* scheduler);
+RUNTIME_API dual_scheduler_t* dualJ_get_scheduler();
+
 #if defined(__cplusplus)
 }
 #endif
@@ -699,9 +704,4 @@ template <class C>
 struct dual_id_of {
     static dual_type_index_t get();
 };
-namespace ftl
-{
-class TaskScheduler;
-}
-RUNTIME_API ftl::TaskScheduler* dualX_get_scheduler();
 #endif

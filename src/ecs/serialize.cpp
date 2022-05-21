@@ -165,7 +165,8 @@ dual_entity_t dual_storage_t::deserialize_single(dual::serializer_t s)
     fixed_stack_scope_t _(localStack);
     auto type = deserialize_type(localStack, s);
     auto group = get_group(type);
-    scheduler->sync_archetype(group->archetype);
+    if(scheduler)
+        scheduler->sync_archetype(group->archetype);
     auto view = allocate_view_strict(group, 1);
     serialize_view(view, s, false);
     entities.fill_entities(view);
@@ -177,8 +178,11 @@ void dual_storage_t::serialize_prefab(dual_entity_t e, dual::serializer_t s)
 {
     using namespace dual;
     s.archive((EIndex)1);
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_archetype(entity_view(e).chunk->type);
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(entity_view(e).chunk->type);
+    }
     serialize_single(e, s);
 }
 
@@ -186,9 +190,12 @@ void dual_storage_t::serialize_prefab(dual_entity_t* es, EIndex n, serializer_t 
 {
     using namespace dual;
     s.archive(n);
-    assert(scheduler->is_main_thread(this));
-    forloop (i, 0, n)
-        scheduler->sync_archetype(entity_view(es[i]).chunk->type);
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        forloop (i, 0, n)
+            scheduler->sync_archetype(entity_view(es[i]).chunk->type);
+    }
     linked_to_prefab(es, n);
     forloop (i, 0, n)
         serialize_single(es[i], s);
@@ -198,7 +205,8 @@ void dual_storage_t::serialize_prefab(dual_entity_t* es, EIndex n, serializer_t 
 dual_entity_t dual_storage_t::deserialize_prefab(dual::serializer_t s)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
+    if(scheduler)
+        SKR_ASSERT(scheduler->is_main_thread(this));
     EIndex count;
     s.archive(count);
     // todo: assert(count > 0)
@@ -220,8 +228,11 @@ dual_entity_t dual_storage_t::deserialize_prefab(dual::serializer_t s)
 void dual_storage_t::serialize(dual::serializer_t s)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_storage(this);
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_storage(this);
+    }
     s.archive((uint32_t)entities.entries.size());
     s.archive((uint32_t)entities.freeEntries.size());
     s.archive(entities.freeEntries.data(), entities.freeEntries.size());
@@ -239,8 +250,11 @@ void dual_storage_t::serialize(dual::serializer_t s)
 void dual_storage_t::deserialize(dual::serializer_t s)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_storage(this);
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_storage(this);
+    }
     // todo: assert(entities.entries.size() == 0)
     uint32_t size;
     s.archive(size);
