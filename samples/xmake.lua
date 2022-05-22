@@ -100,6 +100,15 @@ target("UsdTool")
     add_defines("USDTOOL_IMPL")
     add_deps("SkrTool", "GameRT")
     add_files("usdtool/src/**.cpp")
+    after_build(function (target)
+        local usd = target:pkg("vcpkg::usd")
+        local outputdir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
+        for _, dllpath in ipairs(table.wrap(usd:get("libfiles"))) do
+            if dllpath:endswith(".dll") or sopath:endswith(".so") or sopath:match(".+%.so%..+$") or sopath:endswith(".dylib") then
+                os.vcp(dllpath, outputdir, {symlink = true})
+            end
+        end
+    end)
 end 
 
 target("GameTool")
