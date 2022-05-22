@@ -25,7 +25,6 @@ USDTOOL_API SSceneImporter final : public SImporter
     using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
-USDTOOL_API void Fuck();
 struct sreflect sattr(
 "cooker" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
