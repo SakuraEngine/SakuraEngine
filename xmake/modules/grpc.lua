@@ -22,12 +22,12 @@
 import("core.base.option")
 import("private.utils.batchcmds")
 import("module_parser")
-import("find_sdk")
+import("lib.detect.find_tool")
 -- get protoc
 function _get_protoc(target)
     local protoc = target:data("protobuf.protoc")
     if not protoc then
-        protoc = find_sdk.find_program("protoc", nil, true)
+        protoc = find_tool("protoc")
         if protoc then
             target:data_set("protobuf.protoc", protoc)
         end
@@ -39,7 +39,7 @@ end
 function _get_grpc_cpp_plugin(target)
     local grpc_cpp_plugin = target:data("grpc.grpc_cpp_plugin")
     if not grpc_cpp_plugin then
-        grpc_cpp_plugin = find_sdk.find_program("grpc_cpp_plugin", nil, true)
+        grpc_cpp_plugin = find_tool("grpc_cpp_plugin", nil, true)
         if grpc_cpp_plugin then
             target:data_set("grpc.grpc_cpp_plugin", grpc_cpp_plugin)
         end
