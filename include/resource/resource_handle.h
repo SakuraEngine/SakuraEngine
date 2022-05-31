@@ -54,13 +54,15 @@ typedef struct skr_resource_handle_t {
 #endif
 } skr_resource_handle_t;
 
-typedef struct reflect attr(
+typedef struct sreflect sattr(
     "guid" : "069dd448-d61e-4384-8dc1-36ba712bb8e2",
     "serialize" : true
 )
-skr_bin_t {
+skr_bin_t
+{
     skr_blob_t content;
-} skr_bin_t;
+}
+skr_bin_t;
 
 #if defined(__cplusplus)
 namespace skr::resource

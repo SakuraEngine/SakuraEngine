@@ -13,12 +13,12 @@ namespace skr::io
 class RAMService;
 }
 
-namespace skd reflect
+namespace skd sreflect
 {
 using namespace skr;
-namespace asset reflect
+namespace asset sreflect
 {
-struct reflect attr(
+struct sreflect sattr(
 "guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
 "serialize" : "json"
 )
@@ -42,5 +42,5 @@ struct SImporterFactory {
     virtual skr_guid_t GetResourceType() = 0;
     virtual SImporter* CreateImporter(const SAssetRecord* record) = 0;
 };
-} // namespace reflect
-} // namespace reflect
+} // namespace sreflect
+} // namespace sreflect

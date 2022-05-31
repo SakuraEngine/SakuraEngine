@@ -52,7 +52,7 @@ Cpp11BracedListStyle: false
 
 
 AttributeMacros : ["DUAL_UNLIKELY", "DUAL_FORCEINLINE", "FORCEINLINE"]
-WhitespaceSensitiveMacros : ["attr", "push_attr"]
+WhitespaceSensitiveMacros : ["sattr", "spush_attr"]
 ForEachMacros : ["forloop"]
 
 SortIncludes: false
