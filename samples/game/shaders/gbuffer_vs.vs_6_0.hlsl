@@ -7,6 +7,7 @@ struct VSIn
     centroid float4 normal : NORMAL;
 };
 
+
 struct VSOut
 {
     float4 position : SV_POSITION;
@@ -28,7 +29,7 @@ VSOut main(const VSIn input)
     float4 posW = mul(float4(input.position, 1.0f), push_constants.model);
     float4 posH = mul(posW, push_constants.view_proj);
     output.position = posH;
-    output.uv = input.uv;
+    output.uv = input.uv * push_constants.model[0][0];
     output.normal = input.normal;
     return output;
 }

@@ -232,7 +232,6 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
         const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
         uint32_t icount;
         spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
-        reflection->vertex_inputs_count = icount;
         if (icount > 0)
         {
             DECLARE_ZERO_VLA(SpvReflectInterfaceVariable*, input_vars, icount)

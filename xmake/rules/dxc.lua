@@ -12,13 +12,18 @@ rule("utils.dxc")
         local targetenv = target:extraconf("rules", "utils.dxc", "targetenv") or "vulkan1.1"
         local spv_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "dxc-spv")
         local spvfilepath = path.join(spv_outputdir, hlsl_basename .. ".spv")
+        local spvTextpath = path.join(spv_outputdir, hlsl_basename .. ".h")
         batchcmds:show_progress(opt.progress, "${color.build.object}generating.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
         batchcmds:mkdir(spv_outputdir)
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes",
             "-spirv",
+            "-fspv-reflect",
             vformat("-fspv-target-env=vulkan1.1"), 
+            vformat("-fspv-extension=SPV_GOOGLE_user_type"), 
+            vformat("-fspv-extension=SPV_GOOGLE_hlsl_functionality1"), 
             "-Fo", spvfilepath, 
+            "-Fh", spvTextpath, 
             "-T", target_profile,
             path.join(os.projectdir(), sourcefile_hlsl)})
 

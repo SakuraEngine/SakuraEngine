@@ -66,6 +66,23 @@ typedef struct gfx_material_inst_t {
 } gfx_material_inst_t;
 typedef dual_entity_t gfx_material_inst_id_t;
 
+struct reflect attr(
+    "guid" : "615cfd2c-4009-4f98-85d7-d45a5cd5b654",
+    "component" : 
+    {
+        "buffer" : 2
+    }
+) gfx_param_override_t {
+    dual_type_index_t type;
+    dual_entity_t ent;
+#ifdef __cplusplus
+    gfx_param_override_t(
+    dual_type_index_t type = UINT32_MAX, dual_entity_t ent = UINT32_MAX) 
+        :type(type), ent(ent){}
+#endif
+};
+typedef struct gfx_param_override_t gfx_param_override_t;
+
 // {2bd63472-32dc-4be3-b984-0e08d763b61b}
 const skr_guid_t transform_guid =
 {0x2bd63472, 0x32dc, 0x4be3, {0xb9, 0x84, 0x0e, 0x08, 0xd7, 0x63, 0xb6, 0x1b}};
