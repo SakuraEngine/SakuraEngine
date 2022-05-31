@@ -85,6 +85,8 @@ void free_api_objects()
     free_test_materials();
 
     cgpu_free_fence(present_fence);
+    cgpu_free_buffer(index_buffer);
+    cgpu_free_buffer(vertex_buffer);
     cgpu_free_swapchain(swapchain);
     cgpu_free_surface(device, surface);
     cgpu_free_sampler(sampler);

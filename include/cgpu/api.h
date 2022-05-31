@@ -661,6 +661,7 @@ typedef struct CGPUShaderResource {
 
 typedef struct CGPUVertexInput {
     const char8_t* name;
+    const char8_t* semantics;
     ECGPUFormat format;
 } CGPUVertexInput;
 
