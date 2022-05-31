@@ -130,8 +130,7 @@ struct IsDecomposable<
 // --------------------------------------------------------------------------
 template <class T>
 constexpr bool IsNoThrowSwappable() {
-    using std::swap;
-    return noexcept(swap(std::declval<T&>(), std::declval<T&>()));
+    return noexcept(std::swap(std::declval<T&>(), std::declval<T&>()));
 }
 
 // --------------------------------------------------------------------------
@@ -1539,17 +1538,16 @@ public:
         IsNoThrowSwappable<hasher>() && IsNoThrowSwappable<key_equal>() &&
         (!AllocTraits::propagate_on_container_swap::value ||
          IsNoThrowSwappable<allocator_type>())) {
-        using std::swap;
-        swap(ctrl_, that.ctrl_);
-        swap(slots_, that.slots_);
-        swap(size_, that.size_);
-        swap(capacity_, that.capacity_);
-        swap(growth_left(), that.growth_left());
-        swap(hash_ref(), that.hash_ref());
-        swap(eq_ref(), that.eq_ref());
-        swap(infoz_, that.infoz_);
+        std::swap(ctrl_, that.ctrl_);
+        std::swap(slots_, that.slots_);
+        std::swap(size_, that.size_);
+        std::swap(capacity_, that.capacity_);
+        std::swap(growth_left(), that.growth_left());
+        std::swap(hash_ref(), that.hash_ref());
+        std::swap(eq_ref(), that.eq_ref());
+        std::swap(infoz_, that.infoz_);
         if (AllocTraits::propagate_on_container_swap::value) {
-            swap(alloc_ref(), that.alloc_ref());
+            std::swap(alloc_ref(), that.alloc_ref());
         } else {
             // If the allocators do not compare equal it is officially undefined
             // behavior. We choose to do nothing.
@@ -3161,11 +3159,10 @@ public:
         IsNoThrowSwappable<EmbeddedSet>() &&
         (!AllocTraits::propagate_on_container_swap::value ||
          IsNoThrowSwappable<allocator_type>())) {
-        using std::swap;
         for (size_t i=0; i<num_tables; ++i)
         {
             typename Lockable::UniqueLocks l(sets_[i], that.sets_[i]);
-            swap(sets_[i].set_, that.sets_[i].set_);
+            std::swap(sets_[i].set_, that.sets_[i].set_);
         }
     }
 

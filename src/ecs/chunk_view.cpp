@@ -344,7 +344,7 @@ auto dualV_get_owned(const dual_chunk_view_t* view, dual_type_index_t type)
     if constexpr (!readonly)
         chunk->timestamps()[id] = structure->storage->timestamp;
     auto scheduler = structure->storage->scheduler;
-    if (scheduler->is_main_thread(structure->storage))
+    if (scheduler && scheduler->is_main_thread(structure->storage))
         scheduler->sync_entry(structure, id);
     return (return_type)(chunk->data() + structure->sizes[id] * view->start + structure->offsets[chunk->pt][id]);
 }

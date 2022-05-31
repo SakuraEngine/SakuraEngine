@@ -3,6 +3,7 @@
 #include "ecs/dual.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
+#include "ftl/task.h"
 #include "math/vector.hpp"
 #include "math/vectormath.hpp"
 #include "scene.h"
@@ -39,7 +40,6 @@ static void skr_local_to_x(void* u, dual_storage_t* storage, dual_chunk_view_t* 
             transform->matrix = make_transform(Vector3f::vector_zero(), Vector3f::vector_one(), quaternion_from_rotator(rotation[i].euler));
 }
 
-using skr_children_t = dual::array_component_T<skr_child_t, 4>;
 static void skr_relative_to_world_children(skr_children_t* children, skr_l2w_t* parent, dual_storage_t* storage)
 {
     using namespace skr::math;
@@ -58,7 +58,7 @@ static void skr_relative_to_world_children(skr_children_t* children, skr_l2w_t* 
     if (children->size() > 256) // dispatch recursively
     {
         using iter_t = typename skr_children_t::iterator;
-        skr::parallel_for(dualX_get_scheduler(), children->begin(), children->end(), 128,
+        skr::parallel_for((ftl::TaskScheduler*)dualJ_get_scheduler(), children->begin(), children->end(), 128,
         [&](iter_t begin, iter_t end) {
             for (auto i = begin; i != end; ++i)
                 process(*i);

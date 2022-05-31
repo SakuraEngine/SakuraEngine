@@ -39,7 +39,6 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
         return nullptr;
     }
 
-    // TODO: replace path with skr api
     auto u8Path = record->path.u8string();
 #if 1
     ftl::AtomicFlag counter(&GetCookSystem()->GetScheduler());
@@ -116,7 +115,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
         return false;
     }
     SKR_DEFER({ fclose(file); });
-    fwrite(buffer.data(), 1, buffer.size(), file);
+    fwrite(buffer.data(), 1, archive.adapter().writtenBytesCount(), file);
     return true;
 }
 

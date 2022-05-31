@@ -12,6 +12,7 @@ RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT;
 RUNTIME_API void* mi_new_aligned(size_t size, size_t alignment);
 RUNTIME_API void mi_free(void* p) SKR_NOEXCEPT;
 RUNTIME_API void mi_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT;
+RUNTIME_API void* mi_realloc(void* p, size_t newsize) SKR_NOEXCEPT;
     #ifdef __cplusplus
 }
     #endif
@@ -22,6 +23,7 @@ RUNTIME_API void mi_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT;
     #define sakura_new_aligned mi_new_aligned
     #define sakura_free mi_free
     #define sakura_free_aligned mi_free_aligned
+    #define sakura_realloc mi_realloc
 #elif defined(SKR_PLATFORM_WA)
 
 #else
@@ -40,6 +42,7 @@ FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignm
     #define sakura_new_aligned(size, alignment) aligned_alloc((alignment), (size))
     #define sakura_free free
     #define sakura_free_aligned free_aligned
+    #define sakura_realloc realloc
 #endif
 
 #ifdef _CRTDBG_MAP_ALLOC

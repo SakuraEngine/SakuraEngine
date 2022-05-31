@@ -1,4 +1,7 @@
-set_project("Sakura.Samples")
+add_requires("vcpkg::usd", {debug=true,configs={shared=true }})
+if(has_config("build_usdtool")) then
+    set_project("Sakura.Samples")
+end
 
 target("cgpu-mandelbrot")
     add_rules("utils.dxc", {
@@ -83,6 +86,21 @@ target("GameRT")
     set_kind("shared")
     add_deps("SkrRT")
     add_files("game/src/**.cpp", "game/src/**.c")
+
+if(has_config("build_usdtool")) then
+target("UsdTool")
+    set_kind("shared")
+    add_rules("c++.reflection", {
+        files = {"usdtool/**.h", "usdtool/**.hpp"},
+        rootdir = "usdtool/"
+    })
+    add_includedirs("usdtool/include", {public=true})
+    add_packages("vcpkg::usd")
+    add_defines("USDTOOL_SHARED", {public=true})
+    add_defines("USDTOOL_IMPL")
+    add_deps("SkrTool", "GameRT")
+    add_files("usdtool/src/**.cpp")
+end 
 
 target("GameTool")
     set_kind("shared")

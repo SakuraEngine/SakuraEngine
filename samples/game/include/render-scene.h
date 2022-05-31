@@ -66,7 +66,7 @@ typedef struct gfx_material_inst_t {
 } gfx_material_inst_t;
 typedef dual_entity_t gfx_material_inst_id_t;
 
-struct reflect attr(
+struct sreflect sattr(
     "guid" : "615cfd2c-4009-4f98-85d7-d45a5cd5b654",
     "component" : 
     {
@@ -92,7 +92,7 @@ typedef struct transform_t {
     skr_float4_t rotation;
 } transform_t;
 
-struct reflect attr(
+struct sreflect sattr(
     "guid" : "2a661e86-4dc0-4fb6-808f-ce9f4ffd0448",
     "component" : 
     {

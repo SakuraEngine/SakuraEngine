@@ -233,7 +233,7 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
 #else
 #  define BOOST_LIB_THREAD_OPT
 #endif
-
+#ifndef BOOST_LIB_RT_OPT
 #if defined(_MSC_VER) || defined(__MWERKS__)
 
 #  ifdef _DLL
@@ -411,7 +411,7 @@ BOOST_LIB_SUFFIX:     Static/import libraries extension (".lib", ".a") for the c
 #  endif
 
 #endif
-
+#endif
 //
 // BOOST_LIB_ARCH_AND_MODEL_OPT
 //

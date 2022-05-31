@@ -11,7 +11,6 @@ struct entity_registry_t {
     };
     std::vector<entry_t> entries;
     std::vector<EIndex> freeEntries;
-    uint32_t size = 0;
 
     void reset();
     void shrink();

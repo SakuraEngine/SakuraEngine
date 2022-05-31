@@ -1111,7 +1111,7 @@ size_t TSize)
     else
     {
         // If this wasn't grown from the inline copy, grow the allocated space.
-        NewElts = realloc(this->BeginX, NewCapacityInBytes);
+        NewElts = dual_realloc(this->BeginX, NewCapacityInBytes);
     }
     assert(NewElts && "Out of memory");
 

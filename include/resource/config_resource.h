@@ -4,7 +4,7 @@
 #include "resource/resource_factory.h"
 #include "type/type_registry.h"
 
-typedef struct reflect attr(
+typedef struct sreflect sattr(
     "guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
 )
 skr_config_resource_t

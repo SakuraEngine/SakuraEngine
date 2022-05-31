@@ -2,6 +2,8 @@
 
 #include "archetype.hpp"
 #include "chunk_view.hpp"
+#include "ecs/dual.h"
+#include "ecs/entities.hpp"
 #include "pool.hpp"
 #include "serialize.hpp"
 #include "stack.hpp"
@@ -49,14 +51,14 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
             forloop (i, 0, view.count)
             {
                 auto array = (dual_array_component_t*)((size_t)i * size + src);
-                auto temp = *array;
-                *(intptr_t*)temp.BeginX = ((char*)temp.BeginX - (char*)(array + 1)); // padding
-                *(intptr_t*)temp.EndX = ((char*)temp.EndX - (char*)temp.BeginX);     // length
-                s.archive(temp);
+                intptr_t padding = ((char*)array->BeginX - (char*)(array + 1));
+                intptr_t length = ((char*)array->EndX - (char*)array->BeginX);
+                s.archive((uint32_t)padding);
+                s.archive((uint32_t)length);
                 if (serialize)
-                    serialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(((char*)array->EndX - (char*)array->BeginX) / elemSize), s.v, s.t);
+                    serialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(length / elemSize), s.v, s.t);
                 else
-                    s.archive(array->BeginX, (uint32_t)((char*)array->EndX - (char*)array->BeginX));
+                    s.archive(array->BeginX, length);
             }
         }
         else
@@ -64,9 +66,9 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
             forloop (i, 0, view.count)
             {
                 auto array = (dual_array_component_t*)((size_t)i * size + src);
-                s.archive(*array);
-                auto padding = (intptr_t)array->BeginX;
-                auto length = (intptr_t)array->EndX;
+                uint32_t padding, length;
+                s.archive(padding);
+                s.archive(length);
                 if (padding > elemSize) // array on heap
                 {
                     array->BeginX = llvm_vecsmall::SmallVectorBase::allocate(length);
@@ -163,7 +165,8 @@ dual_entity_t dual_storage_t::deserialize_single(dual::serializer_t s)
     fixed_stack_scope_t _(localStack);
     auto type = deserialize_type(localStack, s);
     auto group = get_group(type);
-    scheduler->sync_archetype(group->archetype);
+    if(scheduler)
+        scheduler->sync_archetype(group->archetype);
     auto view = allocate_view_strict(group, 1);
     serialize_view(view, s, false);
     entities.fill_entities(view);
@@ -175,8 +178,11 @@ void dual_storage_t::serialize_prefab(dual_entity_t e, dual::serializer_t s)
 {
     using namespace dual;
     s.archive((EIndex)1);
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_archetype(entity_view(e).chunk->type);
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(entity_view(e).chunk->type);
+    }
     serialize_single(e, s);
 }
 
@@ -184,9 +190,12 @@ void dual_storage_t::serialize_prefab(dual_entity_t* es, EIndex n, serializer_t 
 {
     using namespace dual;
     s.archive(n);
-    assert(scheduler->is_main_thread(this));
-    forloop (i, 0, n)
-        scheduler->sync_archetype(entity_view(es[i]).chunk->type);
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        forloop (i, 0, n)
+            scheduler->sync_archetype(entity_view(es[i]).chunk->type);
+    }
     linked_to_prefab(es, n);
     forloop (i, 0, n)
         serialize_single(es[i], s);
@@ -196,7 +205,8 @@ void dual_storage_t::serialize_prefab(dual_entity_t* es, EIndex n, serializer_t 
 dual_entity_t dual_storage_t::deserialize_prefab(dual::serializer_t s)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
+    if(scheduler)
+        SKR_ASSERT(scheduler->is_main_thread(this));
     EIndex count;
     s.archive(count);
     // todo: assert(count > 0)
@@ -218,14 +228,15 @@ dual_entity_t dual_storage_t::deserialize_prefab(dual::serializer_t s)
 void dual_storage_t::serialize(dual::serializer_t s)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_storage(this);
-    s.archive(entities.entries.size());
-    s.archive(entities.entries.data(), entities.entries.size());
-    s.archive(entities.freeEntries.size());
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_storage(this);
+    }
+    s.archive((uint32_t)entities.entries.size());
+    s.archive((uint32_t)entities.freeEntries.size());
     s.archive(entities.freeEntries.data(), entities.freeEntries.size());
-    s.archive(entities.size);
-    s.archive(groups.size());
+    s.archive((uint32_t)groups.size());
     for (auto& pair : groups)
     {
         auto group = pair.second;
@@ -239,18 +250,19 @@ void dual_storage_t::serialize(dual::serializer_t s)
 void dual_storage_t::deserialize(dual::serializer_t s)
 {
     using namespace dual;
-    assert(scheduler->is_main_thread(this));
-    scheduler->sync_storage(this);
+    if(scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_storage(this);
+    }
     // todo: assert(entities.entries.size() == 0)
     uint32_t size;
     s.archive(size);
     entities.entries.resize(size);
-    s.archive(entities.entries.data(), size);
     uint32_t freeSize;
     s.archive(freeSize);
     entities.freeEntries.resize(freeSize);
     s.archive(entities.freeEntries.data(), freeSize);
-    s.archive(entities.size);
     uint32_t groupSize;
     s.archive(groupSize);
     forloop (i, 0, groupSize)
@@ -258,7 +270,7 @@ void dual_storage_t::deserialize(dual::serializer_t s)
         fixed_stack_scope_t _(localStack);
         auto type = deserialize_type(localStack, s);
         auto group = construct_group(type);
-        uint32_t chunkCount;
+        uint16_t chunkCount;
         s.archive(chunkCount);
         forloop (j, 0, chunkCount)
         {
@@ -266,6 +278,15 @@ void dual_storage_t::deserialize(dual::serializer_t s)
             s.peek(chunkSize);
             auto view = allocate_view_strict(group, chunkSize);
             serialize_view(view, s, true);
+            auto ents = dualV_get_entities(&view);
+            forloop(k, 0, view.count)
+            {
+                entity_registry_t::entry_t entry;
+                entry.chunk = view.chunk;
+                entry.indexInChunk = k + view.start;
+                entry.version = e_version(ents[k]);
+                entities.entries[e_id(ents[k])] = entry;
+            }
         }
     }
 }
