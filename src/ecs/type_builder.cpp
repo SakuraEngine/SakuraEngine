@@ -1,7 +1,7 @@
 #include "ecs/type_builder.hpp"
-#include "stack.hpp"
 #include "set.hpp"
 #include <algorithm>
+
 namespace dual
 {
 type_builder_t::type_builder_t()
@@ -31,11 +31,8 @@ void type_builder_t::with(dual_type_index_t type)
     }
 }
 
-extern thread_local fixed_stack_t localStack;
-
 void type_builder_t::with(dual_type_set_t type)
 {
-    fixed_stack_scope_t _(localStack);
     SIndex i = 0, j = 0, k = 0;
     while (i < length && j < type.length)
     {
