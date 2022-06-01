@@ -111,7 +111,7 @@ void dual::serialize_view(const dual_chunk_view_t& view, dual::serializer_t s, b
         serialize_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], s, type->callbacks[i].serialize);
 }
 
-void dual_storage_t::serialize_type(const dual_entity_type_t& type, dual::serializer_t s)
+void dual_storage_t::serialize_type(const dual_entity_type_t& type, dual::serializer_t s, bool keepMeta)
 {
     using namespace dual;
     // group is define by entity_type, so we just serialize it's type
@@ -120,11 +120,14 @@ void dual_storage_t::serialize_type(const dual_entity_type_t& type, dual::serial
     auto reg = type_registry_t::get();
     for (auto t : type.type)
         s.archive(reg.descriptions[type_index_t(t).index()].guid);
-    s.archive(type.meta.length);
-    s.archive(type.meta.data, type.meta.length);
+    if(keepMeta)
+    {
+        s.archive(type.meta.length);
+        s.archive(type.meta.data, type.meta.length);
+    }
 }
 
-dual_entity_type_t dual_storage_t::deserialize_type(dual::fixed_stack_t& stack, dual::serializer_t s)
+dual_entity_type_t dual_storage_t::deserialize_type(dual::fixed_stack_t& stack, dual::serializer_t s, bool keepMeta)
 {
     using namespace dual;
     // deserialize type, and get/create group from it
@@ -138,13 +141,16 @@ dual_entity_type_t dual_storage_t::deserialize_type(dual::fixed_stack_t& stack, 
     forloop (i, 0, type.type.length) // todo: check type existence
         ((dual_type_index_t*)type.type.data)[i] = reg.guid2type[guids[i]];
     std::sort((dual_type_index_t*)type.type.data, (dual_type_index_t*)type.type.data + type.type.length);
-    s.archive(type.meta.length);
-    if (type.meta.length > 0)
+    if(keepMeta)
     {
-        // todo: how to patch meta? guid?
-        type.meta.data = stack.allocate<dual_entity_t>(type.meta.length);
-        s.archive(type.meta.data, type.meta.length);
-        std::sort((dual_entity_t*)type.meta.data, (dual_entity_t*)type.meta.data + type.meta.length);
+        s.archive(type.meta.length);
+        if (type.meta.length > 0)
+        {
+            // todo: how to patch meta? guid?
+            type.meta.data = stack.allocate<dual_entity_t>(type.meta.length);
+            s.archive(type.meta.data, type.meta.length);
+            std::sort((dual_entity_t*)type.meta.data, (dual_entity_t*)type.meta.data + type.meta.length);
+        }
     }
     return type;
 }
@@ -155,7 +161,7 @@ void dual_storage_t::serialize_single(dual_entity_t e, dual::serializer_t s)
     auto view = entity_view(e);
     auto type = view.chunk->group->type;
     type.meta.length = 0; // remove meta
-    serialize_type(type, s);
+    serialize_type(type, s, false);
     serialize_view(view, s, false);
 }
 
@@ -163,7 +169,7 @@ dual_entity_t dual_storage_t::deserialize_single(dual::serializer_t s)
 {
     using namespace dual;
     fixed_stack_scope_t _(localStack);
-    auto type = deserialize_type(localStack, s);
+    auto type = deserialize_type(localStack, s, false);
     auto group = get_group(type);
     if(scheduler)
         scheduler->sync_archetype(group->archetype);
@@ -240,7 +246,7 @@ void dual_storage_t::serialize(dual::serializer_t s)
     for (auto& pair : groups)
     {
         auto group = pair.second;
-        serialize_type(group->type, s);
+        serialize_type(group->type, s, true);
         s.archive(group->chunkCount);
         for (dual_chunk_t* c = group->firstChunk; c; c = c->next)
             serialize_view({ c, 0, c->count }, s, true);
@@ -268,7 +274,7 @@ void dual_storage_t::deserialize(dual::serializer_t s)
     forloop (i, 0, groupSize)
     {
         fixed_stack_scope_t _(localStack);
-        auto type = deserialize_type(localStack, s);
+        auto type = deserialize_type(localStack, s, true);
         auto group = construct_group(type);
         uint16_t chunkCount;
         s.archive(chunkCount);
