@@ -165,8 +165,8 @@ struct dual_storage_t {
 
     void serialize_single(dual_entity_t e, serializer_t s);
     dual_entity_t deserialize_single(serializer_t s);
-    void serialize_type(const dual_entity_type_t& g, serializer_t s);
-    dual_entity_type_t deserialize_type(dual::fixed_stack_t& stack, serializer_t s);
+    void serialize_type(const dual_entity_type_t& g, serializer_t s, bool keepMeta);
+    dual_entity_type_t deserialize_type(dual::fixed_stack_t& stack, serializer_t s, bool keepMeta);
     void serialize_prefab(dual_entity_t e, serializer_t s);
     void serialize_prefab(dual_entity_t* es, EIndex n, serializer_t s);
     dual_entity_t deserialize_prefab(serializer_t s);
