@@ -872,4 +872,23 @@ const char* dualQ_get_error()
 {
     return dual::get_error().c_str();
 }
+
+void dualS_all(dual_storage_t *storage, bool includeDisabled, bool includeDead, dual_view_callback_t callback, void *u)
+{
+    for(auto& pair : storage->groups)
+    {
+        auto group = pair.second;
+        if(group->isDead && !includeDead)
+            continue;
+        if(group->disabled && !includeDisabled)
+            continue;
+        auto c = pair.second->firstChunk;
+        while(c)
+        {
+            dual_chunk_view_t view {c, 0, c->count};
+            callback(u, &view);
+            c = c->next;
+        }
+    }
+}
 }
