@@ -20,10 +20,17 @@ bool GameLoop(GameContext& ctx)
     std::memset(&metaFilter, 0, sizeof(dual_meta_filter_t));
     auto drawList = [&](dual_chunk_view_t* view) {
         auto names = (skr_name_t*)dualV_get_owned_ro(view, type_name);
-        forloop (i, 0, view->count)
-            ImGui::Text("%s", names[i].str);
+        if(names)
+            forloop (i, 0, view->count)
+                ImGui::Text("%s", names[i].str);
+        else
+        {
+            auto es = dualV_get_entities(view);
+            forloop (i, 0, view->count)
+                ImGui::Text("%d : %d", es[i] & ENTITY_ID_MASK, (es[i] >> ENTITY_VERSION_OFFSET) & ENTITY_VERSION_MASK);
+        };
     };
-    dualS_query(world, &filter, &metaFilter, DUAL_LAMBDA(drawList));
+    dualS_all(world, false, false, DUAL_LAMBDA(drawList));
     ImGui::End();
     return false;
 }

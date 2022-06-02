@@ -357,6 +357,15 @@ RUNTIME_API void dualS_batch(dual_storage_t* storage, const dual_entity_t* ents,
  */
 RUNTIME_API void dualS_query(dual_storage_t* storage, const dual_filter_t* filter, const dual_meta_filter_t* meta, dual_view_callback_t callback, void* u);
 /**
+ * @brief get all chunk view
+ *
+ * @param storage
+ * @param filter
+ * @param meta
+ * @param callback callback for filtered chunk view
+ */
+RUNTIME_API void dualS_all(dual_storage_t* storage, bool includeDisabled, bool includeDead, dual_view_callback_t callback, void* u);
+/**
  * @brief get all groups matching given filter
  *
  * @param storage

@@ -9,11 +9,11 @@ fixed_stack_t::fixed_stack_t(size_t cap)
     : size(0)
     , capacity(cap)
 {
-    buffer = ::dual_malloc(cap);
+    buffer = ::malloc(cap);
 }
 fixed_stack_t::~fixed_stack_t()
 {
-    ::dual_free(buffer);
+    ::free(buffer);
 }
 
 void* fixed_stack_t::allocate(size_t inSize)
