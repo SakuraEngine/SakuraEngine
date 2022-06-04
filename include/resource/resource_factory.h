@@ -23,7 +23,7 @@ namespace skr
 {
 namespace resource
 {
-using SBinaryDeserializer = bitsery::Deserializer<bitsery::InputBufferAdapter<eastl::vector<uint8_t>>>;
+using SBinaryDeserializer = bitsery::Deserializer<bitsery::InputBufferAdapter<gsl::span<uint8_t>>>;
 using SBinarySerializer = bitsery::Serializer<bitsery::OutputBufferAdapter<eastl::vector<uint8_t>>>;
 struct SBinaryArchive {
     SBinaryDeserializer* deserializer;
@@ -36,8 +36,9 @@ struct SBinaryArchive {
 */
 struct RUNTIME_API SResourceFactory {
     virtual skr_type_id_t GetResourceType() = 0;
-    virtual ESkrLoadStatus Load(skr_resource_record_t* record, const ghc::filesystem::path& path, skr_vfs_t* vfs) = 0;
-    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record, const ghc::filesystem::path& path, skr_vfs_t* vfs);
+    virtual bool AsyncIO() { return true; }
+    virtual ESkrLoadStatus Load(skr_resource_record_t* record) = 0;
+    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record);
     virtual bool Unload(skr_resource_record_t* record);
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
     virtual bool Uninstall(skr_resource_record_t* record) { return true; }
