@@ -254,7 +254,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
             // allocate
             auto fsize = skr_vfs_fsize(vf);
             service->current.request->size = fsize;
-            service->current.request->bytes = (char8_t*)sakura_malloc(fsize);
+            service->current.request->bytes = (uint8_t*)sakura_malloc(fsize);
         }
         skr_vfs_fread(vf, service->current.request->bytes, service->current.offset, service->current.request->size);
         service->current.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
@@ -309,7 +309,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
         back.path = std::string(info->path);
         back.offset = info->offset;
         back.request = async_request;
-        back.request->bytes = (char8_t*)info->bytes;
+        back.request->bytes = (uint8_t*)info->bytes;
         back.request->size = info->size;
         back.priority = info->priority;
         back.sub_priority = info->sub_priority;
@@ -332,7 +332,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
         back.path = std::string(info->path);
         back.offset = info->offset;
         back.request = async_request;
-        back.request->bytes = (char8_t*)info->bytes;
+        back.request->bytes = (uint8_t*)info->bytes;
         back.request->size = info->size;
         back.priority = info->priority;
         back.sub_priority = info->sub_priority;

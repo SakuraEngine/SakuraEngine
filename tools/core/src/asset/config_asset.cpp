@@ -56,7 +56,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     skr_async_io_request_t ioRequest = {};
     ioService->request(record->project->vfs, &ramIO, &ioRequest);
     GetCookSystem()->scheduler->WaitForCounter(&counter, true);
-    auto jsonString = simdjson::padded_string(ioRequest.bytes, ioRequest.size);
+    auto jsonString = simdjson::padded_string((char8_t*)ioRequest.bytes, ioRequest.size);
     sakura_free(ioRequest.bytes);
 #else
     auto file = skr_vfs_fopen(record->project->vfs, u8Path.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
