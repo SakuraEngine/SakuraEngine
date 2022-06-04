@@ -60,8 +60,10 @@ struct ContainerTraits<gsl::span<T, count>>
 };
 
 template <typename T, size_t count>
-struct BufferAdapterTraits<gsl::span<T, count>>
-    : public StdContainerForBufferAdapter<gsl::span<T, count>> {
+struct BufferAdapterTraits<gsl::span<T, count>> {
+    using TIterator = typename gsl::span<T, count>::iterator;
+    using TConstIterator = typename gsl::span<T, count>::iterator;
+    using TValue = typename ContainerTraits<gsl::span<T, count>>::TValue;
 };
 
 } // namespace traits

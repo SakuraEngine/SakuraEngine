@@ -7,6 +7,11 @@
 #include "resource/resource_handle.h"
 #include "utils/hashmap.hpp"
 #include "resource/resource_header.h"
+#include "utils/io.h"
+namespace skr::io
+{
+class RAMService;
+}
 typedef enum ESkrLoadingPhase
 {
     SKR_LOADING_PHASE_NONE = -1,
@@ -14,6 +19,8 @@ typedef enum ESkrLoadingPhase
     // Load Stages
     SKR_LOADING_PHASE_REQUEST_RESOURCE,
     SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST,
+    SKR_LOADING_PHASE_IO,
+    SKR_LOADING_PHASE_WAITFOR_IO,
     SKR_LOADING_PHASE_LOAD_RESOURCE,
     SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE,
     SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES,
@@ -25,6 +32,7 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_UNLOAD_RESOURCE,
 
     // Special Cases
+    SKR_LOADING_PHASE_CANCLE_WAITFOR_IO,
     SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE,
     SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE,
     SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES,
@@ -44,9 +52,15 @@ struct SResourceSystem;
 struct SResourceRequest {
     SResourceSystem* system;
     skr_resource_record_t* resourceRecord;
+    skr_async_io_request_t request;
     SResourceFactory* factory;
     skr_vfs_t* vfs;
     ghc::filesystem::path path;
+    std::string u8path;
+    uint8_t* data;
+    uint64_t size;
+
+    gsl::span<uint8_t> GetData() { return {data, data+size}; }
 
     eastl::fixed_vector<skr_guid_t, 4> dependencies;
     ESkrLoadingPhase currentPhase;
@@ -89,6 +103,7 @@ struct RUNTIME_API SResourceSystem {
     void UnregisterFactory(skr_type_id_t type);
 
     SResourceRegistry* resourceProvider = nullptr;
+    skr::io::RAMService* ioService = nullptr; 
     eastl::vector<SResourceRequest*> requests;
     dual::entity_registry_t resourceIds;
     SMutex recordMutex;

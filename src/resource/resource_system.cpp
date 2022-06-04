@@ -1,6 +1,8 @@
 #include "resource/resource_system.h"
 #include "platform/debug.h"
 #include "platform/thread.h"
+#include "utils/defer.hpp"
+#include "utils/io.hpp"
 #include "utils/log.h"
 #include "resource/resource_handle.h"
 #include "resource/resource_header.h"
@@ -213,6 +215,10 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
         }
         break;
 
+        case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
+            currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
+            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
+        }
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE: {
             currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
@@ -259,10 +265,18 @@ void SResourceRequest::UpdateUnload()
             currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES;
         }
         break;
-
+        case SKR_LOADING_PHASE_IO:
         case SKR_LOADING_PHASE_LOAD_RESOURCE: {
+            if(data)
+                sakura_free(data);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+        }
+        break;
+        case SKR_LOADING_PHASE_WAITFOR_IO:
+        {
+            currentPhase = SKR_LOADING_PHASE_CANCLE_WAITFOR_IO;
+            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
         }
         break;
 
@@ -309,13 +323,25 @@ void SResourceRequest::OnRequestFileFinished()
     }
     else
     {
-        currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
+        auto iter = system->resourceFactories.find(resourceRecord->header.type);
+        if (iter == system->resourceFactories.end())
+        {
+            SKR_LOG_FMT_ERROR("Resource {} failed to load, factory not found.", resourceRecord->header.guid);
+            currentPhase = SKR_LOADING_PHASE_FINISHED;
+            resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+        }
+        factory = iter->second;
+        u8path = path.u8string();
+        currentPhase = SKR_LOADING_PHASE_IO;
     }
 }
 
 void SResourceRequest::_LoadFinished()
 {
     resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
+    if(data)
+        sakura_free(data);
+    data = nullptr;
     if (!requestInstall) // only require data, we are done
     {
         currentPhase = SKR_LOADING_PHASE_FINISHED;
@@ -352,17 +378,41 @@ void SResourceRequest::Update()
         break;
         case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
             break;
-        case SKR_LOADING_PHASE_LOAD_RESOURCE: {
-            auto iter = system->resourceFactories.find(resourceRecord->header.type);
-            if (iter == system->resourceFactories.end())
-            {
-                SKR_LOG_FMT_ERROR("Resource {} failed to load, factory not found.", resourceRecord->header.guid);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-            factory = iter->second;
+        case SKR_LOADING_PHASE_IO:
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
-            auto status = factory->Load(resourceRecord, path, vfs);
+            if(factory->AsyncIO())
+            {
+                skr_ram_io_t ramIO = {};
+                ramIO.bytes = nullptr;
+                ramIO.offset = 0;
+                ramIO.size = 0;
+                ramIO.path = u8path.c_str();
+                system->ioService->request(vfs, &ramIO, &request);
+                currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
+            }
+            else 
+            {
+                auto file = skr_vfs_fopen(vfs, u8path.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+                SKR_DEFER({ skr_vfs_fclose(file); });
+                auto size = skr_vfs_fsize(file);
+                eastl::vector<uint8_t> buffer(size);
+                skr_vfs_fread(file, buffer.data(), 0, size);
+                data = buffer.data();
+                size = buffer.size();
+                buffer.reset_lose_memory();
+                currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
+            }
+            break;
+        case SKR_LOADING_PHASE_WAITFOR_IO:
+            if(request.is_ready())
+            {
+                data = request.bytes;
+                size = request.size;
+                currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
+            }
+            break;
+        case SKR_LOADING_PHASE_LOAD_RESOURCE: {
+            auto status = factory->Load(resourceRecord);
             if (status == SKR_LOAD_STATUS_FAILED)
             {
                 SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
@@ -380,7 +430,7 @@ void SResourceRequest::Update()
         }
         break;
         case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-            auto status = factory->UpdateLoad(resourceRecord, path, vfs);
+            auto status = factory->UpdateLoad(resourceRecord);
             if (status == SKR_LOAD_STATUS_FAILED)
             {
                 SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
@@ -463,6 +513,16 @@ void SResourceRequest::Update()
             }
         }
         break;
+        case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO:
+        {
+            if(!request.is_ready())
+            {
+                system->ioService->defer_cancel(&request);
+            }
+            currentPhase = SKR_LOADING_PHASE_FINISHED;
+            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+        }
+        break;
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE:
         case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
@@ -471,9 +531,11 @@ void SResourceRequest::Update()
             currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
         }
         break;
-        case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES:
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE:
+        case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES:
         case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
+            if(data)
+                sakura_free(data);
             for (auto& dep : resourceRecord->header.dependencies)
                 system->UnloadResource(dep);
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;

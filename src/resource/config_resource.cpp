@@ -11,6 +11,7 @@
 #include "type/type_registry.h"
 #include "SkrRT/typeid.generated.hpp"
 #include "utils/defer.hpp"
+#include "resource/resource_system.h"
 
 namespace skr::resource
 {
@@ -41,14 +42,9 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
     return res;
 }
 
-ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record, const ghc::filesystem::path& path, skr_vfs_t* vfs)
+ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)
 {
-    auto file = skr_vfs_fopen(vfs, path.u8string().c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
-    SKR_DEFER({ skr_vfs_fclose(file); });
-    auto size = skr_vfs_fsize(file);
-    eastl::vector<uint8_t> buffer(size);
-    skr_vfs_fread(file, buffer.data(), 0, size);
-    SBinaryDeserializer archive{ buffer.begin(), buffer.end() };
+    SBinaryDeserializer archive{ record->activeRequest->GetData() };
     if (Deserialize(record, archive))
         return SKR_LOAD_STATUS_SUCCEED;
     else
