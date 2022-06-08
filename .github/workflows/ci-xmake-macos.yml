@@ -36,7 +36,7 @@ jobs:
         cp -r /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}} $GITHUB_WORKSPACE/..
         hdiutil detach /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}}
     - name: ConfigureDebug
-      run: xmake f -m debug -y -v --build_tests=n -c
+      run: xmake f -m debug -y -v --build_tests=n --build_usdtool=n -c
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
     - name: UploadMeta
