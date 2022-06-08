@@ -24,7 +24,7 @@ struct static_type_set_T {
     }
 };
 
-struct type_builder_t {
+struct RUNTIME_API type_builder_t {
     dual_type_index_t* data;
     SIndex length;
 
@@ -32,6 +32,8 @@ struct type_builder_t {
     ~type_builder_t();
     void with(dual_type_set_t type);
     void with(dual_type_index_t type);
+    template<class T>
+    void with() { with(dual_id_of<T>::get()); }
     dual_type_set_t build();
 };
 } // namespace dual
