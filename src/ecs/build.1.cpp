@@ -6,3 +6,4 @@
 #include "stack.cpp"
 #include "storage.cpp"
 #include "type_registry.cpp"
+#include "type_builder.cpp"
