@@ -23,9 +23,9 @@ target("SkrCompiler")
     if(has_config("build_usdtool")) then
         add_defines("WITH_USDTOOL", {public = false})
     end
-    if(is_os("windows")) then 
-        add_links("zlibstatic")
-    end
+    --if(is_os("windows")) then 
+    --    add_links("zlibstatic")
+    --end
     add_rules("c++.reflection", {
         files = {"compiler/**.h", "compiler/**.hpp"},
         rootdir = "compiler/"
