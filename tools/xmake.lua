@@ -1,7 +1,7 @@
 set_project("SakuraTool")
 
 if(has_config("build_usdtool")) then
-    add_requires("vcpkg::usd", {debug=true,configs={shared=true }})
+    add_requires("vcpkg::usd", {configs={shared=true }})
 end
 
 target("SkrTool")
