@@ -32,7 +32,7 @@ jobs:
         $installer = Start-Process -FilePath ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe -Wait -PassThru -ArgumentList @("/S");
         $installer.WaitForExit();
    - name: ConfigureDebug
-     run: xmake f -m debug -y -v --build_tests=n --build_usdtool=n -c
+     run: xmake f -m debug -y -v --build_tests=n --build_usdtool=n --policies=build.ccache:n -c
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
    - name: UploadMeta
