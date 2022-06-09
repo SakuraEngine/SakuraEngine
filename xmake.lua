@@ -167,6 +167,7 @@ target("SkrRT")
     add_cxflags(project_cxflags, {public = true})
 target_end()
 
+includes("modules/xmake.lua")
 if(has_config("build_samples")) then
     includes("samples/xmake.lua")
 end

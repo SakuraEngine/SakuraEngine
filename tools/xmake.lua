@@ -1,5 +1,9 @@
 set_project("SakuraTool")
 
+if(has_config("build_usdtool")) then
+    add_requires("vcpkg::usd", {debug=true,configs={shared=true }})
+end
+
 target("SkrTool")
     set_kind("shared")
     add_files("core/src/**.cpp")
@@ -11,6 +15,34 @@ target("SkrTool")
         rootdir = "core/",
         api = "TOOL"
     })
+
+if(has_config("build_usdtool")) then
+target("UsdTool")
+    set_kind("shared")
+    add_rules("c++.reflection", {
+        files = {"usdtool/**.h", "usdtool/**.hpp"},
+        rootdir = "usdtool/"
+    })
+    add_includedirs("usdtool/include", {public=true})
+    add_packages("vcpkg::usd")
+    add_defines("USDTOOL_SHARED", {public=true})
+    add_defines("USDTOOL_IMPL")
+    add_deps("SkrTool", "GameRT")
+    add_files("usdtool/src/**.cpp")
+end 
+
+target("RenderTool")
+    set_kind("shared")
+    add_rules("c++.reflection", {
+        files = {"rendertool/**.h", "rendertool/**.hpp"},
+        rootdir = "rendertool/"
+    })
+    add_includedirs("rendertool/include", {public=true})
+    add_packages("vcpkg::usd")
+    add_defines("RENDERTOOL_SHARED", {public=true})
+    add_defines("RENDERTOOL_IMPL")
+    add_deps("SkrTool", "GameRT")
+    add_files("rendertool/src/**.cpp")
 
 target("SkrCompiler")
     -- add_rules("grpc.cpp")
