@@ -129,11 +129,10 @@ skr_guid_t SJsonConfigImporterFactory::GetResourceType()
 {
     return get_type_id_skr_config_resource_t();
 }
-SImporter* SJsonConfigImporterFactory::CreateImporter(const SAssetRecord* record)
+void SJsonConfigImporterFactory::CreateImporter(const SAssetRecord* record)
 {
     // TODO: invoke user interface?
     SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
 }
 } // namespace asset
 } // namespace skd

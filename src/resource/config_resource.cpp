@@ -44,7 +44,8 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
 
 ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)
 {
-    SBinaryDeserializer archive{ record->activeRequest->GetData() };
+    auto data = record->activeRequest->GetData();
+    SBinaryDeserializer archive{ data.begin(), data.end() };
     if (Deserialize(record, archive))
         return SKR_LOAD_STATUS_SUCCEED;
     else

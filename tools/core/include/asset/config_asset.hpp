@@ -41,7 +41,7 @@ TOOL_API SConfigCooker final : public SCooker
 struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override;
     skr_guid_t GetResourceType() override;
-    SImporter* CreateImporter(const SAssetRecord* record) override;
+    void CreateImporter(const SAssetRecord* record) override;
 };
 } // namespace sreflect
 } // namespace sreflect

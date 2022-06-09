@@ -37,7 +37,7 @@ USDTOOL_API SSceneCooker final : public SCooker
 struct USDTOOL_API SSceneImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override { return false; }
     skr_guid_t GetResourceType() override { return {}; }
-    SImporter* CreateImporter(const SAssetRecord* record) override { return nullptr; }
+    void CreateImporter(const SAssetRecord* record) override;
 };
 } // namespace sreflect
 } // namespace sreflect

@@ -4,6 +4,7 @@
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
 #include "math/matrix.hpp"
+#include "mesh_asset.hpp"
 #include "platform/debug.h"
 #include "ecs/dual.h"
 #include "resource/resource_factory.h"
@@ -12,6 +13,7 @@
 #include "utils/make_zeroed.hpp"
 #include "scene.h"
 #include "transform.hpp"
+#include "ecs/type_builder.hpp"
 
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
@@ -19,6 +21,7 @@
 #include "pxr/usd/usdGeom/modelAPI.h"
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdGeom/sphere.h"
+#include "pxr/usd/usdGeom/mesh.h"
 
 namespace game::asset
 {
@@ -41,22 +44,20 @@ void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, children_t* child
         pxr::GfMatrix4d transform;
         bool resetsXformStack;
         bool validTransform = xform.GetLocalTransformation(&transform, &resetsXformStack);
-        auto type = make_zeroed<dual_entity_type_t>();
+        dual::type_builder_t builder;
         dual_type_index_t transformType;
         if(!children)
             transformType = dual_id_of<skr_l2w_t>::get();
         else
             transformType = dual_id_of<skr_l2r_t>::get();
-        dual_type_index_t comps[10];
-        if(1)
-            comps[type.type.length++] = dual_id_of<skr_name_t>::get();
-        comps[type.type.length++] = transformType;
+        builder.with(transformType);
+        builder.with<skr_name_t>();
         if(children)
-            comps[type.type.length++] = dual_id_of<skr_parent_t>::get();
+            builder.with<skr_parent_t>();
         if(!ecsChildren.empty())
-            comps[type.type.length++] = dual_id_of<skr_child_t>::get();
-        std::sort(comps, comps + type.type.length);
-        type.type.data = comps;
+            builder.with<skr_child_t>();
+        auto type = make_zeroed<dual_entity_type_t>();
+        type.type = builder.build();
         auto Init = [&](dual_chunk_view_t* view)
         {
             auto self = *dualV_get_entities(view);
@@ -150,4 +151,20 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     fwrite(buffer.data(), 1, archive.adapter().writtenBytesCount(), file);
     return true;
 }
+
+void SSceneImporterFactory::CreateImporter(const SAssetRecord *record)
+{
+    auto u8Path = record->path.u8string();
+    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
+    SSceneImporter sceneImporter(record->guid);
+    for(auto prim : stage->Traverse())
+    {
+        if(prim.IsA<pxr::UsdGeomMesh>())
+        {
+            SUSDMeshImporter meshImporter(record->guid);
+        }
+    }
+}
+
+
 } // namespace game::asset

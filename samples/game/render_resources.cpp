@@ -478,6 +478,11 @@ void create_test_materials()
     dualS_allocate_type(gamert->ecs_world, &renderableT, 100, DUAL_LAMBDA(primSetup));
 }
 
+void init_render(dual_storage_t* world)
+{
+    
+}
+
 void free_test_materials()
 {
     ecsr_unregister_gfx_shader_set(shaderset_id);
