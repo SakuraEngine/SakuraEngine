@@ -71,3 +71,21 @@
 ## 接入的扩展API以及版本
 - nvapi R510
 - amd_ags 6.0.1
+
+## 构建
+### 前置
+- xmake
+- vcpkg（可选，当前 grpc 和 usd 通过 vcpkg 安装）
+
+### 编译
+使用以下命令编译
+```
+> xmake l setup.lua
+> xmake f -m debug --build_usdtool=n -c
+> xmake project -k compile_commands
+> xmake 
+```
+编译 usdtool 需要通过 vcpkg 安装
+
+## 编辑环境
+推荐使用 vscode + clangd 作为编辑环境，使用命令 `xmake project -k compile_commands` 来生成 clangd 需要的数据集
