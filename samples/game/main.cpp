@@ -9,25 +9,12 @@
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
 #include "utils/make_zeroed.hpp"
+#include "skr_renderer.h"
 #include <thread>
 #include <chrono>
-#ifdef SKR_OS_WINDOWS
-    #include <shellscalingapi.h>
-#endif
 
 extern SWindowHandle window;
-extern uint32_t backbuffer_index;
-extern bool DPIAware;
-extern CGPUSurfaceId surface;
-extern CGPUSwapChainId swapchain;
-extern CGPUFenceId present_fence;
-extern ECGPUBackend backend;
-extern CGPUInstanceId instance;
-extern CGPUAdapterId adapter;
-extern CGPUDeviceId device;
-extern CGPUQueueId gfx_queue;
-extern CGPUSamplerId sampler;
-extern void create_api_objects();
+uint32_t backbuffer_index;
 extern void free_api_objects();
 extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph);
 
@@ -45,10 +32,7 @@ int main(int argc, char** argv)
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameRT", true);
     moduleManager->init_module_graph();
-#ifdef SKR_OS_WINDOWS
-    ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-    DPIAware = true;
-#endif
+
     assert(gamert_get_ecs_world());
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
@@ -57,13 +41,14 @@ int main(int argc, char** argv)
     window_desc.resizable = true;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
-    window = skr_create_window(gCGPUBackendNames[backend], &window_desc);
-    create_api_objects();
+    window = skr_create_window("Game", &window_desc);
+    auto swapchain = skr_renderer_register_window(window);
+    auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
     namespace render_graph = skr::render_graph;
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
-        builder.with_device(device)
-        .with_gfx_queue(gfx_queue)
+        builder.with_device(skr_renderer_get_cgpu_device())
+        .with_gfx_queue(skr_renderer_get_gfx_queue())
         .enable_memory_aliasing();
     });
     create_render_resources(renderGraph);
@@ -86,8 +71,8 @@ int main(int argc, char** argv)
         }
         auto& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(
-        (float)swapchain->back_buffers[0]->width,
-        (float)swapchain->back_buffers[0]->height);
+            swapchain->back_buffers[0]->width,
+            swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
         quit |= skg::GameLoop(ctx);
         // move
@@ -142,11 +127,12 @@ int main(int argc, char** argv)
         CGPUQueuePresentDescriptor present_desc = {};
         present_desc.index = backbuffer_index;
         present_desc.swapchain = swapchain;
-        cgpu_queue_present(gfx_queue, &present_desc);
+        cgpu_queue_present(skr_renderer_get_gfx_queue(), &present_desc);
         FrameMark
     }
     // clean up
-    cgpu_wait_queue_idle(gfx_queue);
+    cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+    cgpu_free_fence(present_fence);
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
     free_api_objects();
