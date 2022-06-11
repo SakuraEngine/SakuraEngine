@@ -27,6 +27,11 @@ option("build_tests")
     set_description("Toggle to build tests of SakuraRuntime")
 option_end()
 
+option("build_AAA")
+    set_default(false)
+    set_description("Toggle to build AAA project")
+option_end()
+
 set_languages("c11", "cxx17")
 
 include_dir_list = {"include"}
