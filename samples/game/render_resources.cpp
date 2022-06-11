@@ -6,98 +6,31 @@
 #include "gamert.h"
 #include "platform/memory.h"
 #include "utils/log.h"
+#include "skr_renderer.h"
+#include "runtime_module.h"
 
 SWindowHandle window;
-uint32_t backbuffer_index;
-bool DPIAware = false;
-CGPUSurfaceId surface;
-CGPUSwapChainId swapchain;
-CGPUFenceId present_fence;
-ECGPUBackend backend = CGPU_BACKEND_VULKAN;
-CGPUInstanceId instance;
-CGPUAdapterId adapter;
-CGPUDeviceId device;
-CGPUQueueId gfx_queue;
-CGPUSamplerId sampler;
 CGPUBufferId index_buffer;
 CGPUBufferId vertex_buffer;
 
-void create_api_objects()
-{
-    // Create instance
-    CGPUInstanceDescriptor instance_desc = {};
-    instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
-    instance_desc.enable_set_name = true;
-    instance = cgpu_create_instance(&instance_desc);
-
-    // Filter adapters
-    uint32_t adapters_count = 0;
-    cgpu_enum_adapters(instance, CGPU_NULLPTR, &adapters_count);
-    CGPUAdapterId adapters[64];
-    cgpu_enum_adapters(instance, adapters, &adapters_count);
-    adapter = adapters[0];
-
-    // Create device
-    CGPUQueueGroupDescriptor queue_group_desc = {};
-    queue_group_desc.queueType = CGPU_QUEUE_TYPE_GRAPHICS;
-    queue_group_desc.queueCount = 1;
-    CGPUDeviceDescriptor device_desc = {};
-    device_desc.queueGroups = &queue_group_desc;
-    device_desc.queueGroupCount = 1;
-    device = cgpu_create_device(adapter, &device_desc);
-    gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
-    present_fence = cgpu_create_fence(device);
-    // Sampler
-    CGPUSamplerDescriptor sampler_desc = {};
-    sampler_desc.address_u = CGPU_ADDRESS_MODE_REPEAT;
-    sampler_desc.address_v = CGPU_ADDRESS_MODE_REPEAT;
-    sampler_desc.address_w = CGPU_ADDRESS_MODE_REPEAT;
-    sampler_desc.mipmap_mode = CGPU_MIPMAP_MODE_LINEAR;
-    sampler_desc.min_filter = CGPU_FILTER_TYPE_LINEAR;
-    sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
-    sampler_desc.compare_func = CGPU_CMP_NEVER;
-    sampler = cgpu_create_sampler(device, &sampler_desc);
-
-    // Create swapchain
-    surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-    CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.presentQueues = &gfx_queue;
-    chain_desc.presentQueuesCount = 1;
-    chain_desc.width = BACK_BUFFER_WIDTH;
-    chain_desc.height = BACK_BUFFER_HEIGHT;
-    chain_desc.surface = surface;
-    chain_desc.imageCount = 2;
-    chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
-    chain_desc.enableVsync = false;
-    swapchain = cgpu_create_swapchain(device, &chain_desc);
-}
-
-void create_test_materials();
+void create_test_materials(skr::render_graph::RenderGraph* renderGraph);
 void free_test_materials();
 
 void free_api_objects()
 {
     // Free cgpu objects
-    cgpu_wait_fences(&present_fence, 1);
-
     free_test_materials();
-
-    cgpu_free_fence(present_fence);
     cgpu_free_buffer(index_buffer);
     cgpu_free_buffer(vertex_buffer);
-    cgpu_free_swapchain(swapchain);
-    cgpu_free_surface(device, surface);
-    cgpu_free_sampler(sampler);
-    cgpu_free_queue(gfx_queue);
-    cgpu_free_device(device);
-    cgpu_free_instance(instance);
 }
 
 void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 {
     auto moduleManager = skr_get_module_manager();
+    auto renderModule = static_cast<SkrRendererModule*>(moduleManager->get_module("SkrRenderer"));
+    const auto device = renderGraph->get_backend_device();
+    const auto backend = device->adapter->instance->backend;
+    const auto gfx_queue = renderGraph->get_gfx_queue();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
     {
@@ -111,7 +44,7 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
         uint32_t *font_bytes, font_length;
         read_bytes(font_path, (char**)&font_bytes, &font_length);
         float dpi_scaling = 1.f;
-        if (!DPIAware)
+        if (!skr_runtime_is_dpi_aware())
         {
             float ddpi;
             SDL_GetDisplayDPI(0, &ddpi, NULL, NULL);
@@ -168,7 +101,7 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
     sakura_free(im_fs_bytes);
     RenderGraphImGuiDescriptor imgui_graph_desc = {};
     imgui_graph_desc.render_graph = renderGraph;
-    imgui_graph_desc.backbuffer_format = (ECGPUFormat)swapchain->back_buffers[backbuffer_index]->format;
+    imgui_graph_desc.backbuffer_format = renderModule->get_swapchain_format();
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
     imgui_graph_desc.vs.entry = "main";
@@ -176,13 +109,13 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
     imgui_graph_desc.ps.stage = CGPU_SHADER_STAGE_FRAG;
     imgui_graph_desc.ps.entry = "main";
     imgui_graph_desc.queue = gfx_queue;
-    imgui_graph_desc.static_sampler = sampler;
+    imgui_graph_desc.static_sampler = renderModule->get_linear_sampler();
     render_graph_imgui_initialize(&imgui_graph_desc);
     cgpu_free_shader_library(imgui_vs);
     cgpu_free_shader_library(imgui_fs);
 
     // create materials
-    create_test_materials();
+    create_test_materials(renderGraph);
 }
 
 #include "utils/make_zeroed.hpp"
@@ -300,8 +233,10 @@ struct CubeGeometry {
     };
 };
 
-void create_geom_resources()
+void create_geom_resources(skr::render_graph::RenderGraph* renderGraph)
 {
+    const auto device = renderGraph->get_backend_device();
+    const auto gfx_queue = renderGraph->get_gfx_queue();
     // upload
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = "UploadBuffer";
@@ -376,9 +311,11 @@ void create_geom_resources()
     cgpu_free_command_pool(cmd_pool);
 }
 
-void create_test_materials()
+void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
 {
     auto moduleManager = skr_get_module_manager();
+    const auto device = renderGraph->get_backend_device();
+    const auto backend = device->adapter->instance->backend;
 
     // read shaders
     eastl::string vsname = u8"shaders/Game/gbuffer_vs";
@@ -419,7 +356,7 @@ void create_test_materials()
     shaderset_id = ecsr_register_gfx_shader_set(&shaderSet);
     auto mat = make_zeroed<gfx_material_t>();
     mat.m_gfx = shaderset_id;
-    mat.device = ::device;
+    mat.device = device;
     mat.push_constant_count = 1;
     const char8_t* push_const_name = u8"push_constants";
     mat.push_constant_names = &push_const_name;
@@ -448,7 +385,7 @@ void create_test_materials()
         i, cdesc->name);
     }
     // create vbs & ib
-    create_geom_resources();
+    create_geom_resources(renderGraph);
     // allocate renderable
     eastl::stable_sort(ctypes, ctypes + ctype_count);
     dual_entity_type_t renderableT = {};
@@ -476,11 +413,6 @@ void create_test_materials()
         }
     };
     dualS_allocate_type(gamert->ecs_world, &renderableT, 100, DUAL_LAMBDA(primSetup));
-}
-
-void init_render(dual_storage_t* world)
-{
-    
 }
 
 void free_test_materials()

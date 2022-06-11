@@ -82,7 +82,7 @@ target("GameRT")
     add_defines("GAMERT_SHARED", {public=true})
     add_defines("GAMERT_IMPL")
     set_kind("shared")
-    add_deps("SkrRT")
+    add_deps("SkrRT", "SkrRenderer")
     add_files("game/src/**.cpp", "game/src/**.c")
 
 target("GameTool")
@@ -107,7 +107,6 @@ target("GameTool")
             end
         end
     end)
-
 
 target("Game")
     set_kind("binary")
