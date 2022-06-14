@@ -44,7 +44,7 @@
 
 ### 光栅化管线
 - Shader Reflection :heavy_check_mark:
-- MSAA :heavy_exclamation_mark: 
+- MSAA :heavy_check_mark: 
 - Reflection Created RootSig :heavy_check_mark:
 - Texture Sample :heavy_check_mark:
 - CBV :heavy_check_mark:
