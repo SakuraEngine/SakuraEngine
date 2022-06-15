@@ -12,6 +12,9 @@
 #include "skr_renderer.h"
 #include <thread>
 #include <chrono>
+#include "input/gainput/gainput.h"
+#include "input/gainput/GainputInputDeviceKeyboard.h"
+#include "input/gainput/GainputInputDeviceMouse.h"
 
 extern SWindowHandle window;
 uint32_t backbuffer_index;
@@ -52,6 +55,28 @@ int main(int argc, char** argv)
         .enable_memory_aliasing();
     });
     create_render_resources(renderGraph);
+
+    // Setup Gainput
+    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+    enum InputAction
+    {
+    	Quit,
+        Cao,
+    };
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo((SDL_Window*)window, &wmInfo);
+    HWND hwnd = wmInfo.info.win.window;
+    gainput::InputManager manager;
+    manager.Init(hwnd);
+    manager.SetWindowsInstance(hwnd);
+	manager.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
+	gainput::DeviceId keyboardId = manager.CreateDevice<gainput::InputDeviceKeyboard>();
+    gainput::DeviceId mouseId = manager.CreateDevice<gainput::InputDeviceMouse>();
+    gainput::InputMap inputMap(manager);
+    inputMap.MapBool(InputAction::Quit, keyboardId, gainput::KeyEscape);
+    inputMap.MapBool(InputAction::Cao, mouseId, gainput::MouseButtonLeft);
+
     // loop
     bool quit = false;
     skg::GameContext ctx;
@@ -60,15 +85,23 @@ int main(int argc, char** argv)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            auto sdl_window = (SDL_Window*)window;
-            if (SDL_GetWindowID(sdl_window) == event.window.windowID)
+            if(event.type == SDL_SYSWMEVENT)
             {
-                if (!SDLEventHandler(&event, sdl_window))
-                {
-                    quit = true;
-                }
+                SDL_SysWMmsg* msg = event.syswm.msg;
+                manager.HandleMessage((MSG&)msg->msg);
             }
         }
+
+        manager.Update();
+        if (inputMap.GetBoolWasDown(InputAction::Cao))
+	    {
+	    	SKR_LOG_DEBUG("Cao");
+	    }
+        if (inputMap.GetBoolWasDown(InputAction::Quit))
+	    {
+	    	quit = true;
+	    }
+        
         auto& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(
             swapchain->back_buffers[0]->width,

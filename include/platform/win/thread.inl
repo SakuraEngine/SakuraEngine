@@ -82,7 +82,7 @@ FORCEINLINE static void skr_init_thread(SThreadDesc* pDesc, SThreadHandle* pHand
     *pHandle = handle;
 }
 
-const int priorities[SKR_THREAD_PRIORITY_COUNT] = {
+static const int priorities[SKR_THREAD_PRIORITY_COUNT] = {
     THREAD_PRIORITY_NORMAL,
     THREAD_PRIORITY_LOWEST,
     THREAD_PRIORITY_BELOW_NORMAL,
