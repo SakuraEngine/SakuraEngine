@@ -71,9 +71,11 @@ target("SkrRT")
     add_includedirs(include_dir_list, {public = true})
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
+    add_files("src/input/gainput/**.cpp")
     add_cxflags(project_cxflags, {public = true, force = true})
     -- runtime compile definitions
     add_defines("MI_SHARED_LIB", "RUNTIME_SHARED", "EA_DLL", {public = true})
+    add_defines("GAINPUT_DEV", "GAINPUT_LIB_DYNAMIC", {public = true})
     add_defines("MI_SHARED_LIB_EXPORT", "RUNTIME_API=RUNTIME_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT")
     -- fetch vk includes
     add_rules("utils.fetch-vk-includes")
