@@ -76,6 +76,7 @@
 ### 前置
 - xmake
 - vcpkg（可选，当前 grpc 和 usd 通过 vcpkg 安装）
+- python，并安装 mako `pip install mako`
 
 ### 编译
 使用以下命令编译
