@@ -38,19 +38,19 @@
 
 ### 计算管线
 - Dispatch :heavy_check_mark:
-- CBV :heavy_exclamation_mark:
+- CBV :heavy_check_mark:
 - UAV :heavy_check_mark:
 - Texture :heavy_check_mark:
 
 ### 光栅化管线
 - Shader Reflection :heavy_check_mark:
-- MSAA :heavy_exclamation_mark: 
+- MSAA :heavy_check_mark: 
 - Reflection Created RootSig :heavy_check_mark:
 - Texture Sample :heavy_check_mark:
 - CBV :heavy_check_mark:
 - Static Sampler :heavy_check_mark:
-- Vertex Layout :heavy_exclamation_mark:
-- Root Constant :heavy_exclamation_mark:
+- Vertex Layout :heavy_check_mark:
+- Root Constant :heavy_check_mark:
 - Constant Spec :heavy_exclamation_mark:
 - Shading Rate :heavy_exclamation_mark:
 
