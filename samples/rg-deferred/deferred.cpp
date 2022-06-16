@@ -235,7 +235,7 @@ struct LightingCSPushConstants {
     smath::Vector2f viewportOrigin = { 0, 0 };
 };
 static LightingCSPushConstants lighting_cs_data = {};
-const bool fragmentLightingPass = false;
+bool fragmentLightingPass = true;
 bool DPIAware = false;
 
 #ifdef SKR_OS_WINDOWS
@@ -371,33 +371,41 @@ int main(int argc, char* argv[])
             (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
             ImGui::Begin(u8"RenderGraphProfile");
+            if (ImGui::Button(fragmentLightingPass ? "SwitchToComputeLightingPass" : "SwitchToFragmentLightingPass"))
+            {
+                fragmentLightingPass = !fragmentLightingPass;
+            }
             if (frame_index > RG_MAX_FRAME_IN_FLIGHT)
             {
                 auto profiler_index = (frame_index - 1) % RG_MAX_FRAME_IN_FLIGHT;
                 auto&& profiler = profilers[profiler_index];
-                // text
-                ImGui::Text("frame: %d(%d frames before)",
-                profiler.frame_index,
-                frame_index - profiler.frame_index);
-                float total_ms = 0.f;
-                for (uint32_t i = 1; i < profiler.times_ms.size(); i++)
+                if (profiler.times_ms.size() == profiler.query_names.size())
                 {
-                    auto text = profiler.query_names[i];
-                    text = text.append(": %.4f ms");
-                    ImGui::Text(text.c_str(), profiler.times_ms[i]);
-                    total_ms += profiler.times_ms[i];
+                    // text
+                    ImGui::Text("frame: %d(%d frames before)",
+                    profiler.frame_index,
+                    frame_index - profiler.frame_index);
+                    float total_ms = 0.f;
+                    for (uint32_t i = 1; i < profiler.times_ms.size(); i++)
+                    {
+                        auto text = profiler.query_names[i];
+                        text = text.append(": %.4f ms");
+                        ImGui::Text(text.c_str(), profiler.times_ms[i]);
+                        total_ms += profiler.times_ms[i];
+                    }
+                    ImGui::Text("GPU Time: %f(ms)", total_ms);
+                    // plot
+                    auto max_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
+                    auto min_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
+                    (void)min_scale;
+                    ImVec2 size = { 200, 200 };
+                    ImGui::PlotHistogram("##ms",
+                    profiler.times_ms.data() + 1,
+                    (int)profiler.times_ms.size() - 1,
+                    0, NULL,
+                    0.0001f, *max_scale * 1.1f, size);
                 }
-                ImGui::Text("GPU Time: %f(ms)", total_ms);
-                // plot
-                auto max_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
-                auto min_scale = eastl::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
-                (void)min_scale;
-                ImVec2 size = { 200, 200 };
-                ImGui::PlotHistogram("##ms",
-                profiler.times_ms.data() + 1,
-                (int)profiler.times_ms.size() - 1,
-                0, NULL,
-                0.0001f, *max_scale * 1.1f, size);
+
             }
             ImGui::End();
         }
