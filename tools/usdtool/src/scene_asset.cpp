@@ -23,7 +23,7 @@
 #include "pxr/usd/usdGeom/sphere.h"
 #include "pxr/usd/usdGeom/mesh.h"
 
-namespace game::asset
+namespace skd::asset
 {
 
 struct TranverseContext

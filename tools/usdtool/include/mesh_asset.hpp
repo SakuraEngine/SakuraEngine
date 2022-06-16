@@ -3,11 +3,10 @@
 #include "asset/importer.hpp"
 #include "platform/configure.h"
 
-namespace game sreflect
+namespace skd sreflect
 {
 namespace asset sreflect
 {
-using namespace skd::asset;
 struct sreflect sattr(
 "guid" : "01A1037A-22A1-46C9-8461-90B443796FDC",
 "serialize" : "json",
@@ -15,7 +14,7 @@ struct sreflect sattr(
 )
 USDTOOL_API SUSDMeshImporter final : public SImporter
 {
-    //the SDF path of Mesh asset
+    // the SDF path of Mesh asset
     eastl::string path;
     using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override { return nullptr; }
