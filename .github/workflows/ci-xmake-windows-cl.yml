@@ -48,7 +48,7 @@ jobs:
    - name: Release
      shell: cmd
      run: |
-        xmake f -m release -y -c -v --build_tests=n 
+        xmake f -m release -y -c -v --build_tests=n --policies=build.ccache:n
         xmake -y -v
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
