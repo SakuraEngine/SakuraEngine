@@ -91,7 +91,11 @@ int main(int argc, char** argv)
                 manager.HandleMessage((XEvent&)msg->msg);
 #endif
             }
-            quit = (event.type == SDL_QUIT);
+            if (event.type == SDL_QUIT)
+            {
+                quit = true;
+                break;
+            }
         }
 
         manager.Update();
