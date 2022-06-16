@@ -2,6 +2,7 @@
 #if defined(_WIN32)
     #include "windows/time.c"
 #elif defined(__APPLE__)
+    #include "apple/time.c"
 #elif defined(__EMSCRIPTEN__) || defined(__wasi__)
     #include "linux/time.c"
 #endif

@@ -3,7 +3,7 @@
 
 #ifdef GAINPUT_PLATFORM_MAC
 #include "input/gainput/GainputMac.h"
-#include "input/gainput/mouse/GainputInputDeviceMouseMac.h"
+#include "GainputInputDeviceMouseMac.h"
 
 #include "input/gainput/GainputInputDeltaState.h"
 #include "input/gainput/GainputHelpers.h"

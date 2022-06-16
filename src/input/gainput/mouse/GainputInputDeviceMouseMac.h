@@ -5,7 +5,9 @@
 #include "GainputInputDeviceMouseImpl.h"
 #import <Carbon/Carbon.h>
 
-@class GainputMacInputView;
+#ifndef __OBJC__
+class GainputMacInputView;
+#endif
 
 namespace gainput
 {

@@ -63,10 +63,7 @@ int main(int argc, char** argv)
     	Quit,
         Cao,
     };
-    SDL_SysWMinfo wmInfo;
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo((SDL_Window*)window, &wmInfo);
-    HWND hwnd = wmInfo.info.win.window;
+    auto hwnd = skr_window_get_native_handle(window);
     gainput::InputManager manager;
     manager.Init(hwnd);
     manager.SetWindowsInstance(hwnd);
@@ -88,7 +85,9 @@ int main(int argc, char** argv)
             if(event.type == SDL_SYSWMEVENT)
             {
                 SDL_SysWMmsg* msg = event.syswm.msg;
-                manager.HandleMessage((MSG&)msg->msg);
+#if defined(GAINPUT_PLATFORM_WIN)
+                manager.HandleMessage(msg->msg);
+#endif
             }
         }
 

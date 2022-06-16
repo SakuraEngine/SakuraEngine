@@ -29,6 +29,7 @@ DEFINE_GUID(GUID_DEVINTERFACE_USB_DEVICE, 0xA5DCBF10L, 0x6530, 0x11D2, 0x90, 0x1
 
 #elif defined(__APPLE__)
 #include <IOKit/hid/IOHIDDevice.h>
+#include <IOKit/IOKitLib.h>
 
 #elif defined(__linux__)
 #include <libudev.h>
