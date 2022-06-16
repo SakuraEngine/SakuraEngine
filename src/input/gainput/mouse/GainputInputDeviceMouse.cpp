@@ -17,8 +17,8 @@
 	#include "GainputInputDeviceMouseWin.h"
 	#include "GainputInputDeviceMouseWinRaw.h"
 #elif defined(GAINPUT_PLATFORM_MAC)
-	#include "input/gainput/mouse/GainputInputDeviceMouseMac.h"
-    #include "input/gainput/mouse/GainputInputDeviceMouseMacRaw.h"
+	#include "GainputInputDeviceMouseMac.h"
+    #include "GainputInputDeviceMouseMacRaw.h"
 #elif defined(GAINPUT_PLATFORM_GGP)
 	#include "../../../../../../../../Stadia/Common_3/OS/Input/GainputInputDeviceMouseGGP.h"
 	#include "../../../../../../../../Stadia/Common_3/OS/Input/GainputInputDeviceMouseGGPRaw.h"

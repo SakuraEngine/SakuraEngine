@@ -30,8 +30,7 @@
 
 #include "../hidapi.h"
 
-#include "../../../../../../../OS/Interfaces/IThread.h"
-// #include "../../../../../../../OS/Interfaces/IMemory.h"
+#include "platform/thread.h"
 #include "platform/memory.h"
 
 /* As defined in AppKit.h, but we don't need the entire AppKit for a single constant. */
@@ -43,8 +42,8 @@ extern const double NSAppKitVersionNumber;
    StackOverflow. It is used with his permission. */
 typedef int thread_barrierattr_t;
 typedef struct thread_barrier {
-    Mutex mutex;
-    ConditionVariable cond;
+    SMutex mutex;
+    SConditionVariable cond;
     int count;
     int trip_count;
 } thread_barrier_t;
@@ -58,11 +57,11 @@ static int thread_barrier_init(thread_barrier_t *barrier, const thread_barrierat
 		return -1;
 	}
 
-	if(initMutex(&barrier->mutex)) {
+	if(skr_init_mutex(&barrier->mutex)) {
 		return -1;
 	}
-	if(initConditionVariable(&barrier->cond)) {
-		destroyMutex(&barrier->mutex);
+	if(skr_init_condition_var(&barrier->cond)) {
+		skr_destroy_mutex(&barrier->mutex);
 		return -1;
 	}
 	barrier->trip_count = count;
@@ -73,26 +72,26 @@ static int thread_barrier_init(thread_barrier_t *barrier, const thread_barrierat
 
 static int thread_barrier_destroy(thread_barrier_t *barrier)
 {
-	destroyConditionVariable(&barrier->cond);
-	destroyMutex(&barrier->mutex);
+	skr_destroy_condition_var(&barrier->cond);
+	skr_destroy_mutex(&barrier->mutex);
 	return 0;
 }
 
 static int thread_barrier_wait(thread_barrier_t *barrier)
 {
-	acquireMutex(&barrier->mutex);
+	skr_acquire_mutex(&barrier->mutex);
 	++(barrier->count);
 	if(barrier->count >= barrier->trip_count)
 	{
 		barrier->count = 0;
-		wakeAllConditionVariable(&barrier->cond);
-		releaseMutex(&barrier->mutex);
+		skr_wake_all_condition_vars(&barrier->cond);
+		skr_release_mutex(&barrier->mutex);
 		return 1;
 	}
 	else
 	{
-		waitConditionVariable(&barrier->cond, &(barrier->mutex), TIMEOUT_INFINITE);
-		releaseMutex(&barrier->mutex);
+		skr_wait_condition_vars(&barrier->cond, &(barrier->mutex), TIMEOUT_INFINITE);
+		skr_release_mutex(&barrier->mutex);
 		return 0;
 	}
 }
@@ -118,9 +117,9 @@ struct hid_device_ {
 	CFIndex max_input_report_len;
 	struct input_report *input_reports;
 
-	ThreadHandle thread;
-	Mutex mutex; /* Protects input_reports */
-	ConditionVariable condition;
+	SThreadHandle thread;
+	SMutex mutex; /* Protects input_reports */
+	SConditionVariable condition;
 	thread_barrier_t barrier; /* Ensures correct startup sequence */
 	thread_barrier_t shutdown_barrier; /* Ensures correct shutdown sequence */
 	int shutdown_thread;
@@ -141,8 +140,8 @@ static hid_device *new_hid_device(void)
 	dev->shutdown_thread = 0;
 
 	/* Thread objects */
-	initMutex(&dev->mutex);
-	initConditionVariable(&dev->condition);
+	skr_init_mutex(&dev->mutex);
+	skr_init_condition_var(&dev->condition);
 	thread_barrier_init(&dev->barrier, NULL, 2);
 	thread_barrier_init(&dev->shutdown_barrier, NULL, 2);
 
@@ -175,8 +174,8 @@ static void free_hid_device(hid_device *dev)
 	/* Clean up the thread objects */
 	thread_barrier_destroy(&dev->shutdown_barrier);
 	thread_barrier_destroy(&dev->barrier);
-	destroyConditionVariable(&dev->condition);
-	destroyMutex(&dev->mutex);
+	skr_destroy_condition_var(&dev->condition);
+	skr_destroy_mutex(&dev->mutex);
 
 	/* Free the structure itself. */
 	sakura_free(dev);
@@ -713,7 +712,7 @@ static void hid_report_callback(void *context, IOReturn result, void *sender,
 	rpt->next = NULL;
 
 	/* Lock this section */
-	acquireMutex(&dev->mutex);
+	skr_acquire_mutex(&dev->mutex);
 
 	/* Attach the new report object to the end of the list. */
 	if (dev->input_reports == NULL) {
@@ -739,10 +738,10 @@ static void hid_report_callback(void *context, IOReturn result, void *sender,
 	}
 
 	/* Signal a waiting thread that there is data. */
-	wakeOneConditionVariable(&dev->condition);
+	skr_wake_condition_var(&dev->condition);
 
 	/* Unlock */
-	releaseMutex(&dev->mutex);
+	skr_release_mutex(&dev->mutex);
 
 }
 
@@ -806,9 +805,9 @@ static void read_thread(void *param)
 	   make sure that a thread which is about to go to sleep waiting on
 	   the condition actually will go to sleep before the condition is
 	   signaled. */
-	acquireMutex(&dev->mutex);
-	wakeAllConditionVariable(&dev->condition);
-	releaseMutex(&dev->mutex);
+	skr_acquire_mutex(&dev->mutex);
+	skr_wake_all_condition_vars(&dev->condition);
+	skr_release_mutex(&dev->mutex);
 
 	/* Wait here until hid_close() is called and makes it past
 	   the call to CFRunLoopWakeUp(). This thread still needs to
@@ -891,12 +890,12 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path)
 		IOHIDDeviceRegisterRemovalCallback(dev->device_handle, hid_device_removal_callback, dev);
 
 		/* Start the read thread */
-		ThreadDesc threadDesc;
+		SThreadDesc threadDesc;
 		memset(&threadDesc, 0, sizeof(threadDesc));
 		threadDesc.pFunc = read_thread;
 		threadDesc.pData = dev;
-		strncpy(threadDesc.mThreadName, "HIDReadThread", sizeof(threadDesc.mThreadName));
-        initThread(&threadDesc, &dev->thread);
+		//strncpy(threadDesc.mThreadName, "HIDReadThread", sizeof(threadDesc.mThreadName));
+        skr_init_thread(&threadDesc, &dev->thread);
 
 		/* Wait here for the read thread to be initialized. */
 		thread_barrier_wait(&dev->barrier);
@@ -1009,10 +1008,10 @@ static int return_data(hid_device *dev, unsigned char *data, size_t length)
 	return (int)len;
 }
 
-static int cond_wait(const hid_device *dev, ConditionVariable *cond, Mutex *mutex)
+static int cond_wait(const hid_device *dev, SConditionVariable *cond, SMutex *mutex)
 {
 	while (!dev->input_reports) {
-		waitConditionVariable(cond, mutex, TIMEOUT_INFINITE);
+		skr_wait_condition_vars(cond, mutex, TIMEOUT_INFINITE);
 
 		/* Check to see that there's actually
 		   data in the queue before returning, and if not, go back
@@ -1025,10 +1024,10 @@ static int cond_wait(const hid_device *dev, ConditionVariable *cond, Mutex *mute
 	return 0;
 }
 
-static int cond_timedwait(const hid_device *dev, ConditionVariable *cond, Mutex *mutex, uint32_t abstime)
+static int cond_timedwait(const hid_device *dev, SConditionVariable *cond, SMutex *mutex, uint32_t abstime)
 {
 	while (!dev->input_reports) {
-		waitConditionVariable(cond, mutex, abstime);
+		skr_wait_condition_vars(cond, mutex, abstime);
 
         /* Check to see that there's actually
            data in the queue before returning, and if not, go back
@@ -1047,7 +1046,7 @@ int HID_API_EXPORT hid_read_timeout(hid_device *dev, unsigned char *data, size_t
 	int bytes_read = -1;
 
 	/* Lock the access to the report list. */
-	acquireMutex(&dev->mutex);
+	skr_acquire_mutex(&dev->mutex);
 
 	/* There's an input report queued up. Return it. */
 	if (dev->input_reports) {
@@ -1102,7 +1101,7 @@ int HID_API_EXPORT hid_read_timeout(hid_device *dev, unsigned char *data, size_t
 
 ret:
 	/* Unlock */
-	releaseMutex(&dev->mutex);
+	skr_release_mutex(&dev->mutex);
 	return bytes_read;
 }
 
@@ -1162,7 +1161,7 @@ void HID_API_EXPORT hid_close(hid_device *dev)
 	thread_barrier_wait(&dev->shutdown_barrier);
 
 	/* Wait for read_thread() to end. */
-    joinThread(dev->thread);
+    skr_join_thread(dev->thread);
 
 	/* Close the OS handle to the device, but only if it's not
 	   been unplugged. If it's been unplugged, then calling
@@ -1178,11 +1177,11 @@ void HID_API_EXPORT hid_close(hid_device *dev)
 	}
 
 	/* Clear out the queue of received reports. */
-	acquireMutex(&dev->mutex);
+	skr_acquire_mutex(&dev->mutex);
 	while (dev->input_reports) {
 		return_data(dev, NULL, 0);
 	}
-	releaseMutex(&dev->mutex);
+	skr_release_mutex(&dev->mutex);
 	CFRelease(dev->device_handle);
 
 	free_hid_device(dev);

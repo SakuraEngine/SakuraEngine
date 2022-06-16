@@ -7,7 +7,7 @@
 #include "input/gainput/GainputHelpers.h"
 #include "input/gainput/GainputLog.h"
 
-#include "input/gainput/keyboard/GainputInputDeviceKeyboardMac.h"
+#include "GainputInputDeviceKeyboardMac.h"
 
 #import <Carbon/Carbon.h>
 #import <CoreFoundation/CoreFoundation.h>

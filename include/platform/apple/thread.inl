@@ -98,7 +98,7 @@ FORCEINLINE static void* ThreadFunctionStatic(void* data)
     return 0;
 }
 
-const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = { 
+static const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = { 
     0, 1, 25, 50, 75, 75, 99 
 };
 

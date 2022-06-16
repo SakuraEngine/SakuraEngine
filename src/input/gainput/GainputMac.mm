@@ -5,9 +5,9 @@
 
 #include "input/gainput/GainputMac.h"
 
-#include "input/gainput/mouse/GainputInputDeviceMouseMac.h"
-#include "input/gainput/mouse/GainputInputDeviceMouseMacRaw.h"
-#include "input/gainput/keyboard/GainputInputDeviceKeyboardMac.h"
+#include "mouse/GainputInputDeviceMouseMac.h"
+#include "mouse/GainputInputDeviceMouseMacRaw.h"
+#include "keyboard/GainputInputDeviceKeyboardMac.h"
 #import <AppKit/AppKit.h>
 #import <MetalKit/MetalKit.h>
 

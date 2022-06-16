@@ -17,7 +17,7 @@
 #elif defined(GAINPUT_PLATFORM_ANDROID)
 	#include "GainputInputDeviceKeyboardAndroid.h"
 #elif defined(GAINPUT_PLATFORM_MAC)
-	#include "input/gainput/keyboard/GainputInputDeviceKeyboardMac.h"
+	#include "GainputInputDeviceKeyboardMac.h"
 #elif defined(GAINPUT_PLATFORM_IOS)
 	#include "GainputInputDeviceKeyboardIOS.h"
 #elif defined(GAINPUT_PLATFORM_GGP)
