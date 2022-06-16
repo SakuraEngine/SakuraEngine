@@ -298,8 +298,10 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
 #endif
     }
 
-    if (vkCreateInstance(&createInfo, GLOBAL_VkAllocationCallbacks, &I->pVkInstance) != VK_SUCCESS)
+    auto instRes = (int32_t)vkCreateInstance(&createInfo, GLOBAL_VkAllocationCallbacks, &I->pVkInstance);
+    if (instRes != VK_SUCCESS)
     {
+        cgpu_fatal("Vulkan: failed to create instance with code %d", instRes);
         cgpu_assert(0 && "Vulkan: failed to create instance!");
     }
     CGPUVkLayersTable::ConstructForInstance(I, blackboard);
