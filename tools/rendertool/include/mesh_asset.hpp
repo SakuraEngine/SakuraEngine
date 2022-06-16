@@ -3,12 +3,12 @@
 #include "rendertool_configure.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
+#include "cgltf.h"
 
-namespace game sreflect
+namespace skd sreflect
 {
 namespace asset sreflect
 {
-using namespace skd::asset;
 struct sreflect sattr(
 "guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922",
 "serialize" : "json",

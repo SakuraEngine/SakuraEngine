@@ -7,11 +7,10 @@
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
 
-namespace game sreflect
+namespace skd sreflect
 {
 namespace asset sreflect
 {
-using namespace skd::asset;
 struct sreflect sattr(
 "guid" : "4F0E4239-A07F-4F48-B54F-FBF406C60DC3",
 "serialize" : "json",
