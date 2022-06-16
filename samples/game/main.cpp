@@ -87,7 +87,7 @@ int main(int argc, char** argv)
                 SDL_SysWMmsg* msg = event.syswm.msg;
 #if defined(GAINPUT_PLATFORM_WIN)
                 manager.HandleMessage((MSG&)msg->msg);
-#else defined(GAINPUT_PLATFORM_LINUX)
+#elif defined(GAINPUT_PLATFORM_LINUX)
                 manager.HandleMessage((XEvent&)msg->msg);
 #endif
             }
