@@ -1,4 +1,4 @@
-/* Signal guard support
+﻿/* Signal guard support
 (C) 2018-2021 Niall Douglas <http://www.nedproductions.biz/> (4 commits)
 File Created: June 2018
 
