@@ -106,12 +106,12 @@ void initialize(void* usrdata)
 
     // Create device
     CGPUQueueGroupDescriptor G = {
-        .queueType = CGPU_QUEUE_TYPE_GRAPHICS,
-        .queueCount = 1
+        .queue_type = CGPU_QUEUE_TYPE_GRAPHICS,
+        .queue_count = 1
     };
     CGPUDeviceDescriptor device_desc = {
-        .queueGroups = &G,
-        .queueGroupCount = 1
+        .queue_groups = &G,
+        .queue_group_count = 1
     };
     device = cgpu_create_device(adapter, &device_desc);
     gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
@@ -125,14 +125,14 @@ void initialize(void* usrdata)
     surface = cgpu_surface_from_ns_view(device, ns_view);
 #endif
     CGPUSwapChainDescriptor descriptor = {
-        .presentQueues = &gfx_queue,
-        .presentQueuesCount = 1,
+        .present_queues = &gfx_queue,
+        .present_queues_count = 1,
         .width = BACK_BUFFER_WIDTH,
         .height = BACK_BUFFER_HEIGHT,
         .surface = surface,
         .imageCount = 3,
         .format = CGPU_FORMAT_R8G8B8A8_UNORM,
-        .enableVsync = true
+        .enable_vsync = true
     };
     swapchain = cgpu_create_swapchain(device, &descriptor);
     // Create views

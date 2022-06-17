@@ -33,8 +33,8 @@ protected:
 
         CGPUQueueGroupDescriptor G = { CGPU_QUEUE_TYPE_GRAPHICS, 1 };
         DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
-        descriptor.queueGroups = &G;
-        descriptor.queueGroupCount = 1;
+        descriptor.queue_groups = &G;
+        descriptor.queue_group_count = 1;
         device = cgpu_create_device(adapter, &descriptor);
         EXPECT_NE(device, nullptr);
         EXPECT_NE(device, CGPU_NULLPTR);

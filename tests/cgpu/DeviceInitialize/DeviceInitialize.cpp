@@ -91,8 +91,8 @@ void test_create_device(InstanceId instance, bool enable_debug_layer, bool enabl
         if (cQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_COMPUTE, 1 });
         if (tQueue > 0) queueGroup.push_back(QueueGroupDescriptor{ CGPU_QUEUE_TYPE_TRANSFER, 1 });
         DECLARE_ZERO(DeviceDescriptor, descriptor)
-        descriptor.queueGroups = queueGroup.data();
-        descriptor.queueGroupCount = (uint32_t)queueGroup.size();
+        descriptor.queue_groups = queueGroup.data();
+        descriptor.queue_group_count = (uint32_t)queueGroup.size();
 
         auto device = cgpu_create_device(adapter, &descriptor);
         EXPECT_NE(device, nullptr);

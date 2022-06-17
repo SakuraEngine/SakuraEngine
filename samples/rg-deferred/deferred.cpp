@@ -59,11 +59,11 @@ void create_api_objects()
 
     // Create device
     CGPUQueueGroupDescriptor queue_group_desc = {};
-    queue_group_desc.queueType = CGPU_QUEUE_TYPE_GRAPHICS;
-    queue_group_desc.queueCount = 1;
+    queue_group_desc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
+    queue_group_desc.queue_count = 1;
     CGPUDeviceDescriptor device_desc = {};
-    device_desc.queueGroups = &queue_group_desc;
-    device_desc.queueGroupCount = 1;
+    device_desc.queue_groups = &queue_group_desc;
+    device_desc.queue_group_count = 1;
     device = cgpu_create_device(adapter, &device_desc);
     gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     present_fence = cgpu_create_fence(device);
@@ -81,14 +81,14 @@ void create_api_objects()
     // Create swapchain
     surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
     CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.presentQueues = &gfx_queue;
-    chain_desc.presentQueuesCount = 1;
+    chain_desc.present_queues = &gfx_queue;
+    chain_desc.present_queues_count = 1;
     chain_desc.width = BACK_BUFFER_WIDTH;
     chain_desc.height = BACK_BUFFER_HEIGHT;
     chain_desc.surface = surface;
     chain_desc.imageCount = 2;
     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
-    chain_desc.enableVsync = false;
+    chain_desc.enable_vsync = false;
     swapchain = cgpu_create_swapchain(device, &chain_desc);
 }
 

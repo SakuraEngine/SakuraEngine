@@ -111,13 +111,13 @@ CGPUDeviceId cgpu_create_device_metal(CGPUAdapterId adapter, const CGPUDeviceDes
 {
     CGPUAdapter_Metal* MA = (CGPUAdapter_Metal*)adapter;
     // Create Requested Queues
-    for (uint32_t i = 0; i < desc->queueGroupCount; i++)
+    for (uint32_t i = 0; i < desc->queue_group_count; i++)
     {
-        const CGPUQueueGroupDescriptor* queueGroup = desc->queueGroups + i;
-        const ECGPUQueueType type = queueGroup->queueType;
-        MA->device.ppMtlQueues[type] = cgpu_calloc(queueGroup->queueCount, sizeof(id<MTLCommandQueue>));
-        MA->device.pMtlQueueCounts[type] = queueGroup->queueCount;
-        for (uint32_t j = 0u; j < queueGroup->queueCount; j++)
+        const CGPUQueueGroupDescriptor* queueGroup = desc->queue_groups + i;
+        const ECGPUQueueType type = queueGroup->queue_type;
+        MA->device.ppMtlQueues[type] = cgpu_calloc(queueGroup->queue_count, sizeof(id<MTLCommandQueue>));
+        MA->device.pMtlQueueCounts[type] = queueGroup->queue_count;
+        for (uint32_t j = 0u; j < queueGroup->queue_count; j++)
         {
             MA->device.ppMtlQueues[type][j] = [MA->device.pDevice newCommandQueueWithMaxCommandBufferCount:512];
         }

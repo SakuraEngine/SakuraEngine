@@ -35,8 +35,8 @@ protected:
 
         CGPUQueueGroupDescriptor G = { CGPU_QUEUE_TYPE_GRAPHICS, 1 };
         DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
-        descriptor.queueGroups = &G;
-        descriptor.queueGroupCount = 1;
+        descriptor.queue_groups = &G;
+        descriptor.queue_group_count = 1;
         device = cgpu_create_device(adapter, &descriptor);
         EXPECT_NE(device, nullptr);
         EXPECT_NE(device, CGPU_NULLPTR);
@@ -52,12 +52,12 @@ protected:
     {
         auto mainQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         DECLARE_ZERO(CGPUSwapChainDescriptor, descriptor)
-        descriptor.presentQueues = &mainQueue;
-        descriptor.presentQueuesCount = 1;
+        descriptor.present_queues = &mainQueue;
+        descriptor.present_queues_count = 1;
         descriptor.surface = surface;
         descriptor.imageCount = 3;
         descriptor.format = CGPU_FORMAT_R8G8B8A8_UNORM;
-        descriptor.enableVsync = true;
+        descriptor.enable_vsync = true;
 
         auto swapchain = cgpu_create_swapchain(device, &descriptor);
         return swapchain;

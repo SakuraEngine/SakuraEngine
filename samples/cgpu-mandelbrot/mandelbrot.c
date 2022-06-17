@@ -85,12 +85,12 @@ void ComputeFunc(void* usrdata)
 
     // Create device
     CGPUQueueGroupDescriptor G = {
-        .queueType = CGPU_QUEUE_TYPE_GRAPHICS,
-        .queueCount = 1
+        .queue_type = CGPU_QUEUE_TYPE_GRAPHICS,
+        .queue_count = 1
     };
     CGPUDeviceDescriptor device_desc = {
-        .queueGroups = &G,
-        .queueGroupCount = 1
+        .queue_groups = &G,
+        .queue_group_count = 1
     };
     CGPUDeviceId device = cgpu_create_device(adapter, &device_desc);
 

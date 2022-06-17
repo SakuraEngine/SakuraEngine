@@ -803,8 +803,8 @@ typedef struct CGPUInstanceDescriptor {
 } CGPUInstanceDescriptor;
 
 typedef struct CGPUQueueGroupDescriptor {
-    ECGPUQueueType queueType;
-    uint32_t queueCount;
+    ECGPUQueueType queue_type;
+    uint32_t queue_count;
 } CGPUQueueGroupDescriptor;
 
 typedef struct CGPUQueueSubmitDescriptor {
@@ -908,8 +908,8 @@ typedef struct CGPUResourceBarrierDescriptor {
 
 typedef struct CGPUDeviceDescriptor {
     bool disable_pipeline_cache;
-    CGPUQueueGroupDescriptor* queueGroups;
-    uint32_t queueGroupCount;
+    CGPUQueueGroupDescriptor* queue_groups;
+    uint32_t queue_group_count;
 } CGPUDeviceDescriptor;
 
 typedef struct CGPUCommandPoolDescriptor {
@@ -935,9 +935,9 @@ typedef struct CGPUPipelineShaderDescriptor {
 
 typedef struct CGPUSwapChainDescriptor {
     /// Present Queues
-    CGPUQueueId* presentQueues;
+    CGPUQueueId* present_queues;
     /// Present Queues Count
-    uint32_t presentQueuesCount;
+    uint32_t present_queues_count;
     /// Surface to Create SwapChain on
     CGPUSurfaceId surface;
     /// Number of backbuffers in this swapchain
@@ -947,11 +947,11 @@ typedef struct CGPUSwapChainDescriptor {
     /// Height of the swapchain
     uint32_t height;
     /// Set whether swap chain will be presented using vsync
-    bool enableVsync;
+    bool enable_vsync;
     /// We can toggle to using FLIP model if app desires
-    bool useFlipSwapEffect;
+    bool use_flip_swap_effect;
     /// Clear Value.
-    float clearValue[4];
+    float clear_value[4];
     /// format
     ECGPUFormat format;
 } CGPUSwapChainDescriptor;
