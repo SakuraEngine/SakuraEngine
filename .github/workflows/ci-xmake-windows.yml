@@ -19,6 +19,7 @@ jobs:
      run: |
         echo "::set-output name=VULKAN_SDK::C:\VulkanSDK\${{env.VulkanSDKVersion}}"
         xmake l setup.lua
+        xmake l modules/wasm/setup.lua
    - name: Cache
      id: cache
      uses: actions/cache@v1.1.2
