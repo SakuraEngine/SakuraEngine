@@ -1,6 +1,15 @@
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"
 
+namespace skr::imgui
+{
+RUNTIME_API ImGuiContext*& imgui_context()
+{
+    static thread_local ImGuiContext* ctx = nullptr;
+    return ctx;
+}
+} // namespace skr::imgui
+
 static void imgui_update_mouse_and_buttons(SWindowHandle window)
 {
     ImGuiIO& io = ImGui::GetIO();

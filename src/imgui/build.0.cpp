@@ -1,2 +1,2 @@
-#include "render_graph_imgui.cpp"
+#include "platform/configure.h"
 #include "imgui_skr_input.cpp"

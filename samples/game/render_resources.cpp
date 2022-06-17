@@ -8,6 +8,7 @@
 #include "utils/log.h"
 #include "skr_renderer.h"
 #include "runtime_module.h"
+#include "imgui/skr_imgui_rg.h"
 
 SWindowHandle window;
 CGPUBufferId index_buffer;
@@ -76,12 +77,12 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
     auto vsfile = skr_vfs_fopen(gamert->resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    uint32_t im_vs_length = skr_vfs_fsize(vsfile);
+    uint32_t im_vs_length = (uint32_t)skr_vfs_fsize(vsfile);
     uint32_t* im_vs_bytes = (uint32_t*)sakura_malloc(im_vs_length);
     skr_vfs_fread(vsfile, im_vs_bytes, 0, im_vs_length);
     skr_vfs_fclose(vsfile);
     auto fsfile = skr_vfs_fopen(gamert->resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    uint32_t im_fs_length = skr_vfs_fsize(fsfile);
+    uint32_t im_fs_length = (uint32_t)skr_vfs_fsize(fsfile);
     uint32_t* im_fs_bytes = (uint32_t*)sakura_malloc(im_fs_length);
     skr_vfs_fread(fsfile, im_fs_bytes, 0, im_fs_length);
     skr_vfs_fclose(fsfile);
@@ -322,7 +323,7 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
     auto vsfile = skr_vfs_fopen(gamert->resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    uint32_t _vs_length = skr_vfs_fsize(vsfile);
+    uint32_t _vs_length = (uint32_t)skr_vfs_fsize(vsfile);
     uint32_t* _vs_bytes = (uint32_t*)sakura_malloc(_vs_length);
     skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
     skr_vfs_fclose(vsfile);
@@ -330,7 +331,7 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
     eastl::string fsname = u8"shaders/Game/gbuffer_fs";
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     auto fsfile = skr_vfs_fopen(gamert->resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    uint32_t _fs_length = skr_vfs_fsize(fsfile);
+    uint32_t _fs_length = (uint32_t)skr_vfs_fsize(fsfile);
     uint32_t* _fs_bytes = (uint32_t*)sakura_malloc(_fs_length);
     skr_vfs_fread(fsfile, _fs_bytes, 0, _fs_length);
     skr_vfs_fclose(fsfile);

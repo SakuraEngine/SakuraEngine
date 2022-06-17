@@ -3,6 +3,7 @@
 #include <EASTL/list.h>
 #include <boost/graph/adjacency_list.hpp>
 #include "utils/dependency_graph.hpp"
+
 namespace skr
 {
 namespace DAG
@@ -204,6 +205,6 @@ public:
     using DAGVertex = DAG::GraphVertex<DependencyGraph::Node*, DependencyGraph::Edge*>;
     using DAGEdge = DAG::GraphEdge<DependencyGraph::Node*, DependencyGraph::Edge*>;
 
-    static DependencyGraphBase* as(DependencyGraph* graph) SKR_NOEXCEPT;
+    static RUNTIME_API DependencyGraphBase* as(DependencyGraph* graph) SKR_NOEXCEPT;
 };
 } // namespace skr

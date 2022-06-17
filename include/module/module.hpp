@@ -69,7 +69,7 @@ struct ModuleInfo {
  * @description: Base of all plugins
  * @author: SaeruHikari
  */
-struct IModule {
+struct RUNTIME_API IModule {
     friend class ModuleManagerImpl;
 
 public:
@@ -89,7 +89,7 @@ public:
 protected:
     ModuleInfo information;
 };
-struct IDynamicModule : public IModule {
+struct RUNTIME_API IDynamicModule : public IModule {
     eastl::unique_ptr<SharedLibrary> sharedLib;
     virtual const char* get_meta_data(void) override
     {

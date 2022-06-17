@@ -10,7 +10,7 @@ namespace skr
 namespace render_graph
 {
 
-struct RUNTIME_API PassContext {
+struct SKR_RENDER_GRAPH_API PassContext {
     CGPUCommandBufferId cmd;
     gsl::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
     gsl::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
@@ -32,7 +32,7 @@ struct RUNTIME_API PassContext {
         return nullptr;
     }
 };
-class RUNTIME_API PassNode : public RenderGraphNode
+class SKR_RENDER_GRAPH_API PassNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
@@ -80,7 +80,7 @@ struct RenderPassContext : public PassContext {
 };
 using RenderPassExecuteFunction = eastl::function<
 void(class RenderGraph&, RenderPassContext&)>;
-class RUNTIME_API RenderPassNode : public PassNode
+class SKR_RENDER_GRAPH_API RenderPassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -102,13 +102,13 @@ protected:
     ECGPUStoreAction stencil_store_action;
 };
 
-struct RUNTIME_API ComputePassContext : public PassContext {
+struct SKR_RENDER_GRAPH_API ComputePassContext : public PassContext {
     CGPUComputePassEncoderId encoder;
     gsl::span<CGPUDescriptorSetId> desc_sets;
 };
 using ComputePassExecuteFunction = eastl::function<
 void(class RenderGraph&, ComputePassContext&)>;
-class RUNTIME_API ComputePassNode : public PassNode
+class SKR_RENDER_GRAPH_API ComputePassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -124,7 +124,7 @@ protected:
     CGPURootSignatureId root_signature;
 };
 
-class RUNTIME_API CopyPassNode : public PassNode
+class SKR_RENDER_GRAPH_API CopyPassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -139,7 +139,7 @@ protected:
     eastl::vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>> b2bs;
 };
 
-class RUNTIME_API PresentPassNode : public PassNode
+class SKR_RENDER_GRAPH_API PresentPassNode : public PassNode
 {
 public:
     friend class RenderGraph;

@@ -196,7 +196,7 @@ void RenderWindow::Present(uint32_t index, const CGPUSemaphoreId* wait_semaphore
     }
     CGPUQueuePresentDescriptor present_desc = {};
     present_desc.index = index;
-    present_desc.wait_semaphore_count = final_semaphores.size();
+    present_desc.wait_semaphore_count = (uint32_t)final_semaphores.size();
     present_desc.wait_semaphores = final_semaphores.data();
     present_desc.swapchain = swapchain_;
     cgpu_queue_present(render_device_->GetPresentQueue(), &present_desc);

@@ -28,7 +28,6 @@ void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool);
 #endif
 
 #include "utils/hash.h"
-#define cgpu_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
 #include "utils/log.h"
 #define cgpu_trace(...) log_log(SKR_LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
 #define cgpu_debug(...) log_log(SKR_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)

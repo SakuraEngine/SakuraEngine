@@ -189,8 +189,8 @@ private:
     void tchar_to_utf8(const TCHAR* str, char* str8)
     {
     #ifdef _UNICODE
-        int size = WideCharToMultiByte(CP_UTF8, 0, str, wcslen(str), NULL, 0, NULL, NULL);
-        WideCharToMultiByte(CP_UTF8, 0, str, wcslen(str), str8, size, NULL, NULL);
+        auto size = WideCharToMultiByte(CP_UTF8, 0, str, (int)wcslen(str), NULL, 0, NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, str, (int)wcslen(str), str8, size, NULL, NULL);
         str8[size] = '\0';
     #else
         return strcpy(str8, str);

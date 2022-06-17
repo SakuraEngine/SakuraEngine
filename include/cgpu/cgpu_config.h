@@ -56,3 +56,5 @@
     #define cgpu_assert(expr) (void)(expr);
 #endif
 #define cgpu_static_assert static_assert
+
+#define cgpu_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))

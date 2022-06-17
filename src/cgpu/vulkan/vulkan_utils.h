@@ -174,8 +174,8 @@ static const char* cgpu_wanted_instance_exts[] = {
 static const char* cgpu_wanted_device_exts[] = {
     "VK_KHR_portability_subset",
 #if defined(VK_VERSION_1_3)
-    VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
-    VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME,
+    // VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
+    // VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME,
 #endif
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,

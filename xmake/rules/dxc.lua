@@ -18,12 +18,11 @@ rule("utils.dxc")
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes",
             "-spirv",
-            "-fspv-reflect",
+            -- "-fspv-reflect",
             vformat("-fspv-target-env=vulkan1.1"), 
-            vformat("-fspv-extension=SPV_GOOGLE_user_type"), 
-            vformat("-fspv-extension=SPV_GOOGLE_hlsl_functionality1"), 
+            -- vformat("-fspv-extension=SPV_GOOGLE_user_type"), 
+            -- vformat("-fspv-extension=SPV_GOOGLE_hlsl_functionality1"), 
             "-Fo", spvfilepath, 
-            "-Fh", spvTextpath, 
             "-T", target_profile,
             path.join(os.projectdir(), sourcefile_hlsl)})
 

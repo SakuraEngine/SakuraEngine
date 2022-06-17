@@ -5,6 +5,7 @@
 #include "blit_pipeline.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
+#include "imgui/skr_imgui_rg.h"
 #include "imgui/imgui.h"
 #include "platform/window.h"
 #include "tracy/Tracy.hpp"

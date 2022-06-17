@@ -4,7 +4,7 @@ target("SkrRenderer")
         rootdir = "game/"
     })
     set_kind("shared")
-    add_deps("SkrRT")
+    add_deps("SkrRenderGraph")
     add_includedirs("include", {public=true})
     add_defines("SKR_RENDERER_SHARED", {public=true})
     add_defines("SKR_RENDERER_IMPL")
