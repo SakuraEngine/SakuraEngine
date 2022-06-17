@@ -1,4 +1,4 @@
-#include "resource/local_resource_registry.h"
+﻿#include "resource/local_resource_registry.h"
 #include "ghc/filesystem.hpp"
 #include "platform/guid.h"
 #include "platform/vfs.h"
