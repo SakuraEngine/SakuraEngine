@@ -31,3 +31,5 @@ stressTest
 /thirdparty/USD
 /thirdparty/*.zip
 scenes
+/vcpkg_installed
+.history
