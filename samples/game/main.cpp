@@ -13,9 +13,9 @@
 #include "skr_renderer.h"
 #include <thread>
 #include <chrono>
-#include "input/gainput/gainput.h"
-#include "input/gainput/GainputInputDeviceKeyboard.h"
-#include "input/gainput/GainputInputDeviceMouse.h"
+#include "gainput/gainput.h"
+#include "gainput/GainputInputDeviceKeyboard.h"
+#include "gainput/GainputInputDeviceMouse.h"
 
 extern SWindowHandle window;
 uint32_t backbuffer_index;
