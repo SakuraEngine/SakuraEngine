@@ -83,11 +83,6 @@ target("SkrRT")
     add_defines("MI_SHARED_LIB_EXPORT", "RUNTIME_API=RUNTIME_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT")
     -- fetch vk includes
     add_rules("utils.fetch-vk-includes")
-    -- add internal shaders
-    add_rules("utils.dxc", {
-        spv_outdir = "/../resources/shaders", 
-        dxil_outdir = "/../resources/shaders"})
-    add_files("src/**/*.hlsl")
     -- link system libs/frameworks
     if (is_os("windows")) then 
         add_links("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})

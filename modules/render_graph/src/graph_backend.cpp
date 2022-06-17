@@ -1,6 +1,6 @@
 ﻿#include "render_graph/backend/graph_backend.hpp"
-#include "../cgpu/common/common_utils.h"
 #include "tracy/Tracy.hpp"
+#include "utils/hash.h"
 
 namespace skr
 {

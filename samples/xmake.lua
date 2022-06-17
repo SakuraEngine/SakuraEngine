@@ -1,4 +1,3 @@
-
 set_project("Sakura.Samples")
 
 target("cgpu-mandelbrot")
@@ -59,7 +58,7 @@ target("rg-triangle")
         spv_outdir = "/../resources/shaders/rg-triangle",
         dxil_outdir = "/../resources/shaders/rg-triangle"})
     set_kind("binary")
-    add_deps("SkrRT")
+    add_deps("SkrRT", "SkrRenderGraph")
     add_files("rg-triangle/*.cpp")
     add_files("rg-triangle/**.hlsl")
 
@@ -68,7 +67,7 @@ target("rg-deferred")
         spv_outdir = "/../resources/shaders/rg-deferred",
         dxil_outdir = "/../resources/shaders/rg-deferred"})
     set_kind("binary")
-    add_deps("SkrRT")
+    add_deps("SkrRT", "SkrRenderGraph")
     add_files("rg-deferred/*.cpp")
     add_files("rg-deferred/**.hlsl")
 

@@ -6,7 +6,7 @@ namespace skr
 {
 namespace render_graph
 {
-class RUNTIME_API ResourceNode : public RenderGraphNode
+class SKR_RENDER_GRAPH_API ResourceNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
@@ -30,7 +30,7 @@ protected:
     mutable LifeSpan frame_lifespan = { UINT32_MAX, UINT32_MAX };
 };
 
-class RUNTIME_API TextureNode : public ResourceNode
+class SKR_RENDER_GRAPH_API TextureNode : public ResourceNode
 {
 public:
     friend class RenderGraph;
@@ -60,7 +60,7 @@ protected:
     mutable bool frame_aliasing = false;
 };
 
-class RUNTIME_API BufferNode : public ResourceNode
+class SKR_RENDER_GRAPH_API BufferNode : public ResourceNode
 {
 public:
     friend class RenderGraph;

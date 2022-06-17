@@ -1,33 +1,29 @@
 #include "platform/configure.h"
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"
+#include "imgui/skr_imgui_rg.h"
 
 namespace skr::imgui
 {
-RUNTIME_API CGPUTextureId font_texture;
-RUNTIME_API CGPURootSignatureId root_sig;
-RUNTIME_API CGPURenderPipelineId render_pipeline;
-RUNTIME_API skr::render_graph::TextureHandle font_handle;
-RUNTIME_API skr::render_graph::BufferHandle vertex_buffer_handle;
-RUNTIME_API skr::render_graph::BufferHandle index_buffer_handle;
-RUNTIME_API skr::render_graph::BufferHandle upload_buffer_handle;
-RUNTIME_API CGPUBufferId upload_buffer;
-
-RUNTIME_API ImGuiContext*& imgui_context()
-{
-    static thread_local ImGuiContext* ctx = nullptr;
-    return ctx;
-}
+SKR_RENDER_GRAPH_API CGPUTextureId font_texture;
+SKR_RENDER_GRAPH_API CGPURootSignatureId root_sig;
+SKR_RENDER_GRAPH_API CGPURenderPipelineId render_pipeline;
+SKR_RENDER_GRAPH_API skr::render_graph::TextureHandle font_handle;
+SKR_RENDER_GRAPH_API skr::render_graph::BufferHandle vertex_buffer_handle;
+SKR_RENDER_GRAPH_API skr::render_graph::BufferHandle index_buffer_handle;
+SKR_RENDER_GRAPH_API skr::render_graph::BufferHandle upload_buffer_handle;
+SKR_RENDER_GRAPH_API CGPUBufferId upload_buffer;
 
 namespace rg = skr::render_graph;
 
 void imgui_create_fonts(CGPUQueueId queue);
 void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc);
 void imgui_render_window(ImGuiViewport* viewport, void*);
-} // namespace skr::imgui
+}
+
 
 using namespace skr::imgui;
-RUNTIME_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor* desc)
+SKR_RENDER_GRAPH_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor* desc)
 {
     ImGuiIO& io = ImGui::GetIO();
     io.BackendRendererName = "imgui_render_graph";
@@ -46,7 +42,7 @@ RUNTIME_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor*
     platform_io.Renderer_RenderWindow = imgui_render_window;
 }
 
-RUNTIME_API void render_graph_imgui_add_render_pass(
+SKR_RENDER_GRAPH_API void render_graph_imgui_add_render_pass(
 skr::render_graph::RenderGraph* render_graph,
 skr::render_graph::TextureRTVHandle target,
 ECGPULoadAction load_action)
@@ -223,7 +219,7 @@ ECGPULoadAction load_action)
     }
 }
 
-RUNTIME_API void render_graph_imgui_finalize()
+SKR_RENDER_GRAPH_API void render_graph_imgui_finalize()
 {
     if (upload_buffer) cgpu_free_buffer(upload_buffer);
     cgpu_free_texture(font_texture);

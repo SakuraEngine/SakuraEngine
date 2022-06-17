@@ -6,6 +6,7 @@
 #include "resource/local_resource_registry.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
+#include "imgui/skr_imgui_rg.h"
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
 #include "utils/make_zeroed.hpp"
@@ -110,8 +111,8 @@ int main(int argc, char** argv)
         
         auto& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(
-            swapchain->back_buffers[0]->width,
-            swapchain->back_buffers[0]->height);
+            (float)swapchain->back_buffers[0]->width,
+            (float)swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
         quit |= skg::GameLoop(ctx);
         // move
@@ -127,8 +128,8 @@ int main(int argc, char** argv)
                 auto transforms = (transform_t*)dualV_get_owned_ro(view, transform_type);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
-                    float lscale = abs(sin(total_sec * 0.5));
-                    lscale = lerp(lerps[0], lerps[1], lscale);
+                    float lscale = (float)abs(sin(total_sec * 0.5));
+                    lscale = (float)lerp(lerps[0], lerps[1], lscale);
                     transforms[i].location = {
                         ((float)(i % 10) - 4.5f) * lscale,
                         ((float)(i / 10) - 4.5f) * lscale, 0.f

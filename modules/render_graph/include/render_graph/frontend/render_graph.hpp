@@ -12,7 +12,7 @@ namespace skr
 {
 namespace render_graph
 {
-class RUNTIME_API RenderGraphProfiler
+class SKR_RENDER_GRAPH_API RenderGraphProfiler
 {
 public:
     virtual ~RenderGraphProfiler() = default;
@@ -25,11 +25,11 @@ public:
     virtual void after_commit(class RenderGraph&, class RenderGraphFrameExecutor&) {}
 };
 
-class RUNTIME_API RenderGraph
+class SKR_RENDER_GRAPH_API RenderGraph
 {
 public:
     friend class RenderGraphViz;
-    class RUNTIME_API RenderGraphBuilder
+    class SKR_RENDER_GRAPH_API RenderGraphBuilder
     {
     public:
         friend class RenderGraph;
@@ -50,7 +50,7 @@ public:
     using RenderGraphSetupFunction = eastl::function<void(class RenderGraph::RenderGraphBuilder&)>;
     static RenderGraph* create(const RenderGraphSetupFunction& setup) SKR_NOEXCEPT;
     static void destroy(RenderGraph* g) SKR_NOEXCEPT;
-    class RUNTIME_API RenderPassBuilder
+    class SKR_RENDER_GRAPH_API RenderPassBuilder
     {
     public:
         friend class RenderGraph;
@@ -83,7 +83,7 @@ public:
     using RenderPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
     PassHandle add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor) SKR_NOEXCEPT;
 
-    class RUNTIME_API ComputePassBuilder
+    class SKR_RENDER_GRAPH_API ComputePassBuilder
     {
     public:
         friend class RenderGraph;
@@ -107,7 +107,7 @@ public:
     using ComputePassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::ComputePassBuilder&)>;
     PassHandle add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor) SKR_NOEXCEPT;
 
-    class RUNTIME_API CopyPassBuilder
+    class SKR_RENDER_GRAPH_API CopyPassBuilder
     {
     public:
         friend class RenderGraph;
@@ -123,7 +123,7 @@ public:
     using CopyPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
     PassHandle add_copy_pass(const CopyPassSetupFunction& setup) SKR_NOEXCEPT;
 
-    class RUNTIME_API PresentPassBuilder
+    class SKR_RENDER_GRAPH_API PresentPassBuilder
     {
     public:
         friend class RenderGraph;
@@ -140,7 +140,7 @@ public:
     using PresentPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::PresentPassBuilder&)>;
     PassHandle add_present_pass(const PresentPassSetupFunction& setup) SKR_NOEXCEPT;
 
-    class RUNTIME_API BufferBuilder
+    class SKR_RENDER_GRAPH_API BufferBuilder
     {
     public:
         friend class RenderGraph;
@@ -169,7 +169,7 @@ public:
     inline BufferHandle get_buffer(const char* name) SKR_NOEXCEPT;
     const ECGPUResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const SKR_NOEXCEPT;
 
-    class RUNTIME_API TextureBuilder
+    class SKR_RENDER_GRAPH_API TextureBuilder
     {
     public:
         friend class RenderGraph;
@@ -259,7 +259,7 @@ using TextureBuilder = RenderGraph::TextureBuilder;
 using BufferSetupFunction = RenderGraph::BufferSetupFunction;
 using BufferBuilder = RenderGraph::BufferBuilder;
 
-class RUNTIME_API RenderGraphViz
+class SKR_RENDER_GRAPH_API RenderGraphViz
 {
 public:
     static void write_graphviz(RenderGraph& graph, const char* outf) SKR_NOEXCEPT;

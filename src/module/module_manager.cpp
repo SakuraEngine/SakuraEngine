@@ -49,7 +49,7 @@ private:
     eastl::vector<eastl::string> roots;
     eastl::string mainModuleName;
     ModuleGraphImpl moduleDependecyGraph;
-    eastl::map<eastl::string, int, eastl::less<>> nodeMap;
+    eastl::map<eastl::string, int32_t, eastl::less<>> nodeMap;
     eastl::map<eastl::string, module_registerer, eastl::less<>> initializeMap;
     eastl::map<eastl::string, eastl::unique_ptr<IModule>, eastl::less<>> modulesMap;
 };
@@ -242,7 +242,7 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, b
     IModule* _module = shared ?
                        spawnDynamicModule(entry) :
                        spawnStaticModule(entry);
-    nodeMap[entry] = nodeMap.size();
+    nodeMap[entry] = (int32_t)nodeMap.size();
     ModuleProperty prop;
     prop.name = entry;
     prop.bActive = false;

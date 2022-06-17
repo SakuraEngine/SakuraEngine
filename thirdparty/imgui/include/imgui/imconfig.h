@@ -124,9 +124,6 @@ namespace ImGui
 }
 */
 
-#if !defined(RUNTIME_API) || !defined(RUNTIME_EXPORT)
-    #define RUNTIME_API
-#endif
 struct ImGuiContext;
 namespace skr::imgui
 {

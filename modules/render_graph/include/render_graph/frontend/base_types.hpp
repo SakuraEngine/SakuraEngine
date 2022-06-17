@@ -248,7 +248,7 @@ using TextureDSVHandle = TextureHandle::DepthStencilHandle;
 using TextureUAVHandle = TextureHandle::ShaderReadWriteHandle;
 using TextureSubresourceHandle = TextureHandle::SubresourceHandle;
 
-struct RUNTIME_API RenderGraphNode : public DependencyGraphNode {
+struct SKR_RENDER_GRAPH_API RenderGraphNode : public DependencyGraphNode {
     RenderGraphNode(EObjectType type)
         : type(type)
     {

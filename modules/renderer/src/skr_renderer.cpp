@@ -11,7 +11,7 @@ SKR_MODULE_METADATA(u8R"(
     "prettyname" : "SakuraRenderer",
     "version" : "0.0.1",
     "linking" : "shared",
-    "dependencies" : [{"name":"SkrRT", "version":"0.1.0"}],
+    "dependencies" : [{"name":"SkrRenderGraph", "version":"0.1.0"}],
     "author" : "",
     "url" : "",
     "license" : "",
