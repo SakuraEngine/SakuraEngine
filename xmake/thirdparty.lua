@@ -7,7 +7,9 @@ includes("thirdparty/SDL2.lua")
 includes("thirdparty/imgui.lua")
 includes("thirdparty/tracy.lua")
 includes("thirdparty/gfx-sdk.lua")
---includes("thirdparty/wasm3.lua")
+if (is_os("windows")) then 
+    includes("thirdparty/wasm3.lua")
+end
 includes("thirdparty/parallel_hashmap.lua")
 includes("thirdparty/FiberTaskingLib.lua")
 includes("thirdparty/simdjson.lua")

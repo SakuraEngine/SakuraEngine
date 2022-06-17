@@ -18,8 +18,6 @@ if (os.host() == "windows") then
     find_sdk.sdk_from_github("WinPixEventRuntime-windows-x64.zip")
     find_sdk.sdk_from_github("amdags-windows-x64.zip")
     find_sdk.sdk_from_github("dxc-windows-x64.zip")
-    find_sdk.sdk_from_github("m3-windows-x64.zip")
-    find_sdk.sdk_from_github("m3_d-windows-x64.zip")
     find_sdk.sdk_from_github("nvapi-windows-x64.zip")
     find_sdk.sdk_from_github("reflector-windows-x64.zip")
     find_sdk.sdk_from_github("SDL2-windows-x64.zip")
@@ -31,15 +29,11 @@ end
 if (os.host() == "macosx") then
     if (os.arch() == "x86_64") then
         find_sdk.sdk_from_github("dxc-macosx-x86_64.zip")
-        find_sdk.sdk_from_github("m3-macosx-x86_64.zip")
-        find_sdk.sdk_from_github("m3_d-macosx-x86_64.zip")
         find_sdk.sdk_from_github("reflector-macosx-x86_64.zip")
         find_sdk.sdk_from_github("tracyclient-macosx-x86_64.zip")
         find_sdk.sdk_from_github("llfio-macosx-x86_64.zip")
     else
         find_sdk.sdk_from_github("dxc-macosx-arm64.zip")
-        find_sdk.sdk_from_github("m3-macosx-arm64.zip")
-        find_sdk.sdk_from_github("m3_d-macosx-arm64.zip")
     end
 end
 

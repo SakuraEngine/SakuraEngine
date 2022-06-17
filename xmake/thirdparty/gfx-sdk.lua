@@ -6,6 +6,7 @@ task("unzip-gfx-sdk")
             find_sdk.install_lib("nvapi")
             find_sdk.install_lib("WinPixEventRuntime")
             find_sdk.install_lib("SDL2")
+            find_sdk.install_lib("m3")
         end
         find_sdk.install_lib("llfio")
     end)
