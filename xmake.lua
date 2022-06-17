@@ -71,11 +71,6 @@ target("SkrRT")
     add_includedirs(include_dir_list, {public = true})
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
-    -- gainput
-    add_files("src/input/gainput/**.cpp")
-    if (is_os("macosx")) then 
-        add_files("src/input/gainput/**.m", "src/input/gainput/**.mm")
-    end
     add_cxflags(project_cxflags, {public = true, force = true})
     -- runtime compile definitions
     add_defines("MI_SHARED_LIB", "RUNTIME_SHARED", "EA_DLL", {public = true})
