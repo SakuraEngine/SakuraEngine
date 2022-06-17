@@ -8,4 +8,6 @@ target("SkrGAInput")
     add_files("src/**.cpp", "src/hidapi/build.0.c")
     if (is_os("macosx")) then 
         add_files("src/**.m", "src/**.mm")
+        add_mxflags("-fno-objc-arc", {force = true})
+        add_frameworks("CoreFoundation", "Cocoa", "IOKit")
     end
