@@ -1,8 +1,4 @@
 target("SkrRenderer")
-    add_rules("c++.reflection", {
-        files = {"game/**.h", "game/**.hpp"},
-        rootdir = "game/"
-    })
     set_kind("shared")
     add_deps("SkrRenderGraph")
     add_includedirs("include", {public=true})

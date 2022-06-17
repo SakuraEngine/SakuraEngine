@@ -27,18 +27,17 @@ target("cgpu-texture")
     add_files("cgpu-texture/*.c")
     add_files("cgpu-texture/**.hlsl")
     
---[[
+
 if (os.host() == "windows") then
     target("hot-triangle")
         add_rules("utils.dxc", {
             spv_outdir = "/../resources/shaders/hot-triangle",
             dxil_outdir = "/../resources/shaders/hot-triangle"})
         set_kind("binary")
-        add_deps("SkrRT")
+        add_deps("SkrRT", "SkrWASM")
         add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
         add_files("hot-triangle/**.hlsl")
 end
-]]--
 
 target("cgpu-3d")
     add_rules("utils.install-resources", {

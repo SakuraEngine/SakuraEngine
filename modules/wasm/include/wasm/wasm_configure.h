@@ -88,3 +88,40 @@ typedef double swa_f64;
 typedef float swa_f32;
 typedef void* swa_ptr;
 typedef const void* swa_cptr;
+
+
+// TODO: Remove this with xmake defines
+#ifndef SKR_WASM_EXPORT
+    #if defined(_MSC_VER)
+        #define SKR_WASM_EXPORT __declspec(dllexport)
+    #else
+        #define SKR_WASM_EXPORT
+    #endif
+#endif
+
+#ifdef SKR_WASM_IMPL
+    #ifndef SKR_WASM_API
+        #define SKR_WASM_API SKR_WASM_EXPORT
+    #endif
+#endif
+
+#ifndef SKR_WASM_API // If the build file hasn't already defined this to be dllexport...
+    #ifdef SKR_WASM_SHARED
+        #if defined(_MSC_VER)
+            #define SKR_WASM_API __declspec(dllimport)
+            #define SKR_WASM_LOCAL
+        #elif defined(__CYGWIN__)
+            #define SKR_WASM_API __attribute__((dllimport))
+            #define SKR_WASM_LOCAL
+        #elif (defined(__GNUC__) && (__GNUC__ >= 4))
+            #define SKR_WASM_API __attribute__((visibility("default")))
+            #define SKR_WASM_LOCAL __attribute__((visibility("hidden")))
+        #else
+            #define SKR_WASM_API
+            #define SKR_WASM_LOCAL
+        #endif
+    #else
+        #define SKR_WASM_API
+        #define SKR_WASM_LOCAL
+    #endif
+#endif
