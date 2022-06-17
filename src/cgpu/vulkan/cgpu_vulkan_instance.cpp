@@ -389,17 +389,17 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
 
     // Prepare Create Queues
     eastl::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    queueCreateInfos.resize(desc->queueGroupCount);
-    for (uint32_t i = 0; i < desc->queueGroupCount; i++)
+    queueCreateInfos.resize(desc->queue_group_count);
+    for (uint32_t i = 0; i < desc->queue_group_count; i++)
     {
         VkDeviceQueueCreateInfo& info = queueCreateInfos[i];
-        CGPUQueueGroupDescriptor& descriptor = desc->queueGroups[i];
+        CGPUQueueGroupDescriptor& descriptor = desc->queue_groups[i];
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        info.queueCount = descriptor.queueCount;
-        info.queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[descriptor.queueType];
+        info.queueCount = descriptor.queue_count;
+        info.queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[descriptor.queue_type];
         info.pQueuePriorities = queuePriorities;
 
-        cgpu_assert(cgpu_query_queue_count_vulkan(adapter, descriptor.queueType) >= descriptor.queueCount && "allocated too many queues!");
+        cgpu_assert(cgpu_query_queue_count_vulkan(adapter, descriptor.queue_type) >= descriptor.queue_count && "allocated too many queues!");
     }
     // Create Device
     DECLARE_ZERO(VkDeviceCreateInfo, createInfo)

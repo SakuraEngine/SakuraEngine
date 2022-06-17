@@ -2199,7 +2199,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan(CGPUDeviceId device, const CGPUSwap
     // CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)device->adapter->instance;
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
-    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->presentQueues[0];
+    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->present_queues[0];
 
     VkSurfaceKHR vkSurface = (VkSurfaceKHR)desc->surface;
 
@@ -2278,7 +2278,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan(CGPUDeviceId device, const CGPUSwap
         VK_PRESENT_MODE_FIFO_KHR          // low power consumption
     };
     const uint32_t preferredModeCount = CGPU_ARRAY_LEN(preferredModeList);
-    uint32_t preferredModeStartIndex = desc->enableVsync ? 1 : 0;
+    uint32_t preferredModeStartIndex = desc->enable_vsync ? 1 : 0;
     for (uint32_t j = preferredModeStartIndex; j < preferredModeCount; ++j)
     {
         VkPresentModeKHR mode = preferredModeList[j];

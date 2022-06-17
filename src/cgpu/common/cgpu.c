@@ -993,14 +993,14 @@ CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDe
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_swapchain && "create_swapchain Proc Missing!");
 
-    if (desc->presentQueues == CGPU_NULLPTR)
+    if (desc->present_queues == CGPU_NULLPTR)
     {
-        cgpu_assert(desc->presentQueuesCount <= 0 &&
+        cgpu_assert(desc->present_queues_count <= 0 &&
                     "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
     }
     else
     {
-        cgpu_assert(desc->presentQueuesCount > 0 &&
+        cgpu_assert(desc->present_queues_count > 0 &&
                     "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
     }
     CGPUSwapChain* swapchain = (CGPUSwapChain*)device->proc_table_cache->create_swapchain(device, desc);

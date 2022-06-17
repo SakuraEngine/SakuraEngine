@@ -121,14 +121,14 @@ int main(int argc, char** argv)
             auto meta = make_zeroed<dual_meta_filter_t>();
             filter.all.data = &transform_type;
             filter.all.length = 1;
-            double lerps[] = { 1.25, 2.0 };
+            float lerps[] = { 1.25, 2.0 };
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
             auto moveFunc = [&](dual_chunk_view_t* view) {
                 auto transforms = (transform_t*)dualV_get_owned_ro(view, transform_type);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
-                    float lscale = (float)abs(sin(total_sec * 0.5));
+                    auto lscale = (float)abs(sin(total_sec * 0.5));
                     lscale = (float)lerp(lerps[0], lerps[1], lscale);
                     transforms[i].location = {
                         ((float)(i % 10) - 4.5f) * lscale,

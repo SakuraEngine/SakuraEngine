@@ -132,16 +132,16 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
     }
 
     // Create Requested Queues.
-    for (uint32_t i = 0u; i < desc->queueGroupCount; i++)
+    for (uint32_t i = 0u; i < desc->queue_group_count; i++)
     {
-        const auto& queueGroup = desc->queueGroups[i];
-        const auto type = queueGroup.queueType;
+        const auto& queueGroup = desc->queue_groups[i];
+        const auto type = queueGroup.queue_type;
 
-        *const_cast<uint32_t*>(&D->pCommandQueueCounts[type]) = queueGroup.queueCount;
+        *const_cast<uint32_t*>(&D->pCommandQueueCounts[type]) = queueGroup.queue_count;
         *const_cast<ID3D12CommandQueue***>(&D->ppCommandQueues[type]) =
-        (ID3D12CommandQueue**)cgpu_malloc(sizeof(ID3D12CommandQueue*) * queueGroup.queueCount);
+        (ID3D12CommandQueue**)cgpu_malloc(sizeof(ID3D12CommandQueue*) * queueGroup.queue_count);
 
-        for (uint32_t j = 0u; j < queueGroup.queueCount; j++)
+        for (uint32_t j = 0u; j < queueGroup.queue_count; j++)
         {
             DECLARE_ZERO(D3D12_COMMAND_QUEUE_DESC, queueDesc)
             switch (type)
@@ -1734,7 +1734,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapC
                                   sizeof(CGPUTextureId) * buffer_count);
     CGPUSwapChain_D3D12* S = cgpu_new_placed<CGPUSwapChain_D3D12>(Memory);
 
-    S->mDxSyncInterval = desc->enableVsync ? 1 : 0;
+    S->mDxSyncInterval = desc->enable_vsync ? 1 : 0;
     DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, chain_desc1)
     chain_desc1.Width = desc->width;
     chain_desc1.Height = desc->height;
@@ -1751,19 +1751,19 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapC
     BOOL allowTearing = FALSE;
     I->pDXGIFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
     chain_desc1.Flags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-    S->mFlags |= (!desc->enableVsync && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    S->mFlags |= (!desc->enable_vsync && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
     IDXGISwapChain1* swapchain;
     HWND hwnd = (HWND)desc->surface;
 
     CGPUQueue_D3D12* Q = CGPU_NULLPTR;
-    if (desc->presentQueues == CGPU_NULLPTR)
+    if (desc->present_queues == CGPU_NULLPTR)
     {
         Q = (CGPUQueue_D3D12*)cgpu_get_queue_d3d12(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     }
     else
     {
-        Q = (CGPUQueue_D3D12*)desc->presentQueues[0];
+        Q = (CGPUQueue_D3D12*)desc->present_queues[0];
     }
     auto bCreated =
     SUCCEEDED(I->pDXGIFactory->CreateSwapChainForHwnd(Q->pCommandQueue, hwnd, &chain_desc1, NULL, NULL, &swapchain));

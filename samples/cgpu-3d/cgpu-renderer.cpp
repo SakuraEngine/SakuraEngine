@@ -25,14 +25,14 @@ void RenderWindow::Initialize(RenderDevice* render_device)
     surface_ = cgpu_surface_from_ns_view(device_, ns_view);
 #endif
     CGPUSwapChainDescriptor swapchain_desc = {};
-    swapchain_desc.presentQueues = &render_device->gfx_queue_;
-    swapchain_desc.presentQueuesCount = 1;
+    swapchain_desc.present_queues = &render_device->gfx_queue_;
+    swapchain_desc.present_queues_count = 1;
     swapchain_desc.width = BACK_BUFFER_WIDTH;
     swapchain_desc.height = BACK_BUFFER_HEIGHT;
     swapchain_desc.surface = surface_;
     swapchain_desc.imageCount = 3;
     swapchain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
-    swapchain_desc.enableVsync = false;
+    swapchain_desc.enable_vsync = false;
     swapchain_ = cgpu_create_swapchain(device_, &swapchain_desc);
     for (uint32_t i = 0; i < swapchain_->buffer_count; i++)
     {
@@ -240,19 +240,19 @@ void RenderDevice::Initialize(ECGPUBackend backend, RenderWindow** pprender_wind
     }
     const auto cpy_queue_count_ = cgpu_query_queue_count(adapter_, CGPU_QUEUE_TYPE_TRANSFER);
     CGPUQueueGroupDescriptor Gs[2];
-    Gs[0].queueType = CGPU_QUEUE_TYPE_GRAPHICS;
-    Gs[0].queueCount = 1;
-    Gs[1].queueType = CGPU_QUEUE_TYPE_TRANSFER;
-    Gs[1].queueCount = cgpu_min(cpy_queue_count_, MAX_CPY_QUEUE_COUNT);
-    if (Gs[1].queueCount)
+    Gs[0].queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
+    Gs[0].queue_count = 1;
+    Gs[1].queue_type = CGPU_QUEUE_TYPE_TRANSFER;
+    Gs[1].queue_count = cgpu_min(cpy_queue_count_, MAX_CPY_QUEUE_COUNT);
+    if (Gs[1].queue_count)
     {
         CGPUDeviceDescriptor device_desc = {};
-        device_desc.queueGroups = Gs;
-        device_desc.queueGroupCount = 2;
+        device_desc.queue_groups = Gs;
+        device_desc.queue_group_count = 2;
         device_ = cgpu_create_device(adapter_, &device_desc);
         gfx_queue_ = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         cpy_queue_ = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_TRANSFER, 0);
-        for (uint32_t i = 1; i < Gs[1].queueCount; i++)
+        for (uint32_t i = 1; i < Gs[1].queue_count; i++)
         {
             extra_cpy_queues_[i - 1] = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_TRANSFER, i);
             extra_cpy_queue_count_++;
@@ -261,8 +261,8 @@ void RenderDevice::Initialize(ECGPUBackend backend, RenderWindow** pprender_wind
     else
     {
         CGPUDeviceDescriptor device_desc = {};
-        device_desc.queueGroups = Gs;
-        device_desc.queueGroupCount = 1;
+        device_desc.queue_groups = Gs;
+        device_desc.queue_group_count = 1;
         device_ = cgpu_create_device(adapter_, &device_desc);
         gfx_queue_ = cgpu_get_queue(device_, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         cpy_queue_ = gfx_queue_;

@@ -224,11 +224,11 @@ FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGPUResourceTy
 	return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUAdapter_Vulkan* A, VkAccessFlags accessFlags, ECGPUQueueType queueType)
+FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUAdapter_Vulkan* A, VkAccessFlags accessFlags, ECGPUQueueType queue_type)
 {
     VkPipelineStageFlags flags = 0;
 
-	switch (queueType)
+	switch (queue_type)
 	{
 		case CGPU_QUEUE_TYPE_GRAPHICS:
 		{
