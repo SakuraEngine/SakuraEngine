@@ -14,7 +14,10 @@ SKR_MODULE_METADATA(u8R"(
     "prettyname" : "GameRuntime",
     "version" : "0.0.1",
     "linking" : "shared",
-    "dependencies" : [{"name":"SkrRenderer", "version":"0.1.0"}],
+    "dependencies" : [
+        {"name":"SkrRenderer", "version":"0.1.0"}, 
+        {"name":"SkrGAInput", "version":"0.1.0"}
+    ],
     "author" : "",
     "url" : "",
     "license" : "",
