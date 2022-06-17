@@ -1,3 +1,4 @@
+--[[
 target("static0")
     set_kind("static")
     add_deps("SkrRT")
@@ -36,3 +37,4 @@ target("module-test")
     add_packages("gtest")
     add_files("test/main.cpp")
     set_languages("c++17")
+]]--
