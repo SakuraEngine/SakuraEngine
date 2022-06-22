@@ -118,3 +118,5 @@ target("Game")
 if has_config("build_AAA") then 
     includes("AAA/xmake.lua")
 end
+
+includes("chat/xmake.lua")
