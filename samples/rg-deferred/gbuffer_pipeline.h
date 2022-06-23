@@ -1,6 +1,6 @@
 #pragma once
 #include "math/vectormath.hpp"
-#include "../common/utils.h"
+#include "../cgpu/common/utils.h"
 
 const ECGPUFormat gbuffer_formats[] = {
     CGPU_FORMAT_R8G8B8A8_UNORM, CGPU_FORMAT_R16G16B16A16_SNORM
