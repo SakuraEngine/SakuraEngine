@@ -66,7 +66,7 @@ target("rg-deferred")
         spv_outdir = "/../resources/shaders/rg-deferred",
         dxil_outdir = "/../resources/shaders/rg-deferred"})
     set_kind("binary")
-    add_deps("SkrRT", "SkrRenderGraph")
+    add_deps("SkrRT", "SkrRenderGraph", "SkrImGui")
     add_files("rg-deferred/*.cpp")
     add_files("rg-deferred/**.hlsl")
 
@@ -80,7 +80,7 @@ target("GameRT")
     add_defines("GAMERT_SHARED", {public=true})
     add_defines("GAMERT_IMPL")
     set_kind("shared")
-    add_deps("SkrRT", "SkrGAInput", "SkrRenderer")
+    add_deps("SkrRT", "SkrGAInput", "SkrRenderer", "SkrImGui")
     add_files("game/src/**.cpp", "game/src/**.c")
 
 target("GameTool")

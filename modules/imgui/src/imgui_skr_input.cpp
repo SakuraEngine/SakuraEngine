@@ -3,7 +3,7 @@
 
 namespace skr::imgui
 {
-RUNTIME_API ImGuiContext*& imgui_context()
+SKR_IMGUI_API ImGuiContext*& imgui_context()
 {
     static thread_local ImGuiContext* ctx = nullptr;
     return ctx;

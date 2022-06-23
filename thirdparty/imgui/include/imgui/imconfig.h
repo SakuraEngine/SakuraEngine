@@ -127,7 +127,7 @@ namespace ImGui
 struct ImGuiContext;
 namespace skr::imgui
 {
-RUNTIME_API ImGuiContext*& imgui_context();
+SKR_IMGUI_API ImGuiContext*& imgui_context();
 }
 
 #define GImGui skr::imgui::imgui_context()
