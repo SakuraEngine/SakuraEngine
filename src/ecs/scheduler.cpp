@@ -413,8 +413,8 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             };
             forloop (i, 0, batchs.size())
                 _tasks[i] = { taskBody, &payloads[i], TearDown };
-            job->scheduler->allCounter->Add(batchs.size());
-            job->query->storage->counter->Add(batchs.size());
+            job->scheduler->allCounter->Add(static_cast<const uint32_t>(batchs.size()));
+            job->query->storage->counter->Add(static_cast<const uint32_t>(batchs.size()));
             job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks, ftl::TaskPriority::Normal, job->counter.get());
             dual_free(_tasks);
         }

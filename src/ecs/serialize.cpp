@@ -58,7 +58,7 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
                 if (serialize)
                     serialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(length / elemSize), s.v, s.t);
                 else
-                    s.archive(array->BeginX, length);
+                    s.archive(array->BeginX, static_cast<uint32_t>(length));
             }
         }
         else
@@ -241,7 +241,7 @@ void dual_storage_t::serialize(dual::serializer_t s)
     }
     s.archive((uint32_t)entities.entries.size());
     s.archive((uint32_t)entities.freeEntries.size());
-    s.archive(entities.freeEntries.data(), entities.freeEntries.size());
+    s.archive(entities.freeEntries.data(), static_cast<uint32_t>(entities.freeEntries.size()));
     s.archive((uint32_t)groups.size());
     for (auto& pair : groups)
     {

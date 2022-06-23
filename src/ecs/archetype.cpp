@@ -83,7 +83,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         uint32_t* offsets = proto.offsets[i];
         uint32_t& capacity = proto.chunkCapacity[i];
         capacity = (uint32_t)(caps[i] - sizeof(dual_chunk_t) - versionSize - padding) / proto.entitySize;
-        proto.versionOffset[i] = caps[i] - versionSize;
+        proto.versionOffset[i] = static_cast<uint32_t>(caps[i] - versionSize);
         if (capacity == 0)
             continue;
         uint32_t offset = sizeof(dual_entity_t) * capacity;
@@ -111,7 +111,7 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     structure.data = inType.type.data;
     structure.length = firstTag;
     archetype_t* archetype = get_archetype(structure);
-    const uint32_t typeSize = data_size(inType);
+    const auto typeSize = static_cast<uint32_t>(data_size(inType));
     assert((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);
     char* buffer = (char*)groupPool.allocate();
     dual_group_t& proto = *(dual_group_t*)buffer;
