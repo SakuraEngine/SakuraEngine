@@ -119,6 +119,6 @@ if has_config("build_AAA") then
     includes("AAA/xmake.lua")
 end
 
-if (os.host() == "windows") then
+if (os.host() == "windows" and has_config("build_chat")) then
     includes("chat/xmake.lua")
 end

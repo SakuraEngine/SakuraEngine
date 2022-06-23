@@ -16,6 +16,9 @@ skr_config_resource_t
 skr_config_resource_t;
 
 #if defined(__cplusplus)
+inline static constexpr skr_guid_t get_type_id_skr_config_resource_t()
+{ return {0x8F2DE9A2, 0xFE05, 0x4EB7, {0xA0, 0x7F, 0xA9, 0x73, 0xE3, 0xE9, 0x2B, 0x74}}; }
+
     #include "simdjson.h"
 namespace skr
 {

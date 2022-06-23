@@ -28,7 +28,7 @@ struct sreflect sattr(
 )
 skr_vertex_bin_t
 {
-    skr_bin_t blob;
+    skr_blob_t blob;
 };
 
 struct sreflect sattr(
@@ -37,7 +37,7 @@ struct sreflect sattr(
 )
 skr_index_bin_t
 {
-    skr_bin_t blob;
+    skr_blob_t blob;
 };
 
 struct sreflect sattr(

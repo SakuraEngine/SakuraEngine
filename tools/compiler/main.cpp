@@ -16,7 +16,6 @@
 #include "utils/defer.hpp"
 #include "resource/resource_header.h"
 #include "utils/format.hpp"
-#include "SkrRT/typeid.generated.hpp"
 #include "module/module_manager.hpp"
 #include "platform/vfs.h"
 #include <string>
