@@ -13,7 +13,6 @@
 #include "type/type_registry.h"
 #include "utils/log.h"
 #include "utils/defer.hpp"
-#include "SkrRT/typeid.generated.hpp"
 #include "utils/io.hpp"
 
 namespace skd::asset
