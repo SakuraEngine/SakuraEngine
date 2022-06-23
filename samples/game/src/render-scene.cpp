@@ -98,7 +98,7 @@ dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_
             ctypes[2] = index_buffer_type;
             ctypes[3] = dual_id_of<ecsr_vertex_buffer_t>::get();
         }
-        const uint32_t bcount = matDB.bindingTypeDB[desc->material].size();
+        const uint32_t bcount = static_cast<uint32_t>(matDB.bindingTypeDB[desc->material].size());
         if (ctypes)
         {
             for(uint32_t i = 0; i < bcount; i++)
