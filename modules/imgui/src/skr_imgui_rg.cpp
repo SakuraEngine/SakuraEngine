@@ -5,14 +5,14 @@
 
 namespace skr::imgui
 {
-SKR_RENDER_GRAPH_API CGPUTextureId font_texture;
-SKR_RENDER_GRAPH_API CGPURootSignatureId root_sig;
-SKR_RENDER_GRAPH_API CGPURenderPipelineId render_pipeline;
-SKR_RENDER_GRAPH_API skr::render_graph::TextureHandle font_handle;
-SKR_RENDER_GRAPH_API skr::render_graph::BufferHandle vertex_buffer_handle;
-SKR_RENDER_GRAPH_API skr::render_graph::BufferHandle index_buffer_handle;
-SKR_RENDER_GRAPH_API skr::render_graph::BufferHandle upload_buffer_handle;
-SKR_RENDER_GRAPH_API CGPUBufferId upload_buffer;
+SKR_IMGUI_API CGPUTextureId font_texture;
+SKR_IMGUI_API CGPURootSignatureId root_sig;
+SKR_IMGUI_API CGPURenderPipelineId render_pipeline;
+SKR_IMGUI_API skr::render_graph::TextureHandle font_handle;
+SKR_IMGUI_API skr::render_graph::BufferHandle vertex_buffer_handle;
+SKR_IMGUI_API skr::render_graph::BufferHandle index_buffer_handle;
+SKR_IMGUI_API skr::render_graph::BufferHandle upload_buffer_handle;
+SKR_IMGUI_API CGPUBufferId upload_buffer;
 
 namespace rg = skr::render_graph;
 
@@ -23,7 +23,7 @@ void imgui_render_window(ImGuiViewport* viewport, void*);
 
 
 using namespace skr::imgui;
-SKR_RENDER_GRAPH_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor* desc)
+SKR_IMGUI_API void render_graph_imgui_initialize(const RenderGraphImGuiDescriptor* desc)
 {
     ImGuiIO& io = ImGui::GetIO();
     io.BackendRendererName = "imgui_render_graph";
@@ -42,7 +42,7 @@ SKR_RENDER_GRAPH_API void render_graph_imgui_initialize(const RenderGraphImGuiDe
     platform_io.Renderer_RenderWindow = imgui_render_window;
 }
 
-SKR_RENDER_GRAPH_API void render_graph_imgui_add_render_pass(
+SKR_IMGUI_API void render_graph_imgui_add_render_pass(
 skr::render_graph::RenderGraph* render_graph,
 skr::render_graph::TextureRTVHandle target,
 ECGPULoadAction load_action)
@@ -219,7 +219,7 @@ ECGPULoadAction load_action)
     }
 }
 
-SKR_RENDER_GRAPH_API void render_graph_imgui_finalize()
+SKR_IMGUI_API void render_graph_imgui_finalize()
 {
     if (upload_buffer) cgpu_free_buffer(upload_buffer);
     cgpu_free_texture(font_texture);

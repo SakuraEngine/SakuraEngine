@@ -1,5 +1,5 @@
-#if !defined(RUNTIME_API) || !defined(RUNTIME_EXPORT)
-#define RUNTIME_API
+#if !defined(SKR_IMGUI_API) || !defined(SKR_IMGUI_EXPORT)
+#define SKR_IMGUI_API
 #endif
 #include "imgui_draw.cpp"
 #include "imgui_tables.cpp"
