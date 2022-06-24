@@ -221,8 +221,15 @@ private:
     bool loadImpl(const char* path)
     {
         _lastError.clear();
-        auto wpath = ghc::filesystem::path(path);
-        _handle = LoadLibrary(wpath.c_str());
+        if (path == nullptr)
+        {
+            _handle = GetModuleHandle(nullptr);
+        }
+        else
+        {
+            auto wpath = ghc::filesystem::path(path);
+            _handle = LoadLibrary(wpath.c_str());
+        }
         if (!_handle)
         {
             _lastError = getWindowsError();

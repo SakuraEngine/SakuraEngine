@@ -60,17 +60,20 @@ if (is_os("windows")) then
 end
 
 target("SkrRT") 
-    set_kind("shared")
     add_deps(deps_list)
+    add_rules("skr.module", {api = "RUNTIME"})
     add_packages(packages_list, {public = true})
     add_includedirs(include_dir_list, {public = true})
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     add_cxflags(project_cxflags, {public = true, force = true})
     -- runtime compile definitions
-    add_defines("MI_SHARED_LIB", "RUNTIME_SHARED", "EA_DLL", {public = true})
-    add_defines("GAINPUT_DEV", "GAINPUT_LIB_DYNAMIC", {public = true})
-    add_defines("MI_SHARED_LIB_EXPORT", "RUNTIME_API=RUNTIME_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT")
+    after_load(function (target,  opt)
+        if (target:get("kind") == "shared") then
+            target:add("defines", "MI_SHARED_LIB", "EA_DLL", {public = true})
+            target:add("defines", "MI_SHARED_LIB_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT")
+        end
+    end)
     -- fetch vk includes
     add_rules("utils.fetch-vk-includes")
     -- link system libs/frameworks

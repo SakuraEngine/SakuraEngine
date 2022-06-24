@@ -11,11 +11,9 @@ target("imgui")
     end)
 
 target("SkrImGui")
-    set_kind("shared")
+    add_rules("skr.module", {api = "SKR_IMGUI"})
     add_deps("imgui", "SkrRT", "SkrRenderGraph")
     add_includedirs("include", {public=true})
-    add_defines("SKR_IMGUI_SHARED", {public=true})
-    add_defines("SKR_IMGUI_IMPL")
     add_files("src/build.*.cpp")
     -- add render graph shaders
     add_rules("utils.dxc", {

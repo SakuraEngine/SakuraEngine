@@ -5,11 +5,9 @@ if(has_config("build_usdtool")) then
 end
 
 target("SkrTool")
-    set_kind("shared")
+    add_rules("skr.module", {api = "TOOL"})
     add_files("core/src/**.cpp")
     add_deps("SkrRT")
-    add_defines("TOOL_SHARED", {public=true})
-    add_defines("TOOL_IMPL", {public = false})
     add_includedirs("core/include", {public = true})
     add_rules("c++.reflection", {
         files = {"core/**.h", "core/**.hpp"},
@@ -19,29 +17,25 @@ target("SkrTool")
 
 if(has_config("build_usdtool")) then
 target("UsdTool")
-    set_kind("shared")
+    add_rules("skr.module", {api = "USDTOOL"})
     add_rules("c++.reflection", {
         files = {"usdtool/**.h", "usdtool/**.hpp"},
         rootdir = "usdtool/"
     })
     add_includedirs("usdtool/include", {public=true})
     add_packages("vcpkg::usd")
-    add_defines("USDTOOL_SHARED", {public=true})
-    add_defines("USDTOOL_IMPL")
     add_deps("SkrTool", "GameRT")
     add_files("usdtool/src/**.cpp")
 end 
 
 target("RenderTool")
-    set_kind("shared")
+    add_rules("skr.module", {api = "RENDERTOOL"})
     add_rules("c++.reflection", {
         files = {"rendertool/**.h", "rendertool/**.hpp"},
         rootdir = "rendertool/"
     })
     add_includedirs("rendertool/include", {public=true})
     add_packages("vcpkg::usd")
-    add_defines("RENDERTOOL_SHARED", {public=true})
-    add_defines("RENDERTOOL_IMPL")
     add_deps("SkrTool", "GameRT")
     add_files("rendertool/src/**.cpp")
 

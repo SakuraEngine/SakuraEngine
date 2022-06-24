@@ -1,9 +1,9 @@
 target("SkrGAInput")
-    set_kind("shared")
+    add_rules("skr.module", {api = "GAINPUT_LIB"})
+    add_defines("GAINPUT_DEV", {public = true})
+    add_defines("GAINPUT_LIB_IMPL", {public = true}) --??WTF?
     add_deps("SkrRT")
     add_includedirs("include", {public=true})
-    add_defines("GAINPUT_LIB_DYNAMIC_USE", {public=true})
-    add_defines("GAINPUT_LIB_DYNAMIC")
     -- gainput
     add_files("src/**.cpp", "src/hidapi/build.0.c")
     if (is_os("macosx")) then 

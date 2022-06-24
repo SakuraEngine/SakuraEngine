@@ -61,15 +61,15 @@ int main(int argc, char** argv)
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     enum InputAction
     {
-    	Quit,
+        Quit,
         Cao,
     };
     auto hwnd = skr_window_get_native_handle(window);
     gainput::InputManager manager;
     manager.Init(hwnd);
     manager.SetWindowsInstance(hwnd);
-	manager.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
-	gainput::DeviceId keyboardId = manager.CreateDevice<gainput::InputDeviceKeyboard>();
+    manager.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
+    gainput::DeviceId keyboardId = manager.CreateDevice<gainput::InputDeviceKeyboard>();
     gainput::DeviceId mouseId = manager.CreateDevice<gainput::InputDeviceMouse>();
     gainput::InputMap inputMap(manager);
     inputMap.MapBool(InputAction::Quit, keyboardId, gainput::KeyEscape);
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if(event.type == SDL_SYSWMEVENT)
+            if (event.type == SDL_SYSWMEVENT)
             {
                 SDL_SysWMmsg* msg = event.syswm.msg;
 #if defined(GAINPUT_PLATFORM_WIN)
@@ -101,18 +101,18 @@ int main(int argc, char** argv)
 
         manager.Update();
         if (inputMap.GetBoolWasDown(InputAction::Cao))
-	    {
-	    	SKR_LOG_DEBUG("Cao");
-	    }
+        {
+            SKR_LOG_DEBUG("Cao");
+        }
         if (inputMap.GetBoolWasDown(InputAction::Quit))
-	    {
-	    	quit = true;
-	    }
-        
+        {
+            quit = true;
+        }
+
         auto& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(
-            (float)swapchain->back_buffers[0]->width,
-            (float)swapchain->back_buffers[0]->height);
+        (float)swapchain->back_buffers[0]->width,
+        (float)swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
         quit |= skg::GameLoop(ctx);
         // move
