@@ -1,7 +1,5 @@
 target("SkrRenderGraph")
-    set_kind("shared")
+    add_rules("skr.module", {api = "SKR_RENDER_GRAPH"})
     add_deps("SkrRT")
     add_includedirs("include", {public=true})
-    add_defines("SKR_RENDER_GRAPH_SHARED", {public=true})
-    add_defines("SKR_RENDER_GRAPH_IMPL")
     add_files("src/*.cpp")

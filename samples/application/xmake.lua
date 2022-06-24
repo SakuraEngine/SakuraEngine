@@ -1,12 +1,10 @@
 target("GameRT")
+    add_rules("skr.module", {api = "GAMERT"})
     add_rules("c++.reflection", {
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
     add_includedirs("game/include", {public=true})
-    add_defines("GAMERT_SHARED", {public=true})
-    add_defines("GAMERT_IMPL")
-    set_kind("shared")
     add_deps("SkrRT", "SkrGAInput", "SkrRenderer", "SkrImGui")
     add_files("game/src/**.cpp", "game/src/**.c")
 
@@ -20,14 +18,12 @@ target("Game")
     add_files("game/shaders/**.hlsl")
 
 target("GameTool")
-    set_kind("shared")
+    add_rules("skr.module", {api = "GAMETOOL"})
     add_rules("c++.reflection", {
         files = {"gametool/**.h", "gametool/**.hpp"},
         rootdir = "gametool/"
     })
     add_includedirs("gametool/include", {public=true})
-    add_defines("GAMETOOL_SHARED", {public=true})
-    add_defines("GAMETOOL_IMPL")
     add_deps("SkrTool", "GameRT")
     add_files("gametool/src/**.cpp")
     on_config(function (target, opt)

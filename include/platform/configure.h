@@ -116,6 +116,12 @@
     #endif
 #endif
 
+#ifdef RUNTIME_IMPL
+    #ifndef RUNTIME_API
+        #define RUNTIME_API RUNTIME_EXPORT
+    #endif
+#endif
+
 #ifndef RUNTIME_API // If the build file hasn't already defined this to be dllexport...
     #ifdef RUNTIME_SHARED
         #if defined(_MSC_VER)

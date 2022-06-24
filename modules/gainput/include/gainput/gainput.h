@@ -12,54 +12,54 @@
 #include "platform/configure.h"
 
 #if defined(VK_USE_PLATFORM_GGP)
-	#define GAINPUT_PLATFORM_GGP
-	#define GAINPUT_LIBEXPORT
+    #define GAINPUT_PLATFORM_GGP
+    #define GAINPUT_LIBEXPORT
 #elif defined(XBOX) || defined(_XBOX_ONE)
-#define GAINPUT_PLATFORM_XBOX_ONE
-#define GAINPUT_LIBEXPORT
-#include "../../../../../../../Xbox/Common_3/OS/pch.h"
+    #define GAINPUT_PLATFORM_XBOX_ONE
+    #define GAINPUT_LIBEXPORT
+    #include "../../../../../../../Xbox/Common_3/OS/pch.h"
 #elif defined(__ANDROID__) || defined(ANDROID)
     #if defined(QUEST_VR)
         #define GAINPUT_PLATFORM_QUEST
     #else
-	    #define GAINPUT_PLATFORM_ANDROID
+        #define GAINPUT_PLATFORM_ANDROID
     #endif
-	#define GAINPUT_LIBEXPORT
+    #define GAINPUT_LIBEXPORT
 #elif defined(__linux) || defined(__linux__) || defined(linux) || defined(LINUX)
-	#define GAINPUT_PLATFORM_LINUX
-	#define GAINPUT_LIBEXPORT
+    #define GAINPUT_PLATFORM_LINUX
+    #define GAINPUT_LIBEXPORT
 #elif defined(_WIN32) || defined(__WIN32__) || (defined(_MSC_VER) && !defined(NX64))
-	#define GAINPUT_PLATFORM_WIN
-	#if defined(GAINPUT_LIB_DYNAMIC)
-		#define GAINPUT_LIBEXPORT		__declspec(dllexport)
-	#elif defined(GAINPUT_LIB_DYNAMIC_USE)
-		#define GAINPUT_LIBEXPORT		__declspec(dllimport)
-	#else
-		#define GAINPUT_LIBEXPORT
-	#endif
+    #define GAINPUT_PLATFORM_WIN
+    #if defined(GAINPUT_LIB_IMPL)
+        #define GAINPUT_LIBEXPORT __declspec(dllexport)
+    #elif defined(GAINPUT_LIB_SHARED)
+        #define GAINPUT_LIBEXPORT __declspec(dllimport)
+    #else
+        #define GAINPUT_LIBEXPORT
+    #endif
 #elif defined(__APPLE__)
-	#define GAINPUT_LIBEXPORT
-	#include <TargetConditionals.h>
+    #define GAINPUT_LIBEXPORT
+    #include <TargetConditionals.h>
     #if TARGET_OS_TV
         #define GAINPUT_PLATFORM_TVOS
-	#elif TARGET_OS_IPHONE
-		#define GAINPUT_PLATFORM_IOS
-	#elif TARGET_OS_MAC
-		#define GAINPUT_PLATFORM_MAC
-	#else
-		#error Gainput: Unknown/unsupported Apple platform!
-	#endif
+    #elif TARGET_OS_IPHONE
+        #define GAINPUT_PLATFORM_IOS
+    #elif TARGET_OS_MAC
+        #define GAINPUT_PLATFORM_MAC
+    #else
+        #error Gainput: Unknown/unsupported Apple platform!
+    #endif
 #elif defined(NX64)
-	#define GAINPUT_PLATFORM_NX64
-	#define GAINPUT_LIBEXPORT
+    #define GAINPUT_PLATFORM_NX64
+    #define GAINPUT_LIBEXPORT
 #elif defined(ORBIS)
-	#define GAINPUT_PLATFORM_ORBIS
-	#define GAINPUT_LIBEXPORT
+    #define GAINPUT_PLATFORM_ORBIS
+    #define GAINPUT_LIBEXPORT
 #elif defined(PROSPERO)
-#define GAINPUT_PLATFORM_PROSPERO
-#define GAINPUT_LIBEXPORT
+    #define GAINPUT_PLATFORM_PROSPERO
+    #define GAINPUT_LIBEXPORT
 #else
-	#error Gainput: Unknown/unsupported platform!
+    #error Gainput: Unknown/unsupported platform!
 #endif
 
 //#define GAINPUT_DEBUG
@@ -69,17 +69,17 @@
 #define GAINPUT_TEXT_INPUT_QUEUE_LENGTH 32
 
 #ifdef GAINPUT_ENABLE_CONCURRENCY
-#define MOODYCAMEL_EXCEPTIONS_DISABLED
-#include "concurrentqueue.h"
-#define GAINPUT_CONC_QUEUE(TYPE)            moodycamel::ConcurrentQueue<TYPE>
-#define GAINPUT_CONC_CONSTRUCT(queue)       queue()
-#define GAINPUT_CONC_ENQUEUE(queue, obj)    queue.enqueue(obj)
-#define GAINPUT_CONC_DEQUEUE(queue, obj)    queue.try_dequeue(obj)
+    #define MOODYCAMEL_EXCEPTIONS_DISABLED
+    #include "concurrentqueue.h"
+    #define GAINPUT_CONC_QUEUE(TYPE) moodycamel::ConcurrentQueue<TYPE>
+    #define GAINPUT_CONC_CONSTRUCT(queue) queue()
+    #define GAINPUT_CONC_ENQUEUE(queue, obj) queue.enqueue(obj)
+    #define GAINPUT_CONC_DEQUEUE(queue, obj) queue.try_dequeue(obj)
 #else
-#define GAINPUT_CONC_QUEUE(TYPE)            gainput::Array<TYPE>
-#define GAINPUT_CONC_CONSTRUCT(queue)       queue(allocator)
-#define GAINPUT_CONC_ENQUEUE(queue, obj)    queue.push_back(obj)
-#define GAINPUT_CONC_DEQUEUE(queue, obj)    (!queue.empty() ? (obj = queue[queue.size()-1], queue.pop_back(), true) : false)
+    #define GAINPUT_CONC_QUEUE(TYPE) gainput::Array<TYPE>
+    #define GAINPUT_CONC_CONSTRUCT(queue) queue(allocator)
+    #define GAINPUT_CONC_ENQUEUE(queue, obj) queue.push_back(obj)
+    #define GAINPUT_CONC_DEQUEUE(queue, obj) (!queue.empty() ? (obj = queue[queue.size() - 1], queue.pop_back(), true) : false)
 #endif
 
 #include <cassert>
@@ -91,55 +91,53 @@
 
 #if defined(GAINPUT_PLATFORM_LINUX) || defined(GAINPUT_PLATFORM_GGP)
 
-#include <cstdlib>
-#include <stdint.h>
+    #include <cstdlib>
+    #include <stdint.h>
 
 union _XEvent;
 typedef _XEvent XEvent;
 
 #elif defined(GAINPUT_PLATFORM_WIN)
 
-#include <cstdlib>
+    #include <cstdlib>
 
 typedef struct tagMSG MSG;
 
 namespace gainput
 {
-	typedef unsigned __int8 uint8_t;
-	typedef __int8 int8_t;
-	typedef unsigned __int32 uint32_t;
-	typedef unsigned __int64 uint64_t;
-}
+typedef unsigned __int8 uint8_t;
+typedef __int8 int8_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+} // namespace gainput
 
 #elif defined(GAINPUT_PLATFORM_ANDROID)
 
-#include <stdint.h>
-#include <stdlib.h>
+    #include <stdint.h>
+    #include <stdlib.h>
 struct AInputEvent;
 
 #elif defined(GAINPUT_PLATFORM_QUEST)
 
-#include <stdint.h>
-#include <stdlib.h>
+    #include <stdint.h>
+    #include <stdlib.h>
 
 #elif defined(GAINPUT_PLATFORM_NX64)
 
-#include <cstdlib>
-#include <stdint.h>
+    #include <cstdlib>
+    #include <stdint.h>
 
 #elif defined(GAINPUT_PLATFORM_ORBIS)
 
-#include <cstdlib>
-#include <stdint.h>
+    #include <cstdlib>
+    #include <stdint.h>
 
 #elif defined(GAINPUT_PLATFORM_PROSPERO)
 
-#include <cstdlib>
-#include <stdint.h>
+    #include <cstdlib>
+    #include <stdint.h>
 
 #endif
-
-
 
 /// Contains all Gainput related classes, types, and functions.
 namespace gainput
@@ -151,12 +149,11 @@ typedef unsigned int DeviceId;
 typedef unsigned int DeviceButtonId;
 
 /// Describes a device button on a specific device.
-struct DeviceButtonSpec
-{
-	/// ID of the input device.
-	DeviceId deviceId;
-	/// ID of the button on the given input device.
-	DeviceButtonId buttonId;
+struct DeviceButtonSpec {
+    /// ID of the input device.
+    DeviceId deviceId;
+    /// ID of the button on the given input device.
+    DeviceButtonId buttonId;
 };
 
 /// ID of a user-defined, mapped button.
@@ -186,7 +183,8 @@ class InputManager;
 class DebugRenderer;
 class DeviceStateModifier;
 
-template <class T> T Abs(T a) { return a < T() ? -a : a; }
+template <class T>
+T Abs(T a) { return a < T() ? -a : a; }
 
 /// Switches the library's internal development server to HTTP mode.
 /**
@@ -204,12 +202,11 @@ template <class T> T Abs(T a) { return a < T() ? -a : a; }
  * http://gainput.johanneskuhlmann.de/html5client/
  */
 void DevSetHttp(bool enable);
-}
+} // namespace gainput
 
-#define GAINPUT_VER_MAJOR_SHIFT		16
-#define GAINPUT_VER_GET_MAJOR(ver)	(ver >> GAINPUT_VER_MAJOR_SHIFT)
-#define GAINPUT_VER_GET_MINOR(ver)	(ver & (uint32_t(-1) >> GAINPUT_VER_MAJOR_SHIFT))
-
+#define GAINPUT_VER_MAJOR_SHIFT 16
+#define GAINPUT_VER_GET_MAJOR(ver) (ver >> GAINPUT_VER_MAJOR_SHIFT)
+#define GAINPUT_VER_GET_MINOR(ver) (ver & (uint32_t(-1) >> GAINPUT_VER_MAJOR_SHIFT))
 
 #include "GainputAllocator.h"
 #include "GainputContainers.h"
@@ -232,4 +229,3 @@ void DevSetHttp(bool enable);
 #include "./recorder/GainputInputRecorder.h"
 
 #endif
-

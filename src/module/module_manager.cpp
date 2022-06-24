@@ -19,7 +19,11 @@ using ModuleNode = skr::DAG::GraphVertex<ModuleProp>;
 class ModuleManagerImpl : public skr::ModuleManager
 {
 public:
-    ModuleManagerImpl() = default;
+    ModuleManagerImpl()
+    {
+        auto sucess = processSymbolTable.load(nullptr);
+        assert(sucess && "Failed to load symbol table");
+    }
     ~ModuleManagerImpl() = default;
     virtual IModule* get_module(const eastl::string& name) final;
     virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = true) final;
@@ -52,6 +56,8 @@ private:
     eastl::map<eastl::string, int32_t, eastl::less<>> nodeMap;
     eastl::map<eastl::string, module_registerer, eastl::less<>> initializeMap;
     eastl::map<eastl::string, eastl::unique_ptr<IModule>, eastl::less<>> modulesMap;
+
+    SharedLibrary processSymbolTable;
 };
 
 void ModuleManagerImpl::registerStaticallyLinkedModule(const char* moduleName, module_registerer _register)
@@ -85,30 +91,43 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
     eastl::string initName("__initializeModule");
     eastl::string mName(name);
     initName.append(mName);
-    eastl::string filename;
-#if defined(SKR_OS_MACOSX)
-    filename.append("lib").append(name);
-    filename.append(".dylib");
-#elif defined(SKR_OS_UNIX)
-    filename.append("lib").append(name);
-    filename.append(".so");
-#elif defined(SKR_OS_WINDOWS)
-    filename.append(name);
-    filename.append(".dll");
-#endif
-    auto finalPath = (ghc::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
-    if (!sharedLib->load(finalPath.c_str()))
+    // try load in program
+    IModule* (*func)() = nullptr;
+    if (processSymbolTable.hasSymbol(initName.c_str()))
     {
-        SKR_LOG_ERROR("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
-        return nullptr;
+        func = processSymbolTable.get<IModule*()>(initName.c_str());
     }
-#ifdef SPA_OUTPUT_LOG
-    else
-        std::cout << filename << ": Load dll success!" << std::endl;
-#endif
-    if (sharedLib->hasSymbol(initName.c_str()))
+    if (func == nullptr)
     {
-        auto func = sharedLib->get<IModule*()>(initName.c_str());
+        // try load dll
+        eastl::string filename;
+#if defined(SKR_OS_MACOSX)
+        filename.append("lib").append(name);
+        filename.append(".dylib");
+#elif defined(SKR_OS_UNIX)
+        filename.append("lib").append(name);
+        filename.append(".so");
+#elif defined(SKR_OS_WINDOWS)
+        filename.append(name);
+        filename.append(".dll");
+#endif
+        auto finalPath = (ghc::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
+        if (!sharedLib->load(finalPath.c_str()))
+        {
+            SKR_LOG_ERROR("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
+            return nullptr;
+        }
+#ifdef SPA_OUTPUT_LOG
+        else
+            std::cout << filename << ": Load dll success!" << std::endl;
+#endif
+        if (sharedLib->hasSymbol(initName.c_str()))
+        {
+            func = sharedLib->get<IModule*()>(initName.c_str());
+        }
+    }
+    if (func)
+    {
         modulesMap[name] = eastl::unique_ptr<IModule>(func());
         IDynamicModule* module = (IDynamicModule*)modulesMap[name].get();
         module->sharedLib = eastl::move(sharedLib);
@@ -239,9 +258,13 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, b
 {
     if (nodeMap.find(entry) != nodeMap.end())
         return;
-    IModule* _module = shared ?
-                       spawnDynamicModule(entry) :
-                       spawnStaticModule(entry);
+    IModule* _module = nullptr;
+    if (!_module)
+    {
+        _module = shared ?
+                  spawnDynamicModule(entry) :
+                  spawnStaticModule(entry);
+    }
     nodeMap[entry] = (int32_t)nodeMap.size();
     ModuleProperty prop;
     prop.name = entry;
