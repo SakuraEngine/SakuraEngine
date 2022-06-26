@@ -1,7 +1,0 @@
-add_subdirectory(cgpu-mandelbrot)
-add_subdirectory(hot-triangle)
-add_subdirectory(cgpu-texture)
-add_subdirectory(cgpu-indexed-instance)
-add_subdirectory(cgpu-3d)
-add_subdirectory(rg-triangle)
-add_subdirectory(rg-deferred)

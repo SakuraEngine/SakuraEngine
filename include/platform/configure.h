@@ -403,7 +403,16 @@ typedef int64_t host_ptr_t;
 
 // TODO: move this anywhere else
 #define USE_DXMATH
-#define TRACY_IMPORTS
-#define TRACY_ENABLE
-#define TRACY_ON_DEMAND
-#define TRACY_FIBERS
+
+#if !defined(TRACY_ENABLE) && !defined (TRACY_OVERRIDE_DISABLE) && !defined(TRACY_OVERRIDE_ENABLE)
+    #ifdef _DEBUG
+        #define TRACY_ENABLE
+    #else
+    #endif
+#endif
+
+#ifdef TRACY_ENABLE
+    #define TRACY_IMPORTS
+    #define TRACY_ON_DEMAND
+    #define TRACY_FIBERS
+#endif

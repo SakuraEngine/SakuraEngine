@@ -3,34 +3,7 @@ set_project("Sakura.Runtime")
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_moduledirs("xmake/modules")
 
-option("build_tools")
-    set_default(true)
-    set_showmenu(true)
-    set_description("Toggle to build tools of SakuraRuntime")
-option_end()
-
-option("build_usdtool")
-    set_default(false)
-    set_showmenu(true)
-    set_description("Toggle to build usdtool of SakuraRuntime")
-option_end()
-
-option("build_samples")
-    set_default(true)
-    set_showmenu(true)
-    set_description("Toggle to build samples of SakuraRuntime")
-option_end()
-
-option("build_tests")
-    set_default(true)
-    set_showmenu(true)
-    set_description("Toggle to build tests of SakuraRuntime")
-option_end()
-
-option("build_AAA")
-    set_default(false)
-    set_description("Toggle to build AAA project")
-option_end()
+includes("xmake/options.lua")
 
 set_languages("c11", "cxx17")
 
@@ -47,6 +20,7 @@ includes("xmake/thirdparty.lua")
 includes("tools/codegen/xmake.lua")
 
 set_warnings("all")
+
 if (is_os("windows")) then 
     add_defines("UNICODE")
     add_defines("_UNICODE")
@@ -92,7 +66,7 @@ target("SkrRT")
         task.run("unzip-gfx-sdk")
     end)
     add_links(links_list, {public = true})
-
+    -- boost ctx
     do
         local platform = "x86_64"
         local os = "ms"
