@@ -23,7 +23,7 @@ extern "C" void dualX_register_types();
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
-void SkrRuntimeModule::on_load()
+void SkrRuntimeModule::on_load(int argc, char** argv)
 {
     dualX_register_types();
     

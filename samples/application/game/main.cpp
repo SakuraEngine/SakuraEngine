@@ -35,7 +35,7 @@ int main(int argc, char** argv)
     auto root = ghc::filesystem::current_path();
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameRT", true);
-    moduleManager->init_module_graph();
+    moduleManager->init_module_graph(argc, argv);
 
     assert(gamert_get_ecs_world());
 

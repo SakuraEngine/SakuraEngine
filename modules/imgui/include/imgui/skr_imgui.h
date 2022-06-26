@@ -12,7 +12,7 @@ SKR_IMGUI_API void skr_imgui_new_frame(SWindowHandle window, float delta_time);
     class SKR_IMGUI_API SkrImGuiModule : public skr::IDynamicModule
     {
     public:
-        virtual void on_load() override;
+        virtual void on_load(int argc, char** argv) override;
         virtual void on_unload() override;
     };
 #endif

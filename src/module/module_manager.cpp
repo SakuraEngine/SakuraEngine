@@ -27,8 +27,8 @@ public:
     ~ModuleManagerImpl() = default;
     virtual IModule* get_module(const eastl::string& name) final;
     virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = true) final;
-    virtual bool patch_module_graph(const eastl::string& name, bool shared = true) final;
-    virtual bool init_module_graph(void) final;
+    virtual bool patch_module_graph(const eastl::string& name, bool shared = true, int argc = 0, char** argv = nullptr) final;
+    virtual bool init_module_graph(int argc, char** argv) final;
     virtual bool destroy_module_graph(void) final;
     virtual void mount(const char8_t* path) final;
     virtual eastl::string_view get_root(void) final;
@@ -45,7 +45,7 @@ private:
     bool __internal_DestroyModuleGraph(const eastl::string& nodename);
     void __internal_MakeModuleGraph(const eastl::string& entry,
     bool shared = false);
-    bool __internal_InitModuleGraph(const eastl::string& nodename);
+    bool __internal_InitModuleGraph(const eastl::string& nodename, int argc, char** argv);
     ModuleInfo parseMetaData(const char* metadata);
 
 private:
@@ -196,7 +196,7 @@ void ModuleManagerImpl::set_module_property(const eastl::string& entry, const Mo
     moduleDependecyGraph, prop);
 }
 
-bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename)
+bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename, int argc, char** argv)
 {
     if (get_module_property(nodename).bActive)
         return true;
@@ -204,10 +204,10 @@ bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename
     {
         if (get_module_property(iter.name).bActive)
             continue;
-        if (!__internal_InitModuleGraph(iter.name))
+        if (!__internal_InitModuleGraph(iter.name, argc, argv))
             return false;
     }
-    get_module(nodename)->on_load();
+    get_module(nodename)->on_load(argc, argv);
     ModuleProperty prop;
     prop.bActive = true;
     prop.name = nodename;
@@ -236,11 +236,11 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& noden
     return true;
 }
 
-bool ModuleManagerImpl::init_module_graph(void)
+bool ModuleManagerImpl::init_module_graph(int argc, char** argv)
 {
-    if (!__internal_InitModuleGraph(mainModuleName))
+    if (!__internal_InitModuleGraph(mainModuleName, argc, argv))
         return false;
-    get_module(mainModuleName)->main_module_exec();
+    get_module(mainModuleName)->main_module_exec(argc, argv);
     return true;
 }
 
@@ -291,10 +291,10 @@ const ModuleGraph* ModuleManagerImpl::make_module_graph(const eastl::string& ent
     return (struct ModuleGraph*)&moduleDependecyGraph;
 }
 
-bool ModuleManagerImpl::patch_module_graph(const eastl::string& entry, bool shared)
+bool ModuleManagerImpl::patch_module_graph(const eastl::string& entry, bool shared, int argc, char** argv)
 {
     __internal_MakeModuleGraph(entry, shared);
-    if (!__internal_InitModuleGraph(entry))
+    if (!__internal_InitModuleGraph(entry, argc, argv))
         return false;
     return true;
 }
