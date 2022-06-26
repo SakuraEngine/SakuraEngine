@@ -19,6 +19,7 @@
 
 extern SWindowHandle window;
 uint32_t backbuffer_index;
+ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
 extern void free_api_objects();
 extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph);
 
@@ -153,7 +154,19 @@ int main(int argc, char** argv)
             .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
         });
-        ecsr_draw_scene((struct skr_render_graph_t*)renderGraph);
+        const char* shadingRateNames[] = {
+            "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
+        };
+        ImGui::Begin(u8"ShadingRate");
+        if (ImGui::Button(fmt::format("SwitchShadingRate-{}", shadingRateNames[shading_rate]).c_str()))
+        {
+            if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
+                shading_rate = (ECGPUShadingRate)(shading_rate + 1);
+            else
+                shading_rate = CGPU_SHADING_RATE_FULL;
+        }
+        ImGui::End();
+        ecsr_draw_scene((struct skr_render_graph_t*)renderGraph, shading_rate);
         render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {

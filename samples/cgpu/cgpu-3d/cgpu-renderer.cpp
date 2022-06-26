@@ -1,3 +1,4 @@
+#include "cgpu/api.h"
 #include "cgpu/flags.h"
 #include "render-device.hpp"
 #include "render-context.hpp"

@@ -149,7 +149,7 @@ GAMERT_API bool ecsr_unregister_gfx_material(gfx_material_id_t) SKR_NOEXCEPT;
 // scene
 GAMERT_API bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
 dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_t* meta_count) SKR_NOEXCEPT;
-GAMERT_API void ecsr_draw_scene(struct skr_render_graph_t* graph) SKR_NOEXCEPT;
+GAMERT_API void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_rate) SKR_NOEXCEPT;
 
 // cs-mats
 // GAMERT_API processor_material_t ecsr_register_processor_material(const processor_material_t*) SKR_NOEXCEPT;

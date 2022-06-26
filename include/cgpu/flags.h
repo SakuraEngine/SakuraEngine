@@ -679,6 +679,31 @@ typedef enum ECGPUTextureViewAspect
 } ECGPUTextureViewAspect;
 typedef uint32_t CGPUTextureViewAspects;
 
+// VRS
+typedef enum ECGPUShadingRate
+{
+	CGPU_SHADING_RATE_FULL = 0,
+	CGPU_SHADING_RATE_HALF = CGPU_SHADING_RATE_FULL + 1,
+	CGPU_SHADING_RATE_QUARTER = CGPU_SHADING_RATE_HALF + 1,
+	CGPU_SHADING_RATE_1X2 = CGPU_SHADING_RATE_QUARTER + 1,
+	CGPU_SHADING_RATE_2X1 = CGPU_SHADING_RATE_1X2 + 1,
+    // Causes low wave usage, avoid using this! Just using 2x2.
+	CGPU_SHADING_RATE_2X4 = CGPU_SHADING_RATE_2X1 + 1,
+    // Causes low wave usage, avoid using this! Just using 2x2.
+    CGPU_SHADING_RATE_4X2 = CGPU_SHADING_RATE_2X4 + 1,
+	CGPU_SHADING_RATE_COUNT = CGPU_SHADING_RATE_4X2 + 1,
+    CGPU_SHADING_RATE_MAX_ENUM_BIT = 0x7FFFFFFF
+} ECGPUShadingRate;
+
+typedef enum ECGPUShadingRateCombiner
+{
+	CGPU_SHADING_RATE_COMBINER_PASSTHROUGH = 0,
+	CGPU_SHADING_RATE_COMBINER_OVERRIDE = 1,
+	CGPU_SHADING_RATE_COMBINER_MIN = 2,
+	CGPU_SHADING_RATE_COMBINER_MAX = 3,
+	CGPU_SHADING_RATE_COMBINER_SUM = 4,
+} ECGPUShadingRateCombiner;
+
 //
 /* clang-format off */
 static FORCEINLINE bool FormatUtil_IsDepthStencilFormat(ECGPUFormat const fmt) {

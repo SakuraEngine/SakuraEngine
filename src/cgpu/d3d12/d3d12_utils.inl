@@ -53,6 +53,36 @@ FORCEINLINE static void D3D12Util_CreateDSV(CGPUDevice_D3D12* D,
     D->pDxDevice->CreateDepthStencilView(pResource, pDsvDesc, *pHandle);
 }
 
+#ifdef __ID3D12GraphicsCommandList5_INTERFACE_DEFINED__
+#define D3D12_HEADER_SUPPORT_VRS
+D3D12_SHADING_RATE_COMBINER D3D12Util_TranslateShadingRateCombiner(ECGPUShadingRateCombiner combiner)
+{
+	switch (combiner)
+	{
+		case CGPU_SHADING_RATE_COMBINER_PASSTHROUGH: return D3D12_SHADING_RATE_COMBINER_PASSTHROUGH;
+		case CGPU_SHADING_RATE_COMBINER_OVERRIDE: return D3D12_SHADING_RATE_COMBINER_OVERRIDE;
+		case CGPU_SHADING_RATE_COMBINER_MAX: return D3D12_SHADING_RATE_COMBINER_MAX;
+		case CGPU_SHADING_RATE_COMBINER_SUM: return D3D12_SHADING_RATE_COMBINER_SUM;
+		default: cgpu_assert(false && "Invalid shading rate combiner type"); return D3D12_SHADING_RATE_COMBINER_PASSTHROUGH;
+	}
+}
+
+D3D12_SHADING_RATE D3D12Util_TranslateShadingRate(ECGPUShadingRate shadingRate)
+{
+	switch (shadingRate)
+	{
+		case CGPU_SHADING_RATE_FULL: return D3D12_SHADING_RATE_1X1;
+		case CGPU_SHADING_RATE_1X2: return D3D12_SHADING_RATE_1X2;
+		case CGPU_SHADING_RATE_2X1: return D3D12_SHADING_RATE_2X1;
+		case CGPU_SHADING_RATE_HALF: return D3D12_SHADING_RATE_2X2;
+		case CGPU_SHADING_RATE_2X4: return D3D12_SHADING_RATE_2X4;
+		case CGPU_SHADING_RATE_4X2: return D3D12_SHADING_RATE_4X2;
+		case CGPU_SHADING_RATE_QUARTER: return D3D12_SHADING_RATE_4X4;
+		default: cgpu_assert(false && "Invalid shading rate"); return D3D12_SHADING_RATE_1X1;
+	}
+}
+#endif
+
 FORCEINLINE static D3D12_DESCRIPTOR_RANGE_TYPE D3D12Util_ResourceTypeToDescriptorRangeType(ECGPUResourceType type) {
   switch (type) {
   case CGPU_RESOURCE_TYPE_UNIFORM_BUFFER:
