@@ -1,5 +1,6 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/flags.h"
+#include "utils/log.h"
 #include "vulkan_utils.h"
 #include "vulkan/vulkan_core.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
@@ -113,6 +114,7 @@ const CGPUProcTable tbl_vk = {
 
     // Render CMDs
     .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_vulkan,
+    .render_encoder_set_shading_rate = &cgpu_render_encoder_set_shading_rate_vulkan,
     .render_encoder_bind_descriptor_set = cgpu_render_encoder_bind_descriptor_set_vulkan,
     .render_encoder_set_viewport = &cgpu_render_encoder_set_viewport_vulkan,
     .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_vulkan,
@@ -1883,6 +1885,12 @@ void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGPUComputePassEncoderId en
     Set->super.index, 1, &Set->pVkDescriptorSet,
     // TODO: Dynamic Offset
     0, NULL);
+}
+
+void cgpu_render_encoder_set_shading_rate_vulkan(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate)
+{
+    // TODO: Vulkan impl
+    SKR_LOG_WARN("Vulkan: cgpu_render_encoder_set_shading_rate_vulkan not implemented yet!");
 }
 
 void cgpu_render_encoder_bind_descriptor_set_vulkan(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set)

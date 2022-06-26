@@ -680,6 +680,16 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass(CGPUCommandBufferId cmd, cons
     return ecd;
 }
 
+void cgpu_render_encoder_set_shading_rate(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate)
+{
+    cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
+    CGPUDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcRenderEncoderSetShadingRate fn_set_shading_rate = device->proc_table_cache->render_encoder_set_shading_rate;
+    cgpu_assert(fn_set_shading_rate && "render_encoder_set_shading_rate Proc Missing!");
+    fn_set_shading_rate(encoder, shading_rate, post_rasterizer_rate, final_rate);
+}
+
 void cgpu_render_encoder_bind_descriptor_set(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");

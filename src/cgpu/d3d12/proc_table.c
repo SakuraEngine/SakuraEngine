@@ -105,6 +105,7 @@ const CGPUProcTable tbl_d3d12 = {
 
     // Render Pass
     .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_d3d12,
+    .render_encoder_set_shading_rate = &cgpu_render_encoder_set_shading_rate_d3d12,
     .render_encoder_bind_descriptor_set = cgpu_render_encoder_bind_descriptor_set_d3d12,
     .render_encoder_set_viewport = &cgpu_render_encoder_set_viewport_d3d12,
     .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_d3d12,

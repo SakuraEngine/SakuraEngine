@@ -5,6 +5,7 @@
 #include <dxcapi.h>
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
+#include "utils/make_zeroed.hpp"
 #include <EASTL/vector.h>
 #include <winsock.h>
 
@@ -167,6 +168,30 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12))))
     {
         D3D12Adapter->mEnhancedBarriersSupported = options12.EnhancedBarriersSupported;
+    }
+#endif
+#ifdef D3D12_HEADER_SUPPORT_VRS
+    D3D12_FEATURE_DATA_D3D12_OPTIONS6 options = make_zeroed<D3D12_FEATURE_DATA_D3D12_OPTIONS6>();
+	if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options, sizeof(options))))
+    {
+        if (options.VariableShadingRateTier == D3D12_VARIABLE_SHADING_RATE_TIER_1)
+        {
+            adapter_detail.support_shading_rate = true;
+            adapter_detail.support_shading_rate_mask = false;
+            adapter_detail.support_shading_rate_sv = true;
+        }
+        else if (options.VariableShadingRateTier == D3D12_VARIABLE_SHADING_RATE_TIER_2)
+        {
+            adapter_detail.support_shading_rate = true;
+            adapter_detail.support_shading_rate_mask = true;
+            adapter_detail.support_shading_rate_sv = true;
+        }
+        else
+        {
+            adapter_detail.support_shading_rate = false;
+            adapter_detail.support_shading_rate_mask = false;
+            adapter_detail.support_shading_rate_sv = false;
+        }
     }
 #endif
     adapter_detail.host_visible_vram_budget = 0;

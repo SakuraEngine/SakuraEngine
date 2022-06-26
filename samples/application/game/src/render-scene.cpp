@@ -1,4 +1,6 @@
 #include "render-scene.h"
+#include "cgpu/api.h"
+#include "cgpu/flags.h"
 #include "gamert.h"
 #include "utils/make_zeroed.hpp"
 #include <EASTL/unordered_map.h>
@@ -7,6 +9,8 @@
 #include "ecs/callback.hpp"
 #include "ecs/array.hpp"
 #include "math/vectormath.hpp"
+#include "imgui/skr_imgui.h"
+#include "imgui/imgui.h"
 
 static struct 
 {
@@ -150,7 +154,7 @@ CGPURenderPipelineId ecsr_create_gbuffer_render_pipeline(
 }
 #include <iostream>
 
-void ecsr_draw_scene(struct skr_render_graph_t* graph) SKR_NOEXCEPT
+void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_rate) SKR_NOEXCEPT
 {
     auto renderGraph = (skr::render_graph::RenderGraph*)graph;
     // TODO: Culling
@@ -275,7 +279,9 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph) SKR_NOEXCEPT
                         cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
                         cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                         cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "push_constants", &data);
+                        cgpu_render_encoder_set_shading_rate(stack.encoder, CGPU_SHADING_RATE_QUARTER, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
                         cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
+                        cgpu_render_encoder_set_shading_rate(stack.encoder, CGPU_SHADING_RATE_FULL, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
                     }
                 };
                 const dual_type_index_t draw_filter_all[] = { 

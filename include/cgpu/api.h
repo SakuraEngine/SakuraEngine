@@ -346,6 +346,8 @@ typedef void (*CGPUProcCmdEndComputePass)(CGPUCommandBufferId cmd, CGPUComputePa
 // Render Pass
 RUNTIME_API CGPURenderPassEncoderId cgpu_cmd_begin_render_pass(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc);
 typedef CGPURenderPassEncoderId (*CGPUProcCmdBeginRenderPass)(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_set_shading_rate(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate);
+typedef void (*CGPUProcRenderEncoderSetShadingRate)(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate);
 RUNTIME_API void cgpu_render_encoder_bind_descriptor_set(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set);
 typedef void (*CGPUProcRenderEncoderBindDescriptorSet)(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set);
 RUNTIME_API void cgpu_render_encoder_set_viewport(CGPURenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
@@ -500,6 +502,7 @@ typedef struct CGPUProcTable {
 
     // Render CMDs
     const CGPUProcCmdBeginRenderPass cmd_begin_render_pass;
+    const CGPUProcRenderEncoderSetShadingRate render_encoder_set_shading_rate;
     const CGPUProcRenderEncoderBindDescriptorSet render_encoder_bind_descriptor_set;
     const CGPUProcRenderEncoderBindPipeline render_encoder_bind_pipeline;
     const CGPUProcRendeEncoderBindVertexBuffers render_encoder_bind_vertex_buffers;
@@ -568,6 +571,10 @@ typedef struct CGPUAdapterDetail {
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
+    // RDNA2 
+    bool support_shading_rate : 1;
+    bool support_shading_rate_mask : 1;
+    bool support_shading_rate_sv : 1;
     CGPUFormatSupport format_supports[CGPU_FORMAT_COUNT];
     CGPUVendorPreset vendor_preset;
 } CGPUAdapterDetail;
