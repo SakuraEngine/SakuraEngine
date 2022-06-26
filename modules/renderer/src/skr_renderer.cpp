@@ -1,7 +1,9 @@
 #include "skr_renderer.h"
+#include "cgpu/api.h"
 #include "utils/log.h"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
+#include <string.h>
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
 SKR_MODULE_METADATA(u8R"(
@@ -29,6 +31,26 @@ SkrRenderer)
 void SkrRendererModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr renderer loaded!");
+
+    for (uint32_t i = 0; i < argc; i++)
+    {
+        if (::strcmp(argv[i], "--vulkan") == 0)
+        {
+            backend = CGPU_BACKEND_VULKAN;
+        }
+        else if (::strcmp(argv[i], "--d3d12") == 0)
+        {
+            backend = CGPU_BACKEND_D3D12;
+        }
+        else
+        {
+        #ifdef _WIN32
+            backend = CGPU_BACKEND_D3D12;
+        #else
+            backend = CGPU_BACKEND_VULKAN;
+        #endif
+        }
+    }
 
     create_api_objects();
 }
