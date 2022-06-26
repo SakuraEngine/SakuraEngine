@@ -10,3 +10,7 @@ task("unzip-gfx-sdk")
         end
         find_sdk.install_lib("llfio")
     end)
+
+vk_includes_dir = "$(projectdir)/SDKs/vulkan"
+
+table.insert(include_dir_list, vk_includes_dir)

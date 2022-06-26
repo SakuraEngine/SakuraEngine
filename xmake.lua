@@ -74,8 +74,6 @@ target("SkrRT")
             target:add("defines", "MI_SHARED_LIB_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT")
         end
     end)
-    -- fetch vk includes
-    add_rules("utils.fetch-vk-includes")
     -- link system libs/frameworks
     if (is_os("windows")) then 
         add_links("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})
