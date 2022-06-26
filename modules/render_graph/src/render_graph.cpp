@@ -18,7 +18,7 @@ SKR_MODULE_METADATA(u8R"(
 )",
 SkrRenderGraph)
 
-void SkrRenderGraphModule::on_load()
+void SkrRenderGraphModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr render graph loaded!");
 }

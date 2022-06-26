@@ -24,7 +24,7 @@ SKR_MODULE_METADATA(u8R"(
 )",
 SkrImGui)
 
-void SkrImGuiModule::on_load()
+void SkrImGuiModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr imgui loaded!");
 }

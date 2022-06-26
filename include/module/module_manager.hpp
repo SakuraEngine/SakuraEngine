@@ -19,8 +19,8 @@ public:
     virtual ~ModuleManager() = default;
     virtual IModule* get_module(const eastl::string& name) = 0;
     virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = true) = 0;
-    virtual bool patch_module_graph(const eastl::string& name, bool shared = true) = 0;
-    virtual bool init_module_graph(void) = 0;
+    virtual bool patch_module_graph(const eastl::string& name, bool shared = true, int argc = 0, char** argv = nullptr) = 0;
+    virtual bool init_module_graph(int argc, char** argv) = 0;
     virtual bool destroy_module_graph(void) = 0;
     virtual void mount(const char8_t* path) = 0;
     virtual eastl::string_view get_root(void) = 0;

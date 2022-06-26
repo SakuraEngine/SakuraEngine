@@ -27,7 +27,7 @@ SKR_MODULE_METADATA(u8R"(
 GameRT)
 
 extern "C" void ecsr_register_types();
-void SGameRTModule::on_load()
+void SGameRTModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
     auto resourceRoot = (ghc::filesystem::current_path() / "../resources").u8string();
@@ -44,7 +44,7 @@ void SGameRTModule::on_load()
     ecsr_register_types();
 }
 
-void SGameRTModule::main_module_exec()
+void SGameRTModule::main_module_exec(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime executed as main module!");
 }

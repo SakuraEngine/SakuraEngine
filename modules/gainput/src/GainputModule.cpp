@@ -18,7 +18,7 @@ SKR_MODULE_METADATA(u8R"(
 )",
 SkrGAInput)
 
-void SkrGAInputModule::on_load()
+void SkrGAInputModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr gainput loaded!");
 }

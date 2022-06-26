@@ -77,9 +77,9 @@ public:
     IModule(const IModule& rhs) = delete;
     IModule& operator=(const IModule& rhs) = delete;
     virtual ~IModule(){};
-    virtual void on_load() = 0;
+    virtual void on_load(int argc, char** argv) = 0;
     virtual void on_unload() = 0;
-    virtual void main_module_exec() {}
+    virtual void main_module_exec(int argc, char** argv) {}
     virtual const char* get_meta_data(void) = 0;
     virtual const ModuleInfo* get_module_info()
     {

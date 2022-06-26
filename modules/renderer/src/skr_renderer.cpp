@@ -26,7 +26,7 @@ SkrRenderer)
 #define BACK_BUFFER_HEIGHT 900
 #define BACK_BUFFER_WIDTH 900
 
-void SkrRendererModule::on_load()
+void SkrRendererModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr renderer loaded!");
 

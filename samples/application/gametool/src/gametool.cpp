@@ -3,11 +3,11 @@
 
 class SGameToolModule : public skr::IDynamicModule
 {
-    virtual void on_load() override
+    virtual void on_load(int argc, char** argv) override
     {
         SKR_LOG_INFO("game tool loaded!");
     }
-    virtual void main_module_exec() override
+    virtual void main_module_exec(int argc, char** argv) override
     {
         SKR_LOG_INFO("game tool executed as main module!");
     }
