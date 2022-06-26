@@ -2,6 +2,7 @@
 #include <EASTL/vector.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/string.h>
+#include <EASTL/sort.h>
 
 class VkUtil_Blackboard
 {
@@ -322,6 +323,14 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     VkUtil_QueryAllAdapters(I,
     wanted_device_layers, wanted_device_layers_count,
     wanted_device_extensions, wanted_device_extensions_count);
+    // sort by GPU type
+    eastl::stable_sort(I->pVulkanAdapters, I->pVulkanAdapters + I->mPhysicalDeviceCount, 
+    [](const CGPUAdapter_Vulkan& a, const CGPUAdapter_Vulkan& b) {
+        const uint32_t orders[] = {
+            4, 1, 0, 2, 3
+        };
+        return orders[a.mPhysicalDeviceProps.properties.deviceType] < orders[b.mPhysicalDeviceProps.properties.deviceType];
+    });
     // construct extensions table
     CGPUVkLayersTable::ConstructForAllAdapters(I, blackboard);
     CGPUVkExtensionsTable::ConstructForAllAdapters(I, blackboard);
