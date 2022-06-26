@@ -1,6 +1,7 @@
 #pragma once
 #include <EASTL/unordered_map.h>
 #include <EASTL/deque.h>
+#include "platform/configure.h"
 #include "utils/hash.h"
 #include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
@@ -41,7 +42,7 @@ protected:
     buffers;
 };
 
-inline BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
+FORCEINLINE BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
     : device(device)
     , size(desc.size)
     , descriptors(desc.descriptors)
@@ -54,17 +55,17 @@ inline BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& des
 {
 }
 
-inline BufferPool::Key::operator size_t() const
+FORCEINLINE BufferPool::Key::operator size_t() const
 {
     return skr_hash(this, sizeof(*this), (size_t)device);
 }
 
-inline void BufferPool::initialize(CGPUDeviceId device_)
+FORCEINLINE void BufferPool::initialize(CGPUDeviceId device_)
 {
     device = device_;
 }
 
-inline void BufferPool::finalize()
+FORCEINLINE void BufferPool::finalize()
 {
     for (auto queue : buffers)
     {
@@ -98,7 +99,7 @@ inline eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const 
     return allocated;
 }
 
-inline void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, uint64_t frame_index)
+FORCEINLINE void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, uint64_t frame_index)
 {
     auto key = make_zeroed<BufferPool::Key>(device, desc);
     buffers[key].push_back({ { buffer, final_state }, frame_index });
