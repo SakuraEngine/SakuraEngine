@@ -35,7 +35,7 @@ jobs:
    - name: Shipping
      shell: cmd
      run: |
-        xmake f -m release --cc=clang-cl --cxx=clang-cl -c -y -v --build_tests=n --module_as_objects=y --policies=build.ccache:n
+        xmake f -m release --cc=clang-cl --cxx=clang-cl -c -y -v --build_tests=n --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
         xmake -y -v
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}

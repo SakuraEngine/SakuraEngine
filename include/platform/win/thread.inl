@@ -1,4 +1,5 @@
 #include <process.h> // _beginthreadex
+#include <assert.h>
 
 typedef struct SCallOnceFnWrapper {
     SCallOnceFn fn;

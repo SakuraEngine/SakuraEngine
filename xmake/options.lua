@@ -1,0 +1,36 @@
+option("build_tools")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Toggle to build tools of SakuraRuntime")
+option_end()
+
+option("build_usdtool")
+    set_default(false)
+    set_showmenu(true)
+    set_description("Toggle to build usdtool of SakuraRuntime")
+option_end()
+
+option("build_samples")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Toggle to build samples of SakuraRuntime")
+option_end()
+
+option("build_tests")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Toggle to build tests of SakuraRuntime")
+option_end()
+
+option("build_AAA")
+    set_default(false)
+    set_description("Toggle to build AAA project")
+option_end()
+
+option("use_tracy")
+    -- "auto", "enable", "disable"
+    set_default("auto")
+    set_values("auto", "enable", "disable")
+    set_showmenu(true)
+    set_description("Toggle to use tracy profile")
+option_end()

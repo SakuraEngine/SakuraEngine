@@ -123,7 +123,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     {
         taskScheduler->m_callbacks.OnFiberAttached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiber());
     }
-    TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str());
+    TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str())
 
     // If we just started from the pool, we may need to clean up from another fiber
     taskScheduler->CleanUpOldFiber();
@@ -191,12 +191,12 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             {
                 callbacks.OnFiberDetached(callbacks.Context, tls->OldFiber, false);
             }
-            TracyFiberLeave;
+            TracyFiberLeave
             // Switch
             {
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
             }
-            TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str());
+            TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str())
 
             if (callbacks.OnFiberAttached != nullptr)
             {
@@ -293,7 +293,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         taskScheduler->m_callbacks.OnFiberDetached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiber(), false);
     }
 
-    TracyFiberLeave;
+    TracyFiberLeave
     unsigned index = taskScheduler->GetCurrentThreadIndex();
     {
         taskScheduler->m_tls[index].CurrentFiber->SwitchToFiber(&taskScheduler->m_quitFibers[index]);
@@ -930,14 +930,14 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
 
     // Switch
     if (currentFiber != &m_mainFiber) //不是从主线程来的
-        TracyFiberLeave;
+        TracyFiberLeave
     currentFiber->SwitchToFiber(freeFiber);
 
     if (m_callbacks.OnFiberAttached != nullptr)
     {
         m_callbacks.OnFiberAttached(m_callbacks.Context, GetCurrentFiber());
     }
-    TracyFiberEnter(GetCurrentFiber()->name->c_str());
+    TracyFiberEnter(GetCurrentFiber()->name->c_str())
     // And we're back
     CleanUpOldFiber();
 }

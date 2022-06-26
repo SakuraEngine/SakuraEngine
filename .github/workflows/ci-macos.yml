@@ -1,4 +1,4 @@
-name: macos-xmake-build
+name: macos-build
 
 on: [push, pull_request]
 env:
@@ -51,7 +51,7 @@ jobs:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
     - name: Release
       run: |
-        xmake f -m release -y --build_tests=n -c --policies=build.ccache:n
+        xmake f -m release -y --build_tests=n --use_tracy=disable -c --policies=build.ccache:n
         xmake -y -v
       env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
