@@ -262,13 +262,13 @@ enum {
     AAA_INITIALIZE_CHAT,
 } initializeState;
 
-int initialize()
+int initialize(int argc, const char **argv)
 { 
     auto moduleManager = skr_get_module_manager();
     auto root = ghc::filesystem::current_path();
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("SkrRenderer", true);
-    moduleManager->init_module_graph();
+    moduleManager->init_module_graph(argc, argv);
 
     if(auto result = CreateMainWindow(); result != 0)
         return result;
@@ -705,7 +705,7 @@ void OnSteamNetConnectionStatusChanged( SteamNetConnectionStatusChangedCallback_
 
 int main( int argc, const char **argv )
  {
-    auto result = initialize();
+    auto result = initialize(argc, argv);
     if(result != 0)
     {
         shutdown();
