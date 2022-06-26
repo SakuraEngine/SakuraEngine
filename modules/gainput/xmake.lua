@@ -9,5 +9,5 @@ target("SkrGAInput")
     if (is_os("macosx")) then 
         add_files("src/**.m", "src/**.mm")
         add_mxflags("-fno-objc-arc", {force = true})
-        add_frameworks("CoreFoundation", "Cocoa", "IOKit")
+        add_frameworks("CoreFoundation", "Cocoa", "IOKit", {public = true})
     end
