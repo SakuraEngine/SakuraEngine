@@ -1,4 +1,4 @@
-name: macos-xmake-build
+name: macos-build-shipping
 
 on: [push, pull_request]
 env:

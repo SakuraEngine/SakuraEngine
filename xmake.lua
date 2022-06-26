@@ -81,7 +81,7 @@ target("SkrRT")
     if (is_os("macosx")) then 
         add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
         add_mxflags("-fno-objc-arc", {force = true})
-        add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit")
+        add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
         add_files("src/**/build.*.m", "src/**/build.*.mm")
     end
     -- unzip & link sdks

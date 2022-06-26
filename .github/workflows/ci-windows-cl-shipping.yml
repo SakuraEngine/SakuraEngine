@@ -1,4 +1,4 @@
-name: windows-xmake-cl-build
+name: windows-cl-build-shipping
 
 on: [push, pull_request]
 env:
