@@ -133,7 +133,7 @@ int main(int argc, char** argv)
     auto root = ghc::filesystem::current_path();
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameTool", true);
-    moduleManager->init_module_graph();
+    moduleManager->init_module_graph(argc, argv);
     #ifdef WITH_USDTOOL
     moduleManager->patch_module_graph("UsdTool", true);
     #endif
