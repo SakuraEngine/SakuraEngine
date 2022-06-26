@@ -31,7 +31,7 @@ void parallel_for(ftl::TaskScheduler* scheduler, Iter begin, Iter end, size_t ba
         tasks[i] = { body, &payloads[i] };
     }
     ftl::TaskCounter counter(scheduler);
-    scheduler->AddTasks(batchCount, tasks, ftl::TaskPriority::Normal, &counter);
+    scheduler->AddTasks(static_cast<uint32_t>(batchCount), tasks, ftl::TaskPriority::Normal, &counter);
     sakura_free(tasks);
     scheduler->WaitForCounter(&counter);
     sakura_free(payloads);
