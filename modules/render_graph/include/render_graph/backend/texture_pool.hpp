@@ -44,7 +44,7 @@ protected:
     textures;
 };
 
-inline TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
+FORCEINLINE TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
     : device(device)
     , flags(desc.flags)
     , width(desc.width)
@@ -60,12 +60,12 @@ inline TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& d
 {
 }
 
-inline TexturePool::Key::operator size_t() const
+FORCEINLINE TexturePool::Key::operator size_t() const
 {
     return skr_hash(this, sizeof(*this), (size_t)device);
 }
 
-inline void TexturePool::initialize(CGPUDeviceId device_)
+FORCEINLINE void TexturePool::initialize(CGPUDeviceId device_)
 {
     device = device_;
 }
@@ -101,7 +101,7 @@ inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(cons
     return allocated;
 }
 
-inline void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, uint64_t frame_index)
+FORCEINLINE void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, uint64_t frame_index)
 {
     auto key = make_zeroed<TexturePool::Key>(device, desc);
     textures[key].push_back({ { texture, final_state }, frame_index });

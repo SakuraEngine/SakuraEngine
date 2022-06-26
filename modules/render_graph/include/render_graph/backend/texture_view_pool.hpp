@@ -38,7 +38,7 @@ protected:
     eastl::unordered_map<Key, eastl::pair<CGPUTextureViewId, uint64_t>> views;
 };
 
-inline TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc)
+FORCEINLINE TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc)
     : device(device)
     , texture(desc.texture)
     , format(desc.format)
@@ -68,17 +68,17 @@ inline uint32_t TextureViewPool::erase(CGPUTextureId texture)
     return prev_size - (uint32_t)views.size();
 }
 
-inline TextureViewPool::Key::operator size_t() const
+FORCEINLINE TextureViewPool::Key::operator size_t() const
 {
     return skr_hash(this, sizeof(*this), (size_t)device);
 }
 
-inline void TextureViewPool::initialize(CGPUDeviceId device_)
+FORCEINLINE void TextureViewPool::initialize(CGPUDeviceId device_)
 {
     device = device_;
 }
 
-inline void TextureViewPool::finalize()
+FORCEINLINE void TextureViewPool::finalize()
 {
     for (auto&& view : views)
     {
