@@ -3,6 +3,7 @@
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
 #include "d3d12_utils.h"
+#include "utils/make_zeroed.hpp"
 #include <EASTL/string.h>
 #include <dxcapi.h>
 
@@ -394,7 +395,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     ID3D12Resource* pDxResource = nullptr;
     D3D12MA::Allocation* pDxAllocation = nullptr;
     // add to gpu
-    D3D12_RESOURCE_DESC resDesc = {};
+    D3D12_RESOURCE_DESC resDesc = make_zeroed<D3D12_RESOURCE_DESC>();
     DXGI_FORMAT dxFormat = DXGIUtil_TranslatePixelFormat(desc->format);
     CGPUResourceTypes descriptors = desc->descriptors;
     if (desc->native_handle == CGPU_NULLPTR)
@@ -535,7 +536,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
         }
-        if (!desc->is_dedicated)
+        if (!desc->is_dedicated && desc->sample_count == CGPU_SAMPLE_COUNT_1)
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
         }
