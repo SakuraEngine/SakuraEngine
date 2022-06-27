@@ -242,7 +242,9 @@ static const char* cgpu_wanted_device_exts[] = {
     // RDNA2 Extensions
     /************************************************************************/
     VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+#if VK_KHR_fragment_shading_rate
     VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
+#endif
 /************************************************************************/
 // Raytracing
 /************************************************************************/

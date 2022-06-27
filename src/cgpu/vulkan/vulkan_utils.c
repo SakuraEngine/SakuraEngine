@@ -141,6 +141,15 @@ const char* const* device_extensions, uint32_t device_extension_count)
             vkGetPhysicalDeviceProperties2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
             // Query Physical Device Features
             VkAdapter->mPhysicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+            // Append pNexts
+            {
+                void** ppNext = &VkAdapter->mPhysicalDeviceFeatures.pNext;
+#if VK_KHR_fragment_shading_rate
+                VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR;
+                *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pNext;
+#endif
+            }
 #ifndef NX64
             vkGetPhysicalDeviceFeatures2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
 #else

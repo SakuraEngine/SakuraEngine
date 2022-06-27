@@ -12,17 +12,17 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 
-static struct 
+static struct
 {
-    struct ECSRShaderResource
-    {
+    struct ECSRShaderResource {
         ECGPUResourceType type;
         uint32_t set;
         uint32_t binding;
         dual_type_index_t type_index;
     };
-    eastl::unordered_map<gfx_material_id_t, 
-        eastl::vector_map<eastl::string, ECSRShaderResource>> bindingTypeDB;
+    eastl::unordered_map<gfx_material_id_t,
+    eastl::vector_map<eastl::string, ECSRShaderResource>>
+    bindingTypeDB;
     // TODO: add a real pipeline pool with hashset
     eastl::unordered_map<gfx_material_id_t, CGPURenderPipelineId> pipelinePool;
 } matDB;
@@ -33,7 +33,7 @@ dual_type_index_t ecsr_query_material_parameter_type(gfx_material_id_t mat_id, c
     if (name != nullptr)
     {
         auto type = db.find(name);
-        if(type != db.end())
+        if (type != db.end())
         {
             return type->second.type_index;
         }
@@ -85,7 +85,7 @@ dual_type_index_t ecsr_query_material_parameter_type(gfx_material_id_t mat_id, c
     return 0;
 }
 
-bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc, 
+bool ecsr_renderable_primitive_type(const skr_scene_primitive_desc_t* desc,
 dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_t* meta_count) SKR_NOEXCEPT
 {
     *meta_count = 0;
@@ -93,9 +93,9 @@ dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_
     if (desc->material)
     {
         *meta_count = 1;
-        if(emetas != NULL) emetas[0] = desc->material;
+        if (emetas != NULL) emetas[0] = desc->material;
         *ctype_count += 4;
-        if(ctypes)
+        if (ctypes)
         {
             ctypes[0] = transform_type;
             ctypes[1] = gfx_material_inst_type;
@@ -105,7 +105,7 @@ dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_
         const uint32_t bcount = static_cast<uint32_t>(matDB.bindingTypeDB[desc->material].size());
         if (ctypes)
         {
-            for(uint32_t i = 0; i < bcount; i++)
+            for (uint32_t i = 0; i < bcount; i++)
             {
                 ctypes[*ctype_count + i] = matDB.bindingTypeDB[desc->material].at(i).second.type_index;
             }
@@ -116,13 +116,12 @@ dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_
     return false;
 }
 
-
 // TODO: REFACTOR THIS
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 CGPURenderPipelineId ecsr_create_gbuffer_render_pipeline(
-    CGPUDeviceId device, CGPURootSignatureId root_sig,
-    const CGPUPipelineShaderDescriptor* vs,
-    const CGPUPipelineShaderDescriptor* ps)
+CGPUDeviceId device, CGPURootSignatureId root_sig,
+const CGPUPipelineShaderDescriptor* vs,
+const CGPUPipelineShaderDescriptor* ps)
 {
     CGPUVertexLayout vertex_layout = {};
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
@@ -179,13 +178,13 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
         auto mats = (gfx_material_t*)dualV_get_owned_ro(inView, gfx_material_type);
         auto ents = dualV_get_entities(inView);
         // per material
-        for(uint32_t i = 0; i < inView->count; i++)
+        for (uint32_t i = 0; i < inView->count; i++)
         {
             auto matId = ents[i];
             auto& mat = mats[i];
             {
-                const dual_type_index_t draw_filter_all[] = { 
-                    transform_type, gfx_material_inst_type, index_buffer_type, 
+                const dual_type_index_t draw_filter_all[] = {
+                    transform_type, gfx_material_inst_type, index_buffer_type,
                     dual_id_of<ecsr_vertex_buffer_t>::get()
                 };
                 auto draw_filter = make_zeroed<dual_filter_t>();
@@ -194,7 +193,7 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
                 auto draw_meta = make_zeroed<dual_meta_filter_t>();
                 draw_meta.all_meta.data = &matId;
                 draw_meta.all_meta.length = 1;
-                
+
                 auto ppl_callback = [&](dual_chunk_view_t* inView) {
                     // find proper render pipeline
                     auto iter = matDB.pipelinePool.find(matId);
@@ -239,24 +238,23 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
                     auto index_buffers = (CGPUBufferId*)dualV_get_owned_ro(inView, index_buffer_type);
                     auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_ro(inView, dual_id_of<ecsr_vertex_buffer_t>::get());
                     auto transforms = (transform_t*)dualV_get_owned_ro(inView, transform_type);
-                    for(uint32_t j = 0; j < inView->count; j++)
+                    for (uint32_t j = 0; j < inView->count; j++)
                     {
                         struct PushConstants {
                             skr::math::float4x4 world;
                             skr::math::float4x4 view_proj;
                         } data;
                         auto world = skr::math::make_transform(
-                            transforms[j].location,
-                            transforms[j].scale,
-                            skr::math::Quaternion::identity()
-                        );
+                        transforms[j].location,
+                        transforms[j].scale,
+                        skr::math::Quaternion::identity());
                         auto view = skr::math::look_at_matrix(
-                            { 0.f, 0.f, 12.5f } /*eye*/, 
-                            { 0.f, 0.f, 0.f } /*at*/);
+                        { 0.f, 0.f, 12.5f } /*eye*/,
+                        { 0.f, 0.f, 0.f } /*at*/);
                         auto proj = skr::math::perspective_fov(
-                            3.1415926f / 2.f,
-                            (float)900 / (float)900,
-                            1.f, 1000.f);
+                        3.1415926f / 2.f,
+                        (float)900 / (float)900,
+                        1.f, 1000.f);
                         data.world = world;
                         data.view_proj = skr::math::multiply(view, proj);
                         const auto vertex_buffer = vertex_buffers[j];
@@ -279,13 +277,12 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
                         cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
                         cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                         cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "push_constants", &data);
-                        cgpu_render_encoder_set_shading_rate(stack.encoder, CGPU_SHADING_RATE_QUARTER, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
+                        cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
                         cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
-                        cgpu_render_encoder_set_shading_rate(stack.encoder, CGPU_SHADING_RATE_FULL, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
                     }
                 };
-                const dual_type_index_t draw_filter_all[] = { 
-                    transform_type, gfx_material_inst_type, index_buffer_type, 
+                const dual_type_index_t draw_filter_all[] = {
+                    transform_type, gfx_material_inst_type, index_buffer_type,
                     dual_id_of<ecsr_vertex_buffer_t>::get()
                 };
                 auto draw_filter = make_zeroed<dual_filter_t>();
