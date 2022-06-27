@@ -608,6 +608,11 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
     adapter_detail->wave_lane_count = VkAdapter->mSubgroupProperties.subgroupSize;
     adapter_detail->support_geom_shader = VkAdapter->mPhysicalDeviceFeatures.features.geometryShader;
     adapter_detail->support_tessellation = VkAdapter->mPhysicalDeviceFeatures.features.tessellationShader;
+#if VK_KHR_fragment_shading_rate
+    adapter_detail->support_shading_rate = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pipelineFragmentShadingRate;
+    adapter_detail->support_shading_rate_mask = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.attachmentFragmentShadingRate;
+    adapter_detail->support_shading_rate_sv = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.primitiveFragmentShadingRate;
+#endif
     // memory features
     VkUtil_QueryHostVisbleVramInfo(VkAdapter);
 }
