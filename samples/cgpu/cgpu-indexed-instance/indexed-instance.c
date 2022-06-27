@@ -396,7 +396,8 @@ void initialize(void* usrdata)
             .aspects = CGPU_TVA_COLOR,
             .dims = CGPU_TEX_DIMENSION_2D,
             .format = swapchain->back_buffers[i]->format,
-            .usages = CGPU_TVU_RTV_DSV
+            .usages = CGPU_TVU_RTV_DSV,
+            .array_layer_count = 1
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
     }
@@ -465,7 +466,7 @@ void raster_redraw()
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         const uint32_t stride = sizeof(Vertex);
         cgpu_render_encoder_bind_vertex_buffers(rp_encoder, 1, &vertex_buffer, &stride, CGPU_NULLPTR);
-        cgpu_render_encoder_bind_index_buffer(rp_encoder, index_buffer, 16, 0);
+        cgpu_render_encoder_bind_index_buffer(rp_encoder, index_buffer, sizeof(uint16_t), 0);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
         cgpu_render_encoder_push_constants(rp_encoder, root_sig, "push_constants", &data);
         if (desc_set2) cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set2);
