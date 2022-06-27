@@ -169,7 +169,10 @@ typedef struct CGPUAdapter_Vulkan {
     CGPUAdapter super;
     VkPhysicalDevice pPhysicalDevice;
     /// Physical Device Props & Features
-    VkPhysicalDeviceProperties2 mPhysicalDeviceProps;
+    VkPhysicalDeviceProperties2KHR mPhysicalDeviceProps;
+#if VK_KHR_fragment_shading_rate
+    VkPhysicalDeviceFragmentShadingRatePropertiesKHR mPhysicalDeviceFragmentShadingRateProps;
+#endif
     VkPhysicalDeviceFeatures2 mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
     /// Queue Families

@@ -174,8 +174,8 @@ static const char* cgpu_wanted_instance_exts[] = {
 static const char* cgpu_wanted_device_exts[] = {
     "VK_KHR_portability_subset",
 #if defined(VK_VERSION_1_3)
-    // VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
-    // VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME,
+// VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
+// VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME,
 #endif
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,
@@ -238,6 +238,11 @@ static const char* cgpu_wanted_device_exts[] = {
     // Descriptor Update Template Extension for efficient descriptor set updates
     /************************************************************************/
     VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
+    /************************************************************************/
+    // RDNA2 Extensions
+    /************************************************************************/
+    VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+    VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
 /************************************************************************/
 // Raytracing
 /************************************************************************/

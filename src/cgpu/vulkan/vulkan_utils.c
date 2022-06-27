@@ -124,11 +124,21 @@ const char* const* device_extensions, uint32_t device_extension_count)
             }
             VkAdapter->pPhysicalDevice = pysicalDevices[i];
             // Query Physical Device Properties
-            VkAdapter->mSubgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
-            VkAdapter->mSubgroupProperties.pNext = NULL;
-            VkAdapter->mPhysicalDeviceProps.pNext = &VkAdapter->mSubgroupProperties;
             VkAdapter->mPhysicalDeviceProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
-            vkGetPhysicalDeviceProperties2(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
+            // Append pNexts
+            {
+                void** ppNext = &VkAdapter->mPhysicalDeviceProps.pNext;
+                VkAdapter->mSubgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
+                VkAdapter->mSubgroupProperties.pNext = NULL;
+                *ppNext = &VkAdapter->mSubgroupProperties;
+                ppNext = &VkAdapter->mSubgroupProperties.pNext;
+#if VK_KHR_fragment_shading_rate
+                VkAdapter->mPhysicalDeviceFragmentShadingRateProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR;
+                *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps;
+                ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps.pNext;
+#endif
+            }
+            vkGetPhysicalDeviceProperties2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
             // Query Physical Device Features
             VkAdapter->mPhysicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 #ifndef NX64

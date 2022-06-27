@@ -406,7 +406,6 @@ int main(int argc, char* argv[])
                     0, NULL,
                     0.0001f, *max_scale * 1.1f, size);
                 }
-
             }
             ImGui::End();
         }
