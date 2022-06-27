@@ -1,6 +1,6 @@
 #define WIDTH 3200
 #define HEIGHT 2400
-
+#define PI 3.141592653589793238462643383279502f
 struct Pixel
 {
     float4 value;
@@ -38,6 +38,7 @@ void main(uint3 ThreadID : SV_DispatchThreadID)
     float3 e = float3(-0.2, -0.3 ,-0.5);
     float3 f = float3(2.1, 2.0, 3.0);
     float3 g = float3(0.0, 0.1, 0.0);
-    float4 color = float4(d + (e * cos(((f * t) + g) * 6.28318023681640625f)), 1.0f);
+    float4 color = float4(d + (e * cos(((f * t) + g) * 2.f * PI)), 1.0f);
+    
     buf[(WIDTH * ThreadID.y) + ThreadID.x] = color;
 }
