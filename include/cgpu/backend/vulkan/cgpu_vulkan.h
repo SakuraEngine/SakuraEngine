@@ -172,6 +172,7 @@ typedef struct CGPUAdapter_Vulkan {
     VkPhysicalDeviceProperties2KHR mPhysicalDeviceProps;
 #if VK_KHR_fragment_shading_rate
     VkPhysicalDeviceFragmentShadingRatePropertiesKHR mPhysicalDeviceFragmentShadingRateProps;
+    VkPhysicalDeviceFragmentShadingRateFeaturesKHR mPhysicalDeviceFragmentShadingRateFeatures;
 #endif
     VkPhysicalDeviceFeatures2 mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;

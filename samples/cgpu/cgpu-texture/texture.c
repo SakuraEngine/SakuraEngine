@@ -266,7 +266,8 @@ void initialize(void* usrdata)
             .aspects = CGPU_TVA_COLOR,
             .dims = CGPU_TEX_DIMENSION_2D,
             .format = swapchain->back_buffers[i]->format,
-            .usages = CGPU_TVU_RTV_DSV
+            .usages = CGPU_TVU_RTV_DSV,
+            .array_layer_count = 1
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
     }

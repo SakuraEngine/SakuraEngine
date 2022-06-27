@@ -1051,6 +1051,9 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
         VK_DYNAMIC_STATE_BLEND_CONSTANTS,
         VK_DYNAMIC_STATE_DEPTH_BOUNDS,
         VK_DYNAMIC_STATE_STENCIL_REFERENCE,
+#if VK_KHR_fragment_shading_rate
+        VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR 
+#endif
     };
     VkPipelineDynamicStateCreateInfo dys = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
@@ -1885,12 +1888,6 @@ void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGPUComputePassEncoderId en
     Set->super.index, 1, &Set->pVkDescriptorSet,
     // TODO: Dynamic Offset
     0, NULL);
-}
-
-void cgpu_render_encoder_set_shading_rate_vulkan(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate)
-{
-    // TODO: Vulkan impl
-    SKR_LOG_WARN("Vulkan: cgpu_render_encoder_set_shading_rate_vulkan not implemented yet!");
 }
 
 void cgpu_render_encoder_bind_descriptor_set_vulkan(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set)

@@ -41,12 +41,15 @@ int main(int argc, char** argv)
     assert(gamert_get_ecs_world());
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
+    auto cgpuDevice = skr_renderer_get_cgpu_device();
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
     window_desc.resizable = true;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
-    window = skr_create_window("Game", &window_desc);
+    window = skr_create_window(
+    fmt::format("Game [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
+    &window_desc);
     auto swapchain = skr_renderer_register_window(window);
     auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
     namespace render_graph = skr::render_graph;
@@ -57,7 +60,6 @@ int main(int argc, char** argv)
         .enable_memory_aliasing();
     });
     create_render_resources(renderGraph);
-
     // Setup Gainput
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     enum InputAction

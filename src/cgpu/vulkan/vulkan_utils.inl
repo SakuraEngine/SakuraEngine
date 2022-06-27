@@ -198,6 +198,63 @@ FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGPUShaderSta
     return result;
 }
 
+FORCEINLINE static uint32_t VkUtil_GetShadingRateX(ECGPUShadingRate shading_rate)
+{
+    switch (shading_rate)
+    {
+        case CGPU_SHADING_RATE_FULL:
+        case CGPU_SHADING_RATE_1X2:
+            return 1;
+        case CGPU_SHADING_RATE_HALF:
+        case CGPU_SHADING_RATE_2X1:
+        case CGPU_SHADING_RATE_2X4:
+            return 2;
+        case CGPU_SHADING_RATE_QUARTER:
+        case CGPU_SHADING_RATE_4X2:
+            return 4;
+        default:
+            return 1;
+    }
+}
+
+FORCEINLINE static uint32_t VkUtil_GetShadingRateY(ECGPUShadingRate shading_rate)
+{
+    switch (shading_rate)
+    {
+        case CGPU_SHADING_RATE_FULL:
+        case CGPU_SHADING_RATE_2X1:
+            return 1;
+        case CGPU_SHADING_RATE_HALF:
+        case CGPU_SHADING_RATE_1X2:
+        case CGPU_SHADING_RATE_4X2:
+            return 2;
+        case CGPU_SHADING_RATE_QUARTER:
+        case CGPU_SHADING_RATE_2X4:
+            return 4;
+        default:
+            return 1;
+    }
+}
+
+FORCEINLINE static VkFragmentShadingRateCombinerOpKHR VkUtil_TranslateShadingRateCombiner(ECGPUShadingRateCombiner combiner)
+{
+    switch (combiner)
+    {
+        case CGPU_SHADING_RATE_COMBINER_PASSTHROUGH:
+            return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+        case CGPU_SHADING_RATE_COMBINER_OVERRIDE:
+            return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+        case CGPU_SHADING_RATE_COMBINER_MIN:
+            return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MIN_KHR;
+        case CGPU_SHADING_RATE_COMBINER_MAX:
+            return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MAX_KHR;
+        case CGPU_SHADING_RATE_COMBINER_SUM:
+            return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MUL_KHR;
+        default:
+            return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+    }
+}
+
 /* clang-format off */
 FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGPUResourceType type)
 {
