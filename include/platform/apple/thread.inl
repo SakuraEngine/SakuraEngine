@@ -4,9 +4,15 @@
 #include <mach/mach.h>
 #include <unistd.h>
 
-FORCEINLINE static void callOnce(SCallOnceGuard* pGuard, SCallOnceFn pFn)
+FORCEINLINE static void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 {
     pthread_once(pGuard, pFn);
+}
+
+FORCEINLINE static void skr_init_call_once_guard(SCallOnceGuard* pGuard)
+{
+    pthread_once_t once_ = PTHREAD_ONCE_INIT;
+    memcpy(pGuard, once_, sizeof(pthread_once_t));
 }
 
 FORCEINLINE static bool skr_init_mutex(SMutex* pMutex)
@@ -98,8 +104,8 @@ FORCEINLINE static void* ThreadFunctionStatic(void* data)
     return 0;
 }
 
-static const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = { 
-    0, 1, 25, 50, 75, 75, 99 
+static const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = {
+    0, 1, 25, 50, 75, 75, 99
 };
 
 FORCEINLINE static void skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
@@ -108,7 +114,7 @@ FORCEINLINE static void skr_set_thread_priority(SThreadHandle handle, SThreadPri
     param.sched_priority = priorities[priority];
     if (priority == SKR_THREAD_DEFAULT)
         return;
-    else if(priority > SKR_THREAD_ABOVE_NORMAL)
+    else if (priority > SKR_THREAD_ABOVE_NORMAL)
     {
         pthread_setschedparam(handle, SCHED_FIFO, &param);
     }

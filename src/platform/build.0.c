@@ -1,6 +1,7 @@
 #include "timer.c"
 #if defined(_WIN32)
     #include "windows/time.c"
+    #include "windows/thread.c"
 #elif defined(__APPLE__)
     #include "apple/time.c"
 #elif defined(__EMSCRIPTEN__) || defined(__wasi__)

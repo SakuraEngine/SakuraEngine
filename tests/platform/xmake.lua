@@ -1,0 +1,6 @@
+target("threads-test")
+    set_kind("binary")
+    add_deps("SkrRT")
+    add_packages("gtest")
+    add_files("threads/threads.cpp")
+    set_languages("c++17")
