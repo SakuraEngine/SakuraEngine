@@ -57,6 +57,25 @@ TEST(Threads, CondVar)
     skr_destroy_mutex(&sm);
 }
 
+#include "platform/atomic.h"
+
+TEST(Threads, Atomic)
+{
+    SAtomic32 a32 = 0;
+    auto addF = [&]() {
+        skr_atomic32_add_relaxed(&a32, 1);
+    };
+    std::thread st1(addF);
+    std::thread st2(addF);
+    std::thread st3(addF);
+    std::thread st4(addF);
+    st1.join();
+    st2.join();
+    st3.join();
+    st4.join();
+    EXPECT_EQ(a32, 4);
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

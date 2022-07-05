@@ -12,22 +12,25 @@ typedef volatile ALIGNAS(PTR_SIZE) uintptr_t SAtomicPtr;
 #endif
 
 #if defined(_MSC_VER) && !defined(NX64)
-    #define WIN32_LEAN_AND_MEAN
-    #include "windows.h"
-	#include <intrin.h>
+	#pragma intrinsic(_InterlockedExchange)
+	#pragma intrinsic(_InterlockedExchangeAdd)
+	#pragma intrinsic(_InterlockedCompareExchange)
+	#pragma intrinsic(_InterlockedExchange64)
+	#pragma intrinsic(_InterlockedExchangeAdd64)
+	#pragma intrinsic(_InterlockedCompareExchange64)
 
 	#define skr_memorybarrier_acquire() _ReadWriteBarrier()
 	#define skr_memorybarrier_release() _ReadWriteBarrier()
 
 	#define skr_atomic32_load_relaxed(pVar) (*(pVar))
-	#define skr_atomic32_store_relaxed(dst, val) InterlockedExchange( (volatile long*)(dst), val )
-	#define skr_atomic32_add_relaxed(dst, val) InterlockedExchangeAdd( (volatile long*)(dst), (val) )
-	#define skr_atomic32_cas_relaxed(dst, cmp_val, new_val) InterlockedCompareExchange( (volatile long*)(dst), (new_val), (cmp_val) )
+	#define skr_atomic32_store_relaxed(dst, val) _InterlockedExchange( (volatile long*)(dst), val )
+	#define skr_atomic32_add_relaxed(dst, val) _InterlockedExchangeAdd( (volatile long*)(dst), (val) )
+	#define skr_atomic32_cas_relaxed(dst, cmp_val, new_val) _InterlockedCompareExchange( (volatile long*)(dst), (new_val), (cmp_val) )
 
 	#define skr_atomic64_load_relaxed(pVar) (*(pVar))
-	#define skr_atomic64_store_relaxed(dst, val) InterlockedExchange64( (volatile LONG64*)(dst), val )
-	#define skr_atomic64_add_relaxed(dst, val) InterlockedExchangeAdd64( (volatile LONG64*)(dst), (val) )
-	#define skr_atomic64_cas_relaxed(dst, cmp_val, new_val) InterlockedCompareExchange64( (volatile LONG64*)(dst), (new_val), (cmp_val) )
+	#define skr_atomic64_store_relaxed(dst, val) _InterlockedExchange64( (volatile LONG64*)(dst), val )
+	#define skr_atomic64_add_relaxed(dst, val) _InterlockedExchangeAdd64( (volatile LONG64*)(dst), (val) )
+	#define skr_atomic64_cas_relaxed(dst, cmp_val, new_val) _InterlockedCompareExchange64( (volatile LONG64*)(dst), (new_val), (cmp_val) )
 #else
 	#define skr_memorybarrier_acquire() __asm__ __volatile__("": : :"memory")
 	#define skr_memorybarrier_release() __asm__ __volatile__("": : :"memory")
