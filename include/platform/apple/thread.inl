@@ -12,7 +12,8 @@ FORCEINLINE static void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 FORCEINLINE static void skr_init_call_once_guard(SCallOnceGuard* pGuard)
 {
     pthread_once_t once_ = PTHREAD_ONCE_INIT;
-    memcpy(pGuard, once_, sizeof(pthread_once_t));
+    pthread_once_t* pOnce = (pthread_once_t*)pGuard;
+    *pOnce = once_;
 }
 
 FORCEINLINE static bool skr_init_mutex(SMutex* pMutex)
