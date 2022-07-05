@@ -15,18 +15,15 @@ typedef uint32_t SThreadID;
     #endif // !NX64
 #endif
 
-#define INVALID_THREAD_ID 0
-
 #if defined(_WIN32) || defined(XBOX)
-    #define WIN32_LEAN_AND_MEAN
-    #include "windows.h"
-    #include "synchapi.h"
-    #define THREAD_LOCAL __declspec(thread)
-    #define INIT_CALL_ONCE_GUARD INIT_ONCE_STATIC_INIT
-typedef INIT_ONCE SCallOnceGuard;
-#else
-    #define THREAD_LOCAL __thread
-    #define INIT_CALL_ONCE_GUARD PTHREAD_ONCE_INIT
+    #define THREADS_API RUNTIME_API
+typedef struct SCallOnceGuard {
+    // INIT_ONCE
+    unsigned char gdStorage_[sizeof(void*)];
+} SCallOnceGuard;
+#endif
+#ifndef THREADS_API
+    #define THREADS_API
 typedef pthread_once_t SCallOnceGuard;
 #endif
 
@@ -34,24 +31,22 @@ typedef pthread_once_t SCallOnceGuard;
 
 #if defined(_WIN32) || defined(XBOX)
     #define THREAD_LOCAL __declspec(thread)
-    #define INIT_CALL_ONCE_GUARD INIT_ONCE_STATIC_INIT
-typedef INIT_ONCE SCallOnceGuard;
 #else
     #define THREAD_LOCAL __thread
-    #define INIT_CALL_ONCE_GUARD PTHREAD_ONCE_INIT
-typedef pthread_once_t SCallOnceGuard;
 #endif
 
+#define INVALID_THREAD_ID 0
 #define TIMEOUT_INFINITE UINT32_MAX
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 typedef void (*SCallOnceFn)(void);
 
 typedef struct SMutex {
 #if defined(_WIN32) || defined(XBOX)
-    CRITICAL_SECTION mHandle;
+    unsigned char muStorage_[sizeof(void*)];
 #elif defined(NX64)
     MutexTypeNX mMutexPlatformNX;
     uint32_t mSpinCount;
@@ -63,7 +58,7 @@ typedef struct SMutex {
 
 typedef struct SConditionVariable {
 #if defined(_WIN32) || defined(XBOX)
-    void* pHandle;
+    unsigned char cvStorage_[sizeof(void*)];
 #elif defined(NX64)
     ConditionVariableTypeNX mCondPlatformNX;
 #else
@@ -112,39 +107,32 @@ typedef pthread_t SThreadHandle;
     #include "linux/thread.inl"
 #endif
 
-/*
- * Brief:
- *   Guaranties that SCallOnceFn will be called once in a thread-safe way.
- * Notes:
- *   SCallOnceGuard has to be a pointer to a global variable initialized with INIT_CALL_ONCE_GUARD
- */
-void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn);
+/// call once
+THREADS_API void skr_init_call_once_guard(SCallOnceGuard* pGuard);
+THREADS_API void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn);
 
 /// Operating system mutual exclusion primitive.
+THREADS_API bool skr_init_mutex(SMutex* pMutex);
+THREADS_API void skr_destroy_mutex(SMutex* pMutex);
+THREADS_API void skr_acquire_mutex(SMutex* pMutex);
+THREADS_API bool skr_try_acquire_mutex(SMutex* pMutex);
+THREADS_API void skr_release_mutex(SMutex* pMutex);
 
-bool skr_init_mutex(SMutex* pMutex);
-void skr_destroy_mutex(SMutex* pMutex);
+/// cv
+THREADS_API bool skr_init_condition_var(SConditionVariable* cv);
+THREADS_API void skr_destroy_condition_var(SConditionVariable* cv);
+THREADS_API void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
+THREADS_API void skr_wake_all_condition_vars(SConditionVariable* cv);
+THREADS_API void skr_wake_condition_var(SConditionVariable* cv);
 
-void skr_acquire_mutex(SMutex* pMutex);
-bool skr_try_acquire_mutex(SMutex* pMutex);
-void skr_release_mutex(SMutex* pMutex);
-
-bool skr_init_condition_var(SConditionVariable* cv);
-void skr_destroy_condition_var(SConditionVariable* cv);
-
-void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
-void skr_wake_all_condition_vars(SConditionVariable* cv);
-void skr_wake_condition_var(SConditionVariable* cv);
-
-///
-void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
-void skr_set_thread_priority(SThreadHandle, SThreadPriority);
-void skr_destroy_thread(SThreadHandle handle);
-void skr_join_thread(SThreadHandle handle);
-
-SThreadID skr_current_thread_id(void);
-void skr_thread_sleep(unsigned mMilliSecs);
-unsigned int skr_cpu_cores_count(void);
+/// thread
+THREADS_API void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
+THREADS_API void skr_set_thread_priority(SThreadHandle, SThreadPriority);
+THREADS_API void skr_destroy_thread(SThreadHandle handle);
+THREADS_API void skr_join_thread(SThreadHandle handle);
+THREADS_API SThreadID skr_current_thread_id(void);
+THREADS_API void skr_thread_sleep(unsigned mMilliSecs);
+THREADS_API unsigned int skr_cpu_cores_count(void);
 
 #ifdef __cplusplus
 }
