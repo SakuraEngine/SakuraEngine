@@ -1,9 +1,10 @@
 #pragma once
 #ifdef __cplusplus
-#include "skr_renderer_config.h"
-#include "module/module_manager.hpp"
-#include "render_graph/frontend/render_graph.hpp"
-#include "platform/window.h"
+    #include "skr_renderer_config.h"
+    #include "module/module_manager.hpp"
+    #include "render_graph/frontend/render_graph.hpp"
+    #include "platform/window.h"
+    #include "EASTL/vector_map.h"
 
 class SKR_RENDERER_API SkrRendererModule : public skr::IDynamicModule
 {
@@ -24,8 +25,8 @@ protected:
     void create_api_objects();
 
     uint32_t backbuffer_index = 0;
-    CGPUSurfaceId surface = nullptr;
-    CGPUSwapChainId swapchain = nullptr;
+    eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
+    eastl::vector_map<SWindowHandle, CGPUSwapChainId> swapchains;
     ECGPUBackend backend = CGPU_BACKEND_VULKAN;
     CGPUInstanceId instance = nullptr;
     CGPUAdapterId adapter = nullptr;
@@ -36,18 +37,17 @@ protected:
 };
 #endif
 
-RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSwapChainId 
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSwapChainId
 skr_renderer_register_window(SWindowHandle window);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API ECGPUFormat 
+RUNTIME_EXTERN_C SKR_RENDERER_API ECGPUFormat
 skr_renderer_get_swapchain_format();
 
-RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSamplerId 
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSamplerId
 skr_renderer_get_linear_sampler();
 
-RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId 
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
 skr_renderer_get_gfx_queue();
 
-RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDeviceId 
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDeviceId
 skr_renderer_get_cgpu_device();
-
