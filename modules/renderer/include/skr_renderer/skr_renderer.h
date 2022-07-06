@@ -6,6 +6,32 @@
     #include "platform/window.h"
     #include "EASTL/vector_map.h"
 
+class SkrRendererModule;
+
+namespace skr
+{
+class SKR_RENDERER_API Renderer
+{
+    friend class ::SkrRendererModule;
+
+    void create_api_objects();
+
+protected:
+    // Device objects
+    uint32_t backbuffer_index = 0;
+    eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
+    eastl::vector_map<SWindowHandle, CGPUSwapChainId> swapchains;
+    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
+    CGPUInstanceId instance = nullptr;
+    CGPUAdapterId adapter = nullptr;
+    CGPUDeviceId device = nullptr;
+    CGPUQueueId gfx_queue = nullptr;
+    CGPUSamplerId linear_sampler = nullptr;
+    // Render graph
+    skr::render_graph::RenderGraph* renderGraph = nullptr;
+};
+} // namespace skr
+
 class SKR_RENDERER_API SkrRendererModule : public skr::IDynamicModule
 {
 public:
@@ -22,18 +48,8 @@ public:
     static SkrRendererModule* Get();
 
 protected:
-    void create_api_objects();
-
-    uint32_t backbuffer_index = 0;
-    eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
-    eastl::vector_map<SWindowHandle, CGPUSwapChainId> swapchains;
-    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
-    CGPUInstanceId instance = nullptr;
-    CGPUAdapterId adapter = nullptr;
-    CGPUDeviceId device = nullptr;
-    CGPUQueueId gfx_queue = nullptr;
-    CGPUSamplerId linear_sampler = nullptr;
-    skr::render_graph::RenderGraph* renderGraph = nullptr;
+    // Renderer
+    skr::Renderer renderer;
 };
 #endif
 
