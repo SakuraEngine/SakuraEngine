@@ -14,35 +14,33 @@
 #include "hidparsers/HIDParserPS5Controller.h"
 
 #if defined(_WINDOWS)
-#undef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#undef STRICT
-#define STRICT
-#undef UNICODE
-#define UNICODE 1
-#undef _WIN32_WINNT
-#define _WIN32_WINNT  0x501  // for raw input
-#include <windows.h>
-#include <Dbt.h>
-#include <initguid.h>
+    #undef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+    #undef STRICT
+    #define STRICT
+    #undef UNICODE
+    #define UNICODE 1
+    #undef _WIN32_WINNT
+    #define _WIN32_WINNT 0x501 // for raw input
+    #include <windows.h>
+    #include <Dbt.h>
+    #include <initguid.h>
 DEFINE_GUID(GUID_DEVINTERFACE_USB_DEVICE, 0xA5DCBF10L, 0x6530, 0x11D2, 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED);
 
 #elif defined(__APPLE__)
-#include <IOKit/hid/IOHIDDevice.h>
-#include <IOKit/IOKitLib.h>
+    #include <IOKit/hid/IOHIDDevice.h>
+    #include <IOKit/IOKitLib.h>
 
 #elif defined(__linux__)
-#include <libudev.h>
-#include <poll.h>
+    #include <libudev.h>
+    #include <poll.h>
 #endif
 
 // --- Types ------------------------------------------------------------------
 
-
 // --- Data -------------------------------------------------------------------
 
 static bool gHIDInitialized = false;
-
 
 // --- Notifications
 
@@ -57,8 +55,7 @@ HDEVNOTIFY gNotifier;
 #elif defined(__APPLE__)
 IONotificationPortRef gNotificationPort;
 mach_port_t gNotificationMach;
-struct OutMessage
-{
+struct OutMessage {
     mach_msg_header_t hdr;
     char data[4096];
 };
@@ -69,9 +66,8 @@ int gUDevFD;
 #endif
 
 // backup if system has no notification system or fails to initialize
-Timer gForceRecheckTimer;
+STimer gForceRecheckTimer;
 static uint32_t gLastCheck = 0;
-
 
 // --- Device Tracking
 
@@ -93,27 +89,23 @@ uint32_t gActiveDevices = 0;
 // This is equal to the max number of devices connnected over the life of the program
 uint32_t gActiveSlots = 0;
 
-
 // --- Controllers
 
 HIDController gControllerBuffer[MAX_DEVICES_TRACKED];
-
 
 // --- Forward Declarations ---------------------------------------------------
 
 static void HIDInitDeviceTracking();
 static void HIDExitDeviceTracking();
-static void HIDRemoveDevice(HIDDeviceInfo *dev);
+static void HIDRemoveDevice(HIDDeviceInfo* dev);
 static void HIDInitControllerTracking();
 void HIDLoadController(uint8_t devID, uint8_t playerNum);
 void HIDUnloadController(uint8_t devID);
-
 
 // --- System Communication ---------------------------------------------------
 
 // Notifications are needed so that we try to connect to a device only when
 // the drivers are properly installed and not just when connected
-
 
 #if defined(__APPLE__)
 static void CallbackIOServiceFunc(void* context, io_iterator_t portIterator)
@@ -127,20 +119,20 @@ static void CallbackIOServiceFunc(void* context, io_iterator_t portIterator)
 
     // Drain the iterator to continue receiving new notifications
     while ((entry = IOIteratorNext(portIterator)) != 0)
-       IOObjectRelease(entry);
+        IOObjectRelease(entry);
 }
 #elif defined(__linux__)
 // mirror of getSystemTime in LinuxTime.c to get around cross compile issues
 uint32_t getHIDTime()
 {
-    long            ms;    // Milliseconds
-    time_t          s;     // Seconds
+    long ms;  // Milliseconds
+    time_t s; // Seconds
     struct timespec spec;
 
     clock_gettime(CLOCK_REALTIME, &spec);
 
     s = spec.tv_sec;
-    ms = round(spec.tv_nsec / 1.0e6);    // Convert nanoseconds to milliseconds
+    ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
 
     ms += s * 1000;
 
@@ -194,7 +186,7 @@ static void InitSystemNotificationReceiver(void* window)
         // Drain first match notifications, or we won't receive device added notifications
         io_iterator_t portIterator = 0;
         IOReturn result = IOServiceAddMatchingNotification(gNotificationPort, kIOFirstMatchNotification,
-            IOServiceMatching(kIOHIDDeviceKey), CallbackIOServiceFunc, &gDevicesChanged, &portIterator);
+        IOServiceMatching(kIOHIDDeviceKey), CallbackIOServiceFunc, &gDevicesChanged, &portIterator);
 
         if (result == 0)
         {
@@ -211,7 +203,7 @@ static void InitSystemNotificationReceiver(void* window)
         // Drain termination notifications, or we won't receive device removed notifications
         portIterator = 0;
         result = IOServiceAddMatchingNotification(gNotificationPort, kIOTerminatedNotification,
-            IOServiceMatching(kIOHIDDeviceKey), CallbackIOServiceFunc, &gDevicesChanged, &portIterator);
+        IOServiceMatching(kIOHIDDeviceKey), CallbackIOServiceFunc, &gDevicesChanged, &portIterator);
 
         if (result == 0)
         {
@@ -253,14 +245,13 @@ static void InitSystemNotificationReceiver(void* window)
     }
 #endif
 
-
     // backup timer system
     if (!gNotifierInitialized)
     {
 #if defined(__linux__)
         initHIDTimer(&gForceRecheckTimer);
 #else
-        initTimer(&gForceRecheckTimer);
+        skr_init_timer(&gForceRecheckTimer);
 #endif
     }
 }
@@ -296,7 +287,7 @@ static bool CheckForDeviceInstallation(void const* message)
 #if defined(__linux__)
         uint32_t currentTime = getHIDTimerMSec(&gForceRecheckTimer, false);
 #else
-        uint32_t currentTime = getTimerMSec(&gForceRecheckTimer, false);
+        uint32_t currentTime = skr_timer_get_msec(&gForceRecheckTimer, false);
 #endif
 
         // update every 4 seconds
@@ -313,7 +304,7 @@ static bool CheckForDeviceInstallation(void const* message)
     }
 
 #if defined(_WINDOWS)
-    MSG const * msg = (MSG const*)message;
+    MSG const* msg = (MSG const*)message;
     if (message && msg->message == WM_DEVICECHANGE)
     {
         WPARAM wParam = msg->wParam;
@@ -329,7 +320,7 @@ static bool CheckForDeviceInstallation(void const* message)
 #elif defined(__APPLE__)
     OutMessage outMSG;
     while (mach_msg(&outMSG.hdr, MACH_RCV_MSG | MACH_RCV_TIMEOUT, 0, sizeof(OutMessage),
-                    gNotificationMach, 0, MACH_PORT_NULL) == KERN_SUCCESS)
+           gNotificationMach, 0, MACH_PORT_NULL) == KERN_SUCCESS)
         IODispatchCalloutFromMessage(NULL, &outMSG.hdr, gNotificationPort);
 #elif defined(__linux__)
     if (gUDevFD >= 0)
@@ -352,7 +343,6 @@ static bool CheckForDeviceInstallation(void const* message)
 #endif
     return false;
 }
-
 
 // --- HID Management ---------------------------------------------------------
 
@@ -414,34 +404,34 @@ static void HIDInitDeviceTracking()
 
 static void HIDExitDeviceTracking()
 {
-    HIDDeviceInfo * devIt = gDeviceBuffer;
-    HIDDeviceInfo * devEnd = devIt + gActiveSlots;
+    HIDDeviceInfo* devIt = gDeviceBuffer;
+    HIDDeviceInfo* devEnd = devIt + gActiveSlots;
 
     for (; devIt < devEnd; ++devIt)
         if (devIt->isOpen)
             HIDRemoveDevice(devIt);
 }
 
-static void HIDAddDevice(hid_device_info *dev, uint8_t controllertype)
+static void HIDAddDevice(hid_device_info* dev, uint8_t controllertype)
 {
     if (!pFreeList)
     {
         // If this is hit the MAX_DEVICES_TRACKED cap needs to be increased
         SKR_LOG_WARN("Failed to add controller due to lack of room: \"%ls - %ls\" at path: %s",
-            dev->manufacturer_string,
-            dev->product_string,
-            dev->path);
+        dev->manufacturer_string,
+        dev->product_string,
+        dev->path);
         return;
     }
     SKR_ASSERT(strlen(dev->path) < MAX_PATH_LENGTH);
 
     SKR_LOG_DEBUG("Adding controller \"%ls - %ls\" at path: %s",
-        dev->manufacturer_string,
-        dev->product_string,
-        dev->path);
+    dev->manufacturer_string,
+    dev->product_string,
+    dev->path);
 
     // pull a new registry slot off the pFreeList
-    HIDDeviceInfo *newDev = pFreeList;
+    HIDDeviceInfo* newDev = pFreeList;
     pFreeList = pFreeList->next;
 
     newDev->vendorID = dev->vendor_id;
@@ -457,7 +447,7 @@ static void HIDAddDevice(hid_device_info *dev, uint8_t controllertype)
     HIDLoadController(newDev->id, 0);
 }
 
-static void HIDRemoveDevice(HIDDeviceInfo *dev)
+static void HIDRemoveDevice(HIDDeviceInfo* dev)
 {
     if (dev->isOpen)
         HIDUnloadController(dev->id);
@@ -482,19 +472,19 @@ static void HIDLoadDevices()
         gDeviceBuffer[i].active = 0;
 
     // get the list of all currently connect HID devices
-    hid_device_info *deviceList = hid_enumerate(0, 0);
+    hid_device_info* deviceList = hid_enumerate(0, 0);
 
     if (deviceList)
     {
         hid_device_info* devicesToAdd = NULL;
         hid_device_info* devicesToFree = NULL;
 
-        HIDDeviceInfo * devIt = gDeviceBuffer;
-        HIDDeviceInfo * devEnd = devIt + gActiveSlots;
+        HIDDeviceInfo* devIt = gDeviceBuffer;
+        HIDDeviceInfo* devEnd = devIt + gActiveSlots;
         hid_device_info* next = NULL;
 
         // check which devices need to be added or removed
-        for (hid_device_info *it = deviceList; it; it = next)
+        for (hid_device_info* it = deviceList; it; it = next)
         {
             next = it->next;
 
@@ -531,9 +521,9 @@ static void HIDLoadDevices()
             {
 #if defined(HID_VERBOSE_LOGGING)
                 SKR_LOG_DEBUG("Ignoring non-controller \"%ls - %ls\" at path: %s",
-                    dev->manufacturer_string,
-                    dev->product_string,
-                    dev->path);
+                dev->manufacturer_string,
+                dev->product_string,
+                dev->path);
 #endif
                 continue;
             }
@@ -543,9 +533,9 @@ static void HIDLoadDevices()
             {
 #if defined(HID_VERBOSE_LOGGING)
                 SKR_LOG_DEBUG("Ignoring unsupported controller \"%ls - %ls\" at path: %s",
-                    dev->manufacturer_string,
-                    dev->product_string,
-                    dev->path);
+                dev->manufacturer_string,
+                dev->product_string,
+                dev->path);
 #endif
                 continue;
             }
@@ -588,7 +578,6 @@ bool HIDHandleSystemMessage(void const* message)
     return result;
 }
 
-
 // --- HID Controller Setup
 
 uint8_t HIDGetNextNewControllerID(uint8_t* outPlatform, uint16_t* outVendorID, uint16_t* outproductID)
@@ -629,28 +618,28 @@ static void HIDInitControllerTracking()
 static inline void UnsupportedControllerDebug(HIDDeviceInfo* dev, char const* brand)
 {
     SKR_LOG_DEBUG("Unsupported %s controller:   0x%.4X - 0x%.4X   Path: %s",
-        brand,
-        dev->vendorID,
-        dev->productID,
-        dev->logicalSystemPath);
+    brand,
+    dev->vendorID,
+    dev->productID,
+    dev->logicalSystemPath);
 }
 
 static inline void FailedToOpenDebug(HIDDeviceInfo* dev, char const* brand)
 {
     SKR_LOG_DEBUG("Failed to open %s controller:   0x%.4X - 0x%.4X   Path: %s",
-        brand,
-        dev->vendorID,
-        dev->productID,
-        dev->logicalSystemPath);
+    brand,
+    dev->vendorID,
+    dev->productID,
+    dev->logicalSystemPath);
 }
 
 static inline void SuccessfulOpenDebug(HIDDeviceInfo* dev, char const* brand)
 {
     SKR_LOG_DEBUG("Successfully opened %s controller:   0x%.4X - 0x%.4X   Path: %s",
-        brand,
-        dev->vendorID,
-        dev->productID,
-        dev->logicalSystemPath);
+    brand,
+    dev->vendorID,
+    dev->productID,
+    dev->logicalSystemPath);
 }
 
 void HIDLoadController(uint8_t devID, uint8_t playerNum)
@@ -670,34 +659,34 @@ void HIDLoadController(uint8_t devID, uint8_t playerNum)
 
     switch (dev->type)
     {
-    case ctPS4:
-        if (!HIDIsSupportedPS4Controller(dev))
-        {
-            UnsupportedControllerDebug(dev, name);
-            return;
-        }
-        if (HIDOpenPS4Controller(dev, con, playerNum) == -1)
-        {
-            FailedToOpenDebug(dev, name);
-            return;
-        }
-        SuccessfulOpenDebug(dev, name);
-        break;
-    case ctPS5:
-        if (!HIDIsSupportedPS5Controller(dev))
-        {
-            UnsupportedControllerDebug(dev, name);
-            return;
-        }
-        if (HIDOpenPS5Controller(dev, con, playerNum) == -1)
-        {
-            FailedToOpenDebug(dev, name);
-            return;
-        }
-        SuccessfulOpenDebug(dev, name);
-        break;
-    default:
-        break;
+        case ctPS4:
+            if (!HIDIsSupportedPS4Controller(dev))
+            {
+                UnsupportedControllerDebug(dev, name);
+                return;
+            }
+            if (HIDOpenPS4Controller(dev, con, playerNum) == -1)
+            {
+                FailedToOpenDebug(dev, name);
+                return;
+            }
+            SuccessfulOpenDebug(dev, name);
+            break;
+        case ctPS5:
+            if (!HIDIsSupportedPS5Controller(dev))
+            {
+                UnsupportedControllerDebug(dev, name);
+                return;
+            }
+            if (HIDOpenPS5Controller(dev, con, playerNum) == -1)
+            {
+                FailedToOpenDebug(dev, name);
+                return;
+            }
+            SuccessfulOpenDebug(dev, name);
+            break;
+        default:
+            break;
     }
 
     SKR_ASSERT(con->Close && con->Update && "All controllers must set update & close methods.");
@@ -741,22 +730,22 @@ void HIDSetPlayer(uint8_t devID, uint8_t playerNum)
 
 // --- HID Input Fetching
 
-static void HIDUpdateDevices(gainput::InputDeltaState * state)
+static void HIDUpdateDevices(gainput::InputDeltaState* state)
 {
-    HIDController * conIt = gControllerBuffer;
-    HIDController * conEnd = conIt + gActiveSlots;
+    HIDController* conIt = gControllerBuffer;
+    HIDController* conEnd = conIt + gActiveSlots;
     for (; conIt < conEnd; ++conIt)
         if (conIt->hidDev)
             conIt->Update(conIt, state);
 }
 
-void HIDPromptForDeviceStateReports(gainput::InputDeltaState * state)
+void HIDPromptForDeviceStateReports(gainput::InputDeltaState* state)
 {
     SKR_ASSERT(gHIDInitialized);
 
     HIDUpdateDevices(state);
 
-    // Don't want to risk device connection events being intermixed with input 
+    // Don't want to risk device connection events being intermixed with input
     //   events from the same devices
     HIDDetectDevices();
 }
