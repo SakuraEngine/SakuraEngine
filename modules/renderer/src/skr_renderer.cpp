@@ -32,27 +32,27 @@ void SkrRendererModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr renderer loaded!");
 
-    for (uint32_t i = 0; i < argc; i++)
+    for (auto i = 0; i < argc; i++)
     {
         if (::strcmp(argv[i], "--vulkan") == 0)
         {
-            backend = CGPU_BACKEND_VULKAN;
+            renderer.backend = CGPU_BACKEND_VULKAN;
         }
         else if (::strcmp(argv[i], "--d3d12") == 0)
         {
-            backend = CGPU_BACKEND_D3D12;
+            renderer.backend = CGPU_BACKEND_D3D12;
         }
         else
         {
 #ifdef _WIN32
-            backend = CGPU_BACKEND_D3D12;
+            renderer.backend = CGPU_BACKEND_D3D12;
 #else
-            backend = CGPU_BACKEND_VULKAN;
+            renderer.backend = CGPU_BACKEND_VULKAN;
 #endif
         }
     }
 
-    create_api_objects();
+    renderer.create_api_objects();
 }
 
 void create_test_materials();
@@ -62,23 +62,23 @@ void SkrRendererModule::on_unload()
 {
     SKR_LOG_INFO("skr renderer unloaded!");
 
-    for (auto& swapchain : swapchains)
+    for (auto& swapchain : renderer.swapchains)
     {
         if (swapchain.second) cgpu_free_swapchain(swapchain.second);
     }
-    swapchains.clear();
-    for (auto& surface : surfaces)
+    renderer.swapchains.clear();
+    for (auto& surface : renderer.surfaces)
     {
-        if (surface.second) cgpu_free_surface(device, surface.second);
+        if (surface.second) cgpu_free_surface(renderer.device, surface.second);
     }
-    surfaces.clear();
-    cgpu_free_sampler(linear_sampler);
-    cgpu_free_queue(gfx_queue);
-    cgpu_free_device(device);
-    cgpu_free_instance(instance);
+    renderer.surfaces.clear();
+    cgpu_free_sampler(renderer.linear_sampler);
+    cgpu_free_queue(renderer.gfx_queue);
+    cgpu_free_device(renderer.device);
+    cgpu_free_instance(renderer.instance);
 }
 
-void SkrRendererModule::create_api_objects()
+void skr::Renderer::create_api_objects()
 {
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
@@ -120,21 +120,21 @@ CGPUSwapChainId SkrRendererModule::register_window(SWindowHandle window)
 {
     // find registered
     {
-        auto _ = swapchains.find(window);
-        if (_ != swapchains.end()) return _->second;
+        auto _ = renderer.swapchains.find(window);
+        if (_ != renderer.swapchains.end()) return _->second;
     }
     CGPUSurfaceId surface = nullptr;
     // find registered
     {
-        auto _ = surfaces.find(window);
-        if (_ != surfaces.end())
+        auto _ = renderer.surfaces.find(window);
+        if (_ != renderer.surfaces.end())
             surface = _->second;
         else
-            surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
+            surface = cgpu_surface_from_native_view(renderer.device, skr_window_get_native_view(window));
     }
     // Create swapchain
     CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.present_queues = &gfx_queue;
+    chain_desc.present_queues = &renderer.gfx_queue;
     chain_desc.present_queues_count = 1;
     chain_desc.width = BACK_BUFFER_WIDTH;
     chain_desc.height = BACK_BUFFER_HEIGHT;
@@ -142,7 +142,7 @@ CGPUSwapChainId SkrRendererModule::register_window(SWindowHandle window)
     chain_desc.imageCount = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
-    auto swapchain = cgpu_create_swapchain(device, &chain_desc);
+    auto swapchain = cgpu_create_swapchain(renderer.device, &chain_desc);
     return swapchain;
 }
 
@@ -155,23 +155,24 @@ SkrRendererModule* SkrRendererModule::Get()
 
 ECGPUFormat SkrRendererModule::get_swapchain_format() const
 {
-    if (swapchains.size() > 0) return (ECGPUFormat)swapchains.at(0).second->back_buffers[0]->format;
+    if (renderer.swapchains.size() > 0)
+        return (ECGPUFormat)renderer.swapchains.at(0).second->back_buffers[0]->format;
     return CGPU_FORMAT_B8G8R8A8_UNORM;
 }
 
 CGPUSamplerId SkrRendererModule::get_linear_sampler() const
 {
-    return linear_sampler;
+    return renderer.linear_sampler;
 }
 
 CGPUDeviceId SkrRendererModule::get_cgpu_device() const
 {
-    return device;
+    return renderer.device;
 }
 
 CGPUQueueId SkrRendererModule::get_gfx_queue() const
 {
-    return gfx_queue;
+    return renderer.gfx_queue;
 }
 
 CGPUSwapChainId skr_renderer_register_window(SWindowHandle window)
