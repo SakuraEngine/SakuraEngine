@@ -26,16 +26,16 @@ typedef dual_storage_t SGameSceneStorage;
 typedef dual_storage_t SRenderStorage;
 
 // Effect interfaces
-typedef void (*SProcRenderEffectOnAttach)(SGameEntity entity, SRenderEffectEntity effect);
-typedef void (*SProcRenderEffectOnDetach)(SGameEntity entity, SRenderEffectEntity effect);
+typedef void (*SProcRenderEffectOnAttach)(const SGameEntity* entities, uint32_t count, SRenderEffectEntity effect);
+typedef void (*SProcRenderEffectOnDetach)(const SGameEntity* entities, uint32_t count, SRenderEffectEntity effect);
 
 // Data operations for render effect
-typedef void (*SProcRenderEffectAttach)(SGameEntity entity, const char* effect_name);
-typedef void (*SProcRenderEffectDetach)(SGameEntity entity, const char* effect_name);
+typedef void (*SProcRenderEffectAttach)(const SGameEntity* entities, uint32_t count, const char* effect_name);
+typedef void (*SProcRenderEffectDetach)(const SGameEntity* entities, uint32_t count, const char* effect_name);
 typedef void (*SProcRenderEffectQuery)(const char* effect_name, dual_view_callback_t callback, void* user_data);
 typedef void (*SProcRenderEffectAccess)(SGameEntity entity, const char* effect_name, dual_chunk_view_t* view);
-typedef void (*SProcRenderEffectAddData)(SGameEntity entity, const char* effect_name, dual_type_index_t type);
-typedef void (*SProcRenderEffectRemoveData)(SGameEntity entity, const char* effect_name, dual_type_index_t type);
+typedef void (*SProcRenderEffectAddData)(const SGameEntity* entities, uint32_t count, const char* effect_name, dual_type_index_t type);
+typedef void (*SProcRenderEffectRemoveData)(const SGameEntity* entities, uint32_t count, const char* effect_name, dual_type_index_t type);
 
 // Drawcall interfaces for effect processor
 typedef uint32_t (*SProcRenderEffectProduceDrawcall)(SGameSceneStorage* game_storage, SRenderStorage* effect_storage);
@@ -52,8 +52,8 @@ typedef struct VtblRenderEffectProcessor {
 }
 
 typedef struct IRenderEffectProcessor {
-    virtual void on_attach(SGameEntity entity, SRenderEffectEntity effect) = 0;
-    virtual void on_detach(SGameEntity entity, SRenderEffectEntity effect) = 0;
+    virtual void on_attach(const SGameEntity* entities, uint32_t count, SRenderEffectEntity effect) = 0;
+    virtual void on_detach(const SGameEntity* entities, uint32_t count, SRenderEffectEntity effect) = 0;
     virtual uint32_t produce_drawcall(SGameSceneStorage* game_storage, SRenderStorage* effect_storage) = 0;
     virtual void peek_drawcall(skr_primitive_draw_t* drawcalls, uint32_t peek_count) = 0;
 } IRenderEffectProcessor;
