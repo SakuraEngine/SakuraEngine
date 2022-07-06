@@ -44,11 +44,11 @@ void SkrRendererModule::on_load(int argc, char** argv)
         }
         else
         {
-        #ifdef _WIN32
+#ifdef _WIN32
             backend = CGPU_BACKEND_D3D12;
-        #else
+#else
             backend = CGPU_BACKEND_VULKAN;
-        #endif
+#endif
         }
     }
 
@@ -61,9 +61,17 @@ void free_test_materials();
 void SkrRendererModule::on_unload()
 {
     SKR_LOG_INFO("skr renderer unloaded!");
-    
-    if (swapchain) cgpu_free_swapchain(swapchain);
-    if (surface) cgpu_free_surface(device, surface);
+
+    for (auto& swapchain : swapchains)
+    {
+        if (swapchain.second) cgpu_free_swapchain(swapchain.second);
+    }
+    swapchains.clear();
+    for (auto& surface : surfaces)
+    {
+        if (surface.second) cgpu_free_surface(device, surface.second);
+    }
+    surfaces.clear();
     cgpu_free_sampler(linear_sampler);
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
@@ -108,11 +116,23 @@ void SkrRendererModule::create_api_objects()
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
 }
 
-
 CGPUSwapChainId SkrRendererModule::register_window(SWindowHandle window)
 {
+    // find registered
+    {
+        auto _ = swapchains.find(window);
+        if (_ != swapchains.end()) return _->second;
+    }
+    CGPUSurfaceId surface = nullptr;
+    // find registered
+    {
+        auto _ = surfaces.find(window);
+        if (_ != surfaces.end())
+            surface = _->second;
+        else
+            surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
+    }
     // Create swapchain
-    surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
     CGPUSwapChainDescriptor chain_desc = {};
     chain_desc.present_queues = &gfx_queue;
     chain_desc.present_queues_count = 1;
@@ -122,7 +142,7 @@ CGPUSwapChainId SkrRendererModule::register_window(SWindowHandle window)
     chain_desc.imageCount = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
-    swapchain = cgpu_create_swapchain(device, &chain_desc);
+    auto swapchain = cgpu_create_swapchain(device, &chain_desc);
     return swapchain;
 }
 
@@ -135,9 +155,9 @@ SkrRendererModule* SkrRendererModule::Get()
 
 ECGPUFormat SkrRendererModule::get_swapchain_format() const
 {
-    if (swapchain) return (ECGPUFormat)swapchain->back_buffers[0]->format;
+    if (swapchains.size() > 0) return (ECGPUFormat)swapchains.at(0).second->back_buffers[0]->format;
     return CGPU_FORMAT_B8G8R8A8_UNORM;
-}    
+}
 
 CGPUSamplerId SkrRendererModule::get_linear_sampler() const
 {
