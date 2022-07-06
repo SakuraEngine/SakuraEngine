@@ -20,7 +20,7 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
-*/
+ */
 
 #pragma once
 
@@ -53,36 +53,30 @@ RUNTIME_API int64_t getTimerFrequency(void);
 RUNTIME_API uint32_t getSystemTime(void);
 RUNTIME_API uint32_t getTimeSinceStart(void);
 
-
 /// Low res OS timer
-typedef struct Timer
-{
-	uint32_t mStartTime;
-}Timer;
+typedef struct STimer {
+    uint32_t mStartTime;
+} STimer;
 
-RUNTIME_API void initTimer(Timer* pTimer);
-RUNTIME_API void resetTimer(Timer* pTimer);
-RUNTIME_API uint32_t getTimerMSec(Timer* pTimer, bool reset);
-
+RUNTIME_API void skr_init_timer(STimer* pTimer);
+RUNTIME_API void skr_timer_reset(STimer* pTimer);
+RUNTIME_API uint32_t skr_timer_get_msec(STimer* pTimer, bool reset);
 
 /// High-resolution OS timer
 #define HIRES_TIMER_LENGTH_OF_HISTORY 60
 
-typedef struct HiresTimer
-{
-	int64_t		mStartTime;
+typedef struct SHiresTimer {
+    int64_t mStartTime;
+    int64_t mHistory[HIRES_TIMER_LENGTH_OF_HISTORY];
+    uint32_t mHistoryIndex;
+} SHiresTimer;
 
-	int64_t		mHistory[HIRES_TIMER_LENGTH_OF_HISTORY];
-	uint32_t	mHistoryIndex;
-}HiresTimer;
-
-RUNTIME_API void		initHiresTimer(HiresTimer* pTimer);
-RUNTIME_API int64_t		getHiresTimerUSec(HiresTimer* pTimer, bool reset);
-RUNTIME_API int64_t		getHiresTimerUSecAverage(HiresTimer* pTimer);
-RUNTIME_API float		getHiresTimerSeconds(HiresTimer* pTimer, bool reset);
-RUNTIME_API float		getHiresTimerSecondsAverage(HiresTimer* pTimer);
-RUNTIME_API void		resetHiresTimer(HiresTimer* pTimer);
-
+RUNTIME_API void skr_init_hires_timer(SHiresTimer* pTimer);
+RUNTIME_API int64_t skr_hires_timer_get_usec(SHiresTimer* pTimer, bool reset);
+RUNTIME_API int64_t skr_hires_timer_get_usec_average(SHiresTimer* pTimer);
+RUNTIME_API float skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset);
+RUNTIME_API float skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer);
+RUNTIME_API void skr_hires_timer_reset(SHiresTimer* pTimer);
 
 #ifdef __cplusplus
 }
