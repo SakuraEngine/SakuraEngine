@@ -16,6 +16,7 @@ struct sreflect sattr(
 ) skr_render_effect_t
 {
     dual_entity_t entity;
+    const char* name;
 };
 typedef struct skr_render_effect_t skr_render_effect_t;
 
