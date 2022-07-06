@@ -7,7 +7,6 @@
 #include <chrono>
 #include <thread>
 
-
 #define SDL_MAIN_HANDLED
 #include <steam/steamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
@@ -27,7 +26,7 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "runtime_module.h"
-#include "skr_renderer.h"
+#include "skr_renderer/skr_renderer.h"
 #include "imgui/skr_imgui_rg.h"
 #include "tracy/Tracy.hpp"
 #ifdef SKR_OS_WINDOWS
@@ -39,9 +38,9 @@ static SteamNetworkingMicroseconds g_logTimeZero;
 
 HSteamListenSocket g_hListenSock;
 struct ChatClient* g_client;
-const char *pszTrivialSignalingService = "benzzzx.ticp.io:10000";
+const char* pszTrivialSignalingService = "benzzzx.ticp.io:10000";
 
-int g_nVirtualPortLocal = 0; // Used when listening, and when connecting
+int g_nVirtualPortLocal = 0;  // Used when listening, and when connecting
 int g_nVirtualPortRemote = 0; // Only used when connecting
 
 inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
@@ -65,8 +64,7 @@ inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
     return true;
 }
 
-struct Renderer
-{
+struct Renderer {
     skr::render_graph::RenderGraph* renderGraph;
     CGPUFenceId presentFence;
     CGPUSwapChainId swapChain;
@@ -78,9 +76,9 @@ skr_vfs_t* resource_vfs;
 
 int CreateMainWindow()
 {
-    #ifdef SKR_OS_WINDOWS
-        ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-    #endif
+#ifdef SKR_OS_WINDOWS
+    ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+#endif
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
@@ -114,42 +112,42 @@ int CreateVFS()
     return 0;
 }
 
-static void DebugOutput( ESteamNetworkingSocketsDebugOutputType eType, const char *pszMsg );
+static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char* pszMsg);
 int InitializeChat();
 
 int InitializeSockets()
 {
-	// Initialize library, with the desired local identity
-	g_logTimeZero = SteamNetworkingUtils()->GetLocalTimestamp();
-	SteamNetworkingUtils()->SetDebugOutputFunction( k_ESteamNetworkingSocketsDebugOutputType_Debug, DebugOutput );
-	SteamNetworkingUtils()->SetGlobalConfigValueInt32( k_ESteamNetworkingConfig_LogLevel_P2PRendezvous, k_ESteamNetworkingSocketsDebugOutputType_Debug );
+    // Initialize library, with the desired local identity
+    g_logTimeZero = SteamNetworkingUtils()->GetLocalTimestamp();
+    SteamNetworkingUtils()->SetDebugOutputFunction(k_ESteamNetworkingSocketsDebugOutputType_Debug, DebugOutput);
+    SteamNetworkingUtils()->SetGlobalConfigValueInt32(k_ESteamNetworkingConfig_LogLevel_P2PRendezvous, k_ESteamNetworkingSocketsDebugOutputType_Debug);
     SteamDatagramErrMsg errMsg;
-    if ( !GameNetworkingSockets_Init( nullptr, errMsg ) )
+    if (!GameNetworkingSockets_Init(nullptr, errMsg))
     {
-        SKR_LOG_FATAL( "GameNetworkingSockets_Init failed.  %s", errMsg );
+        SKR_LOG_FATAL("GameNetworkingSockets_Init failed.  %s", errMsg);
         return 1;
     }
 
-	const char* turnList = "turn:benzzzx.ticp.io:3478";
-	// Hardcode STUN servers
-	SteamNetworkingUtils()->SetGlobalConfigValueString( k_ESteamNetworkingConfig_P2P_STUN_ServerList, "stun:benzzzx.ticp.io:3478");
+    const char* turnList = "turn:benzzzx.ticp.io:3478";
+    // Hardcode STUN servers
+    SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_STUN_ServerList, "stun:benzzzx.ticp.io:3478");
 
-	// Hardcode TURN servers
-	// comma seperated setting lists
-	const char* userList = "admin"; 
-	const char* passList = "aaa"; 
+    // Hardcode TURN servers
+    // comma seperated setting lists
+    const char* userList = "admin";
+    const char* passList = "aaa";
 
-	SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_TURN_ServerList, turnList);
-	SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_TURN_UserList, userList);
-	SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_TURN_PassList, passList);
+    SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_TURN_ServerList, turnList);
+    SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_TURN_UserList, userList);
+    SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_TURN_PassList, passList);
 
-	// Allow sharing of any kind of ICE address.
-	// We don't have any method of relaying (TURN) in this example, so we are essentially
-	// forced to disclose our public address if we want to pierce NAT.  But if we
-	// had relay fallback, or if we only wanted to connect on the LAN, we could restrict
-	// to only sharing private addresses.
-	SteamNetworkingUtils()->SetGlobalConfigValueInt32(k_ESteamNetworkingConfig_P2P_Transport_ICE_Enable, k_nSteamNetworkingConfig_P2P_Transport_ICE_Enable_All );
-    
+    // Allow sharing of any kind of ICE address.
+    // We don't have any method of relaying (TURN) in this example, so we are essentially
+    // forced to disclose our public address if we want to pierce NAT.  But if we
+    // had relay fallback, or if we only wanted to connect on the LAN, we could restrict
+    // to only sharing private addresses.
+    SteamNetworkingUtils()->SetGlobalConfigValueInt32(k_ESteamNetworkingConfig_P2P_Transport_ICE_Enable, k_nSteamNetworkingConfig_P2P_Transport_ICE_Enable_All);
+
     return 0;
 }
 
@@ -178,7 +176,7 @@ int InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
         const char* font_path = "./../resources/font/SourceSansPro-Regular.ttf";
-        uint8_t *font_bytes;
+        uint8_t* font_bytes;
         uint32_t font_length;
         read_bytes(vfs, font_path, &font_bytes, &font_length);
         float dpi_scaling = 1.f;
@@ -212,7 +210,7 @@ int InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
     eastl::string fsname = u8"shaders/imgui_fragment";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    
+
     uint32_t im_vs_length;
     uint8_t* im_vs_bytes;
     read_bytes(vfs, vsname.c_str(), &im_vs_bytes, &im_vs_length);
@@ -248,12 +246,12 @@ int InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
     cgpu_free_shader_library(imgui_vs);
     cgpu_free_shader_library(imgui_fs);
 
-
     ImGui_ImplSDL2_InitForCGPU((SDL_Window*)mainWindow, renderer.swapChain);
     return 0;
 }
 
-enum {
+enum
+{
     AAA_INITIALIZE_WINDOW,
     AAA_INITIALIZE_RENDERER,
     AAA_INITIALIZE_VFS,
@@ -262,30 +260,30 @@ enum {
     AAA_INITIALIZE_CHAT,
 } initializeState;
 
-int initialize(int argc, const char **argv)
-{ 
+int initialize(int argc, const char** argv)
+{
     auto moduleManager = skr_get_module_manager();
     auto root = ghc::filesystem::current_path();
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("SkrRenderer", true);
     moduleManager->init_module_graph(argc, argv);
 
-    if(auto result = CreateMainWindow(); result != 0)
+    if (auto result = CreateMainWindow(); result != 0)
         return result;
     initializeState = AAA_INITIALIZE_WINDOW;
-    if(auto result = CreateRenderer(mainWindow); result != 0)
+    if (auto result = CreateRenderer(mainWindow); result != 0)
         return result;
     initializeState = AAA_INITIALIZE_RENDERER;
-    if(auto result = CreateVFS(); result != 0)
+    if (auto result = CreateVFS(); result != 0)
         return result;
     initializeState = AAA_INITIALIZE_VFS;
-    if(auto result = InitializeImgui(renderer, resource_vfs); result != 0)
+    if (auto result = InitializeImgui(renderer, resource_vfs); result != 0)
         return result;
     initializeState = AAA_INITIALIZE_IMGUI;
-    if(auto result = InitializeSockets())
+    if (auto result = InitializeSockets())
         return result;
     initializeState = AAA_INITIALIZE_SOCKET;
-    if(auto result = InitializeChat())
+    if (auto result = InitializeChat())
         return result;
     initializeState = AAA_INITIALIZE_CHAT;
 
@@ -313,14 +311,13 @@ void run()
                 }
             }
         }
-        
 
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-        //static Uint64 frequency = SDL_GetPerformanceFrequency();
-        //Uint64 current_time = SDL_GetPerformanceCounter();
-        //io.DeltaTime = bd->Time > 0 ? (float)((double)(current_time - bd->Time) / frequency) : (float)(1.0f / 60.0f);                   
-        //skr_imgui_new_frame(mainWindow, 1.f / 60.f);
+        // static Uint64 frequency = SDL_GetPerformanceFrequency();
+        // Uint64 current_time = SDL_GetPerformanceCounter();
+        // io.DeltaTime = bd->Time > 0 ? (float)((double)(current_time - bd->Time) / frequency) : (float)(1.0f / 60.0f);
+        // skr_imgui_new_frame(mainWindow, 1.f / 60.f);
         UpdateChat();
         {
             // acquire frame
@@ -356,14 +353,14 @@ void run()
 }
 
 void ShutdownChat();
-void Quit( int rc );
+void Quit(int rc);
 
 void shutdown()
 {
     auto moduleManager = skr_get_module_manager();
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
     cgpu_free_fence(renderer.presentFence);
-    switch(initializeState)
+    switch (initializeState)
     {
         case AAA_INITIALIZE_CHAT:
             ShutdownChat();
@@ -382,64 +379,62 @@ void shutdown()
     moduleManager->destroy_module_graph();
 
     SDL_Quit();
-	Quit(0);
+    Quit(0);
 }
 
-void Quit( int rc )
+void Quit(int rc)
 {
-	if ( rc == 0 )
-	{
-		// OK, we cannot just exit the process, because we need to give
-		// the connection time to actually send the last message and clean up.
-		// If this were a TCP connection, we could just bail, because the OS
-		// would handle it.  But this is an application protocol over UDP.
-		// So give a little bit of time for good cleanup.  (Also note that
-		// we really ought to continue pumping the signaling service, but
-		// in this exampple we'll assume that no more signals need to be
-		// exchanged, since we've gotten this far.)  If we just terminated
-		// the program here, our peer could very likely timeout.  (Although
-		// it's possible that the cleanup packets have already been placed
-		// on the wire, and if they don't drop, things will get cleaned up
-		// properly.)
-		SKR_LOG_INFO( "Waiting for any last cleanup packets.\n" );
-		std::this_thread::sleep_for( std::chrono::milliseconds( 1000 ) );
-	}
+    if (rc == 0)
+    {
+        // OK, we cannot just exit the process, because we need to give
+        // the connection time to actually send the last message and clean up.
+        // If this were a TCP connection, we could just bail, because the OS
+        // would handle it.  But this is an application protocol over UDP.
+        // So give a little bit of time for good cleanup.  (Also note that
+        // we really ought to continue pumping the signaling service, but
+        // in this exampple we'll assume that no more signals need to be
+        // exchanged, since we've gotten this far.)  If we just terminated
+        // the program here, our peer could very likely timeout.  (Although
+        // it's possible that the cleanup packets have already been placed
+        // on the wire, and if they don't drop, things will get cleaned up
+        // properly.)
+        SKR_LOG_INFO("Waiting for any last cleanup packets.\n");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 
-	GameNetworkingSockets_Kill();
-	exit(rc);
+    GameNetworkingSockets_Kill();
+    exit(rc);
 }
 
 #ifdef _MSC_VER
-	#pragma warning( disable: 4702 ) /* unreachable code */
+    #pragma warning(disable : 4702) /* unreachable code */
 #endif
 
-static void DebugOutput( ESteamNetworkingSocketsDebugOutputType eType, const char *pszMsg )
+static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char* pszMsg)
 {
-	SteamNetworkingMicroseconds time = SteamNetworkingUtils()->GetLocalTimestamp() - g_logTimeZero;
-	if ( eType <= k_ESteamNetworkingSocketsDebugOutputType_Msg )
-	{
-		SKR_LOG_INFO( "%10.6f %s\n", time*1e-6, pszMsg );
-	}
-	if ( eType == k_ESteamNetworkingSocketsDebugOutputType_Bug )
-	{
-		// !KLUDGE! Our logging (which is done while we hold the lock)
-		// is occasionally triggering this assert.  Just ignroe that one
-		// error for now.
-		// Yes, this is a kludge.
-		if ( strstr( pszMsg, "SteamNetworkingGlobalLock held for" ) )
-			return;
+    SteamNetworkingMicroseconds time = SteamNetworkingUtils()->GetLocalTimestamp() - g_logTimeZero;
+    if (eType <= k_ESteamNetworkingSocketsDebugOutputType_Msg)
+    {
+        SKR_LOG_INFO("%10.6f %s\n", time * 1e-6, pszMsg);
+    }
+    if (eType == k_ESteamNetworkingSocketsDebugOutputType_Bug)
+    {
+        // !KLUDGE! Our logging (which is done while we hold the lock)
+        // is occasionally triggering this assert.  Just ignroe that one
+        // error for now.
+        // Yes, this is a kludge.
+        if (strstr(pszMsg, "SteamNetworkingGlobalLock held for"))
+            return;
 
-		SKR_ASSERT( !"TEST FAILED" );
-	}
+        SKR_ASSERT(!"TEST FAILED");
+    }
 }
-void OnSteamNetConnectionStatusChanged( SteamNetConnectionStatusChangedCallback_t *pInfo );
+void OnSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t* pInfo);
 
-struct ChatClient
-{
+struct ChatClient {
     SteamNetworkingIdentity id;
     ITrivialSignalingClient* signaling = nullptr;
-    struct Connection
-    {
+    struct Connection {
         HSteamNetConnection handle;
         SteamNetworkingIdentity id;
         eastl::vector<eastl::string> messages;
@@ -448,22 +443,22 @@ struct ChatClient
 
     ~ChatClient()
     {
-        if(signaling)
+        if (signaling)
         {
             signaling->Release();
         }
-        if(!connections.empty())
+        if (!connections.empty())
         {
-            for(auto& connection : connections)
+            for (auto& connection : connections)
             {
-                SteamNetworkingSockets()->CloseConnection(connection.handle, 0, "quit", true); 
+                SteamNetworkingSockets()->CloseConnection(connection.handle, 0, "quit", true);
             }
         }
     }
 
     bool Todo()
     {
-        //SteamNetworkingSockets()->CloseConnection( g_hConnection, 0, "Test completed OK", true );
+        // SteamNetworkingSockets()->CloseConnection( g_hConnection, 0, "Test completed OK", true );
         return true;
     }
     void AcceptConnection(HSteamNetConnection conn)
@@ -477,43 +472,41 @@ struct ChatClient
     }
     void RemoveConnection(HSteamNetConnection conn)
     {
-        auto iter = std::find_if(g_client->connections.begin(), g_client->connections.end(), [=](const Connection& connection)
-        {
+        auto iter = std::find_if(g_client->connections.begin(), g_client->connections.end(), [=](const Connection& connection) {
             return connection.handle == conn;
         });
-        if(iter != g_client->connections.end())
+        if (iter != g_client->connections.end())
             g_client->connections.erase_unsorted(iter);
     }
     void Update()
     {
-		// Check for incoming signals, and dispatch them
-		if(signaling)
+        // Check for incoming signals, and dispatch them
+        if (signaling)
             signaling->Poll();
-		// Check callbacks
+        // Check callbacks
         SteamNetworkingSockets()->RunCallbacks();
         ImGui::Begin("ControlPanel");
-        if(!signaling)
+        if (!signaling)
         {
             static char name[256];
             ImGui::InputText("Name", name, 256);
             ImGui::SameLine();
-            if(ImGui::Button("SignIn"))
+            if (ImGui::Button("SignIn"))
             {
                 id.ParseString(name);
-                if ( !id.IsInvalid() )
+                if (!id.IsInvalid())
                 {
                     SteamNetworkingSockets()->ResetIdentity(&id);
                     SteamDatagramErrMsg errMsg;
                     // Create the signaling service
-                    signaling = CreateTrivialSignalingClient( pszTrivialSignalingService, SteamNetworkingSockets(), errMsg );
-                    if ( signaling == nullptr )
-                        SKR_LOG_FATAL( "Failed to initializing signaling client.  %s", errMsg );
+                    signaling = CreateTrivialSignalingClient(pszTrivialSignalingService, SteamNetworkingSockets(), errMsg);
+                    if (signaling == nullptr)
+                        SKR_LOG_FATAL("Failed to initializing signaling client.  %s", errMsg);
 
-                        
-                    SteamNetworkingUtils()->SetGlobalCallback_SteamNetConnectionStatusChanged( OnSteamNetConnectionStatusChanged );
+                    SteamNetworkingUtils()->SetGlobalCallback_SteamNetConnectionStatusChanged(OnSteamNetConnectionStatusChanged);
 
                     // Comment this line in for more detailed spew about signals, route finding, ICE, etc
-                    //SteamNetworkingUtils()->SetGlobalConfigValueInt32( k_ESteamNetworkingConfig_LogLevel_P2PRendezvous, k_ESteamNetworkingSocketsDebugOutputType_Verbose );
+                    // SteamNetworkingUtils()->SetGlobalConfigValueInt32( k_ESteamNetworkingConfig_LogLevel_P2PRendezvous, k_ESteamNetworkingSocketsDebugOutputType_Verbose );
 
                     // Currently you must create a listen socket to use symmetric mode,
                     // even if you know that you will always create connections "both ways".
@@ -528,28 +521,28 @@ struct ChatClient
                     // request arrives before we have started connecting out, then we are forced
                     // to ignore it, as the app has given no indication that it desires to
                     // receive inbound connections at all.
-                    SKR_LOG_INFO( "Creating listen socket in symmetric mode, local virtual port %d\n", g_nVirtualPortLocal );
+                    SKR_LOG_INFO("Creating listen socket in symmetric mode, local virtual port %d\n", g_nVirtualPortLocal);
                     SteamNetworkingConfigValue_t opt;
-                    opt.SetInt32( k_ESteamNetworkingConfig_SymmetricConnect, 1 ); // << Note we set symmetric mode on the listen socket
-                    g_hListenSock = SteamNetworkingSockets()->CreateListenSocketP2P( g_nVirtualPortLocal, 1, &opt );
-                    SKR_ASSERT( g_hListenSock != k_HSteamListenSocket_Invalid  );
+                    opt.SetInt32(k_ESteamNetworkingConfig_SymmetricConnect, 1); // << Note we set symmetric mode on the listen socket
+                    g_hListenSock = SteamNetworkingSockets()->CreateListenSocketP2P(g_nVirtualPortLocal, 1, &opt);
+                    SKR_ASSERT(g_hListenSock != k_HSteamListenSocket_Invalid);
                 }
             }
         }
-        else 
+        else
         {
             static char name[256];
             ImGui::InputText("Target", name, 256);
             ImGui::SameLine();
-            if(ImGui::Button("Connect"))
+            if (ImGui::Button("Connect"))
             {
                 SteamNetworkingIdentity identityRemote;
                 identityRemote.ParseString(name);
-                if ( identityRemote.IsInvalid() )
+                if (identityRemote.IsInvalid())
                     return;
                 SteamDatagramErrMsg errMsg;
                 // Begin connecting to peer, unless we are the server
-                std::vector< SteamNetworkingConfigValue_t > vecOpts;
+                std::vector<SteamNetworkingConfigValue_t> vecOpts;
 
                 // If we want the local and virtual port to differ, we must set
                 // an option.  This is a pretty rare use case, and usually not needed.
@@ -557,11 +550,11 @@ struct ChatClient
                 // connections, and then, it almost always matches.  Here we are
                 // just showing in this example code how you could handle this if you
                 // needed them to differ.
-                if ( g_nVirtualPortRemote != g_nVirtualPortLocal )
+                if (g_nVirtualPortRemote != g_nVirtualPortLocal)
                 {
                     SteamNetworkingConfigValue_t opt;
-                    opt.SetInt32( k_ESteamNetworkingConfig_LocalVirtualPort, g_nVirtualPortLocal );
-                    vecOpts.push_back( opt );
+                    opt.SetInt32(k_ESteamNetworkingConfig_LocalVirtualPort, g_nVirtualPortLocal);
+                    vecOpts.push_back(opt);
                 }
 
                 // Symmetric mode?  Noce that since we created a listen socket on this local
@@ -570,33 +563,32 @@ struct ChatClient
                 // this setting.  However, this is really not recommended.  It is best to be
                 // explicit.
                 SteamNetworkingConfigValue_t opt;
-                opt.SetInt32( k_ESteamNetworkingConfig_SymmetricConnect, 1 );
-                vecOpts.push_back( opt );
-                SKR_LOG_INFO( "Connecting to '%s' in symmetric mode, virtual port %d, from local virtual port %d.\n",
-                    SteamNetworkingIdentityRender( identityRemote ).c_str(), g_nVirtualPortRemote,
-                    g_nVirtualPortLocal );
+                opt.SetInt32(k_ESteamNetworkingConfig_SymmetricConnect, 1);
+                vecOpts.push_back(opt);
+                SKR_LOG_INFO("Connecting to '%s' in symmetric mode, virtual port %d, from local virtual port %d.\n",
+                SteamNetworkingIdentityRender(identityRemote).c_str(), g_nVirtualPortRemote,
+                g_nVirtualPortLocal);
 
                 // Connect using the "custom signaling" path.  Note that when
                 // you are using this path, the identity is actually optional,
                 // since we don't need it.  (Your signaling object already
                 // knows how to talk to the peer) and then the peer identity
                 // will be confirmed via rendezvous.
-                ISteamNetworkingConnectionSignaling *pConnSignaling = signaling->CreateSignalingForConnection(
-                    identityRemote,
-                    errMsg
-                );
-                SKR_ASSERT( pConnSignaling );
-                auto handle = SteamNetworkingSockets()->ConnectP2PCustomSignaling( pConnSignaling, &identityRemote, g_nVirtualPortRemote, (int)vecOpts.size(), vecOpts.data() );
+                ISteamNetworkingConnectionSignaling* pConnSignaling = signaling->CreateSignalingForConnection(
+                identityRemote,
+                errMsg);
+                SKR_ASSERT(pConnSignaling);
+                auto handle = SteamNetworkingSockets()->ConnectP2PCustomSignaling(pConnSignaling, &identityRemote, g_nVirtualPortRemote, (int)vecOpts.size(), vecOpts.data());
                 SteamNetworkingSockets()->SetConnectionUserData(handle, (int64)this);
-                SKR_ASSERT( handle != k_HSteamNetConnection_Invalid );
+                SKR_ASSERT(handle != k_HSteamNetConnection_Invalid);
             }
         }
         ImGui::End();
-        for(auto& connection : connections)
+        for (auto& connection : connections)
         {
-			SteamNetworkingMessage_t *pMessage[10];
-			int r = SteamNetworkingSockets()->ReceiveMessagesOnConnection( connection.handle, pMessage, 10 );
-            for(int i=0; i<r; ++i)
+            SteamNetworkingMessage_t* pMessage[10];
+            int r = SteamNetworkingSockets()->ReceiveMessagesOnConnection(connection.handle, pMessage, 10);
+            for (int i = 0; i < r; ++i)
             {
                 connection.messages.push_back((char*)pMessage[i]->GetData());
                 pMessage[i]->Release();
@@ -606,18 +598,18 @@ struct ChatClient
             ImGui::Begin(SteamNetworkingIdentityRender(connection.id).c_str());
             ImGui::InputText("message", txt, 256);
             ImGui::SameLine();
-            if(ImGui::Button("Send"))
+            if (ImGui::Button("Send"))
             {
                 auto len = strlen(txt);
-                if(len != 0)
+                if (len != 0)
                 {
                     EResult r = SteamNetworkingSockets()->SendMessageToConnection(
-                connection.handle, txt, (int)strlen(txt)+1, k_nSteamNetworkingSend_Reliable, nullptr );
-                    SKR_ASSERT(r == k_EResultOK );
+                    connection.handle, txt, (int)strlen(txt) + 1, k_nSteamNetworkingSend_Reliable, nullptr);
+                    SKR_ASSERT(r == k_EResultOK);
                     connection.messages.push_back(txt);
                 }
             }
-            for(auto& message : connection.messages)
+            for (auto& message : connection.messages)
             {
                 ImGui::Text("%s", message.c_str());
             }
@@ -643,77 +635,75 @@ void ShutdownChat()
 }
 
 // Called when a connection undergoes a state transition.
-void OnSteamNetConnectionStatusChanged( SteamNetConnectionStatusChangedCallback_t *pInfo )
+void OnSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t* pInfo)
 {
-	// What's the state of the connection?
-	switch ( pInfo->m_info.m_eState )
-	{
-	case k_ESteamNetworkingConnectionState_ClosedByPeer:
-	case k_ESteamNetworkingConnectionState_ProblemDetectedLocally:
+    // What's the state of the connection?
+    switch (pInfo->m_info.m_eState)
     {
-		SKR_LOG_INFO( "[%s] %s, reason %d: %s\n",
-			pInfo->m_info.m_szConnectionDescription,
-			( pInfo->m_info.m_eState == k_ESteamNetworkingConnectionState_ClosedByPeer ? "closed by peer" : "problem detected locally" ),
-			pInfo->m_info.m_eEndReason,
-			pInfo->m_info.m_szEndDebug
-		);
-		// Close our end
-		SteamNetworkingSockets()->CloseConnection( pInfo->m_hConn, 0, nullptr, false );
+        case k_ESteamNetworkingConnectionState_ClosedByPeer:
+        case k_ESteamNetworkingConnectionState_ProblemDetectedLocally: {
+            SKR_LOG_INFO("[%s] %s, reason %d: %s\n",
+            pInfo->m_info.m_szConnectionDescription,
+            (pInfo->m_info.m_eState == k_ESteamNetworkingConnectionState_ClosedByPeer ? "closed by peer" : "problem detected locally"),
+            pInfo->m_info.m_eEndReason,
+            pInfo->m_info.m_szEndDebug);
+            // Close our end
+            SteamNetworkingSockets()->CloseConnection(pInfo->m_hConn, 0, nullptr, false);
 
-        g_client->RemoveConnection(pInfo->m_hConn);
+            g_client->RemoveConnection(pInfo->m_hConn);
+        }
+        break;
+
+        case k_ESteamNetworkingConnectionState_None:
+            // Notification that a connection was destroyed.  (By us, presumably.)
+            // We don't need this, so ignore it.
+            break;
+
+        case k_ESteamNetworkingConnectionState_Connecting:
+
+            // Is this a connection we initiated, or one that we are receiving?
+            if (g_hListenSock != k_HSteamListenSocket_Invalid && pInfo->m_info.m_hListenSocket == g_hListenSock)
+            {
+                SKR_LOG_INFO("[%s] Accepting\n", pInfo->m_info.m_szConnectionDescription);
+                SteamNetworkingSockets()->AcceptConnection(pInfo->m_hConn);
+            }
+            else
+            {
+                // Note that we will get notification when our own connection that
+                // we initiate enters this state.
+                SKR_LOG_INFO("[%s] Entered connecting state\n", pInfo->m_info.m_szConnectionDescription);
+            }
+            break;
+
+        case k_ESteamNetworkingConnectionState_FindingRoute:
+            // P2P connections will spend a brief time here where they swap addresses
+            // and try to find a route.
+            SKR_LOG_INFO("[%s] finding route\n", pInfo->m_info.m_szConnectionDescription);
+            break;
+
+        case k_ESteamNetworkingConnectionState_Connected:
+            // We got fully connected
+            SKR_LOG_INFO("[%s] connected\n", pInfo->m_info.m_szConnectionDescription);
+            g_client->AcceptConnection(pInfo->m_hConn);
+            break;
+
+        default:
+            SKR_ASSERT(false);
+            break;
     }
-    break;
-
-	case k_ESteamNetworkingConnectionState_None:
-		// Notification that a connection was destroyed.  (By us, presumably.)
-		// We don't need this, so ignore it.
-		break;
-
-	case k_ESteamNetworkingConnectionState_Connecting:
-
-		// Is this a connection we initiated, or one that we are receiving?
-		if ( g_hListenSock != k_HSteamListenSocket_Invalid && pInfo->m_info.m_hListenSocket == g_hListenSock )
-		{
-			SKR_LOG_INFO( "[%s] Accepting\n", pInfo->m_info.m_szConnectionDescription );
-            SteamNetworkingSockets()->AcceptConnection( pInfo->m_hConn );
-		}
-		else
-		{
-			// Note that we will get notification when our own connection that
-			// we initiate enters this state.
-			SKR_LOG_INFO( "[%s] Entered connecting state\n", pInfo->m_info.m_szConnectionDescription );
-		}
-		break;
-
-	case k_ESteamNetworkingConnectionState_FindingRoute:
-		// P2P connections will spend a brief time here where they swap addresses
-		// and try to find a route.
-		SKR_LOG_INFO( "[%s] finding route\n", pInfo->m_info.m_szConnectionDescription );
-		break;
-
-	case k_ESteamNetworkingConnectionState_Connected:
-		// We got fully connected
-		SKR_LOG_INFO( "[%s] connected\n", pInfo->m_info.m_szConnectionDescription );
-        g_client->AcceptConnection(pInfo->m_hConn);
-		break;
-
-	default:
-		SKR_ASSERT( false );
-		break;
-	}
 }
 
-int main( int argc, const char **argv )
- {
+int main(int argc, const char** argv)
+{
     auto result = initialize(argc, argv);
-    if(result != 0)
+    if (result != 0)
     {
         shutdown();
         return result;
     }
 
     run();
-    
+
     shutdown();
-	return 0;
+    return 0;
 }

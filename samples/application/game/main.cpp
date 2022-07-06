@@ -10,7 +10,7 @@
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
 #include "utils/make_zeroed.hpp"
-#include "skr_renderer.h"
+#include "skr_renderer/skr_renderer.h"
 #include <thread>
 #include <chrono>
 #include "gainput/gainput.h"

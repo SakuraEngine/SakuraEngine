@@ -6,7 +6,7 @@
 #include "gamert.h"
 #include "platform/memory.h"
 #include "utils/log.h"
-#include "skr_renderer.h"
+#include "skr_renderer/skr_renderer.h"
 #include "runtime_module.h"
 #include "imgui/skr_imgui_rg.h"
 
@@ -366,10 +366,10 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
     assert(type != UINT32_MAX);
     auto bindingTypeDesc = dualT_get_desc(type);
     SKR_LOG_FMT_INFO(
-        "ECS Type generated for binding push_constant:"
-        "\n    name:{} size:{}\n    guid: {}", 
-        bindingTypeDesc->name, bindingTypeDesc->size, 
-        bindingTypeDesc->guid);
+    "ECS Type generated for binding push_constant:"
+    "\n    name:{} size:{}\n    guid: {}",
+    bindingTypeDesc->name, bindingTypeDesc->size,
+    bindingTypeDesc->guid);
     auto prim_desc = make_zeroed<skr_scene_primitive_desc_t>();
     prim_desc.material = material_id;
     uint32_t ctype_count = 0;
@@ -378,11 +378,11 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
     dual_entity_t metas[16];
     const bool renderable = ecsr_renderable_primitive_type(&prim_desc, ctypes, &ctype_count, metas, &metaent_count);
     assert(renderable);
-    for(uint32_t i = 0; i < ctype_count; i++)
+    for (uint32_t i = 0; i < ctype_count; i++)
     {
         auto cdesc = dualT_get_desc(ctypes[i]);
         SKR_LOG_FMT_INFO(
-            "Component {} of rendereable: name: {}",
+        "Component {} of rendereable: name: {}",
         i, cdesc->name);
     }
     // create vbs & ib
@@ -402,8 +402,9 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
         auto transforms = (transform_t*)dualV_get_owned_ro(view, transform_type);
         for (uint32_t i = 0; i < view->count; i++)
         {
-            transforms[i].location = { 
-                (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f, 0.f };
+            transforms[i].location = {
+                (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f, 0.f
+            };
             transforms[i].scale = { 1.f, 1.f, 1.f };
             transforms[i].rotation = { 0.f, 0.f, 0.f, 1.f };
             index_buffers[i] = index_buffer;
