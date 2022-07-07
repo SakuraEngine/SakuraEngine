@@ -33,11 +33,13 @@ end
 function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
     -- generate headers dummy
     local changedfiles = {}
-    local generators = {
+    local pre_generators = {
         {
             os.projectdir()..vformat("/tools/codegen/configure.py"),
             os.projectdir()..vformat("/tools/codegen/configure.h.mako"),
         },
+    }
+    local generators = {
         {
             os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
             os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
@@ -82,6 +84,12 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         },
     }
     local rebuild = false
+    for _, generator in ipairs(pre_generators) do
+        local dependfile = target:dependfile(generator[1])
+        depend.on_changed(function ()
+            rebuild = true
+        end, {dependfile = dependfile, files = generator});
+    end
     for _, generator in ipairs(generators) do
         local dependfile = target:dependfile(generator[1])
         depend.on_changed(function ()
@@ -100,6 +108,24 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
     end
     -- generate dummy .cpp file
     if(#changedfiles > 0) then
+        local api = target:extraconf("rules", "c++.reflection", "api")
+        -- compile jsons to c++
+        local function pre_task(index)
+            local pre_generator = pre_generators[index][1]
+            cprint("${cyan}generating.%s${clear} %s", path.filename(pre_generator), path.absolute(metadir))
+            import("find_sdk")
+            local python = find_sdk.find_program("python3")
+            local command = {
+                pre_generator,
+                path.absolute(metadir), path.absolute(pre_generators[index].gendir or gendir), api or target:name()
+            }
+            for _, dep in ipairs(depsmeta) do
+                table.insert(command, dep)
+            end
+            os.iorunv(python.program, command)
+        end
+        runjobs("pre_codegen.cpp", pre_task, {total = #pre_generators})
+        -- generate dummy .h file
         local reflfile = io.open(sourcefile_refl, "w")
         for _, headerfile in ipairs(changedfiles) do
             headerfile = path.absolute(headerfile)
@@ -119,7 +145,6 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             end
         end
         -- compile jsons to c++
-        local api = target:extraconf("rules", "c++.reflection", "api")
         local function task(index)
             local generator = generators[index][1]
             cprint("${cyan}generating.%s${clear} %s", path.filename(generator), path.absolute(metadir))

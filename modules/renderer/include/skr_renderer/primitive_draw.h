@@ -1,5 +1,7 @@
 #pragma once
-#include "skr_renderer/skrrenderer_configure.h"
+#if !defined(__meta__)
+    #include "SkrRenderer/skr_renderer.configure.h"
+#endif
 #include "cgpu/api.h"
 
 #ifdef __cplusplus

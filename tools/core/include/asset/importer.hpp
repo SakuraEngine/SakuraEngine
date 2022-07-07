@@ -1,5 +1,5 @@
 #pragma once
-#include "tool_configure.h"
+#include "SkrTool/tool.configure.h"
 #include "EASTL/vector.h"
 #include "platform/guid.h"
 #include "resource/resource_header.h"

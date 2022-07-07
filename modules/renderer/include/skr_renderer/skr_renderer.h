@@ -1,6 +1,8 @@
 #pragma once
+#if !defined(__meta__)
+    #include "SkrRenderer/skr_renderer.configure.h"
+#endif
 #ifdef __cplusplus
-    #include "skrrenderer_configure.h"
     #include "module/module_manager.hpp"
     #include "render_graph/frontend/render_graph.hpp"
     #include "platform/window.h"

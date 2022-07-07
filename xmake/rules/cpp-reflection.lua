@@ -19,14 +19,13 @@ rule("c++.reflection")
             opt = opt or {}
             opt.cl = true
         end
+        -- generate reflection files
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
+        target:add("includedirs", gendir, {public = true})
+        target:add("includedirs", path.join(gendir, target:name()))
         gen_refl.generate_refl_files(target, abs_rootdir, opt)
         -- add to sourcebatch
         local sourcebatches = target:sourcebatches()
-        local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
-        if os.exists(gendir) then
-            target:add("includedirs", gendir, {public = true})
-            target:add("includedirs", path.join(gendir, target:name()))
-        end
         local cppfiles = os.files(path.join(gendir, "/**.cpp"))
         for _, file in ipairs(cppfiles) do
             target:add("files", file)
