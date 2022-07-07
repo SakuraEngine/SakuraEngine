@@ -1,5 +1,5 @@
 #pragma once
-#include "gamert_configure.h"
+#include "GameRT/gamert.configure.h"
 #include "resource/resource_factory.h"
 namespace skg::resource
 {

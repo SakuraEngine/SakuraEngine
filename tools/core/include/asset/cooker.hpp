@@ -1,11 +1,11 @@
 #pragma once
+#include "SkrTool/tool.configure.h"
 #include "EASTL/vector.h"
 #include "EASTL/shared_ptr.h"
 #include "ftl/task.h"
 #include "platform/memory.h"
 #include "platform/thread.h"
 #include "resource/resource_header.h"
-#include "tool_configure.h"
 #include "ftl/task_counter.h"
 #include "ftl/task_scheduler.h"
 #include "platform/configure.h"

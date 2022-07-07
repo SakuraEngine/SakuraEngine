@@ -1,5 +1,5 @@
 #pragma once
-#include "tool_configure.h"
+#include "SkrTool/tool.configure.h"
 #include "platform/guid.h"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"

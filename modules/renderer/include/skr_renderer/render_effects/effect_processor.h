@@ -1,6 +1,6 @@
 #pragma once
+#include "SkrRenderer/skr_renderer.configure.h"
 #include "ecs/dual.h"
-#include "skr_renderer/skrrenderer_configure.h"
 #include "ecs/dualX.h"
 #include "skr_renderer/primitive_draw.h"
 
@@ -85,7 +85,7 @@ typedef struct VtblRenderEffectProcessor {
     SProcRenderEffectPeekDrawcall peek_drawcall;
 } VtblRenderEffectProcessor;
 
-typedef struct IRenderEffectProcessor {
+typedef struct SKR_RENDERER_API IRenderEffectProcessor {
 #ifdef __cplusplus
     virtual ~IRenderEffectProcessor() = default;
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "gamert_configure.h"
+#include "GameRT/gamert.configure.h"
 #include "ecs/dual.h"
 // align up & can directly update with GPU-scene
 #include "scene.h"

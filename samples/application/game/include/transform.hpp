@@ -1,5 +1,5 @@
 #include "ecs/dual.h"
-#include "gamert_configure.h"
+#include "GameRT/gamert.configure.h"
 #include "math/matrix.hpp"
 #include "math/vector.hpp"
 #include "math/rotator.hpp"
