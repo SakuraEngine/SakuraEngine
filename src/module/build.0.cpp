@@ -1,5 +1,6 @@
 #include "module_manager.cpp"
 #include "runtime_module.h"
+#include "ecs/dual.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 SKR_MODULE_METADATA(u8R"(
@@ -33,10 +34,14 @@ void SkrRuntimeModule::on_load(int argc, char** argv)
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
+
+    ecs_world = dualS_create();
 }
 void SkrRuntimeModule::on_unload()
 {
     SKR_LOG_INFO("SkrRuntime module unloaded!");
+
+    dualS_release(ecs_world);
 }
     
 SkrRuntimeModule* SkrRuntimeModule::Get()

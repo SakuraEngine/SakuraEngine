@@ -20,7 +20,6 @@ class GAMERT_API SGameRTModule : public skr::IDynamicModule
 public:
     skr_vfs_t* resource_vfs = nullptr;
     skr::resource::SLocalResourceRegistry* registry;
-    struct dual_storage_t* ecs_world;
 };
 
 namespace skg

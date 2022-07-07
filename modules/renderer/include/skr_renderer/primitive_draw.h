@@ -1,5 +1,5 @@
 #pragma once
-#include "skr_renderer/skr_renderer_config.h"
+#include "skr_renderer/skrrenderer_configure.h"
 #include "cgpu/api.h"
 
 #ifdef __cplusplus
@@ -31,6 +31,11 @@ typedef struct skr_primitive_draw_t {
     uint32_t vertex_buffer_count;
     skr_index_buffer_view_t index_buffer;
 } skr_primitive_draw_t;
+
+typedef struct skr_primitive_draw_list_view_t {
+    skr_primitive_draw_t* drawcalls;
+    uint32_t count;
+} skr_primitive_draw_list_view_t;
 
 #ifdef __cplusplus
 }
