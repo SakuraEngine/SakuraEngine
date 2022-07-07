@@ -1,6 +1,6 @@
 #pragma once
 #ifdef __cplusplus
-    #include "skr_renderer_config.h"
+    #include "skrrenderer_configure.h"
     #include "module/module_manager.hpp"
     #include "render_graph/frontend/render_graph.hpp"
     #include "platform/window.h"
@@ -10,13 +10,20 @@ class SkrRendererModule;
 
 namespace skr
 {
-class SKR_RENDERER_API Renderer
+struct SKR_RENDERER_API Renderer
 {
     friend class ::SkrRendererModule;
 
-    void create_api_objects();
+public:
+    virtual ~Renderer() = default;
+    void initialize();
+    void finalize();
+    CGPUSwapChainId register_window(SWindowHandle window);
 
 protected:
+    void create_api_objects();
+
+    struct dual_storage_t* storage;
     // Device objects
     uint32_t backbuffer_index = 0;
     eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
@@ -38,14 +45,13 @@ public:
     virtual void on_load(int argc, char** argv) override;
     virtual void on_unload() override;
 
-    CGPUSwapChainId register_window(SWindowHandle window);
-
     CGPUDeviceId get_cgpu_device() const;
     CGPUQueueId get_gfx_queue() const;
     ECGPUFormat get_swapchain_format() const;
     CGPUSamplerId get_linear_sampler() const;
 
     static SkrRendererModule* Get();
+    skr::Renderer* get_renderer() {return &renderer;}
 
 protected:
     // Renderer

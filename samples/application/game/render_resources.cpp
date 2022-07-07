@@ -414,7 +414,7 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
             material_instances[i].material = material_id;
         }
     };
-    dualS_allocate_type(gamert->ecs_world, &renderableT, 100, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(gamert_get_ecs_world(), &renderableT, 100, DUAL_LAMBDA(primSetup));
 }
 
 void free_test_materials()

@@ -5,6 +5,7 @@
 #include "resource/resource_system.h"
 #include "resource/local_resource_registry.h"
 #include "ecs/dual.h"
+#include "runtime_module.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 SKR_MODULE_METADATA(u8R"(
@@ -39,7 +40,6 @@ void SGameRTModule::on_load(int argc, char** argv)
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry);
 
-    ecs_world = dualS_create();
     // register render-scene types
     ecsr_register_types();
 }
@@ -55,13 +55,12 @@ void SGameRTModule::on_unload()
     SkrDelete(registry);
     skr_free_vfs(resource_vfs);
 
-    dualS_release(ecs_world);
     SKR_LOG_INFO("game runtime unloaded!");
 }
 
 dual_storage_t* gamert_get_ecs_world()
 {
-    static auto _module = (SGameRTModule*)skr_get_module_manager()->get_module("GameRT");
+    static auto _module = (SkrRuntimeModule*)skr_get_module_manager()->get_module("SkrRT");
     static auto ecs_world = _module->ecs_world;
     return ecs_world;
 }

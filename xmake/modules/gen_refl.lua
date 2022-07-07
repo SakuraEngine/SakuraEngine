@@ -35,6 +35,10 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
     local changedfiles = {}
     local generators = {
         {
+            os.projectdir()..vformat("/tools/codegen/configure.py"),
+            os.projectdir()..vformat("/tools/codegen/configure.h.mako"),
+        },
+        {
             os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
             os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
             os.projectdir()..vformat("/tools/codegen/json_reader.cpp.mako"),

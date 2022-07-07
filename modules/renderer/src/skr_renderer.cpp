@@ -1,5 +1,6 @@
 #include "skr_renderer/skr_renderer.h"
 #include "cgpu/api.h"
+#include "module/module_manager.hpp"
 #include "utils/log.h"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
@@ -28,54 +29,28 @@ SkrRenderer)
 #define BACK_BUFFER_HEIGHT 900
 #define BACK_BUFFER_WIDTH 900
 
-void SkrRendererModule::on_load(int argc, char** argv)
+void skr::Renderer::initialize()
 {
-    SKR_LOG_INFO("skr renderer loaded!");
-
-    for (auto i = 0; i < argc; i++)
-    {
-        if (::strcmp(argv[i], "--vulkan") == 0)
-        {
-            renderer.backend = CGPU_BACKEND_VULKAN;
-        }
-        else if (::strcmp(argv[i], "--d3d12") == 0)
-        {
-            renderer.backend = CGPU_BACKEND_D3D12;
-        }
-        else
-        {
-#ifdef _WIN32
-            renderer.backend = CGPU_BACKEND_D3D12;
-#else
-            renderer.backend = CGPU_BACKEND_VULKAN;
-#endif
-        }
-    }
-
-    renderer.create_api_objects();
+    auto mm = skr_get_module_manager();
+    create_api_objects();
 }
 
-void create_test_materials();
-void free_test_materials();
-
-void SkrRendererModule::on_unload()
+void skr::Renderer::finalize()
 {
-    SKR_LOG_INFO("skr renderer unloaded!");
-
-    for (auto& swapchain : renderer.swapchains)
+    for (auto& swapchain :swapchains)
     {
         if (swapchain.second) cgpu_free_swapchain(swapchain.second);
     }
-    renderer.swapchains.clear();
-    for (auto& surface : renderer.surfaces)
+    swapchains.clear();
+    for (auto& surface : surfaces)
     {
-        if (surface.second) cgpu_free_surface(renderer.device, surface.second);
+        if (surface.second) cgpu_free_surface(device, surface.second);
     }
-    renderer.surfaces.clear();
-    cgpu_free_sampler(renderer.linear_sampler);
-    cgpu_free_queue(renderer.gfx_queue);
-    cgpu_free_device(renderer.device);
-    cgpu_free_instance(renderer.instance);
+    surfaces.clear();
+    cgpu_free_sampler(linear_sampler);
+    cgpu_free_queue(gfx_queue);
+    cgpu_free_device(device);
+    cgpu_free_instance(instance);
 }
 
 void skr::Renderer::create_api_objects()
@@ -116,25 +91,25 @@ void skr::Renderer::create_api_objects()
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
 }
 
-CGPUSwapChainId SkrRendererModule::register_window(SWindowHandle window)
+CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
 {
     // find registered
     {
-        auto _ = renderer.swapchains.find(window);
-        if (_ != renderer.swapchains.end()) return _->second;
+        auto _ = swapchains.find(window);
+        if (_ != swapchains.end()) return _->second;
     }
     CGPUSurfaceId surface = nullptr;
     // find registered
     {
-        auto _ = renderer.surfaces.find(window);
-        if (_ != renderer.surfaces.end())
+        auto _ = surfaces.find(window);
+        if (_ != surfaces.end())
             surface = _->second;
         else
-            surface = cgpu_surface_from_native_view(renderer.device, skr_window_get_native_view(window));
+            surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
     }
     // Create swapchain
     CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.present_queues = &renderer.gfx_queue;
+    chain_desc.present_queues = &gfx_queue;
     chain_desc.present_queues_count = 1;
     chain_desc.width = BACK_BUFFER_WIDTH;
     chain_desc.height = BACK_BUFFER_HEIGHT;
@@ -142,8 +117,42 @@ CGPUSwapChainId SkrRendererModule::register_window(SWindowHandle window)
     chain_desc.imageCount = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
-    auto swapchain = cgpu_create_swapchain(renderer.device, &chain_desc);
+    auto swapchain = cgpu_create_swapchain(device, &chain_desc);
     return swapchain;
+}
+
+void SkrRendererModule::on_load(int argc, char** argv)
+{
+    SKR_LOG_INFO("skr renderer loaded!");
+
+    for (auto i = 0; i < argc; i++)
+    {
+        if (::strcmp(argv[i], "--vulkan") == 0)
+        {
+            renderer.backend = CGPU_BACKEND_VULKAN;
+        }
+        else if (::strcmp(argv[i], "--d3d12") == 0)
+        {
+            renderer.backend = CGPU_BACKEND_D3D12;
+        }
+        else
+        {
+#ifdef _WIN32
+            renderer.backend = CGPU_BACKEND_D3D12;
+#else
+            renderer.backend = CGPU_BACKEND_VULKAN;
+#endif
+        }
+    }
+    renderer.initialize();
+}
+
+
+void SkrRendererModule::on_unload()
+{
+    SKR_LOG_INFO("skr renderer unloaded!");
+
+    renderer.finalize();
 }
 
 SkrRendererModule* SkrRendererModule::Get()
@@ -177,7 +186,7 @@ CGPUQueueId SkrRendererModule::get_gfx_queue() const
 
 CGPUSwapChainId skr_renderer_register_window(SWindowHandle window)
 {
-    return SkrRendererModule::Get()->register_window(window);
+    return SkrRendererModule::Get()->get_renderer()->register_window(window);
 }
 
 ECGPUFormat skr_renderer_get_swapchain_format()

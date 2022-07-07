@@ -2,7 +2,8 @@ target("SkrRenderer")
     add_rules("skr.module", {api = "SKR_RENDERER"})
     add_rules("c++.reflection", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/"
+        rootdir = "include/",
+        api = "SKR_RENDERER"
     })
     add_deps("SkrRenderGraph", "SkrImGui")
     add_includedirs("include", {public=true})
