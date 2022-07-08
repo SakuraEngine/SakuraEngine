@@ -57,10 +57,3 @@ void SGameRTModule::on_unload()
 
     SKR_LOG_INFO("game runtime unloaded!");
 }
-
-dual_storage_t* gamert_get_ecs_world()
-{
-    static auto _module = (SkrRuntimeModule*)skr_get_module_manager()->get_module("SkrRT");
-    static auto ecs_world = _module->ecs_world;
-    return ecs_world;
-}

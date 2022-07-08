@@ -27,7 +27,7 @@ extern "C" void dualX_register_types();
 void SkrRuntimeModule::on_load(int argc, char** argv)
 {
     dualX_register_types();
-    
+
     SKR_LOG_INFO("SkrRuntime module loaded!");
 
 #ifdef SKR_OS_WINDOWS
@@ -43,15 +43,20 @@ void SkrRuntimeModule::on_unload()
 
     dualS_release(ecs_world);
 }
-    
+
 SkrRuntimeModule* SkrRuntimeModule::Get()
 {
     auto mm = skr_get_module_manager();
     static auto rm = static_cast<SkrRuntimeModule*>(mm->get_module("SkrRT"));
     return rm;
 }
-    
+
 RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware()
 {
     return SkrRuntimeModule::Get()->DPIAware;
+}
+
+RUNTIME_EXTERN_C RUNTIME_API dual_storage_t* skr_runtime_get_dual_storage()
+{
+    return SkrRuntimeModule::Get()->ecs_world;
 }

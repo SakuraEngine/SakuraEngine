@@ -40,7 +40,7 @@ dual_type_index_t ecsr_query_material_parameter_type(gfx_material_id_t mat_id, c
         return UINT32_MAX;
     }
     // allocate all
-    dual_storage_t* storage = gamert_get_ecs_world();
+    dual_storage_t* storage = skr_runtime_get_dual_storage();
     auto view = make_zeroed<dual_chunk_view_t>();
     dualS_access(storage, mat_id, &view);
     CGPURootSignatureId RS = ((CGPURootSignatureId*)dualV_get_owned_rw(&view, gfx_root_sig_type))[0];
@@ -153,12 +153,14 @@ const CGPUPipelineShaderDescriptor* ps)
 }
 #include <iostream>
 
+RUNTIME_EXTERN_C RUNTIME_API struct dual_storage_t* skr_runtime_get_dual_storage();
+
 void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_rate) SKR_NOEXCEPT
 {
     auto renderGraph = (skr::render_graph::RenderGraph*)graph;
     // TODO: Culling
     // iterate materials
-    dual_storage_t* storage = gamert_get_ecs_world();
+    dual_storage_t* storage = skr_runtime_get_dual_storage();
     {
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
