@@ -26,7 +26,7 @@ static struct
     // TODO: add a real pipeline pool with hashset
     eastl::unordered_map<gfx_material_id_t, CGPURenderPipelineId> pipelinePool;
 } matDB;
-RUNTIME_EXTERN_C RUNTIME_API struct dual_storage_t* skr_runtime_get_dual_storage();
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 dual_type_index_t ecsr_query_material_parameter_type(gfx_material_id_t mat_id, const char8_t* name)
 {

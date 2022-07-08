@@ -73,7 +73,7 @@ void skr_renderer_register_render_effect_vtbl(SkrRenderer* renderer, const char*
     renderer->processors[name] = proxy;
 }
 
-RUNTIME_EXTERN_C RUNTIME_API struct dual_storage_t* skr_runtime_get_dual_storage();
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 void skr_render_effect_attach_cv(SkrRenderer* renderer, dual_chunk_view_t* cv, const char* effect_name)
 {
@@ -82,6 +82,7 @@ void skr_render_effect_attach_cv(SkrRenderer* renderer, dual_chunk_view_t* cv, c
     SKR_ASSERT(feature_arrs && "No render effect component in chunk view");
     if (feature_arrs)
     {
+        auto world = skr_runtime_get_dual_storage();
         auto&& i_processor = renderer->processors.find(effect_name);
 
         if (i_processor == renderer->processors.end())

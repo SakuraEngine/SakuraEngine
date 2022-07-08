@@ -19,6 +19,7 @@ static struct
 {
     dual_storage_t* storage;
 } ecsRenderer;
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 void __gfx_shader_set_construct_callback(void* u, dual_chunk_view_t* view)
 {
