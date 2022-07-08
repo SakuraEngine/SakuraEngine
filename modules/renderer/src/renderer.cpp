@@ -27,7 +27,7 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
             vtbl.initialize_data(renderer, storage, cv);
     }
 
-    uint32_t produce_drawcall(SGameSceneStorage* game_storage) override
+    uint32_t produce_drawcall(dual_storage_t* game_storage) override
     {
         if (vtbl.produce_drawcall)
             return vtbl.produce_drawcall(game_storage);
