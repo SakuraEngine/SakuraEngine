@@ -1,9 +1,13 @@
+#include "utils/make_zeroed.hpp"
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
+#include "ecs/callback.hpp"
 #include "skr_renderer/render_effects/effect_processor.h"
 #include "skr_renderer/skr_renderer.h"
 #include "EASTL/unordered_map.h"
 #include "EASTL/vector.h"
+
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
     RenderEffectProcessorVtblProxy(VtblRenderEffectProcessor vtbl)
@@ -11,24 +15,29 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
     {
     }
 
-    void get_type_set(const SGameEntity* entities, uint32_t count, dual_type_set_t* set) override
+    void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
     {
-        vtbl.get_type_set(entities, count, set);
+        if (vtbl.get_type_set)
+            vtbl.get_type_set(cv, set);
     }
 
-    void get_type_set_cv(const dual_chunk_view_t* cv, dual_type_set_t* set) override
+    void initialize_data(SkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* cv) override
     {
-        vtbl.get_type_set_cv(cv, set);
+        if (vtbl.initialize_data)
+            vtbl.initialize_data(renderer, storage, cv);
     }
 
     uint32_t produce_drawcall(SGameSceneStorage* game_storage, SRenderStorage* effect_storage) override
     {
-        return vtbl.produce_drawcall(game_storage, effect_storage);
+        if (vtbl.produce_drawcall)
+            return vtbl.produce_drawcall(game_storage, effect_storage);
+        return 0;
     }
 
     void peek_drawcall(skr_primitive_draw_list_view_t* drawcalls) override
     {
-        vtbl.peek_drawcall(drawcalls);
+        if (vtbl.peek_drawcall)
+            vtbl.peek_drawcall(drawcalls);
     }
 
     VtblRenderEffectProcessor vtbl;
@@ -47,11 +56,11 @@ struct SKR_RENDERER_API SkrRenderer : public skr::Renderer {
         processors.clear();
     }
 
-    eastl::unordered_map<const char*, IRenderEffectProcessor*> processors;
+    eastl::unordered_map<skr_renderer_effect_name_t, IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 };
 
-void skr_renderer_register_render_effect(SkrRenderer* renderer, const char* name, IRenderEffectProcessor* processor)
+void skr_renderer_register_render_effect(SkrRenderer* renderer, skr_renderer_effect_name_t name, IRenderEffectProcessor* processor)
 {
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
     {
@@ -61,7 +70,7 @@ void skr_renderer_register_render_effect(SkrRenderer* renderer, const char* name
     renderer->processors[name] = processor;
 }
 
-void skr_renderer_register_render_effect_vtbl(SkrRenderer* renderer, const char* name, VtblRenderEffectProcessor* processor)
+void skr_renderer_register_render_effect_vtbl(SkrRenderer* renderer, skr_renderer_effect_name_t name, VtblRenderEffectProcessor* processor)
 {
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
     {
@@ -73,11 +82,12 @@ void skr_renderer_register_render_effect_vtbl(SkrRenderer* renderer, const char*
     renderer->processors[name] = proxy;
 }
 
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
-
-void skr_render_effect_attach_cv(SkrRenderer* renderer, dual_chunk_view_t* cv, const char* effect_name)
+namespace
 {
-    using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
+using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
+
+void skr_render_effect_attach(SkrRenderer* renderer, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name)
+{
     auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
     SKR_ASSERT(feature_arrs && "No render effect component in chunk view");
     if (feature_arrs)
@@ -90,12 +100,131 @@ void skr_render_effect_attach_cv(SkrRenderer* renderer, dual_chunk_view_t* cv, c
             SKR_ASSERT(false && "No render effect processor registered");
             return;
         }
-        dual_type_set_t type_set;
-        i_processor->second->get_type_set_cv(cv, &type_set);
-        for (uint32_t i = 0; i < cv->count; i++)
+        auto entity_type = make_zeroed<dual_entity_type_t>();
+        i_processor->second->get_type_set(cv, &entity_type.type);
+        // create render effect entities in storage
+        dual_chunk_view_t* out_cv = nullptr;
+        auto initialize_callback = [&](dual_chunk_view_t* inView) {
+            // do user initialize callback
+            i_processor->second->initialize_data(renderer, world, cv);
+            out_cv = inView;
+        };
+        dualS_allocate_type(world, &entity_type, cv->count, DUAL_LAMBDA(initialize_callback));
+        // attach render effect entities to game entities
+        if (out_cv)
         {
-            auto& features = feature_arrs[i];
-            (void)features;
+            auto entities = dualV_get_entities(cv);
+            for (uint32_t i = 0; i < cv->count; i++)
+            {
+                auto& features = feature_arrs[i];
+#ifdef _DEBUG
+                for (auto& _ : features)
+                {
+                    SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
+                }
+#endif
+                features.push_back({ nullptr, NULL_ENTITY });
+                auto& feature = features.back();
+                feature.name = effect_name;
+                feature.entity = entities[i];
+            }
         }
     }
 }
+
+void skr_render_effect_detach(SkrRenderer* renderer, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name)
+{
+    if (cv)
+    {
+        auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
+        if (feature_arrs)
+        {
+            uint32_t removed_index = 0;
+            for (uint32_t i = 0; i < cv->count; i++)
+            {
+                auto& features = feature_arrs[i];
+                for (auto& _ : features)
+                {
+                    if (strcmp(_.name, effect_name) == 0)
+                    {
+                        _.name = nullptr;
+                        _.entity = NULL_ENTITY;
+                        removed_index = i;
+                    }
+                }
+                features.erase(features.begin() + removed_index);
+            }
+        }
+    }
+}
+
+void skr_render_effect_add_delta(SkrRenderer* renderer, const SGameEntity* entities, uint32_t count,
+skr_renderer_effect_name_t effect_name, dual_delta_type_t delta,
+dual_cast_callback_t callback, void* user_data)
+{
+    if (count)
+    {
+        auto storage = skr_runtime_get_dual_storage();
+        SKR_ASSERT(storage && "No dual storage");
+        eastl::vector<dual_entity_t> render_effects;
+        render_effects.reserve(count);
+        // batch game ents to collect render effects
+        auto game_batch_callback = [&](dual_chunk_view_t* view) {
+            auto feature_arrs = (render_effects_t*)dualV_get_owned_ro(view, dual_id_of<skr_render_effect_t>::get());
+            if (feature_arrs)
+            {
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    auto& features = feature_arrs[i];
+                    for (auto& _ : features)
+                    {
+                        if (strcmp(_.name, effect_name) == 0)
+                        {
+                            render_effects.emplace_back(_.entity);
+                        }
+                    }
+                }
+            }
+        };
+        dualS_batch(storage, entities, count, DUAL_LAMBDA(game_batch_callback));
+        // do cast for render effects
+        auto render_batch_callback = [&](dual_chunk_view_t* view) {
+            dualS_cast_view_delta(storage, view, &delta, callback, user_data);
+        };
+        dualS_batch(storage, render_effects.data(), render_effects.size(), DUAL_LAMBDA(render_batch_callback));
+    }
+}
+
+void skr_render_effect_access(SkrRenderer* renderer, const SGameEntity* entities, uint32_t count, skr_renderer_effect_name_t effect_name, dual_view_callback_t view, void* u)
+{
+    if (count)
+    {
+        auto storage = skr_runtime_get_dual_storage();
+        SKR_ASSERT(storage && "No dual storage");
+        eastl::vector<dual_entity_t> render_effects;
+        render_effects.reserve(count);
+        // batch game ents to collect render effects
+        auto game_batch_callback = [&](dual_chunk_view_t* view) {
+            auto feature_arrs = (render_effects_t*)dualV_get_owned_ro(view, dual_id_of<skr_render_effect_t>::get());
+            if (feature_arrs)
+            {
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    auto& features = feature_arrs[i];
+                    for (auto& _ : features)
+                    {
+                        if (strcmp(_.name, effect_name) == 0)
+                        {
+                            render_effects.emplace_back(_.entity);
+                        }
+                    }
+                }
+            }
+        };
+        dualS_batch(storage, entities, count, DUAL_LAMBDA(game_batch_callback));
+        // do cast for render effects
+        dualS_batch(storage, render_effects.data(), render_effects.size(), view, u);
+    }
+}
+
+} // namespace
