@@ -24,7 +24,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     {
     }
 
-    uint32_t produce_drawcall(SGameSceneStorage* game_storage) override
+    uint32_t produce_drawcall(dual_storage_t* game_storage) override
     {
         return 0;
     }
