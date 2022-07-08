@@ -1,10 +1,20 @@
 #pragma once
-#if !defined(__meta__)
-    #include "SkrRenderer/skr_renderer.configure.h"
+#include "SkrRenderer/skr_renderer.configure.h"
+#ifdef __cplusplus
+    #include "render_graph/frontend/render_graph.hpp"
 #endif
+
+struct SKR_RENDERER_API ISkrRenderer {
+#ifdef __cplusplus
+    virtual ~ISkrRenderer() = default;
+    virtual void initialize() = 0;
+    virtual void render(class skr::render_graph::RenderGraph* render_graph) = 0;
+    virtual void finalize() = 0;
+#endif
+};
+
 #ifdef __cplusplus
     #include "module/module_manager.hpp"
-    #include "render_graph/frontend/render_graph.hpp"
     #include "platform/window.h"
     #include "EASTL/vector_map.h"
 
@@ -12,14 +22,14 @@ class SkrRendererModule;
 
 namespace skr
 {
-struct SKR_RENDERER_API Renderer
-{
+struct SKR_RENDERER_API Renderer : public ISkrRenderer {
     friend class ::SkrRendererModule;
 
 public:
     virtual ~Renderer() = default;
-    void initialize();
-    void finalize();
+    virtual void initialize();
+    virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
+    virtual void finalize();
     CGPUSwapChainId register_window(SWindowHandle window);
 
 protected:
@@ -36,8 +46,6 @@ protected:
     CGPUDeviceId device = nullptr;
     CGPUQueueId gfx_queue = nullptr;
     CGPUSamplerId linear_sampler = nullptr;
-    // Render graph
-    skr::render_graph::RenderGraph* renderGraph = nullptr;
 };
 } // namespace skr
 
@@ -53,13 +61,16 @@ public:
     CGPUSamplerId get_linear_sampler() const;
 
     static SkrRendererModule* Get();
-    skr::Renderer* get_renderer() {return &renderer;}
+    skr::Renderer* get_renderer() { return renderer; }
 
 protected:
     // Renderer
-    skr::Renderer renderer;
+    skr::Renderer* renderer = nullptr;
 };
 #endif
+
+RUNTIME_EXTERN_C SKR_RENDERER_API struct ISkrRenderer*
+skr_renderer_get_renderer();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSwapChainId
 skr_renderer_register_window(SWindowHandle window);
@@ -75,3 +86,6 @@ skr_renderer_get_gfx_queue();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDeviceId
 skr_renderer_get_cgpu_device();
+
+RUNTIME_EXTERN_C SKR_RENDERER_API void
+skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph);

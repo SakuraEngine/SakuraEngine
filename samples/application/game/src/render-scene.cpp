@@ -170,6 +170,7 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
             .allow_depth_stencil();
         });
     }
+
     auto filter = make_zeroed<dual_filter_t>();
     filter.all.data = &gfx_material_type;
     filter.all.length = 1;
