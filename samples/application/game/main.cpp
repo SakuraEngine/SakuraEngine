@@ -28,7 +28,7 @@ extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 #include "ecs/callback.hpp"
 #include <time.h>
 
-RUNTIME_EXTERN_C RUNTIME_API struct dual_storage_t* skr_runtime_get_dual_storage();
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 

@@ -5,7 +5,7 @@
 #include "imgui/imgui.h"
 #include "scene.h"
 
-RUNTIME_EXTERN_C RUNTIME_API struct dual_storage_t* skr_runtime_get_dual_storage();
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 namespace skg
 {

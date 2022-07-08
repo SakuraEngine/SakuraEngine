@@ -84,6 +84,14 @@
     #define SKRENUM(inttype)
 #endif
 
+#ifndef RUNTIME_IMPORT
+    #if defined(_MSC_VER)
+        #define RUNTIME_IMPORT __declspec(dllimport)
+    #else
+        #define RUNTIME_IMPORT
+    #endif
+#endif
+
 #ifndef RUNTIME_EXPORT
     #if defined(_MSC_VER)
         #define RUNTIME_EXPORT __declspec(dllexport)
@@ -141,6 +149,10 @@
         #define RUNTIME_API
         #define RUNTIME_LOCAL
     #endif
+#endif
+
+#ifndef SKR_IMPORT_API
+    #define SKR_IMPORT_API RUNTIME_EXTERN_C RUNTIME_IMPORT
 #endif
 
 #ifndef CHAR8_T_DEFINED // If the user hasn't already defined these...
@@ -404,7 +416,7 @@ typedef int64_t host_ptr_t;
 // TODO: move this anywhere else
 #define USE_DXMATH
 
-#if !defined(TRACY_ENABLE) && !defined (TRACY_OVERRIDE_DISABLE) && !defined(TRACY_OVERRIDE_ENABLE)
+#if !defined(TRACY_ENABLE) && !defined(TRACY_OVERRIDE_DISABLE) && !defined(TRACY_OVERRIDE_ENABLE)
     #ifdef _DEBUG
         #define TRACY_ENABLE
     #else
