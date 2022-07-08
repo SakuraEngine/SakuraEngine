@@ -28,6 +28,8 @@ extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
 #include "ecs/callback.hpp"
 #include <time.h>
 
+RUNTIME_EXTERN_C RUNTIME_API struct dual_storage_t* skr_runtime_get_dual_storage();
+
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
 int main(int argc, char** argv)
@@ -38,7 +40,7 @@ int main(int argc, char** argv)
     moduleManager->make_module_graph("GameRT", true);
     moduleManager->init_module_graph(argc, argv);
 
-    assert(gamert_get_ecs_world());
+    assert(skr_runtime_get_dual_storage());
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     auto cgpuDevice = skr_renderer_get_cgpu_device();
@@ -139,7 +141,7 @@ int main(int argc, char** argv)
                     };
                 }
             };
-            dualS_query(gamert_get_ecs_world(), &filter, &meta, DUAL_LAMBDA(moveFunc));
+            dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(moveFunc));
         }
         {
             // acquire frame

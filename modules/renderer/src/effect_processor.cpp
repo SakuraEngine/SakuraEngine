@@ -5,8 +5,7 @@
 #include "EASTL/unordered_map.h"
 #include "EASTL/vector.h"
 
-struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor
-{
+struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
     RenderEffectProcessorVtblProxy(VtblRenderEffectProcessor vtbl)
         : vtbl(vtbl)
     {
@@ -35,11 +34,10 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
     VtblRenderEffectProcessor vtbl;
 };
 
-struct SKR_RENDERER_API SkrRenderer : public skr::Renderer
-{
+struct SKR_RENDERER_API SkrRenderer : public skr::Renderer {
     friend class ::SkrRendererModule;
 
-    ~SkrRenderer() override 
+    ~SkrRenderer() override
     {
         for (auto proxy : processor_vtbl_proxies)
         {
@@ -75,6 +73,8 @@ void skr_renderer_register_render_effect_vtbl(SkrRenderer* renderer, const char*
     renderer->processors[name] = proxy;
 }
 
+RUNTIME_EXTERN_C RUNTIME_API struct dual_storage_t* skr_runtime_get_dual_storage();
+
 void skr_render_effect_attach_cv(SkrRenderer* renderer, dual_chunk_view_t* cv, const char* effect_name)
 {
     using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
@@ -83,6 +83,7 @@ void skr_render_effect_attach_cv(SkrRenderer* renderer, dual_chunk_view_t* cv, c
     if (feature_arrs)
     {
         auto&& i_processor = renderer->processors.find(effect_name);
+
         if (i_processor == renderer->processors.end())
         {
             SKR_ASSERT(false && "No render effect processor registered");
