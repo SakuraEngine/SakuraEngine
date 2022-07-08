@@ -22,6 +22,8 @@ uint32_t backbuffer_index;
 ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
 extern void free_api_objects();
 extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph);
+extern void initialize_render_effects(skr::render_graph::RenderGraph* renderGraph);
+extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph);
 
 #include "gamert.h"
 #include "render-scene.h"
@@ -52,6 +54,7 @@ int main(int argc, char** argv)
     window = skr_create_window(
     fmt::format("Game [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
     &window_desc);
+    // Initialize renderer
     auto swapchain = skr_renderer_register_window(window);
     auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
     namespace render_graph = skr::render_graph;
@@ -62,6 +65,7 @@ int main(int argc, char** argv)
         .enable_memory_aliasing();
     });
     create_render_resources(renderGraph);
+    initialize_render_effects(renderGraph);
     // Setup Gainput
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     enum InputAction
@@ -70,6 +74,7 @@ int main(int argc, char** argv)
         Cao,
     };
     auto hwnd = skr_window_get_native_handle(window);
+    // Initialize Input
     gainput::InputManager manager;
     manager.Init(hwnd);
     manager.SetWindowsInstance(hwnd);
@@ -171,6 +176,7 @@ int main(int argc, char** argv)
         }
         ImGui::End();
         ecsr_draw_scene((struct skr_render_graph_t*)renderGraph, shading_rate);
+        skr_renderer_render_frame(renderGraph);
         render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
@@ -190,6 +196,7 @@ int main(int argc, char** argv)
     // clean up
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
     cgpu_free_fence(present_fence);
+    finalize_render_effects(renderGraph);
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
     free_api_objects();
