@@ -8,26 +8,29 @@
 extern "C" {
 #endif
 
+typedef struct ISkrRenderer ISkrRenderer;
+
 typedef struct skr_vertex_buffer_view_t {
     CGPUBufferId buffer;
     // in bytes
-    uint32_t offset = 0;
+    uint32_t offset;
     // in bytes
-    uint32_t size = 0;
+    uint32_t size;
     // in bytes
-    uint32_t stride = 0;
+    uint32_t stride;
 } skr_vertex_buffer_view_t;
 
 typedef struct skr_index_buffer_view_t {
     CGPUBufferId buffer;
     // in bytes
-    uint32_t offset = 0;
+    uint32_t offset;
     // in bytes
-    uint32_t stride = 0;
+    uint32_t stride;
 } skr_index_buffer_view_t;
 
 typedef struct skr_primitive_draw_t {
     CGPURenderPipelineId pipeline;
+    const char* push_const_name;
     const uint8_t* push_const;
     const skr_vertex_buffer_view_t* vertex_buffers;
     uint32_t vertex_buffer_count;
