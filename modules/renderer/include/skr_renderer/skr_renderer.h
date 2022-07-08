@@ -1,14 +1,13 @@
 #pragma once
 #include "SkrRenderer/skr_renderer.configure.h"
-#ifdef __cplusplus
-    #include "render_graph/frontend/render_graph.hpp"
-#endif
+#include "primitive_pass.h"
+#include "effect_processor.h"
 
 struct SKR_RENDERER_API ISkrRenderer {
 #ifdef __cplusplus
     virtual ~ISkrRenderer() = default;
     virtual void initialize() = 0;
-    virtual void render(class skr::render_graph::RenderGraph* render_graph) = 0;
+    virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
     virtual void finalize() = 0;
 #endif
 };

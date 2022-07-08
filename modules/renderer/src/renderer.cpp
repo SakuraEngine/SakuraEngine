@@ -2,7 +2,7 @@
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 #include "ecs/callback.hpp"
-#include "skr_renderer/render_effects/effect_processor.h"
+#include "skr_renderer/effect_processor.h"
 #include "skr_renderer/skr_renderer.h"
 #include "EASTL/unordered_map.h"
 #include "EASTL/vector.h"
@@ -27,17 +27,17 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
             vtbl.initialize_data(renderer, storage, cv);
     }
 
-    uint32_t produce_drawcall(dual_storage_t* game_storage) override
+    uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* game_storage) override
     {
         if (vtbl.produce_drawcall)
-            return vtbl.produce_drawcall(game_storage);
+            return vtbl.produce_drawcall(pass, game_storage);
         return 0;
     }
 
-    void peek_drawcall(skr_primitive_draw_list_view_t* drawcalls) override
+    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls) override
     {
         if (vtbl.peek_drawcall)
-            vtbl.peek_drawcall(drawcalls);
+            vtbl.peek_drawcall(pass, drawcalls);
     }
 
     VtblRenderEffectProcessor vtbl;
@@ -58,20 +58,31 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
 
     void render(skr::render_graph::RenderGraph* render_graph) override
     {
-        for (auto& processor : processors)
+        // produce draw calls
+        for (auto& pass : passes)
         {
-            auto storage = skr_runtime_get_dual_storage();
-            auto dcn = processor.second->produce_drawcall(storage);
-            if (dcn)
+            auto& drawcall_arena = drawcalls[pass.second->identity()];
+            // used out
+            drawcall_arena.clear();
+            for (auto& processor : processors)
             {
-                auto drawcalls = make_zeroed<skr_primitive_draw_list_view_t>();
-
-                processor.second->peek_drawcall(&drawcalls);
+                auto storage = skr_runtime_get_dual_storage();
+                auto dcn = processor.second->produce_drawcall(pass.second, storage);
+                drawcall_arena.resize(dcn + drawcall_arena.size());
+                if (dcn && pass.second && processor.second)
+                {
+                    auto drawcalls = make_zeroed<skr_primitive_draw_list_view_t>();
+                    drawcalls.drawcalls = drawcall_arena.data();
+                    drawcalls.count = dcn;
+                    processor.second->peek_drawcall(pass.second, &drawcalls);
+                }
             }
         }
     }
 
-    eastl::unordered_map<skr_renderer_effect_name_t, IRenderEffectProcessor*> processors;
+    eastl::vector_map<skr_render_pass_name_t, eastl::vector<skr_primitive_draw_t>> drawcalls;
+    eastl::unordered_map<skr_render_pass_name_t, IPrimitiveRenderPass*> passes;
+    eastl::unordered_map<skr_render_effect_name_t, IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 };
 
@@ -80,7 +91,27 @@ skr::Renderer* create_renderer_impl()
     return new SkrRendererImpl();
 }
 
-void skr_renderer_register_render_effect(ISkrRenderer* r, skr_renderer_effect_name_t name, IRenderEffectProcessor* processor)
+void skr_renderer_register_render_pass(ISkrRenderer* r, skr_render_effect_name_t name, IPrimitiveRenderPass* pass)
+{
+    auto renderer = (SkrRendererImpl*)r;
+    if (auto&& _ = renderer->passes.find(name); _ != renderer->passes.end())
+    {
+        SKR_ASSERT(false && "Render pass already registered");
+        return;
+    }
+    renderer->passes[name] = pass;
+}
+
+void skr_renderer_remove_render_pass(ISkrRenderer* r, skr_render_pass_name_t name)
+{
+    auto renderer = (SkrRendererImpl*)r;
+    if (auto&& _ = renderer->passes.find(name); _ != renderer->passes.end())
+    {
+        renderer->passes.erase(_);
+    }
+}
+
+void skr_renderer_register_render_effect(ISkrRenderer* r, skr_render_effect_name_t name, IRenderEffectProcessor* processor)
 {
     auto renderer = (SkrRendererImpl*)r;
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
@@ -91,7 +122,7 @@ void skr_renderer_register_render_effect(ISkrRenderer* r, skr_renderer_effect_na
     renderer->processors[name] = processor;
 }
 
-void skr_renderer_register_render_effect_vtbl(ISkrRenderer* r, skr_renderer_effect_name_t name, VtblRenderEffectProcessor* processor)
+void skr_renderer_register_render_effect_vtbl(ISkrRenderer* r, skr_render_effect_name_t name, VtblRenderEffectProcessor* processor)
 {
     auto renderer = (SkrRendererImpl*)r;
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
@@ -104,7 +135,7 @@ void skr_renderer_register_render_effect_vtbl(ISkrRenderer* r, skr_renderer_effe
     renderer->processors[name] = proxy;
 }
 
-void skr_renderer_remove_render_effect(ISkrRenderer* r, skr_renderer_effect_name_t name)
+void skr_renderer_remove_render_effect(ISkrRenderer* r, skr_render_effect_name_t name)
 {
     auto renderer = (SkrRendererImpl*)r;
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
@@ -117,7 +148,7 @@ namespace
 {
 using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
 
-void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name)
+void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name)
 {
     auto renderer = (SkrRendererImpl*)r;
     auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
@@ -164,7 +195,7 @@ void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
     }
 }
 
-void skr_render_effect_detach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name)
+void skr_render_effect_detach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name)
 {
     if (cv)
     {
@@ -191,7 +222,7 @@ void skr_render_effect_detach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
 }
 
 void skr_render_effect_add_delta(ISkrRenderer* r, const SGameEntity* entities, uint32_t count,
-skr_renderer_effect_name_t effect_name, dual_delta_type_t delta,
+skr_render_effect_name_t effect_name, dual_delta_type_t delta,
 dual_cast_callback_t callback, void* user_data)
 {
     if (count)
@@ -227,7 +258,7 @@ dual_cast_callback_t callback, void* user_data)
     }
 }
 
-void skr_render_effect_access(ISkrRenderer* r, const SGameEntity* entities, uint32_t count, skr_renderer_effect_name_t effect_name, dual_view_callback_t view, void* u)
+void skr_render_effect_access(ISkrRenderer* r, const SGameEntity* entities, uint32_t count, skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u)
 {
     if (count)
     {

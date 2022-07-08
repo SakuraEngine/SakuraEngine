@@ -60,7 +60,8 @@ int main(int argc, char** argv)
     namespace render_graph = skr::render_graph;
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
-        builder.with_device(skr_renderer_get_cgpu_device())
+        builder
+        .with_device(skr_renderer_get_cgpu_device())
         .with_gfx_queue(skr_renderer_get_gfx_queue())
         .enable_memory_aliasing();
     });
