@@ -4,6 +4,7 @@
 #include "ecs/dualX.h"
 #include "skr_renderer/primitive_draw.h"
 
+typedef const char* skr_renderer_effect_name_t;
 struct sreflect sattr(
     "guid" : "0a91d7fa-87f3-4dbb-a41a-45abd333e6ee",
     "component" : 
@@ -12,8 +13,8 @@ struct sreflect sattr(
     }
 ) skr_render_effect_t
 {
+    skr_renderer_effect_name_t name;
     dual_entity_t entity;
-    const char* name;
 };
 
 #ifdef __cplusplus
@@ -31,55 +32,35 @@ typedef dual_storage_t SRenderStorage;
 typedef struct SkrRenderer SkrRenderer;
 
 // Data operations for render effect
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_renderer_register_render_effect(SkrRenderer* renderer, const char* name, IRenderEffectProcessor* processor);
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_renderer_register_render_effect_vtbl(SkrRenderer* renderer, const char* name, VtblRenderEffectProcessor* processor);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_renderer_register_render_effect(SkrRenderer* renderer, skr_renderer_effect_name_t name, IRenderEffectProcessor* processor);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_renderer_register_render_effect_vtbl(SkrRenderer* renderer, skr_renderer_effect_name_t name, VtblRenderEffectProcessor* processor);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_attach(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name);
-typedef void (*SProcRenderEffectAttach)(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_attach(SkrRenderer*, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name);
+typedef void (*SProcRenderEffectAttach)(SkrRenderer*, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_detach(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name);
-typedef void (*SProcRenderEffectDetach)(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_detach(SkrRenderer*, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name);
+typedef void (*SProcRenderEffectDetach)(SkrRenderer*, dual_chunk_view_t* cv, skr_renderer_effect_name_t effect_name);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_attach_cv(SkrRenderer*, dual_chunk_view_t* cv, const char* effect_name);
-typedef void (*SProcRenderEffectAttachCV)(SkrRenderer*, dual_chunk_view_t* cv, const char* effect_name);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_add_delta(SkrRenderer*, const SGameEntity* entities, uint32_t count,
+skr_renderer_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
+typedef void (*SProcRenderEffectAddDelta)(SkrRenderer*, const SGameEntity* entities, uint32_t count,
+skr_renderer_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_detach_cv(SkrRenderer*, dual_chunk_view_t* cv, const char* effect_name);
-typedef void (*SProcRenderEffectDetachCV)(SkrRenderer*, dual_chunk_view_t* cv, const char* effect_name);
-
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_query(SkrRenderer*, const char* effect_name, dual_view_callback_t callback, void* user_data);
-typedef void (*SProcRenderEffectQuery)(SkrRenderer*, const char* effect_name, dual_view_callback_t callback, void* user_data);
-
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_access(SkrRenderer*, SGameEntity entity, const char* effect_name, dual_chunk_view_t* view);
-typedef void (*SProcRenderEffectAccess)(SkrRenderer*, SGameEntity entity, const char* effect_name, dual_chunk_view_t* view);
-
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_add_data(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name, dual_type_index_t type);
-typedef void (*SProcRenderEffectAddData)(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name, dual_type_index_t type);
-
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_render_effect_remove_data(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name, dual_type_index_t type);
-typedef void (*SProcRenderEffectRemoveData)(SkrRenderer*, const SGameEntity* entities, uint32_t count, const char* effect_name, dual_type_index_t type);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_access(SkrRenderer*, const SGameEntity* entities, uint32_t count,
+skr_renderer_effect_name_t effect_name, dual_view_callback_t view, void* u);
+typedef void (*SProcRenderEffectAccess)(SkrRenderer*, const SGameEntity* entities, uint32_t count,
+skr_renderer_effect_name_t effect_name, dual_view_callback_t view, void* u);
 
 // Effect interfaces
-// typedef void (*SProcRenderEffectOnAttach)(const SGameEntity* entities, uint32_t count, SRenderEffectEntity effect);
-// typedef void (*SProcRenderEffectOnDetach)(const SGameEntity* entities, uint32_t count, SRenderEffectEntity effect);
-typedef void (*SProcRenderEffectGetTypeSet)(const SGameEntity* entities, uint32_t count, dual_type_set_t* set);
-typedef void (*SProcRenderEffectGetTypeSetCV)(const dual_chunk_view_t* cv, dual_type_set_t* set);
+typedef void (*SProcRenderEffectGetTypeSet)(const dual_chunk_view_t* cv, dual_type_set_t* set);
+typedef void (*SProcRenderEffectInitializeData)(SkrRenderer*, dual_storage_t*, dual_chunk_view_t*);
 // Drawcall interfaces for effect processor
 typedef uint32_t (*SProcRenderEffectProduceDrawcall)(SGameSceneStorage* game_storage, SRenderStorage* effect_storage);
 typedef void (*SProcRenderEffectPeekDrawcall)(skr_primitive_draw_list_view_t* drawcalls);
 
 typedef struct VtblRenderEffectProcessor {
     SProcRenderEffectGetTypeSet get_type_set;
-    SProcRenderEffectGetTypeSetCV get_type_set_cv;
+    SProcRenderEffectInitializeData initialize_data;
 
     SProcRenderEffectProduceDrawcall produce_drawcall;
     SProcRenderEffectPeekDrawcall peek_drawcall;
@@ -89,12 +70,11 @@ typedef struct SKR_RENDERER_API IRenderEffectProcessor {
 #ifdef __cplusplus
     virtual ~IRenderEffectProcessor() = default;
 
-    virtual void get_type_set(const SGameEntity* entities, uint32_t count, dual_type_set_t* set) = 0;
-    virtual void get_type_set_cv(const dual_chunk_view_t* cv, dual_type_set_t* set) = 0;
+    virtual void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) = 0;
+    virtual void initialize_data(SkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* cv) = 0;
 
     virtual uint32_t produce_drawcall(SGameSceneStorage* game_storage, SRenderStorage* effect_storage) = 0;
     virtual void peek_drawcall(skr_primitive_draw_list_view_t* drawcalls) = 0;
-
 #endif
 } IRenderEffectProcessor;
 

@@ -10,6 +10,7 @@
 #include "platform/window.h"
 #include "tracy/Tracy.hpp"
 #include "pass_profiler.h"
+#include "platform/thread.h"
 
 thread_local SWindowHandle window;
 thread_local CGPUSurfaceId surface;
@@ -46,7 +47,7 @@ void create_api_objects()
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
     instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
+    instance_desc.enable_gpu_based_validation = false;
     instance_desc.enable_set_name = true;
     instance = cgpu_create_instance(&instance_desc);
 
@@ -237,6 +238,7 @@ struct LightingCSPushConstants {
 };
 static LightingCSPushConstants lighting_cs_data = {};
 bool fragmentLightingPass = true;
+bool lockFPS = true;
 bool DPIAware = false;
 
 #ifdef SKR_OS_WINDOWS
@@ -375,6 +377,10 @@ int main(int argc, char* argv[])
             if (ImGui::Button(fragmentLightingPass ? "SwitchToComputeLightingPass" : "SwitchToFragmentLightingPass"))
             {
                 fragmentLightingPass = !fragmentLightingPass;
+            }
+            if (ImGui::Button(lockFPS ? "UnlockFPS" : "LockFPS"))
+            {
+                lockFPS = !lockFPS;
             }
             if (frame_index > RG_MAX_FRAME_IN_FLIGHT)
             {
@@ -614,6 +620,8 @@ int main(int argc, char* argv[])
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
             cgpu_queue_present(gfx_queue, &present_desc);
+
+            if (lockFPS) skr_thread_sleep(16);
         }
     }
     cgpu_wait_queue_idle(gfx_queue);
