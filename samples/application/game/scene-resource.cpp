@@ -9,7 +9,7 @@ namespace skg::resource
 {
     skr_type_id_t SSceneFactory::GetResourceType()
     {
-        return get_type_id_game_scene_t();
+        return dual_id_of<game_scene_t>();
     }
 
     ESkrLoadStatus SSceneFactory::Load(skr_resource_record_t* record)

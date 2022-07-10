@@ -1,4 +1,8 @@
 #include "../../cgpu/common/utils.h"
+#include "ecs/callback.hpp"
+#include "ecs/dual.h"
+#include "ecs/type_builder.hpp"
+#include "platform/thread.h"
 #include "platform/window.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
@@ -9,9 +13,12 @@
 #include "skr_renderer/skr_renderer.h"
 #include "runtime_module.h"
 #include "imgui/skr_imgui_rg.h"
+#include "skr_scene/scene.h"
 #include "skr_renderer/effect_processor.h"
 #include "skr_renderer/skr_renderer.h"
 #include "math/vectormath.hpp"
+#include "utils/make_zeroed.hpp"
+#include <mutex>
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
@@ -31,14 +38,50 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
     {
+        static struct _InitFwdTypeSet 
+        {
+            _InitFwdTypeSet(RenderEffectForward& self)
+            {
+                self.type_builder.with<skr_transform_t>();
+            }
+        } init_typeset(*this);
+        *set = type_builder.build();
     }
 
     void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* cv) override
     {
     }
 
-    uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* game_storage) override
+    uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
+        using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
+        dual::type_builder_t featuresBuilder;
+        featuresBuilder.with<skr_render_effect_t>();
+        auto filter = make_zeroed<dual_filter_t>();
+        filter.all = featuresBuilder.build();
+        auto meta = make_zeroed<dual_meta_filter_t>();
+        auto featuresF = [](dual_chunk_view_t* cv){
+            auto ents = dualV_get_entities(cv);
+            auto rf_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
+            if (rf_arrs)
+            {
+                for (uint32_t i = 0; i < cv->count; i++) 
+                {
+                    auto& rf_arr = rf_arrs[i];
+                    for (auto& rf : rf_arr)
+                    {
+                        SKR_LOG_FMT_INFO("game ent {} with {} ent:{}", ents[i], rf.name, rf.effect_entity);
+                    }
+                }
+            }
+        };
+        static bool _callonce = true;
+        if (_callonce)
+        {
+            dualS_query(storage, &filter, &meta, DUAL_LAMBDA(featuresF));
+            _callonce = false;
+        }
+
         // SKR_LOG_FMT_INFO("Pass {} asked Feature {} to produce drawcall", pass->identity(), forward_effect_name);
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
@@ -54,6 +97,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         {
         }
     }
+    dual::type_builder_t type_builder;
     struct PushConstants {
         skr::math::float4x4 world;
         skr::math::float4x4 view_proj;

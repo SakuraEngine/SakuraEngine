@@ -1,10 +1,12 @@
 #include "../../cgpu/common/utils.h"
+#include "ecs/dual.h"
 #include "platform/window.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "gamert.h"
 #include "platform/memory.h"
+#include "skr_renderer/effect_processor.h"
 #include "utils/log.h"
 #include "skr_renderer/skr_renderer.h"
 #include "runtime_module.h"
@@ -385,6 +387,9 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
         "Component {} of rendereable: name: {}",
         i, cdesc->name);
     }
+    // add new render feature comp
+    ctypes[ctype_count] = dual_id_of<skr_render_effect_t>::get();
+    ctype_count++;
     // create vbs & ib
     create_geom_resources(renderGraph);
     // allocate renderable
@@ -399,7 +404,7 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
         auto index_buffers = (CGPUBufferId*)dualV_get_owned_ro(view, index_buffer_type);
         auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_ro(view, dual_id_of<ecsr_vertex_buffer_t>::get());
         auto material_instances = (gfx_material_inst_t*)dualV_get_owned_ro(view, gfx_material_inst_type);
-        auto transforms = (transform_t*)dualV_get_owned_ro(view, transform_type);
+        auto transforms = (skr_transform_t*)dualV_get_owned_ro(view, dual_id_of<skr_transform_t>::get());
         for (uint32_t i = 0; i < view->count; i++)
         {
             transforms[i].location = {
@@ -413,6 +418,8 @@ void create_test_materials(skr::render_graph::RenderGraph* renderGraph)
             vertex_buffers[i].emplace_back(vertex_buffer, sizeof(uint32_t), offsetof(CubeGeometry, g_Normals));
             material_instances[i].material = material_id;
         }
+        auto renderer = skr_renderer_get_renderer();
+        skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
     dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 100, DUAL_LAMBDA(primSetup));
 }

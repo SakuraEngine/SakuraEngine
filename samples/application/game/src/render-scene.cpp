@@ -1,6 +1,7 @@
 #include "render-scene.h"
 #include "cgpu/api.h"
 #include "cgpu/flags.h"
+#include "ecs/dual.h"
 #include "gamert.h"
 #include "utils/make_zeroed.hpp"
 #include <EASTL/unordered_map.h>
@@ -98,7 +99,7 @@ dual_type_index_t* ctypes, uint32_t* ctype_count, dual_entity_t* emetas, uint32_
         *ctype_count += 4;
         if (ctypes)
         {
-            ctypes[0] = transform_type;
+            ctypes[0] = dual_id_of<skr_transform_t>::get();
             ctypes[1] = gfx_material_inst_type;
             ctypes[2] = index_buffer_type;
             ctypes[3] = dual_id_of<ecsr_vertex_buffer_t>::get();
@@ -186,7 +187,7 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
             auto& mat = mats[i];
             {
                 const dual_type_index_t draw_filter_all[] = {
-                    transform_type, gfx_material_inst_type, index_buffer_type,
+                    dual_id_of<skr_transform_t>::get(), gfx_material_inst_type, index_buffer_type,
                     dual_id_of<ecsr_vertex_buffer_t>::get()
                 };
                 auto draw_filter = make_zeroed<dual_filter_t>();
@@ -239,7 +240,7 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
                     using vertex_buffers_t = dual::array_component_T<ecsr_vertex_buffer_t, 8>;
                     auto index_buffers = (CGPUBufferId*)dualV_get_owned_ro(inView, index_buffer_type);
                     auto vertex_buffers = (vertex_buffers_t*)dualV_get_owned_ro(inView, dual_id_of<ecsr_vertex_buffer_t>::get());
-                    auto transforms = (transform_t*)dualV_get_owned_ro(inView, transform_type);
+                    auto transforms = (skr_transform_t*)dualV_get_owned_ro(inView, dual_id_of<skr_transform_t>::get());
                     for (uint32_t j = 0; j < inView->count; j++)
                     {
                         struct PushConstants {
@@ -284,7 +285,7 @@ void ecsr_draw_scene(struct skr_render_graph_t* graph, ECGPUShadingRate shading_
                     }
                 };
                 const dual_type_index_t draw_filter_all[] = {
-                    transform_type, gfx_material_inst_type, index_buffer_type,
+                    dual_id_of<skr_transform_t>::get(), gfx_material_inst_type, index_buffer_type,
                     dual_id_of<ecsr_vertex_buffer_t>::get()
                 };
                 auto draw_filter = make_zeroed<dual_filter_t>();

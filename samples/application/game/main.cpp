@@ -65,8 +65,8 @@ int main(int argc, char** argv)
         .with_gfx_queue(skr_renderer_get_gfx_queue())
         .enable_memory_aliasing();
     });
-    create_render_resources(renderGraph);
     initialize_render_effects(renderGraph);
+    create_render_resources(renderGraph);
     // Setup Gainput
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     enum InputAction
@@ -130,13 +130,14 @@ int main(int argc, char** argv)
         {
             auto filter = make_zeroed<dual_filter_t>();
             auto meta = make_zeroed<dual_meta_filter_t>();
+            auto transform_type = dual_id_of<skr_transform_t>::get();
             filter.all.data = &transform_type;
             filter.all.length = 1;
             float lerps[] = { 1.25, 2.0 };
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
             auto moveFunc = [&](dual_chunk_view_t* view) {
-                auto transforms = (transform_t*)dualV_get_owned_ro(view, transform_type);
+                auto transforms = (skr_transform_t*)dualV_get_owned_ro(view, transform_type);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     auto lscale = (float)abs(sin(total_sec * 0.5));

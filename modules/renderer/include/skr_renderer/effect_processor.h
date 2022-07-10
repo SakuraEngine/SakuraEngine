@@ -14,7 +14,7 @@ struct sreflect sattr(
 ) skr_render_effect_t
 {
     skr_render_effect_name_t name;
-    dual_entity_t entity;
+    dual_entity_t effect_entity;
 };
 
 #ifdef __cplusplus
