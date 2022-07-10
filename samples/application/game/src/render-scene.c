@@ -13,7 +13,6 @@ dual_type_index_t gfx_material_inst_type = UINT32_MAX;
 // index/vertex buffers
 dual_type_index_t index_buffer_type = UINT32_MAX;
 dual_type_index_t vertex_buffer_type = UINT32_MAX;
-dual_type_index_t transform_type = UINT32_MAX;
 
 static struct
 {
@@ -212,15 +211,6 @@ void ecsr_register_types()
         processor_material_type = dualT_register_type(&desc);
     }
     // objects on scene prims
-    {
-        dual_type_description_t desc = {
-            .name = "transform",
-            .size = sizeof(transform_t),
-            .guid = transform_guid,
-            .alignment = _Alignof(transform_t)
-        };
-        transform_type = dualT_register_type(&desc);
-    }
     {
         dual_type_description_t desc = {
             .name = "material_inst",

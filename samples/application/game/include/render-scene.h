@@ -83,15 +83,6 @@ struct sreflect sattr(
 };
 typedef struct gfx_param_override_t gfx_param_override_t;
 
-// {2bd63472-32dc-4be3-b984-0e08d763b61b}
-const skr_guid_t transform_guid =
-{0x2bd63472, 0x32dc, 0x4be3, {0xb9, 0x84, 0x0e, 0x08, 0xd7, 0x63, 0xb6, 0x1b}};
-typedef struct transform_t {
-    skr_float3_t location;
-    skr_float3_t scale;
-    skr_float4_t rotation;
-} transform_t;
-
 struct sreflect sattr(
     "guid" : "2a661e86-4dc0-4fb6-808f-ce9f4ffd0448",
     "component" : 
@@ -165,7 +156,6 @@ extern GAMERT_API dual_type_index_t gfx_material_inst_type;
 // index/vertex buffers
 extern GAMERT_API dual_type_index_t index_buffer_type; 
 extern GAMERT_API dual_type_index_t vertex_buffer_type; 
-extern GAMERT_API dual_type_index_t transform_type; 
 
 #ifdef __cplusplus
 }

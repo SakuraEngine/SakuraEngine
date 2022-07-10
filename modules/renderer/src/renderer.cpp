@@ -80,9 +80,9 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
         }
     }
 
-    eastl::vector_map<skr_render_pass_name_t, eastl::vector<skr_primitive_draw_t>> drawcalls;
-    eastl::unordered_map<skr_render_pass_name_t, IPrimitiveRenderPass*> passes;
-    eastl::unordered_map<skr_render_effect_name_t, IRenderEffectProcessor*> processors;
+    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_t>> drawcalls;
+    eastl::unordered_map<eastl::string, IPrimitiveRenderPass*> passes;
+    eastl::unordered_map<eastl::string, IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 };
 
@@ -144,8 +144,6 @@ void skr_renderer_remove_render_effect(ISkrRenderer* r, skr_render_effect_name_t
     }
 }
 
-namespace
-{
 using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
 
 void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name)
@@ -176,7 +174,7 @@ void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
         // attach render effect entities to game entities
         if (out_cv)
         {
-            auto entities = dualV_get_entities(cv);
+            auto entities = dualV_get_entities(out_cv);
             for (uint32_t i = 0; i < cv->count; i++)
             {
                 auto& features = feature_arrs[i];
@@ -189,7 +187,7 @@ void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
                 features.push_back({ nullptr, NULL_ENTITY });
                 auto& feature = features.back();
                 feature.name = effect_name;
-                feature.entity = entities[i];
+                feature.effect_entity = entities[i];
             }
         }
     }
@@ -211,7 +209,7 @@ void skr_render_effect_detach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
                     if (strcmp(_.name, effect_name) == 0)
                     {
                         _.name = nullptr;
-                        _.entity = NULL_ENTITY;
+                        _.effect_entity = NULL_ENTITY;
                         removed_index = i;
                     }
                 }
@@ -243,7 +241,7 @@ dual_cast_callback_t callback, void* user_data)
                     {
                         if (strcmp(_.name, effect_name) == 0)
                         {
-                            render_effects.emplace_back(_.entity);
+                            render_effects.emplace_back(_.effect_entity);
                         }
                     }
                 }
@@ -278,7 +276,7 @@ void skr_render_effect_access(ISkrRenderer* r, const SGameEntity* entities, uint
                     {
                         if (strcmp(_.name, effect_name) == 0)
                         {
-                            render_effects.emplace_back(_.entity);
+                            render_effects.emplace_back(_.effect_entity);
                         }
                     }
                 }
@@ -289,5 +287,3 @@ void skr_render_effect_access(ISkrRenderer* r, const SGameEntity* entities, uint
         dualS_batch(storage, render_effects.data(), (EIndex)render_effects.size(), view, u);
     }
 }
-
-} // namespace
