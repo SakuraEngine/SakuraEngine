@@ -1,7 +1,8 @@
 #pragma once
+#include "SkrScene/skr_scene.configure.h"
 #include "ecs/dual.h"
 #if !defined(__meta__) && defined(__cplusplus)
-    #include "GameRT/scene.dual.generated.hpp"
+    #include "SkrScene/scene.dual.generated.hpp"
 #endif
 
 struct sreflect sattr(

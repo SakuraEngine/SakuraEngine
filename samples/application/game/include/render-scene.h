@@ -2,7 +2,7 @@
 #include "GameRT/gamert.configure.h"
 #include "ecs/dual.h"
 // align up & can directly update with GPU-scene
-#include "scene.h"
+#include "skr_scene/scene.h"
 #include "cgpu/api.h"
 #include "utils/types.h"
 
