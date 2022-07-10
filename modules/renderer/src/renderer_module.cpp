@@ -15,6 +15,7 @@ SKR_MODULE_METADATA(u8R"(
     "version" : "0.0.1",
     "linking" : "shared",
     "dependencies" : [
+        {"name":"SkrScene", "version":"0.1.0"},
         {"name":"SkrRenderGraph", "version":"0.1.0"},
         {"name":"SkrImGui", "version":"0.1.0"}
     ],

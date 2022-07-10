@@ -11,7 +11,7 @@
 #include "utils/defer.hpp"
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
-#include "scene.h"
+#include "skr_scene/scene.h"
 #include "transform.hpp"
 #include "ecs/type_builder.hpp"
 

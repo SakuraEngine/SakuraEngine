@@ -1,13 +1,13 @@
-#include "transform.hpp"
 #include "ecs/array.hpp"
 #include "ecs/dual.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
+#include "utils/parallel_for.hpp"
 #include "ftl/task.h"
 #include "math/vector.hpp"
 #include "math/vectormath.hpp"
-#include "scene.h"
-#include "utils/parallel_for.hpp"
+#include "skr_scene/scene.h"
+#include "skr_scene/transform.hpp"
 
 template <class T>
 static void skr_local_to_x(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)

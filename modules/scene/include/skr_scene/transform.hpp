@@ -1,10 +1,10 @@
 #include "ecs/dual.h"
-#include "GameRT/gamert.configure.h"
+#include "SkrScene/skr_scene.configure.h"
 #include "math/matrix.hpp"
 #include "math/vector.hpp"
 #include "math/rotator.hpp"
 #if !defined(__meta__)
-    #include "GameRT/transform.dual.generated.hpp"
+    #include "SkrScene/transform.dual.generated.hpp"
 #endif
 
 struct sreflect sattr(
@@ -59,6 +59,6 @@ struct skr_transform_system {
 };
 
 extern "C" {
-GAMERT_API void skr_transform_setup(dual_storage_t* world, skr_transform_system* system);
-GAMERT_API void skr_transform_update(skr_transform_system* query);
+SKR_SCENE_API void skr_transform_setup(dual_storage_t* world, skr_transform_system* system);
+SKR_SCENE_API void skr_transform_update(skr_transform_system* query);
 }

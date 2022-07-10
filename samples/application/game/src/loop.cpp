@@ -3,7 +3,7 @@
 #include "gamert.h"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
-#include "scene.h"
+#include "skr_scene/scene.h"
 
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
