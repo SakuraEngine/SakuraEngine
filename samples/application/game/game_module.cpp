@@ -233,6 +233,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     }
     // clean up
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+    cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
     finalize_render_effects(renderGraph);
     render_graph::RenderGraph::destroy(renderGraph);
