@@ -9,6 +9,10 @@ struct SKR_RENDERER_API ISkrRenderer {
     virtual void initialize() = 0;
     virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
     virtual void finalize() = 0;
+    virtual CGPUDeviceId get_cgpu_device() const = 0;
+    virtual CGPUQueueId get_gfx_queue() const = 0;
+    virtual ECGPUFormat get_swapchain_format() const = 0;
+    virtual CGPUSamplerId get_linear_sampler() const = 0;
 #endif
 };
 
@@ -26,15 +30,34 @@ struct SKR_RENDERER_API Renderer : public ISkrRenderer {
 
 public:
     virtual ~Renderer() = default;
-    virtual void initialize();
+    virtual void initialize() override;
     virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
-    virtual void finalize();
+    virtual void finalize() override;
+
+    virtual CGPUDeviceId get_cgpu_device() const override
+    {
+        return device;
+    }
+    virtual CGPUQueueId get_gfx_queue() const override
+    {
+        return gfx_queue;
+    }
+    virtual ECGPUFormat get_swapchain_format() const override
+    {
+        if (swapchains.size())
+            return (ECGPUFormat)swapchains.at(0).second->back_buffers[0]->format;
+        return CGPU_FORMAT_B8G8R8A8_UNORM;
+    }
+    virtual CGPUSamplerId get_linear_sampler() const override
+    {
+        return linear_sampler;
+    }
+
     CGPUSwapChainId register_window(SWindowHandle window);
 
 protected:
     void create_api_objects();
 
-    struct dual_storage_t* storage;
     // Device objects
     uint32_t backbuffer_index = 0;
     eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
