@@ -22,6 +22,7 @@ void type_builder_t::with(dual_type_index_t type)
     {
         data = (dual_type_index_t*)dual_malloc(sizeof(dual_type_index_t));
         data[0] = type;
+        length = 1;
     }
     else
     {
