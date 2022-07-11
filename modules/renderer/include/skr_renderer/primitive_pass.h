@@ -19,7 +19,7 @@ struct IPrimitiveRenderPass {
     virtual void on_register(ISkrRenderer* renderer) = 0;
     virtual void on_unregister(ISkrRenderer* renderer) = 0;
 
-    virtual void execute(skr::render_graph::RenderGraph* renderGraph, const skr_primitive_draw_list_view_t* dc) = 0;
+    virtual void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t dc) = 0;
     virtual skr_render_pass_name_t identity() const = 0;
 #endif
 };
