@@ -28,7 +28,7 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
 {
     using namespace dual;
     fixed_stack_scope_t _(localStack);
-    dual_entity_t temp = NULL_ENTITY;
+    dual_entity_t temp = DUAL_NULL_ENTITY;
     dual_chunk_view_t temp_view;
     // filter types
     auto filter_types = localStack.allocate<dual_type_index_t>(key_set->length + 1);
@@ -90,9 +90,9 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
     filter.all.length = key_set->length + 1;
     auto meta = make_zeroed<dual_meta_filter_t>();
     meta.all_meta = alloc_type->meta;
-    dual_entity_t result = NULL_ENTITY;
+    dual_entity_t result = DUAL_NULL_ENTITY;
     auto unique_callback = [&](dual_chunk_view_t* inView) {
-        if (result != NULL_ENTITY) return;
+        if (result != DUAL_NULL_ENTITY) return;
         auto hashes = (dualX_hashed_set_t*)dualV_get_owned_rw(inView, hashed_set_type);
         auto ents = dualV_get_entities(inView);
         for (uint32_t i = 0; i < inView->count; i++)
@@ -106,7 +106,7 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
         }
     };
     dualS_query(storage, &filter, &meta, DUAL_LAMBDA(unique_callback));
-    if (result != NULL_ENTITY)
+    if (result != DUAL_NULL_ENTITY)
     {
         dualS_destroy(storage, &temp_view);
     }

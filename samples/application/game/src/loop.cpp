@@ -29,7 +29,7 @@ bool GameLoop(GameContext& ctx)
         {
             auto es = dualV_get_entities(view);
             forloop (i, 0, view->count)
-                ImGui::Text("%d : %d", es[i] & ENTITY_ID_MASK, (es[i] >> ENTITY_VERSION_OFFSET) & ENTITY_VERSION_MASK);
+                ImGui::Text("%d : %d", es[i] & DUAL_ENTITY_ID_MASK, (es[i] >> DUAL_ENTITY_VERSION_OFFSET) & DUAL_ENTITY_VERSION_MASK);
         };
     };
     dualS_all(world, false, false, DUAL_LAMBDA(drawList));
