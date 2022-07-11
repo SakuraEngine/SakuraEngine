@@ -15,10 +15,23 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
     {
     }
 
+    void on_register(ISkrRenderer* renderer)
+    {
+        if (vtbl.on_register)
+            vtbl.on_register(renderer);
+    }
+
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
     {
         if (vtbl.get_type_set)
             vtbl.get_type_set(cv, set);
+    }
+
+    dual_type_index_t get_identity_type() override
+    {
+        if (vtbl.get_identity_type)
+            return vtbl.get_identity_type();
+        return DUAL_NULL_TYPE;
     }
 
     void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* cv) override
@@ -120,6 +133,7 @@ void skr_renderer_register_render_effect(ISkrRenderer* r, skr_render_effect_name
         return;
     }
     renderer->processors[name] = processor;
+    processor->on_register(r);
 }
 
 void skr_renderer_register_render_effect_vtbl(ISkrRenderer* r, skr_render_effect_name_t name, VtblRenderEffectProcessor* processor)
@@ -184,7 +198,7 @@ void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
                     SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
                 }
 #endif
-                features.push_back({ nullptr, NULL_ENTITY });
+                features.push_back({ nullptr, DUAL_NULL_ENTITY });
                 auto& feature = features.back();
                 feature.name = effect_name;
                 feature.effect_entity = entities[i];
@@ -209,7 +223,7 @@ void skr_render_effect_detach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
                     if (strcmp(_.name, effect_name) == 0)
                     {
                         _.name = nullptr;
-                        _.effect_entity = NULL_ENTITY;
+                        _.effect_entity = DUAL_NULL_ENTITY;
                         removed_index = i;
                     }
                 }

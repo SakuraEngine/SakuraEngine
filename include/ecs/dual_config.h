@@ -26,18 +26,17 @@ typedef struct dual_entity_debug_proxy_t {
     dual_entity_t value;
 } dual_entity_debug_proxy_t;
 
-#define ENTITY_ID_MASK 0x00FFFFFF
-#define ENTITY_VERSION_OFFSET 24
-#define ENTITY_VERSION_MASK 0x000000FF
-#define NULL_ENTITY 0xFFFFFFFF
-#define NULL_TYPE 0xFFFFFFFF
+#define DUAL_ENTITY_ID_MASK 0x00FFFFFF
+#define DUAL_ENTITY_VERSION_OFFSET 24
+#define DUAL_ENTITY_VERSION_MASK 0x000000FF
+#define DUAL_NULL_ENTITY 0xFFFFFFFF
+#define DUAL_NULL_TYPE 0xFFFFFFFF
 
 #ifndef forloop
     #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
 #endif
 
 #include "platform/memory.h"
-
 
 #define dual_malloc sakura_malloc
 #define dual_malloc_aligned sakura_malloc_aligned

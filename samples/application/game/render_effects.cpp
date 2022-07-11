@@ -32,20 +32,38 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 };
 RenderPassForward* forward_pass = new RenderPassForward();
 
+typedef struct forward_effect_identity_t {
+    dual_entity_t game_entity;
+} forward_effect_identity_t;
 skr_render_effect_name_t forward_effect_name = "ForwardEffect";
 struct RenderEffectForward : public IRenderEffectProcessor {
     ~RenderEffectForward() = default;
 
+    void on_register(ISkrRenderer* renderer) override
+    {
+        // make identity component type
+        {
+            auto guid = make_zeroed<skr_guid_t>();
+            dual_make_guid(&guid);
+            auto desc = make_zeroed<dual_type_description_t>();
+            desc.name = "forward_effect_identity";
+            desc.size = sizeof(forward_effect_identity_t);
+            desc.guid = guid;
+            desc.alignment = alignof(forward_effect_identity_t);
+            identity_type = dualT_register_type(&desc);
+        }
+        type_builder.with(identity_type);
+        type_builder.with<skr_transform_t>();
+    }
+
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
     {
-        static struct _InitFwdTypeSet 
-        {
-            _InitFwdTypeSet(RenderEffectForward& self)
-            {
-                self.type_builder.with<skr_transform_t>();
-            }
-        } init_typeset(*this);
         *set = type_builder.build();
+    }
+
+    dual_type_index_t get_identity_type() override
+    {
+        return identity_type;
     }
 
     void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* cv) override
@@ -60,12 +78,12 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         auto filter = make_zeroed<dual_filter_t>();
         filter.all = featuresBuilder.build();
         auto meta = make_zeroed<dual_meta_filter_t>();
-        auto featuresF = [](dual_chunk_view_t* cv){
+        auto featuresF = [](dual_chunk_view_t* cv) {
             auto ents = dualV_get_entities(cv);
             auto rf_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
             if (rf_arrs)
             {
-                for (uint32_t i = 0; i < cv->count; i++) 
+                for (uint32_t i = 0; i < cv->count; i++)
                 {
                     auto& rf_arr = rf_arrs[i];
                     for (auto& rf : rf_arr)
@@ -97,6 +115,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         {
         }
     }
+    dual_type_index_t identity_type;
     dual::type_builder_t type_builder;
     struct PushConstants {
         skr::math::float4x4 world;

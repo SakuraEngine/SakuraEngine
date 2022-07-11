@@ -43,13 +43,13 @@ static struct RegisterComponent${type.id}Helper
         desc.alignment = alignof(${type.name});
         type = dualT_register_type(&desc);
     }
-    dual_type_index_t type = NULL_TYPE;
+    dual_type_index_t type = DUAL_NULL_TYPE;
 } _RegisterComponent${type.id}Helper;
 
 dual_type_index_t dual_id_of<::${type.name}>::get()
 {
     auto result = _RegisterComponent${type.id}Helper.type;
-    SKR_ASSERT(result != NULL_TYPE);
+    SKR_ASSERT(result != DUAL_NULL_TYPE);
     return result;
 }
 %endfor
