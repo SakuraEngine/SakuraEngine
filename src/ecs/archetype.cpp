@@ -41,6 +41,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.storage = this;
     proto.type = clone(inType, buffer);
     proto.withMask = false;
+    proto.withDirty = false;
     proto.sizeToPatch = 0;
 
     proto.sizes = arena.allocate<uint32_t>(proto.type.length);
@@ -62,6 +63,8 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         auto t = proto.type.data[i];
         if (t == kMaskComponent)
             proto.withMask = true;
+        if (t == kDirtyComponent)
+            proto.withDirty = true;
         auto& desc = registry.descriptions[type_index_t(t).index()];
         proto.sizes[i] = desc.size;
         proto.elemSizes[i] = desc.elementSize;
@@ -185,7 +188,7 @@ dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
 {
     using namespace dual;
     if (type.type.length == 1 && type.type.data[0] == kDeadComponent) DUAL_UNLIKELY
-    return nullptr;
+        return nullptr;
     dual_group_t* group = try_get_group(type);
     if (!group)
         group = construct_group(type);

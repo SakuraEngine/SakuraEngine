@@ -180,6 +180,7 @@ typedef struct dual_meta_filter_t {
 typedef struct dual_array_component_t dual_array_component_t;
 
 typedef uint32_t dual_mask_component_t;
+typedef uint32_t dual_dirty_component_t;
 
 // APIS
 /**

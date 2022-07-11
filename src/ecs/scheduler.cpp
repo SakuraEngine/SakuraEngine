@@ -173,7 +173,8 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
     auto groupCount = (uint32_t)groups.size();
     size_t arenaSize = 0;
     arenaSize += sizeof(dual_job_t);
-    arenaSize += resources->count * (sizeof(dual_entity_t) + sizeof(int)); // job.resources
+    if(resources)
+        arenaSize += resources->count * (sizeof(dual_entity_t) + sizeof(int)); // job.resources
     arenaSize += groupCount * sizeof(dual_type_index_t) * params.length;   // job.localTypes
     arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.readonly
     arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.randomAccess

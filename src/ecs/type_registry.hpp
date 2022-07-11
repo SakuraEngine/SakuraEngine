@@ -29,6 +29,7 @@ static constexpr type_index_t kDeadComponent = type_index_t(1, false, false, fal
 static constexpr type_index_t kLinkComponent = type_index_t(2, false, true, false, false);
 static constexpr type_index_t kMaskComponent = type_index_t(3, false, false, false, false);
 static constexpr type_index_t kGuidComponent = type_index_t(4, false, false, false, false);
+static constexpr type_index_t kDirtyComponent = type_index_t(5, false, false, false, false);
 
 struct type_registry_t {
     type_registry_t(pool_t& pool);

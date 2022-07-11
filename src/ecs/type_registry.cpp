@@ -80,6 +80,18 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.flags = 0;
         descriptions.push_back(desc);
     }
+    {
+        assert(descriptions.size() == kDirtyComponent);
+        type_description_t desc;
+        desc.guid = skr::guid::make_guid("{A55D73D3-D41C-4683-89E1-8B211C115303}");
+        desc.name = "dirty";
+        desc.size = sizeof(dual_dirty_component_t);
+        desc.elementSize = 0;
+        desc.alignment = DUAL_MASK_ALIGN;
+        desc.entityFieldsCount = 0;
+        desc.flags = 0;
+        descriptions.push_back(desc);
+    }
 }
 
 type_index_t type_registry_t::register_type(const type_description_t& inDesc)
