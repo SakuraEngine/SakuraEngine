@@ -20,8 +20,6 @@
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
 #include "skr_renderer/skr_renderer.h"
-#include <thread>
-#include <chrono>
 #include "gainput/gainput.h"
 #include "gainput/GainputInputDeviceKeyboard.h"
 #include "gainput/GainputInputDeviceMouse.h"

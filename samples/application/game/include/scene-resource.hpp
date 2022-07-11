@@ -1,6 +1,7 @@
 #pragma once
 #include "GameRT/gamert.configure.h"
 #include "resource/resource_factory.h"
+
 namespace skg::resource
 {
     using namespace skr::resource;
