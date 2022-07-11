@@ -27,7 +27,6 @@ void type_builder_t::with(dual_type_index_t type)
     {
         data = (dual_type_index_t*)dual_realloc(data, sizeof(dual_type_index_t) * (length + 1));
         data[length++] = type;
-        std::rotate(std::upper_bound(data, data + length, type), data + length - 1, data + length);
     }
 }
 
@@ -72,6 +71,8 @@ void type_builder_t::with(dual_type_set_t type)
 
 dual_type_set_t type_builder_t::build()
 {
+    for (auto i = data; i != data + length; ++i)
+        std::rotate(std::upper_bound(data, i, *i), i, std::next(i));
     return { data, length };
 }
 } // namespace dual
