@@ -1,7 +1,7 @@
 #include "ecs/SmallVector.h"
 #include "archetype.hpp"
 #include "chunk_view.hpp"
-
+#include "arena.hpp"
 #include "ecs/dual.h"
 #include "mask.hpp"
 #include "pool.hpp"
@@ -179,13 +179,16 @@ void dual_storage_t::update_query_cache(dual_group_t* group, bool isAdd)
 dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual_parameters_t& params)
 {
     using namespace dual;
+    
+    dual::fixed_arena_t arena(4096);
     auto result = arena.allocate<dual_query_t>();
     auto buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(dual_type_index_t));
     result->filter = clone(filter, buffer);
     result->parameters = clone(params, buffer);
     result->buildedFilter = filter;
-    result->built = false;
+    queriesBuilt = false;
     result->storage = this;
+    arena.forget();
     queries.push_back(result);
     return result;
 }
@@ -413,6 +416,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         partBegin += (int)part.size();
     }
 
+    dual::fixed_arena_t arena(4096);
     // parse finished, save result into query
     auto result = arena.allocate<dual_query_t>();
 #define FILTER_PART(NAME)                \
@@ -434,10 +438,20 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     result->parameters = clone(result->parameters, buffer);
     result->buildedFilter = result->filter;
     result->storage = this;
-    result->built = false;
+    queriesBuilt = false;
     std::memset(&result->meta, 0, sizeof(dual_meta_filter_t));
     queries.push_back(result);
+    arena.forget();
     return result;
+}
+
+void dual_storage_t::destroy_query(dual_query_t* query)
+{
+    auto iter = std::find(queries.begin(), queries.end(), query);
+    SKR_ASSERT(iter != queries.end());
+    delete query;
+    queries.erase(iter);
+    queriesBuilt = false;
 }
 
 void dual_storage_t::build_queries()
@@ -514,11 +528,12 @@ void dual_storage_t::build_queries()
             query->buildedFilter.none = clone(none, data);
         }
     }
+    queriesBuilt = true;
 }
 
 void dual_storage_t::query(const dual_query_t* filter, dual_view_callback_t callback, void* u)
 {
-    if (!filter->built)
+    if (!queriesBuilt)
         build_queries();
     return query(filter->buildedFilter, filter->meta, callback, u);
 }

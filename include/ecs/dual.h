@@ -485,6 +485,12 @@ RUNTIME_API void dualS_pack_entities(dual_storage_t* storage);
  */
 RUNTIME_API dual_query_t* dualQ_create(dual_storage_t* storage, const dual_filter_t* filter, const dual_parameters_t* params);
 /**
+ * @brief release a query
+ * 
+ * @param query 
+ */
+RUNTIME_API void dualQ_release(dual_query_t* query);
+/**
  * @brief create a query from string
  * use dsl to descript filter and parameters info:
  * ? - optional

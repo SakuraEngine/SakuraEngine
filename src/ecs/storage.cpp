@@ -16,7 +16,7 @@
 #include "scheduler.hpp"
 
 dual_storage_t::dual_storage_t()
-    : arena(dual::get_default_pool())
+    : archetypeArena(dual::get_default_pool())
     , queryBuildArena(dual::get_default_pool())
     , groupPool(dual::kGroupBlockSize, dual::kGroupBlockCount)
     , scheduler(nullptr)
@@ -25,6 +25,8 @@ dual_storage_t::dual_storage_t()
 
 dual_storage_t::~dual_storage_t()
 {
+    for(auto q : queries)
+        sakura_free(q);
     for (auto iter : groups)
         iter.second->clear();
 }
@@ -38,9 +40,10 @@ void dual_storage_t::reset()
     queries.clear();
     queryCaches.clear();
     entities.reset();
-    arena.reset();
+    archetypeArena.reset();
     queryBuildArena.reset();
     groupPool.reset();
+    queriesBuilt = false;
 }
 
 void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callback_t callback, void* u)
@@ -821,7 +824,7 @@ void dualS_enable_components(const dual_chunk_view_t* view, const dual_type_set_
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
     if (!masks) DUAL_UNLIKELY
-    return;
+        return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_or(newMask);
 }
@@ -834,7 +837,7 @@ void dualS_disable_components(const dual_chunk_view_t* view, const dual_type_set
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
     if (!masks) DUAL_UNLIKELY
-    return;
+        return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_and(~newMask);
 }
@@ -856,6 +859,11 @@ dual_query_t* dualQ_create(dual_storage_t* storage, const dual_filter_t* filter,
 {
     assert(dual::ordered(*filter));
     return storage->make_query(*filter, *params);
+}
+
+void dualQ_release(dual_query_t *query)
+{
+    return query->storage->destroy_query(query);
 }
 
 dual_query_t* dualQ_from_literal(dual_storage_t* storage, const char* desc)

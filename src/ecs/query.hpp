@@ -23,7 +23,6 @@ struct dual_query_t {
     dual_storage_t* storage;
     dual_filter_t filter;
     dual_meta_filter_t meta;
-    bool built = false;
     dual_filter_t buildedFilter;
     dual_parameters_t parameters;
 };

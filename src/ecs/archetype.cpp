@@ -36,20 +36,20 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
 {
     using namespace dual;
     fixed_stack_scope_t _(localStack);
-    char* buffer = (char*)arena.allocate(data_size(inType), 1);
-    archetype_t& proto = *arena.allocate<archetype_t>();
+    char* buffer = (char*)archetypeArena.allocate(data_size(inType), 1);
+    archetype_t& proto = *archetypeArena.allocate<archetype_t>();
     proto.storage = this;
     proto.type = clone(inType, buffer);
     proto.withMask = false;
     proto.withDirty = false;
     proto.sizeToPatch = 0;
 
-    proto.sizes = arena.allocate<uint32_t>(proto.type.length);
+    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     forloop (i, 0, 3)
-        proto.offsets[i] = arena.allocate<uint32_t>(proto.type.length);
-    proto.elemSizes = arena.allocate<uint32_t>(proto.type.length);
-    proto.callbacks = arena.allocate<dual_callback_v>(proto.type.length);
-    proto.aligns = arena.allocate<uint32_t>(proto.type.length);
+        proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
+    proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
     std::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
