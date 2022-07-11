@@ -1,7 +1,6 @@
 #include "arena.hpp"
 #include "pool.hpp"
 #include "ecs/dual_config.h"
-#include <assert.h>
 
 namespace dual
 {
@@ -27,7 +26,7 @@ void* fixed_arena_t::allocate(size_t s, size_t a)
 {
     size_t offset = size.fetch_add(s + a - 1);
     offset = ((offset + a - 1) / a) * a;
-    assert(offset < capacity);
+    SKR_ASSERT(offset < capacity);
     return (char*)buffer + offset;
 }
 

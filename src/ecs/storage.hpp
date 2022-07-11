@@ -108,9 +108,10 @@ struct dual_storage_t {
     using archetypes_t = skr::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
     archetypes_t archetypes;
     queries_t queries;
+    bool queriesBuilt = false;
     groups_t groups;
     query_caches_t queryCaches;
-    dual::block_arena_t arena;
+    dual::block_arena_t archetypeArena;
     dual::block_arena_t queryBuildArena;
     dual::fixed_pool_t groupPool;
     dual::entity_registry_t entities;
@@ -158,6 +159,7 @@ struct dual_storage_t {
     void query(const dual_group_t* group, const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_view_callback_t callback, void* u);
     dual_query_t* make_query(const dual_filter_t& filter, const dual_parameters_t& parameters);
     dual_query_t* make_query(const char* desc);
+    void destroy_query(dual_query_t* query);
     void query(const dual_query_t* query, dual_view_callback_t callback, void* u);
     void build_queries();
     const query_cache_t& get_query_cache(const dual_filter_t& filter);
