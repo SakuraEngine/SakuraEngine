@@ -507,7 +507,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     if (Q && T->pVkImage != VK_NULL_HANDLE && T->pVkAllocation != VK_NULL_HANDLE)
     {
 #ifdef CGPU_THREAD_SAFETY
-        if (Q->pResourceMutex) skr_acquire_mutex(Q->pResourceMutex);
+        if (Q->pMutex) skr_acquire_mutex(Q->pMutex);
 #endif
         cgpu_reset_command_pool(Q->pInnerCmdPool);
         cgpu_cmd_begin(Q->pInnerCmdBuffer);
@@ -530,7 +530,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         cgpu_submit_queue(&Q->super, &barrier_submit);
         cgpu_wait_fences(&Q->pInnerFence, 1);
 #ifdef CGPU_THREAD_SAFETY
-        if (Q->pResourceMutex) skr_release_mutex(Q->pResourceMutex);
+        if (Q->pMutex) skr_release_mutex(Q->pMutex);
 #endif
     }
     return &T->super;

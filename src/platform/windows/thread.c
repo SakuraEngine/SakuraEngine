@@ -37,37 +37,132 @@ void skr_init_call_once_guard(SCallOnceGuard* pGuard)
 
 /// implementation of mutex
 
+#if (_WIN32_WINNT >= 0x0600)
 static_assert(sizeof(SRWLOCK) == sizeof(void*), "`mu_storage_` does not have the same size as SRWLOCK");
 static_assert(_Alignof(SRWLOCK) == _Alignof(void*), "`mu_storage_` does not have the same alignment as SRWLOCK");
+#endif
 
-#if (_WIN32_WINNT >= 0x0600)
-bool skr_init_mutex(SMutex* mutex)
+// Critical Section Lock
+bool skr_init_mutex_cs(SMutex* mutex)
 {
+    mutex->isSRW = 0;
+    CRITICAL_SECTION** pCS = (CRITICAL_SECTION**)mutex->muStorage_;
+    *pCS = sakura_calloc(1, sizeof(CRITICAL_SECTION));
+    return InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)*pCS, (DWORD)MUTEX_DEFAULT_SPIN_COUNT);
+}
+
+void skr_destroy_mutex_cs(SMutex* mutex)
+{
+    CRITICAL_SECTION* cs = *(CRITICAL_SECTION**)mutex->muStorage_;
+    DeleteCriticalSection(cs);
+    sakura_free(cs);
+}
+
+void skr_acquire_mutex_cs(SMutex* mutex)
+{
+    EnterCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
+}
+
+bool skr_try_acquire_mutex_cs(SMutex* mutex)
+{
+    return TryEnterCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
+}
+
+void skr_release_mutex_cs(SMutex* mutex)
+{
+    LeaveCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
+}
+
+// SRW Lock
+bool skr_init_mutex_srw(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
     PSRWLOCK pSrwlock = (PSRWLOCK)mutex->muStorage_;
     InitializeSRWLock(pSrwlock);
+    mutex->isSRW = 1;
     return true;
+#else
+    return skr_init_mutex_cs(mutex);
+#endif
+}
+
+void skr_destroy_mutex_srw(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
+    memset(mutex->muStorage_, 0, sizeof(mutex->muStorage_));
+#else
+    skr_destroy_mutex_cs(mutex);
+#endif
+}
+
+void skr_acquire_mutex_srw(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
+    AcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+#else
+    skr_acquire_mutex_cs(mutex);
+#endif
+}
+
+bool skr_try_acquire_mutex_srw(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
+    return TryAcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+#else
+    return skr_try_acquire_mutex_cs(mutex);
+#endif
+}
+
+void skr_release_mutex_srw(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
+    ReleaseSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+#else
+    skr_release_mutex_cs(mutex);
+#endif
+}
+
+bool skr_init_mutex(SMutex* mutex)
+{
+    return skr_init_mutex_srw(mutex);
+}
+
+bool skr_init_mutex_recursive(SMutex* mutex)
+{
+    return skr_init_mutex_cs(mutex);
 }
 
 void skr_destroy_mutex(SMutex* mutex)
 {
-    memset(mutex->muStorage_, 0, sizeof(mutex->muStorage_));
+    if (mutex->isSRW)
+        skr_destroy_mutex_srw(mutex);
+    else
+        skr_destroy_mutex_cs(mutex);
 }
 
 void skr_acquire_mutex(SMutex* mutex)
 {
-    AcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+    if (mutex->isSRW)
+        skr_acquire_mutex_srw(mutex);
+    else
+        skr_acquire_mutex_cs(mutex);
 }
 
 bool skr_try_acquire_mutex(SMutex* mutex)
 {
-    return TryAcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+    if (mutex->isSRW)
+        return skr_try_acquire_mutex_srw(mutex);
+    else
+        return skr_try_acquire_mutex_cs(mutex);
 }
 
 void skr_release_mutex(SMutex* mutex)
 {
-    ReleaseSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+    if (mutex->isSRW)
+        skr_release_mutex_srw(mutex);
+    else
+        skr_release_mutex_cs(mutex);
 }
-#endif
 
 /// implementation of cv
 
@@ -85,11 +180,17 @@ void skr_destroy_condition_var(SConditionVariable* cv)
 void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t ms)
 {
     CONDITION_VARIABLE* cv_ = (CONDITION_VARIABLE*)(cv->cvStorage_);
-    PSRWLOCK pSrwlock = (PSRWLOCK)(pMutex->muStorage_);
-
-    BOOLEAN acquired = TryAcquireSRWLockExclusive(pSrwlock);
-    SleepConditionVariableSRW((PCONDITION_VARIABLE)cv_, pSrwlock, ms, 0);
-    if (acquired) ReleaseSRWLockExclusive(pSrwlock);
+    if (pMutex->isSRW)
+    {
+        PSRWLOCK pSrwlock = (PSRWLOCK)(pMutex->muStorage_);
+        BOOLEAN acquired = TryAcquireSRWLockExclusive(pSrwlock);
+        SleepConditionVariableSRW((PCONDITION_VARIABLE)cv_, pSrwlock, ms, 0);
+        if (acquired) ReleaseSRWLockExclusive(pSrwlock);
+    }
+    else
+    {
+        SleepConditionVariableCS((PCONDITION_VARIABLE)cv->cvStorage_, *(CRITICAL_SECTION**)pMutex->muStorage_, ms);
+    }
 }
 
 void skr_wake_condition_var(SConditionVariable* cv)

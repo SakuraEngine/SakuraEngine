@@ -19,6 +19,18 @@ FORCEINLINE static bool skr_init_mutex(SMutex* pMutex)
     return status == 0;
 }
 
+FORCEINLINE static bool skr_init_mutex_recursive(SMutex* pMutex)
+{
+    pMutex->mSpinCount = MUTEX_DEFAULT_SPIN_COUNT;
+    pMutex->pHandle = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutexattr_t attr;
+    int status = pthread_mutexattr_init(&attr);
+    status |= pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    status |= pthread_mutex_init(&pMutex->pHandle, &attr);
+    status |= pthread_mutexattr_destroy(&attr);
+    return status == 0;
+}
+
 FORCEINLINE static void skr_destroy_mutex(SMutex* pMutex) { pthread_mutex_destroy(&pMutex->pHandle); }
 
 FORCEINLINE static void skr_acquire_mutex(SMutex* pMutex)
