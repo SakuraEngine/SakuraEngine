@@ -1,3 +1,4 @@
+#pragma once
 #include "ghc/filesystem.hpp"
 #include "platform/guid.h"
 #include "resource_system.h"

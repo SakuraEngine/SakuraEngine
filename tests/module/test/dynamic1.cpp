@@ -7,9 +7,10 @@ class SDynamicModule1 : public skr::IDynamicModule
     {
         SKR_LOG_INFO("dynamic module 1 loaded!");
     }
-    virtual void main_module_exec() override
+    virtual int main_module_exec() override
     {
         SKR_LOG_INFO("dynamic module 1 executed as main module!");
+        return 0;
     }
     virtual void on_unload() override
     {

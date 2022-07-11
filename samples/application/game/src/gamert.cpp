@@ -40,11 +40,6 @@ void SGameRTModule::on_load(int argc, char** argv)
     skr::resource::GetResourceSystem()->Initialize(registry);
 }
 
-void SGameRTModule::main_module_exec(int argc, char** argv)
-{
-    SKR_LOG_INFO("game runtime executed as main module!");
-}
-
 void SGameRTModule::on_unload()
 {
     skr::resource::GetResourceSystem()->Shutdown();
