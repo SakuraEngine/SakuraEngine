@@ -7,9 +7,10 @@ class SUsdToolModule : public skr::IDynamicModule
     {
         SKR_LOG_INFO("game tool loaded!");
     }
-    virtual void main_module_exec() override
+    virtual int main_module_exec() override
     {
         SKR_LOG_INFO("game tool executed as main module!");
+        return 0;
     }
     virtual void on_unload() override
     {

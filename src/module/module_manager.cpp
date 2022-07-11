@@ -28,7 +28,7 @@ public:
     virtual IModule* get_module(const eastl::string& name) final;
     virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = true) final;
     virtual bool patch_module_graph(const eastl::string& name, bool shared = true, int argc = 0, char** argv = nullptr) final;
-    virtual bool init_module_graph(int argc, char** argv) final;
+    virtual int init_module_graph(int argc, char** argv) final;
     virtual bool destroy_module_graph(void) final;
     virtual void mount(const char8_t* path) final;
     virtual eastl::string_view get_root(void) final;
@@ -236,12 +236,11 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& noden
     return true;
 }
 
-bool ModuleManagerImpl::init_module_graph(int argc, char** argv)
+int ModuleManagerImpl::init_module_graph(int argc, char** argv)
 {
     if (!__internal_InitModuleGraph(mainModuleName, argc, argv))
-        return false;
-    get_module(mainModuleName)->main_module_exec(argc, argv);
-    return true;
+        return -1;
+    return get_module(mainModuleName)->main_module_exec(argc, argv);
 }
 
 bool ModuleManagerImpl::destroy_module_graph(void)

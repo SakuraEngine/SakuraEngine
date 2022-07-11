@@ -14,7 +14,6 @@ struct SLocalResourceRegistry;
 class GAMERT_API SGameRTModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
-    virtual void main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
 
 public:

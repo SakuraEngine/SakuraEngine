@@ -19,31 +19,7 @@
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
 
-void create_test_scene()
-{
-    auto renderableT_builder = make_zeroed<dual::type_builder_t>();
-    renderableT_builder.with<skr_transform_t>();
-    renderableT_builder.with<skr_render_effect_t>();
-    // allocate renderable
-    auto renderableT = make_zeroed<dual_entity_type_t>();
-    renderableT.type = renderableT_builder.build();
-    auto primSetup = [&](dual_chunk_view_t* view) {
-        auto transforms = (skr_transform_t*)dualV_get_owned_ro(view, dual_id_of<skr_transform_t>::get());
-        for (uint32_t i = 0; i < view->count; i++)
-        {
-            transforms[i].location = {
-                (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f, 0.f
-            };
-            transforms[i].scale = { 1.f, 1.f, 1.f };
-            transforms[i].rotation = { 0.f, 0.f, 0.f, 1.f };
-        }
-        auto renderer = skr_renderer_get_renderer();
-        skr_render_effect_attach(renderer, view, "ForwardEffect");
-    };
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 100, DUAL_LAMBDA(primSetup));
-}
-
-void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
+void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph)
 {
     auto moduleManager = skr_get_module_manager();
     auto renderModule = static_cast<SkrRendererModule*>(moduleManager->get_module("SkrRenderer"));
@@ -132,7 +108,4 @@ void create_render_resources(skr::render_graph::RenderGraph* renderGraph)
     render_graph_imgui_initialize(&imgui_graph_desc);
     cgpu_free_shader_library(imgui_vs);
     cgpu_free_shader_library(imgui_fs);
-
-    // create materials
-    create_test_scene();
 }

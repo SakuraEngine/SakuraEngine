@@ -79,7 +79,7 @@ public:
     virtual ~IModule(){};
     virtual void on_load(int argc, char** argv) = 0;
     virtual void on_unload() = 0;
-    virtual void main_module_exec(int argc, char** argv) {}
+    virtual int main_module_exec(int argc, char** argv) { return 0; }
     virtual const char* get_meta_data(void) = 0;
     virtual const ModuleInfo* get_module_info()
     {
