@@ -28,15 +28,13 @@ skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
     void on_register(ISkrRenderer* renderer) override
     {
-        dual_storage_t* storage = skr_runtime_get_dual_storage();
-        render_query = dualQ_from_literal(storage, "[in]fwdIdentity");
     }
 
     void on_unregister(ISkrRenderer* renderer) override
     {
     }
 
-    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t dcs) override
+    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
     {
         dual_storage_t* storage = skr_runtime_get_dual_storage();
         {
@@ -49,28 +47,25 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 .allow_depth_stencil();
             });
         }
-        eastl::vector<skr_primitive_draw_t> drawcalls(dcs.drawcalls, dcs.drawcalls + dcs.count);;
         renderGraph->add_render_pass(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
                 const auto out_color = renderGraph->get_texture("backbuffer");
                 const auto depth_buffer = renderGraph->get_texture("depth");
                 builder.set_name("forward_pass")
                     // we know that the drawcalls always have a same pipeline
-                    .set_pipeline(dcs.drawcalls->pipeline)
+                    .set_pipeline(drawcalls.drawcalls->pipeline)
                     .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
                     .set_depth_stencil(depth_buffer);
             },
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
-                auto renderer = skr_renderer_get_renderer();
-                (void)renderer;
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)900, (float)900,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
-                for (uint32_t i = 0; i < drawcalls.size(); i++)
+                for (uint32_t i = 0; i < drawcalls.count; i++)
                 {
-                    auto&& dc = drawcalls[i];
+                    auto&& dc = drawcalls.drawcalls[i];
                     cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, 
                         dc.index_buffer.stride, dc.index_buffer.offset);
                     CGPUBufferId vertex_buffers[3] = {
@@ -94,8 +89,6 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     {
         return forward_pass_name;
     }
-
-    dual_query_t* render_query = nullptr;
 };
 RenderPassForward* forward_pass = new RenderPassForward();
 
@@ -204,7 +197,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             // drawcall
                             auto& drawcall = drawcalls->drawcalls[idx];
                             drawcall.push_const_name = push_constants_name;
-                            drawcall.push_const = (const uint8_t*)push_constants.data() + idx;
+                            drawcall.push_const = (const uint8_t*)(push_constants.data() + idx);
                             drawcall.index_buffer = ibv;
                             drawcall.vertex_buffers = vbvs;
                             drawcall.vertex_buffer_count = 3;
@@ -380,7 +373,7 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
     {
         auto geom = FwdCubeGeometry();
-        memcpy(upload_buffer->cpu_mapped_address, &geom, upload_buffer_desc.size);
+        memcpy(upload_buffer->cpu_mapped_address, &geom, sizeof(FwdCubeGeometry));
     }
     cgpu_cmd_begin(cpy_cmd);
     CGPUBufferToBufferTransfer vb_cpy = {};
