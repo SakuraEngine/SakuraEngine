@@ -18,6 +18,7 @@ struct archetype_t {
     uint32_t entitySize;
     uint32_t sizeToPatch;
     bool withMask;
+    bool withDirty;
 
     /*
         uint32_t offsets[3][firstTag];
