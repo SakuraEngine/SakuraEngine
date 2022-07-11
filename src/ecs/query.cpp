@@ -201,7 +201,8 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     desc.erase(std::remove_if(desc.begin(), desc.end(), isspace), desc.end());
 #endif
     eastl::vector<eastl::string_view> parts;
-    eastl::split(desc, parts, ",");
+    eastl::string spliter = ",";
+    eastl::split(desc, parts, spliter);
     // todo: errorMsg? global error code?
     auto& error = get_error();
     int errorPos = 0;
