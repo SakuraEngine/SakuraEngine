@@ -2,6 +2,7 @@
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 #include "ecs/callback.hpp"
+#include "render_graph/frontend/render_graph.hpp"
 #include "skr_renderer/effect_processor.h"
 #include "skr_renderer/skr_renderer.h"
 #include "EASTL/unordered_map.h"
@@ -77,32 +78,48 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
 
     void render(skr::render_graph::RenderGraph* render_graph) override
     {
+        static uint32_t frame_idx = 0;
+        auto& drawcall_arena = drawcall_arenas[frame_idx];
         // produce draw calls
         for (auto& pass : passes)
         {
-            auto& drawcall_arena = drawcalls[pass.second->identity()];
+            auto& pass_drawcall_arena = drawcall_arena[pass.second->identity()];
             // used out
-            drawcall_arena.clear();
+            pass_drawcall_arena.clear();
             for (auto& processor : processors)
             {
                 auto storage = skr_runtime_get_dual_storage();
                 auto dcn = processor.second->produce_drawcall(pass.second, storage);
-                drawcall_arena.resize(dcn + drawcall_arena.size());
+                pass_drawcall_arena.resize(dcn + pass_drawcall_arena.size());
                 if (dcn && pass.second && processor.second)
                 {
                     auto drawcalls = make_zeroed<skr_primitive_draw_list_view_t>();
-                    drawcalls.drawcalls = drawcall_arena.data();
+                    drawcalls.drawcalls = pass_drawcall_arena.data();
                     drawcalls.count = dcn;
                     processor.second->peek_drawcall(pass.second, &drawcalls);
                 }
             }
         }
+        // execute draw calls
+        for (auto& pass : passes)
+        {
+            if (pass.second)
+            {
+                auto pass_drawcall_arena = drawcall_arena[pass.second->identity()];
+                auto dcs = make_zeroed<skr_primitive_draw_list_view_t>();
+                dcs.drawcalls = pass_drawcall_arena.data();
+                dcs.count = pass_drawcall_arena.size();
+                pass.second->execute(render_graph, dcs);
+            }
+        }
+        frame_idx = (frame_idx + 1) % RG_MAX_FRAME_IN_FLIGHT;
     }
 
-    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_t>> drawcalls;
     eastl::unordered_map<eastl::string, IPrimitiveRenderPass*> passes;
     eastl::unordered_map<eastl::string, IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
+protected:
+    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_t>> drawcall_arenas[RG_MAX_FRAME_IN_FLIGHT];
 };
 
 skr::Renderer* create_renderer_impl()

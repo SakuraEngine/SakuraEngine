@@ -15,8 +15,6 @@ typedef struct skr_vertex_buffer_view_t {
     // in bytes
     uint32_t offset;
     // in bytes
-    uint32_t size;
-    // in bytes
     uint32_t stride;
 } skr_vertex_buffer_view_t;
 

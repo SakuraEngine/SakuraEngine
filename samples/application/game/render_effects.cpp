@@ -1,4 +1,5 @@
 #include "../../cgpu/common/utils.h"
+#include "cgpu/api.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual.h"
 #include "ecs/type_builder.hpp"
@@ -9,6 +10,7 @@
 #include "imgui/imgui.h"
 #include "gamert.h"
 #include "platform/memory.h"
+#include "skr_renderer/primitive_draw.h"
 #include "utils/log.h"
 #include "skr_renderer/skr_renderer.h"
 #include "runtime_module.h"
@@ -20,24 +22,80 @@
 #include "utils/make_zeroed.hpp"
 #include <mutex>
 
+const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
+
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
     void on_register(ISkrRenderer* renderer) override
     {
+        dual_storage_t* storage = skr_runtime_get_dual_storage();
+        render_query = dualQ_from_literal(storage, "[in]fwdIdentity");
     }
 
     void on_unregister(ISkrRenderer* renderer) override
     {
     }
 
-    void execute(skr::render_graph::RenderGraph* renderGraph, const skr_primitive_draw_list_view_t* dc) override
+    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t dcs) override
     {
+        dual_storage_t* storage = skr_runtime_get_dual_storage();
+        {
+            auto depth = renderGraph->create_texture(
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+                builder.set_name("depth")
+                .extent(900, 900)
+                .format(depth_format)
+                .owns_memory()
+                .allow_depth_stencil();
+            });
+        }
+        eastl::vector<skr_primitive_draw_t> drawcalls(dcs.drawcalls, dcs.drawcalls + dcs.count);;
+        renderGraph->add_render_pass(
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+                const auto out_color = renderGraph->get_texture("backbuffer");
+                const auto depth_buffer = renderGraph->get_texture("depth");
+                builder.set_name("forward_pass")
+                    // we know that the drawcalls always have a same pipeline
+                    .set_pipeline(dcs.drawcalls->pipeline)
+                    .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
+                    .set_depth_stencil(depth_buffer);
+            },
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
+                auto renderer = skr_renderer_get_renderer();
+                (void)renderer;
+                cgpu_render_encoder_set_viewport(stack.encoder,
+                    0.0f, 0.0f,
+                    (float)900, (float)900,
+                    0.f, 1.f);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
+                for (uint32_t i = 0; i < drawcalls.size(); i++)
+                {
+                    auto&& dc = drawcalls[i];
+                    cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, 
+                        dc.index_buffer.stride, dc.index_buffer.offset);
+                    CGPUBufferId vertex_buffers[3] = {
+                        dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
+                    };
+                    const uint32_t strides[3] = {
+                        dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
+                    };
+                    const uint32_t offsets[3] = {
+                        dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
+                    };
+                    cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
+                    cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
+                    // cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
+                    cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
+                }
+            });
     }
 
     skr_render_pass_name_t identity() const override
     {
         return forward_pass_name;
     }
+
+    dual_query_t* render_query = nullptr;
 };
 RenderPassForward* forward_pass = new RenderPassForward();
 
@@ -64,11 +122,14 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         type_builder.with(identity_type);
         type_builder.with<skr_transform_t>();
         effect_query = dualQ_from_literal(storage, "[in]fwdIdentity");
+        // prepare render resources
+        prepare_pipeline(renderer);
         prepare_geometry_resources(renderer);
     }
 
     void on_unregister(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
+        free_pipeline(renderer);
         free_geometry_resources(renderer);
     }
 
@@ -144,10 +205,10 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             auto& drawcall = drawcalls->drawcalls[idx];
                             drawcall.push_const_name = push_constants_name;
                             drawcall.push_const = (const uint8_t*)push_constants.data() + idx;
-                            drawcall.index_buffer = {};
-                            drawcall.vertex_buffers = nullptr;
-                            drawcall.vertex_buffer_count = 0;
-                            drawcall.pipeline = nullptr;
+                            drawcall.index_buffer = ibv;
+                            drawcall.vertex_buffers = vbvs;
+                            drawcall.vertex_buffer_count = 3;
+                            drawcall.pipeline = pipeline;
                             idx++;
                         }
                     };
@@ -162,8 +223,14 @@ protected:
     // TODO: move these anywhere else
     void prepare_geometry_resources(ISkrRenderer* renderer);
     void free_geometry_resources(ISkrRenderer* renderer);
+    void prepare_pipeline(ISkrRenderer* renderer);
+    void free_pipeline(ISkrRenderer* renderer);
+    // render resources
+    skr_vertex_buffer_view_t vbvs[3];
+    skr_index_buffer_view_t ibv;
     CGPUBufferId vertex_buffer;
     CGPUBufferId index_buffer;
+    CGPURenderPipelineId pipeline;
     // effect processor data
     const char* push_constants_name = "push_constants";
     dual_query_t* effect_query = nullptr;
@@ -357,12 +424,121 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     cgpu_free_buffer(upload_buffer);
     cgpu_free_command_buffer(cpy_cmd);
     cgpu_free_command_pool(cmd_pool);
+    // init vbvs & ibvs
+    vbvs[0].buffer = vertex_buffer;
+    vbvs[0].stride = sizeof(skr::math::Vector3f);
+    vbvs[0].offset = offsetof(FwdCubeGeometry, g_Positions);
+    vbvs[1].buffer = vertex_buffer;
+    vbvs[1].stride = sizeof(skr::math::Vector2f);
+    vbvs[1].offset = offsetof(FwdCubeGeometry, g_TexCoords);
+    vbvs[2].buffer = vertex_buffer;
+    vbvs[2].stride = sizeof(uint32_t);
+    vbvs[2].offset = offsetof(FwdCubeGeometry, g_Normals);
+    ibv.buffer = index_buffer;
+    ibv.offset = 0;
+    ibv.stride = sizeof(uint32_t);
 }
 
 void RenderEffectForward::free_geometry_resources(ISkrRenderer* renderer)
 {
     cgpu_free_buffer(index_buffer);
     cgpu_free_buffer(vertex_buffer);
+}
+
+void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
+{
+    auto moduleManager = skr_get_module_manager();
+    const auto device = renderer->get_cgpu_device();
+    const auto backend = device->adapter->instance->backend;
+
+    // read shaders
+    eastl::string vsname = u8"shaders/Game/gbuffer_vs";
+    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
+    auto vsfile = skr_vfs_fopen(gamert->resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    uint32_t _vs_length = (uint32_t)skr_vfs_fsize(vsfile);
+    uint32_t* _vs_bytes = (uint32_t*)sakura_malloc(_vs_length);
+    skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
+    skr_vfs_fclose(vsfile);
+
+    eastl::string fsname = u8"shaders/Game/gbuffer_fs";
+    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    auto fsfile = skr_vfs_fopen(gamert->resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    uint32_t _fs_length = (uint32_t)skr_vfs_fsize(fsfile);
+    uint32_t* _fs_bytes = (uint32_t*)sakura_malloc(_fs_length);
+    skr_vfs_fread(fsfile, _fs_bytes, 0, _fs_length);
+    skr_vfs_fclose(fsfile);
+
+    // create default deferred material
+    CGPUShaderLibraryDescriptor vs_desc = {};
+    vs_desc.name = "gbuffer_vertex_buffer";
+    vs_desc.stage = CGPU_SHADER_STAGE_VERT;
+    vs_desc.code = _vs_bytes;
+    vs_desc.code_size = _vs_length;
+    CGPUShaderLibraryDescriptor fs_desc = {};
+    fs_desc.name = "gbuffer_fragment_buffer";
+    fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
+    fs_desc.code = _fs_bytes;
+    fs_desc.code_size = _fs_length;
+    CGPUShaderLibraryId _vs = cgpu_create_shader_library(device, &vs_desc);
+    CGPUShaderLibraryId _fs = cgpu_create_shader_library(device, &fs_desc);
+    sakura_free(_vs_bytes);
+    sakura_free(_fs_bytes);
+
+    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUPipelineShaderDescriptor& vs = ppl_shaders[0];
+    vs.library = _vs;
+    vs.stage = CGPU_SHADER_STAGE_VERT;
+    vs.entry = "main";
+    CGPUPipelineShaderDescriptor& ps = ppl_shaders[1];
+    ps.library = _fs;
+    ps.stage = CGPU_SHADER_STAGE_FRAG;
+    ps.entry = "main";
+
+    auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
+    rs_desc.push_constant_count = 1;
+    rs_desc.push_constant_names = &push_constants_name;
+    rs_desc.shader_count = 2;
+    rs_desc.shaders = ppl_shaders;
+    auto root_sig = cgpu_create_root_signature(device, &rs_desc);
+
+    CGPUVertexLayout vertex_layout = {};
+    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 2, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attribute_count = 3;
+    CGPURenderPipelineDescriptor rp_desc = {};
+    rp_desc.root_signature = root_sig;
+    rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
+    rp_desc.vertex_layout = &vertex_layout;
+    rp_desc.vertex_shader = &vs;
+    rp_desc.fragment_shader = &ps;
+    rp_desc.render_target_count = 1;
+    const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
+    rp_desc.color_formats = &fmt;
+    rp_desc.depth_stencil_format = depth_format;
+    CGPURasterizerStateDescriptor raster_desc = {};
+    raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
+    raster_desc.depth_bias = 0;
+    raster_desc.fill_mode = CGPU_FILL_MODE_SOLID;
+    raster_desc.front_face = CGPU_FRONT_FACE_CCW;
+    rp_desc.rasterizer_state = &raster_desc;
+    CGPUDepthStateDescriptor ds_desc = {};
+    ds_desc.depth_func = CGPU_CMP_LEQUAL;
+    ds_desc.depth_write = true;
+    ds_desc.depth_test = true;
+    rp_desc.depth_state = &ds_desc;
+    pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+
+    cgpu_free_shader_library(_vs);
+    cgpu_free_shader_library(_fs);
+}
+
+void RenderEffectForward::free_pipeline(ISkrRenderer* renderer)
+{
+    auto sig_to_free = pipeline->root_signature;
+    cgpu_free_render_pipeline(pipeline);
+    cgpu_free_root_signature(sig_to_free);
 }
 
 void initialize_render_effects(skr::render_graph::RenderGraph* renderGraph)

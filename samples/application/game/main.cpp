@@ -177,7 +177,6 @@ int main(int argc, char** argv)
                 shading_rate = CGPU_SHADING_RATE_FULL;
         }
         ImGui::End();
-        ecsr_draw_scene((struct skr_render_graph_t*)renderGraph, shading_rate);
         skr_renderer_render_frame(renderGraph);
         render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         renderGraph->add_present_pass(
