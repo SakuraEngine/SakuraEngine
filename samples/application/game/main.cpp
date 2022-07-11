@@ -10,6 +10,7 @@
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
 #include "utils/make_zeroed.hpp"
+#include "skr_scene/scene.h"
 #include "skr_renderer/skr_renderer.h"
 #include <thread>
 #include <chrono>
@@ -17,16 +18,14 @@
 #include "gainput/GainputInputDeviceKeyboard.h"
 #include "gainput/GainputInputDeviceMouse.h"
 
-extern SWindowHandle window;
+SWindowHandle window;
 uint32_t backbuffer_index;
 ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
-extern void free_api_objects();
 extern void create_render_resources(skr::render_graph::RenderGraph* renderGraph);
 extern void initialize_render_effects(skr::render_graph::RenderGraph* renderGraph);
 extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph);
 
 #include "gamert.h"
-#include "render-scene.h"
 #include "ecs/callback.hpp"
 #include <time.h>
 
@@ -46,7 +45,7 @@ int main(int argc, char** argv)
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     auto cgpuDevice = skr_renderer_get_cgpu_device();
-    SWindowDescroptor window_desc = {};
+    auto window_desc = make_zeroed<SWindowDescroptor>();
     window_desc.centered = true;
     window_desc.resizable = true;
     window_desc.height = BACK_BUFFER_HEIGHT;
@@ -60,10 +59,9 @@ int main(int argc, char** argv)
     namespace render_graph = skr::render_graph;
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
-        builder
-        .with_device(skr_renderer_get_cgpu_device())
-        .with_gfx_queue(skr_renderer_get_gfx_queue())
-        .enable_memory_aliasing();
+        builder.with_device(skr_renderer_get_cgpu_device())
+            .with_gfx_queue(skr_renderer_get_gfx_queue())
+            .enable_memory_aliasing();
     });
     initialize_render_effects(renderGraph);
     create_render_resources(renderGraph);
@@ -200,7 +198,6 @@ int main(int argc, char** argv)
     finalize_render_effects(renderGraph);
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
-    free_api_objects();
     moduleManager->destroy_module_graph();
     skr_free_window(window);
     SDL_Quit();

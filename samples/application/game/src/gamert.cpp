@@ -27,7 +27,6 @@ SKR_MODULE_METADATA(u8R"(
 )",
 GameRT)
 
-extern "C" void ecsr_register_types();
 void SGameRTModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
@@ -39,9 +38,6 @@ void SGameRTModule::on_load(int argc, char** argv)
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry);
-
-    // register render-scene types
-    ecsr_register_types();
 }
 
 void SGameRTModule::main_module_exec(int argc, char** argv)

@@ -78,6 +78,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
 
     void render(skr::render_graph::RenderGraph* render_graph) override
     {
+        auto storage = skr_runtime_get_dual_storage();
         // produce draw calls
         for (auto& pass : passes)
         {
@@ -86,7 +87,6 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
             pass_drawcall_arena.clear();
             for (auto& processor : processors)
             {
-                auto storage = skr_runtime_get_dual_storage();
                 auto dcn = processor.second->produce_drawcall(pass.second, storage);
                 pass_drawcall_arena.resize(dcn + pass_drawcall_arena.size());
                 if (dcn && pass.second && processor.second)
