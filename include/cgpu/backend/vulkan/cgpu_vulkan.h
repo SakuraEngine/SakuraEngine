@@ -245,6 +245,7 @@ typedef struct CGPUQueue_Vulkan {
     CGPUFenceId pInnerFence;
     /// Lock for multi-threaded descriptor allocations
     struct SMutex* pMutex;
+    struct SMutex* pResourceMutex;
 } CGPUQueue_Vulkan;
 
 typedef struct CGPUCommandPool_Vulkan {

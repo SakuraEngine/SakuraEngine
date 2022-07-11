@@ -22,7 +22,7 @@ FORCEINLINE static bool skr_init_mutex(SMutex* pMutex)
     pMutex->pHandle = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
     pthread_mutexattr_t attr;
     int status = pthread_mutexattr_init(&attr);
-    status |= pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    status |= pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
     status |= pthread_mutex_init(&pMutex->pHandle, &attr);
     status |= pthread_mutexattr_destroy(&attr);
     return status == 0;

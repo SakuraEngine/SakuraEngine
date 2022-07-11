@@ -50,16 +50,18 @@ typedef void (*SProcRenderEffectAccess)(ISkrRenderer*, const SGameEntity* entiti
 skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
 
 // Effect interfaces
-typedef void (*SProcRenderEffectOnRegister)(ISkrRenderer*);
+typedef void (*SProcRenderEffectOnRegister)(ISkrRenderer*, dual_storage_t*);
+typedef void (*SProcRenderEffectOnUnregister)(ISkrRenderer*, dual_storage_t*);
 typedef void (*SProcRenderEffectGetTypeSet)(const dual_chunk_view_t* cv, dual_type_set_t* set);
 typedef dual_type_index_t (*SProcRenderEffectGetIdentityType)();
-typedef void (*SProcRenderEffectInitializeData)(ISkrRenderer*, dual_storage_t*, dual_chunk_view_t*);
+typedef void (*SProcRenderEffectInitializeData)(ISkrRenderer*, dual_storage_t*, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv);
 // Drawcall interfaces for effect processor
 typedef uint32_t (*SProcRenderEffectProduceDrawcall)(IPrimitiveRenderPass* pass, dual_storage_t* storage);
 typedef void (*SProcRenderEffectPeekDrawcall)(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls);
 
 typedef struct VtblRenderEffectProcessor {
     SProcRenderEffectOnRegister on_register;
+    SProcRenderEffectOnUnregister on_unregister;
 
     SProcRenderEffectGetTypeSet get_type_set;
     SProcRenderEffectInitializeData initialize_data;
@@ -73,11 +75,12 @@ typedef struct SKR_RENDERER_API IRenderEffectProcessor {
 #ifdef __cplusplus
     virtual ~IRenderEffectProcessor() = default;
 
-    virtual void on_register(ISkrRenderer*) = 0;
+    virtual void on_register(ISkrRenderer*, dual_storage_t*) = 0;
+    virtual void on_unregister(ISkrRenderer*, dual_storage_t*) = 0;
 
     virtual void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) = 0;
     virtual dual_type_index_t get_identity_type() = 0;
-    virtual void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* cv) = 0;
+    virtual void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) = 0;
 
     virtual uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) = 0;
     virtual void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls) = 0;

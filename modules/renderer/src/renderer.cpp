@@ -15,10 +15,16 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
     {
     }
 
-    void on_register(ISkrRenderer* renderer)
+    void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
         if (vtbl.on_register)
-            vtbl.on_register(renderer);
+            vtbl.on_register(renderer, storage);
+    }
+
+    void on_unregister(ISkrRenderer* renderer, dual_storage_t* storage) override
+    {
+        if (vtbl.on_unregister)
+            vtbl.on_unregister(renderer, storage);
     }
 
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
@@ -34,10 +40,10 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
         return DUAL_NULL_TYPE;
     }
 
-    void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* cv) override
+    void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) override
     {
         if (vtbl.initialize_data)
-            vtbl.initialize_data(renderer, storage, cv);
+            vtbl.initialize_data(renderer, storage, game_cv, render_cv);
     }
 
     uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* game_storage) override
@@ -113,6 +119,7 @@ void skr_renderer_register_render_pass(ISkrRenderer* r, skr_render_effect_name_t
         return;
     }
     renderer->passes[name] = pass;
+    pass->on_register(r);
 }
 
 void skr_renderer_remove_render_pass(ISkrRenderer* r, skr_render_pass_name_t name)
@@ -120,12 +127,14 @@ void skr_renderer_remove_render_pass(ISkrRenderer* r, skr_render_pass_name_t nam
     auto renderer = (SkrRendererImpl*)r;
     if (auto&& _ = renderer->passes.find(name); _ != renderer->passes.end())
     {
+        _->second->on_unregister(r);
         renderer->passes.erase(_);
     }
 }
 
 void skr_renderer_register_render_effect(ISkrRenderer* r, skr_render_effect_name_t name, IRenderEffectProcessor* processor)
 {
+    auto storage = skr_runtime_get_dual_storage();
     auto renderer = (SkrRendererImpl*)r;
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
     {
@@ -133,7 +142,7 @@ void skr_renderer_register_render_effect(ISkrRenderer* r, skr_render_effect_name
         return;
     }
     renderer->processors[name] = processor;
-    processor->on_register(r);
+    processor->on_register(r, storage);
 }
 
 void skr_renderer_register_render_effect_vtbl(ISkrRenderer* r, skr_render_effect_name_t name, VtblRenderEffectProcessor* processor)
@@ -152,18 +161,20 @@ void skr_renderer_register_render_effect_vtbl(ISkrRenderer* r, skr_render_effect
 void skr_renderer_remove_render_effect(ISkrRenderer* r, skr_render_effect_name_t name)
 {
     auto renderer = (SkrRendererImpl*)r;
+    auto storage = skr_runtime_get_dual_storage();
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
     {
+        _->second->on_unregister(r, storage);
         renderer->processors.erase(_);
     }
 }
 
 using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
 
-void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name)
+void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* g_cv, skr_render_effect_name_t effect_name)
 {
     auto renderer = (SkrRendererImpl*)r;
-    auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
+    auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(g_cv, dual_id_of<skr_render_effect_t>::get());
     SKR_ASSERT(feature_arrs && "No render effect component in chunk view");
     if (feature_arrs)
     {
@@ -176,20 +187,20 @@ void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* cv, skr_render
             return;
         }
         auto entity_type = make_zeroed<dual_entity_type_t>();
-        i_processor->second->get_type_set(cv, &entity_type.type);
+        i_processor->second->get_type_set(g_cv, &entity_type.type);
         // create render effect entities in storage
         dual_chunk_view_t* out_cv = nullptr;
-        auto initialize_callback = [&](dual_chunk_view_t* inView) {
+        auto initialize_callback = [&](dual_chunk_view_t* r_cv) {
             // do user initialize callback
-            i_processor->second->initialize_data(renderer, world, cv);
-            out_cv = inView;
+            i_processor->second->initialize_data(renderer, world, g_cv, r_cv);
+            out_cv = r_cv;
         };
-        dualS_allocate_type(world, &entity_type, cv->count, DUAL_LAMBDA(initialize_callback));
+        dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
         // attach render effect entities to game entities
         if (out_cv)
         {
             auto entities = dualV_get_entities(out_cv);
-            for (uint32_t i = 0; i < cv->count; i++)
+            for (uint32_t i = 0; i < g_cv->count; i++)
             {
                 auto& features = feature_arrs[i];
 #ifdef _DEBUG

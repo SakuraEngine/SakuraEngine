@@ -85,7 +85,10 @@ CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
         if (_ != surfaces.end())
             surface = _->second;
         else
+        {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
+            surfaces[window] = surface;
+        }
     }
     // Create swapchain
     CGPUSwapChainDescriptor chain_desc = {};
@@ -98,5 +101,6 @@ CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(device, &chain_desc);
+    swapchains[window] = swapchain;
     return swapchain;
 }

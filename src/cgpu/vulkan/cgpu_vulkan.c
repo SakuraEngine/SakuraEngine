@@ -1327,6 +1327,8 @@ CGPUQueueId cgpu_get_queue_vulkan(CGPUDeviceId device, ECGPUQueueType type, uint
 #ifdef CGPU_THREAD_SAFETY
     RQ->pMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
     skr_init_mutex(RQ->pMutex);
+    RQ->pResourceMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
+    skr_init_mutex(RQ->pResourceMutex);
 #endif
     return &RQ->super;
 }
@@ -1470,6 +1472,11 @@ void cgpu_free_queue_vulkan(CGPUQueueId queue)
     {
         skr_destroy_mutex(Q->pMutex);
         cgpu_free(Q->pMutex);
+    }
+    if (Q->pResourceMutex)
+    {
+        skr_destroy_mutex(Q->pResourceMutex);
+        cgpu_free(Q->pResourceMutex);
     }
 #endif
     cgpu_free((void*)queue);
