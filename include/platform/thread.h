@@ -47,6 +47,7 @@ typedef void (*SCallOnceFn)(void);
 typedef struct SMutex {
 #if defined(_WIN32) || defined(XBOX)
     unsigned char muStorage_[sizeof(void*)];
+    uint32_t isSRW;
 #elif defined(NX64)
     MutexTypeNX mMutexPlatformNX;
     uint32_t mSpinCount;
@@ -113,6 +114,7 @@ THREADS_API void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn);
 
 /// Operating system mutual exclusion primitive.
 THREADS_API bool skr_init_mutex(SMutex* pMutex);
+THREADS_API bool skr_init_mutex_recursive(SMutex* pMutex);
 THREADS_API void skr_destroy_mutex(SMutex* pMutex);
 THREADS_API void skr_acquire_mutex(SMutex* pMutex);
 THREADS_API bool skr_try_acquire_mutex(SMutex* pMutex);
