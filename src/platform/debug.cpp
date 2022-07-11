@@ -1,4 +1,5 @@
 #include "platform/debug.h"
+#include "shared_library.cpp"
 #include <stdio.h>
 #if defined(_WIN32)
     #include "windows.h"

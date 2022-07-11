@@ -1,3 +1,5 @@
+#define WIN32_MEAN_AND_LEAN
+#include <windows.h> 
 #include "platform/configure.h"
 #include "debug.cpp"
 #include "vfs.cpp"
