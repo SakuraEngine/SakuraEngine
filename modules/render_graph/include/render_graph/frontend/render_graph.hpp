@@ -62,10 +62,10 @@ public:
         ECGPULoadAction load_action = CGPU_LOAD_ACTION_CLEAR,
         ECGPUStoreAction store_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
         RenderPassBuilder& set_depth_stencil(TextureDSVHandle handle,
-        ECGPULoadAction dload_action = CGPU_LOAD_ACTION_CLEAR,
-        ECGPUStoreAction dstore_action = CGPU_STORE_ACTION_STORE,
-        ECGPULoadAction sload_action = CGPU_LOAD_ACTION_CLEAR,
-        ECGPUStoreAction sstore_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
+            ECGPULoadAction dload_action = CGPU_LOAD_ACTION_CLEAR,
+            ECGPUStoreAction dstore_action = CGPU_STORE_ACTION_STORE,
+            ECGPULoadAction sload_action = CGPU_LOAD_ACTION_CLEAR,
+            ECGPUStoreAction sstore_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
         // buffers
         RenderPassBuilder& read(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;

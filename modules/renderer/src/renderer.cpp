@@ -78,8 +78,6 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
 
     void render(skr::render_graph::RenderGraph* render_graph) override
     {
-        static uint32_t frame_idx = 0;
-        auto& drawcall_arena = drawcall_arenas[frame_idx];
         // produce draw calls
         for (auto& pass : passes)
         {
@@ -105,21 +103,20 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
         {
             if (pass.second)
             {
-                auto pass_drawcall_arena = drawcall_arena[pass.second->identity()];
+                auto& pass_drawcall_arena = drawcall_arena[pass.second->identity()];
                 auto dcs = make_zeroed<skr_primitive_draw_list_view_t>();
                 dcs.drawcalls = pass_drawcall_arena.data();
                 dcs.count = pass_drawcall_arena.size();
                 pass.second->execute(render_graph, dcs);
             }
         }
-        frame_idx = (frame_idx + 1) % RG_MAX_FRAME_IN_FLIGHT;
     }
 
     eastl::unordered_map<eastl::string, IPrimitiveRenderPass*> passes;
     eastl::unordered_map<eastl::string, IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 protected:
-    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_t>> drawcall_arenas[RG_MAX_FRAME_IN_FLIGHT];
+    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_t>> drawcall_arena;
 };
 
 skr::Renderer* create_renderer_impl()
