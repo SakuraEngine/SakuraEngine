@@ -1,27 +1,24 @@
 #include "../../cgpu/common/utils.h"
+#include "utils/make_zeroed.hpp"
+#include "utils/log.h"
 #include "cgpu/api.h"
+#include "platform/memory.h"
+#include "platform/thread.h"
+#include "platform/window.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual.h"
 #include "ecs/type_builder.hpp"
-#include "platform/thread.h"
-#include "platform/window.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
-#include "gamert.h"
-#include "platform/memory.h"
-#include "skr_renderer/primitive_draw.h"
-#include "utils/log.h"
-#include "skr_renderer/skr_renderer.h"
-#include "runtime_module.h"
 #include "imgui/skr_imgui_rg.h"
 #include "skr_scene/scene.h"
-#include "skr_renderer/effect_processor.h"
+#include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
-#include "math/vectormath.hpp"
-#include "utils/make_zeroed.hpp"
-#include <mutex>
+#include "gamert.h"
+#include "cube.hpp"
 
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
@@ -34,18 +31,31 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     {
     }
 
+    ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
     void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
     {
-        dual_storage_t* storage = skr_runtime_get_dual_storage();
-        {
-            auto depth = renderGraph->create_texture(
+        auto depth = renderGraph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
                 builder.set_name("depth")
-                .extent(900, 900)
-                .format(depth_format)
-                .owns_memory()
-                .allow_depth_stencil();
+                    .extent(900, 900)
+                    .format(depth_format)
+                    .owns_memory()
+                    .allow_depth_stencil();
             });
+        // IMGUI control shading rate
+        {
+            const char* shadingRateNames[] = {
+                "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
+            };
+            ImGui::Begin(u8"ShadingRate");
+            if (ImGui::Button(fmt::format("SwitchShadingRate-{}", shadingRateNames[shading_rate]).c_str()))
+            {
+                if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
+                    shading_rate = (ECGPUShadingRate)(shading_rate + 1);
+                else
+                    shading_rate = CGPU_SHADING_RATE_FULL;
+            }
+            ImGui::End();
         }
         renderGraph->add_render_pass(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
@@ -79,7 +89,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     };
                     cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                     cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
-                    // cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
+                    cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
                     cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
                 }
             });
@@ -149,8 +159,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
         // query from identity component
-        using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
-        // SKR_LOG_FMT_INFO("Pass {} asked Feature {} to produce drawcall", pass->identity(), forward_effect_name);
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
             uint32_t c = 0;
@@ -237,110 +245,6 @@ protected:
 };
 RenderEffectForward* forward_effect = new RenderEffectForward();
 
-struct FwdCubeGeometry {
-    const skr::math::Vector3f g_Positions[24] = {
-        { -0.5f, 0.5f, -0.5f }, // front face
-        { 0.5f, -0.5f, -0.5f },
-        { -0.5f, -0.5f, -0.5f },
-        { 0.5f, 0.5f, -0.5f },
-
-        { 0.5f, -0.5f, -0.5f }, // right side face
-        { 0.5f, 0.5f, 0.5f },
-        { 0.5f, -0.5f, 0.5f },
-        { 0.5f, 0.5f, -0.5f },
-
-        { -0.5f, 0.5f, 0.5f }, // left side face
-        { -0.5f, -0.5f, -0.5f },
-        { -0.5f, -0.5f, 0.5f },
-        { -0.5f, 0.5f, -0.5f },
-
-        { 0.5f, 0.5f, 0.5f }, // back face
-        { -0.5f, -0.5f, 0.5f },
-        { 0.5f, -0.5f, 0.5f },
-        { -0.5f, 0.5f, 0.5f },
-
-        { -0.5f, 0.5f, -0.5f }, // top face
-        { 0.5f, 0.5f, 0.5f },
-        { 0.5f, 0.5f, -0.5f },
-        { -0.5f, 0.5f, 0.5f },
-
-        { 0.5f, -0.5f, 0.5f }, // bottom face
-        { -0.5f, -0.5f, -0.5f },
-        { 0.5f, -0.5f, -0.5f },
-        { -0.5f, -0.5f, 0.5f },
-    };
-    const skr::math::Vector2f g_TexCoords[24] = {
-        { 0.0f, 0.0f }, // front face
-        { 1.0f, 1.0f },
-        { 0.0f, 1.0f },
-        { 1.0f, 0.0f },
-
-        { 0.0f, 1.0f }, // right side face
-        { 1.0f, 0.0f },
-        { 1.0f, 1.0f },
-        { 0.0f, 0.0f },
-
-        { 0.0f, 0.0f }, // left side face
-        { 1.0f, 1.0f },
-        { 0.0f, 1.0f },
-        { 1.0f, 0.0f },
-
-        { 0.0f, 0.0f }, // back face
-        { 1.0f, 1.0f },
-        { 0.0f, 1.0f },
-        { 1.0f, 0.0f },
-
-        { 0.0f, 1.0f }, // top face
-        { 1.0f, 0.0f },
-        { 1.0f, 1.0f },
-        { 0.0f, 0.0f },
-
-        { 1.0f, 1.0f }, // bottom face
-        { 0.0f, 0.0f },
-        { 1.0f, 0.0f },
-        { 0.0f, 1.0f },
-    };
-    const uint32_t g_Normals[24] = {
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)), // front face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)), // right side face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)), // left side face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)), // back face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)), // top face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)), // bottom face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
-    };
-    static constexpr uint32_t g_Indices[] = {
-        0, 1, 2, 0, 3, 1,       // front face
-        4, 5, 6, 4, 7, 5,       // left face
-        8, 9, 10, 8, 11, 9,     // right face
-        12, 13, 14, 12, 15, 13, // back face
-        16, 17, 18, 16, 19, 17, // top face
-        20, 21, 22, 20, 23, 21, // bottom face
-    };
-};
-
 void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
 {
     const auto device = renderer->get_cgpu_device();
@@ -351,29 +255,29 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
-    upload_buffer_desc.size = sizeof(FwdCubeGeometry) + sizeof(FwdCubeGeometry::g_Indices);
+    upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
     auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGPUBufferDescriptor vb_desc = {};
     vb_desc.name = "VertexBuffer";
     vb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
     vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-    vb_desc.size = sizeof(FwdCubeGeometry);
+    vb_desc.size = sizeof(CubeGeometry);
     vertex_buffer = cgpu_create_buffer(device, &vb_desc);
     CGPUBufferDescriptor ib_desc = {};
     ib_desc.name = "IndexBuffer";
     ib_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
     ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-    ib_desc.size = sizeof(FwdCubeGeometry::g_Indices);
+    ib_desc.size = sizeof(CubeGeometry::g_Indices);
     index_buffer = cgpu_create_buffer(device, &ib_desc);
     auto pool_desc = CGPUCommandPoolDescriptor();
     auto cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
     auto cmd_desc = CGPUCommandBufferDescriptor();
     auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
     {
-        auto geom = FwdCubeGeometry();
-        memcpy(upload_buffer->cpu_mapped_address, &geom, sizeof(FwdCubeGeometry));
+        auto geom = CubeGeometry();
+        memcpy(upload_buffer->cpu_mapped_address, &geom, sizeof(CubeGeometry));
     }
     cgpu_cmd_begin(cpy_cmd);
     CGPUBufferToBufferTransfer vb_cpy = {};
@@ -381,18 +285,18 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     vb_cpy.dst_offset = 0;
     vb_cpy.src = upload_buffer;
     vb_cpy.src_offset = 0;
-    vb_cpy.size = sizeof(FwdCubeGeometry);
+    vb_cpy.size = sizeof(CubeGeometry);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &vb_cpy);
     {
-        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(FwdCubeGeometry),
-        FwdCubeGeometry::g_Indices, sizeof(FwdCubeGeometry::g_Indices));
+        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry),
+        CubeGeometry::g_Indices, sizeof(CubeGeometry::g_Indices));
     }
     CGPUBufferToBufferTransfer ib_cpy = {};
     ib_cpy.dst = index_buffer;
     ib_cpy.dst_offset = 0;
     ib_cpy.src = upload_buffer;
-    ib_cpy.src_offset = sizeof(FwdCubeGeometry);
-    ib_cpy.size = sizeof(FwdCubeGeometry::g_Indices);
+    ib_cpy.src_offset = sizeof(CubeGeometry);
+    ib_cpy.size = sizeof(CubeGeometry::g_Indices);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
     // barriers
     CGPUBufferBarrier barriers[2] = {};
@@ -420,13 +324,13 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     // init vbvs & ibvs
     vbvs[0].buffer = vertex_buffer;
     vbvs[0].stride = sizeof(skr::math::Vector3f);
-    vbvs[0].offset = offsetof(FwdCubeGeometry, g_Positions);
+    vbvs[0].offset = offsetof(CubeGeometry, g_Positions);
     vbvs[1].buffer = vertex_buffer;
     vbvs[1].stride = sizeof(skr::math::Vector2f);
-    vbvs[1].offset = offsetof(FwdCubeGeometry, g_TexCoords);
+    vbvs[1].offset = offsetof(CubeGeometry, g_TexCoords);
     vbvs[2].buffer = vertex_buffer;
     vbvs[2].stride = sizeof(uint32_t);
-    vbvs[2].offset = offsetof(FwdCubeGeometry, g_Normals);
+    vbvs[2].offset = offsetof(CubeGeometry, g_Normals);
     ibv.buffer = index_buffer;
     ibv.offset = 0;
     ibv.stride = sizeof(uint32_t);

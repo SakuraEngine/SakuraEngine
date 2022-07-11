@@ -14,8 +14,10 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui_rg.h"
-#include "runtime_module.h"
 #include "gamert.h"
+
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
+SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
 
 void create_test_scene()
 {
