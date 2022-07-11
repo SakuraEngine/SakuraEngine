@@ -5,7 +5,6 @@
 #include "resource/resource_system.h"
 #include "resource/local_resource_registry.h"
 #include "ecs/dual.h"
-#include "runtime_module.h"
 #include "../../cgpu/common/utils.h"
 #include "ftl/task.h"
 #include "ftl/task_scheduler.h"
@@ -34,7 +33,6 @@ extern void initialize_render_effects(skr::render_graph::RenderGraph* renderGrap
 extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph);
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
-
 
 class SGameModule : public skr::IDynamicModule
 {
