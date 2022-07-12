@@ -18,7 +18,6 @@
 #include "resource/resource_system.h"
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
-#include "skr_scene/transform.hpp"
 #include "skr_renderer/skr_renderer.h"
 #include "gainput/gainput.h"
 #include "gainput/GainputInputDeviceKeyboard.h"
@@ -85,7 +84,7 @@ void create_test_scene()
             translations[i].value = {
                 (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f, 0.f
             };
-            rotations[i].euler = skr_float3_t{ 0.f, 0.f, 0.f };
+            rotations[i].euler = { 0.f, 0.f, 0.f };
             scales[i].value = { 1.f, 1.f, 1.f };
         }
         auto renderer = skr_renderer_get_renderer();

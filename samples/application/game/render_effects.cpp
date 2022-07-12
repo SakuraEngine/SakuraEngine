@@ -13,7 +13,6 @@
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui_rg.h"
 #include "skr_scene/scene.h"
-#include "skr_scene/transform.hpp"
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
 #include "gamert.h"

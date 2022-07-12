@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "platform/configure.h"
+#include "utils/types.h"
 #include "containers/span.hpp"
 
 namespace skr
