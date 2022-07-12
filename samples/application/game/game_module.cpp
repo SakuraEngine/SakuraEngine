@@ -18,6 +18,7 @@
 #include "resource/resource_system.h"
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
+#include "skr_scene/transform.hpp"
 #include "skr_renderer/skr_renderer.h"
 #include "gainput/gainput.h"
 #include "gainput/GainputInputDeviceKeyboard.h"
@@ -68,20 +69,24 @@ void SGameModule::on_load(int argc, char** argv)
 void create_test_scene()
 {
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
-    renderableT_builder.with<skr_transform_t>();
+    renderableT_builder.with<skr_translation_t>();
+    renderableT_builder.with<skr_rotation_t>();
+    renderableT_builder.with<skr_scale_t>();
     renderableT_builder.with<skr_render_effect_t>();
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
     auto primSetup = [&](dual_chunk_view_t* view) {
-        auto transforms = (skr_transform_t*)dualV_get_owned_ro(view, dual_id_of<skr_transform_t>::get());
+        auto translations = (skr_translation_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_t>::get());
+        auto rotations = (skr_rotation_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_t>::get());
+        auto scales = (skr_scale_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_t>::get());
         for (uint32_t i = 0; i < view->count; i++)
         {
-            transforms[i].location = {
+            translations[i].value = {
                 (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f, 0.f
             };
-            transforms[i].scale = { 1.f, 1.f, 1.f };
-            transforms[i].rotation = { 0.f, 0.f, 0.f, 1.f };
+            rotations[i].euler = skr_float3_t{ 0.f, 0.f, 0.f };
+            scales[i].value = { 1.f, 1.f, 1.f };
         }
         auto renderer = skr_renderer_get_renderer();
         skr_render_effect_attach(renderer, view, "ForwardEffect");
@@ -179,19 +184,19 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             auto filter = make_zeroed<dual_filter_t>();
             auto meta = make_zeroed<dual_meta_filter_t>();
-            auto transform_type = dual_id_of<skr_transform_t>::get();
-            filter.all.data = &transform_type;
+            auto translation_type = dual_id_of<skr_translation_t>::get();
+            filter.all.data = &translation_type;
             filter.all.length = 1;
             float lerps[] = { 1.25, 2.0 };
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
             auto moveFunc = [&](dual_chunk_view_t* view) {
-                auto transforms = (skr_transform_t*)dualV_get_owned_ro(view, transform_type);
+                auto translations = (skr_translation_t*)dualV_get_owned_ro(view, translation_type);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     auto lscale = (float)abs(sin(total_sec * 0.5));
                     lscale = (float)lerp(lerps[0], lerps[1], lscale);
-                    transforms[i].location = {
+                    translations[i].value = {
                         ((float)(i % 10) - 4.5f) * lscale,
                         ((float)(i / 10) - 4.5f) * lscale, 0.f
                     };

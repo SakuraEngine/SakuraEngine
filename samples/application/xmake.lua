@@ -6,7 +6,7 @@ target("GameRT")
     })
     add_includedirs("game/include", {public=true})
     add_deps("SkrRT", "SkrScene", "SkrGAInput", "SkrRenderer", "SkrImGui")
-    add_files("game/src/**.cpp", "game/src/**.c")
+    add_files("game/src/**.cpp")
 
 target("Game")
     set_kind("binary")
