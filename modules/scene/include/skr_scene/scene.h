@@ -50,16 +50,3 @@ skr_name_t
     char str[32];
 };
 typedef struct skr_name_t skr_name_t;
-
-struct sreflect sattr(
-    "guid" : "c3f070ea-f833-4ddf-ab70-1d0ef0fad179",
-    "component" : true
-)
-skr_transform_t
-{
-    skr_float3_t location;
-    skr_float3_t scale;
-    skr_float4_t rotation;
-};
-typedef struct skr_name_t skr_name_t;
-

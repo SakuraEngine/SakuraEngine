@@ -13,6 +13,7 @@
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui_rg.h"
 #include "skr_scene/scene.h"
+#include "skr_scene/transform.hpp"
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
 #include "gamert.h"
@@ -123,7 +124,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             identity_type = dualT_register_type(&desc);
         }
         type_builder.with(identity_type);
-        type_builder.with<skr_transform_t>();
         effect_query = dualQ_from_literal(storage, "[in]fwdIdentity");
         // prepare render resources
         prepare_pipeline(renderer);
@@ -188,16 +188,19 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                     uint32_t idx = 0;
                     auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
                         auto g_ents = (dual_entity_t*)dualV_get_entities(g_cv);
-                        auto transforms = (skr_transform_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_transform_t>::get());
+                        auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
+                        auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());
+                        auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
                         for (uint32_t i = 0; i < g_cv->count; i++)
                         {
                             auto g_ent = g_ents[i];
                             auto r_ent = r_ents[idx];
                             (void)g_ent;
                             (void)r_ent;
+                            (void)rotations;
                             push_constants[idx].world = skr::math::make_transform(
-                            transforms[idx].location,
-                            transforms[idx].scale,
+                            translations[idx].value,
+                            scales[idx].value,
                             skr::math::Quaternion::identity());
                             auto view = skr::math::look_at_matrix({ 0.f, 0.f, 12.5f } /*eye*/, { 0.f, 0.f, 0.f } /*at*/);
                             auto proj = skr::math::perspective_fov(3.1415926f / 2.f, (float)900 / (float)900, 1.f, 1000.f);
