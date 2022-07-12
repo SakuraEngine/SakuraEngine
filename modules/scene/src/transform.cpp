@@ -14,6 +14,15 @@
 static_assert(alignof(decltype(skr_l2r_t::matrix)) == 16, "Alignment of matrix must be 16");
 static_assert(sizeof(skr_l2w_t::matrix) == sizeof(skr_float4x4_t), "Size of matrix must equal to skr_float4x4_t");
 
+static_assert(alignof(decltype(skr_rotation_t::euler)) == alignof(skr::math::Rotator), "Alignment of euler must equal to skr::math::Rotator");
+static_assert(sizeof(skr_rotation_t::euler) == sizeof(skr::math::Rotator), "Size of euler must equal to skr::math::Rotator");
+
+static_assert(sizeof(skr_translation_t::value) == sizeof(skr::math::Vector3f), "Size of translation must equal to skr::math::Vector3f");
+static_assert(alignof(decltype(skr_translation_t::value)) == alignof(skr::math::Vector3f), "Alignment of translation must equal to skr::math::Vector3f");
+
+static_assert(sizeof(skr_scale_t::value) == sizeof(skr::math::Vector3f), "Size of translation must equal to skr::math::Vector3f");
+static_assert(alignof(decltype(skr_scale_t::value)) == alignof(skr::math::Vector3f), "Alignment of scale must equal to skr::math::Vector3f");
+
 template <class T>
 static void skr_local_to_x(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
 {
