@@ -18,6 +18,15 @@ typedef struct skr_float3_t {
     };
 } skr_float3_t;
 
+typedef struct skr_rotator_t {
+    struct
+    {
+        float pitch;
+        float yaw;
+        float roll;
+    };
+} skr_rotator_t;
+
 typedef struct SKR_ALIGNAS(16) skr_float4_t {
     struct 
     {
