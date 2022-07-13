@@ -137,8 +137,7 @@ int32_t RenderMesh::loadPrimitive(struct cgltf_primitive* src, uint32_t& index_c
         layout.attributes[i].format = GLTFUtil_ComponentTypeToFormat(gltf_attrib->data->type, gltf_attrib->data->component_type);
         layout.attributes[i].binding = binding++;
         layout.attributes[i].offset = 0;
-        layout.attributes[i].elem_stride =
-        FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
+        layout.attributes[i].elem_stride = FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
     }
     newPrim.vertex_layout_id_ = (uint32_t)RenderBlackboard::AddVertexLayout(layout);
     primitives_.emplace_back(eastl::move(newPrim));
