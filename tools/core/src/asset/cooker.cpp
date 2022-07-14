@@ -318,7 +318,8 @@ SAssetRecord* SCookSystem::ImportAsset(SProject* project, ghc::filesystem::path 
     if (path.is_relative())
         path = project->assetPath / path;
     auto metaPath = path;
-    metaPath.replace_extension(".meta");
+    if(metaPath.extension() != ".meta")
+        metaPath = path.string() + ".asset";
     if (!ghc::filesystem::exists(metaPath))
     {
         SKR_LOG_ERROR("[SAssetRegistry::ImportAsset] meta file %s not exist", path.u8string().c_str());
