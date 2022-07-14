@@ -312,7 +312,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             query->storage->validate(validatedMeta.any_meta);
             query->storage->validate(validatedMeta.none_meta);
         }
-        if (job->hasRandomWrite)
+        if (job->hasRandomWrite || job->batchSize == 0)
         {
             uint32_t startIndex = 0;
             auto processView = [&](dual_chunk_view_t* view) {
