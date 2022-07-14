@@ -1,6 +1,5 @@
 #pragma once
 #include "dual_config.h"
-#include "ecs/dual.h"
 #include "platform/guid.h"
 
 #if defined(__cplusplus)
@@ -16,6 +15,15 @@ DUAL_DECLARE(query_t);
 DUAL_DECLARE(storage_delta_t);
 DUAL_DECLARE(counter_t);
 #undef DUAL_DECLARE
+
+constexpr uint32_t dead = 2 + (1 << 29);
+
+#define DUAL_COMPONENT_DISABLE 0x80000000
+#define DUAL_COMPONENT_DEAD 0x80000001
+#define DUAL_COMPONENT_LINK 0x20000002
+#define DUAL_COMPONENT_MASK 0x3
+#define DUAL_COMPONENT_GUID 0x4
+#define DUAL_COMPONENT_DIRTY 0x5
 
 // structs
 typedef TIndex dual_type_index_t;
