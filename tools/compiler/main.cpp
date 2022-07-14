@@ -111,19 +111,15 @@ void Run(bool server)
 bool IsAsset(ghc::filesystem::path path)
 {
     if (path.extension() == ".meta")
+        return true;
+    if (path.extension() != ".asset")
     {
-        path.replace_extension();
-        if (!path.has_extension()) // skip asset meta
-            return false;
-    }
-    else
-    {
-        auto metaPath = path;
-        metaPath.replace_extension(".meta");
+        auto metaPath = path.string() + ".asset";
         if (!ghc::filesystem::exists(metaPath)) // skip asset without meta
             return false;
+        return true;
     }
-    return true;
+    return false;
 }
 
 int main(int argc, char** argv)
@@ -150,7 +146,7 @@ int main(int argc, char** argv)
     vfs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
     vfs_desc.override_mount_dir = parentPath.c_str();
     project->vfs = skr_create_vfs(&vfs_desc);
-    project->assetPath = (root.parent_path() / "../../../samples/game/assets").lexically_normal();
+    project->assetPath = (root.parent_path() / "../../../samples/application/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
 
