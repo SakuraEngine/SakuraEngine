@@ -5,7 +5,7 @@
 #include "utils/types.h"
 
 typedef struct skr_mesh_section_t {
-    // attachment?
+    // TODO: attachment?
     // skr_mesh_section_t* parent;
     // eastl::vector<skr_mesh_section_t> children;
     uint32_t index;
@@ -46,6 +46,7 @@ struct sreflect sattr(
 )
 skr_mesh_resource_t
 {
+    eastl::string name;
     eastl::vector<skr_mesh_section_t> sections;
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_vertex_bin_t> vertex_buffers;

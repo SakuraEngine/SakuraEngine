@@ -125,7 +125,11 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         jobContext->output = outputPath / fmt::format("{}.bin", metaAsset->guid);
         auto system = GetCookSystem();
         auto iter = system->cookers.find(metaAsset->type);
-        SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
+        if (iter == system->cookers.end())
+        {
+            return;
+        }
+        // SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
         SKR_LOG_FMT_INFO("[CookTask] resource {} cook started!", metaAsset->guid);
         if (iter->second->Cook(jobContext))
         {

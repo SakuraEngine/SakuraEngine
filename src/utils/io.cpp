@@ -75,7 +75,7 @@ public:
         {
             skr_atomic32_store_relaxed(&request->status, value);
             if (callbacks[value] != nullptr)
-                callbacks[value](callback_datas[value]);
+                callbacks[value](request, callback_datas[value]);
         }
     };
     ~RAMServiceImpl() SKR_NOEXCEPT = default;

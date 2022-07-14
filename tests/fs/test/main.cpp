@@ -94,7 +94,7 @@ TEST_F(FSTest, asyncread)
     ramIO.offset = 0;
     ramIO.size = 1024;
     ramIO.path = "testfile";
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](void* arg){
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* arg){
         skr_ram_io_t* pRamIO = (skr_ram_io_t*)arg;
         SKR_LOG_INFO("async read of file %s ok", pRamIO->path);
     };

@@ -47,7 +47,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     ramIO.offset = 0;
     ramIO.size = 0;
     ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](void* data) noexcept {
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request,void* data) noexcept {
         auto pCounter = (ftl::AtomicFlag*)data;
         pCounter->Clear();
     };
