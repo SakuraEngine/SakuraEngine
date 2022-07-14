@@ -78,7 +78,7 @@ typedef struct skr_ram_io_service_desc_t {
     SkrAsyncIOServiceSleepMode sleep_mode;
 } skr_ram_io_service_desc_t;
 
-typedef void (*skr_async_io_callback_t)(void* data);
+typedef void (*skr_async_io_callback_t)(skr_async_io_request_t* request, void* data);
 typedef struct skr_ram_io_t {
     const char8_t* path;
     uint8_t* bytes;

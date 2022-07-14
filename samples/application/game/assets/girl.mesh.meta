@@ -1,0 +1,11 @@
+{
+    "guid": "79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b",
+    "type": "3b8ca511-33d1-4db4-b805-00eea6a8d5e1",
+    "importer": {
+        "importerType": "D72E2056-3C12-402A-A8B8-148CB8EAB922",
+        "assetGuid": "38b343d0-5ede-4a07-b66b-8eebadd2f928"
+    },
+    "cooker": {
+        "binarization": true
+    }
+}

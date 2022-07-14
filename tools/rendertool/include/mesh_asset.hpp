@@ -1,6 +1,5 @@
 #pragma once
-
-#include "rendertool_configure.h"
+#include "RenderTool/rendertool.configure.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
 #include "cgltf.h"
@@ -17,7 +16,7 @@ struct sreflect sattr(
 RENDERTOOL_API SGltfMeshImporter final : public SImporter
 {
     using SImporter::SImporter;
-    void* Import(skr::io::RAMService*, const SAssetRecord* record) override { return nullptr; }
+    void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
 
 struct sreflect sattr(
@@ -25,8 +24,8 @@ struct sreflect sattr(
 )
 RENDERTOOL_API SMeshCooker final : public SCooker
 {
-    bool Cook(SCookContext * ctx) override { return false; }
-    uint32_t Version() override { return 0; }
+    bool Cook(SCookContext * ctx) override;
+    uint32_t Version() override;
 };
 } // namespace sreflect
 } // namespace sreflect

@@ -47,7 +47,7 @@ void SkrRendererModule::on_load(int argc, char** argv)
         else
         {
 #ifdef _WIN32
-            renderer->backend = CGPU_BACKEND_D3D12;
+            renderer->backend = CGPU_BACKEND_VULKAN;
 #else
             renderer->backend = CGPU_BACKEND_VULKAN;
 #endif

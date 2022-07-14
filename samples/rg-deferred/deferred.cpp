@@ -539,61 +539,60 @@ int main(int argc, char* argv[])
             else
             {
                 graph->add_compute_pass(
-                [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
-                    builder.set_name("light_pass_cs")
-                    .set_pipeline(lighting_cs_pipeline)
-                    .read("gbuffer_color", gbuffer_color)
-                    .read("gbuffer_normal", gbuffer_normal)
-                    .read("gbuffer_depth", gbuffer_depth)
-                    .readwrite("lighting_output", lighting_buffer);
-                },
-                [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
-                    cgpu_compute_encoder_push_constants(stack.encoder,
-                    lighting_cs_pipeline->root_signature, "push_constants", &lighting_cs_data);
-                    cgpu_compute_encoder_dispatch(stack.encoder,
-                    (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
-                    (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),
-                    1);
-                });
+                    [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
+                        builder.set_name("light_pass_cs")
+                        .set_pipeline(lighting_cs_pipeline)
+                        .read("gbuffer_color", gbuffer_color)
+                        .read("gbuffer_normal", gbuffer_normal)
+                        .read("gbuffer_depth", gbuffer_depth)
+                        .readwrite("lighting_output", lighting_buffer);
+                    },
+                    [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
+                        cgpu_compute_encoder_push_constants(stack.encoder,
+                            lighting_cs_pipeline->root_signature, "push_constants", &lighting_cs_data);
+                        cgpu_compute_encoder_dispatch(stack.encoder,
+                            (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
+                            (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),
+                            1);
+                    });
                 graph->add_render_pass(
+                    [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                        builder.set_name("lighting_buffer_blit")
+                            .set_pipeline(blit_pipeline)
+                            .read("input_color", lighting_buffer)
+                            .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
+                    },
+                    [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                        cgpu_render_encoder_set_viewport(stack.encoder,
+                            0.0f, 0.0f,
+                            (float)native_backbuffer->width, (float)native_backbuffer->height,
+                            0.f, 1.f);
+                        cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                        cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                    });
+            }
+            render_graph_imgui_add_render_pass(graph, composite_buffer, CGPU_LOAD_ACTION_LOAD);
+            graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                    builder.set_name("lighting_buffer_blit")
-                    .set_pipeline(blit_pipeline)
-                    .read("input_color", lighting_buffer)
-                    .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
+                    builder.set_name("final_blit")
+                        .set_pipeline(blit_pipeline)
+                        .read("input_color", composite_buffer)
+                        .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,
-                    0.0f, 0.0f,
-                    (float)native_backbuffer->width, (float)native_backbuffer->height,
-                    0.f, 1.f);
+                        0.0f, 0.0f,
+                        (float)native_backbuffer->width, (float)native_backbuffer->height,
+                        0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
                     cgpu_render_encoder_draw(stack.encoder, 6, 0);
                 });
-            }
-            render_graph_imgui_add_render_pass(graph,
-            composite_buffer, CGPU_LOAD_ACTION_LOAD);
-            graph->add_render_pass(
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                builder.set_name("final_blit")
-                .set_pipeline(blit_pipeline)
-                .read("input_color", composite_buffer)
-                .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
-            },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
-                cgpu_render_encoder_set_viewport(stack.encoder,
-                0.0f, 0.0f,
-                (float)native_backbuffer->width, (float)native_backbuffer->height,
-                0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
-                cgpu_render_encoder_draw(stack.encoder, 6, 0);
-            });
             graph->add_present_pass(
-            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present_pass")
-                .swapchain(swapchain, backbuffer_index)
-                .texture(back_buffer, true);
-            });
+                [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+                    builder.set_name("present_pass")
+                    .swapchain(swapchain, backbuffer_index)
+                    .texture(back_buffer, true);
+                });
         }
         {
             ZoneScopedN("GraphCompile");

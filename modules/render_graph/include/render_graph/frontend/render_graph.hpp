@@ -238,8 +238,7 @@ protected:
     bool aliasing_enabled;
     uint64_t frame_index = 0;
     Blackboard blackboard;
-    eastl::unique_ptr<DependencyGraph> graph =
-    eastl::unique_ptr<DependencyGraph>(DependencyGraph::Create());
+    eastl::unique_ptr<DependencyGraph> graph = eastl::unique_ptr<DependencyGraph>(DependencyGraph::Create());
     eastl::vector<PassNode*> passes;
     eastl::vector<ResourceNode*> resources;
     eastl::vector<PassNode*> culled_passes;
