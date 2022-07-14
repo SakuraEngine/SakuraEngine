@@ -122,7 +122,6 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     dual_entity_type_t type = clone(inType, buffer);
     proto.type = type;
     auto toClean = localStack.allocate<TIndex>(proto.type.type.length + 1);
-    toClean[0] = kDeadComponent;
     SIndex toCleanCount = 1;
     auto toClone = localStack.allocate<TIndex>(proto.type.type.length + 1);
     SIndex toCloneCount = 0;
@@ -131,9 +130,10 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     forloop (i, 0, proto.type.type.length)
     {
         type_index_t t = proto.type.type.data[i];
-        if (t.is_tracked())
-            toClean[toCleanCount++] = t;
-        else
+        if(t > kDeadComponent)
+            toClean[toCleanCount++] = kDeadComponent;
+        toClean[toCleanCount++] = t;
+        if (!t.is_tracked())
             toClone[toCloneCount++] = t;
         if (t == kDeadComponent)
             proto.isDead = true;
@@ -187,7 +187,17 @@ dual::archetype_t* dual_storage_t::get_archetype(const dual_type_set_t& type)
 dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
 {
     using namespace dual;
-    if (type.type.length == 1 && type.type.data[0] == kDeadComponent) DUAL_UNLIKELY
+    bool withTracked = false;
+    bool dead = false;
+    for(int i=0; i<type.type.length; ++i)
+    {
+        type_index_t t = type.type.data[i];
+        if(t.is_tracked())
+            withTracked = true;
+        if(t == kDeadComponent)
+            dead = true;
+    }
+    if(dead && !withTracked)
         return nullptr;
     dual_group_t* group = try_get_group(type);
     if (!group)
