@@ -125,6 +125,21 @@ void serialize(S& s, skr_blob_t& blob)
 {
     serializeBin(s, blob.bytes, blob.size);
 }
+template <class S>
+void serialize(S& s, skr_float3_t& f3)
+{
+    s.value4b(f3.x);
+    s.value4b(f3.y);
+    s.value4b(f3.z);
+}
+template <class S>
+void serialize(S& s, skr_float4_t& f4)
+{
+    s.value4b(f4.x);
+    s.value4b(f4.y);
+    s.value4b(f4.z);
+    s.value4b(f4.w);
+}
 } // namespace bitsery
 
 namespace bitsery

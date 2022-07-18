@@ -1,6 +1,6 @@
 #pragma once
 #include "math/vectormath.hpp"
-#include "../cgpu/common/utils.h"
+#include "../../cgpu/common/utils.h"
 
 const ECGPUFormat lighting_buffer_format = CGPU_FORMAT_R16G16B16A16_SFLOAT;
 
