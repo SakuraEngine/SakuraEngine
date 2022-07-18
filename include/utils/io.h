@@ -3,10 +3,6 @@
 #include "platform/atomic.h"
 #include "platform/vfs.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
 #define SKR_IO_SERVICE_SLEEP_TIME_MAX UINT32_MAX
 
@@ -91,5 +87,8 @@ typedef struct skr_ram_io_t {
 } skr_ram_io_t;
 
 #ifdef __cplusplus
-}
+namespace skr { namespace io { class RAMService; } }
+using skr_io_ram_service_t = skr::io::RAMService;
+#else
+typedef struct skr_io_ram_service_t skr_io_ram_service_t;
 #endif
