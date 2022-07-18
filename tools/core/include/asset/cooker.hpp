@@ -44,6 +44,7 @@ struct SAssetRecord {
 };
 
 struct TOOL_API SCooker {
+    static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
     virtual ~SCooker() {}
     virtual uint32_t Version() = 0;
     virtual bool Cook(SCookContext* ctx) = 0;

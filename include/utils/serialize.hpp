@@ -5,6 +5,7 @@
 #include "bitsery/adapter/buffer.h"
 #include "bitsery/traits/core/std_defaults.h"
 #include "EASTL/vector.h"
+#include "EASTL/string.h"
 #include "EASTL/fixed_vector.h"
 #include "gsl/span"
 #include "platform/guid.h"
@@ -24,6 +25,16 @@ namespace traits
 template <typename T>
 struct ContainerTraits<gsl::span<T>>
     : public StdContainer<gsl::span<T>, true, true> {
+};
+
+template <typename T>
+struct ContainerTraits<eastl::basic_string<T>>
+    : public StdContainer<eastl::basic_string<T>, true, true> {
+};
+
+template <typename T>
+struct BufferAdapterTraits<eastl::basic_string<T>>
+    : public StdContainerForBufferAdapter<eastl::basic_string<T>> {
 };
 
 template <typename T, typename Allocator>
@@ -95,6 +106,11 @@ void serialize(S& s, skr_resource_handle_t& handle)
         serialize(s, guid);
         handle.set_guid(guid);
     }
+}
+template <class S>
+void serialize(S& s, const eastl::string& str)
+{
+    s.container(str, eastl::string::kMaxSize);
 }
 template <class S, class T, class Size>
 void serializeBin(S& s, T*& pointer, Size& size, Size limit = std::numeric_limits<Size>::max())
