@@ -2,7 +2,7 @@
 #include "GLTFTool/gltftool.configure.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
-#include "cgltf.h"
+#include "cgltf/cgltf.h"
 
 namespace skd sreflect
 {

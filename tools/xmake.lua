@@ -37,7 +37,7 @@ target("GLTFTool")
     add_includedirs("gltf_tool/include", {public=true})
     add_packages("vcpkg::usd")
     add_deps("SkrTool", "GameRT")
-    add_files("gltf_tool/src/**.cpp", "gltf_tool/src/**.c")
+    add_files("gltf_tool/src/**.cpp")
 
 target("SkrCompiler")
     -- add_rules("grpc.cpp")

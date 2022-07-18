@@ -3,7 +3,7 @@
 #include "utils/io.hpp"
 #include "utils/make_zeroed.hpp"
 #include "ftl/atomic_counter.h"
-#include "skr_renderer/cgltf.h"
+#include "cgltf/cgltf.h"
 
 void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* request)
 {
