@@ -580,6 +580,13 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
     }
 }
 
+static inline uint32_t VkUtil_CombineVersion(uint32_t a, uint32_t b) {
+   int times = 1;
+   while (times <= b)
+      times *= 10;
+   return a*times + b;
+} 
+
 void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
 {
     CGPUAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
@@ -592,7 +599,26 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
     // vendor info
     adapter_detail->vendor_preset.device_id = prop->deviceID;
     adapter_detail->vendor_preset.vendor_id = prop->vendorID;
-    adapter_detail->vendor_preset.driver_version = prop->driverVersion;
+    if (adapter_detail->vendor_preset.vendor_id == 4318) // NVIDIA
+    {
+        const uint32_t vraw = prop->driverVersion; 
+        const uint32_t v0 = (vraw >> 22) & 0x3ff;
+        const uint32_t v1 = (vraw >> 14) & 0x0ff;
+        const uint32_t v2 = (vraw >> 6) & 0x0ff;
+        const uint32_t v3 = (vraw) & 0x03f;
+        adapter_detail->vendor_preset.driver_version = VkUtil_CombineVersion(VkUtil_CombineVersion(VkUtil_CombineVersion(v0, v1), v2), v3);
+    }
+    else if (adapter_detail->vendor_preset.vendor_id == 0x8086 ) // NVIDIA
+    {
+        const uint32_t vraw = prop->driverVersion; 
+        const uint32_t v0 = (vraw >> 14);
+        const uint32_t v1 = (vraw) & 0x3fff;
+        adapter_detail->vendor_preset.driver_version = VkUtil_CombineVersion(v0, v1);
+    }
+    else
+    {
+        adapter_detail->vendor_preset.driver_version = prop->driverVersion;
+    }
     const char* device_name = prop->deviceName;
     memcpy(adapter_detail->vendor_preset.gpu_name, device_name, strlen(device_name));
 

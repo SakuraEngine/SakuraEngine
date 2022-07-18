@@ -29,12 +29,12 @@ void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool);
 
 #include "utils/hash.h"
 #include "utils/log.h"
-#define cgpu_trace(...) log_log(SKR_LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define cgpu_debug(...) log_log(SKR_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define cgpu_info(...) log_log(SKR_LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define cgpu_warn(...) log_log(SKR_LOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define cgpu_error(...) log_log(SKR_LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define cgpu_fatal(...) log_log(SKR_LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+#define cgpu_trace(...) SKR_LOG_TRACE(__VA_ARGS__)
+#define cgpu_debug(...) SKR_LOG_DEBUG(__VA_ARGS__)
+#define cgpu_info(...) SKR_LOG_INFO(__VA_ARGS__)
+#define cgpu_warn(...) SKR_LOG_WARN(__VA_ARGS__)
+#define cgpu_error(...) SKR_LOG_ERROR(__VA_ARGS__)
+#define cgpu_fatal(...) SKR_LOG_FATAL(__VA_ARGS__)
 
 #ifdef _CRTDBG_MAP_ALLOC
     #include <crtdbg.h>
