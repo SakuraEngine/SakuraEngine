@@ -1,4 +1,3 @@
-#define CGLTF_IMPLEMENTATION
 #include "render-scene.hpp"
 #include "thirdparty/cgltf.h"
 #include "thirdparty/lodepng.h"

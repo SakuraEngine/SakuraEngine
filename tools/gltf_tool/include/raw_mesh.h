@@ -1,2 +1,2 @@
 #pragma once
-#include "cgltf.h"
+#include "cgltf/cgltf.h"
