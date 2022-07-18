@@ -66,6 +66,10 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
         cgltf_data* data = (cgltf_data*)ioRequest.bytes;
         auto mesh = new skr_mesh_resource_t();
         mesh->name = data->meshes[0].name;
+        if (mesh->name.empty())
+        {
+            mesh->name = "gltfMesh";
+        }
         cgltf_free(data);
         return mesh;
     }
@@ -80,7 +84,8 @@ bool skd::asset::SMeshCooker::Cook(SCookContext * ctx)
     skr::resource::SBinarySerializer archive(buffer);
     ctx->WriteHeader(archive, this);
     //------write resource object
-
+    archive(resource->name);
+    // archive(resource->sections);
     //------save resource to disk
     auto file = fopen(ctx->output.u8string().c_str(), "wb");
     if (!file)
@@ -95,5 +100,5 @@ bool skd::asset::SMeshCooker::Cook(SCookContext * ctx)
 
 uint32_t skd::asset::SMeshCooker::Version() 
 { 
-    return 0; 
+    return kDevelopmentVersion; 
 }

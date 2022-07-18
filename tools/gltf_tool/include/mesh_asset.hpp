@@ -1,5 +1,5 @@
 #pragma once
-#include "RenderTool/rendertool.configure.h"
+#include "GLTFTool/gltftool.configure.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
 #include "cgltf.h"
@@ -13,7 +13,7 @@ struct sreflect sattr(
 "serialize" : "json",
 "importer" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1"
 )
-RENDERTOOL_API SGltfMeshImporter final : public SImporter
+GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
     using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
@@ -22,7 +22,7 @@ RENDERTOOL_API SGltfMeshImporter final : public SImporter
 struct sreflect sattr(
 "cooker" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1"
 )
-RENDERTOOL_API SMeshCooker final : public SCooker
+GLTFTOOL_API SMeshCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;

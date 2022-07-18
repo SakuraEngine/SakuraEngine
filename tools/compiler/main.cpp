@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameTool", true);
     moduleManager->init_module_graph(argc, argv);
-    moduleManager->patch_module_graph("RenderTool", true);
+    moduleManager->patch_module_graph("GLTFTool", true);
     #ifdef WITH_USDTOOL
     moduleManager->patch_module_graph("UsdTool", true);
     #endif

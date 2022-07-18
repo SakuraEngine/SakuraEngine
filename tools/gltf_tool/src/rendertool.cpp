@@ -1,7 +1,7 @@
 #include "module/module_manager.hpp"
 #include "utils/log.h"
 
-class SRenderToolModule : public skr::IDynamicModule
+class SGLTFToolModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override
     {
@@ -17,12 +17,12 @@ class SRenderToolModule : public skr::IDynamicModule
         SKR_LOG_INFO("render tool unloaded!");
     }
 };
-IMPLEMENT_DYNAMIC_MODULE(SRenderToolModule, RenderTool);
+IMPLEMENT_DYNAMIC_MODULE(SGLTFToolModule, GLTFTool);
 SKR_MODULE_METADATA(u8R"(
 {
     "api" : "0.1.0",
-    "name" : "RenderTool",
-    "prettyname" : "RenderTool",
+    "name" : "GLTFTool",
+    "prettyname" : "GLTFTool",
     "version" : "0.0.1",
     "linking" : "shared",
     "dependencies" : [],
@@ -32,4 +32,4 @@ SKR_MODULE_METADATA(u8R"(
     "copyright" : ""
 }
 )",
-RenderTool)
+GLTFTool)
