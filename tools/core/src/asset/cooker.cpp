@@ -239,6 +239,11 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
                 SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] cooker version changed! resource guid: {}", guid);
                 return false;
             }
+            if (iter->second->Version() == UINT32_MAX)
+            {
+                SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dev cooker version (UINT32_MAX)! resource guid: {}", guid);
+                return false;
+            }
         }
 
         for (auto depFile : deps.value_unsafe())
