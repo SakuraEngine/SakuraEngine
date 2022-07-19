@@ -31,6 +31,10 @@ struct RUNTIME_API type_builder_t {
     type_builder_t();
     ~type_builder_t();
     type_builder_t& with(dual_type_index_t* types, uint32_t length);
+    type_builder_t& with(dual_type_index_t type)
+    {
+        return with(&type, 1);
+    }
     template<class... T>
     type_builder_t& with()
     {

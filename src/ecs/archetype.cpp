@@ -10,6 +10,7 @@
 #include "type_registry.hpp"
 #include "stack.hpp"
 #include "storage.hpp"
+#include "utils/make_zeroed.hpp"
 #include <algorithm>
 #include <bitset>
 #ifndef forloop
@@ -122,11 +123,12 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     dual_entity_type_t type = clone(inType, buffer);
     proto.type = type;
     auto toClean = localStack.allocate<TIndex>(proto.type.type.length + 1);
-    SIndex toCleanCount = 1;
+    SIndex toCleanCount = 0;
     auto toClone = localStack.allocate<TIndex>(proto.type.type.length + 1);
     SIndex toCloneCount = 0;
     proto.isDead = false;
     proto.disabled = false;
+    bool hasTracked = false;
     forloop (i, 0, proto.type.type.length)
     {
         type_index_t t = proto.type.type.data[i];
@@ -135,6 +137,8 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
         toClean[toCleanCount++] = t;
         if (!t.is_tracked())
             toClone[toCloneCount++] = t;
+        else
+            hasTracked = true;
         if (t == kDeadComponent)
             proto.isDead = true;
         if (t == kDisableComponent)
@@ -150,12 +154,12 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     proto.cloned = proto.isDead ? nullptr : &proto;
     groups.insert({ type, &proto });
     update_query_cache(&proto, true);
-    if (toCleanCount != 1 && !proto.isDead)
+    if (hasTracked && !proto.isDead)
     {
-        dual_entity_type_t deadType;
+        auto deadType = make_zeroed<dual_entity_type_t>();
         deadType.type = { toClean, toCleanCount };
         proto.dead = get_group(deadType);
-        dual_entity_type_t cloneType;
+        dual_entity_type_t cloneType = make_zeroed<dual_entity_type_t>();
         cloneType.type = { toClone, toCloneCount };
         proto.cloned = get_group(cloneType);
     }

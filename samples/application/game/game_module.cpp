@@ -68,10 +68,9 @@ void SGameModule::on_load(int argc, char** argv)
 void create_test_scene()
 {
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
-    renderableT_builder.with<skr_translation_t>();
-    renderableT_builder.with<skr_rotation_t>();
-    renderableT_builder.with<skr_scale_t>();
-    renderableT_builder.with<skr_render_effect_t>();
+    renderableT_builder
+        .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
+        .with<skr_render_effect_t>();
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();

@@ -22,7 +22,7 @@ type_builder_t& type_builder_t::with(dual_type_index_t* types, uint32_t inLength
         data = (dual_type_index_t*)dual_malloc(sizeof(dual_type_index_t) * inLength);
     else
         data = (dual_type_index_t*)dual_realloc(data, sizeof(dual_type_index_t) * (length + inLength));
-    memcpy(data + length, types, inLength);
+    memcpy(data + length, types, inLength * sizeof(dual_type_index_t));
     length += inLength;
     return *this;
 }
