@@ -30,10 +30,13 @@ struct RUNTIME_API type_builder_t {
 
     type_builder_t();
     ~type_builder_t();
-    void with(dual_type_set_t type);
-    void with(dual_type_index_t type);
-    template<class T>
-    void with() { with(dual_id_of<T>::get()); }
+    type_builder_t& with(dual_type_index_t* types, uint32_t length);
+    template<class... T>
+    type_builder_t& with()
+    {
+        dual_type_index_t types[] = {(dual_id_of<T>::get())...};
+        return with(types, sizeof...(T));
+    }
     dual_type_set_t build();
 };
 } // namespace dual
