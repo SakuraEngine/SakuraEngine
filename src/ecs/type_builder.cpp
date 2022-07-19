@@ -16,64 +16,20 @@ type_builder_t::~type_builder_t()
         dual_free(data);
 }
 
-void type_builder_t::with(dual_type_index_t type)
+type_builder_t& type_builder_t::with(dual_type_index_t* types, uint32_t inLength)
 {
     if (data == nullptr)
-    {
-        data = (dual_type_index_t*)dual_malloc(sizeof(dual_type_index_t));
-        data[0] = type;
-        length = 1;
-    }
+        data = (dual_type_index_t*)dual_malloc(sizeof(dual_type_index_t) * inLength);
     else
-    {
-        data = (dual_type_index_t*)dual_realloc(data, sizeof(dual_type_index_t) * (length + 1));
-        data[length++] = type;
-    }
-}
-
-void type_builder_t::with(dual_type_set_t type)
-{
-    SIndex i = 0, j = 0, k = 0;
-    while (i < length && j < type.length)
-    {
-        if (data[i] > type.data[j])
-            ++j;
-        else if (data[i] < type.data[j])
-            ++i;
-        else
-        {
-            ++k;
-            ++j;
-            ++i;
-        }
-    }
-    auto newLength = length + type.length - k;
-    data = (dual_type_index_t*)dual_realloc(data, sizeof(dual_type_index_t) * newLength);
-    i = 0;
-    j = 0;
-    k = 0;
-    while (i < length && j < type.length)
-    {
-        if (data[i] > type.data[j])
-            data[length + k++] = type.data[j++];
-        else if (data[i] < type.data[j])
-            ++i;
-        else
-        {
-            ++j;
-            ++i;
-        }
-    }
-    while (j < type.length)
-        data[length + k++] = type.data[j++];
-    std::inplace_merge(data, data + length, data + newLength);
-    length = newLength;
+        data = (dual_type_index_t*)dual_realloc(data, sizeof(dual_type_index_t) * (length + inLength));
+    memcpy(data + length, types, inLength);
+    length += inLength;
+    return *this;
 }
 
 dual_type_set_t type_builder_t::build()
 {
-    for (auto i = data; i != data + length; ++i)
-        std::rotate(std::upper_bound(data, i, *i), i, std::next(i));
+    std::sort(data, data + length);
     return { data, length };
 }
 } // namespace dual
