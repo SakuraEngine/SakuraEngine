@@ -58,7 +58,6 @@ skr_mesh_resource_t
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_vertex_bin_t> vertex_buffers;
     struct skr_index_bin_t index_buffer;
-    uint32_t index_stride;
     void* gltf_data;
 };
 #endif

@@ -15,6 +15,7 @@
 #include "skr_scene/scene.h"
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
+#include "skr_renderer/mesh_resource.h"
 #include "gamert.h"
 #include "cube.hpp"
 
@@ -25,6 +26,18 @@ skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
     void on_register(ISkrRenderer* renderer) override
     {
+        auto resource_vfs = skr_game_runtime_get_vfs();
+        auto ram_service = skr_game_runtime_get_ram_service();
+        auto gltf_io_request = make_zeroed<skr_gltf_ram_io_request_t>();
+        gltf_io_request.vfs_override = resource_vfs;
+        skr_mesh_resource_create_from_gltf(ram_service, "scene.gltf", &gltf_io_request);
+        while (!(skr_atomic32_load_relaxed(&gltf_io_request.gltf_status) == SKR_ASYNC_IO_STATUS_OK))
+        {
+
+        }
+        auto mesh_id = gltf_io_request.mesh_resource;
+        SKR_LOG_INFO("gltf loaded!");
+        skr_mesh_resource_free(mesh_id);
     }
 
     void on_unregister(ISkrRenderer* renderer) override

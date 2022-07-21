@@ -9,6 +9,7 @@
 #include <EASTL/vector_map.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/hash_set.h>
+#include "ghc/filesystem.hpp"
 
 static const char* cGLTFAttributeTypeLUT[8] = {
     "NONE",
@@ -163,14 +164,16 @@ static struct SkrMeshResourceUtil
 SkrMeshResourceUtil::cached_hashset<CGPUVertexLayout> SkrMeshResourceUtil::vertex_layouts_;
 SMutex SkrMeshResourceUtil::vertex_layouts_mutex_;
 
-void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* request)
+thread_local struct CallbackData
 {
-    SKR_ASSERT(request->vfs_override && "Support only vfs override");
-    struct CallbackData
-    {
-        skr_gltf_ram_io_request_t* gltfRequest;   
-        eastl::string u8Path;
-    } callbackData;
+    skr_gltf_ram_io_request_t* gltfRequest;   
+    eastl::string u8Path;
+} callbackData;
+
+void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* gltfRequest)
+{
+    SKR_ASSERT(gltfRequest->vfs_override && "Support only vfs override");
+
     skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
     ramIO.bytes = nullptr;
     ramIO.offset = 0;
@@ -224,6 +227,11 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                                 prim.material_inst = make_zeroed<skr_guid_t>();
                                 prim.vertex_layout_id = mesh_resource_util.AddVertexLayoutFromGLTFPrimitive(primitive_);
                                 mesh_section.primive_indices.emplace_back(resource->primitives.size() - 1);
+                                // TODO: Remove this
+                                if (resource->index_buffer.stride == 0)
+                                {
+                                    resource->index_buffer.stride = primitive_->indices->stride;
+                                }
                             }
                         }
                     }
@@ -245,6 +253,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                             vb.blob.size = buf_view->size;
                         }
                     }
+                    cbData->gltfRequest->mesh_resource = resource;
                 }
             }
         }
@@ -266,7 +275,10 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)&callbackData;
     
-    ioService->request(request->vfs_override, &ramIO, &request->ioRequest);
+    callbackData.gltfRequest = gltfRequest;
+    auto gltfPath = ghc::filesystem::path(gltfRequest->vfs_override->mount_dir) / path;
+    callbackData.u8Path = gltfPath.u8string().c_str();
+    ioService->request(gltfRequest->vfs_override, &ramIO, &gltfRequest->ioRequest);
 }
 
 void skr_mesh_resource_free(skr_mesh_resource_id mesh_resource)

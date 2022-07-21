@@ -108,8 +108,11 @@ typedef struct skr_vfs_desc_t {
     const char8_t* override_mount_dir;
 } skr_vfs_desc_t;
 
+// file system
 RUNTIME_API skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT;
 RUNTIME_API void skr_free_vfs(skr_vfs_t*) SKR_NOEXCEPT;
+
+// file I/O
 RUNTIME_API skr_vfile_t* skr_vfs_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT;
 RUNTIME_API size_t skr_vfs_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
 RUNTIME_API size_t skr_vfs_fwrite(skr_vfile_t* file, const void* in_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
