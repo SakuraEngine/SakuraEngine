@@ -100,7 +100,7 @@ RUNTIME_API void sakura_free(void* p) SKR_NOEXCEPT
     free(p);
 }
 
-#define free_aligned free
+#define free_aligned(p, alignment) free((p))
 
 RUNTIME_API void sakura_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT
 {
