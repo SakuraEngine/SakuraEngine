@@ -33,6 +33,7 @@ typedef struct STimer {
 RUNTIME_API void skr_init_timer(STimer* pTimer);
 RUNTIME_API void skr_timer_reset(STimer* pTimer);
 RUNTIME_API uint32_t skr_timer_get_msec(STimer* pTimer, bool reset);
+RUNTIME_API double skr_timer_get_seconds(STimer* pTimer, bool reset);
 
 /// High-resolution OS timer
 #define HIRES_TIMER_LENGTH_OF_HISTORY 60
