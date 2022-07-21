@@ -35,14 +35,25 @@ FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignm
     memset(ptr, 0, size * count);
     return ptr;
 }
-    #define sakura_malloc malloc
-    #define sakura_calloc calloc
-    #define sakura_calloc_aligned calloc_aligned
-    #define sakura_malloc_aligned(size, alignment) aligned_alloc((alignment), (size))
-    #define sakura_new_aligned(size, alignment) aligned_alloc((alignment), (size))
-    #define sakura_free free
-    #define sakura_free_aligned free_aligned
-    #define sakura_realloc realloc
+    #ifdef __cplusplus
+        #define sakura_malloc ::malloc
+        #define sakura_calloc ::calloc
+        #define sakura_calloc_aligned ::calloc_aligned
+        #define sakura_malloc_aligned(size, alignment) ::aligned_alloc((alignment), (size))
+        #define sakura_new_aligned(size, alignment) ::aligned_alloc((alignment), (size))
+        #define sakura_free ::free
+        #define sakura_free_aligned ::free_aligned
+        #define sakura_realloc ::realloc
+    #else
+        #define sakura_malloc malloc
+        #define sakura_calloc calloc
+        #define sakura_calloc_aligned calloc_aligned
+        #define sakura_malloc_aligned(size, alignment) aligned_alloc((alignment), (size))
+        #define sakura_new_aligned(size, alignment) aligned_alloc((alignment), (size))
+        #define sakura_free free
+        #define sakura_free_aligned free_aligned
+        #define sakura_realloc realloc
+    #endif
 #endif
 
 #ifdef _CRTDBG_MAP_ALLOC
