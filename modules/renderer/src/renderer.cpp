@@ -106,7 +106,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
                 auto& pass_drawcall_arena = drawcall_arena[pass.second->identity()];
                 auto dcs = make_zeroed<skr_primitive_draw_list_view_t>();
                 dcs.drawcalls = pass_drawcall_arena.data();
-                dcs.count = pass_drawcall_arena.size();
+                dcs.count = (uint32_t)pass_drawcall_arena.size();
                 pass.second->execute(render_graph, dcs);
             }
         }
