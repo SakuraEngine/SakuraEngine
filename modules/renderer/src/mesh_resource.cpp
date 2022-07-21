@@ -204,7 +204,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                     {
                         const auto node_ = gltf_data_->nodes + i;
                         auto& mesh_section = resource->sections.emplace_back();
-                        mesh_section.parent_index = node_->parent ? node_->parent - gltf_data_->nodes : -1;
+                        mesh_section.parent_index = node_->parent ? (int32_t)(node_->parent - gltf_data_->nodes) : -1;
                         if (node_->has_translation)
                             mesh_section.translation = { node_->translation[0], node_->translation[1], node_->translation[2] };
                         if (node_->has_scale)
