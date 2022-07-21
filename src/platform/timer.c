@@ -12,6 +12,8 @@ unsigned skr_timer_get_msec(STimer* pTimer, bool reset)
     return elapsedTime;
 }
 
+double skr_timer_get_seconds(STimer* pTimer, bool reset) { return (double)skr_timer_get_msec(pTimer, reset) / 1e3; }
+
 void skr_timer_reset(STimer* pTimer) { pTimer->mStartTime = getSystemTime(); }
 
 void skr_init_hires_timer(SHiresTimer* pTimer)

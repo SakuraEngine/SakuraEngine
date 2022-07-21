@@ -1,6 +1,7 @@
-
+#pragma once
 #ifndef GAINPUTINPUTDEVICEPAD_H_
 #define GAINPUTINPUTDEVICEPAD_H_
+#include "gainput/gainput.h"
 
 namespace gainput
 {

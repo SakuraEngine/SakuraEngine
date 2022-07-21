@@ -1,4 +1,6 @@
 #include "gamert.h"
+#include "EASTL/shared_ptr.h"
+#include "gainput/GainputInputDevicePad.h"
 #include "platform/configure.h"
 #include "ghc/filesystem.hpp"
 #include "platform/memory.h"
@@ -9,6 +11,7 @@
 #include "ftl/task.h"
 #include "ftl/task_scheduler.h"
 #include "ghc/filesystem.hpp"
+#include "platform/time.h"
 #include "platform/window.h"
 #include "resource/local_resource_registry.h"
 #include "render_graph/frontend/render_graph.hpp"
@@ -16,6 +19,7 @@
 #include "imgui/skr_imgui_rg.h"
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
+#include "skr_input/Interactions.h"
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
 #include "skr_renderer/skr_renderer.h"
@@ -25,6 +29,7 @@
 #include "gamert.h"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
+#include "skr_input/inputSystem.h"
 
 SWindowHandle window;
 uint32_t backbuffer_index;
@@ -120,24 +125,26 @@ int SGameModule::main_module_exec(int argc, char** argv)
     initialize_render_effects(renderGraph);
     create_test_scene();
     create_imgui_resources(renderGraph);
-    // Setup Gainput
-    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
-    enum InputAction
-    {
-        Quit,
-        Cao,
-    };
-    auto hwnd = skr_window_get_native_handle(window);
     // Initialize Input
-    gainput::InputManager manager;
-    manager.Init(hwnd);
-    manager.SetWindowsInstance(hwnd);
-    manager.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
-    gainput::DeviceId keyboardId = manager.CreateDevice<gainput::InputDeviceKeyboard>();
-    gainput::DeviceId mouseId = manager.CreateDevice<gainput::InputDeviceMouse>();
-    gainput::InputMap inputMap(manager);
-    inputMap.MapBool(InputAction::Quit, keyboardId, gainput::KeyEscape);
-    inputMap.MapBool(InputAction::Cao, mouseId, gainput::MouseButtonLeft);
+    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+    using namespace skr::input;
+    using namespace gainput;
+    InputSystem inputSystem;
+    inputSystem.Init(window);
+    inputSystem.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
+    // InputAction
+    auto actionCao = eastl::make_shared<InputAction<float>>();
+    auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
+    controls1->AddInteraction(eastl::make_shared<InteractionTap_Float>());
+    actionCao->AddControls(controls1);
+    actionCao->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i)
+    {
+        SKR_LOG_DEBUG("Cao %f", value);
+    });
+    inputSystem.AddInputAction(actionCao);
+    // Time
+    STimer timer;
+    skr_init_timer(&timer);
     // loop
     bool quit = false;
     skg::GameContext ctx;
@@ -150,9 +157,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
             {
                 SDL_SysWMmsg* msg = event.syswm.msg;
 #if defined(GAINPUT_PLATFORM_WIN)
-                manager.HandleMessage((MSG&)msg->msg);
+                inputSystem.GetHardwareManager().HandleMessage((MSG&)msg->msg);
 #elif defined(GAINPUT_PLATFORM_LINUX)
-                manager.HandleMessage((XEvent&)msg->msg);
+                inputSystem.GetHardwareManager().HandleMessage((XEvent&)msg->msg);
 #endif
             }
             if (event.type == SDL_QUIT)
@@ -162,15 +169,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
         }
 
-        manager.Update();
-        if (inputMap.GetBoolWasDown(InputAction::Cao))
-        {
-            SKR_LOG_DEBUG("Cao");
-        }
-        if (inputMap.GetBoolWasDown(InputAction::Quit))
-        {
-            quit = true;
-        }
+        const double deltaTime = skr_timer_get_seconds(&timer, true);
+        inputSystem.Update(deltaTime);
 
         auto& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(
