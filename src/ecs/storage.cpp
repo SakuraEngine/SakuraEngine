@@ -57,8 +57,8 @@ void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callb
     while (count != 0)
     {
         dual_chunk_view_t v = allocate_view(group, count);
-        construct_view(v);
         entities.fill_entities(v);
+        construct_view(v);
         count -= v.count;
         if (callback)
             callback(u, &v);
@@ -120,8 +120,8 @@ void dual_storage_t::free(const dual_chunk_view_t& view)
     if (toMove > 0)
     {
         dual_chunk_view_t moveView{ view.chunk, view.start, toMove };
-        move_view(moveView, view.chunk->count - toMove);
         entities.move_entities(moveView, view.chunk->count - toMove);
+        move_view(moveView, view.chunk->count - toMove);
     }
 }
 
@@ -213,8 +213,8 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
         while (localCount != count)
         {
             dual_chunk_view_t v = allocate_view(group, count - localCount);
-            duplicate_view(v, view.chunk, view.start);
             entities.fill_entities(v, localEnts.data() + localCount);
+            duplicate_view(v, view.chunk, view.start);
             m.base = m.curr = ents.data() + localCount * size;
             localCount += v.count;
             iterator_ref_view(v, m);
@@ -237,8 +237,8 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_v
     while (count != 0)
     {
         dual_chunk_view_t v = allocate_view(group, count);
-        duplicate_view(v, view.chunk, view.start);
         entities.fill_entities(v);
+        duplicate_view(v, view.chunk, view.start);
         count -= v.count;
         if (callback)
             callback(u, &v);
@@ -481,8 +481,8 @@ void dual_storage_t::cast_impl(const dual_chunk_view_t& view, dual_group_t* grou
     while (k < view.count)
     {
         dual_chunk_view_t dst = allocate_view(group, view.count - k);
-        cast_view(dst, view.chunk, view.start + k);
         entities.move_entities(dst, view.chunk, view.start + k);
+        cast_view(dst, view.chunk, view.start + k);
         k += dst.count;
         if (callback)
             callback(u, &dst, (dual_chunk_view_t*)&view);
@@ -494,6 +494,8 @@ void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, du
 {
     using namespace dual;
     auto srcGroup = view.chunk->group;
+    if (srcGroup == group)
+        return;
     if (scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
@@ -505,8 +507,6 @@ void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, du
         free(view);
         return;
     }
-    if (srcGroup == group)
-        return;
     if (full_view(view) && srcGroup->archetype == group->archetype)
     {
         srcGroup->remove_chunk(view.chunk);
