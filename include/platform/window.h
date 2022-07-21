@@ -1,5 +1,5 @@
 #pragma once
-#include "configure.h"
+#include "platform/configure.h"
 
 typedef struct SWindow SWindow;
 typedef SWindow* SWindowHandle;

@@ -1,5 +1,5 @@
 #pragma once
-#include "configure.h"
+#include "platform/configure.h"
 
 typedef enum EKeyCode
 {
