@@ -1,5 +1,5 @@
 #pragma once
-#include <inttypes.h>
+#include "platform/configure.h"
 
 typedef struct skr_guid_t {
     uint32_t Data1;

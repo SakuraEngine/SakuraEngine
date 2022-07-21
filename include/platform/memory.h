@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/configure.h"
 #include "platform/debug.h"
 
 RUNTIME_EXTERN_C RUNTIME_API void* sakura_malloc(size_t size) SKR_NOEXCEPT;

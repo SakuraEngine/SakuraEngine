@@ -1,5 +1,5 @@
 #pragma once
-#include "configure.h"
+#include "platform/configure.h"
 RUNTIME_EXTERN_C RUNTIME_API void skr_debug_output(const char* msg);
 
 #if SKR_SHIPPING

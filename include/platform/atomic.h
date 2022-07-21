@@ -1,6 +1,6 @@
 /* clang-format off */
 #pragma once
-#include "configure.h"
+#include "platform/configure.h"
 
 typedef volatile ALIGNAS(4) uint32_t SAtomic32;
 typedef volatile ALIGNAS(8) uint64_t SAtomic64;

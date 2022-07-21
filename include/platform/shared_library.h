@@ -8,7 +8,7 @@
  * @LastEditTime: 2020-06-08 02:46:16
  */
 #pragma once
-#include "configure.h"
+#include "platform/configure.h"
 #include <EASTL/string.h>
 
 namespace skr
