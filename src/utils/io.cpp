@@ -341,8 +341,8 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
             back.callbacks[i] = info->callbacks[i];
             back.callback_datas[i] = info->callback_datas[i];
         }
+        back.setTaskStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
         task_requests.enqueue(eastl::move(back));
-        skr_atomic32_store_relaxed(&async_request->status, SKR_ASYNC_IO_STATUS_ENQUEUED);
         skr_atomic32_store_relaxed(&async_request->request_cancel, 0);
         TracyCZoneEnd(requestZone);
     }
