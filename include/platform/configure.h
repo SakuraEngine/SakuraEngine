@@ -198,10 +198,10 @@ typedef char char8_t;
 
     #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
-    #define UNREF_PARAM(x) (x)
-    #define ALIGNAS(x) __declspec(align(x))
-    #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
-    #define FORGE_CALLCONV __cdecl
+    #define SKR_UNREF_PARAM(x) (x)
+    #define SKR_ALIGNAS(x) __declspec(align(x))
+    #define SKR_DEFINE_ALIGNED(def, a) __declspec(align(a)) def
+    #define SKR_CALLCONV __cdecl
     #if !defined(__clang__)
         #if !defined(_DEBUG) && !defined(NDEBUG)
             #define NDEBUG
@@ -240,10 +240,10 @@ typedef int64_t host_ptr_t;
         #define NOREFS __unsafe_unretained
     #endif
 
-    #define UNREF_PARAM(x) ((void)(x))
-    #define ALIGNAS(x) __attribute__((aligned(x)))
-    #define DEFINE_ALIGNED(def, a) __attribute__((aligned(a))) def
-    #define FORGE_CALLCONV
+    #define SKR_UNREF_PARAM(x) ((void)(x))
+    #define SKR_ALIGNAS(x) __attribute__((aligned(x)))
+    #define SKR_DEFINE_ALIGNED(def, a) __attribute__((aligned(a))) def
+    #define SKR_CALLCONV
 
     #ifdef __clang__
         #define COMPILE_ASSERT(exp) _Static_assert(exp, #exp)

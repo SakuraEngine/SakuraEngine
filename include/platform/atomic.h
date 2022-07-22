@@ -2,9 +2,9 @@
 #pragma once
 #include "platform/configure.h"
 
-typedef volatile ALIGNAS(4) uint32_t SAtomic32;
-typedef volatile ALIGNAS(8) uint64_t SAtomic64;
-typedef volatile ALIGNAS(PTR_SIZE) uintptr_t SAtomicPtr;
+typedef volatile SKR_ALIGNAS(4) uint32_t SAtomic32;
+typedef volatile SKR_ALIGNAS(8) uint64_t SAtomic64;
+typedef volatile SKR_ALIGNAS(PTR_SIZE) uintptr_t SAtomicPtr;
 
 #if defined(__clang__) && defined(_MSC_VER)
 #pragma clang diagnostic push

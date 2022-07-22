@@ -141,7 +141,7 @@ FORCEINLINE static void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHand
 {
     int res = pthread_create(pHandle, NULL, ThreadFunctionStatic, pData);
     skr_set_thread_priority(*pHandle, SKR_THREAD_NORMAL);
-    UNREF_PARAM(res);
+    SKR_UNREF_PARAM(res);
     assert(res == 0);
 }
 
