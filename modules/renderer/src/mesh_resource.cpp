@@ -193,7 +193,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
             }
             else
             {
-                result = cgltf_load_buffers(&options, gltf_data_, cbData->u8Path.c_str());
+                // result = cgltf_load_buffers(&options, gltf_data_, cbData->u8Path.c_str());
                 result = cgltf_validate(gltf_data_);
                 if (result != cgltf_result_success)
                 {
@@ -203,6 +203,15 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                 {
                     skr_mesh_resource_id resource = SkrNew<skr_mesh_resource_t>();
                     resource->gltf_data = gltf_data_;
+                    // record buffer bins
+                    resource->bins.resize(gltf_data_->buffers_count);
+                    for (uint32_t i = 0; i < gltf_data_->buffers_count; i++)
+                    {
+                        resource->bins[i].bin.bytes = (uint8_t*)gltf_data_->buffers[i].data;
+                        resource->bins[i].bin.size = gltf_data_->buffers[i].size;
+                        resource->bins[i].used_with_index = false;
+                        resource->bins[i].used_with_vertex = false;
+                    }
                     // record primitvies
                     for (uint32_t i = 0; i < gltf_data_->nodes_count; i++)
                     {
@@ -231,7 +240,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                                 // TODO: Remove this
                                 if (resource->index_buffer.stride == 0)
                                 {
-                                    resource->index_buffer.stride = primitive_->indices->stride;
+                                    resource->index_buffer.stride = (uint32_t)primitive_->indices->stride;
                                 }
                             }
                         }
@@ -240,18 +249,24 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                     for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
                     {
                         cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
-                        cgltf_buffer* buf = gltf_data_->buffers + i;
+                        cgltf_buffer* buf = buf_view->buffer;
                         if (buf_view->type == cgltf_buffer_view_type_indices)
                         {
-                            resource->index_buffer.blob.bytes = (uint8_t*)buf->data + buf_view->offset;
-                            resource->index_buffer.blob.size = buf_view->size;
-                            resource->index_buffer.stride = (uint8_t)buf_view->stride;
+                            resource->index_buffer.buffer_index = (uint32_t)(buf - gltf_data_->buffers);
+                            resource->index_buffer.offset = buf_view->offset;
+                            resource->index_buffer.size = buf_view->size;
+                            resource->index_buffer.stride = (uint32_t)buf_view->stride;
+                            
+                            resource->bins[resource->index_buffer.buffer_index].used_with_index |= true;
                         }
                         else if (buf_view->type == cgltf_buffer_view_type_vertices)
                         {
                             auto& vb = resource->vertex_buffers.emplace_back();
-                            vb.blob.bytes = (uint8_t*)buf->data + buf_view->offset;
-                            vb.blob.size = buf_view->size;
+                            vb.buffer_index = (uint32_t)(buf - gltf_data_->buffers);
+                            vb.offset = buf_view->offset;
+                            vb.size = buf_view->size;
+
+                            resource->bins[resource->index_buffer.buffer_index].used_with_vertex |= true;
                         }
                     }
                     cbData->gltfRequest->mesh_resource = resource;
