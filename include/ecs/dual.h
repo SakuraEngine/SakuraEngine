@@ -295,6 +295,16 @@ RUNTIME_API void dualS_allocate_group(dual_storage_t* storage, dual_group_t* gro
  */
 RUNTIME_API void dualS_instantiate(dual_storage_t* storage, dual_entity_t prefab, EIndex count, dual_view_callback_t callback, void* u);
 /**
+ * @brief instantiate entity as specific type
+ * instantiate an entity n times as specific type
+ * @param storage
+ * @param prefab
+ * @param count
+ * @param delta
+ * @param callback optional callback after allocating chunk view
+ */
+RUNTIME_API void dualS_instantiate_delta(dual_storage_t* storage, dual_entity_t prefab, EIndex count, const dual_delta_type_t* delta, dual_view_callback_t callback, void* u);
+/**
  * @brief instantiate entities
  * instantiate entities n times, internal reference will be kept
  * @param storage
@@ -677,20 +687,21 @@ typedef struct dual_resource_operation_t {
  * @param u
  * @param init initializer function, called at the beginning of job
  * @param resources
- * @return dual_job_t*
  */
 RUNTIME_API void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_init_callback_t init, dual_resource_operation_t* resources, dual_counter_t** counter);
-typedef void (*dual_for_callback_t)(void* u, uint32_t index);
+
+typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
 /**
- * @brief schedule multiple jobs
+ * @brief schedule custom job and sync with ecs context
  *
- * @param count
+ * @param query
+ * @param counter
  * @param callback
  * @param u
- * @return dual_job_t*
+ * @param resources
  */
-RUNTIME_API void dualJ_schedule_for(uint32_t count, dual_for_callback_t callback, void* u, dual_resource_operation_t* resources, dual_counter_t** counter);
+RUNTIME_API void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources);
 /**
  * @brief wait until counter equal to zero (when job is done)
  *

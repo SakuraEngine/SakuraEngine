@@ -245,6 +245,26 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_v
     }
 }
 
+void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_group_t* group, dual_view_callback_t callback, void* u)
+{
+    using namespace dual;
+    auto view = entity_view(src);
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(group->archetype);
+    }
+    while (count != 0)
+    {
+        dual_chunk_view_t v = allocate_view(group, count);
+        entities.fill_entities(v);
+        duplicate_view(v, view.chunk, view.start);
+        count -= v.count;
+        if (callback)
+            callback(u, &v);
+    }
+}
+
 void dual_storage_t::instantiate(const dual_entity_t* src, uint32_t n, uint32_t count, dual_view_callback_t callback, void* u)
 {
     using namespace dual;
@@ -710,6 +730,11 @@ void dualS_allocate_group(dual_storage_t* storage, dual_group_t* group, EIndex c
 void dualS_instantiate(dual_storage_t* storage, dual_entity_t prefab, EIndex count, dual_view_callback_t callback, void* u)
 {
     storage->instantiate(prefab, count, callback, u);
+}
+
+void dualS_instantiate_delta(dual_storage_t* storage, dual_entity_t prefab, EIndex count, const dual_delta_type_t* delta, dual_view_callback_t callback, void* u)
+{
+    storage->instantiate(prefab, count, storage->cast(storage->entity_view(prefab).chunk->group->cloned, *delta), callback, u);
 }
 
 void dualS_instantiate_entities(dual_storage_t* storage, dual_entity_t* ents, EIndex n, EIndex count, dual_view_callback_t callback, void* u)
