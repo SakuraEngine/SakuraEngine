@@ -398,19 +398,16 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
                 auto job = payload->job;
                 for (auto task = (task_t*)payload->batch.startTask; task != (task_t*)payload->batch.endTask; ++task)
                     job->callback(job->userdata, job->query->storage, &task->view, &job->localTypes[job->query->parameters.length * task->groupIndex], task->startIndex);
+                job->scheduler->allCounter->Decrement();
+                job->query->storage->counter->Decrement();
             };
             auto _tasks = (ftl::Task*)dual_malloc(sizeof(ftl::Task) * batchs.size());
 
             auto TearDown = +[](void* data) {
                 task_payload_t* payload = (task_payload_t*)data;
                 auto job = payload->job;
-                job->scheduler->allCounter->Decrement();
-                job->query->storage->counter->Decrement();
-                if (job->counter->Done())
-                {
-                    job->~dual_ecs_job_t();
-                    dual_free(job);
-                }
+                job->~dual_ecs_job_t();
+                dual_free(job);
             };
             forloop (i, 0, batchs.size())
                 _tasks[i] = { taskBody, &payloads[i], TearDown };
@@ -419,15 +416,12 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks, ftl::TaskPriority::Normal, job->counter.get());
             dual_free(_tasks);
         }
+        job->scheduler->allCounter->Decrement();
     };
     auto TearDown = +[](void* data) {
         dual_ecs_job_t* job = (dual_ecs_job_t*)data;
-        job->scheduler->allCounter->Decrement();
-        if (job->counter->Done())
-        {
-            job->~dual_ecs_job_t();
-            dual_free(job);
-        }
+        job->~dual_ecs_job_t();
+        dual_free(job);
     };
     allCounter->Add(1);
     if (!query->storage->counter)
@@ -437,7 +431,98 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
     return job->counter;
 }
 
-eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resources(eastl::shared_ptr<ftl::TaskCounter> counter, dual_resource_operation_t* resources)
+eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
+{
+    DependencySet dependencies;
+    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+    auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
+        if (localType == kInvalidTypeIndex)
+            return;
+        auto at = group->archetype;
+        auto pair = std::make_pair(at, localType);
+        if (syncedEntry.find(pair) != syncedEntry.end())
+            return;
+        syncedEntry.insert(pair);
+        skr_acquire_mutex(&entryMutex.mMutex);
+        auto iter = dependencyEntries.find(at);
+        if (iter == dependencyEntries.end())
+        {
+            eastl::vector<job_dependency_entry_t> entries(at->type.length);
+            dependencyEntries.insert(std::make_pair(at, std::move(entries)));
+        }
+
+        auto entries = (*iter).second.data();
+        auto& entry = entries[localType];
+        update_entry(entry, counter, readonly, atomic, dependencies);
+        skr_release_mutex(&entryMutex.mMutex);
+    };
+
+    auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
+        for (auto& pair : query->storage->groups)
+        {
+            auto group = pair.second;
+            auto idx = group->index(type);
+            sync_entry(group, idx, readonly, atomic);
+        }
+    };
+
+    if (resources)
+    {
+        skr_acquire_mutex(&resourceMutex.mMutex);
+        forloop (i, 0, resources->count)
+        {
+            auto& entry = allResources[e_id(resources->resources[i])];
+            auto readonly = resources->readonly[i];
+            auto atomic = resources->atomic[i];
+            update_entry(entry, counter, readonly, atomic, dependencies);
+        }
+        skr_release_mutex(&resourceMutex.mMutex);
+    }
+
+    llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
+    auto add_group = [&](dual_group_t* group) {
+        groups.push_back(group);
+    };
+    auto& params = query->parameters;
+    query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
+    forloop (i, 0, params.length)
+    {
+        if (type_index_t(params.types[i]).is_tag())
+            continue;
+        if (params.accesses[i].randomAccess == DOS_GLOBAL)
+        {
+            sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
+        }
+        else
+        {
+            int groupIndex = 0;
+            for (auto group : groups)
+            {
+                auto localType = group->index(params.types[i]);
+                if (localType == kInvalidTypeIndex)
+                {
+                    auto g = group->get_owner(params.types[i]);
+                    if (g)
+                    {
+                        sync_entry(g, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
+                    }
+                }
+                else
+                {
+                    sync_entry(group, localType, params.accesses[i].readonly, params.accesses[i].atomic);
+                }
+                ++groupIndex;
+            }
+        }
+    }
+
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> result;
+    for(auto& counter : dependencies)
+        result.push_back(std::move(counter));
+    return result;
+}
+
+eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resources(const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
     skr_acquire_mutex(&resourceMutex.mMutex);
@@ -499,6 +584,15 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources, dual_cou
     else
     {
         dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, resources);
+    }
+}
+
+void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources)
+{
+    auto results = dual::scheduler_t::get().schedule_custom_job(query, counter->counter, resources);
+    for(auto& result : results)
+    {
+        callback(u, SkrNew<dual_counter_t>(std::move(result)));
     }
 }
 
