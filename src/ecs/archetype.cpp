@@ -343,13 +343,13 @@ void dual_group_t::clear()
     size = 0;
 }
 
-SIndex dual_group_t::index(dual_type_index_t inType) const noexcept
+TIndex dual_group_t::index(dual_type_index_t inType) const noexcept
 {
     using namespace dual;
     auto end = type.type.data + type.type.length;
     const dual_type_index_t* result = std::lower_bound(type.type.data, end, inType);
     if (result != end && *result == inType)
-        return (SIndex)(result - type.type.data);
+        return (TIndex)(result - type.type.data);
     else
         return kInvalidSIndex;
 }
