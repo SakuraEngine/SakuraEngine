@@ -71,6 +71,25 @@ protected:
     uint32_t compute_shader_sizes[ECGPUBackend::CGPU_BACKEND_COUNT];
 };
 
+TEST_P(ResourceCreation, CreateDStorageQueue)
+{
+    DECLARE_ZERO(CGPUDStroageQueueDescriptor, desc)
+    desc.name = "DStroageQueue";
+    desc.capacity = 1024;
+    desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+    desc.source = CGPU_DSTORAGE_SOURCE_FILE;
+#ifdef _WIN32
+    if (GetParam() == CGPU_BACKEND_D3D12)
+    {
+        const auto support = cgpu_query_dstorage_availability(device);
+        EXPECT_EQ(support, CGPU_DSTORAGE_AVAILABILITY_HARDWARE);
+        auto dstorageQueue = cgpu_create_dstorage_queue(device, &desc);
+        EXPECT_NE(dstorageQueue, nullptr);
+        cgpu_free_dstorage_queue(dstorageQueue);
+    }
+#endif
+}
+
 TEST_P(ResourceCreation, CreateIndexBuffer)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
