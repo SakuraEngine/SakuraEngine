@@ -162,7 +162,7 @@ static void InitSystemNotificationReceiver(void* window)
 
     memset(&gWND, 0, sizeof(gWND));
     gWND.hInstance = (HINSTANCE)GetWindowLongPtr(gHWND, GWLP_HINSTANCE);
-    gWND.lpszClassName = L"The Forge";
+    gWND.lpszClassName = L"GAInput";
 
     WNDCLASSW registeredClassData;
     GetClassInfoW(gWND.hInstance, gWND.lpszClassName, &registeredClassData);
