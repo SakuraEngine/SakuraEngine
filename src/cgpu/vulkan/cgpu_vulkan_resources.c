@@ -1,5 +1,5 @@
-#include "math/scalarmath.h"
 #include "float.h"
+#include "math/scalarmath.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
 #include "vulkan_utils.h"
@@ -169,6 +169,37 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
     B->super.size = (uint32_t)desc->size;
     B->super.memory_usage = desc->memory_usage;
     B->super.descriptors = desc->descriptors;
+    // Start state
+    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->owner_queue;
+    if (Q && B->pVkBuffer != VK_NULL_HANDLE && B->pVkAllocation != VK_NULL_HANDLE)
+    {
+#ifdef CGPU_THREAD_SAFETY
+        if (Q->pMutex) skr_acquire_mutex(Q->pMutex);
+#endif
+        cgpu_reset_command_pool(Q->pInnerCmdPool);
+        cgpu_cmd_begin(Q->pInnerCmdBuffer);
+        CGPUBufferBarrier init_barrier = {
+            .buffer = &B->super,
+            .src_state = CGPU_RESOURCE_STATE_UNDEFINED,
+            .dst_state = desc->start_state
+        };
+        CGPUResourceBarrierDescriptor init_barrier_d = {
+            .buffer_barriers = &init_barrier,
+            .buffer_barriers_count = 1
+        };
+        cgpu_cmd_resource_barrier(Q->pInnerCmdBuffer, &init_barrier_d);
+        cgpu_cmd_end(Q->pInnerCmdBuffer);
+        CGPUQueueSubmitDescriptor barrier_submit = {
+            .cmds = &Q->pInnerCmdBuffer,
+            .cmds_count = 1,
+            .signal_fence = Q->pInnerFence
+        };
+        cgpu_submit_queue(&Q->super, &barrier_submit);
+        cgpu_wait_fences(&Q->pInnerFence, 1);
+#ifdef CGPU_THREAD_SAFETY
+        if (Q->pMutex) skr_release_mutex(Q->pMutex);
+#endif
+    }
     return &B->super;
 }
 

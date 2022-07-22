@@ -40,6 +40,11 @@ void skr::Renderer::finalize()
     }
     surfaces.clear();
     cgpu_free_sampler(linear_sampler);
+    for (auto& cpy_queue : cpy_queues)
+    {
+        if (cpy_queue) cgpu_free_queue(cpy_queue);
+    }
+    cpy_queues.clear();
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
     cgpu_free_instance(instance);
