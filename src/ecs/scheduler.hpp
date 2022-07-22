@@ -43,7 +43,8 @@ struct scheduler_t {
     void sync_all();
     void sync_storage(const dual_storage_t* storage);
     eastl::shared_ptr<ftl::TaskCounter> schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_init_callback_t init, dual_resource_operation_t* resources);
-    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> sync_resources(eastl::shared_ptr<ftl::TaskCounter> counter, dual_resource_operation_t* resources);
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> schedule_custom_job(const dual_query_t* query, const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources);
+    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> sync_resources(const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources);
 };
 } // namespace dual
 
