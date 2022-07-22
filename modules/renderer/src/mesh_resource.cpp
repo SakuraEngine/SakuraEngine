@@ -1,5 +1,6 @@
 #include "skr_renderer/mesh_resource.h"
 #include "platform/memory.h"
+#include "platform/vfs.h"
 #include "cgpu/cgpux.hpp"
 #include "utils/io.hpp"
 #include "utils/make_zeroed.hpp"

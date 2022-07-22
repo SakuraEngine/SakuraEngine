@@ -3,7 +3,7 @@
 #include "platform/thread.h"
 #include "utils/log.h"
 #include "utils/io.h"
-#include "utils/io.hpp"
+#include "utils/defer.hpp"
 #include "utils/concurrent_queue.h"
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>
@@ -170,11 +170,11 @@ struct TaskContainer
             skr_release_mutex(&taskMutex);
     }
 
-    // get front
-    eastl::optional<Task> peek_(AsyncServiceBase* service) SKR_NOEXCEPT
+    void update_(AsyncServiceBase* service) SKR_NOEXCEPT
     {
         // 0.if lockless dequeue_bulk the requests to vector
         optionalLockTasks();
+        SKR_DEFER({ optionalUnlockTasks(); });
         if (isLockless)
         {
             Task tsk;
@@ -207,9 +207,7 @@ struct TaskContainer
             // empty sleep
             if (!tasks.size())
             {
-                optionalUnlockTasks();
                 service->sleep_();
-                return eastl::nullopt;
             }
             else // do sort
             {
@@ -233,10 +231,34 @@ struct TaskContainer
                 TracyCZoneEnd(sortZone);
             }
         }
-        auto res = tasks.front();
-        tasks.pop_front();
-        optionalUnlockTasks();
-        return res;
+    }
+
+    // get front
+    eastl::optional<Task> peek_() SKR_NOEXCEPT
+    {
+        optionalLockTasks();
+        SKR_DEFER({ optionalUnlockTasks(); });
+        if (tasks.size() != 0)
+        {
+            auto res = tasks.front();
+            tasks.pop_front();
+            return res;
+        }
+        return eastl::nullopt;
+    }
+
+    void visit_(eastl::function<void(Task&)> kernel) SKR_NOEXCEPT
+    {
+        optionalLockTasks();
+        SKR_DEFER({ optionalUnlockTasks(); });
+        eastl::for_each(tasks.begin(), tasks.end(), kernel);
+        tasks.erase(
+            eastl::remove_if(tasks.begin(), tasks.end(),
+            [&](Task& t) {
+                const auto status = t.getTaskStatus();
+                return status == SKR_ASYNC_IO_STATUS_OK || status == SKR_ASYNC_IO_STATUS_CANCELLED;
+            }),
+        tasks.end());
     }
 
     void enqueue_(Task& back, bool criticalTaskCount, const char* name)
@@ -244,6 +266,7 @@ struct TaskContainer
         if (!isLockless)
         {
             optionalLockTasks();
+            SKR_DEFER({ optionalUnlockTasks(); });
             TracyCZone(requestZone, 1);
             TracyCZoneName(requestZone, "ioRequest(Locked)", strlen("ioRequest(Locked)"));
             if (tasks.size() >= SKR_IO_SERVICE_MAX_TASK_COUNT)
@@ -253,7 +276,6 @@ struct TaskContainer
                     SKR_LOG_WARN(
                         "ioService %s enqueued too many tasks(over %d)!",
                         name, SKR_IO_SERVICE_MAX_TASK_COUNT);
-                        optionalUnlockTasks();
                     return;
                 }
             }
@@ -261,7 +283,6 @@ struct TaskContainer
             tasks.emplace_back(back);
             skr_atomic32_store_relaxed(&back.request->request_cancel, 0);
             TracyCZoneEnd(requestZone);
-            optionalUnlockTasks();
         }
         else
         {
@@ -279,6 +300,7 @@ struct TaskContainer
         if (request->is_enqueued() && !isLockless)
         {
             optionalLockTasks();
+            SKR_DEFER({ optionalUnlockTasks(); });
             bool cancelled = false;
             tasks.erase(
             eastl::remove_if(tasks.begin(), tasks.end(),
@@ -290,7 +312,6 @@ struct TaskContainer
                 return cancelled;
             }),
             tasks.end());
-            optionalUnlockTasks();
             return cancelled;
         }
         return false;

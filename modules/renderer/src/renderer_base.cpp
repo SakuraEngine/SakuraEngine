@@ -1,5 +1,7 @@
 #include "skr_renderer/skr_renderer.h"
+#include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
+#include "cgpu/io.hpp"
 #include "module/module_manager.hpp"
 #include "utils/log.h"
 #include "imgui/skr_imgui.h"
@@ -13,10 +15,20 @@ void skr::Renderer::initialize()
 {
     auto mm = skr_get_module_manager();
     create_api_objects();
+
+    auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
+    vram_service_desc.lockless = true;
+    vram_service_desc.name = "vram_service";
+    vram_service_desc.sleep_mode = SKR_IO_SERVICE_SLEEP_MODE_SLEEP;
+    vram_service_desc.sleep_time = 1000.f / 60.f;
+    vram_service_desc.sort_method = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
+    vram_service = skr::io::VRAMService::create(&vram_service_desc);
 }
 
 void skr::Renderer::finalize()
 {
+    skr::io::VRAMService::destroy(vram_service);
+
     for (auto& swapchain : swapchains)
     {
         if (swapchain.second) cgpu_free_swapchain(swapchain.second);
@@ -33,6 +45,7 @@ void skr::Renderer::finalize()
     cgpu_free_instance(instance);
 }
 
+#define MAX_CPY_QUEUE_COUNT 2
 void skr::Renderer::create_api_objects()
 {
     // Create instance
@@ -51,14 +64,35 @@ void skr::Renderer::create_api_objects()
     adapter = adapters[0];
 
     // Create device
-    CGPUQueueGroupDescriptor queue_group_desc = {};
-    queue_group_desc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
-    queue_group_desc.queue_count = 1;
-    CGPUDeviceDescriptor device_desc = {};
-    device_desc.queue_groups = &queue_group_desc;
-    device_desc.queue_group_count = 1;
-    device = cgpu_create_device(adapter, &device_desc);
-    gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
+    const auto cpy_queue_count_ = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
+    CGPUQueueGroupDescriptor Gs[2];
+    Gs[0].queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
+    Gs[0].queue_count = 1;
+    Gs[1].queue_type = CGPU_QUEUE_TYPE_TRANSFER;
+    Gs[1].queue_count = cgpu_min(cpy_queue_count_, MAX_CPY_QUEUE_COUNT);
+    if (Gs[1].queue_count)
+    {
+        CGPUDeviceDescriptor device_desc = {};
+        device_desc.queue_groups = Gs;
+        device_desc.queue_group_count = 2;
+        device = cgpu_create_device(adapter, &device_desc);
+        gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
+        cpy_queues.resize(Gs[1].queue_count);
+        for (uint32_t i = 0; i < cpy_queues.size(); i++)
+        {
+            cpy_queues[i] = cgpu_get_queue(device, CGPU_QUEUE_TYPE_TRANSFER, i);
+        }
+    }
+    else
+    {
+        CGPUDeviceDescriptor device_desc = {};
+        device_desc.queue_groups = Gs;
+        device_desc.queue_group_count = 1;
+        device = cgpu_create_device(adapter, &device_desc);
+        gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
+        cpy_queues.emplace_back(gfx_queue);
+    }
+
     // Sampler
     CGPUSamplerDescriptor sampler_desc = {};
     sampler_desc.address_u = CGPU_ADDRESS_MODE_REPEAT;

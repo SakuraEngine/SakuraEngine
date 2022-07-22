@@ -1,7 +1,6 @@
 #pragma once
 #include "platform/configure.h"
 #include "platform/atomic.h"
-#include "platform/vfs.h"
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
 #define SKR_IO_SERVICE_SLEEP_TIME_MAX UINT32_MAX
@@ -27,8 +26,9 @@ typedef enum SkrAsyncIOStatus
     SKR_ASYNC_IO_STATUS_OK = 0,
     SKR_ASYNC_IO_STATUS_ENQUEUED = 1,
     SKR_ASYNC_IO_STATUS_CANCELLED = 2,
-    SKR_ASYNC_IO_STATUS_RAM_LOADING = 3,
-    SKR_ASYNC_IO_STATUS_VRAM_LOADING = 4,
+    SKR_ASYNC_IO_STATUS_CREATING_RESOURCE = 3,
+    SKR_ASYNC_IO_STATUS_RAM_LOADING = 5,
+    SKR_ASYNC_IO_STATUS_VRAM_LOADING = 6,
     SKR_ASYNC_IO_STATUS_COUNT,
     SKR_ASYNC_IO_STATUS_MAX_ENUM = UINT32_MAX
 } SkrAsyncIOStatus;

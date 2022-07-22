@@ -92,6 +92,13 @@ CGPUQueueId SkrRendererModule::get_gfx_queue() const
     return renderer->gfx_queue;
 }
 
+CGPUQueueId SkrRendererModule::get_cpy_queue(uint32_t idx) const
+{
+    if (idx < renderer->cpy_queues.size())
+        return renderer->cpy_queues[idx];
+    return renderer->cpy_queues[0];
+}
+
 struct ISkrRenderer* skr_renderer_get_renderer()
 {
     return (ISkrRenderer*)SkrRendererModule::Get()->get_renderer();
@@ -115,6 +122,16 @@ CGPUSamplerId skr_renderer_get_linear_sampler()
 CGPUQueueId skr_renderer_get_gfx_queue()
 {
     return SkrRendererModule::Get()->get_gfx_queue();
+}
+
+CGPUQueueId skr_renderer_get_cpy_queue()
+{
+    return SkrRendererModule::Get()->get_cpy_queue();
+}
+
+CGPUQueueId skr_renderer_get_nth_cpy_queue(uint32_t n)
+{
+    return SkrRendererModule::Get()->get_cpy_queue(n);
 }
 
 CGPUDeviceId skr_renderer_get_cgpu_device()
