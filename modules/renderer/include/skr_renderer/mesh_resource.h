@@ -18,25 +18,39 @@ struct skr_mesh_primitive_t {
 typedef struct skr_mesh_primitive_t skr_mesh_primitive_t;
 
 struct sreflect sattr(
-    "guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca",
-    "serialize" : "bin"
+    "guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca"
 )
-skr_vertex_bin_t
+skr_vertex_buffer_t
 {
-    skr_blob_t blob;
+    uint32_t buffer_index;
+    uint64_t offset;
+    uint64_t size;
 };
-typedef struct skr_vertex_bin_t skr_vertex_bin_t;
+typedef struct skr_vertex_buffer_t skr_vertex_buffer_t;
 
 struct sreflect sattr(
-    "guid" : "6ac5f946-dd65-4710-8725-ab4273fe13e6",
+    "guid" : "6ac5f946-dd65-4710-8725-ab4273fe13e6"
+)
+skr_index_buffer_t
+{
+    uint32_t buffer_index;
+    uint32_t stride;
+    uint64_t offset;
+    uint64_t size;
+};
+typedef struct skr_index_buffer_t skr_index_buffer_t;
+
+struct sreflect sattr(
+    "guid" : "03104e51-c998-410b-9d3c-d76535933440",
     "serialize" : "bin"
 )
-skr_index_bin_t
+skr_mesh_bin_t
 {
-    skr_blob_t blob;
-    uint8_t stride;
+    skr_blob_t bin;
+    bool used_with_index;
+    bool used_with_vertex;
 };
-typedef struct skr_index_bin_t skr_index_bin_t;
+typedef struct skr_mesh_bin_t skr_mesh_bin_t;
 
 #ifdef __cplusplus
 struct skr_mesh_section_t {
@@ -56,8 +70,9 @@ skr_mesh_resource_t
     eastl::string name;
     eastl::vector<skr_mesh_section_t> sections;
     eastl::vector<skr_mesh_primitive_t> primitives;
-    eastl::vector<skr_vertex_bin_t> vertex_buffers;
-    struct skr_index_bin_t index_buffer;
+    eastl::vector<skr_vertex_buffer_t> vertex_buffers;
+    struct skr_index_buffer_t index_buffer;
+    eastl::vector<skr_mesh_bin_t> bins;
     void* gltf_data;
 };
 #endif

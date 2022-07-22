@@ -195,13 +195,11 @@ bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& ta
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
         SKR_ASSERT(buffer_task->upload_task != nullptr);
-        if (auto status = cgpu_query_fence_status(buffer_task->upload_task->fence))
+        auto status = cgpu_query_fence_status(buffer_task->upload_task->fence);
+        if (status == CGPU_FENCE_STATUS_COMPLETE)
         {
-            if (status == CGPU_FENCE_STATUS_COMPLETE)
-            {
-                buffer_task->upload_task->finished = true;
-                return true;
-            }
+            buffer_task->upload_task->finished = true;
+            return true;
         }
     }
     return false;
@@ -274,8 +272,6 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
             case kStepFinished:
                 return;
         }
-       
-
     };
     service->tasks.visit_(foreach_task);
     // 2.sweep upload tasks
