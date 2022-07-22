@@ -6,6 +6,7 @@
     #include "module/module_manager.hpp"
     #include "render_graph/frontend/render_graph.hpp"
     #include "utils/io.hpp"
+    #include "cgpu/io.hpp"
 
 struct dual_storage_t;
 namespace skr::resource

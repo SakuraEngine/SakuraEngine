@@ -81,6 +81,7 @@ public:
     virtual void on_unload() override;
 
     CGPUDeviceId get_cgpu_device() const;
+    skr_io_vram_service_t* get_vram_service() const;
     CGPUQueueId get_gfx_queue() const;
     CGPUQueueId get_cpy_queue(uint32_t idx = 0) const;
     ECGPUFormat get_swapchain_format() const;
@@ -118,6 +119,9 @@ skr_renderer_get_nth_cpy_queue(uint32_t n);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDeviceId
 skr_renderer_get_cgpu_device();
+
+RUNTIME_EXTERN_C SKR_RENDERER_API skr_io_vram_service_t*
+skr_renderer_get_vram_service();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API void
 skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph);

@@ -136,14 +136,14 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
 {
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
-        SKR_ASSERT( task.step == kStepUploading && "task.step must be kStepUploading");
+        SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
 
         const auto& buffer_io = buffer_task->buffer_io;
         const auto& buffer_request = buffer_task->buffer_request;
         CGPUUploadTask* upload = allocateCGPUUploadTask(buffer_io.device, buffer_io.transfer_queue, buffer_io.opt_semaphore);
         eastl::string name = buffer_io.buffer_name;
         name += "-upload";
-        upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_request->out_buffer->size, name.c_str());
+        upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.size, name.c_str());
         upload->dst_buffer = buffer_request->out_buffer;
 
         memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address + buffer_io.offset, buffer_io.bytes, buffer_io.size);
