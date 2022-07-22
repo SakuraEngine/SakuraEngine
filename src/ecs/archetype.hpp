@@ -50,7 +50,7 @@ struct dual_group_t {
         entity metas[metaCount];
     */
 
-    SIndex index(dual_type_index_t type) const noexcept;
+    TIndex index(dual_type_index_t type) const noexcept;
     bool share(dual_type_index_t type) const noexcept;
     bool own(const dual_type_set_t& subtype) const noexcept;
     bool share(const dual_type_set_t& subtype) const noexcept;
