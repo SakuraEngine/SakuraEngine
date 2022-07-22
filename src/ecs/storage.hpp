@@ -139,6 +139,7 @@ struct dual_storage_t {
     void instantiate_prefab(const dual_entity_t* src, uint32_t size, uint32_t count, dual_view_callback_t callback, void* u);
     void instantiate(const dual_entity_t src, uint32_t count, dual_view_callback_t callback, void* u);
     void instantiate(const dual_entity_t* src, uint32_t n, uint32_t count, dual_view_callback_t callback, void* u);
+    void instantiate(const dual_entity_t src, uint32_t count, dual_group_t* group, dual_view_callback_t callback, void* u);
 
     bool components_enabled(const dual_entity_t src, const dual_type_set_t& type);
     bool exist(dual_entity_t e) const noexcept;

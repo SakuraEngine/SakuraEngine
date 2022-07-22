@@ -308,20 +308,72 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
             ++dstI;
         }
     }
-
-    
 }
 
-void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIndex srcStart) noexcept
+
+void duplicate_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStart) noexcept
 {
-    archetype_t* type = srcC->type;
+    archetype_t* srcType = srcC->type;
     archetype_t* dstType = dstV.chunk->type;
-    EIndex* offsets = type->offsets[(int)srcC->pt];
-    EIndex* dstOffsets = dstType->offsets[(int)dstV.chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* elemSizes = type->elemSizes;
-    for (auto i = 0; i < type->type.length; ++i)
-        duplicate_impl(dstV, srcC, srcStart, type->type.data[i], offsets[i], dstOffsets[i], sizes[i], elemSizes[i], type->callbacks[i].copy);
+    EIndex* srcOffsets = srcType->offsets[srcC->pt];
+    EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
+    uint32_t* srcSizes = srcType->sizes;
+    uint32_t* srcAligns = srcType->aligns;
+    uint32_t* dstAligns = dstType->aligns;
+    uint32_t* dstSizes = dstType->sizes;
+    uint32_t* srcElemSizes = srcType->elemSizes;
+    uint32_t* dstElemSizes = dstType->elemSizes;
+    dual_type_set_t srcTypes = srcType->type;
+    dual_type_set_t dstTypes = dstType->type;
+    uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
+    
+    std::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
+    if (srcType->withMask && dstType->withMask)
+    {
+        SIndex srcMaskId = srcType->index(kMaskComponent);
+        SIndex dstMaskId = dstType->index(kMaskComponent);
+        dstMasks = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        srcMasks = (std::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
+        std::memset(dstMasks, 1, sizeof(uint32_t) * dstV.count);
+    }
+
+    std::bitset<32>* dstDirtys = nullptr;
+    if (srcType->withDirty && dstType->withDirty)
+    {
+        SIndex dstMaskId = dstType->index(kDirtyComponent);
+        dstDirtys = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        std::memset(dstDirtys, 1, sizeof(uint32_t) * dstV.count);
+    }
+
+    SIndex srcI = 0, dstI = 0;
+
+    while (srcI < srcTypes.length && dstI < dstTypes.length)
+    {
+        type_index_t srcT = srcTypes.data[srcI];
+        type_index_t dstT = dstTypes.data[dstI];
+        if (srcT < dstT) // ignore
+        {
+            ++srcI;
+        }
+        else if (srcT > dstT) // construct
+        {
+            construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, dstType->callbacks[dstI].constructor);
+            ++dstI;
+        }
+        else
+        {
+            if (srcT != kMaskComponent)
+                duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcElemSizes[srcI], srcType->callbacks[srcI].copy);
+            if (dstMasks && srcMasks)
+            {
+                forloop (i, 0, dstV.count)
+                    dstMasks[i]
+                    .set(dstI, srcMasks[i].test(srcI));
+            }
+            ++srcI;
+            ++dstI;
+        }
+    }
 }
 
 bool full_view(const dual_chunk_view_t& view) noexcept
