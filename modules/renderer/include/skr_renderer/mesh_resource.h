@@ -68,7 +68,7 @@ typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 #include "utils/io.h"
 
 typedef struct skr_gltf_ram_io_request_t {
-    skr_vfs_t* vfs_override;
+    struct skr_vfs_t* vfs_override;
     skr_async_io_request_t ioRequest;
     SAtomic32 gltf_status;
     skr_mesh_resource_id mesh_resource;

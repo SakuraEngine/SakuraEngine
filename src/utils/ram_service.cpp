@@ -1,3 +1,5 @@
+#include "platform/vfs.h"
+#include "utils/io.hpp"
 #include "io_service_util.hpp"
 
 // RAM Service
@@ -5,17 +7,17 @@ namespace skr
 {
 namespace io
 {
-class RAMServiceImpl final : public RAMService, public AsyncThreadedService
+class RAMServiceImpl final : public RAMService
 {
 public:
     struct Task : public TaskBase {
         skr_vfs_t* vfs;
-        std::string path;
+        eastl::string path;
         uint64_t offset;
     };
     ~RAMServiceImpl() SKR_NOEXCEPT = default;
     RAMServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
-        : AsyncThreadedService(sleep_time, lockless), tasks(lockless)
+        : tasks(lockless), threaded_service(sleep_time, lockless)
 
     {
     }
@@ -29,26 +31,28 @@ public:
 
     SkrAsyncIOServiceStatus get_service_status() const SKR_NOEXCEPT final
     {
-        return getRunningStatus();
+        return threaded_service.getRunningStatus();
     }
 
     const eastl::string name;
     // task containers
     TaskContainer<Task> tasks;
+    AsyncThreadedService threaded_service;
 };
 
-void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
+void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
 {
     // 1.peek task
-    auto task = service->tasks.peek_(service);
+    service->tasks.update_(&service->threaded_service);
+    auto task = service->tasks.peek_();
     // 2.load file
     if (task.has_value())
     {
         TracyCZoneC(readZone, tracy::Color::LightYellow, 1);
         TracyCZoneName(readZone, "ioServiceReadFile", strlen("ioServiceReadFile"));
-        task->setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
+        task->setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
         auto vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
-        ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+            ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
         if (task->request->bytes == nullptr)
         {
             // allocate
@@ -56,6 +60,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
             task->request->size = fsize;
             task->request->bytes = (uint8_t*)sakura_malloc(fsize);
         }
+        task->setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
         skr_vfs_fread(vf, task->request->bytes, task->offset, task->request->size);
         task->setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
         skr_vfs_fclose(vf);
@@ -63,7 +68,7 @@ void ioThreadTask_execute(skr::io::RAMServiceImpl* service)
     }
 }
 
-void ioThreadTask(void* arg)
+void __ioThreadTask_RAM(void* arg)
 {
 #ifdef TRACY_ENABLE
     static uint32_t taskIndex = 0;
@@ -72,16 +77,16 @@ void ioThreadTask(void* arg)
     tracy::SetThreadName(name.c_str());
 #endif
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
-    for (; service->getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
+    for (; service->threaded_service.getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {
-        if (service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND)
+        if (service->threaded_service.getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND)
         {
             ZoneScopedN("ioServiceSuspend");
-            for (; service->getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND;)
+            for (; service->threaded_service.getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND;)
             {
             }
         }
-        ioThreadTask_execute(service);
+        __ioThreadTask_RAM_execute(service);
     }
 }
 
@@ -90,7 +95,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     // try push back new request
     Task back = {};
     back.vfs = vfs;
-    back.path = std::string(info->path);
+    back.path = eastl::string(info->path);
     back.offset = info->offset;
     back.request = async_request;
     back.request->bytes = (uint8_t*)info->bytes;
@@ -102,19 +107,19 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
         back.callbacks[i] = info->callbacks[i];
         back.callback_datas[i] = info->callback_datas[i];
     }
-    tasks.enqueue_(back, criticalTaskCount, name.c_str());
-    AsyncThreadedService::request_();
+    tasks.enqueue_(back, threaded_service.criticalTaskCount, name.c_str());
+    threaded_service.request_();
 }
 
 skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
     auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time, desc->lockless);
-    service->create_(desc->sleep_mode);
-    service->sortMethod = desc->sort_method;
-    service->threadItem.pData = service;
-    service->threadItem.pFunc = &ioThreadTask;
-    skr_init_thread(&service->threadItem, &service->serviceThread);
-    skr_set_thread_priority(service->serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    service->threaded_service.create_(desc->sleep_mode);
+    service->threaded_service.sortMethod = desc->sort_method;
+    service->threaded_service.threadItem.pData = service;
+    service->threaded_service.threadItem.pFunc = &__ioThreadTask_RAM;
+    skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
+    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
     return service;
 }
 
@@ -122,7 +127,7 @@ void RAMService::destroy(RAMService* s) SKR_NOEXCEPT
 {
     auto service = static_cast<skr::io::RAMServiceImpl*>(s);
     s->drain();
-    service->destroy_();
+    service->threaded_service.destroy_();
     SkrDelete(service);
 }
 
@@ -138,22 +143,22 @@ void skr::io::RAMServiceImpl::defer_cancel(skr_async_io_request_t* request) SKR_
 
 void skr::io::RAMServiceImpl::drain() SKR_NOEXCEPT
 {
-    AsyncThreadedService::drain_();
+    threaded_service.drain_();
 }
 
 void skr::io::RAMServiceImpl::set_sleep_time(uint32_t time) SKR_NOEXCEPT
 {
-    AsyncThreadedService::set_sleep_time_(time);
+    threaded_service.set_sleep_time_(time);
 }
 
 void skr::io::RAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
 {
-    AsyncThreadedService::stop_(wait_drain);
+    threaded_service.stop_(wait_drain);
 }
 
 void skr::io::RAMServiceImpl::run() SKR_NOEXCEPT
 {
-    AsyncThreadedService::run_();
+    threaded_service.run_();
 }
 
 } // namespace io

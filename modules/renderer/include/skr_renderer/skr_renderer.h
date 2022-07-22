@@ -2,6 +2,7 @@
 #include "SkrRenderer/skr_renderer.configure.h"
 #include "primitive_pass.h"
 #include "effect_processor.h"
+#include "cgpu/io.h"
 
 struct SKR_RENDERER_API ISkrRenderer {
 #ifdef __cplusplus
@@ -67,7 +68,9 @@ protected:
     CGPUAdapterId adapter = nullptr;
     CGPUDeviceId device = nullptr;
     CGPUQueueId gfx_queue = nullptr;
+    eastl::vector<CGPUQueueId> cpy_queues;
     CGPUSamplerId linear_sampler = nullptr;
+    skr_io_vram_service_t* vram_service = nullptr;
 };
 } // namespace skr
 
@@ -79,6 +82,7 @@ public:
 
     CGPUDeviceId get_cgpu_device() const;
     CGPUQueueId get_gfx_queue() const;
+    CGPUQueueId get_cpy_queue(uint32_t idx = 0) const;
     ECGPUFormat get_swapchain_format() const;
     CGPUSamplerId get_linear_sampler() const;
 
@@ -105,6 +109,12 @@ skr_renderer_get_linear_sampler();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
 skr_renderer_get_gfx_queue();
+
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
+skr_renderer_get_cpy_queue();
+
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
+skr_renderer_get_nth_cpy_queue(uint32_t n);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDeviceId
 skr_renderer_get_cgpu_device();

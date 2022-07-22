@@ -452,7 +452,7 @@ AsyncRenderBuffer* const* buffers, uint32_t buffers_count)
         buf_barriers[i].dst_state = CGPU_RESOURCE_STATE_SHADER_RESOURCE;
         if (textures[i]->queue_type_.load() == CGPU_QUEUE_TYPE_TRANSFER)
         {
-            tex_barriers[i].queue_acquire = true;
+            buf_barriers[i].queue_acquire = true;
             buf_barriers[i].queue_type = theQueueType;
         }
         buffers[i]->queue_type_ = theQueueType;

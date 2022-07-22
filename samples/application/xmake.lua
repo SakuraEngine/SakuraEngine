@@ -11,11 +11,15 @@ target("GameRT")
 target("Game")
     set_kind("binary")
     add_deps("GameRT")
+    add_rules("utils.install-resources", {
+        extensions = {".gltf", ".bin", ".png"},
+        outdir = "/../resources", _png_outdir = "/../resources/textures"})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Game",
         dxil_outdir = "/../resources/shaders/Game"})
     add_files("game/main.cpp", "game/render_resources.cpp", "game/render_effects.cpp",  "game/game_module.cpp")
     add_files("game/shaders/**.hlsl")
+    add_files("game/**.bin", "game/**.gltf")
 
 target("GameTool")
     add_rules("skr.module", {api = "GAMETOOL"})

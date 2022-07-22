@@ -1,21 +1,19 @@
 #pragma once
-#include "io.h"
-
-struct skr_vfs_t;
+#include "cgpu/io.h"
 
 namespace skr
 {
 namespace io
 {
-class RUNTIME_API RAMService
+class RUNTIME_API VRAMService
 {
 public:
-    [[nodiscard]] static RAMService* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
-    static void destroy(RAMService* service) SKR_NOEXCEPT;
+    [[nodiscard]] static VRAMService* create(const skr_vram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    static void destroy(VRAMService* service) SKR_NOEXCEPT;
 
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
-    virtual void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) SKR_NOEXCEPT = 0;
+    virtual void request(const skr_vram_buffer_io_t* info, skr_async_io_request_t* async_request, skr_vram_buffer_request_t* buffer_request) SKR_NOEXCEPT = 0;
 
     // try to cancel an enqueued request at **this** thread
     // not available (returns always false) under lockless mode
@@ -41,8 +39,8 @@ public:
     // get service status (sleeping or running)
     virtual SkrAsyncIOServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
 
-    virtual ~RAMService() SKR_NOEXCEPT = default;
-    RAMService() SKR_NOEXCEPT = default;
+    virtual ~VRAMService() SKR_NOEXCEPT = default;
+    VRAMService() SKR_NOEXCEPT = default;
 };
 } // namespace io
 } // namespace skr
