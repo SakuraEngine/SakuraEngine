@@ -87,6 +87,11 @@ CGPUDeviceId SkrRendererModule::get_cgpu_device() const
     return renderer->device;
 }
 
+skr_io_vram_service_t* SkrRendererModule::get_vram_service() const
+{
+    return renderer->vram_service;
+}
+
 CGPUQueueId SkrRendererModule::get_gfx_queue() const
 {
     return renderer->gfx_queue;
@@ -137,6 +142,11 @@ CGPUQueueId skr_renderer_get_nth_cpy_queue(uint32_t n)
 CGPUDeviceId skr_renderer_get_cgpu_device()
 {
     return SkrRendererModule::Get()->get_cgpu_device();
+}
+
+skr_io_vram_service_t* skr_renderer_get_vram_service()
+{
+    return SkrRendererModule::Get()->get_vram_service();
 }
 
 void skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph)

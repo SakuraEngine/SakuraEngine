@@ -37,6 +37,19 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         }
         auto mesh_id = gltf_io_request.mesh_resource;
         SKR_LOG_INFO("gltf loaded!");
+        auto vram_service = skr_renderer_get_vram_service();
+        auto index_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
+        index_buffer_io.device = skr_renderer_get_cgpu_device();
+        index_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
+        index_buffer_io.owner_queue = skr_renderer_get_gfx_queue();
+        index_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
+        index_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+        index_buffer_io.buffer_size = mesh_id->index_buffer.blob.size;
+        index_buffer_io.bytes = mesh_id->index_buffer.blob.bytes;
+        index_buffer_io.size = mesh_id->index_buffer.blob.size;
+        skr_async_io_request_t async_request = {};
+        skr_vram_buffer_request_t buffer_request = {};
+        vram_service->request(&index_buffer_io, &async_request, &buffer_request);
         skr_mesh_resource_free(mesh_id);
     }
 
