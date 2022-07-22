@@ -1115,3 +1115,29 @@ void cgpu_free_surface(CGPUDeviceId device, CGPUSurfaceId surface)
     device->adapter->instance->surfaces_table->free_surface(device, surface);
     return;
 }
+
+// dstraoge
+ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->query_dstorage_availability && "query_dstorage_availability Proc Missing!");
+
+    return device->proc_table_cache->query_dstorage_availability(device);
+}
+
+CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const CGPUDStroageQueueDescriptor* descriptor)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->create_dstorage_queue && "create_dstorage_queue Proc Missing!");
+
+    return device->proc_table_cache->create_dstorage_queue(device, descriptor);    
+}
+
+void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->create_dstorage_queue && "create_dstorage_queue Proc Missing!");
+
+    queue->device->proc_table_cache->free_dstorage_queue(queue);    
+}

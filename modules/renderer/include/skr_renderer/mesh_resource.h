@@ -40,6 +40,15 @@ skr_index_buffer_t
 };
 typedef struct skr_index_buffer_t skr_index_buffer_t;
 
+#ifdef __cplusplus
+struct skr_mesh_section_t {
+    int32_t parent_index;
+    skr_float3_t translation;
+    skr_float3_t scale;
+    skr_float4_t rotation;
+    eastl::vector<uint32_t> primive_indices;
+};
+
 struct sreflect sattr(
     "guid" : "03104e51-c998-410b-9d3c-d76535933440",
     "serialize" : "bin"
@@ -49,16 +58,7 @@ skr_mesh_bin_t
     skr_blob_t bin;
     bool used_with_index;
     bool used_with_vertex;
-};
-typedef struct skr_mesh_bin_t skr_mesh_bin_t;
-
-#ifdef __cplusplus
-struct skr_mesh_section_t {
-    int32_t parent_index;
-    skr_float3_t translation;
-    skr_float3_t scale;
-    skr_float4_t rotation;
-    eastl::vector<uint32_t> primive_indices;
+    eastl::string uri;
 };
 
 struct sreflect sattr(
@@ -76,6 +76,7 @@ skr_mesh_resource_t
     void* gltf_data;
 };
 #endif
+typedef struct skr_mesh_bin_t skr_mesh_bin_t;
 typedef struct skr_mesh_section_t skr_mesh_section_t;
 typedef struct skr_mesh_resource_t skr_mesh_resource_t;
 typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
@@ -84,6 +85,7 @@ typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
 typedef struct skr_gltf_ram_io_request_t {
     struct skr_vfs_t* vfs_override;
+    bool load_bin_to_memory;
     skr_async_io_request_t ioRequest;
     SAtomic32 gltf_status;
     skr_mesh_resource_id mesh_resource;

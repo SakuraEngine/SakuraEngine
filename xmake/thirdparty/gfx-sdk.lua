@@ -2,6 +2,7 @@ task("unzip-gfx-sdk")
     on_run(function ()
         import("find_sdk")
         if(os.host() == "windows") then
+            find_sdk.install_lib("dstorage")
             find_sdk.install_lib("amdags")
             find_sdk.install_lib("nvapi")
             find_sdk.install_lib("WinPixEventRuntime")

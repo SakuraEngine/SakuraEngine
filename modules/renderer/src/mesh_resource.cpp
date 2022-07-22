@@ -193,7 +193,8 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
             }
             else
             {
-                // result = cgltf_load_buffers(&options, gltf_data_, cbData->u8Path.c_str());
+                if (cbData->gltfRequest->load_bin_to_memory)
+                    result = cgltf_load_buffers(&options, gltf_data_, cbData->u8Path.c_str());
                 result = cgltf_validate(gltf_data_);
                 if (result != cgltf_result_success)
                 {
@@ -209,6 +210,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                     {
                         resource->bins[i].bin.bytes = (uint8_t*)gltf_data_->buffers[i].data;
                         resource->bins[i].bin.size = gltf_data_->buffers[i].size;
+                        resource->bins[i].uri = gltf_data_->buffers[i].uri;
                         resource->bins[i].used_with_index = false;
                         resource->bins[i].used_with_vertex = false;
                     }

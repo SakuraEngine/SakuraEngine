@@ -15,10 +15,13 @@ os.runv(pip.program, {"install", "mako"})
 find_sdk.sdk_from_github("SourceSansPro-Regular.ttf")
 if (os.host() == "windows") then
     find_sdk.sdk_from_github("wasm-clang-windows-x64.zip")
+    -- gfx
     find_sdk.sdk_from_github("WinPixEventRuntime-windows-x64.zip")
     find_sdk.sdk_from_github("amdags-windows-x64.zip")
     find_sdk.sdk_from_github("dxc-windows-x64.zip")
     find_sdk.sdk_from_github("nvapi-windows-x64.zip")
+    find_sdk.sdk_from_github("dstorage-windows-x64.zip")
+    --
     find_sdk.sdk_from_github("reflector-windows-x64.zip")
     find_sdk.sdk_from_github("SDL2-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient-windows-x64.zip")

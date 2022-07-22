@@ -26,10 +26,12 @@ skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
     void on_register(ISkrRenderer* renderer) override
     {
+        const bool supportDirectStorage = false;
         auto resource_vfs = skr_game_runtime_get_vfs();
         auto ram_service = skr_game_runtime_get_ram_service();
         auto gltf_io_request = make_zeroed<skr_gltf_ram_io_request_t>();
         gltf_io_request.vfs_override = resource_vfs;
+        gltf_io_request.load_bin_to_memory = !supportDirectStorage;
         skr_mesh_resource_create_from_gltf(ram_service, "scene.gltf", &gltf_io_request);
         while (!(skr_atomic32_load_relaxed(&gltf_io_request.gltf_status) == SKR_ASYNC_IO_STATUS_OK))
         {
@@ -38,17 +40,20 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         auto mesh_id = gltf_io_request.mesh_resource;
         SKR_LOG_INFO("gltf loaded!");
         auto vram_service = skr_renderer_get_vram_service();
-        auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
-        mesh_buffer_io.device = skr_renderer_get_cgpu_device();
-        mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
-        mesh_buffer_io.owner_queue = skr_renderer_get_gfx_queue();
-        mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
-        mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-        mesh_buffer_io.buffer_size = mesh_id->index_buffer.size;
-        mesh_buffer_io.bytes = mesh_id->bins[0].bin.bytes;
-        mesh_buffer_io.size =  mesh_id->bins[0].bin.size;
         skr_async_io_request_t async_request = {};
         skr_vram_buffer_request_t buffer_request = {};
+        auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
+        if (!supportDirectStorage)
+        {
+            mesh_buffer_io.device = skr_renderer_get_cgpu_device();
+            mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
+            mesh_buffer_io.owner_queue = skr_renderer_get_gfx_queue();
+            mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
+            mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+            mesh_buffer_io.buffer_size = mesh_id->index_buffer.size;
+            mesh_buffer_io.bytes = mesh_id->bins[0].bin.bytes;
+            mesh_buffer_io.size =  mesh_id->bins[0].bin.size;
+        }
         vram_service->request(&mesh_buffer_io, &async_request, &buffer_request);
         while (!async_request.is_ready())
         {

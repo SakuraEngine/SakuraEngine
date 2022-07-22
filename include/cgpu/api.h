@@ -57,6 +57,7 @@ struct CGPUGraphicsPipeline;
 struct CGPUComputePipeline;
 struct CGPUShaderReflection;
 struct CGPUPipelineReflection;
+struct CGPUDStroageQueueDescriptor;
 
 typedef uint32_t CGPUQueueIndex;
 #if defined(SKR_PLATFORM_WA32)
@@ -86,6 +87,7 @@ typedef const host_ptr_t CGPURenderPipelineId;
 typedef const host_ptr_t CGPUComputePipelineId;
 typedef const host_ptr_t CGPUShaderReflectionId;
 typedef const host_ptr_t CGPUPipelineReflectionId;
+typedef const host_ptr_t CGPUDStorageQueueId;
 #else
 typedef const struct CGPUSurface_Dummy* CGPUSurfaceId;
 typedef const struct CGPUInstance* CGPUInstanceId;
@@ -113,6 +115,7 @@ typedef const struct CGPURenderPipeline* CGPURenderPipelineId;
 typedef const struct CGPUComputePipeline* CGPUComputePipelineId;
 typedef const struct CGPUShaderReflection* CGPUShaderReflectionId;
 typedef const struct CGPUPipelineReflection* CGPUPipelineReflectionId;
+typedef const struct CGPUDStorageQueue* CGPUDStorageQueueId;
 #endif
 static const CGPUBufferId CGPU_BUFFER_OUT_OF_HOST_MEMORY = (CGPUBufferId)1;
 static const CGPUBufferId CGPU_BUFFER_OUT_OF_DEVICE_MEMORY = (CGPUBufferId)3;
@@ -395,6 +398,15 @@ typedef void (*CGPUProcCmdSetMarker)(CGPUCommandBufferId cmd, const CGPUMarkerIn
 RUNTIME_API void cgpu_cmd_end_event(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcCmdEndEvent)(CGPUCommandBufferId cmd);
 
+// dstorage
+RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
+typedef ECGPUDStorageAvailability (*CGPUProcQueryDStorageAvailability)(CGPUDeviceId device);
+RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStroageQueueDescriptor* desc);
+typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const struct CGPUDStroageQueueDescriptor* desc);
+RUNTIME_API void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue);
+typedef void (*CGPUProcFreeDStorageQueue)(CGPUDStorageQueueId queue);
+
+// cgpux
 RUNTIME_API CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
 uint64_t size, const char8_t* name, bool device_local_preferred);
 RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
@@ -520,6 +532,11 @@ typedef struct CGPUProcTable {
     const CGPUProcCmdBeginEvent cmd_begin_event;
     const CGPUProcCmdSetMarker cmd_set_marker;
     const CGPUProcCmdEndEvent cmd_end_event;
+
+    // DStroage
+    const CGPUProcQueryDStorageAvailability query_dstorage_availability;
+    const CGPUProcCreateDStorageQueue create_dstorage_queue;
+    const CGPUProcFreeDStorageQueue free_dstorage_queue;
 } CGPUProcTable;
 
 // surfaces
@@ -612,6 +629,10 @@ typedef struct CGPUQueue {
     ECGPUQueueType type;
     CGPUQueueIndex index;
 } CGPUQueue;
+
+typedef struct CGPUDStorageQueue {
+    CGPUDeviceId device;
+} CGPUDStorageQueue;
 
 typedef struct CGPUFence {
     CGPUDeviceId device;
@@ -808,6 +829,14 @@ typedef struct CGPUInstanceDescriptor {
     bool enable_gpu_based_validation;
     bool enable_set_name;
 } CGPUInstanceDescriptor;
+
+#define CGPU_DSTORAGE_MAX_QUEUE_CAPACITY 0x2000
+typedef struct CGPUDStroageQueueDescriptor {
+    ECGPUDStrogaeSource source;
+    uint16_t capacity;
+    ECGPUDStoragePriority priority;
+    const char* name;
+} CGPUDStroageQueueDescriptor;
 
 typedef struct CGPUQueueGroupDescriptor {
     ECGPUQueueType queue_type;

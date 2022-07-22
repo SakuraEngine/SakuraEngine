@@ -138,6 +138,11 @@ RUNTIME_API void cgpu_render_encoder_draw_indexed_d3d12(CGPURenderPassEncoderId 
 RUNTIME_API void cgpu_render_encoder_draw_indexed_instanced_d3d12(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
 RUNTIME_API void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder);
 
+// dstorage
+RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device);
+RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStroageQueueDescriptor* descriptor);
+RUNTIME_API void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue);
+
 #ifdef __cplusplus
 } // end extern "C"
 namespace D3D12MA
