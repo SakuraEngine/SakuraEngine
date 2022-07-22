@@ -16,7 +16,7 @@ type_builder_t::~type_builder_t()
         dual_free(data);
 }
 
-type_builder_t& type_builder_t::with(dual_type_index_t* types, uint32_t inLength)
+type_builder_t& type_builder_t::with(const dual_type_index_t* types, uint32_t inLength)
 {
     if (data == nullptr)
         data = (dual_type_index_t*)dual_malloc(sizeof(dual_type_index_t) * inLength);
