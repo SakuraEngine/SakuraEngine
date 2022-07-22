@@ -146,17 +146,23 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.size, name.c_str());
         upload->dst_buffer = buffer_request->out_buffer;
 
-        memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address + buffer_io.offset, buffer_io.bytes, buffer_io.size);
-
-        cgpu_cmd_begin(upload->command_buffer);
-        CGPUBufferToBufferTransfer vb_cpy = {};
-        vb_cpy.dst = buffer_request->out_buffer;
-        vb_cpy.dst_offset = 0;
-        vb_cpy.src = upload->upload_buffer;
-        vb_cpy.src_offset = 0;
-        vb_cpy.size = buffer_io.size;
-        cgpu_cmd_transfer_buffer_to_buffer(upload->command_buffer, &vb_cpy);
+        if (buffer_io.bytes)
+        {
+            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address + buffer_io.offset, buffer_io.bytes, buffer_io.size);
+        }
         
+        cgpu_cmd_begin(upload->command_buffer);
+        
+        if (buffer_io.bytes)
+        {
+            CGPUBufferToBufferTransfer vb_cpy = {};
+            vb_cpy.dst = buffer_request->out_buffer;
+            vb_cpy.dst_offset = 0;
+            vb_cpy.src = upload->upload_buffer;
+            vb_cpy.src_offset = 0;
+            vb_cpy.size = buffer_io.size;
+            cgpu_cmd_transfer_buffer_to_buffer(upload->command_buffer, &vb_cpy);
+        }
         auto buffer_barrier = make_zeroed<CGPUBufferBarrier>();
         buffer_barrier.buffer = buffer_request->out_buffer;
         buffer_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
@@ -164,14 +170,15 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         // acquire
         if (buffer_io.owner_queue->type != buffer_io.transfer_queue->type)
         {
-            buffer_barrier.queue_acquire = true;
-            buffer_barrier.queue_type = buffer_io.owner_queue->type;
+            buffer_barrier.queue_release = true;
+            buffer_barrier.queue_type = buffer_io.transfer_queue->type;
         }
         
         auto barrier = make_zeroed<CGPUResourceBarrierDescriptor>();
         barrier.buffer_barriers = &buffer_barrier;
         barrier.buffer_barriers_count = 1;
         cgpu_cmd_resource_barrier(upload->command_buffer, &barrier);
+        
         cgpu_cmd_end(upload->command_buffer);
 
         CGPUQueueSubmitDescriptor submit_desc = {};

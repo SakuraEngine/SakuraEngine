@@ -1187,7 +1187,9 @@ typedef struct CGPUBufferDescriptor {
     uint64_t elemet_count;
     /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
     uint64_t element_stride;
-    /// What state will the texture get created in
+    /// Owner queue of the resource at creation
+    CGPUQueueId owner_queue;
+    /// What state will the buffer get created in
     ECGPUResourceState start_state;
     /// Preferred actual location
     /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
