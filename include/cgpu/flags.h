@@ -714,11 +714,11 @@ typedef enum ECGPUDStorageAvailability
     CGPU_DSTORAGE_AVAILABILITY_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGPUDStorageAvailability;
 
-typedef enum ECGPUDStrogaeSource {
+typedef enum ECGPUDStorageSource {
     CGPU_DSTORAGE_SOURCE_FILE = 0,
     CGPU_DSTORAGE_SOURCE_MEMORY = 1,
     CGPU_DSTORAGE_SOURCE_MAX_ENUM_BIT = 0x7FFFFFFF
-} ECGPUDStrogaeSource;
+} ECGPUDStorageSource;
 
 typedef enum ECGPUDStoragePriority {
     CGPU_DSTORAGE_PRIORITY_LOW = -1,
@@ -729,6 +729,11 @@ typedef enum ECGPUDStoragePriority {
     CGPU_DSTORAGE_PRIORITY_COUNT = 4,
     CGPU_DSTORAGE_PRIORITY_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGPUDStoragePriority;
+
+typedef enum ECGPUDStorageCompression {
+    CGPU_DSTORAGE_COMPRESSION_NONE = 0,
+    CGPU_DSTORAGE_COMPRESSION_MAX_ENUM_BIT = 0x7FFFFFFF
+} ECGPUDStorageCompression;
 
 //
 /* clang-format off */

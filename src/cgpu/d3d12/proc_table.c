@@ -122,6 +122,11 @@ const CGPUProcTable tbl_d3d12 = {
     // DStorage
     .query_dstorage_availability = &cgpu_query_dstorage_availability_d3d12,
     .create_dstorage_queue = &cgpu_create_dstorage_queue_d3d12,
+    .dstorage_open_file = &cgpu_dstorage_open_file_d3d12,
+    .dstorage_query_file_info = &cgpu_dstorage_query_file_info_d3d12,
+    .dstorage_enqueue_buffer_request = &cgpu_dstorage_enqueue_buffer_request_d3d12,
+    .dstorage_queue_submit = &cgpu_dstorage_queue_submit_d3d12,
+    .dstorage_close_file = &cgpu_dstorage_close_file_d3d12,
     .free_dstorage_queue = &cgpu_free_dstorage_queue_d3d12
 };
 
