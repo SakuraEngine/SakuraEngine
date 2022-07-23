@@ -88,6 +88,7 @@ typedef const host_ptr_t CGPUComputePipelineId;
 typedef const host_ptr_t CGPUShaderReflectionId;
 typedef const host_ptr_t CGPUPipelineReflectionId;
 typedef const host_ptr_t CGPUDStorageQueueId;
+typedef const host_ptr_t CGPUDStorageFileHandle;
 #else
 typedef const struct CGPUSurface_Dummy* CGPUSurfaceId;
 typedef const struct CGPUInstance* CGPUInstanceId;
@@ -116,6 +117,7 @@ typedef const struct CGPUComputePipeline* CGPUComputePipelineId;
 typedef const struct CGPUShaderReflection* CGPUShaderReflectionId;
 typedef const struct CGPUPipelineReflection* CGPUPipelineReflectionId;
 typedef const struct CGPUDStorageQueue* CGPUDStorageQueueId;
+typedef const struct CGPUDStorageFile* CGPUDStorageFileHandle;
 #endif
 static const CGPUBufferId CGPU_BUFFER_OUT_OF_HOST_MEMORY = (CGPUBufferId)1;
 static const CGPUBufferId CGPU_BUFFER_OUT_OF_DEVICE_MEMORY = (CGPUBufferId)3;
@@ -399,10 +401,44 @@ RUNTIME_API void cgpu_cmd_end_event(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcCmdEndEvent)(CGPUCommandBufferId cmd);
 
 // dstorage
+typedef struct CGPUDStorageFileInfo {
+    uint64_t file_size;
+} CGPUDStorageFileInfo;
+typedef struct CGPUDStorageBufferIODescriptor {
+    ECGPUDStorageCompression compression;
+    ECGPUDStorageSource source_type;
+    struct
+    {
+        uint8_t* bytes;
+        uint64_t bytes_size;
+    } source_memory;
+    struct
+    {
+        CGPUDStorageFileHandle file;
+        uint64_t offset;
+        uint64_t size;
+    } source_file;
+    CGPUBufferId buffer;
+    uint64_t offset;
+    uint64_t size;
+    uint64_t uncompressed_size;
+    CGPUFenceId fence;
+    const char* name;
+} CGPUDStorageBufferIODescriptor;
 RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
 typedef ECGPUDStorageAvailability (*CGPUProcQueryDStorageAvailability)(CGPUDeviceId device);
 RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStroageQueueDescriptor* desc);
 typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const struct CGPUDStroageQueueDescriptor* desc);
+RUNTIME_API CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path);
+typedef CGPUDStorageFileHandle (*CGPUProcDStorageOpenFile)(CGPUDStorageQueueId queue, const char* abs_path);
+RUNTIME_API void cgpu_dstorage_query_file_info(CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
+typedef void (*CGPUProcDStorageQueryFileInfo)(CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
+RUNTIME_API void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
+typedef void (*CGPUProcDStorageEnqueueBufferRequest)(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
+RUNTIME_API void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence);
+typedef void (*CGPUProcDStorageQueueSubmit)(CGPUDStorageQueueId queue, CGPUFenceId fence);
+RUNTIME_API void cgpu_dstorage_close_file(CGPUDStorageFileHandle file);
+typedef void (*CGPUProcDStorageCloseFile)(CGPUDStorageFileHandle file);
 RUNTIME_API void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue);
 typedef void (*CGPUProcFreeDStorageQueue)(CGPUDStorageQueueId queue);
 
@@ -536,6 +572,11 @@ typedef struct CGPUProcTable {
     // DStroage
     const CGPUProcQueryDStorageAvailability query_dstorage_availability;
     const CGPUProcCreateDStorageQueue create_dstorage_queue;
+    const CGPUProcDStorageOpenFile dstorage_open_file;
+    const CGPUProcDStorageQueryFileInfo dstorage_query_file_info;
+    const CGPUProcDStorageEnqueueBufferRequest dstorage_enqueue_buffer_request;
+    const CGPUProcDStorageQueueSubmit dstorage_queue_submit;
+    const CGPUProcDStorageCloseFile dstorage_close_file;
     const CGPUProcFreeDStorageQueue free_dstorage_queue;
 } CGPUProcTable;
 
@@ -832,7 +873,7 @@ typedef struct CGPUInstanceDescriptor {
 
 #define CGPU_DSTORAGE_MAX_QUEUE_CAPACITY 0x2000
 typedef struct CGPUDStroageQueueDescriptor {
-    ECGPUDStrogaeSource source;
+    ECGPUDStorageSource source;
     uint16_t capacity;
     ECGPUDStoragePriority priority;
     const char* name;
