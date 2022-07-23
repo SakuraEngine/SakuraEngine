@@ -1120,8 +1120,11 @@ void cgpu_free_surface(CGPUDeviceId device, CGPUSurfaceId surface)
 ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    if (device->proc_table_cache->query_dstorage_availability == NULL)
+    {
+        return CGPU_DSTORAGE_AVAILABILITY_NONE;
+    }
     cgpu_assert(device->proc_table_cache->query_dstorage_availability && "query_dstorage_availability Proc Missing!");
-
     return device->proc_table_cache->query_dstorage_availability(device);
 }
 
@@ -1131,6 +1134,51 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const CGPUDS
     cgpu_assert(device->proc_table_cache->create_dstorage_queue && "create_dstorage_queue Proc Missing!");
 
     return device->proc_table_cache->create_dstorage_queue(device, descriptor);    
+}
+
+CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->dstorage_open_file && "dstorage_open_file Proc Missing!");
+
+    return queue->device->proc_table_cache->dstorage_open_file(queue, abs_path);    
+}
+
+void cgpu_dstorage_query_file_info(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->dstorage_query_file_info && "dstorage_query_file_info Proc Missing!");
+
+    return queue->device->proc_table_cache->dstorage_query_file_info(queue, file, info);
+}
+
+void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->dstorage_enqueue_buffer_request && "dstorage_enqueue_buffer_request Proc Missing!");
+
+    return queue->device->proc_table_cache->dstorage_enqueue_buffer_request(queue, desc);
+}
+
+void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->dstorage_queue_submit && "dstorage_queue_submit Proc Missing!");
+
+    return queue->device->proc_table_cache->dstorage_queue_submit(queue, fence);
+}
+
+void cgpu_dstorage_close_file(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->dstorage_close_file && "dstorage_close_file Proc Missing!");
+
+    return queue->device->proc_table_cache->dstorage_close_file(queue, file);
 }
 
 void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue)

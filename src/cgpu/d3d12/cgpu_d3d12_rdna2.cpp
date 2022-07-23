@@ -89,7 +89,7 @@ CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, 
     return (CGPUDStorageFileHandle)pFile;
 }
 
-void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info)
+void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info)
 {
     BY_HANDLE_FILE_INFORMATION fileInfo;
     IDStorageFile* pFile = (IDStorageFile*)file;
@@ -144,7 +144,7 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
     Q->pQueue->Submit();
 }
 
-void cgpu_dstorage_close_file_d3d12(CGPUDStorageFileHandle file)
+void cgpu_dstorage_close_file_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file)
 {
     IDStorageFile* pFile = (IDStorageFile*)file;
     pFile->Close();
