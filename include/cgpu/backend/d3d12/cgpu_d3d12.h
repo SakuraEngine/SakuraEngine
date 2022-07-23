@@ -142,10 +142,10 @@ RUNTIME_API void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURen
 RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device);
 RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStroageQueueDescriptor* descriptor);
 RUNTIME_API CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char* abs_path);
-RUNTIME_API void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
+RUNTIME_API void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
 RUNTIME_API void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
 RUNTIME_API void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fence);
-RUNTIME_API void cgpu_dstorage_close_file_d3d12(CGPUDStorageFileHandle file);
+RUNTIME_API void cgpu_dstorage_close_file_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
 RUNTIME_API void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue);
 
 #ifdef __cplusplus

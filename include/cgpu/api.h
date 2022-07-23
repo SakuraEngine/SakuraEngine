@@ -431,14 +431,14 @@ RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, 
 typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const struct CGPUDStroageQueueDescriptor* desc);
 RUNTIME_API CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path);
 typedef CGPUDStorageFileHandle (*CGPUProcDStorageOpenFile)(CGPUDStorageQueueId queue, const char* abs_path);
-RUNTIME_API void cgpu_dstorage_query_file_info(CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
-typedef void (*CGPUProcDStorageQueryFileInfo)(CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
+RUNTIME_API void cgpu_dstorage_query_file_info(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
+typedef void (*CGPUProcDStorageQueryFileInfo)(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
 RUNTIME_API void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
 typedef void (*CGPUProcDStorageEnqueueBufferRequest)(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
 RUNTIME_API void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence);
 typedef void (*CGPUProcDStorageQueueSubmit)(CGPUDStorageQueueId queue, CGPUFenceId fence);
-RUNTIME_API void cgpu_dstorage_close_file(CGPUDStorageFileHandle file);
-typedef void (*CGPUProcDStorageCloseFile)(CGPUDStorageFileHandle file);
+RUNTIME_API void cgpu_dstorage_close_file(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
+typedef void (*CGPUProcDStorageCloseFile)(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
 RUNTIME_API void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue);
 typedef void (*CGPUProcFreeDStorageQueue)(CGPUDStorageQueueId queue);
 
