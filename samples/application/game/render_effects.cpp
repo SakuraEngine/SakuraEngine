@@ -18,15 +18,27 @@
 #include "skr_renderer/mesh_resource.h"
 #include "gamert.h"
 #include "cube.hpp"
+#include <ghc/filesystem.hpp>
 
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
+    CGPUDStorageQueueId mesh_bin_dstorage_queue = nullptr;
     void on_register(ISkrRenderer* renderer) override
     {
-        const bool supportDirectStorage = false;
+        auto device = skr_renderer_get_cgpu_device();
+        auto dstorage_cap = cgpu_query_dstorage_availability(skr_renderer_get_cgpu_device());
+        const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
+        if (supportDirectStorage)
+        {
+            CGPUDStroageQueueDescriptor queue_desc = {};
+            queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
+            queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
+            queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+            mesh_bin_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+        }
         auto resource_vfs = skr_game_runtime_get_vfs();
         auto ram_service = skr_game_runtime_get_ram_service();
         auto gltf_io_request = make_zeroed<skr_gltf_ram_io_request_t>();
@@ -43,18 +55,21 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         skr_async_io_request_t async_request = {};
         skr_vram_buffer_request_t buffer_request = {};
         auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
-        if (!supportDirectStorage)
         {
             mesh_buffer_io.device = skr_renderer_get_cgpu_device();
+            mesh_buffer_io.dstorage_queue = mesh_bin_dstorage_queue;
             mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
             mesh_buffer_io.owner_queue = skr_renderer_get_gfx_queue();
             mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
             mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-            mesh_buffer_io.buffer_size = mesh_id->index_buffer.size;
+            mesh_buffer_io.buffer_size = mesh_id->bins[0].bin.size;
             mesh_buffer_io.bytes = mesh_id->bins[0].bin.bytes;
             mesh_buffer_io.size =  mesh_id->bins[0].bin.size;
+            // TODO: replace this with newer VFS API
+            auto gltfPath = (ghc::filesystem::path(resource_vfs->mount_dir) / mesh_id->bins[0].uri.c_str()).u8string();
+            mesh_buffer_io.path = gltfPath.c_str();
+            vram_service->request(&mesh_buffer_io, &async_request, &buffer_request);
         }
-        vram_service->request(&mesh_buffer_io, &async_request, &buffer_request);
         while (!async_request.is_ready())
         {
             

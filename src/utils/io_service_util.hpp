@@ -345,7 +345,7 @@ public:
         service->setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     }
 
-    void sleep_() SKR_NOEXCEPT override
+    virtual void sleep_() SKR_NOEXCEPT override
     {
         auto service = this;
         AsyncServiceBase::sleep_();
@@ -374,7 +374,7 @@ public:
         }
     }
 
-    void request_() SKR_NOEXCEPT override
+    virtual void request_() SKR_NOEXCEPT override
     {
         // unlock cv
         const auto sleepTimeVal = skr_atomic32_load_acquire(&_sleepTime);
@@ -384,7 +384,7 @@ public:
         }
     }
 
-    void destroy_() SKR_NOEXCEPT override
+    virtual void destroy_() SKR_NOEXCEPT override
     {
         auto service = this;
         AsyncServiceBase::destroy_();
@@ -393,14 +393,14 @@ public:
         skr_destroy_thread(service->serviceThread);
     }
     
-    void run_() SKR_NOEXCEPT override
+    virtual void run_() SKR_NOEXCEPT override
     {
         if (getThreadStatus() != _SKR_IO_THREAD_STATUS_SUSPEND)
             return;
         setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     }
 
-    void stop_(bool wait_drain) SKR_NOEXCEPT override
+    virtual void stop_(bool wait_drain) SKR_NOEXCEPT override
     {
         if (getThreadStatus() != _SKR_IO_THREAD_STATUS_RUNNING) return;
         if (wait_drain) drain_(); // sleep -> hung
