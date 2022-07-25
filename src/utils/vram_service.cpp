@@ -478,7 +478,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
     // 2.sweep task batches
     eastl::for_each(service->upload_batch_queue.begin(), service->upload_batch_queue.end(),
         [](auto& batch){
-            bool ready = true;
+            bool ready = batch.second->submitted;
             for (auto [queue, batch_fence] : batch.second->fences)
             {
                 if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
@@ -497,7 +497,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 
     eastl::for_each(service->dstorage_batch_queue.begin(), service->dstorage_batch_queue.end(),
         [](auto& batch){
-            bool ready = true;
+            bool ready = batch.second->submitted;
             for (auto [queue, batch_fence] : batch.second->fences)
             {
                 if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
