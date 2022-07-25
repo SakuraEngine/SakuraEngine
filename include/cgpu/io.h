@@ -5,6 +5,7 @@
 typedef struct skr_vram_buffer_io_t {
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
+    CGPUDStorageQueueId dstorage_queue;
     CGPUQueueId owner_queue;
     CGPUSemaphoreId opt_semaphore;
     // CGPU Resource Desc

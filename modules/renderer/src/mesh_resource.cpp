@@ -292,8 +292,8 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
         skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_RAM_LOADING);
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)&callbackData;
-    
     callbackData.gltfRequest = gltfRequest;
+    // TODO: replace this with newer VFS API
     auto gltfPath = ghc::filesystem::path(gltfRequest->vfs_override->mount_dir) / path;
     callbackData.u8Path = gltfPath.u8string().c_str();
     ioService->request(gltfRequest->vfs_override, &ramIO, &gltfRequest->ioRequest);

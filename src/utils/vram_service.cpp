@@ -39,10 +39,29 @@ public:
         skr_vram_buffer_request_t* buffer_request;
         CGPUUploadTask* upload_task;
     };
+
+    struct CGPUDStorageTask {
+        CGPUDStorageQueueId storage_queue = nullptr;
+        CGPUBufferId dst_buffer = nullptr;
+        CGPUDStorageFileHandle ds_file = nullptr;
+        bool finished = false;
+    };
+    struct DStorageBufferTask
+    {
+        skr_vram_buffer_io_t buffer_io;
+        skr_vram_buffer_request_t* buffer_request;
+        CGPUDStorageTask* dstorage_task;
+    };
+
     struct Task : public TaskBase {
         eastl::string path;
-        eastl::variant<BufferTask> resource_task;
+        eastl::variant<BufferTask, DStorageBufferTask> resource_task;
         EVramTaskStep step;
+        uint64_t batch_id;
+        bool isDStorage() const
+        {
+            return eastl::get_if<DStorageBufferTask>(&resource_task);
+        }
     };
     ~VRAMServiceImpl() SKR_NOEXCEPT = default;
     VRAMServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
@@ -73,6 +92,11 @@ public:
     void tryUploadBufferResource(Task& task) SKR_NOEXCEPT;
     // upload resource
 
+    // dstorage resource
+    void dstorageResource(Task& task) SKR_NOEXCEPT;
+    void tryDStorageBufferResource(Task& task) SKR_NOEXCEPT;
+    // dstorage resource
+
     // status check
     bool vramIOFinished(Task& task) SKR_NOEXCEPT;
     // status check
@@ -80,14 +104,38 @@ public:
     // cgpu helpers
     CGPUUploadTask* allocateCGPUUploadTask(CGPUDeviceId, CGPUQueueId, CGPUSemaphoreId) SKR_NOEXCEPT; 
     void freeCGPUUploadTask(CGPUUploadTask* task) SKR_NOEXCEPT; 
+    CGPUDStorageTask* allocateCGPUDStorageTask(CGPUDeviceId, CGPUDStorageQueueId, CGPUDStorageFileHandle) SKR_NOEXCEPT; 
+    void freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_NOEXCEPT; 
     // cgpu helpers
 
     const eastl::string name;
     // task containers
     TaskContainer<Task> tasks;
-    AsyncThreadedService threaded_service;
+    struct TaskBatch
+    {
+        eastl::vector<Task> tasks;
+        CGPUFenceId batch_fence;
+        uint64_t id;
+    };
+    eastl::vector_map<uint64_t, TaskBatch*> task_batch_queue;
+    struct AsyncThreadBatchService : public AsyncThreadedService
+    {
+        AsyncThreadBatchService(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
+            : AsyncThreadedService(sleep_time, lockless)
+        {
+
+        }
+        virtual void sleep_() SKR_NOEXCEPT override
+        {
+            AsyncThreadedService::sleep_();
+            batch_id++;
+        }
+        uint64_t batch_id = 0;
+    };
+    AsyncThreadBatchService threaded_service;
     // CGPU Objects
     eastl::vector<CGPUUploadTask*> resource_uploads;
+    eastl::vector<CGPUDStorageTask*> dstorage_uploads;
 };
 
 // create resource
@@ -121,6 +169,31 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
         else if (buffer_task->buffer_io.path)
         {
             SKR_UNIMPLEMENTED_FUNCTION();
+        }
+    }
+    if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
+    {
+        SKR_ASSERT( (ds_buffer_task->buffer_io.path) && "buffer_io.path must be set");
+        if (ds_buffer_task->buffer_io.path)
+        {
+            const auto& buffer_io = ds_buffer_task->buffer_io;
+            auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage_queue, task.path.c_str());
+            ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage_queue, ds_file);
+            CGPUDStorageFileInfo finfo = {};
+            cgpu_dstorage_query_file_info(ds_buffer_task->dstorage_task->storage_queue, ds_buffer_task->dstorage_task->ds_file, &finfo);
+            auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
+            buffer_desc.size = finfo.file_size;
+            buffer_desc.name = buffer_io.buffer_name;
+            buffer_desc.descriptors = buffer_io.resource_types;
+            buffer_desc.memory_usage = buffer_io.memory_usage;
+            buffer_desc.format = buffer_io.format;
+            buffer_desc.flags = buffer_io.flags;
+            buffer_desc.start_state = buffer_io.start_state;
+            buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
+            buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
+            auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
+            // return resource object
+            ds_buffer_task->buffer_request->out_buffer = buffer;
         }
     }
 }
@@ -196,6 +269,26 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
 }
 // upload resource
 
+
+// dstorage resource
+void skr::io::VRAMServiceImpl::dstorageResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+{
+    tryDStorageBufferResource(task);
+}
+
+void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+{
+    if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
+    {
+        SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
+
+        const auto& buffer_io = ds_buffer_task->buffer_io;
+        const auto& buffer_request = ds_buffer_task->buffer_request;
+
+    }
+}
+// dstorage resource
+
 // status check
 bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
 {
@@ -208,6 +301,10 @@ bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& ta
             buffer_task->upload_task->finished = true;
             return true;
         }
+    }
+    if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
+    {
+        return true;
     }
     return false;
 }
@@ -244,12 +341,35 @@ void skr::io::VRAMServiceImpl::freeCGPUUploadTask(skr::io::VRAMServiceImpl::CGPU
     cgpu_free_fence(upload->fence);
     SkrDelete(upload);
 }
+
+skr::io::VRAMServiceImpl::CGPUDStorageTask* skr::io::VRAMServiceImpl::allocateCGPUDStorageTask(CGPUDeviceId device, CGPUDStorageQueueId storage_queue, CGPUDStorageFileHandle file) SKR_NOEXCEPT
+{
+    auto dstorage = SkrNew<skr::io::VRAMServiceImpl::CGPUDStorageTask>();
+    dstorage->storage_queue = storage_queue;
+    dstorage->ds_file = file;
+    return dstorage;
+}
+
+void skr::io::VRAMServiceImpl::freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_NOEXCEPT
+{
+    SkrDelete(task);
+}
 // cgpu helpers
 
 void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 {
     // 1.visit task
     service->tasks.update_(&service->threaded_service);
+    /*
+    auto batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
+    batch->id = service->threaded_service.batch_id;
+    while (auto iter = service->tasks.peek_())
+    {
+        if (!iter.has_value()) break;
+        batch->tasks.emplace_back(iter.value());
+    }
+    service->task_batch_queue[batch->id] = batch;
+    */
     auto foreach_task = [service](auto& task)
     {
         const auto vramIOStep = task.step;
@@ -261,9 +381,18 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 task.step = kStepResourceCreated;
                 break;
             case kStepResourceCreated: // start uploading
-                task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
-                service->uploadResource(task);
-                task.step = kStepUploading;
+                if (task.isDStorage())
+                {
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                    service->dstorageResource(task);
+                    task.step = kStepDirectStorage;
+                }
+                else
+                {
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                    service->uploadResource(task);
+                    task.step = kStepUploading;
+                }
                 break;
             case kStepUploading:
                 if (service->vramIOFinished(task))
@@ -274,6 +403,13 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 else task.step = kStepUploading; // continue uploading
                 break;
             case kStepDirectStorage:
+                if (service->vramIOFinished(task))
+                {
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+                    task.step = kStepFinished;
+                }
+                else task.step = kStepDirectStorage; // continue uploading
+                break;
             case kStepResourceBarrier:
                 SKR_UNIMPLEMENTED_FUNCTION();
             case kStepFinished:
@@ -331,13 +467,21 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* info, skr_asy
         io_task.callbacks[i] = info->callbacks[i];
         io_task.callback_datas[i] = info->callback_datas[i];
     }
-
     io_task.path = info->path;
-    io_task.resource_task = make_zeroed<BufferTask>();
-    auto&& buffer_task = eastl::get<BufferTask>(io_task.resource_task);
-    buffer_task.buffer_io = *info;
-    buffer_task.buffer_request = buffer_request;
-
+    if (info->dstorage_queue)
+    {
+        io_task.resource_task = make_zeroed<DStorageBufferTask>();
+        auto&& ds_buffer_task = eastl::get<DStorageBufferTask>(io_task.resource_task);
+        ds_buffer_task.buffer_io = *info;
+        ds_buffer_task.buffer_request = buffer_request;
+    }
+    else
+    {
+        io_task.resource_task = make_zeroed<BufferTask>();
+        auto&& buffer_task = eastl::get<BufferTask>(io_task.resource_task);
+        buffer_task.buffer_io = *info;
+        buffer_task.buffer_request = buffer_request;
+    }
     tasks.enqueue_(io_task, threaded_service.criticalTaskCount, name.c_str());
     threaded_service.request_();
 }
