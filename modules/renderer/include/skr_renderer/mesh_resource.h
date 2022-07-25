@@ -89,6 +89,16 @@ typedef struct skr_gltf_ram_io_request_t {
     skr_async_io_request_t ioRequest;
     SAtomic32 gltf_status;
     skr_mesh_resource_id mesh_resource;
+#ifdef __cplusplus
+    bool is_ready() const SKR_NOEXCEPT
+    {
+        return get_status() == SKR_ASYNC_IO_STATUS_OK;
+    }
+    SkrAsyncIOStatus get_status() const SKR_NOEXCEPT
+    {
+        return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&gltf_status);
+    }
+#endif
 } skr_gltf_ram_io_request_t;
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
