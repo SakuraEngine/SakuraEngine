@@ -112,6 +112,7 @@ public:
     struct TaskBatch
     {
         eastl::vector<Task> tasks;
+        eastl::vector<CGPUBufferBarrier> buffer_barriers;
         eastl::vector_map<CGPUQueueId, CGPUFenceId> fences;
         eastl::vector_map<CGPUQueueId, CGPUCommandPoolId> cmd_pools;
         eastl::vector_map<CGPUQueueId, CGPUCommandBufferId> cmds;
@@ -162,6 +163,11 @@ public:
             }
         }
     };
+    void foreach_batch(const eastl::function<void(eastl::pair<uint64_t, TaskBatch*>&)>& func) SKR_NOEXCEPT
+    {
+        eastl::for_each(upload_batch_queue.begin(), upload_batch_queue.end(), func);
+        eastl::for_each(dstorage_batch_queue.begin(), dstorage_batch_queue.end(), func);
+    }
     eastl::vector_map<uint64_t, TaskBatch*> upload_batch_queue;
     eastl::vector_map<uint64_t, TaskBatch*> dstorage_batch_queue;
     struct AsyncThreadBatchService : public AsyncThreadedService
@@ -214,7 +220,7 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
         }
         else if (buffer_task->buffer_io.path)
         {
-            SKR_UNIMPLEMENTED_FUNCTION();
+            SKR_UNREACHABLE_CODE();
         }
     }
     if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
@@ -240,6 +246,10 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
             // return resource object
             ds_buffer_task->buffer_request->out_buffer = buffer;
+        }
+        else 
+        {
+            SKR_UNREACHABLE_CODE();
         }
     }
 }
@@ -293,10 +303,7 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
             buffer_barrier.queue_type = buffer_io.transfer_queue->type;
         }
         
-        auto barrier = make_zeroed<CGPUResourceBarrierDescriptor>();
-        barrier.buffer_barriers = &buffer_barrier;
-        barrier.buffer_barriers_count = 1;
-        cgpu_cmd_resource_barrier(cmd, &barrier);
+        task.task_batch->buffer_barriers.emplace_back(buffer_barrier);
 
         buffer_task->upload_task = upload;
         resource_uploads.emplace_back(upload);
@@ -376,157 +383,168 @@ void skr::io::VRAMServiceImpl::freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_
 
 void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 {
+    // 0.update task 
+    {
+        service->tasks.update_(&service->threaded_service);
+    }
     // 1.visit task
-    service->tasks.update_(&service->threaded_service);
-    auto upload_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
-    auto dstorage_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
-    upload_batch->id = service->threaded_service.batch_id;
-    dstorage_batch->id = service->threaded_service.batch_id;
-    while (auto iter = service->tasks.peek_())
     {
-        if (!iter.has_value()) break;
-        if (iter.value().isDStorage())
-        {
-            dstorage_batch->tasks.emplace_back(iter.value()).task_batch = dstorage_batch;
-        }
-        else
-        {
-            upload_batch->tasks.emplace_back(iter.value()).task_batch = upload_batch;
-        }
-    }
-    if (!upload_batch->tasks.empty())
-    {
-        service->upload_batch_queue[upload_batch->id] = upload_batch;
-    }
-    if (!dstorage_batch->tasks.empty())
-        service->dstorage_batch_queue[upload_batch->id] = dstorage_batch;
-    auto foreach_task = [service](auto& task)
-    {
-        const auto vramIOStep = task.step;
-        switch (vramIOStep)
-        {
-            case kStepNone: // start create resource
-                task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
-                service->createResource(task);
-                task.step = kStepResourceCreated;
-                break;
-            case kStepResourceCreated: // start uploading
-                if (task.isDStorage())
-                {
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
-                    service->dstorageResource(task);
-                    task.step = kStepDirectStorage;
-                }
-                else
-                {
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
-                    service->uploadResource(task);
-                    task.step = kStepUploading;
-                }
-                break;
-            case kStepUploading:
-                if (service->vramIOFinished(task))
-                {
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
-                    task.step = kStepFinished;
-                }
-                else task.step = kStepUploading; // continue uploading
-                break;
-            case kStepDirectStorage:
-                if (service->vramIOFinished(task))
-                {
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
-                    task.step = kStepFinished;
-                }
-                else task.step = kStepDirectStorage; // continue uploading
-                break;
-            case kStepResourceBarrier:
-                SKR_UNIMPLEMENTED_FUNCTION();
-            case kStepFinished:
-                return;
-        }
-    };
-    for (auto [batch_id, batch] : service->upload_batch_queue)
-    {
-        auto earliest_step = kStepResourceCreated;
-        auto latest_step = kStepResourceCreated;
-        for (auto& task : batch->tasks)
-        {
-            foreach_task(task);
-            latest_step = eastl::max(latest_step, task.step);
-            earliest_step = eastl::min(latest_step, task.step);
-        }
-        if (latest_step == kStepUploading && earliest_step == kStepUploading && !batch->submitted)
-        {
-            for (auto&& [queue, cmd] : batch->cmds)
-            {
-                cgpu_cmd_end(cmd);
-                CGPUQueueSubmitDescriptor submit_desc = {};
-                submit_desc.cmds = &cmd;
-                submit_desc.cmds_count = 1;
-                // TODO: Additional semaphores
-                submit_desc.signal_semaphore_count = 0;
-                submit_desc.signal_semaphores = nullptr;
-                submit_desc.signal_fence = batch->get_fence(queue);
-                cgpu_submit_queue(queue, &submit_desc);
-            }
-        }
-    }
-    for (auto [batch_id, batch] : service->dstorage_batch_queue)
-        for (auto& task : batch->tasks)
-            foreach_task(task);
-    // 2.sweep task batches
-    eastl::for_each(service->upload_batch_queue.begin(), service->upload_batch_queue.end(),
-        [](auto& batch){
-            bool ready = batch.second->submitted;
-            for (auto [queue, batch_fence] : batch.second->fences)
-            {
-                if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
-            }
-            if (ready)
-            {
-                SkrDelete(batch.second);
-                batch.second = nullptr;
-            }
-        });
-    service->upload_batch_queue.erase(
-    eastl::remove_if(service->upload_batch_queue.begin(), service->upload_batch_queue.end(),
-        [](auto& batch){
-            return batch.second == nullptr;
-        }), service->upload_batch_queue.end());
+        ZoneScopedN("ioVRAMServiceWork");
 
-    eastl::for_each(service->dstorage_batch_queue.begin(), service->dstorage_batch_queue.end(),
-        [](auto& batch){
-            bool ready = batch.second->submitted;
-            for (auto [queue, batch_fence] : batch.second->fences)
+        auto upload_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
+        auto dstorage_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
+        upload_batch->id = service->threaded_service.batch_id;
+        dstorage_batch->id = service->threaded_service.batch_id;
+        while (auto iter = service->tasks.peek_())
+        {
+            if (!iter.has_value()) break;
+            if (iter.value().isDStorage())
             {
-                if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
+                dstorage_batch->tasks.emplace_back(iter.value()).task_batch = dstorage_batch;
             }
-            if (ready)
+            else
             {
-                SkrDelete(batch.second);
-                batch.second = nullptr;
+                upload_batch->tasks.emplace_back(iter.value()).task_batch = upload_batch;
             }
-        });
-    service->dstorage_batch_queue.erase(
-    eastl::remove_if(service->dstorage_batch_queue.begin(), service->dstorage_batch_queue.end(),
-        [](auto& batch){
-            return batch.second == nullptr;
-        }), service->dstorage_batch_queue.end());
-    // 3.sweep upload tasks
-    eastl::for_each(service->resource_uploads.begin(), service->resource_uploads.end(),
-        [service](auto& upload){
-            if (upload->finished)
+        }
+        if (!upload_batch->tasks.empty())
+        {
+            service->upload_batch_queue[upload_batch->id] = upload_batch;
+        }
+        if (!dstorage_batch->tasks.empty())
+            service->dstorage_batch_queue[upload_batch->id] = dstorage_batch;
+        auto foreach_task = [service](auto& task)
+        {
+            const auto vramIOStep = task.step;
+            switch (vramIOStep)
             {
-                service->freeCGPUUploadTask(upload);
-                upload = nullptr;
+                case kStepNone: // start create resource
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
+                    service->createResource(task);
+                    task.step = kStepResourceCreated;
+                    break;
+                case kStepResourceCreated: // start uploading
+                    if (task.isDStorage())
+                    {
+                        ZoneScopedN("Prepare-DStorage");
+
+                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                        service->dstorageResource(task);
+                        task.step = kStepDirectStorage;
+                    }
+                    else
+                    {
+                        ZoneScopedN("Prepare-CpyCmd");
+
+                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                        service->uploadResource(task);
+                        task.step = kStepUploading;
+                    }
+                    break;
+                case kStepUploading:
+                    if (service->vramIOFinished(task))
+                    {
+                        ZoneScopedN("CpyQueue-SignalOK");
+
+                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+                        task.step = kStepFinished;
+                    }
+                    else task.step = kStepUploading; // continue uploading
+                    break;
+                case kStepDirectStorage:
+                    if (service->vramIOFinished(task))
+                    {
+                        ZoneScopedN("DStorage-SignalOK");
+
+                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+                        task.step = kStepFinished;
+                    }
+                    else task.step = kStepDirectStorage; // continue uploading
+                    break;
+                case kStepResourceBarrier:
+                    SKR_UNIMPLEMENTED_FUNCTION();
+                case kStepFinished:
+                    return;
             }
-        });
-    service->resource_uploads.erase(
-        eastl::remove_if(service->resource_uploads.begin(), service->resource_uploads.end(),
-        [](auto& upload){
-            return upload == nullptr;
-        }), service->resource_uploads.end());
+        };
+        for (auto [batch_id, batch] : service->upload_batch_queue)
+        {
+            auto earliest_step = kStepResourceCreated;
+            auto latest_step = kStepResourceCreated;
+            for (auto& task : batch->tasks)
+            {
+                foreach_task(task);
+                latest_step = eastl::max(latest_step, task.step);
+                earliest_step = eastl::min(latest_step, task.step);
+            }
+            if (latest_step == kStepUploading && earliest_step == kStepUploading && !batch->submitted)
+            {
+                for (auto&& [queue, cmd] : batch->cmds)
+                {
+                    auto barrier = make_zeroed<CGPUResourceBarrierDescriptor>();
+                    barrier.buffer_barriers = batch->buffer_barriers.data();
+                    barrier.buffer_barriers_count = batch->buffer_barriers.size();
+                    cgpu_cmd_resource_barrier(cmd, &barrier);
+
+                    cgpu_cmd_end(cmd);
+                    CGPUQueueSubmitDescriptor submit_desc = {};
+                    submit_desc.cmds = &cmd;
+                    submit_desc.cmds_count = 1;
+                    // TODO: Additional semaphores
+                    submit_desc.signal_semaphore_count = 0;
+                    submit_desc.signal_semaphores = nullptr;
+                    submit_desc.signal_fence = batch->get_fence(queue);
+                    cgpu_submit_queue(queue, &submit_desc);
+                    batch->submitted = true;
+                }
+            }
+        }
+        for (auto [batch_id, batch] : service->dstorage_batch_queue)
+            for (auto& task : batch->tasks)
+                foreach_task(task);
+    }
+    // 2.sweep up
+    {
+        ZoneScopedN("ioVRAMServiceSweep");
+    
+        // 2.1 sweep task batches
+        service->foreach_batch([](auto& batch){
+                bool ready = batch.second->submitted;
+                for (auto [queue, batch_fence] : batch.second->fences)
+                {
+                    if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
+                }
+                if (ready)
+                {
+                    SkrDelete(batch.second);
+                    batch.second = nullptr;
+                }
+            });
+        service->upload_batch_queue.erase(
+        eastl::remove_if(service->upload_batch_queue.begin(), service->upload_batch_queue.end(),
+            [](auto& batch){
+                return batch.second == nullptr;
+            }), service->upload_batch_queue.end());
+        service->dstorage_batch_queue.erase(
+        eastl::remove_if(service->dstorage_batch_queue.begin(), service->dstorage_batch_queue.end(),
+            [](auto& batch){
+                return batch.second == nullptr;
+            }), service->dstorage_batch_queue.end());
+        // 2.2 sweep upload tasks
+        eastl::for_each(service->resource_uploads.begin(), service->resource_uploads.end(),
+            [service](auto& upload){
+                if (upload->finished)
+                {
+                    service->freeCGPUUploadTask(upload);
+                    upload = nullptr;
+                }
+            });
+        service->resource_uploads.erase(
+            eastl::remove_if(service->resource_uploads.begin(), service->resource_uploads.end(),
+            [](auto& upload){
+                return upload == nullptr;
+            }), service->resource_uploads.end());
+    }
 }
 
 void __ioThreadTask_VRAM(void* arg)
@@ -548,7 +566,7 @@ void __ioThreadTask_VRAM(void* arg)
             }
         }
         {
-            ZoneScopedN("ioVRAMServiceWork");
+            ZoneScopedN("ioVRAMServiceWake");
             __ioThreadTask_VRAM_execute(service);
         }
     }
