@@ -57,7 +57,7 @@ struct CGPUGraphicsPipeline;
 struct CGPUComputePipeline;
 struct CGPUShaderReflection;
 struct CGPUPipelineReflection;
-struct CGPUDStroageQueueDescriptor;
+struct CGPUDStorageQueueDescriptor;
 
 typedef uint32_t CGPUQueueIndex;
 #if defined(SKR_PLATFORM_WA32)
@@ -427,8 +427,8 @@ typedef struct CGPUDStorageBufferIODescriptor {
 } CGPUDStorageBufferIODescriptor;
 RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
 typedef ECGPUDStorageAvailability (*CGPUProcQueryDStorageAvailability)(CGPUDeviceId device);
-RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStroageQueueDescriptor* desc);
-typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const struct CGPUDStroageQueueDescriptor* desc);
+RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
+typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
 RUNTIME_API CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path);
 typedef CGPUDStorageFileHandle (*CGPUProcDStorageOpenFile)(CGPUDStorageQueueId queue, const char* abs_path);
 RUNTIME_API void cgpu_dstorage_query_file_info(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
@@ -569,7 +569,7 @@ typedef struct CGPUProcTable {
     const CGPUProcCmdSetMarker cmd_set_marker;
     const CGPUProcCmdEndEvent cmd_end_event;
 
-    // DStroage
+    // DStorage
     const CGPUProcQueryDStorageAvailability query_dstorage_availability;
     const CGPUProcCreateDStorageQueue create_dstorage_queue;
     const CGPUProcDStorageOpenFile dstorage_open_file;
@@ -872,12 +872,12 @@ typedef struct CGPUInstanceDescriptor {
 } CGPUInstanceDescriptor;
 
 #define CGPU_DSTORAGE_MAX_QUEUE_CAPACITY 0x2000
-typedef struct CGPUDStroageQueueDescriptor {
+typedef struct CGPUDStorageQueueDescriptor {
     ECGPUDStorageSource source;
     uint16_t capacity;
     ECGPUDStoragePriority priority;
     const char* name;
-} CGPUDStroageQueueDescriptor;
+} CGPUDStorageQueueDescriptor;
 
 typedef struct CGPUQueueGroupDescriptor {
     ECGPUQueueType queue_type;

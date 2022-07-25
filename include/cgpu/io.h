@@ -22,7 +22,7 @@ typedef struct skr_vram_buffer_io_t {
     /// Preferred actual location
     /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
     bool prefer_on_host;
-    // TODO: Direct Storage ?
+    // Direct Storage
     const char8_t* path;
     // Data bytes
     uint8_t* bytes;

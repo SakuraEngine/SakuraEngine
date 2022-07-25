@@ -73,8 +73,8 @@ protected:
 
 TEST_P(ResourceCreation, CreateDStorageQueue)
 {
-    DECLARE_ZERO(CGPUDStroageQueueDescriptor, desc)
-    desc.name = "DStroageQueue";
+    DECLARE_ZERO(CGPUDStorageQueueDescriptor, desc)
+    desc.name = "DStorageQueue";
     desc.capacity = 1024;
     desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
     desc.source = CGPU_DSTORAGE_SOURCE_FILE;
