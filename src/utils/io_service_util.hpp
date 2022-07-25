@@ -109,8 +109,8 @@ public:
     // service settings & states
     SAtomic32 _running_status /*SkrAsyncIOServiceStatus*/;
     // can be simply exchanged by atomic vars to support runtime mode modify
-    SkrIOServiceSortMethod sortMethod;
-    SkrAsyncIOServiceSleepMode sleepMode;
+    SkrIOServiceSortMethod sortMethod = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
+    SkrAsyncIOServiceSleepMode sleepMode = SKR_IO_SERVICE_SLEEP_MODE_COND_VAR;
 };
 
 struct TaskBase
@@ -352,8 +352,7 @@ public:
         const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
         {
             service->setRunningStatus(SKR_IO_SERVICE_STATUS_SLEEPING);
-            if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_SLEEP &&
-                sleepTimeVal != 0)
+            if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_SLEEP && sleepTimeVal != 0)
             {
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
                 sleepTime = eastl::max(sleepTimeVal, 1u);
@@ -362,7 +361,7 @@ public:
                 skr_thread_sleep(sleepTime);
                 TracyCZoneEnd(sleepZone);
             }
-            if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
+            else if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
             {
                 // use condition variable to sleep
                 TracyCZone(sleepZone, 1);
@@ -370,6 +369,10 @@ public:
                 SMutexLock sleepLock(service->sleepMutex);
                 skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);
                 TracyCZoneEnd(sleepZone);
+            }
+            else
+            {
+                SKR_UNREACHABLE_CODE();
             }
         }
     }

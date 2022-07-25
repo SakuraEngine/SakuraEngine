@@ -30,7 +30,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     {
         auto device = skr_renderer_get_cgpu_device();
         auto dstorage_cap = cgpu_query_dstorage_availability(skr_renderer_get_cgpu_device());
-        const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
+        const bool supportDirectStorage = false;(dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
         if (supportDirectStorage)
         {
             CGPUDStroageQueueDescriptor queue_desc = {};
