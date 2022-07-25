@@ -281,7 +281,7 @@ struct TaskContainer
             }
             back.setTaskStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
             tasks.emplace_back(back);
-            skr_atomic32_store_relaxed(&back.request->request_cancel, 0);
+            skr_atomic32_store_release(&back.request->request_cancel, 0);
             TracyCZoneEnd(requestZone);
         }
         else
@@ -290,7 +290,7 @@ struct TaskContainer
             TracyCZoneName(requestZone, "ioRequest(Lockless)", strlen("ioRequest(Lockless)"));
             back.setTaskStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
             task_requests.enqueue(back);
-            skr_atomic32_store_relaxed(&back.request->request_cancel, 0);
+            skr_atomic32_store_release(&back.request->request_cancel, 0);
             TracyCZoneEnd(requestZone);
         }
     }
@@ -319,7 +319,7 @@ struct TaskContainer
 
     void defer_cancel_(skr_async_io_request_t* request) 
     {
-        skr_atomic32_store_relaxed(&request->request_cancel, 1);
+        skr_atomic32_store_release(&request->request_cancel, 1);
     }
 
     const bool isLockless = false;

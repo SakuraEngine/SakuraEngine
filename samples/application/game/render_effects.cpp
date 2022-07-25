@@ -29,7 +29,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     void on_register(ISkrRenderer* renderer) override
     {
         auto device = skr_renderer_get_cgpu_device();
-        auto dstorage_cap = cgpu_query_dstorage_availability(skr_renderer_get_cgpu_device());
+        auto dstorage_cap = cgpu_query_dstorage_availability(device);
         const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
         if (supportDirectStorage)
         {
@@ -45,7 +45,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         gltf_io_request.vfs_override = resource_vfs;
         gltf_io_request.load_bin_to_memory = !supportDirectStorage;
         skr_mesh_resource_create_from_gltf(ram_service, "scene.gltf", &gltf_io_request);
-        while (!(skr_atomic32_load_relaxed(&gltf_io_request.gltf_status) == SKR_ASYNC_IO_STATUS_OK))
+        while (!gltf_io_request.is_ready())
         {
 
         }
@@ -56,7 +56,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         skr_vram_buffer_request_t buffer_request = {};
         auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
         {
-            mesh_buffer_io.device = skr_renderer_get_cgpu_device();
+            mesh_buffer_io.device = device;
             mesh_buffer_io.dstorage_queue = mesh_bin_dstorage_queue;
             mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
             mesh_buffer_io.owner_queue = skr_renderer_get_gfx_queue();

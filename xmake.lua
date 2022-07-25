@@ -11,6 +11,7 @@ include_dir_list = {"include"}
 source_list = {}
 packages_list = {}
 deps_list = {}
+defs_list = {}
 links_list = {}
 generator_list = {}
 
@@ -35,6 +36,7 @@ end
 
 target("SkrRT") 
     add_deps(deps_list)
+    add_defines(defs_list, {public = true})
     add_rules("skr.module", {api = "RUNTIME"})
     add_packages(packages_list, {public = true})
     add_includedirs(include_dir_list, {public = true})
