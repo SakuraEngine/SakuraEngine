@@ -28,6 +28,7 @@ void cgpu_render_encoder_set_shading_rate_d3d12(CGPURenderPassEncoderId encoder,
 #endif
 
 #include "dstorage.h"
+#include "EASTL/vector_map.h"
 
 struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     IDStorageQueue* pQueue;
@@ -35,20 +36,27 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     SMutex request_mutex;
 };
 
-thread_local static IDStorageFactory* factory = nullptr;
+thread_local static eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
 ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device)
 {
-    if (!factory)
+    auto res = availability_map.find(device);
+    if (res == availability_map.end())
     {
-        if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&factory))))
+        IDStorageFactory* pFactory = nullptr;
+        if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
         {
-            return CGPU_DSTORAGE_AVAILABILITY_NONE;
+            availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_NONE;
+        }
+        else
+        {
+            availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_HARDWARE;
+            pFactory->Release();
         }
     }
-    return CGPU_DSTORAGE_AVAILABILITY_HARDWARE;
+    return availability_map[device];
 }
 
-CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStroageQueueDescriptor* desc)
+CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStorageQueueDescriptor* desc)
 {
     CGPUDStorageQueueD3D12* Q = SkrNew<CGPUDStorageQueueD3D12>();
     auto Device = (CGPUDevice_D3D12*)device;
@@ -58,22 +66,20 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
     queueDesc.SourceType = (DSTORAGE_REQUEST_SOURCE_TYPE)desc->source;
     queueDesc.Name = desc->name;
     queueDesc.Device = Device->pDxDevice;
-    if (!factory)
+    IDStorageFactory* pFactory = nullptr;
+    if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
     {
-        if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&factory))))
-        {
-            SKR_LOG_ERROR("Failed to get DStorage factory!");
-            SkrDelete(Q);
-            return nullptr;
-        }
+        SKR_LOG_ERROR("Failed to get DStorage factory!");
+        SkrDelete(Q);
+        return nullptr;
     }
-    if (!SUCCEEDED(factory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
+    if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
         SKR_LOG_ERROR("Failed to create DStorage queue!");
         SkrDelete(Q);
         return nullptr;
     }
-    Q->pFactory = factory;
+    Q->pFactory = pFactory;
     Q->device = device;
     return Q;
 }
@@ -116,18 +122,18 @@ void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const
         request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
         request.Source.File.Source = (IDStorageFile*)desc->source_file.file;
         request.Source.File.Offset = desc->source_file.offset;
-        request.Source.File.Size = desc->source_file.size;
+        request.Source.File.Size = (uint32_t)desc->source_file.size;
     }
     else if (desc->source_type == CGPU_DSTORAGE_SOURCE_MEMORY)
     {
         request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_MEMORY;
         request.Source.Memory.Source = desc->source_memory.bytes;
-        request.Source.Memory.Size = desc->source_memory.bytes_size;
+        request.Source.Memory.Size = (uint32_t)desc->source_memory.bytes_size;
     }
     request.Destination.Buffer.Resource = pBuffer->pDxResource;
     request.Destination.Buffer.Offset = desc->offset;
-    request.Destination.Buffer.Size = desc->size;
-    request.UncompressedSize = desc->size;
+    request.Destination.Buffer.Size = (uint32_t)desc->size;
+    request.UncompressedSize = (uint32_t)desc->size;
     Q->pQueue->EnqueueRequest(&request);
     if (desc->fence)
     {
@@ -157,6 +163,7 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 
     if (Q->pQueue)
     {
+        Q->pFactory->Release();
         Q->pQueue->Release();
     }
 

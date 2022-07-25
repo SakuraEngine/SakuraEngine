@@ -30,10 +30,10 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     {
         auto device = skr_renderer_get_cgpu_device();
         auto dstorage_cap = cgpu_query_dstorage_availability(skr_renderer_get_cgpu_device());
-        const bool supportDirectStorage = false;(dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
+        const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
         if (supportDirectStorage)
         {
-            CGPUDStroageQueueDescriptor queue_desc = {};
+            CGPUDStorageQueueDescriptor queue_desc = {};
             queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
             queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
             queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
@@ -81,6 +81,8 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 
     void on_unregister(ISkrRenderer* renderer) override
     {
+        if(mesh_bin_dstorage_queue)
+            cgpu_free_dstorage_queue(mesh_bin_dstorage_queue);
     }
 
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;

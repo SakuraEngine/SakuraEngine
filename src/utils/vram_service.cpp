@@ -28,7 +28,6 @@ public:
         CGPUQueueId queue = nullptr;
         CGPUSemaphoreId semaphore = nullptr;
         CGPUBufferId upload_buffer = nullptr;
-        CGPUBufferId dst_buffer = nullptr;
         CGPUTextureId dst_texture = nullptr;
         bool finished = false;
     };
@@ -40,7 +39,6 @@ public:
 
     struct CGPUDStorageTask {
         CGPUDStorageQueueId storage_queue = nullptr;
-        CGPUBufferId dst_buffer = nullptr;
         CGPUDStorageFileHandle ds_file = nullptr;
         bool finished = false;
     };
@@ -111,14 +109,26 @@ public:
     TaskContainer<Task> tasks;
     struct TaskBatch
     {
+        // Tasks
         eastl::vector<Task> tasks;
+        // Upload Resources
         eastl::vector<CGPUBufferBarrier> buffer_barriers;
         eastl::vector_map<CGPUQueueId, CGPUFenceId> fences;
         eastl::vector_map<CGPUQueueId, CGPUCommandPoolId> cmd_pools;
         eastl::vector_map<CGPUQueueId, CGPUCommandBufferId> cmds;
+        // DStorage Resources
+        eastl::vector_map<CGPUDStorageQueueId, CGPUFenceId> ds_fences;
         bool submitted = false;
         uint64_t id;
 
+        CGPUFenceId get_fence(CGPUDStorageQueueId queue) SKR_NOEXCEPT
+        {
+            auto it = ds_fences.find(queue);
+            if (it != ds_fences.end()) return it->second;
+            auto fence = cgpu_create_fence(queue->device);
+            ds_fences[queue] = fence;
+            return fence;
+        }
         CGPUFenceId get_fence(CGPUQueueId queue) SKR_NOEXCEPT
         {
             auto it = fences.find(queue);
@@ -149,6 +159,10 @@ public:
         }
         ~TaskBatch()
         {
+            for (auto& fence : ds_fences)
+            {
+                cgpu_free_fence(fence.second);
+            }
             for (auto& fence : fences)
             {
                 cgpu_free_fence(fence.second);
@@ -273,7 +287,6 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         eastl::string name = buffer_io.buffer_name;
         name += "-upload";
         upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.size, name.c_str());
-        upload->dst_buffer = buffer_request->out_buffer;
 
         if (buffer_io.bytes)
         {
@@ -306,7 +319,6 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         task.task_batch->buffer_barriers.emplace_back(buffer_barrier);
 
         buffer_task->upload_task = upload;
-        resource_uploads.emplace_back(upload);
     }
 }
 // upload resource
@@ -327,6 +339,24 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
         const auto& buffer_io = ds_buffer_task->buffer_io;
         const auto& buffer_request = ds_buffer_task->buffer_request;
 
+        CGPUDStorageBufferIODescriptor io_desc = {};
+        io_desc.source_type = CGPU_DSTORAGE_SOURCE_FILE;
+        io_desc.source_file.file = ds_buffer_task->dstorage_task->ds_file;
+        io_desc.source_file.offset = 0u;
+        io_desc.source_file.size = buffer_request->out_buffer->size;
+        io_desc.buffer = buffer_request->out_buffer;
+
+        io_desc.offset = buffer_io.offset;
+        io_desc.size = buffer_request->out_buffer->size;
+
+        io_desc.compression = CGPU_DSTORAGE_COMPRESSION_NONE;
+        io_desc.uncompressed_size = io_desc.size;
+
+        io_desc.name = buffer_io.buffer_name;
+        cgpu_dstorage_enqueue_buffer_request(ds_buffer_task->dstorage_task->storage_queue, &io_desc);
+
+        if (auto fence = task.task_batch->get_fence(ds_buffer_task->dstorage_task->storage_queue));
+        else SKR_UNREACHABLE_CODE();
     }
 }
 // dstorage resource
@@ -346,7 +376,12 @@ bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& ta
     }
     if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
     {
-        return true;
+        auto status = cgpu_query_fence_status(task.task_batch->get_fence(ds_buffer_task->dstorage_task->storage_queue));
+        if (status == CGPU_FENCE_STATUS_COMPLETE)
+        {
+            ds_buffer_task->dstorage_task->finished = true;
+            return true;
+        }
     }
     return false;
 }
@@ -358,6 +393,7 @@ skr::io::VRAMServiceImpl::CGPUUploadTask* skr::io::VRAMServiceImpl::allocateCGPU
     auto upload = SkrNew<skr::io::VRAMServiceImpl::CGPUUploadTask>();
     upload->queue = queue;
     upload->semaphore = semaphore;
+    resource_uploads.emplace_back(upload);
     return upload;
 }
 
@@ -372,11 +408,13 @@ skr::io::VRAMServiceImpl::CGPUDStorageTask* skr::io::VRAMServiceImpl::allocateCG
     auto dstorage = SkrNew<skr::io::VRAMServiceImpl::CGPUDStorageTask>();
     dstorage->storage_queue = storage_queue;
     dstorage->ds_file = file;
+    dstorage_uploads.emplace_back(dstorage);
     return dstorage;
 }
 
 void skr::io::VRAMServiceImpl::freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_NOEXCEPT
 {
+    cgpu_dstorage_close_file(task->storage_queue, task->ds_file);
     SkrDelete(task);
 }
 // cgpu helpers
@@ -399,18 +437,12 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         {
             if (!iter.has_value()) break;
             if (iter.value().isDStorage())
-            {
                 dstorage_batch->tasks.emplace_back(iter.value()).task_batch = dstorage_batch;
-            }
             else
-            {
                 upload_batch->tasks.emplace_back(iter.value()).task_batch = upload_batch;
-            }
         }
         if (!upload_batch->tasks.empty())
-        {
             service->upload_batch_queue[upload_batch->id] = upload_batch;
-        }
         if (!dstorage_batch->tasks.empty())
             service->dstorage_batch_queue[upload_batch->id] = dstorage_batch;
         auto foreach_task = [service](auto& task)
@@ -467,6 +499,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                     return;
             }
         };
+        // upload cmds
         for (auto [batch_id, batch] : service->upload_batch_queue)
         {
             auto earliest_step = kStepResourceCreated;
@@ -483,7 +516,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     auto barrier = make_zeroed<CGPUResourceBarrierDescriptor>();
                     barrier.buffer_barriers = batch->buffer_barriers.data();
-                    barrier.buffer_barriers_count = batch->buffer_barriers.size();
+                    barrier.buffer_barriers_count = (uint32_t)batch->buffer_barriers.size();
                     cgpu_cmd_resource_barrier(cmd, &barrier);
 
                     cgpu_cmd_end(cmd);
@@ -499,9 +532,26 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 }
             }
         }
+        // dstorage queue requests
         for (auto [batch_id, batch] : service->dstorage_batch_queue)
+        {
+            auto earliest_step = kStepResourceCreated;
+            auto latest_step = kStepResourceCreated;
             for (auto& task : batch->tasks)
+            {
                 foreach_task(task);
+                latest_step = eastl::max(latest_step, task.step);
+                earliest_step = eastl::min(latest_step, task.step);
+            }
+            if (latest_step == kStepDirectStorage && earliest_step == kStepDirectStorage && !batch->submitted)
+            {
+                for (auto&& [queue, fence] : batch->ds_fences)
+                {
+                    cgpu_dstorage_queue_submit(queue, fence);
+                    batch->submitted = true;
+                }
+            }
+        }
     }
     // 2.sweep up
     {
@@ -511,6 +561,10 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         service->foreach_batch([](auto& batch){
                 bool ready = batch.second->submitted;
                 for (auto [queue, batch_fence] : batch.second->fences)
+                {
+                    if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
+                }
+                for (auto [ds_queue, batch_fence] : batch.second->ds_fences)
                 {
                     if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
                 }
@@ -539,11 +593,25 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                     upload = nullptr;
                 }
             });
-        service->resource_uploads.erase(
+         service->resource_uploads.erase(
             eastl::remove_if(service->resource_uploads.begin(), service->resource_uploads.end(),
             [](auto& upload){
                 return upload == nullptr;
             }), service->resource_uploads.end());
+        // 2.3 sweep dstorage tasks
+        eastl::for_each(service->dstorage_uploads.begin(), service->dstorage_uploads.end(),
+            [service](auto& dstorage){
+                if (dstorage->finished)
+                {
+                    service->freeCGPUDStorageTask(dstorage);
+                    dstorage = nullptr;
+                }
+            });
+        service->dstorage_uploads.erase(
+            eastl::remove_if(service->dstorage_uploads.begin(), service->dstorage_uploads.end(),
+            [](auto& dstorage){
+                return dstorage == nullptr;
+            }), service->dstorage_uploads.end());
     }
 }
 
