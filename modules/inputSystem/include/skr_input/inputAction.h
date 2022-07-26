@@ -58,7 +58,7 @@ public:
         }
     }
 
-    void AddControls(eastl::shared_ptr<ControlsBase<ValueType>> control)
+    void AddControls(const eastl::shared_ptr<ControlsBase<ValueType>>& control)
     {
         _allControls.emplace_back(control);
     }
