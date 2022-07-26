@@ -68,7 +68,7 @@ gainput::InputManager& InputSystem::GetHardwareManager()
     return _hardwareManager;
 }
 
-void InputSystem::AddInputAction(eastl::shared_ptr<InputActionBase> action)
+void InputSystem::AddInputAction(const eastl::shared_ptr<InputActionBase>& action)
 {
     _allAction.emplace_back(action);
     action->Init(_hardwareManager);

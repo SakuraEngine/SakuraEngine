@@ -9,24 +9,24 @@ void InteractionTap_Float::Update(float value, bool IsInit)
     {
         _time = 0.f;
         if(value >= _pressPoint)
-            _state = Started;
+            _state = InteractionState::Started;
         else
-            _state = Waiting;
+            _state = InteractionState::Waiting;
     }
     else 
     {
         switch (_state) 
         {
-            case Waiting :
+            case InteractionState::Waiting :
                 if(value >= _pressPoint)
-                    _state = Started;
+                    _state = InteractionState::Started;
                 break;
-            case Started : 
+            case InteractionState::Started : 
                 if(value < _pressPoint)
-                    _state = Performed;
+                    _state = InteractionState::Performed;
                 break;
-            case Performed : 
-            case Fail : break;
+            case InteractionState::Performed : 
+            case InteractionState::Fail : break;
         }
     }
 }
@@ -35,15 +35,15 @@ void InteractionTap_Float::Tick(float deltaTime)
 {
     switch (_state) 
     {
-        case Waiting : break;
-        case Started : 
+        case InteractionState::Waiting : break;
+        case InteractionState::Started : 
             _time += deltaTime;
             if(_time >= _duration)
-                _state = Fail;
+                _state = InteractionState::Fail;
             break;
-        case Performed : 
-        case Fail : 
-            _state = Waiting;
+        case InteractionState::Performed : 
+        case InteractionState::Fail : 
+            _state = InteractionState::Waiting;
             _time = 0.f;
             break;
     }
@@ -51,7 +51,7 @@ void InteractionTap_Float::Tick(float deltaTime)
 
 bool InteractionTap_Float::IsTriggerByState()
 {
-    return _state == Performed;
+    return _state == InteractionState::Performed;
 }
 
 }

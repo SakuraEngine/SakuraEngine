@@ -4,7 +4,7 @@
 namespace skr::input
 {
 
-enum InteractionState
+enum class InteractionState
 {
     Waiting,    //等待预期输入
     Started,    //开始交互

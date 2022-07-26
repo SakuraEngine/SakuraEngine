@@ -19,7 +19,7 @@ public:
     void SetDisplaySize(int32_t width, int32_t height);
     gainput::InputManager& GetHardwareManager();
 
-    void AddInputAction(eastl::shared_ptr<InputActionBase> action);
+    void AddInputAction(const eastl::shared_ptr<InputActionBase>& action);
 
     bool OnDeviceButtonBool(gainput::DeviceId device, gainput::DeviceButtonId deviceButton, bool oldValue, bool newValue) override;
     bool OnDeviceButtonFloat(gainput::DeviceId device, gainput::DeviceButtonId deviceButton, float oldValue, float newValue) override;

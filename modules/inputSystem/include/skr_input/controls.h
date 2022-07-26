@@ -57,12 +57,12 @@ public:
         return true;
     }
 
-    void AddProcessor(eastl::shared_ptr<ProcessorBase<ValueType>> processor)
+    void AddProcessor(const eastl::shared_ptr<ProcessorBase<ValueType>>& processor)
     {
-        _processors.emplace_back(eastl::move(processor));
+        _processors.emplace_back(processor);
     };
 
-    void RemoveProcessor(eastl::shared_ptr<ProcessorBase<ValueType>> processor)
+    void RemoveProcessor(const eastl::shared_ptr<ProcessorBase<ValueType>>& processor)
     {
         auto it = eastl::find_if(_processors.begin(), _processors.end(), [&](const eastl::shared_ptr<ProcessorBase<ValueType>>& p)
         {
@@ -72,12 +72,12 @@ public:
             _processors.erase(it);
     };
 
-    void AddInteraction(eastl::shared_ptr<InteractionBase<ValueType>> interaction)
+    void AddInteraction(const eastl::shared_ptr<InteractionBase<ValueType>>& interaction)
     {
-        _interactions.emplace_back(eastl::move(interaction));
+        _interactions.emplace_back(interaction);
     };
 
-    void RemoveInteraction(eastl::shared_ptr<InteractionBase<ValueType>> interaction)
+    void RemoveInteraction(const eastl::shared_ptr<InteractionBase<ValueType>>& interaction)
     {
         auto it = eastl::find_if(_interactions.begin(), _interactions.end(), [&](const eastl::shared_ptr<InteractionBase<ValueType>>& i)
         {
@@ -87,9 +87,10 @@ public:
             _interactions.erase(it);
     };
 
-    void AddCondition(Condition&& condition)
+    template<class F>
+    void AddCondition(F&& condition)
     {
-        _conditions.emplace_back(condition);
+        _conditions.emplace_back(std::forward<F>(condition));
     }
 
 protected:
@@ -201,7 +202,7 @@ protected:
             {
                 if(interaction->IsTriggerByState())
                     _events.push_back({interaction.get(), _value});
-                if(interaction->GetState() != Fail)
+                if(interaction->GetState() != InteractionState::Fail)
                     break;
             }
         }
