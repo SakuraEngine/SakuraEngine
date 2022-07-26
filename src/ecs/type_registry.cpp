@@ -203,4 +203,10 @@ void dualT_set_guid_func(guid_func_t func)
 {
     dual::type_registry_t::get().guid_func = func;
 }
+
+void dualT_get_types(dual_type_callback_t callback, void* u)
+{
+    for(auto& pair : dual::type_registry_t::get().name2type)
+        callback(u, pair.second);
+}
 }

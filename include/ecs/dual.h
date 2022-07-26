@@ -218,6 +218,7 @@ typedef void (*dual_view_callback_t)(void* u, dual_chunk_view_t* view);
 typedef void (*dual_group_callback_t)(void* u, dual_group_t* view);
 typedef void (*dual_entity_callback_t)(void* u, dual_entity_t e);
 typedef void (*dual_cast_callback_t)(void* u, dual_chunk_view_t* new_view, dual_chunk_view_t* old_view);
+typedef void (*dual_type_callback_t)(void* u, dual_type_index_t t);
 
 /**
  * @brief register a new component
@@ -254,7 +255,13 @@ RUNTIME_API const dual_type_description_t* dualT_get_desc(dual_type_index_t idx)
  * @param func
  */
 RUNTIME_API void dualT_set_guid_func(guid_func_t func);
-
+/**
+ * @brief get all types registered to dual
+ * 
+ * @param callback 
+ * @param u
+ */
+RUNTIME_API void dualT_get_types(dual_type_callback_t callback, void* u);
 /**
  * @brief create a new storage
  *
