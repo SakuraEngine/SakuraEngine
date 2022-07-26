@@ -1,7 +1,6 @@
 #include "skr_input/controls.h"
 #include "EASTL/internal/copy_help.h"
 #include "gainput/GainputInputDevice.h"
-#include <vcruntime.h>
 
 namespace skr::input
 {

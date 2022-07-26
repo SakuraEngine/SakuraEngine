@@ -1,5 +1,4 @@
-#include "skr_input/inputSystem.h"
-#include <vcruntime.h>
+﻿#include "skr_input/inputSystem.h"
 
 namespace skr::input 
 {

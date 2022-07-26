@@ -1,11 +1,13 @@
-#pragma once
+﻿#pragma once
 #include "SkrInputSystem/skr_inputsystem.configure.h"
 #include "gainput/gainput.h"
 #include "platform/window.h"
 #include <EASTL/vector.h>
 #include "skr_input/inputAction.h"
 
-namespace skr::input 
+namespace skr 
+{
+namespace input
 {
 
 class SKR_INPUTSYSTEM_API InputSystem : public gainput::InputListener
@@ -39,4 +41,5 @@ private:
     eastl::vector<eastl::shared_ptr<InputActionBase>> _allAction;
 };
 
+}
 }
