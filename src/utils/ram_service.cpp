@@ -92,6 +92,8 @@ void __ioThreadTask_RAM(void* arg)
 
 void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, skr_async_io_request_t* async_request) SKR_NOEXCEPT
 {
+    ZoneScopedN("ioRAMRequest");
+
     // try push back new request
     Task back = {};
     back.vfs = vfs;

@@ -6,6 +6,8 @@
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_mesh.h"
 
+#include "tracy/Tracy.hpp"
+
 void setup_render_mesh(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource)
 {
     uint32_t ibv_c = 0;
@@ -54,6 +56,8 @@ void setup_render_mesh(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh
 
 void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, const char* path, skr_render_mesh_request_t* request)
 {
+    ZoneScopedN("ioRAM & VRAM Mesh Request");
+
     struct CallbackData
     {
         skr_render_mesh_request_t* request = nullptr;

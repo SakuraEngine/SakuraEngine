@@ -634,7 +634,7 @@ void __ioThreadTask_VRAM(void* arg)
             }
         }
         {
-            ZoneScopedN("ioVRAMServiceWake");
+            ZoneScopedN("ioVRAMServiceUpdate");
             __ioThreadTask_VRAM_execute(service);
         }
     }
