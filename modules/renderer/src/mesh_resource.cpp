@@ -228,47 +228,32 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                             mesh_section.rotation = { node_->rotation[0], node_->rotation[1], node_->rotation[2], node_->rotation[3] };
                         if (node_->mesh != nullptr)
                         {
+                            // per primitive
                             for (uint32_t j = 0, index_cursor = 0; j < node_->mesh->primitives_count; j++)
                             {
                                 auto& prim = resource->primitives.emplace_back();
                                 const auto primitive_ = node_->mesh->primitives + j;
-                                prim.index_offset = (uint32_t)primitive_->indices->offset;
-                                prim.index_count = (uint32_t)primitive_->indices->count;
-                                prim.first_index = index_cursor;
+                                // ib
+                                prim.index_buffer.buffer_index = primitive_->indices->buffer_view->buffer - gltf_data_->buffers;
+                                prim.index_buffer.index_offset = (uint32_t)primitive_->indices->offset + primitive_->indices->buffer_view->offset;
+                                prim.index_buffer.first_index = index_cursor;
+                                prim.index_buffer.index_count = (uint32_t)primitive_->indices->count;
+                                prim.index_buffer.stride = (uint32_t)primitive_->indices->stride;
+                                // vbs
+                                prim.vertex_buffers.resize(primitive_->attributes_count);
+                                for (uint32_t k = 0; k < primitive_->attributes_count; k++)
+                                {
+                                    const auto buf_view = primitive_->attributes[k].data->buffer_view;
+                                    prim.vertex_buffers[k].buffer_index = buf_view->buffer - gltf_data_->buffers;
+                                    prim.vertex_buffers[k].stride = (uint32_t)primitive_->attributes[k].data->stride;
+                                    prim.vertex_buffers[k].offset = (uint32_t)primitive_->attributes[k].data->offset + buf_view->offset;
+                                }
                                 // TODO: Material
                                 prim.material_inst = make_zeroed<skr_guid_t>();
                                 prim.vertex_layout_id = mesh_resource_util.AddVertexLayoutFromGLTFPrimitive(primitive_);
-                                mesh_section.primive_indices.emplace_back(resource->primitives.size() - 1);
-                                // TODO: Remove this
-                                if (resource->index_buffer.stride == 0)
-                                {
-                                    resource->index_buffer.stride = (uint32_t)primitive_->indices->stride;
-                                }
-                            }
-                        }
-                    }
-                    // record vertex buffer data
-                    for (uint32_t i = 0; i < gltf_data_->buffer_views_count; i++)
-                    {
-                        cgltf_buffer_view* buf_view = gltf_data_->buffer_views + i;
-                        cgltf_buffer* buf = buf_view->buffer;
-                        if (buf_view->type == cgltf_buffer_view_type_indices)
-                        {
-                            resource->index_buffer.buffer_index = (uint32_t)(buf - gltf_data_->buffers);
-                            resource->index_buffer.offset = buf_view->offset;
-                            resource->index_buffer.size = buf_view->size;
-                            resource->index_buffer.stride = (uint32_t)buf_view->stride;
-                            
-                            resource->bins[resource->index_buffer.buffer_index].used_with_index |= true;
-                        }
-                        else if (buf_view->type == cgltf_buffer_view_type_vertices)
-                        {
-                            auto& vb = resource->vertex_buffers.emplace_back();
-                            vb.buffer_index = (uint32_t)(buf - gltf_data_->buffers);
-                            vb.offset = buf_view->offset;
-                            vb.size = buf_view->size;
 
-                            resource->bins[resource->index_buffer.buffer_index].used_with_vertex |= true;
+                                mesh_section.primive_indices.emplace_back(resource->primitives.size() - 1);
+                            }
                         }
                     }
                     cbData->gltfRequest->mesh_resource = resource;

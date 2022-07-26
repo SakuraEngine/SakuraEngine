@@ -1,6 +1,37 @@
 #include "math/vectormath.hpp"
 
 struct CubeGeometry {
+    const skr::math::Vector3f g_Normals[24] = {
+        skr::math::Vector3f(0.0f, 0.0f, -1.0f), // front face
+        skr::math::Vector3f(0.0f, 0.0f, -1.0f),
+        skr::math::Vector3f(0.0f, 0.0f, -1.0f),
+        skr::math::Vector3f(0.0f, 0.0f, -1.0f),
+
+        skr::math::Vector3f(1.0f, 0.0f, 0.0f), // right side face
+        skr::math::Vector3f(1.0f, 0.0f, 0.0f),
+        skr::math::Vector3f(1.0f, 0.0f, 0.0f),
+        skr::math::Vector3f(1.0f, 0.0f, 0.0f),
+
+        skr::math::Vector3f(-1.0f, 0.0f, 0.0f), // left side face
+        skr::math::Vector3f(-1.0f, 0.0f, 0.0f),
+        skr::math::Vector3f(-1.0f, 0.0f, 0.0f),
+        skr::math::Vector3f(-1.0f, 0.0f, 0.0f),
+
+        skr::math::Vector3f(0.0f, 0.0f, 1.0f), // back face
+        skr::math::Vector3f(0.0f, 0.0f, 1.0f),
+        skr::math::Vector3f(0.0f, 0.0f, 1.0f),
+        skr::math::Vector3f(0.0f, 0.0f, 1.0f),
+
+        skr::math::Vector3f(0.0f, 1.0f, 0.0f), // top face
+        skr::math::Vector3f(0.0f, 1.0f, 0.0f),
+        skr::math::Vector3f(0.0f, 1.0f, 0.0f),
+        skr::math::Vector3f(0.0f, 1.0f, 0.0f),
+
+        skr::math::Vector3f(0.0f, -1.0f, 0.0f), // bottom face
+        skr::math::Vector3f(0.0f, -1.0f, 0.0f),
+        skr::math::Vector3f(0.0f, -1.0f, 0.0f),
+        skr::math::Vector3f(0.0f, -1.0f, 0.0f),
+    };
     const skr::math::Vector3f g_Positions[24] = {
         { -0.5f, 0.5f, -0.5f }, // front face
         { 0.5f, -0.5f, -0.5f },
@@ -62,37 +93,6 @@ struct CubeGeometry {
         { 0.0f, 0.0f },
         { 1.0f, 0.0f },
         { 0.0f, 1.0f },
-    };
-    const uint32_t g_Normals[24] = {
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)), // front face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, -1.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)), // right side face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(1.0f, 0.0f, 0.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)), // left side face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(-1.0f, 0.0f, 0.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)), // back face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 0.0f, 1.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)), // top face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, 1.0f, 0.0f, 0.0f)),
-
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)), // bottom face
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
-        skr::math::vector_to_snorm8(skr::math::Vector4f(0.0f, -1.0f, 0.0f, 0.0f)),
     };
     static constexpr uint32_t g_Indices[] = {
         0, 1, 2, 0, 3, 1,       // front face

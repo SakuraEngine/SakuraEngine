@@ -1,5 +1,4 @@
 #include "scene_asset.hpp"
-#include "GameRT/transform.dual.generated.hpp"
 #include "ecs/SmallVector.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
@@ -12,7 +11,6 @@
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
-#include "transform.hpp"
 #include "ecs/type_builder.hpp"
 
 #include "pxr/usd/usd/prim.h"

@@ -2,11 +2,10 @@
 
 struct VSIn
 {
+    centroid float3 normal : NORMAL;
     float3 position : POSITION;
     float2 uv : TEXCOORD0;
-    centroid float4 normal : NORMAL;
 };
-
 
 struct VSOut
 {
@@ -30,6 +29,6 @@ VSOut main(const VSIn input)
     float4 posH = mul(posW, push_constants.view_proj);
     output.position = posH;
     output.uv = input.uv * push_constants.model[0][0];
-    output.normal = input.normal;
+    output.normal = float4(input.normal, 0.f);
     return output;
 }
