@@ -311,7 +311,7 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
 }
 
 
-void duplicate_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStart) noexcept
+void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIndex srcStart) noexcept
 {
     archetype_t* srcType = srcC->type;
     archetype_t* dstType = dstV.chunk->type;
