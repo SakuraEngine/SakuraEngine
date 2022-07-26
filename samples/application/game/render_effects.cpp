@@ -176,7 +176,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 mesh_buffer_io.device = device;
                 mesh_buffer_io.dstorage_queue = mesh_bin_dstorage_queue;
                 mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
-                mesh_buffer_io.owner_queue = skr_renderer_get_gfx_queue();
                 mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
                 mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
                 mesh_buffer_io.buffer_size = mesh_id->bins[0].bin.size;
