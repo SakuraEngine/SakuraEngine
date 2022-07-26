@@ -12,6 +12,8 @@
 #include <EASTL/hash_set.h>
 #include "ghc/filesystem.hpp"
 
+#include "tracy/Tracy.hpp"
+
 static const char* cGLTFAttributeTypeLUT[8] = {
     "NONE",
     "POSITION",
@@ -167,6 +169,8 @@ SMutex SkrMeshResourceUtil::vertex_layouts_mutex_;
 
 void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* gltfRequest)
 {
+    ZoneScopedN("ioRAM Mesh Request");
+
     SKR_ASSERT(gltfRequest->vfs_override && "Support only vfs override");
 
     struct CallbackData
@@ -283,8 +287,12 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)callbackData;
     callbackData->gltfRequest = gltfRequest;
     // TODO: replace this with newer VFS API
-    auto gltfPath = ghc::filesystem::path(gltfRequest->vfs_override->mount_dir) / path;
-    callbackData->u8Path = gltfPath.u8string().c_str();
+    std::string gltfPath;
+    {
+        ZoneScopedN("ioRAM Mesh Path Calc");
+        gltfPath = (ghc::filesystem::path(gltfRequest->vfs_override->mount_dir) / path).u8string();
+        callbackData->u8Path = gltfPath.c_str();
+    }
     ioService->request(gltfRequest->vfs_override, &ramIO, &gltfRequest->ioRequest);
 }
 
