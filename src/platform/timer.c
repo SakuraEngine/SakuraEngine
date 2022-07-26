@@ -52,8 +52,8 @@ int64_t skr_hires_timer_get_usec_average(SHiresTimer* pTimer)
     return elapsedTime;
 }
 
-float skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset) { return (float)(skr_hires_timer_get_usec(pTimer, reset) / 1e6); }
+double skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset) { return (double)(skr_hires_timer_get_usec(pTimer, reset) / 1e6); }
 
-float skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer) { return (float)(skr_hires_timer_get_usec_average(pTimer) / 1e6); }
+double skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer) { return (double)(skr_hires_timer_get_usec_average(pTimer) / 1e6); }
 
 void skr_hires_timer_reset(SHiresTimer* pTimer) { pTimer->mStartTime = getUSec(false); }
