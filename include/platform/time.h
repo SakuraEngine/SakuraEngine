@@ -46,8 +46,8 @@ typedef struct SHiresTimer {
 RUNTIME_API void skr_init_hires_timer(SHiresTimer* pTimer);
 RUNTIME_API int64_t skr_hires_timer_get_usec(SHiresTimer* pTimer, bool reset);
 RUNTIME_API int64_t skr_hires_timer_get_usec_average(SHiresTimer* pTimer);
-RUNTIME_API float skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset);
-RUNTIME_API float skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer);
+RUNTIME_API double skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset);
+RUNTIME_API double skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer);
 RUNTIME_API void skr_hires_timer_reset(SHiresTimer* pTimer);
 
 #ifdef __cplusplus
