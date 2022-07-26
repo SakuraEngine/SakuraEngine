@@ -98,8 +98,10 @@ typedef struct skr_gltf_ram_io_request_t {
 #endif
 } skr_gltf_ram_io_request_t;
 
+#ifndef SKR_SERIALIZE_GURAD
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
 skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* request);
+#endif
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
 skr_mesh_resource_free(skr_mesh_resource_id mesh_resource);

@@ -112,7 +112,6 @@ skr_render_effect_name_t forward_effect_name = "ForwardEffect";
 struct RenderEffectForward : public IRenderEffectProcessor {
     ~RenderEffectForward() = default;
 
-    CGPUDStorageQueueId mesh_bin_dstorage_queue = nullptr;
     // render_mesh_t
     skr_mesh_resource_id mesh_id;
     CGPUBufferId mesh_buffer;
@@ -145,23 +144,13 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
         {
             auto device = skr_renderer_get_cgpu_device();
-            auto dstorage_cap = cgpu_query_dstorage_availability(device);
             auto resource_vfs = skr_game_runtime_get_vfs();
             auto ram_service = skr_game_runtime_get_ram_service();
             auto vram_service = skr_renderer_get_vram_service();
 
-            const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
-            if (supportDirectStorage)
-            {
-                auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
-                queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
-                queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
-                queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
-                mesh_bin_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
-            }
             auto gltf_io_request = make_zeroed<skr_gltf_ram_io_request_t>();
             gltf_io_request.vfs_override = resource_vfs;
-            gltf_io_request.load_bin_to_memory = !supportDirectStorage;
+            gltf_io_request.load_bin_to_memory = !skr_renderer_get_default_dstorage_queue();
             skr_mesh_resource_create_from_gltf(ram_service, "scene.gltf", &gltf_io_request);
             while (!gltf_io_request.is_ready())
             {
@@ -174,7 +163,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
             {
                 mesh_buffer_io.device = device;
-                mesh_buffer_io.dstorage_queue = mesh_bin_dstorage_queue;
+                mesh_buffer_io.dstorage_queue = skr_renderer_get_default_dstorage_queue();
                 mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
                 mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
                 mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
@@ -225,7 +214,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     {
         if(mesh_buffer) cgpu_free_buffer(mesh_buffer);
         if(mesh_id) skr_mesh_resource_free(mesh_id);
-        if(mesh_bin_dstorage_queue) cgpu_free_dstorage_queue(mesh_bin_dstorage_queue);
 
         free_pipeline(renderer);
         free_geometry_resources(renderer);
