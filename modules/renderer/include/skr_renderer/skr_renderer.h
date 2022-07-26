@@ -12,6 +12,8 @@ struct SKR_RENDERER_API ISkrRenderer {
     virtual void finalize() = 0;
     virtual CGPUDeviceId get_cgpu_device() const = 0;
     virtual CGPUQueueId get_gfx_queue() const = 0;
+    virtual CGPUQueueId get_cpy_queue(uint32_t idx) const = 0;
+    virtual CGPUDStorageQueueId get_default_dstorage_queue() const = 0;
     virtual ECGPUFormat get_swapchain_format() const = 0;
     virtual CGPUSamplerId get_linear_sampler() const = 0;
 #endif
@@ -43,6 +45,16 @@ public:
     {
         return gfx_queue;
     }
+    virtual CGPUQueueId get_cpy_queue(uint32_t idx) const override
+    {
+        if (idx < cpy_queues.size())
+            return cpy_queues[idx];
+        return cpy_queues[0];
+    }
+    virtual CGPUDStorageQueueId get_default_dstorage_queue() const override
+    {
+        return default_dstorage_queue;
+    }
     virtual ECGPUFormat get_swapchain_format() const override
     {
         if (swapchains.size())
@@ -71,6 +83,7 @@ protected:
     eastl::vector<CGPUQueueId> cpy_queues;
     CGPUSamplerId linear_sampler = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
+    CGPUDStorageQueueId default_dstorage_queue = nullptr;
 };
 } // namespace skr
 
@@ -84,6 +97,7 @@ public:
     skr_io_vram_service_t* get_vram_service() const;
     CGPUQueueId get_gfx_queue() const;
     CGPUQueueId get_cpy_queue(uint32_t idx = 0) const;
+    CGPUDStorageQueueId get_default_dstorage_queue() const;
     ECGPUFormat get_swapchain_format() const;
     CGPUSamplerId get_linear_sampler() const;
 
@@ -110,6 +124,9 @@ skr_renderer_get_linear_sampler();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
 skr_renderer_get_gfx_queue();
+
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDStorageQueueId
+skr_renderer_get_default_dstorage_queue();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
 skr_renderer_get_cpy_queue();
