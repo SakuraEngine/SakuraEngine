@@ -31,12 +31,11 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_UNINSTALL_RESOURCE,
     SKR_LOADING_PHASE_UNLOAD_RESOURCE,
 
-    // Special Cases
+    // Special Cases, needed so we can resume correctly when going from load -> unload -> load
     SKR_LOADING_PHASE_CANCLE_WAITFOR_IO,
     SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE,
     SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE,
     SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES,
-    // This stage is needed so we can resume correctly when going from load -> unload -> load
     SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST,
 
     SKR_LOADING_PHASE_FINISHED,
