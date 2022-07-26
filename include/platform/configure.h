@@ -423,6 +423,10 @@ typedef int64_t host_ptr_t;
     #endif
 #endif
 
+#ifdef TRACY_OVERRIDE_ENABLE
+    #define TRACY_ENABLE
+#endif
+
 #if defined(TRACY_ENABLE) || defined(TRACY_OVERRIDE_ENABLE)
     #define TRACY_IMPORTS
     #define TRACY_ON_DEMAND
