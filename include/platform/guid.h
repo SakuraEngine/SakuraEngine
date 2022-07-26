@@ -41,7 +41,7 @@ constexpr int parse_hex_digit(const char c)
     else if ('A' <= c && c <= 'F')
         return 10 + c - 'A';
     else
-        assert(0 && "invalid character in GUID");
+        SKR_ASSERT(0 && "invalid character in GUID");
     return -1;
 }
 
@@ -112,9 +112,9 @@ constexpr skr_guid_t operator""_guid(const char* str, size_t N)
     using namespace details;
 
     if (!(N == long_guid_form_length || N == short_guid_form_length))
-        assert(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
+        SKR_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
     if (N == long_guid_form_length && (str[0] != '{' || str[long_guid_form_length - 1] != '}'))
-        assert(0 && "Missing opening or closing brace");
+        SKR_ASSERT(0 && "Missing opening or closing brace");
 
     return make_guid_helper(str + (N == long_guid_form_length ? 1 : 0));
 }

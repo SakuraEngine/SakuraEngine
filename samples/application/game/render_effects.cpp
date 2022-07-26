@@ -25,64 +25,14 @@ const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
-    CGPUDStorageQueueId mesh_bin_dstorage_queue = nullptr;
     void on_register(ISkrRenderer* renderer) override
     {
-        auto device = skr_renderer_get_cgpu_device();
-        auto dstorage_cap = cgpu_query_dstorage_availability(device);
-        const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
-        if (supportDirectStorage)
-        {
-            CGPUDStorageQueueDescriptor queue_desc = {};
-            queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
-            queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
-            queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
-            mesh_bin_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
-        }
-        auto resource_vfs = skr_game_runtime_get_vfs();
-        auto ram_service = skr_game_runtime_get_ram_service();
-        auto gltf_io_request = make_zeroed<skr_gltf_ram_io_request_t>();
-        gltf_io_request.vfs_override = resource_vfs;
-        gltf_io_request.load_bin_to_memory = !supportDirectStorage;
-        skr_mesh_resource_create_from_gltf(ram_service, "scene.gltf", &gltf_io_request);
-        while (!gltf_io_request.is_ready())
-        {
 
-        }
-        auto mesh_id = gltf_io_request.mesh_resource;
-        SKR_LOG_INFO("gltf loaded!");
-        auto vram_service = skr_renderer_get_vram_service();
-        skr_async_io_request_t async_request = {};
-        skr_vram_buffer_request_t buffer_request = {};
-        auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
-        {
-            mesh_buffer_io.device = device;
-            mesh_buffer_io.dstorage_queue = mesh_bin_dstorage_queue;
-            mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
-            mesh_buffer_io.owner_queue = skr_renderer_get_gfx_queue();
-            mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
-            mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-            mesh_buffer_io.buffer_size = mesh_id->bins[0].bin.size;
-            mesh_buffer_io.bytes = mesh_id->bins[0].bin.bytes;
-            mesh_buffer_io.size =  mesh_id->bins[0].bin.size;
-            // TODO: replace this with newer VFS API
-            auto gltfPath = (ghc::filesystem::path(resource_vfs->mount_dir) / mesh_id->bins[0].uri.c_str()).u8string();
-            mesh_buffer_io.path = gltfPath.c_str();
-            vram_service->request(&mesh_buffer_io, &async_request, &buffer_request);
-        }
-        while (!async_request.is_ready())
-        {
-            
-        }
-        SKR_LOG_INFO("gltf uploaded!");
-        cgpu_free_buffer(buffer_request.out_buffer);
-        skr_mesh_resource_free(mesh_id);
     }
 
     void on_unregister(ISkrRenderer* renderer) override
     {
-        if(mesh_bin_dstorage_queue)
-            cgpu_free_dstorage_queue(mesh_bin_dstorage_queue);
+
     }
 
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
@@ -130,8 +80,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 for (uint32_t i = 0; i < drawcalls.count; i++)
                 {
                     auto&& dc = drawcalls.drawcalls[i];
-                    cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, 
-                        dc.index_buffer.stride, dc.index_buffer.offset);
+                    cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
                     CGPUBufferId vertex_buffers[3] = {
                         dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
                     };
@@ -144,7 +93,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                     cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
                     cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
-                    cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
+                    cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
                 }
             });
     }
@@ -162,6 +111,18 @@ typedef struct forward_effect_identity_t {
 skr_render_effect_name_t forward_effect_name = "ForwardEffect";
 struct RenderEffectForward : public IRenderEffectProcessor {
     ~RenderEffectForward() = default;
+
+    CGPUDStorageQueueId mesh_bin_dstorage_queue = nullptr;
+    // render_mesh_t
+    skr_mesh_resource_id mesh_id;
+    CGPUBufferId mesh_buffer;
+    struct render_prim {
+        skr_vertex_buffer_view_t mesh_vbvs[3];
+        skr_index_buffer_view_t mesh_ibv;
+        skr_float4_t roatation;
+    };
+    eastl::vector<render_prim> mesh_buffer_views;
+    // render_mesh_t
 
     void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
@@ -181,10 +142,92 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         // prepare render resources
         prepare_pipeline(renderer);
         prepare_geometry_resources(renderer);
+
+        {
+            auto device = skr_renderer_get_cgpu_device();
+            auto dstorage_cap = cgpu_query_dstorage_availability(device);
+            auto resource_vfs = skr_game_runtime_get_vfs();
+            auto ram_service = skr_game_runtime_get_ram_service();
+            auto vram_service = skr_renderer_get_vram_service();
+
+            const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
+            if (supportDirectStorage)
+            {
+                auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
+                queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
+                queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
+                queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+                mesh_bin_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+            }
+            auto gltf_io_request = make_zeroed<skr_gltf_ram_io_request_t>();
+            gltf_io_request.vfs_override = resource_vfs;
+            gltf_io_request.load_bin_to_memory = !supportDirectStorage;
+            skr_mesh_resource_create_from_gltf(ram_service, "scene.gltf", &gltf_io_request);
+            while (!gltf_io_request.is_ready())
+            {
+
+            }
+            mesh_id = gltf_io_request.mesh_resource;
+            SKR_LOG_INFO("gltf loaded!");
+            skr_async_io_request_t async_request = {};
+            skr_vram_buffer_request_t buffer_request = {};
+            auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
+            {
+                mesh_buffer_io.device = device;
+                mesh_buffer_io.dstorage_queue = mesh_bin_dstorage_queue;
+                mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
+                mesh_buffer_io.owner_queue = skr_renderer_get_gfx_queue();
+                mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
+                mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+                mesh_buffer_io.buffer_size = mesh_id->bins[0].bin.size;
+                mesh_buffer_io.bytes = mesh_id->bins[0].bin.bytes;
+                mesh_buffer_io.size =  mesh_id->bins[0].bin.size;
+                // TODO: replace this with newer VFS API
+                auto gltfPath = (ghc::filesystem::path(resource_vfs->mount_dir) / mesh_id->bins[0].uri.c_str()).u8string();
+                mesh_buffer_io.path = gltfPath.c_str();
+                vram_service->request(&mesh_buffer_io, &async_request, &buffer_request);
+            }
+            while (!async_request.is_ready())
+            {
+                
+            }
+            SKR_LOG_INFO("gltf uploaded!");
+            mesh_buffer = buffer_request.out_buffer;
+            // prepare render mesh
+            for (uint32_t i = 0; i < mesh_id->sections.size(); i++)
+            {
+                const auto& section = mesh_id->sections[i];
+                for (auto prim_idx : section.primive_indices)
+                {
+                    auto& draw_cmd = mesh_buffer_views.emplace_back();
+                    auto& prim = mesh_id->primitives[prim_idx];
+                    // TODO: replace this with scene transform
+                    draw_cmd.roatation = mesh_id->sections[0].rotation;
+                    auto& mesh_vbvs = draw_cmd.mesh_vbvs;
+                    auto& mesh_ibv = draw_cmd.mesh_ibv;
+                    for (uint32_t j = 0; j < prim.vertex_buffers.size(); j++)
+                    {
+                        mesh_vbvs[j].buffer = mesh_buffer;
+                        mesh_vbvs[j].offset = prim.vertex_buffers[j].offset;
+                        mesh_vbvs[j].stride = prim.vertex_buffers[j].stride;
+                    }
+                    mesh_ibv.buffer = mesh_buffer;
+                    mesh_ibv.offset = prim.index_buffer.index_offset;
+                    mesh_ibv.stride = prim.index_buffer.stride;
+                    mesh_ibv.index_count = prim.index_buffer.index_count;
+                    mesh_ibv.first_index = prim.index_buffer.first_index;
+                }
+
+            }
+        }
     }
 
     void on_unregister(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
+        if(mesh_buffer) cgpu_free_buffer(mesh_buffer);
+        if(mesh_id) skr_mesh_resource_free(mesh_id);
+        if(mesh_bin_dstorage_queue) cgpu_free_dstorage_queue(mesh_bin_dstorage_queue);
+
         free_pipeline(renderer);
         free_geometry_resources(renderer);
     }
@@ -220,8 +263,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
-            push_constants.resize(c);
-            return c;
+            push_constants.resize(c + mesh_buffer_views.size());
+            return c + mesh_buffer_views.size(); // draw one more girl
         }
         return 0;
     }
@@ -232,13 +275,13 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
             auto storage = skr_runtime_get_dual_storage();
+            uint32_t idx = 0;
             auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
                 auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
                 auto unbatched_g_ents = (dual_entity_t*)identities;
                 auto r_ents = dualV_get_entities(r_cv);
                 if (unbatched_g_ents)
                 {
-                    uint32_t idx = 0;
                     auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
                         auto g_ents = (dual_entity_t*)dualV_get_entities(g_cv);
                         auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
@@ -273,6 +316,34 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 }
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
+
+            // draw one more girl
+            for (auto& girl_prim : mesh_buffer_views)
+            {
+                auto& drawcall = drawcalls->drawcalls[idx];
+                drawcall.vertex_buffers = girl_prim.mesh_vbvs;
+                drawcall.vertex_buffer_count = 3;
+                drawcall.index_buffer = girl_prim.mesh_ibv;
+                drawcall.pipeline = pipeline;
+                drawcall.push_const_name = push_constants_name;
+
+                auto world = skr::math::make_transform(
+                    { 0.f, 0.f, 0.f },                                             // translation
+                    skr::math::Vector3f::vector_one(),                             // scale
+                    skr::math::Quaternion(girl_prim.roatation) // quat
+                );
+                // camera
+                auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
+                auto proj = skr::math::perspective_fov(
+                    3.1415926f / 2.f,
+                    (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
+                    1.f, 1000.f);
+                push_constants[idx].world = world;
+                push_constants[idx].view_proj = skr::math::multiply(view, proj);
+
+                drawcall.push_const = (const uint8_t*)(push_constants.data() + idx);
+                idx++;
+            }
         }
     }
 
@@ -380,14 +451,16 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     // init vbvs & ibvs
     vbvs[0].buffer = vertex_buffer;
     vbvs[0].stride = sizeof(skr::math::Vector3f);
-    vbvs[0].offset = offsetof(CubeGeometry, g_Positions);
+    vbvs[0].offset = offsetof(CubeGeometry, g_Normals);
     vbvs[1].buffer = vertex_buffer;
-    vbvs[1].stride = sizeof(skr::math::Vector2f);
-    vbvs[1].offset = offsetof(CubeGeometry, g_TexCoords);
+    vbvs[1].stride = sizeof(skr::math::Vector3f);
+    vbvs[1].offset = offsetof(CubeGeometry, g_Positions);
     vbvs[2].buffer = vertex_buffer;
-    vbvs[2].stride = sizeof(uint32_t);
-    vbvs[2].offset = offsetof(CubeGeometry, g_Normals);
+    vbvs[2].stride = sizeof(skr::math::Vector2f);
+    vbvs[2].offset = offsetof(CubeGeometry, g_TexCoords);
     ibv.buffer = index_buffer;
+    ibv.index_count = 36;
+    ibv.first_index = 0;
     ibv.offset = 0;
     ibv.stride = sizeof(uint32_t);
 }
@@ -456,9 +529,9 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
     CGPUVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 2, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[0] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 1, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 3;
     CGPURenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = root_sig;
