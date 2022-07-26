@@ -15,6 +15,7 @@
 #include "skr_scene/scene.h"
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
+#include "skr_renderer/render_mesh.h"
 #include "skr_renderer/mesh_resource.h"
 #include "gamert.h"
 #include "cube.hpp"
@@ -113,14 +114,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     ~RenderEffectForward() = default;
 
     // render_mesh_t
-    skr_mesh_resource_id mesh_id;
-    CGPUBufferId mesh_buffer;
-    struct render_prim {
-        skr_vertex_buffer_view_t mesh_vbvs[3];
-        skr_index_buffer_view_t mesh_ibv;
-        skr_float4_t roatation;
-    };
-    eastl::vector<render_prim> mesh_buffer_views;
+    skr_render_mesh_request_t render_mesh_request;
     // render_mesh_t
 
     void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override
@@ -141,79 +135,12 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         // prepare render resources
         prepare_pipeline(renderer);
         prepare_geometry_resources(renderer);
-
-        {
-            auto device = skr_renderer_get_cgpu_device();
-            auto resource_vfs = skr_game_runtime_get_vfs();
-            auto ram_service = skr_game_runtime_get_ram_service();
-            auto vram_service = skr_renderer_get_vram_service();
-
-            auto gltf_io_request = make_zeroed<skr_gltf_ram_io_request_t>();
-            gltf_io_request.vfs_override = resource_vfs;
-            gltf_io_request.load_bin_to_memory = !skr_renderer_get_default_dstorage_queue();
-            skr_mesh_resource_create_from_gltf(ram_service, "scene.gltf", &gltf_io_request);
-            while (!gltf_io_request.is_ready())
-            {
-
-            }
-            mesh_id = gltf_io_request.mesh_resource;
-            SKR_LOG_INFO("gltf loaded!");
-            skr_async_io_request_t async_request = {};
-            skr_vram_buffer_request_t buffer_request = {};
-            auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
-            {
-                mesh_buffer_io.device = device;
-                mesh_buffer_io.dstorage_queue = skr_renderer_get_default_dstorage_queue();
-                mesh_buffer_io.transfer_queue = skr_renderer_get_cpy_queue();
-                mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
-                mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-                mesh_buffer_io.buffer_size = mesh_id->bins[0].bin.size;
-                mesh_buffer_io.bytes = mesh_id->bins[0].bin.bytes;
-                mesh_buffer_io.size =  mesh_id->bins[0].bin.size;
-                // TODO: replace this with newer VFS API
-                auto gltfPath = (ghc::filesystem::path(resource_vfs->mount_dir) / mesh_id->bins[0].uri.c_str()).u8string();
-                mesh_buffer_io.path = gltfPath.c_str();
-                vram_service->request(&mesh_buffer_io, &async_request, &buffer_request);
-            }
-            while (!async_request.is_ready())
-            {
-                
-            }
-            SKR_LOG_INFO("gltf uploaded!");
-            mesh_buffer = buffer_request.out_buffer;
-            // prepare render mesh
-            for (uint32_t i = 0; i < mesh_id->sections.size(); i++)
-            {
-                const auto& section = mesh_id->sections[i];
-                for (auto prim_idx : section.primive_indices)
-                {
-                    auto& draw_cmd = mesh_buffer_views.emplace_back();
-                    auto& prim = mesh_id->primitives[prim_idx];
-                    // TODO: replace this with scene transform
-                    draw_cmd.roatation = mesh_id->sections[0].rotation;
-                    auto& mesh_vbvs = draw_cmd.mesh_vbvs;
-                    auto& mesh_ibv = draw_cmd.mesh_ibv;
-                    for (uint32_t j = 0; j < prim.vertex_buffers.size(); j++)
-                    {
-                        mesh_vbvs[j].buffer = mesh_buffer;
-                        mesh_vbvs[j].offset = prim.vertex_buffers[j].offset;
-                        mesh_vbvs[j].stride = prim.vertex_buffers[j].stride;
-                    }
-                    mesh_ibv.buffer = mesh_buffer;
-                    mesh_ibv.offset = prim.index_buffer.index_offset;
-                    mesh_ibv.stride = prim.index_buffer.stride;
-                    mesh_ibv.index_count = prim.index_buffer.index_count;
-                    mesh_ibv.first_index = prim.index_buffer.first_index;
-                }
-
-            }
-        }
     }
 
     void on_unregister(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
-        if(mesh_buffer) cgpu_free_buffer(mesh_buffer);
-        if(mesh_id) skr_mesh_resource_free(mesh_id);
+        if (render_mesh_request.is_buffer_ready()) 
+            skr_render_mesh_free(render_mesh_request.render_mesh);
 
         free_pipeline(renderer);
         free_geometry_resources(renderer);
@@ -241,6 +168,33 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
+        if (!render_mesh_request.mesh_resource_request.vfs_override)
+        {
+            ImGui::Begin(u8"AsyncMesh");
+            auto dstroage_queue = skr_renderer_get_default_dstorage_queue();
+            auto resource_vfs = skr_game_runtime_get_vfs();
+            auto ram_service = skr_game_runtime_get_ram_service();
+            auto vram_service = skr_renderer_get_vram_service();
+            if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage)"))
+            {
+                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+                render_mesh_request.dstorage_queue_override = dstroage_queue;
+                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
+            }
+            else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))
+            {
+                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+                render_mesh_request.queue_override = skr_renderer_get_cpy_queue();
+                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
+            }
+            else if (ImGui::Button(u8"LoadMesh(GraphicsQueue)"))
+            {
+                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+                render_mesh_request.queue_override = skr_renderer_get_gfx_queue();
+                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
+            }
+            ImGui::End();   
+        }
         // query from identity component
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
@@ -250,8 +204,13 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
-            push_constants.resize(c + mesh_buffer_views.size());
-            return c + mesh_buffer_views.size(); // draw one more girl
+            if (render_mesh_request.is_buffer_ready())
+            {
+                auto render_mesh_id = render_mesh_request.render_mesh;
+                c += (uint32_t)render_mesh_id->primitive_commands.size();
+            }
+            push_constants.resize(c);
+            return c;
         }
         return 0;
     }
@@ -305,31 +264,35 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
 
             // draw one more girl
-            for (auto& girl_prim : mesh_buffer_views)
+            if (render_mesh_request.is_buffer_ready() && push_constants.size() > idx)
             {
-                auto& drawcall = drawcalls->drawcalls[idx];
-                drawcall.vertex_buffers = girl_prim.mesh_vbvs;
-                drawcall.vertex_buffer_count = 3;
-                drawcall.index_buffer = girl_prim.mesh_ibv;
-                drawcall.pipeline = pipeline;
-                drawcall.push_const_name = push_constants_name;
+                auto render_mesh_id = render_mesh_request.render_mesh;
+                for (auto& girl_prim : render_mesh_id->primitive_commands)
+                {
+                    auto& drawcall = drawcalls->drawcalls[idx];
+                    drawcall.vertex_buffers = girl_prim.vbvs.data();
+                    drawcall.vertex_buffer_count = (uint32_t)girl_prim.vbvs.size();
+                    drawcall.index_buffer = *girl_prim.ibv;
+                    drawcall.pipeline = pipeline;
+                    drawcall.push_const_name = push_constants_name;
 
-                auto world = skr::math::make_transform(
-                    { 0.f, 0.f, 0.f },                                             // translation
-                    skr::math::Vector3f::vector_one(),                             // scale
-                    skr::math::Quaternion(girl_prim.roatation) // quat
-                );
-                // camera
-                auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
-                auto proj = skr::math::perspective_fov(
-                    3.1415926f / 2.f,
-                    (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
-                    1.f, 1000.f);
-                push_constants[idx].world = world;
-                push_constants[idx].view_proj = skr::math::multiply(view, proj);
+                    auto world = skr::math::make_transform(
+                        { 0.f, 0.f, 0.f }, // translation
+                        skr::math::Vector3f::vector_one(), // scale
+                        skr::math::Quaternion::identity() // quat
+                    );
+                    // camera
+                    auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
+                    auto proj = skr::math::perspective_fov(
+                        3.1415926f / 2.f,
+                        (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
+                        1.f, 1000.f);
+                    push_constants[idx].world = world;
+                    push_constants[idx].view_proj = skr::math::multiply(view, proj);
 
-                drawcall.push_const = (const uint8_t*)(push_constants.data() + idx);
-                idx++;
+                    drawcall.push_const = (const uint8_t*)(push_constants.data() + idx);
+                    idx++;
+                }
             }
         }
     }

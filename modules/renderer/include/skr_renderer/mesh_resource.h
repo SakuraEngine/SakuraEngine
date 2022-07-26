@@ -11,8 +11,8 @@ struct sreflect sattr(
 skr_vertex_buffer_entry_t
 {
     uint32_t buffer_index;
-    uint64_t stride;
-    uint64_t offset;
+    uint32_t stride;
+    uint32_t offset;
 };
 typedef struct skr_vertex_buffer_entry_t skr_vertex_buffer_entry_t;
 
@@ -23,8 +23,8 @@ skr_index_buffer_entry_t
 {
     uint32_t buffer_index;
     uint32_t index_offset;
-    uint64_t first_index;
-    uint64_t index_count;
+    uint32_t first_index;
+    uint32_t index_count;
     uint32_t stride;
 };
 typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
@@ -80,12 +80,15 @@ typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
 #include "utils/io.h"
 
+typedef void (*skr_async_gltf_io_callback_t)(struct skr_gltf_ram_io_request_t* request, void* data);
 typedef struct skr_gltf_ram_io_request_t {
     struct skr_vfs_t* vfs_override;
     bool load_bin_to_memory;
     skr_async_io_request_t ioRequest;
     SAtomic32 gltf_status;
     skr_mesh_resource_id mesh_resource;
+    skr_async_gltf_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
+    void* callback_data[SKR_ASYNC_IO_STATUS_COUNT];
 #ifdef __cplusplus
     bool is_ready() const SKR_NOEXCEPT
     {

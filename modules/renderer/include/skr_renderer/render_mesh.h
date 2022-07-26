@@ -9,14 +9,14 @@
 
 struct skr_render_primitive_command_t {
     skr::span<const skr_vertex_buffer_view_t> vbvs;
-    const skr_vertex_buffer_view_t* ibv;
+    const skr_index_buffer_view_t* ibv;
     uint64_t characteristic;
 };
 
 struct skr_render_mesh_t {
     skr_mesh_resource_id mesh_resource_id;
-    eastl::vector<skr_async_io_request_t> vram_requests;
-    CGPUBufferId gpu_buffer;
+    eastl::vector<skr_async_io_request_t> vio_requests;
+    eastl::vector<skr_vram_buffer_request_t> buffer_requests;
     eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
     eastl::vector<skr_render_primitive_command_t> primitive_commands;
@@ -27,9 +27,21 @@ typedef struct skr_render_mesh_t skr_render_mesh_t;
 typedef struct skr_render_mesh_t* skr_render_mesh_id;
 
 typedef struct skr_render_mesh_request_t {
-    skr_async_io_request_t ram_request;
+    CGPUQueueId queue_override;
+    CGPUDStorageQueueId dstorage_queue_override;
+    skr_gltf_ram_io_request_t mesh_resource_request;
     skr_render_mesh_id render_mesh;
-    SAtomic32 status;
+    SAtomic32 buffers_io_status;
+#ifdef __cplusplus
+    bool is_buffer_ready() const SKR_NOEXCEPT
+    {
+        return get_buffer_status() == SKR_ASYNC_IO_STATUS_OK;
+    }
+    SkrAsyncIOStatus get_buffer_status() const SKR_NOEXCEPT
+    {
+        return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&buffers_io_status);
+    }
+#endif
 } skr_render_mesh_request_t;
 
 struct sreflect sattr(
