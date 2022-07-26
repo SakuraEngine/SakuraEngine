@@ -6,7 +6,6 @@ typedef struct skr_vram_buffer_io_t {
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
     CGPUDStorageQueueId dstorage_queue;
-    CGPUQueueId owner_queue;
     CGPUSemaphoreId opt_semaphore;
     // CGPU Resource Desc
     const char8_t* buffer_name;
@@ -15,7 +14,6 @@ typedef struct skr_vram_buffer_io_t {
     ECGPUFormat format;
     uint64_t buffer_size;
     CGPUBufferCreationFlags flags;
-    ECGPUResourceState start_state;
     /// Preferred actual location
     /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
     bool prefer_on_device;

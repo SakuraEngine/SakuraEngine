@@ -225,7 +225,6 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             buffer_desc.memory_usage = buffer_io.memory_usage;
             buffer_desc.format = buffer_io.format;
             buffer_desc.flags = buffer_io.flags;
-            buffer_desc.start_state = buffer_io.start_state;
             buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
             buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
             auto buffer = cgpu_create_buffer(buffer_task->buffer_io.device, &buffer_desc);
@@ -254,7 +253,6 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             buffer_desc.memory_usage = buffer_io.memory_usage;
             buffer_desc.format = buffer_io.format;
             buffer_desc.flags = buffer_io.flags;
-            buffer_desc.start_state = buffer_io.start_state;
             buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
             buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
             auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
@@ -308,9 +306,7 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         auto buffer_barrier = make_zeroed<CGPUBufferBarrier>();
         buffer_barrier.buffer = buffer_request->out_buffer;
         buffer_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
-        buffer_barrier.dst_state = buffer_io.start_state;
-        // acquire
-        if (buffer_io.owner_queue->type != buffer_io.transfer_queue->type)
+        // release
         {
             buffer_barrier.queue_release = true;
             buffer_barrier.queue_type = buffer_io.transfer_queue->type;
