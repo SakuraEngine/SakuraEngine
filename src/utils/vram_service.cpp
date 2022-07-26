@@ -422,6 +422,60 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         service->tasks.update_(&service->threaded_service);
     }
     // 1.visit task
+    auto foreach_task = [service](auto& task)
+    {
+        const auto vramIOStep = task.step;
+        switch (vramIOStep)
+        {
+            case kStepNone: // start create resource
+                task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
+                service->createResource(task);
+                task.step = kStepResourceCreated;
+                break;
+            case kStepResourceCreated: // start uploading
+                if (task.isDStorage())
+                {
+                    ZoneScopedN("Prepare-DStorage");
+
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                    service->dstorageResource(task);
+                    task.step = kStepDirectStorage;
+                }
+                else
+                {
+                    ZoneScopedN("Prepare-CpyCmd");
+
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                    service->uploadResource(task);
+                    task.step = kStepUploading;
+                }
+                break;
+            case kStepUploading:
+                if (service->vramIOFinished(task))
+                {
+                    ZoneScopedN("CpyQueue-SignalOK");
+
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+                    task.step = kStepFinished;
+                }
+                else task.step = kStepUploading; // continue uploading
+                break;
+            case kStepDirectStorage:
+                if (service->vramIOFinished(task))
+                {
+                    ZoneScopedN("DStorage-SignalOK");
+
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+                    task.step = kStepFinished;
+                }
+                else task.step = kStepDirectStorage; // continue uploading
+                break;
+            case kStepResourceBarrier:
+                SKR_UNIMPLEMENTED_FUNCTION();
+            case kStepFinished:
+                return;
+        }
+    };
     {
         ZoneScopedN("ioVRAMServiceWork");
 
@@ -441,60 +495,6 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
             service->upload_batch_queue[upload_batch->id] = upload_batch;
         if (!dstorage_batch->tasks.empty())
             service->dstorage_batch_queue[upload_batch->id] = dstorage_batch;
-        auto foreach_task = [service](auto& task)
-        {
-            const auto vramIOStep = task.step;
-            switch (vramIOStep)
-            {
-                case kStepNone: // start create resource
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
-                    service->createResource(task);
-                    task.step = kStepResourceCreated;
-                    break;
-                case kStepResourceCreated: // start uploading
-                    if (task.isDStorage())
-                    {
-                        ZoneScopedN("Prepare-DStorage");
-
-                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
-                        service->dstorageResource(task);
-                        task.step = kStepDirectStorage;
-                    }
-                    else
-                    {
-                        ZoneScopedN("Prepare-CpyCmd");
-
-                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
-                        service->uploadResource(task);
-                        task.step = kStepUploading;
-                    }
-                    break;
-                case kStepUploading:
-                    if (service->vramIOFinished(task))
-                    {
-                        ZoneScopedN("CpyQueue-SignalOK");
-
-                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
-                        task.step = kStepFinished;
-                    }
-                    else task.step = kStepUploading; // continue uploading
-                    break;
-                case kStepDirectStorage:
-                    if (service->vramIOFinished(task))
-                    {
-                        ZoneScopedN("DStorage-SignalOK");
-
-                        task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
-                        task.step = kStepFinished;
-                    }
-                    else task.step = kStepDirectStorage; // continue uploading
-                    break;
-                case kStepResourceBarrier:
-                    SKR_UNIMPLEMENTED_FUNCTION();
-                case kStepFinished:
-                    return;
-            }
-        };
         // upload cmds
         for (auto [batch_id, batch] : service->upload_batch_queue)
         {
@@ -554,22 +554,26 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         ZoneScopedN("ioVRAMServiceSweep");
     
         // 2.1 sweep task batches
-        service->foreach_batch([](auto& batch){
-                bool ready = batch.second->submitted;
-                for (auto [queue, batch_fence] : batch.second->fences)
+        service->foreach_batch([foreach_task](auto& batch){
+            bool ready = batch.second->submitted;
+            for (auto [queue, batch_fence] : batch.second->fences)
+            {
+                if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
+            }
+            for (auto [ds_queue, batch_fence] : batch.second->ds_fences)
+            {
+                if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
+            }
+            if (ready)
+            {
+                for (auto& task : batch.second->tasks)
                 {
-                    if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
+                    foreach_task(task);
                 }
-                for (auto [ds_queue, batch_fence] : batch.second->ds_fences)
-                {
-                    if (cgpu_query_fence_status(batch_fence) != CGPU_FENCE_STATUS_COMPLETE) ready = false;
-                }
-                if (ready)
-                {
-                    SkrDelete(batch.second);
-                    batch.second = nullptr;
-                }
-            });
+                SkrDelete(batch.second);
+                batch.second = nullptr;
+            }
+        });
         service->upload_batch_queue.erase(
         eastl::remove_if(service->upload_batch_queue.begin(), service->upload_batch_queue.end(),
             [](auto& batch){

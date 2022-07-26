@@ -165,16 +165,16 @@ static struct SkrMeshResourceUtil
 SkrMeshResourceUtil::cached_hashset<CGPUVertexLayout> SkrMeshResourceUtil::vertex_layouts_;
 SMutex SkrMeshResourceUtil::vertex_layouts_mutex_;
 
-thread_local struct CallbackData
-{
-    skr_gltf_ram_io_request_t* gltfRequest;   
-    eastl::string u8Path;
-} callbackData;
-
 void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* gltfRequest)
 {
     SKR_ASSERT(gltfRequest->vfs_override && "Support only vfs override");
 
+    struct CallbackData
+    {
+        skr_gltf_ram_io_request_t* gltfRequest;   
+        eastl::string u8Path;
+    };
+    auto callbackData = SkrNew<CallbackData>();
     skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
     ramIO.bytes = nullptr;
     ramIO.offset = 0;
@@ -234,8 +234,8 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                                 auto& prim = resource->primitives.emplace_back();
                                 const auto primitive_ = node_->mesh->primitives + j;
                                 // ib
-                                prim.index_buffer.buffer_index = primitive_->indices->buffer_view->buffer - gltf_data_->buffers;
-                                prim.index_buffer.index_offset = (uint32_t)primitive_->indices->offset + primitive_->indices->buffer_view->offset;
+                                prim.index_buffer.buffer_index = (uint32_t)(primitive_->indices->buffer_view->buffer - gltf_data_->buffers);
+                                prim.index_buffer.index_offset = (uint32_t)(primitive_->indices->offset + primitive_->indices->buffer_view->offset);
                                 prim.index_buffer.first_index = index_cursor;
                                 prim.index_buffer.index_count = (uint32_t)primitive_->indices->count;
                                 prim.index_buffer.stride = (uint32_t)primitive_->indices->stride;
@@ -244,9 +244,9 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                                 for (uint32_t k = 0; k < primitive_->attributes_count; k++)
                                 {
                                     const auto buf_view = primitive_->attributes[k].data->buffer_view;
-                                    prim.vertex_buffers[k].buffer_index = buf_view->buffer - gltf_data_->buffers;
+                                    prim.vertex_buffers[k].buffer_index = (uint32_t)(buf_view->buffer - gltf_data_->buffers);
                                     prim.vertex_buffers[k].stride = (uint32_t)primitive_->attributes[k].data->stride;
-                                    prim.vertex_buffers[k].offset = (uint32_t)primitive_->attributes[k].data->offset + buf_view->offset;
+                                    prim.vertex_buffers[k].offset = (uint32_t)(primitive_->attributes[k].data->offset + buf_view->offset);
                                 }
                                 // TODO: Material
                                 prim.material_inst = make_zeroed<skr_guid_t>();
@@ -264,23 +264,27 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
         request->bytes = nullptr;
         request->size = 0;
         skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_OK);
+        cbData->gltfRequest->callbacks[SKR_ASYNC_IO_STATUS_OK](cbData->gltfRequest, cbData->gltfRequest->callback_data[SKR_ASYNC_IO_STATUS_OK]);
+        SkrDelete(cbData);
     };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)callbackData;
     // pass status
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_async_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
         skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_ENQUEUED);
+        cbData->gltfRequest->callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED](cbData->gltfRequest, cbData->gltfRequest->callback_data[SKR_ASYNC_IO_STATUS_ENQUEUED]);
     };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_ENQUEUED] = (void*)&callbackData;
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_ENQUEUED] = (void*)callbackData;
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_RAM_LOADING] = +[](skr_async_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
         skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_RAM_LOADING);
+        cbData->gltfRequest->callbacks[SKR_ASYNC_IO_STATUS_RAM_LOADING](cbData->gltfRequest, cbData->gltfRequest->callback_data[SKR_ASYNC_IO_STATUS_RAM_LOADING]);
     };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)&callbackData;
-    callbackData.gltfRequest = gltfRequest;
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)callbackData;
+    callbackData->gltfRequest = gltfRequest;
     // TODO: replace this with newer VFS API
     auto gltfPath = ghc::filesystem::path(gltfRequest->vfs_override->mount_dir) / path;
-    callbackData.u8Path = gltfPath.u8string().c_str();
+    callbackData->u8Path = gltfPath.u8string().c_str();
     ioService->request(gltfRequest->vfs_override, &ramIO, &gltfRequest->ioRequest);
 }
 
