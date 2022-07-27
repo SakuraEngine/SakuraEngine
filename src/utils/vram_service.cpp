@@ -214,7 +214,7 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
 {
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
-        SKR_ASSERT( (buffer_task->buffer_io.size || buffer_task->buffer_io.path) && "buffer_io.size or buffer_io.path must be set");
+        SKR_ASSERT( (buffer_task->buffer_io.size) && "buffer_io.size must be set");
         if (buffer_task->buffer_io.size)
         {
             auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
