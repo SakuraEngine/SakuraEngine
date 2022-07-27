@@ -114,7 +114,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     ~RenderEffectForward() = default;
 
     // render_mesh_t
-    skr_render_mesh_request_t render_mesh_request;
+    skr_render_mesh_request_t render_mesh_request = make_zeroed<skr_render_mesh_request_t>();
     // render_mesh_t
 
     void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override

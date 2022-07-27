@@ -64,6 +64,8 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
         skr_render_mesh_request_t* request = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
         skr_io_vram_service_t* vram_service = nullptr;
+        // buffer io
+        eastl::vector<std::string> buffer_paths;
         uint32_t buffers_count = 0;
         SAtomic32 created_buffers = 0;
         SAtomic32 finished_buffers = 0;
@@ -97,6 +99,7 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
         render_mesh->vio_requests.resize(mesh_resource->bins.size());
         render_mesh->buffer_requests.resize(mesh_resource->bins.size());
         cbData->buffers_count = (uint32_t)mesh_resource->bins.size();
+        cbData->buffer_paths.resize(cbData->buffers_count);
         for (uint32_t i = 0; i < render_mesh->buffer_requests.size(); i++)
         {
             auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
@@ -108,9 +111,9 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
             mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
             mesh_buffer_io.buffer_size = mesh_resource->bins[i].bin.size;
             mesh_buffer_io.bytes = mesh_resource->bins[i].bin.bytes;
-            mesh_buffer_io.size =  mesh_resource->bins[i].bin.size;
-            auto gltfPath = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
-            mesh_buffer_io.path = gltfPath.c_str();
+            mesh_buffer_io.size = mesh_resource->bins[i].bin.size;
+            cbData->buffer_paths[i] = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
+            mesh_buffer_io.path = cbData->buffer_paths[i].c_str();
             mesh_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* io, void* data){
                 auto cbData = (CallbackData*)data;
                 auto request = cbData->request;
