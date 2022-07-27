@@ -32,6 +32,11 @@ public:
     virtual void Init(const gainput::InputManager& manager) = 0;
     virtual void OnDeviceInputChange(const DeviceInputChangeEvent& event) = 0;
     virtual void OnTick(double deltaTime) = 0;
+    void DisableEvent(bool IsDisable)
+    {
+        _disableEvent = IsDisable;
+    }
+
 protected:
     bool _disableEvent = false;
 };
@@ -44,17 +49,21 @@ public:
     {
         Interaction* interaction;
         ValueType value;
+        eastl::any interactionData;
     };
 
-    bool PopEvnet(Interaction*& outInteraction, ValueType& outValue)
+    bool PopEvnet(OutEvent& out)
     {
         if(_events.empty())
             return false;
-        const auto& event = _events.front();
-        outInteraction = event.interaction;
-        outValue = event.value;
+        out = eastl::move(_events.front());
         _events.erase(_events.begin());
         return true;
+    }
+
+    ValueType GetValue()
+    {
+        return _value;
     }
 
     void AddProcessor(const eastl::shared_ptr<ProcessorBase<ValueType>>& processor)
@@ -200,8 +209,10 @@ protected:
         {
             for(auto& interaction : _interactions)
             {
-                if(interaction->IsTriggerByState())
-                    _events.push_back({interaction.get(), _value});
+                if(interaction->IsTrigger())
+                {
+                    _events.push_back({interaction.get(), _value, interaction->OnSendEvent()});
+                }
                 if(interaction->GetState() != InteractionState::Fail)
                     break;
             }
@@ -237,6 +248,43 @@ private:
     unsigned _index;
     gainput::DeviceId _deviceId;
     gainput::DeviceButtonId _deviceButton;
+};
+
+class SKR_INPUTSYSTEM_API Vector2Control : public ControlsBase<math::Vector2f>
+{
+public:
+    Vector2Control(float min_x = -1.f, float max_x = 1.f, float min_y = -1.f, float max_y = 1.f)
+        : _min_x(min_x),_max_x(max_x),_min_y(min_y),_max_y(max_y)
+    {}
+
+    struct ButtonDirection
+    {
+        eastl::shared_ptr<ControlsFloat> up;
+        eastl::shared_ptr<ControlsFloat> down;
+        eastl::shared_ptr<ControlsFloat> left;
+        eastl::shared_ptr<ControlsFloat> right;
+    };
+
+    struct StickDirection
+    {
+        eastl::shared_ptr<ControlsFloat> x;
+        eastl::shared_ptr<ControlsFloat> y;
+    };
+
+    void Init(const gainput::InputManager& manager) override;
+    void OnDeviceInputChange(const DeviceInputChangeEvent& event) override;
+    void OnTick(double deltaTime) override;
+    void Bind(const ButtonDirection& controls);
+    void Bind(const StickDirection& controls);
+private:
+    void UpdateRawValue();
+
+    eastl::vector<ButtonDirection> _buttonDirections;
+    eastl::vector<StickDirection> _stickDirections;
+    const float _min_x;
+    const float _max_x;
+    const float _min_y;
+    const float _max_y;
 };
 
 }

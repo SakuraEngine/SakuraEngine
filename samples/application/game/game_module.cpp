@@ -1,4 +1,5 @@
 #include "gamert.h"
+#include "EASTL/any.h"
 #include "EASTL/shared_ptr.h"
 #include "gainput/GainputInputDevicePad.h"
 #include "platform/configure.h"
@@ -31,6 +32,7 @@
 #include "ecs/type_builder.hpp"
 #include "skr_input/inputSystem.h"
 #include "skr_renderer/render_mesh.h"
+#include "math/vector.hpp"
 
 SWindowHandle window;
 uint32_t backbuffer_index;
@@ -222,15 +224,59 @@ int SGameModule::main_module_exec(int argc, char** argv)
     inputSystem.Init(window);
     inputSystem.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
     // InputAction
-    auto actionCao = eastl::make_shared<InputAction<float>>();
-    auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
-    controls1->AddInteraction(eastl::make_shared<InteractionTap_Float>());
-    actionCao->AddControls(controls1);
-    actionCao->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i)
     {
-        SKR_LOG_DEBUG("Cao %f", value);
-    });
-    inputSystem.AddInputAction(actionCao);
+        auto action = eastl::make_shared<InputAction<float>>();
+        auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
+        controls1->AddInteraction(eastl::make_shared<InteractionTap_Float>());
+        action->AddControl(controls1);
+        action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, eastl::any iData)
+        {
+            SKR_LOG_DEBUG("Tap_Float %f", value);
+        });
+        inputSystem.AddInputAction(action);
+    }
+    {
+        auto action = eastl::make_shared<InputAction<float>>();
+        auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyP);
+        controls1->AddInteraction(eastl::make_shared<InteractionPress_Float>(PressBehavior::PressAndRelease, 0.5f));
+        action->AddControl(controls1);
+        action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, eastl::any iData)
+        {
+            if(eastl::any_cast<PressEventType>(iData) == PressEventType::Press)
+                SKR_LOG_DEBUG("Press_Float Press %f", value);
+            else
+                SKR_LOG_DEBUG("Press_Float Release %f", value);;
+        });
+        inputSystem.AddInputAction(action);
+    }
+    {
+        auto action = eastl::make_shared<InputAction<skr::math::Vector2f>>();
+        auto controls1 = eastl::make_shared<Vector2Control>();
+        controls1->Bind(
+            Vector2Control::ButtonDirection{
+                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyW),
+                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyS),
+                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyA),
+                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyD),
+            }
+        );
+        controls1->Bind(
+            Vector2Control::StickDirection{
+                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickX),
+                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
+            }
+        );
+        controls1->AddInteraction(eastl::make_shared<InteractionPress_Vector2>(PressBehavior::PressAndRelease, 0.5f));
+        action->AddControl(controls1);
+        action->ListenEvent([](skr::math::Vector2f value, ControlsBase<skr::math::Vector2f>* _c, Interaction* i, eastl::any iData)
+        {
+            if(eastl::any_cast<PressEventType>(iData) == PressEventType::Press)
+                SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
+            else
+                SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);;
+        });
+        inputSystem.AddInputAction(action);
+    }
     // Time
     STimer timer;
     skr_init_timer(&timer);
