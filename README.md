@@ -1,7 +1,7 @@
 <h1 align="center">Sakura.Runtime</h1>
 
 <a href="https://olivermak.es/">
-  <img src="https://raw.githubusercontent.com/SakuraEngine/Sakura.Resources/c79b9364b797e841bf972708d244901959dfb057/logos/skr_logo.svg" width="100%" height="100%">
+  <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/logos/skr_icon.svg" width="100%" height="100%">
 </a>
 
 ## 特性
