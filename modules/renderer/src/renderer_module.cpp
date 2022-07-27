@@ -102,9 +102,14 @@ CGPUQueueId SkrRendererModule::get_cpy_queue(uint32_t idx) const
     return renderer->get_cpy_queue(idx);
 }
 
-CGPUDStorageQueueId SkrRendererModule::get_default_dstorage_queue() const
+CGPUDStorageQueueId SkrRendererModule::get_file_dstorage_queue() const
 {
-    return renderer->get_default_dstorage_queue();
+    return renderer->get_file_dstorage_queue();
+}
+
+CGPUDStorageQueueId SkrRendererModule::get_memory_dstorage_queue() const
+{
+    return renderer->get_memory_dstorage_queue();
 }
 
 struct ISkrRenderer* skr_renderer_get_renderer()
@@ -157,7 +162,11 @@ void skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph)
     SkrRendererModule::Get()->get_renderer()->render(render_graph);
 }
 
-CGPUDStorageQueueId skr_renderer_get_default_dstorage_queue()
+CGPUDStorageQueueId skr_renderer_get_file_dstorage_queue()
 {
-    return SkrRendererModule::Get()->get_default_dstorage_queue();
+    return SkrRendererModule::Get()->get_file_dstorage_queue();
+}
+CGPUDStorageQueueId skr_renderer_get_memory_dstorage_queue()
+{
+    return SkrRendererModule::Get()->get_memory_dstorage_queue();
 }

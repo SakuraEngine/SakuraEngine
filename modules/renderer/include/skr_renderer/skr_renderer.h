@@ -13,7 +13,8 @@ struct SKR_RENDERER_API ISkrRenderer {
     virtual CGPUDeviceId get_cgpu_device() const = 0;
     virtual CGPUQueueId get_gfx_queue() const = 0;
     virtual CGPUQueueId get_cpy_queue(uint32_t idx) const = 0;
-    virtual CGPUDStorageQueueId get_default_dstorage_queue() const = 0;
+    virtual CGPUDStorageQueueId get_file_dstorage_queue() const = 0;
+    virtual CGPUDStorageQueueId get_memory_dstorage_queue() const = 0;
     virtual ECGPUFormat get_swapchain_format() const = 0;
     virtual CGPUSamplerId get_linear_sampler() const = 0;
 #endif
@@ -51,9 +52,13 @@ public:
             return cpy_queues[idx];
         return cpy_queues[0];
     }
-    virtual CGPUDStorageQueueId get_default_dstorage_queue() const override
+    virtual CGPUDStorageQueueId get_file_dstorage_queue() const override
     {
-        return default_dstorage_queue;
+        return file_dstorage_queue;
+    }
+    virtual CGPUDStorageQueueId get_memory_dstorage_queue() const override
+    {
+        return memory_dstorage_queue;
     }
     virtual ECGPUFormat get_swapchain_format() const override
     {
@@ -83,7 +88,8 @@ protected:
     eastl::vector<CGPUQueueId> cpy_queues;
     CGPUSamplerId linear_sampler = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
-    CGPUDStorageQueueId default_dstorage_queue = nullptr;
+    CGPUDStorageQueueId file_dstorage_queue = nullptr;
+    CGPUDStorageQueueId memory_dstorage_queue = nullptr;
 };
 } // namespace skr
 
@@ -97,7 +103,8 @@ public:
     skr_io_vram_service_t* get_vram_service() const;
     CGPUQueueId get_gfx_queue() const;
     CGPUQueueId get_cpy_queue(uint32_t idx = 0) const;
-    CGPUDStorageQueueId get_default_dstorage_queue() const;
+    CGPUDStorageQueueId get_file_dstorage_queue() const;
+    CGPUDStorageQueueId get_memory_dstorage_queue() const;
     ECGPUFormat get_swapchain_format() const;
     CGPUSamplerId get_linear_sampler() const;
 
@@ -126,7 +133,10 @@ RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
 skr_renderer_get_gfx_queue();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDStorageQueueId
-skr_renderer_get_default_dstorage_queue();
+skr_renderer_get_file_dstorage_queue();
+
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUDStorageQueueId
+skr_renderer_get_memory_dstorage_queue();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
 skr_renderer_get_cpy_queue();
