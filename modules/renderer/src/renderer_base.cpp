@@ -46,7 +46,8 @@ void skr::Renderer::finalize()
     }
     cpy_queues.clear();
 
-    if(default_dstorage_queue) cgpu_free_dstorage_queue(default_dstorage_queue);
+    if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
+    if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
 
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
@@ -110,7 +111,12 @@ void skr::Renderer::create_api_objects()
         queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
         queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
         queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
-        default_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+        file_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+
+        queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
+        queue_desc.source = CGPU_DSTORAGE_SOURCE_MEMORY;
+        queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+        memory_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
     }
 
     // Sampler

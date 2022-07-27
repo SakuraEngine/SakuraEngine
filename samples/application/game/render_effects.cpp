@@ -171,14 +171,22 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         if (!render_mesh_request.mesh_resource_request.vfs_override)
         {
             ImGui::Begin(u8"AsyncMesh");
-            auto dstroage_queue = skr_renderer_get_default_dstorage_queue();
+            auto dstroage_queue = skr_renderer_get_file_dstorage_queue();
             auto resource_vfs = skr_game_runtime_get_vfs();
             auto ram_service = skr_game_runtime_get_ram_service();
             auto vram_service = skr_renderer_get_vram_service();
-            if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage)"))
+            if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
             {
                 render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
                 render_mesh_request.dstorage_queue_override = dstroage_queue;
+                render_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_FILE;
+                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
+            }
+            else if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Memory])"))
+            {
+                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+                render_mesh_request.dstorage_queue_override = dstroage_queue;
+                render_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_MEMORY;
                 skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
             }
             else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))

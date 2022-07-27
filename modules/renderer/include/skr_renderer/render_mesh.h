@@ -29,6 +29,7 @@ typedef struct skr_render_mesh_t* skr_render_mesh_id;
 typedef struct skr_render_mesh_request_t {
     CGPUQueueId queue_override;
     CGPUDStorageQueueId dstorage_queue_override;
+    ECGPUDStorageSource dstorage_source;
     skr_gltf_ram_io_request_t mesh_resource_request;
     skr_render_mesh_id render_mesh;
     SAtomic32 buffers_io_status;

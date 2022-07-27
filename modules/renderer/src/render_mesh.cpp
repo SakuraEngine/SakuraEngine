@@ -60,6 +60,7 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
 
     struct CallbackData
     {
+        CGPUDStorageQueueId dstorage_queue;
         skr_render_mesh_request_t* request = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
         skr_io_vram_service_t* vram_service = nullptr;
@@ -73,12 +74,14 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
     };
     SKR_ASSERT((!request->queue_override || !request->dstorage_queue_override) && "only one type of override queue should be set!");
     SKR_ASSERT(request->mesh_resource_request.vfs_override && "vfs_override is null, only support override mode now!");
-    auto dstorage_queue = skr_renderer_get_default_dstorage_queue();
+    auto dstorage_queue = (request->dstorage_source == CGPU_DSTORAGE_SOURCE_FILE) ? skr_renderer_get_file_dstorage_queue() : skr_renderer_get_memory_dstorage_queue();
     auto cbData = SkrNew<CallbackData>();
     cbData->ram_service = ram_service;
     cbData->vram_service = vram_service;
+    cbData->dstorage_queue = dstorage_queue;
     cbData->request = request;
-    request->mesh_resource_request.load_bin_to_memory =  request->queue_override ? true : !dstorage_queue;
+    request->mesh_resource_request.load_bin_to_memory =  
+        request->queue_override ? true : !( (request->dstorage_source == CGPU_DSTORAGE_SOURCE_FILE) && dstorage_queue );
     request->mesh_resource_request.callback_data[SKR_ASYNC_IO_STATUS_OK] = cbData;
     request->mesh_resource_request.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_gltf_ram_io_request_t* gltf_request, void* data)
     {
@@ -98,7 +101,8 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
         {
             auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
             mesh_buffer_io.device = device;
-            mesh_buffer_io.dstorage_queue = request->queue_override ? nullptr : skr_renderer_get_default_dstorage_queue();
+            mesh_buffer_io.dstorage_source_type = request->dstorage_source;
+            mesh_buffer_io.dstorage_queue = request->queue_override ? nullptr : cbData->dstorage_queue;
             mesh_buffer_io.transfer_queue = request->queue_override ? request->queue_override : skr_renderer_get_cpy_queue();
             mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
             mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;

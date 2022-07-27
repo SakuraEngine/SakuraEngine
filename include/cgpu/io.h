@@ -21,6 +21,7 @@ typedef struct skr_vram_buffer_io_t {
     /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
     bool prefer_on_host;
     // Direct Storage
+    ECGPUDStorageSource dstorage_source_type;
     const char8_t* path;
     // Data bytes
     uint8_t* bytes;
@@ -35,6 +36,10 @@ typedef struct skr_vram_buffer_io_t {
 typedef struct skr_vram_buffer_request_t {
     CGPUBufferId out_buffer;
 } skr_vram_buffer_request_t;
+
+typedef struct skr_vram_texture_request_t {
+    CGPUTextureId out_texture;
+} skr_vram_texture_request_t;
 
 typedef struct skr_vram_io_service_desc_t {
     const char8_t* name;
