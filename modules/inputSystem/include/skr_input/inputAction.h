@@ -21,7 +21,10 @@ template<typename ValueType>
 class InputAction : public InputActionBase
 {
 public:
-    using ActionEvent = eastl::function<void(ValueType, ControlsBase<ValueType>*, Interaction*)>;
+    using ActionEvent = eastl::function<void(const ValueType& /*触发时的值*/, 
+                                            ControlsBase<ValueType>* /*触发的Control*/, 
+                                            Interaction* /*触发的Interaction*/,
+                                            const eastl::any& /*触发的Interaction的额外数据*/)>;
 
     void Init(const gainput::InputManager& manager) override
     {
@@ -46,19 +49,18 @@ public:
 
     void UpdateEvent()
     {
-        Interaction* outInteraction = nullptr;
-        ValueType outValue;
+        typename ControlsBase<ValueType>::OutEvent event;
         for(auto& control : _allControls)
         {
-            while (control->PopEvnet(outInteraction, outValue)) 
+            while (control->PopEvnet(event)) 
             {
                 for(auto& action : _allActionEvent)
-                    action(outValue, control.get(), outInteraction);
+                    action(event.value, control.get(), event.interaction, event.interactionData);
             }
         }
     }
 
-    void AddControls(const eastl::shared_ptr<ControlsBase<ValueType>>& control)
+    void AddControl(const eastl::shared_ptr<ControlsBase<ValueType>>& control)
     {
         _allControls.emplace_back(control);
     }
