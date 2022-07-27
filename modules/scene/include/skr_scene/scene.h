@@ -101,6 +101,16 @@ skr_scale_t
     skr_float3_t value;
 };
 
+struct sreflect sattr(
+    "guid" : "4fa24729-2c66-45a2-9417-3497ebc18771",
+    "component" : true
+)
+skr_movement_t
+{
+    skr_float3_t value;
+};
+
+
 struct skr_transform_system {
     dual_query_t* localToWorld;
     dual_query_t* localToRelative;

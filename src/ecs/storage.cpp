@@ -776,7 +776,8 @@ void dualS_batch(dual_storage_t* storage, const dual_entity_t* ents, EIndex coun
 
 void dualS_query(dual_storage_t* storage, const dual_filter_t* filter, const dual_meta_filter_t* meta, dual_view_callback_t callback, void* u)
 {
-    assert(dual::ordered(*filter) && dual::ordered(*meta));
+    assert(dual::ordered(*filter));
+    assert(dual::ordered(*meta));
     storage->query(*filter, *meta, callback, u);
 }
 

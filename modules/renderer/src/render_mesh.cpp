@@ -111,9 +111,18 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
             mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
             mesh_buffer_io.buffer_size = mesh_resource->bins[i].bin.size;
             mesh_buffer_io.bytes = mesh_resource->bins[i].bin.bytes;
-            mesh_buffer_io.size = mesh_resource->bins[i].bin.size;
-            cbData->buffer_paths[i] = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
-            mesh_buffer_io.path = cbData->buffer_paths[i].c_str();
+            mesh_buffer_io.size =  mesh_resource->bins[i].bin.size;
+            if (request->mesh_name)
+            {
+                mesh_buffer_io.buffer_name = request->mesh_name;
+            }
+            else
+            {
+                const char8_t* gltf_buffer_default_name = "gltf_buffer";
+                mesh_buffer_io.buffer_name = gltf_buffer_default_name;
+            }
+            auto gltfPath = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
+            mesh_buffer_io.path = gltfPath.c_str();
             mesh_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* io, void* data){
                 auto cbData = (CallbackData*)data;
                 auto request = cbData->request;

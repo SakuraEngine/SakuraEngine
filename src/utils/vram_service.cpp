@@ -36,6 +36,11 @@ public:
         skr_vram_buffer_request_t* buffer_request;
         CGPUUploadTask* upload_task;
     };
+    struct TextureTask {
+        skr_vram_texture_io_t buffer_io;
+        skr_vram_texture_request_t* buffer_request;
+        CGPUUploadTask* upload_task;
+    };
 
     struct CGPUDStorageTask {
         CGPUDStorageQueueId storage_queue = nullptr;
@@ -46,6 +51,12 @@ public:
     {
         skr_vram_buffer_io_t buffer_io;
         skr_vram_buffer_request_t* buffer_request;
+        CGPUDStorageTask* dstorage_task;
+    };
+    struct DStorageTextureTask
+    {
+        skr_vram_texture_io_t buffer_io;
+        skr_vram_texture_request_t* buffer_request;
         CGPUDStorageTask* dstorage_task;
     };
 
@@ -223,7 +234,6 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             buffer_desc.name = buffer_io.buffer_name;
             buffer_desc.descriptors = buffer_io.resource_types;
             buffer_desc.memory_usage = buffer_io.memory_usage;
-            buffer_desc.format = buffer_io.format;
             buffer_desc.flags = buffer_io.flags;
             buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
             buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
@@ -251,7 +261,6 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             buffer_desc.name = buffer_io.buffer_name;
             buffer_desc.descriptors = buffer_io.resource_types;
             buffer_desc.memory_usage = buffer_io.memory_usage;
-            buffer_desc.format = buffer_io.format;
             buffer_desc.flags = buffer_io.flags;
             buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
             buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
@@ -272,7 +281,6 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             buffer_desc.name = buffer_io.buffer_name;
             buffer_desc.descriptors = buffer_io.resource_types;
             buffer_desc.memory_usage = buffer_io.memory_usage;
-            buffer_desc.format = buffer_io.format;
             buffer_desc.flags = buffer_io.flags;
             buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
             buffer_desc.prefer_on_host = buffer_io.prefer_on_host;

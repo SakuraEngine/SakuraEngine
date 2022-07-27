@@ -27,6 +27,7 @@ typedef struct skr_render_mesh_t skr_render_mesh_t;
 typedef struct skr_render_mesh_t* skr_render_mesh_id;
 
 typedef struct skr_render_mesh_request_t {
+    const char* mesh_name;
     CGPUQueueId queue_override;
     CGPUDStorageQueueId dstorage_queue_override;
     ECGPUDStorageSource dstorage_source;
