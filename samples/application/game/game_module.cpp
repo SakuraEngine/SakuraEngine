@@ -140,6 +140,7 @@ void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_s
     };
     dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
+
 void imgui_button_spawn_girl()
 {
     static bool onceGuard  = true;

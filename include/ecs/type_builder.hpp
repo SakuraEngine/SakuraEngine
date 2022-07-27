@@ -1,5 +1,6 @@
 #pragma once
 #include "dual.h"
+#include "SmallVector.h"
 
 namespace dual
 {
@@ -25,11 +26,8 @@ struct static_type_set_T {
 };
 
 struct RUNTIME_API type_builder_t {
-    dual_type_index_t* data;
-    SIndex length;
-
-    type_builder_t();
-    ~type_builder_t();
+    type_builder_t() = default;
+    ~type_builder_t() = default;
     type_builder_t& with(const dual_type_index_t* types, uint32_t length);
     type_builder_t& with(dual_type_index_t type)
     {
@@ -42,5 +40,7 @@ struct RUNTIME_API type_builder_t {
         return with(types, sizeof...(T));
     }
     dual_type_set_t build();
+protected:
+    llvm_vecsmall::SmallVector<dual_type_index_t, 8> indices;
 };
 } // namespace dual
