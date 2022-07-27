@@ -2,6 +2,8 @@
 #include "cgpu/api.h"
 #include "utils/io.h"
 
+// no format & stride parameters provided now because we think it's not necessary to support async io with UAV buffers
+// we can add them if necessary in the future
 typedef struct skr_vram_buffer_io_t {
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
@@ -11,7 +13,6 @@ typedef struct skr_vram_buffer_io_t {
     const char8_t* buffer_name;
     CGPUResourceTypes resource_types;
     ECGPUMemoryUsage memory_usage;
-    ECGPUFormat format;
     uint64_t buffer_size;
     CGPUBufferCreationFlags flags;
     /// Preferred actual location
@@ -36,6 +37,15 @@ typedef struct skr_vram_buffer_io_t {
 typedef struct skr_vram_buffer_request_t {
     CGPUBufferId out_buffer;
 } skr_vram_buffer_request_t;
+
+typedef struct skr_vram_texture_io_t {
+    CGPUDeviceId device;
+    CGPUQueueId transfer_queue;
+    CGPUDStorageQueueId dstorage_queue;
+    CGPUSemaphoreId opt_semaphore;
+    // CGPU Resource Desc
+    const char8_t* texture_name;
+} skr_vram_texture_io_t;
 
 typedef struct skr_vram_texture_request_t {
     CGPUTextureId out_texture;

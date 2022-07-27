@@ -62,41 +62,44 @@ struct RenderPassForward : public IPrimitiveRenderPass {
             }
             ImGui::End();
         }
-        renderGraph->add_render_pass(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
-                const auto out_color = renderGraph->get_texture("backbuffer");
-                const auto depth_buffer = renderGraph->get_texture("depth");
-                builder.set_name("forward_pass")
-                    // we know that the drawcalls always have a same pipeline
-                    .set_pipeline(drawcalls.drawcalls->pipeline)
-                    .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
-                    .set_depth_stencil(depth_buffer);
-            },
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
-                cgpu_render_encoder_set_viewport(stack.encoder,
-                    0.0f, 0.0f,
-                    (float)900, (float)900,
-                    0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
-                for (uint32_t i = 0; i < drawcalls.count; i++)
-                {
-                    auto&& dc = drawcalls.drawcalls[i];
-                    cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                    CGPUBufferId vertex_buffers[3] = {
-                        dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
-                    };
-                    const uint32_t strides[3] = {
-                        dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
-                    };
-                    const uint32_t offsets[3] = {
-                        dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
-                    };
-                    cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
-                    cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
-                    cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
-                    cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
-                }
-            });
+        if (drawcalls.count)
+        {
+            renderGraph->add_render_pass(
+                [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+                    const auto out_color = renderGraph->get_texture("backbuffer");
+                    const auto depth_buffer = renderGraph->get_texture("depth");
+                    builder.set_name("forward_pass")
+                        // we know that the drawcalls always have a same pipeline
+                        .set_pipeline(drawcalls.drawcalls->pipeline)
+                        .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
+                        .set_depth_stencil(depth_buffer);
+                },
+                [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
+                    cgpu_render_encoder_set_viewport(stack.encoder,
+                        0.0f, 0.0f,
+                        (float)900, (float)900,
+                        0.f, 1.f);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
+                    for (uint32_t i = 0; i < drawcalls.count; i++)
+                    {
+                        auto&& dc = drawcalls.drawcalls[i];
+                        cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
+                        CGPUBufferId vertex_buffers[3] = {
+                            dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
+                        };
+                        const uint32_t strides[3] = {
+                            dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
+                        };
+                        const uint32_t offsets[3] = {
+                            dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
+                        };
+                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
+                        cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
+                        cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
+                        cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
+                    }
+                });
+        }
     }
 
     skr_render_pass_name_t identity() const override
@@ -113,10 +116,6 @@ skr_render_effect_name_t forward_effect_name = "ForwardEffect";
 struct RenderEffectForward : public IRenderEffectProcessor {
     ~RenderEffectForward() = default;
 
-    // render_mesh_t
-    skr_render_mesh_request_t render_mesh_request = make_zeroed<skr_render_mesh_request_t>();
-    // render_mesh_t
-
     void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
         // make identity component type
@@ -131,6 +130,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             identity_type = dualT_register_type(&desc);
         }
         type_builder.with(identity_type);
+        type_builder.with<skr_render_mesh_comp_t>();
         effect_query = dualQ_from_literal(storage, "[in]fwdIdentity");
         // prepare render resources
         prepare_pipeline(renderer);
@@ -139,9 +139,18 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     void on_unregister(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
-        if (render_mesh_request.is_buffer_ready()) 
-            skr_render_mesh_free(render_mesh_request.render_mesh);
-
+        auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
+            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            for (uint32_t i = 0; i < r_cv->count; i++)
+            {
+                if (meshes[i].async_request.render_mesh && meshes[i].async_request.is_buffer_ready())
+                {
+                    skr_render_mesh_free(meshes[i].async_request.render_mesh);
+                    meshes[i].async_request.render_mesh = nullptr;
+                }
+            }
+        };
+        dualQ_get_views(effect_query, DUAL_LAMBDA(sweepFunction));
         free_pipeline(renderer);
         free_geometry_resources(renderer);
     }
@@ -168,55 +177,26 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
-        if (!render_mesh_request.mesh_resource_request.vfs_override)
-        {
-            ImGui::Begin(u8"AsyncMesh");
-            auto dstroage_queue = skr_renderer_get_file_dstorage_queue();
-            auto resource_vfs = skr_game_runtime_get_vfs();
-            auto ram_service = skr_game_runtime_get_ram_service();
-            auto vram_service = skr_renderer_get_vram_service();
-            if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
-            {
-                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-                render_mesh_request.dstorage_queue_override = dstroage_queue;
-                render_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_FILE;
-                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
-            }
-            else if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Memory])"))
-            {
-                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-                render_mesh_request.dstorage_queue_override = dstroage_queue;
-                render_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_MEMORY;
-                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
-            }
-            else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))
-            {
-                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-                render_mesh_request.queue_override = skr_renderer_get_cpy_queue();
-                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
-            }
-            else if (ImGui::Button(u8"LoadMesh(GraphicsQueue)"))
-            {
-                render_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-                render_mesh_request.queue_override = skr_renderer_get_gfx_queue();
-                skr_render_mesh_create_from_gltf(ram_service, vram_service, "scene.gltf", &render_mesh_request);
-            }
-            ImGui::End();   
-        }
         // query from identity component
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
             uint32_t c = 0;
-            auto counterF = [&](dual_chunk_view_t* cv) {
-                c += cv->count;
+            auto counterF = [&](dual_chunk_view_t* r_cv) {
+                auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+                for (uint32_t i = 0; i < r_cv->count; i++)
+                {
+                    if (meshes[i].async_request.is_buffer_ready())
+                    {
+                        c += meshes[i].async_request.render_mesh->primitive_commands.size();
+                    }
+                    else
+                    {
+                        c++;
+                    }
+                }
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
-            if (render_mesh_request.is_buffer_ready())
-            {
-                auto render_mesh_id = render_mesh_request.render_mesh;
-                c += (uint32_t)render_mesh_id->primitive_commands.size();
-            }
             push_constants.resize(c);
             return c;
         }
@@ -229,79 +209,73 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
             auto storage = skr_runtime_get_dual_storage();
-            uint32_t idx = 0;
+            uint32_t r_idx = 0;
+            uint32_t dc_idx = 0;
             auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
                 auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
                 auto unbatched_g_ents = (dual_entity_t*)identities;
                 auto r_ents = dualV_get_entities(r_cv);
+                auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
                 if (unbatched_g_ents)
                 {
                     auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
                         auto g_ents = (dual_entity_t*)dualV_get_entities(g_cv);
                         auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
-                        auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());
+                        auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
                         auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
-                        for (uint32_t i = 0; i < g_cv->count; i++)
+                        for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                         {
-                            auto g_ent = g_ents[i];
-                            auto r_ent = r_ents[idx];
-                            (void)g_ent;
-                            (void)r_ent;
-                            (void)rotations;
-                            push_constants[idx].world = skr::math::make_transform(
-                            translations[idx].value,
-                            scales[idx].value,
-                            skr::math::Quaternion::identity());
-                            auto view = skr::math::look_at_matrix({ 0.f, 0.f, 12.5f } /*eye*/, { 0.f, 0.f, 0.f } /*at*/);
-                            auto proj = skr::math::perspective_fov(3.1415926f / 2.f, (float)900 / (float)900, 1.f, 1000.f);
-                            push_constants[idx].view_proj = skr::math::multiply(view, proj);
+                            auto g_ent = g_ents[g_idx];(void)g_ent;
+                            auto r_ent = r_ents[r_idx];(void)r_ent;
+                            auto world = skr::math::make_transform(
+                                translations[g_idx].value,
+                                scales[g_idx].value,
+                                skr::math::quaternion_from_euler(rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll));
+                            auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
+                            auto proj = skr::math::perspective_fov(3.1415926f / 2.f, (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 1.f, 1000.f);
+                            // resources may be ready after produce_drawcall, so we need to check it here
+                            if (push_constants.size() <= dc_idx) return;
                             // drawcall
-                            auto& drawcall = drawcalls->drawcalls[idx];
-                            drawcall.push_const_name = push_constants_name;
-                            drawcall.push_const = (const uint8_t*)(push_constants.data() + idx);
-                            drawcall.index_buffer = ibv;
-                            drawcall.vertex_buffers = vbvs;
-                            drawcall.vertex_buffer_count = 3;
-                            drawcall.pipeline = pipeline;
-                            idx++;
+                            if (!meshes || !meshes[r_idx].async_request.is_buffer_ready())
+                            {
+                                push_constants[dc_idx].world = world;
+                                push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
+                                auto& drawcall = drawcalls->drawcalls[dc_idx];
+                                drawcall.pipeline = pipeline;
+                                drawcall.push_const_name = push_constants_name;
+                                drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
+                                drawcall.index_buffer = ibv;
+                                drawcall.vertex_buffers = vbvs;
+                                drawcall.vertex_buffer_count = 3;
+                                dc_idx++;
+                            }
+                            else
+                            {
+                                const auto& async_request = meshes[r_idx].async_request;
+                                if (async_request.is_buffer_ready())
+                                {
+                                    const auto& cmds = async_request.render_mesh->primitive_commands;
+                                    for (auto&& cmd : cmds)
+                                    {
+                                        push_constants[dc_idx].world = world;
+                                        push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
+                                        auto& drawcall = drawcalls->drawcalls[dc_idx];
+                                        drawcall.pipeline = pipeline;
+                                        drawcall.push_const_name = push_constants_name;
+                                        drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
+                                        drawcall.index_buffer = *cmd.ibv;
+                                        drawcall.vertex_buffers = cmd.vbvs.data();
+                                        drawcall.vertex_buffer_count = cmd.vbvs.size();
+                                        dc_idx++;
+                                    }
+                                }
+                            }
                         }
                     };
                     dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
                 }
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
-
-            // draw one more girl
-            if (render_mesh_request.is_buffer_ready() && push_constants.size() > idx)
-            {
-                auto render_mesh_id = render_mesh_request.render_mesh;
-                for (auto& girl_prim : render_mesh_id->primitive_commands)
-                {
-                    auto& drawcall = drawcalls->drawcalls[idx];
-                    drawcall.vertex_buffers = girl_prim.vbvs.data();
-                    drawcall.vertex_buffer_count = (uint32_t)girl_prim.vbvs.size();
-                    drawcall.index_buffer = *girl_prim.ibv;
-                    drawcall.pipeline = pipeline;
-                    drawcall.push_const_name = push_constants_name;
-
-                    auto world = skr::math::make_transform(
-                        { 0.f, 0.f, 0.f }, // translation
-                        skr::math::Vector3f::vector_one(), // scale
-                        skr::math::Quaternion::identity() // quat
-                    );
-                    // camera
-                    auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
-                    auto proj = skr::math::perspective_fov(
-                        3.1415926f / 2.f,
-                        (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
-                        1.f, 1000.f);
-                    push_constants[idx].world = world;
-                    push_constants[idx].view_proj = skr::math::multiply(view, proj);
-
-                    drawcall.push_const = (const uint8_t*)(push_constants.data() + idx);
-                    idx++;
-                }
-            }
         }
     }
 

@@ -30,6 +30,7 @@
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
 #include "skr_input/inputSystem.h"
+#include "skr_renderer/render_mesh.h"
 
 SWindowHandle window;
 uint32_t backbuffer_index;
@@ -72,9 +73,10 @@ void SGameModule::on_load(int argc, char** argv)
 
 void create_test_scene()
 {
+    // allocate 100 movable cubes
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
     renderableT_builder
-        .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
+        .with<skr_translation_t, skr_rotation_t, skr_scale_t, skr_movement_t>()
         .with<skr_render_effect_t>();
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
@@ -83,18 +85,105 @@ void create_test_scene()
         auto translations = (skr_translation_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_t>::get());
         auto rotations = (skr_rotation_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_t>::get());
         auto scales = (skr_scale_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_t>::get());
+        auto movements = (skr_movement_t*)dualV_get_owned_ro(view, dual_id_of<skr_movement_t>::get());
         for (uint32_t i = 0; i < view->count; i++)
         {
-            translations[i].value = {
-                (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f, 0.f
-            };
-            rotations[i].euler = { 0.f, 0.f, 0.f };
-            scales[i].value = { 1.f, 1.f, 1.f };
+            if (movements)
+            {
+                translations[i].value = {
+                    (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f + 50.f, 0.f
+                };
+                rotations[i].euler = { 0.f, 0.f, 0.f };
+                scales[i].value = { 8.f, 8.f, 8.f };
+            }
+            else
+            {
+                translations[i].value = { 0.f, 0.f, 0.f };
+                rotations[i].euler = { 3.14159f * 1.5f, 0.f, 0.f };
+                scales[i].value = { 1.f, 1.f, 1.f };
+            }
         }
         auto renderer = skr_renderer_get_renderer();
         skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
     dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 100, DUAL_LAMBDA(primSetup));
+
+    // allocate 1 static(unmovable) gltf mesh
+    auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
+    static_renderableT_builderT
+        .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
+        .with<skr_render_effect_t>();
+    // allocate renderable
+    auto static_renderableT = make_zeroed<dual_entity_type_t>();
+    static_renderableT.type = static_renderableT_builderT.build();
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
+}
+
+void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, const char* path, skr_render_mesh_request_t* request)
+{
+    auto filter = make_zeroed<dual_filter_t>();
+    auto meta = make_zeroed<dual_meta_filter_t>();
+    auto renderable_type = make_zeroed<dual::type_builder_t>();
+    renderable_type.with<skr_render_effect_t, skr_translation_t>();
+    auto static_type = make_zeroed<dual::type_builder_t>();
+    static_type.with<skr_movement_t>();
+    filter.all = renderable_type.build();
+    filter.none = static_type.build();
+    auto attchFunc = [=](dual_chunk_view_t* view) {
+        auto ents = (dual_entity_t*)dualV_get_entities(view);
+        auto requestSetup = [=](dual_chunk_view_t* view) {
+            auto mesh_comps = (skr_render_mesh_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_mesh_comp_t>::get());
+            mesh_comps->async_request = *request;
+            skr_render_mesh_create_from_gltf(ram_service, vram_service, path, &mesh_comps->async_request);
+        };
+        skr_render_effect_access(skr_renderer_get_renderer(), ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
+    };
+    dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
+}
+void imgui_button_spawn_girl()
+{
+    static bool onceGuard  = true;
+    if (onceGuard)
+    {
+        auto girl_mesh_request = make_zeroed<skr_render_mesh_request_t>();
+        ImGui::Begin(u8"AsyncMesh");
+        auto dstroage_queue = skr_renderer_get_file_dstorage_queue();
+        auto resource_vfs = skr_game_runtime_get_vfs();
+        auto ram_service = skr_game_runtime_get_ram_service();
+        auto vram_service = skr_renderer_get_vram_service();
+        girl_mesh_request.mesh_name = "girl";
+        if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
+        {
+            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+            girl_mesh_request.dstorage_queue_override = dstroage_queue;
+            girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_FILE;
+            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            onceGuard = false;
+        }
+        else if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Memory])"))
+        {
+            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+            girl_mesh_request.dstorage_queue_override = dstroage_queue;
+            girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_MEMORY;
+            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            onceGuard = false;
+        }
+        else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))
+        {
+            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+            girl_mesh_request.queue_override = skr_renderer_get_cpy_queue();
+            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            onceGuard = false;
+        }
+        else if (ImGui::Button(u8"LoadMesh(GraphicsQueue)"))
+        {
+            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
+            girl_mesh_request.queue_override = skr_renderer_get_gfx_queue();
+            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            onceGuard = false;
+        }
+        ImGui::End();  
+    }
 }
 
 int SGameModule::main_module_exec(int argc, char** argv)
@@ -177,26 +266,27 @@ int SGameModule::main_module_exec(int argc, char** argv)
         (float)swapchain->back_buffers[0]->width,
         (float)swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
+        imgui_button_spawn_girl();
         quit |= skg::GameLoop(ctx);
         // move
         {
             auto filter = make_zeroed<dual_filter_t>();
             auto meta = make_zeroed<dual_meta_filter_t>();
-            auto translation_type = dual_id_of<skr_translation_t>::get();
-            filter.all.data = &translation_type;
-            filter.all.length = 1;
-            float lerps[] = { 1.25, 2.0 };
+            auto movable_type = make_zeroed<dual::type_builder_t>();
+            filter.all = movable_type.with<skr_movement_t, skr_translation_t>().build();
+            float lerps[] = { 12.5, 20 };
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
             auto moveFunc = [&](dual_chunk_view_t* view) {
-                auto translations = (skr_translation_t*)dualV_get_owned_ro(view, translation_type);
+                auto translations = (skr_translation_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_t>::get());
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     auto lscale = (float)abs(sin(total_sec * 0.5));
                     lscale = (float)lerp(lerps[0], lerps[1], lscale);
                     translations[i].value = {
                         ((float)(i % 10) - 4.5f) * lscale,
-                        ((float)(i / 10) - 4.5f) * lscale, 0.f
+                        ((float)(i / 10) - 4.5f) * lscale + 50.f, 
+                        0.f
                     };
                 }
             };
