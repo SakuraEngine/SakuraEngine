@@ -20,6 +20,9 @@ target("Game")
     add_files("game/main.cpp", "game/render_resources.cpp", "game/render_effects.cpp",  "game/game_module.cpp")
     add_files("game/shaders/**.hlsl")
     add_files("game/**.bin", "game/**.gltf")
+    if (is_os("windows")) then 
+        add_files("/../../resources/windows/sakura.rc")
+    end
 
 target("GameTool")
     add_rules("skr.module", {api = "GAMETOOL"})
