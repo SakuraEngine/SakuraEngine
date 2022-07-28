@@ -1,4 +1,5 @@
-
+﻿#include "platform/configure.h"
+#include "tracy/Tracy.hpp"
 
 #include "gainput/gainput.h"
 #include "gainput/GainputInputDeltaState.h"
@@ -42,7 +43,6 @@ static gainput::InputManager* gGainputInputManager;
 #include "./hid/GainputHID.h"
 #endif
 #include "gainput/GainputHelpers.h"
-
 
 namespace gainput
 {
@@ -157,7 +157,10 @@ void InputManager::Update()
     GAINPUT_ASSERT(mInitialized);
 
 #if defined(GAINPUT_PLATFORM_WIN) || defined(GAINPUT_PLATFORM_MAC) || defined(GAINPUT_PLATFORM_LINUX)
-    HIDPromptForDeviceStateReports(pDeltaState);
+	{
+        ZoneScopedN("HIDPromptForDeviceStateReports");
+   		HIDPromptForDeviceStateReports(pDeltaState);
+	}
 #endif
 
     Change change;

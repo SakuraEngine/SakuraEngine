@@ -1,5 +1,7 @@
 ﻿#include "skr_input/inputSystem.h"
 
+#include "tracy/Tracy.hpp"
+
 namespace skr::input 
 {
 
@@ -49,10 +51,18 @@ void InputSystem::UpdateAllDevice()
 
 void InputSystem::Update(double deltaTime)
 {
-    UpdateAllDevice();
-    _hardwareManager.Update();
+    {
+        ZoneScopedN("UpdateAllDevice");
+        UpdateAllDevice();
+    }
+    {
+        ZoneScopedN("UpdateManager");
+        _hardwareManager.Update();
+    }
     for(auto& action : _allAction)
     {
+        ZoneScopedN("TickAction");
+
         action->Tick(deltaTime);
     }
 }
