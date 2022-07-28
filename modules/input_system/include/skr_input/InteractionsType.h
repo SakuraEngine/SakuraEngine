@@ -65,12 +65,6 @@ public:
         return this->_state == InteractionState::Performed;
     }
 
-    Interaction::EvendId OnSendEvent() override
-    {
-        auto newId = NewEventId();
-        return newId;
-    }
-
 private:
     float _duration;
     float _threshold;
@@ -129,7 +123,7 @@ public:
 
     Interaction::EvendId OnSendEvent() override
     {
-        auto newId = NewEventId();
+        auto newId = this->NewEventId();
         if(this->_state == InteractionState::Performed)
         {
             _time = 0.f;
