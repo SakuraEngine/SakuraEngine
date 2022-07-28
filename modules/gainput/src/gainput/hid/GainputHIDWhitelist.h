@@ -5,7 +5,6 @@
 
 struct hid_device_info;
 
-
 enum UsagePage
 {
     upUndef   = 0x0000,
