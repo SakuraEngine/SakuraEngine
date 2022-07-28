@@ -24,7 +24,7 @@ public:
     using ActionEvent = eastl::function<void(const ValueType& /*触发时的值*/, 
                                             ControlsBase<ValueType>* /*触发的Control*/, 
                                             Interaction* /*触发的Interaction*/,
-                                            const eastl::any& /*触发的Interaction的额外数据*/)>;
+                                            Interaction::EvendId /*由触发的Interaction给这个事件分配的ID*/)>;
 
     void Init(const gainput::InputManager& manager) override
     {
@@ -55,7 +55,7 @@ public:
             while (control->PopEvnet(event)) 
             {
                 for(auto& action : _allActionEvent)
-                    action(event.value, control.get(), event.interaction, event.interactionData);
+                    action(event.value, control.get(), event.interaction, event.eventId);
             }
         }
     }

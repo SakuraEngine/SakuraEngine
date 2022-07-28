@@ -1,7 +1,9 @@
 #include "skr_input/controls.h"
 #include "EASTL/algorithm.h"
 #include "EASTL/internal/copy_help.h"
+#include "EASTL/numeric_limits.h"
 #include "gainput/GainputInputDevice.h"
+#include "math/scalarmath.h"
 #include "utils/log.h"
 
 namespace skr::input
@@ -102,6 +104,11 @@ void ControlsFloat::OnTick(double deltaTime)
     InteractionTick(deltaTime);
 }
 
+bool ControlsFloat::ThresholdReached(float threshold)
+{
+    return _value >= threshold;
+}
+
 void Vector2Control::Init(const gainput::InputManager& manager)
 {
     for(const auto& direction : _buttonDirections)
@@ -153,6 +160,29 @@ void Vector2Control::OnTick(double deltaTime)
     UpdateRawValue();
     ProcessorTick(deltaTime);
     InteractionTick(deltaTime);
+}
+
+bool Vector2Control::ThresholdReached(float threshold)
+{
+    for(const auto& direction : _buttonDirections)
+    {
+        if(direction.up->GetValue() >= threshold)
+            return true;
+        if(direction.down->GetValue() >= threshold)
+            return true;
+        if(direction.left->GetValue() >= threshold)
+            return true;
+        if(direction.right->GetValue() >= threshold)
+            return true;
+    }
+    for(const auto& direction : _stickDirections)
+    {
+        if(math::abs(direction.x->GetValue()) >= threshold)
+            return true;
+        if(math::abs(direction.y->GetValue()) >= threshold)
+            return true;
+    }
+    return false;
 }
 
 void Vector2Control::Bind(const ButtonDirection& controls)
