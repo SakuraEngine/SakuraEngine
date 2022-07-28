@@ -25,6 +25,7 @@ public:
     virtual void Tick(float deltaTime) {};
     virtual bool IsTrigger() = 0;
     virtual EvendId OnSendEvent() { return NewEventId(); };
+    virtual void OnReleaseEvent(EvendId eventId) {};
     InteractionState GetState() { return _state; };
     EvendId NewEventId()
     {
