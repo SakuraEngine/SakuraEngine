@@ -32,6 +32,7 @@ public:
     virtual void Init(const gainput::InputManager& manager) = 0;
     virtual void OnDeviceInputChange(const DeviceInputChangeEvent& event) = 0;
     virtual void OnTick(double deltaTime) = 0;
+    virtual bool ThresholdReached(float threshold) = 0;
     void DisableEvent(bool IsDisable)
     {
         _disableEvent = IsDisable;
@@ -47,9 +48,9 @@ class ControlsBase : public Controls
 public:
     struct OutEvent
     {
-        Interaction* interaction;
         ValueType value;
-        eastl::any interactionData;
+        Interaction* interaction;
+        Interaction::EvendId eventId;
     };
 
     bool PopEvnet(OutEvent& out)
@@ -178,7 +179,7 @@ protected:
     void InteractionUpdate(bool isInit)
     {
         for(auto& interaction : _interactions)
-            interaction->Update(_value, isInit);
+            interaction->Update(_value, isInit, *this);
     }
 
     void InteractionTick(float deltaTime)
@@ -203,7 +204,7 @@ protected:
             return;
         if(_interactions.empty())
         {
-            _events.push_back({nullptr, _value});
+            _events.push_back({_value, nullptr});
         }
         else 
         {
@@ -211,7 +212,7 @@ protected:
             {
                 if(interaction->IsTrigger())
                 {
-                    _events.push_back({interaction.get(), _value, interaction->OnSendEvent()});
+                    _events.push_back({_value, interaction.get(), interaction->OnSendEvent()});
                 }
                 if(interaction->GetState() != InteractionState::Fail)
                     break;
@@ -237,6 +238,7 @@ public:
     void Init(const gainput::InputManager& manager) override;
     void OnDeviceInputChange(const DeviceInputChangeEvent& event) override;
     void OnTick(double deltaTime) override;
+    bool ThresholdReached(float threshold) override;
 private:
     enum
     {
@@ -274,6 +276,7 @@ public:
     void Init(const gainput::InputManager& manager) override;
     void OnDeviceInputChange(const DeviceInputChangeEvent& event) override;
     void OnTick(double deltaTime) override;
+    bool ThresholdReached(float threshold) override;
     void Bind(const ButtonDirection& controls);
     void Bind(const StickDirection& controls);
 private:

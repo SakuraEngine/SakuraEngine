@@ -1,5 +1,4 @@
 #include "gamert.h"
-#include "EASTL/any.h"
 #include "EASTL/shared_ptr.h"
 #include "gainput/GainputInputDevicePad.h"
 #include "platform/configure.h"
@@ -21,6 +20,7 @@
 #include "imgui/imgui.h"
 #include "resource/resource_system.h"
 #include "skr_input/Interactions.h"
+#include "skr_input/InteractionsType.h"
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
 #include "skr_renderer/skr_renderer.h"
@@ -228,9 +228,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
     {
         auto action = eastl::make_shared<InputAction<float>>();
         auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
-        controls1->AddInteraction(eastl::make_shared<InteractionTap_Float>());
+        controls1->AddInteraction(eastl::make_shared<InteractionTap<float>>());
         action->AddControl(controls1);
-        action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, eastl::any iData)
+        action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
         {
             SKR_LOG_DEBUG("Tap_Float %f", value);
         });
@@ -239,14 +239,18 @@ int SGameModule::main_module_exec(int argc, char** argv)
     {
         auto action = eastl::make_shared<InputAction<float>>();
         auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyP);
-        controls1->AddInteraction(eastl::make_shared<InteractionPress_Float>(PressBehavior::PressAndRelease, 0.5f));
+        auto interactionPress = eastl::make_shared<InteractionPress<float>>(PressBehavior::PressAndRelease, 0.5f);
+        controls1->AddInteraction(interactionPress);
         action->AddControl(controls1);
-        action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, eastl::any iData)
+        action->ListenEvent([interactionPress](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
         {
-            if(eastl::any_cast<PressEventType>(iData) == PressEventType::Press)
-                SKR_LOG_DEBUG("Press_Float Press %f", value);
-            else
-                SKR_LOG_DEBUG("Press_Float Release %f", value);;
+            if(interactionPress.get() == i)
+            {
+                if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                    SKR_LOG_DEBUG("Press_Float Press %f", value);
+                else
+                    SKR_LOG_DEBUG("Press_Float Release %f", value);
+            }
         });
         inputSystem.AddInputAction(action);
     }
@@ -267,14 +271,18 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
             }
         );
-        controls1->AddInteraction(eastl::make_shared<InteractionPress_Vector2>(PressBehavior::PressAndRelease, 0.5f));
+        auto interactionPress = eastl::make_shared<InteractionPress<skr::math::Vector2f>>(PressBehavior::PressAndRelease, 0.5f);
+        controls1->AddInteraction(interactionPress);
         action->AddControl(controls1);
-        action->ListenEvent([](skr::math::Vector2f value, ControlsBase<skr::math::Vector2f>* _c, Interaction* i, eastl::any iData)
+        action->ListenEvent([interactionPress](skr::math::Vector2f value, ControlsBase<skr::math::Vector2f>* _c, Interaction* i, Interaction::EvendId eventId)
         {
-            if(eastl::any_cast<PressEventType>(iData) == PressEventType::Press)
-                SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
-            else
-                SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);;
+            if(interactionPress.get() == i)
+            {
+                if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                    SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
+                else
+                    SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
+            }
         });
         inputSystem.AddInputAction(action);
     }
