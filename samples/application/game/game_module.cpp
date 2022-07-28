@@ -34,6 +34,8 @@
 #include "skr_renderer/render_mesh.h"
 #include "math/vector.hpp"
 
+#include "tracy/Tracy.hpp"
+
 SWindowHandle window;
 uint32_t backbuffer_index;
 extern void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph);
@@ -294,9 +296,14 @@ int SGameModule::main_module_exec(int argc, char** argv)
     skg::GameContext ctx;
     while (!quit)
     {
+        FrameMark
+        ZoneScopedN("LoopBody");
+
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
+            ZoneScopedN("PollEvent");
+
             if (event.type == SDL_SYSWMEVENT)
             {
                 SDL_SysWMmsg* msg = event.syswm.msg;
@@ -312,19 +319,28 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 break;
             }
         }
+        // Input
+        {
+            ZoneScopedN("Input");
+        
+            const double deltaTime = skr_timer_get_seconds(&timer, true);
+            inputSystem.Update(deltaTime);
+        }
+        {
+            ZoneScopedN("ImGUI");
 
-        const double deltaTime = skr_timer_get_seconds(&timer, true);
-        inputSystem.Update(deltaTime);
-
-        auto& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2(
-        (float)swapchain->back_buffers[0]->width,
-        (float)swapchain->back_buffers[0]->height);
-        skr_imgui_new_frame(window, 1.f / 60.f);
-        imgui_button_spawn_girl();
-        quit |= skg::GameLoop(ctx);
+            auto& io = ImGui::GetIO();
+            io.DisplaySize = ImVec2(
+            (float)swapchain->back_buffers[0]->width,
+            (float)swapchain->back_buffers[0]->height);
+            skr_imgui_new_frame(window, 1.f / 60.f);
+            imgui_button_spawn_girl();
+            quit |= skg::GameLoop(ctx);
+        }
         // move
         {
+            ZoneScopedN("MoveSystem");
+
             auto filter = make_zeroed<dual_filter_t>();
             auto meta = make_zeroed<dual_meta_filter_t>();
             auto movable_type = make_zeroed<dual::type_builder_t>();
@@ -348,6 +364,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
             dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(moveFunc));
         }
         {
+            ZoneScopedN("AcquireFrame");
+
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);
             CGPUAcquireNextDescriptor acquire_desc = {};
@@ -362,22 +380,36 @@ int SGameModule::main_module_exec(int argc, char** argv)
             .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
         });
-        skr_renderer_render_frame(renderGraph);
-        render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
+        {
+            ZoneScopedN("RenderScene");
+            skr_renderer_render_frame(renderGraph);
+        }
+        {
+            ZoneScopedN("RenderIMGUI");
+            render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
+        }
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
             builder.set_name("present_pass")
             .swapchain(swapchain, backbuffer_index)
             .texture(back_buffer, true);
         });
-        renderGraph->compile();
-        renderGraph->execute();
-        // present
-        CGPUQueuePresentDescriptor present_desc = {};
-        present_desc.index = backbuffer_index;
-        present_desc.swapchain = swapchain;
-        cgpu_queue_present(skr_renderer_get_gfx_queue(), &present_desc);
-        FrameMark
+        {
+            ZoneScopedN("CompileRenderGraph");
+            renderGraph->compile();
+        }
+        {
+            ZoneScopedN("ExecuteRenderGraph");
+            renderGraph->execute();
+        }
+        {
+            ZoneScopedN("QueuePresentSwapchain");
+            // present
+            CGPUQueuePresentDescriptor present_desc = {};
+            present_desc.index = backbuffer_index;
+            present_desc.swapchain = swapchain;
+            cgpu_queue_present(skr_renderer_get_gfx_queue(), &present_desc);
+        }
     }
     // clean up
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());

@@ -1,3 +1,5 @@
+#include "platform/configure.h"
+#include "tracy/Tracy.hpp"
 
 #include "GainputHID.h"
 
@@ -512,11 +514,16 @@ static void HIDLoadDevices()
         //   dependant on the list being as compact as possible
         for (devIt = gDeviceBuffer; devIt < devEnd; ++devIt)
             if (devIt->wasActive && !devIt->active)
+            {
+                ZoneScopedN("HIDRemoveDevice");
                 HIDRemoveDevice(devIt);
+            }
 
         // add any qualifying devices
         for (hid_device_info* dev = devicesToAdd; dev; dev = dev->next)
         {
+            ZoneScopedN("HIDAddDevice");
+
             if (!HIDIsController(dev))
             {
 #if defined(HID_VERBOSE_LOGGING)
@@ -556,6 +563,8 @@ static void HIDLoadDevices()
 static void HIDDetectDevices()
 {
 #if !defined(_WINDOWS)
+    ZoneScopedN("CheckForDeviceInstallation");
+
     CheckForDeviceInstallation(NULL);
 #endif
 
@@ -743,9 +752,15 @@ void HIDPromptForDeviceStateReports(gainput::InputDeltaState* state)
 {
     SKR_ASSERT(gHIDInitialized);
 
-    HIDUpdateDevices(state);
+    {
+        ZoneScopedN("HIDUpdateDevices");
+        HIDUpdateDevices(state);
+    }
 
     // Don't want to risk device connection events being intermixed with input
     //   events from the same devices
-    HIDDetectDevices();
+    {
+        ZoneScopedN("HIDDetectDevices");
+        HIDDetectDevices();
+    }
 }
