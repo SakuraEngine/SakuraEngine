@@ -29,7 +29,7 @@ LANGUAGE 9, 1
 // remains consistent on all systems.
 
 IDI_TESTW       ICON         "sakura_app.ico"
-IDI_SMALL               ICON         "sakura_app.ico"
+IDI_SMALL       ICON         "sakura_app.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
