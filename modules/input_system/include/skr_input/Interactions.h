@@ -22,7 +22,7 @@ public:
     using EvendId = uint64_t;
 
     virtual ~Interaction(){};
-    virtual void Tick(float deltaTime) {};
+    virtual void Tick(double deltaTime) {};
     virtual bool IsTrigger() = 0;
     virtual EvendId OnSendEvent() { return NewEventId(); };
     virtual void OnReleaseEvent(EvendId eventId) {};
