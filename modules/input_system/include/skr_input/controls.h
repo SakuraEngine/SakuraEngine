@@ -159,7 +159,7 @@ protected:
         UpdateValue(isInit);
     };
 
-    void ProcessorTick(float deltaTime)
+    void ProcessorTick(double deltaTime)
     {
         ProcessorBase<ValueType>* prevProcessor = nullptr;
         for(auto& processor : _processors)
@@ -182,7 +182,7 @@ protected:
             interaction->Update(_value, isInit, *this);
     }
 
-    void InteractionTick(float deltaTime)
+    void InteractionTick(double deltaTime)
     {
         for(auto& interaction : _interactions)
             interaction->Tick(deltaTime);

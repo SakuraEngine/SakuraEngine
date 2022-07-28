@@ -11,7 +11,7 @@ class SKR_INPUTSYSTEM_API Processor
 public:
     virtual ~Processor(){};
     // 返回是否发生变化
-    virtual bool Tick(float deltaTime) { return false; };
+    virtual bool Tick(double deltaTime) { return false; };
 };
 
 template<typename ValueType>

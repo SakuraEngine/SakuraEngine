@@ -42,7 +42,7 @@ public:
         }
     }
 
-    void Tick(float deltaTime) override
+    void Tick(double deltaTime) override
     {
         switch (this->_state) 
         {
@@ -68,7 +68,7 @@ public:
 private:
     float _duration;
     float _threshold;
-    float _time = 0.f;
+    double _time = 0.f;
 };
 
 enum class PressBehavior
@@ -110,7 +110,7 @@ public:
         }
     }
 
-    void Tick(float deltaTime) override
+    void Tick(double deltaTime) override
     {
         if(this->_state == InteractionState::Performed && _pressEventInterval > 0.f)
         _time += deltaTime;
@@ -154,7 +154,7 @@ private:
     float _threshold;
     PressBehavior _behavior;
     float _pressEventInterval;
-    float _time = 0.f;
+    double _time = 0.f;
     bool _justReleased = false;
     eastl::map<Interaction::EvendId, PressEventType> _eventData;
 };

@@ -34,7 +34,7 @@ void UpdateDevice(gainput::InputManager& manager, eastl::vector<T*>& allDevice)
             allDevice.push_back(manager.CreateAndGetDevice<T>());
         else if(T* device = allDevice.back();device->IsAvailable())
         {
-            allDevice.push_back(manager.CreateAndGetDevice<T>(allDevice.size()));
+            allDevice.push_back(manager.CreateAndGetDevice<T>());
         }
         else
             break;
