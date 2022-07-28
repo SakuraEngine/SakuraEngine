@@ -56,6 +56,8 @@ public:
             {
                 for(auto& action : _allActionEvent)
                     action(event.value, control.get(), event.interaction, event.eventId);
+                if(event.interaction)
+                    event.interaction->OnReleaseEvent(event.eventId);
             }
         }
     }

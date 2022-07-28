@@ -143,6 +143,11 @@ public:
         return newId;
     }
 
+    void OnReleaseEvent(Interaction::EvendId eventId) override
+    {
+        _eventData.erase(eventId);
+    }
+
     PressEventType GetPressEventType(Interaction::EvendId id)
     {
         auto type = _eventData.find(id);
