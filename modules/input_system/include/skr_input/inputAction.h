@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "EASTL/internal/function.h"
 #include "EASTL/vector.h"
 #include "SkrInputSystem/skr_inputsystem.configure.h"
@@ -69,7 +69,7 @@ public:
 
     void ListenEvent(ActionEvent&& event)
     {
-        _allActionEvent.emplace_back(event);
+        _allActionEvent.emplace_back(eastl::move(event));
     }
 
 protected:
