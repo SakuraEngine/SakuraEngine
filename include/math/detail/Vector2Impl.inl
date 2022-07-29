@@ -15,6 +15,12 @@ FORCEINLINE constexpr Vector<T, 2>::Vector(const skr::array<T, 2> v)
 }
 
 template <typename T>
+FORCEINLINE constexpr Vector<T, 2>::Vector(const skr_float2_t v)
+    : X(v.x), Y(v.y)
+{
+}
+
+template <typename T>
 FORCEINLINE span<T, 2> Vector<T, 2>::data_view()
 {
     return m_;
