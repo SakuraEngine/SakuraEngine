@@ -233,11 +233,12 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 skr::math::quaternion_from_euler(rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll));
                             auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
                             auto proj = skr::math::perspective_fov(3.1415926f / 2.f, (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 1.f, 1000.f);
-                            // resources may be ready after produce_drawcall, so we need to check it here
-                            if (push_constants.size() <= dc_idx) return;
                             // drawcall
                             if (!meshes || !meshes[r_idx].async_request.is_buffer_ready())
                             {
+                                // resources may be ready after produce_drawcall, so we need to check it here
+                                if (push_constants.size() <= dc_idx) return;
+
                                 push_constants[dc_idx].world = world;
                                 push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
                                 auto& drawcall = drawcalls->drawcalls[dc_idx];
@@ -257,6 +258,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                     const auto& cmds = async_request.render_mesh->primitive_commands;
                                     for (auto&& cmd : cmds)
                                     {
+                                        // resources may be ready after produce_drawcall, so we need to check it here
+                                        if (push_constants.size() <= dc_idx) return;
+
                                         push_constants[dc_idx].world = world;
                                         push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
                                         auto& drawcall = drawcalls->drawcalls[dc_idx];
