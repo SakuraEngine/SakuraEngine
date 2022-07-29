@@ -78,6 +78,7 @@ public:
     FORCEINLINE constexpr Vector() = default;
     FORCEINLINE constexpr Vector(const T x, const T y);
     FORCEINLINE constexpr Vector(const skr::array<T, 2> v);
+    FORCEINLINE constexpr Vector(const skr_float2_t v);
     FORCEINLINE skr::span<T, 2> data_view();
     FORCEINLINE skr::span<const T, 2> data_view() const;
     FORCEINLINE static constexpr Vector<T, 2> vector_one();
@@ -112,6 +113,27 @@ public:
     FORCEINLINE Vector operator-=(const Vector V);
     FORCEINLINE Vector operator*=(const T Scale);
     FORCEINLINE Vector operator/=(T V);
+
+    FORCEINLINE friend bool operator==(const Vector<float, 2> v2, const skr_float2_t f2)
+    {
+        return f2.x == v2.x && f2.y == v2.y;
+    }
+    FORCEINLINE friend bool operator==(const skr_float2_t f2, const Vector<float, 2> v2)
+    {
+        return f2.x == v2.x && f2.y == v2.y;
+    }
+    FORCEINLINE friend bool operator!=(const Vector<float, 2> v2, const skr_float2_t f2)
+    {
+        return !(f2 == v2);
+    }
+    FORCEINLINE friend bool operator!=(const skr_float2_t f2, const Vector<float, 2> v2)
+    {
+        return !(f2 == v2);
+    }
+    FORCEINLINE constexpr operator skr_float2_t() const
+    {
+        return {x, y};
+    }
 
     /**
      * Gets the result of component-wise multiplication of this vector by another.
@@ -171,8 +193,8 @@ public:
         skr::array<T, 2> m_ = { 0, 0 };
     };
 };
-using Vector2f = Vector<float, 2u>;
 using Vector2i = Vector<int32_t, 2u>;
+using Vector2f = Vector<float, 2u>;
 struct Rect {
     Vector2f min;
     Vector2f max;
@@ -219,6 +241,14 @@ public:
 
     Vector operator/(T Scale) const;
     bool operator==(const Vector V) const;
+    bool operator!=(const Vector V) const;
+    bool equals(const Vector V, T Tolerance = KINDA_SMALL_NUMBER) const;
+    FORCEINLINE Vector operator-() const;
+    FORCEINLINE Vector operator+=(const Vector V);
+    FORCEINLINE Vector operator-=(const Vector V);
+    FORCEINLINE Vector operator*=(const T Scale);
+    FORCEINLINE Vector operator/=(T V);
+
     FORCEINLINE friend bool operator==(const Vector<float, 3> v3, const skr_float3_t f3)
     {
         return f3.x == v3.x && f3.y == v3.y && f3.z == v3.z;
@@ -239,13 +269,6 @@ public:
     {
         return {x, y, z};
     }
-    bool operator!=(const Vector V) const;
-    bool equals(const Vector V, T Tolerance = KINDA_SMALL_NUMBER) const;
-    FORCEINLINE Vector operator-() const;
-    FORCEINLINE Vector operator+=(const Vector V);
-    FORCEINLINE Vector operator-=(const Vector V);
-    FORCEINLINE Vector operator*=(const T Scale);
-    FORCEINLINE Vector operator/=(T V);
 
     /**
      * Gets the result of component-wise multiplication of this vector by another.
@@ -362,21 +385,21 @@ public:
 
     Vector operator/(float Scale) const;
     bool operator==(const Vector V) const;
-    FORCEINLINE friend bool operator==(const Vector<float, 4> v3, const skr_float4_t f3)
+    FORCEINLINE friend bool operator==(const Vector<float, 4> v4, const skr_float4_t f4)
     {
-        return f3.x == v3.x && f3.y == v3.y && f3.z == v3.z && f3.w == v3.w;
+        return f4.x == v4.x && f4.y == v4.y && f4.z == v4.z && f4.w == v4.w;
     }
-    FORCEINLINE friend bool operator==(const skr_float4_t f3, const Vector<float, 4> v3)
+    FORCEINLINE friend bool operator==(const skr_float4_t f4, const Vector<float, 4> v4)
     {
-        return f3.x == v3.x && f3.y == v3.y && f3.z == v3.z && f3.w == v3.w;
+        return f4.x == v4.x && f4.y == v4.y && f4.z == v4.z && f4.w == v4.w;
     }
-    FORCEINLINE friend bool operator!=(const Vector<float, 4> v3, const skr_float4_t f3)
+    FORCEINLINE friend bool operator!=(const Vector<float, 4> v4, const skr_float4_t f4)
     {
-        return !(f3 == v3);
+        return !(f4 == v4);
     }
-    FORCEINLINE friend bool operator!=(const skr_float4_t f3, const Vector<float, 4> v3)
+    FORCEINLINE friend bool operator!=(const skr_float4_t f4, const Vector<float, 4> v4)
     {
-        return !(f3 == v3);
+        return !(f4 == v4);
     }
     FORCEINLINE constexpr operator skr_float4_t() const
     {
