@@ -615,7 +615,10 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         // submit
         ZoneScopedN("GraphQueueSubmit");
         if (profiler) profiler->before_commit(*this, executor);
-        executor.commit(gfx_queue);
+        {
+            ZoneScopedN("CGPUGfxQueueSubmit");
+            executor.commit(gfx_queue);
+        }
         if (profiler) profiler->after_commit(*this, executor);
     }
     {
