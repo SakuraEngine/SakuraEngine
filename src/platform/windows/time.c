@@ -11,9 +11,9 @@
 /************************************************************************/
 // Time Related Functions
 /************************************************************************/
-uint32_t getSystemTime() { return (uint32_t)timeGetTime(); }
+uint32_t skr_sys_get_time() { return (uint32_t)timeGetTime(); }
 
-uint32_t getTimeSinceStart() { return (uint32_t)time(NULL); }
+uint32_t skr_sys_get_time_since_start() { return (uint32_t)time(NULL); }
 
 static SCallOnceGuard timeInitGuard;
 static int64_t highResTimerFrequency = 0;
@@ -72,7 +72,7 @@ static void ensureTimeInit()
     skr_call_once(&timeInitGuard, initTime);
 }
 
-int64_t getTimerFrequency()
+int64_t skr_sys_get_timer_freq()
 {
     ensureTimeInit();
 
@@ -82,7 +82,7 @@ int64_t getTimerFrequency()
 // The `precise` param is being used to specify the way in which the usec is calculated.
 // If it's false, then a normal unsafe multiplication and division operations are made.
 // If it's true, a special int64MulDiv function is called that avoids the overflow.
-int64_t getUSec(bool precise)
+int64_t skr_sys_get_usec(bool precise)
 {
     ensureTimeInit();
 

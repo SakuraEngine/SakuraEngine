@@ -18,12 +18,12 @@ static inline int64_t int64MulDiv(int64_t value, int64_t numer, int64_t denom)
 }
 
 // High res timer functions
-RUNTIME_API int64_t getUSec(bool precise);
-RUNTIME_API int64_t getTimerFrequency(void);
+RUNTIME_API int64_t skr_sys_get_usec(bool precise);
+RUNTIME_API int64_t skr_sys_get_timer_freq(void);
 
 // Time related functions
-RUNTIME_API uint32_t getSystemTime(void);
-RUNTIME_API uint32_t getTimeSinceStart(void);
+RUNTIME_API uint32_t skr_sys_get_time(void);
+RUNTIME_API uint32_t skr_sys_get_time_since_start(void);
 
 /// Low res OS timer
 typedef struct STimer {

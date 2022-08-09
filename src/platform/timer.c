@@ -4,7 +4,7 @@ void skr_init_timer(STimer* pTimer) { skr_timer_reset(pTimer); }
 
 unsigned skr_timer_get_msec(STimer* pTimer, bool reset)
 {
-    unsigned currentTime = getSystemTime();
+    unsigned currentTime = skr_sys_get_time();
     unsigned elapsedTime = currentTime - pTimer->mStartTime;
     if (reset)
         pTimer->mStartTime = currentTime;
@@ -14,7 +14,7 @@ unsigned skr_timer_get_msec(STimer* pTimer, bool reset)
 
 double skr_timer_get_seconds(STimer* pTimer, bool reset) { return (double)skr_timer_get_msec(pTimer, reset) / 1e3; }
 
-void skr_timer_reset(STimer* pTimer) { pTimer->mStartTime = getSystemTime(); }
+void skr_timer_reset(STimer* pTimer) { pTimer->mStartTime = skr_sys_get_time(); }
 
 void skr_init_hires_timer(SHiresTimer* pTimer)
 {
@@ -24,7 +24,7 @@ void skr_init_hires_timer(SHiresTimer* pTimer)
 
 int64_t skr_hires_timer_get_usec(SHiresTimer* pTimer, bool reset)
 {
-    int64_t currentTime = getUSec(false);
+    int64_t currentTime = skr_sys_get_usec(false);
     int64_t elapsedTime = currentTime - pTimer->mStartTime;
 
     // Correct for possible weirdness with changing internal frequency
@@ -58,4 +58,4 @@ double skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset) { return (do
 
 double skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer) { return (double)skr_hires_timer_get_usec_average(pTimer) / 1e6; }
 
-void skr_hires_timer_reset(SHiresTimer* pTimer) { pTimer->mStartTime = getUSec(false); }
+void skr_hires_timer_reset(SHiresTimer* pTimer) { pTimer->mStartTime = skr_sys_get_usec(false); }
