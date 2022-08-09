@@ -1,4 +1,4 @@
-name: windows-build
+name: windows-vs2019
 
 on: [push, pull_request]
 env:
