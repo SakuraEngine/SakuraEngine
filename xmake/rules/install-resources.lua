@@ -3,9 +3,10 @@ rule("utils.install-resources")
         local raw_ext = path.extension(sourcefile)
         local ext = raw_ext:gsub('%.', '_')
         local outdir = target:extraconf("rules", "utils.install-resources", "outdir") or "/../resources"
+        local rootdir = target:extraconf("rules", "utils.install-resources", "rootdir") or ""
         local ext_outdir = target:extraconf("rules", "utils.install-resources", ext.."_outdir")
         if(ext_outdir ~= nil) then
             outdir = ext_outdir
         end
-        os.cp(sourcefile, path.join(target:targetdir(), outdir).."/")
+        os.cp(sourcefile, path.join(target:targetdir(), outdir).."/", {rootdir = path.relative(rootdir)})
     end)

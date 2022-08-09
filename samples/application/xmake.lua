@@ -55,7 +55,8 @@ if (os.host() == "windows") then
         add_deps("SkrLive2D", "SkrImGui")
         add_rules("utils.install-resources", {
             extensions = {".json", ".moc3", ".png"},
-            outdir = "/../resources"})
+            outdir = "/../resources/Live2DViewer", 
+            rootdir = os.curdir().."/live2d-viewer/resources"})
         add_rules("utils.dxc", {
             spv_outdir = "/../resources/shaders/Live2DViewer",
             dxil_outdir = "/../resources/shaders/Live2DViewer"})
