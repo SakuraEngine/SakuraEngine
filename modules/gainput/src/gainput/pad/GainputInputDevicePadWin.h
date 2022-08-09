@@ -63,7 +63,7 @@ public:
 		//added
 		if (fb.duration_ms)
 		{
-			if (getSystemTime() > fb.duration_ms)
+			if (skr_sys_get_time() > fb.duration_ms)
 			{
 				SetRumbleEffect(0.0f, 0.0f, 0);
 			}
@@ -212,7 +212,7 @@ public:
 		fb.vibration_left = uint8_t(leftMotor * MaxMotorSpeed);
 		fb.vibration_right = uint8_t(rightMotor * MaxMotorSpeed);
 		if(duration_ms)
-			fb.duration_ms = getSystemTime() + duration_ms;
+			fb.duration_ms = skr_sys_get_time() + duration_ms;
 		else
 			fb.duration_ms = 0;
 

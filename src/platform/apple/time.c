@@ -8,7 +8,7 @@
 // Time Related Functions
 /************************************************************************/
 
-uint32_t getSystemTime()
+uint32_t skr_sys_get_time()
 {
 	long            ms;    // Milliseconds
 	time_t          s;     // Seconds
@@ -24,7 +24,7 @@ uint32_t getSystemTime()
 	return (uint32_t)ms;
 }
 
-int64_t getUSec(bool precise)
+int64_t skr_sys_get_usec(bool precise)
 {
 	struct timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
@@ -33,9 +33,9 @@ int64_t getUSec(bool precise)
 	return us;
 }
 
-uint32_t getTimeSinceStart() { return (uint32_t)time(NULL); }
+uint32_t skr_sys_get_time_since_start() { return (uint32_t)time(NULL); }
 
-int64_t getTimerFrequency()
+int64_t skr_sys_get_timer_freq()
 {
 	// This is us to s
 	return 1000000LL;
