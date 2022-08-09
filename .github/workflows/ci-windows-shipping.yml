@@ -1,4 +1,4 @@
-name: windows-build-shipping
+name: windows-vs2022-shipping
 
 on: [push, pull_request]
 env:
