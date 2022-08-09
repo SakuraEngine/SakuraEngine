@@ -678,7 +678,7 @@ RUNTIME_API dual_entity_t dualJ_add_resource();
 RUNTIME_API void dualJ_remove_resource(dual_entity_t id);
 typedef uint32_t dual_thread_index_t;
 typedef void (*dual_system_callback_t)(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
-typedef void (*dual_system_init_callback_t)(void* u, EIndex entityCount);
+typedef void (*dual_system_lifetime_callback_t)(void* u, EIndex entityCount);
 typedef struct dual_resource_operation_t {
     dual_entity_t* resources;
     int* readonly;
@@ -696,7 +696,7 @@ typedef struct dual_resource_operation_t {
  * @param resources
  */
 RUNTIME_API void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_init_callback_t init, dual_resource_operation_t* resources, dual_counter_t** counter);
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter);
 
 typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
 /**
