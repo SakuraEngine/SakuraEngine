@@ -9,7 +9,7 @@ target("SkrTool")
     add_files("core/src/**.cpp")
     add_deps("SkrRT")
     add_includedirs("core/include", {public = true})
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"core/**.h", "core/**.hpp"},
         rootdir = "core/",
         api = "TOOL"
@@ -18,7 +18,7 @@ target("SkrTool")
 if(has_config("build_usdtool")) then
 target("UsdTool")
     add_rules("skr.module", {api = "USDTOOL"})
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"usdtool/**.h", "usdtool/**.hpp"},
         rootdir = "usdtool/"
     })
@@ -30,7 +30,7 @@ end
 
 target("GLTFTool")
     add_rules("skr.module", {api = "GLTFTool"})
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"gltf_tool/**.h", "gltf_tool/**.hpp"},
         rootdir = "gltf_tool/"
     })
@@ -53,7 +53,7 @@ target("SkrCompiler")
     --if(is_os("windows")) then 
     --    add_links("zlibstatic")
     --end
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"compiler/**.h", "compiler/**.hpp"},
         rootdir = "compiler/"
     })

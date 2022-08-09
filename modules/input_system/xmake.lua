@@ -1,6 +1,6 @@
 target("SkrInputSystem")
     add_rules("skr.module", {api = "SKR_INPUTSYSTEM"})
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"include/**.h"},
         rootdir = "include/",
         api = "SKR_INPUTSYSTEM"

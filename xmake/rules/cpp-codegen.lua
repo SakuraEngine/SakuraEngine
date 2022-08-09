@@ -1,29 +1,29 @@
-rule("c++.reflection")
+rule("c++.codegen")
     after_load(function (target, opt)
-        import("gen_refl")
+        import("meta_codegen")
         local headerfiles = {}
-        local files = target:extraconf("rules", "c++.reflection", "files")
+        local files = target:extraconf("rules", "c++.codegen", "files")
         for _, file in ipairs(files) do
             local p = path.join(target:scriptdir(), file)
             for __, filepath in ipairs(os.files(p)) do
                 table.insert(headerfiles, filepath)
             end
         end
-        gen_refl(target, headerfiles)
+        meta_codegen(target, headerfiles)
     end)
     on_config(function (target, opt)
-        import("gen_refl")
-        local rootdir = target:extraconf("rules", "c++.reflection", "rootdir")
+        import("meta_codegen")
+        local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
         local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
         if has_config("is_msvc") then
             opt = opt or {}
             opt.cl = true
         end
-        -- generate reflection files
-        local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated")
+        -- generate code files
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
         target:add("includedirs", gendir, {public = true})
         target:add("includedirs", path.join(gendir, target:name()))
-        gen_refl.generate_refl_files(target, abs_rootdir, opt)
+        meta_codegen.generate_code_files(target, abs_rootdir, opt)
         -- add to sourcebatch
         local sourcebatches = target:sourcebatches()
         local cppfiles = os.files(path.join(gendir, "/**.cpp"))
