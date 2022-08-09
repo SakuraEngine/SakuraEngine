@@ -1,5 +1,5 @@
 includes("rules/dxc.lua")
 includes("rules/install-resources.lua")
 includes("rules/grpc_rule.lua")
-includes("rules/cpp-reflection.lua")
+includes("rules/cpp-codegen.lua")
 includes("rules/skr-module.lua")

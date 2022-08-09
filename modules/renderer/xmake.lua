@@ -1,6 +1,6 @@
 target("SkrRenderer")
     add_rules("skr.module", {api = "SKR_RENDERER"})
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/",
         api = "SKR_RENDERER"

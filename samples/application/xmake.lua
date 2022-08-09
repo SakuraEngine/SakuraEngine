@@ -1,6 +1,6 @@
 target("GameRT")
     add_rules("skr.module", {api = "GAMERT"})
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
@@ -26,7 +26,7 @@ target("Game")
 
 target("GameTool")
     add_rules("skr.module", {api = "GAMETOOL"})
-    add_rules("c++.reflection", {
+    add_rules("c++.codegen", {
         files = {"gametool/**.h", "gametool/**.hpp"},
         rootdir = "gametool/"
     })

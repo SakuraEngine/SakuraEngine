@@ -83,6 +83,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
         },
     }
+    local disable_reflection = target:extraconf("rules", "c++.codegen", "disable_reflection")
     local rebuild = false
     for _, generator in ipairs(pre_generators) do
         local dependfile = target:dependfile(generator[1])
@@ -100,7 +101,9 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         local dependfile = target:dependfile(headerfile.."meta")
         depend.on_changed(function ()
             table.insert(changedfiles, headerfile);
-            cprint("${cyan}reflection.header ${clear}%s", headerfile)
+            if (not disable_reflection) then
+                cprint("${cyan}reflection.header ${clear}%s", headerfile)
+            end
         end, {dependfile = dependfile, files = {headerfile}})
     end
     if rebuild then
@@ -108,8 +111,8 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
     end
     -- generate dummy .cpp file
     if(#changedfiles > 0) then
-        local api = target:extraconf("rules", "c++.reflection", "api")
-        -- compile jsons to c++
+        local api = target:extraconf("rules", "c++.codegen", "api")
+        -- gen configure file
         local function pre_task(index)
             local pre_generator = pre_generators[index][1]
             cprint("${cyan}generating.%s${clear} %s", path.filename(pre_generator), path.absolute(metadir))
@@ -125,45 +128,48 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             os.iorunv(python.program, command)
         end
         runjobs("pre_codegen.cpp", pre_task, {total = #pre_generators})
-        -- generate dummy .h file
-        local reflfile = io.open(sourcefile_refl, "w")
-        for _, headerfile in ipairs(changedfiles) do
-            headerfile = path.absolute(headerfile)
-            sourcefile_refl =
-            path.absolute(sourcefile_refl)
-            headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
-            reflfile:print("#include \"%s\"", headerfile)
-        end
-        reflfile:close()
-        -- build generated cpp to json
-        cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
-        local depsmeta = {}
-        for _, dep in pairs(target:deps()) do
-            local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
-            if os.exists(depmetadir) then
-                table.insert(depsmeta, depmetadir)
-            end
-        end
         -- compile jsons to c++
-        local function task(index)
-            local generator = generators[index][1]
-            cprint("${cyan}generating.%s${clear} %s", path.filename(generator), path.absolute(metadir))
-            import("find_sdk")
-            local python = find_sdk.find_program("python3")
-            local command = {
-                generator,
-                path.absolute(metadir), path.absolute(generators[index].gendir or gendir), api or target:name()
-            }
-            for _, dep in ipairs(depsmeta) do
-                table.insert(command, dep)
+        if (not disable_reflection) then
+            -- generate dummy .h file
+            local reflfile = io.open(sourcefile_refl, "w")
+            for _, headerfile in ipairs(changedfiles) do
+                headerfile = path.absolute(headerfile)
+                sourcefile_refl =
+                path.absolute(sourcefile_refl)
+                headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
+                reflfile:print("#include \"%s\"", headerfile)
             end
-            os.iorunv(python.program, command)
+            reflfile:close()
+            -- build generated cpp to json
+            cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
+            local depsmeta = {}
+            for _, dep in pairs(target:deps()) do
+                local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
+                if os.exists(depmetadir) then
+                    table.insert(depsmeta, depmetadir)
+                end
+            end
+            -- compile jsons to c++
+            local function task(index)
+                local generator = generators[index][1]
+                cprint("${cyan}generating.%s${clear} %s", path.filename(generator), path.absolute(metadir))
+                import("find_sdk")
+                local python = find_sdk.find_program("python3")
+                local command = {
+                    generator,
+                    path.absolute(metadir), path.absolute(generators[index].gendir or gendir), api or target:name()
+                }
+                for _, dep in ipairs(depsmeta) do
+                    table.insert(command, dep)
+                end
+                os.iorunv(python.program, command)
+            end
+            runjobs("codegen.cpp", task, {total = #generators})
         end
-        runjobs("codegen.cpp", task, {total = #generators})
     end
 end
 
-function generate_refl_files(target, rootdir, opt)
+function generate_code_files(target, rootdir, opt)
     local refl_batch = target:data("reflection.batch")
     if refl_batch then
         for _, sourceinfo in ipairs(refl_batch) do
@@ -183,10 +189,10 @@ end
 
 function main(target, headerfiles)
     local batchsize = extraconf and extraconf.batchsize or 10
-    local extraconf = target:extraconf("rules", "c++.reflection")
+    local extraconf = target:extraconf("rules", "c++.codegen")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
-    local gendir = path.join(target:autogendir({root = true}), target:plat(), "reflection/generated", target:name())
+    local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen", target:name())
     local toolgendir = path.join(target:autogendir({root = true}), target:plat(), "tool/generated", target:name())
     local reflection_batch = {}
     local id = 1
