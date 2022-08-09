@@ -10,7 +10,7 @@ target("SkrLive2D")
     add_includedirs("src/Framework", {public=false})
     add_files("src/**.cpp")
     if (is_os("windows")) then 
-        add_linkdirs("CubismNativeCore/lib/windows/x86_64/142")
+        add_linkdirs("CubismNativeCore/lib/windows/x86_64/142", {public=true})
         if (is_mode("release")) then
             add_links("Live2DCubismCore_MD", {public=true})
         else
@@ -18,6 +18,6 @@ target("SkrLive2D")
         end
     end
     if (is_os("macosx")) then 
-        add_linkdirs("CubismNativeCore/lib/macos/x86_64")
+        add_linkdirs("CubismNativeCore/lib/macos/x86_64", {public=true})
         add_links("Live2DCubismCore", {public=true})
     end
