@@ -835,7 +835,7 @@ static bool mi_try_new_handler(bool nothrow) {
 #else
 typedef void (*std_new_handler_t)(void);
 
-#if (defined(__GNUC__) || defined(__clang__))
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(_WIN32)
 std_new_handler_t __attribute((weak)) _ZSt15get_new_handlerv(void) {
   return NULL;
 }

@@ -506,8 +506,8 @@ mi_decl_export void _mi_redirect_entry(DWORD reason) {
     mi_thread_done();
   }
 }
-__declspec(dllimport) bool mi_allocator_init(const char** message);
-__declspec(dllimport) void mi_allocator_done(void);
+__declspec(dllexport) bool mi_allocator_init(const char** message);
+__declspec(dllexport) void mi_allocator_done(void);
 #ifdef __cplusplus
 }
 #endif
