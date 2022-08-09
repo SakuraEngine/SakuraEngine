@@ -55,7 +55,7 @@
 
 ## 嵌入源码的开源库和版本
 - log.c f9ea349 (MIT)
-- mimalloc v2.0.3 (MIT)
+- mimalloc v2.0.6 (MIT)
 - xxhash 0.8.1 (BSD)
 - VulkanMemoryAllocator 3.0.0, release
 - D3D12MemoryAllocator 2.0.1 release
