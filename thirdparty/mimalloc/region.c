@@ -94,7 +94,7 @@ typedef struct mem_region_s {
   mi_bitmap_field_t         commit;      // track if committed per block
   mi_bitmap_field_t         reset;       // track if reset per block
   _Atomic(size_t)           arena_memid; // if allocated from a (huge page) arena
-  size_t                    padding;     // round to 8 fields
+  _Atomic(size_t)           padding;     // round to 8 fields (needs to be atomic for msvc, see issue #508)
 } mem_region_t;
 
 // The region map
@@ -122,7 +122,7 @@ static size_t mi_good_commit_size(size_t size) {
 */
 
 // Return if a pointer points into a region reserved by us.
-bool mi_is_in_heap_region(const void* p) mi_attr_noexcept {
+mi_decl_nodiscard bool mi_is_in_heap_region(const void* p) mi_attr_noexcept {
   if (p==NULL) return false;
   size_t count = mi_atomic_load_relaxed(&regions_count);
   for (size_t i = 0; i < count; i++) {
