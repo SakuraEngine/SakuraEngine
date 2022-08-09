@@ -54,15 +54,15 @@ if (os.host() == "windows") then
         set_kind("binary")
         add_deps("SkrLive2D", "SkrImGui")
         add_rules("utils.install-resources", {
-            extensions = {".gltf", ".bin", ".png"},
-            outdir = "/../resources", _png_outdir = "/../resources/textures"})
+            extensions = {".json", ".moc3", ".png"},
+            outdir = "/../resources"})
         add_rules("utils.dxc", {
             spv_outdir = "/../resources/shaders/Live2DViewer",
             dxil_outdir = "/../resources/shaders/Live2DViewer"})
         add_includedirs("live2d-viewer/include", {public=true})
         add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp")
         -- add_files("live2d-viewer/shaders/**.hlsl")
-        -- add_files("live2d-viewer/**.bin", "live2d-viewer/**.gltf")
+        add_files("live2d-viewer/**.json", "live2d-viewer/**.moc3", "live2d-viewer/**.png")
         if (is_os("windows")) then 
             add_files("/../../resources/windows/sakura.rc")
         end
