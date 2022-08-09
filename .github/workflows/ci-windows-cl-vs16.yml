@@ -1,4 +1,4 @@
-name: windows-cl-build-shipping
+name: windows-cl-build
 
 on: [push, pull_request]
 env:
@@ -6,7 +6,7 @@ env:
 
 jobs:
  build-windows-cl:
-  runs-on: windows-latest
+  runs-on: windows-2019
   steps:
    - uses: actions/checkout@v2
      with:
@@ -32,15 +32,24 @@ jobs:
         Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/${{env.VulkanSDKVersion}}/windows/VulkanSDK-${{env.VulkanSDKVersion}}-Installer.exe?u= -OutFile ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe
         $installer = Start-Process -FilePath ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe -Wait -PassThru -ArgumentList @("/S");
         $installer.WaitForExit();
-   - name: Shipping
+   - name: ConfigureDebug
+     run: xmake f -m debug -y -v --build_tests=n --build_usdtool=n --policies=build.ccache:n -c
+     env:
+        VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+   - name: UploadMeta
+     uses: actions/upload-artifact@v3
+     with:
+        name: meta-files
+        path: build/.gens
+   - name: Debug
+     shell: cmd
+     run: xmake -y -v
+     env:
+        VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+   - name: Release
      shell: cmd
      run: |
-        xmake f -m release -y -c -v --build_tests=n --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
+        xmake f -m release -y -c -v --build_tests=n --use_tracy=disable --policies=build.ccache:n
         xmake -y -v
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
-   - name: UploadShipping
-     uses: actions/upload-artifact@v3
-     with:
-        name: artifacts
-        path: build/windows
