@@ -71,26 +71,26 @@ ECGPULoadAction load_action)
         font_handle = render_graph->create_texture(
         [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
             builder.set_name("imgui_font_texture")
-            .import(font_texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+                .import(font_texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
         });
         // vb & ib
         vertex_buffer_handle = render_graph->create_buffer(
         [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
             builder.set_name("imgui_vertex_buffer")
-            .size(vertex_size)
-            .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-            .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-            .prefer_on_device()
-            .as_vertex_buffer();
+                .size(vertex_size)
+                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+                .prefer_on_device()
+                .as_vertex_buffer();
         });
         index_buffer_handle = render_graph->create_buffer(
         [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
             builder.set_name("imgui_index_buffer")
-            .size(index_size)
-            .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-            .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-            .prefer_on_device()
-            .as_index_buffer();
+                .size(index_size)
+                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+                .prefer_on_device()
+                .as_index_buffer();
         });
         if (!useCVV)
         {
@@ -98,12 +98,11 @@ ECGPULoadAction load_action)
             {
                 if (upload_buffer)
                 {
+                    // TODO: release upload_buffer more efficiently
                     cgpu_wait_queue_idle(render_graph->get_gfx_queue());
                     cgpu_free_buffer(upload_buffer);
                 }
-                upload_buffer = cgpux_create_mapped_upload_buffer(
-                device, index_size + vertex_size,
-                "imgui_upload_buffer");
+                upload_buffer = cgpux_create_mapped_upload_buffer(device, index_size + vertex_size, "imgui_upload_buffer");
             }
             // upload
             ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
@@ -119,24 +118,24 @@ ECGPULoadAction load_action)
             upload_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
                 builder.set_name("imgui_upload_buffer")
-                .import(upload_buffer, CGPU_RESOURCE_STATE_COPY_SOURCE);
+                    .import(upload_buffer, CGPU_RESOURCE_STATE_COPY_SOURCE);
             });
             render_graph->add_copy_pass(
             [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
                 builder.set_name("imgui_geom_transfer")
-                .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
-                .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
+                    .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
+                    .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
             });
         }
         // add pass
         render_graph->add_render_pass(
         [=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
             builder.set_name("imgui_pass")
-            .set_pipeline(render_pipeline)
-            .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
-            .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
-            .read("texture0", font_handle)
-            .write(0, target, load_action);
+                .set_pipeline(render_pipeline)
+                .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+                .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
+                .read("texture0", font_handle)
+                .write(0, target, load_action);
         },
         [target, useCVV](rg::RenderGraph& g, rg::RenderPassContext& context) {
             auto target_node = g.resolve(target);
@@ -202,14 +201,14 @@ ECGPULoadAction load_action)
                             }
                         }
                         cgpu_render_encoder_bind_index_buffer(context.encoder,
-                        resolved_ib, sizeof(uint16_t), 0);
-                        const uint32_t stride = sizeof(ImDrawVert);
+                            resolved_ib, sizeof(uint16_t), 0);
+                            const uint32_t stride = sizeof(ImDrawVert);
                         cgpu_render_encoder_bind_vertex_buffers(context.encoder,
-                        1, &resolved_vb, &stride, NULL);
-                        cgpu_render_encoder_draw_indexed(context.encoder,
-                        pcmd->ElemCount,
-                        pcmd->IdxOffset + global_idx_offset,
-                        pcmd->VtxOffset + global_vtx_offset);
+                            1, &resolved_vb, &stride, NULL);
+                            cgpu_render_encoder_draw_indexed(context.encoder,
+                            pcmd->ElemCount,
+                            pcmd->IdxOffset + global_idx_offset,
+                            pcmd->VtxOffset + global_vtx_offset);
                     }
                 }
                 global_idx_offset += cmd_list->IdxBuffer.Size;
