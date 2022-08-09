@@ -1,12 +1,12 @@
-name: windows-cl-build-shipping
+name: windows-build-shipping
 
 on: [push, pull_request]
 env:
   VulkanSDKVersion: 1.2.162.1
 
 jobs:
- build-windows-cl:
-  runs-on: windows-latest
+ build-windows:
+  runs-on: windows-2019
   steps:
    - uses: actions/checkout@v2
      with:
@@ -35,7 +35,7 @@ jobs:
    - name: Shipping
      shell: cmd
      run: |
-        xmake f -m release -y -c -v --build_tests=n --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
+        xmake f -m release --cc=clang-cl --cxx=clang-cl -c -y -v --build_tests=n --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
         xmake -y -v
      env:
         VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
