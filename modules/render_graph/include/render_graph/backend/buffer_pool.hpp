@@ -17,6 +17,18 @@ public:
         uint64_t frame_index;
         uint32_t tags;
     };
+    struct PooledBuffer
+    {
+        PooledBuffer() = delete;
+        PooledBuffer(CGPUBufferId buffer, ECGPUResourceState state, AllocationMark mark)
+            : buffer(buffer), state(state), mark(mark)
+        {
+
+        }
+        CGPUBufferId buffer;
+        ECGPUResourceState state;
+        AllocationMark mark;
+    };
     struct Key {
         const CGPUDeviceId device;
         uint64_t size;
@@ -40,9 +52,7 @@ public:
 
 protected:
     CGPUDeviceId device;
-    eastl::unordered_map<Key,
-        eastl::deque<eastl::pair<
-            eastl::pair<CGPUBufferId, ECGPUResourceState>, AllocationMark>>> buffers;
+    eastl::unordered_map<Key, eastl::deque<PooledBuffer>> buffers;
 };
 
 FORCEINLINE BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
@@ -74,7 +84,7 @@ FORCEINLINE void BufferPool::finalize()
     {
         while (!queue.empty())
         {
-            cgpu_free_buffer(queue.front().first.first);
+            cgpu_free_buffer(queue.front().buffer);
             queue.pop_front();
         }
     }
@@ -86,12 +96,12 @@ FORCEINLINE eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(c
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<BufferPool::Key>(device, desc);
-    if (buffers[key].empty() || buffers[key].front().second.frame_index < min_frame_index )
+    if (buffers[key].empty() || buffers[key].front().mark.frame_index < min_frame_index )
     {
         auto new_buffer = cgpu_create_buffer(device, &desc);
-        buffers[key].push_front({ { new_buffer, desc.start_state }, mark });
+        buffers[key].emplace_front(new_buffer, desc.start_state , mark);
     }
-    allocated = buffers[key].front().first;
+    allocated = { buffers[key].front().buffer, buffers[key].front().state };
     buffers[key].pop_front();
     return allocated;
 }
@@ -99,8 +109,11 @@ FORCEINLINE eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(c
 FORCEINLINE void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, AllocationMark mark)
 {
     auto key = make_zeroed<BufferPool::Key>(device, desc);
-    
-    buffers[key].push_back({ { buffer, final_state }, mark });
+    for (auto&& iter : buffers[key])
+    {
+        return;
+    }
+    buffers[key].emplace_back(buffer, final_state, mark);
 }
 
 } // namespace render_graph

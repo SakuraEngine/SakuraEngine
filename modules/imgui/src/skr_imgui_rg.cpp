@@ -12,7 +12,6 @@ SKR_IMGUI_API skr::render_graph::TextureHandle font_handle;
 SKR_IMGUI_API skr::render_graph::BufferHandle vertex_buffer_handle;
 SKR_IMGUI_API skr::render_graph::BufferHandle index_buffer_handle;
 SKR_IMGUI_API skr::render_graph::BufferHandle upload_buffer_handle;
-SKR_IMGUI_API CGPUBufferId upload_buffer;
 
 namespace rg = skr::render_graph;
 
@@ -42,15 +41,12 @@ SKR_IMGUI_API void render_graph_imgui_initialize(const RenderGraphImGuiDescripto
     platform_io.Renderer_RenderWindow = imgui_render_window;
 }
 
-SKR_IMGUI_API void render_graph_imgui_add_render_pass(
-skr::render_graph::RenderGraph* render_graph,
-skr::render_graph::TextureRTVHandle target,
-ECGPULoadAction load_action)
+SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderGraph* render_graph,
+    skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
 {
     ImGui::Render();
     ImDrawData* draw_data = ImGui::GetDrawData();
-    if (!draw_data)
-        return;
+    if (!draw_data) return;
 
     bool useCVV = true;
 #ifdef SKR_OS_MACOSX
@@ -96,42 +92,36 @@ ECGPULoadAction load_action)
             });
         if (!useCVV)
         {
-            if ((!upload_buffer || upload_buffer->size < index_size + vertex_size) && device)
-            {
-                if (upload_buffer)
-                {
-                    // TODO: release upload_buffer more efficiently
-                    cgpu_wait_queue_idle(render_graph->get_gfx_queue());
-                    cgpu_free_buffer(upload_buffer);
-                }
-                upload_buffer = cgpux_create_mapped_upload_buffer(device, index_size + vertex_size, "imgui_upload_buffer");
-            }
-            // upload
-            ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
-            ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
-            for (int n = 0; n < draw_data->CmdListsCount; n++)
-            {
-                const ImDrawList* cmd_list = draw_data->CmdLists[n];
-                memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
-                memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
-                vtx_dst += cmd_list->VtxBuffer.Size;
-                idx_dst += cmd_list->IdxBuffer.Size;
-            }
             upload_buffer_handle = render_graph->create_buffer(
-            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                builder.set_name("imgui_upload_buffer")
-                    .import(upload_buffer, CGPU_RESOURCE_STATE_COPY_SOURCE);
-            });
+                [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                    builder.set_name("imgui_upload_buffer")
+                        .size(index_size + vertex_size)
+                        .with_tags(kRenderGraphDefaultResourceTag)
+                        .as_upload_buffer();
+                });
             render_graph->add_copy_pass(
-            [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-                builder.set_name("imgui_geom_transfer")
-                    .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
-                    .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
-            });
+                [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+                    builder.set_name("imgui_geom_transfer")
+                        .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
+                        .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
+                },
+                [](rg::RenderGraph& g, rg::CopyPassContext& context){
+                    auto upload_buffer = context.resolve(upload_buffer_handle);
+                    ImDrawData* draw_data = ImGui::GetDrawData();
+                    ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
+                    ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
+                    for (int n = 0; n < draw_data->CmdListsCount; n++)
+                    {
+                        const ImDrawList* cmd_list = draw_data->CmdLists[n];
+                        memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+                        memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+                        vtx_dst += cmd_list->VtxBuffer.Size;
+                        idx_dst += cmd_list->IdxBuffer.Size;
+                    }
+                });
         }
         // add pass
-        render_graph->add_render_pass(
-        [=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
+        render_graph->add_render_pass([=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
             builder.set_name("imgui_pass")
                 .set_pipeline(render_pipeline)
                 .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
@@ -222,7 +212,6 @@ ECGPULoadAction load_action)
 
 SKR_IMGUI_API void render_graph_imgui_finalize()
 {
-    if (upload_buffer) cgpu_free_buffer(upload_buffer);
     cgpu_free_texture(font_texture);
     cgpu_free_render_pipeline(render_pipeline);
     cgpu_free_root_signature(root_sig);
