@@ -181,8 +181,7 @@ eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOE
     });
 }
 
-const ECGPUResourceState RenderGraph::get_lastest_state(
-const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT
+const ECGPUResourceState RenderGraph::get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT
 {
     ZoneScopedN("CaclulateLatestState-Texture");
 
@@ -226,8 +225,7 @@ const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT
     return result;
 }
 
-const ECGPUResourceState RenderGraph::get_lastest_state(
-const BufferNode* buffer, const PassNode* pending_pass) const SKR_NOEXCEPT
+const ECGPUResourceState RenderGraph::get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const SKR_NOEXCEPT
 {
     ZoneScopedN("CaclulateLatestState-Buffer");
 

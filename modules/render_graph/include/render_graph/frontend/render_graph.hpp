@@ -205,16 +205,16 @@ public:
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT { return nullptr; }
     virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT { return nullptr; }
     virtual uint32_t collect_garbage(uint64_t critical_frame,
-        uint32_t tex_with_tags = kRenderGraphDefaultResourceTag, uint32_t tex_without_flags = 0,
-        uint32_t buf_with_tags = kRenderGraphDefaultResourceTag, uint32_t buf_without_flags = 0) SKR_NOEXCEPT
+        uint32_t tex_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t tex_without_flags = 0,
+        uint32_t buf_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t buf_without_flags = 0) SKR_NOEXCEPT
     {
         return collect_texture_garbage(critical_frame, tex_with_tags,tex_without_flags)
             + collect_buffer_garbage(critical_frame, buf_with_tags, buf_without_flags);
     }
     virtual uint32_t collect_texture_garbage(uint64_t critical_frame,
-        uint32_t with_tags = kRenderGraphDefaultResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
     virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
-        uint32_t with_tags = kRenderGraphDefaultResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
 
     inline BufferNode* resolve(BufferHandle hdl) SKR_NOEXCEPT { return static_cast<BufferNode*>(graph->node_at(hdl)); }
     inline TextureNode* resolve(TextureHandle hdl) SKR_NOEXCEPT { return static_cast<TextureNode*>(graph->node_at(hdl)); }
