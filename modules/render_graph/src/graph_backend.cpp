@@ -100,7 +100,7 @@ CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, co
         }
         else
         {
-            auto allocated = texture_pool.allocate(node.descriptor, frame_index);
+            auto allocated = texture_pool.allocate(node.descriptor, { frame_index, node.tags });
             node.frame_texture = node.imported ?
                                  node.frame_texture :
                                  allocated.first;
@@ -115,7 +115,7 @@ CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, con
     ZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
     {
-        auto allocated = buffer_pool.allocate(node.descriptor, frame_index);
+        auto allocated = buffer_pool.allocate(node.descriptor, { frame_index, node.tags });
         node.frame_buffer = node.imported ?
                             node.frame_buffer :
                             allocated.first;
@@ -297,7 +297,7 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
                 texture_pool.deallocate(texture->descriptor,
                 texture->frame_texture,
                 edge->requested_state,
-                frame_index);
+                { frame_index, texture->tags });
         }
     });
     pass->foreach_buffers(
@@ -317,7 +317,7 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
             buffer_pool.deallocate(buffer->descriptor,
             buffer->frame_buffer,
             edge->requested_state,
-            frame_index);
+            { frame_index, buffer->tags });
     });
 }
 
@@ -659,25 +659,26 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 
 CGPUDeviceId RenderGraphBackend::get_backend_device() SKR_NOEXCEPT { return device; }
 
-uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame) SKR_NOEXCEPT
+uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame,
+    int32_t tex_with_tags, uint32_t tex_without_tags,
+    uint32_t buf_with_tags, uint32_t buf_without_tags) SKR_NOEXCEPT
 {
-    return collect_texture_garbage(critical_frame) +
-           collect_buffer_garbage(critical_frame);
+    return collect_texture_garbage(critical_frame, tex_with_tags, tex_without_tags) 
+        + collect_buffer_garbage(critical_frame, buf_with_tags, buf_without_tags);
 }
 
-uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame) SKR_NOEXCEPT
+uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
     uint32_t total_count = 0;
-    for (auto&& iter : texture_pool.textures)
+    for (auto&& [key, queue] : texture_pool.textures)
     {
-        auto&& queue = iter.second;
-        for (auto&& element : queue)
+        for (auto&& [allocation, mark] : queue)
         {
-            if (element.second <= critical_frame)
+            if (mark.frame_index <= critical_frame && (mark.tags & with_tags) && !(mark.tags & without_tags))
             {
-                texture_view_pool.erase(element.first.first);
-                cgpu_free_texture(element.first.first);
-                element.first.first = nullptr;
+                texture_view_pool.erase(allocation.first);
+                cgpu_free_texture(allocation.first);
+                allocation.first = nullptr;
             }
         }
         using ElementType = decltype(queue.front());
@@ -693,28 +694,27 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame) SK
     return total_count;
 }
 
-uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame) SKR_NOEXCEPT
+uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
     uint32_t total_count = 0;
-    for (auto&& iter : buffer_pool.buffers)
+    for (auto&& [key, queue] : buffer_pool.buffers)
     {
-        auto&& queue = iter.second;
-        for (auto&& element : queue)
+        for (auto&& [allocation, mark] : queue)
         {
-            if (element.second <= critical_frame)
+            if (mark.frame_index <= critical_frame && (mark.tags & with_tags) && !(mark.tags & without_tags))
             {
-                cgpu_free_buffer(element.first.first);
-                element.first.first = nullptr;
+                cgpu_free_buffer(allocation.first);
+                allocation.first = nullptr;
             }
         }
         using ElementType = decltype(queue.front());
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
         eastl::remove_if(queue.begin(), queue.end(),
-        [&](ElementType& element) {
-            return element.first.first == nullptr;
-        }),
-        queue.end());
+            [&](ElementType& element) {
+                return element.first.first == nullptr;
+            }),
+            queue.end());
         total_count += prev_count - (uint32_t)queue.size();
     }
     return total_count;

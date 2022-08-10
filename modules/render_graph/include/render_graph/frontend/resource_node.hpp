@@ -6,6 +6,12 @@ namespace skr
 {
 namespace render_graph
 {
+enum
+{
+    kRenderGraphInvalidResourceTag = 0x00,
+    kRenderGraphDefaultResourceTag = 0x01
+};
+
 class SKR_RENDER_GRAPH_API ResourceNode : public RenderGraphNode
 {
 public:
@@ -27,6 +33,7 @@ public:
 protected:
     bool imported : 1;
     bool canbe_lone : 1;
+    uint32_t tags = kRenderGraphInvalidResourceTag;
     mutable LifeSpan frame_lifespan = { UINT32_MAX, UINT32_MAX };
 };
 

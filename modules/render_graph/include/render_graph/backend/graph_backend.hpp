@@ -80,9 +80,13 @@ public:
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT final;
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT final;
     inline virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT final { return gfx_queue; }
-    virtual uint32_t collect_garbage(uint64_t critical_frame) SKR_NOEXCEPT final;
-    virtual uint32_t collect_texture_garbage(uint64_t critical_frame) SKR_NOEXCEPT final;
-    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) SKR_NOEXCEPT final;
+    virtual uint32_t collect_garbage(uint64_t critical_frame,
+        int32_t tex_with_tags = kRenderGraphDefaultResourceTag, uint32_t tex_without_tags = 0,
+        uint32_t buf_with_tags = kRenderGraphDefaultResourceTag, uint32_t buf_without_tags = 0) SKR_NOEXCEPT final;
+    virtual uint32_t collect_texture_garbage(uint64_t critical_frame,
+        uint32_t with_tags = kRenderGraphDefaultResourceTag, uint32_t without_tags = 0) SKR_NOEXCEPT final;
+    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
+        uint32_t with_tags = kRenderGraphDefaultResourceTag, uint32_t without_tags = 0) SKR_NOEXCEPT final;
 
     friend class RenderGraph;
 
