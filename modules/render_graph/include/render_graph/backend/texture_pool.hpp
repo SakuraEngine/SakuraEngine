@@ -12,6 +12,10 @@ namespace render_graph
 class TexturePool
 {
 public:
+    struct AllocationMark {
+        uint64_t frame_index;
+        uint32_t tags;
+    };
     struct Key {
         const CGPUDeviceId device;
         const CGPUTextureCreationFlags flags;
@@ -33,15 +37,14 @@ public:
     friend class RenderGraphBackend;
     void initialize(CGPUDeviceId device);
     void finalize();
-    eastl::pair<CGPUTextureId, ECGPUResourceState> allocate(const CGPUTextureDescriptor& desc, uint64_t frame_index);
-    void deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, uint64_t frame_index);
+    eastl::pair<CGPUTextureId, ECGPUResourceState> allocate(const CGPUTextureDescriptor& desc, AllocationMark mark);
+    void deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, AllocationMark mark);
 
 protected:
     CGPUDeviceId device;
     eastl::unordered_map<Key,
-    eastl::deque<eastl::pair<
-    eastl::pair<CGPUTextureId, ECGPUResourceState>, uint64_t>>>
-    textures;
+        eastl::deque<eastl::pair<
+            eastl::pair<CGPUTextureId, ECGPUResourceState>, AllocationMark>>> textures;
 };
 
 FORCEINLINE TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
@@ -82,7 +85,7 @@ inline void TexturePool::finalize()
     }
 }
 
-inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, uint64_t frame_index)
+inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, AllocationMark mark)
 {
     eastl::pair<CGPUTextureId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
@@ -93,18 +96,18 @@ inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(cons
     if (textures[key].empty())
     {
         new_tex = cgpu_create_texture(device, &desc);
-        textures[key].push_back({ { new_tex, desc.start_state }, frame_index });
+        textures[key].push_back({ { new_tex, desc.start_state }, mark });
     }
-    textures[key].front().second = frame_index;
+    textures[key].front().second = mark;
     allocated = textures[key].front().first;
     textures[key].pop_front();
     return allocated;
 }
 
-FORCEINLINE void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, uint64_t frame_index)
+FORCEINLINE void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, AllocationMark mark)
 {
     auto key = make_zeroed<TexturePool::Key>(device, desc);
-    textures[key].push_back({ { texture, final_state }, frame_index });
+    textures[key].push_back({ { texture, final_state }, mark });
 }
 } // namespace render_graph
 } // namespace skr
