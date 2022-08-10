@@ -70,12 +70,12 @@ FORCEINLINE void BufferPool::initialize(CGPUDeviceId device_)
 
 FORCEINLINE void BufferPool::finalize()
 {
-    for (auto queue : buffers)
+    for (auto&& [key, queue] : buffers)
     {
-        while (!queue.second.empty())
+        while (!queue.empty())
         {
-            cgpu_free_buffer(queue.second.front().first.first);
-            queue.second.pop_front();
+            cgpu_free_buffer(queue.front().first.first);
+            queue.pop_front();
         }
     }
 }
@@ -99,6 +99,7 @@ FORCEINLINE eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(c
 FORCEINLINE void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, AllocationMark mark)
 {
     auto key = make_zeroed<BufferPool::Key>(device, desc);
+    
     buffers[key].push_back({ { buffer, final_state }, mark });
 }
 

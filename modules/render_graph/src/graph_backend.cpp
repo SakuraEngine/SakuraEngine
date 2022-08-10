@@ -685,14 +685,13 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
                 allocation.first = nullptr;
             }
         }
-        using ElementType = decltype(queue.front());
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-        eastl::remove_if(queue.begin(), queue.end(),
-        [&](ElementType& element) {
-            return element.first.first == nullptr;
-        }),
-        queue.end());
+            eastl::remove_if(queue.begin(), queue.end(),
+            [&](auto& element) {
+                return element.first.first == nullptr;
+            }),
+            queue.end());
         total_count += prev_count - (uint32_t)queue.size();
     }
     return total_count;
@@ -711,14 +710,13 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uin
                 allocation.first = nullptr;
             }
         }
-        using ElementType = decltype(queue.front());
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-        eastl::remove_if(queue.begin(), queue.end(),
-            [&](ElementType& element) {
-                return element.first.first == nullptr;
-            }),
-            queue.end());
+            eastl::remove_if(queue.begin(), queue.end(),
+                [&](auto& element) {
+                    return element.first.first == nullptr;
+                }),
+                queue.end());
         total_count += prev_count - (uint32_t)queue.size();
     }
     return total_count;

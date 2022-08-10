@@ -123,7 +123,7 @@ public:
         CopyPassNode& node;
     };
     using CopyPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
-    PassHandle add_copy_pass(const CopyPassSetupFunction& setup) SKR_NOEXCEPT;
+    PassHandle add_copy_pass(const CopyPassSetupFunction& setup, const CopyPassExecuteFunction& executor) SKR_NOEXCEPT;
 
     class SKR_RENDER_GRAPH_API PresentPassBuilder
     {
