@@ -122,6 +122,10 @@ protected:
     CGPURootSignatureId root_signature;
 };
 
+struct CopyPassContext : public PassContext {
+    CGPUCommandBufferId cmd;
+};
+using CopyPassExecuteFunction = eastl::function<void(class RenderGraph&, CopyPassContext&)>;
 class SKR_RENDER_GRAPH_API CopyPassNode : public PassNode
 {
 public:
@@ -133,6 +137,7 @@ protected:
         : PassNode(EPassType::Copy, order)
     {
     }
+    CopyPassExecuteFunction executor;
     eastl::vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>> t2ts;
     eastl::vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>> b2bs;
 };

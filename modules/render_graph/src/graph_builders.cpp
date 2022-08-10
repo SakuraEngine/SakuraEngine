@@ -269,7 +269,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
     return *this;
 }
 
-PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup) SKR_NOEXCEPT
+PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup, const CopyPassExecuteFunction& executor) SKR_NOEXCEPT
 {
     auto newPass = new CopyPassNode((uint32_t)passes.size());
     passes.emplace_back(newPass);
@@ -277,6 +277,7 @@ PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup) SKR_NO
     // build up
     CopyPassBuilder builder(*this, *newPass);
     setup(*this, builder);
+    newPass->executor = executor;
     return newPass->get_handle();
 }
 
