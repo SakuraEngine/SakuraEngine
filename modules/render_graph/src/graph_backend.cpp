@@ -64,8 +64,7 @@ void RenderGraphBackend::finalize() SKR_NOEXCEPT
 // - 可以撮合两个对象，将它们提升为可alias的，把他们的size和alignment取最大处理即可。
 //  - 首先寻找可以直接alias处理的, cgpu_try_create_aliasing_resource(ResourceId, ResourceDesc)
 //  - 其次再考虑提升合并的行为（此行为在前端无法模拟）
-CGPUTextureId RenderGraphBackend::try_aliasing_allocate(
-RenderGraphFrameExecutor& executor, const TextureNode& node) SKR_NOEXCEPT
+CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor& executor, const TextureNode& node) SKR_NOEXCEPT
 {
     if (node.frame_aliasing_source)
     {
@@ -88,6 +87,20 @@ RenderGraphFrameExecutor& executor, const TextureNode& node) SKR_NOEXCEPT
     return nullptr;
 }
 
+uint64_t RenderGraphBackend::get_latest_finished_frame() SKR_NOEXCEPT
+{
+    uint64_t result = 0;
+    for (auto&& executor : executors)
+    {
+        if (!executor.exec_fence) continue;
+        if (cgpu_query_fence_status(executor.exec_fence) == CGPU_FENCE_STATUS_COMPLETE)
+        {
+            result = std::max(result, executor.exec_frame);
+        }
+    }
+    return result;
+}
+
 CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const TextureNode& node) SKR_NOEXCEPT
 {
     ZoneScopedN("ResolveTexture");
@@ -101,9 +114,7 @@ CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, co
         else
         {
             auto allocated = texture_pool.allocate(node.descriptor, { frame_index, node.tags });
-            node.frame_texture = node.imported ?
-                                 node.frame_texture :
-                                 allocated.first;
+            node.frame_texture = node.imported ? node.frame_texture : allocated.first;
             node.init_state = allocated.second;
         }
     }
@@ -115,18 +126,17 @@ CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, con
     ZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
     {
-        auto allocated = buffer_pool.allocate(node.descriptor, { frame_index, node.tags });
-        node.frame_buffer = node.imported ?
-                            node.frame_buffer :
-                            allocated.first;
+        uint64_t latest_frame = (node.tags & kRenderGraphDynamicResourceTag) ? get_latest_finished_frame() : 0;
+        auto allocated = buffer_pool.allocate(node.descriptor, { frame_index, node.tags }, latest_frame);
+        node.frame_buffer = node.imported ? node.frame_buffer : allocated.first;
         node.init_state = allocated.second;
     }
     return node.frame_buffer;
 }
 
 void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
+    eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+    eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
 {
     ZoneScopedN("CalculateBarriers");
     tex_barriers.reserve(pass->textures_count());
@@ -134,31 +144,31 @@ eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<Buffer
     buf_barriers.reserve(pass->buffers_count());
     resolved_buffers.reserve(pass->buffers_count());
     pass->foreach_textures(
-    [&](TextureNode* texture, TextureEdge* edge) {
-        auto tex_resolved = resolve(executor, *texture);
-        resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
-        const auto current_state = get_lastest_state(texture, pass);
-        const auto dst_state = edge->requested_state;
-        if (current_state == dst_state) return;
-        CGPUTextureBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.texture = tex_resolved;
-        tex_barriers.emplace_back(barrier);
-    });
+        [&](TextureNode* texture, TextureEdge* edge) {
+            auto tex_resolved = resolve(executor, *texture);
+            resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
+            const auto current_state = get_lastest_state(texture, pass);
+            const auto dst_state = edge->requested_state;
+            if (current_state == dst_state) return;
+            CGPUTextureBarrier barrier = {};
+            barrier.src_state = current_state;
+            barrier.dst_state = dst_state;
+            barrier.texture = tex_resolved;
+            tex_barriers.emplace_back(barrier);
+        });
     pass->foreach_buffers(
-    [&](BufferNode* buffer, BufferEdge* edge) {
-        auto buf_resolved = resolve(executor, *buffer);
-        resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
-        const auto current_state = get_lastest_state(buffer, pass);
-        const auto dst_state = edge->requested_state;
-        if (current_state == dst_state) return;
-        CGPUBufferBarrier barrier = {};
-        barrier.src_state = current_state;
-        barrier.dst_state = dst_state;
-        barrier.buffer = buf_resolved;
-        buf_barriers.emplace_back(barrier);
-    });
+        [&](BufferNode* buffer, BufferEdge* edge) {
+            auto buf_resolved = resolve(executor, *buffer);
+            resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
+            const auto current_state = get_lastest_state(buffer, pass);
+            const auto dst_state = edge->requested_state;
+            if (current_state == dst_state) return;
+            CGPUBufferBarrier barrier = {};
+            barrier.src_state = current_state;
+            barrier.dst_state = dst_state;
+            barrier.buffer = buf_resolved;
+            buf_barriers.emplace_back(barrier);
+        });
 }
 
 eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURootSignatureId root_sig)
@@ -278,12 +288,10 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
 void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
 {
     ZoneScopedN("VirtualDeallocate");
-    pass->foreach_textures(
-    [this, pass](TextureNode* texture, TextureEdge* edge) {
+    pass->foreach_textures([this, pass](TextureNode* texture, TextureEdge* edge) {
         if (texture->imported) return;
         bool is_last_user = true;
-        texture->foreach_neighbors(
-        [&](DependencyGraphNode* neig) {
+        texture->foreach_neighbors([&](DependencyGraphNode* neig) {
             RenderGraphNode* rg_node = (RenderGraphNode*)neig;
             if (rg_node->type == EObjectType::Pass)
             {
@@ -294,18 +302,16 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
         if (is_last_user)
         {
             if (!texture->frame_aliasing)
-                texture_pool.deallocate(texture->descriptor,
-                texture->frame_texture,
-                edge->requested_state,
-                { frame_index, texture->tags });
+            {
+                texture_pool.deallocate(texture->descriptor, texture->frame_texture,
+                    edge->requested_state, { frame_index, texture->tags });
+            }
         }
     });
-    pass->foreach_buffers(
-    [this, pass](BufferNode* buffer, BufferEdge* edge) {
+    pass->foreach_buffers([this, pass](BufferNode* buffer, BufferEdge* edge) {
         if (buffer->imported) return;
         bool is_last_user = true;
-        buffer->foreach_neighbors(
-        [&](DependencyGraphNode* neig) {
+        buffer->foreach_neighbors([&](DependencyGraphNode* neig) {
             RenderGraphNode* rg_node = (RenderGraphNode*)neig;
             if (rg_node->type == EObjectType::Pass)
             {
@@ -314,10 +320,10 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
             }
         });
         if (is_last_user)
-            buffer_pool.deallocate(buffer->descriptor,
-            buffer->frame_buffer,
-            edge->requested_state,
-            { frame_index, buffer->tags });
+        {
+            buffer_pool.deallocate(buffer->descriptor, buffer->frame_buffer,
+                edge->requested_state, { frame_index, buffer->tags });
+        }
     });
 }
 
@@ -332,8 +338,8 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
     eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
-    tex_barriers, resolved_textures,
-    buffer_barriers, resolved_buffers);
+        tex_barriers, resolved_textures,
+        buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     stack.desc_sets = alloc_update_pass_descsets(executor, pass);
     stack.resolved_buffers = resolved_buffers;
@@ -385,8 +391,8 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
     eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
-    tex_barriers, resolved_textures,
-    buffer_barriers, resolved_buffers);
+        tex_barriers, resolved_textures,
+        buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     stack.desc_sets = alloc_update_pass_descsets(executor, pass);
     stack.resolved_buffers = resolved_buffers;
@@ -493,8 +499,8 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
     eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
-    tex_barriers, resolved_textures,
-    buffer_barriers, resolved_buffers);
+        tex_barriers, resolved_textures,
+        buffer_barriers, resolved_buffers);
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
@@ -617,7 +623,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         if (profiler) profiler->before_commit(*this, executor);
         {
             ZoneScopedN("CGPUGfxQueueSubmit");
-            executor.commit(gfx_queue);
+            executor.commit(gfx_queue, frame_index);
         }
         if (profiler) profiler->after_commit(*this, executor);
     }
@@ -635,12 +641,10 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         culled_passes.clear();
         for (auto pass : passes)
         {
-            pass->foreach_textures(
-            +[](TextureNode* t, TextureEdge* e) {
+            pass->foreach_textures(+[](TextureNode* t, TextureEdge* e) {
                 delete e;
             });
-            pass->foreach_buffers(
-            +[](BufferNode* t, BufferEdge* e) {
+            pass->foreach_buffers(+[](BufferNode* t, BufferEdge* e) {
                 delete e;
             });
             delete pass;

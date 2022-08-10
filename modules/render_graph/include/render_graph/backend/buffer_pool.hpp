@@ -35,15 +35,14 @@ public:
     friend class RenderGraphBackend;
     void initialize(CGPUDeviceId device);
     void finalize();
-    eastl::pair<CGPUBufferId, ECGPUResourceState> allocate(const CGPUBufferDescriptor& desc, AllocationMark mark);
+    eastl::pair<CGPUBufferId, ECGPUResourceState> allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index);
     void deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, AllocationMark mark);
 
 protected:
     CGPUDeviceId device;
     eastl::unordered_map<Key,
         eastl::deque<eastl::pair<
-            eastl::pair<CGPUBufferId, ECGPUResourceState>, AllocationMark>>>
-    buffers;
+            eastl::pair<CGPUBufferId, ECGPUResourceState>, AllocationMark>>> buffers;
 };
 
 FORCEINLINE BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
@@ -81,22 +80,16 @@ FORCEINLINE void BufferPool::finalize()
     }
 }
 
-FORCEINLINE eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark)
+FORCEINLINE eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
 {
     eastl::pair<CGPUBufferId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<BufferPool::Key>(device, desc);
-    auto&& queue_iter = buffers.find(key);
-    // add queue
-    if (queue_iter == buffers.end())
-    {
-        buffers[key] = {};
-    }
-    if (buffers[key].empty())
+    if (buffers[key].empty() || buffers[key].front().second.frame_index < min_frame_index )
     {
         auto new_buffer = cgpu_create_buffer(device, &desc);
-        buffers[key].push_back({ { new_buffer, desc.start_state }, mark });
+        buffers[key].push_front({ { new_buffer, desc.start_state }, mark });
     }
     allocated = buffers[key].front().first;
     buffers[key].pop_front();

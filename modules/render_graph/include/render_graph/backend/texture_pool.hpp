@@ -91,11 +91,9 @@ inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(cons
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<TexturePool::Key>(device, desc);
-    CGPUTextureId new_tex = nullptr;
-    // add queue
     if (textures[key].empty())
     {
-        new_tex = cgpu_create_texture(device, &desc);
+        auto new_tex = cgpu_create_texture(device, &desc);
         textures[key].push_back({ { new_tex, desc.start_state }, mark });
     }
     textures[key].front().second = mark;

@@ -78,8 +78,7 @@ struct RenderPassContext : public PassContext {
     CGPURenderPassEncoderId encoder;
     gsl::span<CGPUDescriptorSetId> desc_sets;
 };
-using RenderPassExecuteFunction = eastl::function<
-void(class RenderGraph&, RenderPassContext&)>;
+using RenderPassExecuteFunction = eastl::function<void(class RenderGraph&, RenderPassContext&)>;
 class SKR_RENDER_GRAPH_API RenderPassNode : public PassNode
 {
 public:
@@ -106,8 +105,7 @@ struct SKR_RENDER_GRAPH_API ComputePassContext : public PassContext {
     CGPUComputePassEncoderId encoder;
     gsl::span<CGPUDescriptorSetId> desc_sets;
 };
-using ComputePassExecuteFunction = eastl::function<
-void(class RenderGraph&, ComputePassContext&)>;
+using ComputePassExecuteFunction = eastl::function<void(class RenderGraph&, ComputePassContext&)>;
 class SKR_RENDER_GRAPH_API ComputePassNode : public PassNode
 {
 public:

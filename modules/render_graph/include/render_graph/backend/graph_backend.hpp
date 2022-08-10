@@ -24,13 +24,14 @@ public:
         gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
         exec_fence = cgpu_create_fence(device);
     }
-    void commit(CGPUQueueId gfx_queue)
+    void commit(CGPUQueueId gfx_queue, uint64_t frame_index)
     {
         CGPUQueueSubmitDescriptor submit_desc = {};
         submit_desc.cmds = &gfx_cmd_buf;
         submit_desc.cmds_count = 1;
         submit_desc.signal_fence = exec_fence;
         cgpu_submit_queue(gfx_queue, &submit_desc);
+        exec_frame = frame_index;
     }
     void reset_begin(TextureViewPool& texture_view_pool)
     {
@@ -67,6 +68,7 @@ public:
     CGPUCommandPoolId gfx_cmd_pool = nullptr;
     CGPUCommandBufferId gfx_cmd_buf = nullptr;
     CGPUFenceId exec_fence = nullptr;
+    uint64_t exec_frame = 0;
     eastl::vector<CGPUTextureId> aliasing_textures;
     eastl::unordered_map<CGPURootSignatureId, DescSetHeap*> desc_set_pool;
 };
@@ -81,12 +83,12 @@ public:
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT final;
     inline virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT final { return gfx_queue; }
     virtual uint32_t collect_garbage(uint64_t critical_frame,
-        uint32_t tex_with_tags = kRenderGraphDefaultResourceTag, uint32_t tex_without_tags = 0,
-        uint32_t buf_with_tags = kRenderGraphDefaultResourceTag, uint32_t buf_without_tags = 0) SKR_NOEXCEPT final;
+        uint32_t tex_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t tex_without_tags = 0,
+        uint32_t buf_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t buf_without_tags = 0) SKR_NOEXCEPT final;
     virtual uint32_t collect_texture_garbage(uint64_t critical_frame,
-        uint32_t with_tags = kRenderGraphDefaultResourceTag, uint32_t without_tags = 0) SKR_NOEXCEPT final;
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_tags = 0) SKR_NOEXCEPT final;
     virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
-        uint32_t with_tags = kRenderGraphDefaultResourceTag, uint32_t without_tags = 0) SKR_NOEXCEPT final;
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_tags = 0) SKR_NOEXCEPT final;
 
     friend class RenderGraph;
 
@@ -109,6 +111,8 @@ protected:
     void execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass) SKR_NOEXCEPT;
     void execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass) SKR_NOEXCEPT;
     void execute_present_pass(RenderGraphFrameExecutor& executor, PresentPassNode* pass) SKR_NOEXCEPT;
+
+    uint64_t get_latest_finished_frame() SKR_NOEXCEPT;
 
     CGPUQueueId gfx_queue;
     CGPUDeviceId device;

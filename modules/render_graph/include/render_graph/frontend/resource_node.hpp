@@ -2,16 +2,18 @@
 #include <atomic>
 #include "render_graph/frontend/base_types.hpp"
 
+enum
+{
+    kRenderGraphInvalidResourceTag = 0x00,
+    kRenderGraphDefaultResourceTag = 0x01,
+    // see D3D11 DynamicBuffer, some sync problems are dealed under render graph implementation with D3D12/Vulkan
+    kRenderGraphDynamicResourceTag = 0x02
+};
+
 namespace skr
 {
 namespace render_graph
 {
-enum
-{
-    kRenderGraphInvalidResourceTag = 0x00,
-    kRenderGraphDefaultResourceTag = 0x01
-};
-
 class SKR_RENDER_GRAPH_API ResourceNode : public RenderGraphNode
 {
 public:
