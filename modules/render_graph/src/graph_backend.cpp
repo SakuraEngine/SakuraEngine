@@ -515,6 +515,13 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     }
     CGPUEventInfo event = { pass->name.c_str(), { 0.f, .5f, 1.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
+    {
+        CopyPassContext stack = {};
+        stack.cmd = executor.gfx_cmd_buf;
+        stack.resolved_buffers = resolved_buffers;
+        stack.resolved_textures = resolved_textures;
+        pass->executor(*this, stack);
+    }
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     for (uint32_t i = 0; i < pass->t2ts.size(); i++)
     {
@@ -702,19 +709,20 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uin
     uint32_t total_count = 0;
     for (auto&& [key, queue] : buffer_pool.buffers)
     {
-        for (auto&& [allocation, mark] : queue)
+        for (auto&& pooled : queue)
         {
-            if (mark.frame_index <= critical_frame && (mark.tags & with_tags) && !(mark.tags & without_tags))
+            if (pooled.mark.frame_index <= critical_frame 
+                && (pooled.mark.tags & with_tags) && !(pooled.mark.tags & without_tags))
             {
-                cgpu_free_buffer(allocation.first);
-                allocation.first = nullptr;
+                cgpu_free_buffer(pooled.buffer);
+                pooled.buffer = nullptr;
             }
         }
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
             eastl::remove_if(queue.begin(), queue.end(),
                 [&](auto& element) {
-                    return element.first.first == nullptr;
+                    return element.buffer == nullptr;
                 }),
                 queue.end());
         total_count += prev_count - (uint32_t)queue.size();
