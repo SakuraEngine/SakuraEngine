@@ -660,7 +660,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 CGPUDeviceId RenderGraphBackend::get_backend_device() SKR_NOEXCEPT { return device; }
 
 uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame,
-    int32_t tex_with_tags, uint32_t tex_without_tags,
+    uint32_t tex_with_tags, uint32_t tex_without_tags,
     uint32_t buf_with_tags, uint32_t buf_without_tags) SKR_NOEXCEPT
 {
     return collect_texture_garbage(critical_frame, tex_with_tags, tex_without_tags) 
