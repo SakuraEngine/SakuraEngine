@@ -167,6 +167,7 @@ static struct SkrMeshResourceUtil
 SkrMeshResourceUtil::cached_hashset<CGPUVertexLayout> SkrMeshResourceUtil::vertex_layouts_;
 SMutex SkrMeshResourceUtil::vertex_layouts_mutex_;
 
+#ifndef SKR_SERIALIZE_GURAD
 void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* gltfRequest)
 {
     ZoneScopedN("ioRAM Mesh Request");
@@ -268,24 +269,10 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
         request->bytes = nullptr;
         request->size = 0;
         skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_OK);
-        cbData->gltfRequest->callbacks[SKR_ASYNC_IO_STATUS_OK](cbData->gltfRequest, cbData->gltfRequest->callback_data[SKR_ASYNC_IO_STATUS_OK]);
+        cbData->gltfRequest->callback(cbData->gltfRequest, cbData->gltfRequest->callback_data);
         SkrDelete(cbData);
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)callbackData;
-    // pass status
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_async_io_request_t* request, void* data) noexcept {
-        auto cbData = (CallbackData*)data;
-        skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_ENQUEUED);
-        cbData->gltfRequest->callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED](cbData->gltfRequest, cbData->gltfRequest->callback_data[SKR_ASYNC_IO_STATUS_ENQUEUED]);
-    };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_ENQUEUED] = (void*)callbackData;
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_RAM_LOADING] = +[](skr_async_io_request_t* request, void* data) noexcept {
-        auto cbData = (CallbackData*)data;
-        skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_RAM_LOADING);
-        cbData->gltfRequest->callbacks[SKR_ASYNC_IO_STATUS_RAM_LOADING](cbData->gltfRequest, cbData->gltfRequest->callback_data[SKR_ASYNC_IO_STATUS_RAM_LOADING]);
-    };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)callbackData;
-    callbackData->gltfRequest = gltfRequest;
     // TODO: replace this with newer VFS API
     std::string gltfPath;
     {
@@ -293,8 +280,10 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
         gltfPath = (ghc::filesystem::path(gltfRequest->vfs_override->mount_dir) / path).u8string();
         callbackData->u8Path = gltfPath.c_str();
     }
+    callbackData->gltfRequest = gltfRequest;
     ioService->request(gltfRequest->vfs_override, &ramIO, &gltfRequest->ioRequest);
 }
+#endif
 
 void skr_mesh_resource_free(skr_mesh_resource_id mesh_resource)
 {

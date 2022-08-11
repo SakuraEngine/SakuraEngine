@@ -87,8 +87,8 @@ typedef struct skr_gltf_ram_io_request_t {
     skr_async_io_request_t ioRequest;
     SAtomic32 gltf_status;
     skr_mesh_resource_id mesh_resource;
-    skr_async_gltf_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
-    void* callback_data[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_async_gltf_io_callback_t callback;
+    void* callback_data;
 #ifdef __cplusplus
     bool is_ready() const SKR_NOEXCEPT
     {
