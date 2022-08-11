@@ -111,7 +111,7 @@ FORCEINLINE void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBu
     auto key = make_zeroed<BufferPool::Key>(device, desc);
     for (auto&& iter : buffers[key])
     {
-        return;
+        if (iter.buffer == buffer) return;
     }
     buffers[key].emplace_back(buffer, final_state, mark);
 }

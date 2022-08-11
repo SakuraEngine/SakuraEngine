@@ -16,6 +16,18 @@ public:
         uint64_t frame_index;
         uint32_t tags;
     };
+    struct PooledTexture
+    {
+        PooledTexture() = delete;
+        PooledTexture(CGPUTextureId texture, ECGPUResourceState state, AllocationMark mark)
+            : texture(texture), state(state), mark(mark)
+        {
+
+        }
+        CGPUTextureId texture;
+        ECGPUResourceState state;
+        AllocationMark mark;
+    };
     struct Key {
         const CGPUDeviceId device;
         const CGPUTextureCreationFlags flags;
@@ -42,9 +54,7 @@ public:
 
 protected:
     CGPUDeviceId device;
-    eastl::unordered_map<Key,
-        eastl::deque<eastl::pair<
-            eastl::pair<CGPUTextureId, ECGPUResourceState>, AllocationMark>>> textures;
+    eastl::unordered_map<Key, eastl::deque<PooledTexture>> textures;
 };
 
 FORCEINLINE TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
@@ -79,7 +89,7 @@ inline void TexturePool::finalize()
     {
         while (!queue.second.empty())
         {
-            cgpu_free_texture(queue.second.front().first.first);
+            cgpu_free_texture(queue.second.front().texture);
             queue.second.pop_front();
         }
     }
@@ -94,10 +104,10 @@ inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(cons
     if (textures[key].empty())
     {
         auto new_tex = cgpu_create_texture(device, &desc);
-        textures[key].push_back({ { new_tex, desc.start_state }, mark });
+        textures[key].emplace_back(new_tex, desc.start_state, mark);
     }
-    textures[key].front().second = mark;
-    allocated = textures[key].front().first;
+    textures[key].front().mark = mark;
+    allocated = { textures[key].front().texture, textures[key].front().state };
     textures[key].pop_front();
     return allocated;
 }
@@ -105,7 +115,11 @@ inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(cons
 FORCEINLINE void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, AllocationMark mark)
 {
     auto key = make_zeroed<TexturePool::Key>(device, desc);
-    textures[key].push_back({ { texture, final_state }, mark });
+    for (auto&& iter : textures[key])
+    {
+        if (iter.texture == texture) return;
+    }
+    textures[key].emplace_back(texture, final_state, mark);
 }
 } // namespace render_graph
 } // namespace skr

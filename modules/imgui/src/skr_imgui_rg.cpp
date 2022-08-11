@@ -48,7 +48,7 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
     ImDrawData* draw_data = ImGui::GetDrawData();
     if (!draw_data) return;
 
-    bool useCVV = true;
+    bool useCVV = false;
 #ifdef SKR_OS_MACOSX
     useCVV = false;
 #endif
