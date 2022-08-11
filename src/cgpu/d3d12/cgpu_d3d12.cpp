@@ -1299,6 +1299,8 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
             }
             else
             {
+                cgpu_assert((pTransBarrier->src_state != pTransBarrier->dst_state) && "D3D12 ERROR: Buffer Barrier with same src and dst state!");
+
                 pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
                 if (pTransBarrier->d3d12.begin_ony)
                 {
@@ -1323,6 +1325,8 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
                 else
                     pBarrier->Transition.StateAfter = D3D12Util_TranslateResourceState(pTransBarrier->dst_state);
 
+                cgpu_assert((pBarrier->Transition.StateBefore != pBarrier->Transition.StateAfter) && "D3D12 ERROR: Buffer Barrier with same src and dst state!");
+
                 ++transitionCount;
             }
         }
@@ -1342,6 +1346,8 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
         }
         else
         {
+            cgpu_assert((pTransBarrier->src_state != pTransBarrier->dst_state) && "D3D12 ERROR: Texture Barrier with same src and dst state!");
+
             pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
             pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
             if (pTransBarrier->d3d12.begin_ony)
@@ -1369,11 +1375,21 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
             else
                 pBarrier->Transition.StateAfter = D3D12Util_TranslateResourceState(pTransBarrier->dst_state);
 
+            if (pBarrier->Transition.StateBefore == D3D12_RESOURCE_STATE_COMMON && pBarrier->Transition.StateAfter == D3D12_RESOURCE_STATE_COMMON)
+            {
+                if (pTransBarrier->dst_state == CGPU_RESOURCE_STATE_PRESENT || pTransBarrier->src_state == CGPU_RESOURCE_STATE_PRESENT)
+                {
+                    continue;
+                }
+            }
+            cgpu_assert((pBarrier->Transition.StateBefore != pBarrier->Transition.StateAfter) && "D3D12 ERROR: Texture Barrier with same src and dst state!");
             ++transitionCount;
         }
     }
     if (transitionCount)
+    {
         Cmd->pDxCmdList->ResourceBarrier(transitionCount, barriers);
+    }
 }
 
 void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc)
