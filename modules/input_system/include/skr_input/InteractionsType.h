@@ -113,12 +113,12 @@ public:
     void Tick(double deltaTime) override
     {
         if(this->_state == InteractionState::Performed && _pressEventInterval > 0.f)
-        _time += deltaTime;
+            _time += deltaTime;
     }
 
     bool IsTrigger() override
     {
-        return (this->_state == InteractionState::Performed && _behavior != PressBehavior::ReleaseOnly && _pressEventInterval <= _time) || _justReleased;
+        return (this->_state == InteractionState::Performed && _behavior != PressBehavior::ReleaseOnly && _pressEventInterval <= _time && _pressEventInterval > 0.f) || _justReleased;
     }
 
     Interaction::EvendId OnSendEvent() override
