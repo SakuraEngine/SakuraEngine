@@ -84,8 +84,8 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
     cbData->request = request;
     request->mesh_resource_request.load_bin_to_memory =  
         request->queue_override ? true : !( (request->dstorage_source == CGPU_DSTORAGE_SOURCE_FILE) && dstorage_queue );
-    request->mesh_resource_request.callback_data[SKR_ASYNC_IO_STATUS_OK] = cbData;
-    request->mesh_resource_request.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_gltf_ram_io_request_t* gltf_request, void* data)
+    request->mesh_resource_request.callback_data = cbData;
+    request->mesh_resource_request.callback = +[](skr_gltf_ram_io_request_t* gltf_request, void* data)
     {
         auto device = skr_renderer_get_cgpu_device();
         auto cbData = (CallbackData*)data;
@@ -150,20 +150,6 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
             mesh_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_VRAM_LOADING] = cbData;
             vram_service->request(&mesh_buffer_io, &render_mesh->vio_requests[i], &render_mesh->buffer_requests[i]);
         }
-    };
-    request->mesh_resource_request.callback_data[SKR_ASYNC_IO_STATUS_ENQUEUED] = cbData;
-    request->mesh_resource_request.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_gltf_ram_io_request_t* gltf_request, void* data)
-    {
-        auto cbData = (CallbackData*)data;
-        auto request = cbData->request;
-        skr_atomic32_store_release(&request->buffers_io_status, SKR_ASYNC_IO_STATUS_ENQUEUED);
-    };
-    request->mesh_resource_request.callback_data[SKR_ASYNC_IO_STATUS_RAM_LOADING] = cbData;
-    request->mesh_resource_request.callbacks[SKR_ASYNC_IO_STATUS_RAM_LOADING] = +[](skr_gltf_ram_io_request_t* gltf_request, void* data)
-    {
-        auto cbData = (CallbackData*)data;
-        auto request = cbData->request;
-        skr_atomic32_store_release(&request->buffers_io_status, SKR_ASYNC_IO_STATUS_RAM_LOADING);
     };
     skr_mesh_resource_create_from_gltf(ram_service, path, &request->mesh_resource_request);
 }
