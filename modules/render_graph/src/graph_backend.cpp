@@ -1,6 +1,7 @@
 ﻿#include "render_graph/backend/graph_backend.hpp"
 #include "tracy/Tracy.hpp"
 #include "utils/hash.h"
+#include <EASTL/set.h>
 
 namespace skr
 {
@@ -683,20 +684,21 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
     uint32_t total_count = 0;
     for (auto&& [key, queue] : texture_pool.textures)
     {
-        for (auto&& [allocation, mark] : queue)
+        for (auto&& pooled: queue)
         {
-            if (mark.frame_index <= critical_frame && (mark.tags & with_tags) && !(mark.tags & without_tags))
+            if (pooled.mark.frame_index <= critical_frame 
+                && (pooled.mark.tags & with_tags) && !(pooled.mark.tags & without_tags))
             {
-                texture_view_pool.erase(allocation.first);
-                cgpu_free_texture(allocation.first);
-                allocation.first = nullptr;
+                texture_view_pool.erase(pooled.texture);
+                cgpu_free_texture(pooled.texture);
+                pooled.texture = nullptr;
             }
         }
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
             eastl::remove_if(queue.begin(), queue.end(),
             [&](auto& element) {
-                return element.first.first == nullptr;
+                return element.texture == nullptr;
             }),
             queue.end());
         total_count += prev_count - (uint32_t)queue.size();
