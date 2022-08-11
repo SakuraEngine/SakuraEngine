@@ -172,45 +172,45 @@ int main(int argc, char* argv[])
         // render graph setup & compile & exec
         CGPUTextureId to_import = swapchain->back_buffers[backbuffer_index];
         auto back_buffer = graph->create_texture(
-        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            builder.set_name("backbuffer")
-            .import(to_import, CGPU_RESOURCE_STATE_PRESENT)
-            .allow_render_target();
-        });
+            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                builder.set_name("backbuffer")
+                .import(to_import, CGPU_RESOURCE_STATE_PRESENT)
+                .allow_render_target();
+            });
         graph->add_render_pass(
-        [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-            builder.set_name("color_pass")
-            .set_pipeline(pipeline)
-            .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
-        },
-        [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
-            cgpu_render_encoder_set_viewport(stack.encoder,
-            0.0f, 0.0f,
-            (float)to_import->width / 3, (float)to_import->height,
-            0.f, 1.f);
-            cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
-            cgpu_render_encoder_draw(stack.encoder, 3, 0);
-        });
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                builder.set_name("color_pass")
+                .set_pipeline(pipeline)
+                .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
+            },
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                cgpu_render_encoder_set_viewport(stack.encoder,
+                0.0f, 0.0f,
+                (float)to_import->width / 3, (float)to_import->height,
+                0.f, 1.f);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_draw(stack.encoder, 3, 0);
+            });
         graph->add_render_pass(
-        [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-            builder.set_name("color_pass2")
-            .set_pipeline(pipeline)
-            .write(0, back_buffer, CGPU_LOAD_ACTION_LOAD);
-        },
-        [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
-            cgpu_render_encoder_set_viewport(stack.encoder,
-            2 * (float)to_import->width / 3, 0.0f,
-            (float)to_import->width / 3, (float)to_import->height,
-            0.f, 1.f);
-            cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
-            cgpu_render_encoder_draw(stack.encoder, 3, 0);
-        });
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                builder.set_name("color_pass2")
+                .set_pipeline(pipeline)
+                .write(0, back_buffer, CGPU_LOAD_ACTION_LOAD);
+            },
+            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                cgpu_render_encoder_set_viewport(stack.encoder,
+                    2 * (float)to_import->width / 3, 0.0f,
+                    (float)to_import->width / 3, (float)to_import->height,
+                    0.f, 1.f);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_draw(stack.encoder, 3, 0);
+            });
         graph->add_present_pass(
-        [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-            builder.set_name("present")
-            .swapchain(swapchain, backbuffer_index)
-            .texture(back_buffer, true);
-        });
+            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+                builder.set_name("present")
+                .swapchain(swapchain, backbuffer_index)
+                .texture(back_buffer, true);
+            });
         graph->compile();
         const auto frame_index = graph->execute();
         // present

@@ -6,7 +6,9 @@
 #include "render_graph/frontend/resource_edge.hpp"
 #include "render_graph/frontend/pass_node.hpp"
 
+#ifndef RG_MAX_FRAME_IN_FLIGHT
 #define RG_MAX_FRAME_IN_FLIGHT 3
+#endif
 
 namespace skr
 {
@@ -121,7 +123,7 @@ public:
         CopyPassNode& node;
     };
     using CopyPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
-    PassHandle add_copy_pass(const CopyPassSetupFunction& setup) SKR_NOEXCEPT;
+    PassHandle add_copy_pass(const CopyPassSetupFunction& setup, const CopyPassExecuteFunction& executor) SKR_NOEXCEPT;
 
     class SKR_RENDER_GRAPH_API PresentPassBuilder
     {
@@ -145,6 +147,7 @@ public:
     public:
         friend class RenderGraph;
         BufferBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        BufferBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         BufferBuilder& import(CGPUBufferId buffer, ECGPUResourceState init_state) SKR_NOEXCEPT;
         BufferBuilder& owns_memory() SKR_NOEXCEPT;
         BufferBuilder& structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride) SKR_NOEXCEPT;
@@ -174,6 +177,7 @@ public:
     public:
         friend class RenderGraph;
         TextureBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        TextureBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         TextureBuilder& import(CGPUTextureId texture, ECGPUResourceState init_state) SKR_NOEXCEPT;
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1) SKR_NOEXCEPT;
         TextureBuilder& format(ECGPUFormat format) SKR_NOEXCEPT;
@@ -200,12 +204,17 @@ public:
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT;
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT { return nullptr; }
     virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT { return nullptr; }
-    virtual uint32_t collect_garbage(uint64_t critical_frame) SKR_NOEXCEPT
+    virtual uint32_t collect_garbage(uint64_t critical_frame,
+        uint32_t tex_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t tex_without_flags = 0,
+        uint32_t buf_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t buf_without_flags = 0) SKR_NOEXCEPT
     {
-        return collect_texture_garbage(critical_frame) + collect_buffer_garbage(critical_frame);
+        return collect_texture_garbage(critical_frame, tex_with_tags,tex_without_flags)
+            + collect_buffer_garbage(critical_frame, buf_with_tags, buf_without_flags);
     }
-    virtual uint32_t collect_texture_garbage(uint64_t critical_frame) SKR_NOEXCEPT { return 0; }
-    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame) SKR_NOEXCEPT { return 0; }
+    virtual uint32_t collect_texture_garbage(uint64_t critical_frame,
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
+    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
 
     inline BufferNode* resolve(BufferHandle hdl) SKR_NOEXCEPT { return static_cast<BufferNode*>(graph->node_at(hdl)); }
     inline TextureNode* resolve(TextureHandle hdl) SKR_NOEXCEPT { return static_cast<TextureNode*>(graph->node_at(hdl)); }

@@ -269,7 +269,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
     return *this;
 }
 
-PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup) SKR_NOEXCEPT
+PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup, const CopyPassExecuteFunction& executor) SKR_NOEXCEPT
 {
     auto newPass = new CopyPassNode((uint32_t)passes.size());
     passes.emplace_back(newPass);
@@ -277,6 +277,7 @@ PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup) SKR_NO
     // build up
     CopyPassBuilder builder(*this, *newPass);
     setup(*this, builder);
+    newPass->executor = executor;
     return newPass->get_handle();
 }
 
@@ -339,6 +340,12 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* nam
     // blackboard
     graph.blackboard.named_buffers[name] = &node;
     node.set_name(name);
+    return *this;
+}
+
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::with_tags(uint32_t tags) SKR_NOEXCEPT
+{
+    node.tags |= tags;
     return *this;
 }
 
@@ -434,12 +441,14 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::prefer_on_host() SKR_NOE
 
 BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup) SKR_NOEXCEPT
 {
-    auto newTex = new BufferNode();
-    resources.emplace_back(newTex);
-    graph->insert(newTex);
-    BufferBuilder builder(*this, *newTex);
+    auto newBuf = new BufferNode();
+    resources.emplace_back(newBuf);
+    graph->insert(newBuf);
+    BufferBuilder builder(*this, *newBuf);
     setup(*this, builder);
-    return newTex->get_handle();
+    // set default gc tag
+    if (newBuf->tags == kRenderGraphInvalidResourceTag) newBuf->tags |= kRenderGraphDefaultResourceTag;
+    return newBuf->get_handle();
 }
 
 BufferHandle RenderGraph::get_buffer(const char* name) SKR_NOEXCEPT
@@ -464,6 +473,12 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* n
     // blackboard
     graph.blackboard.named_textures[name] = &node;
     node.set_name(name);
+    return *this;
+}
+
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::with_tags(uint32_t tags) SKR_NOEXCEPT
+{
+    node.tags |= tags;
     return *this;
 }
 
@@ -547,6 +562,8 @@ TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR
     graph->insert(newTex);
     TextureBuilder builder(*this, *newTex);
     setup(*this, builder);
+    // set default gc tag
+    if (newTex->tags == kRenderGraphInvalidResourceTag) newTex->tags |= kRenderGraphDefaultResourceTag;
     return newTex->get_handle();
 }
 

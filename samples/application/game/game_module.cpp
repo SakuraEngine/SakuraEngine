@@ -400,7 +400,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
         }
         {
             ZoneScopedN("ExecuteRenderGraph");
-            renderGraph->execute();
+            auto frame_index = renderGraph->execute();
+            {
+                ZoneScopedN("CollectGarbage");
+                if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
+                    renderGraph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
+            }
         }
         {
             ZoneScopedN("QueuePresentSwapchain");
