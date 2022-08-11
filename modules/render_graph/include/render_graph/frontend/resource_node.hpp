@@ -2,6 +2,14 @@
 #include <atomic>
 #include "render_graph/frontend/base_types.hpp"
 
+enum
+{
+    kRenderGraphInvalidResourceTag = 0x00,
+    kRenderGraphDefaultResourceTag = 0x01,
+    // see D3D11 DynamicBuffer, some sync problems are dealed under render graph implementation with D3D12/Vulkan
+    kRenderGraphDynamicResourceTag = 0x02
+};
+
 namespace skr
 {
 namespace render_graph
@@ -27,6 +35,7 @@ public:
 protected:
     bool imported : 1;
     bool canbe_lone : 1;
+    uint32_t tags = kRenderGraphInvalidResourceTag;
     mutable LifeSpan frame_lifespan = { UINT32_MAX, UINT32_MAX };
 };
 
