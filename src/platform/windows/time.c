@@ -15,7 +15,7 @@ uint32_t skr_sys_get_time() { return (uint32_t)timeGetTime(); }
 
 uint32_t skr_sys_get_time_since_start() { return (uint32_t)time(NULL); }
 
-static SCallOnceGuard timeInitGuard;
+static SCallOnceGuard timeInitGuard = INIT_ONCE_STATIC_INIT;
 static int64_t highResTimerFrequency = 0;
 static int64_t highResTimerStart = 0;
 
@@ -68,7 +68,6 @@ static void initTime(void)
 static void ensureTimeInit()
 {
     // Make sure time constants are initialized before anyone tries to use them
-    skr_init_call_once_guard(&timeInitGuard);
     skr_call_once(&timeInitGuard, initTime);
 }
 
