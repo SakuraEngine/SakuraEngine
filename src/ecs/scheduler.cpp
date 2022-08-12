@@ -420,9 +420,11 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             auto TearDown = +[](void* data) {
                 task_payload_t* payload = (task_payload_t*)data;
                 auto job = payload->job;
-                job->teardown(job->userdata, job->entityCount);
+                if(job->teardown)
+                    job->teardown(job->userdata, job->entityCount);
                 dual_free(job->tasks);
                 dual_free(job->payloads);
+                job->~dual_ecs_job_t();
                 dual_free(job);
             };
             forloop (i, 0, batchs.size())
@@ -434,17 +436,12 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         }
         job->scheduler->allCounter->Decrement();
     };
-    auto TearDown = +[](void* data) {
-        dual_ecs_job_t* job = (dual_ecs_job_t*)data;
-        job->~dual_ecs_job_t();
-        dual_free(job);
-    };
     allCounter->Add(1);
     if (!query->storage->counter)
         query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
     query->storage->counter->Add(1);
     auto counter = job->counter;
-    scheduler->AddTask({ body, job, TearDown }, ftl::TaskPriority::High, job->counter.get());
+    scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter.get());
     return counter;
 }
 
