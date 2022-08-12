@@ -8,7 +8,7 @@ struct SKR_RENDERER_API ISkrRenderer {
 #ifdef __cplusplus
     virtual ~ISkrRenderer() = default;
     virtual void initialize() = 0;
-    virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
+    virtual void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) = 0;
     virtual void finalize() = 0;
     virtual CGPUDeviceId get_cgpu_device() const = 0;
     virtual CGPUQueueId get_gfx_queue() const = 0;
@@ -35,7 +35,7 @@ struct SKR_RENDERER_API Renderer : public ISkrRenderer {
 public:
     virtual ~Renderer() = default;
     virtual void initialize() override;
-    virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
+    virtual void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) = 0;
     virtual void finalize() override;
 
     virtual CGPUDeviceId get_cgpu_device() const override
@@ -151,4 +151,4 @@ RUNTIME_EXTERN_C SKR_RENDERER_API skr_io_vram_service_t*
 skr_renderer_get_vram_service();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API void
-skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph);
+skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage);
