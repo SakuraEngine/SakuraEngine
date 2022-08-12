@@ -8,6 +8,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
     class csmString;
     class ACubismMotion;
 
+    class csmExpressionMap;
     class csmMotionMap;
     class csmBreathVector;
     class csmIdVector;
@@ -15,11 +16,13 @@ namespace Live2D { namespace Cubism { namespace Framework {
 typedef class Live2D::Cubism::Framework::CubismModelSettingJson* CubismModelSettingJsonId;
 typedef class Live2D::Cubism::Framework::csmUserModel* csmUserModelId;
 typedef class Live2D::Cubism::Framework::csmMotionMap* csmMotionMapId;
+typedef class Live2D::Cubism::Framework::csmExpressionMap* csmExpressionMapId;
 typedef class Live2D::Cubism::Framework::csmBreathVector* csmBreathVectorId;
 typedef class Live2D::Cubism::Framework::csmIdVector* csmIdVectorId;
 #else
 typedef struct CubismModelSettingJson* CubismModelSettingJsonId;
 typedef struct csmUserModel* csmUserModelId;
+typedef struct csmExpressionMap* csmExpressionMapId;
 typedef struct csmMotionMap* csmMotionMapId;
 typedef struct csmBreathVector* csmBreathVectorId;
 typedef struct csmIdVector* csmIdVectorId;
@@ -31,11 +34,11 @@ typedef struct csmIdVector* csmIdVectorId;
 struct skr_live2d_model_resource_t {
     CubismModelSettingJsonId model_setting;
     csmUserModelId model;
-    csmMotionMapId expression_map;
+    csmExpressionMapId expression_map;
     csmMotionMapId motion_map;
-    csmBreathVectorId breath_vector;
-    csmIdVectorId eye_blink_ids;
-    csmIdVectorId lip_sync_ids;
+    // csmBreathVectorId breath_vector;
+    // csmIdVectorId eye_blink_ids;
+    // csmIdVectorId lip_sync_ids;
 };
 typedef struct skr_live2d_model_resource_t skr_live2d_model_resource_t;
 typedef struct skr_live2d_model_resource_t* skr_live2d_model_resource_id;
