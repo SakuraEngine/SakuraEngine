@@ -17,8 +17,10 @@
 #include "Framework/CubismModelSettingJson.hpp"
 #include "Framework/Effect/CubismEyeBlink.hpp"
 #include "Framework/Effect/CubismBreath.hpp"
+#include "Framework/Motion/CubismMotion.hpp"
 #include "Id/CubismIdManager.hpp"
 #include "CubismDefaultParameterId.hpp"
+#include "Utils/CubismString.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -30,15 +32,18 @@ struct L2DRequestCallbackData
 {
     skr_io_ram_service_t* ioService;
     IAsyncL2DResourceInterface* model_resource;
+    IAsyncL2DResourceInterface* motions_resource;
     skr_live2d_ram_io_request_t* live2dRequest;   
     eastl::string u8HomePath;
 
     uint32_t expression_count;
+    uint32_t motion_count;
     uint32_t model_count;
     uint32_t phys_count;
     uint32_t pose_count;
     uint32_t usr_data_count;
     SAtomic32 finished_expressions;
+    SAtomic32 finished_motions;
     SAtomic32 finished_models;
     SAtomic32 finished_physics;
     SAtomic32 finished_poses;
@@ -51,9 +56,12 @@ struct L2DRequestCallbackData
         auto _ph = skr_atomic32_load_acquire(&finished_physics);
         auto _po = skr_atomic32_load_acquire(&finished_poses);
         auto _ud = skr_atomic32_load_acquire(&finished_usr_data);
-        if (_e == expression_count && _m == model_count && _ph == phys_count && _po == pose_count && _ud == usr_data_count)
+        auto _mo = skr_atomic32_load_acquire(&finished_motions);
+        if (_e == expression_count && _m == model_count && _ph == phys_count &&
+             _po == pose_count && _ud == usr_data_count && _mo == motion_count)
         {
             model_resource->on_finished();
+            motions_resource->on_finished();
             skr_atomic32_store_relaxed(&live2dRequest->liv2d_status, SKR_ASYNC_IO_STATUS_OK);
             SkrDelete(this);
         }
@@ -65,6 +73,7 @@ namespace L2DF = Live2D::Cubism::Framework;
 namespace Live2D { namespace Cubism { namespace Framework {
     class csmUserModel : public CubismUserModel, public IAsyncL2DResourceInterface
     {
+        friend class csmMotionMap;
     public:
         csmUserModel()
             : CubismUserModel()
@@ -79,7 +88,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data)
         {
-            ZoneScopedN("Live2D Model Request");
+            ZoneScopedN("Request Live2D Model");
 
             auto settings = _modelSetting = data->live2dRequest->model_resource->model_setting;
             auto mFile = settings->GetModelFileName();
@@ -94,14 +103,14 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
             // Model Request
             {
-                ZoneScopedN("Model Request");
+                ZoneScopedN("Request Model");
 
                 modelPath = data->u8HomePath + "/" + mFile;
                 SKR_LOG_TRACE("Live2D Model %s at %s", mFile, modelPath.c_str());
                 skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
                 ramIO.path = modelPath.c_str();
                 ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
-                    ZoneScopedN("Model Initialize");
+                    ZoneScopedN("Create Model");
                     auto _this = (csmUserModel*)data;
 
                     _this->LoadModel(request->bytes, (L2DF::csmSizeInt)request->size);
@@ -116,14 +125,14 @@ namespace Live2D { namespace Cubism { namespace Framework {
             // Physics Request
             if (cbData->phys_count)
             {
-                ZoneScopedN("Physics Request");
+                ZoneScopedN("Request Physics");
 
                 pyhsicsPath = data->u8HomePath + "/" + phFile;
                 SKR_LOG_TRACE("Live2D Physics %s at %s", phFile, pyhsicsPath.c_str());
                 skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
                 ramIO.path = pyhsicsPath.c_str();
                 ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
-                    ZoneScopedN("Physics Initialize");
+                    ZoneScopedN("Create Physics");
                     auto _this = (csmUserModel*)data;
                     
                     _this->LoadPhysics(request->bytes, (L2DF::csmSizeInt)request->size);
@@ -138,14 +147,14 @@ namespace Live2D { namespace Cubism { namespace Framework {
             // Pose Request
             if (cbData->pose_count)
             {
-                ZoneScopedN("Pose Request");
+                ZoneScopedN("Request Pose");
 
                 posePath = data->u8HomePath + "/" + poFile;
                 SKR_LOG_TRACE("Live2D Pose %s at %s", poFile, posePath.c_str());
                 skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
                 ramIO.path = posePath.c_str();
                 ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
-                    ZoneScopedN("Pose Initialize");
+                    ZoneScopedN("Create Pose");
                     auto _this = (csmUserModel*)data;
                     
                     _this->LoadPose(request->bytes, (L2DF::csmSizeInt)request->size);
@@ -160,14 +169,14 @@ namespace Live2D { namespace Cubism { namespace Framework {
             // UsrData Request
             if (cbData->usr_data_count)
             {
-                ZoneScopedN("UsrData Request");
+                ZoneScopedN("Request UsrData");
 
                 usrDataPath = data->u8HomePath + "/" + udFile;
                 SKR_LOG_TRACE("Live2D UsrData %s at %s", udFile, usrDataPath.c_str());
                 skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
                 ramIO.path = usrDataPath.c_str();
                 ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
-                    ZoneScopedN("UsrData Initialize");
+                    ZoneScopedN("Create UsrData");
                     auto _this = (csmUserModel*)data;
                     
                     _this->LoadUserData(request->bytes, (L2DF::csmSizeInt)request->size);
@@ -181,14 +190,9 @@ namespace Live2D { namespace Cubism { namespace Framework {
             }
         }
 
-        void PreloadMotionGroup(const Csm::csmChar* group)
-        {
-
-        }
-
         void on_finished() override
         {
-            ZoneScopedN("Live2D Model Finish");
+            ZoneScopedN("Setup Live2D Model");
 
             // EyeBlink Parameters
             if (_modelSetting->GetEyeBlinkParameterCount())
@@ -230,16 +234,9 @@ namespace Live2D { namespace Cubism { namespace Framework {
             _modelMatrix->SetupFromLayout(layout);
 
             _model->SaveParameters();
-
-            for (csmInt32 i = 0; i < _modelSetting->GetMotionGroupCount(); i++)
-            {
-                const csmChar* group = _modelSetting->GetMotionGroupName(i);
-                PreloadMotionGroup(group);
-            }
-
-            _motionManager->StopAllMotions();
         }
 
+    protected:
         // Model States
         Csm::ICubismModelSetting* _modelSetting;
         Csm::csmVector<Csm::CubismIdHandle> _eyeBlinkIds;
@@ -262,10 +259,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         skr_async_io_request_t usrDataRequest;
         L2DRequestCallbackData* cbData;
     };
-    class csmMotionMap : public csmMap<csmString, ACubismMotion*>
+    class csmExpressionMap : public csmMap<csmString, ACubismMotion*>
     {
     public:
-        ~csmMotionMap()
+        ~csmExpressionMap()
         {
             for (auto iter = Begin(); iter != End(); ++iter)
             {
@@ -275,7 +272,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
         }
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data)
         {
-            ZoneScopedN("Live2D MotionMap Request");
+            ZoneScopedN("Request Live2D ExpressionMap");
             cbData = data;
 
             auto settings = data->live2dRequest->model_resource->model_setting;
@@ -299,10 +296,13 @@ namespace Live2D { namespace Cubism { namespace Framework {
                 skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
                 ramIO.path = path.c_str();
                 ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
-                    auto _this = (csmMotionMap*)data;
+                    ZoneScopedN("Create Live2D Expression");
+
+                    auto _this = (csmExpressionMap*)data;
                     auto name = _this->expression_names[request];
                     
                     csmMap<csmString, ACubismMotion*>& map = *_this;
+                    // callbacks are called from single same thread, so no need to lock 
                     map[name.c_str()] = CubismExpressionMotion::Create(request->bytes, (L2DF::csmSizeInt)request->size);
                     sakura_free(request->bytes);
                     
@@ -318,16 +318,117 @@ namespace Live2D { namespace Cubism { namespace Framework {
         eastl::vector_map<skr_async_io_request_t*, eastl::string> expression_paths;
         L2DRequestCallbackData* cbData;
     };
-    class csmBreathVector : public csmVector<CubismBreath::BreathParameterData>
+    class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
     {
     public:
+        ~csmMotionMap()
+        {
+            for (auto iter = Begin(); iter != End(); ++iter)
+            {
+                for (auto iter2 = iter->Second.Begin(); iter2 != iter->Second.End(); ++iter2)
+                {
+                    ACubismMotion::Delete(*iter2);
+                }
+            }
+            Clear();
+        }
+        void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data)
+        {
+            ZoneScopedN("Request Live2D MotionMap");
+            cbData = data;
+            cbData->motions_resource = this;
 
-    };
-    class csmIdVector : public csmVector<CubismIdHandle>
-    {
-    public:
+            auto settings = data->live2dRequest->model_resource->model_setting;
+            motion_entries.resize(cbData->motion_count);
+            motion_paths.resize(cbData->motion_count);
+            motion_requests.resize(cbData->motion_count);
+            uint32_t slot = 0;
+            for (uint32_t i = 0; i < settings->GetMotionGroupCount(); i++)
+            {
+                ZoneScopedN("Setup Motion Request");
 
+                auto group = settings->GetMotionGroupName(i);
+                auto count = settings->GetMotionCount(group);
+                csmMap<csmString, csmVector<ACubismMotion*>>& map = *this;
+                map[group].Resize(count);
+                for (uint32_t j = 0; j < settings->GetMotionCount(group); j++)
+                {
+                    auto& request = motion_requests[slot];
+                    auto&& [pRequest, path] = motion_paths.at(slot);
+                    auto&& [pRequest_, entry] = motion_entries.at(slot);
+
+                    entry.first = group;
+                    entry.second = j;
+                    auto file = settings->GetMotionFileName(group, j);
+                    pRequest = &request;
+                    pRequest_ = &request;
+                    path = data->u8HomePath + "/" + file;
+
+                    slot++;
+                }
+            }
+            for (uint32_t i = 0; i < motion_requests.size(); i++)
+            {
+                ZoneScopedN("Request Motion");
+
+                auto& request = motion_requests[i];
+                auto&& [pRequest, path] = motion_paths.at(i);
+                auto&& [pRequest_, entry] = motion_entries.at(i);
+                SKR_LOG_TRACE("Request Live2D Motion in group %s at %d", entry.first.c_str(), entry.second);
+
+                skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
+                ramIO.path = path.c_str();
+                ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
+                    ZoneScopedN("Create Live2D Motion");
+
+                    auto _this = (csmMotionMap*)data;
+                    auto entry = _this->motion_entries[request];
+                    
+                    csmMap<csmString, csmVector<ACubismMotion*>>& map = *_this;
+                    // callbacks are called from single same thread, so no need to lock 
+                    map[entry.first.c_str()][entry.second] = L2DF::CubismMotion::Create(request->bytes, (L2DF::csmSizeInt)request->size);
+                    sakura_free(request->bytes);
+                    
+                    skr_atomic32_add_relaxed(&_this->cbData->finished_motions, 1);
+                    _this->cbData->partial_finished();
+                };
+                ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
+                ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &request);
+            }
+        }
+
+        void on_finished()
+        {
+            ZoneScopedN("Setup Live2D Motion");
+
+            auto Model = static_cast<csmUserModel*>(cbData->model_resource);
+            auto settings = Model->_modelSetting;
+            auto motionManager = Model->_motionManager;
+            for (csmInt32 i = 0; i < settings->GetMotionGroupCount(); i++)
+            {
+                const csmChar* group = settings->GetMotionGroupName(i);
+                for (uint32_t j = 0; j < settings->GetMotionCount(group); j++)
+                {
+                    SKR_LOG_TRACE("Setup Live2D Motion %s at %d", group, j);
+                    csmMap<csmString, csmVector<ACubismMotion*>>& map = *this;
+                    auto motion = static_cast<CubismMotion*>(map[group][j]);
+                    csmFloat32 fadeTime = settings->GetMotionFadeInTimeValue(group, j);
+                    if (fadeTime >= 0.0f)
+                    {
+                        motion->SetFadeInTime(fadeTime);
+                    }
+                    motion->SetEffectIds(Model->_eyeBlinkIds, Model->_lipSyncIds);
+                }
+            }
+            motionManager->StopAllMotions();
+        }
+
+        eastl::vector<skr_async_io_request_t> motion_requests;
+        eastl::vector_map<skr_async_io_request_t*, eastl::pair<eastl::string, uint32_t>> motion_entries;
+        eastl::vector_map<skr_async_io_request_t*, eastl::string> motion_paths;
+        L2DRequestCallbackData* cbData;
     };
+
 }}}
 
 #ifndef SKR_SERIALIZE_GURAD
@@ -366,12 +467,20 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
             cbData->usr_data_count = 1;
         }
         cbData->expression_count = model_setting->GetExpressionCount();
+        for (uint32_t i = 0; i < model_setting->GetMotionGroupCount(); i++)
+        {
+            auto group = model_setting->GetMotionGroupName(i);
+            cbData->motion_count += model_setting->GetMotionCount(group);
+        }
         // load model & physics & pose & eyeblinks & breath & usrdata
         auto model = model_resource->model = SkrNew<L2DF::csmUserModel>();
         model->request(cbData->ioService, cbData);
         // load expressions
-        auto expressions = model_resource->expression_map = SkrNew<L2DF::csmMotionMap>();
+        auto expressions = model_resource->expression_map = SkrNew<L2DF::csmExpressionMap>();
         expressions->request(cbData->ioService, cbData);
+        // load motions
+        auto motions = model_resource->motion_map = SkrNew<L2DF::csmMotionMap>();
+        motions->request(cbData->ioService, cbData);
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)callbackData;
     callbackData->live2dRequest = live2dRequest;
