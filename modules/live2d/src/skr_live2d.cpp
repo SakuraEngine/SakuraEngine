@@ -83,7 +83,8 @@ SKR_MODULE_METADATA(u8R"(
     "version" : "0.0.1",
     "linking" : "shared",
     "dependencies" : [
-        {"name":"SkrRenderer", "version":"0.1.0"}
+        {"name":"SkrRenderer", "version":"0.1.0"},
+        {"name":"SkrImageCoder", "version":"0.1.0"}
     ],
     "author" : "",
     "url" : "",
