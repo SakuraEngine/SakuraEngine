@@ -10,6 +10,8 @@
 #include "utils/make_zeroed.hpp"
 #include "skr_live2d/model_resource.h"
 
+#include "tracy/Tracy.hpp"
+
 class SLive2DViewerModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
@@ -75,10 +77,9 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     skr_io_ram_service_t* ioService = ram_service;
     request.vfs_override = resource_vfs;
     skr_live2d_model_create_from_json(ioService, "Live2DViewer/Haru/Haru.model3.json", &request);
-
-    while(!request.is_ready())
     {
-
+        ZoneScopedN("Idle");
+        while(!request.is_ready());
     }
     skr_live2d_model_free(request.model_resource);
     return 0;
