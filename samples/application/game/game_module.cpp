@@ -49,6 +49,8 @@ class SGameModule : public skr::IDynamicModule
     virtual void on_load(int argc, char** argv) override;
     virtual int main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
+
+    ftl::TaskScheduler scheduler;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SGameModule, Game);
@@ -73,6 +75,8 @@ Game)
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
+    scheduler.Init();
+    dualJ_initialize((dual_scheduler_t*)&scheduler);
 }
 
 void create_test_scene()
@@ -294,6 +298,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
     // loop
     bool quit = false;
     skg::GameContext ctx;
+    dual_query_t* moveQuery;
+    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t");
     while (!quit)
     {
         FrameMark
@@ -340,16 +346,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
         // move
         {
             ZoneScopedN("MoveSystem");
-
-            auto filter = make_zeroed<dual_filter_t>();
-            auto meta = make_zeroed<dual_meta_filter_t>();
-            auto movable_type = make_zeroed<dual::type_builder_t>();
-            filter.all = movable_type.with<skr_movement_t, skr_translation_t>().build();
-            float lerps[] = { 12.5, 20 };
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
-            auto moveFunc = [&](dual_chunk_view_t* view) {
-                auto translations = (skr_translation_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_t>::get());
+            
+            auto moveJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                float lerps[] = { 12.5, 20 };
+                auto translations = (skr_translation_t*)dualV_get_owned_ro_local(view, localTypes[0]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     auto lscale = (float)abs(sin(total_sec * 0.5));
@@ -360,8 +362,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         0.f
                     };
                 }
-            };
-            dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(moveFunc));
+            });
+            dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
+            dualJ_wait_all();
         }
         {
             ZoneScopedN("AcquireFrame");
@@ -382,7 +385,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         });
         {
             ZoneScopedN("RenderScene");
-            skr_renderer_render_frame(renderGraph);
+            skr_renderer_render_frame(renderGraph, skr_runtime_get_dual_storage());
         }
         {
             ZoneScopedN("RenderIMGUI");

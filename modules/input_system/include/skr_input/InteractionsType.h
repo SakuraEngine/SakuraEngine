@@ -113,7 +113,7 @@ public:
     void Tick(double deltaTime) override
     {
         if(this->_state == InteractionState::Performed && _pressEventInterval > 0.f)
-        _time += deltaTime;
+            _time += deltaTime;
     }
 
     bool IsTrigger() override

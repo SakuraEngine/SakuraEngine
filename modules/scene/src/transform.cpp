@@ -98,18 +98,18 @@ static void skr_relative_to_world_root(void* u, dual_storage_t* storage, dual_ch
 void skr_transform_setup(dual_storage_t* world, skr_transform_system* system)
 {
     // for root entities, calculate local to world
-    system->localToWorld = dualQ_from_literal(world, "[in]|skr_translation_t [in]|skr_rotation_t [in]|skr_scale_t [out]skr_l2w_t !skr_parent_t");
+    system->localToWorld = dualQ_from_literal(world, "[in]|skr_translation_t,[in]|skr_rotation_t, [in]|skr_scale_t,[out]skr_l2w_t,!skr_parent_t");
 
     // for node entities, calculate local to parent
-    system->localToRelative = dualQ_from_literal(world, "[in]|skr_translation_t [in]|skr_rotation_t [in]|skr_scale_t [out]skr_l2r_t [has]skr_parent_t");
+    system->localToRelative = dualQ_from_literal(world, "[in]|skr_translation_t,[in]|skr_rotation_t,[in]|skr_scale_t,[out]skr_l2r_t,[has]skr_parent_t");
 
     // then recursively calculate local to world for node entities
-    system->relativeToWorld = dualQ_from_literal(world, "[inout][rand]skr_l2w_t [in][rand]skr_child_t [in][rand]?skr_l2r_t !skr_parent_t");
+    system->relativeToWorld = dualQ_from_literal(world, "[inout][rand]skr_l2w_t,[in][rand]skr_child_t,[in][rand]?skr_l2r_t,!skr_parent_t");
 }
 
 void skr_transform_update(skr_transform_system* query)
 {
-    dualJ_schedule_ecs(query->localToWorld, 256, &skr_local_to_x<skr_l2w_t>, nullptr, nullptr, nullptr, nullptr);
-    dualJ_schedule_ecs(query->localToRelative, 256, &skr_local_to_x<skr_l2r_t>, nullptr, nullptr, nullptr, nullptr);
-    dualJ_schedule_ecs(query->relativeToWorld, 128, &skr_relative_to_world_root, nullptr, nullptr, nullptr, nullptr);
+    dualJ_schedule_ecs(query->localToWorld, 256, &skr_local_to_x<skr_l2w_t>, nullptr, nullptr, nullptr, nullptr, nullptr);
+    dualJ_schedule_ecs(query->localToRelative, 256, &skr_local_to_x<skr_l2r_t>, nullptr, nullptr, nullptr, nullptr, nullptr);
+    dualJ_schedule_ecs(query->relativeToWorld, 128, &skr_relative_to_world_root, nullptr, nullptr, nullptr, nullptr, nullptr);
 }
