@@ -61,7 +61,7 @@ if (os.host() == "windows") then
             spv_outdir = "/../resources/shaders/Live2DViewer",
             dxil_outdir = "/../resources/shaders/Live2DViewer"})
         add_includedirs("live2d-viewer/include", {public=true})
-        add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp")
+        add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")
         -- add_files("live2d-viewer/shaders/**.hlsl")
         add_files("live2d-viewer/**.json", "live2d-viewer/**.moc3", "live2d-viewer/**.png")
         if (is_os("windows")) then 
