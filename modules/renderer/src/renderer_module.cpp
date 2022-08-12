@@ -157,9 +157,9 @@ skr_io_vram_service_t* skr_renderer_get_vram_service()
     return SkrRendererModule::Get()->get_vram_service();
 }
 
-void skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph)
+void skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage)
 {
-    SkrRendererModule::Get()->get_renderer()->render(render_graph);
+    SkrRendererModule::Get()->get_renderer()->render(render_graph, storage);
 }
 
 CGPUDStorageQueueId skr_renderer_get_file_dstorage_queue()
