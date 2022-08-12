@@ -54,10 +54,10 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
         return 0;
     }
 
-    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls) override
+    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage) override
     {
         if (vtbl.peek_drawcall)
-            vtbl.peek_drawcall(pass, drawcalls);
+            vtbl.peek_drawcall(pass, drawcalls, storage);
     }
 
     VtblRenderEffectProcessor vtbl;
@@ -76,9 +76,8 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
         processors.clear();
     }
 
-    void render(skr::render_graph::RenderGraph* render_graph) override
+    void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) override
     {
-        auto storage = skr_runtime_get_dual_storage();
         // produce draw calls
         for (auto& pass : passes)
         {
@@ -94,7 +93,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
                     auto drawcalls = make_zeroed<skr_primitive_draw_list_view_t>();
                     drawcalls.drawcalls = pass_drawcall_arena.data();
                     drawcalls.count = dcn;
-                    processor.second->peek_drawcall(pass.second, &drawcalls);
+                    processor.second->peek_drawcall(pass.second, &drawcalls, storage);
                 }
             }
         }

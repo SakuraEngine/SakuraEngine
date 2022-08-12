@@ -203,7 +203,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         return 0;
     }
 
-    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls) override
+    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage) override
     {
         // SKR_LOG_FMT_INFO("Pass {} asked Feature {} to peek drawcall", pass->identity(), forward_effect_name);
         if (strcmp(pass->identity(), forward_pass_name) == 0)

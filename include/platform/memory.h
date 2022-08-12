@@ -36,6 +36,15 @@ template <typename T>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
 
+template <typename F>
+[[nodiscard]] FORCEINLINE F* SkrNewLambda(F&& lambda)
+{
+    using ValueType = std::remove_reference_t<F>;
+    void* pMemory = sakura_malloc_aligned(sizeof(ValueType), alignof(ValueType));
+    SKR_ASSERT(pMemory != nullptr);
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(std::forward<F>(lambda));
+}
+
 template <typename T>
 FORCEINLINE void SkrDelete(T* pType)
 {

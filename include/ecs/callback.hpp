@@ -27,3 +27,4 @@ namespace dual
 }
 
 #define DUAL_LAMBDA(f) &dual::CallbackHelper<decltype(&decltype(f)::operator())>::Call<&decltype(f)::operator()>, &f
+#define DUAL_LAMBDA_POINTER(f) &dual::CallbackHelper<decltype(&std::remove_reference_t<decltype(*f)>::operator())>::Call<&std::remove_reference_t<decltype(*f)>::operator()>, f, nullptr, +[](void* u, EIndex entityCount) { SkrDelete(((decltype(f))u)); }

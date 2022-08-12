@@ -42,7 +42,7 @@ struct scheduler_t {
     void sync_entry(dual::archetype_t* type, dual_type_index_t entry);
     void sync_all();
     void sync_storage(const dual_storage_t* storage);
-    eastl::shared_ptr<ftl::TaskCounter> schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_init_callback_t init, dual_resource_operation_t* resources);
+    eastl::shared_ptr<ftl::TaskCounter> schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
     eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> schedule_custom_job(const dual_query_t* query, const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources);
     eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> sync_resources(const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources);
 };
@@ -75,11 +75,13 @@ struct dual_ecs_job_t : dual_job_t {
     bool hasRandomWrite;
     EIndex entityCount;
     dual_resource_operation_t resources;
-    dual_query_t* query;
+    const dual_query_t* query;
     dual_system_callback_t callback;
-    dual_system_init_callback_t init;
+    dual_system_lifetime_callback_t init;
+    dual_system_lifetime_callback_t teardown;
     EIndex batchSize;
     void* userdata;
     void* payloads;
+    void* tasks;
     ~dual_ecs_job_t();
 };

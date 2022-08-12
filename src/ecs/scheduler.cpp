@@ -60,7 +60,10 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
     skr_acquire_mutex(&entryMutex.mMutex);
     auto pair = dependencyEntries.find(type);
     if (pair == dependencyEntries.end())
+    {
+        skr_release_mutex(&entryMutex.mMutex);
         return;
+    }
     auto entries = pair->second.data();
     auto count = type->type.length;
     forloop (i, 0, count)
@@ -87,7 +90,11 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
     eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
     skr_acquire_mutex(&entryMutex.mMutex);
     auto pair = dependencyEntries.find(type);
-    if (pair == dependencyEntries.end()) return;
+    if (pair == dependencyEntries.end()) 
+    {
+        skr_release_mutex(&entryMutex.mMutex);
+        return;
+    };
     auto entries = pair->second.data();
     for (auto dep : entries[i].owned)
         deps.push_back(dep);
@@ -103,7 +110,7 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
 void dual::scheduler_t::sync_all()
 {
     SKR_ASSERT(scheduler->GetCurrentThreadIndex() == 0);
-    scheduler->WaitForCounter(allCounter.get());
+    scheduler->WaitForCounter(allCounter.get(), true);
 }
 
 void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
@@ -155,7 +162,7 @@ void update_entry(job_dependency_entry_t& entry, eastl::shared_ptr<ftl::TaskCoun
 } // namespace dual
 
 eastl::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_init_callback_t init, dual_resource_operation_t* resources)
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
 {
     if (query->storage->scheduler == nullptr)
     {
@@ -172,15 +179,18 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
     auto groupCount = (uint32_t)groups.size();
     size_t arenaSize = 0;
-    arenaSize += sizeof(dual_job_t);
+    arenaSize += sizeof(dual_ecs_job_t);
     if(resources)
         arenaSize += resources->count * (sizeof(dual_entity_t) + sizeof(int)); // job.resources
+    arenaSize += groupCount * sizeof(dual_group_t*);   // job.groups
     arenaSize += groupCount * sizeof(dual_type_index_t) * params.length;   // job.localTypes
     arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.readonly
+    arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.atomic
     arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.randomAccess
-    fixed_arena_t arena{ arenaSize };                                      // todo: pool?
+    fixed_arena_t arena{ arenaSize * 2 };                                      // todo: pool?
     dual_ecs_job_t* job = new (arena.allocate<dual_ecs_job_t>()) dual_ecs_job_t(*this);
     job->type = dual_job_type::ecs;
+    job->query = query;
     job->groups = arena.allocate<dual_group_t*>(groupCount);
     job->groupCount = groupCount;
     job->localTypes = arena.allocate<dual_type_index_t>(groupCount * params.length);
@@ -193,6 +203,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
     job->userdata = u;
     job->batchSize = batchSize;
     job->init = init;
+    job->teardown = teardown;
     arena.forget();
     std::memcpy(job->groups, groups.data(), groupCount * sizeof(dual_group_t*));
     int groupIndex = 0;
@@ -227,7 +238,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         if (iter == dependencyEntries.end())
         {
             eastl::vector<job_dependency_entry_t> entries(at->type.length);
-            dependencyEntries.insert(std::make_pair(at, std::move(entries)));
+            iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
         }
 
         auto entries = (*iter).second.data();
@@ -324,6 +335,7 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
                 auto group = job->groups[i];
                 query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(processView));
             }
+            job->teardown(job->userdata, job->entityCount);
         }
         else
         {
@@ -387,10 +399,12 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             uint32_t payloadIndex = 0;
             for (auto& batch : batchs)
             {
-                batch.startTask = (intptr_t)&tasks[batch.startTask];
-                batch.endTask = (intptr_t)&tasks[batch.endTask];
+                batch.startTask = (intptr_t)(tasks.data() + batch.startTask);
+                batch.endTask = (intptr_t)(tasks.data() + batch.endTask);
                 payloads[payloadIndex++] = { batch, job };
             }
+            job->tasks = tasks.data();
+            tasks.reset_lose_memory();
             job->payloads = payloads;
 
             auto taskBody = +[](ftl::TaskScheduler* taskScheduler, void* data) {
@@ -406,6 +420,10 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
             auto TearDown = +[](void* data) {
                 task_payload_t* payload = (task_payload_t*)data;
                 auto job = payload->job;
+                if(job->teardown)
+                    job->teardown(job->userdata, job->entityCount);
+                dual_free(job->tasks);
+                dual_free(job->payloads);
                 job->~dual_ecs_job_t();
                 dual_free(job);
             };
@@ -418,17 +436,13 @@ dual_system_init_callback_t init, dual_resource_operation_t* resources)
         }
         job->scheduler->allCounter->Decrement();
     };
-    auto TearDown = +[](void* data) {
-        dual_ecs_job_t* job = (dual_ecs_job_t*)data;
-        job->~dual_ecs_job_t();
-        dual_free(job);
-    };
     allCounter->Add(1);
     if (!query->storage->counter)
         query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
     query->storage->counter->Add(1);
-    scheduler->AddTask({ body, job, TearDown }, ftl::TaskPriority::High, job->counter.get());
-    return job->counter;
+    auto counter = job->counter;
+    scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter.get());
+    return counter;
 }
 
 eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
@@ -448,7 +462,7 @@ eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_c
         if (iter == dependencyEntries.end())
         {
             eastl::vector<job_dependency_entry_t> entries(at->type.length);
-            dependencyEntries.insert(std::make_pair(at, std::move(entries)));
+            iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
         }
 
         auto entries = (*iter).second.data();
@@ -556,7 +570,6 @@ dual_job_t::dual_job_t(dual::scheduler_t& scheduler)
 
 dual_ecs_job_t::~dual_ecs_job_t()
 {
-    ::dual_free(payloads);
 }
 
 extern "C" {
@@ -575,15 +588,15 @@ struct dual_counter_t {
 };
 
 void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_init_callback_t init, dual_resource_operation_t* resources, dual_counter_t** counter)
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter)
 {
     if (counter)
     {
-        *counter = SkrNew<dual_counter_t>(dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, resources));
+        *counter = SkrNew<dual_counter_t>(dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources));
     }
     else
     {
-        dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, resources);
+        dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
     }
 }
 

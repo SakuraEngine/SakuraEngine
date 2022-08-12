@@ -343,9 +343,13 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         else
         {
             auto j = i;
-            while (i < part.size() && std::isalpha(part[i]))
+            auto validNameChar = [](char c)
+            {
+                return std::isalpha(c) || c =='_' || (c > '0' && c <= '9');
+            };
+            while (i < part.size() && validNameChar(part[i]))
                 ++i;
-            auto name = part.substr(j, j - i);
+            auto name = part.substr(j, i - j);
             type = reg.get_type(name);
             if (type == kInvalidTypeIndex)
             {
@@ -413,7 +417,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             operations.push_back(operation);
         }
 
-        partBegin += (int)part.size();
+        partBegin += (int)part.size() + 1;
     }
 
     dual::fixed_arena_t arena(4096);
