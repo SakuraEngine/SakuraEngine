@@ -87,8 +87,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     window = skr_create_window(
-    fmt::format("Live2D Viewer [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
-    &window_desc);
+        fmt::format("Live2D Viewer [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
+        &window_desc);
     // Initialize renderer
     auto swapchain = skr_renderer_register_window(window);
     auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
