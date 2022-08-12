@@ -51,18 +51,32 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
         TracyCZoneC(readZone, tracy::Color::LightYellow, 1);
         TracyCZoneName(readZone, "ioServiceReadFile", strlen("ioServiceReadFile"));
         task->setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
-        auto vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
-            ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+        skr_vfile_t* vf = nullptr;
+        {
+            ZoneScopedN("FOpen");
+            vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
+                ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+        }
         if (task->request->bytes == nullptr)
         {
+            ZoneScopedN("Allocate");
             // allocate
             auto fsize = skr_vfs_fsize(vf);
             task->request->size = fsize;
             task->request->bytes = (uint8_t*)sakura_malloc(fsize);
         }
-        task->setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
-        skr_vfs_fread(vf, task->request->bytes, task->offset, task->request->size);
-        task->setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+        {
+            ZoneScopedN("BeforeLoadingCallback");
+            task->setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
+        }
+        {
+            ZoneScopedN("FRead");
+            skr_vfs_fread(vf, task->request->bytes, task->offset, task->request->size);
+        }
+        {
+            ZoneScopedN("LoadingOKCallback");
+            task->setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+        }
         skr_vfs_fclose(vf);
         TracyCZoneEnd(readZone);
     }

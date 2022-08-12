@@ -26,8 +26,8 @@ typedef struct csmIdVector* csmIdVectorId;
 #endif
 
 // Made up with: 
-// [Setting], [Model], [Expression], [Motions], Physics
-// Pose, EyeBlink, [Breath], UserData, [EyeBlinkIds], [LipSyncIds]
+// [Setting], [Model], [Expression], [Motions], [Physics]
+// [Pose], EyeBlink, [Breath], [UserData], [EyeBlinkIds], [LipSyncIds]
 struct skr_live2d_model_resource_t {
     CubismModelSettingJsonId model_setting;
     csmUserModelId model;
