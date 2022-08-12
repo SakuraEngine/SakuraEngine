@@ -1,5 +1,6 @@
 set_project("Sakura.Modules")
 
+includes("image_coder/xmake.lua")
 includes("scene/xmake.lua")
 includes("renderer/xmake.lua")
 includes("render_graph/xmake.lua")

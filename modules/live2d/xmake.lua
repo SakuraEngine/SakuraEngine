@@ -5,7 +5,7 @@ target("SkrLive2D")
         rootdir = "include/", disable_reflection = true,
         api = "SKR_LIVE2D"
     })
-    add_deps("SkrRenderer")
+    add_deps("SkrRenderer", "SkrImageCoder")
     add_includedirs("include", "CubismNativeCore/include", {public=true})
     add_includedirs("src/Framework", {public=false})
     add_files("src/**.cpp")
