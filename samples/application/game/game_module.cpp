@@ -385,7 +385,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         });
         {
             ZoneScopedN("RenderScene");
-            skr_renderer_render_frame(renderGraph);
+            skr_renderer_render_frame(renderGraph, skr_runtime_get_dual_storage());
         }
         {
             ZoneScopedN("RenderIMGUI");
