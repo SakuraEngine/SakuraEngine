@@ -48,7 +48,7 @@ bool BaseImageCoder::set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEP
     encoded_data.size = size;
     memcpy(encoded_data.bytes, data, size);
 
-    encoded_view = {(const uint8_t*)data, size};
+    encoded_view = { (const uint8_t*)data, size };
     return true;
 }
 
@@ -59,7 +59,7 @@ bool BaseImageCoder::move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
     encoded_data.bytes = (uint8_t*)data;
     encoded_data.size = size;
 
-    encoded_view = {(const uint8_t*)data, size};
+    encoded_view = { (const uint8_t*)data, size };
     return true;
 }
 
@@ -67,12 +67,12 @@ bool BaseImageCoder::view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
 {
     freeEncoded();
 
-    encoded_view = {(const uint8_t*)data, size};
+    encoded_view = { (const uint8_t*)data, size };
     return true;
 }
 
-bool BaseImageCoder::set_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
-    EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
+bool BaseImageCoder::set_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
+EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
 {
     freeRaw();
 
@@ -80,30 +80,30 @@ bool BaseImageCoder::set_raw(const uint8_t* data, uint64_t size, uint32_t width,
     raw_data.size = size;
     memcpy(raw_data.bytes, data, size);
 
-    raw_view = {(const uint8_t*)data, size};
+    raw_view = { (const uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
     return true;
 }
 
-bool BaseImageCoder::move_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
-    EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
+bool BaseImageCoder::move_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
+EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
 {
     freeRaw();
 
     raw_data.bytes = (uint8_t*)data;
     raw_data.size = size;
 
-    raw_view = {(const uint8_t*)data, size};
+    raw_view = { (const uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
     return true;
 }
 
-bool BaseImageCoder::view_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
-    EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
+bool BaseImageCoder::view_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
+EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
 {
     freeRaw();
 
-    encoded_view = {(const uint8_t*)data, size};
+    encoded_view = { (const uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
     return true;
 }
@@ -144,4 +144,4 @@ bool BaseImageCoder::get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR
     return true;
 }
 
-}
+} // namespace skr
