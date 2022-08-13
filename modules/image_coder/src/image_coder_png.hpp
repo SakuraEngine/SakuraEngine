@@ -16,6 +16,7 @@ public:
     uint32_t get_bit_depth() const SKR_NOEXCEPT final;
 
     bool valid_data() const SKR_NOEXCEPT;
+    bool load_png_header() SKR_NOEXCEPT;
 
     uint8_t channels = 0;
     uint8_t _padding = 0;

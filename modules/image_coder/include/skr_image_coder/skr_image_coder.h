@@ -3,6 +3,7 @@
 
 #ifdef __cplusplus
     #include "module/module_manager.hpp"
+    #include <containers/span.hpp>
 
 class SKR_IMAGE_CODER_API SkrImageCoderModule : public skr::IDynamicModule
 {
@@ -62,9 +63,9 @@ struct SKR_IMAGE_CODER_API skr_image_coder_t {
         EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT = 0;
 
     virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
-    virtual bool get_raw_data_view(uint8_t** ppData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
+    virtual skr::span<const uint8_t> get_raw_data_view() const SKR_NOEXCEPT = 0;
     virtual bool get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
-    virtual bool get_encoded_data_view(uint8_t** ppData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
+    virtual skr::span<const uint8_t> get_encoded_data_view() const SKR_NOEXCEPT = 0;
 
     virtual EImageCoderFormat get_image_format() const SKR_NOEXCEPT = 0;
     virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT = 0;

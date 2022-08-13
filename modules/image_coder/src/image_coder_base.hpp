@@ -24,9 +24,9 @@ public:
         EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT override;
 
     virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT override;
-    virtual bool get_raw_data_view(uint8_t** ppData, uint64_t* pSize) const SKR_NOEXCEPT override;
     virtual bool get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT override;
-    virtual bool get_encoded_data_view(uint8_t** ppData, uint64_t* pSize) const SKR_NOEXCEPT override;
+    virtual skr::span<const uint8_t> get_raw_data_view() const SKR_NOEXCEPT override;
+    virtual skr::span<const uint8_t> get_encoded_data_view() const SKR_NOEXCEPT override;
 
 protected:
     skr::span<const uint8_t> raw_view;

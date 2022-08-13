@@ -126,18 +126,14 @@ bool BaseImageCoder::get_raw_data(uint8_t* pData, uint64_t* pSize) const SKR_NOE
     return true;
 }
 
-bool BaseImageCoder::get_raw_data_view(uint8_t** ppData, uint64_t* pSize) const SKR_NOEXCEPT
+skr::span<const uint8_t> BaseImageCoder::get_raw_data_view() const SKR_NOEXCEPT
 {
-    *ppData = (uint8_t*)raw_view.data();
-    *pSize = raw_view.size();
-    return true;
+    return raw_view;
 }
 
-bool BaseImageCoder::get_encoded_data_view(uint8_t** ppData, uint64_t* pSize) const SKR_NOEXCEPT
+skr::span<const uint8_t> BaseImageCoder::get_encoded_data_view() const SKR_NOEXCEPT
 {
-    *ppData = (uint8_t*)encoded_view.data();
-    *pSize = encoded_view.size();
-    return true;
+    return encoded_view;
 }
 
 bool BaseImageCoder::get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT

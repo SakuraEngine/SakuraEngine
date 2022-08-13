@@ -80,7 +80,10 @@ bool skr_image_coder_move_raw(skr_image_coder_id image, const uint8_t* data, uin
 
 bool skr_image_coder_get_raw_data_view(skr_image_coder_id image, uint8_t** pData, uint64_t* pSize)
 {
-    return image->get_raw_data_view(pData, pSize);
+    auto _ = image->get_raw_data_view();
+    *pData = (uint8_t*)_.data();
+    *pSize = _.size();
+    return _.size();
 }
 
 bool skr_image_coder_get_raw_data(skr_image_coder_id image, uint8_t* pData, uint64_t* pSize)
@@ -90,7 +93,10 @@ bool skr_image_coder_get_raw_data(skr_image_coder_id image, uint8_t* pData, uint
 
 bool skr_image_coder_get_encoded_data_view(skr_image_coder_id image, uint8_t** pData, uint64_t* pSize)
 {
-    return image->get_encoded_data_view(pData, pSize);
+    auto _ = image->get_encoded_data_view();
+    *pData = (uint8_t*)_.data();
+    *pSize = _.size();
+    return _.size();
 }
 
 bool skr_image_coder_get_encoded_data(skr_image_coder_id image, uint8_t* pData, uint64_t* pSize)
