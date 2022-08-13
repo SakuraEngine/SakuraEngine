@@ -16,15 +16,13 @@ static void initThreadIDKey()
 	result = atexit(destroyThreadIDKey);
 }
 
-static SAtomic32 intializeCounter()
-{
-    skr_init_call_once_guard(&gKeyInitGuard);
-    return 1;
-}
-
 SThreadID skrGetCurrentPthreadID() 
 {
-	static SAtomic32 counter = intializeCounter();
+	static SAtomic32 counter = 1;
+	if (counter == 1)
+	{
+		skr_init_call_once_guard(&gKeyInitGuard);
+	}
 	skr_call_once(&gKeyInitGuard, initThreadIDKey);
 
 	void* ptr = pthread_getspecific(gThreadIDKey);
