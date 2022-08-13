@@ -147,12 +147,11 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
         // Check if there is a ready pinned waiting fiber
         {
-            ZoneScopedNC("SearchWaitingFiber", DISPATCH_GRAY);
-
             std::lock_guard<std::mutex> guard(tls->PinnedReadyFibersLock);
 
             for (auto bundle = tls->PinnedReadyFibers.begin(); bundle != tls->PinnedReadyFibers.end(); ++bundle)
             {
+
                 readyWaitingFibers = true;
 
                 if (!(*bundle)->FiberIsSwitched.load(std::memory_order_acquire))
@@ -175,7 +174,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         // If nothing was found, check if there is a high priority task to run
         if (waitingFiber == nullptr)
         {
-            ZoneScopedNC("SearchHighPriTask", DISPATCH_GRAY);
 
             foundTask = taskScheduler->GetNextHiPriTask(&nextTask, &taskBuffer);
 
@@ -191,9 +189,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
         if (waitingFiber != nullptr)
         {
-            TracyCZoneC(switchZone, DISPATCH_GRAY, 1);
-            TracyCZoneName(switchZone, "SwitchFiber", strlen("ioServiceReadFile"));
-            
             // Found a waiting task that is ready to continue
 
             tls->OldFiber = tls->CurrentFiber;
@@ -208,7 +203,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             
             // Switch
             {
-                TracyCZoneEnd(switchZone);
                 if (threadIndex == 0 && waitingFiber == &taskScheduler->m_mainFiber) dispatch_depth = 0;
                 if (threadIndex == 0 && dispatch_depth == 0) TracyFiberLeave;
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
@@ -231,7 +225,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         }
         else
         {
-            ZoneScopedNC("KeepFiber", DISPATCH_GRAY);
 
             // If we didn't find a high priority task, look for a low priority task
             if (!foundTask)
@@ -267,13 +260,11 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 {
                     case EmptyQueueBehavior::Yield:
                     {
-                        ZoneScopedNC("YieldThread", DISPATCH_GRAY);
                         YieldThread();
                         break;
                     }
 
                     case EmptyQueueBehavior::Sleep: {
-                        ZoneScopedNC("SleepThread", DISPATCH_GRAY);
 
                         // If we have a ready waiting fiber, prevent sleep
                         if (!readyWaitingFibers)
