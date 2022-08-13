@@ -9,5 +9,9 @@
     #include "linux/time.c"
 #endif
 
+#ifdef SKR_OS_UNIX
+    #include "unix/unix_thread.c"
+#endif
+
 #include "sdl2/sdl2_input.c"
 #include "sdl2/sdl2_window.c"
