@@ -89,6 +89,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     taskScheduler->m_tls[index].CurrentFiber = freeFiber;
     // Switch
     {
+        TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str())
         taskScheduler->m_tls[index]
         .ThreadFiber.SwitchToFiber(freeFiber);
     }
