@@ -21,6 +21,8 @@
 #include "cube.hpp"
 #include <ghc/filesystem.hpp>
 
+#include "tracy/Tracy.hpp"
+
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 
@@ -82,6 +84,8 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
                     for (uint32_t i = 0; i < drawcalls.count; i++)
                     {
+                        ZoneScopedN("DrawCall");
+
                         auto&& dc = drawcalls.drawcalls[i];
                         cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
                         CGPUBufferId vertex_buffers[3] = {
