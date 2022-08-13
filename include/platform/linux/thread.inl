@@ -114,3 +114,8 @@ FORCEINLINE static void skr_destroy_thread(SThreadHandle handle)
 }
 
 FORCEINLINE static void skr_join_thread(SThreadHandle handle) { pthread_join(handle, NULL); }
+
+FORCEINLINE SThreadID skr_current_thread_id(void)
+{
+    return skrGetCurrentPthreadID();
+}

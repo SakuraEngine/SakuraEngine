@@ -53,13 +53,13 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
         task->setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
         skr_vfile_t* vf = nullptr;
         {
-            ZoneScopedN("FOpen");
+            ZoneScopedNC("FOpen", tracy::Color::LightBlue);
             vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
                 ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
         }
         if (task->request->bytes == nullptr)
         {
-            ZoneScopedN("Allocate");
+            ZoneScopedNC("Allocate", tracy::Color::LightBlue);
             // allocate
             auto fsize = skr_vfs_fsize(vf);
             task->request->size = fsize;
@@ -70,7 +70,7 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
             task->setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
         }
         {
-            ZoneScopedN("FRead");
+            ZoneScopedNC("FRead", tracy::Color::LightBlue);
             skr_vfs_fread(vf, task->request->bytes, task->offset, task->request->size);
         }
         {
