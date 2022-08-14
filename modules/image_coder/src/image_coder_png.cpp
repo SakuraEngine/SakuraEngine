@@ -107,7 +107,8 @@ bool PNGImageCoder::load_png_header() SKR_NOEXCEPT
             }
             else
             {
-                color_format = (png_color_type & PNG_COLOR_MASK_COLOR || png_color_type & PNG_COLOR_MASK_ALPHA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : IMAGE_CODER_COLOR_FORMAT_Gray;
+                const auto notGray = (png_color_type & PNG_COLOR_MASK_COLOR || png_color_type & PNG_COLOR_MASK_ALPHA);
+                color_format = notGray ? IMAGE_CODER_COLOR_FORMAT_RGBA : IMAGE_CODER_COLOR_FORMAT_Gray;
             }
 
             if (color_format == IMAGE_CODER_COLOR_FORMAT_RGBA && bit_depth <= 8)

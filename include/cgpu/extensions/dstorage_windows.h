@@ -1,0 +1,13 @@
+#pragma once
+#include "cgpu/api.h"
+
+typedef struct skr_win_dstorage_decompress_service_t skr_win_dstorage_decompress_service_t;
+typedef struct skr_win_dstorage_decompress_service_t* skr_win_dstorage_decompress_service_id;
+
+#define SKR_WIN_DSTORAGE_COMPRESSION_TYPE_ADATIVE CGPU_DSTORAGE_COMPRESSION_CUSTOM
+
+RUNTIME_EXTERN_C RUNTIME_API
+skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service(CGPUDStorageQueueId dsqueue);
+
+RUNTIME_EXTERN_C RUNTIME_API
+void cgpu_win_free_decompress_service(skr_win_dstorage_decompress_service_id service);
