@@ -24,6 +24,9 @@ struct SKR_RENDERER_API ISkrRenderer {
     #include "module/module_manager.hpp"
     #include "platform/window.h"
     #include "EASTL/vector_map.h"
+#ifdef _WIN32
+    #include "cgpu/extensions/dstorage_windows.h"
+#endif
 
 class SkrRendererModule;
 
@@ -90,6 +93,9 @@ protected:
     skr_io_vram_service_t* vram_service = nullptr;
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
     CGPUDStorageQueueId memory_dstorage_queue = nullptr;
+#ifdef _WIN32
+    skr_win_dstorage_decompress_service_id decompress_service = nullptr;
+#endif
 };
 } // namespace skr
 

@@ -45,6 +45,7 @@ public:
     struct CGPUDStorageTask {
         CGPUDStorageQueueId storage_queue = nullptr;
         CGPUDStorageFileHandle ds_file = nullptr;
+        uint64_t file_size;
         bool finished = false;
     };
     struct DStorageBufferTask
@@ -254,10 +255,8 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             const auto& buffer_io = ds_buffer_task->buffer_io;
             auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage_queue, task.path.c_str());
             ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage_queue, ds_file);
-            CGPUDStorageFileInfo finfo = {};
-            cgpu_dstorage_query_file_info(ds_buffer_task->dstorage_task->storage_queue, ds_buffer_task->dstorage_task->ds_file, &finfo);
             auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-            buffer_desc.size = finfo.file_size;
+            buffer_desc.size = (buffer_io.buffer_size == 0) ? ds_buffer_task->dstorage_task->file_size : buffer_io.buffer_size;
             buffer_desc.name = buffer_io.buffer_name;
             buffer_desc.descriptors = buffer_io.resource_types;
             buffer_desc.memory_usage = buffer_io.memory_usage;
@@ -366,19 +365,20 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
         {
             io_desc.source_file.file = ds_buffer_task->dstorage_task->ds_file;
             io_desc.source_file.offset = 0u;
-            io_desc.source_file.size = buffer_request->out_buffer->size;
+            io_desc.source_file.size = ds_buffer_task->dstorage_task->file_size;
+            io_desc.size = buffer_io.size ? buffer_io.size : io_desc.source_file.size;
         }
         else
         {
             io_desc.source_memory.bytes = buffer_io.bytes;
             io_desc.source_memory.bytes_size = buffer_io.size;
+            io_desc.size = buffer_io.size ? buffer_io.size : io_desc.source_memory.bytes_size;
         }
         io_desc.buffer = buffer_request->out_buffer;
 
         io_desc.offset = buffer_io.offset;
-        io_desc.size = buffer_request->out_buffer->size;
 
-        io_desc.compression = CGPU_DSTORAGE_COMPRESSION_NONE;
+        io_desc.compression = buffer_io.dstorage_compression;
         io_desc.uncompressed_size = io_desc.size;
 
         io_desc.name = buffer_io.buffer_name;
@@ -437,6 +437,9 @@ skr::io::VRAMServiceImpl::CGPUDStorageTask* skr::io::VRAMServiceImpl::allocateCG
     auto dstorage = SkrNew<skr::io::VRAMServiceImpl::CGPUDStorageTask>();
     dstorage->storage_queue = storage_queue;
     dstorage->ds_file = file;
+    CGPUDStorageFileInfo finfo = {};
+    cgpu_dstorage_query_file_info(dstorage->storage_queue, dstorage->ds_file, &finfo);
+    dstorage->file_size = finfo.file_size;
     dstorage_uploads.emplace_back(dstorage);
     return dstorage;
 }

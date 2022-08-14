@@ -405,7 +405,7 @@ typedef struct CGPUDStorageFileInfo {
     uint64_t file_size;
 } CGPUDStorageFileInfo;
 typedef struct CGPUDStorageBufferIODescriptor {
-    ECGPUDStorageCompression compression;
+    CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;
     struct
     {

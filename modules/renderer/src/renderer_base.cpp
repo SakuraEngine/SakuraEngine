@@ -46,6 +46,9 @@ void skr::Renderer::finalize()
     }
     cpy_queues.clear();
 
+#ifdef _WIN32
+    cgpu_win_free_decompress_service(decompress_service);
+#endif
     if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
     if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
 
@@ -129,6 +132,10 @@ void skr::Renderer::create_api_objects()
     sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
     sampler_desc.compare_func = CGPU_CMP_NEVER;
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
+
+#ifdef _WIN32
+    decompress_service = cgpu_win_create_decompress_service(file_dstorage_queue);
+#endif
 }
 
 CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
