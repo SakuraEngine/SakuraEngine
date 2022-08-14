@@ -356,7 +356,7 @@ public:
             {
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
                 sleepTime = eastl::max(sleepTimeVal, 1u);
-                TracyCZone(sleepZone, 1);
+                TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
                 TracyCZoneName(sleepZone, "ioServiceSleep(Sleep)", strlen("ioServiceSleep(Sleep)"));
                 skr_thread_sleep(sleepTime);
                 TracyCZoneEnd(sleepZone);
@@ -364,7 +364,7 @@ public:
             else if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
             {
                 // use condition variable to sleep
-                TracyCZone(sleepZone, 1);
+                TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
                 TracyCZoneName(sleepZone, "ioServiceSleep(Cond)", strlen("ioServiceSleep(Cond)"));
                 SMutexLock sleepLock(service->sleepMutex);
                 skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);

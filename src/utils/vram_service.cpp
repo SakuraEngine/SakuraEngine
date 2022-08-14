@@ -464,14 +464,17 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         switch (vramIOStep)
         {
             case kStepNone: // start create resource
-                task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
-                service->createResource(task);
-                task.step = kStepResourceCreated;
+                {
+                    ZoneScopedN("CreateResource");
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
+                    service->createResource(task);
+                    task.step = kStepResourceCreated;
+                }
                 break;
             case kStepResourceCreated: // start uploading
                 if (task.isDStorage())
                 {
-                    ZoneScopedN("Prepare-DStorage");
+                    ZoneScopedN("PrepareDStorage");
 
                     task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
                     service->dstorageResource(task);
@@ -479,7 +482,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 }
                 else
                 {
-                    ZoneScopedN("Prepare-CpyCmd");
+                    ZoneScopedN("PrepareCpyCmd");
 
                     task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
                     service->uploadResource(task);
@@ -489,7 +492,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
             case kStepUploading:
                 if (service->vramIOFinished(task))
                 {
-                    ZoneScopedN("CpyQueue-SignalOK");
+                    ZoneScopedN("CpyQueueSignalOK");
 
                     task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
                     task.step = kStepFinished;
@@ -499,7 +502,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
             case kStepDirectStorage:
                 if (service->vramIOFinished(task))
                 {
-                    ZoneScopedN("DStorage-SignalOK");
+                    ZoneScopedN("DStorageSignalOK");
 
                     task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
                     task.step = kStepFinished;
@@ -539,6 +542,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
             for (auto& task : batch->tasks)
             {
                 foreach_task(task);
+                foreach_task(task); // call this twice to skip create_resource state to avoid idling
                 latest_step = eastl::max(latest_step, task.step);
                 earliest_step = eastl::min(latest_step, task.step);
             }
@@ -572,11 +576,14 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
             for (auto& task : batch->tasks)
             {
                 foreach_task(task);
+                foreach_task(task); // call this twice to skip create_resource state to avoid idling
                 latest_step = eastl::max(latest_step, task.step);
                 earliest_step = eastl::min(latest_step, task.step);
             }
             if (latest_step == kStepDirectStorage && earliest_step == kStepDirectStorage && !batch->submitted)
             {
+                ZoneScopedN("SubmitDStorageQueue");
+
                 for (auto&& [queue, fence] : batch->ds_fences)
                 {
                     cgpu_dstorage_queue_submit(queue, fence);
@@ -669,10 +676,7 @@ void __ioThreadTask_VRAM(void* arg)
             {
             }
         }
-        {
-            ZoneScopedN("ioVRAMServiceUpdate");
-            __ioThreadTask_VRAM_execute(service);
-        }
+        __ioThreadTask_VRAM_execute(service);
     }
 }
 

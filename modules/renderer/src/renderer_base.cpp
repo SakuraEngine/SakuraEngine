@@ -134,7 +134,7 @@ void skr::Renderer::create_api_objects()
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
 
 #ifdef _WIN32
-    decompress_service = cgpu_win_create_decompress_service(file_dstorage_queue);
+    decompress_service = cgpu_win_create_decompress_service();
 #endif
 }
 

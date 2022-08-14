@@ -119,21 +119,28 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     {
         auto vram_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
         auto png_io_request = make_zeroed<skr_async_io_request_t>();
-        vram_buffer_io.device = skr_renderer_get_cgpu_device();
-        vram_buffer_io.dstorage_compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_ADATIVE;
-        vram_buffer_io.dstorage_source_type = CGPU_DSTORAGE_SOURCE_FILE;
-        vram_buffer_io.dstorage_queue = dstorage_queue;
-        vram_buffer_io.resource_types = CGPU_RESOURCE_TYPE_NONE;
-        vram_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-        vram_buffer_io.buffer_name = "PNG";
-        vram_buffer_io.buffer_size = 1533596;
-        auto pngPath = ghc::filesystem::path(resource_vfs->mount_dir) / "Live2DViewer/Haru/Haru.2048/texture_00.png";
-        auto pngPathStr = pngPath.u8string();
-        vram_buffer_io.path = pngPathStr.c_str();
-        vram_service->request(&vram_buffer_io, &png_io_request, &png_buffer_request);
-        while (!png_io_request.is_ready())
         {
+            ZoneScopedN("DirectStoragePNGRequest");
 
+            vram_buffer_io.device = skr_renderer_get_cgpu_device();
+            vram_buffer_io.dstorage_compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_ADATIVE;
+            vram_buffer_io.dstorage_source_type = CGPU_DSTORAGE_SOURCE_FILE;
+            vram_buffer_io.dstorage_queue = dstorage_queue;
+            vram_buffer_io.resource_types = CGPU_RESOURCE_TYPE_NONE;
+            vram_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+            vram_buffer_io.buffer_name = "PNG";
+            vram_buffer_io.buffer_size = 1533596;
+            auto pngPath = ghc::filesystem::path(resource_vfs->mount_dir) / "Live2DViewer/Haru/Haru.2048/texture_00.png";
+            auto pngPathStr = pngPath.u8string();
+            vram_buffer_io.path = pngPathStr.c_str();
+            vram_service->request(&vram_buffer_io, &png_io_request, &png_buffer_request);
+        }
+        {
+            ZoneScopedN("IdleWaitDirectStoragePNG");
+            while (!png_io_request.is_ready())
+            {
+
+            }
         }
     }
     if (png_buffer_request.out_buffer)
