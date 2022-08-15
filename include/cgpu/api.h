@@ -425,6 +425,28 @@ typedef struct CGPUDStorageBufferIODescriptor {
     CGPUFenceId fence;
     const char* name;
 } CGPUDStorageBufferIODescriptor;
+typedef struct CGPUDStorageTextureIODescriptor {
+    CGPUDStorageCompression compression;
+    ECGPUDStorageSource source_type;
+    struct
+    {
+        uint8_t* bytes;
+        uint64_t bytes_size;
+    } source_memory;
+    struct
+    {
+        CGPUDStorageFileHandle file;
+        uint64_t offset;
+        uint64_t size;
+    } source_file;
+    CGPUTextureId texture;
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+    uint64_t uncompressed_size;
+    CGPUFenceId fence;
+    const char* name;
+} CGPUDStorageTextureIODescriptor;
 RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
 typedef ECGPUDStorageAvailability (*CGPUProcQueryDStorageAvailability)(CGPUDeviceId device);
 RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
@@ -435,6 +457,8 @@ RUNTIME_API void cgpu_dstorage_query_file_info(CGPUDStorageQueueId queue, CGPUDS
 typedef void (*CGPUProcDStorageQueryFileInfo)(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
 RUNTIME_API void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
 typedef void (*CGPUProcDStorageEnqueueBufferRequest)(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
+RUNTIME_API void cgpu_dstorage_enqueue_texture_request(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc);
+typedef void (*CGPUProcDStorageEnqueueTextureRequest)(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc);
 RUNTIME_API void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence);
 typedef void (*CGPUProcDStorageQueueSubmit)(CGPUDStorageQueueId queue, CGPUFenceId fence);
 RUNTIME_API void cgpu_dstorage_close_file(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
@@ -575,6 +599,7 @@ typedef struct CGPUProcTable {
     const CGPUProcDStorageOpenFile dstorage_open_file;
     const CGPUProcDStorageQueryFileInfo dstorage_query_file_info;
     const CGPUProcDStorageEnqueueBufferRequest dstorage_enqueue_buffer_request;
+    const CGPUProcDStorageEnqueueTextureRequest dstorage_enqueue_texture_request;
     const CGPUProcDStorageQueueSubmit dstorage_queue_submit;
     const CGPUProcDStorageCloseFile dstorage_close_file;
     const CGPUProcFreeDStorageQueue free_dstorage_queue;

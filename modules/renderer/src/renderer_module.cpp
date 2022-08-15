@@ -170,3 +170,15 @@ CGPUDStorageQueueId skr_renderer_get_memory_dstorage_queue()
 {
     return SkrRendererModule::Get()->get_memory_dstorage_queue();
 }
+
+#ifdef _WIN32
+skr_win_dstorage_decompress_service_id SkrRendererModule::get_win_dstorage_decompress_service() const
+{
+    return renderer->decompress_service;
+}
+
+skr_win_dstorage_decompress_service_id skr_renderer_get_win_dstorage_decompress_service()
+{
+    return SkrRendererModule::Get()->get_win_dstorage_decompress_service();
+}
+#endif

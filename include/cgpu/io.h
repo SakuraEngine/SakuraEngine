@@ -13,8 +13,8 @@ typedef struct skr_vram_buffer_io_t {
     const char8_t* buffer_name;
     CGPUResourceTypes resource_types;
     ECGPUMemoryUsage memory_usage;
-    uint64_t buffer_size;
     CGPUBufferCreationFlags flags;
+    uint64_t buffer_size;
     /// Preferred actual location
     /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
     bool prefer_on_device;
@@ -46,6 +46,24 @@ typedef struct skr_vram_texture_io_t {
     CGPUSemaphoreId opt_semaphore;
     // CGPU Resource Desc
     const char8_t* texture_name;
+    CGPUResourceTypes resource_types;
+    CGPUTextureCreationFlags flags;
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+    ECGPUFormat format;
+    // Direct Storage
+    CGPUDStorageCompression dstorage_compression;
+    ECGPUDStorageSource dstorage_source_type;
+    const char8_t* path;
+    // Data bytes
+    uint8_t* bytes;
+    uint64_t offset;
+    uint64_t size;
+    SkrIOServicePriority priority;
+    float sub_priority; /*0.f ~ 1.f*/
+    skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
+    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
 } skr_vram_texture_io_t;
 
 typedef struct skr_vram_texture_request_t {
