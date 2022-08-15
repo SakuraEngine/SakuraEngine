@@ -899,6 +899,7 @@ typedef struct CGPUInstanceDescriptor {
 #define CGPU_DSTORAGE_MAX_QUEUE_CAPACITY 0x2000
 typedef struct CGPUDStorageQueueDescriptor {
     ECGPUDStorageSource source;
+    uint64_t max_request_size;
     uint16_t capacity;
     ECGPUDStoragePriority priority;
     const char* name;

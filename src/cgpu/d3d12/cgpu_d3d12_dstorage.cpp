@@ -8,6 +8,7 @@
 
 #include "dstorage.h"
 #include "EASTL/vector_map.h"
+#include "EASTL/algorithm.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -15,6 +16,7 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     IDStorageQueue* pQueue;
     IDStorageFactory* pFactory;
     SMutex request_mutex;
+    uint64_t max_size;
 };
 
 thread_local static eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
@@ -54,12 +56,22 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
         SkrDelete(Q);
         return nullptr;
     }
+    const auto max_size = eastl::max((uint64_t)desc->max_request_size, (uint64_t)(DSTORAGE_STAGING_BUFFER_SIZE_32MB));
+    if (desc->max_request_size)
+    {
+        pFactory->SetStagingBufferSize(max_size);
+    }
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
         SKR_LOG_ERROR("Failed to create DStorage queue!");
         SkrDelete(Q);
         return nullptr;
     }
+    if (desc->max_request_size)
+    {
+        pFactory->SetStagingBufferSize(DSTORAGE_STAGING_BUFFER_SIZE_32MB);
+    }
+    Q->max_size = max_size;
     Q->pFactory = pFactory;
     Q->device = device;
     return Q;
@@ -158,6 +170,7 @@ void cgpu_dstorage_enqueue_texture_request_d3d12(CGPUDStorageQueueId queue, cons
     request.Destination.Texture.Region.bottom = desc->height;
     request.Destination.Texture.Region.back = desc->depth;
     request.UncompressedSize = (uint32_t)desc->uncompressed_size;
+    SKR_ASSERT(desc->uncompressed_size <= Q->max_size);
     Q->pQueue->EnqueueRequest(&request);
     if (desc->fence)
     {
@@ -187,6 +200,10 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 
     if (Q->pQueue)
     {
+        // TODO: WaitErrorEvent & Handle errors 
+        DSTORAGE_ERROR_RECORD record = {};
+        Q->pQueue->RetrieveErrorRecord(&record);
+
         Q->pFactory->Release();
         Q->pQueue->Release();
     }

@@ -114,6 +114,7 @@ void skr::Renderer::create_api_objects()
         queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
         queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
         queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+        queue_desc.max_request_size = 4096 * 4096 * 4;
         file_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
 
         queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;

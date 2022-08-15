@@ -25,6 +25,7 @@ void L2DRequestCallbackData::partial_finished() SKR_NOEXCEPT
         model_resource->on_finished();
         motions_resource->on_finished();
         skr_atomic32_store_relaxed(&live2dRequest->liv2d_status, SKR_ASYNC_IO_STATUS_OK);
+        live2dRequest->finish_callback(live2dRequest, live2dRequest->callback_data);
         SkrDelete(this);
     }
 }
@@ -52,6 +53,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     auto poFile = settings->GetPoseFileName();
     auto udFile = settings->GetUserDataFile();
 
+    homePath = data->u8HomePath;
     cbData = data;
     cbData->model_resource = this;
 
