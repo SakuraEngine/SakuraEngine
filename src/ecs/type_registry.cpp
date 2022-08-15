@@ -22,6 +22,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     : nameArena(pool)
 {
     {
+        SKR_ASSERT(descriptions.size() == kDisableComponent.index());
         type_description_t desc;
         desc.guid = skr::guid::make_guid("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
         desc.name = "disable";
@@ -31,8 +32,11 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
+        guid2type.insert(eastl::make_pair(desc.guid, kDisableComponent));
+        name2type.insert(eastl::make_pair(desc.name, kDisableComponent));
     }
     {
+        SKR_ASSERT(descriptions.size() == kDeadComponent.index());
         type_description_t desc;
         desc.guid = skr::guid::make_guid("{C0471B12-5462-48BB-B8C4-9983036ECC6C}");
         desc.name = "dead";
@@ -42,8 +46,11 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
+        guid2type.insert(eastl::make_pair(desc.guid, kDeadComponent));
+        name2type.insert(eastl::make_pair(desc.name, kDeadComponent));
     }
     {
+        SKR_ASSERT(descriptions.size() == kLinkComponent.index());
         type_description_t desc;
         desc.guid = skr::guid::make_guid("{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
         desc.name = "link";
@@ -55,9 +62,11 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFields = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
+        guid2type.insert(eastl::make_pair(desc.guid, kLinkComponent));
+        name2type.insert(eastl::make_pair(desc.name, kLinkComponent));
     }
     {
-        assert(descriptions.size() == kMaskComponent);
+        SKR_ASSERT(descriptions.size() == kMaskComponent.index());
         type_description_t desc;
         desc.guid = skr::guid::make_guid("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
         desc.name = "mask";
@@ -67,9 +76,11 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
+        guid2type.insert(eastl::make_pair(desc.guid, kMaskComponent));
+        name2type.insert(eastl::make_pair(desc.name, kMaskComponent));
     }
     {
-        assert(descriptions.size() == kGuidComponent);
+        SKR_ASSERT(descriptions.size() == kGuidComponent.index());
         type_description_t desc;
         desc.guid = skr::guid::make_guid("{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
         desc.name = "guid";
@@ -79,9 +90,11 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
+        guid2type.insert(eastl::make_pair(desc.guid, kGuidComponent));
+        name2type.insert(eastl::make_pair(desc.name, kGuidComponent));
     }
     {
-        assert(descriptions.size() == kDirtyComponent);
+        SKR_ASSERT(descriptions.size() == kDirtyComponent.index());
         type_description_t desc;
         desc.guid = skr::guid::make_guid("{A55D73D3-D41C-4683-89E1-8B211C115303}");
         desc.name = "dirty";
@@ -91,6 +104,8 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
+        guid2type.insert(eastl::make_pair(desc.guid, kDirtyComponent));
+        name2type.insert(eastl::make_pair(desc.name, kDirtyComponent));
     }
 }
 
