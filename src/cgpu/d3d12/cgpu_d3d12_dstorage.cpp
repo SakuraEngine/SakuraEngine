@@ -194,6 +194,7 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
     SkrDelete(Q);
 }
 
+#include <EASTL/string.h>
 #include <EASTL/vector_map.h>
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
@@ -212,7 +213,7 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void*);
 
 struct skr_win_dstorage_decompress_service_t
 {
-    const bool use_thread_pool = false;
+    const bool use_thread_pool = true;
     skr_win_dstorage_decompress_service_t(IDStorageCustomDecompressionQueue* queue)
         : decompress_queue(queue)
     {
@@ -317,13 +318,26 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
     TP_WAIT* wait,
     TP_WAIT_RESULT)
 {
-    ZoneScopedN("DirectStorageDecompress");
+#ifdef TRACY_ENABLE
+    auto thread_id = skr_current_thread_id();
+    const eastl::string name = "DirectStorageDecompressThread(Pooled)-";
+    auto indexed_name = name + eastl::to_string(thread_id);
+    tracy::SetThreadName(indexed_name.c_str());
+#endif
+
     auto service = (skr_win_dstorage_decompress_service_id)data;
     auto oldPriority = GetThreadPriority(GetCurrentThread());
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+    {
+        ZoneScopedN("DirectStorageDecompress");
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
-    __decompressTask_DirectStorage(service);
+        __decompressTask_DirectStorage(service);
+    }
     
+#ifdef TRACY_ENABLE
+    tracy::SetThreadName("");
+#endif
+
     // Restore the original thread's priority back to its original setting.
     SetThreadPriority(GetCurrentThread(), oldPriority);
     // Re-register the custom decompression queue event with this callback
@@ -333,8 +347,10 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
 
 static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
 {
+#ifdef TRACY_ENABLE
+    tracy::SetThreadName("DirectStorageDecompressThread");
+#endif
     auto service = (skr_win_dstorage_decompress_service_id)data;
-
     while (skr_atomic32_load_acquire(&service->thread_running))
     {
         {
