@@ -127,6 +127,45 @@ void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const
     }
 }
 
+void cgpu_dstorage_enqueue_texture_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc)
+{
+    DSTORAGE_REQUEST request = {};
+    CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
+    CGPUTexture_D3D12* pTexture = (CGPUTexture_D3D12*)desc->texture;
+    request.Options.DestinationType = DSTORAGE_REQUEST_DESTINATION_TEXTURE_REGION;
+    if (desc->compression == 0 || desc->compression >= CGPU_DSTORAGE_COMPRESSION_CUSTOM)
+    {
+        request.Options.CompressionFormat = (DSTORAGE_COMPRESSION_FORMAT)desc->compression;
+    }
+    if (desc->source_type == CGPU_DSTORAGE_SOURCE_FILE)
+    {
+        request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
+        request.Source.File.Source = (IDStorageFile*)desc->source_file.file;
+        request.Source.File.Offset = desc->source_file.offset;
+        request.Source.File.Size = (uint32_t)desc->source_file.size;
+    }
+    else if (desc->source_type == CGPU_DSTORAGE_SOURCE_MEMORY)
+    {
+        request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_MEMORY;
+        request.Source.Memory.Source = desc->source_memory.bytes;
+        request.Source.Memory.Size = (uint32_t)desc->source_memory.bytes_size;
+    }
+    request.Destination.Texture.Resource = pTexture->pDxResource;
+    // TODO: Support mip & array
+    request.Destination.Texture.SubresourceIndex = 0; // mipIndex + (arrayIndex * textureMetaData.mipLevels);
+    request.Destination.Texture.Region = { 0, 0, 0, 0, 0, 0 };
+    request.Destination.Texture.Region.right = desc->width;
+    request.Destination.Texture.Region.bottom = desc->height;
+    request.Destination.Texture.Region.back = desc->depth;
+    request.UncompressedSize = (uint32_t)desc->uncompressed_size;
+    Q->pQueue->EnqueueRequest(&request);
+    if (desc->fence)
+    {
+        CGPUFence_D3D12* F = (CGPUFence_D3D12*)desc->fence;
+        Q->pQueue->EnqueueSignal(F->pDxFence, F->mFenceValue++);
+    }
+}
+
 void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fence)
 {
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
@@ -253,7 +292,11 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                     skrRequest.src_buffer = requests[i].SrcBuffer;
                     skrRequest.dst_size = requests[i].DstSize;
                     skrRequest.dst_buffer = requests[i].DstBuffer;
-                    resolver->second.callback(&skrRequest, resolver->second.user_data);
+                    auto result = resolver->second.callback(&skrRequest, resolver->second.user_data);
+                    DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
+                    failResult.Result = result;
+                    failResult.Id = requests[i].Id;
+                    service->decompress_queue->SetRequestResults(1, &failResult);
                 }
                 else
                 {

@@ -113,6 +113,9 @@ public:
     CGPUDStorageQueueId get_memory_dstorage_queue() const;
     ECGPUFormat get_swapchain_format() const;
     CGPUSamplerId get_linear_sampler() const;
+#ifdef _WIN32
+    skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const;
+#endif
 
     static SkrRendererModule* Get();
     skr::Renderer* get_renderer() { return renderer; }
@@ -158,3 +161,8 @@ skr_renderer_get_vram_service();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API void
 skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage);
+
+#ifdef _WIN32
+RUNTIME_EXTERN_C SKR_RENDERER_API
+skr_win_dstorage_decompress_service_id skr_renderer_get_win_dstorage_decompress_service();
+#endif

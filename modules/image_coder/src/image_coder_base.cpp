@@ -48,7 +48,7 @@ bool BaseImageCoder::set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEP
     encoded_data.size = size;
     memcpy(encoded_data.bytes, data, size);
 
-    encoded_view = { (const uint8_t*)data, size };
+    encoded_view = { (uint8_t*)data, size };
     return true;
 }
 
@@ -59,7 +59,7 @@ bool BaseImageCoder::move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
     encoded_data.bytes = (uint8_t*)data;
     encoded_data.size = size;
 
-    encoded_view = { (const uint8_t*)data, size };
+    encoded_view = { (uint8_t*)data, size };
     return true;
 }
 
@@ -67,7 +67,7 @@ bool BaseImageCoder::view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
 {
     freeEncoded();
 
-    encoded_view = { (const uint8_t*)data, size };
+    encoded_view = { (uint8_t*)data, size };
     return true;
 }
 
@@ -80,7 +80,7 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
     raw_data.size = size;
     memcpy(raw_data.bytes, data, size);
 
-    raw_view = { (const uint8_t*)data, size };
+    raw_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
     return true;
 }
@@ -93,7 +93,7 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
     raw_data.bytes = (uint8_t*)data;
     raw_data.size = size;
 
-    raw_view = { (const uint8_t*)data, size };
+    raw_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
     return true;
 }
@@ -103,7 +103,7 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
 {
     freeRaw();
 
-    encoded_view = { (const uint8_t*)data, size };
+    encoded_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
     return true;
 }
@@ -118,30 +118,79 @@ uint64_t BaseImageCoder::get_encoded_size() const SKR_NOEXCEPT
     return encoded_view.size();
 }
 
-bool BaseImageCoder::get_raw_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT
+bool BaseImageCoder::lazy_encode() const SKR_NOEXCEPT
 {
+    if (raw_view.empty())
+    {
+        auto _this = const_cast<BaseImageCoder*>(this);
+        if (!_this->encode())
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BaseImageCoder::lazy_decode(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
+{
+    if (raw_view.empty())
+    {
+        auto _this = const_cast<BaseImageCoder*>(this);
+        if (_this->decode(format, bit_depth))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BaseImageCoder::get_raw_data(uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
+{
+    lazy_decode(format, bit_depth);
     SKR_ASSERT(*pSize >= get_raw_size());
     memcpy(pData, raw_view.data(), raw_view.size());
     *pSize = raw_view.size();
     return true;
 }
 
-skr::span<const uint8_t> BaseImageCoder::get_raw_data_view() const SKR_NOEXCEPT
+skr::span<const uint8_t> BaseImageCoder::get_raw_data_view(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
 {
+    lazy_decode(format, bit_depth);
     return raw_view;
 }
 
 skr::span<const uint8_t> BaseImageCoder::get_encoded_data_view() const SKR_NOEXCEPT
 {
+    lazy_encode();
     return encoded_view;
 }
 
 bool BaseImageCoder::get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT
 {
+    lazy_encode();
     SKR_ASSERT(*pSize >= get_encoded_size());
     memcpy(pData, encoded_view.data(), encoded_view.size());
     *pSize = encoded_view.size();
     return true;
 }
 
+EImageCoderColorFormat BaseImageCoder::get_color_format() const SKR_NOEXCEPT
+{
+    return color_format;
+}
+
+uint32_t BaseImageCoder::get_width() const SKR_NOEXCEPT
+{
+    return width;
+}
+
+uint32_t BaseImageCoder::get_height() const SKR_NOEXCEPT
+{
+    return height;
+}
+
+uint32_t BaseImageCoder::get_bit_depth() const SKR_NOEXCEPT
+{
+    return bit_depth;
+}
 } // namespace skr

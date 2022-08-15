@@ -1163,6 +1163,15 @@ void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUD
     queue->device->proc_table_cache->dstorage_enqueue_buffer_request(queue, desc);
 }
 
+void cgpu_dstorage_enqueue_texture_request(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->dstorage_enqueue_texture_request && "dstorage_enqueue_texture_request Proc Missing!");
+
+    queue->device->proc_table_cache->dstorage_enqueue_texture_request(queue, desc);
+}
+
 void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");

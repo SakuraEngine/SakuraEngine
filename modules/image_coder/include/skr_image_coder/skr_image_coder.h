@@ -62,8 +62,8 @@ struct SKR_IMAGE_CODER_API skr_image_coder_t {
     virtual bool view_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
         EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT = 0;
 
-    virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
-    virtual skr::span<const uint8_t> get_raw_data_view() const SKR_NOEXCEPT = 0;
+    virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT = 0;
+    virtual skr::span<const uint8_t> get_raw_data_view(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT = 0;
     virtual bool get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
     virtual skr::span<const uint8_t> get_encoded_data_view() const SKR_NOEXCEPT = 0;
 
@@ -104,9 +104,9 @@ bool skr_image_coder_view_raw(skr_image_coder_id image, const uint8_t* data,
     EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw);
 
 SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_get_raw_data(skr_image_coder_id image, uint8_t* pData, uint64_t* pSize);
+bool skr_image_coder_get_raw_data(skr_image_coder_id image, uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth);
 SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_get_raw_data_view(skr_image_coder_id image, uint8_t** ppData, uint64_t* pSize);
+bool skr_image_coder_get_raw_data_view(skr_image_coder_id image, uint8_t** ppData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth);
 SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
 bool skr_image_coder_get_encoded_data(skr_image_coder_id image, uint8_t* pData, uint64_t* pSize);
 SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
@@ -126,3 +126,6 @@ SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
 uint32_t skr_image_coder_get_height(skr_image_coder_id image);
 SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
 uint32_t skr_image_coder_get_bit_depth(skr_image_coder_id image);
+
+SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
+EImageCoderFormat skr_image_coder_detect_format(const uint8_t* encoded_data, uint64_t size);

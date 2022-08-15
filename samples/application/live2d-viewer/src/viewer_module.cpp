@@ -15,6 +15,10 @@
 
 #include "tracy/Tracy.hpp"
 
+#ifdef _WIN32
+#include "skr_image_coder/extensions/win_dstorage_decompressor.h"
+#endif
+
 class SLive2DViewerModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
@@ -65,6 +69,13 @@ void SLive2DViewerModule::on_load(int argc, char** argv)
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
     ram_service = skr::io::RAMService::create(&ioServiceDesc);
+
+#ifdef _WIN32
+    auto decompress_service = skr_renderer_get_win_dstorage_decompress_service();
+    cgpu_win_decompress_service_register_callback(decompress_service, 
+        SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE, 
+        &skr_image_coder_win_dstorage_decompressor, nullptr);
+#endif
 }
 
 void SLive2DViewerModule::on_unload()
@@ -114,26 +125,30 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
 
     auto vram_service = skr_renderer_get_vram_service();
     auto dstorage_queue = skr_renderer_get_file_dstorage_queue();
-    auto png_buffer_request = make_zeroed<skr_vram_buffer_request_t>();
+    auto png_texture_request = make_zeroed<skr_vram_texture_request_t>();
+#ifdef _WIN32
     if (dstorage_queue)
     {
-        auto vram_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
+        auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
         auto png_io_request = make_zeroed<skr_async_io_request_t>();
         {
             ZoneScopedN("DirectStoragePNGRequest");
 
-            vram_buffer_io.device = skr_renderer_get_cgpu_device();
-            vram_buffer_io.dstorage_compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_ADATIVE;
-            vram_buffer_io.dstorage_source_type = CGPU_DSTORAGE_SOURCE_FILE;
-            vram_buffer_io.dstorage_queue = dstorage_queue;
-            vram_buffer_io.resource_types = CGPU_RESOURCE_TYPE_NONE;
-            vram_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-            vram_buffer_io.buffer_name = "PNG";
-            vram_buffer_io.buffer_size = 1533596;
+            vram_texture_io.device = skr_renderer_get_cgpu_device();
+            vram_texture_io.dstorage_compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE;
+            vram_texture_io.dstorage_source_type = CGPU_DSTORAGE_SOURCE_FILE;
+            vram_texture_io.dstorage_queue = dstorage_queue;
+            vram_texture_io.resource_types = CGPU_RESOURCE_TYPE_NONE;
+            vram_texture_io.texture_name = "PNG";
+            vram_texture_io.width = 2048;
+            vram_texture_io.height = 2048;
+            vram_texture_io.depth = 1;
+            vram_texture_io.format = CGPU_FORMAT_R8G8B8A8_UINT;
+            vram_texture_io.size = 2048 * 2048 * 4;
             auto pngPath = ghc::filesystem::path(resource_vfs->mount_dir) / "Live2DViewer/Haru/Haru.2048/texture_00.png";
             auto pngPathStr = pngPath.u8string();
-            vram_buffer_io.path = pngPathStr.c_str();
-            vram_service->request(&vram_buffer_io, &png_io_request, &png_buffer_request);
+            vram_texture_io.path = pngPathStr.c_str();
+            vram_service->request(&vram_texture_io, &png_io_request, &png_texture_request);
         }
         {
             ZoneScopedN("IdleWaitDirectStoragePNG");
@@ -143,8 +158,9 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             }
         }
     }
-    if (png_buffer_request.out_buffer)
-        cgpu_free_buffer(png_buffer_request.out_buffer);
+    if (png_texture_request.out_texture)
+        cgpu_free_texture(png_texture_request.out_texture);
+#endif
         
     bool quit = false;
     while (!quit)
