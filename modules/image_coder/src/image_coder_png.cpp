@@ -253,7 +253,7 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
     {
 #if PNG_LIBPNG_VER >= 10504
         SKR_ASSERT(0); // Needs testing
-        Transform |= PNG_TRANSFORM_EXPAND_16;
+        transform |= PNG_TRANSFORM_EXPAND_16;
 #else
         // Expanding 8-bit images to 16-bit via transform needs a libpng update
         SKR_ASSERT(0);
