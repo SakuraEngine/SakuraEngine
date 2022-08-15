@@ -77,7 +77,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
 {
 #ifndef _WIN32
     SKR_UNIMPLEMENTED_FUNCTION();
-#endif
+#else
     auto csmModel = resource->model->GetModel();
     SKR_ASSERT(csmModel && "csmModel is null");
     // request load textures
@@ -121,6 +121,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             vram_service->request(&vram_texture_io, &texture_io_request, &texture_request);
         }
     }
+#endif
     // request load buffers
     // csmModel->GetDrawableCount()
 
