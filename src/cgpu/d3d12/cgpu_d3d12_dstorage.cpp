@@ -234,13 +234,13 @@ struct skr_win_dstorage_decompress_service_t
     ~skr_win_dstorage_decompress_service_t  () SKR_NOEXCEPT
     {
         skr_atomic32_store_release(&thread_running, 0);
-        SetEvent(event_handle);
         if (use_thread_pool)
         {
             CloseThreadpoolWait(thread_pool_wait);
         }
         else
         {
+            SetEvent(event_handle);
             skr_join_thread(thread_handle);
             skr_destroy_thread(thread_handle);
         }
