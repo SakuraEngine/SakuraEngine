@@ -12,6 +12,7 @@
 #include "utils/make_zeroed.hpp"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_live2d/model_resource.h"
+#include "skr_live2d/render_model.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -24,6 +25,8 @@ class SLive2DViewerModule : public skr::IDynamicModule
     virtual void on_load(int argc, char** argv) override;
     virtual int main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
+
+    static SLive2DViewerModule* Get();
 
     SWindowHandle window;
     uint32_t backbuffer_index;
@@ -51,6 +54,14 @@ SKR_MODULE_METADATA(u8R"(
 }
 )",
 Live2DViewer)
+
+
+SLive2DViewerModule* SLive2DViewerModule::Get()
+{
+    auto mm = skr_get_module_manager();
+    static auto rm = static_cast<SLive2DViewerModule*>(mm->get_module("Live2DViewer"));
+    return rm;
+}
 
 void SLive2DViewerModule::on_load(int argc, char** argv)
 {
@@ -113,54 +124,26 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     });
     create_imgui_resources(renderGraph, resource_vfs);
 
+    auto dstorage_queue = skr_renderer_get_file_dstorage_queue();
+    auto render_model_request = make_zeroed<skr_live2d_render_model_request_t>();
+    render_model_request.dstorage_queue_override = dstorage_queue;
+    render_model_request.vfs_override = resource_vfs;
     auto request = make_zeroed<skr_live2d_ram_io_request_t>();
-    skr_io_ram_service_t* ioService = ram_service;
     request.vfs_override = resource_vfs;
-    skr_live2d_model_create_from_json(ioService, "Live2DViewer/Haru/Haru.model3.json", &request);
+    request.callback_data = &render_model_request;
+    request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)
+    {
+        auto pRenderModelRequest = (skr_live2d_render_model_request_t*)data;
+        auto ram_service = SLive2DViewerModule::Get()->ram_service;
+        auto vram_service = skr_renderer_get_vram_service();
+        auto cgpuDevice = skr_renderer_get_cgpu_device();
+        skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
+    };
+    skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &request);
     {
         ZoneScopedN("Idle");
-        while(!request.is_ready());
+        while(!render_model_request.is_ready());
     }
-
-
-    auto vram_service = skr_renderer_get_vram_service();
-    auto dstorage_queue = skr_renderer_get_file_dstorage_queue();
-    auto png_texture_request = make_zeroed<skr_vram_texture_request_t>();
-#ifdef _WIN32
-    if (dstorage_queue)
-    {
-        auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
-        auto png_io_request = make_zeroed<skr_async_io_request_t>();
-        {
-            ZoneScopedN("DirectStoragePNGRequest");
-
-            vram_texture_io.device = skr_renderer_get_cgpu_device();
-            vram_texture_io.dstorage_compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE;
-            vram_texture_io.dstorage_source_type = CGPU_DSTORAGE_SOURCE_FILE;
-            vram_texture_io.dstorage_queue = dstorage_queue;
-            vram_texture_io.resource_types = CGPU_RESOURCE_TYPE_NONE;
-            vram_texture_io.texture_name = "PNG";
-            vram_texture_io.width = 2048;
-            vram_texture_io.height = 2048;
-            vram_texture_io.depth = 1;
-            vram_texture_io.format = CGPU_FORMAT_R8G8B8A8_UINT;
-            vram_texture_io.size = 2048 * 2048 * 4;
-            auto pngPath = ghc::filesystem::path(resource_vfs->mount_dir) / "Live2DViewer/Haru/Haru.2048/texture_00.png";
-            auto pngPathStr = pngPath.u8string();
-            vram_texture_io.path = pngPathStr.c_str();
-            vram_service->request(&vram_texture_io, &png_io_request, &png_texture_request);
-        }
-        {
-            ZoneScopedN("IdleWaitDirectStoragePNG");
-            while (!png_io_request.is_ready())
-            {
-
-            }
-        }
-    }
-    if (png_texture_request.out_texture)
-        cgpu_free_texture(png_texture_request.out_texture);
-#endif
         
     bool quit = false;
     while (!quit)
@@ -244,6 +227,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     cgpu_free_fence(present_fence);
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
+    skr_live2d_render_model_free(render_model_request.render_model);
     skr_live2d_model_free(request.model_resource);
     return 0;
 }

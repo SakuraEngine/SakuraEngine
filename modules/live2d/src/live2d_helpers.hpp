@@ -54,6 +54,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
         void on_finished() SKR_NOEXCEPT final;
 
+        eastl::string homePath;
+
     protected:
         // Model States
         Csm::ICubismModelSetting* _modelSetting;
