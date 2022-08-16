@@ -124,9 +124,11 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     });
     create_imgui_resources(renderGraph, resource_vfs);
 
-    auto dstorage_queue = skr_renderer_get_file_dstorage_queue();
+    auto file_dstorage_queue = skr_renderer_get_file_dstorage_queue();
+    auto memory_dstorage_queue = skr_renderer_get_memory_dstorage_queue();
     auto render_model_request = make_zeroed<skr_live2d_render_model_request_t>();
-    render_model_request.dstorage_queue_override = dstorage_queue;
+    render_model_request.file_dstorage_queue_override = file_dstorage_queue;
+    render_model_request.memory_dstorage_queue_override = memory_dstorage_queue;
     render_model_request.vfs_override = resource_vfs;
     auto request = make_zeroed<skr_live2d_ram_io_request_t>();
     request.vfs_override = resource_vfs;

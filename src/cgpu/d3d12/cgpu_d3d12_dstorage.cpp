@@ -17,9 +17,11 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     IDStorageFactory* pFactory;
     SMutex request_mutex;
     uint64_t max_size;
+    DSTORAGE_REQUEST_SOURCE_TYPE source_type;
 };
 
 thread_local static eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
+static uint64_t sDirectStorageStagingBufferSize = DSTORAGE_STAGING_BUFFER_SIZE_32MB;
 ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device)
 {
     auto res = availability_map.find(device);
@@ -46,7 +48,7 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
     DSTORAGE_QUEUE_DESC queueDesc{};
     queueDesc.Capacity = desc->capacity;
     queueDesc.Priority = (DSTORAGE_PRIORITY)desc->priority;
-    queueDesc.SourceType = (DSTORAGE_REQUEST_SOURCE_TYPE)desc->source;
+    Q->source_type = queueDesc.SourceType = (DSTORAGE_REQUEST_SOURCE_TYPE)desc->source;
     queueDesc.Name = desc->name;
     if(Device) queueDesc.Device = Device->pDxDevice;
     IDStorageFactory* pFactory = nullptr;
@@ -56,22 +58,14 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
         SkrDelete(Q);
         return nullptr;
     }
-    const auto max_size = eastl::max((uint64_t)desc->max_request_size, (uint64_t)(DSTORAGE_STAGING_BUFFER_SIZE_32MB));
-    if (desc->max_request_size)
-    {
-        pFactory->SetStagingBufferSize(max_size);
-    }
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
         SKR_LOG_ERROR("Failed to create DStorage queue!");
         SkrDelete(Q);
         return nullptr;
     }
-    if (desc->max_request_size)
-    {
-        pFactory->SetStagingBufferSize(DSTORAGE_STAGING_BUFFER_SIZE_32MB);
-    }
-    Q->max_size = max_size;
+
+    Q->max_size = sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
     Q->device = device;
     return Q;
@@ -116,6 +110,8 @@ void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const
     }
     if (desc->source_type == CGPU_DSTORAGE_SOURCE_FILE)
     {
+        SKR_ASSERT(Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE);
+
         request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
         request.Source.File.Source = (IDStorageFile*)desc->source_file.file;
         request.Source.File.Offset = desc->source_file.offset;
@@ -123,13 +119,15 @@ void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const
     }
     else if (desc->source_type == CGPU_DSTORAGE_SOURCE_MEMORY)
     {
+        SKR_ASSERT(Q->source_type == DSTORAGE_REQUEST_SOURCE_MEMORY);
+
         request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_MEMORY;
         request.Source.Memory.Source = desc->source_memory.bytes;
         request.Source.Memory.Size = (uint32_t)desc->source_memory.bytes_size;
     }
     request.Destination.Buffer.Resource = pBuffer->pDxResource;
     request.Destination.Buffer.Offset = desc->offset;
-    request.Destination.Buffer.Size = (uint32_t)desc->size;
+    request.Destination.Buffer.Size = (uint32_t)desc->uncompressed_size;
     request.UncompressedSize = (uint32_t)desc->uncompressed_size;
     Q->pQueue->EnqueueRequest(&request);
     if (desc->fence)
@@ -376,6 +374,17 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
         }
         __decompressTask_DirectStorage(service);
     } 
+}
+
+void cgpu_win_dstorage_set_staging_buffer_size(uint64_t size)
+{
+    IDStorageFactory* pFactory = nullptr;
+    if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
+    {
+        SKR_LOG_ERROR("Failed to get DStorage factory!");
+    }
+    pFactory->SetStagingBufferSize(size);
+    sDirectStorageStagingBufferSize = size;
 }
 
 skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service()

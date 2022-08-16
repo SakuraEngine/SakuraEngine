@@ -284,7 +284,8 @@ ECGPUFenceStatus cgpu_query_fence_status_d3d12(CGPUFenceId fence)
 {
     ECGPUFenceStatus status = CGPU_FENCE_STATUS_COMPLETE;
     CGPUFence_D3D12* F = (CGPUFence_D3D12*)fence;
-    if (F->pDxFence->GetCompletedValue() < F->mFenceValue - 1)
+    const auto Value = F->pDxFence->GetCompletedValue();
+    if (Value < F->mFenceValue - 1)
         status = CGPU_FENCE_STATUS_INCOMPLETE;
     else
         status = CGPU_FENCE_STATUS_COMPLETE;

@@ -420,7 +420,6 @@ typedef struct CGPUDStorageBufferIODescriptor {
     } source_file;
     CGPUBufferId buffer;
     uint64_t offset;
-    uint64_t size;
     uint64_t uncompressed_size;
     CGPUFenceId fence;
     const char* name;
@@ -899,7 +898,6 @@ typedef struct CGPUInstanceDescriptor {
 #define CGPU_DSTORAGE_MAX_QUEUE_CAPACITY 0x2000
 typedef struct CGPUDStorageQueueDescriptor {
     ECGPUDStorageSource source;
-    uint64_t max_request_size;
     uint16_t capacity;
     ECGPUDStoragePriority priority;
     const char* name;

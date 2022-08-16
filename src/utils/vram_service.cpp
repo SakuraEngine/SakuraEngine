@@ -233,20 +233,29 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
         SKR_ASSERT( (buffer_task->buffer_io.size) && "buffer_io.size must be set");
+        const auto& buffer_io = buffer_task->buffer_io;
         if (buffer_task->buffer_io.size)
         {
-            auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-            const auto& buffer_io = buffer_task->buffer_io;
-            buffer_desc.size = buffer_io.buffer_size;
-            buffer_desc.name = buffer_io.buffer_name;
-            buffer_desc.descriptors = buffer_io.resource_types;
-            buffer_desc.memory_usage = buffer_io.memory_usage;
-            buffer_desc.flags = buffer_io.flags;
-            buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
-            buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
-            auto buffer = cgpu_create_buffer(buffer_task->buffer_io.device, &buffer_desc);
-            // return resource object
-            buffer_task->buffer_request->out_buffer = buffer;
+            if (buffer_io.dst_buffer) 
+            {
+                buffer_task->buffer_request->out_buffer = buffer_io.dst_buffer;
+            }
+            else
+            {
+                ZoneScopedN("CreateBufferResource");
+
+                auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
+                buffer_desc.size = buffer_io.buffer_size;
+                buffer_desc.name = buffer_io.buffer_name;
+                buffer_desc.descriptors = buffer_io.resource_types;
+                buffer_desc.memory_usage = buffer_io.memory_usage;
+                buffer_desc.flags = buffer_io.flags;
+                buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
+                buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
+                auto buffer = cgpu_create_buffer(buffer_task->buffer_io.device, &buffer_desc);
+                // return resource object
+                buffer_task->buffer_request->out_buffer = buffer;
+            }
         }
         else if (buffer_task->buffer_io.path)
         {
@@ -255,23 +264,32 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     }
     if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
     {
+        const auto& buffer_io = ds_buffer_task->buffer_io;
         if (ds_buffer_task->buffer_io.dstorage_source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
             SKR_ASSERT( (ds_buffer_task->buffer_io.path) && "buffer_io.path must be set");
-            const auto& buffer_io = ds_buffer_task->buffer_io;
             auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage_queue, task.path.c_str());
             ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage_queue, ds_file);
-            auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-            buffer_desc.size = (buffer_io.buffer_size == 0) ? ds_buffer_task->dstorage_task->file_size : buffer_io.buffer_size;
-            buffer_desc.name = buffer_io.buffer_name;
-            buffer_desc.descriptors = buffer_io.resource_types;
-            buffer_desc.memory_usage = buffer_io.memory_usage;
-            buffer_desc.flags = buffer_io.flags;
-            buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
-            buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
-            auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
-            // return resource object
-            ds_buffer_task->buffer_request->out_buffer = buffer;
+            if (buffer_io.dst_buffer) 
+            {
+                ds_buffer_task->buffer_request->out_buffer = buffer_io.dst_buffer;
+            }
+            else
+            {
+                ZoneScopedN("CreateBufferResource");
+
+                auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
+                buffer_desc.size = (buffer_io.buffer_size == 0) ? ds_buffer_task->dstorage_task->file_size : buffer_io.buffer_size;
+                buffer_desc.name = buffer_io.buffer_name;
+                buffer_desc.descriptors = buffer_io.resource_types;
+                buffer_desc.memory_usage = buffer_io.memory_usage;
+                buffer_desc.flags = buffer_io.flags;
+                buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
+                buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
+                auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
+                // return resource object
+                ds_buffer_task->buffer_request->out_buffer = buffer;
+            }
         }
         else 
         {
@@ -281,17 +299,26 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
 
             const auto& buffer_io = ds_buffer_task->buffer_io;
             ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage_queue, nullptr);
-            auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-            buffer_desc.size = buffer_io.buffer_size;
-            buffer_desc.name = buffer_io.buffer_name;
-            buffer_desc.descriptors = buffer_io.resource_types;
-            buffer_desc.memory_usage = buffer_io.memory_usage;
-            buffer_desc.flags = buffer_io.flags;
-            buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
-            buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
-            auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
-            // return resource object
-            ds_buffer_task->buffer_request->out_buffer = buffer;
+            if (buffer_io.dst_buffer) 
+            {
+                ds_buffer_task->buffer_request->out_buffer = buffer_io.dst_buffer;
+            }
+            else
+            {
+                ZoneScopedN("CreateBufferResource");
+
+                auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
+                buffer_desc.size = buffer_io.buffer_size;
+                buffer_desc.name = buffer_io.buffer_name;
+                buffer_desc.descriptors = buffer_io.resource_types;
+                buffer_desc.memory_usage = buffer_io.memory_usage;
+                buffer_desc.flags = buffer_io.flags;
+                buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
+                buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
+                auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
+                // return resource object
+                ds_buffer_task->buffer_request->out_buffer = buffer;
+            }
         }
     }
 }
@@ -303,6 +330,8 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
         SKR_ASSERT( (buffer_task->texture_io.size) && "texture_io.size must be set");
         if (buffer_task->texture_io.size)
         {
+            ZoneScopedN("CreateTextureResource");
+
             auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
             const auto& texture_io = buffer_task->texture_io;
             texture_desc.width = texture_io.width;
@@ -324,6 +353,8 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
     {
         if (ds_texture_task->texture_io.dstorage_source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
+            ZoneScopedN("CreateTextureResource");
+
             SKR_ASSERT( (ds_texture_task->texture_io.path) && "texture_io.path must be set");
             const auto& texture_io = ds_texture_task->texture_io;
             auto ds_file = cgpu_dstorage_open_file(texture_io.dstorage_queue, task.path.c_str());
@@ -342,6 +373,8 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
         }
         else 
         {
+            ZoneScopedN("CreateTextureResource");
+
             SKR_ASSERT( (ds_texture_task->texture_io.width) && "buffer_io.buffer_size must be set");
             SKR_ASSERT( (ds_texture_task->texture_io.bytes) && "buffer_io.bytes must be set");
             SKR_ASSERT( (ds_texture_task->texture_io.size) && "buffer_io.size must be set");
@@ -489,20 +522,18 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
             io_desc.source_file.file = ds_buffer_task->dstorage_task->ds_file;
             io_desc.source_file.offset = 0u;
             io_desc.source_file.size = ds_buffer_task->dstorage_task->file_size;
-            io_desc.size = buffer_io.size ? buffer_io.size : io_desc.source_file.size;
         }
         else
         {
             io_desc.source_memory.bytes = buffer_io.bytes;
             io_desc.source_memory.bytes_size = buffer_io.size;
-            io_desc.size = buffer_io.size ? buffer_io.size : io_desc.source_memory.bytes_size;
         }
         io_desc.buffer = buffer_request->out_buffer;
 
         io_desc.offset = buffer_io.offset;
 
         io_desc.compression = buffer_io.dstorage_compression;
-        io_desc.uncompressed_size = io_desc.size;
+        io_desc.uncompressed_size = buffer_io.size;
 
         io_desc.name = buffer_io.buffer_name;
         cgpu_dstorage_enqueue_buffer_request(ds_buffer_task->dstorage_task->storage_queue, &io_desc);
@@ -619,10 +650,13 @@ skr::io::VRAMServiceImpl::CGPUDStorageTask* skr::io::VRAMServiceImpl::allocateCG
 {
     auto dstorage = SkrNew<skr::io::VRAMServiceImpl::CGPUDStorageTask>();
     dstorage->storage_queue = storage_queue;
-    dstorage->ds_file = file;
-    CGPUDStorageFileInfo finfo = {};
-    cgpu_dstorage_query_file_info(dstorage->storage_queue, dstorage->ds_file, &finfo);
-    dstorage->file_size = finfo.file_size;
+    if (file)
+    {
+        dstorage->ds_file = file;
+        CGPUDStorageFileInfo finfo = {};
+        cgpu_dstorage_query_file_info(dstorage->storage_queue, dstorage->ds_file, &finfo);
+        dstorage->file_size = finfo.file_size;
+    }
     dstorage_uploads.emplace_back(dstorage);
     return dstorage;
 }
@@ -648,7 +682,6 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         {
             case kStepNone: // start create resource
                 {
-                    ZoneScopedN("CreateResource");
                     task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
                     service->createResource(task);
                     task.step = kStepResourceCreated;
@@ -715,8 +748,13 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         }
         if (!upload_batch->tasks.empty())
             service->upload_batch_queue[upload_batch->id] = upload_batch;
+        else
+            SkrDelete(upload_batch);
+            
         if (!dstorage_batch->tasks.empty())
             service->dstorage_batch_queue[upload_batch->id] = dstorage_batch;
+        else
+            SkrDelete(dstorage_batch);
         // upload cmds
         for (auto [batch_id, batch] : service->upload_batch_queue)
         {
@@ -771,6 +809,8 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 
                 for (auto&& [queue, fence] : batch->ds_fences)
                 {
+                    ZoneScopedN("Queue");
+
                     cgpu_dstorage_queue_submit(queue, fence);
                     batch->submitted = true;
                 }
