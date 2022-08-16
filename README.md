@@ -71,6 +71,7 @@
 - bitsery v5.2.2 (MIT)
 - fast_float v3.4.0
 - llfio 28ed462
+- ghc::filesystem v1.5.12
 
 ## 接入的扩展API以及版本
 - nvapi R510
