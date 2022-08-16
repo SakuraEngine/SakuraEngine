@@ -86,16 +86,16 @@ SkrAsyncIOStatus skr_live2d_render_model_request_t::get_status() const SKR_NOEXC
 void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
     CGPUDeviceId device, skr_live2d_model_resource_id resource, skr_live2d_render_model_request_t* request)
 {
-#ifndef _WIN32
-    SKR_UNIMPLEMENTED_FUNCTION();
-#else
     auto csmModel = resource->model->GetModel();
     SKR_ASSERT(csmModel && "csmModel is null");
-    // request load textures
     auto file_dstorage_queue = request->file_dstorage_queue_override;
     auto memory_dstorage_queue = request->memory_dstorage_queue_override;
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
     auto render_model = request->render_model = SkrNew<skr_live2d_render_model_async_t>(request);
+#ifndef _WIN32
+    SKR_UNIMPLEMENTED_FUNCTION();
+#else
+    // request load textures
     render_model->texture_requests.resize(texture_count);
     render_model->texture_io_requests.resize(texture_count);
     if (request->file_dstorage_queue_override)
