@@ -734,27 +734,30 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
     {
         ZoneScopedN("ioVRAMServiceWork");
 
-        auto upload_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
-        auto dstorage_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
-        upload_batch->id = service->threaded_service.batch_id;
-        dstorage_batch->id = service->threaded_service.batch_id;
-        while (auto iter = service->tasks.peek_())
         {
-            if (!iter.has_value()) break;
-            if (iter.value().isDStorage())
-                dstorage_batch->tasks.emplace_back(iter.value()).task_batch = dstorage_batch;
+            auto upload_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
+            auto dstorage_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
+            upload_batch->id = service->threaded_service.batch_id;
+            dstorage_batch->id = service->threaded_service.batch_id;
+            while (auto iter = service->tasks.peek_())
+            {
+                if (!iter.has_value()) break;
+                if (iter.value().isDStorage())
+                    dstorage_batch->tasks.emplace_back(iter.value()).task_batch = dstorage_batch;
+                else
+                    upload_batch->tasks.emplace_back(iter.value()).task_batch = upload_batch;
+            }
+            if (!upload_batch->tasks.empty())
+                service->upload_batch_queue[upload_batch->id] = upload_batch;
             else
-                upload_batch->tasks.emplace_back(iter.value()).task_batch = upload_batch;
+                SkrDelete(upload_batch);
+                
+            if (!dstorage_batch->tasks.empty())
+                service->dstorage_batch_queue[dstorage_batch->id] = dstorage_batch;
+            else
+                SkrDelete(dstorage_batch);
         }
-        if (!upload_batch->tasks.empty())
-            service->upload_batch_queue[upload_batch->id] = upload_batch;
-        else
-            SkrDelete(upload_batch);
-            
-        if (!dstorage_batch->tasks.empty())
-            service->dstorage_batch_queue[upload_batch->id] = dstorage_batch;
-        else
-            SkrDelete(dstorage_batch);
+
         // upload cmds
         for (auto [batch_id, batch] : service->upload_batch_queue)
         {
@@ -811,8 +814,9 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     ZoneScopedN("Queue");
 
-                    cgpu_dstorage_queue_submit(queue, fence);
-                    batch->submitted = true;
+                    auto _batch = batch;
+                    cgpu_dstorage_queue_submit(queue, _batch->get_fence(queue));
+                    _batch->submitted = true;
                 }
             }
         }
@@ -837,6 +841,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 for (auto& task : batch.second->tasks)
                 {
                     foreach_task(task);
+                    SKR_ASSERT(task.step == kStepFinished);
                 }
                 SkrDelete(batch.second);
                 batch.second = nullptr;

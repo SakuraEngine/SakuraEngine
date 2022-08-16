@@ -37,6 +37,9 @@ struct skr_live2d_render_model_t {
     eastl::vector_map<uint32_t, skr_vertex_buffer_view_t> uv_buffer_views;
     eastl::vector_map<uint32_t, skr_index_buffer_view_t> index_buffer_views;
     bool use_dynamic_buffer = true;
+
+    uint32_t finished_texture_request = 0;
+    uint32_t finished_buffer_request = 0;
 };
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_t {
@@ -46,13 +49,11 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_t {
     {
 
     }
-    uint32_t finished_texture_request = 0;
     void texture_finish(skr_async_io_request_t* p_io_request)
     {
         finished_texture_request++;
         try_finish();
     }
-    uint32_t finished_buffer_request = 0;
     void buffer_finish(skr_async_io_request_t* p_io_request)
     {
         finished_buffer_request++;
