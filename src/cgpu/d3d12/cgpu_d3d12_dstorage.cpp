@@ -10,32 +10,72 @@
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
 
+#define TRACY_PROFILE_DIRECT_STORAGE
 #include "tracy/Tracy.hpp"
 
 struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     IDStorageQueue* pQueue;
     IDStorageFactory* pFactory;
-    SMutex request_mutex;
     uint64_t max_size;
     DSTORAGE_REQUEST_SOURCE_TYPE source_type;
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+    SMutex profile_mutex;
+    struct ProfileTracer {
+        CGPUDStorageQueueD3D12* Q;
+        ID3D12Fence* fence;
+        SThreadDesc desc;
+        SThreadHandle handle;
+        HANDLE fence_handle;
+        uint64_t submit_index;
+        uint32_t fence_value = 0;
+        SAtomic32 finished;
+    };
+    eastl::vector<ProfileTracer*> profile_fences;
+#endif
+
+    ~CGPUDStorageQueueD3D12() SKR_NOEXCEPT {
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+        for (auto&& tracer : profile_fences)
+        {
+            if (!skr_atomic32_load_acquire(&tracer->finished))
+            {
+                skr_join_thread(tracer->handle);
+            }
+            skr_destroy_thread(tracer->handle);
+            tracer->fence->Release();
+        }
+#endif
+    }
 };
 
 thread_local static eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
 static uint64_t sDirectStorageStagingBufferSize = DSTORAGE_STAGING_BUFFER_SIZE_32MB;
+inline static IDStorageFactory* GetDStorageFactory()
+{
+    static IDStorageFactory* pFactory = nullptr;
+    if (!pFactory)
+    {
+        if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
+        {
+            SKR_LOG_ERROR("Failed to get DStorage factory!");
+            return nullptr;
+        }
+    }
+    return pFactory;
+}
+
 ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device)
 {
     auto res = availability_map.find(device);
     if (res == availability_map.end())
     {
-        IDStorageFactory* pFactory = nullptr;
-        if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
+        if (!GetDStorageFactory())
         {
             availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_NONE;
         }
         else
         {
             availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_HARDWARE;
-            pFactory->Release();
         }
     }
     return availability_map[device];
@@ -51,20 +91,16 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
     Q->source_type = queueDesc.SourceType = (DSTORAGE_REQUEST_SOURCE_TYPE)desc->source;
     queueDesc.Name = desc->name;
     if(Device) queueDesc.Device = Device->pDxDevice;
-    IDStorageFactory* pFactory = nullptr;
-    if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
-    {
-        SKR_LOG_ERROR("Failed to get DStorage factory!");
-        SkrDelete(Q);
-        return nullptr;
-    }
+    IDStorageFactory* pFactory = ::GetDStorageFactory();
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
         SKR_LOG_ERROR("Failed to create DStorage queue!");
         SkrDelete(Q);
         return nullptr;
     }
-
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+    skr_init_mutex_recursive(&Q->profile_mutex);
+#endif
     Q->max_size = sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
     Q->device = device;
@@ -181,6 +217,72 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
 {
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
     CGPUFence_D3D12* F = (CGPUFence_D3D12*)fence;
+
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+    {
+        static uint64_t submit_index = 0;
+        auto D = (CGPUDevice_D3D12*)F->super.device;
+        HANDLE event_handle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+        CGPUDStorageQueueD3D12::ProfileTracer* tracer = nullptr;
+        {
+            SMutexLock profile_lock(Q->profile_mutex);
+            for (auto&& _tracer : Q->profile_fences)
+            {
+                if (skr_atomic32_load_acquire(&_tracer->finished))
+                {
+                    tracer = _tracer;
+                    skr_destroy_thread(tracer->handle);
+                    tracer->fence->SetEventOnCompletion(tracer->fence_value++, event_handle);
+                    tracer->finished = 0;
+                    break;
+                }
+            }
+        }
+        if (tracer == nullptr)
+        {
+            tracer = SkrNew<CGPUDStorageQueueD3D12::ProfileTracer>();
+            tracer->fence_value = 1;
+            D->pDxDevice->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tracer->fence));
+            tracer->fence->SetEventOnCompletion(tracer->fence_value, event_handle);
+            {
+                SMutexLock profile_lock(Q->profile_mutex);
+                Q->profile_fences.emplace_back(tracer);
+            }
+        }
+        Q->pQueue->EnqueueSignal(tracer->fence, tracer->fence_value);
+        tracer->fence_handle = event_handle;
+        tracer->submit_index = submit_index++;
+        tracer->Q = Q;
+        tracer->desc.pData = tracer;
+        tracer->desc.pFunc = +[](void* arg){
+            auto tracer = (CGPUDStorageQueueD3D12::ProfileTracer*)arg;
+            auto Q = tracer->Q;
+            const auto event_handle = tracer->fence_handle;
+            eastl::string name = "DirectStorageQueueSubmit-";
+            name += eastl::to_string(tracer->submit_index);
+            TracyFiberEnter(name.c_str());
+            if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
+            {
+                ZoneScopedN("Working(File)");
+                WaitForSingleObject(event_handle, INFINITE);
+            }
+            else if (Q->source_type == DSTORAGE_REQUEST_SOURCE_MEMORY)
+            {
+                ZoneScopedN("Working(Memory)");
+                WaitForSingleObject(event_handle, INFINITE);
+            }
+            else
+            {
+                WaitForSingleObject(event_handle, INFINITE);
+            }
+            TracyFiberLeave;
+            CloseHandle(event_handle);
+            skr_atomic32_store_release(&tracer->finished, 1);
+        };
+        skr_init_thread(&tracer->desc, &tracer->handle);
+        submit_index++;
+    }
+#endif
     Q->pQueue->EnqueueSignal(F->pDxFence, F->mFenceValue++);
     Q->pQueue->Submit();
 }
@@ -202,7 +304,10 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
         DSTORAGE_ERROR_RECORD record = {};
         Q->pQueue->RetrieveErrorRecord(&record);
 
-        Q->pFactory->Release();
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+        skr_destroy_mutex(&Q->profile_mutex);
+#endif
+
         Q->pQueue->Release();
     }
 
@@ -378,23 +483,14 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
 
 void cgpu_win_dstorage_set_staging_buffer_size(uint64_t size)
 {
-    IDStorageFactory* pFactory = nullptr;
-    if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
-    {
-        SKR_LOG_ERROR("Failed to get DStorage factory!");
-    }
+    IDStorageFactory* pFactory = GetDStorageFactory();
     pFactory->SetStagingBufferSize(size);
     sDirectStorageStagingBufferSize = size;
 }
 
 skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service()
 {
-    IDStorageFactory* pFactory = nullptr;
-    if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
-    {
-        SKR_LOG_ERROR("Failed to get DStorage factory!");
-        return nullptr;
-    }
+    IDStorageFactory* pFactory = GetDStorageFactory();
     IDStorageCustomDecompressionQueue* pCompressionQueue = nullptr;
     if (!SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&pCompressionQueue))))
     {
@@ -402,7 +498,6 @@ skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service()
     }
     auto service = SkrNew<skr_win_dstorage_decompress_service_t>(pCompressionQueue);
     SKR_LOG_DEBUG("Created decompress service");
-    pFactory->Release();
     return service;
 }
 
@@ -420,6 +515,7 @@ bool cgpu_win_decompress_service_register_callback(skr_win_dstorage_decompress_s
 void cgpu_win_free_decompress_service(skr_win_dstorage_decompress_service_id service)
 {
     SKR_ASSERT(service && "Invalid service");
+    service->decompress_queue->Release();
     SkrDelete(service);
     SKR_LOG_DEBUG("Deleted decompress service");
 }
