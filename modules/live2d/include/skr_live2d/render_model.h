@@ -11,7 +11,8 @@ typedef struct skr_live2d_render_model_request_t {
     const char* model_name;
     skr_vfs_t* vfs_override;
     CGPUQueueId queue_override;
-    CGPUDStorageQueueId dstorage_queue_override;
+    CGPUDStorageQueueId file_dstorage_queue_override;
+    CGPUDStorageQueueId memory_dstorage_queue_override;
     ECGPUDStorageSource dstorage_source;
     skr_live2d_render_model_id render_model;
     SAtomic32 io_status;
@@ -20,6 +21,16 @@ typedef struct skr_live2d_render_model_request_t {
     SKR_LIVE2D_API SkrAsyncIOStatus get_status() const SKR_NOEXCEPT;
 #endif
 } skr_live2d_render_model_request_t;
+
+typedef struct skr_live2d_vertex_pos_t {
+    float x;
+    float y;
+} skr_live2d_vertex_pos_t;
+
+typedef struct skr_live2d_vertex_uv_t {
+    float u;
+    float v;
+} skr_live2d_vertex_uv_t;
 
 #ifndef SKR_SERIALIZE_GURAD
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 

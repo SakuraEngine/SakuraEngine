@@ -7,6 +7,9 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include <string.h>
+#ifdef _WIN32
+#include "cgpu/extensions/dstorage_windows.h"
+#endif
 
 #define BACK_BUFFER_HEIGHT 900
 #define BACK_BUFFER_WIDTH 900
@@ -110,17 +113,25 @@ void skr::Renderer::create_api_objects()
     const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
     if (supportDirectStorage)
     {
-        auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
-        queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
-        queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
-        queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
-        queue_desc.max_request_size = 4096 * 4096 * 4;
-        file_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
-
-        queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
-        queue_desc.source = CGPU_DSTORAGE_SOURCE_MEMORY;
-        queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
-        memory_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+#ifdef _WIN32
+        cgpu_win_dstorage_set_staging_buffer_size(4096 * 4096 * 8);
+#endif
+        {
+            auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
+            queue_desc.name = "DirectStorageFileQueue";
+            queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
+            queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
+            queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+            file_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+        }
+        {
+            auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
+            queue_desc.name = "DirectStorageMemoryQueue";
+            queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
+            queue_desc.source = CGPU_DSTORAGE_SOURCE_MEMORY;
+            queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+            memory_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+        }
     }
 
     // Sampler

@@ -9,6 +9,8 @@ typedef struct skr_vram_buffer_io_t {
     CGPUQueueId transfer_queue;
     CGPUDStorageQueueId dstorage_queue;
     CGPUSemaphoreId opt_semaphore;
+    CGPUBufferId dst_buffer;
+    uint64_t offset;
     // CGPU Resource Desc
     const char8_t* buffer_name;
     CGPUResourceTypes resource_types;
@@ -27,7 +29,6 @@ typedef struct skr_vram_buffer_io_t {
     const char8_t* path;
     // Data bytes
     uint8_t* bytes;
-    uint64_t offset;
     uint64_t size;
     SkrIOServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
