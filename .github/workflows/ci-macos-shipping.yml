@@ -17,6 +17,7 @@ jobs:
     - name: Set env
       id: env
       run: |
+        xmake g -c
         xmake l setup.lua
         xmake l modules/wasm/setup.lua
         VULKAN_SDK=$GITHUB_WORKSPACE/../vulkansdk-macos-${{env.VulkanSDKVersion}}/macOS
