@@ -24,24 +24,24 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
         CGPUDStorageQueueD3D12* Q;
         ID3D12Fence* fence;
         SThreadDesc desc;
-        SThreadHandle handle;
-        HANDLE fence_handle;
+        SThreadHandle thread_handle;
+        HANDLE fence_event;
         uint64_t submit_index;
         uint32_t fence_value = 0;
         SAtomic32 finished;
     };
-    eastl::vector<ProfileTracer*> profile_fences;
+    eastl::vector<ProfileTracer*> profile_tracers;
 #endif
 
     ~CGPUDStorageQueueD3D12() SKR_NOEXCEPT {
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
-        for (auto&& tracer : profile_fences)
+        for (auto&& tracer : profile_tracers)
         {
             if (!skr_atomic32_load_acquire(&tracer->finished))
             {
-                skr_join_thread(tracer->handle);
+                skr_join_thread(tracer->thread_handle);
             }
-            skr_destroy_thread(tracer->handle);
+            skr_destroy_thread(tracer->thread_handle);
             tracer->fence->Release();
         }
 #endif
@@ -226,12 +226,12 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
         CGPUDStorageQueueD3D12::ProfileTracer* tracer = nullptr;
         {
             SMutexLock profile_lock(Q->profile_mutex);
-            for (auto&& _tracer : Q->profile_fences)
+            for (auto&& _tracer : Q->profile_tracers)
             {
                 if (skr_atomic32_load_acquire(&_tracer->finished))
                 {
                     tracer = _tracer;
-                    skr_destroy_thread(tracer->handle);
+                    skr_destroy_thread(tracer->thread_handle);
                     tracer->fence->SetEventOnCompletion(tracer->fence_value++, event_handle);
                     tracer->finished = 0;
                     break;
@@ -246,18 +246,18 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
             tracer->fence->SetEventOnCompletion(tracer->fence_value, event_handle);
             {
                 SMutexLock profile_lock(Q->profile_mutex);
-                Q->profile_fences.emplace_back(tracer);
+                Q->profile_tracers.emplace_back(tracer);
             }
         }
         Q->pQueue->EnqueueSignal(tracer->fence, tracer->fence_value);
-        tracer->fence_handle = event_handle;
+        tracer->fence_event = event_handle;
         tracer->submit_index = submit_index++;
         tracer->Q = Q;
         tracer->desc.pData = tracer;
         tracer->desc.pFunc = +[](void* arg){
             auto tracer = (CGPUDStorageQueueD3D12::ProfileTracer*)arg;
             auto Q = tracer->Q;
-            const auto event_handle = tracer->fence_handle;
+            const auto event_handle = tracer->fence_event;
             eastl::string name = "DirectStorageQueueSubmit-";
             name += eastl::to_string(tracer->submit_index);
             TracyFiberEnter(name.c_str());
@@ -279,7 +279,7 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
             CloseHandle(event_handle);
             skr_atomic32_store_release(&tracer->finished, 1);
         };
-        skr_init_thread(&tracer->desc, &tracer->handle);
+        skr_init_thread(&tracer->desc, &tracer->thread_handle);
         submit_index++;
     }
 #endif
