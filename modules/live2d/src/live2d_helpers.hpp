@@ -102,5 +102,14 @@ namespace Live2D { namespace Cubism { namespace Framework {
         eastl::vector_map<skr_async_io_request_t*, eastl::string> motion_paths;
         L2DRequestCallbackData* cbData;
     };
-
 }}}
+
+#include "utils/types.h"
+#include "Framework/Math/CubismMatrix44.hpp"
+#include "Framework/Math/CubismViewMatrix.hpp"
+
+struct live2d_render_view_t {
+    Csm::CubismMatrix44 device_to_screen;
+    Csm::CubismViewMatrix view_matrix;
+    skr_float4_t clear_color;
+};
