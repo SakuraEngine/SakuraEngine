@@ -13,4 +13,18 @@ private:
     bool _framework_initialized = false;
 };
 
+const float kLive2DViewScale = 1.0f;
+const float kLive2DViewMaxScale = 2.0f;
+const float kLive2DViewMinScale = 0.8f;
+
+const float kLive2DViewLogicalLeft = -1.0f;
+const float kLive2DViewLogicalRight = 1.0f;
+const float kLive2DViewLogicalBottom = -1.0f;
+const float kLive2DViewLogicalTop = -1.0f;
+
+const float kLive2DViewLogicalMaxLeft = -2.0f;
+const float kLive2DViewLogicalMaxRight = 2.0f;
+const float kLive2DViewLogicalMaxBottom = -2.0f;
+const float kLive2DViewLogicalMaxTop = 2.0f;
+
 #endif
