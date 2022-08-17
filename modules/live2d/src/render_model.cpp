@@ -13,8 +13,8 @@
 
 #include "tracy/Tracy.hpp"
 
-struct skr_live2d_render_model_t {
-    ~skr_live2d_render_model_t() SKR_NOEXCEPT
+struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
+    ~skr_live2d_render_model_impl_t() SKR_NOEXCEPT
     {
         for (auto&& request : texture_requests)
         {
@@ -25,27 +25,22 @@ struct skr_live2d_render_model_t {
         cgpu_free_buffer(uv_buffer);
     }
 
-    skr_live2d_model_resource_id model_resource_id;
+    CGPUBufferId index_buffer;
+    CGPUBufferId pos_buffer;
+    CGPUBufferId uv_buffer;
+
     eastl::vector<skr_async_io_request_t> texture_io_requests;
     eastl::vector<skr_vram_texture_request_t> texture_requests;
     eastl::vector<skr_async_io_request_t> buffer_io_requests;
     eastl::vector<skr_vram_buffer_request_t> buffer_requests;
-    CGPUBufferId index_buffer;
-    CGPUBufferId pos_buffer;
-    CGPUBufferId uv_buffer;
-    eastl::vector_map<uint32_t, skr_vertex_buffer_view_t> pos_buffer_views;
-    eastl::vector_map<uint32_t, skr_vertex_buffer_view_t> uv_buffer_views;
-    eastl::vector_map<uint32_t, skr_index_buffer_view_t> index_buffer_views;
-    bool use_dynamic_buffer = true;
 
-    uint32_t finished_texture_request = 0;
-    uint32_t finished_buffer_request = 0;
+
 };
 
-struct skr_live2d_render_model_async_t : public skr_live2d_render_model_t {
+struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     skr_live2d_render_model_async_t() = delete;
     skr_live2d_render_model_async_t(skr_live2d_render_model_request_t* request)
-        : skr_live2d_render_model_t(), request(request)
+        : skr_live2d_render_model_impl_t(), request(request)
     {
 
     }
@@ -70,6 +65,9 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_t {
         if (finished_buffer_request < buffer_io_requests.size()) return;
         finish();
     }
+    uint32_t finished_texture_request = 0;
+    uint32_t finished_buffer_request = 0;
+    bool use_dynamic_buffer = true;
     skr_live2d_render_model_request_t* request = nullptr;
 };
 
@@ -92,7 +90,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     auto file_dstorage_queue = request->file_dstorage_queue_override;
     auto memory_dstorage_queue = request->memory_dstorage_queue_override;
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
-    auto render_model = request->render_model = SkrNew<skr_live2d_render_model_async_t>(request);
+    auto render_model = SkrNew<skr_live2d_render_model_async_t>(request);
+    request->render_model = render_model;
 #ifndef _WIN32
     SKR_UNIMPLEMENTED_FUNCTION();
 #else
