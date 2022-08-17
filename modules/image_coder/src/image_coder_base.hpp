@@ -8,7 +8,7 @@ namespace skr
 class SKR_IMAGE_CODER_API BaseImageCoder : public skr_image_coder_t
 {
 public:
-    ~BaseImageCoder() SKR_NOEXCEPT;
+    virtual ~BaseImageCoder() SKR_NOEXCEPT;
 
     virtual uint64_t get_raw_size() const SKR_NOEXCEPT override;
     virtual uint64_t get_encoded_size() const SKR_NOEXCEPT override;
