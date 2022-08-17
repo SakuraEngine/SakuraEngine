@@ -1,4 +1,6 @@
 #include "platform/memory.h"
+#include "tracy/TracyC.h"
+
 #if !defined(SKR_PLATFORM_WA) && !defined(__APPLE__)
     #ifdef __cplusplus
 extern "C" {
@@ -19,42 +21,57 @@ RUNTIME_API void* mi_realloc(void* p, size_t newsize) SKR_NOEXCEPT;
 #if !defined(SKR_PLATFORM_WA) && !defined(__APPLE__)
 RUNTIME_API void* sakura_malloc(size_t size) SKR_NOEXCEPT
 {
-    return mi_malloc(size);
+    void* p = mi_malloc(size);
+    TracyCAlloc(p, size);
+    return p;
 }
 
 RUNTIME_API void* sakura_calloc(size_t count, size_t size) SKR_NOEXCEPT
 {
-    return mi_calloc(count, size);
+    void* p = mi_calloc(count, size);
+    TracyCAlloc(p, size);
+    return p;
 }
 
 RUNTIME_API void* sakura_calloc_aligned(size_t count, size_t size, size_t alignment) SKR_NOEXCEPT
 {
-    return mi_calloc_aligned(count, size, alignment);
+    void* p =  mi_calloc_aligned(count, size, alignment);
+    TracyCAlloc(p, size);
+    return p;
 }
 
 RUNTIME_API void* sakura_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT
 {
-    return mi_malloc_aligned(size, alignment);
+    void* p =  mi_malloc_aligned(size, alignment);
+    TracyCAlloc(p, size);
+    return p;
 }
 
 RUNTIME_API void* sakura_new_aligned(size_t size, size_t alignment)
 {
-    return mi_new_aligned(size, alignment);
+    void* p =   mi_new_aligned(size, alignment);
+    TracyCAlloc(p, size);
+    return p;
 }
 
 RUNTIME_API void sakura_free(void* p) SKR_NOEXCEPT
 {
+    TracyCFree(p);
     mi_free(p);
 }
 
 RUNTIME_API void sakura_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT
 {
+    TracyCFree(p);
     mi_free_aligned(p, alignment);
 }
 
 RUNTIME_API void* sakura_realloc(void* p, size_t newsize) SKR_NOEXCEPT
 {
-    return mi_realloc(p, newsize);
+    TracyCFree(p);
+    void* np = mi_realloc(p, newsize);
+    TracyCAlloc(np, newsize);
+    return np;
 }
 
 #elif defined(SKR_PLATFORM_WA)

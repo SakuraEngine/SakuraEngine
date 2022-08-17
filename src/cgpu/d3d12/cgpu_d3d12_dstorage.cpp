@@ -43,6 +43,7 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
             }
             skr_destroy_thread(tracer->thread_handle);
             tracer->fence->Release();
+            SkrDelete(tracer);
         }
 #endif
     }
