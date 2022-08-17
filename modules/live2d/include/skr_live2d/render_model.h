@@ -4,6 +4,16 @@
 #include "cgpu/api.h"
 #include "cgpu/io.h"
 
+#ifdef __cplusplus
+#include <EASTL/vector.h>
+struct skr_live2d_render_model_t {
+    skr_live2d_model_resource_id model_resource_id;
+
+    eastl::vector<skr_vertex_buffer_view_t> pos_buffer_views;
+    eastl::vector<skr_vertex_buffer_view_t> uv_buffer_views;
+    eastl::vector<skr_index_buffer_view_t> index_buffer_views;
+};
+#endif
 typedef struct skr_live2d_render_model_t skr_live2d_render_model_t;
 typedef struct skr_live2d_render_model_t* skr_live2d_render_model_id;
 
