@@ -52,6 +52,7 @@ typedef uint32_t ImageCoderCompression;
 
 #ifdef __cplusplus
 struct SKR_IMAGE_CODER_API skr_image_coder_t {
+    virtual ~skr_image_coder_t() = default;
     virtual bool set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;
     virtual bool move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;
     virtual bool view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;
