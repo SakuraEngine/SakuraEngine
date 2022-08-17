@@ -21,3 +21,8 @@ target("SkrLive2D")
         add_linkdirs("CubismNativeCore/lib/macos/x86_64", {public=true})
         add_links("Live2DCubismCore", {public=true})
     end
+    -- add live2d shaders
+    add_rules("utils.dxc", {
+        spv_outdir = "/../resources/shaders", 
+        dxil_outdir = "/../resources/shaders"})
+    add_files("shaders/*.hlsl")
