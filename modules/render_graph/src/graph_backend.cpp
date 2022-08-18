@@ -369,7 +369,8 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         cgpu_compute_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
-        cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
+        if (desc_set->updated)
+            cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
     }
     {
         ZoneScopedN("PassExecutor");
@@ -478,7 +479,8 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
-        cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
+        if (desc_set->updated)
+            cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
     }
     {
         ZoneScopedN("PassExecutor");

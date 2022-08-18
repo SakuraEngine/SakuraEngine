@@ -1237,6 +1237,7 @@ typedef struct CGPURootSignature {
 typedef struct CGPUDescriptorSet {
     CGPURootSignatureId root_signature;
     uint32_t index;
+    bool updated;
 } CGPUDescriptorSet;
 
 typedef struct CGPUComputePipeline {

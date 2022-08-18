@@ -263,9 +263,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
-    skr_live2d_finalize_render_effects(renderGraph, resource_vfs);
     render_graph::RenderGraph::destroy(renderGraph);
+    skr_live2d_finalize_render_effects(renderGraph, resource_vfs);
     render_graph_imgui_finalize();
-
     return 0;
 }
