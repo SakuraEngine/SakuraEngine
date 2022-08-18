@@ -166,28 +166,6 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         vb_desc.size = total_vertex_count * sizeof(skr_live2d_vertex_uv_t);
         render_model->uv_buffer = cgpu_create_buffer(device, &vb_desc);
     }
-    // Record Vertex Buffer View
-    render_model->pos_buffer_views.resize(drawable_count);
-    render_model->uv_buffer_views.resize(drawable_count);
-    uint32_t pos_buffer_cursor = 0;
-    uint32_t uv_buffer_cursor = 0;
-    for(uint32_t i = 0; i < drawable_count; i++)
-    {
-        const int32_t vcount = csmModel->GetDrawableVertexCount(i);
-        if (vcount != 0)
-        {
-            ZoneScopedN("FillLive2DVertexBufferViews");
-            render_model->pos_buffer_views[i].offset = pos_buffer_cursor;
-            render_model->pos_buffer_views[i].stride = sizeof(skr_live2d_vertex_pos_t);
-            render_model->pos_buffer_views[i].buffer = render_model->pos_buffer;
-            pos_buffer_cursor += vcount * sizeof(skr_live2d_vertex_pos_t);
-
-            render_model->uv_buffer_views[i].offset = uv_buffer_cursor;
-            render_model->uv_buffer_views[i].stride = sizeof(skr_live2d_vertex_uv_t);
-            render_model->uv_buffer_views[i].buffer = render_model->uv_buffer;
-            uv_buffer_cursor += vcount * sizeof(skr_live2d_vertex_uv_t);
-        }
-    }
     // Create Index Buffer
     {
         ZoneScopedN("CreateLive2DIndexBuffer");
@@ -202,38 +180,87 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ib_desc.size = total_index_count * sizeof(Csm::csmUint16);
         render_model->index_buffer = cgpu_create_buffer(device, &ib_desc);
     }
-    render_model->buffer_io_requests.resize(drawable_count);
-    render_model->buffer_requests.resize(drawable_count);
-    uint32_t index_buffer_cursor = 0;
-    for(uint32_t i = 0; i < drawable_count; i++)
+    // Record Vertex Buffer View
     {
-        const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
-        if (icount != 0)
+        render_model->vertex_buffer_views.resize(2 * drawable_count);
+        uint32_t pos_buffer_cursor = 0;
+        uint32_t uv_buffer_cursor = 0;
+        for(uint32_t i = 0; i < drawable_count; i++)
         {
-            ZoneScopedN("RequestLive2DIndexBuffer");
+            const int32_t vcount = csmModel->GetDrawableVertexCount(i);
+            if (vcount != 0)
+            {
+                ZoneScopedN("FillLive2DVertexBufferViews");
+                auto pos_slot = 2 * i;
+                auto uv_slot = 2 * i + 1;
+                render_model->vertex_buffer_views[pos_slot].offset = pos_buffer_cursor;
+                render_model->vertex_buffer_views[pos_slot].stride = sizeof(skr_live2d_vertex_pos_t);
+                render_model->vertex_buffer_views[pos_slot].buffer = render_model->pos_buffer;
+                pos_buffer_cursor += vcount * sizeof(skr_live2d_vertex_pos_t);
 
-            const auto indices = csmModel->GetDrawableVertexIndices(i);
-            auto ib_io = make_zeroed<skr_vram_buffer_io_t>();
-            auto& io_request = render_model->buffer_io_requests[i];
-            auto& buffer_request = render_model->buffer_requests[i];
-            ib_io.dst_buffer = render_model->index_buffer;
-            ib_io.offset = index_buffer_cursor;
-            ib_io.dstorage_source_type = CGPU_DSTORAGE_SOURCE_MEMORY;
-            ib_io.device = device;
-            ib_io.dstorage_queue = request->queue_override ? nullptr : memory_dstorage_queue;
-            ib_io.transfer_queue = request->queue_override;
-            ib_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
-            ib_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-            ib_io.buffer_size = total_index_count * sizeof(Csm::csmUint16);
-            ib_io.bytes = (uint8_t*)indices;
-            ib_io.size = sizeof(Csm::csmUint16) * icount;
-            ib_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data){
-                auto render_model = (skr_live2d_render_model_async_t*)data;
-                render_model->buffer_finish(request);
-            };
-            ib_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = render_model;
-            vram_service->request(&ib_io, &io_request, &buffer_request);
-            index_buffer_cursor += icount * sizeof(Csm::csmUint16);
+                render_model->vertex_buffer_views[uv_slot].offset = uv_buffer_cursor;
+                render_model->vertex_buffer_views[uv_slot].stride = sizeof(skr_live2d_vertex_uv_t);
+                render_model->vertex_buffer_views[uv_slot].buffer = render_model->uv_buffer;
+                uv_buffer_cursor += vcount * sizeof(skr_live2d_vertex_uv_t);
+            }
+        }
+    }
+    // Record Index Buffer View
+    {
+        render_model->primitive_commands.resize(drawable_count);
+        render_model->index_buffer_views.resize(drawable_count);
+        uint32_t index_buffer_cursor = 0;
+        for(uint32_t i = 0; i < drawable_count; i++)
+        {
+            const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
+            if (icount != 0)
+            {
+                render_model->index_buffer_views[i].offset = index_buffer_cursor;
+                render_model->index_buffer_views[i].stride = sizeof(Csm::csmUint16);
+                render_model->index_buffer_views[i].buffer = render_model->index_buffer;
+                index_buffer_cursor += icount * sizeof(Csm::csmUint16);
+            }
+            // Record static primitive commands
+            render_model->primitive_commands[i].ibv = &render_model->index_buffer_views[i];
+            render_model->primitive_commands[i].vbvs = skr::span(&render_model->vertex_buffer_views[2 * i], 2);
+        }
+
+    }
+    // Request indices I/O
+    {
+        render_model->buffer_io_requests.resize(drawable_count);
+        render_model->buffer_requests.resize(drawable_count);
+        uint32_t index_buffer_cursor = 0;
+        for(uint32_t i = 0; i < drawable_count; i++)
+        {
+            const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
+            if (icount != 0)
+            {
+                ZoneScopedN("RequestLive2DIndexBuffer");
+
+                const auto indices = csmModel->GetDrawableVertexIndices(i);
+                auto ib_io = make_zeroed<skr_vram_buffer_io_t>();
+                auto& io_request = render_model->buffer_io_requests[i];
+                auto& buffer_request = render_model->buffer_requests[i];
+                ib_io.dst_buffer = render_model->index_buffer;
+                ib_io.offset = index_buffer_cursor;
+                ib_io.dstorage_source_type = CGPU_DSTORAGE_SOURCE_MEMORY;
+                ib_io.device = device;
+                ib_io.dstorage_queue = request->queue_override ? nullptr : memory_dstorage_queue;
+                ib_io.transfer_queue = request->queue_override;
+                ib_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
+                ib_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+                ib_io.buffer_size = total_index_count * sizeof(Csm::csmUint16);
+                ib_io.bytes = (uint8_t*)indices;
+                ib_io.size = sizeof(Csm::csmUint16) * icount;
+                ib_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data){
+                    auto render_model = (skr_live2d_render_model_async_t*)data;
+                    render_model->buffer_finish(request);
+                };
+                ib_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = render_model;
+                vram_service->request(&ib_io, &io_request, &buffer_request);
+                index_buffer_cursor += icount * sizeof(Csm::csmUint16);
+            }
         }
     }
 }

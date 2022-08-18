@@ -11,9 +11,10 @@ struct skr_live2d_render_model_t {
     virtual ~skr_live2d_render_model_t() = default;
     skr_live2d_model_resource_id model_resource_id;
 
-    eastl::vector<skr_vertex_buffer_view_t> pos_buffer_views;
-    eastl::vector<skr_vertex_buffer_view_t> uv_buffer_views;
+    // pos-uv-pos-uv...
+    eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
+    eastl::vector<skr_render_primitive_command_t> primitive_commands;
 };
 #endif
 typedef struct skr_live2d_render_model_t skr_live2d_render_model_t;

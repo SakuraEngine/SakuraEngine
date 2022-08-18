@@ -5,13 +5,6 @@
 #include "cgpu/io.h"
 
 #ifdef __cplusplus
-#include "containers/span.hpp"
-
-struct skr_render_primitive_command_t {
-    skr::span<const skr_vertex_buffer_view_t> vbvs;
-    const skr_index_buffer_view_t* ibv;
-    uint64_t characteristic;
-};
 
 struct skr_render_mesh_t {
     skr_mesh_resource_id mesh_resource_id;
