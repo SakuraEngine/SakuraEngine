@@ -1,3 +1,4 @@
+#include "utils/log.h"
 #include "utils/make_zeroed.hpp"
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
@@ -202,31 +203,38 @@ void skr_render_effect_attach(ISkrRenderer* r, dual_chunk_view_t* g_cv, skr_rend
         auto entity_type = make_zeroed<dual_entity_type_t>();
         i_processor->second->get_type_set(g_cv, &entity_type.type);
         // create render effect entities in storage
-        dual_chunk_view_t* out_cv = nullptr;
-        auto initialize_callback = [&](dual_chunk_view_t* r_cv) {
-            // do user initialize callback
-            i_processor->second->initialize_data(renderer, world, g_cv, r_cv);
-            out_cv = r_cv;
-        };
-        dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
-        // attach render effect entities to game entities
-        if (out_cv)
+        if (entity_type.type.length != 0)
         {
-            auto entities = dualV_get_entities(out_cv);
-            for (uint32_t i = 0; i < g_cv->count; i++)
+            dual_chunk_view_t* out_cv = nullptr;
+            auto initialize_callback = [&](dual_chunk_view_t* r_cv) {
+                // do user initialize callback
+                i_processor->second->initialize_data(renderer, world, g_cv, r_cv);
+                out_cv = r_cv;
+            };
+            dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
+            // attach render effect entities to game entities
+            if (out_cv)
             {
-                auto& features = feature_arrs[i];
-#ifdef _DEBUG
-                for (auto& _ : features)
+                auto entities = dualV_get_entities(out_cv);
+                for (uint32_t i = 0; i < g_cv->count; i++)
                 {
-                    SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
-                }
+                    auto& features = feature_arrs[i];
+#ifdef _DEBUG
+                    for (auto& _ : features)
+                    {
+                        SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
+                    }
 #endif
-                features.push_back({ nullptr, DUAL_NULL_ENTITY });
-                auto& feature = features.back();
-                feature.name = effect_name;
-                feature.effect_entity = entities[i];
+                    features.push_back({ nullptr, DUAL_NULL_ENTITY });
+                    auto& feature = features.back();
+                    feature.name = effect_name;
+                    feature.effect_entity = entities[i];
+                }
             }
+        }
+        else
+        {
+            SKR_LOG_WARN("Render Effect %s privided no valid component types! At least identity type should be provided!", effect_name);
         }
     }
 }
