@@ -475,6 +475,7 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     rs_desc.push_constant_names = &push_constants_name;
     rs_desc.shader_count = 2;
     rs_desc.shaders = ppl_shaders;
+    rs_desc.pool = skr_renderer_get_root_signature_pool();
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
     CGPUVertexLayout vertex_layout = {};

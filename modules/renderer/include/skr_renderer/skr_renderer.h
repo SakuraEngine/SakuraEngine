@@ -93,6 +93,7 @@ protected:
     skr_io_vram_service_t* vram_service = nullptr;
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
     CGPUDStorageQueueId memory_dstorage_queue = nullptr;
+    CGPURootSignaturePoolId root_signature_pool = nullptr;
 #ifdef _WIN32
     skr_win_dstorage_decompress_service_id decompress_service = nullptr;
 #endif
@@ -113,6 +114,7 @@ public:
     CGPUDStorageQueueId get_memory_dstorage_queue() const;
     ECGPUFormat get_swapchain_format() const;
     CGPUSamplerId get_linear_sampler() const;
+    CGPURootSignaturePoolId get_root_signature_pool() const;
 #ifdef _WIN32
     skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const;
 #endif
@@ -137,6 +139,9 @@ skr_renderer_get_swapchain_format();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSamplerId
 skr_renderer_get_linear_sampler();
+
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPURootSignaturePoolId
+skr_renderer_get_root_signature_pool();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUQueueId
 skr_renderer_get_gfx_queue();

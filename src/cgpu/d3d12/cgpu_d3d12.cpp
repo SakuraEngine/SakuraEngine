@@ -512,18 +512,13 @@ void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature)
     if (signature->pool)
     {
         CGPUUtil_PoolFreeSignature(signature->pool, signature);
-        if (signature->pool_sig) // not root
-        {
-            // Free Reflection Data
-            CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
-            cgpu_delete(RS);
-        }
         return;
     }
     // [RS POOL] END FREE
     CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
     SAFE_RELEASE(RS->pDxRootSignature);
     cgpu_delete(RS);
+    return;
 }
 
 CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)

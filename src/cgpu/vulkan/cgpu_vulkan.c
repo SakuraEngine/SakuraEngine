@@ -652,12 +652,6 @@ void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature)
     if (signature->pool)
     {
         CGPUUtil_PoolFreeSignature(signature->pool, signature);
-        if (signature->pool_sig) // not root
-        {
-            // Free Reflection Data
-            CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
-            cgpu_free(RS);
-        }
         return;
     }
     // [RS POOL] END FREE

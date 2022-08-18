@@ -87,6 +87,11 @@ CGPUDeviceId SkrRendererModule::get_cgpu_device() const
     return renderer->device;
 }
 
+CGPURootSignaturePoolId SkrRendererModule::get_root_signature_pool() const
+{
+    return renderer->root_signature_pool;
+}
+
 skr_io_vram_service_t* SkrRendererModule::get_vram_service() const
 {
     return renderer->vram_service;
@@ -130,6 +135,11 @@ ECGPUFormat skr_renderer_get_swapchain_format()
 CGPUSamplerId skr_renderer_get_linear_sampler()
 {
     return SkrRendererModule::Get()->get_linear_sampler();
+}
+
+CGPURootSignaturePoolId skr_renderer_get_root_signature_pool()
+{
+    return SkrRendererModule::Get()->get_root_signature_pool();
 }
 
 CGPUQueueId skr_renderer_get_gfx_queue()
