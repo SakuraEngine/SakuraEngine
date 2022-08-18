@@ -217,8 +217,12 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             .allow_render_target();
         });
         {
+            ZoneScopedN("RenderScene");
+            skr_renderer_render_frame(renderGraph, skr_runtime_get_dual_storage());
+        }
+        {
             ZoneScopedN("RenderIMGUI");
-            render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
+            render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         }
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
