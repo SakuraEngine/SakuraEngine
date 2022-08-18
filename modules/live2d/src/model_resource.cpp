@@ -194,6 +194,163 @@ void csmUserModel::on_finished() SKR_NOEXCEPT
     _model->SaveParameters();
 }
 
+CubismMotionQueueEntryHandle csmUserModel::startMotion(csmMotionMap* motion_map, const csmChar* group, 
+    csmInt32 no, csmInt32 priority, ACubismMotion::FinishedMotionCallback onFinishedMotionHandler) SKR_NOEXCEPT
+{
+    if (priority == kPriorityForce)
+    {
+        _motionManager->SetReservePriority(priority);
+    }
+    else if (!_motionManager->ReserveMotion(priority))
+    {
+        if (_debugMode)
+        {
+            SKR_LOG_DEBUG("[csmUserModel]can't start motion.");
+        }
+        return InvalidMotionQueueEntryHandleValue;
+    }
+
+    const csmString fileName = _modelSetting->GetMotionFileName(group, no);
+
+    //ex) idle_0
+    auto& map = *static_cast< csmMap<csmString, csmVector<ACubismMotion*>>* >(motion_map);
+    CubismMotion* motion = static_cast<CubismMotion*>(map[group][no]);
+    csmBool autoDelete = false;
+    SKR_ASSERT(motion && "motion is null");
+    motion->SetFinishedMotionHandler(onFinishedMotionHandler);
+    //voice
+    /*
+    csmString voice = _modelSetting->GetMotionSoundFileName(group, no);
+    if (strcmp(voice.GetRawString(), "") != 0)
+    {
+        csmString path = voice;
+        path = _modelHomeDir + path;
+        _wavFileHandler.Start(path);
+    }
+    */
+    if (_debugMode)
+    {
+        SKR_LOG_DEBUG("[APP]start motion: [%s_%d]", group, no);
+    }
+    return  _motionManager->StartMotionPriority(motion, autoDelete, priority);
+}
+
+Csm::CubismMotionQueueEntryHandle csmUserModel::startRandomMotion(csmMotionMap* motion_map, const Csm::csmChar* group, 
+    Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler) SKR_NOEXCEPT
+{
+    if (_modelSetting->GetMotionCount(group) == 0)
+    {
+        return InvalidMotionQueueEntryHandleValue;
+    }
+
+    csmInt32 no = rand() % _modelSetting->GetMotionCount(group);
+
+    return startMotion(motion_map, group, no, priority, onFinishedMotionHandler);
+}
+
+void csmUserModel::update(csmMotionMap* motion_map, float delta_time) SKR_NOEXCEPT
+{
+    _dragManager->Update(delta_time);
+    _dragX = _dragManager->GetX();
+    _dragY = _dragManager->GetY();
+
+    // モーションによるパラメータ更新の有無
+    csmBool motionUpdated = false;
+
+    //-----------------------------------------------------------------
+    _model->LoadParameters(); // 前回セーブされた状態をロード
+    if (_motionManager->IsFinished())
+    {
+        // モーションの再生がない場合、待機モーションの中からランダムで再生する
+        startRandomMotion(motion_map, kMotionGroupIdle, kPriorityIdle);
+    }
+    else
+    {
+        motionUpdated = _motionManager->UpdateMotion(_model, delta_time); // モーションを更新
+    }
+    _model->SaveParameters(); // 状態を保存
+    //-----------------------------------------------------------------
+
+    // まばたき
+    if (!motionUpdated)
+    {
+        if (_eyeBlink != NULL)
+        {
+            // メインモーションの更新がないとき
+            _eyeBlink->UpdateParameters(_model, delta_time); // 目パチ
+        }
+    }
+
+    if (_expressionManager != NULL)
+    {
+        _expressionManager->UpdateMotion(_model, delta_time); // 表情でパラメータ更新（相対変化）
+    }
+
+    //ドラッグによる変化
+    //ドラッグによる顔の向きの調整
+    _model->AddParameterValue(_idParamAngleX, _dragX * 30); // -30から30の値を加える
+    _model->AddParameterValue(_idParamAngleY, _dragY * 30);
+    _model->AddParameterValue(_idParamAngleZ, _dragX * _dragY * -30);
+
+    //ドラッグによる体の向きの調整
+    _model->AddParameterValue(_idParamBodyAngleX, _dragX * 10); // -10から10の値を加える
+
+    //ドラッグによる目の向きの調整
+    _model->AddParameterValue(_idParamEyeBallX, _dragX); // -1から1の値を加える
+    _model->AddParameterValue(_idParamEyeBallY, _dragY);
+
+    // 呼吸など
+    if (_breath != NULL)
+    {
+        _breath->UpdateParameters(_model, delta_time);
+    }
+
+    // 物理演算の設定
+    if (_physics != NULL)
+    {
+        _physics->Evaluate(_model, delta_time);
+    }
+
+    // リップシンクの設定
+    /*
+    if (_lipSync)
+    {
+        // リアルタイムでリップシンクを行う場合、システムから音量を取得して0〜1の範囲で値を入力します。
+        csmFloat32 value = 0.0f;
+
+        // 状態更新/RMS値取得
+        _wavFileHandler.Update(delta_time);
+        value = _wavFileHandler.GetRms();
+
+        for (csmUint32 i = 0; i < _lipSyncIds.GetSize(); ++i)
+        {
+            _model->AddParameterValue(_lipSyncIds[i], value, 0.8f);
+        }
+    }
+    */
+
+    // ポーズの設定
+    if (_pose != NULL)
+    {
+        _pose->UpdateParameters(_model, delta_time);
+    }
+
+    _model->Update();
+    
+    const auto* orders = _model->GetDrawableRenderOrders();
+    _sorted_drawable_list.resize(GetModel()->GetDrawableCount());
+    for (uint32_t i = 0; i < _sorted_drawable_list.size(); i++)
+    {
+        const auto order = orders[i];
+        _sorted_drawable_list[order] = i;
+    }
+}
+
+const uint32_t* csmUserModel::get_sorted_drawlist() const SKR_NOEXCEPT
+{
+    return _sorted_drawable_list.data();
+}
+
 csmExpressionMap::~csmExpressionMap() SKR_NOEXCEPT
 {
     for (auto iter = Begin(); iter != End(); ++iter)
@@ -416,6 +573,62 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
     ioService->request(live2dRequest->vfs_override, &ramIO, &live2dRequest->settingsRequest);
 }
 #endif
+
+void skr_live2d_model_update(skr_live2d_model_resource_id live2d_resource, float delta_time)
+{
+    if (live2d_resource)
+    {
+        live2d_resource->model->update(live2d_resource->motion_map, delta_time);
+    }
+}
+
+const skr_live2d_vertex_pos_t* skr_live2d_model_get_drawable_vertex_positions(skr_live2d_model_resource_id live2d_resource, uint32_t drawable_index, uint32_t* out_count)
+{
+    auto model = live2d_resource->model->GetModel();
+    if (!model)
+    {
+        SKR_LOG_ERROR("no valid model");
+        return nullptr;
+    }
+    auto positions = model->GetDrawableVertexPositions(drawable_index);
+    if (out_count) *out_count = model->GetDrawableVertexCount(drawable_index);
+    static_assert(sizeof(*positions) == sizeof(skr_live2d_vertex_pos_t));
+    return (skr_live2d_vertex_pos_t*)positions;
+}
+
+const skr_live2d_vertex_uv_t* skr_live2d_model_get_drawable_vertex_uvs(skr_live2d_model_resource_id live2d_resource, uint32_t drawable_index, uint32_t* out_count)
+{
+    auto model = live2d_resource->model->GetModel();
+    if (!model)
+    {
+        SKR_LOG_ERROR("no valid model");
+        return nullptr;
+    }
+    auto uvs = model->GetDrawableVertexUvs(drawable_index);
+    if (out_count) *out_count = model->GetDrawableVertexCount(drawable_index);
+    static_assert(sizeof(*uvs) == sizeof(skr_live2d_vertex_uv_t));
+    return (skr_live2d_vertex_uv_t*)uvs;
+}
+
+bool skr_live2d_model_get_drawable_is_visible(skr_live2d_model_resource_id live2d_resource, uint32_t drawable_index)
+{
+    auto model = live2d_resource->model->GetModel();
+    if (!model)
+    {
+        SKR_LOG_ERROR("no valid model");
+        return false;
+    }
+    return model->GetDrawableDynamicFlagIsVisible(drawable_index);
+}
+
+const uint32_t* skr_live2d_model_get_sorted_drawable_list(skr_live2d_model_resource_id live2d_resource)
+{
+    if (live2d_resource)
+    {
+        return live2d_resource->model->get_sorted_drawlist();
+    }
+    return 0;
+}
 
 void skr_live2d_model_free(skr_live2d_model_resource_id live2d_resource)
 {

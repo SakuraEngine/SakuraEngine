@@ -16,9 +16,13 @@
 struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     ~skr_live2d_render_model_impl_t() SKR_NOEXCEPT
     {
-        for (auto&& request : texture_requests)
+        for (auto&& texture : textures)
         {
-            cgpu_free_texture(request.out_texture);
+            cgpu_free_texture(texture);
+        }
+        for (auto&& texture_view : texture_views)
+        {
+            cgpu_free_texture_view(texture_view);
         }
         cgpu_free_buffer(index_buffer);
         cgpu_free_buffer(pos_buffer);
@@ -54,6 +58,21 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     }
     void finish()
     {
+        for (uint32_t i = 0; i < textures.size(); i++)
+        {
+            textures[i] = texture_requests[i].out_texture;
+            CGPUTextureViewDescriptor view_desc = {};
+            view_desc.texture = textures[i];
+            view_desc.array_layer_count = 1;
+            view_desc.base_array_layer = 0;
+            view_desc.mip_level_count = 1;
+            view_desc.base_mip_level = 0;
+            view_desc.aspects = CGPU_TVA_COLOR;
+            view_desc.dims = CGPU_TEX_DIMENSION_2D;
+            view_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+            view_desc.usages = CGPU_TVU_SRV;
+            texture_views[i] = cgpu_create_texture_view(textures[i]->device, &view_desc);
+        }
         skr_atomic32_store_relaxed(&request->io_status, SKR_ASYNC_IO_STATUS_OK);
         request = nullptr;
     }
@@ -65,7 +84,6 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     }
     uint32_t finished_texture_request = 0;
     uint32_t finished_buffer_request = 0;
-    bool use_dynamic_buffer = true;
     skr_live2d_render_model_request_t* request = nullptr;
 };
 
@@ -89,11 +107,14 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     auto memory_dstorage_queue = request->memory_dstorage_queue_override;
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
     auto render_model = SkrNew<skr_live2d_render_model_async_t>(request);
+    render_model->model_resource_id = resource;
     request->render_model = render_model;
 #ifndef _WIN32
     SKR_UNIMPLEMENTED_FUNCTION();
 #else
     // request load textures
+    render_model->textures.resize(texture_count);
+    render_model->texture_views.resize(texture_count);
     render_model->texture_requests.resize(texture_count);
     render_model->texture_io_requests.resize(texture_count);
     if (request->file_dstorage_queue_override)
@@ -120,7 +141,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             vram_texture_io.width = resolution;
             vram_texture_io.height = resolution;
             vram_texture_io.depth = 1;
-            vram_texture_io.format = CGPU_FORMAT_R8G8B8A8_UINT;
+            vram_texture_io.format = CGPU_FORMAT_R8G8B8A8_UNORM;
             vram_texture_io.size = resolution * resolution * 4;
             auto pngPath = ghc::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
             auto pngPathStr = pngPath.u8string();
@@ -215,10 +236,12 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
             if (icount != 0)
             {
-                render_model->index_buffer_views[i].offset = index_buffer_cursor;
+                render_model->index_buffer_views[i].offset = 0;
+                render_model->index_buffer_views[i].first_index = index_buffer_cursor;
+                render_model->index_buffer_views[i].index_count = icount;
                 render_model->index_buffer_views[i].stride = sizeof(Csm::csmUint16);
                 render_model->index_buffer_views[i].buffer = render_model->index_buffer;
-                index_buffer_cursor += icount * sizeof(Csm::csmUint16);
+                index_buffer_cursor += icount;
             }
             // Record static primitive commands
             render_model->primitive_commands[i].ibv = &render_model->index_buffer_views[i];
@@ -265,6 +288,18 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     }
 }
 #endif
+
+CGPUTextureId skr_live2d_render_model_get_texture(skr_live2d_render_model_id render_model, uint32_t drawable_index)
+{
+    auto tIdx = render_model->model_resource_id->model->GetModel()->GetDrawableTextureIndex(drawable_index);
+    return render_model->textures[tIdx];
+}
+
+CGPUTextureViewId skr_live2d_render_model_get_texture_view(skr_live2d_render_model_id render_model, uint32_t drawable_index)
+{
+    auto tIdx = render_model->model_resource_id->model->GetModel()->GetDrawableTextureIndex(drawable_index);
+    return render_model->texture_views[tIdx];
+}
 
 void skr_live2d_render_model_free(skr_live2d_render_model_id render_model)
 {

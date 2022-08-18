@@ -14,9 +14,16 @@
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"
 
+#include "render_graph/api.h"
+
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/mesh_resource.h"
+
+#include "tracy/Tracy.hpp"
+
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
+const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 
 skr_render_pass_name_t live2d_pass_name = "Live2DPass";
 struct RenderPassLive2D : public IPrimitiveRenderPass {
@@ -32,7 +39,70 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
 
     void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
     {
+        auto depth = renderGraph->create_texture(
+        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+            builder.set_name("depth")
+                .extent(900, 900)
+                .format(depth_format)
+                .owns_memory()
+                .allow_depth_stencil();
+        });
+        if (drawcalls.count)
+        {
+            renderGraph->add_render_pass(
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+                const auto out_color = renderGraph->get_texture("backbuffer");
+                const auto depth_buffer = renderGraph->get_texture("depth");
+                builder.set_name("live2d_forward_pass")
+                    // we know that the drawcalls always have a same pipeline
+                    .set_pipeline(drawcalls.drawcalls->pipeline)
+                    .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
+                    .set_depth_stencil(depth_buffer);
+            },
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
+                cgpu_render_encoder_set_viewport(stack.encoder,
+                    0.0f, 0.0f,
+                    (float)900, (float)900,
+                    0.f, 1.f);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
+                for (uint32_t i = 0; i < drawcalls.count; i++)
+                {
+                    ZoneScopedN("DrawCall");
 
+                    auto&& dc = drawcalls.drawcalls[i];
+                    if (dc.desperated) continue;
+                    {
+                        ZoneScopedN("BindTextures");
+                        for (uint32_t j = 0; j < dc.descriptor_set_count; j++)
+                        {
+                            cgpu_render_encoder_bind_descriptor_set(stack.encoder, dc.descriptor_sets[j]);
+                        }
+                    }
+                    {
+                        ZoneScopedN("BindGeometry");
+                        cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
+                        CGPUBufferId vertex_buffers[2] = {
+                            dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer
+                        };
+                        const uint32_t strides[2] = {
+                            dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride
+                        };
+                        const uint32_t offsets[2] = {
+                            dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset
+                        };
+                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 2, vertex_buffers, strides, offsets);
+                    }
+                    {
+                        ZoneScopedN("PushConstants");
+                        cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
+                    }
+                    {
+                        ZoneScopedN("DrawIndexed");
+                        cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
+                    }
+                }
+            });
+        }
     }
 
     skr_render_pass_name_t identity() const override
@@ -82,7 +152,6 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     skr_vfs_t* resource_vfs = nullptr;
     const char* push_constants_name = "push_constants";
-    const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
     // this is a view object, later we will expose it to the world
     live2d_render_view_t view_;
 
@@ -103,7 +172,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             desc.alignment = alignof(live2d_effect_identity_t);
             identity_type = dualT_register_type(&desc);
         }
-        type_builder.with(identity_type)
+        type_builder
+            .with(identity_type)
             .with<skr_live2d_render_model_comp_t>();
         effect_query = dualQ_from_literal(storage, "[in]live2d_identity");
         // prepare render resources
@@ -149,6 +219,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     }
 
+    eastl::vector_map<CGPUTextureViewId, CGPUDescriptorSetId> descriptor_sets;
+    eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
     uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
         if (strcmp(pass->identity(), live2d_pass_name) == 0)
@@ -161,7 +233,58 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     if (models[i].vram_request.is_ready())
                     {
                         auto&& render_model = models[i].vram_request.render_model;
-                        c += 1;
+                        auto&& model_resource = models[i].ram_request.model_resource;
+                        skr_live2d_model_update(model_resource, 1.f / 60.f);
+                        // update buffer
+                        if (render_model->use_dynamic_buffer)
+                        {
+                            const auto vb_c = render_model->vertex_buffer_views.size();
+                            for (uint32_t j = 0; j < vb_c; j++)
+                            {
+                                auto& view = render_model->vertex_buffer_views[j];
+                                const void* pSrc = nullptr;
+                                uint32_t vcount = 0;
+                                // pos-uv-pos-uv...
+                                if (j % 2 == 0)
+                                {
+                                    pSrc = skr_live2d_model_get_drawable_vertex_positions(
+                                        model_resource, j / 2, &vcount);
+                                }
+                                else
+                                {
+                                    pSrc = skr_live2d_model_get_drawable_vertex_uvs(
+                                        model_resource, (j - 1) / 2, &vcount);
+                                }
+                                memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
+                            }
+                        }
+                        // create descriptor sets if not existed
+                        {
+                            const auto ib_c = render_model->index_buffer_views.size();
+                            for (uint32_t j = 0; j < ib_c; j++)
+                            {
+                                auto texture_view = skr_live2d_render_model_get_texture_view(render_model, j);
+                                auto iter = descriptor_sets.find(texture_view);
+                                if (iter == descriptor_sets.end())
+                                {
+                                    CGPUDescriptorSetDescriptor desc_set_desc = {};
+                                    desc_set_desc.root_signature = pipeline->root_signature;
+                                    desc_set_desc.set_index = 0;
+                                    auto desc_set = cgpu_create_descriptor_set(pipeline->device, &desc_set_desc);
+                                    descriptor_sets[texture_view] = desc_set;
+                                    CGPUDescriptorData datas[1];
+                                    datas[0].name = "color_texture";
+                                    datas[0].count = 1;
+                                    datas[0].textures = &texture_view;
+                                    datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
+                                    cgpu_update_descriptor_set(desc_set, datas, 1);
+                                }
+                            }
+                        }
+                        const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
+                        sorted_drawable_list[render_model] = { list , render_model->index_buffer_views.size() };
+                        // grow drawcall size
+                        c += render_model->primitive_commands.size();
                     }
                 }
             };
@@ -175,7 +298,72 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage) override
     {
-        
+        if (strcmp(pass->identity(), live2d_pass_name) == 0)
+        {
+            auto storage = skr_runtime_get_dual_storage();
+            uint32_t r_idx = 0;
+            uint32_t dc_idx = 0;
+            auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
+                auto identities = (live2d_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
+                auto unbatched_g_ents = (dual_entity_t*)identities;
+                auto r_ents = dualV_get_entities(r_cv);
+                auto meshes = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
+                if (unbatched_g_ents)
+                {
+                    auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
+                        auto g_ents = (dual_entity_t*)dualV_get_entities(g_cv);
+                        for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
+                        {
+                            auto g_ent = g_ents[g_idx];(void)g_ent;
+                            auto r_ent = r_ents[r_idx];(void)r_ent;
+                            
+                            if (meshes)
+                            {
+                                const auto& async_request = meshes[r_idx].vram_request;
+                                if (async_request.is_ready())
+                                {
+                                    const auto& render_model = async_request.render_model;
+                                    const auto& cmds = render_model->primitive_commands;
+                                    for (auto drawable : sorted_drawable_list[render_model])
+                                    {
+                                        const auto& cmd = cmds[drawable];
+                                        // resources may be ready after produce_drawcall, so we need to check it here
+                                        if (push_constants.size() <= dc_idx) return;
+
+                                        // push_constants[dc_idx].world = world;
+                                        // push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
+                                        auto visibility = skr_live2d_model_get_drawable_is_visible(render_model->model_resource_id, drawable);
+                                        auto& drawcall = drawcalls->drawcalls[dc_idx];
+                                        if (!visibility)
+                                        {
+                                            drawcall.desperated = true;
+                                            drawcall.pipeline = pipeline;
+                                        }
+                                        else
+                                        {
+                                            drawcall.pipeline = pipeline;
+                                            drawcall.push_const_name = push_constants_name;
+                                            drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
+                                            drawcall.index_buffer = *cmd.ibv;
+                                            drawcall.vertex_buffers = cmd.vbvs.data();
+                                            drawcall.vertex_buffer_count = cmd.vbvs.size();
+                                            {
+                                                auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
+                                                drawcall.descriptor_set_count = 1;
+                                                drawcall.descriptor_sets = &descriptor_sets[texture_view];
+                                            }
+                                        }
+                                        dc_idx++;
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
+                }
+            };
+            dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
+        }
     }
 protected:
     void prepare_pipeline(ISkrRenderer* renderer);
@@ -237,12 +425,17 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
     ppl_ps.entry = "main";
 
+    const char* static_sampler_name = "color_sampler";
+    auto static_sampler = skr_renderer_get_linear_sampler();
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
     rs_desc.push_constant_names = &push_constants_name;
     rs_desc.shader_count = 2;
     rs_desc.shaders = ppl_shaders;
     rs_desc.pool = skr_renderer_get_root_signature_pool();
+    rs_desc.static_sampler_count = 1;
+    rs_desc.static_sampler_names = &static_sampler_name;
+    rs_desc.static_samplers = &static_sampler;
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
     CGPUVertexLayout vertex_layout = {};
@@ -261,7 +454,7 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     rp_desc.color_formats = &fmt;
     rp_desc.depth_stencil_format = depth_format;
     CGPURasterizerStateDescriptor raster_desc = {};
-    raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
+    raster_desc.cull_mode = CGPU_CULL_MODE_NONE;
     raster_desc.depth_bias = 0;
     raster_desc.fill_mode = CGPU_FILL_MODE_SOLID;
     raster_desc.front_face = CGPU_FRONT_FACE_CCW;

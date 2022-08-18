@@ -10,8 +10,11 @@
 struct skr_live2d_render_model_t {
     virtual ~skr_live2d_render_model_t() = default;
     skr_live2d_model_resource_id model_resource_id;
+    bool use_dynamic_buffer = true;
 
     // pos-uv-pos-uv...
+    eastl::vector<CGPUTextureId> textures;
+    eastl::vector<CGPUTextureViewId> texture_views;
     eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
     eastl::vector<skr_render_primitive_command_t> primitive_commands;
@@ -35,16 +38,6 @@ typedef struct skr_live2d_render_model_request_t {
 #endif
 } skr_live2d_render_model_request_t;
 
-typedef struct skr_live2d_vertex_pos_t {
-    float x;
-    float y;
-} skr_live2d_vertex_pos_t;
-
-typedef struct skr_live2d_vertex_uv_t {
-    float u;
-    float v;
-} skr_live2d_vertex_uv_t;
-
 struct skr_live2d_render_model_comp_t {
     skr_guid_t resource_guid;
     skr_live2d_ram_io_request_t ram_request;
@@ -57,6 +50,12 @@ SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void
 skr_live2d_render_model_create_from_raw(skr_io_ram_service_t*, skr_io_vram_service_t*, CGPUDeviceId device,
     skr_live2d_model_resource_id resource, skr_live2d_render_model_request_t* request);
 #endif
+
+SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API CGPUTextureId
+skr_live2d_render_model_get_texture(skr_live2d_render_model_id render_model, uint32_t drawable_index);
+
+SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API CGPUTextureViewId
+skr_live2d_render_model_get_texture_view(skr_live2d_render_model_id render_model, uint32_t drawable_index);
 
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 
 skr_live2d_render_model_free(skr_live2d_render_model_id render_model);

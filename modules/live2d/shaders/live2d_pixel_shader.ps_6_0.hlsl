@@ -12,6 +12,7 @@ SamplerState color_sampler : register(s0, space1);
 float4 main(VSOut input) : SV_TARGET
 {
     float4 tex_color = color_texture.Sample(color_sampler, input.uv);
+    return tex_color;
     tex_color.rgb = tex_color.rgb * push_constants.multiply_color.rgb;
     const float3 _a = tex_color.rgb + push_constants.screen_color.rgb; 
     const float3 _m = tex_color.rgb * push_constants.screen_color.rgb; 

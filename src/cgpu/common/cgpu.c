@@ -252,6 +252,7 @@ void cgpu_update_descriptor_set(CGPUDescriptorSetId set, const struct CGPUDescri
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->update_descriptor_set && "update_descriptor_set Proc Missing!");
     device->proc_table_cache->update_descriptor_set(set, datas, count);
+    if (count) ((CGPUDescriptorSet*)set)->updated = true;
 }
 
 void cgpu_free_descriptor_set(CGPUDescriptorSetId set)

@@ -54,10 +54,25 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
         void on_finished() SKR_NOEXCEPT final;
 
+        void update(csmMotionMap* motion_map, float delta_time) SKR_NOEXCEPT;
+        const uint32_t* get_sorted_drawlist() const SKR_NOEXCEPT;
+
         eastl::string homePath;
 
+        const csmChar* kMotionGroupIdle = "Idle"; // アイドリング
+        const csmChar* kMotionGroupTapBody = "TapBody"; // 体をタップしたとき
+        // モーションの優先度定数
+        const csmInt32 kPriorityNone = 0;
+        const csmInt32 kPriorityIdle = 1;
+        const csmInt32 kPriorityNormal = 2;
+        const csmInt32 kPriorityForce = 3;
+
     protected:
+        Csm::CubismMotionQueueEntryHandle startMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
+        Csm::CubismMotionQueueEntryHandle startRandomMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
+    
         // Model States
+        eastl::vector<uint32_t> _sorted_drawable_list;
         Csm::ICubismModelSetting* _modelSetting;
         Csm::csmVector<Csm::CubismIdHandle> _eyeBlinkIds;
         Csm::csmVector<Csm::CubismIdHandle> _lipSyncIds; ///< モデルに設定されたリップシンク機能用パラメータID
