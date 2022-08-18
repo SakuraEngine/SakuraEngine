@@ -136,7 +136,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             auto guid = make_zeroed<skr_guid_t>();
             dual_make_guid(&guid);
             auto desc = make_zeroed<dual_type_description_t>();
-            desc.name = "fwdIdentity";
+            desc.name = "forward_render_identity";
             desc.size = sizeof(forward_effect_identity_t);
             desc.guid = guid;
             desc.alignment = alignof(forward_effect_identity_t);
@@ -144,7 +144,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         }
         type_builder.with(identity_type);
         type_builder.with<skr_render_mesh_comp_t>();
-        effect_query = dualQ_from_literal(storage, "[in]fwdIdentity");
+        effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
         // prepare render resources
         prepare_pipeline(renderer);
         prepare_geometry_resources(renderer);

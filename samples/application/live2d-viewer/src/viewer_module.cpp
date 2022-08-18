@@ -13,6 +13,7 @@
 #include "skr_renderer/skr_renderer.h"
 #include "skr_live2d/model_resource.h"
 #include "skr_live2d/render_model.h"
+#include "skr_live2d/render_effect.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -98,6 +99,27 @@ void SLive2DViewerModule::on_unload()
 }
 
 extern void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
+SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
+
+#include "ecs/dual.h"
+#include "ecs/callback.hpp"
+#include "ecs/type_builder.hpp"
+
+void create_test_scene()
+{
+    auto renderableT_builder = make_zeroed<dual::type_builder_t>();
+    renderableT_builder
+        .with<skr_render_effect_t>();
+    // allocate renderable
+    auto renderableT = make_zeroed<dual_entity_type_t>();
+    renderableT.type = renderableT_builder.build();
+    auto modelSetup = [&](dual_chunk_view_t* view) {
+        auto renderer = skr_renderer_get_renderer();
+        skr_render_effect_attach(renderer, view, "Live2DEffect");
+    };
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(modelSetup));
+}
+
 int SLive2DViewerModule::main_module_exec(int argc, char** argv)
 {
     SKR_LOG_INFO("live2d viewer executed!");
@@ -123,6 +145,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             .enable_memory_aliasing();
     });
     create_imgui_resources(renderGraph, resource_vfs);
+    skr_live2d_initialize_render_effects(renderGraph);
+    create_test_scene();
 
     auto file_dstorage_queue = skr_renderer_get_file_dstorage_queue();
     auto memory_dstorage_queue = skr_renderer_get_memory_dstorage_queue();
@@ -227,6 +251,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
+    skr_live2d_finalize_render_effects(renderGraph);
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
     skr_live2d_render_model_free(render_model_request.render_model);

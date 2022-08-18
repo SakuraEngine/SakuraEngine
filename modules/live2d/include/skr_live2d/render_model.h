@@ -7,6 +7,7 @@
 #ifdef __cplusplus
 #include <EASTL/vector.h>
 struct skr_live2d_render_model_t {
+    virtual ~skr_live2d_render_model_t() = default;
     skr_live2d_model_resource_id model_resource_id;
 
     eastl::vector<skr_vertex_buffer_view_t> pos_buffer_views;
