@@ -31,7 +31,7 @@ SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API
 void skr_live2d_free_render_view(live2d_render_view_id view);
 
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API
-void skr_live2d_initialize_render_effects(live2d_render_graph_t* render_graph);
+void skr_live2d_initialize_render_effects(live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs);
 
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API
-void skr_live2d_finalize_render_effects(live2d_render_graph_t* render_graph);
+void skr_live2d_finalize_render_effects(live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs);

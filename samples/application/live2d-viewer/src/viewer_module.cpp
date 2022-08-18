@@ -27,6 +27,7 @@ class SLive2DViewerModule : public skr::IDynamicModule
     virtual int main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
 
+public:
     static SLive2DViewerModule* Get();
 
     SWindowHandle window;
@@ -105,7 +106,7 @@ SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
 
-void create_test_scene()
+void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service)
 {
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
     renderableT_builder
@@ -113,11 +114,39 @@ void create_test_scene()
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
-    auto modelSetup = [&](dual_chunk_view_t* view) {
+    auto live2dEntSetup = [&](dual_chunk_view_t* view) {
         auto renderer = skr_renderer_get_renderer();
         skr_render_effect_attach(renderer, view, "Live2DEffect");
+        
+        auto ents = (dual_entity_t*)dualV_get_entities(view);
+        auto modelSetup = [=](dual_chunk_view_t* view) {
+            auto file_dstorage_queue = skr_renderer_get_file_dstorage_queue();
+            auto memory_dstorage_queue = skr_renderer_get_memory_dstorage_queue();
+            auto mesh_comps = (skr_live2d_render_model_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_live2d_render_model_comp_t>::get());
+            SKR_ASSERT(view->count == 1);
+            for (uint32_t i = 0; i < view->count; i++)
+            {
+                auto& vram_request = mesh_comps[i].vram_request;
+                auto& ram_request = mesh_comps[i].ram_request;
+                vram_request.file_dstorage_queue_override = file_dstorage_queue;
+                vram_request.memory_dstorage_queue_override = memory_dstorage_queue;
+                vram_request.vfs_override = resource_vfs;
+                ram_request.vfs_override = resource_vfs;
+                ram_request.callback_data = &vram_request;
+                ram_request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)
+                {
+                    auto ram_service = SLive2DViewerModule::Get()->ram_service;
+                    auto vram_service = skr_renderer_get_vram_service();
+                    auto pRenderModelRequest = (skr_live2d_render_model_request_t*)data;
+                    auto cgpuDevice = skr_renderer_get_cgpu_device();
+                    skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
+                };
+                skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
+            }
+        };
+        skr_render_effect_access(skr_renderer_get_renderer(), ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
     };
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(modelSetup));
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
 }
 
 int SLive2DViewerModule::main_module_exec(int argc, char** argv)
@@ -134,6 +163,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     window = skr_create_window(
         fmt::format("Live2D Viewer [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
         &window_desc);
+    auto ram_service = SLive2DViewerModule::Get()->ram_service;
+    auto vram_service = skr_renderer_get_vram_service();
     // Initialize renderer
     auto swapchain = skr_renderer_register_window(window);
     auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
@@ -145,31 +176,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             .enable_memory_aliasing();
     });
     create_imgui_resources(renderGraph, resource_vfs);
-    skr_live2d_initialize_render_effects(renderGraph);
-    create_test_scene();
-
-    auto file_dstorage_queue = skr_renderer_get_file_dstorage_queue();
-    auto memory_dstorage_queue = skr_renderer_get_memory_dstorage_queue();
-    auto render_model_request = make_zeroed<skr_live2d_render_model_request_t>();
-    render_model_request.file_dstorage_queue_override = file_dstorage_queue;
-    render_model_request.memory_dstorage_queue_override = memory_dstorage_queue;
-    render_model_request.vfs_override = resource_vfs;
-    auto request = make_zeroed<skr_live2d_ram_io_request_t>();
-    request.vfs_override = resource_vfs;
-    request.callback_data = &render_model_request;
-    request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)
-    {
-        auto pRenderModelRequest = (skr_live2d_render_model_request_t*)data;
-        auto ram_service = SLive2DViewerModule::Get()->ram_service;
-        auto vram_service = skr_renderer_get_vram_service();
-        auto cgpuDevice = skr_renderer_get_cgpu_device();
-        skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
-    };
-    skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &request);
-    {
-        ZoneScopedN("Idle");
-        while(!render_model_request.is_ready());
-    }
+    skr_live2d_initialize_render_effects(renderGraph, resource_vfs);
+    create_test_scene(resource_vfs, ram_service, vram_service);
         
     bool quit = false;
     while (!quit)
@@ -255,10 +263,9 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
-    skr_live2d_finalize_render_effects(renderGraph);
+    skr_live2d_finalize_render_effects(renderGraph, resource_vfs);
     render_graph::RenderGraph::destroy(renderGraph);
     render_graph_imgui_finalize();
-    skr_live2d_render_model_free(render_model_request.render_model);
-    skr_live2d_model_free(request.model_resource);
+
     return 0;
 }

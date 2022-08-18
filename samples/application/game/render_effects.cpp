@@ -446,12 +446,12 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
 
     // create default deferred material
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "gbuffer_vertex_buffer";
+    vs_desc.name = "gbuffer_vertex_shader";
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = _vs_bytes;
     vs_desc.code_size = _vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
-    fs_desc.name = "gbuffer_fragment_buffer";
+    fs_desc.name = "gbuffer_pixel_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = _fs_bytes;
     fs_desc.code_size = _fs_length;

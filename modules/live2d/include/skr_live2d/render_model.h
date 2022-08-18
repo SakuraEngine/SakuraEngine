@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/guid.h"
 #include "model_resource.h"
 #include "skr_renderer/primitive_draw.h"
 #include "cgpu/api.h"
@@ -42,6 +43,13 @@ typedef struct skr_live2d_vertex_uv_t {
     float u;
     float v;
 } skr_live2d_vertex_uv_t;
+
+struct skr_live2d_render_model_comp_t {
+    skr_guid_t resource_guid;
+    skr_live2d_ram_io_request_t ram_request;
+    skr_live2d_render_model_request_t vram_request;
+};
+typedef struct skr_live2d_render_model_comp_t skr_live2d_render_model_comp_t;
 
 #ifndef SKR_SERIALIZE_GURAD
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 
