@@ -33,8 +33,6 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     eastl::vector<skr_vram_texture_request_t> texture_requests;
     eastl::vector<skr_async_io_request_t> buffer_io_requests;
     eastl::vector<skr_vram_buffer_request_t> buffer_requests;
-
-
 };
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {

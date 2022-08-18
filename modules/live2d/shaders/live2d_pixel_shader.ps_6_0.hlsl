@@ -6,8 +6,8 @@ struct VSOut
     float2 uv  : TEXCOORD0;
 };
 
-Texture2D color_texture : register(t0);
-SamplerState color_sampler : register(s0);
+Texture2D color_texture : register(t0, space0);
+SamplerState color_sampler : register(s0, space1);
 
 float4 main(VSOut input) : SV_TARGET
 {

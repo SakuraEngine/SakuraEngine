@@ -308,21 +308,21 @@ void skr_render_effect_access(ISkrRenderer* r, const SGameEntity* entities, uint
     {
         auto storage = skr_runtime_get_dual_storage();
         SKR_ASSERT(storage && "No dual storage");
-        eastl::vector<dual_entity_t> render_effects;
-        render_effects.reserve(count);
+        eastl::vector<dual_entity_t> batch_render_effects;
+        batch_render_effects.reserve(count);
         // batch game ents to collect render effects
         auto game_batch_callback = [&](dual_chunk_view_t* view) {
-            auto feature_arrs = (render_effects_t*)dualV_get_owned_ro(view, dual_id_of<skr_render_effect_t>::get());
-            if (feature_arrs)
+            auto effects_chunk = (render_effects_t*)dualV_get_owned_ro(view, dual_id_of<skr_render_effect_t>::get());
+            if (effects_chunk)
             {
                 for (uint32_t i = 0; i < view->count; i++)
                 {
-                    auto& features = feature_arrs[i];
-                    for (auto& _ : features)
+                    auto& effects = effects_chunk[i];
+                    for (auto& effect : effects)
                     {
-                        if (strcmp(_.name, effect_name) == 0)
+                        if (strcmp(effect.name, effect_name) == 0)
                         {
-                            render_effects.emplace_back(_.effect_entity);
+                            batch_render_effects.emplace_back(effect.effect_entity);
                         }
                     }
                 }
@@ -330,6 +330,9 @@ void skr_render_effect_access(ISkrRenderer* r, const SGameEntity* entities, uint
         };
         dualS_batch(storage, entities, count, DUAL_LAMBDA(game_batch_callback));
         // do cast for render effects
-        dualS_batch(storage, render_effects.data(), (EIndex)render_effects.size(), view, u);
+        if (batch_render_effects.size())
+        {
+            dualS_batch(storage, batch_render_effects.data(), (EIndex)batch_render_effects.size(), view, u);
+        }
     }
 }
