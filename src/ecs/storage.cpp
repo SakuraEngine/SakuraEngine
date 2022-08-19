@@ -907,6 +907,14 @@ const char* dualQ_get_error()
     return dual::get_error().c_str();
 }
 
+void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params)
+{
+    if(!query->storage->queriesBuilt)
+        query->storage->build_queries();
+    *filter = query->buildedFilter;
+    *params = query->parameters;
+}
+
 void dualS_all(dual_storage_t *storage, bool includeDisabled, bool includeDead, dual_view_callback_t callback, void *u)
 {
     for(auto& pair : storage->groups)
