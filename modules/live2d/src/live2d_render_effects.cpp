@@ -1,5 +1,6 @@
 #include "platform/memory.h"
 #include "platform/vfs.h"
+#include "platform/time.h"
 #include "math/vectormath.hpp"
 #include "utils/make_zeroed.hpp"
 
@@ -176,6 +177,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             .with(identity_type)
             .with<skr_live2d_render_model_comp_t>();
         effect_query = dualQ_from_literal(storage, "[in]live2d_identity");
+        skr_init_timer(&motion_timer);
         // prepare render resources
         prepare_pipeline(renderer);
         // prepare_geometry_resources(renderer);
@@ -221,6 +223,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     eastl::vector_map<CGPUTextureViewId, CGPUDescriptorSetId> descriptor_sets;
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
+    STimer motion_timer;
+    uint32_t last_ms = 0;
     uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
         if (strcmp(pass->identity(), live2d_pass_name) == 0)
@@ -234,7 +238,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     {
                         auto&& render_model = models[i].vram_request.render_model;
                         auto&& model_resource = models[i].ram_request.model_resource;
-                        skr_live2d_model_update(model_resource, 1.f / 60.f);
+                        last_ms = skr_timer_get_msec(&motion_timer, true);
+                        skr_live2d_model_update(model_resource, (float)last_ms / 1000.f);
                         // update buffer
                         if (render_model->use_dynamic_buffer)
                         {
