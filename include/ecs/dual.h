@@ -532,6 +532,8 @@ RUNTIME_API void dualQ_release(dual_query_t* query);
 RUNTIME_API dual_query_t* dualQ_from_literal(dual_storage_t* storage, const char* desc);
 
 RUNTIME_API const char* dualQ_get_error();
+
+RUNTIME_API void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params);
 /**
  * @brief set meta filter for a query
  * note: query does not own this meta, user should care about meta's lifetime
