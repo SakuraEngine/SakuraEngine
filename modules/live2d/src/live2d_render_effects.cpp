@@ -1,6 +1,7 @@
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/time.h"
+#include "platform/thread.h"
 #include "math/vectormath.hpp"
 #include "utils/make_zeroed.hpp"
 
@@ -223,6 +224,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     eastl::vector_map<CGPUTextureViewId, CGPUDescriptorSetId> descriptor_sets;
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
+    const float kMotionFramesPerSecond = 160.0f;
     STimer motion_timer;
     uint32_t last_ms = 0;
     uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
@@ -239,28 +241,34 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                         auto&& render_model = models[i].vram_request.render_model;
                         auto&& model_resource = models[i].ram_request.model_resource;
                         last_ms = skr_timer_get_msec(&motion_timer, true);
-                        skr_live2d_model_update(model_resource, (float)last_ms / 1000.f);
-                        // update buffer
-                        if (render_model->use_dynamic_buffer)
+                        static float delta_sum = 0.f;
+                        delta_sum += ((float)last_ms / 1000.f);
+                        if (delta_sum > (1.f / kMotionFramesPerSecond))
                         {
-                            const auto vb_c = render_model->vertex_buffer_views.size();
-                            for (uint32_t j = 0; j < vb_c; j++)
+                            skr_live2d_model_update(model_resource, delta_sum);
+                            delta_sum = 0.f;
+                            // update buffer
+                            if (render_model->use_dynamic_buffer)
                             {
-                                auto& view = render_model->vertex_buffer_views[j];
-                                const void* pSrc = nullptr;
-                                uint32_t vcount = 0;
-                                // pos-uv-pos-uv...
-                                if (j % 2 == 0)
+                                const auto vb_c = render_model->vertex_buffer_views.size();
+                                for (uint32_t j = 0; j < vb_c; j++)
                                 {
-                                    pSrc = skr_live2d_model_get_drawable_vertex_positions(
-                                        model_resource, j / 2, &vcount);
+                                    auto& view = render_model->vertex_buffer_views[j];
+                                    const void* pSrc = nullptr;
+                                    uint32_t vcount = 0;
+                                    // pos-uv-pos-uv...
+                                    if (j % 2 == 0)
+                                    {
+                                        pSrc = skr_live2d_model_get_drawable_vertex_positions(
+                                            model_resource, j / 2, &vcount);
+                                    }
+                                    else
+                                    {
+                                        pSrc = skr_live2d_model_get_drawable_vertex_uvs(
+                                            model_resource, (j - 1) / 2, &vcount);
+                                    }
+                                    memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
                                 }
-                                else
-                                {
-                                    pSrc = skr_live2d_model_get_drawable_vertex_uvs(
-                                        model_resource, (j - 1) / 2, &vcount);
-                                }
-                                memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
                             }
                         }
                         // create descriptor sets if not existed
