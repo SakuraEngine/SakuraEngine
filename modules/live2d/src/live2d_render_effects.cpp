@@ -65,7 +65,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                     (float)900, (float)900,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
-                for (uint32_t i = 0; i < drawcalls.count; i++)
+                for (uint32_t i = 0; i < drawcalls.count - 2; i++)
                 {
                     ZoneScopedN("DrawCall");
 
@@ -329,9 +329,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         const auto& cmd = cmds[drawable];
                                         // resources may be ready after produce_drawcall, so we need to check it here
                                         if (push_constants.size() <= dc_idx) return;
-
-                                        // push_constants[dc_idx].world = world;
-                                        // push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
+    
+                                        // push_constants[dc_idx].projection_matrix = skr::math::float4x4();
+                                        // push_constants[dc_idx].clip_matrix = skr::math::multiply(view, proj);
+                                        skr_live2d_model_get_drawable_colors(render_model->model_resource_id, drawable,
+                                            &push_constants[dc_idx].multiply_color,
+                                            &push_constants[dc_idx].screen_color);
+                                        push_constants[dc_idx].base_color = { 1.f, 1.f, 1.f, 1.f };
                                         auto visibility = skr_live2d_model_get_drawable_is_visible(render_model->model_resource_id, drawable);
                                         auto& drawcall = drawcalls->drawcalls[dc_idx];
                                         if (!visibility)
@@ -370,8 +374,12 @@ protected:
     void free_pipeline(ISkrRenderer* renderer);
 
     struct PushConstants {
-        skr::math::float4x4 world;
-        skr::math::float4x4 view_proj;
+        skr::math::float4x4 projection_matrix;
+        skr::math::float4x4 clip_matrix;
+        skr_float4_t base_color;
+        skr_float4_t multiply_color;
+        skr_float4_t screen_color;
+        skr_float4_t channel_flag;
     };
     eastl::vector<PushConstants> push_constants;
     CGPURenderPipelineId pipeline = nullptr;
@@ -453,17 +461,42 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     rp_desc.color_formats = &fmt;
     rp_desc.depth_stencil_format = depth_format;
-    CGPURasterizerStateDescriptor raster_desc = {};
-    raster_desc.cull_mode = CGPU_CULL_MODE_NONE;
-    raster_desc.depth_bias = 0;
-    raster_desc.fill_mode = CGPU_FILL_MODE_SOLID;
-    raster_desc.front_face = CGPU_FRONT_FACE_CCW;
-    rp_desc.rasterizer_state = &raster_desc;
-    CGPUDepthStateDescriptor ds_desc = {};
-    ds_desc.depth_func = CGPU_CMP_LEQUAL;
-    ds_desc.depth_write = true;
-    ds_desc.depth_test = true;
-    rp_desc.depth_state = &ds_desc;
+
+    CGPURasterizerStateDescriptor rs_state = {};
+    rs_state.cull_mode = CGPU_CULL_MODE_NONE;
+    rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
+    rs_state.front_face = CGPU_FRONT_FACE_CCW;
+    rs_state.slope_scaled_depth_bias = 0.f;
+    rs_state.enable_depth_clamp = true;
+    rs_state.enable_scissor = true;
+    rs_state.enable_multi_sample = false;
+    rs_state.depth_bias = 0;
+    rp_desc.rasterizer_state = &rs_state;
+
+    CGPUDepthStateDescriptor depth_state = {};
+    depth_state.depth_write = false;
+    depth_state.depth_test = false;
+    rp_desc.depth_state = &depth_state;
+
+    CGPUBlendStateDescriptor blend_state = {};
+    blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD;
+    blend_state.blend_alpha_modes[0] = CGPU_BLEND_MODE_ADD;
+    blend_state.masks[0] = CGPU_COLOR_MASK_ALL;
+    blend_state.independent_blend = false;
+
+    // Normal
+    blend_state.src_factors[0] = CGPU_BLEND_CONST_SRC_ALPHA;
+    blend_state.dst_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+    blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+
+    // Multiply
+    blend_state.src_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+    blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+
+    rp_desc.blend_state = &blend_state;
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
 
     cgpu_free_shader_library(vs);
