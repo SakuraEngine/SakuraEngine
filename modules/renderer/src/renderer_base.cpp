@@ -169,12 +169,14 @@ CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
             surfaces[window] = surface;
         }
     }
+    int32_t width, height;
+    skr_window_get_extent(window, &width, &height);
     // Create swapchain
     CGPUSwapChainDescriptor chain_desc = {};
     chain_desc.present_queues = &gfx_queue;
     chain_desc.present_queues_count = 1;
-    chain_desc.width = BACK_BUFFER_WIDTH;
-    chain_desc.height = BACK_BUFFER_HEIGHT;
+    chain_desc.width = width;
+    chain_desc.height = height;
     chain_desc.surface = surface;
     chain_desc.imageCount = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
