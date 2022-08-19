@@ -141,7 +141,7 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
                     auto cgpuDevice = skr_renderer_get_cgpu_device();
                     skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
                 };
-                skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
+                skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
             }
         };
         skr_render_effect_access(skr_renderer_get_renderer(), ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
