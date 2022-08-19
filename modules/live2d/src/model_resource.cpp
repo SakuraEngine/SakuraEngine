@@ -582,6 +582,39 @@ void skr_live2d_model_update(skr_live2d_model_resource_id live2d_resource, float
     }
 }
 
+const uint32_t* skr_live2d_model_get_sorted_drawable_list(skr_live2d_model_resource_id live2d_resource)
+{
+    if (live2d_resource)
+    {
+        return live2d_resource->model->get_sorted_drawlist();
+    }
+    return 0;
+}
+
+void skr_live2d_model_get_drawable_colors(skr_live2d_model_resource_id model, uint32_t drawable_index, 
+    struct skr_float4_t* multiply_color, struct skr_float4_t* screen_color)
+{
+    auto _model = model->model->GetModel();
+    const auto _multiply_color = _model->GetMultiplyColor(drawable_index);
+    const auto _screen_color = _model->GetScreenColor(drawable_index);
+    const float opacity = _model->GetDrawableOpacity(drawable_index);
+    if (multiply_color) 
+    {
+        multiply_color->x = _multiply_color.R;
+        multiply_color->y = _multiply_color.G;
+        multiply_color->z = _multiply_color.B;
+        multiply_color->w = _multiply_color.A;
+        multiply_color->w *= opacity;
+    }
+    if (screen_color)
+    {
+        screen_color->x = _screen_color.R;
+        screen_color->y = _screen_color.G;
+        screen_color->z = _screen_color.B;
+        screen_color->w = _screen_color.A;
+    } 
+}
+
 const skr_live2d_vertex_pos_t* skr_live2d_model_get_drawable_vertex_positions(skr_live2d_model_resource_id live2d_resource, uint32_t drawable_index, uint32_t* out_count)
 {
     auto model = live2d_resource->model->GetModel();
@@ -619,15 +652,6 @@ bool skr_live2d_model_get_drawable_is_visible(skr_live2d_model_resource_id live2
         return false;
     }
     return model->GetDrawableDynamicFlagIsVisible(drawable_index);
-}
-
-const uint32_t* skr_live2d_model_get_sorted_drawable_list(skr_live2d_model_resource_id live2d_resource)
-{
-    if (live2d_resource)
-    {
-        return live2d_resource->model->get_sorted_drawlist();
-    }
-    return 0;
 }
 
 void skr_live2d_model_free(skr_live2d_model_resource_id live2d_resource)
