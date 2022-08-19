@@ -84,9 +84,9 @@ type_registry_t::type_registry_t(pool_t& pool)
         type_description_t desc;
         desc.guid = skr::guid::make_guid("{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
         desc.name = "guid";
-        desc.size = 0;
+        desc.size = sizeof(dual_guid_t);
         desc.elementSize = 0;
-        desc.alignment = 0;
+        desc.alignment = alignof(dual_guid_t);
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
