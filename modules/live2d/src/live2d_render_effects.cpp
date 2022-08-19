@@ -70,7 +70,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                     ZoneScopedN("DrawCall");
 
                     auto&& dc = drawcalls.drawcalls[i];
-                    if (dc.desperated) continue;
+                    if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
                     {
                         ZoneScopedN("BindTextures");
                         for (uint32_t j = 0; j < dc.descriptor_set_count; j++)

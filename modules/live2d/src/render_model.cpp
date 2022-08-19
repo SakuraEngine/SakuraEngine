@@ -79,7 +79,8 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     void try_finish()
     {
         if (finished_texture_request < texture_io_requests.size()) return;
-        if (finished_buffer_request < buffer_io_requests.size()) return;
+        const auto bios = buffer_io_requests.size();
+        if (finished_buffer_request < bios) return;
         finish();
     }
     uint32_t finished_texture_request = 0;
@@ -283,6 +284,12 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 ib_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = render_model;
                 vram_service->request(&ib_io, &io_request, &buffer_request);
                 index_buffer_cursor += icount * sizeof(Csm::csmUint16);
+            }
+            else
+            {
+                auto& io_request = render_model->buffer_io_requests[i];
+                io_request.status = SKR_ASYNC_IO_STATUS_OK;
+                render_model->buffer_finish(&io_request);    
             }
         }
     }
