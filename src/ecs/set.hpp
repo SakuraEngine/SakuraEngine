@@ -136,39 +136,39 @@ namespace dual
             return j == rhs.length;
         }
     };
-    void sort(const dual_type_set_t& value);
-    void sort(const dual_entity_set_t& value);
-    bool equal(const dual_type_set_t& a, const dual_type_set_t& b);
-    bool equal(const dual_entity_set_t& a, const dual_entity_set_t& b);
-    bool equal(const dual_entity_type_t& a, const dual_entity_type_t& b);
+    RUNTIME_API void sort(const dual_type_set_t& value);
+    RUNTIME_API void sort(const dual_entity_set_t& value);
+    RUNTIME_API bool equal(const dual_type_set_t& a, const dual_type_set_t& b);
+    RUNTIME_API bool equal(const dual_entity_set_t& a, const dual_entity_set_t& b);
+    RUNTIME_API bool equal(const dual_entity_type_t& a, const dual_entity_type_t& b);
 
-    bool ordered(const dual_type_set_t& value);
-    bool ordered(const dual_entity_set_t& value);
-    bool ordered(const dual_entity_type_t& value);
-    bool ordered(const dual_filter_t& value);
-    bool ordered(const dual_meta_filter_t& value);
-    bool ordered(const dual_delta_type_t& value);
+    RUNTIME_API bool ordered(const dual_type_set_t& value);
+    RUNTIME_API bool ordered(const dual_entity_set_t& value);
+    RUNTIME_API bool ordered(const dual_entity_type_t& value);
+    RUNTIME_API bool ordered(const dual_filter_t& value);
+    RUNTIME_API bool ordered(const dual_meta_filter_t& value);
+    RUNTIME_API bool ordered(const dual_delta_type_t& value);
 
-    size_t hash(const dual_type_set_t& value, size_t basis = _FNV_offset_basis);
-    size_t hash(const dual_entity_set_t& value, size_t basis = _FNV_offset_basis);
-    size_t hash(const dual_filter_t& value, size_t basis = _FNV_offset_basis);
-    size_t hash(const dual_meta_filter_t& value, size_t basis = _FNV_offset_basis);
-    size_t hash(const dual_entity_type_t& value, size_t basis = _FNV_offset_basis);
+    RUNTIME_API size_t hash(const dual_type_set_t& value, size_t basis = _FNV_offset_basis);
+    RUNTIME_API size_t hash(const dual_entity_set_t& value, size_t basis = _FNV_offset_basis);
+    RUNTIME_API size_t hash(const dual_filter_t& value, size_t basis = _FNV_offset_basis);
+    RUNTIME_API size_t hash(const dual_meta_filter_t& value, size_t basis = _FNV_offset_basis);
+    RUNTIME_API size_t hash(const dual_entity_type_t& value, size_t basis = _FNV_offset_basis);
 
-    size_t data_size(const dual_type_set_t& value);
-    size_t data_size(const dual_entity_set_t& value);
-    size_t data_size(const dual_filter_t& value);
-    size_t data_size(const dual_meta_filter_t& value);
-    size_t data_size(const dual_parameters_t& value);
-    size_t data_size(const dual_entity_type_t& value);
+    RUNTIME_API size_t data_size(const dual_type_set_t& value);
+    RUNTIME_API size_t data_size(const dual_entity_set_t& value);
+    RUNTIME_API size_t data_size(const dual_filter_t& value);
+    RUNTIME_API size_t data_size(const dual_meta_filter_t& value);
+    RUNTIME_API size_t data_size(const dual_parameters_t& value);
+    RUNTIME_API size_t data_size(const dual_entity_type_t& value);
 
-    dual_type_set_t clone(const dual_type_set_t& value, char*& buffer);
-    dual_entity_set_t clone(const dual_entity_set_t& value, char*& buffer);
-    dual_filter_t clone(const dual_filter_t& value, char*& buffer);
-    dual_meta_filter_t clone(const dual_meta_filter_t& value, char*& buffer);
-    dual_parameters_t clone(const dual_parameters_t& value, char*& buffer);
-    dual_entity_type_t clone(const dual_entity_type_t& value, char*& buffer);
-    bool match(const dual_entity_type_t& type, const dual_filter_t& value);
+    RUNTIME_API dual_type_set_t clone(const dual_type_set_t& value, char*& buffer);
+    RUNTIME_API dual_entity_set_t clone(const dual_entity_set_t& value, char*& buffer);
+    RUNTIME_API dual_filter_t clone(const dual_filter_t& value, char*& buffer);
+    RUNTIME_API dual_meta_filter_t clone(const dual_meta_filter_t& value, char*& buffer);
+    RUNTIME_API dual_parameters_t clone(const dual_parameters_t& value, char*& buffer);
+    RUNTIME_API dual_entity_type_t clone(const dual_entity_type_t& value, char*& buffer);
+    RUNTIME_API bool match(const dual_entity_type_t& type, const dual_filter_t& value);
 
     
 }
