@@ -35,11 +35,11 @@ bool is_array_small(dual_array_component_t* ptr)
 
 static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data))
 {
-    char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
+    char* dst = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
         forloop (j, 0, view.count)
         {
-            char* buf = (size_t)j * size + src;
+            char* buf = (size_t)j * size + dst;
             auto array = new_array(buf, size, elemSize, align);
             if (constructor)
                 for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
@@ -47,12 +47,20 @@ static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIn
         }
     else if (type == kMaskComponent)
         forloop (j, 0, view.count)
-            ((mask_t*)src)[j] = maskValue;
+            ((mask_t*)dst)[j] = maskValue;
+    else if (type == kGuidComponent)
+    {
+        auto guidDst = (guid_t*)dst;
+        auto registry = type_registry_t::get();
+        forloop (j, 0, view.count)
+            guidDst[j] = registry.make_guid();
+        return;
+    }
     else if (constructor)
         forloop (j, 0, view.count)
-            constructor(view.chunk, view.start + j, (size_t)j * size + src);
+            constructor(view.chunk, view.start + j, (size_t)j * size + dst);
     else
-        memset(src, 0, (size_t)size * view.count);
+        memset(dst, 0, (size_t)size * view.count);
 }
 
 static void destruct_impl(const dual_chunk_view_t& view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data))
