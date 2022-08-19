@@ -4,6 +4,7 @@
 #include "platform/memory.h"
 #include "platform/debug.h"
 #include "skr_live2d/render_model.h"
+#include "live2d_clipping.hpp"
 #include "live2d_helpers.hpp"
 #include <ghc/filesystem.hpp>
 
@@ -14,7 +15,7 @@
 #include "tracy/Tracy.hpp"
 
 struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
-    ~skr_live2d_render_model_impl_t() SKR_NOEXCEPT
+    virtual ~skr_live2d_render_model_impl_t() SKR_NOEXCEPT
     {
         for (auto&& texture : textures)
         {
@@ -27,6 +28,7 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
         cgpu_free_buffer(index_buffer);
         cgpu_free_buffer(pos_buffer);
         cgpu_free_buffer(uv_buffer);
+        CSM_DELETE_SELF(skr_live2d_clipping_manager_t, clipping_manager);
     }
 
     CGPUBufferId index_buffer;
@@ -41,10 +43,20 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     skr_live2d_render_model_async_t() = delete;
-    skr_live2d_render_model_async_t(skr_live2d_render_model_request_t* request)
+    skr_live2d_render_model_async_t(skr_live2d_render_model_request_t* request, skr_live2d_model_resource_id model_resource)
         : skr_live2d_render_model_impl_t(), request(request)
     {
-
+        model_resource_id = model_resource;
+        auto model = model_resource->model->GetModel();
+        if (model->IsUsingMasking())
+        {
+            clipping_manager = CSM_NEW skr_live2d_clipping_manager_t();
+            clipping_manager->Initialize(*model, 
+                model->GetDrawableCount(),
+                model->GetDrawableMasks(), 
+                model->GetDrawableMaskCounts()
+            );
+        }
     }
     void texture_finish(skr_async_io_request_t* p_io_request)
     {
@@ -107,8 +119,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     auto file_dstorage_queue = request->file_dstorage_queue_override;
     auto memory_dstorage_queue = request->memory_dstorage_queue_override;
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
-    auto render_model = SkrNew<skr_live2d_render_model_async_t>(request);
-    render_model->model_resource_id = resource;
+    auto render_model = SkrNew<skr_live2d_render_model_async_t>(request, resource);
     request->render_model = render_model;
 #ifndef _WIN32
     SKR_UNIMPLEMENTED_FUNCTION();

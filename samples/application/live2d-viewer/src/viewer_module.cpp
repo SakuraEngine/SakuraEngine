@@ -141,7 +141,7 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
                     auto cgpuDevice = skr_renderer_get_cgpu_device();
                     skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
                 };
-                skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
+                skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Taohua/Taohua.model3.json", &ram_request);
             }
         };
         skr_render_effect_access(skr_renderer_get_renderer(), ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
@@ -158,8 +158,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     auto window_desc = make_zeroed<SWindowDescroptor>();
     window_desc.centered = true;
     window_desc.resizable = true;
-    window_desc.height = BACK_BUFFER_HEIGHT;
-    window_desc.width = BACK_BUFFER_WIDTH;
+    window_desc.height = 1800;
+    window_desc.width = 1800;
     window = skr_create_window(
         fmt::format("Live2D Viewer [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
         &window_desc);
