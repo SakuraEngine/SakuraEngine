@@ -204,6 +204,9 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     job->batchSize = batchSize;
     job->init = init;
     job->teardown = teardown;
+    job->scheduler = this;
+    job->tasks = nullptr;
+    job->payloads = nullptr;
     arena.forget();
     std::memcpy(job->groups, groups.data(), groupCount * sizeof(dual_group_t*));
     int groupIndex = 0;
@@ -335,7 +338,9 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 auto group = job->groups[i];
                 query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(processView));
             }
-            job->teardown(job->userdata, job->entityCount);
+            if(job->teardown)
+                job->teardown(job->userdata, job->entityCount);
+            job->scheduler->allCounter->Decrement();
         }
         else
         {
@@ -422,10 +427,6 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 auto job = payload->job;
                 if(job->teardown)
                     job->teardown(job->userdata, job->entityCount);
-                dual_free(job->tasks);
-                dual_free(job->payloads);
-                job->~dual_ecs_job_t();
-                dual_free(job);
             };
             forloop (i, 0, batchs.size())
                 _tasks[i] = { taskBody, &payloads[i], TearDown };
@@ -433,15 +434,20 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             job->query->storage->counter->Add(static_cast<const uint32_t>(batchs.size()));
             job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks, ftl::TaskPriority::Normal, job->counter.get());
             dual_free(_tasks);
+            job->scheduler->allCounter->Decrement();
         }
-        job->scheduler->allCounter->Decrement();
     };
     allCounter->Add(1);
     if (!query->storage->counter)
         query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
     query->storage->counter->Add(1);
     auto counter = job->counter;
-    scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter.get());
+    
+    auto TearDown = +[](void* data) {
+        auto job = (dual_ecs_job_t*)data;
+        SkrDelete(job);
+    };
+    scheduler->AddTask({ body, job, TearDown }, ftl::TaskPriority::High, job->counter.get());
     return counter;
 }
 
@@ -570,6 +576,10 @@ dual_job_t::dual_job_t(dual::scheduler_t& scheduler)
 
 dual_ecs_job_t::~dual_ecs_job_t()
 {
+    if(payloads)
+        dual_free(payloads);
+    if(tasks)
+        dual_free(tasks);
 }
 
 extern "C" {
