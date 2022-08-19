@@ -22,97 +22,11 @@
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/mesh_resource.h"
 
+#include "live2d_model_pass.hpp"
+
 #include "tracy/Tracy.hpp"
 
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
-const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
-
-skr_render_pass_name_t live2d_pass_name = "Live2DPass";
-struct RenderPassLive2D : public IPrimitiveRenderPass {
-    void on_register(ISkrRenderer* renderer) override
-    {
-
-    }
-
-    void on_unregister(ISkrRenderer* renderer) override
-    {
-
-    }
-
-    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
-    {
-        auto depth = renderGraph->create_texture(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-            builder.set_name("depth")
-                .extent(900, 900)
-                .format(depth_format)
-                .owns_memory()
-                .allow_depth_stencil();
-        });
-        if (drawcalls.count)
-        {
-            renderGraph->add_render_pass(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
-                const auto out_color = renderGraph->get_texture("backbuffer");
-                const auto depth_buffer = renderGraph->get_texture("depth");
-                builder.set_name("live2d_forward_pass")
-                    // we know that the drawcalls always have a same pipeline
-                    .set_pipeline(drawcalls.drawcalls->pipeline)
-                    .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
-                    .set_depth_stencil(depth_buffer);
-            },
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
-                cgpu_render_encoder_set_viewport(stack.encoder,
-                    0.0f, 0.0f,
-                    (float)900, (float)900,
-                    0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
-                for (uint32_t i = 0; i < drawcalls.count - 2; i++)
-                {
-                    ZoneScopedN("DrawCall");
-
-                    auto&& dc = drawcalls.drawcalls[i];
-                    if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
-                    {
-                        ZoneScopedN("BindTextures");
-                        for (uint32_t j = 0; j < dc.descriptor_set_count; j++)
-                        {
-                            cgpu_render_encoder_bind_descriptor_set(stack.encoder, dc.descriptor_sets[j]);
-                        }
-                    }
-                    {
-                        ZoneScopedN("BindGeometry");
-                        cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                        CGPUBufferId vertex_buffers[2] = {
-                            dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer
-                        };
-                        const uint32_t strides[2] = {
-                            dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride
-                        };
-                        const uint32_t offsets[2] = {
-                            dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset
-                        };
-                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 2, vertex_buffers, strides, offsets);
-                    }
-                    {
-                        ZoneScopedN("PushConstants");
-                        cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
-                    }
-                    {
-                        ZoneScopedN("DrawIndexed");
-                        cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
-                    }
-                }
-            });
-        }
-    }
-
-    skr_render_pass_name_t identity() const override
-    {
-        return live2d_pass_name;
-    }
-};
-RenderPassLive2D* live2d_pass = new RenderPassLive2D();
 
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper
 {
@@ -136,6 +50,7 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
     }
     dual_type_index_t type = DUAL_NULL_TYPE;
 } _RegisterComponentskr_live2d_render_model_comp_tHelper;
+
 template<>
 struct dual_id_of<skr_live2d_render_model_comp_t>
 {
@@ -180,7 +95,10 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         effect_query = dualQ_from_literal(storage, "[in]live2d_identity");
         skr_init_timer(&motion_timer);
         // prepare render resources
+        prepare_pipeline_settings();
         prepare_pipeline(renderer);
+        prepare_mask_pipeline(renderer);
+        prepare_masked_pipeline(renderer);
         // prepare_geometry_resources(renderer);
         skr_live2d_render_view_reset(&view_);
     }
@@ -205,6 +123,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         };
         dualQ_get_views(effect_query, DUAL_LAMBDA(sweepFunction));
         free_pipeline(renderer);
+        free_mask_pipeline(renderer);
+        free_masked_pipeline(renderer);
     }
 
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
@@ -383,8 +303,15 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         }
     }
 protected:
+    void prepare_pipeline_settings();
     void prepare_pipeline(ISkrRenderer* renderer);
+    void prepare_mask_pipeline(ISkrRenderer* renderer);
+    void prepare_masked_pipeline(ISkrRenderer* renderer);
     void free_pipeline(ISkrRenderer* renderer);
+    void free_mask_pipeline(ISkrRenderer* renderer);
+    void free_masked_pipeline(ISkrRenderer* renderer);
+    uint32_t* read_shader_bytes(ISkrRenderer* renderer, const char* name, uint32_t* out_length);
+    CGPUShaderLibraryId create_shader_library(ISkrRenderer* renderer, const char* name, ECGPUShaderStage stage);
 
     struct PushConstants {
         skr::math::float4x4 projection_matrix;
@@ -395,46 +322,74 @@ protected:
         skr_float4_t channel_flag;
     };
     eastl::vector<PushConstants> push_constants;
+
+    CGPUVertexLayout vertex_layout = {};
+    CGPURasterizerStateDescriptor rs_state = {};
+    CGPUDepthStateDescriptor depth_state = {};
+
     CGPURenderPipelineId pipeline = nullptr;
+    CGPURenderPipelineId masked_pipeline = nullptr;
+    CGPURenderPipelineId mask_pipeline = nullptr;
 };
+
+RenderPassLive2D* live2d_pass = new RenderPassLive2D();
 RenderEffectLive2D* live2d_effect = new RenderEffectLive2D();
+
+uint32_t* RenderEffectLive2D::read_shader_bytes(ISkrRenderer* renderer, const char* name, uint32_t* out_length)
+{
+    const auto device = renderer->get_cgpu_device();
+    const auto backend = device->adapter->instance->backend;
+    eastl::string shader_name = name;
+    shader_name.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    auto shader_file = skr_vfs_fopen(resource_vfs, shader_name.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    const uint32_t shader_length = (uint32_t)skr_vfs_fsize(shader_file);
+    auto shader_bytes = (uint32_t*)sakura_malloc(shader_length);
+    skr_vfs_fread(shader_file, shader_bytes, 0, shader_length);
+    skr_vfs_fclose(shader_file);
+    if (out_length) *out_length = shader_length;
+    return shader_bytes;
+}
+
+CGPUShaderLibraryId RenderEffectLive2D::create_shader_library(ISkrRenderer* renderer, const char* name, ECGPUShaderStage stage)
+{
+    const auto device = renderer->get_cgpu_device();
+    uint32_t shader_length = 0;
+    uint32_t* shader_bytes = read_shader_bytes(renderer, name, &shader_length);
+    CGPUShaderLibraryDescriptor shader_desc = {};
+    shader_desc.name = name;
+    shader_desc.stage = stage;
+    shader_desc.code = shader_bytes;
+    shader_desc.code_size = shader_length;
+    CGPUShaderLibraryId shader = cgpu_create_shader_library(device, &shader_desc);
+    sakura_free(shader_bytes);
+    return shader;
+}
+
+void RenderEffectLive2D::prepare_pipeline_settings()
+{
+    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attribute_count = 2;
+
+    rs_state.cull_mode = CGPU_CULL_MODE_NONE;
+    rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
+    rs_state.front_face = CGPU_FRONT_FACE_CCW;
+    rs_state.slope_scaled_depth_bias = 0.f;
+    rs_state.enable_depth_clamp = true;
+    rs_state.enable_scissor = true;
+    rs_state.enable_multi_sample = false;
+    rs_state.depth_bias = 0;
+
+    depth_state.depth_write = false;
+    depth_state.depth_test = false;
+}
 
 void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
 {
     const auto device = renderer->get_cgpu_device();
-    const auto backend = device->adapter->instance->backend;
 
-    uint32_t *vs_bytes, *ps_bytes;
-    eastl::string vsname = u8"shaders/live2d_vertex_shader";
-    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto vsfile = skr_vfs_fopen(resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    const uint32_t vs_length = (uint32_t)skr_vfs_fsize(vsfile);
-    vs_bytes = (uint32_t*)sakura_malloc(vs_length);
-    skr_vfs_fread(vsfile, vs_bytes, 0, vs_length);
-    skr_vfs_fclose(vsfile);
-
-    eastl::string psname = u8"shaders/live2d_pixel_shader";
-    psname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto psfile = skr_vfs_fopen(resource_vfs, psname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    const uint32_t ps_length = (uint32_t)skr_vfs_fsize(psfile);
-    ps_bytes = (uint32_t*)sakura_malloc(ps_length);
-    skr_vfs_fread(psfile, ps_bytes, 0, ps_length);
-    skr_vfs_fclose(psfile);
-
-    CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "live2d_vertex_shader";
-    vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    vs_desc.code = vs_bytes;
-    vs_desc.code_size = vs_length;
-    CGPUShaderLibraryDescriptor ps_desc = {};
-    ps_desc.name = "live2d_pixel_shader";
-    ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
-    ps_desc.code = ps_bytes;
-    ps_desc.code_size = ps_length;
-    CGPUShaderLibraryId vs = cgpu_create_shader_library(device, &vs_desc);
-    CGPUShaderLibraryId ps = cgpu_create_shader_library(device, &ps_desc);
-    sakura_free(vs_bytes);
-    sakura_free(ps_bytes);
+    CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_vs", CGPU_SHADER_STAGE_VERT);
+    CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_ps", CGPU_SHADER_STAGE_FRAG);
 
     CGPUPipelineShaderDescriptor ppl_shaders[2];
     CGPUPipelineShaderDescriptor& ppl_vs = ppl_shaders[0];
@@ -459,11 +414,6 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     rs_desc.static_samplers = &static_sampler;
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
-    CGPUVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attribute_count = 2;
-
     CGPURenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = root_sig;
     rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
@@ -474,22 +424,6 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     rp_desc.color_formats = &fmt;
     rp_desc.depth_stencil_format = depth_format;
-
-    CGPURasterizerStateDescriptor rs_state = {};
-    rs_state.cull_mode = CGPU_CULL_MODE_NONE;
-    rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
-    rs_state.front_face = CGPU_FRONT_FACE_CCW;
-    rs_state.slope_scaled_depth_bias = 0.f;
-    rs_state.enable_depth_clamp = true;
-    rs_state.enable_scissor = true;
-    rs_state.enable_multi_sample = false;
-    rs_state.depth_bias = 0;
-    rp_desc.rasterizer_state = &rs_state;
-
-    CGPUDepthStateDescriptor depth_state = {};
-    depth_state.depth_write = false;
-    depth_state.depth_test = false;
-    rp_desc.depth_state = &depth_state;
 
     CGPUBlendStateDescriptor blend_state = {};
     blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD;
@@ -510,6 +444,8 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
 
     rp_desc.blend_state = &blend_state;
+    rp_desc.rasterizer_state = &rs_state;
+    rp_desc.depth_state = &depth_state;
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
 
     cgpu_free_shader_library(vs);
@@ -520,6 +456,156 @@ void RenderEffectLive2D::free_pipeline(ISkrRenderer* renderer)
 {
     auto sig_to_free = pipeline->root_signature;
     cgpu_free_render_pipeline(pipeline);
+    cgpu_free_root_signature(sig_to_free);
+}
+
+void RenderEffectLive2D::prepare_masked_pipeline(ISkrRenderer* renderer)
+{
+    const auto device = renderer->get_cgpu_device();
+
+    CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_vs", CGPU_SHADER_STAGE_VERT);
+    CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_ps", CGPU_SHADER_STAGE_FRAG);
+
+    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUPipelineShaderDescriptor& ppl_vs = ppl_shaders[0];
+    ppl_vs.library = vs;
+    ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
+    ppl_vs.entry = "main";
+    CGPUPipelineShaderDescriptor& ppl_ps = ppl_shaders[1];
+    ppl_ps.library = ps;
+    ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
+    ppl_ps.entry = "main";
+
+    const char* static_sampler_name = "color_sampler";
+    auto static_sampler = skr_renderer_get_linear_sampler();
+    auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
+    rs_desc.push_constant_count = 1;
+    rs_desc.push_constant_names = &push_constants_name;
+    rs_desc.shader_count = 2;
+    rs_desc.shaders = ppl_shaders;
+    rs_desc.pool = skr_renderer_get_root_signature_pool();
+    rs_desc.static_sampler_count = 1;
+    rs_desc.static_sampler_names = &static_sampler_name;
+    rs_desc.static_samplers = &static_sampler;
+    auto root_sig = cgpu_create_root_signature(device, &rs_desc);
+
+    CGPURenderPipelineDescriptor rp_desc = {};
+    rp_desc.root_signature = root_sig;
+    rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
+    rp_desc.vertex_layout = &vertex_layout;
+    rp_desc.vertex_shader = &ppl_vs;
+    rp_desc.fragment_shader = &ppl_ps;
+    rp_desc.render_target_count = 1;
+    const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
+    rp_desc.color_formats = &fmt;
+    rp_desc.depth_stencil_format = depth_format;
+
+    CGPUBlendStateDescriptor blend_state = {};
+    blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD;
+    blend_state.blend_alpha_modes[0] = CGPU_BLEND_MODE_ADD;
+    blend_state.masks[0] = CGPU_COLOR_MASK_ALL;
+    blend_state.independent_blend = false;
+
+    // Normal
+    blend_state.src_factors[0] = CGPU_BLEND_CONST_SRC_ALPHA;
+    blend_state.dst_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+    blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+
+    // Multiply
+    blend_state.src_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+    blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+
+    rp_desc.blend_state = &blend_state;
+    rp_desc.rasterizer_state = &rs_state;
+    rp_desc.depth_state = &depth_state;
+    masked_pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+
+    cgpu_free_shader_library(vs);
+    cgpu_free_shader_library(ps);
+}
+
+void RenderEffectLive2D::free_masked_pipeline(ISkrRenderer* renderer)
+{
+    auto sig_to_free = masked_pipeline->root_signature;
+    cgpu_free_render_pipeline(masked_pipeline);
+    cgpu_free_root_signature(sig_to_free);
+}
+
+void RenderEffectLive2D::prepare_mask_pipeline(ISkrRenderer* renderer)
+{
+    const auto device = renderer->get_cgpu_device();
+    
+    CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_vs", CGPU_SHADER_STAGE_VERT);
+    CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_ps", CGPU_SHADER_STAGE_FRAG);
+
+    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUPipelineShaderDescriptor& ppl_vs = ppl_shaders[0];
+    ppl_vs.library = vs;
+    ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
+    ppl_vs.entry = "main";
+    CGPUPipelineShaderDescriptor& ppl_ps = ppl_shaders[1];
+    ppl_ps.library = ps;
+    ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
+    ppl_ps.entry = "main";
+
+    const char* static_sampler_name = "color_sampler";
+    auto static_sampler = skr_renderer_get_linear_sampler();
+    auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
+    rs_desc.push_constant_count = 1;
+    rs_desc.push_constant_names = &push_constants_name;
+    rs_desc.shader_count = 2;
+    rs_desc.shaders = ppl_shaders;
+    rs_desc.pool = skr_renderer_get_root_signature_pool();
+    rs_desc.static_sampler_count = 1;
+    rs_desc.static_sampler_names = &static_sampler_name;
+    rs_desc.static_samplers = &static_sampler;
+    auto root_sig = cgpu_create_root_signature(device, &rs_desc);
+
+    CGPURenderPipelineDescriptor rp_desc = {};
+    rp_desc.root_signature = root_sig;
+    rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
+    rp_desc.vertex_layout = &vertex_layout;
+    rp_desc.vertex_shader = &ppl_vs;
+    rp_desc.fragment_shader = &ppl_ps;
+    rp_desc.render_target_count = 1;
+    const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
+    rp_desc.color_formats = &fmt;
+    rp_desc.depth_stencil_format = depth_format;
+
+    CGPUBlendStateDescriptor blend_state = {};
+    blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD;
+    blend_state.blend_alpha_modes[0] = CGPU_BLEND_MODE_ADD;
+    blend_state.masks[0] = CGPU_COLOR_MASK_ALL;
+    blend_state.independent_blend = false;
+
+    // Normal
+    blend_state.src_factors[0] = CGPU_BLEND_CONST_SRC_ALPHA;
+    blend_state.dst_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+    blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+
+    // Multiply
+    blend_state.src_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+    blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
+    blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+
+    rp_desc.blend_state = &blend_state;
+    rp_desc.rasterizer_state = &rs_state;
+    rp_desc.depth_state = &depth_state;
+    mask_pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+
+    cgpu_free_shader_library(vs);
+    cgpu_free_shader_library(ps);
+}
+
+void RenderEffectLive2D::free_mask_pipeline(ISkrRenderer* renderer)
+{
+    auto sig_to_free = mask_pipeline->root_signature;
+    cgpu_free_render_pipeline(mask_pipeline);
     cgpu_free_root_signature(sig_to_free);
 }
 
