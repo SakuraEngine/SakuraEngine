@@ -160,60 +160,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     {
                         auto&& render_model = models[i].vram_request.render_model;
                         auto&& model_resource = models[i].ram_request.model_resource;
-                        last_ms = skr_timer_get_msec(&motion_timer, true);
-                        static float delta_sum = 0.f;
-                        delta_sum += ((float)last_ms / 1000.f);
-                        if (delta_sum > (1.f / kMotionFramesPerSecond))
-                        {
-                            skr_live2d_model_update(model_resource, delta_sum);
-                            delta_sum = 0.f;
-                            // update buffer
-                            if (render_model->use_dynamic_buffer)
-                            {
-                                const auto vb_c = render_model->vertex_buffer_views.size();
-                                for (uint32_t j = 0; j < vb_c; j++)
-                                {
-                                    auto& view = render_model->vertex_buffer_views[j];
-                                    const void* pSrc = nullptr;
-                                    uint32_t vcount = 0;
-                                    // pos-uv-pos-uv...
-                                    if (j % 2 == 0)
-                                    {
-                                        pSrc = skr_live2d_model_get_drawable_vertex_positions(
-                                            model_resource, j / 2, &vcount);
-                                    }
-                                    else
-                                    {
-                                        pSrc = skr_live2d_model_get_drawable_vertex_uvs(
-                                            model_resource, (j - 1) / 2, &vcount);
-                                    }
-                                    memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
-                                }
-                            }
-                        }
-                        // create descriptor sets if not existed
-                        {
-                            const auto ib_c = render_model->index_buffer_views.size();
-                            for (uint32_t j = 0; j < ib_c; j++)
-                            {
-                                auto texture_view = skr_live2d_render_model_get_texture_view(render_model, j);
-                                auto iter = descriptor_sets.find(texture_view);
-                                if (iter == descriptor_sets.end())
-                                {
-                                    CGPUDescriptorSetDescriptor desc_set_desc = {};
-                                    desc_set_desc.root_signature = pipeline->root_signature;
-                                    desc_set_desc.set_index = 0;
-                                    auto desc_set = cgpu_create_descriptor_set(pipeline->device, &desc_set_desc);
-                                    descriptor_sets[texture_view] = desc_set;
-                                    CGPUDescriptorData datas[1];
-                                    datas[0].name = "color_texture";
-                                    datas[0].count = 1;
-                                    datas[0].textures = &texture_view;
-                                    datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
-                                    cgpu_update_descriptor_set(desc_set, datas, 1);
-                                }
-                            }
-                        }
+                        updateModelMotion(render_model);
+                        updateTexture(render_model);
                         const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
                         sorted_drawable_list[render_model] = { list , render_model->index_buffer_views.size() };
                         // grow drawcall size
@@ -303,6 +251,67 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         }
     }
 protected:
+    void updateTexture(skr_live2d_render_model_id render_model)
+    {
+        // create descriptor sets if not existed
+        const auto ib_c = render_model->index_buffer_views.size();
+        for (uint32_t j = 0; j < ib_c; j++)
+        {
+            auto texture_view = skr_live2d_render_model_get_texture_view(render_model, j);
+            auto iter = descriptor_sets.find(texture_view);
+            if (iter == descriptor_sets.end())
+            {
+                CGPUDescriptorSetDescriptor desc_set_desc = {};
+                desc_set_desc.root_signature = pipeline->root_signature;
+                desc_set_desc.set_index = 0;
+                auto desc_set = cgpu_create_descriptor_set(pipeline->device, &desc_set_desc);
+                descriptor_sets[texture_view] = desc_set;
+                CGPUDescriptorData datas[1];
+                datas[0].name = "color_texture";
+                datas[0].count = 1;
+                datas[0].textures = &texture_view;
+                datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
+                cgpu_update_descriptor_set(desc_set, datas, 1);
+            }
+        }
+    }
+
+    void updateModelMotion(skr_live2d_render_model_id render_model)
+    {
+        const auto model_resource = render_model->model_resource_id;
+        last_ms = skr_timer_get_msec(&motion_timer, true);
+        static float delta_sum = 0.f;
+        delta_sum += ((float)last_ms / 1000.f);
+        if (delta_sum > (1.f / kMotionFramesPerSecond))
+        {
+            skr_live2d_model_update(model_resource, delta_sum);
+            delta_sum = 0.f;
+            // update buffer
+            if (render_model->use_dynamic_buffer)
+            {
+                const auto vb_c = render_model->vertex_buffer_views.size();
+                for (uint32_t j = 0; j < vb_c; j++)
+                {
+                    auto& view = render_model->vertex_buffer_views[j];
+                    const void* pSrc = nullptr;
+                    uint32_t vcount = 0;
+                    // pos-uv-pos-uv...
+                    if (j % 2 == 0)
+                    {
+                        pSrc = skr_live2d_model_get_drawable_vertex_positions(
+                            model_resource, j / 2, &vcount);
+                    }
+                    else
+                    {
+                        pSrc = skr_live2d_model_get_drawable_vertex_uvs(
+                            model_resource, (j - 1) / 2, &vcount);
+                    }
+                    memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
+                }
+            }
+        }
+    }
+
     void prepare_pipeline_settings();
     void prepare_pipeline(ISkrRenderer* renderer);
     void prepare_mask_pipeline(ISkrRenderer* renderer);
