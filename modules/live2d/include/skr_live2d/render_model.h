@@ -5,21 +5,8 @@
 #include "cgpu/api.h"
 #include "cgpu/io.h"
 
-#ifdef __cplusplus
-#include <EASTL/vector.h>
-struct skr_live2d_render_model_t {
-    virtual ~skr_live2d_render_model_t() = default;
-    skr_live2d_model_resource_id model_resource_id;
-    bool use_dynamic_buffer = true;
-
-    // pos-uv-pos-uv...
-    eastl::vector<CGPUTextureId> textures;
-    eastl::vector<CGPUTextureViewId> texture_views;
-    eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
-    eastl::vector<skr_index_buffer_view_t> index_buffer_views;
-    eastl::vector<skr_render_primitive_command_t> primitive_commands;
-};
-#endif
+typedef struct skr_live2d_clipping_manager_t skr_live2d_clipping_manager_t;
+typedef struct skr_live2d_clipping_manager_t* skr_live2d_clipping_manager_id;
 typedef struct skr_live2d_render_model_t skr_live2d_render_model_t;
 typedef struct skr_live2d_render_model_t* skr_live2d_render_model_id;
 
@@ -59,3 +46,21 @@ skr_live2d_render_model_get_texture_view(skr_live2d_render_model_id render_model
 
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 
 skr_live2d_render_model_free(skr_live2d_render_model_id render_model);
+
+#ifdef __cplusplus
+#include <EASTL/vector.h>
+struct skr_live2d_render_model_t {
+    virtual ~skr_live2d_render_model_t() = default;
+    skr_live2d_model_resource_id model_resource_id;
+    bool use_dynamic_buffer = true;
+
+    // clipping 
+    skr_live2d_clipping_manager_id clipping_manager;
+    // pos-uv-pos-uv...
+    eastl::vector<CGPUTextureId> textures;
+    eastl::vector<CGPUTextureViewId> texture_views;
+    eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
+    eastl::vector<skr_index_buffer_view_t> index_buffer_views;
+    eastl::vector<skr_render_primitive_command_t> primitive_commands;
+};
+#endif

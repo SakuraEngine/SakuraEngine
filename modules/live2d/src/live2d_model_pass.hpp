@@ -3,10 +3,10 @@
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/mesh_resource.h"
+#include "live2d_helpers.hpp"
 
 #include "tracy/Tracy.hpp"
 
-const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 const skr_render_pass_name_t live2d_pass_name = "Live2DPass";
 
 struct RenderPassLive2D : public IPrimitiveRenderPass {
@@ -25,8 +25,8 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             builder.set_name("depth")
-                .extent(900, 900)
-                .format(depth_format)
+                .extent(1800, 1800)
+                .format(live2d_depth_format)
                 .owns_memory()
                 .allow_depth_stencil();
         });
@@ -45,9 +45,9 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
-                    (float)900, (float)900,
+                    (float)1800, (float)1800,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 1800, 1800);
                 for (uint32_t i = 0; i < drawcalls.count - 2; i++)
                 {
                     ZoneScopedN("DrawCall");

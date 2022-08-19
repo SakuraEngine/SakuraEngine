@@ -12,7 +12,6 @@
 #include "skr_live2d/render_effect.h"
 #include "skr_live2d/render_model.h"
 
-#include "live2d_helpers.hpp"
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"
 
@@ -23,6 +22,7 @@
 #include "skr_renderer/mesh_resource.h"
 
 #include "live2d_model_pass.hpp"
+#include "live2d_mask_pass.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -160,6 +160,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     {
                         auto&& render_model = models[i].vram_request.render_model;
                         auto&& model_resource = models[i].ram_request.model_resource;
+                        // TODO: move this to (some manager?) other than update morph/phys in a render pass
                         updateModelMotion(render_model);
                         updateTexture(render_model);
                         const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
@@ -172,6 +173,27 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
             push_constants.resize(c);
+            return c;
+        }
+        if (strcmp(pass->identity(), live2d_mask_pass_name) == 0)
+        {
+            uint32_t c = 0;
+            auto counterF = [&](dual_chunk_view_t* r_cv) {
+                auto models = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
+                for (uint32_t i = 0; i < r_cv->count; i++)
+                {
+                    if (models[i].vram_request.is_ready())
+                    {
+                        auto&& render_model = models[i].vram_request.render_model;
+                        auto&& model_resource = models[i].ram_request.model_resource;
+                        
+
+                    }
+                }
+            };
+            dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+            mask_push_constants.clear();
+            mask_push_constants.resize(c);
             return c;
         }
         return 0;
@@ -331,6 +353,7 @@ protected:
         skr_float4_t channel_flag;
     };
     eastl::vector<PushConstants> push_constants;
+    eastl::vector<PushConstants> mask_push_constants;
 
     CGPUVertexLayout vertex_layout = {};
     CGPURasterizerStateDescriptor rs_state = {};
@@ -340,7 +363,7 @@ protected:
     CGPURenderPipelineId masked_pipeline = nullptr;
     CGPURenderPipelineId mask_pipeline = nullptr;
 };
-
+MaskPassLive2D* live2d_mask_pass = new MaskPassLive2D();
 RenderPassLive2D* live2d_pass = new RenderPassLive2D();
 RenderEffectLive2D* live2d_effect = new RenderEffectLive2D();
 
@@ -432,7 +455,7 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     rp_desc.render_target_count = 1;
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     rp_desc.color_formats = &fmt;
-    rp_desc.depth_stencil_format = depth_format;
+    rp_desc.depth_stencil_format = live2d_depth_format;
 
     CGPUBlendStateDescriptor blend_state = {};
     blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD;
@@ -507,7 +530,7 @@ void RenderEffectLive2D::prepare_masked_pipeline(ISkrRenderer* renderer)
     rp_desc.render_target_count = 1;
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     rp_desc.color_formats = &fmt;
-    rp_desc.depth_stencil_format = depth_format;
+    rp_desc.depth_stencil_format = live2d_depth_format;
 
     CGPUBlendStateDescriptor blend_state = {};
     blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD;
@@ -582,7 +605,7 @@ void RenderEffectLive2D::prepare_mask_pipeline(ISkrRenderer* renderer)
     rp_desc.render_target_count = 1;
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     rp_desc.color_formats = &fmt;
-    rp_desc.depth_stencil_format = depth_format;
+    rp_desc.depth_stencil_format = live2d_depth_format;
 
     CGPUBlendStateDescriptor blend_state = {};
     blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD;
@@ -622,6 +645,7 @@ void skr_live2d_initialize_render_effects(live2d_render_graph_t* render_graph, s
 {
     auto renderer = skr_renderer_get_renderer();
     live2d_effect->resource_vfs = resource_vfs;
+    skr_renderer_register_render_pass(renderer, live2d_mask_pass_name, live2d_mask_pass);
     skr_renderer_register_render_pass(renderer, live2d_pass_name, live2d_pass);
     skr_renderer_register_render_effect(renderer, live2d_effect_name, live2d_effect);
 }
@@ -630,7 +654,9 @@ void skr_live2d_finalize_render_effects(live2d_render_graph_t* render_graph, str
 {
     auto renderer = skr_renderer_get_renderer();
     skr_renderer_remove_render_pass(renderer, live2d_pass_name);
+    skr_renderer_remove_render_pass(renderer, live2d_mask_pass_name);
     skr_renderer_remove_render_effect(renderer, live2d_effect_name);
     delete live2d_effect;
     delete live2d_pass;
+    delete live2d_mask_pass;
 }

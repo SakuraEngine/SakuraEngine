@@ -46,6 +46,15 @@ struct L2DRequestCallbackData
 };
 
 namespace Live2D { namespace Cubism { namespace Framework {
+    static constexpr csmChar* kMotionGroupIdle = "Idle"; // アイドリング
+    static constexpr csmChar* kMotionGroupTapBody = "TapBody"; // 体をタップしたとき
+    // モーションの優先度定数
+    static constexpr csmInt32 kPriorityNone = 0;
+    static constexpr csmInt32 kPriorityIdle = 1;
+    static constexpr csmInt32 kPriorityNormal = 2;
+    static constexpr csmInt32 kPriorityForce = 3;
+    static constexpr csmInt32 kColorChannelCount = 4;
+
     class csmUserModel : public CubismUserModel, public IAsyncL2DResourceInterface
     {
         friend class csmMotionMap;
@@ -58,14 +67,6 @@ namespace Live2D { namespace Cubism { namespace Framework {
         const uint32_t* get_sorted_drawlist() const SKR_NOEXCEPT;
 
         eastl::string homePath;
-
-        const csmChar* kMotionGroupIdle = "Idle"; // アイドリング
-        const csmChar* kMotionGroupTapBody = "TapBody"; // 体をタップしたとき
-        // モーションの優先度定数
-        const csmInt32 kPriorityNone = 0;
-        const csmInt32 kPriorityIdle = 1;
-        const csmInt32 kPriorityNormal = 2;
-        const csmInt32 kPriorityForce = 3;
 
     protected:
         Csm::CubismMotionQueueEntryHandle startMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
@@ -119,6 +120,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
     };
 }}}
 
+#include "cgpu/api.h"
 #include "utils/types.h"
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"
@@ -128,3 +130,5 @@ struct live2d_render_view_t {
     Csm::CubismViewMatrix view_matrix;
     skr_float4_t clear_color;
 };
+
+const ECGPUFormat live2d_depth_format = CGPU_FORMAT_D32_SFLOAT;
