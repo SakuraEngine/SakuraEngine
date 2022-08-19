@@ -464,6 +464,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             attachment.view = texture_view_pool.allocate(view_desc, frame_index);
             attachment.load_action = pass->load_actions[write_edge->mrt_index];
             attachment.store_action = pass->store_actions[write_edge->mrt_index];
+            attachment.clear_color = write_edge->clear_value;
             color_attachments.emplace_back(attachment);
         }
     }

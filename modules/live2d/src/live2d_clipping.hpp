@@ -122,6 +122,13 @@ public:
     csmVector<CubismClippingContext*>* GetClippingContextListForDraw() SKR_NOEXCEPT;
 
     /**
+     * @brief   マスク描画に使用するクリッピングマスクのリストを取得する
+     *
+     * @return  マスク描画に使用するクリッピングマスクのリスト
+     */
+    csmVector<CubismClippingContext*>* GetClippingContextListForMask() SKR_NOEXCEPT;
+
+    /**
      *@brief  クリッピングマスクバッファのサイズを設定する
      *
      *@param  size -> クリッピングマスクバッファのサイズ

@@ -158,8 +158,9 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     auto window_desc = make_zeroed<SWindowDescroptor>();
     window_desc.centered = true;
     window_desc.resizable = true;
-    window_desc.height = 1800;
-    window_desc.width = 1800;
+    // TODO: Resizable swapchain
+    window_desc.height = 1440;
+    window_desc.width = 1440;
     window = skr_create_window(
         fmt::format("Live2D Viewer [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
         &window_desc);

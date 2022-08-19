@@ -79,10 +79,10 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8
 }
 
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
-    uint32_t mrt_index, TextureRTVHandle handle, ECGPULoadAction load_action,
+    uint32_t mrt_index, TextureRTVHandle handle, ECGPULoadAction load_action, CGPUClearValue clear_color,
     ECGPUStoreAction store_action) SKR_NOEXCEPT
 {
-    auto&& edge = node.out_texture_edges.emplace_back(new TextureRenderEdge(mrt_index, handle._this));
+    auto&& edge = node.out_texture_edges.emplace_back(new TextureRenderEdge(mrt_index, handle._this, clear_color));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.load_actions[mrt_index] = load_action;
     node.store_actions[mrt_index] = store_action;
@@ -93,7 +93,8 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stenci
     ECGPULoadAction dload_action, ECGPUStoreAction dstore_action,
     ECGPULoadAction sload_action, ECGPUStoreAction sstore_action) SKR_NOEXCEPT
 {
-    auto&& edge = node.out_texture_edges.emplace_back(new TextureRenderEdge(CGPU_MAX_MRT_COUNT, handle._this, CGPU_RESOURCE_STATE_DEPTH_WRITE));
+    auto&& edge = node.out_texture_edges.emplace_back(
+        new TextureRenderEdge(CGPU_MAX_MRT_COUNT, handle._this, fastclear_0000, CGPU_RESOURCE_STATE_DEPTH_WRITE));
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.depth_load_action = dload_action;
     node.depth_store_action = dstore_action;
@@ -262,7 +263,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(Buf
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst) SKR_NOEXCEPT
 {
     auto&& in_edge = node.in_texture_edges.emplace_back(new TextureReadEdge(0, 0, src._this, CGPU_RESOURCE_STATE_COPY_SOURCE));
-    auto&& out_edge = node.out_texture_edges.emplace_back(new TextureRenderEdge(0, dst._this, CGPU_RESOURCE_STATE_COPY_DEST));
+    auto&& out_edge = node.out_texture_edges.emplace_back(new TextureRenderEdge(0, dst._this, fastclear_0000, CGPU_RESOURCE_STATE_COPY_DEST));
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
     node.t2ts.emplace_back(src, dst);
