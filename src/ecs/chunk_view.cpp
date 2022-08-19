@@ -48,6 +48,8 @@ static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIn
     else if (type == kMaskComponent)
         forloop (j, 0, view.count)
             ((mask_t*)dst)[j] = maskValue;
+    else if (type == kDirtyComponent)
+        memset(dst, 0xFFFFFFFF, (size_t)size * view.count);
     else if (type == kGuidComponent)
     {
         auto guidDst = (guid_t*)dst;
