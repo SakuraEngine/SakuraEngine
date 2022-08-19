@@ -430,6 +430,11 @@ void skr_live2d_clipping_manager_t::SetupLayoutBounds(csmInt32 usingClipCount) c
     }
 }
 
+CubismRenderer::CubismTextureColor* skr_live2d_clipping_manager_t::GetChannelFlagAsColor(csmInt32 channelNo) SKR_NOEXCEPT
+{
+    return _channelColors[channelNo];
+}
+
 void skr_live2d_clipping_manager_t::CalcClippedDrawTotalBounds(CubismModel& model, CubismClippingContext* clippingContext) SKR_NOEXCEPT
 {
     // 被クリッピングマスク（マスクされる描画オブジェクト）の全体の矩形
@@ -488,4 +493,14 @@ void skr_live2d_clipping_manager_t::CalcClippedDrawTotalBounds(CubismModel& mode
         clippingContext->_allClippedDrawRect->Width = w;
         clippingContext->_allClippedDrawRect->Height = h;
     }
+}
+
+csmVector<CubismClippingContext*>* skr_live2d_clipping_manager_t::GetClippingContextListForDraw() SKR_NOEXCEPT
+{
+    return &_clippingContextListForDraw;
+}
+
+csmVector<CubismClippingContext*>* skr_live2d_clipping_manager_t::GetClippingContextListForMask() SKR_NOEXCEPT
+{
+    return &_clippingContextListForMask;
 }

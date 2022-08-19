@@ -112,8 +112,8 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
         }
     }
 
-    eastl::unordered_map<eastl::string, IPrimitiveRenderPass*> passes;
-    eastl::unordered_map<eastl::string, IRenderEffectProcessor*> processors;
+    eastl::vector_map<eastl::string, IPrimitiveRenderPass*> passes;
+    eastl::vector_map<eastl::string, IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 protected:
     eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_t>> drawcall_arena;
