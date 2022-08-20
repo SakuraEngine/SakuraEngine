@@ -63,7 +63,7 @@ skr_live2d_clipping_manager_t* CubismClippingContext::GetClippingManager() SKR_N
 
 skr_live2d_clipping_manager_t::skr_live2d_clipping_manager_t() SKR_NOEXCEPT
     : _currentFrameNo(0)
-    , _clippingMaskBufferSize(256, 256)
+    , _clippingMaskBufferSize(kMaskResolution, kMaskResolution)
 {
     CubismRenderer::CubismTextureColor* tmp = NULL;
     tmp = CSM_NEW CubismRenderer::CubismTextureColor();
@@ -197,22 +197,6 @@ void skr_live2d_clipping_manager_t::SetupClippingContext(CubismModel& model, boo
     // マスク作成処理
     if (usingClipCount > 0)
     {
-        //if (!high_precision_mask)
-        //{
-        //    // ビューポートは退避済み
-        //    // 生成したFrameBufferと同じサイズでビューポートを設定
-        //    CubismRenderer_D3D11::GetRenderStateManager()->SetViewport(renderContext,
-        //        0,
-        //        0,
-        //        static_cast<FLOAT>(_clippingMaskBufferSize),
-        //        static_cast<FLOAT>(_clippingMaskBufferSize),
-        //        0.0f, 1.0f);
-
-        //    useTarget.BeginDraw(renderContext);
-        //    // 1が無効（描かれない）領域、0が有効（描かれる）領域。（シェーダで Cd*Csで0に近い値をかけてマスクを作る。1をかけると何も起こらない）
-        //    useTarget.Clear(renderContext, 1.0f, 1.0f, 1.0f, 1.0f);
-        //}
-
         // 各マスクのレイアウトを決定していく
         SetupLayoutBounds(high_precision_mask ? 0 : usingClipCount);
 
@@ -227,7 +211,6 @@ void skr_live2d_clipping_manager_t::SetupClippingContext(CubismModel& model, boo
             const csmFloat32 MARGIN = 0.05f;
             csmFloat32 scaleX = 0.0f;
             csmFloat32 scaleY = 0.0f;
-
 
             if (high_precision_mask)
             {

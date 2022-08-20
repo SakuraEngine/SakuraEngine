@@ -380,7 +380,6 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
         {
             CGPUShaderResource* reflSlot = &paramTable->resources[i_register];
             visStages |= reflSlot->stages;
-            // Record RS::mRootConstantParam directly, it'll be copied to the end of rootParams list
             {
                 D3D12_DESCRIPTOR_RANGE1* descRange = &cbvSrvUavRanges[i_range];
                 descRange->RegisterSpace = reflSlot->set;
@@ -489,10 +488,10 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     // #NOTE : In non SLI mode, mNodeCount will be 0 which sets nodeMask to
     // default value
     CHECK_HRESULT(D->pDxDevice->CreateRootSignature(
-    SINGLE_GPU_NODE_MASK,
-    rootSignatureString->GetBufferPointer(),
-    rootSignatureString->GetBufferSize(),
-    IID_ARGS(&RS->pDxRootSignature)));
+        SINGLE_GPU_NODE_MASK,
+        rootSignatureString->GetBufferPointer(),
+        rootSignatureString->GetBufferSize(),
+        IID_ARGS(&RS->pDxRootSignature)));
     cgpu_free(rootParams);
     cgpu_free(cbvSrvUavRanges);
     // [RS POOL] INSERTION
@@ -1636,6 +1635,9 @@ void cgpu_render_encoder_bind_descriptor_set_d3d12(CGPURenderPassEncoderId encod
 {
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)encoder;
     const CGPUDescriptorSet_D3D12* Set = (CGPUDescriptorSet_D3D12*)set;
+    CGPURootSignature_D3D12* RS = (CGPURootSignature_D3D12*)Set->super.root_signature;
+    SKR_ASSERT(RS);
+    reset_root_signature(Cmd, CGPU_PIPELINE_TYPE_GRAPHICS, RS->pDxRootSignature);
     if (Set->mCbvSrvUavHandle != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
     {
         Cmd->pDxCmdList->SetGraphicsRootDescriptorTable(set->index,

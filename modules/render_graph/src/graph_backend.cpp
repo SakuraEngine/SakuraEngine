@@ -202,6 +202,7 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
         root_sig = ((RenderPassNode*)pass)->root_signature;
     else if (pass->pass_type == EPassType::Compute)
         root_sig = ((ComputePassNode*)pass)->root_signature;
+    if (!root_sig) return {};
     auto&& desc_set_heap = executor.desc_set_pool.find(root_sig);
     if (desc_set_heap == executor.desc_set_pool.end())
         executor.desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
@@ -235,9 +236,9 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
                 const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 const bool is_depth_only = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 view_desc.aspects =
-                is_depth_stencil ?
-                is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL :
-                CGPU_TVA_COLOR;
+                    is_depth_stencil ?
+                    is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL :
+                    CGPU_TVA_COLOR;
                 view_desc.usages = CGPU_TVU_SRV;
                 view_desc.dims = read_edge->get_dimension();
                 srvs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
@@ -369,8 +370,8 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         cgpu_compute_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
-        if (desc_set->updated)
-            cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
+        if (!desc_set->updated) continue;
+        cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
     }
     {
         ZoneScopedN("PassExecutor");
@@ -476,12 +477,11 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.depth_stencil = &ds_attachment;
     stack.cmd = executor.gfx_cmd_buf;
     stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
-    if(pass->pipeline)
-        cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
+    if (pass->pipeline) cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
-        if (desc_set->updated)
-            cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
+        if (!desc_set->updated) continue;
+        cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
     }
     {
         ZoneScopedN("PassExecutor");

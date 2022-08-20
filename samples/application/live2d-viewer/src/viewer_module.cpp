@@ -1,3 +1,5 @@
+#include <EASTL/algorithm.h>
+
 #include "../../../cgpu/common/utils.h"
 #include "utils/log.h"
 #include "imgui/skr_imgui.h"
@@ -6,6 +8,7 @@
 
 #include "ghc/filesystem.hpp"
 #include "platform/vfs.h"
+#include "platform/time.h"
 #include "utils/io.hpp"
 #include "cgpu/io.hpp"
 
@@ -123,7 +126,6 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
             auto file_dstorage_queue = skr_renderer_get_file_dstorage_queue();
             auto memory_dstorage_queue = skr_renderer_get_memory_dstorage_queue();
             auto mesh_comps = (skr_live2d_render_model_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_live2d_render_model_comp_t>::get());
-            SKR_ASSERT(view->count == 1);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& vram_request = mesh_comps[i].vram_request;
@@ -141,7 +143,10 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
                     auto cgpuDevice = skr_renderer_get_cgpu_device();
                     skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
                 };
-                skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Taohua/Taohua.model3.json", &ram_request);
+                if (i == 0)
+                    skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
+                else
+                    skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
             }
         };
         skr_render_effect_access(skr_renderer_get_renderer(), ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
@@ -155,6 +160,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
         return -1;
     auto cgpuDevice = skr_renderer_get_cgpu_device();
+    auto adapter_detail = cgpu_query_adapter_detail(cgpuDevice->adapter);
     auto window_desc = make_zeroed<SWindowDescroptor>();
     window_desc.centered = true;
     window_desc.resizable = true;
@@ -179,7 +185,12 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     create_imgui_resources(renderGraph, resource_vfs);
     skr_live2d_initialize_render_effects(renderGraph, resource_vfs);
     create_test_scene(resource_vfs, ram_service, vram_service);
-        
+    SHiresTimer tick_timer;
+    int64_t elapsed_us = 0;
+    int64_t elapsed_frame = 0;
+    uint32_t fps = 60;
+    skr_init_hires_timer(&tick_timer);
+
     bool quit = false;
     while (!quit)
     {
@@ -195,6 +206,15 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         }
         // LoopBody
         ZoneScopedN("LoopBody");
+        int64_t us = skr_hires_timer_get_usec(&tick_timer, true);
+        elapsed_us += us;
+        elapsed_frame += 1;
+        if (elapsed_us > (1000 * 1000))
+        {
+            fps = elapsed_frame;
+            elapsed_frame = 0;
+            elapsed_us = 0;
+        }
         {
             ZoneScopedN("ImGUI");
 
@@ -206,6 +226,17 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         }
         {
             ImGui::Begin("Live2DViewer");
+#ifdef _DEBUG
+            ImGui::Text("Debug Build");
+#else
+            ImGui::Text("Shipping Build");
+#endif
+            ImGui::Text("Graphics: %s", adapter_detail->vendor_preset.gpu_name);
+            int32_t wind_width = 0, wind_height = 0;
+            skr_window_get_extent(window, &wind_width, &wind_height);
+            ImGui::Text("Resolution: %dx%d", wind_width, wind_height);
+            ImGui::Text("SimulationFPS: %d", 240);
+            ImGui::Text("RenderFPS: %d", (uint32_t)fps);
             ImGui::End();
         }
         {
