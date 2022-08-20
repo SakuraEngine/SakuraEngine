@@ -588,7 +588,7 @@ const uint32_t* skr_live2d_model_get_sorted_drawable_list(skr_live2d_model_resou
     {
         return live2d_resource->model->get_sorted_drawlist();
     }
-    return 0;
+    return nullptr;
 }
 
 void skr_live2d_model_get_drawable_colors(skr_live2d_model_resource_id model, uint32_t drawable_index, 

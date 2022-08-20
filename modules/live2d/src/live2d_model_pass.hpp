@@ -36,9 +36,10 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
                 const auto out_color = renderGraph->get_texture("backbuffer");
                 const auto depth_buffer = renderGraph->get_texture("depth");
+                const auto mask_buffer = renderGraph->get_texture("live2d_mask");
                 builder.set_name("live2d_forward_pass")
-                    // we know that the drawcalls always have a same pipeline
-                    .set_pipeline(drawcalls.drawcalls->pipeline)
+                    .set_root_signature(drawcalls.drawcalls->pipeline->root_signature)
+                    .read("mask_texture", mask_buffer)
                     .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
                     .set_depth_stencil(depth_buffer);
             },
@@ -48,12 +49,19 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                     (float)Csm::kScreenResolution, (float)Csm::kScreenResolution,
                     0.f, 1.f);
                 cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, Csm::kScreenResolution, Csm::kScreenResolution);
+                CGPURenderPipelineId old_pipeline = nullptr;
                 for (uint32_t i = 0; i < drawcalls.count; i++)
                 {
                     ZoneScopedN("DrawCall");
 
                     auto&& dc = drawcalls.drawcalls[i];
                     if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
+
+                    if (old_pipeline != dc.pipeline)
+                    {
+                        cgpu_render_encoder_bind_pipeline(stack.encoder, dc.pipeline);
+                        old_pipeline = dc.pipeline;
+                    }
                     {
                         ZoneScopedN("BindTextures");
                         for (uint32_t j = 0; j < dc.descriptor_set_count; j++)

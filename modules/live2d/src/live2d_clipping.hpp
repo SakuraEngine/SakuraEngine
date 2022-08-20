@@ -149,7 +149,7 @@ public:
 
     csmVector<CubismClippingContext*>               _clippingContextListForMask;   ///< マスク用クリッピングコンテキストのリスト
     csmVector<CubismClippingContext*>               _clippingContextListForDraw;   ///< 描画用クリッピングコンテキストのリスト
-    CubismVector2                                        _clippingMaskBufferSize; ///< クリッピングマスクのバッファサイズ（初期値:256）
+    CubismVector2                                   _clippingMaskBufferSize; ///< クリッピングマスクのバッファサイズ（初期値:256）
 
     CubismMatrix44  _tmpMatrix;              ///< マスク計算用の行列
     CubismMatrix44  _tmpMatrixForMask;       ///< マスク計算用の行列

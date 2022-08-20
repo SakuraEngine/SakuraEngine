@@ -91,8 +91,8 @@ protected:
     {
     }
     RenderPassExecuteFunction executor;
-    CGPURenderPipelineId pipeline;
-    CGPURootSignatureId root_signature;
+    CGPURenderPipelineId pipeline = nullptr;
+    CGPURootSignatureId root_signature = nullptr;
     ECGPULoadAction load_actions[CGPU_MAX_MRT_COUNT + 1];
     ECGPUStoreAction store_actions[CGPU_MAX_MRT_COUNT + 1];
     ECGPULoadAction depth_load_action;
