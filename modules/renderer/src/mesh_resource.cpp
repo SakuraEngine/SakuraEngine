@@ -177,6 +177,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
     struct CallbackData
     {
         skr_gltf_ram_io_request_t* gltfRequest;   
+        skr_async_ram_destination_t destination;
         eastl::string u8Path;
     };
     auto callbackData = SkrNew<CallbackData>();
@@ -189,9 +190,9 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
         auto cbData = (CallbackData*)data;
         cgltf_options options = {};
         struct cgltf_data* gltf_data_ = nullptr;
-        if (request->bytes)
+        if (cbData->destination.bytes)
         {
-            cgltf_result result = cgltf_parse(&options, request->bytes, request->size, &gltf_data_);
+            cgltf_result result = cgltf_parse(&options, cbData->destination.bytes, cbData->destination.size, &gltf_data_);
             if (result != cgltf_result_success)
             {
                 gltf_data_ = nullptr;
@@ -265,9 +266,9 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                 }
             }
         }
-        sakura_free(request->bytes);
-        request->bytes = nullptr;
-        request->size = 0;
+        sakura_free(cbData->destination.bytes);
+        cbData->destination.bytes = nullptr;
+        cbData->destination.size = 0;
         skr_atomic32_store_relaxed(&cbData->gltfRequest->gltf_status, SKR_ASYNC_IO_STATUS_OK);
         cbData->gltfRequest->callback(cbData->gltfRequest, cbData->gltfRequest->callback_data);
         SkrDelete(cbData);
@@ -281,7 +282,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
         callbackData->u8Path = gltfPath.c_str();
     }
     callbackData->gltfRequest = gltfRequest;
-    ioService->request(gltfRequest->vfs_override, &ramIO, &gltfRequest->ioRequest);
+    ioService->request(gltfRequest->vfs_override, &ramIO, &gltfRequest->ioRequest, &callbackData->destination);
 }
 #endif
 

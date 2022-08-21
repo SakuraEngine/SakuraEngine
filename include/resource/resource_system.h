@@ -52,6 +52,7 @@ struct SResourceRequest {
     SResourceSystem* system;
     skr_resource_record_t* resourceRecord;
     skr_async_io_request_t request;
+    skr_async_ram_destination_t destination;
     SResourceFactory* factory;
     skr_vfs_t* vfs;
     ghc::filesystem::path path;
