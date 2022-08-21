@@ -34,6 +34,9 @@ void SkrRendererModule::on_load(int argc, char** argv)
     SKR_LOG_INFO("skr renderer loaded!");
 
     renderer = create_renderer_impl();
+    bool enable_debug_layer = false;
+    bool enable_gpu_based_validation = false;
+    bool enable_set_name = true;
     for (auto i = 0; i < argc; i++)
     {
         if (::strcmp(argv[i], "--vulkan") == 0)
@@ -52,8 +55,11 @@ void SkrRendererModule::on_load(int argc, char** argv)
             renderer->backend = CGPU_BACKEND_VULKAN;
 #endif
         }
+        enable_debug_layer = ::strcmp(argv[i], "--debug_layer");
+        enable_gpu_based_validation = ::strcmp(argv[i], "--gpu_based_validation");
+        enable_set_name = ::strcmp(argv[i], "--gpu_obj_name");
     }
-    renderer->initialize();
+    renderer->initialize(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 }
 
 void SkrRendererModule::on_unload()
