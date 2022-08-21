@@ -51,7 +51,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
 {
     ZoneScopedN("RenderGraphCompile");
     {
-        ZoneScopedN("ull");
+        ZoneScopedN("Cull");
         // 1.cull
         resources.erase(
         eastl::remove_if(resources.begin(), resources.end(),
