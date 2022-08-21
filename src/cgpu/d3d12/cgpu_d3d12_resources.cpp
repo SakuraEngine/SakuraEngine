@@ -390,6 +390,7 @@ struct CGPUTextureAliasing_D3D12 : public CGPUTexture_D3D12 {
 CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc)
 {
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)device->adapter;
     bool can_alias_allocation = true;
     bool is_dedicated = false;
     ID3D12Resource* pDxResource = nullptr;
@@ -548,11 +549,25 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                 &pDxAllocation, IID_ARGS(&pDxResource));
             if (hres != S_OK)
             {
-                SKR_LOG_FATAL("[D3D12] Create Texture Resorce Failed With HRESULT %d! \n\tWith Name: %s\n\t Size: %dx%d \n\t Format: %s \n\t Sample Count: %d", 
+                SKR_LOG_FATAL("[D3D12] Create Texture Resorce Failed With HRESULT %d! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
                     hres,
                     desc->name ? desc->name : "", desc->width, desc->height, 
                     desc->format, desc->sample_count);
+                SKR_LOG_FATAL("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
+                    A->adapter_detail.format_supports[desc->format].render_target_write,
+                    A->adapter_detail.format_supports[desc->format].shader_read,
+                    A->adapter_detail.format_supports[desc->format].shader_write);
                 SKR_ASSERT(0);
+            }
+            else
+            {
+                SKR_LOG_DEBUG("[D3D12] Create Texture Resource Succeed! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
+                    desc->name ? desc->name : "", desc->width, desc->height, 
+                    desc->format, desc->sample_count);
+                SKR_LOG_DEBUG("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
+                    A->adapter_detail.format_supports[desc->format].render_target_write,
+                    A->adapter_detail.format_supports[desc->format].shader_read,
+                    A->adapter_detail.format_supports[desc->format].shader_write);
             }
         }
         is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
