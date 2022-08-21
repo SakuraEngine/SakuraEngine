@@ -7,7 +7,7 @@
 struct SKR_RENDERER_API ISkrRenderer {
 #ifdef __cplusplus
     virtual ~ISkrRenderer() = default;
-    virtual void initialize() = 0;
+    virtual void initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name) = 0;
     virtual void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) = 0;
     virtual void finalize() = 0;
     virtual CGPUDeviceId get_cgpu_device() const = 0;
@@ -37,7 +37,7 @@ struct SKR_RENDERER_API Renderer : public ISkrRenderer {
 
 public:
     virtual ~Renderer() = default;
-    virtual void initialize() override;
+    virtual void initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name) override;
     virtual void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) = 0;
     virtual void finalize() override;
 
@@ -77,7 +77,7 @@ public:
     CGPUSwapChainId register_window(SWindowHandle window);
 
 protected:
-    void create_api_objects();
+    void create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name);
 
     // Device objects
     uint32_t backbuffer_index = 0;
