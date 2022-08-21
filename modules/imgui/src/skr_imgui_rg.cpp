@@ -236,7 +236,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     tex_desc.array_size = 1;
     tex_desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
     tex_desc.mip_levels = 1;
-    tex_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
+    tex_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     tex_desc.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
     tex_desc.owner_queue = queue;
     font_texture = cgpu_create_texture(queue->device, &tex_desc);
