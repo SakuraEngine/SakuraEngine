@@ -543,9 +543,17 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
 
         if (!desc->is_aliasing)
         {
-            CHECK_HRESULT(D->pResourceAllocator->CreateResource(
-            &alloc_desc, &resDesc, res_states, pClearValue,
-            &pDxAllocation, IID_ARGS(&pDxResource)));
+            auto hres = D->pResourceAllocator->CreateResource(
+                &alloc_desc, &resDesc, res_states, pClearValue,
+                &pDxAllocation, IID_ARGS(&pDxResource));
+            if (hres != S_OK)
+            {
+                SKR_LOG_FATAL("[D3D12] Create Texture Resorce Failed With HRESULT %d! \n\tWith Name: %s\n\t Size: %dx%d \n\t Format: %s \n\t Sample Count: %d", 
+                    hres,
+                    desc->name ? desc->name : "", desc->width, desc->height, 
+                    desc->format, desc->sample_count);
+                SKR_ASSERT(0);
+            }
         }
         is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
         can_alias_allocation = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
