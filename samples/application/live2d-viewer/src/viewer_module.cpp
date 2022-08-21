@@ -143,7 +143,7 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
                     auto cgpuDevice = skr_renderer_get_cgpu_device();
                     skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
                 };
-                if (i == 0)
+                if (i == 1)
                     skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
                 else
                     skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
