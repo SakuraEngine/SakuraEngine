@@ -547,6 +547,8 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
             auto hres = D->pResourceAllocator->CreateResource(
                 &alloc_desc, &resDesc, res_states, pClearValue,
                 &pDxAllocation, IID_ARGS(&pDxResource));
+            is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
+            can_alias_allocation = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
             if (hres != S_OK)
             {
                 auto fallbackHres = hres;
@@ -571,6 +573,8 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                         D3D12_HEAP_FLAG_NONE, &resDesc, res_states, pClearValue, IID_ARGS(&pDxResource));
                     if (fallbackHres == S_OK)
                     {
+                        is_dedicated = true;
+                        can_alias_allocation = false;
                         SKR_LOG_DEBUG("[D3D12] Create Texture With Fallback Driver API Succeed!");
                     }
                     else
@@ -591,8 +595,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                     A->adapter_detail.format_supports[desc->format].shader_write);
             }
         }
-        is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
-        can_alias_allocation = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
+
     }
     else
     {
