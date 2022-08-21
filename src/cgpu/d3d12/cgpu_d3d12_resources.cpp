@@ -575,6 +575,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                     {
                         is_dedicated = true;
                         can_alias_allocation = false;
+                        pDxAllocation = nullptr;
                         SKR_LOG_DEBUG("[D3D12] Create Texture With Fallback Driver API Succeed!");
                     }
                     else
