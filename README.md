@@ -67,7 +67,7 @@
 - sole 1.0.1 (zlib License)
 - parallel-hashmap 1.3.4 (Apache-2.0)
 - folly (Apache-2.0)
-- simdjson v1.0.2 (Apache-2.0)
+- simdjson v2.2.2 (Apache-2.0)
 - bitsery v5.2.2 (MIT)
 - fast_float v3.4.0
 - llfio 28ed462

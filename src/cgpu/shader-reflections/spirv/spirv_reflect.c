@@ -14,7 +14,7 @@
  limitations under the License.
 */
 
-#include "spirv_reflect.h"
+#include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
