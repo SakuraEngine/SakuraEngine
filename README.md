@@ -57,7 +57,7 @@
 - log.c f9ea349 (MIT)
 - mimalloc v2.0.6 (MIT)
 - xxhash 0.8.1 (BSD)
-- VulkanMemoryAllocator 3.0.0, release
+- VulkanMemoryAllocator 3.0.1, release
 - D3D12MemoryAllocator 2.0.1 release
 - SPIRV-Reflect b68b5a8 (Apache-2.0)
 - wasm3 a3abb3f, org.fork (MIT)
