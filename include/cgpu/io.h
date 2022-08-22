@@ -7,69 +7,87 @@
 typedef struct skr_vram_buffer_io_t {
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
-    CGPUDStorageQueueId dstorage_queue;
     CGPUSemaphoreId opt_semaphore;
-    CGPUBufferId dst_buffer;
-    uint64_t offset;
     // CGPU Resource Desc
-    const char8_t* buffer_name;
-    CGPUResourceTypes resource_types;
-    ECGPUMemoryUsage memory_usage;
-    CGPUBufferCreationFlags flags;
-    uint64_t buffer_size;
-    /// Preferred actual location
-    /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
-    bool prefer_on_device;
-    /// Preferred actual location
-    /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
-    bool prefer_on_host;
+    struct 
+    {
+        const char8_t* buffer_name;
+        CGPUResourceTypes resource_types;
+        ECGPUMemoryUsage memory_usage;
+        CGPUBufferCreationFlags flags;
+        uint64_t buffer_size;
+        uint64_t offset;
+        /// Preferred actual location
+        /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
+        bool prefer_on_device;
+        /// Preferred actual location
+        /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
+        bool prefer_on_host;
+    } vbuffer;
     // Direct Storage
-    CGPUDStorageCompression dstorage_compression;
-    ECGPUDStorageSource dstorage_source_type;
-    const char8_t* path;
-    // Data bytes
-    uint8_t* bytes;
-    uint64_t size;
+    struct 
+    {
+        const char8_t* path;
+        CGPUDStorageQueueId queue;
+        CGPUDStorageCompression compression;
+        ECGPUDStorageSource source_type;
+        uint64_t uncompressed_size;
+    } dstorage;
+    // Src Memory
+    struct
+    {
+        uint8_t* bytes;
+        uint64_t size;
+    } src_memory;
     SkrIOServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
     skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
 } skr_vram_buffer_io_t;
 
-typedef struct skr_vram_buffer_request_t {
-    CGPUBufferId out_buffer;
-} skr_vram_buffer_request_t;
+typedef struct skr_async_vbuffer_destination_t {
+    CGPUBufferId buffer;
+} skr_async_vbuffer_destination_t;
 
 typedef struct skr_vram_texture_io_t {
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
-    CGPUDStorageQueueId dstorage_queue;
     CGPUSemaphoreId opt_semaphore;
     // CGPU Resource Desc
-    const char8_t* texture_name;
-    CGPUResourceTypes resource_types;
-    CGPUTextureCreationFlags flags;
-    uint32_t width;
-    uint32_t height;
-    uint32_t depth;
-    ECGPUFormat format;
+    struct
+    {
+        const char8_t* texture_name;
+        CGPUResourceTypes resource_types;
+        CGPUTextureCreationFlags flags;
+        uint32_t width;
+        uint32_t height;
+        uint32_t depth;
+        ECGPUFormat format;
+    } vtexture;
     // Direct Storage
-    CGPUDStorageCompression dstorage_compression;
-    ECGPUDStorageSource dstorage_source_type;
-    const char8_t* path;
+    struct
+    {
+        const char8_t* path;
+        CGPUDStorageQueueId queue;
+        CGPUDStorageCompression compression;
+        ECGPUDStorageSource source_type;
+        uint64_t uncompressed_size;
+    } dstorage;
     // Data bytes
-    uint8_t* bytes;
-    uint64_t offset;
-    uint64_t size;
+    struct
+    {
+        uint8_t* bytes;
+        uint64_t size;
+    } src_memory;
     SkrIOServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
     skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
 } skr_vram_texture_io_t;
 
-typedef struct skr_vram_texture_request_t {
-    CGPUTextureId out_texture;
-} skr_vram_texture_request_t;
+typedef struct skr_async_vtexture_destination_t {
+    CGPUTextureId texture;
+} skr_async_vtexture_destination_t;
 
 typedef struct skr_vram_io_service_desc_t {
     const char8_t* name;
