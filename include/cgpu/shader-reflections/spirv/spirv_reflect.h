@@ -33,7 +33,7 @@ VERSION HISTORY
 #if defined(SPIRV_REFLECT_USE_SYSTEM_SPIRV_H)
 #include <spirv/unified1/spirv.h>
 #else
-#include "./include/spirv/unified1/spirv.h"
+#include "unified1/spirv.h"
 #endif
 
 
