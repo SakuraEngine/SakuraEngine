@@ -79,7 +79,7 @@ Live2D 模型复合了多种源数据类型，所有数据类型异步地加载�
 
 </div>
 
-Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这可以达到是 Cubism 官方示例基准的十数倍。
+Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubism 官方示例基准的十数倍。
 
 ### [热更三角形](samples/hot-triangle)
 
