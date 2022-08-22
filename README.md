@@ -59,7 +59,7 @@
 - xxhash 0.8.1 (BSD)
 - VulkanMemoryAllocator 3.0.0, release
 - D3D12MemoryAllocator 2.0.1 release
-- SPIRV-Reflect 173ae4d (Apache-2.0)
+- SPIRV-Reflect b68b5a8 (Apache-2.0)
 - wasm3 a3abb3f, org.fork (MIT)
 - DirectXMath 596aa5d (MIT)
 - GSL 4.0.0 Release (MIT)
