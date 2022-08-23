@@ -1,5 +1,10 @@
 rule("utils.ispc")
     set_extensions(".ispc")
+    on_config(function (target, opt)
+        local header_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-headers")
+        local obj_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-obj")
+        target:add("includedirs", header_outputdir)
+    end)
     before_buildcmd_file(function (target, batchcmds, sourcefile_ispc, opt)
         import("find_sdk")
         ispc = find_sdk.find_program("ispc")
@@ -29,13 +34,13 @@ rule("utils.ispc")
             "-h", header_path,
             target_args,
             "--opt=fast-math"})
-
-        target:add("includedirs", header_outputdir)
-        target:add("obj", obj_path)
+        
+            print(obj_path)
+        table.insert(target:objectfiles(), obj_path)
         if (os.arch() == "x86_64" or os.arch() == "x64") then
-            target:add("obj", obj_avx_path)
+            --table.insert(target:objectfiles(), obj_avx_path)
         else
-            target:add("obj", obj_neon_path)
+            --table.insert(target:objectfiles(), obj_neon_path)
         end
 
         batchcmds:add_depfiles(sourcefile_ispc)
