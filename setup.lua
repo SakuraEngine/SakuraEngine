@@ -4,6 +4,7 @@ if (os.host() =="macosx") then
     if(brew == nil) then
         os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
     end
+    os.exec("brew install ispc")
     os.exec("brew install python")
     os.exec("brew install sdl2")
     os.exec("brew install googletest")
@@ -33,7 +34,6 @@ end
 if (os.host() == "macosx") then
     if (os.arch() == "x86_64") then
         find_sdk.sdk_from_github("dxc-macosx-x86_64.zip")
-        find_sdk.sdk_from_github("ispc-macosx-x86_64.zip")
         find_sdk.sdk_from_github("reflector-macosx-x86_64.zip")
         find_sdk.sdk_from_github("tracyclient-macosx-x86_64.zip")
         find_sdk.sdk_from_github("llfio-macosx-x86_64.zip")
