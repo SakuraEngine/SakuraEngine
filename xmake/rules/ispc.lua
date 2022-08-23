@@ -5,6 +5,7 @@ rule("utils.ispc")
     on_config(function (target, opt)
         local header_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-headers")
         local obj_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-obj")
+        os.mkdir(target:autogendir())
         os.mkdir(header_outputdir)
         target:add("includedirs", header_outputdir, {public = true})
     end)
@@ -38,7 +39,7 @@ rule("utils.ispc")
             target_args,
             "--opt=fast-math"})
         
-            print(obj_path)
+        assert(os.exists(target:autogendir()))
         table.insert(target:objectfiles(), obj_path)
         if (os.arch() == "x86_64" or os.arch() == "x64") then
             --table.insert(target:objectfiles(), obj_avx_path)
