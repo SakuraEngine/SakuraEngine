@@ -1,227 +1,4 @@
-#include "cgpu/io.hpp"
-#include "utils/make_zeroed.hpp"
-#include "io_service_util.hpp"
-#include <EASTL/variant.h>
-#include <EASTL/vector_map.h>
-
-// RAM Service
-namespace skr
-{
-namespace io
-{
-enum EVramTaskStep
-{
-    kStepNone = 0,
-    kStepResourceCreated,
-    kStepUploading,
-    kStepDirectStorage,
-    kStepResourceBarrier,
-    kStepFinished
-};
-
-class VRAMServiceImpl final : public VRAMService
-{
-public:
-    struct TaskBatch;
-    struct CGPUUploadTask
-    {
-        CGPUQueueId queue = nullptr;
-        CGPUSemaphoreId semaphore = nullptr;
-        CGPUBufferId upload_buffer = nullptr;
-        CGPUTextureId dst_texture = nullptr;
-        bool finished = false;
-    };
-    struct BufferTask {
-        skr_vram_buffer_io_t buffer_io;
-        skr_vram_buffer_request_t* buffer_request;
-        CGPUUploadTask* upload_task;
-    };
-    struct TextureTask {
-        skr_vram_texture_io_t texture_io;
-        skr_vram_texture_request_t* texture_request;
-        CGPUUploadTask* upload_task;
-    };
-
-    struct CGPUDStorageTask {
-        CGPUDStorageQueueId storage_queue = nullptr;
-        CGPUDStorageFileHandle ds_file = nullptr;
-        uint64_t file_size;
-        bool finished = false;
-    };
-    struct DStorageBufferTask
-    {
-        skr_vram_buffer_io_t buffer_io;
-        skr_vram_buffer_request_t* buffer_request;
-        CGPUDStorageTask* dstorage_task;
-    };
-    struct DStorageTextureTask
-    {
-        skr_vram_texture_io_t texture_io;
-        skr_vram_texture_request_t* texture_request;
-        CGPUDStorageTask* dstorage_task;
-    };
-
-    struct Task : public TaskBase {
-        eastl::string path;
-        eastl::variant<BufferTask, DStorageBufferTask, TextureTask, DStorageTextureTask> resource_task;
-        EVramTaskStep step;
-        TaskBatch* task_batch;
-        bool isDStorage() const
-        {
-            return eastl::get_if<DStorageBufferTask>(&resource_task) || eastl::get_if<DStorageTextureTask>(&resource_task);
-        }
-    };
-    ~VRAMServiceImpl() SKR_NOEXCEPT = default;
-    VRAMServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
-        : tasks(lockless), threaded_service(sleep_time, lockless)
-
-    {
-    }
-    void request(const skr_vram_buffer_io_t* info, skr_async_io_request_t* async_request, skr_vram_buffer_request_t* buffer_request) SKR_NOEXCEPT final;
-    void request(const skr_vram_texture_io_t* info, skr_async_io_request_t* async_request, skr_vram_texture_request_t* texture_request) SKR_NOEXCEPT final;
-    bool try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
-    void defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
-    void drain() SKR_NOEXCEPT final;
-    void set_sleep_time(uint32_t time) SKR_NOEXCEPT final;
-    void stop(bool wait_drain = false) SKR_NOEXCEPT final;
-    void run() SKR_NOEXCEPT final;
-
-    SkrAsyncIOServiceStatus get_service_status() const SKR_NOEXCEPT final
-    {
-        return threaded_service.getRunningStatus();
-    }
-
-    // create resource
-    void createResource(Task& task) SKR_NOEXCEPT;
-    void tryCreateBufferResource(Task& task) SKR_NOEXCEPT;
-    void tryCreateTextureResource(Task& task) SKR_NOEXCEPT;
-    // create resource
-
-    // upload resource
-    void uploadResource(Task& task) SKR_NOEXCEPT;
-    void tryUploadBufferResource(Task& task) SKR_NOEXCEPT;
-    void tryUploadTextureResource(Task& task) SKR_NOEXCEPT;
-    // upload resource
-
-    // dstorage resource
-    void dstorageResource(Task& task) SKR_NOEXCEPT;
-    void tryDStorageBufferResource(Task& task) SKR_NOEXCEPT;
-    void tryDStorageTextureResource(Task& task) SKR_NOEXCEPT;
-    // dstorage resource
-
-    // status check
-    bool vramIOFinished(Task& task) SKR_NOEXCEPT;
-    // status check
-
-    // cgpu helpers
-    CGPUUploadTask* allocateCGPUUploadTask(CGPUDeviceId, CGPUQueueId, CGPUSemaphoreId) SKR_NOEXCEPT; 
-    void freeCGPUUploadTask(CGPUUploadTask* task) SKR_NOEXCEPT; 
-    CGPUDStorageTask* allocateCGPUDStorageTask(CGPUDeviceId, CGPUDStorageQueueId, CGPUDStorageFileHandle) SKR_NOEXCEPT; 
-    void freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_NOEXCEPT; 
-    // cgpu helpers
-
-    const eastl::string name;
-    // task containers
-    TaskContainer<Task> tasks;
-    struct TaskBatch
-    {
-        // Tasks
-        eastl::vector<Task> tasks;
-        // Upload Resources
-        eastl::vector<CGPUBufferBarrier> buffer_barriers;
-        eastl::vector<CGPUTextureBarrier> texture_barriers;
-        eastl::vector_map<CGPUQueueId, CGPUFenceId> fences;
-        eastl::vector_map<CGPUQueueId, CGPUCommandPoolId> cmd_pools;
-        eastl::vector_map<CGPUQueueId, CGPUCommandBufferId> cmds;
-        // DStorage Resources
-        eastl::vector_map<CGPUDStorageQueueId, CGPUFenceId> ds_fences;
-        bool submitted = false;
-        uint64_t id;
-
-        CGPUFenceId get_fence(CGPUDStorageQueueId queue) SKR_NOEXCEPT
-        {
-            auto it = ds_fences.find(queue);
-            if (it != ds_fences.end()) return it->second;
-            auto fence = cgpu_create_fence(queue->device);
-            ds_fences[queue] = fence;
-            return fence;
-        }
-        CGPUFenceId get_fence(CGPUQueueId queue) SKR_NOEXCEPT
-        {
-            auto it = fences.find(queue);
-            if (it != fences.end()) return it->second;
-            auto fence = cgpu_create_fence(queue->device);
-            fences[queue] = fence;
-            return fence;
-        }
-        CGPUCommandPoolId get_cmd_pool(CGPUQueueId queue) SKR_NOEXCEPT
-        {
-            auto it = cmd_pools.find(queue);
-            if (it != cmd_pools.end()) return it->second;
-            CGPUCommandPoolDescriptor cmd_pool_desc = {};
-            auto cmd_pool = cgpu_create_command_pool(queue, &cmd_pool_desc);
-            cmd_pools[queue] = cmd_pool;
-            return cmd_pool;
-        }
-        CGPUCommandBufferId get_cmd(CGPUQueueId queue) SKR_NOEXCEPT
-        {
-            auto it = cmds.find(queue);
-            if (it != cmds.end()) return it->second;
-            CGPUCommandBufferDescriptor cmd_desc = {};
-            cmd_desc.is_secondary = false;
-            auto cmd = cgpu_create_command_buffer(get_cmd_pool(queue), &cmd_desc);
-            cmds[queue] = cmd;
-            cgpu_cmd_begin(cmd);
-            return cmd;
-        }
-        ~TaskBatch()
-        {
-            uint32_t ds_fence_c = ds_fences.size();
-            uint32_t ds_idx = 0;
-            for (auto& fence : ds_fences)
-            {
-                ds_idx++;
-                cgpu_free_fence(fence.second);
-            }
-            SKR_ASSERT(ds_idx == ds_fence_c);
-            for (auto& fence : fences)
-            {
-                cgpu_free_fence(fence.second);
-            }
-            for (auto& cmd : cmds)
-            {
-                cgpu_free_command_buffer(cmd.second);
-            }
-            for (auto& cmd_pool : cmd_pools)
-            {
-                cgpu_free_command_pool(cmd_pool.second);
-            }
-        }
-    };
-    void foreach_batch(const eastl::function<void(eastl::pair<uint64_t, TaskBatch*>&)>& func) SKR_NOEXCEPT
-    {
-        eastl::for_each(upload_batch_queue.begin(), upload_batch_queue.end(), func);
-        eastl::for_each(dstorage_batch_queue.begin(), dstorage_batch_queue.end(), func);
-    }
-    eastl::vector_map<uint64_t, TaskBatch*> upload_batch_queue;
-    eastl::vector_map<uint64_t, TaskBatch*> dstorage_batch_queue;
-    struct AsyncThreadBatchService : public AsyncThreadedService
-    {
-        AsyncThreadBatchService(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
-            : AsyncThreadedService(sleep_time, lockless)
-        {
-
-        }
-        virtual void sleep_() SKR_NOEXCEPT override
-        {
-            AsyncThreadedService::sleep_();
-        }
-    };
-    AsyncThreadBatchService threaded_service;
-    // CGPU Objects
-    eastl::vector<CGPUUploadTask*> resource_uploads;
-    eastl::vector<CGPUDStorageTask*> dstorage_uploads;
-};
+#include "vram_service_impl.hpp"
 
 // create resource
 void skr::io::VRAMServiceImpl::createResource(skr::io::VRAMServiceImpl::Task &task) SKR_NOEXCEPT
@@ -234,32 +11,33 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
 {
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
-        SKR_ASSERT( (buffer_task->buffer_io.size) && "buffer_io.size must be set");
+        SKR_ASSERT( (buffer_task->buffer_io.src_memory.size) && "buffer_io.size must be set");
         const auto& buffer_io = buffer_task->buffer_io;
-        if (buffer_task->buffer_io.size)
+        const auto& destination = buffer_task->destination;
+        if (buffer_task->buffer_io.src_memory.size)
         {
-            if (buffer_io.dst_buffer) 
+            if (destination->buffer) 
             {
-                buffer_task->buffer_request->out_buffer = buffer_io.dst_buffer;
+                buffer_task->destination->buffer = destination->buffer;
             }
             else
             {
                 ZoneScopedN("CreateBufferResource");
 
                 auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-                buffer_desc.size = buffer_io.buffer_size;
-                buffer_desc.name = buffer_io.buffer_name;
-                buffer_desc.descriptors = buffer_io.resource_types;
-                buffer_desc.memory_usage = buffer_io.memory_usage;
-                buffer_desc.flags = buffer_io.flags;
-                buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
-                buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
+                buffer_desc.size = buffer_io.vbuffer.buffer_size;
+                buffer_desc.name = buffer_io.vbuffer.buffer_name;
+                buffer_desc.descriptors = buffer_io.vbuffer.resource_types;
+                buffer_desc.memory_usage = buffer_io.vbuffer.memory_usage;
+                buffer_desc.flags = buffer_io.vbuffer.flags;
+                buffer_desc.prefer_on_device = buffer_io.vbuffer.prefer_on_device;
+                buffer_desc.prefer_on_host = buffer_io.vbuffer.prefer_on_host;
                 auto buffer = cgpu_create_buffer(buffer_task->buffer_io.device, &buffer_desc);
                 // return resource object
-                buffer_task->buffer_request->out_buffer = buffer;
+                buffer_task->destination->buffer = buffer;
             }
         }
-        else if (buffer_task->buffer_io.path)
+        else //if (buffer_task->buffer_io.path)
         {
             SKR_UNREACHABLE_CODE();
         }
@@ -267,59 +45,62 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
     {
         const auto& buffer_io = ds_buffer_task->buffer_io;
-        if (ds_buffer_task->buffer_io.dstorage_source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        const auto& destination = ds_buffer_task->destination;
+        if (ds_buffer_task->buffer_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
-            SKR_ASSERT( (ds_buffer_task->buffer_io.path) && "buffer_io.path must be set");
-            auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage_queue, task.path.c_str());
-            ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage_queue, ds_file);
-            if (buffer_io.dst_buffer) 
+            SKR_ASSERT( (ds_buffer_task->buffer_io.dstorage.path) && "buffer_io.path must be set");
+            auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage.queue, task.path.c_str());
+            ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage.queue, ds_file);
+            if (destination->buffer) 
             {
-                ds_buffer_task->buffer_request->out_buffer = buffer_io.dst_buffer;
+                ds_buffer_task->destination->buffer = destination->buffer;
             }
             else
             {
                 ZoneScopedN("CreateBufferResource");
 
                 auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-                buffer_desc.size = (buffer_io.buffer_size == 0) ? ds_buffer_task->dstorage_task->file_size : buffer_io.buffer_size;
-                buffer_desc.name = buffer_io.buffer_name;
-                buffer_desc.descriptors = buffer_io.resource_types;
-                buffer_desc.memory_usage = buffer_io.memory_usage;
-                buffer_desc.flags = buffer_io.flags;
-                buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
-                buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
+                buffer_desc.size = (buffer_io.vbuffer.buffer_size == 0) ? ds_buffer_task->dstorage_task->file_size : buffer_io.vbuffer.buffer_size;
+                buffer_desc.name = buffer_io.vbuffer.buffer_name;
+                buffer_desc.descriptors = buffer_io.vbuffer.resource_types;
+                buffer_desc.memory_usage = buffer_io.vbuffer.memory_usage;
+                buffer_desc.flags = buffer_io.vbuffer.flags;
+                buffer_desc.prefer_on_device = buffer_io.vbuffer.prefer_on_device;
+                buffer_desc.prefer_on_host = buffer_io.vbuffer.prefer_on_host;
                 auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
                 // return resource object
-                ds_buffer_task->buffer_request->out_buffer = buffer;
+                ds_buffer_task->destination->buffer = buffer;
             }
         }
-        else 
+        else // SOURCE_MEMORY
         {
-            SKR_ASSERT( (ds_buffer_task->buffer_io.buffer_size) && "buffer_io.buffer_size must be set");
-            SKR_ASSERT( (ds_buffer_task->buffer_io.bytes) && "buffer_io.bytes must be set");
-            SKR_ASSERT( (ds_buffer_task->buffer_io.size) && "buffer_io.size must be set");
+            SKR_ASSERT( (ds_buffer_task->buffer_io.src_memory.bytes) && "buffer_io.bytes must be set");
+            SKR_ASSERT( (ds_buffer_task->buffer_io.src_memory.size) && "buffer_io.size must be set");
 
             const auto& buffer_io = ds_buffer_task->buffer_io;
-            ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage_queue, nullptr);
-            if (buffer_io.dst_buffer) 
+            const auto& destination = ds_buffer_task->destination;
+            ds_buffer_task->dstorage_task =
+                allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage.queue, nullptr);
+            if (destination->buffer) 
             {
-                ds_buffer_task->buffer_request->out_buffer = buffer_io.dst_buffer;
+                ds_buffer_task->destination->buffer = destination->buffer;
             }
             else
             {
+                SKR_ASSERT( (ds_buffer_task->buffer_io.vbuffer.buffer_size) && "buffer_io.buffer_size must be set");
                 ZoneScopedN("CreateBufferResource");
 
                 auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-                buffer_desc.size = buffer_io.buffer_size;
-                buffer_desc.name = buffer_io.buffer_name;
-                buffer_desc.descriptors = buffer_io.resource_types;
-                buffer_desc.memory_usage = buffer_io.memory_usage;
-                buffer_desc.flags = buffer_io.flags;
-                buffer_desc.prefer_on_device = buffer_io.prefer_on_device;
-                buffer_desc.prefer_on_host = buffer_io.prefer_on_host;
+                buffer_desc.size = buffer_io.vbuffer.buffer_size;
+                buffer_desc.name = buffer_io.vbuffer.buffer_name;
+                buffer_desc.descriptors = buffer_io.vbuffer.resource_types;
+                buffer_desc.memory_usage = buffer_io.vbuffer.memory_usage;
+                buffer_desc.flags = buffer_io.vbuffer.flags;
+                buffer_desc.prefer_on_device = buffer_io.vbuffer.prefer_on_device;
+                buffer_desc.prefer_on_host = buffer_io.vbuffer.prefer_on_host;
                 auto buffer = cgpu_create_buffer(ds_buffer_task->buffer_io.device, &buffer_desc);
                 // return resource object
-                ds_buffer_task->buffer_request->out_buffer = buffer;
+                ds_buffer_task->destination->buffer = buffer;
             }
         }
     }
@@ -329,71 +110,71 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
 {
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::TextureTask>(&task.resource_task))
     {
-        SKR_ASSERT( (buffer_task->texture_io.size) && "texture_io.size must be set");
-        if (buffer_task->texture_io.size)
+        SKR_ASSERT( (buffer_task->texture_io.src_memory.size) && "texture_io.size must be set");
+        if (buffer_task->texture_io.src_memory.size)
         {
             ZoneScopedN("CreateTextureResource");
 
             auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
             const auto& texture_io = buffer_task->texture_io;
-            texture_desc.width = texture_io.width;
-            texture_desc.height = texture_io.height;
-            texture_desc.depth = texture_io.depth;
-            texture_desc.name = texture_io.texture_name;
-            texture_desc.descriptors = texture_io.resource_types;
-            texture_desc.flags = texture_io.flags;
+            texture_desc.name = texture_io.vtexture.texture_name;
+            texture_desc.width = texture_io.vtexture.width;
+            texture_desc.height = texture_io.vtexture.height;
+            texture_desc.depth = texture_io.vtexture.depth;
+            texture_desc.descriptors = texture_io.vtexture.resource_types;
+            texture_desc.flags = texture_io.vtexture.flags;
             auto texture = cgpu_create_texture(buffer_task->texture_io.device, &texture_desc);
             // return resource object
-            buffer_task->texture_request->out_texture = texture;
+            buffer_task->destination->texture = texture;
         }
-        else if (buffer_task->texture_io.path)
+        else // if (buffer_task->texture_io.path)
         {
             SKR_UNREACHABLE_CODE();
         }
     }
     if (auto ds_texture_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
     {
-        if (ds_texture_task->texture_io.dstorage_source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (ds_texture_task->texture_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
             ZoneScopedN("CreateTextureResource");
 
-            SKR_ASSERT( (ds_texture_task->texture_io.path) && "texture_io.path must be set");
+            SKR_ASSERT( (ds_texture_task->texture_io.dstorage.path) && "texture_io.path must be set");
             const auto& texture_io = ds_texture_task->texture_io;
-            auto ds_file = cgpu_dstorage_open_file(texture_io.dstorage_queue, task.path.c_str());
-            ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage_queue, ds_file);
+            auto ds_file = cgpu_dstorage_open_file(texture_io.dstorage.queue, task.path.c_str());
+            ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage.queue, ds_file);
             auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
-            texture_desc.width = texture_io.width;
-            texture_desc.height = texture_io.height;
-            texture_desc.depth = texture_io.depth;
-            texture_desc.name = texture_io.texture_name;
-            texture_desc.descriptors = texture_io.resource_types;
-            texture_desc.flags = texture_io.flags;
-            texture_desc.format = texture_io.format;
+            texture_desc.width = texture_io.vtexture.width;
+            texture_desc.height = texture_io.vtexture.height;
+            texture_desc.depth = texture_io.vtexture.depth;
+            texture_desc.name = texture_io.vtexture.texture_name;
+            texture_desc.descriptors = texture_io.vtexture.resource_types;
+            texture_desc.flags = texture_io.vtexture.flags;
+            texture_desc.format = texture_io.vtexture.format;
             auto texture = cgpu_create_texture(ds_texture_task->texture_io.device, &texture_desc);
             // return resource object
-            ds_texture_task->texture_request->out_texture = texture;
+            ds_texture_task->destination->texture = texture;
         }
         else 
         {
             ZoneScopedN("CreateTextureResource");
 
-            SKR_ASSERT( (ds_texture_task->texture_io.width) && "buffer_io.buffer_size must be set");
-            SKR_ASSERT( (ds_texture_task->texture_io.bytes) && "buffer_io.bytes must be set");
-            SKR_ASSERT( (ds_texture_task->texture_io.size) && "buffer_io.size must be set");
+            SKR_ASSERT( (ds_texture_task->texture_io.vtexture.width) && "buffer_io.buffer_size must be set");
+            SKR_ASSERT( (ds_texture_task->texture_io.src_memory.bytes) && "buffer_io.bytes must be set");
+            SKR_ASSERT( (ds_texture_task->texture_io.src_memory.size) && "buffer_io.size must be set");
 
             const auto& texture_io = ds_texture_task->texture_io;
-            ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage_queue, nullptr);
+            ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage.queue, nullptr);
             auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
-            texture_desc.width = texture_io.width;
-            texture_desc.height = texture_io.height;
-            texture_desc.depth = texture_io.depth;
-            texture_desc.name = texture_io.texture_name;
-            texture_desc.descriptors = texture_io.resource_types;
-            texture_desc.flags = texture_io.flags;
-            texture_desc.format = texture_io.format;
+            texture_desc.width = texture_io.vtexture.width;
+            texture_desc.height = texture_io.vtexture.height;
+            texture_desc.depth = texture_io.vtexture.depth;
+            texture_desc.name = texture_io.vtexture.texture_name;
+            texture_desc.descriptors = texture_io.vtexture.resource_types;
+            texture_desc.flags = texture_io.vtexture.flags;
+            texture_desc.format = texture_io.vtexture.format;
             auto texture = cgpu_create_texture(ds_texture_task->texture_io.device, &texture_desc);
             // return resource object
-            ds_texture_task->texture_request->out_texture = texture;
+            ds_texture_task->destination->texture = texture;
         }
     }
 }
@@ -413,31 +194,32 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
 
         const auto& buffer_io = buffer_task->buffer_io;
-        const auto& buffer_request = buffer_task->buffer_request;
+        const auto& destination = buffer_task->destination;
         CGPUUploadTask* upload = allocateCGPUUploadTask(buffer_io.device, buffer_io.transfer_queue, buffer_io.opt_semaphore);
-        eastl::string name = buffer_io.buffer_name;
+        eastl::string name = buffer_io.vbuffer.buffer_name;
         name += "-upload";
-        upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.size, name.c_str());
+        upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.src_memory.size, name.c_str());
 
-        if (buffer_io.bytes)
+        if (buffer_io.src_memory.bytes)
         {
-            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address + buffer_io.offset, buffer_io.bytes, buffer_io.size);
+            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address + buffer_io.vbuffer.offset, 
+                buffer_io.src_memory.bytes, buffer_io.src_memory.size);
         }
         
         auto cmd = task.task_batch->get_cmd(buffer_io.transfer_queue);
         
-        if (buffer_io.bytes)
+        if (buffer_io.src_memory.bytes)
         {
             CGPUBufferToBufferTransfer vb_cpy = {};
-            vb_cpy.dst = buffer_request->out_buffer;
+            vb_cpy.dst = destination->buffer;
             vb_cpy.dst_offset = 0;
             vb_cpy.src = upload->upload_buffer;
             vb_cpy.src_offset = 0;
-            vb_cpy.size = buffer_io.size;
+            vb_cpy.size = buffer_io.src_memory.size;
             cgpu_cmd_transfer_buffer_to_buffer(cmd, &vb_cpy);
         }
         auto buffer_barrier = make_zeroed<CGPUBufferBarrier>();
-        buffer_barrier.buffer = buffer_request->out_buffer;
+        buffer_barrier.buffer = destination->buffer;
         buffer_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
         // release
         {
@@ -458,23 +240,23 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
 
         const auto& texture_io = texture_task->texture_io;
-        const auto& texture_request = texture_task->texture_request;
+        const auto& destination = texture_task->destination;
         CGPUUploadTask* upload = allocateCGPUUploadTask(texture_io.device, texture_io.transfer_queue, texture_io.opt_semaphore);
-        eastl::string name = texture_io.texture_name;
+        eastl::string name = texture_io.vtexture.texture_name;
         name += "-upload";
-        upload->upload_buffer = cgpux_create_mapped_upload_buffer(texture_io.device, texture_io.size, name.c_str());
+        upload->upload_buffer = cgpux_create_mapped_upload_buffer(texture_io.device, texture_io.src_memory.size, name.c_str());
 
-        if (texture_io.bytes)
+        if (texture_io.src_memory.bytes)
         {
-            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address + texture_io.offset, texture_io.bytes, texture_io.size);
+            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address, texture_io.src_memory.bytes, texture_io.src_memory.size);
         }
         
         auto cmd = task.task_batch->get_cmd(texture_io.transfer_queue);
         
-        if (texture_io.bytes)
+        if (texture_io.src_memory.bytes)
         {
             CGPUBufferToTextureTransfer tex_cpy = {};
-            tex_cpy.dst = texture_request->out_texture;
+            tex_cpy.dst = destination->texture;
             tex_cpy.dst_subresource.aspects = CGPU_TVA_COLOR;
             // TODO: texture array & mips
             tex_cpy.dst_subresource.base_array_layer = 0;
@@ -485,7 +267,7 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
             cgpu_cmd_transfer_buffer_to_texture(cmd, &tex_cpy);
         }
         auto texture_barrier = make_zeroed<CGPUTextureBarrier>();
-        texture_barrier.texture = texture_request->out_texture;
+        texture_barrier.texture = destination->texture;
         texture_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
         // release
         {
@@ -515,10 +297,10 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
 
         const auto& buffer_io = ds_buffer_task->buffer_io;
-        const auto& buffer_request = ds_buffer_task->buffer_request;
+        const auto& destination = ds_buffer_task->destination;
 
         CGPUDStorageBufferIODescriptor io_desc = {};
-        io_desc.source_type = buffer_io.dstorage_source_type;
+        io_desc.source_type = buffer_io.dstorage.source_type;
         if (io_desc.source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
             io_desc.source_file.file = ds_buffer_task->dstorage_task->ds_file;
@@ -527,17 +309,17 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
         }
         else
         {
-            io_desc.source_memory.bytes = buffer_io.bytes;
-            io_desc.source_memory.bytes_size = buffer_io.size;
+            io_desc.source_memory.bytes = buffer_io.src_memory.bytes;
+            io_desc.source_memory.bytes_size = buffer_io.src_memory.size;
         }
-        io_desc.buffer = buffer_request->out_buffer;
+        io_desc.buffer = destination->buffer;
 
-        io_desc.offset = buffer_io.offset;
+        io_desc.offset = buffer_io.vbuffer.offset;
 
-        io_desc.compression = buffer_io.dstorage_compression;
-        io_desc.uncompressed_size = buffer_io.size;
+        io_desc.compression = buffer_io.dstorage.compression;
+        io_desc.uncompressed_size = buffer_io.dstorage.uncompressed_size;
 
-        io_desc.name = buffer_io.buffer_name;
+        io_desc.name = buffer_io.vbuffer.buffer_name;
         cgpu_dstorage_enqueue_buffer_request(ds_buffer_task->dstorage_task->storage_queue, &io_desc);
 
         if (auto fence = task.task_batch->get_fence(ds_buffer_task->dstorage_task->storage_queue));
@@ -552,33 +334,33 @@ void skr::io::VRAMServiceImpl::tryDStorageTextureResource(skr::io::VRAMServiceIm
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
 
         const auto& texture_io = ds_texture_task->texture_io;
-        const auto& texture_request = ds_texture_task->texture_request;
+        const auto& destination = ds_texture_task->destination;
 
         CGPUDStorageTextureIODescriptor io_desc = {};
-        io_desc.source_type = texture_io.dstorage_source_type;
+        io_desc.source_type = texture_io.dstorage.source_type;
         if (io_desc.source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
             io_desc.source_file.file = ds_texture_task->dstorage_task->ds_file;
             io_desc.source_file.offset = 0u;
             io_desc.source_file.size = ds_texture_task->dstorage_task->file_size;
-            io_desc.width = texture_io.width;
-            io_desc.height = texture_io.height;
-            io_desc.depth = texture_io.depth;
+            io_desc.width = texture_io.vtexture.width;
+            io_desc.height = texture_io.vtexture.height;
+            io_desc.depth = texture_io.vtexture.depth;
         }
         else
         {
-            io_desc.source_memory.bytes = texture_io.bytes;
-            io_desc.source_memory.bytes_size = texture_io.size;
-            io_desc.width = texture_io.width;
-            io_desc.height = texture_io.height;
-            io_desc.depth = texture_io.depth;
+            io_desc.source_memory.bytes = texture_io.src_memory.bytes;
+            io_desc.source_memory.bytes_size = texture_io.src_memory.size;
+            io_desc.width = texture_io.vtexture.width;
+            io_desc.height = texture_io.vtexture.height;
+            io_desc.depth = texture_io.vtexture.depth;
         }
-        io_desc.texture = texture_request->out_texture;
+        io_desc.name = texture_io.vtexture.texture_name;
+        io_desc.texture = destination->texture;
 
-        io_desc.compression = texture_io.dstorage_compression;
-        io_desc.uncompressed_size = texture_io.size;
+        io_desc.compression = texture_io.dstorage.compression;
+        io_desc.uncompressed_size = texture_io.dstorage.uncompressed_size;
 
-        io_desc.name = texture_io.texture_name;
         cgpu_dstorage_enqueue_texture_request(ds_texture_task->dstorage_task->storage_queue, &io_desc);
 
         if (auto fence = task.task_batch->get_fence(ds_texture_task->dstorage_task->storage_queue));
@@ -672,6 +454,7 @@ void skr::io::VRAMServiceImpl::freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_
 
 void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 {
+    using namespace skr::io;
     // 0.update task 
     {
         service->tasks.update_(&service->threaded_service);
@@ -923,6 +706,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 
 void __ioThreadTask_VRAM(void* arg)
 {
+    using namespace skr::io;
 #ifdef TRACY_ENABLE
     static uint32_t taskIndex = 0;
     eastl::string name = "ioVRAMServiceThread-";
@@ -943,7 +727,7 @@ void __ioThreadTask_VRAM(void* arg)
     }
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, skr_async_io_request_t* async_request, skr_vram_buffer_request_t* buffer_request) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, skr_async_io_request_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -955,26 +739,26 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, 
         io_task.callbacks[i] = buffer_info->callbacks[i];
         io_task.callback_datas[i] = buffer_info->callback_datas[i];
     }
-    io_task.path = buffer_info->path;
-    if (buffer_info->dstorage_queue)
+    io_task.path = buffer_info->dstorage.path;
+    if (buffer_info->dstorage.queue)
     {
         io_task.resource_task = make_zeroed<DStorageBufferTask>();
         auto&& ds_buffer_task = eastl::get<DStorageBufferTask>(io_task.resource_task);
         ds_buffer_task.buffer_io = *buffer_info;
-        ds_buffer_task.buffer_request = buffer_request;
+        ds_buffer_task.destination = destination;
     }
     else
     {
         io_task.resource_task = make_zeroed<BufferTask>();
         auto&& buffer_task = eastl::get<BufferTask>(io_task.resource_task);
         buffer_task.buffer_io = *buffer_info;
-        buffer_task.buffer_request = buffer_request;
+        buffer_task.destination = destination;
     }
     tasks.enqueue_(io_task, threaded_service.criticalTaskCount, name.c_str());
     threaded_service.request_();
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info, skr_async_io_request_t* async_request, skr_vram_texture_request_t* texture_request) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info, skr_async_io_request_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -986,20 +770,20 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info
         io_task.callbacks[i] = texture_info->callbacks[i];
         io_task.callback_datas[i] = texture_info->callback_datas[i];
     }
-    io_task.path = texture_info->path;
-    if (texture_info->dstorage_queue)
+    io_task.path = texture_info->dstorage.path;
+    if (texture_info->dstorage.queue)
     {
         io_task.resource_task = make_zeroed<DStorageTextureTask>();
         auto&& ds_buffer_task = eastl::get<DStorageTextureTask>(io_task.resource_task);
         ds_buffer_task.texture_io = *texture_info;
-        ds_buffer_task.texture_request = texture_request;
+        ds_buffer_task.destination = destination;
     }
     else
     {
         io_task.resource_task = make_zeroed<TextureTask>();
         auto&& buffer_task = eastl::get<TextureTask>(io_task.resource_task);
         buffer_task.texture_io = *texture_info;
-        buffer_task.texture_request = texture_request;
+        buffer_task.destination = destination;
     }
     tasks.enqueue_(io_task, threaded_service.criticalTaskCount, name.c_str());
     threaded_service.request_();
@@ -1018,7 +802,7 @@ skr::io::VRAMService* skr::io::VRAMService::create(const skr_vram_io_service_des
     return service;
 }
 
-void VRAMService::destroy(VRAMService* s) SKR_NOEXCEPT
+void skr::io::VRAMService::destroy(VRAMService* s) SKR_NOEXCEPT
 {
     auto service = static_cast<skr::io::VRAMServiceImpl*>(s);
     s->drain();
@@ -1054,6 +838,4 @@ void skr::io::VRAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
 void skr::io::VRAMServiceImpl::run() SKR_NOEXCEPT
 {
     threaded_service.run_();
-}
-}
 }

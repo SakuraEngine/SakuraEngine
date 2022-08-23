@@ -14,10 +14,10 @@
 #define BACK_BUFFER_HEIGHT 900
 #define BACK_BUFFER_WIDTH 900
 
-void skr::Renderer::initialize()
+void skr::Renderer::initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
     auto mm = skr_get_module_manager();
-    create_api_objects();
+    create_api_objects(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
     vram_service_desc.lockless = true;
@@ -61,14 +61,14 @@ void skr::Renderer::finalize()
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
-void skr::Renderer::create_api_objects()
+void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
-    instance_desc.enable_set_name = true;
+    instance_desc.enable_debug_layer = false;
+    instance_desc.enable_gpu_based_validation = false;
+    instance_desc.enable_set_name = false;
     instance = cgpu_create_instance(&instance_desc);
 
     // Filter adapters

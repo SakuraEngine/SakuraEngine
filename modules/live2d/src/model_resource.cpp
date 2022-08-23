@@ -71,14 +71,14 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             ZoneScopedN("Create Model");
             auto _this = (csmUserModel*)data;
 
-            _this->LoadModel(request->bytes, (L2DF::csmSizeInt)request->size);
-            sakura_free(request->bytes);
+            _this->LoadModel(_this->modelDestination.bytes, (L2DF::csmSizeInt)_this->modelDestination.size);
+            sakura_free(_this->modelDestination.bytes);
             
             skr_atomic32_add_relaxed(&_this->cbData->finished_models, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
-        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &modelRequest);
+        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &modelRequest, &modelDestination);
     }
     // Physics Request
     if (cbData->phys_count)
@@ -93,14 +93,14 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             ZoneScopedN("Create Physics");
             auto _this = (csmUserModel*)data;
             
-            _this->LoadPhysics(request->bytes, (L2DF::csmSizeInt)request->size);
-            sakura_free(request->bytes);
+            _this->LoadPhysics(_this->physicsDestination.bytes, (L2DF::csmSizeInt)_this->physicsDestination.size);
+            sakura_free(_this->physicsDestination.bytes);
             
             skr_atomic32_add_relaxed(&_this->cbData->finished_physics, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
-        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &pyhsicsRequest);
+        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &pyhsicsRequest, &physicsDestination);
     }
     // Pose Request
     if (cbData->pose_count)
@@ -115,14 +115,14 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             ZoneScopedN("Create Pose");
             auto _this = (csmUserModel*)data;
             
-            _this->LoadPose(request->bytes, (L2DF::csmSizeInt)request->size);
-            sakura_free(request->bytes);
+            _this->LoadPose(_this->poseDestination.bytes, (L2DF::csmSizeInt)_this->poseDestination.size);
+            sakura_free(_this->poseDestination.bytes);
             
             skr_atomic32_add_relaxed(&_this->cbData->finished_poses, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
-        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &poseRequest);
+        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &poseRequest, &poseDestination);
     }
     // UsrData Request
     if (cbData->usr_data_count)
@@ -137,14 +137,14 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             ZoneScopedN("Create UsrData");
             auto _this = (csmUserModel*)data;
             
-            _this->LoadUserData(request->bytes, (L2DF::csmSizeInt)request->size);
-            sakura_free(request->bytes);
+            _this->LoadUserData(_this->usrDataDestination.bytes, (L2DF::csmSizeInt)_this->usrDataDestination.size);
+            sakura_free(_this->usrDataDestination.bytes);
             
             skr_atomic32_add_relaxed(&_this->cbData->finished_usr_data, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
-        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &usrDataRequest);
+        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &usrDataRequest, &usrDataDestination);
     }
 }
 
@@ -366,14 +366,16 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
     cbData = data;
 
     auto settings = data->live2dRequest->model_resource->model_setting;
-    expression_names.resize(settings->GetExpressionCount());
-    expression_paths.resize(settings->GetExpressionCount());
-    expression_requests.resize(settings->GetExpressionCount());
-    for (uint32_t i = 0; i < expression_requests.size(); i++)
+    expressionNames.resize(settings->GetExpressionCount());
+    expressionPaths.resize(settings->GetExpressionCount());
+    expressionRequests.resize(settings->GetExpressionCount());
+    expressionDestinations.resize(settings->GetExpressionCount());
+    for (uint32_t i = 0; i < expressionRequests.size(); i++)
     {
-        auto& request = expression_requests[i];
-        auto&& [pRequest, path] = expression_paths.at(i);
-        auto&& [pRequest_, name] = expression_names.at(i);
+        auto& request = expressionRequests[i];
+        auto& destination = expressionDestinations[i];
+        auto&& [pRequest, path] = expressionPaths.at(i);
+        auto&& [pRequest_, name] = expressionNames.at(i);
 
         name = settings->GetExpressionName(i);
         auto file = settings->GetExpressionFileName(i);
@@ -389,18 +391,20 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
             ZoneScopedN("Create Live2D Expression");
 
             auto _this = (csmExpressionMap*)data;
-            auto name = _this->expression_names[request];
+            auto name = _this->expressionNames[request];
+            auto index = request - _this->expressionRequests.data();
+            auto& destination = _this->expressionDestinations[index];
             
             csmMap<csmString, ACubismMotion*>& map = *_this;
             // callbacks are called from single same thread, so no need to lock 
-            map[name.c_str()] = CubismExpressionMotion::Create(request->bytes, (L2DF::csmSizeInt)request->size);
-            sakura_free(request->bytes);
+            map[name.c_str()] = CubismExpressionMotion::Create(destination.bytes, (L2DF::csmSizeInt)destination.size);
+            sakura_free(destination.bytes);
             
             skr_atomic32_add_relaxed(&_this->cbData->finished_expressions, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
-        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &request);
+        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &request, &destination);
     }
 }
 
@@ -422,9 +426,10 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     cbData->motions_resource = this;
 
     auto settings = data->live2dRequest->model_resource->model_setting;
-    motion_entries.resize(cbData->motion_count);
-    motion_paths.resize(cbData->motion_count);
-    motion_requests.resize(cbData->motion_count);
+    motionEntries.resize(cbData->motion_count);
+    motionPaths.resize(cbData->motion_count);
+    motionRequests.resize(cbData->motion_count);
+    motionDestinations.resize(cbData->motion_count);
     uint32_t slot = 0;
     for (uint32_t i = 0; i < settings->GetMotionGroupCount(); i++)
     {
@@ -436,9 +441,9 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         map[group].Resize(count);
         for (uint32_t j = 0; j < settings->GetMotionCount(group); j++)
         {
-            auto& request = motion_requests[slot];
-            auto&& [pRequest, path] = motion_paths.at(slot);
-            auto&& [pRequest_, entry] = motion_entries.at(slot);
+            auto& request = motionRequests[slot];
+            auto&& [pRequest, path] = motionPaths.at(slot);
+            auto&& [pRequest_, entry] = motionEntries.at(slot);
 
             entry.first = group;
             entry.second = j;
@@ -450,13 +455,14 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             slot++;
         }
     }
-    for (uint32_t i = 0; i < motion_requests.size(); i++)
+    for (uint32_t i = 0; i < motionRequests.size(); i++)
     {
         ZoneScopedN("Request Motion");
 
-        auto& request = motion_requests[i];
-        auto&& [pRequest, path] = motion_paths.at(i);
-        auto&& [pRequest_, entry] = motion_entries.at(i);
+        auto& request = motionRequests[i];
+        auto& destination = motionDestinations[i];
+        auto&& [pRequest, path] = motionPaths.at(i);
+        auto&& [pRequest_, entry] = motionEntries.at(i);
         SKR_LOG_TRACE("Request Live2D Motion in group %s at %d", entry.first.c_str(), entry.second);
 
         skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
@@ -465,18 +471,20 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             ZoneScopedN("Create Live2D Motion");
 
             auto _this = (csmMotionMap*)data;
-            auto entry = _this->motion_entries[request];
+            auto entry = _this->motionEntries[request];
+            auto index = request - _this->motionRequests.data();
+            auto& destination = _this->motionDestinations[index];
             
             csmMap<csmString, csmVector<ACubismMotion*>>& map = *_this;
             // callbacks are called from single same thread, so no need to lock 
-            map[entry.first.c_str()][entry.second] = L2DF::CubismMotion::Create(request->bytes, (L2DF::csmSizeInt)request->size);
-            sakura_free(request->bytes);
+            map[entry.first.c_str()][entry.second] = L2DF::CubismMotion::Create(destination.bytes, (L2DF::csmSizeInt)destination.size);
+            sakura_free(destination.bytes);
             
             skr_atomic32_add_relaxed(&_this->cbData->finished_motions, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
-        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &request);
+        ioService->request(cbData->live2dRequest->vfs_override, &ramIO, &request, &destination);
     }
 }
 
@@ -524,8 +532,8 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
         auto cbData = (L2DRequestCallbackData*)data;
         auto model_resource = cbData->live2dRequest->model_resource = SkrNew<skr_live2d_model_resource_t>();
         auto model_setting = model_resource->model_setting 
-            = SkrNew<L2DF::CubismModelSettingJson>(request->bytes, (L2DF::csmSizeInt)request->size);
-        sakura_free(request->bytes);
+            = SkrNew<L2DF::CubismModelSettingJson>(cbData->settingRawData.bytes, (L2DF::csmSizeInt)cbData->settingRawData.size);
+        sakura_free(cbData->settingRawData.bytes);
         // setup models & expressions count
         if (auto _ = eastl::string(model_setting->GetModelFileName()); !_.empty())
         {
@@ -570,7 +578,7 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
         l2dHomePathStr = l2dPath.parent_path().u8string();
         callbackData->u8HomePath = l2dHomePathStr.c_str();
     }
-    ioService->request(live2dRequest->vfs_override, &ramIO, &live2dRequest->settingsRequest);
+    ioService->request(live2dRequest->vfs_override, &ramIO, &live2dRequest->settingsRequest, &callbackData->settingRawData);
 }
 #endif
 
