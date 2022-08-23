@@ -4,7 +4,7 @@
 typedef struct skr_win_dstorage_decompress_service_t skr_win_dstorage_decompress_service_t;
 typedef struct skr_win_dstorage_decompress_service_t* skr_win_dstorage_decompress_service_id;
 
-#define SKR_WIN_DSTORAGE_COMPRESSION_TYPE_ADATIVE CGPU_DSTORAGE_COMPRESSION_CUSTOM
+#define SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE CGPU_DSTORAGE_COMPRESSION_CUSTOM + 1
 
 typedef enum EWinDStorageDecompressionFlag {
     WIN_DSTORAGE_DECOMPRESSION_FLAG_NONE = 0x00,

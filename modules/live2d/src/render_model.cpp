@@ -121,14 +121,14 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
     auto render_model = SkrNew<skr_live2d_render_model_async_t>(request, resource);
     request->render_model = render_model;
-#ifndef _WIN32
-    SKR_UNIMPLEMENTED_FUNCTION();
-#else
     // request load textures
     render_model->textures.resize(texture_count);
     render_model->texture_views.resize(texture_count);
     render_model->texture_destinations.resize(texture_count);
     render_model->texture_io_requests.resize(texture_count);
+#ifndef _WIN32
+    SKR_UNIMPLEMENTED_FUNCTION();
+#else
     if (request->file_dstorage_queue_override)
     {
         for (uint32_t i = 0; i < texture_count; i++)
