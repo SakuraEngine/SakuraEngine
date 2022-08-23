@@ -37,12 +37,12 @@ void setup_render_mesh(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh
             {
                 auto& mesh_vbv = render_mesh->vertex_buffer_views.emplace_back();
                 const auto buffer_index = prim.vertex_buffers[j].buffer_index;
-                mesh_vbv.buffer = render_mesh->buffer_requests[buffer_index].out_buffer;
+                mesh_vbv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
                 mesh_vbv.offset = prim.vertex_buffers[j].offset;
                 mesh_vbv.stride = prim.vertex_buffers[j].stride;
             }
             const auto buffer_index = prim.index_buffer.buffer_index;
-            mesh_ibv.buffer = render_mesh->buffer_requests[buffer_index].out_buffer;
+            mesh_ibv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
             mesh_ibv.offset = prim.index_buffer.index_offset;
             mesh_ibv.stride = prim.index_buffer.stride;
             mesh_ibv.index_count = prim.index_buffer.index_count;
@@ -97,32 +97,36 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
         auto mesh_resource = render_mesh->mesh_resource_id = gltf_request->mesh_resource;
         // resize gpu request
         render_mesh->vio_requests.resize(mesh_resource->bins.size());
-        render_mesh->buffer_requests.resize(mesh_resource->bins.size());
+        render_mesh->buffer_destinations.resize(mesh_resource->bins.size());
         cbData->buffers_count = (uint32_t)mesh_resource->bins.size();
         cbData->buffer_paths.resize(cbData->buffers_count);
-        for (uint32_t i = 0; i < render_mesh->buffer_requests.size(); i++)
+        for (uint32_t i = 0; i < render_mesh->buffer_destinations.size(); i++)
         {
             auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
             mesh_buffer_io.device = device;
-            mesh_buffer_io.dstorage_source_type = request->dstorage_source;
-            mesh_buffer_io.dstorage_queue = request->queue_override ? nullptr : cbData->dstorage_queue;
             mesh_buffer_io.transfer_queue = request->queue_override ? request->queue_override : skr_renderer_get_cpy_queue();
-            mesh_buffer_io.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
-            mesh_buffer_io.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-            mesh_buffer_io.buffer_size = mesh_resource->bins[i].bin.size;
-            mesh_buffer_io.bytes = mesh_resource->bins[i].bin.bytes;
-            mesh_buffer_io.size =  mesh_resource->bins[i].bin.size;
+            // dstorage
+            auto gltfPath = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
+            mesh_buffer_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
+            mesh_buffer_io.dstorage.path = gltfPath.c_str();
+            mesh_buffer_io.dstorage.queue = request->queue_override ? nullptr : cbData->dstorage_queue;
+            mesh_buffer_io.dstorage.source_type = request->dstorage_source;
+            mesh_buffer_io.dstorage.uncompressed_size = mesh_resource->bins[i].bin.size;
+            // buffer
+            mesh_buffer_io.vbuffer.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
+            mesh_buffer_io.vbuffer.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+            mesh_buffer_io.vbuffer.buffer_size = mesh_resource->bins[i].bin.size;
+            mesh_buffer_io.src_memory.bytes = mesh_resource->bins[i].bin.bytes;
+            mesh_buffer_io.src_memory.size =  mesh_resource->bins[i].bin.size;
             if (request->mesh_name)
             {
-                mesh_buffer_io.buffer_name = request->mesh_name;
+                mesh_buffer_io.vbuffer.buffer_name = request->mesh_name;
             }
             else
             {
                 const char8_t* gltf_buffer_default_name = "gltf_buffer";
-                mesh_buffer_io.buffer_name = gltf_buffer_default_name;
+                mesh_buffer_io.vbuffer.buffer_name = gltf_buffer_default_name;
             }
-            auto gltfPath = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
-            mesh_buffer_io.path = gltfPath.c_str();
             mesh_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* io, void* data){
                 auto cbData = (CallbackData*)data;
                 auto request = cbData->request;
@@ -148,7 +152,7 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
                 }
             };
             mesh_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_VRAM_LOADING] = cbData;
-            vram_service->request(&mesh_buffer_io, &render_mesh->vio_requests[i], &render_mesh->buffer_requests[i]);
+            vram_service->request(&mesh_buffer_io, &render_mesh->vio_requests[i], &render_mesh->buffer_destinations[i]);
         }
     };
     skr_mesh_resource_create_from_gltf(ram_service, path, &request->mesh_resource_request);
@@ -160,9 +164,9 @@ void skr_render_mesh_free(skr_render_mesh_id render_mesh)
     {
         skr_mesh_resource_free(render_mesh->mesh_resource_id);
     }
-    for (auto&& request : render_mesh->buffer_requests)
+    for (auto&& destination : render_mesh->buffer_destinations)
     {
-        cgpu_free_buffer(request.out_buffer);
+        cgpu_free_buffer(destination.buffer);
     }
     SkrDelete(render_mesh);
 }

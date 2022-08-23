@@ -235,7 +235,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             int32_t wind_width = 0, wind_height = 0;
             skr_window_get_extent(window, &wind_width, &wind_height);
             ImGui::Text("Resolution: %dx%d", wind_width, wind_height);
-            ImGui::Text("SimulationFPS: %d", 240);
+            ImGui::Text("MotionEvalFPS(Fixed): %d", 240);
+            ImGui::Text("PhysicsEvalFPS(Fixed): %d", 240);
             ImGui::Text("RenderFPS: %d", (uint32_t)fps);
             ImGui::End();
         }

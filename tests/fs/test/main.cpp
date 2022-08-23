@@ -100,11 +100,12 @@ TEST_F(FSTest, asyncread)
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = &ramIO;
     skr_async_io_request_t request = {};
-    ioService->request(abs_fs, &ramIO, &request);
-    std::cout << (const char*)bytes << std::endl;
+    skr_async_ram_destination_t destination = {};
+    ioService->request(abs_fs, &ramIO, &request, &destination);
+    std::cout << (const char*)destination.bytes << std::endl;
     while (!request.is_ready()) {}
     // ioService->drain();
-    std::cout << (const char*)bytes << std::endl;
+    std::cout << (const char*)destination.bytes << std::endl;
     skr::io::RAMService::destroy(ioService);
 }
 
@@ -131,9 +132,11 @@ TEST_F(FSTest, cancel)
         anotherRamIO.size = 1024;
         anotherRamIO.path = "testfile";
         skr_async_io_request_t request;
-        ioService->request(abs_fs, &ramIO, &request);
+        skr_async_ram_destination_t destination = {};
+        ioService->request(abs_fs, &ramIO, &request, &destination);
         skr_async_io_request_t anotherRequest;
-        ioService->request(abs_fs, &anotherRamIO, &anotherRequest);
+        skr_async_ram_destination_t anotherDestination = {};
+        ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         // try cancel io of testfile
         bool cancelled = ioService->try_cancel(&anotherRequest);
         if (cancelled)
@@ -183,9 +186,11 @@ TEST_F(FSTest, defer_cancel)
         anotherRamIO.size = 1024;
         anotherRamIO.path = "testfile";
         skr_async_io_request_t request;
-        ioService->request(abs_fs, &ramIO, &request);
+        skr_async_ram_destination_t destination = {};
+        ioService->request(abs_fs, &ramIO, &request, &destination);
         skr_async_io_request_t anotherRequest;
-        ioService->request(abs_fs, &anotherRamIO, &anotherRequest);
+        skr_async_ram_destination_t anotherDestination = {};
+        ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         // try cancel io of testfile
         ioService->defer_cancel(&anotherRequest);
         ioService->drain();
@@ -233,9 +238,11 @@ TEST_F(FSTest, sort)
         anotherRamIO.priority = ::SKR_IO_SERVICE_PRIORITY_URGENT;
         anotherRamIO.path = "testfile";
         skr_async_io_request_t request;
-        ioService->request(abs_fs, &ramIO, &request);
+        skr_async_ram_destination_t destination = {};
+        ioService->request(abs_fs, &ramIO, &request, &destination);
         skr_async_io_request_t anotherRequest;
-        ioService->request(abs_fs, &anotherRamIO, &anotherRequest);
+        skr_async_ram_destination_t anotherDestination;
+        ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         ioService->run();
         while (!anotherRequest.is_ready())
         {

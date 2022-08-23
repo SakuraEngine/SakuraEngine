@@ -14,6 +14,7 @@ public:
         skr_vfs_t* vfs;
         eastl::string path;
         uint64_t offset;
+        skr_async_ram_destination_t* destination;
     };
     ~RAMServiceImpl() SKR_NOEXCEPT = default;
     RAMServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
@@ -21,7 +22,7 @@ public:
 
     {
     }
-    void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request) SKR_NOEXCEPT final;
+    void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request, skr_async_ram_destination_t* dst) SKR_NOEXCEPT final;
     bool try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
     void defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
     void drain() SKR_NOEXCEPT final;
@@ -57,13 +58,13 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
             vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
                 ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
         }
-        if (task->request->bytes == nullptr)
+        if (task->destination->bytes == nullptr)
         {
             ZoneScopedNC("Allocate", tracy::Color::LightBlue);
             // allocate
             auto fsize = skr_vfs_fsize(vf);
-            task->request->size = fsize;
-            task->request->bytes = (uint8_t*)sakura_malloc(fsize);
+            task->destination->size = fsize;
+            task->destination->bytes = (uint8_t*)sakura_malloc(fsize);
         }
         {
             ZoneScopedN("BeforeLoadingCallback");
@@ -71,7 +72,7 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
         }
         {
             ZoneScopedNC("FRead", tracy::Color::LightBlue);
-            skr_vfs_fread(vf, task->request->bytes, task->offset, task->request->size);
+            skr_vfs_fread(vf, task->destination->bytes, task->offset, task->destination->size);
         }
         {
             ZoneScopedN("LoadingOKCallback");
@@ -104,7 +105,8 @@ void __ioThreadTask_RAM(void* arg)
     }
 }
 
-void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, skr_async_io_request_t* async_request) SKR_NOEXCEPT
+void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
+    skr_async_io_request_t* async_request, skr_async_ram_destination_t* dst) SKR_NOEXCEPT
 {
     ZoneScopedN("ioRAMRequest");
 
@@ -114,8 +116,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
     back.path = eastl::string(info->path);
     back.offset = info->offset;
     back.request = async_request;
-    back.request->bytes = (uint8_t*)info->bytes;
-    back.request->size = info->size;
+    back.destination = dst;
     back.priority = info->priority;
     back.sub_priority = info->sub_priority;
     for (uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
