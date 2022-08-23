@@ -1,8 +1,11 @@
 rule("utils.ispc")
     set_extensions(".ispc")
+    add_deps("utils.inherit.links")
+
     on_config(function (target, opt)
         local header_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-headers")
         local obj_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-obj")
+        os.mkdir(header_outputdir)
         target:add("includedirs", header_outputdir)
     end)
     before_buildcmd_file(function (target, batchcmds, sourcefile_ispc, opt)
@@ -11,9 +14,9 @@ rule("utils.ispc")
 
         ispc_basename = path.filename(sourcefile_ispc):match("..+%..+")
         if (os.arch() == "x86_64" or os.arch() == "x64") then
-            target_args = "--target=avx"
+            target_args = "--target=host"
         else
-            target_args = "--target=neon"
+            target_args = "--target=host"
         end
 
         local obj_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-obj")
@@ -43,7 +46,7 @@ rule("utils.ispc")
             --table.insert(target:objectfiles(), obj_neon_path)
         end
 
-        batchcmds:add_depfiles(sourcefile_ispc)
+        batchcmds:add_depfiles(sourcefile_ispc, header_path)
         batchcmds:set_depmtime(os.mtime(obj_path))
         batchcmds:set_depcache(target:dependfile(obj_path))
         batchcmds:set_depmtime(os.mtime(header_path))
