@@ -161,6 +161,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         auto texture_path = resource->model_setting->GetTextureFileName(i);
         auto pngPath = ghc::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
         auto pngPathStr = pngPath.u8string();
+#ifdef _WIN32
         if (request->file_dstorage_queue_override)
         {
             std::string p = texture_path;
@@ -193,6 +194,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
         }
         else
+#endif
         {
             auto& png_destination = render_model->png_destinations[i];
             auto& png_io_request = render_model->png_io_requests[i];
