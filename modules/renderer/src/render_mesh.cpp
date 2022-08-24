@@ -118,6 +118,7 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
             mesh_buffer_io.vbuffer.buffer_size = mesh_resource->bins[i].bin.size;
             mesh_buffer_io.src_memory.bytes = mesh_resource->bins[i].bin.bytes;
             mesh_buffer_io.src_memory.size =  mesh_resource->bins[i].bin.size;
+            
             if (request->mesh_name)
             {
                 mesh_buffer_io.vbuffer.buffer_name = request->mesh_name;

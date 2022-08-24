@@ -66,9 +66,9 @@ void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = false;
-    instance_desc.enable_gpu_based_validation = false;
-    instance_desc.enable_set_name = false;
+    instance_desc.enable_debug_layer = enable_debug_layer;
+    instance_desc.enable_gpu_based_validation = enable_gpu_based_validation;
+    instance_desc.enable_set_name = enable_set_name;
     instance = cgpu_create_instance(&instance_desc);
 
     // Filter adapters

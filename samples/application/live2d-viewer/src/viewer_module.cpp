@@ -133,6 +133,7 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
                 vram_request.file_dstorage_queue_override = file_dstorage_queue;
                 vram_request.memory_dstorage_queue_override = memory_dstorage_queue;
                 vram_request.vfs_override = resource_vfs;
+                vram_request.queue_override = skr_renderer_get_gfx_queue();
                 ram_request.vfs_override = resource_vfs;
                 ram_request.callback_data = &vram_request;
                 ram_request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)

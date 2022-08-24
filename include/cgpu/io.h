@@ -76,7 +76,7 @@ typedef struct skr_vram_texture_io_t {
     // Data bytes
     struct
     {
-        uint8_t* bytes;
+        const uint8_t* bytes;
         uint64_t size;
     } src_memory;
     SkrIOServicePriority priority;

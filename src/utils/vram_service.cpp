@@ -123,6 +123,7 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
             texture_desc.depth = texture_io.vtexture.depth;
             texture_desc.descriptors = texture_io.vtexture.resource_types;
             texture_desc.flags = texture_io.vtexture.flags;
+            texture_desc.format = texture_io.vtexture.format;
             auto texture = cgpu_create_texture(buffer_task->texture_io.device, &texture_desc);
             // return resource object
             buffer_task->destination->texture = texture;
@@ -202,7 +203,7 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
 
         if (buffer_io.src_memory.bytes)
         {
-            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address + buffer_io.vbuffer.offset, 
+            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address, 
                 buffer_io.src_memory.bytes, buffer_io.src_memory.size);
         }
         
@@ -212,7 +213,7 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         {
             CGPUBufferToBufferTransfer vb_cpy = {};
             vb_cpy.dst = destination->buffer;
-            vb_cpy.dst_offset = 0;
+            vb_cpy.dst_offset = buffer_io.vbuffer.offset;
             vb_cpy.src = upload->upload_buffer;
             vb_cpy.src_offset = 0;
             vb_cpy.size = buffer_io.src_memory.size;
@@ -221,7 +222,9 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         auto buffer_barrier = make_zeroed<CGPUBufferBarrier>();
         buffer_barrier.buffer = destination->buffer;
         buffer_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+        buffer_barrier.dst_state = CGPU_RESOURCE_STATE_COMMON;
         // release
+        if (buffer_io.transfer_queue->type == CGPU_QUEUE_TYPE_TRANSFER)
         {
             buffer_barrier.queue_release = true;
             buffer_barrier.queue_type = buffer_io.transfer_queue->type;
@@ -269,7 +272,9 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
         auto texture_barrier = make_zeroed<CGPUTextureBarrier>();
         texture_barrier.texture = destination->texture;
         texture_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+        texture_barrier.dst_state = CGPU_RESOURCE_STATE_SHADER_RESOURCE;
         // release
+        if (texture_io.transfer_queue->type == CGPU_QUEUE_TYPE_TRANSFER)
         {
             texture_barrier.queue_release = true;
             texture_barrier.queue_type = texture_io.transfer_queue->type;
