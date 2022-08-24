@@ -13,6 +13,7 @@
 #include "live2d_helpers.hpp"
 #include <ghc/filesystem.hpp>
 
+#include "skr_image_coder/skr_image_coder.h"
 #ifdef _WIN32
 #include "skr_image_coder/extensions/win_dstorage_decompressor.h"
 #endif
