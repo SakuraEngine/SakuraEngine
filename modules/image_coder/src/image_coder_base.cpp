@@ -138,7 +138,7 @@ bool BaseImageCoder::lazy_decode(EImageCoderColorFormat format, uint32_t bit_dep
         auto _this = const_cast<BaseImageCoder*>(this);
         if (_this->decode(format, bit_depth))
         {
-            return false;
+            return true;
         }
     }
     return true;

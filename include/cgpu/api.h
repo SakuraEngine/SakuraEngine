@@ -429,7 +429,7 @@ typedef struct CGPUDStorageTextureIODescriptor {
     ECGPUDStorageSource source_type;
     struct
     {
-        uint8_t* bytes;
+        const uint8_t* bytes;
         uint64_t bytes_size;
     } source_memory;
     struct

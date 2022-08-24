@@ -1,5 +1,10 @@
 #include "platform/vfs.h"
+
+#include "utils/io.hpp"
+#include "utils/log.h"
+#include "utils/defer.hpp"
 #include "cgpu/io.hpp"
+
 #include "utils/make_zeroed.hpp"
 #include "platform/memory.h"
 #include "platform/debug.h"
@@ -37,6 +42,9 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
 
     eastl::vector<skr_async_io_request_t> texture_io_requests;
     eastl::vector<skr_async_vtexture_destination_t> texture_destinations;
+    eastl::vector<skr_async_io_request_t> png_io_requests;
+    eastl::vector<skr_async_ram_destination_t> png_destinations;
+
     eastl::vector<skr_async_io_request_t> buffer_io_requests;
     eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
 };
@@ -85,6 +93,10 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
             view_desc.usages = CGPU_TVU_SRV;
             texture_views[i] = cgpu_create_texture_view(textures[i]->device, &view_desc);
         }
+        for (auto&& coder : coders)
+        {
+            if (coder) skr_image_coder_free_image(coder);
+        }
         skr_atomic32_store_relaxed(&request->io_status, SKR_ASYNC_IO_STATUS_OK);
         request = nullptr;
     }
@@ -98,6 +110,10 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     uint32_t finished_texture_request = 0;
     uint32_t finished_buffer_request = 0;
     skr_live2d_render_model_request_t* request = nullptr;
+    skr_io_vram_service_t* vram_service = nullptr;
+    CGPUDeviceId device;
+    CGPUQueueId transfer_queue;
+    eastl::vector<skr_image_coder_id> coders;
 };
 
 bool skr_live2d_render_model_request_t::is_ready() const SKR_NOEXCEPT
@@ -121,42 +137,46 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
     auto render_model = SkrNew<skr_live2d_render_model_async_t>(request, resource);
     request->render_model = render_model;
+    render_model->device = device;
+    render_model->transfer_queue = request->queue_override;
+    render_model->vram_service = vram_service;
     // request load textures
     render_model->textures.resize(texture_count);
     render_model->texture_views.resize(texture_count);
     render_model->texture_destinations.resize(texture_count);
     render_model->texture_io_requests.resize(texture_count);
-#ifndef _WIN32
-    SKR_UNIMPLEMENTED_FUNCTION();
-#else
-    if (request->file_dstorage_queue_override)
+    if (!request->file_dstorage_queue_override)
     {
-        for (uint32_t i = 0; i < texture_count; i++)
-        {
-            ZoneScopedN("RequestLive2DTexture");
+        render_model->png_destinations.resize(texture_count);
+        render_model->png_io_requests.resize(texture_count);
+    }
+    for (uint32_t i = 0; i < texture_count; i++)
+    {
+        ZoneScopedN("RequestLive2DTexture");
 
-            auto& texture_destination = render_model->texture_destinations[i];
-            auto& texture_io_request = render_model->texture_io_requests[i];
-            auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
-            auto texture_path = resource->model_setting->GetTextureFileName(i);
+        auto& texture_destination = render_model->texture_destinations[i];
+        auto& texture_io_request = render_model->texture_io_requests[i];
+        auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
+        auto texture_path = resource->model_setting->GetTextureFileName(i);
+        auto pngPath = ghc::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
+        auto pngPathStr = pngPath.u8string();
+        if (request->file_dstorage_queue_override)
+        {
             std::string p = texture_path;
             int p1 = p.find(".");
             int p2 = p.find("/");
             std::string number = p.substr(p1 + 1, p2 - p1 - 1);
             auto resolution = std::stoi(number);
             vram_texture_io.device = device;
-
-            auto pngPath = ghc::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
-           
-            auto pngPathStr = pngPath.u8string();
+        
             vram_texture_io.dstorage.path = pngPathStr.c_str();
             vram_texture_io.dstorage.compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE;
             vram_texture_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
             vram_texture_io.dstorage.queue = file_dstorage_queue;
             vram_texture_io.dstorage.uncompressed_size = resolution * resolution * 4;
 
-            vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_NONE;
             vram_texture_io.vtexture.texture_name = texture_path;
+            vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
             vram_texture_io.vtexture.width = resolution;
             vram_texture_io.vtexture.height = resolution;
             vram_texture_io.vtexture.depth = 1;
@@ -171,8 +191,67 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = render_model;
             vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
         }
+        else
+        {
+            auto& png_destination = render_model->png_destinations[i];
+            auto& png_io_request = render_model->png_io_requests[i];
+
+            auto ram_texture_io = make_zeroed<skr_ram_io_t>();
+
+            ram_texture_io.path = pngPathStr.c_str();
+            ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
+                ZoneScopedN("Load PNG");
+                auto render_model = (skr_live2d_render_model_async_t*)data;
+                auto idx = request - render_model->png_io_requests.data();
+
+                const auto& png_destination = render_model->png_destinations[idx];
+                auto vram_service = render_model->vram_service;
+                // decompress
+                EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_destination.bytes, png_destination.size);
+                auto coder = skr_image_coder_create_image(format);
+                render_model->coders.emplace_back(coder);
+                if (skr_image_coder_set_encoded(coder, (const uint8_t*)png_destination.bytes, png_destination.size))
+                {
+                    SKR_LOG_DEBUG("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+                        skr_image_coder_get_width(coder), skr_image_coder_get_height(coder), 
+                        skr_image_coder_get_encoded_size(coder),
+                        skr_image_coder_get_raw_size(coder));
+                    const auto encoded_format = coder->get_color_format();
+                    const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
+                    if (auto raw_data = coder->get_raw_data_view(raw_format, coder->get_bit_depth());!raw_data.empty())
+                    {
+                        // upload
+                        auto& texture_io_request = render_model->texture_io_requests[idx];
+                        auto& texture_destination = render_model->texture_destinations[idx];
+                        auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
+                        vram_texture_io.device = render_model->device;
+                        vram_texture_io.transfer_queue = render_model->transfer_queue;
+
+                        vram_texture_io.vtexture.texture_name = nullptr;
+                        vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
+                        vram_texture_io.vtexture.width = coder->get_width();
+                        vram_texture_io.vtexture.height = coder->get_height();
+                        vram_texture_io.vtexture.depth = 1;
+                        vram_texture_io.vtexture.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+
+                        vram_texture_io.src_memory.size = coder->get_width() * coder->get_height() * 4;
+                        vram_texture_io.src_memory.bytes = raw_data.data();
+                        vram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data){
+                            auto render_model = (skr_live2d_render_model_async_t*)data;
+
+                            render_model->texture_finish(request);
+                        };
+                        vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = render_model;
+                        vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
+                    }
+                }
+                sakura_free(png_destination.bytes);
+            };
+            ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)render_model;
+            ram_service->request(request->vfs_override, &ram_texture_io, &png_io_request, &png_destination);
+        }
     }
-#endif
+    
     // request load buffers
     const auto use_dynamic_buffer = render_model->use_dynamic_buffer;
     const auto drawable_count = csmModel->GetDrawableCount();
@@ -265,7 +344,6 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             render_model->primitive_commands[i].ibv = &render_model->index_buffer_views[i];
             render_model->primitive_commands[i].vbvs = skr::span(&render_model->vertex_buffer_views[2 * i], 2);
         }
-
     }
     // Request indices I/O
     {
@@ -286,9 +364,9 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 buffer_destination.buffer = render_model->index_buffer;
 
                 ib_io.device = device;
-                ib_io.transfer_queue = request->queue_override;
+                ib_io.transfer_queue = memory_dstorage_queue ? nullptr : request->queue_override;
 
-                ib_io.dstorage.queue = request->queue_override ? nullptr : memory_dstorage_queue;
+                ib_io.dstorage.queue = memory_dstorage_queue;
                 ib_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_MEMORY;
                 ib_io.dstorage.uncompressed_size = sizeof(Csm::csmUint16) * icount;
 
