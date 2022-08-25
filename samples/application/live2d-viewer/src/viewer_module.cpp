@@ -8,6 +8,7 @@
 
 #include "ghc/filesystem.hpp"
 #include "platform/vfs.h"
+#include "platform/thread.h"
 #include "platform/time.h"
 #include "utils/io.hpp"
 #include "cgpu/io.hpp"
@@ -166,8 +167,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     window_desc.centered = true;
     window_desc.resizable = true;
     // TODO: Resizable swapchain
-    window_desc.height = 1440;
-    window_desc.width = 1440;
+    window_desc.height = 1500;
+    window_desc.width = 1500;
     window = skr_create_window(
         fmt::format("Live2D Viewer [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
         &window_desc);
@@ -199,6 +200,19 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
+            if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
+            {
+                if (event.type == SDL_WINDOWEVENT)
+                {
+                    Uint8 window_event = event.window.event;
+                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                    {
+                        cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+                        cgpu_wait_fences(&present_fence, 1);
+                        swapchain = skr_renderer_recreate_window_swapchain(window);
+                    }
+                }
+            }
             if (event.type == SDL_QUIT)
             {
                 quit = true;

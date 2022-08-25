@@ -57,7 +57,6 @@ namespace Live2D { namespace Cubism { namespace Framework {
     static constexpr csmInt32 kPriorityForce = 3;
     static constexpr csmInt32 kColorChannelCount = 4;
     // TODO: Refactor these
-    static constexpr csmInt32 kScreenResolution = 1440;
     static constexpr csmInt32 kMaskResolution = 256;
 
     class csmUserModel : public CubismUserModel, public IAsyncL2DResourceInterface

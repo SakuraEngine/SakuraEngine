@@ -457,7 +457,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             view_desc.base_array_layer = write_edge->get_array_base();
             view_desc.array_layer_count = write_edge->get_array_count();
             view_desc.base_mip_level = write_edge->get_mip_level();
-            view_desc.mip_level_count = 1;
+            view_desc.mip_level_count = 1; // TODO: mip
             view_desc.format = (ECGPUFormat)view_desc.texture->format;
             view_desc.aspects = CGPU_TVA_COLOR;
             view_desc.usages = CGPU_TVU_RTV_DSV;
