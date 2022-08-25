@@ -22,10 +22,12 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
 
     void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
     {
+        auto backbuffer = renderGraph->get_texture("backbuffer");
+        auto& back_desc = renderGraph->resolve(backbuffer)->get_desc();
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             builder.set_name("depth")
-                .extent(Csm::kScreenResolution, Csm::kScreenResolution)
+                .extent(back_desc.width, back_desc.height)
                 .format(live2d_depth_format)
                 .owns_memory()
                 .allow_depth_stencil();
@@ -46,9 +48,9 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
-                    (float)Csm::kScreenResolution, (float)Csm::kScreenResolution,
+                    (float)back_desc.width, (float)back_desc.height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, Csm::kScreenResolution, Csm::kScreenResolution);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc.width, back_desc.height);
                 CGPURenderPipelineId old_pipeline = nullptr;
                 for (uint32_t i = 0; i < drawcalls.count; i++)
                 {

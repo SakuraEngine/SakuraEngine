@@ -133,6 +133,11 @@ CGPUSwapChainId skr_renderer_register_window(SWindowHandle window)
     return SkrRendererModule::Get()->get_renderer()->register_window(window);
 }
 
+CGPUSwapChainId skr_renderer_recreate_window_swapchain(SWindowHandle window)
+{
+    return SkrRendererModule::Get()->get_renderer()->recreate_window_swapchain(window);
+}
+
 ECGPUFormat skr_renderer_get_swapchain_format()
 {
     return SkrRendererModule::Get()->get_swapchain_format();

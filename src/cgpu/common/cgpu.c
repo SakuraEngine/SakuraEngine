@@ -1012,7 +1012,7 @@ CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDe
     else
     {
         cgpu_assert(desc->present_queues_count > 0 &&
-                    "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
+                    "fatal cgpu_create_swapchain: queue array & queue count dismatch!");
     }
     CGPUSwapChain* swapchain = (CGPUSwapChain*)device->proc_table_cache->create_swapchain(device, desc);
     cgpu_assert(swapchain && "fatal cgpu_create_swapchain: NULL swapchain id returned from backend.");

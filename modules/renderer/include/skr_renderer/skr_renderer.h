@@ -75,6 +75,7 @@ public:
     }
 
     CGPUSwapChainId register_window(SWindowHandle window);
+    CGPUSwapChainId recreate_window_swapchain(SWindowHandle window);
 
 protected:
     void create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name);
@@ -133,6 +134,9 @@ skr_renderer_get_renderer();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSwapChainId
 skr_renderer_register_window(SWindowHandle window);
+
+RUNTIME_EXTERN_C SKR_RENDERER_API CGPUSwapChainId
+skr_renderer_recreate_window_swapchain(SWindowHandle window);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API ECGPUFormat
 skr_renderer_get_swapchain_format();

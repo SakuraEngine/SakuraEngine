@@ -185,3 +185,43 @@ CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
     swapchains[window] = swapchain;
     return swapchain;
 }
+
+CGPUSwapChainId skr::Renderer::recreate_window_swapchain(SWindowHandle window)
+{
+    // find registered
+    CGPUSwapChainId old = nullptr;
+    {
+        auto _ = swapchains.find(window);
+        if (_ == swapchains.end()) return nullptr;
+        else old = _->second;
+    }
+    CGPUSurfaceId surface = nullptr;
+    // find registered
+    {
+        auto _ = surfaces.find(window);
+        if (_ != surfaces.end())
+        {
+            cgpu_free_surface(device, _->second);
+        }
+        {
+            surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
+            surfaces[window] = surface;
+        }
+    }
+    int32_t width, height;
+    skr_window_get_extent(window, &width, &height);
+    // Create swapchain
+    CGPUSwapChainDescriptor chain_desc = {};
+    chain_desc.present_queues = &gfx_queue;
+    chain_desc.present_queues_count = 1;
+    chain_desc.width = width;
+    chain_desc.height = height;
+    chain_desc.surface = surface;
+    chain_desc.imageCount = 2;
+    chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
+    chain_desc.enable_vsync = false;
+    cgpu_free_swapchain(old);
+    auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
+    swapchains[window] = swapchain;
+    return swapchain;
+}

@@ -363,7 +363,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         if (!drawcalls->drawcalls) return 0;
 
         CubismMatrix44 projection;
-        projection.Scale(static_cast<float>(Csm::kScreenResolution) / static_cast<float>(Csm::kScreenResolution), 1.0f);
+        // TODO: Correct Projection
+        projection.Scale(static_cast<float>(100.f) / static_cast<float>(100.f), 1.0f);
         // TODO: View Matrix
 
         uint32_t dc_idx = 0;

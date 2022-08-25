@@ -373,6 +373,43 @@ void raster_program()
                 {
                     quit = true;
                 }
+                if (event.type == SDL_WINDOWEVENT)
+                {
+                    Uint8 window_event = event.window.event;
+                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                    {
+                        cgpu_wait_queue_idle(gfx_queue);
+                        int width = 0, height = 0;
+                        SDL_GetWindowSize(sdl_window, &width, &height);
+                        CGPUSwapChainDescriptor descriptor = {
+                            .present_queues = &gfx_queue,
+                            .present_queues_count = 1,
+                            .width = width,
+                            .height = height,
+                            .surface = surface,
+                            .imageCount = BACK_BUFFER_COUNT,
+                            .format = CGPU_FORMAT_R8G8B8A8_UNORM,
+                            .enable_vsync = true
+                        };
+                        cgpu_free_swapchain(swapchain);
+                        swapchain = cgpu_create_swapchain(device, &descriptor);
+                        // Create views
+                        for (uint32_t i = 0; i < swapchain->buffer_count; i++)
+                        {
+                            cgpu_free_texture_view(views[i]);
+                            CGPUTextureViewDescriptor view_desc = {
+                                .texture = swapchain->back_buffers[i],
+                                .aspects = CGPU_TVA_COLOR,
+                                .dims = CGPU_TEX_DIMENSION_2D,
+                                .format = swapchain->back_buffers[i]->format,
+                                .usages = CGPU_TVU_RTV_DSV,
+                                .array_layer_count = 1
+                            };
+                            views[i] = cgpu_create_texture_view(device, &view_desc);
+                        }
+                        skr_thread_sleep(100);
+                    }
+                }
             }
         }
         raster_redraw();
