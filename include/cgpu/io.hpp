@@ -13,7 +13,9 @@ public:
 
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
-    virtual void request(const skr_vram_buffer_io_t* info, skr_async_io_request_t* async_request, skr_vram_buffer_request_t* buffer_request) SKR_NOEXCEPT = 0;
+
+    virtual void request(const skr_vram_buffer_io_t* buffer_info, skr_async_io_request_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT = 0;
+    virtual void request(const skr_vram_texture_io_t* texture_info, skr_async_io_request_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT = 0;
 
     // try to cancel an enqueued request at **this** thread
     // not available (returns always false) under lockless mode

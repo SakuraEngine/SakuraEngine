@@ -34,6 +34,9 @@ void SkrRendererModule::on_load(int argc, char** argv)
     SKR_LOG_INFO("skr renderer loaded!");
 
     renderer = create_renderer_impl();
+    bool enable_debug_layer = false;
+    bool enable_gpu_based_validation = false;
+    bool enable_set_name = true;
     for (auto i = 0; i < argc; i++)
     {
         if (::strcmp(argv[i], "--vulkan") == 0)
@@ -52,8 +55,11 @@ void SkrRendererModule::on_load(int argc, char** argv)
             renderer->backend = CGPU_BACKEND_VULKAN;
 #endif
         }
+        enable_debug_layer = (0 == ::strcmp(argv[i], "--debug_layer"));
+        enable_gpu_based_validation = (0 == ::strcmp(argv[i], "--gpu_based_validation"));
+        enable_set_name = (0 == ::strcmp(argv[i], "--gpu_obj_name"));
     }
-    renderer->initialize();
+    renderer->initialize(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 }
 
 void SkrRendererModule::on_unload()
@@ -85,6 +91,11 @@ CGPUSamplerId SkrRendererModule::get_linear_sampler() const
 CGPUDeviceId SkrRendererModule::get_cgpu_device() const
 {
     return renderer->device;
+}
+
+CGPURootSignaturePoolId SkrRendererModule::get_root_signature_pool() const
+{
+    return renderer->root_signature_pool;
 }
 
 skr_io_vram_service_t* SkrRendererModule::get_vram_service() const
@@ -122,6 +133,11 @@ CGPUSwapChainId skr_renderer_register_window(SWindowHandle window)
     return SkrRendererModule::Get()->get_renderer()->register_window(window);
 }
 
+CGPUSwapChainId skr_renderer_recreate_window_swapchain(SWindowHandle window)
+{
+    return SkrRendererModule::Get()->get_renderer()->recreate_window_swapchain(window);
+}
+
 ECGPUFormat skr_renderer_get_swapchain_format()
 {
     return SkrRendererModule::Get()->get_swapchain_format();
@@ -130,6 +146,11 @@ ECGPUFormat skr_renderer_get_swapchain_format()
 CGPUSamplerId skr_renderer_get_linear_sampler()
 {
     return SkrRendererModule::Get()->get_linear_sampler();
+}
+
+CGPURootSignaturePoolId skr_renderer_get_root_signature_pool()
+{
+    return SkrRendererModule::Get()->get_root_signature_pool();
 }
 
 CGPUQueueId skr_renderer_get_gfx_queue()
@@ -170,3 +191,15 @@ CGPUDStorageQueueId skr_renderer_get_memory_dstorage_queue()
 {
     return SkrRendererModule::Get()->get_memory_dstorage_queue();
 }
+
+#ifdef _WIN32
+skr_win_dstorage_decompress_service_id SkrRendererModule::get_win_dstorage_decompress_service() const
+{
+    return renderer->decompress_service;
+}
+
+skr_win_dstorage_decompress_service_id skr_renderer_get_win_dstorage_decompress_service()
+{
+    return SkrRendererModule::Get()->get_win_dstorage_decompress_service();
+}
+#endif

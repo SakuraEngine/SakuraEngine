@@ -732,8 +732,10 @@ typedef enum ECGPUDStoragePriority {
 
 typedef enum ECGPUDStorageCompression {
     CGPU_DSTORAGE_COMPRESSION_NONE = 0,
-    CGPU_DSTORAGE_COMPRESSION_MAX_ENUM_BIT = 0x7FFFFFFF
+    CGPU_DSTORAGE_COMPRESSION_CUSTOM = 0x80,
+    CGPU_DSTORAGE_COMPRESSION_MAX_ENUM_BIT = 0xFF
 } ECGPUDStorageCompression;
+typedef uint8_t CGPUDStorageCompression;
 
 //
 /* clang-format off */

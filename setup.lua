@@ -4,6 +4,7 @@ if (os.host() =="macosx") then
     if(brew == nil) then
         os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
     end
+    os.exec("brew install ispc")
     os.exec("brew install python")
     os.exec("brew install sdl2")
     os.exec("brew install googletest")
@@ -22,6 +23,7 @@ if (os.host() == "windows") then
     find_sdk.sdk_from_github("nvapi-windows-x64.zip")
     find_sdk.sdk_from_github("dstorage-windows-x64.zip")
     --
+    find_sdk.sdk_from_github("ispc-windows-x64.zip")
     find_sdk.sdk_from_github("reflector-windows-x64.zip")
     find_sdk.sdk_from_github("SDL2-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient-windows-x64.zip")
@@ -36,12 +38,14 @@ if (os.host() == "macosx") then
         find_sdk.sdk_from_github("tracyclient-macosx-x86_64.zip")
         find_sdk.sdk_from_github("llfio-macosx-x86_64.zip")
     else
+        -- find_sdk.sdk_from_github("ispc-macosx-arm64.zip")
         find_sdk.sdk_from_github("dxc-macosx-arm64.zip")
     end
 end
 
 find_sdk.install_tool("dxc")
 find_sdk.install_tool("reflector")
+find_sdk.install_tool("ispc")
 if (os.host() == "windows") then
     find_sdk.install_tool("wasm-clang")
 end

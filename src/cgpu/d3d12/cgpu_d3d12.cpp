@@ -284,7 +284,8 @@ ECGPUFenceStatus cgpu_query_fence_status_d3d12(CGPUFenceId fence)
 {
     ECGPUFenceStatus status = CGPU_FENCE_STATUS_COMPLETE;
     CGPUFence_D3D12* F = (CGPUFence_D3D12*)fence;
-    if (F->pDxFence->GetCompletedValue() < F->mFenceValue - 1)
+    const auto Value = F->pDxFence->GetCompletedValue();
+    if (Value < F->mFenceValue - 1)
         status = CGPU_FENCE_STATUS_INCOMPLETE;
     else
         status = CGPU_FENCE_STATUS_COMPLETE;
@@ -379,7 +380,6 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
         {
             CGPUShaderResource* reflSlot = &paramTable->resources[i_register];
             visStages |= reflSlot->stages;
-            // Record RS::mRootConstantParam directly, it'll be copied to the end of rootParams list
             {
                 D3D12_DESCRIPTOR_RANGE1* descRange = &cbvSrvUavRanges[i_range];
                 descRange->RegisterSpace = reflSlot->set;
@@ -488,10 +488,10 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     // #NOTE : In non SLI mode, mNodeCount will be 0 which sets nodeMask to
     // default value
     CHECK_HRESULT(D->pDxDevice->CreateRootSignature(
-    SINGLE_GPU_NODE_MASK,
-    rootSignatureString->GetBufferPointer(),
-    rootSignatureString->GetBufferSize(),
-    IID_ARGS(&RS->pDxRootSignature)));
+        SINGLE_GPU_NODE_MASK,
+        rootSignatureString->GetBufferPointer(),
+        rootSignatureString->GetBufferSize(),
+        IID_ARGS(&RS->pDxRootSignature)));
     cgpu_free(rootParams);
     cgpu_free(cbvSrvUavRanges);
     // [RS POOL] INSERTION
@@ -511,18 +511,13 @@ void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature)
     if (signature->pool)
     {
         CGPUUtil_PoolFreeSignature(signature->pool, signature);
-        if (signature->pool_sig) // not root
-        {
-            // Free Reflection Data
-            CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
-            cgpu_delete(RS);
-        }
         return;
     }
     // [RS POOL] END FREE
     CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
     SAFE_RELEASE(RS->pDxRootSignature);
     cgpu_delete(RS);
+    return;
 }
 
 CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)
@@ -1586,8 +1581,8 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
             Cmd->mSubResolveResource.DstY = 0;
             Cmd->mSubResolveResource.SrcSubresource = 0;
             Cmd->mSubResolveResource.DstSubresource = CALC_SUBRESOURCE_INDEX(
-            0, 0, 0,
-            T->super.mip_levels, T->super.array_size_minus_one + 1);
+                0, 0, 0,
+                T->super.mip_levels, T->super.array_size_minus_one + 1);
             Resolve.PreserveResolveSource = false;
             Resolve.SubresourceCount = 1;
             Resolve.pSubresourceParameters = &Cmd->mSubResolveResource;
@@ -1607,14 +1602,10 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
     if (desc->depth_stencil != nullptr && desc->depth_stencil->view != nullptr)
     {
         CGPUTextureView_D3D12* DTV = (CGPUTextureView_D3D12*)desc->depth_stencil->view;
-        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE dBeginingAccess =
-        gDx12PassBeginOpTranslator[desc->depth_stencil->depth_load_action];
-        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE sBeginingAccess =
-        gDx12PassBeginOpTranslator[desc->depth_stencil->stencil_load_action];
-        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE dEndingAccess =
-        gDx12PassEndOpTranslator[desc->depth_stencil->depth_store_action];
-        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE sEndingAccess =
-        gDx12PassEndOpTranslator[desc->depth_stencil->stencil_store_action];
+        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE dBeginingAccess = gDx12PassBeginOpTranslator[desc->depth_stencil->depth_load_action];
+        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE sBeginingAccess = gDx12PassBeginOpTranslator[desc->depth_stencil->stencil_load_action];
+        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE dEndingAccess = gDx12PassEndOpTranslator[desc->depth_stencil->depth_store_action];
+        D3D12_RENDER_PASS_ENDING_ACCESS_TYPE sEndingAccess = gDx12PassEndOpTranslator[desc->depth_stencil->stencil_store_action];
         clearDepth.Format = DXGIUtil_TranslatePixelFormat(desc->depth_stencil->view->info.format);
         clearDepth.DepthStencil.Depth = desc->depth_stencil->clear_depth;
         clearStencil.Format = DXGIUtil_TranslatePixelFormat(desc->depth_stencil->view->info.format);
@@ -1627,9 +1618,9 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
         pRenderPassDepthStencilDesc = &renderPassDepthStencilDesc;
     }
     D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderPassRenderTargetDesc = renderPassRenderTargetDescs;
-    CmdList4->BeginRenderPass(colorTargetCount,
-    pRenderPassRenderTargetDesc, pRenderPassDepthStencilDesc,
-    D3D12_RENDER_PASS_FLAG_NONE);
+    CmdList4->BeginRenderPass(colorTargetCount, 
+        pRenderPassRenderTargetDesc, pRenderPassDepthStencilDesc,
+        D3D12_RENDER_PASS_FLAG_NONE);
     return (CGPURenderPassEncoderId)&Cmd->super;
 #endif
     cgpu_info("ID3D12GraphicsCommandList4 is not defined!");
@@ -1640,6 +1631,9 @@ void cgpu_render_encoder_bind_descriptor_set_d3d12(CGPURenderPassEncoderId encod
 {
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)encoder;
     const CGPUDescriptorSet_D3D12* Set = (CGPUDescriptorSet_D3D12*)set;
+    CGPURootSignature_D3D12* RS = (CGPURootSignature_D3D12*)Set->super.root_signature;
+    SKR_ASSERT(RS);
+    reset_root_signature(Cmd, CGPU_PIPELINE_TYPE_GRAPHICS, RS->pDxRootSignature);
     if (Set->mCbvSrvUavHandle != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
     {
         Cmd->pDxCmdList->SetGraphicsRootDescriptorTable(set->index,
@@ -1740,16 +1734,19 @@ void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncod
 }
 
 // SwapChain APIs
-CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc)
+CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc, CGPUSwapChain_D3D12* old)
 {
     CGPUInstance_D3D12* I = (CGPUInstance_D3D12*)device->adapter->instance;
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    CGPUSwapChain_D3D12* S = (CGPUSwapChain_D3D12*)old;
     const uint32_t buffer_count = desc->imageCount;
-    void* Memory = cgpu_calloc(1, sizeof(CGPUSwapChain_D3D12) +
-                                  sizeof(CGPUTexture_D3D12) * buffer_count +
-                                  sizeof(CGPUTextureId) * buffer_count);
-    CGPUSwapChain_D3D12* S = cgpu_new_placed<CGPUSwapChain_D3D12>(Memory);
-
+    if (!old)
+    {
+        void* Memory = cgpu_calloc(1, sizeof(CGPUSwapChain_D3D12) +
+                                    sizeof(CGPUTexture_D3D12) * buffer_count +
+                                    sizeof(CGPUTextureId) * buffer_count);
+        S = cgpu_new_placed<CGPUSwapChain_D3D12>(Memory);
+    }
     S->mDxSyncInterval = desc->enable_vsync ? 1 : 0;
     DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, chain_desc1)
     chain_desc1.Width = desc->width;
@@ -1784,7 +1781,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapC
     auto bCreated =
     SUCCEEDED(I->pDXGIFactory->CreateSwapChainForHwnd(Q->pCommandQueue, hwnd, &chain_desc1, NULL, NULL, &swapchain));
     (void)bCreated;
-    cgpu_assert(bCreated && "Failed to Try to Create SwapChain!");
+    cgpu_assert(bCreated && "Failed to Try to Create SwapChain! An existed swapchain might be destroyed!");
 
     auto bAssociation = SUCCEEDED(I->pDXGIFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
     (void)bAssociation;
@@ -1796,8 +1793,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapC
 
     SAFE_RELEASE(swapchain);
     // Get swapchain images
-    ID3D12Resource** backbuffers =
-    (ID3D12Resource**)alloca(desc->imageCount * sizeof(ID3D12Resource*));
+    ID3D12Resource** backbuffers = (ID3D12Resource**)alloca(desc->imageCount * sizeof(ID3D12Resource*));
     for (uint32_t i = 0; i < desc->imageCount; ++i)
     {
         CHECK_HRESULT(S->pDxSwapChain->GetBuffer(i, IID_ARGS(&backbuffers[i])));
@@ -1829,6 +1825,22 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapC
     return &S->super;
 }
 
+void cgpu_free_swapchain_d3d12_impl(CGPUSwapChainId swapchain)
+{
+    CGPUSwapChain_D3D12* S = (CGPUSwapChain_D3D12*)swapchain;
+    for (uint32_t i = 0; i < S->super.buffer_count; i++)
+    {
+        CGPUTexture_D3D12* Texture = (CGPUTexture_D3D12*)S->super.back_buffers[i];
+        SAFE_RELEASE(Texture->pDxResource);
+    }
+    SAFE_RELEASE(S->pDxSwapChain);
+}
+
+CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc)
+{
+    return cgpu_create_swapchain_d3d12_impl(device, desc, nullptr);
+}
+
 uint32_t cgpu_acquire_next_image_d3d12(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc)
 {
     CGPUSwapChain_D3D12* S = (CGPUSwapChain_D3D12*)swapchain;
@@ -1845,12 +1857,7 @@ uint32_t cgpu_acquire_next_image_d3d12(CGPUSwapChainId swapchain, const struct C
 void cgpu_free_swapchain_d3d12(CGPUSwapChainId swapchain)
 {
     CGPUSwapChain_D3D12* S = (CGPUSwapChain_D3D12*)swapchain;
-    for (uint32_t i = 0; i < S->super.buffer_count; i++)
-    {
-        CGPUTexture_D3D12* Texture = (CGPUTexture_D3D12*)S->super.back_buffers[i];
-        SAFE_RELEASE(Texture->pDxResource);
-    }
-    SAFE_RELEASE(S->pDxSwapChain);
+    cgpu_free_swapchain_d3d12_impl(swapchain);
     cgpu_delete_placed(S);
     cgpu_free(S);
 }

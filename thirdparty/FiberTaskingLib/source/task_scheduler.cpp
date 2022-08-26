@@ -89,8 +89,10 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     taskScheduler->m_tls[index].CurrentFiber = freeFiber;
     // Switch
     {
-        taskScheduler->m_tls[index]
-        .ThreadFiber.SwitchToFiber(freeFiber);
+        eastl::string thread_id = "worker";thread_id += eastl::to_string(index);
+        TracyFiberEnter(thread_id.c_str())
+        taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
+        TracyFiberLeave
     }
 
     // And we've returned
@@ -115,15 +117,21 @@ ReadyFiberDummyTask(TaskScheduler* taskScheduler, void* arg)
     (void)arg;
 }
 
+static thread_local uint32_t dispatch_depth = 0; 
+#define DISPATCH_GRAY 0x2f2f2f
 void TaskScheduler::FiberStartFunc(void* const arg)
 {
     TaskScheduler* taskScheduler = reinterpret_cast<TaskScheduler*>(arg);
+    auto threadIndex = taskScheduler->GetCurrentThreadIndex();
+    ThreadLocalStorage* tls = &taskScheduler->m_tls[threadIndex];
+
+    if (threadIndex == 0 && dispatch_depth == 0) TracyFiberEnter("MainThreadAsFiber");
+    dispatch_depth++;
 
     if (taskScheduler->m_callbacks.OnFiberAttached != nullptr)
     {
         taskScheduler->m_callbacks.OnFiberAttached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiber());
     }
-    TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str())
 
     // If we just started from the pool, we may need to clean up from another fiber
     taskScheduler->CleanUpOldFiber();
@@ -134,7 +142,6 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     while (!taskScheduler->m_quit.load(std::memory_order_acquire))
     {
         Fiber* waitingFiber = nullptr;
-        ThreadLocalStorage* tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
 
         bool readyWaitingFibers = false;
 
@@ -144,6 +151,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
             for (auto bundle = tls->PinnedReadyFibers.begin(); bundle != tls->PinnedReadyFibers.end(); ++bundle)
             {
+
                 readyWaitingFibers = true;
 
                 if (!(*bundle)->FiberIsSwitched.load(std::memory_order_acquire))
@@ -166,6 +174,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         // If nothing was found, check if there is a high priority task to run
         if (waitingFiber == nullptr)
         {
+
             foundTask = taskScheduler->GetNextHiPriTask(&nextTask, &taskBuffer);
 
             // Check if the found task is a ReadyFiber dummy task
@@ -191,12 +200,13 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             {
                 callbacks.OnFiberDetached(callbacks.Context, tls->OldFiber, false);
             }
-            TracyFiberLeave
+            
             // Switch
             {
+                if (threadIndex == 0 && waitingFiber == &taskScheduler->m_mainFiber) dispatch_depth = 0;
+                if (threadIndex == 0 && dispatch_depth == 0) TracyFiberLeave;
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
             }
-            TracyFiberEnter(taskScheduler->GetCurrentFiber()->name->c_str())
 
             if (callbacks.OnFiberAttached != nullptr)
             {
@@ -215,6 +225,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         }
         else
         {
+
             // If we didn't find a high priority task, look for a low priority task
             if (!foundTask)
             {
@@ -231,7 +242,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 }
 
                 {
-                    ZoneScopedN("Task");
+                    ZoneScopedNC("Task", DISPATCH_GRAY);
                     nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
                     if (nextTask.Counter != nullptr)
                     {
@@ -248,10 +259,13 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 switch (behavior)
                 {
                     case EmptyQueueBehavior::Yield:
+                    {
                         YieldThread();
                         break;
+                    }
 
                     case EmptyQueueBehavior::Sleep: {
+
                         // If we have a ready waiting fiber, prevent sleep
                         if (!readyWaitingFibers)
                         {
@@ -287,13 +301,14 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     }
 
     // Switch to the quit fibers
+    dispatch_depth--;
+    if (threadIndex == 0 && dispatch_depth == 0) TracyFiberLeave;
 
     if (taskScheduler->m_callbacks.OnFiberDetached != nullptr)
     {
         taskScheduler->m_callbacks.OnFiberDetached(taskScheduler->m_callbacks.Context, taskScheduler->GetCurrentFiber(), false);
     }
 
-    TracyFiberLeave
     unsigned index = taskScheduler->GetCurrentThreadIndex();
     {
         taskScheduler->m_tls[index].CurrentFiber->SwitchToFiber(&taskScheduler->m_quitFibers[index]);
@@ -929,15 +944,12 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     }
 
     // Switch
-    if (currentFiber != &m_mainFiber) //不是从主线程来的
-        TracyFiberLeave
     currentFiber->SwitchToFiber(freeFiber);
 
     if (m_callbacks.OnFiberAttached != nullptr)
     {
         m_callbacks.OnFiberAttached(m_callbacks.Context, GetCurrentFiber());
     }
-    TracyFiberEnter(GetCurrentFiber()->name->c_str())
     // And we're back
     CleanUpOldFiber();
 }

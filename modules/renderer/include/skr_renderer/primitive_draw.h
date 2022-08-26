@@ -3,6 +3,7 @@
 #include "cgpu/api.h"
 
 #ifdef __cplusplus
+#include "containers/span.hpp"
 extern "C" {
 #endif
 
@@ -28,11 +29,14 @@ typedef struct skr_index_buffer_view_t {
 
 typedef struct skr_primitive_draw_t {
     CGPURenderPipelineId pipeline;
+    const CGPUDescriptorSetId* descriptor_sets;
+    uint32_t descriptor_set_count;
     const char* push_const_name;
     const uint8_t* push_const;
     const skr_vertex_buffer_view_t* vertex_buffers;
     uint32_t vertex_buffer_count;
     skr_index_buffer_view_t index_buffer;
+    bool desperated;
 } skr_primitive_draw_t;
 
 typedef struct skr_primitive_draw_list_view_t {
@@ -41,5 +45,11 @@ typedef struct skr_primitive_draw_list_view_t {
 } skr_primitive_draw_list_view_t;
 
 #ifdef __cplusplus
+
+struct skr_render_primitive_command_t {
+    skr::span<const skr_vertex_buffer_view_t> vbvs;
+    const skr_index_buffer_view_t* ibv;
+    uint64_t characteristic;
+};
 }
 #endif

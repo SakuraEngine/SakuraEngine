@@ -252,6 +252,7 @@ void cgpu_update_descriptor_set(CGPUDescriptorSetId set, const struct CGPUDescri
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->update_descriptor_set && "update_descriptor_set Proc Missing!");
     device->proc_table_cache->update_descriptor_set(set, datas, count);
+    if (count) ((CGPUDescriptorSet*)set)->updated = true;
 }
 
 void cgpu_free_descriptor_set(CGPUDescriptorSetId set)
@@ -1011,7 +1012,7 @@ CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDe
     else
     {
         cgpu_assert(desc->present_queues_count > 0 &&
-                    "fatal cgpu_create_swapchain: queue array & queue coutn dismatch!");
+                    "fatal cgpu_create_swapchain: queue array & queue count dismatch!");
     }
     CGPUSwapChain* swapchain = (CGPUSwapChain*)device->proc_table_cache->create_swapchain(device, desc);
     cgpu_assert(swapchain && "fatal cgpu_create_swapchain: NULL swapchain id returned from backend.");
@@ -1161,6 +1162,15 @@ void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUD
     cgpu_assert(queue->device->proc_table_cache->dstorage_enqueue_buffer_request && "dstorage_enqueue_buffer_request Proc Missing!");
 
     queue->device->proc_table_cache->dstorage_enqueue_buffer_request(queue, desc);
+}
+
+void cgpu_dstorage_enqueue_texture_request(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(queue->device->proc_table_cache->dstorage_enqueue_texture_request && "dstorage_enqueue_texture_request Proc Missing!");
+
+    queue->device->proc_table_cache->dstorage_enqueue_texture_request(queue, desc);
 }
 
 void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence)

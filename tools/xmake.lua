@@ -39,6 +39,17 @@ target("GLTFTool")
     add_deps("SkrTool", "GameRT")
     add_files("gltf_tool/src/**.cpp")
 
+target("ISPCTextureCompressor")
+    set_kind("object")
+    add_rules("utils.ispc")
+    add_files("texture_compiler/src/**.ispc")
+
+target("TextureCompiler")
+    add_rules("skr.module", {api = "TEXTURE_COMPILER"})
+    add_includedirs("texture_compiler/include", {public=true})
+    add_deps("SkrTool", "GameRT", "ISPCTextureCompressor")
+    add_files("texture_compiler/src/**.cpp")
+
 target("SkrCompiler")
     -- add_rules("grpc.cpp")
     set_kind("binary")

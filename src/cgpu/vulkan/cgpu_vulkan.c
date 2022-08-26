@@ -652,12 +652,6 @@ void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature)
     if (signature->pool)
     {
         CGPUUtil_PoolFreeSignature(signature->pool, signature);
-        if (signature->pool_sig) // not root
-        {
-            // Free Reflection Data
-            CGPUUtil_FreeRSParamTables((CGPURootSignature*)signature);
-            cgpu_free(RS);
-        }
         return;
     }
     // [RS POOL] END FREE
@@ -1962,18 +1956,18 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
         VkUtil_RenderPassDesc rpdesc = {
             .mColorAttachmentCount = desc->render_target_count,
             .mDepthStencilFormat =
-            desc->depth_stencil ?
-            (desc->depth_stencil->view ? desc->depth_stencil->view->info.format : CGPU_FORMAT_UNDEFINED) :
-            CGPU_FORMAT_UNDEFINED,
+                desc->depth_stencil ?
+                (desc->depth_stencil->view ? desc->depth_stencil->view->info.format : CGPU_FORMAT_UNDEFINED) :
+                CGPU_FORMAT_UNDEFINED,
             .mSampleCount = desc->sample_count,
             .mLoadActionDepth =
-            desc->depth_stencil ? desc->depth_stencil->depth_load_action : CGPU_LOAD_ACTION_DONTCARE,
+                desc->depth_stencil ? desc->depth_stencil->depth_load_action : CGPU_LOAD_ACTION_DONTCARE,
             .mStoreActionDepth =
-            desc->depth_stencil ? desc->depth_stencil->depth_store_action : CGPU_STORE_ACTION_STORE,
+                desc->depth_stencil ? desc->depth_stencil->depth_store_action : CGPU_STORE_ACTION_STORE,
             .mLoadActionStencil =
-            desc->depth_stencil ? desc->depth_stencil->stencil_load_action : CGPU_LOAD_ACTION_DONTCARE,
+                desc->depth_stencil ? desc->depth_stencil->stencil_load_action : CGPU_LOAD_ACTION_DONTCARE,
             .mStoreActionStencil =
-            desc->depth_stencil ? desc->depth_stencil->stencil_store_action : CGPU_STORE_ACTION_STORE
+                desc->depth_stencil ? desc->depth_stencil->stencil_store_action : CGPU_STORE_ACTION_STORE
         };
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {
@@ -2199,7 +2193,7 @@ void cgpu_cmd_end_render_pass_vulkan(CGPUCommandBufferId cmd, CGPURenderPassEnco
 // SwapChain APIs
 #define clamp(x, min, max) (x) < (min) ? (min) : ((x) > (max) ? (max) : (x));
 // TODO: Handle multi-queue presenting
-CGPUSwapChainId cgpu_create_swapchain_vulkan(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc)
+CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc, CGPUSwapChain_Vulkan* old)
 {
     // CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)device->adapter->instance;
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
@@ -2416,8 +2410,12 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan(CGPUDeviceId device, const CGPUSwap
 
     // Get swapchain images
     CHECK_VKRESULT(D->mVkDeviceTable.vkGetSwapchainImagesKHR(D->pVkDevice, new_chain, &buffer_count, VK_NULL_HANDLE));
-    CGPUSwapChain_Vulkan* S = (CGPUSwapChain_Vulkan*)cgpu_calloc(1,
-    sizeof(CGPUSwapChain_Vulkan) + sizeof(CGPUTexture_Vulkan) * buffer_count + sizeof(CGPUTextureId) * buffer_count);
+    CGPUSwapChain_Vulkan* S = old;
+    if (!old)
+    {
+        S = (CGPUSwapChain_Vulkan*)cgpu_calloc(1,
+            sizeof(CGPUSwapChain_Vulkan) + sizeof(CGPUTexture_Vulkan) * buffer_count + sizeof(CGPUTextureId) * buffer_count);
+    }
     S->pVkSwapChain = new_chain;
     S->super.buffer_count = buffer_count;
     DECLARE_ZERO_VLA(VkImage, vimages, S->super.buffer_count)
@@ -2447,6 +2445,19 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan(CGPUDeviceId device, const CGPUSwap
     S->super.back_buffers = Vs;
     S->pVkSurface = vkSurface;
     return &S->super;
+}
+
+void cgpu_free_swapchain_vulkan_impl(CGPUSwapChainId swapchain)
+{
+    CGPUSwapChain_Vulkan* S = (CGPUSwapChain_Vulkan*)swapchain;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)swapchain->device;
+
+    D->mVkDeviceTable.vkDestroySwapchainKHR(D->pVkDevice, S->pVkSwapChain, GLOBAL_VkAllocationCallbacks);
+}
+
+CGPUSwapChainId cgpu_create_swapchain_vulkan(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc)
+{
+    return cgpu_create_swapchain_vulkan_impl(device, desc, CGPU_NULLPTR);
 }
 
 uint32_t cgpu_acquire_next_image_vulkan(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc)
@@ -2490,11 +2501,7 @@ uint32_t cgpu_acquire_next_image_vulkan(CGPUSwapChainId swapchain, const struct 
 
 void cgpu_free_swapchain_vulkan(CGPUSwapChainId swapchain)
 {
-    CGPUSwapChain_Vulkan* S = (CGPUSwapChain_Vulkan*)swapchain;
-    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)swapchain->device;
-
-    D->mVkDeviceTable.vkDestroySwapchainKHR(D->pVkDevice, S->pVkSwapChain, GLOBAL_VkAllocationCallbacks);
-
+    cgpu_free_swapchain_vulkan_impl(swapchain);
     cgpu_free((void*)swapchain);
 }
 

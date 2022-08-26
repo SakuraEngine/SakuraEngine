@@ -89,14 +89,16 @@ public:
     inline uint32_t get_mip_level() const { return handle.mip_level; }
 
 protected:
-    TextureRenderEdge(uint32_t mrt_index, TextureRTVHandle handle,
+    TextureRenderEdge(uint32_t mrt_index, TextureRTVHandle handle, CGPUClearValue clear_value,
     ECGPUResourceState state = CGPU_RESOURCE_STATE_RENDER_TARGET)
         : TextureEdge(ERelationshipType::TextureWrite, state)
         , mrt_index(mrt_index)
         , handle(handle)
+        , clear_value(clear_value)
     {
     }
     TextureRTVHandle handle;
+    CGPUClearValue clear_value;
 };
 
 class BufferEdge : public RenderGraphEdge

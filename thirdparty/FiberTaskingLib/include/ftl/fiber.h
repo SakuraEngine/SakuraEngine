@@ -96,11 +96,6 @@ public:
     }
     ~Fiber();
 
-#ifdef TRACY_ENABLE
-    std::string* name;
-#endif
-    void InitName();
-
 private:
     void* m_stack{ nullptr };
     size_t m_systemPageSize{ 0 };
