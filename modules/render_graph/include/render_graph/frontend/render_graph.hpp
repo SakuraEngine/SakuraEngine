@@ -62,6 +62,7 @@ public:
         RenderPassBuilder& read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& write(uint32_t mrt_index, TextureRTVHandle handle,
         ECGPULoadAction load_action = CGPU_LOAD_ACTION_CLEAR,
+        CGPUClearValue clear_color = fastclear_0000,
         ECGPUStoreAction store_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
         RenderPassBuilder& set_depth_stencil(TextureDSVHandle handle,
             ECGPULoadAction dload_action = CGPU_LOAD_ACTION_CLEAR,

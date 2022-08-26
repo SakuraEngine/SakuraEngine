@@ -74,8 +74,16 @@ Game)
 
 void SGameModule::on_load(int argc, char** argv)
 {
+#ifdef _WIN32
+    SetThreadPriorityBoost(GetCurrentThread(), false);
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+#endif
+
     SKR_LOG_INFO("game runtime loaded!");
-    scheduler.Init();
+    auto options = make_zeroed<ftl::TaskSchedulerInitOptions>();
+    options.ThreadPoolSize = 0;
+    options.Behavior = ftl::EmptyQueueBehavior::Spin;
+    scheduler.Init(options);
     dualJ_initialize((dual_scheduler_t*)&scheduler);
 }
 
@@ -304,6 +312,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
     {
         FrameMark
         ZoneScopedN("LoopBody");
+        static auto main_thread_id = skr_current_thread_id();
+        auto current_thread_id = skr_current_thread_id();
+        SKR_ASSERT(main_thread_id == current_thread_id && "This is not the main thread");
 
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -350,6 +361,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
             
             auto moveJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                ZoneScopedN("MoveJob");
+                
                 float lerps[] = { 12.5, 20 };
                 auto translations = (skr_translation_t*)dualV_get_owned_ro_local(view, localTypes[0]);
                 for (uint32_t i = 0; i < view->count; i++)
@@ -423,8 +436,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
-    finalize_render_effects(renderGraph);
     render_graph::RenderGraph::destroy(renderGraph);
+    finalize_render_effects(renderGraph);
     render_graph_imgui_finalize();
     skr_free_window(window);
     SDL_Quit();

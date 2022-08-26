@@ -6,6 +6,8 @@
 #include "utils/defer.hpp"
 #include "utils/log.h"
 
+#define MAGIC_SIZE_GLTF_PARSE_READY ~0
+
 void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, const skd::asset::SAssetRecord* record) 
 {
     auto ext = record->path.extension();
@@ -18,6 +20,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
     ftl::AtomicFlag counter(&GetCookSystem()->GetScheduler());
     struct CallbackData
     {
+        skr_async_ram_destination_t destination;
         ftl::AtomicFlag* pCounter;   
         eastl::string u8Path;
     } callbackData;
@@ -34,9 +37,9 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
         auto cbData = (CallbackData*)data;
         cgltf_options options = {};
         struct cgltf_data* gltf_data_ = nullptr;
-        if (request->bytes)
+        if (cbData->destination.bytes)
         {
-            cgltf_result result = cgltf_parse(&options, request->bytes, request->size, &gltf_data_);
+            cgltf_result result = cgltf_parse(&options, cbData->destination.bytes, cbData->destination.size, &gltf_data_);
             if (result != cgltf_result_success)
             {
                 gltf_data_ = nullptr;
@@ -51,19 +54,19 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
                 }
             }
         }
-        sakura_free(request->bytes);
-        request->bytes = (uint8_t*)gltf_data_;
-        request->size = 114514;
+        sakura_free(cbData->destination.bytes);
+        cbData->destination.bytes = (uint8_t*)gltf_data_;
+        cbData->destination.size = MAGIC_SIZE_GLTF_PARSE_READY;
         cbData->pCounter->Clear();
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
     skr_async_io_request_t ioRequest = {};
-    ioService->request(record->project->vfs, &ramIO, &ioRequest);
+    ioService->request(record->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
     GetCookSystem()->scheduler->WaitForCounter(&counter, true);
     // parse
-    if (ioRequest.size == 114514)
+    if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
     {
-        cgltf_data* data = (cgltf_data*)ioRequest.bytes;
+        cgltf_data* data = (cgltf_data*)callbackData.destination.bytes;
         auto mesh = new skr_mesh_resource_t();
         mesh->name = data->meshes[0].name;
         if (mesh->name.empty())

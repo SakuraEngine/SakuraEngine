@@ -1,6 +1,84 @@
 ﻿#include "render_graph/frontend/render_graph.hpp"
 #include <EASTL/vector_map.h>
 #include "tracy/Tracy.hpp"
+#include "render_graph/backend/texture_view_pool.hpp"
+
+namespace skr
+{
+namespace render_graph
+{
+TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc)
+    : device(device)
+    , texture(desc.texture)
+    , format(desc.format)
+    , usages(desc.usages)
+    , aspects(desc.aspects)
+    , dims(desc.dims)
+    , base_array_layer(desc.base_array_layer)
+    , array_layer_count(desc.array_layer_count)
+    , base_mip_level(desc.base_mip_level)
+    , mip_level_count(desc.mip_level_count)
+    , tex_width(desc.texture->width)
+    , tex_height(desc.texture->height)
+{
+
+}
+
+uint32_t TextureViewPool::erase(CGPUTextureId texture)
+{
+    auto prev_size = (uint32_t)views.size();
+    for (auto it = views.begin(); it != views.end();)
+    {
+        if (it->first.texture == texture)
+        {
+            cgpu_free_texture_view(it->second.texture_view);
+            it = views.erase(it);
+        }
+        else
+            ++it;
+    }
+    return prev_size - (uint32_t)views.size();
+}
+
+TextureViewPool::Key::operator size_t() const
+{
+    return skr_hash(this, sizeof(*this), (size_t)device);
+}
+
+void TextureViewPool::initialize(CGPUDeviceId device_)
+{
+    device = device_;
+}
+
+void TextureViewPool::finalize()
+{
+    for (auto&& view : views)
+    {
+        cgpu_free_texture_view(view.second.texture_view);
+    }
+    views.clear();
+}
+
+CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index)
+{
+    const TextureViewPool::Key key(device, desc);
+    auto&& found = views.find(key);
+    if (found != views.end() && found->first.texture == key.texture)
+    {
+        found->second.mark.frame_index = frame_index;
+        SKR_ASSERT(found->first.texture);
+        return found->second.texture_view;
+    }
+    else
+    {
+        CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
+        AllocationMark mark = {frame_index, 0};
+        views[key] = PooledTextureView(new_view, mark);
+        return new_view;
+    }
+}
+}
+}
 
 namespace skr
 {
@@ -51,7 +129,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
 {
     ZoneScopedN("RenderGraphCompile");
     {
-        ZoneScopedN("ull");
+        ZoneScopedN("Cull");
         // 1.cull
         resources.erase(
         eastl::remove_if(resources.begin(), resources.end(),

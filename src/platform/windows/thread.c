@@ -256,3 +256,8 @@ void skr_destroy_thread(SThreadHandle handle)
 }
 
 void skr_join_thread(SThreadHandle handle) { WaitForSingleObject((HANDLE)handle, INFINITE); }
+
+SThreadID skr_current_thread_id(void)
+{
+    return GetCurrentThreadId();
+}

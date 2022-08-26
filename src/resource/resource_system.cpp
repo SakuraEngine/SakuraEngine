@@ -387,7 +387,7 @@ void SResourceRequest::Update()
                 ramIO.offset = 0;
                 ramIO.size = 0;
                 ramIO.path = u8path.c_str();
-                system->ioService->request(vfs, &ramIO, &request);
+                system->ioService->request(vfs, &ramIO, &request, &destination);
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
             }
             else 
@@ -406,8 +406,8 @@ void SResourceRequest::Update()
         case SKR_LOADING_PHASE_WAITFOR_IO:
             if(request.is_ready())
             {
-                data = request.bytes;
-                size = request.size;
+                data = destination.bytes;
+                size = destination.size;
                 currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
             }
             break;

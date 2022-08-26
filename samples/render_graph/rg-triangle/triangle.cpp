@@ -135,10 +135,10 @@ int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     sdl_window = SDL_CreateWindow(gCGPUBackendNames[backend],
-    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-    BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
-    SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-    SDL_VERSION(&wmInfo.version);
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdl_window, &wmInfo);
     create_api_objects();
     create_render_pipeline();
@@ -161,6 +161,27 @@ int main(int argc, char* argv[])
                 if (!SDLEventHandler(&event, sdl_window))
                 {
                     quit = true;
+                }
+            }
+            if (event.type == SDL_WINDOWEVENT)
+            {
+                Uint8 window_event = event.window.event;
+                if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                {
+                    cgpu_wait_queue_idle(gfx_queue);
+                    cgpu_free_swapchain(swapchain);
+                    int width = 0, height = 0;
+                    SDL_GetWindowSize(sdl_window, &width, &height);
+                    CGPUSwapChainDescriptor chain_desc = {};
+                    chain_desc.present_queues = &gfx_queue;
+                    chain_desc.present_queues_count = 1;
+                    chain_desc.width = width;
+                    chain_desc.height = height;
+                    chain_desc.surface = surface;
+                    chain_desc.imageCount = 3;
+                    chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+                    chain_desc.enable_vsync = true;
+                    swapchain = cgpu_create_swapchain(device, &chain_desc);
                 }
             }
         }

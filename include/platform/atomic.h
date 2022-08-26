@@ -12,12 +12,8 @@ typedef volatile SKR_ALIGNAS(PTR_SIZE) uintptr_t SAtomicPtr;
 #endif
 
 #if defined(_MSC_VER) && !defined(NX64)
-	#pragma intrinsic(_InterlockedExchange)
-	#pragma intrinsic(_InterlockedExchangeAdd)
-	#pragma intrinsic(_InterlockedCompareExchange)
-	#pragma intrinsic(_InterlockedExchange64)
-	#pragma intrinsic(_InterlockedExchangeAdd64)
-	#pragma intrinsic(_InterlockedCompareExchange64)
+
+#include <intrin0.h>
 
 	#define skr_memorybarrier_acquire() _ReadWriteBarrier()
 	#define skr_memorybarrier_release() _ReadWriteBarrier()

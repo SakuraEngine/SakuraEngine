@@ -5,18 +5,11 @@
 #include "cgpu/io.h"
 
 #ifdef __cplusplus
-#include "containers/span.hpp"
-
-struct skr_render_primitive_command_t {
-    skr::span<const skr_vertex_buffer_view_t> vbvs;
-    const skr_index_buffer_view_t* ibv;
-    uint64_t characteristic;
-};
 
 struct skr_render_mesh_t {
     skr_mesh_resource_id mesh_resource_id;
     eastl::vector<skr_async_io_request_t> vio_requests;
-    eastl::vector<skr_vram_buffer_request_t> buffer_requests;
+    eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
     eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
     eastl::vector<skr_render_primitive_command_t> primitive_commands;

@@ -129,6 +129,27 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
     }
 }
 
+void D3D12Util_EnumFormatSupports(CGPUAdapter_D3D12* D3DAdapter, ID3D12Device* pCheckDevice)
+{
+    CGPUAdapterDetail* adapter_detail = (CGPUAdapterDetail*)&D3DAdapter->adapter_detail;
+    for (uint32_t i = 0; i < CGPU_FORMAT_COUNT; ++i)
+    {
+        adapter_detail->format_supports[i].shader_read = 0;
+        adapter_detail->format_supports[i].shader_write = 0;
+        adapter_detail->format_supports[i].render_target_write = 0;
+        DXGI_FORMAT fmt = DXGIUtil_TranslatePixelFormat((ECGPUFormat)i);
+        if (fmt == DXGI_FORMAT_UNKNOWN) continue;
+
+        D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport = { fmt };
+        pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &formatSupport, sizeof(formatSupport));
+
+        adapter_detail->format_supports[i].shader_read = (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE) != 0;
+        adapter_detail->format_supports[i].shader_write = (formatSupport.Support2 & D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE) != 0;
+        adapter_detail->format_supports[i].render_target_write = (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET)  != 0;
+    }
+    return;
+}
+
 void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
 {
     CGPUInstance_D3D12* I = (CGPUInstance_D3D12*)D3D12Adapter->super.instance;
@@ -162,6 +183,8 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     adapter_detail.is_uma = dxgi_feature.UMA;
     adapter_detail.is_cpu = desc3.Flags & DXGI_ADAPTER_FLAG_SOFTWARE;
     adapter_detail.is_virtual = false;
+    // Check Format Capacities
+    D3D12Util_EnumFormatSupports(D3D12Adapter, pCheckDevice);
 #ifdef CGPU_USE_D3D12_ENHANCED_BARRIERS
     // Enhanced barriers features
     D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12 = {};

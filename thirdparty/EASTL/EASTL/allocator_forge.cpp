@@ -3,6 +3,8 @@
 #include "allocator_forge.h"
 #include <stdlib.h>
 
+#include "tracy/TracyC.h"
+
 #ifdef _CRTDBG_MAP_ALLOC
     #include <crtdbg.h>
 	#define core_malloc(n) _aligned_malloc((n), 1)
@@ -35,20 +37,27 @@
 	{
 		void* allocator_forge::allocate(size_t n, int /*flags*/)
 		{ 
-			return core_malloc(n);
+			void* p = core_malloc(n);
+			TracyCAllocN(p, n, "EASTL");
+			return p;
 		}
 
 		void* allocator_forge::allocate(size_t n, size_t alignment, size_t alignmentOffset, int /*flags*/)
 		{
 		    if ((alignmentOffset % alignment) == 0) // We check for (offset % alignmnent == 0) instead of (offset == 0) because any block which is
 													// aligned on e.g. 64 also is aligned at an offset of 64 by definition.
-			    return core_memalign(n, alignment);
+			{
+			    void* p = core_memalign(n, alignment);
+				TracyCAllocN(p, n, "EASTL");
+				return p;
+			}
 
 		    return NULL;
 		}
 
 		void allocator_forge::deallocate(void* p, size_t /*n*/)
 		{ 
+			TracyCFree(p);
 			core_free(p);
 		}
 

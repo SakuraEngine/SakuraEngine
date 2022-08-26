@@ -48,3 +48,23 @@ target("GameTool")
 if (os.host() == "windows" and has_config("build_chat")) then
     includes("chat/xmake.lua")
 end
+
+if (os.host() == "windows") then
+    target("Live2DViewer")
+        set_kind("binary")
+        add_deps("SkrLive2D", "SkrImGui")
+        add_rules("utils.install-resources", {
+            extensions = {".json", ".moc3", ".png"},
+            outdir = "/../resources/Live2DViewer", 
+            rootdir = os.curdir().."/live2d-viewer/resources"})
+        add_rules("utils.dxc", {
+            spv_outdir = "/../resources/shaders/Live2DViewer",
+            dxil_outdir = "/../resources/shaders/Live2DViewer"})
+        add_includedirs("live2d-viewer/include", {public=true})
+        add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")
+        -- add_files("live2d-viewer/shaders/**.hlsl")
+        add_files("live2d-viewer/**.json", "live2d-viewer/**.moc3", "live2d-viewer/**.png")
+        if (is_os("windows")) then 
+            add_files("/../../resources/windows/sakura.rc")
+        end
+end

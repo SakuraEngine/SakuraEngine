@@ -21,6 +21,8 @@
 #include "cube.hpp"
 #include <ghc/filesystem.hpp>
 
+#include "tracy/Tracy.hpp"
+
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
 
@@ -82,21 +84,32 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
                     for (uint32_t i = 0; i < drawcalls.count; i++)
                     {
+                        ZoneScopedN("DrawCall");
+
                         auto&& dc = drawcalls.drawcalls[i];
-                        cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                        CGPUBufferId vertex_buffers[3] = {
-                            dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
-                        };
-                        const uint32_t strides[3] = {
-                            dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
-                        };
-                        const uint32_t offsets[3] = {
-                            dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
-                        };
-                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
-                        cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
+                        {
+                            ZoneScopedN("BindGeometry");
+                            cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
+                            CGPUBufferId vertex_buffers[3] = {
+                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
+                            };
+                            const uint32_t strides[3] = {
+                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
+                            };
+                            const uint32_t offsets[3] = {
+                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
+                            };
+                            cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
+                        }
+                        {
+                            ZoneScopedN("PushConstants");
+                            cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
+                        }
                         cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
-                        cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
+                        {
+                            ZoneScopedN("DrawIndexed");
+                            cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
+                        }
                     }
                 });
         }
@@ -123,7 +136,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             auto guid = make_zeroed<skr_guid_t>();
             dual_make_guid(&guid);
             auto desc = make_zeroed<dual_type_description_t>();
-            desc.name = "fwdIdentity";
+            desc.name = "forward_render_identity";
             desc.size = sizeof(forward_effect_identity_t);
             desc.guid = guid;
             desc.alignment = alignof(forward_effect_identity_t);
@@ -131,7 +144,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         }
         type_builder.with(identity_type);
         type_builder.with<skr_render_mesh_comp_t>();
-        effect_query = dualQ_from_literal(storage, "[in]fwdIdentity");
+        effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
         // prepare render resources
         prepare_pipeline(renderer);
         prepare_geometry_resources(renderer);
@@ -433,12 +446,12 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
 
     // create default deferred material
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "gbuffer_vertex_buffer";
+    vs_desc.name = "gbuffer_vertex_shader";
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = _vs_bytes;
     vs_desc.code_size = _vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
-    fs_desc.name = "gbuffer_fragment_buffer";
+    fs_desc.name = "gbuffer_pixel_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = _fs_bytes;
     fs_desc.code_size = _fs_length;
@@ -462,6 +475,7 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     rs_desc.push_constant_names = &push_constants_name;
     rs_desc.shader_count = 2;
     rs_desc.shaders = ppl_shaders;
+    rs_desc.pool = skr_renderer_get_root_signature_pool();
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
     CGPUVertexLayout vertex_layout = {};

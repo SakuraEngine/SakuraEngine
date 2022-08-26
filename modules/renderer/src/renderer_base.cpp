@@ -7,14 +7,17 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include <string.h>
+#ifdef _WIN32
+#include "cgpu/extensions/dstorage_windows.h"
+#endif
 
 #define BACK_BUFFER_HEIGHT 900
 #define BACK_BUFFER_WIDTH 900
 
-void skr::Renderer::initialize()
+void skr::Renderer::initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
     auto mm = skr_get_module_manager();
-    create_api_objects();
+    create_api_objects(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
     vram_service_desc.lockless = true;
@@ -46,6 +49,9 @@ void skr::Renderer::finalize()
     }
     cpy_queues.clear();
 
+#ifdef _WIN32
+    cgpu_win_free_decompress_service(decompress_service);
+#endif
     if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
     if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
 
@@ -55,14 +61,14 @@ void skr::Renderer::finalize()
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
-void skr::Renderer::create_api_objects()
+void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
-    instance_desc.enable_set_name = true;
+    instance_desc.enable_debug_layer = enable_debug_layer;
+    instance_desc.enable_gpu_based_validation = enable_gpu_based_validation;
+    instance_desc.enable_set_name = enable_set_name;
     instance = cgpu_create_instance(&instance_desc);
 
     // Filter adapters
@@ -107,16 +113,25 @@ void skr::Renderer::create_api_objects()
     const bool supportDirectStorage = (dstorage_cap != CGPU_DSTORAGE_AVAILABILITY_NONE);
     if (supportDirectStorage)
     {
-        auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
-        queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
-        queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
-        queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
-        file_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
-
-        queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
-        queue_desc.source = CGPU_DSTORAGE_SOURCE_MEMORY;
-        queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
-        memory_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+#ifdef _WIN32
+        cgpu_win_dstorage_set_staging_buffer_size(4096 * 4096 * 8);
+#endif
+        {
+            auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
+            queue_desc.name = "DirectStorageFileQueue";
+            queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
+            queue_desc.source = CGPU_DSTORAGE_SOURCE_FILE;
+            queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+            file_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+        }
+        {
+            auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
+            queue_desc.name = "DirectStorageMemoryQueue";
+            queue_desc.capacity = CGPU_DSTORAGE_MAX_QUEUE_CAPACITY;
+            queue_desc.source = CGPU_DSTORAGE_SOURCE_MEMORY;
+            queue_desc.priority = CGPU_DSTORAGE_PRIORITY_NORMAL;
+            memory_dstorage_queue = cgpu_create_dstorage_queue(device, &queue_desc);
+        }
     }
 
     // Sampler
@@ -129,6 +144,10 @@ void skr::Renderer::create_api_objects()
     sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
     sampler_desc.compare_func = CGPU_CMP_NEVER;
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
+
+#ifdef _WIN32
+    decompress_service = cgpu_win_create_decompress_service();
+#endif
 }
 
 CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
@@ -150,17 +169,59 @@ CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
             surfaces[window] = surface;
         }
     }
+    int32_t width, height;
+    skr_window_get_extent(window, &width, &height);
     // Create swapchain
     CGPUSwapChainDescriptor chain_desc = {};
     chain_desc.present_queues = &gfx_queue;
     chain_desc.present_queues_count = 1;
-    chain_desc.width = BACK_BUFFER_WIDTH;
-    chain_desc.height = BACK_BUFFER_HEIGHT;
+    chain_desc.width = width;
+    chain_desc.height = height;
     chain_desc.surface = surface;
     chain_desc.imageCount = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(device, &chain_desc);
+    swapchains[window] = swapchain;
+    return swapchain;
+}
+
+CGPUSwapChainId skr::Renderer::recreate_window_swapchain(SWindowHandle window)
+{
+    // find registered
+    CGPUSwapChainId old = nullptr;
+    {
+        auto _ = swapchains.find(window);
+        if (_ == swapchains.end()) return nullptr;
+        else old = _->second;
+    }
+    CGPUSurfaceId surface = nullptr;
+    // find registered
+    {
+        auto _ = surfaces.find(window);
+        if (_ != surfaces.end())
+        {
+            cgpu_free_surface(device, _->second);
+        }
+        {
+            surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
+            surfaces[window] = surface;
+        }
+    }
+    int32_t width, height;
+    skr_window_get_extent(window, &width, &height);
+    // Create swapchain
+    CGPUSwapChainDescriptor chain_desc = {};
+    chain_desc.present_queues = &gfx_queue;
+    chain_desc.present_queues_count = 1;
+    chain_desc.width = width;
+    chain_desc.height = height;
+    chain_desc.surface = surface;
+    chain_desc.imageCount = 2;
+    chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
+    chain_desc.enable_vsync = false;
+    cgpu_free_swapchain(old);
+    auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
     swapchains[window] = swapchain;
     return swapchain;
 }
