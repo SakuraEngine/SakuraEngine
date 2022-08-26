@@ -6,18 +6,38 @@ namespace dual
 {
 template <class... Ts>
 struct static_type_set_T {
-    dual_type_index_t storage[sizeof...(Ts)];
     dual_type_set_t typeSet;
+    template <size_t N, size_t... I>
+    void Initialize(dual_type_index_t types[N], std::index_sequence<I...>)
+    {
+        static constexpr size_t length = sizeof...(Ts) + N;
+        static dual_type_index_t storage[length];
+        for(int i=0; i<N; ++i)
+            storage[i] = types[i];
+        int _[] = { (storage[I + N] = dual_id_of<Ts>::get(), 0)... };
+        std::sort(storage, storage + length);
+        typeSet.data = storage;
+        typeSet.length = (SIndex)length;
+    }
     template <size_t... I>
     void Initialize(std::index_sequence<I...>)
     {
+        static constexpr size_t length = sizeof...(Ts);
+        static dual_type_index_t storage[length];
         int _[] = { (storage[I] = dual_id_of<Ts>::get(), 0)... };
+        std::sort(storage, storage + length);
+        typeSet.data = storage;
+        typeSet.length = (SIndex)length;
     }
     static_type_set_T()
     {
         Initialize(std::index_sequence_for<Ts...>{});
-        typeSet.data = storage;
-        typeSet.length = (SIndex)sizeof...(Ts);
+    }
+    template<class... TArgs>
+    static_type_set_T(TArgs... args)
+    {
+        dual_type_index_t types[] = {args...};
+        Initialize<sizeof...(TArgs)>(types, std::index_sequence_for<Ts...>{});
     }
     const dual_type_set_t& get()
     {
