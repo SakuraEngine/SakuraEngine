@@ -125,7 +125,17 @@ static struct SkrMeshResourceUtil
         skr_destroy_mutex(&vertex_layouts_mutex_);
     }
 
-    static FORCEINLINE skr_vertex_layout_id AddVertexLayoutFromGLTFPrimitive(const cgltf_primitive* primitive)
+    static inline skr_vertex_layout_id AddVertexLayout(const CGPUVertexLayout& layout)
+    {
+        const auto hash = vertex_layouts_.get_hash_code(layout);
+        if (vertex_layouts_.find_by_hash(hash) == vertex_layouts_.end())
+        {
+            vertex_layouts_.insert(layout);
+        }
+        return hash;
+    }
+
+    static inline skr_vertex_layout_id AddVertexLayoutFromGLTFPrimitive(const cgltf_primitive* primitive)
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
@@ -143,15 +153,11 @@ static struct SkrMeshResourceUtil
             layout.attributes[i].offset = 0;
             layout.attributes[i].elem_stride = FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
         }
-        const auto hash = vertex_layouts_.get_hash_code(layout);
-        if (vertex_layouts_.find_by_hash(hash) == vertex_layouts_.end())
-        {
-            vertex_layouts_.insert(layout);
-        }
+        const auto hash = AddVertexLayout(layout);
         return hash;
     }
 
-    static FORCEINLINE bool GetVertexLayout(skr_vertex_layout_id id, CGPUVertexLayout* layout)
+    static inline bool GetVertexLayout(skr_vertex_layout_id id, CGPUVertexLayout* layout)
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
@@ -245,18 +251,44 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                                 prim.index_buffer.first_index = index_cursor;
                                 prim.index_buffer.index_count = (uint32_t)primitive_->indices->count;
                                 prim.index_buffer.stride = (uint32_t)primitive_->indices->stride;
+                                
                                 // vbs
                                 prim.vertex_buffers.resize(primitive_->attributes_count);
-                                for (uint32_t k = 0; k < primitive_->attributes_count; k++)
+                                for (uint32_t k = 0, attrib_idx = 0; k < primitive_->attributes_count; k++)
                                 {
-                                    const auto buf_view = primitive_->attributes[k].data->buffer_view;
+                                    if (cbData->gltfRequest->shuffle_layout)
+                                    {
+                                        attrib_idx = -1;
+                                        for (uint32_t l = 0; l < primitive_->attributes_count; l++)
+                                        {
+                                            const auto& shuffle_attrib = cbData->gltfRequest->shuffle_layout->attributes[k];
+                                            const char* semantic_name = cGLTFAttributeTypeLUT[primitive_->attributes[l].type];
+                                            if (::strcmp(shuffle_attrib.semantic_name, semantic_name) == 0)
+                                            {
+                                                attrib_idx = l;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        attrib_idx = k;
+                                    }
+                                    const auto buf_view = primitive_->attributes[attrib_idx].data->buffer_view;
                                     prim.vertex_buffers[k].buffer_index = (uint32_t)(buf_view->buffer - gltf_data_->buffers);
-                                    prim.vertex_buffers[k].stride = (uint32_t)primitive_->attributes[k].data->stride;
-                                    prim.vertex_buffers[k].offset = (uint32_t)(primitive_->attributes[k].data->offset + buf_view->offset);
+                                    prim.vertex_buffers[k].stride = (uint32_t)primitive_->attributes[attrib_idx].data->stride;
+                                    prim.vertex_buffers[k].offset = (uint32_t)(primitive_->attributes[attrib_idx].data->offset + buf_view->offset);
                                 }
+                                if (cbData->gltfRequest->shuffle_layout)
+                                {
+                                    prim.vertex_layout_id = mesh_resource_util.AddVertexLayout(*cbData->gltfRequest->shuffle_layout);
+                                }
+                                else
+                                {
+                                    prim.vertex_layout_id = mesh_resource_util.AddVertexLayoutFromGLTFPrimitive(primitive_);
+                                }
+
                                 // TODO: Material
                                 prim.material_inst = make_zeroed<skr_guid_t>();
-                                prim.vertex_layout_id = mesh_resource_util.AddVertexLayoutFromGLTFPrimitive(primitive_);
 
                                 mesh_section.primive_indices.emplace_back(resource->primitives.size() - 1);
                             }

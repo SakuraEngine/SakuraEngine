@@ -5,7 +5,7 @@ namespace skr::imgui
 {
 SKR_IMGUI_API ImGuiContext*& imgui_context()
 {
-    static thread_local ImGuiContext* ctx = nullptr;
+    static ImGuiContext* ctx = nullptr;
     return ctx;
 }
 } // namespace skr::imgui

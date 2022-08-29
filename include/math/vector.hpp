@@ -46,10 +46,12 @@ struct Vector {
         }
         return res;
     }
+
     T length() const
     {
         return math::sqrt(length_squared());
     }
+
     FORCEINLINE bool is_zero() const
     {
         return length_squared() == 0;

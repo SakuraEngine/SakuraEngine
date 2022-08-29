@@ -44,6 +44,11 @@ extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph)
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
+const bool bSpawnMovable = false;
+
+// TODO: Refactor this
+CGPUVertexLayout vertex_layout = {};
+
 class SGameModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
@@ -85,6 +90,13 @@ void SGameModule::on_load(int argc, char** argv)
     options.Behavior = ftl::EmptyQueueBehavior::Spin;
     scheduler.Init(options);
     dualJ_initialize((dual_scheduler_t*)&scheduler);
+
+    // TODO: Refactor this
+    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attribute_count = 4;
 }
 
 void create_test_scene()
@@ -115,15 +127,17 @@ void create_test_scene()
             else
             {
                 translations[i].value = { 0.f, 0.f, 0.f };
-                rotations[i].euler = { 3.14159f * 1.5f, 0.f, 0.f };
+                rotations[i].euler = { 0.f, 0.f, 0.f };
                 scales[i].value = { 1.f, 1.f, 1.f };
             }
         }
         auto renderer = skr_renderer_get_renderer();
         skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 100, DUAL_LAMBDA(primSetup));
-
+    if (bSpawnMovable)
+    {
+        dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 100, DUAL_LAMBDA(primSetup));
+    }
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
     static_renderableT_builderT
@@ -157,6 +171,7 @@ void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_s
     dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
+const char* gltf_file = "scene.gltf";
 void imgui_button_spawn_girl()
 {
     static bool onceGuard  = true;
@@ -168,13 +183,14 @@ void imgui_button_spawn_girl()
         auto resource_vfs = skr_game_runtime_get_vfs();
         auto ram_service = skr_game_runtime_get_ram_service();
         auto vram_service = skr_renderer_get_vram_service();
-        girl_mesh_request.mesh_name = "girl";
+        girl_mesh_request.mesh_name = gltf_file;
+        girl_mesh_request.mesh_resource_request.shuffle_layout = &vertex_layout;
         if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.dstorage_queue_override = dstroage_queue;
             girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_FILE;
-            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
             onceGuard = false;
         }
         else if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Memory])"))
@@ -182,21 +198,21 @@ void imgui_button_spawn_girl()
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.dstorage_queue_override = dstroage_queue;
             girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_MEMORY;
-            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
             onceGuard = false;
         }
         else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.queue_override = skr_renderer_get_cpy_queue();
-            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
             onceGuard = false;
         }
         else if (ImGui::Button(u8"LoadMesh(GraphicsQueue)"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.queue_override = skr_renderer_get_gfx_queue();
-            attach_mesh_on_static_ents(ram_service, vram_service, "scene.gltf", &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
             onceGuard = false;
         }
         ImGui::End();  
@@ -352,9 +368,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
             (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
             imgui_button_spawn_girl();
-            quit |= skg::GameLoop(ctx);
+            // quit |= skg::GameLoop(ctx);
         }
         // move
+        if (bSpawnMovable)
         {
             ZoneScopedN("MoveSystem");
             auto timer = clock();

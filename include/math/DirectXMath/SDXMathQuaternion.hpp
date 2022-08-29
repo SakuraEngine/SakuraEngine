@@ -17,8 +17,7 @@ namespace __quaternion
 using namespace skr::math;
 using MatrixRegister = DirectX::XMMATRIX;
 
-FORCEINLINE __vector::VectorRegister quaternion_from_euler(
-const float pitch, const float yaw, const float roll)
+FORCEINLINE __vector::VectorRegister quaternion_from_euler(const float pitch, const float yaw, const float roll)
 {
     DirectX::XMVECTOR Angles = DirectX::XMVectorSet(pitch, yaw, roll, 0.0f);
     DirectX::XMVECTOR Q = DirectX::XMQuaternionRotationRollPitchYawFromVector(Angles);
