@@ -27,6 +27,7 @@ struct Rotator : public Vector3f {
     {
         return data_view()[0];
     }
+    
     FORCEINLINE void pitch(float value)
     {
         m_[0] = value;
@@ -36,6 +37,7 @@ struct Rotator : public Vector3f {
     {
         return data_view()[1];
     }
+
     FORCEINLINE void yaw(float value)
     {
         m_[1] = value;
@@ -45,6 +47,7 @@ struct Rotator : public Vector3f {
     {
         return data_view()[2];
     }
+
     FORCEINLINE void roll(float value)
     {
         m_[2] = value;

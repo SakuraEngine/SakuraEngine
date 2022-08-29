@@ -54,12 +54,12 @@ const Quaternion quaternion)
 {
     using namespace DirectX;
     return DirectX::XMMatrixTransformation(
-    g_XMZero,
-    g_XMIdentityR3,
-    __vector::load_float3_w0(scale.data_view()),
-    g_XMZero,
-    __vector::load_aligned(quaternion.data_view()),
-    __vector::load_float3_w0(translation.data_view()));
+        g_XMZero,
+        g_XMIdentityR3,
+        __vector::load_float3_w0(scale.data_view()),
+        g_XMZero,
+        __vector::load_aligned(quaternion.data_view()),
+        __vector::load_float3_w0(translation.data_view()));
 }
 
 FORCEINLINE MatrixRegister make_transform_t(
@@ -70,13 +70,14 @@ const Vector3f translation)
 }
 
 FORCEINLINE MatrixRegister look_at(
-const Vector3f Eye,
-const Vector3f At)
+    const Vector3f Eye,
+    const Vector3f At,
+    const Vector3f Up = Vector3f(0.f, 1.f, 0.f) )
 {
     return DirectX::XMMatrixLookAtRH(
-    __vector::load_float3_w1(Eye.data_view()),
-    __vector::load_float3_w1(At.data_view()),
-    DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f));
+        __vector::load_float3_w1(Eye.data_view()),
+        __vector::load_float3_w1(At.data_view()),
+        __vector::load_float3_w0(Up.data_view()));
 }
 
 FORCEINLINE MatrixRegister perspective_fov(

@@ -2150,8 +2150,8 @@ void cgpu_render_encoder_push_constants_vulkan(CGPURenderPassEncoderId encoder, 
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)rs;
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)rs->device;
     D->mVkDeviceTable.vkCmdPushConstants(Cmd->pVkCmdBuf, RS->pPipelineLayout,
-    RS->pPushConstRanges[0].stageFlags, 0,
-    RS->pPushConstRanges[0].size, data);
+        RS->pPushConstRanges[0].stageFlags, 0,
+        RS->pPushConstRanges[0].size, data);
 }
 
 void cgpu_render_encoder_draw_vulkan(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex)

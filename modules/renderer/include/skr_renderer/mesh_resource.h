@@ -83,6 +83,7 @@ typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 typedef void (*skr_async_gltf_io_callback_t)(struct skr_gltf_ram_io_request_t* request, void* data);
 typedef struct skr_gltf_ram_io_request_t {
     struct skr_vfs_t* vfs_override;
+    const struct CGPUVertexLayout* shuffle_layout SKR_IF_CPP( = nullptr);
     bool load_bin_to_memory;
     skr_async_io_request_t ioRequest;
     SAtomic32 gltf_status;

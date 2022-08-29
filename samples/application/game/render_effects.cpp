@@ -50,6 +50,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     .allow_depth_stencil();
             });
         // IMGUI control shading rate
+        if (false)
         {
             const char* shadingRateNames[] = {
                 "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
@@ -240,12 +241,21 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                         {
                             auto g_ent = g_ents[g_idx];(void)g_ent;
                             auto r_ent = r_ents[r_idx];(void)r_ent;
+                            const auto quaternion = skr::math::quaternion_from_euler(
+                                rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll);
                             auto world = skr::math::make_transform(
                                 translations[g_idx].value,
                                 scales[g_idx].value,
-                                skr::math::quaternion_from_euler(rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll));
-                            auto view = skr::math::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
-                            auto proj = skr::math::perspective_fov(3.1415926f / 2.f, (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 1.f, 1000.f);
+                                quaternion);
+                            auto view = skr::math::look_at_matrix(
+                                { 0.f, -135.f, 55.f } /*eye*/, 
+                                { 0.f, 0.f, 50.f } /*at*/,
+                                { 0.f, 0.f, 1.f } /*up*/
+                            );
+                            auto proj = skr::math::perspective_fov(
+                                3.1415926f / 2.f, 
+                                (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 
+                                1.f, 1000.f);
                             // drawcall
                             if (!meshes || !meshes[r_idx].async_request.is_buffer_ready())
                             {
@@ -303,7 +313,7 @@ protected:
     void prepare_pipeline(ISkrRenderer* renderer);
     void free_pipeline(ISkrRenderer* renderer);
     // render resources
-    skr_vertex_buffer_view_t vbvs[3];
+    skr_vertex_buffer_view_t vbvs[4];
     skr_index_buffer_view_t ibv;
     CGPUBufferId vertex_buffer;
     CGPUBufferId index_buffer;
@@ -400,13 +410,16 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     // init vbvs & ibvs
     vbvs[0].buffer = vertex_buffer;
     vbvs[0].stride = sizeof(skr::math::Vector3f);
-    vbvs[0].offset = offsetof(CubeGeometry, g_Normals);
+    vbvs[0].offset = offsetof(CubeGeometry, g_Positions);
     vbvs[1].buffer = vertex_buffer;
-    vbvs[1].stride = sizeof(skr::math::Vector3f);
-    vbvs[1].offset = offsetof(CubeGeometry, g_Positions);
+    vbvs[1].stride = sizeof(skr::math::Vector2f);
+    vbvs[1].offset = offsetof(CubeGeometry, g_TexCoords);
     vbvs[2].buffer = vertex_buffer;
-    vbvs[2].stride = sizeof(skr::math::Vector2f);
-    vbvs[2].offset = offsetof(CubeGeometry, g_TexCoords);
+    vbvs[2].stride = sizeof(skr::math::Vector3f);
+    vbvs[2].offset = offsetof(CubeGeometry, g_Normals);
+    vbvs[3].buffer = vertex_buffer;
+    vbvs[3].stride = sizeof(skr::math::Vector4f);
+    vbvs[3].offset = offsetof(CubeGeometry, g_Tangents);
     ibv.buffer = index_buffer;
     ibv.index_count = 36;
     ibv.first_index = 0;
@@ -479,10 +492,11 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
     CGPUVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 1, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attribute_count = 3;
+    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attribute_count = 4;
     CGPURenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = root_sig;
     rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;

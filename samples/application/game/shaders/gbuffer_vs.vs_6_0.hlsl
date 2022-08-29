@@ -2,9 +2,10 @@
 
 struct VSIn
 {
-    centroid float3 normal : NORMAL;
     float3 position : POSITION;
     float2 uv : TEXCOORD0;
+    centroid float3 normal : NORMAL;
+    centroid float4 tangent : TANGENT;
 };
 
 struct VSOut
