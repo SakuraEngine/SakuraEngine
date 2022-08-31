@@ -56,8 +56,7 @@ typedef void (*SProcRenderEffectGetTypeSet)(const dual_chunk_view_t* cv, dual_ty
 typedef dual_type_index_t (*SProcRenderEffectGetIdentityType)();
 typedef void (*SProcRenderEffectInitializeData)(ISkrRenderer*, dual_storage_t*, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv);
 // Drawcall interfaces for effect processor
-typedef uint32_t (*SProcRenderEffectProduceDrawcall)(IPrimitiveRenderPass* pass, dual_storage_t* storage);
-typedef void (*SProcRenderEffectPeekDrawcall)(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage);
+typedef void (*SProcRenderEffectProduceDrawPackets)(IPrimitiveRenderPass* pass, dual_storage_t* storage, skr_primitive_draw_packet_t* result);
 
 typedef struct VtblRenderEffectProcessor {
     SProcRenderEffectOnRegister on_register;
@@ -67,8 +66,7 @@ typedef struct VtblRenderEffectProcessor {
     SProcRenderEffectInitializeData initialize_data;
     SProcRenderEffectGetIdentityType get_identity_type;
 
-    SProcRenderEffectProduceDrawcall produce_drawcall;
-    SProcRenderEffectPeekDrawcall peek_drawcall;
+    SProcRenderEffectProduceDrawPackets produce_draw_packets;
 } VtblRenderEffectProcessor;
 
 typedef struct SKR_RENDERER_API IRenderEffectProcessor {
@@ -82,8 +80,7 @@ typedef struct SKR_RENDERER_API IRenderEffectProcessor {
     virtual dual_type_index_t get_identity_type() = 0;
     virtual void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) = 0;
 
-    virtual uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) = 0;
-    virtual void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage) = 0;
+    virtual skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) = 0;
 #endif
 } IRenderEffectProcessor;
 

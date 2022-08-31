@@ -148,283 +148,227 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     eastl::vector_map<skr_live2d_render_model_id, STimer> motion_timers;
     uint32_t last_ms = 0;
     const bool use_high_precision_mask = false;
-    uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
+
+    eastl::vector<skr_primitive_draw_t> model_drawcalls;
+    skr_primitive_draw_list_view_t model_draw_list;
+    void produce_model_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) 
     {
-        if (strcmp(pass->identity(), live2d_pass_name) == 0)
-        {
-            auto counterF = [&](dual_chunk_view_t* r_cv) {
-                auto models = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
-                for (uint32_t i = 0; i < r_cv->count; i++)
-                {
-                    if (models[i].vram_request.is_ready())
-                    {
-                        auto&& render_model = models[i].vram_request.render_model;
-                        push_constants[render_model].resize(0);
-
-                        auto&& model_resource = models[i].ram_request.model_resource;
-                        const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
-                        if(!list) continue;
-                        auto drawable_list = sorted_drawable_list[render_model] = { list , render_model->index_buffer_views.size() };
-                        push_constants[render_model].resize(push_constants[render_model].size() + drawable_list.size());
-                        // record constant parameters
-                        auto clipping_manager = render_model->clipping_manager;
-                        if (auto clipping_list = clipping_manager->GetClippingContextListForDraw())
-                        {
-                            for (auto drawable : drawable_list)
-                            {
-                                auto& push_const = push_constants[render_model][drawable];
-                                CubismClippingContext* clipping_context = (*clipping_list)[drawable];
-                                push_const.use_mask = clipping_context && clipping_context->_isUsing;
-                                if (push_const.use_mask)
-                                {
-                                    for (uint32_t k = 0; k < 16; k++)
-                                    {
-                                        push_const.clip_matrix.M16[k] = clipping_context->_matrixForDraw.GetArray()[k];
-                                    }
-                                    push_const.clip_matrix = skr::math::transpose(push_const.clip_matrix);
-                                    const csmInt32 channelNo = clipping_context->_layoutChannelNo;
-                                    CubismRenderer::CubismTextureColor* colorChannel = clipping_context->GetClippingManager()->GetChannelFlagAsColor(channelNo);
-                                    push_const.channel_flag = { colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A };
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-            dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
-            uint32_t all = 0;
-            for (auto&& consts : push_constants)
-            {
-                all += consts.second.size();
-            }
-            return all;
-        }
-        if (strcmp(pass->identity(), live2d_mask_pass_name) == 0)
-        {
-            sorted_mask_drawable_lists.resize(0);
-            auto counterF = [&](dual_chunk_view_t* r_cv) {
-                auto models = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
-                for (uint32_t i = 0; i < r_cv->count; i++)
-                {
-                    if (models[i].vram_request.is_ready())
-                    {
-                        auto&& render_model = models[i].vram_request.render_model;
-                        auto&& model_resource = models[i].ram_request.model_resource;
-                        mask_push_constants[render_model].resize(0);
-
-                        // TODO: move this to (some manager?) other than update morph/phys in a render pass
-                        updateModelMotion(render_model);
-                        updateTexture(render_model);
-                        // record constant parameters
-                        if (auto clipping_manager = render_model->clipping_manager)
-                        {
-                            auto mask_list = clipping_manager->GetClippingContextListForMask();
-                            if (!mask_list) continue;
-                            for (uint32_t j = 0; j < mask_list->GetSize(); j++)
-                            {
-                                CubismClippingContext* clipping_context = (clipping_manager != NULL)
-                                    ? (*mask_list)[j]
-                                    : NULL;
-                                if (clipping_context && !use_high_precision_mask && clipping_context->_isUsing)
-                                {
-                                    const csmInt32 clipDrawCount = clipping_context->_clippingIdCount;
-                                    for (csmInt32 ctx = 0; ctx < clipDrawCount; ctx++)
-                                    {
-                                        const csmInt32 clipDrawIndex = clipping_context->_clippingIdList[ctx];
-                                        // 頂点情報が更新されておらず、信頼性がない場合は描画をパスする
-                                        if (!model_resource->model->GetModel()->GetDrawableDynamicFlagVertexPositionsDidChange(clipDrawIndex))
-                                        {
-                                            continue;
-                                        }
-                                        sorted_mask_drawable_lists[render_model].emplace_back(clipDrawIndex);
-                                        auto&& push_const = mask_push_constants[render_model].emplace_back();
-                                        for (uint32_t k = 0; k < 16; k++)
-                                        {
-                                            push_const.projection_matrix.M16[k] = clipping_context->_matrixForMask.GetArray()[k];
-                                        }
-                                        push_const.projection_matrix = skr::math::transpose(push_const.projection_matrix);
-                                        const csmInt32 channelNo = clipping_context->_layoutChannelNo;
-                                        CubismRenderer::CubismTextureColor* colorChannel = clipping_context->GetClippingManager()->GetChannelFlagAsColor(channelNo);
-                                        push_const.channel_flag = { colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A };
-                                        
-                                        skr_live2d_model_get_drawable_colors(render_model->model_resource_id, clipDrawIndex,
-                                            &push_const.multiply_color,
-                                            &push_const.screen_color);
-                                        csmRectF* rect = clipping_context->_layoutBounds;
-                                        push_const.base_color = { rect->X * 2.0f - 1.0f, rect->Y * 2.0f - 1.0f, rect->GetRight() * 2.0f - 1.0f, rect->GetBottom() * 2.0f - 1.0f };
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-            dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
-            uint32_t all = 0;
-            for (auto&& consts : mask_push_constants)
-            {
-                all += consts.second.size();
-            }
-            return all;
-        }
-        return 0;
-    }
-
-    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage) override
-    {
-        auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
-            auto identities = (live2d_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
-            skr_primitive_draw_list_view_t subview = { drawcalls->drawcalls, drawcalls->count };
-            if (strcmp(pass->identity(), live2d_pass_name) == 0)
-            {
-                auto used = peek_model_drawcall(&subview, r_cv);
-                if (subview.count > used)
-                {
-                    subview.drawcalls += used;
-                    subview.count -= used;
-                }
-                else
-                {
-                    subview.drawcalls = nullptr;
-                    subview.count = 0;
-                }
-            }
-            if (strcmp(pass->identity(), live2d_mask_pass_name) == 0)
-            {
-                auto used = peek_mask_drawcall(&subview, r_cv);
-                if (subview.count > used)
-                {
-                    subview.drawcalls += used;
-                    subview.count -= used;
-                }
-                else
-                {
-                    subview.drawcalls = nullptr;
-                    subview.count = 0;
-                }
-            }
-        };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
-    }
-
-    uint32_t peek_mask_drawcall(skr_primitive_draw_list_view_t* drawcalls, dual_chunk_view_t* r_cv)
-    {
-        if (!drawcalls->drawcalls) return 0;
-        uint32_t dc_idx = 0;
-        auto meshes = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
-        for (uint32_t r_idx = 0; r_idx < r_cv->count; r_idx++)
-        {
-            if (meshes)
-            {
-                const auto& async_request = meshes[r_idx].vram_request;
-                if (async_request.is_ready())
-                {
-                    const auto& render_model = async_request.render_model;
-                    const auto& cmds = render_model->primitive_commands;
-                    uint32_t model_dc_idx = 0;
-                    for (auto drawable : sorted_mask_drawable_lists[render_model])
-                    {
-                        const auto& cmd = cmds[drawable];
-                        // resources may be ready after produce_drawcall, so we need to check it here
-                        if (mask_push_constants[render_model].size() <= model_dc_idx) break;
-
-                        auto visibility = skr_live2d_model_get_drawable_is_visible(render_model->model_resource_id, drawable);
-                        auto& drawcall = drawcalls->drawcalls[dc_idx];
-                        if (!visibility)
-                        {
-                            drawcall.desperated = true;
-                            drawcall.pipeline = mask_pipeline;
-                        }
-                        else
-                        {
-                            drawcall.pipeline = mask_pipeline;
-                            drawcall.push_const_name = push_constants_name;
-                            drawcall.push_const = (const uint8_t*)(mask_push_constants[render_model].data() + model_dc_idx);
-                            drawcall.index_buffer = *cmd.ibv;
-                            drawcall.vertex_buffers = cmd.vbvs.data();
-                            drawcall.vertex_buffer_count = cmd.vbvs.size();
-                            {
-                                auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
-                                drawcall.descriptor_set_count = 1;
-                                drawcall.descriptor_sets = &mask_descriptor_sets[texture_view];
-                            }
-                        }
-                        dc_idx++;
-                        model_dc_idx++;
-                    }
-                }
-            }
-        }
-        return dc_idx;
-    }
-
-    uint32_t peek_model_drawcall(skr_primitive_draw_list_view_t* drawcalls, dual_chunk_view_t* r_cv)
-    {
-        if (!drawcalls->drawcalls) return 0;
-
         CubismMatrix44 projection;
         // TODO: Correct Projection
         projection.Scale(static_cast<float>(100.f) / static_cast<float>(100.f), 1.0f);
         // TODO: View Matrix
 
-        uint32_t dc_idx = 0;
-        auto meshes = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
-        for (uint32_t r_idx = 0; r_idx < r_cv->count; r_idx++)
-        {
-            if (meshes)
+        model_drawcalls.resize(0);
+        auto counterF = [&](dual_chunk_view_t* r_cv) {
+            auto models = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
+            for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                const auto& async_request = meshes[r_idx].vram_request;
-                if (async_request.is_ready())
+                if (models[i].vram_request.is_ready())
                 {
-                    const auto& render_model = async_request.render_model;
+                    auto&& render_model = models[i].vram_request.render_model;
                     const auto& cmds = render_model->primitive_commands;
-                    uint32_t model_dc_idx = 0;
-                    for (auto drawable : sorted_drawable_list[render_model])
-                    {
-                        const auto& cmd = cmds[drawable];
-                        // resources may be ready after produce_drawcall, so we need to check it here
-                        if (push_constants[render_model].size() <= model_dc_idx) break;;
-                        auto& push_const = push_constants[render_model][drawable];
-                        
-                        for (uint32_t i = 0; i < 16; i++)
-                        {
-                            push_const.projection_matrix.M16[i] = projection.GetArray()[i];
-                        }
-                        push_const.projection_matrix = skr::math::transpose(push_const.projection_matrix);
-                        skr_live2d_model_get_drawable_colors(render_model->model_resource_id, drawable,
-                            &push_const.multiply_color,
-                            &push_const.screen_color);
-                        push_const.base_color = { 1.f, 1.f, 1.f, push_const.multiply_color.w };
+                    push_constants[render_model].resize(0);
 
-                        auto visibility = skr_live2d_model_get_drawable_is_visible(render_model->model_resource_id, drawable);
-                        auto& drawcall = drawcalls->drawcalls[dc_idx];
-                        if (!visibility)
+                    auto&& model_resource = models[i].ram_request.model_resource;
+                    const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
+                    if(!list) continue;
+                    auto drawable_list = sorted_drawable_list[render_model] = { list , render_model->index_buffer_views.size() };
+                    push_constants[render_model].resize(drawable_list.size());
+                    // record constant parameters
+                    auto clipping_manager = render_model->clipping_manager;
+                    if (auto clipping_list = clipping_manager->GetClippingContextListForDraw())
+                    {
+                        for (auto drawable : drawable_list)
                         {
-                            drawcall.desperated = true;
-                            drawcall.pipeline = pipeline;
-                        }
-                        else
-                        {
-                            drawcall.pipeline = pipeline;
-                            drawcall.push_const_name = push_constants_name;
-                            drawcall.push_const = (const uint8_t*)(push_constants[render_model].data() + drawable);
-                            drawcall.index_buffer = *cmd.ibv;
-                            drawcall.vertex_buffers = cmd.vbvs.data();
-                            drawcall.vertex_buffer_count = cmd.vbvs.size();
+                            const auto& cmd = cmds[drawable];
+                            auto& push_const = push_constants[render_model][drawable];
+                            CubismClippingContext* clipping_context = (*clipping_list)[drawable];
+                            push_const.use_mask = clipping_context && clipping_context->_isUsing;
+                            if (push_const.use_mask)
                             {
-                                auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
-                                drawcall.descriptor_set_count = 1;
-                                drawcall.descriptor_sets = &descriptor_sets[texture_view];
+                                for (uint32_t k = 0; k < 16; k++)
+                                {
+                                    push_const.clip_matrix.M16[k] = clipping_context->_matrixForDraw.GetArray()[k];
+                                }
+                                push_const.clip_matrix = skr::math::transpose(push_const.clip_matrix);
+                                const csmInt32 channelNo = clipping_context->_layoutChannelNo;
+                                CubismRenderer::CubismTextureColor* colorChannel = clipping_context->GetClippingManager()->GetChannelFlagAsColor(channelNo);
+                                push_const.channel_flag = { colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A };
+                            }
+                            for (uint32_t i = 0; i < 16; i++)
+                            {
+                                push_const.projection_matrix.M16[i] = projection.GetArray()[i];
+                            }
+                            push_const.projection_matrix = skr::math::transpose(push_const.projection_matrix);
+                            skr_live2d_model_get_drawable_colors(render_model->model_resource_id, drawable,
+                                &push_const.multiply_color,
+                                &push_const.screen_color);
+                            push_const.base_color = { 1.f, 1.f, 1.f, push_const.multiply_color.w };
+
+                            auto visibility = skr_live2d_model_get_drawable_is_visible(render_model->model_resource_id, drawable);
+                            auto& drawcall = model_drawcalls.emplace_back();
+                            if (!visibility)
+                            {
+                                drawcall.desperated = true;
+                                drawcall.pipeline = pipeline;
+                            }
+                            else
+                            {
+                                drawcall.pipeline = pipeline;
+                                drawcall.push_const_name = push_constants_name;
+                                drawcall.push_const = (const uint8_t*)(push_constants[render_model].data() + drawable);
+                                drawcall.index_buffer = *cmd.ibv;
+                                drawcall.vertex_buffers = cmd.vbvs.data();
+                                drawcall.vertex_buffer_count = cmd.vbvs.size();
+                                {
+                                    auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
+                                    drawcall.descriptor_set_count = 1;
+                                    drawcall.descriptor_sets = &descriptor_sets[texture_view];
+                                }
                             }
                         }
-                        model_dc_idx++;
-                        dc_idx++;
                     }
                 }
             }
-        }
-        return dc_idx;
+        };
+        dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
     }
+
+    eastl::vector<skr_primitive_draw_t> mask_drawcalls;
+    skr_primitive_draw_list_view_t mask_draw_list;
+    void produce_mask_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) 
+    {
+        mask_drawcalls.resize(0);
+        sorted_mask_drawable_lists.resize(0);
+        auto counterF = [&](dual_chunk_view_t* r_cv) {
+            auto models = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
+            for (uint32_t i = 0; i < r_cv->count; i++)
+            {
+                if (models[i].vram_request.is_ready())
+                {
+                    auto&& render_model = models[i].vram_request.render_model;
+                    auto&& model_resource = models[i].ram_request.model_resource;
+                    mask_push_constants[render_model].resize(0);
+
+                    // TODO: move this to (some manager?) other than update morph/phys in a render pass
+                    updateModelMotion(render_model);
+                    updateTexture(render_model);
+                    // record constant parameters
+                    if (auto clipping_manager = render_model->clipping_manager)
+                    {
+                        auto mask_list = clipping_manager->GetClippingContextListForMask();
+                        if (!mask_list) continue;
+                        uint32_t valid_masks = 0;
+                        for (uint32_t j = 0; j < mask_list->GetSize(); j++)
+                        {
+                            CubismClippingContext* clipping_context = (clipping_manager != NULL)
+                                ? (*mask_list)[j]
+                                : NULL;
+                            if (clipping_context && !use_high_precision_mask && clipping_context->_isUsing)
+                            {
+                                const csmInt32 clipDrawCount = clipping_context->_clippingIdCount;
+                                for (csmInt32 ctx = 0; ctx < clipDrawCount; ctx++)
+                                {
+                                    const csmInt32 clipDrawIndex = clipping_context->_clippingIdList[ctx];
+                                    // 頂点情報が更新されておらず、信頼性がない場合は描画をパスする
+                                    if (!model_resource->model->GetModel()->GetDrawableDynamicFlagVertexPositionsDidChange(clipDrawIndex))
+                                    {
+                                        continue;
+                                    }
+                                    valid_masks++;
+                                }
+                            }
+                        }
+                        sorted_mask_drawable_lists.reserve(valid_masks);
+                        mask_push_constants.reserve(valid_masks);
+                        for (uint32_t j = 0; j < mask_list->GetSize(); j++)
+                        {
+                            CubismClippingContext* clipping_context = (clipping_manager != NULL)
+                                ? (*mask_list)[j]
+                                : NULL;
+                            if (clipping_context && !use_high_precision_mask && clipping_context->_isUsing)
+                            {
+                                const csmInt32 clipDrawCount = clipping_context->_clippingIdCount;
+                                for (csmInt32 ctx = 0; ctx < clipDrawCount; ctx++)
+                                {
+                                    const csmInt32 clipDrawIndex = clipping_context->_clippingIdList[ctx];
+                                    // 頂点情報が更新されておらず、信頼性がない場合は描画をパスする
+                                    if (!model_resource->model->GetModel()->GetDrawableDynamicFlagVertexPositionsDidChange(clipDrawIndex))
+                                    {
+                                        continue;
+                                    }
+                                    sorted_mask_drawable_lists[render_model].emplace_back(clipDrawIndex);
+                                    auto&& push_const = mask_push_constants[render_model].emplace_back();
+                                    for (uint32_t k = 0; k < 16; k++)
+                                    {
+                                        push_const.projection_matrix.M16[k] = clipping_context->_matrixForMask.GetArray()[k];
+                                    }
+                                    push_const.projection_matrix = skr::math::transpose(push_const.projection_matrix);
+                                    const csmInt32 channelNo = clipping_context->_layoutChannelNo;
+                                    CubismRenderer::CubismTextureColor* colorChannel = clipping_context->GetClippingManager()->GetChannelFlagAsColor(channelNo);
+                                    push_const.channel_flag = { colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A };
+                                    
+                                    skr_live2d_model_get_drawable_colors(render_model->model_resource_id, clipDrawIndex,
+                                        &push_const.multiply_color,
+                                        &push_const.screen_color);
+                                    csmRectF* rect = clipping_context->_layoutBounds;
+                                    push_const.base_color = { rect->X * 2.0f - 1.0f, rect->Y * 2.0f - 1.0f, rect->GetRight() * 2.0f - 1.0f, rect->GetBottom() * 2.0f - 1.0f };
+                                
+                                    const auto& cmds = render_model->primitive_commands;
+                                    const auto& cmd = cmds[clipDrawIndex];
+                                    auto visibility = skr_live2d_model_get_drawable_is_visible(render_model->model_resource_id, clipDrawIndex);
+                                    auto& drawcall = mask_drawcalls.emplace_back();
+                                    if (!visibility)
+                                    {
+                                        drawcall.desperated = true;
+                                        drawcall.pipeline = mask_pipeline;
+                                    }
+                                    else
+                                    {
+                                        drawcall.pipeline = mask_pipeline;
+                                        drawcall.push_const_name = push_constants_name;
+                                        drawcall.push_const = (const uint8_t*)(&push_const);
+                                        drawcall.index_buffer = *cmd.ibv;
+                                        drawcall.vertex_buffers = cmd.vbvs.data();
+                                        drawcall.vertex_buffer_count = cmd.vbvs.size();
+                                        {
+                                            auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
+                                            drawcall.descriptor_set_count = 1;
+                                            drawcall.descriptor_sets = &mask_descriptor_sets[texture_view];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+    }
+
+    skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
+    {
+        skr_primitive_draw_packet_t packet = {};
+        if (strcmp(pass->identity(), live2d_mask_pass_name) == 0)
+        {
+            produce_mask_drawcall(pass, storage);
+            mask_draw_list.drawcalls = mask_drawcalls.data();
+            mask_draw_list.count = mask_drawcalls.size();
+            packet.count = 1;
+            packet.lists = &mask_draw_list;
+        }
+        if (strcmp(pass->identity(), live2d_pass_name) == 0)
+        {
+            produce_model_drawcall(pass, storage);
+            model_draw_list.drawcalls = model_drawcalls.data();
+            model_draw_list.count = model_drawcalls.size();
+            packet.count = 1;
+            packet.lists = &model_draw_list;
+        }
+        return packet;
+    }
+
 protected:
     void updateTexture(skr_live2d_render_model_id render_model)
     {
