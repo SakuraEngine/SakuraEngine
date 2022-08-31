@@ -42,11 +42,13 @@ typedef struct skr_primitive_draw_t {
 typedef struct skr_primitive_draw_list_view_t {
     skr_primitive_draw_t* drawcalls;
     uint32_t count;
+    void* user_data;
 } skr_primitive_draw_list_view_t;
 
 typedef struct skr_primitive_draw_packet_t {
     skr_primitive_draw_list_view_t* lists;
     uint32_t count;
+    void* user_data;
 } skr_primitive_draw_packet_t;
 
 #ifdef __cplusplus

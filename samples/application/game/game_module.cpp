@@ -475,6 +475,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("CompileRenderGraph");
             renderGraph->compile();
+            render_graph::RenderGraphViz::write_graphviz(*renderGraph, "render_graph_game.gv");
         }
         {
             ZoneScopedN("ExecuteRenderGraph");

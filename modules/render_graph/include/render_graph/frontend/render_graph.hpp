@@ -70,8 +70,8 @@ public:
             ECGPULoadAction sload_action = CGPU_LOAD_ACTION_CLEAR,
             ECGPUStoreAction sstore_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
         // buffers
-        RenderPassBuilder& read(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT;
-        RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
+        RenderPassBuilder& read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT;
+        RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& write(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& use_buffer(PipelineBufferHandle buffer, ECGPUResourceState requested_state) SKR_NOEXCEPT;
@@ -160,6 +160,7 @@ public:
         BufferBuilder& as_upload_buffer() SKR_NOEXCEPT;
         BufferBuilder& as_vertex_buffer() SKR_NOEXCEPT;
         BufferBuilder& as_index_buffer() SKR_NOEXCEPT;
+        BufferBuilder& as_uniform_buffer() SKR_NOEXCEPT;
         BufferBuilder& prefer_on_device() SKR_NOEXCEPT;
         BufferBuilder& prefer_on_host() SKR_NOEXCEPT;
 

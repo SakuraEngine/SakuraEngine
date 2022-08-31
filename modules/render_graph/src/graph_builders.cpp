@@ -1,3 +1,4 @@
+#include "platform/debug.h"
 #include "render_graph/frontend/render_graph.hpp"
 
 namespace skr
@@ -103,23 +104,28 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stenci
     return *this;
 }
 
-RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT
 {
+    SKR_UNIMPLEMENTED_FUNCTION();
     return *this;
 }
 
-RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT
 {
+    auto&& edge = node.in_buffer_edges.emplace_back(new BufferReadEdge(handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
 
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT
 {
+    SKR_UNIMPLEMENTED_FUNCTION();
     return *this;
 }
 
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT
 {
+    SKR_UNIMPLEMENTED_FUNCTION();
     return *this;
 }
 
@@ -425,6 +431,13 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_index_buffer() SKR_NO
 {
     node.descriptor.descriptors |= CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     node.descriptor.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    return *this;
+}
+
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_uniform_buffer() SKR_NOEXCEPT
+{
+    node.descriptor.descriptors |= CGPU_RESOURCE_TYPE_UNIFORM_BUFFER;
+    node.descriptor.start_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
     return *this;
 }
 

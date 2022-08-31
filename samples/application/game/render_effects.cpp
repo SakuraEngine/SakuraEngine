@@ -41,6 +41,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
     void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
     {
+        const auto view_proj = *(skr_float4x4_t*)drawcalls.user_data;
         auto depth = renderGraph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
                 builder.set_name("depth")
@@ -48,6 +49,16 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     .format(depth_format)
                     .owns_memory()
                     .allow_depth_stencil();
+            });
+        auto cbuffer = renderGraph->create_buffer(
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+                builder.set_name("forward_cbuffer")
+                    .size(sizeof(skr_float4x4_t))
+                    .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
+                    .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
+                    .with_tags(kRenderGraphDynamicResourceTag)
+                    .prefer_on_device()
+                    .as_uniform_buffer();
             });
         // IMGUI control shading rate
         if (false)
@@ -74,10 +85,14 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     builder.set_name("forward_pass")
                         // we know that the drawcalls always have a same pipeline
                         .set_pipeline(drawcalls.drawcalls->pipeline)
+                        .read("ForwardRenderConstants", cbuffer.range(0, sizeof(skr_float4x4_t)))
                         .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
                         .set_depth_stencil(depth_buffer);
                 },
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
+                    auto cb = stack.resolve(cbuffer);
+                    SKR_ASSERT(cb && "cbuffer not found");
+                    ::memcpy(cb->cpu_mapped_address, &view_proj, sizeof(view_proj));
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
                         (float)900, (float)900,
@@ -215,8 +230,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
-            push_constants.resize(c);
             mesh_drawcalls.clear();
+            push_constants.resize(c);
             mesh_drawcalls.reserve(c);
         }
         if (strcmp(pass->identity(), forward_pass_name) == 0)
@@ -242,6 +257,11 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 }
             };
             dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
+            auto proj = skr::math::perspective_fov(
+                3.1415926f / 2.f, 
+                (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 
+                1.f, 1000.f);
+            view_proj = skr::math::multiply(view, proj);
             
             uint32_t r_idx = 0;
             uint32_t dc_idx = 0;
@@ -263,10 +283,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 translations[g_idx].value,
                                 scales[g_idx].value,
                                 quaternion);
-                            auto proj = skr::math::perspective_fov(
-                                3.1415926f / 2.f, 
-                                (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 
-                                1.f, 1000.f);
                             // drawcall
                             if (!meshes || !meshes[r_idx].async_request.is_buffer_ready())
                             {
@@ -274,7 +290,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 if (push_constants.size() <= dc_idx) return;
 
                                 push_constants[dc_idx].world = world;
-                                push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
                                 auto& drawcall = mesh_drawcalls.emplace_back();
                                 drawcall.pipeline = pipeline;
                                 drawcall.push_const_name = push_constants_name;
@@ -296,7 +311,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                         if (push_constants.size() <= dc_idx) return;
 
                                         push_constants[dc_idx].world = world;
-                                        push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
                                         auto& drawcall = mesh_drawcalls.emplace_back();
                                         drawcall.pipeline = pipeline;
                                         drawcall.push_const_name = push_constants_name;
@@ -316,6 +330,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
             mesh_draw_list.drawcalls = mesh_drawcalls.data();
             mesh_draw_list.count = mesh_drawcalls.size();
+            mesh_draw_list.user_data = &view_proj;
             packet.count = 1;
             packet.lists = &mesh_draw_list;
         }
@@ -342,9 +357,9 @@ protected:
     dual::type_builder_t type_builder;
     struct PushConstants {
         skr::math::float4x4 world;
-        skr::math::float4x4 view_proj;
     };
     eastl::vector<PushConstants> push_constants;
+    skr::math::float4x4 view_proj;
 };
 RenderEffectForward* forward_effect = new RenderEffectForward();
 

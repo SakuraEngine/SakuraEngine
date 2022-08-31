@@ -265,7 +265,8 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
 
 bool PNGImageCoder::encode() SKR_NOEXCEPT
 {
-    return true;
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return false;
 }
 
 EImageCoderFormat PNGImageCoder::get_image_format() const SKR_NOEXCEPT
