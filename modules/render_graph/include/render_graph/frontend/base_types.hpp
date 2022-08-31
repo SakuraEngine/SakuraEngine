@@ -106,7 +106,7 @@ struct ObjectHandle<EObjectType::Buffer> {
     // pipeline
     inline operator PipelineReferenceHandle() const { return PipelineReferenceHandle(handle); }
     // range
-    inline RangeHandle range(uint64_t from, uint64_t to) { return RangeHandle(handle, from, to); }
+    inline RangeHandle range(uint64_t from, uint64_t to) const { return RangeHandle(handle, from, to); }
 
     friend class RenderGraph;
     friend class RenderGraphBackend;
