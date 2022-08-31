@@ -181,7 +181,7 @@ void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_s
 }
 
 const char* gltf_file = "scene.gltf";
-const char* gltf_file2 = "Sponza.gltf";
+const char* gltf_file2 = "scene.gltf";
 void imgui_button_spawn_girl()
 {
     static bool onceGuard  = true;
@@ -475,7 +475,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("CompileRenderGraph");
             renderGraph->compile();
-            render_graph::RenderGraphViz::write_graphviz(*renderGraph, "render_graph_game.gv");
         }
         {
             ZoneScopedN("ExecuteRenderGraph");

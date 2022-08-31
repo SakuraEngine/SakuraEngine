@@ -112,7 +112,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(uint32_t se
 
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT
 {
-    auto&& edge = node.in_buffer_edges.emplace_back(new BufferReadEdge(handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+    auto&& edge = node.in_buffer_edges.emplace_back(new BufferReadEdge(name, handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
@@ -258,7 +258,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char*
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst) SKR_NOEXCEPT
 {
-    auto&& in_edge = node.in_buffer_edges.emplace_back(new BufferReadEdge(src, CGPU_RESOURCE_STATE_COPY_SOURCE));
+    auto&& in_edge = node.in_buffer_edges.emplace_back(new BufferReadEdge("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE));
     auto&& out_edge = node.out_buffer_edges.emplace_back(new BufferReadWriteEdge(dst, CGPU_RESOURCE_STATE_COPY_DEST));
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);

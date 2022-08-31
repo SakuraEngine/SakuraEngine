@@ -172,7 +172,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         });
 }
 
-eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURootSignatureId root_sig)
+eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURootSignatureId root_sig, ECGPUResourceType* type = nullptr)
 {
     uint32_t set = 0, binding = 0;
     auto name_hash = cgpu_hash(name, strlen(name), (size_t)root_sig->device);
@@ -184,6 +184,7 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURoot
             {
                 set = root_sig->tables[i].resources[j].set;
                 binding = root_sig->tables[i].resources[j].binding;
+                if (type) *type = root_sig->tables[i].resources[j].type;
                 return { set, binding };
             }
         }
@@ -192,33 +193,60 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURoot
 }
 
 gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
-RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
+    RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
 {
     ZoneScopedN("UpdateBindings");
     CGPURootSignatureId root_sig = nullptr;
-    auto read_edges = pass->tex_read_edges();
-    auto rw_edges = pass->tex_readwrite_edges();
+    auto tex_read_edges = pass->tex_read_edges();
+    auto tex_rw_edges = pass->tex_readwrite_edges();
+    auto buf_read_edges = pass->buf_read_edges();
+    auto buf_rw_edges = pass->buf_readwrite_edges();
+    // Get Root Signature
     if (pass->pass_type == EPassType::Render)
         root_sig = ((RenderPassNode*)pass)->root_signature;
     else if (pass->pass_type == EPassType::Compute)
         root_sig = ((ComputePassNode*)pass)->root_signature;
     if (!root_sig) return {};
+    // Allocate or get descriptor set heap
     auto&& desc_set_heap = executor.desc_set_pool.find(root_sig);
     if (desc_set_heap == executor.desc_set_pool.end())
         executor.desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
     auto desc_sets = executor.desc_set_pool[root_sig]->pop();
+    // Bind resources
     for (uint32_t set_idx = 0; set_idx < desc_sets.size(); set_idx++)
     {
         eastl::vector<CGPUDescriptorData> desc_set_updates;
-        // SRVs
-        eastl::vector<CGPUTextureViewId> srvs(read_edges.size());
-        for (uint32_t e_idx = 0; e_idx < read_edges.size(); e_idx++)
+        // CBV Buffers
+        eastl::vector<CGPUBufferId> cbvs(buf_read_edges.size());
+        for (uint32_t e_idx = 0; e_idx < buf_read_edges.size(); e_idx++)
         {
-            auto& read_edge = read_edges[e_idx];
+            auto& read_edge = buf_read_edges[e_idx];
             auto read_set_binding =
-            read_edge->name.empty() ?
-            eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
-            calculate_bind_set(read_edge->name.c_str(), root_sig);
+                read_edge->name.empty() ?
+                eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
+                calculate_bind_set(read_edge->name.c_str(), root_sig);
+            ECGPUResourceType resource_type = root_sig->tables[read_set_binding.first].resources[read_set_binding.second].type;
+            if (read_set_binding.first == set_idx)
+            {
+                auto buffer_readed = read_edge->get_buffer_node();
+                CGPUDescriptorData update = {};
+                update.count = 1;
+                update.binding = read_set_binding.second;
+                update.binding_type = resource_type;
+                auto buffer = resolve(executor, *buffer_readed);
+                update.buffers = &buffer;
+                desc_set_updates.emplace_back(update);
+            }
+        }
+        // SRVs
+        eastl::vector<CGPUTextureViewId> srvs(tex_read_edges.size());
+        for (uint32_t e_idx = 0; e_idx < tex_read_edges.size(); e_idx++)
+        {
+            auto& read_edge = tex_read_edges[e_idx];
+            auto read_set_binding =
+                read_edge->name.empty() ?
+                eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
+                calculate_bind_set(read_edge->name.c_str(), root_sig);
             if (read_set_binding.first == set_idx)
             {
                 auto texture_readed = read_edge->get_texture_node();
@@ -247,10 +275,10 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
             }
         }
         // UAVs
-        eastl::vector<CGPUTextureViewId> uavs(rw_edges.size());
-        for (uint32_t e_idx = 0; e_idx < rw_edges.size(); e_idx++)
+        eastl::vector<CGPUTextureViewId> uavs(tex_rw_edges.size());
+        for (uint32_t e_idx = 0; e_idx < tex_rw_edges.size(); e_idx++)
         {
-            auto& rw_edge = rw_edges[e_idx];
+            auto& rw_edge = tex_rw_edges[e_idx];
             auto rw_set_binding =
             rw_edge->name.empty() ?
             eastl::pair<uint32_t, uint32_t>(rw_edge->set, rw_edge->binding) :
@@ -280,8 +308,7 @@ RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
         auto update_count = desc_set_updates.size();
         if (update_count)
         {
-            cgpu_update_descriptor_set(desc_sets[set_idx],
-            desc_set_updates.data(), (uint32_t)desc_set_updates.size());
+            cgpu_update_descriptor_set(desc_sets[set_idx], desc_set_updates.data(), (uint32_t)desc_set_updates.size());
         }
     }
     return desc_sets;
@@ -425,9 +452,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         // TODO: MSAA
         auto texture_target = write_edge->get_texture_node();
         const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(
-        (ECGPUFormat)resolve(executor, *texture_target)->format);
+            (ECGPUFormat)resolve(executor, *texture_target)->format);
         const bool is_depth_only = FormatUtil_IsDepthStencilFormat(
-        (ECGPUFormat)resolve(executor, *texture_target)->format);
+            (ECGPUFormat)resolve(executor, *texture_target)->format);
         if (write_edge->requested_state == CGPU_RESOURCE_STATE_DEPTH_WRITE && is_depth_stencil)
         {
             CGPUTextureViewDescriptor view_desc = {};

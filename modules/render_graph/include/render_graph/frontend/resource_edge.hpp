@@ -66,11 +66,11 @@ public:
 protected:
     const TextureUAVHandle handle;
     TextureReadWriteEdge(
-    uint32_t set, uint32_t binding, TextureUAVHandle handle,
-    ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+        uint32_t set, uint32_t binding, TextureUAVHandle handle,
+        ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
     TextureReadWriteEdge(
-    const char8_t* name, TextureUAVHandle handle,
-    ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+        const char8_t* name, TextureUAVHandle handle,
+        ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
 };
 
 class TextureRenderEdge : public TextureEdge
@@ -123,12 +123,19 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
+    const uint32_t set;
+    const uint32_t binding;
+    const eastl::string name;
+
     BufferNode* get_buffer_node() final;
     PassNode* get_pass_node() final;
 
 protected:
-    BufferReadEdge(BufferRangeHandle handle, ECGPUResourceState state)
+    BufferReadEdge(const char8_t* name, BufferRangeHandle handle, ECGPUResourceState state)
         : BufferEdge(ERelationshipType::BufferRead, state)
+        , set(UINT32_MAX)
+        , binding(UINT32_MAX)
+        , name (name)
         , handle(handle)
     {
     }
