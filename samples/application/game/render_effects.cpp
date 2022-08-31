@@ -38,30 +38,26 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 
     }
 
+    struct DrawCallListData
+    {
+        skr::math::float4x4 view_projection;
+        uint32_t viewport_width;
+        uint32_t viewport_height;
+    };
+
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
     void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
     {
-        const auto view_proj = *(skr_float4x4_t*)drawcalls.user_data;
+        const auto list_data = *(DrawCallListData*)drawcalls.user_data;
         auto depth = renderGraph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
                 builder.set_name("depth")
-                    .extent(900, 900)
+                    .extent(list_data.viewport_width, list_data.viewport_height)
                     .format(depth_format)
                     .owns_memory()
                     .allow_depth_stencil();
             });
-        auto cbuffer = renderGraph->create_buffer(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
-                builder.set_name("forward_cbuffer")
-                    .size(sizeof(skr_float4x4_t))
-                    .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
-                    .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
-                    .with_tags(kRenderGraphDynamicResourceTag)
-                    .prefer_on_device()
-                    .as_uniform_buffer();
-            });
         // IMGUI control shading rate
-        if (false)
         {
             const char* shadingRateNames[] = {
                 "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
@@ -78,6 +74,16 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         }
         if (drawcalls.count)
         {
+            auto cbuffer = renderGraph->create_buffer(
+                [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+                    builder.set_name("forward_cbuffer")
+                        .size(sizeof(skr_float4x4_t))
+                        .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
+                        .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
+                        .with_tags(kRenderGraphDynamicResourceTag)
+                        .prefer_on_device()
+                        .as_uniform_buffer();
+                });
             renderGraph->add_render_pass(
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
                     const auto out_color = renderGraph->get_texture("backbuffer");
@@ -92,12 +98,12 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                     auto cb = stack.resolve(cbuffer);
                     SKR_ASSERT(cb && "cbuffer not found");
-                    ::memcpy(cb->cpu_mapped_address, &view_proj, sizeof(view_proj));
+                    ::memcpy(cb->cpu_mapped_address, &list_data.view_projection, sizeof(list_data.view_projection));
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
-                        (float)900, (float)900,
+                        (float)list_data.viewport_width, (float)list_data.viewport_height,
                         0.f, 1.f);
-                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, 900, 900);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, list_data.viewport_width, list_data.viewport_height);
                     for (uint32_t i = 0; i < drawcalls.count; i++)
                     {
                         ZoneScopedN("DrawCall");
@@ -249,6 +255,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 SKR_ASSERT(g_cv->count <= 1);
                 if (cameras)
                 {
+                    forward_pass_data.viewport_width = cameras->viewport_width;
+                    forward_pass_data.viewport_height = cameras->viewport_height;
+
                     view  = skr::math::look_at_matrix(
                         camera_transforms->value /*eye*/, 
                         camera_forward + camera_transforms->value /*at*/,
@@ -261,7 +270,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 3.1415926f / 2.f, 
                 (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 
                 1.f, 1000.f);
-            view_proj = skr::math::multiply(view, proj);
+
+            forward_pass_data.view_projection = skr::math::multiply(view, proj);
             
             uint32_t r_idx = 0;
             uint32_t dc_idx = 0;
@@ -330,7 +340,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
             mesh_draw_list.drawcalls = mesh_drawcalls.data();
             mesh_draw_list.count = mesh_drawcalls.size();
-            mesh_draw_list.user_data = &view_proj;
+            mesh_draw_list.user_data = &forward_pass_data;
             packet.count = 1;
             packet.lists = &mesh_draw_list;
         }
@@ -359,7 +369,7 @@ protected:
         skr::math::float4x4 world;
     };
     eastl::vector<PushConstants> push_constants;
-    skr::math::float4x4 view_proj;
+    RenderPassForward::DrawCallListData forward_pass_data;
 };
 RenderEffectForward* forward_effect = new RenderEffectForward();
 

@@ -116,7 +116,8 @@ struct sreflect sattr(
 )
 skr_camera_t
 {
-    skr_float3_t value;
+    uint32_t viewport_width;
+    uint32_t viewport_height;
 };
 
 

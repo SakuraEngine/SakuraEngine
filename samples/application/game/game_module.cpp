@@ -335,7 +335,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
     moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, !skr_camera_t");
-    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [has]skr_camera_t");
+    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_camera_t");
     while (!quit)
     {
         FrameMark
@@ -349,6 +349,19 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("PollEvent");
 
+            if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
+            {
+                if (event.type == SDL_WINDOWEVENT)
+                {
+                    Uint8 window_event = event.window.event;
+                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                    {
+                        cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+                        cgpu_wait_fences(&present_fence, 1);
+                        swapchain = skr_renderer_recreate_window_swapchain(window);
+                    }
+                }
+            }
             if (event.type == SDL_SYSWMEVENT)
             {
                 SDL_SysWMmsg* msg = event.syswm.msg;
@@ -376,8 +389,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
 
             auto& io = ImGui::GetIO();
             io.DisplaySize = ImVec2(
-            (float)swapchain->back_buffers[0]->width,
-            (float)swapchain->back_buffers[0]->height);
+                (float)swapchain->back_buffers[0]->width,
+                (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
             imgui_button_spawn_girl();
             // quit |= skg::GameLoop(ctx);
@@ -408,21 +421,22 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
         }
-        // [has]skr_movement_t, [inout]skr_translation_t, [has]skr_camera_t
+        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_camera_t
         {
             ZoneScopedN("PlayerSystem");
 
-            auto timer = clock();
-            auto total_sec = (double)timer / CLOCKS_PER_SEC;
-            
             auto playerJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("PlayerJob");
                 
                 auto translations = (skr_translation_t*)dualV_get_owned_ro_local(view, localTypes[0]);
+                auto cameras = (skr_camera_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 auto forward = skr::math::Vector3f(0.f, 1.f, 0.f);
                 auto right = skr::math::Vector3f(1.f, 0.f, 0.f);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
+                    cameras[i].viewport_width = swapchain->back_buffers[0]->width;
+                    cameras[i].viewport_height = swapchain->back_buffers[0]->height;
+
                     const auto kSpeed = 15.f;
                     auto qdown = skr_key_down(EKeyCode::KEY_CODE_Q);
                     auto edown = skr_key_down(EKeyCode::KEY_CODE_E);

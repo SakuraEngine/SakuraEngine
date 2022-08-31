@@ -120,7 +120,7 @@ uint64_t BaseImageCoder::get_encoded_size() const SKR_NOEXCEPT
 
 bool BaseImageCoder::lazy_encode() const SKR_NOEXCEPT
 {
-    if (raw_view.empty())
+    if (encoded_view.empty())
     {
         auto _this = const_cast<BaseImageCoder*>(this);
         if (!_this->encode())
