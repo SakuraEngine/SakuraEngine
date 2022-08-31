@@ -50,3 +50,5 @@
 
     #endif
 #endif
+
+#define SKR_RUNTIME_USE_MIMALLOC

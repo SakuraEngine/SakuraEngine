@@ -5,39 +5,25 @@
 
 #include "tracy/TracyC.h"
 
-#ifdef _CRTDBG_MAP_ALLOC
-    #include <crtdbg.h>
-	#define core_malloc(n) _aligned_malloc((n), 1)
-	#define core_memalign _aligned_malloc
-	#define core_free _aligned_free
-#else
-	#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
-	extern "C"
-	{
-		extern void* mi_malloc(size_t size);
-		extern void* mi_malloc_aligned(size_t size, size_t alignment);
-		extern void mi_free(void* p);
-	}
-	#define core_malloc ::mi_malloc
-	#define core_memalign ::mi_malloc_aligned
-	#define core_free ::mi_free
-	#else
-	#define core_malloc malloc
-	#ifdef _WINDOWS
-	#define core_memalign _aligned_malloc
-	#else
-	#define core_memalign(size, alignment) aligned_alloc((alignment), (size))
-	#endif
-	#define core_free free
-	#endif
-#endif
+extern "C"
+{
+	extern void* sakura_malloc(size_t size);
+	extern void* sakura_malloc_aligned(size_t size, size_t alignment);
+	extern void sakura_free(void* p);
+	extern void sakura_free_aligned(void* p, size_t alignment);
+
+}
+#define core_malloc ::sakura_malloc
+#define core_memalign ::sakura_malloc_aligned
+#define core_free ::sakura_free
+#define core_free_aligned ::sakura_free_aligned
 
 #if EASTL_ALLOCATOR_FORGE
 	namespace eastl
 	{
 		void* allocator_forge::allocate(size_t n, int /*flags*/)
 		{ 
-			void* p = core_malloc(n);
+			void* p = core_memalign(n, 1);
 			TracyCAllocN(p, n, "EASTL");
 			return p;
 		}
@@ -58,7 +44,7 @@
 		void allocator_forge::deallocate(void* p, size_t /*n*/)
 		{ 
 			TracyCFree(p);
-			core_free(p);
+			core_free_aligned(p, 1);
 		}
 
 		/// gDefaultAllocator

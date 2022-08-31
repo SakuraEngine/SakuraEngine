@@ -246,9 +246,15 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                     nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
                     if (nextTask.Counter != nullptr)
                     {
+                        ZoneScopedNC("TaskEnd", DISPATCH_GRAY);
+
                         nextTask.Counter->Decrement();
                         if (nextTask.Counter->Done() && nextTask.TaskToExecute.PostFunction)
+                        {
+                            ZoneScopedNC("PostTask", DISPATCH_GRAY);
+
                             nextTask.TaskToExecute.PostFunction(nextTask.TaskToExecute.ArgData);
+                        }
                     }
                 }
             }
@@ -894,6 +900,8 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     // Fast out
     if (counter->m_value.load(std::memory_order_relaxed) == value)
     {
+        ZoneScopedN("WaitThread");
+
         // wait for threads to drain from counter logic, otherwise we might continue too early
         while (counter->m_lock.load() > 0)
         {
@@ -925,6 +933,8 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     // Just trivially return
     if (alreadyDone)
     {
+        ZoneScopedN("ReleaseFiberBundle");
+
         ReleaseFiberBundle(readyFiberBundle);
         return;
     }
