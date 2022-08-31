@@ -44,7 +44,7 @@ extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph)
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
-const bool bSpawnMovable = false;
+const bool bSpawnMovable = true;
 
 // TODO: Refactor this
 CGPUVertexLayout vertex_layout = {};
@@ -127,7 +127,7 @@ void create_test_scene()
             else
             {
                 translations[i].value = { 0.f, 0.f, 0.f };
-                rotations[i].euler = { 0.f, 0.f, 0.f };
+                rotations[i].euler = { 3.1415926f / 2.f, 0.f, 0.f };
                 scales[i].value = { 1.f, 1.f, 1.f };
             }
         }
@@ -138,12 +138,21 @@ void create_test_scene()
     {
         dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 100, DUAL_LAMBDA(primSetup));
     }
+    // allocate 1 player entity
+    auto playerT_builder = make_zeroed<dual::type_builder_t>();
+    playerT_builder
+        .with<skr_translation_t, skr_rotation_t, skr_scale_t, skr_movement_t>()
+        .with<skr_camera_t>()
+        .with<skr_render_effect_t>();
+    auto playerT = make_zeroed<dual_entity_type_t>();
+    playerT.type = playerT_builder.build();
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
+
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
     static_renderableT_builderT
         .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
         .with<skr_render_effect_t>();
-    // allocate renderable
     auto static_renderableT = make_zeroed<dual_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
     dualS_allocate_type(skr_runtime_get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
@@ -172,6 +181,7 @@ void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_s
 }
 
 const char* gltf_file = "scene.gltf";
+const char* gltf_file2 = "Sponza.gltf";
 void imgui_button_spawn_girl()
 {
     static bool onceGuard  = true;
@@ -183,14 +193,14 @@ void imgui_button_spawn_girl()
         auto resource_vfs = skr_game_runtime_get_vfs();
         auto ram_service = skr_game_runtime_get_ram_service();
         auto vram_service = skr_renderer_get_vram_service();
-        girl_mesh_request.mesh_name = gltf_file;
+        girl_mesh_request.mesh_name = gltf_file2;
         girl_mesh_request.mesh_resource_request.shuffle_layout = &vertex_layout;
         if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.dstorage_queue_override = dstroage_queue;
             girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_FILE;
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         else if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Memory])"))
@@ -198,21 +208,21 @@ void imgui_button_spawn_girl()
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.dstorage_queue_override = dstroage_queue;
             girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_MEMORY;
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.queue_override = skr_renderer_get_cpy_queue();
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         else if (ImGui::Button(u8"LoadMesh(GraphicsQueue)"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.queue_override = skr_renderer_get_gfx_queue();
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file, &girl_mesh_request);
+            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         ImGui::End();  
@@ -323,7 +333,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
     bool quit = false;
     skg::GameContext ctx;
     dual_query_t* moveQuery;
-    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t");
+    dual_query_t* cameraQuery;
+    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, !skr_camera_t");
+    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [has]skr_camera_t");
     while (!quit)
     {
         FrameMark
@@ -352,11 +364,11 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 break;
             }
         }
+        const double deltaTime = skr_timer_get_seconds(&timer, true);
         // Input
         {
             ZoneScopedN("Input");
         
-            const double deltaTime = skr_timer_get_seconds(&timer, true);
             inputSystem.Update(deltaTime);
         }
         {
@@ -371,6 +383,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             // quit |= skg::GameLoop(ctx);
         }
         // move
+        // [has]skr_movement_t, [inout]skr_translation_t, !skr_camera_t
         if (bSpawnMovable)
         {
             ZoneScopedN("MoveSystem");
@@ -394,6 +407,38 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 }
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
+        }
+        // [has]skr_movement_t, [inout]skr_translation_t, [has]skr_camera_t
+        {
+            ZoneScopedN("PlayerSystem");
+
+            auto timer = clock();
+            auto total_sec = (double)timer / CLOCKS_PER_SEC;
+            
+            auto playerJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                ZoneScopedN("PlayerJob");
+                
+                auto translations = (skr_translation_t*)dualV_get_owned_ro_local(view, localTypes[0]);
+                auto forward = skr::math::Vector3f(0.f, 1.f, 0.f);
+                auto right = skr::math::Vector3f(1.f, 0.f, 0.f);
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    const auto kSpeed = 15.f;
+                    auto qdown = skr_key_down(EKeyCode::KEY_CODE_Q);
+                    auto edown = skr_key_down(EKeyCode::KEY_CODE_E);
+                    auto wdown = skr_key_down(EKeyCode::KEY_CODE_W);
+                    auto sdown = skr_key_down(EKeyCode::KEY_CODE_S);
+                    auto adown = skr_key_down(EKeyCode::KEY_CODE_A);
+                    auto ddown = skr_key_down(EKeyCode::KEY_CODE_D);
+                    if (qdown) translations[i].value.z += deltaTime * kSpeed;
+                    if (edown) translations[i].value.z -= deltaTime * kSpeed;
+                    if (wdown) translations[i].value = forward * deltaTime * kSpeed + translations[i].value;
+                    if (sdown) translations[i].value = -1.f * forward * deltaTime * kSpeed + translations[i].value;
+                    if (adown) translations[i].value = -1.f * right * deltaTime * kSpeed + translations[i].value;
+                    if (ddown) translations[i].value = 1.f * right * deltaTime * kSpeed + translations[i].value;
+                }
+            });
+            dualJ_schedule_ecs(cameraQuery, 1024, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
             dualJ_wait_all();
         }
         {
