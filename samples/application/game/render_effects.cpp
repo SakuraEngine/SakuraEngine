@@ -189,8 +189,11 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         }
     }
 
-    uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
+    eastl::vector<skr_primitive_draw_t> mesh_drawcalls;
+    skr_primitive_draw_list_view_t mesh_draw_list;
+    skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
+        skr_primitive_draw_packet_t packet = {};
         // query from identity component
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
@@ -212,14 +215,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
             push_constants.resize(c);
-            return c;
+            mesh_drawcalls.clear();
+            mesh_drawcalls.reserve(c);
         }
-        return 0;
-    }
-
-    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage) override
-    {
-        // SKR_LOG_FMT_INFO("Pass {} asked Feature {} to peek drawcall", pass->identity(), forward_effect_name);
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
             auto storage = skr_runtime_get_dual_storage();
@@ -228,19 +226,15 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
                 auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
                 auto unbatched_g_ents = (dual_entity_t*)identities;
-                auto r_ents = dualV_get_entities(r_cv);
                 auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
                 if (unbatched_g_ents)
                 {
                     auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
-                        auto g_ents = (dual_entity_t*)dualV_get_entities(g_cv);
                         auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
                         auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
                         auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
                         for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                         {
-                            auto g_ent = g_ents[g_idx];(void)g_ent;
-                            auto r_ent = r_ents[r_idx];(void)r_ent;
                             const auto quaternion = skr::math::quaternion_from_euler(
                                 rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll);
                             auto world = skr::math::make_transform(
@@ -264,7 +258,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
                                 push_constants[dc_idx].world = world;
                                 push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
-                                auto& drawcall = drawcalls->drawcalls[dc_idx];
+                                auto& drawcall = mesh_drawcalls.emplace_back();
                                 drawcall.pipeline = pipeline;
                                 drawcall.push_const_name = push_constants_name;
                                 drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
@@ -286,7 +280,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
                                         push_constants[dc_idx].world = world;
                                         push_constants[dc_idx].view_proj = skr::math::multiply(view, proj);
-                                        auto& drawcall = drawcalls->drawcalls[dc_idx];
+                                        auto& drawcall = mesh_drawcalls.emplace_back();
                                         drawcall.pipeline = pipeline;
                                         drawcall.push_const_name = push_constants_name;
                                         drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
@@ -303,7 +297,12 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 }
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
+            mesh_draw_list.drawcalls = mesh_drawcalls.data();
+            mesh_draw_list.count = mesh_drawcalls.size();
+            packet.count = 1;
+            packet.lists = &mesh_draw_list;
         }
+        return packet;
     }
 
 protected:

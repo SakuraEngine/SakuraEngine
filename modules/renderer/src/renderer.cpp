@@ -48,17 +48,12 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
             vtbl.initialize_data(renderer, storage, game_cv, render_cv);
     }
 
-    uint32_t produce_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* game_storage) override
+    skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
-        if (vtbl.produce_drawcall)
-            return vtbl.produce_drawcall(pass, game_storage);
-        return 0;
-    }
-
-    void peek_drawcall(IPrimitiveRenderPass* pass, skr_primitive_draw_list_view_t* drawcalls, dual_storage_t* storage) override
-    {
-        if (vtbl.peek_drawcall)
-            vtbl.peek_drawcall(pass, drawcalls, storage);
+        skr_primitive_draw_packet_t result = {};
+        if (vtbl.produce_draw_packets)
+            vtbl.produce_draw_packets(pass, storage, &result);
+        return result;
     }
 
     VtblRenderEffectProcessor vtbl;
@@ -82,19 +77,14 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
         // produce draw calls
         for (auto& pass : passes)
         {
-            auto& pass_drawcall_arena = drawcall_arena[pass.second->identity()];
+            draw_packets[pass.second->identity()].clear();
             // used out
-            pass_drawcall_arena.clear();
             for (auto& processor : processors)
             {
-                auto dcn = processor.second->produce_drawcall(pass.second, storage);
-                pass_drawcall_arena.resize(dcn + pass_drawcall_arena.size());
-                if (dcn && pass.second && processor.second)
+                if (pass.second && processor.second)
                 {
-                    auto drawcalls = make_zeroed<skr_primitive_draw_list_view_t>();
-                    drawcalls.drawcalls = pass_drawcall_arena.data();
-                    drawcalls.count = dcn;
-                    processor.second->peek_drawcall(pass.second, &drawcalls, storage);
+                    auto packet = processor.second->produce_draw_packets(pass.second, storage);
+                    draw_packets[pass.second->identity()].emplace_back(packet);
                 }
             }
         }
@@ -103,11 +93,14 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
         {
             if (pass.second)
             {
-                auto& pass_drawcall_arena = drawcall_arena[pass.second->identity()];
-                auto dcs = make_zeroed<skr_primitive_draw_list_view_t>();
-                dcs.drawcalls = pass_drawcall_arena.data();
-                dcs.count = (uint32_t)pass_drawcall_arena.size();
-                pass.second->execute(render_graph, dcs);
+                auto& pass_draw_packets = draw_packets[pass.second->identity()];
+                for (auto pass_draw_packet : pass_draw_packets)
+                {
+                    for (uint32_t i = 0; i < pass_draw_packet.count; i++)
+                    {
+                        pass.second->execute(render_graph, pass_draw_packet.lists[i]);
+                    }
+                }
             }
         }
     }
@@ -116,7 +109,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public skr::Renderer {
     eastl::vector_map<eastl::string, IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 protected:
-    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_t>> drawcall_arena;
+    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_packet_t>> draw_packets;
 };
 
 skr::Renderer* create_renderer_impl()
