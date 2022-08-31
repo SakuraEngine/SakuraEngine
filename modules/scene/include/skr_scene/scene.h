@@ -110,6 +110,16 @@ skr_movement_t
     skr_float3_t value;
 };
 
+struct sreflect sattr(
+    "guid" : "d33c74c5-2763-4ba4-b58e-dc44a627ebf4",
+    "component" : true
+)
+skr_camera_t
+{
+    skr_float3_t value;
+};
+
+
 
 struct skr_transform_system {
     dual_query_t* localToWorld;

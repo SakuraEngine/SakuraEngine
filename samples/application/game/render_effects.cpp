@@ -146,6 +146,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         type_builder.with(identity_type);
         type_builder.with<skr_render_mesh_comp_t>();
         effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
+        camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
         // prepare render resources
         prepare_pipeline(renderer);
         prepare_geometry_resources(renderer);
@@ -221,6 +222,27 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
             auto storage = skr_runtime_get_dual_storage();
+            auto view = skr::math::look_at_matrix(
+                { 0.f, -135.f, 55.f } /*eye*/, 
+                { 0.f, 0.f, 50.f } /*at*/,
+                { 0.f, 0.f, 1.f } /*up*/
+            );
+            auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
+                auto cameras = (skr_camera_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_camera_t>::get());
+                auto camera_transforms = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
+                auto camera_forward = skr::math::Vector3f(0.f, 1.f, 0.f);
+                SKR_ASSERT(g_cv->count <= 1);
+                if (cameras)
+                {
+                    view  = skr::math::look_at_matrix(
+                        camera_transforms->value /*eye*/, 
+                        camera_forward + camera_transforms->value /*at*/,
+                        { 0.f, 0.f, 1.f } /*up*/
+                    );
+                }
+            };
+            dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
+            
             uint32_t r_idx = 0;
             uint32_t dc_idx = 0;
             auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
@@ -241,11 +263,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 translations[g_idx].value,
                                 scales[g_idx].value,
                                 quaternion);
-                            auto view = skr::math::look_at_matrix(
-                                { 0.f, -135.f, 55.f } /*eye*/, 
-                                { 0.f, 0.f, 50.f } /*at*/,
-                                { 0.f, 0.f, 1.f } /*up*/
-                            );
                             auto proj = skr::math::perspective_fov(
                                 3.1415926f / 2.f, 
                                 (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 
@@ -320,6 +337,7 @@ protected:
     // effect processor data
     const char* push_constants_name = "push_constants";
     dual_query_t* effect_query = nullptr;
+    dual_query_t* camera_query = nullptr;
     dual_type_index_t identity_type = {};
     dual::type_builder_t type_builder;
     struct PushConstants {

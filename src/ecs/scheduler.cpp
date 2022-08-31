@@ -104,7 +104,7 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
     entries[i].owned.clear();
     skr_release_mutex(&entryMutex.mMutex);
     for (auto dep : deps)
-        scheduler->WaitForCounter(dep.get());
+        scheduler->WaitForCounter(dep.get(), true);
 }
 
 void dual::scheduler_t::sync_all()
