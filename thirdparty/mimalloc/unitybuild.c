@@ -1,4 +1,6 @@
-#if !defined(__EMSCRIPTEN__)
+#include "platform/configure.h"
+
+#if !defined(__EMSCRIPTEN__) && defined(SKR_RUNTIME_USE_MIMALLOC)
     #include "stats.c"
     #include "random.c"
     #include "os.c"

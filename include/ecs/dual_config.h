@@ -44,5 +44,5 @@ typedef struct dual_entity_debug_proxy_t {
 #define dual_calloc_aligned sakura_calloc_aligned
 #define dual_memalign sakura_malloc_aligned
 #define dual_free sakura_free
-#define dual_free_aligned sakura_free
+#define dual_free_aligned sakura_free_aligned
 #define dual_realloc sakura_realloc

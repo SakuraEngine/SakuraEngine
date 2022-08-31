@@ -44,7 +44,7 @@ extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph)
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
-const bool bSpawnMovable = true;
+const bool bUseJob = false;
 
 // TODO: Refactor this
 CGPUVertexLayout vertex_layout = {};
@@ -134,10 +134,8 @@ void create_test_scene()
         auto renderer = skr_renderer_get_renderer();
         skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
-    if (bSpawnMovable)
-    {
-        dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 100, DUAL_LAMBDA(primSetup));
-    }
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 10000, DUAL_LAMBDA(primSetup));
+
     // allocate 1 player entity
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
     playerT_builder
@@ -395,9 +393,19 @@ int SGameModule::main_module_exec(int argc, char** argv)
             imgui_button_spawn_girl();
             // quit |= skg::GameLoop(ctx);
         }
+        // update camera
+        auto cameraUpdate = [=](dual_chunk_view_t* view){
+            auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());
+            for (uint32_t i = 0; i < view->count; i++)
+            {
+                cameras[i].viewport_width = swapchain->back_buffers[0]->width;
+                cameras[i].viewport_height = swapchain->back_buffers[0]->height;
+            }
+        };
+        dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));
         // move
         // [has]skr_movement_t, [inout]skr_translation_t, !skr_camera_t
-        if (bSpawnMovable)
+        if (bUseJob)
         {
             ZoneScopedN("MoveSystem");
             auto timer = clock();
@@ -422,6 +430,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
         }
         // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_camera_t
+        if (bUseJob)
         {
             ZoneScopedN("PlayerSystem");
 
@@ -429,14 +438,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ZoneScopedN("PlayerJob");
                 
                 auto translations = (skr_translation_t*)dualV_get_owned_ro_local(view, localTypes[0]);
-                auto cameras = (skr_camera_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 auto forward = skr::math::Vector3f(0.f, 1.f, 0.f);
                 auto right = skr::math::Vector3f(1.f, 0.f, 0.f);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
-                    cameras[i].viewport_width = swapchain->back_buffers[0]->width;
-                    cameras[i].viewport_height = swapchain->back_buffers[0]->height;
-
                     const auto kSpeed = 15.f;
                     auto qdown = skr_key_down(EKeyCode::KEY_CODE_Q);
                     auto edown = skr_key_down(EKeyCode::KEY_CODE_E);
@@ -453,7 +458,11 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 }
             });
             dualJ_schedule_ecs(cameraQuery, 1024, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
-            dualJ_wait_all();
+            
+            {
+                ZoneScopedN("DualJSync");
+                dualJ_wait_all();
+            }
         }
         {
             ZoneScopedN("AcquireFrame");

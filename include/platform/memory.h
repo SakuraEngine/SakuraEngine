@@ -23,7 +23,7 @@ RUNTIME_EXTERN_C RUNTIME_API void* sakura_realloc(void* p, size_t newsize) SKR_N
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
 {
-    void* pMemory = sakura_malloc_aligned(sizeof(T), alignof(T));
+    void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
 }
@@ -31,7 +31,7 @@ template <typename T, typename... TArgs>
 template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNew()
 {
-    void* pMemory = sakura_malloc_aligned(sizeof(T), alignof(T));
+    void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
@@ -40,18 +40,18 @@ template <typename F>
 [[nodiscard]] FORCEINLINE F* SkrNewLambda(F&& lambda)
 {
     using ValueType = std::remove_reference_t<F>;
-    void* pMemory = sakura_malloc_aligned(sizeof(ValueType), alignof(ValueType));
+    void* pMemory = sakura_new_aligned(sizeof(ValueType), alignof(ValueType));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(std::forward<F>(lambda));
 }
 
 template <typename T>
-FORCEINLINE void SkrDelete(T* pType)
+void SkrDelete(T* pType)
 {
     if (pType != nullptr)
     {
         pType->~T();
-        sakura_free((void*)pType);
+        sakura_free_aligned((void*)pType, alignof(T));
     }
 }
 #endif

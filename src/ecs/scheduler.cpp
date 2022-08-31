@@ -164,6 +164,8 @@ void update_entry(job_dependency_entry_t& entry, eastl::shared_ptr<ftl::TaskCoun
 eastl::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
 {
+    ZoneScopedN("SchedualECSJob");
+
     if (query->storage->scheduler == nullptr)
     {
         query->storage->scheduler = this;
@@ -261,6 +263,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 
     if (resources)
     {
+        ZoneScopedN("UpdateResourceEntries");
+
         skr_acquire_mutex(&resourceMutex.mMutex);
         forloop (i, 0, resources->count)
         {
@@ -310,15 +314,25 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         job->dependencies[dependencyIndex++] = dependency;
 
     auto body = +[](ftl::TaskScheduler*, void* data) {
+        ZoneScopedN("ECSJobBody");
+
         auto job = (dual_ecs_job_t*)data;
-        forloop (i, 0, job->dependencyCount)
-            job->scheduler->scheduler->WaitForCounter(job->dependencies[i].get());
-        if (job->init)
-            job->init(job->userdata, job->entityCount);
+        {
+            ZoneScopedN("JobWaitDependencies");
+            forloop (i, 0, job->dependencyCount)
+                job->scheduler->scheduler->WaitForCounter(job->dependencies[i].get());
+        }
+        {
+            ZoneScopedN("JobInitialize");
+            if (job->init)
+                job->init(job->userdata, job->entityCount);
+        }
         auto query = job->query;
         fixed_stack_scope_t _(localStack);
         dual_meta_filter_t validatedMeta;
         {
+            ZoneScopedN("JobValidateMeta");
+
             auto& meta = query->meta;
             auto data = (char*)localStack.allocate(data_size(meta));
             validatedMeta = clone(meta, data);
@@ -338,8 +352,12 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 auto group = job->groups[i];
                 query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(processView));
             }
-            if(job->teardown)
-                job->teardown(job->userdata, job->entityCount);
+
+            {
+                ZoneScopedN("JobTearDown0");
+                if(job->teardown)
+                    job->teardown(job->userdata, job->entityCount);
+            }
             job->scheduler->allCounter->Decrement();
         }
         else
@@ -355,10 +373,11 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             };
             eastl::vector<batch_t> batchs;
             eastl::vector<task_t> tasks;
-            batchs.reserve(job->entityCount / job->batchSize);
-            tasks.reserve(batchs.capacity());
             {
+                ZoneScopedN("JobPrepareBatch");
 
+                batchs.reserve(job->entityCount / job->batchSize);
+                tasks.reserve(batchs.capacity());
                 uint32_t batchRemain = job->batchSize;
                 EIndex startIndex = 0;
                 batch_t currBatch;
@@ -423,6 +442,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             auto _tasks = (ftl::Task*)dual_malloc(sizeof(ftl::Task) * batchs.size());
 
             auto TearDown = +[](void* data) {
+                ZoneScopedN("JobTearDown1");
+
                 task_payload_t* payload = (task_payload_t*)data;
                 auto job = payload->job;
                 if(job->teardown)
@@ -444,8 +465,12 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     auto counter = job->counter;
     
     auto TearDown = +[](void* data) {
+        ZoneScopedN("JobTearDown2");
+
         auto job = (dual_ecs_job_t*)data;
-        SkrDelete(job);
+        // TODO: deallocate job from arena
+        job->~dual_ecs_job_t();
+        sakura_free(job);
     };
     scheduler->AddTask({ body, job, TearDown }, ftl::TaskPriority::High, job->counter.get());
     return counter;
@@ -579,7 +604,7 @@ dual_ecs_job_t::~dual_ecs_job_t()
     if(payloads)
         dual_free(payloads);
     if(tasks)
-        dual_free(tasks);
+        dual_free_aligned(tasks, 1); // tasks moved from eastl::vector uses aligned allocation
 }
 
 extern "C" {

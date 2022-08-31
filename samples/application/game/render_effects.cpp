@@ -272,10 +272,11 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 1.f, 1000.f);
 
             forward_pass_data.view_projection = skr::math::multiply(view, proj);
-            
-            uint32_t r_idx = 0;
-            uint32_t dc_idx = 0;
+
             auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
+                uint32_t r_idx = 0;
+                uint32_t dc_idx = 0;
+
                 auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
                 auto unbatched_g_ents = (dual_entity_t*)identities;
                 auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
@@ -294,7 +295,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 scales[g_idx].value,
                                 quaternion);
                             // drawcall
-                            if (!meshes || !meshes[r_idx].async_request.is_buffer_ready())
+                            if (!meshes[r_idx].async_request.is_buffer_ready())
                             {
                                 // resources may be ready after produce_drawcall, so we need to check it here
                                 if (push_constants.size() <= dc_idx) return;
