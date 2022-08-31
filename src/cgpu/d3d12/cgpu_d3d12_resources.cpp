@@ -48,12 +48,17 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         NV_RESOURCE_PARAMS nvParams = {};
         nvParams.NVResourceFlags = NV_D3D12_RESOURCE_FLAGS::NV_D3D12_RESOURCE_FLAG_CPUVISIBLE_VIDMEM;
         NvAPI_D3D12_CreateCommittedResource(D->pDxDevice, &heapProps,
-        alloc_desc.ExtraHeapFlags,
-        &bufDesc, res_states,
-        nullptr, &nvParams, IID_ARGS(&B->pDxResource),
-        &cpuVisibleVRamSupported);
+            alloc_desc.ExtraHeapFlags,
+            &bufDesc, res_states,
+            nullptr, &nvParams, IID_ARGS(&B->pDxResource),
+            &cpuVisibleVRamSupported);
         if (!cpuVisibleVRamSupported)
             B->pDxResource = nullptr;
+        else
+        {
+            SKR_LOG_DEBUG("[D3D12] Create CVV Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %d \n\t Format: %d", 
+                desc->name ? desc->name : "", desc->size, desc->format);
+        }
     }
 #endif
     if (!B->pDxResource)
@@ -69,11 +74,15 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
             CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
             &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
+            SKR_LOG_DEBUG("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %d \n\t Format: %d \n\t Sample Count: %d", 
+                desc->name ? desc->name : "", desc->size, desc->format);
         }
         else
         {
-            CHECK_HRESULT(D->pResourceAllocator->CreateResource(
-            &alloc_desc, &bufDesc, res_states, NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
+            CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, res_states, 
+            NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
+            SKR_LOG_DEBUG("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %d \n\t Format: %d \n\t Sample Count: %d", 
+                desc->name ? desc->name : "", desc->size, desc->format);
         }
     }
 

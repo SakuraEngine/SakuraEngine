@@ -155,6 +155,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     CGPUInstance_D3D12* I = (CGPUInstance_D3D12*)D3D12Adapter->super.instance;
     auto& adapter = *D3D12Adapter;
     auto& adapter_detail = adapter.adapter_detail;
+    adapter_detail = make_zeroed<CGPUAdapterDetail>();
     auto& vendor_preset = adapter_detail.vendor_preset;
     // Vendor & Feature Cache
     DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc3)
@@ -183,27 +184,29 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     adapter_detail.is_uma = dxgi_feature.UMA;
     adapter_detail.is_cpu = desc3.Flags & DXGI_ADAPTER_FLAG_SOFTWARE;
     adapter_detail.is_virtual = false;
+    // Constants
+    adapter_detail.max_vertex_input_bindings = 32u;
+    adapter_detail.uniform_buffer_alignment = D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
+    adapter_detail.upload_buffer_texture_alignment = D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT;
+    adapter_detail.upload_buffer_texture_row_alignment = D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
     // Check Format Capacities
     D3D12Util_EnumFormatSupports(D3D12Adapter, pCheckDevice);
-#ifdef CGPU_USE_D3D12_ENHANCED_BARRIERS
-    // Enhanced barriers features
-    D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12 = {};
-    if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12))))
+    D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1 = make_zeroed<D3D12_FEATURE_DATA_D3D12_OPTIONS1>();
+	if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1))))
     {
-        D3D12Adapter->mEnhancedBarriersSupported = options12.EnhancedBarriersSupported;
+        adapter_detail.wave_lane_count = options1.WaveLaneCountMin;
     }
-#endif
 #ifdef D3D12_HEADER_SUPPORT_VRS
-    D3D12_FEATURE_DATA_D3D12_OPTIONS6 options = make_zeroed<D3D12_FEATURE_DATA_D3D12_OPTIONS6>();
-	if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options, sizeof(options))))
+    D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6 = make_zeroed<D3D12_FEATURE_DATA_D3D12_OPTIONS6>();
+	if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6))))
     {
-        if (options.VariableShadingRateTier == D3D12_VARIABLE_SHADING_RATE_TIER_1)
+        if (options6.VariableShadingRateTier == D3D12_VARIABLE_SHADING_RATE_TIER_1)
         {
             adapter_detail.support_shading_rate = true;
             adapter_detail.support_shading_rate_mask = false;
             adapter_detail.support_shading_rate_sv = true;
         }
-        else if (options.VariableShadingRateTier == D3D12_VARIABLE_SHADING_RATE_TIER_2)
+        else if (options6.VariableShadingRateTier == D3D12_VARIABLE_SHADING_RATE_TIER_2)
         {
             adapter_detail.support_shading_rate = true;
             adapter_detail.support_shading_rate_mask = true;
@@ -215,6 +218,14 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
             adapter_detail.support_shading_rate_mask = false;
             adapter_detail.support_shading_rate_sv = false;
         }
+    }
+#endif
+#ifdef CGPU_USE_D3D12_ENHANCED_BARRIERS
+    // Enhanced barriers features
+    D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12 = {};
+    if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12))))
+    {
+        D3D12Adapter->mEnhancedBarriersSupported = options12.EnhancedBarriersSupported;
     }
 #endif
     adapter_detail.host_visible_vram_budget = 0;
