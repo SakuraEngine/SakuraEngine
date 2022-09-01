@@ -58,22 +58,24 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     .allow_depth_stencil();
             });
         // IMGUI control shading rate
-        {
-            const char* shadingRateNames[] = {
-                "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
-            };
-            ImGui::Begin(u8"ShadingRate");
-            if (ImGui::Button(fmt::format("SwitchShadingRate-{}", shadingRateNames[shading_rate]).c_str()))
-            {
-                if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
-                    shading_rate = (ECGPUShadingRate)(shading_rate + 1);
-                else
-                    shading_rate = CGPU_SHADING_RATE_FULL;
-            }
-            ImGui::End();
-        }
+
         if (drawcalls.count)
         {
+            {
+                const char* shadingRateNames[] = {
+                    "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
+                };
+                ImGui::Begin(u8"ShadingRate");
+                if (ImGui::Button(fmt::format("SwitchShadingRate-{}", shadingRateNames[shading_rate]).c_str()))
+                {
+                    if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
+                        shading_rate = (ECGPUShadingRate)(shading_rate + 1);
+                    else
+                        shading_rate = CGPU_SHADING_RATE_FULL;
+                }
+                ImGui::End();
+            }
+
             auto cbuffer = renderGraph->create_buffer(
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
                     builder.set_name("forward_cbuffer")
@@ -164,8 +166,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             desc.alignment = alignof(forward_effect_identity_t);
             identity_type = dualT_register_type(&desc);
         }
-        type_builder.with(identity_type);
-        type_builder.with<skr_render_mesh_comp_t>();
+
         effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
         camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
         // prepare render resources
@@ -193,6 +194,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
     {
+        dual::type_builder_t type_builder;
+        type_builder.with(identity_type);
+        type_builder.with<skr_render_mesh_comp_t>();
         *set = type_builder.build();
     }
 
@@ -224,24 +228,46 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
-                    if (meshes[i].async_request.is_buffer_ready())
+                    SKR_LOG_DEBUG("R Featuree!");
+
+                    if (meshes && meshes[i].async_request.is_buffer_ready())
                     {
+                        SKR_LOG_DEBUG("Draw Mesh!");
                         c += meshes[i].async_request.render_mesh->primitive_commands.size();
+                        SKR_LOG_DEBUG("Draw Mesh!");
                     }
                     else
                     {
+                        SKR_LOG_DEBUG("Draw SS!");
                         c++;
                     }
+                    SKR_LOG_DEBUG("R Featur5e!");
                 }
             };
-            dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+            auto filter = make_zeroed<dual_filter_t>();
+            auto meta = make_zeroed<dual_meta_filter_t>();
+            auto renderable_type = make_zeroed<dual::type_builder_t>();
+            renderable_type.with<skr_render_effect_t, skr_translation_t>();
+            auto static_type = make_zeroed<dual::type_builder_t>();
+            static_type.with<skr_movement_t>();
+            filter.all = renderable_type.build();
+            filter.none = static_type.build();
+            dualS_query(storage, &filter, &meta, DUAL_LAMBDA(counterF));
+
+            SKR_LOG_DEBUG("R Feature3!");
+
+            //dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
             mesh_drawcalls.clear();
             push_constants.resize(c);
             mesh_drawcalls.reserve(c);
+            
+            SKR_LOG_DEBUG("R Feature4!");
         }
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
+            SKR_LOG_DEBUG("R Feature2!");
+
             auto storage = skr_runtime_get_dual_storage();
             auto view = skr::math::look_at_matrix(
                 { 0.f, -135.f, 55.f } /*eye*/, 
@@ -270,6 +296,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 3.1415926f / 2.f, 
                 (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 
                 1.f, 1000.f);
+
+            SKR_LOG_DEBUG("R Feature3!");
 
             forward_pass_data.view_projection = skr::math::multiply(view, proj);
 
@@ -365,7 +393,6 @@ protected:
     dual_query_t* effect_query = nullptr;
     dual_query_t* camera_query = nullptr;
     dual_type_index_t identity_type = {};
-    dual::type_builder_t type_builder;
     struct PushConstants {
         skr::math::float4x4 world;
     };

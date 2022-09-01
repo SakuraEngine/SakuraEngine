@@ -1,5 +1,7 @@
 #include <ghc/filesystem.hpp>
 #include "utils/io.hpp"
+#include "utils/log.h"
+#include "platform/debug.h"
 #include "cgpu/io.hpp"
 #include "platform/vfs.h"
 #include "utils/make_zeroed.hpp"
@@ -134,8 +136,12 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
                 auto cbData = (CallbackData*)data;
                 auto request = cbData->request;
                 skr_atomic32_add_relaxed(&cbData->finished_buffers, 1);
+                        SKR_LOG_DEBUG("Mesh?");
+
                 if (skr_atomic32_load_acquire(&cbData->finished_buffers) == cbData->buffers_count)
                 {
+                        SKR_LOG_DEBUG("Mesh!");
+
                     setup_render_mesh(request->render_mesh, request->render_mesh->mesh_resource_id);
                     skr_atomic32_store_release(&request->buffers_io_status, SKR_ASYNC_IO_STATUS_OK);
                 }
