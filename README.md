@@ -156,6 +156,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 使用以下命令编译
 ```
 > xmake l setup.lua
+> xmake l modules/wasm/setup.lua
 > xmake f -m debug --build_usdtool=n -c
 > xmake project -k compile_commands
 > xmake 
