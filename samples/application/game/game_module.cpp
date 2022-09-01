@@ -140,11 +140,10 @@ void create_test_scene()
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
     playerT_builder
         .with<skr_translation_t, skr_rotation_t, skr_scale_t, skr_movement_t>()
-        .with<skr_camera_t>()
-        .with<skr_render_effect_t>();
+        .with<skr_camera_t>();
     auto playerT = make_zeroed<dual_entity_type_t>();
     playerT.type = playerT_builder.build();
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
+    // dualS_allocate_type(skr_runtime_get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
 
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
@@ -420,9 +419,11 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 {
                     auto lscale = (float)abs(sin(total_sec * 0.5));
                     lscale = (float)lerp(lerps[0], lerps[1], lscale);
+                    const auto col = (i % 10);
+                    const auto row = (i / 10);
                     translations[i].value = {
-                        ((float)(i % 10) - 4.5f) * lscale,
-                        ((float)(i / 10) - 4.5f) * lscale + 50.f, 
+                        ((float)col - 4.5f) * lscale,
+                        ((float)row - 4.5f) * lscale + 50.f, 
                         0.f
                     };
                 }

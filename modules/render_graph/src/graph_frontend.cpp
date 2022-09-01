@@ -1,7 +1,8 @@
 ﻿#include "render_graph/frontend/render_graph.hpp"
 #include <EASTL/vector_map.h>
-#include "tracy/Tracy.hpp"
 #include "render_graph/backend/texture_view_pool.hpp"
+
+#include "tracy/Tracy.hpp"
 
 namespace skr
 {
@@ -134,16 +135,24 @@ bool RenderGraph::compile() SKR_NOEXCEPT
         resources.erase(
         eastl::remove_if(resources.begin(), resources.end(),
         [this](ResourceNode* resource) {
+            ZoneScopedN("Resource");
             const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
-            if (lone) culled_resources.emplace_back(resource);
+            {
+                ZoneScopedN("RecordDealloc");
+                if (lone) culled_resources.emplace_back(resource);
+            }
             return lone;
         }),
         resources.end());
         passes.erase(
         eastl::remove_if(passes.begin(), passes.end(),
         [this](PassNode* pass) {
+            ZoneScopedN("Pass");
             const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
-            if (lone) culled_passes.emplace_back(pass);
+            {
+                ZoneScopedN("RecordDealloc");
+                if (lone) culled_passes.emplace_back(pass);
+            }
             return lone;
         }),
         passes.end());

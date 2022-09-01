@@ -74,14 +74,14 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
             CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
             &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
-            SKR_LOG_DEBUG("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %d \n\t Format: %d \n\t Sample Count: %d", 
+            SKR_LOG_DEBUG("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %d \n\t Format: %d", 
                 desc->name ? desc->name : "", desc->size, desc->format);
         }
         else
         {
             CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, res_states, 
             NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
-            SKR_LOG_DEBUG("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %d \n\t Format: %d \n\t Sample Count: %d", 
+            SKR_LOG_DEBUG("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %d \n\t Format: %d", 
                 desc->name ? desc->name : "", desc->size, desc->format);
         }
     }
