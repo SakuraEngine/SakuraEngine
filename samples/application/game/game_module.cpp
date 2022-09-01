@@ -137,7 +137,7 @@ void create_test_scene()
         if(feature_arrs)
             skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 10000, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 500, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 0!");
 
@@ -340,8 +340,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
     skg::GameContext ctx;
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
-    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, !skr_camera_t");
-    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_camera_t");
+    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, !skr_camera_t");
+    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
     while (!quit)
     {
         FrameMark
@@ -384,6 +384,20 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
         }
         const double deltaTime = skr_timer_get_seconds(&timer, true);
+        // Update camera
+        auto cameraUpdate = [=](dual_chunk_view_t* view){
+            SKR_LOG_ERROR("Shit!!");
+
+            auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());
+            for (uint32_t i = 0; i < view->count; i++)
+            {
+                SKR_LOG_ERROR("Shit %d", i);
+
+                cameras[i].viewport_width = swapchain->back_buffers[0]->width;
+                cameras[i].viewport_height = swapchain->back_buffers[0]->height;
+            }
+        };
+        dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));
         // Input
         {
             ZoneScopedN("Input");
@@ -401,18 +415,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
             imgui_button_spawn_girl();
             // quit |= skg::GameLoop(ctx);
         }
-        // update camera
-        auto cameraUpdate = [=](dual_chunk_view_t* view){
-            auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());
-            for (uint32_t i = 0; i < view->count; i++)
-            {
-                cameras[i].viewport_width = swapchain->back_buffers[0]->width;
-                cameras[i].viewport_height = swapchain->back_buffers[0]->height;
-            }
-        };
-        dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));
         // move
-        // [has]skr_movement_t, [inout]skr_translation_t, !skr_camera_t
+        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, !skr_camera_t
         if (bUseJob)
         {
             ZoneScopedN("MoveSystem");
@@ -423,18 +427,28 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ZoneScopedN("MoveJob");
                 
                 float lerps[] = { 12.5, 20 };
-                auto translations = (skr_translation_t*)dualV_get_owned_ro_local(view, localTypes[0]);
+                auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
+                auto scales = (skr_scale_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
+                    if (scales[i].value.x != 8.f)
+                    {
+                        SKR_LOG_ERROR("Fuck0 %d", i);
+                    }
+
                     auto lscale = (float)abs(sin(total_sec * 0.5));
                     lscale = (float)lerp(lerps[0], lerps[1], lscale);
                     const auto col = (i % 10);
                     const auto row = (i / 10);
                     translations[i].value = {
-                        ((float)col - 4.5f) * lscale,
-                        ((float)row - 4.5f) * lscale + 50.f, 
+                        (float)col * 2.f,
+                        (float)row * 2.f, 
                         0.f
                     };
+                    if (scales[i].value.x != 8.f)
+                    {
+                        SKR_LOG_ERROR("Fuck %d", i);
+                    }
                 }
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
@@ -447,7 +461,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto playerJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("PlayerJob");
                 
-                auto translations = (skr_translation_t*)dualV_get_owned_ro_local(view, localTypes[0]);
+                auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
                 auto forward = skr::math::Vector3f(0.f, 1.f, 0.f);
                 auto right = skr::math::Vector3f(1.f, 0.f, 0.f);
                 for (uint32_t i = 0; i < view->count; i++)

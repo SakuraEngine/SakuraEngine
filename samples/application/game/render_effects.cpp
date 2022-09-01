@@ -114,14 +114,14 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         {
                             ZoneScopedN("BindGeometry");
                             cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                            CGPUBufferId vertex_buffers[3] = {
-                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
+                            CGPUBufferId vertex_buffers[4] = {
+                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer, dc.vertex_buffers[3].buffer
                             };
-                            const uint32_t strides[3] = {
-                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
+                            const uint32_t strides[4] = {
+                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride, dc.vertex_buffers[2].stride
                             };
-                            const uint32_t offsets[3] = {
-                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
+                            const uint32_t offsets[4] = {
+                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset, dc.vertex_buffers[2].offset
                             };
                             cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                         }
@@ -252,7 +252,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             }
             push_constants.clear();
             mesh_drawcalls.clear();
-            push_constants.resize(c);
+            push_constants.reserve(c);
             mesh_drawcalls.reserve(c);
         }
         if (strcmp(pass->identity(), forward_pass_name) == 0)
@@ -313,16 +313,17 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             if (!meshes[r_idx].async_request.is_buffer_ready())
                             {
                                 // resources may be ready after produce_drawcall, so we need to check it here
-                                if (push_constants.size() <= dc_idx) return;
+                                if (push_constants.capacity() <= dc_idx) return;
 
-                                push_constants[dc_idx].world = world;
+                                auto& push_const = push_constants.emplace_back();
+                                push_const.world = world;
                                 auto& drawcall = mesh_drawcalls.emplace_back();
                                 drawcall.pipeline = pipeline;
                                 drawcall.push_const_name = push_constants_name;
-                                drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
+                                drawcall.push_const = (const uint8_t*)(&push_const);
                                 drawcall.index_buffer = ibv;
                                 drawcall.vertex_buffers = vbvs;
-                                drawcall.vertex_buffer_count = 3;
+                                drawcall.vertex_buffer_count = 4;
                                 dc_idx++;
                             }
                             else
@@ -334,13 +335,14 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                     for (auto&& cmd : cmds)
                                     {
                                         // resources may be ready after produce_drawcall, so we need to check it here
-                                        if (push_constants.size() <= dc_idx) return;
+                                        if (push_constants.capacity() <= dc_idx) return;
 
-                                        push_constants[dc_idx].world = world;
+                                        auto& push_const = push_constants.emplace_back();
+                                        push_const.world = world;
                                         auto& drawcall = mesh_drawcalls.emplace_back();
                                         drawcall.pipeline = pipeline;
                                         drawcall.push_const_name = push_constants_name;
-                                        drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
+                                        drawcall.push_const = (const uint8_t*)(&push_const);
                                         drawcall.index_buffer = *cmd.ibv;
                                         drawcall.vertex_buffers = cmd.vbvs.data();
                                         drawcall.vertex_buffer_count = cmd.vbvs.size();
