@@ -386,13 +386,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
         const double deltaTime = skr_timer_get_seconds(&timer, true);
         // Update camera
         auto cameraUpdate = [=](dual_chunk_view_t* view){
-            SKR_LOG_ERROR("Shit!!");
-
             auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());
             for (uint32_t i = 0; i < view->count; i++)
             {
-                SKR_LOG_ERROR("Shit %d", i);
-
                 cameras[i].viewport_width = swapchain->back_buffers[0]->width;
                 cameras[i].viewport_height = swapchain->back_buffers[0]->height;
             }
@@ -441,8 +437,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     const auto col = (i % 10);
                     const auto row = (i / 10);
                     translations[i].value = {
-                        (float)col * 2.f,
-                        (float)row * 2.f, 
+                        ((float)col - 4.5f) * lscale,
+                        ((float)row - 4.5f) * lscale + 50.f, 
                         0.f
                     };
                     if (scales[i].value.x != 8.f)
