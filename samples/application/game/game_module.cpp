@@ -44,7 +44,7 @@ extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph)
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
-const bool bUseJob = false;
+const bool bUseJob = true;
 
 // TODO: Refactor this
 CGPUVertexLayout vertex_layout = {};
@@ -132,9 +132,14 @@ void create_test_scene()
             }
         }
         auto renderer = skr_renderer_get_renderer();
-        skr_render_effect_attach(renderer, view, "ForwardEffect");
+
+        auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get());
+        if(feature_arrs)
+            skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
     dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 10000, DUAL_LAMBDA(primSetup));
+
+    SKR_LOG_DEBUG("Create Scene 0!");
 
     // allocate 1 player entity
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
@@ -143,7 +148,9 @@ void create_test_scene()
         .with<skr_camera_t>();
     auto playerT = make_zeroed<dual_entity_type_t>();
     playerT.type = playerT_builder.build();
-    // dualS_allocate_type(skr_runtime_get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
+
+    SKR_LOG_DEBUG("Create Scene 1!");
 
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
@@ -153,6 +160,8 @@ void create_test_scene()
     auto static_renderableT = make_zeroed<dual_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
     dualS_allocate_type(skr_runtime_get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
+
+    SKR_LOG_DEBUG("Create Scene 2!");
 }
 
 void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, const char* path, skr_render_mesh_request_t* request)
