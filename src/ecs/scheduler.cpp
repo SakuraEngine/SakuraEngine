@@ -359,6 +359,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                     job->teardown(job->userdata, job->entityCount);
             }
             job->scheduler->allCounter->Decrement();
+            job->~dual_ecs_job_t();
+            sakura_free(job);
         }
         else
         {
@@ -448,6 +450,9 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 auto job = payload->job;
                 if(job->teardown)
                     job->teardown(job->userdata, job->entityCount);
+                    
+                job->~dual_ecs_job_t();
+                sakura_free(job);
             };
             forloop (i, 0, batchs.size())
                 _tasks[i] = { taskBody, &payloads[i], TearDown };
@@ -463,16 +468,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
     query->storage->counter->Add(1);
     auto counter = job->counter;
-    
-    auto TearDown = +[](void* data) {
-        ZoneScopedN("JobTearDown2");
-
-        auto job = (dual_ecs_job_t*)data;
-        // TODO: deallocate job from arena
-        job->~dual_ecs_job_t();
-        sakura_free(job);
-    };
-    scheduler->AddTask({ body, job, TearDown }, ftl::TaskPriority::High, job->counter.get());
+    scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter.get());
     return counter;
 }
 
