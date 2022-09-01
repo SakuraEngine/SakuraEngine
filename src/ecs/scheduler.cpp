@@ -359,8 +359,6 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                     job->teardown(job->userdata, job->entityCount);
             }
             job->scheduler->allCounter->Decrement();
-            job->~dual_ecs_job_t();
-            sakura_free(job);
         }
         else
         {
@@ -441,25 +439,22 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 job->scheduler->allCounter->Decrement();
                 job->query->storage->counter->Decrement();
             };
-            auto _tasks = (ftl::Task*)dual_malloc(sizeof(ftl::Task) * batchs.size());
+            eastl::vector<ftl::Task> _tasks;
+            _tasks.resize(batchs.size());
 
-            auto TearDown = +[](void* data) {
+            auto TearDown = ftl::PostTask([job] {
                 ZoneScopedN("JobTearDown1");
-
-                task_payload_t* payload = (task_payload_t*)data;
-                auto job = payload->job;
                 if(job->teardown)
                     job->teardown(job->userdata, job->entityCount);
                     
                 job->~dual_ecs_job_t();
                 sakura_free(job);
-            };
+            });
             forloop (i, 0, batchs.size())
                 _tasks[i] = { taskBody, &payloads[i], TearDown };
             job->scheduler->allCounter->Add(static_cast<const uint32_t>(batchs.size()));
             job->query->storage->counter->Add(static_cast<const uint32_t>(batchs.size()));
-            job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks, ftl::TaskPriority::Normal, job->counter.get());
-            dual_free(_tasks);
+            job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks.data(), ftl::TaskPriority::Normal, job->counter.get());
             job->scheduler->allCounter->Decrement();
         }
     };
@@ -468,6 +463,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
     query->storage->counter->Add(1);
     auto counter = job->counter;
+
     scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter.get());
     return counter;
 }
