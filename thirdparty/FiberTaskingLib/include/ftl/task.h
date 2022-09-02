@@ -26,6 +26,7 @@
 
 #include "runtime_configure.h"
 #include <string>
+#include <memory>
 
 #include "tracy/TracyC.h"
 #include "tracy/Tracy.hpp"
@@ -47,8 +48,24 @@ using TaskPostFunction = void (*)(void* arg);
 struct Task {
     TaskFunction Function;
     void* ArgData;
-    TaskPostFunction PostFunction = nullptr;
+    std::shared_ptr<void> RefCounter;
 };
+
+template<class F>
+std::shared_ptr<void> PostTask(F&& f)
+{
+    struct Helper
+    {
+        std::remove_reference_t<F> f;
+        Helper(F&& p)
+            :f(std::forward<F>(p)) {}
+        ~Helper()
+        {
+            f();
+        }
+    };
+    return std::static_pointer_cast<void>(std::make_shared<Helper>(std::forward<F>(f)));
+}
 
 enum class TaskPriority
 {

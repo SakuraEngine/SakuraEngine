@@ -785,6 +785,7 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
                 }
                 break;
             }
+            case CGPU_RESOURCE_TYPE_UNIFORM_BUFFER:
             case CGPU_RESOURCE_TYPE_BUFFER:
             case CGPU_RESOURCE_TYPE_BUFFER_RAW:
             case CGPU_RESOURCE_TYPE_RW_BUFFER:

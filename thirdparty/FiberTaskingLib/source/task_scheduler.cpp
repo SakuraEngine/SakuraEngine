@@ -249,11 +249,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                         ZoneScopedNC("TaskEnd", DISPATCH_GRAY);
 
                         nextTask.Counter->Decrement();
-                        if (nextTask.Counter->Done() && nextTask.TaskToExecute.PostFunction)
                         {
                             ZoneScopedNC("PostTask", DISPATCH_GRAY);
 
-                            nextTask.TaskToExecute.PostFunction(nextTask.TaskToExecute.ArgData);
+                            nextTask.TaskToExecute.RefCounter.reset();
                         }
                     }
                 }

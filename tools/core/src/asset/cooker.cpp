@@ -163,7 +163,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
     };
     mainCounter->Add(1);
     auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
-    const ftl::Task task = { Task, jobContext, TearDown }; 
+    const ftl::Task task = { Task, jobContext /*, TearDown */}; // TODO: deal with teardown 
     scheduler->AddTask(task, ftl::TaskPriority::High, counter.get() FTL_TASK_NAME(, guidName.c_str()));
     return counter;
 }
