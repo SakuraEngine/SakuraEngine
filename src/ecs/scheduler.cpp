@@ -193,12 +193,15 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     dual_ecs_job_t* job = new (arena.allocate<dual_ecs_job_t>()) dual_ecs_job_t(*this);
     job->type = dual_job_type::ecs;
     job->query = query;
-    job->groups = arena.allocate<dual_group_t*>(groupCount);
-    job->groupCount = groupCount;
-    job->localTypes = arena.allocate<dual_type_index_t>(groupCount * params.length);
-    job->readonly = arena.allocate<std::bitset<32>>(groupCount);
-    job->atomic = arena.allocate<std::bitset<32>>(groupCount);
-    job->randomAccess = arena.allocate<std::bitset<32>>(groupCount);
+    {
+        ZoneScopedN("AllocateGroupData");
+        job->groups = arena.allocate<dual_group_t*>(groupCount);
+        job->groupCount = groupCount;
+        job->localTypes = arena.allocate<dual_type_index_t>(groupCount * params.length);
+        job->readonly = arena.allocate<std::bitset<32>>(groupCount);
+        job->atomic = arena.allocate<std::bitset<32>>(groupCount);
+        job->randomAccess = arena.allocate<std::bitset<32>>(groupCount);
+    }
     job->hasRandomWrite = false;
     job->entityCount = 0;
     job->callback = callback;
@@ -307,11 +310,14 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         }
     }
 
-    job->dependencies.resize(dependencies.size());
-    job->dependencyCount = (int)dependencies.size();
-    uint32_t dependencyIndex = 0;
-    for (auto dependency : dependencies)
-        job->dependencies[dependencyIndex++] = dependency;
+    {
+        ZoneScopedN("AllocateDependencyData");
+        job->dependencies.resize(dependencies.size());
+        job->dependencyCount = (int)dependencies.size();
+        uint32_t dependencyIndex = 0;
+        for (auto dependency : dependencies)
+            job->dependencies[dependencyIndex++] = dependency;
+    }
 
     auto body = +[](ftl::TaskScheduler*, void* data) {
         ZoneScopedN("ECSJobBody");
@@ -458,12 +464,14 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             job->scheduler->allCounter->Decrement();
         }
     };
-    allCounter->Add(1);
-    if (!query->storage->counter)
-        query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
-    query->storage->counter->Add(1);
+    {
+        ZoneScopedN("AllocateCounter");
+        allCounter->Add(1);
+        if (!query->storage->counter)
+            query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
+        query->storage->counter->Add(1);
+    }
     auto counter = job->counter;
-
     scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter.get());
     return counter;
 }

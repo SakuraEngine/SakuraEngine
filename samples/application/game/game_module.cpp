@@ -340,8 +340,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
     skg::GameContext ctx;
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
-    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, !skr_camera_t");
-    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
+    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), 
+        "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, !skr_camera_t");
+    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), 
+        "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
     while (!quit)
     {
         FrameMark
@@ -427,11 +429,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 auto scales = (skr_scale_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
-                    if (scales[i].value.x != 8.f)
-                    {
-                        SKR_LOG_ERROR("Fuck0 %d", i);
-                    }
-
                     auto lscale = (float)abs(sin(total_sec * 0.5));
                     lscale = (float)lerp(lerps[0], lerps[1], lscale);
                     const auto col = (i % 10);
@@ -441,10 +438,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         ((float)row - 4.5f) * lscale + 50.f, 
                         0.f
                     };
-                    if (scales[i].value.x != 8.f)
-                    {
-                        SKR_LOG_ERROR("Fuck %d", i);
-                    }
                 }
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
