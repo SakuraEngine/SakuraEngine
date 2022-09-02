@@ -58,22 +58,24 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     .allow_depth_stencil();
             });
         // IMGUI control shading rate
-        {
-            const char* shadingRateNames[] = {
-                "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
-            };
-            ImGui::Begin(u8"ShadingRate");
-            if (ImGui::Button(fmt::format("SwitchShadingRate-{}", shadingRateNames[shading_rate]).c_str()))
-            {
-                if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
-                    shading_rate = (ECGPUShadingRate)(shading_rate + 1);
-                else
-                    shading_rate = CGPU_SHADING_RATE_FULL;
-            }
-            ImGui::End();
-        }
+
         if (drawcalls.count)
         {
+            {
+                const char* shadingRateNames[] = {
+                    "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
+                };
+                ImGui::Begin(u8"ShadingRate");
+                if (ImGui::Button(fmt::format("SwitchShadingRate-{}", shadingRateNames[shading_rate]).c_str()))
+                {
+                    if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
+                        shading_rate = (ECGPUShadingRate)(shading_rate + 1);
+                    else
+                        shading_rate = CGPU_SHADING_RATE_FULL;
+                }
+                ImGui::End();
+            }
+
             auto cbuffer = renderGraph->create_buffer(
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
                     builder.set_name("forward_cbuffer")
@@ -112,14 +114,14 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         {
                             ZoneScopedN("BindGeometry");
                             cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                            CGPUBufferId vertex_buffers[3] = {
-                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
+                            CGPUBufferId vertex_buffers[4] = {
+                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer, dc.vertex_buffers[3].buffer
                             };
-                            const uint32_t strides[3] = {
-                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
+                            const uint32_t strides[4] = {
+                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride, dc.vertex_buffers[2].stride
                             };
-                            const uint32_t offsets[3] = {
-                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
+                            const uint32_t offsets[4] = {
+                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset, dc.vertex_buffers[2].offset
                             };
                             cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                         }
@@ -164,8 +166,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             desc.alignment = alignof(forward_effect_identity_t);
             identity_type = dualT_register_type(&desc);
         }
-        type_builder.with(identity_type);
-        type_builder.with<skr_render_mesh_comp_t>();
+
         effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
         camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
         // prepare render resources
@@ -193,6 +194,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
     {
+        dual::type_builder_t type_builder;
+        type_builder.with(identity_type);
+        type_builder.with<skr_render_mesh_comp_t>();
         *set = type_builder.build();
     }
 
@@ -224,7 +228,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
-                    if (meshes[i].async_request.is_buffer_ready())
+                    if (meshes && meshes[i].async_request.is_buffer_ready())
                     {
                         c += meshes[i].async_request.render_mesh->primitive_commands.size();
                     }
@@ -234,10 +238,21 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                     }
                 }
             };
-            dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+            if (true)
+            {
+                auto filter = make_zeroed<dual_filter_t>();
+                auto meta = make_zeroed<dual_meta_filter_t>();
+                filter.all.data = &identity_type;
+                filter.all.length = 1;
+                dualS_query(storage, &filter, &meta, DUAL_LAMBDA(counterF));
+            }
+            else
+            {
+                dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+            }
             push_constants.clear();
             mesh_drawcalls.clear();
-            push_constants.resize(c);
+            push_constants.reserve(c);
             mesh_drawcalls.reserve(c);
         }
         if (strcmp(pass->identity(), forward_pass_name) == 0)
@@ -298,16 +313,17 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             if (!meshes[r_idx].async_request.is_buffer_ready())
                             {
                                 // resources may be ready after produce_drawcall, so we need to check it here
-                                if (push_constants.size() <= dc_idx) return;
+                                if (push_constants.capacity() <= dc_idx) return;
 
-                                push_constants[dc_idx].world = world;
+                                auto& push_const = push_constants.emplace_back();
+                                push_const.world = world;
                                 auto& drawcall = mesh_drawcalls.emplace_back();
                                 drawcall.pipeline = pipeline;
                                 drawcall.push_const_name = push_constants_name;
-                                drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
+                                drawcall.push_const = (const uint8_t*)(&push_const);
                                 drawcall.index_buffer = ibv;
                                 drawcall.vertex_buffers = vbvs;
-                                drawcall.vertex_buffer_count = 3;
+                                drawcall.vertex_buffer_count = 4;
                                 dc_idx++;
                             }
                             else
@@ -319,13 +335,14 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                     for (auto&& cmd : cmds)
                                     {
                                         // resources may be ready after produce_drawcall, so we need to check it here
-                                        if (push_constants.size() <= dc_idx) return;
+                                        if (push_constants.capacity() <= dc_idx) return;
 
-                                        push_constants[dc_idx].world = world;
+                                        auto& push_const = push_constants.emplace_back();
+                                        push_const.world = world;
                                         auto& drawcall = mesh_drawcalls.emplace_back();
                                         drawcall.pipeline = pipeline;
                                         drawcall.push_const_name = push_constants_name;
-                                        drawcall.push_const = (const uint8_t*)(push_constants.data() + dc_idx);
+                                        drawcall.push_const = (const uint8_t*)(&push_const);
                                         drawcall.index_buffer = *cmd.ibv;
                                         drawcall.vertex_buffers = cmd.vbvs.data();
                                         drawcall.vertex_buffer_count = cmd.vbvs.size();
@@ -365,7 +382,6 @@ protected:
     dual_query_t* effect_query = nullptr;
     dual_query_t* camera_query = nullptr;
     dual_type_index_t identity_type = {};
-    dual::type_builder_t type_builder;
     struct PushConstants {
         skr::math::float4x4 world;
     };

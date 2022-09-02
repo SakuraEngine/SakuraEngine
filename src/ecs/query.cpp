@@ -378,14 +378,15 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            if (operation.phase == 0)
+            if (i > j && operation.phase == 0)
             {
                 errorPos = partBegin + j;
                 error = fmt::format("unexpected phase modifier.([out] is always phase 0), loc {}.", errorPos);
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            operation.phase = j - i;
+            if(i > j)
+                operation.phase = j - i;
         }
         if (shared)
         {
