@@ -39,6 +39,7 @@ private:
     gainput::InputDeviceTouch* _touch;
 
     eastl::vector<eastl::shared_ptr<InputActionBase>> _allAction;
+    bool _initialized = false;
 };
 
 }
