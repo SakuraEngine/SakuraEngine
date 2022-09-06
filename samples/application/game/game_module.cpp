@@ -136,7 +136,7 @@ void create_test_scene()
         if(feature_arrs)
             skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 500, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 0!");
 
@@ -234,6 +234,10 @@ void imgui_button_spawn_girl()
     }
 }
 
+#ifdef _WIN32
+#include "cgpu/extensions/cgpu_d3d12_exts.h"
+#endif
+
 int SGameModule::main_module_exec(int argc, char** argv)
 {
     SKR_LOG_INFO("game executed as main module!");
@@ -259,6 +263,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
             .with_gfx_queue(skr_renderer_get_gfx_queue())
             .enable_memory_aliasing();
     });
+#ifdef _WIN32
+    cgpu_d3d12_enable_DRED();
+#endif
     initialize_render_effects(renderGraph);
     create_test_scene();
     create_imgui_resources(renderGraph);
