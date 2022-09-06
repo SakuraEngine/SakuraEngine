@@ -152,6 +152,8 @@ typedef struct forward_effect_identity_t {
 skr_render_effect_name_t forward_effect_name = "ForwardEffect";
 struct RenderEffectForward : public IRenderEffectProcessor {
     ~RenderEffectForward() = default;
+    dual::type_builder_t type_builder;
+    dual_type_set_t typeset;
 
     void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override
     {
@@ -165,6 +167,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             desc.guid = guid;
             desc.alignment = alignof(forward_effect_identity_t);
             identity_type = dualT_register_type(&desc);
+            type_builder.with(identity_type);
+            type_builder.with<skr_render_mesh_comp_t>();
+            typeset = type_builder.build();
         }
 
         effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
@@ -194,10 +199,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
     {
-        dual::type_builder_t type_builder;
-        type_builder.with(identity_type);
-        type_builder.with<skr_render_mesh_comp_t>();
-        *set = type_builder.build();
+        *set = typeset;
     }
 
     dual_type_index_t get_identity_type() override
