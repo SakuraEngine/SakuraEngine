@@ -127,7 +127,7 @@ CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, con
     ZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
     {
-        uint64_t latest_frame = (node.tags & kRenderGraphDynamicResourceTag) ? get_latest_finished_frame() : 0;
+        uint64_t latest_frame = (node.tags & kRenderGraphDynamicResourceTag) ? get_latest_finished_frame() : UINT64_MAX;
         auto allocated = buffer_pool.allocate(node.descriptor, { frame_index, node.tags }, latest_frame);
         node.frame_buffer = node.imported ? node.frame_buffer : allocated.first;
         node.init_state = allocated.second;

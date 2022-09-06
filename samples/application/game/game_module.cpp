@@ -292,10 +292,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             if(interactionPress.get() == i)
             {
-                if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                    SKR_LOG_DEBUG("Press_Float Press %f", value);
-                else
-                    SKR_LOG_DEBUG("Press_Float Release %f", value);
+                //if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                //    SKR_LOG_DEBUG("Press_Float Press %f", value);
+                //else
+                //    SKR_LOG_DEBUG("Press_Float Release %f", value);
             }
         });
         inputSystem.AddInputAction(action);
@@ -324,10 +324,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             if(interactionPress.get() == i)
             {
-                if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                    SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
-                else
-                    SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
+                //if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                //    SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
+                //else
+                //    SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
             }
         });
         inputSystem.AddInputAction(action);
@@ -386,6 +386,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
         }
         const double deltaTime = skr_timer_get_seconds(&timer, true);
+        const auto fps = 1.0 / deltaTime;
         // Update camera
         auto cameraUpdate = [=](dual_chunk_view_t* view){
             auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());
@@ -410,6 +411,11 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 (float)swapchain->back_buffers[0]->width,
                 (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
+            {
+                ImGui::Begin(u8"Information");
+                ImGui::Text("RenderFPS: %d", (uint32_t)fps);
+                ImGui::End();
+            }
             imgui_button_spawn_girl();
             // quit |= skg::GameLoop(ctx);
         }
@@ -517,8 +523,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto frame_index = renderGraph->execute();
             {
                 ZoneScopedN("CollectGarbage");
-                if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
-                    renderGraph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
+                if (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0)
+                    renderGraph->collect_garbage(frame_index - 10 * RG_MAX_FRAME_IN_FLIGHT);
             }
         }
         {
