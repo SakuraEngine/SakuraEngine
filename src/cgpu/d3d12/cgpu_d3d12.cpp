@@ -1109,15 +1109,27 @@ void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDe
     HRESULT hr = S->pDxSwapChain->Present(S->mDxSyncInterval, S->mFlags /*desc->index*/);
     if (FAILED(hr))
     {
+        cgpu_error("Failed to present swapchain render target!");
 #if defined(_WIN32)
         ID3D12Device* device = NULL;
         S->pDxSwapChain->GetDevice(IID_ARGS(&device));
-        HRESULT removeHr = device->GetDeviceRemovedReason();
-        if (FAILED(removeHr))
+        HRESULT removeHr = -1;
+        auto failedCount = 0u;
+        const auto retryCount = 8u;
+        while (FAILED(removeHr) && (failedCount < retryCount))
         {
-            Sleep(5000); // Wait for a few seconds to allow the driver to come
-                         // back online before doing a reset.
-            // onDeviceLost();
+            removeHr = device->GetDeviceRemovedReason();
+            if (FAILED(removeHr))
+            {
+                cgpu_info("Device removed, waiting for driver to come back online...");
+                Sleep(500); // Wait for a few seconds to allow the driver to come
+                            // back online before doing a reset.
+                failedCount++;
+            }
+        }
+        if (failedCount >= retryCount)
+        {
+            cgpu_fatal("Device driver get lost, unable to get removed reason.");
         }
     #ifdef __ID3D12DeviceRemovedExtendedData_FWD_DEFINED__
         ID3D12DeviceRemovedExtendedData* pDread;
@@ -1138,7 +1150,6 @@ void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDe
     #endif
         device->Release();
 #endif
-        cgpu_error("Failed to present swapchain render target!");
     }
 }
 
