@@ -2,6 +2,8 @@
 #include "utils/DAG.boost.hpp"
 #include "utils/dependency_graph.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace skr
 {
 class DependencyGraphImpl : public DependencyGraph, public DependencyGraphBase
@@ -88,6 +90,8 @@ public:
     }
     virtual uint32_t foreach_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
+        ZoneScopedN("ForeachNeighbors");
+
         DAGVertex vert(node);
         auto neigs = DAG::adjacent_vertices(vert, *this);
         uint32_t count = 0;
@@ -103,6 +107,8 @@ public:
     }
     virtual uint32_t foreach_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
+        ZoneScopedN("ForeachNeighbors");
+
         DAGVertex vert(node);
         auto neigs = DAG::adjacent_vertices(vert, *this);
         uint32_t count = 0;
@@ -118,6 +124,8 @@ public:
     }
     virtual uint32_t foreach_inv_neighbors(dep_graph_handle_t node, eastl::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
+        ZoneScopedN("ForeachInvNeighbors");
+
         DAGVertex vert(node);
         auto neigs = DAG::inv_adjacent_vertices(vert, *this);
         uint32_t count = 0;
@@ -133,6 +141,8 @@ public:
     }
     virtual uint32_t foreach_inv_neighbors(const dep_graph_handle_t node, eastl::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
+        ZoneScopedN("ForeachInvNeighbors");
+
         DAGVertex vert(node);
         auto neigs = DAG::inv_adjacent_vertices(vert, *this);
         uint32_t count = 0;
@@ -148,6 +158,8 @@ public:
     }
     virtual uint32_t outgoing_edges(dep_graph_handle_t id) SKR_NOEXCEPT final
     {
+        ZoneScopedN("OutgoingEdges");
+
         auto oedges = DAG::out_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
         for (auto iter = oedges.first; iter != oedges.second; iter++)
@@ -157,13 +169,15 @@ public:
         return count;
     }
     virtual uint32_t foreach_outgoing_edges(Node* node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
+        eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
     {
         return foreach_outgoing_edges(node->id, func);
     }
     virtual uint32_t foreach_outgoing_edges(dep_graph_handle_t node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
+        eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
     {
+        ZoneScopedN("ForeachOutgoingEdges");
+
         auto oedges = DAG::out_edges((vertex_descriptor)node, *this);
         uint32_t count = 0;
         for (auto iter = oedges.first; iter != oedges.second; iter++)
@@ -179,6 +193,8 @@ public:
     }
     virtual uint32_t incoming_edges(dep_graph_handle_t id) SKR_NOEXCEPT final
     {
+        ZoneScopedN("IncomingEdges");
+
         auto iedges = DAG::in_edges((vertex_descriptor)id, *this);
         uint32_t count = 0;
         for (auto iter = iedges.first; iter != iedges.second; iter++)
@@ -188,13 +204,15 @@ public:
         return count;
     }
     virtual uint32_t foreach_incoming_edges(Node* node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
+        eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
     {
         return foreach_incoming_edges(node->id, func);
     }
     virtual uint32_t foreach_incoming_edges(dep_graph_handle_t node,
-    eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
+        eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
     {
+        ZoneScopedN("ForeachIncomingEdges");
+
         auto oedges = DAG::in_edges((vertex_descriptor)node, *this);
         uint32_t count = 0;
         for (auto iter = oedges.first; iter != oedges.second; iter++)
@@ -206,6 +224,8 @@ public:
     }
     virtual uint32_t foreach_edges(eastl::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
     {
+        ZoneScopedN("AllEdges");
+
         auto edges = boost::edges(*this);
         uint32_t count = 0;
         for (auto iter = edges.first; iter != edges.second; iter++)

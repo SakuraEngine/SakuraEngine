@@ -17,52 +17,52 @@ struct pmrListS {
 } // namespace ____
 
 template <class VertexProperty = boost::no_property,
-class EdgeProperty = boost::no_property,
-class GraphProperty = boost::no_property,
-class EdgeListS = boost::listS>
+    class EdgeProperty = boost::no_property,
+    class GraphProperty = boost::no_property,
+    class EdgeListS = boost::listS>
 using Graph = boost::adjacency_list<boost::vecS, boost::vecS,
-boost::bidirectionalS,
-VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
+    boost::bidirectionalS,
+    VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
 
 template <class VertexProperty = boost::no_property,
-class EdgeProperty = boost::no_property,
-class GraphProperty = boost::no_property,
-class EdgeListS = boost::listS>
+    class EdgeProperty = boost::no_property,
+    class GraphProperty = boost::no_property,
+    class EdgeListS = boost::listS>
 using GraphVertex =
-typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
-vertex_descriptor;
+    typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
+    vertex_descriptor;
 
 template <class VertexProperty = boost::no_property,
-class EdgeProperty = boost::no_property,
-class GraphProperty = boost::no_property,
-class EdgeListS = boost::listS>
+    class EdgeProperty = boost::no_property,
+    class GraphProperty = boost::no_property,
+    class EdgeListS = boost::listS>
 using GraphEdge =
-typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
-edge_descriptor;
+    typename boost::graph_traits<Graph<VertexProperty, GraphProperty, EdgeListS>>::
+    edge_descriptor;
 
 template <class VertexProperty = boost::no_property,
-class EdgeProperty = boost::no_property,
-class GraphProperty = boost::no_property,
-class EdgeListS = boost::listS>
+    class EdgeProperty = boost::no_property,
+    class GraphProperty = boost::no_property,
+    class EdgeListS = boost::listS>
 using MutableGraph = boost::adjacency_list<boost::listS, boost::listS,
-boost::bidirectionalS,
-VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
+    boost::bidirectionalS,
+    VertexProperty, EdgeProperty, GraphProperty, EdgeListS>;
 
 template <class VertexProperty = boost::no_property,
-class EdgeProperty = boost::no_property,
-class GraphProperty = boost::no_property,
-class EdgeListS = boost::listS>
+    class EdgeProperty = boost::no_property,
+    class GraphProperty = boost::no_property,
+    class EdgeListS = boost::listS>
 using MutableGraphVertex =
-typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
-vertex_descriptor;
+    typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
+    vertex_descriptor;
 
 template <class VertexProperty = boost::no_property,
-class EdgeProperty = boost::no_property,
-class GraphProperty = boost::no_property,
-class EdgeListS = boost::listS>
+    class EdgeProperty = boost::no_property,
+    class GraphProperty = boost::no_property,
+    class EdgeListS = boost::listS>
 using MutableGraphEdge =
-typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
-edge_descriptor;
+    typename boost::graph_traits<MutableGraph<VertexProperty, GraphProperty, EdgeListS>>::
+    edge_descriptor;
 
 // returns the num of edges in the graph
 using boost::num_edges;

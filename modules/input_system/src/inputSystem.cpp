@@ -7,7 +7,10 @@ namespace skr::input
 
 InputSystem::~InputSystem()
 {
-    _hardwareManager.Exit();
+    if (_initialized)
+    {
+        _hardwareManager.Exit();
+    }
 }
 
 void InputSystem::Init(SWindowHandle window)
@@ -25,6 +28,7 @@ void InputSystem::Init(SWindowHandle window)
     _builtIn = _hardwareManager.CreateAndGetDevice<gainput::InputDeviceBuiltIn>();
     _touch = _hardwareManager.CreateAndGetDevice<gainput::InputDeviceTouch>();
     UpdateAllDevice();
+    _initialized = true;
 }
 
 template<typename T>

@@ -45,6 +45,7 @@ SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
 const bool bUseJob = true;
+const bool bUseInputSystem = false;
 
 // TODO: Refactor this
 CGPUVertexLayout vertex_layout = {};
@@ -79,17 +80,15 @@ Game)
 
 void SGameModule::on_load(int argc, char** argv)
 {
-#ifdef _WIN32
-    SetThreadPriorityBoost(GetCurrentThread(), false);
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-#endif
-
     SKR_LOG_INFO("game runtime loaded!");
-    auto options = make_zeroed<ftl::TaskSchedulerInitOptions>();
-    options.ThreadPoolSize = 0;
-    options.Behavior = ftl::EmptyQueueBehavior::Spin;
-    scheduler.Init(options);
-    dualJ_initialize((dual_scheduler_t*)&scheduler);
+    if (bUseJob)
+    {
+        auto options = make_zeroed<ftl::TaskSchedulerInitOptions>();
+        options.ThreadPoolSize = 0;
+        options.Behavior = ftl::EmptyQueueBehavior::Sleep;
+        scheduler.Init(options);
+        dualJ_initialize((dual_scheduler_t*)&scheduler);
+    }
 
     // TODO: Refactor this
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
@@ -264,80 +263,85 @@ int SGameModule::main_module_exec(int argc, char** argv)
     create_test_scene();
     create_imgui_resources(renderGraph);
     // Initialize Input
-    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
-    using namespace skr::input;
-    using namespace gainput;
-    InputSystem inputSystem;
-    inputSystem.Init(window);
-    inputSystem.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
-    // InputAction
+    skr::input::InputSystem inputSystem;
+    if (bUseInputSystem)
     {
-        auto action = eastl::make_shared<InputAction<float>>();
-        auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
-        controls1->AddInteraction(eastl::make_shared<InteractionTap<float>>());
-        action->AddControl(controls1);
-        action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
+        SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+        using namespace skr::input;
+        using namespace gainput;
+        inputSystem.Init(window);
+        inputSystem.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
+        // InputAction
         {
-            SKR_LOG_DEBUG("Tap_Float %f", value);
-        });
-        inputSystem.AddInputAction(action);
-    }
-    {
-        auto action = eastl::make_shared<InputAction<float>>();
-        auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyP);
-        auto interactionPress = eastl::make_shared<InteractionPress<float>>(PressBehavior::PressAndRelease, 0.5f);
-        controls1->AddInteraction(interactionPress);
-        action->AddControl(controls1);
-        action->ListenEvent([interactionPress](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
-        {
-            if(interactionPress.get() == i)
+            auto action = eastl::make_shared<InputAction<float>>();
+            auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
+            controls1->AddInteraction(eastl::make_shared<InteractionTap<float>>());
+            action->AddControl(controls1);
+            action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
             {
-                //if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                //    SKR_LOG_DEBUG("Press_Float Press %f", value);
-                //else
-                //    SKR_LOG_DEBUG("Press_Float Release %f", value);
-            }
-        });
-        inputSystem.AddInputAction(action);
-    }
-    {
-        auto action = eastl::make_shared<InputAction<skr::math::Vector2f>>();
-        auto controls1 = eastl::make_shared<Vector2Control>();
-        controls1->Bind(
-            Vector2Control::ButtonDirection{
-                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyW),
-                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyS),
-                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyA),
-                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyD),
-            }
-        );
-        controls1->Bind(
-            Vector2Control::StickDirection{
-                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickX),
-                eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
-            }
-        );
-        auto interactionPress = eastl::make_shared<InteractionPress<skr::math::Vector2f>>(PressBehavior::PressAndRelease, 0.5f);
-        controls1->AddInteraction(interactionPress);
-        action->AddControl(controls1);
-        action->ListenEvent([interactionPress](skr::math::Vector2f value, ControlsBase<skr::math::Vector2f>* _c, Interaction* i, Interaction::EvendId eventId)
+                SKR_LOG_DEBUG("Tap_Float %f", value);
+            });
+            inputSystem.AddInputAction(action);
+        }
         {
-            if(interactionPress.get() == i)
+            auto action = eastl::make_shared<InputAction<float>>();
+            auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyP);
+            auto interactionPress = eastl::make_shared<InteractionPress<float>>(PressBehavior::PressAndRelease, 0.5f);
+            controls1->AddInteraction(interactionPress);
+            action->AddControl(controls1);
+            action->ListenEvent([interactionPress](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
             {
-                //if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                //    SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
-                //else
-                //    SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
-            }
-        });
-        inputSystem.AddInputAction(action);
+                if(interactionPress.get() == i)
+                {
+                    //if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                    //    SKR_LOG_DEBUG("Press_Float Press %f", value);
+                    //else
+                    //    SKR_LOG_DEBUG("Press_Float Release %f", value);
+                }
+            });
+            inputSystem.AddInputAction(action);
+        }
+        {
+            auto action = eastl::make_shared<InputAction<skr::math::Vector2f>>();
+            auto controls1 = eastl::make_shared<Vector2Control>();
+            controls1->Bind(
+                Vector2Control::ButtonDirection{
+                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyW),
+                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyS),
+                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyA),
+                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyD),
+                }
+            );
+            controls1->Bind(
+                Vector2Control::StickDirection{
+                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickX),
+                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
+                }
+            );
+            auto interactionPress = eastl::make_shared<InteractionPress<skr::math::Vector2f>>(PressBehavior::PressAndRelease, 0.5f);
+            controls1->AddInteraction(interactionPress);
+            action->AddControl(controls1);
+            action->ListenEvent([interactionPress](skr::math::Vector2f value, ControlsBase<skr::math::Vector2f>* _c, Interaction* i, Interaction::EvendId eventId)
+            {
+                if(interactionPress.get() == i)
+                {
+                    //if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                    //    SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
+                    //else
+                    //    SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
+                }
+            });
+            inputSystem.AddInputAction(action);
+        }
     }
     // Time
-    STimer timer;
-    skr_init_timer(&timer);
+    SHiresTimer tick_timer;
+    int64_t elapsed_us = 0;
+    int64_t elapsed_frame = 0;
+    uint32_t fps = 60;
+    skr_init_hires_timer(&tick_timer);
     // loop
     bool quit = false;
-    skg::GameContext ctx;
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
     moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), 
@@ -373,11 +377,14 @@ int SGameModule::main_module_exec(int argc, char** argv)
             if (event.type == SDL_SYSWMEVENT)
             {
                 SDL_SysWMmsg* msg = event.syswm.msg;
+                if (bUseInputSystem)
+                {
 #if defined(GAINPUT_PLATFORM_WIN)
                 inputSystem.GetHardwareManager().HandleMessage((MSG&)msg->msg);
 #elif defined(GAINPUT_PLATFORM_LINUX)
                 inputSystem.GetHardwareManager().HandleMessage((XEvent&)msg->msg);
 #endif
+                }
             }
             if (event.type == SDL_QUIT)
             {
@@ -385,8 +392,16 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 break;
             }
         }
-        const double deltaTime = skr_timer_get_seconds(&timer, true);
-        const auto fps = 1.0 / deltaTime;
+        int64_t us = skr_hires_timer_get_usec(&tick_timer, true);
+        double deltaTime = (double)us / 1000 / 1000;
+        elapsed_us += us;
+        elapsed_frame += 1;
+        if (elapsed_us > (1000 * 1000))
+        {
+            fps = elapsed_frame;
+            elapsed_frame = 0;
+            elapsed_us = 0;
+        }
         // Update camera
         auto cameraUpdate = [=](dual_chunk_view_t* view){
             auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());
@@ -398,6 +413,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         };
         dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));
         // Input
+        if (bUseInputSystem)
         {
             ZoneScopedN("Input");
         
@@ -446,7 +462,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     };
                 }
             });
-            dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
+            dualJ_schedule_ecs(moveQuery, 128, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
         }
         // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_camera_t
         if (bUseJob)
@@ -476,8 +492,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     if (ddown) translations[i].value = 1.f * right * deltaTime * kSpeed + translations[i].value;
                 }
             });
-            dualJ_schedule_ecs(cameraQuery, 1024, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
-            
+            dualJ_schedule_ecs(cameraQuery, 128, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
             {
                 ZoneScopedN("DualJSync");
                 dualJ_wait_all();

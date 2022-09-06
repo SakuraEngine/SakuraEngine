@@ -35,7 +35,16 @@ if (is_os("windows")) then
     end
 end
 
+target("SkrDependencyGraph")
+    set_kind("static")
+    set_optimize("fastest")
+    add_files("src/**/dependency_graph.cpp")
+    add_files("src/**/boost_exception.cpp")
+    add_defines(defs_list, {public = true})
+    add_includedirs(include_dir_list, {public = true})
+
 target("SkrRT") 
+    add_deps("SkrDependencyGraph", {public = false})
     add_deps(deps_list)
     add_defines(defs_list, {public = true})
     add_rules("skr.module", {api = "RUNTIME"})
