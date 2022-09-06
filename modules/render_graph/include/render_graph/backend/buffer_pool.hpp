@@ -30,15 +30,16 @@ public:
         AllocationMark mark;
     };
     struct Key {
-        const CGPUDeviceId device;
-        uint64_t size;
-        CGPUResourceTypes descriptors;
-        ECGPUMemoryUsage memory_usage;
-        ECGPUFormat format;
-        CGPUBufferCreationFlags flags;
-        uint64_t first_element;
-        uint64_t elemet_count;
-        uint64_t element_stride;
+        const CGPUDeviceId device = nullptr;
+        uint64_t size = 0;
+        CGPUResourceTypes descriptors = CGPU_RESOURCE_TYPE_NONE;
+        ECGPUMemoryUsage memory_usage = CGPU_MEM_USAGE_UNKNOWN;
+        ECGPUFormat format = CGPU_FORMAT_UNDEFINED;
+        CGPUBufferCreationFlags flags = 0;
+        uint64_t first_element = 0;
+        uint64_t elemet_count = 0;
+        uint64_t element_stride = 0;
+        uint64_t padding = 0;
         operator size_t() const;
         friend class BufferPool;
 
@@ -55,7 +56,7 @@ protected:
     eastl::unordered_map<Key, eastl::deque<PooledBuffer>> buffers;
 };
 
-FORCEINLINE BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
+inline BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
     : device(device)
     , size(desc.size)
     , descriptors(desc.descriptors)
@@ -68,17 +69,17 @@ FORCEINLINE BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor
 {
 }
 
-FORCEINLINE BufferPool::Key::operator size_t() const
+inline BufferPool::Key::operator size_t() const
 {
     return skr_hash(this, sizeof(*this), (size_t)device);
 }
 
-FORCEINLINE void BufferPool::initialize(CGPUDeviceId device_)
+inline void BufferPool::initialize(CGPUDeviceId device_)
 {
     device = device_;
 }
 
-FORCEINLINE void BufferPool::finalize()
+inline void BufferPool::finalize()
 {
     for (auto&& [key, queue] : buffers)
     {
@@ -90,13 +91,15 @@ FORCEINLINE void BufferPool::finalize()
     }
 }
 
-FORCEINLINE eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
+inline eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
 {
     eastl::pair<CGPUBufferId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<BufferPool::Key>(device, desc);
-    if (buffers[key].empty() || buffers[key].front().mark.frame_index < min_frame_index )
+    const auto empty = buffers[key].empty();
+    const auto frame_available = empty ? false : buffers[key].front().mark.frame_index <= min_frame_index;
+    if ( empty || !frame_available )
     {
         auto new_buffer = cgpu_create_buffer(device, &desc);
         buffers[key].emplace_front(new_buffer, desc.start_state , mark);
@@ -106,12 +109,13 @@ FORCEINLINE eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(c
     return allocated;
 }
 
-FORCEINLINE void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, AllocationMark mark)
+inline void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, AllocationMark mark)
 {
     auto key = make_zeroed<BufferPool::Key>(device, desc);
     for (auto&& iter : buffers[key])
     {
-        if (iter.buffer == buffer) return;
+        if (iter.buffer == buffer) 
+            return;
     }
     buffers[key].emplace_back(buffer, final_state, mark);
 }
