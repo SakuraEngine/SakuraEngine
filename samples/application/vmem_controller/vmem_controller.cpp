@@ -21,9 +21,11 @@ class SVMemCCModule : public skr::IDynamicModule
     void initialize_imgui();
     void finalize();
 
+    void imgui_ui();
+
     bool DPIAware = false;
     SWindowHandle window;
-    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
+    ECGPUBackend backend = CGPU_BACKEND_D3D12;
 
     CGPUInstanceId instance;
     CGPUAdapterId adapter;
@@ -36,7 +38,7 @@ class SVMemCCModule : public skr::IDynamicModule
     uint32_t backbuffer_index;
     CGPUFenceId present_fence;
 
-    float buffer_size = 0.f;
+    float buffer_size = 0.001f;
     eastl::vector<CGPUBufferId> buffers;
 
     skr::render_graph::RenderGraph* graph = nullptr;
@@ -76,6 +78,93 @@ void SVMemCCModule::on_load(int argc, char** argv)
             backend = CGPU_BACKEND_D3D12;
         }
     }
+}
+
+void SVMemCCModule::imgui_ui()
+{
+    ImGui::Begin(u8"VideoMemoryController");
+    const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
+    const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+
+    auto adapter_detail = cgpu_query_adapter_detail(adapter);
+    // information
+    {
+        ImGui::Text("Card: %s", adapter_detail->vendor_preset.gpu_name);
+        ImGui::Text("Driver: %d", adapter_detail->vendor_preset.driver_version);
+    }
+    // allocation
+    uint64_t total_bytes = 0;
+    uint64_t used_bytes = 0;
+    cgpu_query_video_memory_info(device, &total_bytes, &used_bytes);
+    const auto total_mb = (float)total_bytes / 1024.f / 1024.f;
+    const auto used_mb = (float)used_bytes / 1024.f / 1024.f;
+    ImGui::Text("Used VMem: %.3f MB", used_mb);
+    ImGui::Text("Usable VMem: %.3f MB", total_mb - used_mb);
+    ImGui::SliderFloat("Size", &buffer_size, 0.001f, total_mb - used_mb, "%.3f MB"); // in MB
+    if (ImGui::Button(u8"AllocateVideoMemory"))
+    {
+        auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
+        buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+        buf_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
+        buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+        buf_desc.size = (uint64_t)(buffer_size * 1024 * 1024);
+        buf_desc.name = "VideoMemory";
+        auto new_buf = cgpu_create_buffer(device, &buf_desc);
+        buffers.emplace_back(new_buf);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(u8"AllocateSharedMemory"))
+    {
+        auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
+        buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+        buf_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
+        buf_desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
+        buf_desc.size = (uint64_t)(buffer_size * 1024 * 1024);
+        buf_desc.name = "SharedMemory";
+        auto new_buf = cgpu_create_buffer(device, &buf_desc);
+        buffers.emplace_back(new_buf);
+    }
+    // table
+    const ImGuiTableFlags flags =
+        ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti
+        | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_NoBordersInBody
+        | ImGuiTableFlags_ScrollY;
+    if (ImGui::BeginTable("table_sorting", 4, flags, ImVec2(0.0f, TEXT_BASE_HEIGHT * 10), 0.0f))
+    {
+        ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 0.0f, 1);
+        ImGui::TableSetupColumn("Size(MB)", ImGuiTableColumnFlags_WidthFixed, 0.0f, 2);
+        ImGui::TableSetupColumn("Free", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed, 0.0f, 3);
+        ImGui::TableSetupScrollFreeze(0, 1); // Make row always visible
+        ImGui::TableHeadersRow();
+
+        // Demonstrate using clipper for large vertical lists
+        ImGuiListClipper clipper;
+        clipper.Begin(buffers.size());
+        while (clipper.Step())
+            for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
+            {
+                // Display a data item
+                auto buffer = buffers[row_n];
+                ImGui::PushID(row_n);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("%04d", row_n);
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted((buffer->memory_usage == CGPU_MEM_USAGE_GPU_ONLY) ? "VideoMemory" : "SharedMemory");
+                ImGui::TableNextColumn();
+                ImGui::Text("%.3f", (float)buffer->size / 1024.f / 1024.f);
+                ImGui::TableNextColumn();
+                if (ImGui::SmallButton("Delete"))
+                {
+                    cgpu_free_buffer(buffer);
+                    buffers[row_n] = nullptr;
+                }
+                ImGui::PopID();
+            }
+        ImGui::EndTable();
+    }
+    ImGui::End();
 }
 
 int SVMemCCModule::main_module_exec(int argc, char** argv)
@@ -118,40 +207,14 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
                 }
             }
         }
-
         static uint64_t frame_index = 0;
         auto& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(
             (float)swapchain->back_buffers[0]->width,
             (float)swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
-        ImGui::Begin(u8"VideoMemoryController");
-        auto adapter_detail = cgpu_query_adapter_detail(adapter);
-        // information
-        {
-            ImGui::Text("Card: %s", adapter_detail->vendor_preset.gpu_name);
-            ImGui::Text("Driver: %d", adapter_detail->vendor_preset.driver_version);
-        }
-        // allocation
-        uint64_t total_bytes = 0;
-        uint64_t used_bytes = 0;
-        cgpu_query_video_memory_info(device, &total_bytes, &used_bytes);
-        const auto total_mb = (float)total_bytes / 1024.f / 1024.f;
-        const auto used_mb = (float)used_bytes / 1024.f / 1024.f;
-        ImGui::Text("Used: %f MB", used_mb);
-        ImGui::SliderFloat("Size", &buffer_size, 0, total_mb - used_mb); // in MB
-        if (ImGui::Button(u8"AllocateVideoMemory"))
-        {
-            auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
-            buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
-            buf_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
-            buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-            buf_desc.size = (uint64_t)(buffer_size * 1024 * 1024);
-            buf_desc.name = "PlaceHolder";
-            auto new_buf = cgpu_create_buffer(device, &buf_desc);
-            buffers.emplace_back(new_buf);
-        }
-        ImGui::End();
+        imgui_ui();
+        buffers.erase(eastl::remove(buffers.begin(), buffers.end(), nullptr), buffers.end());
         {
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);
@@ -177,12 +240,10 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
 
         graph->compile();
         frame_index = graph->execute();
-
         {
             if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
                 graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
         }
-
         {
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;
@@ -192,19 +253,19 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
             skr_thread_sleep(16);
         }
     }
-    cgpu_wait_queue_idle(gfx_queue);
-    render_graph::RenderGraph::destroy(graph);
-    render_graph_imgui_finalize();
-    // clean up
-    finalize();
-    skr_free_window(window);
-    SDL_Quit();
     return 0;
 }
 
 void SVMemCCModule::on_unload()
 {
     SKR_LOG_INFO("vmem controller unloaded!");
+    cgpu_wait_queue_idle(gfx_queue);
+    skr::render_graph::RenderGraph::destroy(graph);
+    render_graph_imgui_finalize();
+    // clean up
+    finalize();
+    skr_free_window(window);
+    SDL_Quit();
 }
 
 void SVMemCCModule::create_api_objects()
