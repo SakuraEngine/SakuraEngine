@@ -59,14 +59,13 @@ FORCEINLINE static VkFormatFeatureFlags VkUtil_ImageUsageToFormatFeatures(VkImag
 void cgpu_query_video_memory_info_vulkan(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes)
 {
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
-    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
     const VkPhysicalDeviceMemoryProperties* mem_props = CGPU_NULLPTR;
     vmaGetMemoryProperties(D->pVmaAllocator, &mem_props);
     VmaBudget budgets[VK_MAX_MEMORY_HEAPS];
     vmaGetHeapBudgets(D->pVmaAllocator, budgets);
     *total = 0;
     *used_bytes = 0;
-    for (uint32_t i = 0; i < mem_props->memoryHeapCount; ++i)
+    for (uint32_t i = 0; i < mem_props->memoryHeapCount; i++)
     {
         if (mem_props->memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
         {
