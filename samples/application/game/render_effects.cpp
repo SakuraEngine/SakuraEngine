@@ -275,20 +275,20 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                     forward_pass_data.viewport_width = cameras->viewport_width;
                     forward_pass_data.viewport_height = cameras->viewport_height;
 
-                    view  = skr::math::look_at_matrix(
+                    view = skr::math::look_at_matrix(
                         camera_transforms->value /*eye*/, 
                         camera_forward + camera_transforms->value /*at*/,
                         { 0.f, 0.f, 1.f } /*up*/
                     );
+                    auto proj = skr::math::perspective_fov(
+                        3.1415926f / 2.f, 
+                        (float)forward_pass_data.viewport_width / (float)forward_pass_data.viewport_height, 
+                        1.f, 1000.f);
+                    forward_pass_data.view_projection = skr::math::multiply(view, proj);
                 }
             };
             dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
-            auto proj = skr::math::perspective_fov(
-                3.1415926f / 2.f, 
-                (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH, 
-                1.f, 1000.f);
 
-            forward_pass_data.view_projection = skr::math::multiply(view, proj);
 
             auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
                 uint32_t r_idx = 0;

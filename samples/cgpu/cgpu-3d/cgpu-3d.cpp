@@ -164,9 +164,9 @@ int main(int argc, char* argv[])
     // camera
     auto view = smath::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
     auto proj = smath::perspective_fov(
-    3.1415926f / 2.f,
-    (float)BACK_BUFFER_HEIGHT / (float)BACK_BUFFER_WIDTH,
-    1.f, 1000.f);
+        3.1415926f / 2.f,
+        (float)BACK_BUFFER_WIDTH / (float)BACK_BUFFER_HEIGHT,
+        1.f, 1000.f);
     data.world = smath::transpose(world);
     data.view_proj = smath::transpose(smath::multiply(view, proj));
     // render loop
