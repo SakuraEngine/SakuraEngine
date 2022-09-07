@@ -370,8 +370,8 @@ int main(int argc, char* argv[])
             ZoneScopedN("ImGui");
             auto& io = ImGui::GetIO();
             io.DisplaySize = ImVec2(
-            (float)swapchain->back_buffers[0]->width,
-            (float)swapchain->back_buffers[0]->height);
+                (float)swapchain->back_buffers[0]->width,
+                (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
             ImGui::Begin(u8"RenderGraphProfile");
             if (ImGui::Button(fragmentLightingPass ? "SwitchToComputeLightingPass" : "SwitchToFragmentLightingPass"))

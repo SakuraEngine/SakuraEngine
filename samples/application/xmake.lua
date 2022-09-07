@@ -24,6 +24,14 @@ target("Game")
         add_files("/../../resources/windows/sakura.rc")
     end
 
+target("VMemController")
+    set_kind("binary")
+    add_deps("SkrImGui", "SkrRenderGraph")
+    add_files("vmem_controller/**.cpp")
+    if (is_os("windows")) then 
+        add_files("/../../resources/windows/sakura.rc")
+    end
+
 target("GameTool")
     add_rules("skr.module", {api = "GAMETOOL"})
     add_rules("c++.codegen", {
