@@ -23,7 +23,7 @@ class SVMemCCModule : public skr::IDynamicModule
 
     bool DPIAware = false;
     SWindowHandle window;
-    const ECGPUBackend backend = CGPU_BACKEND_D3D12;
+    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
 
     CGPUInstanceId instance;
     CGPUAdapterId adapter;
@@ -65,6 +65,17 @@ VMemController)
 void SVMemCCModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("vmem controller loaded!");
+    for (auto i = 0; i < argc; i++)
+    {
+        if (::strcmp(argv[i], "--vulkan") == 0)
+        {
+            backend = CGPU_BACKEND_VULKAN;
+        }
+        else if (::strcmp(argv[i], "--d3d12") == 0)
+        {
+            backend = CGPU_BACKEND_D3D12;
+        }
+    }
 }
 
 int SVMemCCModule::main_module_exec(int argc, char** argv)
@@ -124,7 +135,7 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
         // allocation
         uint64_t total_bytes = 0;
         uint64_t used_bytes = 0;
-        cgpu_query_video_memory_info(adapter, &total_bytes, &used_bytes);
+        cgpu_query_video_memory_info(device, &total_bytes, &used_bytes);
         const auto total_mb = (float)total_bytes / 1024.f / 1024.f;
         const auto used_mb = (float)used_bytes / 1024.f / 1024.f;
         ImGui::Text("Used: %f MB", used_mb);

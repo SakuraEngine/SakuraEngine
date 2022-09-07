@@ -10,11 +10,11 @@ const CGPUProcTable tbl_d3d12 = {
     // Adapter APIs
     .enum_adapters = &cgpu_enum_adapters_d3d12,
     .query_adapter_detail = &cgpu_query_adapter_detail_d3d12,
-    .query_video_memory_info = &cgpu_query_video_memory_info_d3d12,
     .query_queue_count = &cgpu_query_queue_count_d3d12,
 
     // Device APIs
     .create_device = &cgpu_create_device_d3d12,
+    .query_video_memory_info = &cgpu_query_video_memory_info_d3d12,
     .free_device = &cgpu_free_device_d3d12,
 
     // API Object APIs

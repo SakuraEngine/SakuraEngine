@@ -56,6 +56,26 @@ FORCEINLINE static VkFormatFeatureFlags VkUtil_ImageUsageToFormatFeatures(VkImag
     return result;
 }
 
+void cgpu_query_video_memory_info_vulkan(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes)
+{
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
+    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
+    const VkPhysicalDeviceMemoryProperties* mem_props = CGPU_NULLPTR;
+    vmaGetMemoryProperties(D->pVmaAllocator, &mem_props);
+    VmaBudget budgets[VK_MAX_MEMORY_HEAPS];
+    vmaGetHeapBudgets(D->pVmaAllocator, budgets);
+    *total = 0;
+    *used_bytes = 0;
+    for (uint32_t i = 0; i < mem_props->memoryHeapCount; ++i)
+    {
+        if (mem_props->memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+        {
+            *total += budgets[i].budget;
+            *used_bytes += budgets[i].usage;
+        }
+    }
+}
+
 // Buffer APIs
 cgpu_static_assert(sizeof(CGPUBuffer_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc)

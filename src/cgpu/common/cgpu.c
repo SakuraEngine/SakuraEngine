@@ -117,14 +117,6 @@ const struct CGPUAdapterDetail* cgpu_query_adapter_detail(const CGPUAdapterId ad
     return detail;
 }
 
-void cgpu_query_video_memory_info(const CGPUAdapterId adapter, uint64_t* total, uint64_t* used_bytes)
-{
-    cgpu_assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
-    cgpu_assert(adapter->proc_table_cache->query_video_memory_info && "query_video_memory_info Proc Missing!");
-
-    adapter->proc_table_cache->query_video_memory_info(adapter, total, used_bytes);
-}
-
 uint32_t cgpu_query_queue_count(const CGPUAdapterId adapter, const ECGPUQueueType type)
 {
     cgpu_assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
@@ -146,6 +138,14 @@ CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const CGPUDeviceDescripto
     }
     // -- proc_table_cache
     return device;
+}
+
+void cgpu_query_video_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL adapter!");
+    cgpu_assert(device->proc_table_cache->query_video_memory_info && "query_video_memory_info Proc Missing!");
+
+    device->proc_table_cache->query_video_memory_info(device, total, used_bytes);
 }
 
 CGPUFenceId cgpu_create_fence(CGPUDeviceId device)
