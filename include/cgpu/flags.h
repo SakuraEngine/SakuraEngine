@@ -613,7 +613,7 @@ typedef enum ECGPUPipelineType
 typedef enum ECGPUResourceType
 {
     CGPU_RESOURCE_TYPE_NONE = 0,
-    CGPU_RESOURCE_TYPE_SAMPLER = 0x01,
+    CGPU_RESOURCE_TYPE_SAMPLER = 0x00000001,
     // SRV Read only texture
     CGPU_RESOURCE_TYPE_TEXTURE = (CGPU_RESOURCE_TYPE_SAMPLER << 1),
     /// RTV Texture

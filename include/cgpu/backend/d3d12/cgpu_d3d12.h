@@ -33,6 +33,7 @@ RUNTIME_API uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, c
 // Device APIs
 RUNTIME_API CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc);
 RUNTIME_API void cgpu_query_video_memory_info_d3d12(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+RUNTIME_API void cgpu_query_shared_memory_info_d3d12(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
 RUNTIME_API void cgpu_free_device_d3d12(CGPUDeviceId device);
 
 // API Object APIs

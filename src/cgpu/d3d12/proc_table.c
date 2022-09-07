@@ -15,6 +15,7 @@ const CGPUProcTable tbl_d3d12 = {
     // Device APIs
     .create_device = &cgpu_create_device_d3d12,
     .query_video_memory_info = &cgpu_query_video_memory_info_d3d12,
+    .query_shared_memory_info = &cgpu_query_shared_memory_info_d3d12,
     .free_device = &cgpu_free_device_d3d12,
 
     // API Object APIs

@@ -32,6 +32,7 @@ RUNTIME_API uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, 
 // Device APIs
 RUNTIME_API CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc);
 RUNTIME_API void cgpu_query_video_memory_info_vulkan(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+RUNTIME_API void cgpu_query_shared_memory_info_vulkan(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
 RUNTIME_API void cgpu_free_device_vulkan(CGPUDeviceId device);
 
 // API Object APIs

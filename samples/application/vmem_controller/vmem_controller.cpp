@@ -17,6 +17,7 @@ class SVMemCCModule : public skr::IDynamicModule
     virtual int main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
 
+    void create_swapchain();
     void create_api_objects();
     void initialize_imgui();
     void finalize();
@@ -27,18 +28,19 @@ class SVMemCCModule : public skr::IDynamicModule
     SWindowHandle window;
     ECGPUBackend backend = CGPU_BACKEND_D3D12;
 
-    CGPUInstanceId instance;
-    CGPUAdapterId adapter;
-    CGPUDeviceId device;
-    CGPUQueueId gfx_queue;
-    CGPUSamplerId static_sampler;
+    CGPUInstanceId instance = nullptr;
+    CGPUAdapterId adapter = nullptr;
+    CGPUDeviceId device = nullptr;
+    CGPUQueueId gfx_queue = nullptr;
+    CGPUSamplerId static_sampler = nullptr;
 
-    CGPUSurfaceId surface;
-    CGPUSwapChainId swapchain;
+    CGPUSurfaceId surface = nullptr;
+    CGPUSwapChainId swapchain = nullptr;
     uint32_t backbuffer_index;
-    CGPUFenceId present_fence;
+    CGPUFenceId present_fence = nullptr;
 
-    float buffer_size = 0.001f;
+    float vbuffer_size = 0.001f;
+    float sbuffer_size = 0.001f;
     eastl::vector<CGPUBufferId> buffers;
 
     skr::render_graph::RenderGraph* graph = nullptr;
@@ -99,19 +101,33 @@ void SVMemCCModule::imgui_ui()
     const auto total_mb = (float)total_bytes / 1024.f / 1024.f;
     const auto used_mb = (float)used_bytes / 1024.f / 1024.f;
     ImGui::Text("Used VMem: %.3f MB", used_mb);
+    ImGui::SameLine();
     ImGui::Text("Usable VMem: %.3f MB", total_mb - used_mb);
-    ImGui::SliderFloat("Size", &buffer_size, 0.001f, total_mb - used_mb, "%.3f MB"); // in MB
+    
+    uint64_t total_shared_bytes = 0;
+    uint64_t used_shared_bytes = 0;
+    cgpu_query_shared_memory_info(device, &total_shared_bytes, &used_shared_bytes);
+    const auto total_shared_mb = (float)total_shared_bytes / 1024.f / 1024.f;
+    const auto used_shared_mb = (float)used_shared_bytes / 1024.f / 1024.f;
+    ImGui::Text("Used SMem: %.3f MB", used_shared_mb);
+    ImGui::SameLine();
+    ImGui::Text("Usable SVMem: %.3f MB", total_shared_mb - used_shared_mb);
+
+    ImGui::SliderFloat(u8"##vbuffer", &vbuffer_size, 0.001f, total_mb - used_mb, "%.3f MB"); // in MB
+    ImGui::SameLine();
     if (ImGui::Button(u8"AllocateVideoMemory"))
     {
         auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
         buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
         buf_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
         buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-        buf_desc.size = (uint64_t)(buffer_size * 1024 * 1024);
+        buf_desc.size = (uint64_t)(vbuffer_size * 1024 * 1024);
         buf_desc.name = "VideoMemory";
         auto new_buf = cgpu_create_buffer(device, &buf_desc);
         buffers.emplace_back(new_buf);
     }
+
+    ImGui::SliderFloat(u8"##sbuffer", &sbuffer_size, 0.001f, total_shared_mb - used_shared_mb, "%.3f MB"); // in MB
     ImGui::SameLine();
     if (ImGui::Button(u8"AllocateSharedMemory"))
     {
@@ -119,11 +135,12 @@ void SVMemCCModule::imgui_ui()
         buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
         buf_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
         buf_desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
-        buf_desc.size = (uint64_t)(buffer_size * 1024 * 1024);
+        buf_desc.size = (uint64_t)(sbuffer_size * 1024 * 1024);
         buf_desc.name = "SharedMemory";
         auto new_buf = cgpu_create_buffer(device, &buf_desc);
         buffers.emplace_back(new_buf);
     }
+
     // table
     const ImGuiTableFlags flags =
         ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti
@@ -177,8 +194,8 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
     SWindowDescroptor window_desc = {};
     window_desc.centered = true;
     window_desc.resizable = true;
-    window_desc.height = 512;
-    window_desc.width = 512;
+    window_desc.height = 1024;
+    window_desc.width = 1024;
     window = skr_create_window(gCGPUBackendNames[backend], &window_desc);
     // initialize api objects
     create_api_objects();
@@ -201,10 +218,24 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
         {
             if (SDL_GetWindowID(sdl_window) == event.window.windowID)
             {
+                if (event.type == SDL_WINDOWEVENT)
+                {
+                    Uint8 window_event = event.window.event;
+                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                    {
+                        cgpu_wait_fences(&present_fence, 1);
+                        create_swapchain();
+                    }
+                }
                 if (!SDLEventHandler(&event, sdl_window))
                 {
                     quit = true;
                 }
+            }
+            if (event.type == SDL_QUIT)
+            {
+                quit = true;
+                break;
             }
         }
         static uint64_t frame_index = 0;
@@ -308,6 +339,15 @@ void SVMemCCModule::create_api_objects()
 
     // Create swapchain
     surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
+    create_swapchain();
+}
+
+void SVMemCCModule::create_swapchain()
+{
+    if (swapchain)
+    {
+        cgpu_free_swapchain(swapchain);
+    }
     int32_t wwidth, wheight;
     skr_window_get_extent(window, &wwidth, &wheight);
     CGPUSwapChainDescriptor chain_desc = {};

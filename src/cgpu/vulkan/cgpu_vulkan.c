@@ -24,6 +24,7 @@ const CGPUProcTable tbl_vk = {
     // Device APIs
     .create_device = &cgpu_create_device_vulkan,
     .query_video_memory_info = &cgpu_query_video_memory_info_vulkan,
+    .query_shared_memory_info = &cgpu_query_shared_memory_info_vulkan,
     .free_device = &cgpu_free_device_vulkan,
 
     // API Object APIs

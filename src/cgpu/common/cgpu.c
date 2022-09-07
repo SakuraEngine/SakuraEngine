@@ -148,6 +148,14 @@ void cgpu_query_video_memory_info(const CGPUDeviceId device, uint64_t* total, ui
     device->proc_table_cache->query_video_memory_info(device, total, used_bytes);
 }
 
+void cgpu_query_shared_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes)
+{
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL adapter!");
+    cgpu_assert(device->proc_table_cache->query_video_memory_info && "query_shared_memory_info Proc Missing!");
+
+    device->proc_table_cache->query_shared_memory_info(device, total, used_bytes);
+}
+
 CGPUFenceId cgpu_create_fence(CGPUDeviceId device)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
