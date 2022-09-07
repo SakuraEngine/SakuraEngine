@@ -200,6 +200,8 @@ RUNTIME_API CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const struct 
 typedef CGPUDeviceId (*CGPUProcCreateDevice)(CGPUAdapterId adapter, const struct CGPUDeviceDescriptor* desc);
 RUNTIME_API void cgpu_query_video_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
 typedef void (*CGPUProcQueryVideoMemoryInfo)(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+RUNTIME_API void cgpu_query_shared_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+typedef void (*CGPUProcQuerySharedMemoryInfo)(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
 RUNTIME_API void cgpu_free_device(CGPUDeviceId device);
 typedef void (*CGPUProcFreeDevice)(CGPUDeviceId device);
 
@@ -484,6 +486,7 @@ typedef struct CGPUProcTable {
     const CGPUProcEnumAdapters enum_adapters;
     const CGPUProcQueryAdapterDetail query_adapter_detail;
     const CGPUProcQueryVideoMemoryInfo query_video_memory_info;
+    const CGPUProcQuerySharedMemoryInfo query_shared_memory_info;
     const CGPUProcQueryQueueCount query_queue_count;
 
     // Device APIs
@@ -840,8 +843,8 @@ typedef struct CGPUBuffer {
      * Applicable to buffers created in CPU accessible heaps (CPU, CPU_TO_GPU, GPU_TO_CPU)
      */
     void* cpu_mapped_address;
-    uint64_t size : 32;
-    uint64_t descriptors : 20;
+    uint64_t size : 37;
+    uint64_t descriptors : 24;
     uint64_t memory_usage : 3;
 } CGPUBuffer;
 
