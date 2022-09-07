@@ -192,6 +192,8 @@ typedef void (*CGPUProcEnumAdapters)(CGPUInstanceId instance, CGPUAdapterId* con
 
 RUNTIME_API const struct CGPUAdapterDetail* cgpu_query_adapter_detail(const CGPUAdapterId adapter);
 typedef const struct CGPUAdapterDetail* (*CGPUProcQueryAdapterDetail)(const CGPUAdapterId adapter);
+RUNTIME_API void cgpu_query_video_memory_info(const CGPUAdapterId adapter, uint64_t* total, uint64_t* used_bytes);
+typedef void (*CGPUProcQueryVideoMemoryInfo)(const CGPUAdapterId adapter, uint64_t* total, uint64_t* used_bytes);
 RUNTIME_API uint32_t cgpu_query_queue_count(const CGPUAdapterId adapter, const ECGPUQueueType type);
 typedef uint32_t (*CGPUProcQueryQueueCount)(const CGPUAdapterId adapter, const ECGPUQueueType type);
 
@@ -481,6 +483,7 @@ typedef struct CGPUProcTable {
     // Adapter APIs
     const CGPUProcEnumAdapters enum_adapters;
     const CGPUProcQueryAdapterDetail query_adapter_detail;
+    const CGPUProcQueryVideoMemoryInfo query_video_memory_info;
     const CGPUProcQueryQueueCount query_queue_count;
 
     // Device APIs

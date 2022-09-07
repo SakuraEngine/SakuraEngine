@@ -28,6 +28,7 @@ RUNTIME_API void cgpu_free_instance_d3d12(CGPUInstanceId instance);
 // Adapter APIs
 RUNTIME_API void cgpu_enum_adapters_d3d12(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num);
 RUNTIME_API const struct CGPUAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGPUAdapterId adapter);
+RUNTIME_API void cgpu_query_video_memory_info_d3d12(const CGPUAdapterId adapter, uint64_t* total, uint64_t* used_bytes);
 RUNTIME_API uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, const ECGPUQueueType type);
 
 // Device APIs

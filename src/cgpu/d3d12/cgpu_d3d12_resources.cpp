@@ -1074,9 +1074,14 @@ CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* de
     }
     // Adjust for padding
     UINT64 padded_size = 0;
-    D->pDxDevice->GetCopyableFootprints(&bufDesc, 0, 1, 0, NULL, NULL, NULL, &padded_size);
-    allocationSize = (uint64_t)padded_size;
-    bufDesc.Width = allocationSize;
+    D->pDxDevice->GetCopyableFootprints(&bufDesc, 
+        0, 1, 0, NULL,
+        NULL, NULL, &padded_size);
+    if (padded_size != UINT64_MAX)
+    {
+        allocationSize = (uint64_t)padded_size;
+        bufDesc.Width = allocationSize;
+    }
     // Mark DENY_SHADER_RESOURCE
     if (desc->memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU)
     {
