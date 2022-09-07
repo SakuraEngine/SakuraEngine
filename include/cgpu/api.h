@@ -192,14 +192,14 @@ typedef void (*CGPUProcEnumAdapters)(CGPUInstanceId instance, CGPUAdapterId* con
 
 RUNTIME_API const struct CGPUAdapterDetail* cgpu_query_adapter_detail(const CGPUAdapterId adapter);
 typedef const struct CGPUAdapterDetail* (*CGPUProcQueryAdapterDetail)(const CGPUAdapterId adapter);
-RUNTIME_API void cgpu_query_video_memory_info(const CGPUAdapterId adapter, uint64_t* total, uint64_t* used_bytes);
-typedef void (*CGPUProcQueryVideoMemoryInfo)(const CGPUAdapterId adapter, uint64_t* total, uint64_t* used_bytes);
 RUNTIME_API uint32_t cgpu_query_queue_count(const CGPUAdapterId adapter, const ECGPUQueueType type);
 typedef uint32_t (*CGPUProcQueryQueueCount)(const CGPUAdapterId adapter, const ECGPUQueueType type);
 
 // Device APIs
 RUNTIME_API CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const struct CGPUDeviceDescriptor* desc);
 typedef CGPUDeviceId (*CGPUProcCreateDevice)(CGPUAdapterId adapter, const struct CGPUDeviceDescriptor* desc);
+RUNTIME_API void cgpu_query_video_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+typedef void (*CGPUProcQueryVideoMemoryInfo)(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
 RUNTIME_API void cgpu_free_device(CGPUDeviceId device);
 typedef void (*CGPUProcFreeDevice)(CGPUDeviceId device);
 

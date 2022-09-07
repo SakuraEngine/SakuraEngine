@@ -103,16 +103,6 @@ const CGPUAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGPUAdapterId ada
     return &A->adapter_detail;
 }
 
-void cgpu_query_video_memory_info_d3d12(const CGPUAdapterId adapter, uint64_t* total, uint64_t* used_bytes)
-{
-    const CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)adapter;
-    DXGI_QUERY_VIDEO_MEMORY_INFO info = {};
-    A->pDxActiveGPU->QueryVideoMemoryInfo(
-        SINGLE_GPU_NODE_INDEX, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info);
-    *total = info.Budget;
-    *used_bytes = info.CurrentUsage;
-}
-
 uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, const ECGPUQueueType type)
 {
     // queues are virtual in d3d12.
@@ -227,6 +217,16 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
         }
     }
     return &D->super;
+}
+
+void cgpu_query_video_memory_info_d3d12(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes)
+{
+    const CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)device->adapter;
+    DXGI_QUERY_VIDEO_MEMORY_INFO info = {};
+    A->pDxActiveGPU->QueryVideoMemoryInfo(
+        SINGLE_GPU_NODE_INDEX, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info);
+    *total = info.Budget;
+    *used_bytes = info.CurrentUsage;
 }
 
 void cgpu_free_device_d3d12(CGPUDeviceId device)
