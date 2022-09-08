@@ -33,12 +33,13 @@
 #include "extensions/cgpu_nsight_d3d12.cpp"
 #endif
 #else
+#include "cgpu/extensions/cgpu_nsight.h"
 CGPUNSightTrackerId cgpu_create_nsight_tracker(CGPUInstanceId instance, const CGPUNSightTrackerDescriptor* descriptor)
 {
     return nullptr;
 }
 void cgpu_free_nsight_tracker(CGPUNSightTrackerId tracker)
 {
-    
+
 }
 #endif
