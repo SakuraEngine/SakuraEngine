@@ -159,7 +159,7 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
 int SLive2DViewerModule::main_module_exec(int argc, char** argv)
 {
     SKR_LOG_INFO("live2d viewer executed!");
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 
         return -1;
     auto cgpuDevice = skr_renderer_get_cgpu_device();
     auto adapter_detail = cgpu_query_adapter_detail(cgpuDevice->adapter);

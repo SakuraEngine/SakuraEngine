@@ -1573,6 +1573,7 @@ void cgpu_cmd_end_compute_pass_d3d12(CGPUCommandBufferId cmd, CGPUComputePassEnc
 }
 
 // Render CMDs
+#if 1
 CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc)
 {
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
@@ -1658,6 +1659,28 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
     cgpu_info("ID3D12GraphicsCommandList4 is not defined!");
     return (CGPURenderPassEncoderId)&Cmd->super;
 }
+#else
+CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc)
+{
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
+    ID3D12GraphicsCommandList* pCmdList = Cmd->pDxCmdList;
+    D3D12_CPU_DESCRIPTOR_HANDLE Rtvs[CGPU_MAX_MRT_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE Dtv;
+    for (uint32_t i = 0; i < desc->render_target_count; i++)
+    {
+        auto RTV = (CGPUTextureView_D3D12*)desc->color_attachments[i].view;
+        Rtvs[i] = RTV->mDxRtvDsvDescriptorHandle;
+    }
+    if (desc->depth_stencil && desc->depth_stencil->view)
+    {
+        auto DTV = (CGPUTextureView_D3D12*)desc->depth_stencil->view;
+        Dtv = DTV->mDxRtvDsvDescriptorHandle;
+    }
+    pCmdList->OMSetRenderTargets(desc->render_target_count, Rtvs, 
+        FALSE, desc->depth_stencil ? &Dtv : nullptr);
+    return (CGPURenderPassEncoderId)&Cmd->super;
+}
+#endif
 
 void cgpu_render_encoder_bind_descriptor_set_d3d12(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set)
 {
