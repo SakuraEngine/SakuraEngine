@@ -21,6 +21,7 @@ if (os.host() == "windows") then
     find_sdk.sdk_from_github("amdags-windows-x64.zip")
     find_sdk.sdk_from_github("dxc-windows-x64.zip")
     find_sdk.sdk_from_github("nvapi-windows-x64.zip")
+    find_sdk.sdk_from_github("nsight-windows-x64.zip")
     find_sdk.sdk_from_github("dstorage-windows-x64.zip")
     --
     find_sdk.sdk_from_github("ispc-windows-x64.zip")

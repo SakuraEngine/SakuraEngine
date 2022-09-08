@@ -89,7 +89,6 @@ void SGameModule::on_load(int argc, char** argv)
         scheduler.Init(options);
         dualJ_initialize((dual_scheduler_t*)&scheduler);
     }
-
     // TODO: Refactor this
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };

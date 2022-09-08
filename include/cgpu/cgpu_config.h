@@ -58,3 +58,7 @@
 #define cgpu_static_assert static_assert
 
 #define cgpu_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
+
+#if !defined(ENABLE_NSIGHT_AFTERMATH) && defined(_WIN32)
+    #define ENABLE_NSIGHT_AFTERMATH
+#endif

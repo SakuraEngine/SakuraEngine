@@ -1149,7 +1149,7 @@ void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDe
         }
         if (failedCount >= retryCount)
         {
-            cgpu_fatal("Device driver get lost, unable to get removed reason.");
+            cgpu_fatal("Device driver get lost, unable to get removed reason from DRED.");
         }
     #ifdef __ID3D12DeviceRemovedExtendedData_FWD_DEFINED__
         ID3D12DeviceRemovedExtendedData* pDread;
@@ -1169,6 +1169,7 @@ void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDe
         pDread->Release();
     #endif
         device->Release();
+        ((CGPUDevice*)queue->device)->is_lost = true;
 #endif
     }
 }
@@ -1911,4 +1912,16 @@ void cgpu_d3d12_disable_DRED(CGPUDREDSettingsId settings)
     settings->pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_OFF);
     SAFE_RELEASE(settings->pDredSettings);
     cgpu_delete(settings);
+}
+
+ID3D12GraphicsCommandList* cgpu_d3d12_get_command_list(CGPUCommandBufferId cmd)
+{
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
+    return Cmd->pDxCmdList;
+}
+
+ID3D12Resource* cgpu_d3d12_get_buffer(CGPUBufferId buffer)
+{
+    CGPUBuffer_D3D12* Buf = (CGPUBuffer_D3D12*)buffer;
+    return Buf->pDxResource;
 }

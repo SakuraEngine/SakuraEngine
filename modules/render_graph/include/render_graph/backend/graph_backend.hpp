@@ -5,6 +5,8 @@
 #include "texture_view_pool.hpp"
 #include "desc_set_heap.hpp"
 
+#include "cgpu/extensions/cgpu_marker_buffer.h"
+
 namespace skr
 {
 namespace render_graph
@@ -23,7 +25,12 @@ public:
         cmd_desc.is_secondary = false;
         gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
         exec_fence = cgpu_create_fence(device);
+
+        CGPUMarkerBufferDescriptor marker_desc = {};
+        marker_desc.marker_count = 1000;
+        marker_buffer = cgpu_create_marker_buffer(device, &marker_desc);
     }
+
     void commit(CGPUQueueId gfx_queue, uint64_t frame_index)
     {
         CGPUQueueSubmitDescriptor submit_desc = {};
@@ -33,6 +40,7 @@ public:
         cgpu_submit_queue(gfx_queue, &submit_desc);
         exec_frame = frame_index;
     }
+
     void reset_begin(TextureViewPool& texture_view_pool)
     {
         for (auto desc_heap : desc_set_pool)
@@ -45,9 +53,19 @@ public:
             cgpu_free_texture(aliasing_texture);
         }
         aliasing_textures.clear();
+        marker_idx = 0;
+        marker_messages.clear();
         cgpu_reset_command_pool(gfx_cmd_pool);
         cgpu_cmd_begin(gfx_cmd_buf);
+        write_marker("Frame Begin");
     }
+
+    void write_marker(const char* message)
+    {
+        cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, 1);
+        marker_messages.push_back(message);
+    }
+
     void finalize()
     {
         if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
@@ -64,6 +82,7 @@ public:
         {
             cgpu_free_texture(aliasing_tex);
         }
+        if (marker_buffer) cgpu_free_marker_buffer(marker_buffer);
     }
     CGPUCommandPoolId gfx_cmd_pool = nullptr;
     CGPUCommandBufferId gfx_cmd_buf = nullptr;
@@ -71,6 +90,10 @@ public:
     uint64_t exec_frame = 0;
     eastl::vector<CGPUTextureId> aliasing_textures;
     eastl::unordered_map<CGPURootSignatureId, DescSetHeap*> desc_set_pool;
+
+    CGPUMarkerBufferId marker_buffer = nullptr;
+    uint32_t marker_idx = 0;
+    eastl::vector<eastl::string> marker_messages;
 };
 
 class RenderGraphBackend : public RenderGraph

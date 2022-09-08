@@ -599,7 +599,7 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
     // vendor info
     adapter_detail->vendor_preset.device_id = prop->deviceID;
     adapter_detail->vendor_preset.vendor_id = prop->vendorID;
-    if (adapter_detail->vendor_preset.vendor_id == 4318) // NVIDIA
+    if (adapter_detail->vendor_preset.vendor_id == 0x10DE) // NVIDIA
     {
         const uint32_t vraw = prop->driverVersion; 
         const uint32_t v0 = (vraw >> 22) & 0x3ff;
@@ -608,7 +608,7 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
         const uint32_t v3 = (vraw) & 0x03f;
         adapter_detail->vendor_preset.driver_version = VkUtil_CombineVersion(VkUtil_CombineVersion(VkUtil_CombineVersion(v0, v1), v2), v3);
     }
-    else if (adapter_detail->vendor_preset.vendor_id == 0x8086 ) // NVIDIA
+    else if (adapter_detail->vendor_preset.vendor_id == 0x8086 ) // Intel
     {
         const uint32_t vraw = prop->driverVersion; 
         const uint32_t v0 = (vraw >> 14);

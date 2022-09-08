@@ -1086,6 +1086,24 @@ uint64_t size, const char8_t* name)
     return cgpu_create_buffer(device, &buf_desc);
 }
 
+bool cgpux_adapter_is_nvidia(CGPUAdapterId adapter)
+{
+    const CGPUAdapterDetail* detail = cgpu_query_adapter_detail(adapter);
+    return (detail->vendor_preset.vendor_id == 0x10DE);
+}
+
+bool cgpux_adapter_is_amd(CGPUAdapterId adapter)
+{
+    const CGPUAdapterDetail* detail = cgpu_query_adapter_detail(adapter);
+    return (detail->vendor_preset.vendor_id == 0x1002);
+}
+
+bool cgpux_adapter_is_intel(CGPUAdapterId adapter)
+{
+    const CGPUAdapterDetail* detail = cgpu_query_adapter_detail(adapter);
+    return (detail->vendor_preset.vendor_id == 0x8086);
+}
+
 // surfaces
 #if defined(_WIN32) || defined(_WIN64)
 CGPUSurfaceId cgpu_surface_from_hwnd(CGPUDeviceId device, HWND window)

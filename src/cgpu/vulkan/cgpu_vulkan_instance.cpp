@@ -167,8 +167,10 @@ struct CGPUVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
                 Adapter.amd_gcn_shader = Table[VK_AMD_GCN_SHADER_EXTENSION_NAME];
                 Adapter.descriptor_indexing = Table[VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME];
                 Adapter.sampler_ycbcr = Table[VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME];
+#ifdef ENABLE_NSIGHT_AFTERMATH
                 Adapter.nv_diagnostic_checkpoints = Table[VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME];
                 Adapter.nv_diagnostic_config = Table[VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME];
+#endif
             }
         }
     }

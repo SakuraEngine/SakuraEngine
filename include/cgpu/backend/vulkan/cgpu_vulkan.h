@@ -208,9 +208,10 @@ typedef struct CGPUAdapter_Vulkan {
     uint32_t amd_gcn_shader : 1;
     uint32_t descriptor_indexing : 1;
     uint32_t sampler_ycbcr : 1;
+#ifdef ENABLE_NSIGHT_AFTERMATH
     uint32_t nv_diagnostic_checkpoints : 1;
     uint32_t nv_diagnostic_config : 1;
-
+#endif
     CGPUAdapterDetail adapter_detail;
 } CGPUAdapter_Vulkan;
 

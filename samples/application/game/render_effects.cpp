@@ -24,7 +24,7 @@
 #include "tracy/Tracy.hpp"
 
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
-const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT;
+const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
@@ -57,10 +57,9 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     .owns_memory()
                     .allow_depth_stencil();
             });
-        // IMGUI control shading rate
-
         if (drawcalls.count)
         {
+            // IMGUI control shading rate
             {
                 const char* shadingRateNames[] = {
                     "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
@@ -75,7 +74,6 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 }
                 ImGui::End();
             }
-
             auto cbuffer = renderGraph->create_buffer(
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
                     builder.set_name("forward_cbuffer")
@@ -100,12 +98,16 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                     auto cb = stack.resolve(cbuffer);
                     SKR_ASSERT(cb && "cbuffer not found");
+                    auto idx = 0;
                     ::memcpy(cb->cpu_mapped_address, &list_data.view_projection, sizeof(list_data.view_projection));
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
                         (float)list_data.viewport_width, (float)list_data.viewport_height,
                         0.f, 1.f);
-                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, list_data.viewport_width, list_data.viewport_height);
+                    cgpu_render_encoder_set_scissor(stack.encoder,
+                        0, 0, 
+                        list_data.viewport_width, list_data.viewport_height);
+                    
                     for (uint32_t i = 0; i < drawcalls.count; i++)
                     {
                         ZoneScopedN("DrawCall");
@@ -113,15 +115,16 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         auto&& dc = drawcalls.drawcalls[i];
                         {
                             ZoneScopedN("BindGeometry");
-                            cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                            CGPUBufferId vertex_buffers[4] = {
-                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer, dc.vertex_buffers[3].buffer
+                            cgpu_render_encoder_bind_index_buffer(stack.encoder, 
+                                dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
+                            CGPUBufferId vertex_buffers[3] = {
+                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
                             };
-                            const uint32_t strides[4] = {
-                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride, dc.vertex_buffers[2].stride
+                            const uint32_t strides[3] = {
+                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
                             };
-                            const uint32_t offsets[4] = {
-                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset, dc.vertex_buffers[2].offset
+                            const uint32_t offsets[3] = {
+                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
                             };
                             cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
                         }
@@ -558,7 +561,8 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 4;
-    CGPURenderPipelineDescriptor rp_desc = {};
+
+    auto rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();
     rp_desc.root_signature = root_sig;
     rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
     rp_desc.vertex_layout = &vertex_layout;
@@ -568,16 +572,19 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     rp_desc.color_formats = &fmt;
     rp_desc.depth_stencil_format = depth_format;
-    CGPURasterizerStateDescriptor raster_desc = {};
+
+    auto raster_desc = make_zeroed<CGPURasterizerStateDescriptor>();
     raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
     raster_desc.depth_bias = 0;
     raster_desc.fill_mode = CGPU_FILL_MODE_SOLID;
     raster_desc.front_face = CGPU_FRONT_FACE_CCW;
-    rp_desc.rasterizer_state = &raster_desc;
-    CGPUDepthStateDescriptor ds_desc = {};
+
+    auto ds_desc = make_zeroed<CGPUDepthStateDescriptor>();
     ds_desc.depth_func = CGPU_CMP_LEQUAL;
     ds_desc.depth_write = true;
     ds_desc.depth_test = true;
+
+    rp_desc.rasterizer_state = &raster_desc;
     rp_desc.depth_state = &ds_desc;
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
 
