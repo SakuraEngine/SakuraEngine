@@ -228,6 +228,7 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& noden
         __internal_DestroyModuleGraph(n.name);
     }
     get_module(nodename)->on_unload();
+    get_module(nodename)->~IModule();
     // DAG::remove_vertex(nodeMap[nodename], moduleDependecyGraph);
     ModuleProperty prop;
     prop.bActive = false;
