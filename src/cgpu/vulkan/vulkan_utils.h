@@ -264,7 +264,7 @@ static const char* cgpu_wanted_device_exts[] = {
 /************************************************************************/
 // Nsight Aftermath
 /************************************************************************/
-#ifdef ENABLE_NSIGHT_AFTERMATH
+#if defined(VK_CAN_USE_NSIGHT_AFTERMATH) && defined(ENABLE_NSIGHT_AFTERMATH)
     VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME,
     VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME,
 #endif

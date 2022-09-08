@@ -23,3 +23,13 @@
 #ifdef CGPU_USE_D3D12
 #include "extensions/marker_buffer_d3d12.cpp"
 #endif
+
+#ifdef ENABLE_NSIGHT_AFTERMATH
+#include "extensions/cgpu_nsight.cpp"
+#ifdef CGPU_USE_VULKAN
+#include "extensions/cgpu_nsight_vulkan.cpp"
+#endif
+#ifdef CGPU_USE_D3D12
+#include "extensions/cgpu_nsight_d3d12.cpp"
+#endif
+#endif

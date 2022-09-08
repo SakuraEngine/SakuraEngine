@@ -17,6 +17,7 @@
 void skr::Renderer::initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
     auto mm = skr_get_module_manager();
+
     create_api_objects(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
@@ -58,6 +59,7 @@ void skr::Renderer::finalize()
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
     cgpu_free_instance(instance);
+    cgpu_free_nsight_tracker(nsight_tracker);
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
@@ -77,6 +79,12 @@ void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_
     CGPUAdapterId adapters[64];
     cgpu_enum_adapters(instance, adapters, &adapters_count);
     adapter = adapters[0];
+
+    if (cgpux_adapter_is_nvidia(adapter))
+    {
+        CGPUNSightTrackerDescriptor desc = {};
+        nsight_tracker = cgpu_create_nsight_tracker(instance, &desc);
+    }
 
     // Create device
     const auto cpy_queue_count_ = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);

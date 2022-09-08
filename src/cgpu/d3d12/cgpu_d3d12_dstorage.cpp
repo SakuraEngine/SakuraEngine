@@ -485,7 +485,7 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
 void cgpu_win_dstorage_set_staging_buffer_size(uint64_t size)
 {
     IDStorageFactory* pFactory = GetDStorageFactory();
-    pFactory->SetStagingBufferSize(size);
+    pFactory->SetStagingBufferSize((uint32_t)size);
     sDirectStorageStagingBufferSize = size;
 }
 
