@@ -544,7 +544,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto frame_index = renderGraph->execute();
             {
                 ZoneScopedN("CollectGarbage");
-                if (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0)
+                if ( (frame_index > (RG_MAX_FRAME_IN_FLIGHT * 10)) && (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0))
                     renderGraph->collect_garbage(frame_index - 10 * RG_MAX_FRAME_IN_FLIGHT);
             }
         }
