@@ -471,9 +471,12 @@ typedef void (*CGPUProcFreeDStorageQueue)(CGPUDStorageQueueId queue);
 
 // cgpux
 RUNTIME_API CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
-uint64_t size, const char8_t* name, bool device_local_preferred);
+    uint64_t size, const char8_t* name, bool device_local_preferred);
 RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
-uint64_t size, const char8_t* name);
+    uint64_t size, const char8_t* name);
+RUNTIME_API bool cgpux_adapter_is_nvidia(CGPUAdapterId adapter);
+RUNTIME_API bool cgpux_adapter_is_amd(CGPUAdapterId adapter);
+RUNTIME_API bool cgpux_adapter_is_intel(CGPUAdapterId adapter);
 
 // Types
 typedef struct CGPUProcTable {
@@ -693,6 +696,7 @@ typedef struct CGPUDevice {
     {
     }
 #endif
+    bool is_lost SKR_IF_CPP(= false);
 } CGPUDevice;
 
 typedef struct CGPUQueue {

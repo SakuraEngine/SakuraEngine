@@ -1,6 +1,7 @@
 ﻿#include "render_graph/backend/graph_backend.hpp"
 #include "tracy/Tracy.hpp"
 #include "utils/hash.h"
+#include "fmt/format.h"
 #include <EASTL/set.h>
 
 namespace skr
@@ -442,6 +443,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     CGPUEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
+    executor.write_marker(fmt::format("Pass-{}-BeginBarrier", pass->get_name()).c_str());
     // color attachments
     // TODO: MSAA
     eastl::vector<CGPUColorAttachment> color_attachments = {};
@@ -453,7 +455,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         auto texture_target = write_edge->get_texture_node();
         const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(
             (ECGPUFormat)resolve(executor, *texture_target)->format);
-        const bool is_depth_only = FormatUtil_IsDepthStencilFormat(
+        const bool is_depth_only = FormatUtil_IsDepthOnlyFormat(
             (ECGPUFormat)resolve(executor, *texture_target)->format);
         if (write_edge->requested_state == CGPU_RESOURCE_STATE_DEPTH_WRITE && is_depth_stencil)
         {
@@ -464,7 +466,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             view_desc.base_mip_level = write_edge->get_mip_level();
             view_desc.mip_level_count = 1;
             view_desc.aspects =
-            is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL;
+                is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL;
             view_desc.format = (ECGPUFormat)view_desc.texture->format;
             view_desc.usages = CGPU_TVU_RTV_DSV;
             view_desc.dims = CGPU_TEX_DIMENSION_2D;
@@ -504,17 +506,20 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.depth_stencil = &ds_attachment;
     stack.cmd = executor.gfx_cmd_buf;
     stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
+    executor.write_marker(fmt::format("Pass-{}-BeginPass", pass->get_name()).c_str());
     if (pass->pipeline) cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
         if (!desc_set->updated) continue;
         cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
+        executor.write_marker(fmt::format("Pass-{}-BindDescriptors", pass->get_name()).c_str());
     }
     {
         ZoneScopedN("PassExecutor");
         pass->executor(*this, stack);
     }
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
+    executor.write_marker(fmt::format("Pass-{}-EndRenderPass", pass->get_name()).c_str());
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
     deallocate_resources(pass);
@@ -607,6 +612,24 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 {
     const auto executor_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
     RenderGraphFrameExecutor& executor = executors[executor_index];
+    if (device->is_lost)
+    {
+        auto last_executor = executors[executor_index - 1];
+        auto fill_data = (const uint32_t*)last_executor.marker_buffer->cgpu_buffer->cpu_mapped_address;
+        SKR_LOG_FATAL("Device lost caused by GPU command buffer failure Detected, command trace:");
+        for (uint32_t i = 0; i < last_executor.marker_messages.size(); i++)
+        {
+            if (fill_data[i] == 0)
+            {
+                SKR_LOG_ERROR("\tFailed Command %d: %s", i, last_executor.marker_messages[i].c_str());
+            }
+            else
+            {
+                SKR_LOG_INFO("\tCommand %d: %s", i, last_executor.marker_messages[i].c_str());
+            }
+        }
+        SKR_BREAK();
+    }
     {
         ZoneScopedN("AcquireExecutor");
         cgpu_wait_fences(&executor.exec_fence, 1);

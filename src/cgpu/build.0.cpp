@@ -15,3 +15,11 @@
 #endif
 
 #include "common/cgpu.cpp"
+
+#include "extensions/marker_buffer.cpp"
+#ifdef CGPU_USE_VULKAN
+#include "extensions/marker_buffer_vulkan.cpp"
+#endif
+#ifdef CGPU_USE_D3D12
+#include "extensions/marker_buffer_d3d12.cpp"
+#endif
