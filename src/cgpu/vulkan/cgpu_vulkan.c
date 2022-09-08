@@ -1389,7 +1389,18 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     if (Q->pMutex) skr_acquire_mutex(Q->pMutex);
 #endif
     VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
-    CHECK_VKRESULT(res);
+    if(res != VK_SUCCESS)
+    {
+        SKR_LOG_FATAL("CGPU VULKAN: Failed to submit queue! Error code: %d", res);
+        if (res == VK_ERROR_DEVICE_LOST)
+        {
+            ((CGPUDevice*)queue->device)->is_lost = true;
+        }
+        else
+        {
+            SKR_ASSERT("Unhandled VK ERROR!");
+        }
+    };
     if (F) F->mSubmitted = true;
 #ifdef CGPU_THREAD_SAFETY
     if (Q->pMutex) skr_release_mutex(Q->pMutex);
@@ -2510,3 +2521,15 @@ void cgpu_free_swapchain_vulkan(CGPUSwapChainId swapchain)
 
 // exts
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
+
+VkCommandBuffer cgpu_vulkan_get_command_buffer(CGPUCommandBufferId cmd)
+{
+    CGPUCommandBuffer_Vulkan* Cmd = (CGPUCommandBuffer_Vulkan*)cmd;
+    return Cmd->pVkCmdBuf;
+}
+
+VkBuffer cgpu_vulkan_get_buffer(CGPUBufferId buffer)
+{
+    CGPUBuffer_Vulkan* Buf = (CGPUBuffer_Vulkan*)buffer;
+    return Buf->pVkBuffer;
+}

@@ -344,7 +344,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
     int64_t elapsed_frame = 0;
-    uint32_t fps = 60;
+    int64_t fps = 60;
     skr_init_hires_timer(&tick_timer);
     // loop
     bool quit = false;
@@ -490,12 +490,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     auto sdown = skr_key_down(EKeyCode::KEY_CODE_S);
                     auto adown = skr_key_down(EKeyCode::KEY_CODE_A);
                     auto ddown = skr_key_down(EKeyCode::KEY_CODE_D);
-                    if (qdown) translations[i].value.z += deltaTime * kSpeed;
-                    if (edown) translations[i].value.z -= deltaTime * kSpeed;
-                    if (wdown) translations[i].value = forward * deltaTime * kSpeed + translations[i].value;
-                    if (sdown) translations[i].value = -1.f * forward * deltaTime * kSpeed + translations[i].value;
-                    if (adown) translations[i].value = -1.f * right * deltaTime * kSpeed + translations[i].value;
-                    if (ddown) translations[i].value = 1.f * right * deltaTime * kSpeed + translations[i].value;
+                    if (qdown) translations[i].value.z += (float)deltaTime * kSpeed;
+                    if (edown) translations[i].value.z -= (float)deltaTime * kSpeed;
+                    if (wdown) translations[i].value = forward * (float)deltaTime * kSpeed + translations[i].value;
+                    if (sdown) translations[i].value = -1.f * forward * (float)deltaTime * kSpeed + translations[i].value;
+                    if (adown) translations[i].value = -1.f * right * (float)deltaTime * kSpeed + translations[i].value;
+                    if (ddown) translations[i].value = 1.f * right * (float)deltaTime * kSpeed + translations[i].value;
                 }
             });
             dualJ_schedule_ecs(cameraQuery, 128, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
