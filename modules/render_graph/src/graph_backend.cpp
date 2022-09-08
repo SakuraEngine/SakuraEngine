@@ -614,19 +614,9 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
     RenderGraphFrameExecutor& executor = executors[executor_index];
     if (device->is_lost)
     {
-        auto last_executor = executors[executor_index - 1];
-        auto fill_data = (const uint32_t*)last_executor.marker_buffer->cgpu_buffer->cpu_mapped_address;
-        SKR_LOG_FATAL("Device lost caused by GPU command buffer failure Detected, command trace:");
-        for (uint32_t i = 0; i < last_executor.marker_messages.size(); i++)
+        for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
         {
-            if (fill_data[i] == 0)
-            {
-                SKR_LOG_ERROR("\tFailed Command %d: %s", i, last_executor.marker_messages[i].c_str());
-            }
-            else
-            {
-                SKR_LOG_INFO("\tCommand %d: %s", i, last_executor.marker_messages[i].c_str());
-            }
+            executors[i].print_error_trace(frame_index);
         }
         SKR_BREAK();
     }

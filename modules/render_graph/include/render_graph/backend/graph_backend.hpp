@@ -66,6 +66,24 @@ public:
         marker_messages.push_back(message);
     }
 
+    void print_error_trace(uint64_t frame_index)
+    {
+        auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->cpu_mapped_address;
+        if (fill_data[0] == 0) return;// begin cmd is unlikely to fail on gpu
+        SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
+        for (uint32_t i = 0; i < marker_messages.size(); i++)
+        {
+            if (fill_data[i] == 0)
+            {
+                SKR_LOG_ERROR("\tFailed Command %d: %s", i, marker_messages[i].c_str());
+            }
+            else
+            {
+                SKR_LOG_INFO("\tCommand %d: %s", i, marker_messages[i].c_str());
+            }
+        }
+    }
+
     void finalize()
     {
         if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
