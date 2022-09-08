@@ -16,6 +16,10 @@ extern "C" {
     #define VK_USE_VOLK_DEVICE_TABLE
 #endif
 
+#if VK_HEADER_VERSION >= 135
+#define VK_CAN_USE_NSIGHT_AFTERMATH
+#endif
+
 RUNTIME_API const CGPUProcTable* CGPU_VulkanProcTable();
 RUNTIME_API const CGPUSurfacesProcTable* CGPU_VulkanSurfacesProcTable();
 

@@ -27,6 +27,7 @@ struct SKR_RENDERER_API ISkrRenderer {
 #ifdef _WIN32
     #include "cgpu/extensions/dstorage_windows.h"
 #endif
+#include "cgpu/extensions/cgpu_nsight.h"
 
 class SkrRendererModule;
 
@@ -98,6 +99,7 @@ protected:
 #ifdef _WIN32
     skr_win_dstorage_decompress_service_id decompress_service = nullptr;
 #endif
+    CGPUNSightTrackerId nsight_tracker;
 };
 } // namespace skr
 
