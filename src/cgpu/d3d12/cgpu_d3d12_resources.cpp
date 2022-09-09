@@ -43,8 +43,8 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
         heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-        heapProps.VisibleNodeMask = SINGLE_GPU_NODE_MASK;
-        heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
+        heapProps.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+        heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
         NV_RESOURCE_PARAMS nvParams = {};
         nvParams.NVResourceFlags = NV_D3D12_RESOURCE_FLAGS::NV_D3D12_RESOURCE_FLAG_CPUVISIBLE_VIDMEM;
         NvAPI_D3D12_CreateCommittedResource(D->pDxDevice, &heapProps,
@@ -70,8 +70,8 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
             heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
             heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-            heapProps.VisibleNodeMask = SINGLE_GPU_NODE_MASK;
-            heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
+            heapProps.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+            heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
             CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
             &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
             SKR_LOG_DEBUG("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
@@ -576,8 +576,8 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                     heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
                     heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
                     heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-                    heapProps.CreationNodeMask = SINGLE_GPU_NODE_MASK;
-                    heapProps.VisibleNodeMask = SINGLE_GPU_NODE_MASK;
+                    heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+                    heapProps.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
                     fallbackHres = D->pDxDevice->CreateCommittedResource(&heapProps, 
                         D3D12_HEAP_FLAG_NONE, &resDesc, res_states, pClearValue, IID_ARGS(&pDxResource));
                     if (fallbackHres == S_OK)

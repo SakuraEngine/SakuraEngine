@@ -14,111 +14,60 @@
 #define CGPU_COLOR_MASK_ALL CGPU_COLOR_MASK_RED | CGPU_COLOR_MASK_GREEN | CGPU_COLOR_MASK_BLUE | CGPU_COLOR_MASK_ALPHA
 #define CGPU_COLOR_MASK_NONE 0
 
+#if defined(SKR_PLATFORM_WA32)
+#define DEFINE_CGPU_OBJECT(name) struct name##Descriptor; typedef const host_ptr_t name##Id;
+#else
+#define DEFINE_CGPU_OBJECT(name) struct name##Descriptor; typedef const struct name* name##Id;
+#endif
+
+typedef uint32_t CGPUQueueIndex;
+DEFINE_CGPU_OBJECT(CGPUSurface)
+DEFINE_CGPU_OBJECT(CGPUInstance)
+DEFINE_CGPU_OBJECT(CGPUAdapter)
+DEFINE_CGPU_OBJECT(CGPUDevice)
+DEFINE_CGPU_OBJECT(CGPUQueue)
+DEFINE_CGPU_OBJECT(CGPUSemaphore)
+DEFINE_CGPU_OBJECT(CGPUFence)
+DEFINE_CGPU_OBJECT(CGPUCommandPool)
+DEFINE_CGPU_OBJECT(CGPUCommandBuffer)
+DEFINE_CGPU_OBJECT(CGPUSwapChain)
+DEFINE_CGPU_OBJECT(CGPUShaderLibrary)
+DEFINE_CGPU_OBJECT(CGPURootSignature)
+DEFINE_CGPU_OBJECT(CGPURootSignaturePool)
+DEFINE_CGPU_OBJECT(CGPUDescriptorSet)
+DEFINE_CGPU_OBJECT(CGPUMemoryPool)
+DEFINE_CGPU_OBJECT(CGPUBuffer)
+DEFINE_CGPU_OBJECT(CGPUTexture)
+DEFINE_CGPU_OBJECT(CGPUSampler)
+DEFINE_CGPU_OBJECT(CGPUTextureView)
+DEFINE_CGPU_OBJECT(CGPUQueryPool)
+DEFINE_CGPU_OBJECT(CGPURenderPassEncoder)
+DEFINE_CGPU_OBJECT(CGPUComputePassEncoder)
+DEFINE_CGPU_OBJECT(CGPURenderPipeline)
+DEFINE_CGPU_OBJECT(CGPUComputePipeline)
+DEFINE_CGPU_OBJECT(CGPUShaderReflection)
+DEFINE_CGPU_OBJECT(CGPUPipelineReflection)
+DEFINE_CGPU_OBJECT(CGPUDStorageQueue)
+DEFINE_CGPU_OBJECT(CGPUDStorageFile)
+typedef CGPUDStorageFileId CGPUDStorageFileHandle;
+
+struct CGPUBufferToBufferTransfer;
+struct CGPUBufferToTextureTransfer;
+struct CGPUTextureToTextureTransfer;
+struct CGPUQueryDescriptor;
+struct CGPUDescriptorData;
+struct CGPUResourceBarrierDescriptor;
+struct CGPUTextureAliasingBindDescriptor;
+struct CGPURenderPassDescriptor;
+struct CGPUComputePassDescriptor;
+struct CGPUQueueSubmitDescriptor;
+struct CGPUQueuePresentDescriptor;
+struct CGPUAcquireNextDescriptor;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct CGPUInstanceDescriptor;
-struct CGPUAdapterDetail;
-struct CGPUDeviceDescriptor;
-struct CGPUCommandPoolDescriptor;
-struct CGPUCommandBufferDescriptor;
-struct CGPUShaderLibraryDescriptor;
-struct CGPUPipelineShaderDescriptor;
-struct CGPUResourceBarrierDescriptor;
-struct CGPUComputePipelineDescriptor;
-struct CGPURenderPipelineDescriptor;
-struct CGPUBufferDescriptor;
-struct CGPUTextureDescriptor;
-struct CGPUTextureViewDescriptor;
-struct CGPUTextureAliasingBindDescriptor;
-struct CGPUQueryPoolDescriptor;
-struct CGPUQueryDescriptor;
-struct CGPUMemoryPoolDescriptor;
-struct CGPUSamplerDescriptor;
-struct CGPUSwapChainDescriptor;
-struct CGPUAcquireNextDescriptor;
-struct CGPUQueueSubmitDescriptor;
-struct CGPUQueuePresentDescriptor;
-struct CGPUBufferToBufferTransfer;
-struct CGPUBufferToTextureTransfer;
-struct CGPUTextureToTextureTransfer;
-struct CGPUTextureToBufferTransfer;
-struct CGPURootSignatureDescriptor;
-struct CGPURootSignaturePoolDescriptor;
-struct CGPUDescriptorSetDescriptor;
-struct CGPURenderPassDescriptor;
-struct CGPUComputePassDescriptor;
-struct CGPUDescriptorSet;
-struct CGPUDescriptorData;
-struct CGPURenderPassEncoder;
-struct CGPUComputePassEncoder;
-struct CGPUGraphicsPipeline;
-struct CGPUComputePipeline;
-struct CGPUShaderReflection;
-struct CGPUPipelineReflection;
-struct CGPUDStorageQueueDescriptor;
-
-typedef uint32_t CGPUQueueIndex;
-#if defined(SKR_PLATFORM_WA32)
-typedef const host_ptr_t CGPUSurfaceId;
-typedef const host_ptr_t CGPUInstanceId;
-typedef const host_ptr_t CGPUAdapterId;
-typedef const host_ptr_t CGPUDeviceId;
-typedef const host_ptr_t CGPUQueueId;
-typedef const host_ptr_t CGPUSemaphoreId;
-typedef const host_ptr_t CGPUFenceId;
-typedef const host_ptr_t CGPUCommandPoolId;
-typedef const host_ptr_t CGPUCommandBufferId;
-typedef const host_ptr_t CGPUSwapChainId;
-typedef const host_ptr_t CGPUShaderLibraryId;
-typedef const host_ptr_t CGPURootSignatureId;
-typedef const host_ptr_t CGPURootSignaturePoolId;
-typedef const host_ptr_t CGPUDescriptorSetId;
-typedef const host_ptr_t CGPUMemoryPoolId;
-typedef const host_ptr_t CGPUBufferId;
-typedef const host_ptr_t CGPUTextureId;
-typedef const host_ptr_t CGPUSamplerId;
-typedef const host_ptr_t CGPUTextureViewId;
-typedef const host_ptr_t CGPUQueryPoolId;
-typedef const host_ptr_t CGPURenderPassEncoderId;
-typedef const host_ptr_t CGPUComputePassEncoderId;
-typedef const host_ptr_t CGPURenderPipelineId;
-typedef const host_ptr_t CGPUComputePipelineId;
-typedef const host_ptr_t CGPUShaderReflectionId;
-typedef const host_ptr_t CGPUPipelineReflectionId;
-typedef const host_ptr_t CGPUDStorageQueueId;
-typedef const host_ptr_t CGPUDStorageFileHandle;
-#else
-typedef const struct CGPUSurface_Dummy* CGPUSurfaceId;
-typedef const struct CGPUInstance* CGPUInstanceId;
-typedef const struct CGPUAdapter* CGPUAdapterId;
-typedef const struct CGPUDevice* CGPUDeviceId;
-typedef const struct CGPUQueue* CGPUQueueId;
-typedef const struct CGPUSemaphore* CGPUSemaphoreId;
-typedef const struct CGPUFence* CGPUFenceId;
-typedef const struct CGPUCommandPool* CGPUCommandPoolId;
-typedef const struct CGPUCommandBuffer* CGPUCommandBufferId;
-typedef const struct CGPUSwapChain* CGPUSwapChainId;
-typedef const struct CGPUShaderLibrary* CGPUShaderLibraryId;
-typedef const struct CGPURootSignature* CGPURootSignatureId;
-typedef const struct CGPURootSignaturePool* CGPURootSignaturePoolId;
-typedef const struct CGPUDescriptorSet* CGPUDescriptorSetId;
-typedef const struct CGPUMemoryPool* CGPUMemoryPoolId;
-typedef const struct CGPUBuffer* CGPUBufferId;
-typedef const struct CGPUTexture* CGPUTextureId;
-typedef const struct CGPUSampler* CGPUSamplerId;
-typedef const struct CGPUTextureView* CGPUTextureViewId;
-typedef const struct CGPUQueryPool* CGPUQueryPoolId;
-typedef const struct CGPURenderPassEncoder* CGPURenderPassEncoderId;
-typedef const struct CGPUComputePassEncoder* CGPUComputePassEncoderId;
-typedef const struct CGPURenderPipeline* CGPURenderPipelineId;
-typedef const struct CGPUComputePipeline* CGPUComputePipelineId;
-typedef const struct CGPUShaderReflection* CGPUShaderReflectionId;
-typedef const struct CGPUPipelineReflection* CGPUPipelineReflectionId;
-typedef const struct CGPUDStorageQueue* CGPUDStorageQueueId;
-typedef const struct CGPUDStorageFile* CGPUDStorageFileHandle;
-#endif
 static const CGPUBufferId CGPU_BUFFER_OUT_OF_HOST_MEMORY = (CGPUBufferId)1;
 static const CGPUBufferId CGPU_BUFFER_OUT_OF_DEVICE_MEMORY = (CGPUBufferId)3;
 
@@ -450,6 +399,7 @@ typedef struct CGPUDStorageTextureIODescriptor {
     CGPUFenceId fence;
     const char* name;
 } CGPUDStorageTextureIODescriptor;
+
 RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
 typedef ECGPUDStorageAvailability (*CGPUProcQueryDStorageAvailability)(CGPUDeviceId device);
 RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
@@ -1404,9 +1354,9 @@ typedef struct CGPUSampler {
 
 #pragma endregion DESCRIPTORS
 
-#define SINGLE_GPU_NODE_COUNT 1
-#define SINGLE_GPU_NODE_MASK 1
-#define SINGLE_GPU_NODE_INDEX 0
+#define CGPU_SINGLE_GPU_NODE_COUNT 1
+#define CGPU_SINGLE_GPU_NODE_MASK 1
+#define CGPU_SINGLE_GPU_NODE_INDEX 0
 
 #ifdef __cplusplus
 } // end extern "C"
