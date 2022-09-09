@@ -8,6 +8,162 @@ namespace skr
 {
 namespace render_graph
 {
+
+TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc)
+    : device(device)
+    , texture(desc.texture)
+    , format(desc.format)
+    , usages(desc.usages)
+    , aspects(desc.aspects)
+    , dims(desc.dims)
+    , base_array_layer(desc.base_array_layer)
+    , array_layer_count(desc.array_layer_count)
+    , base_mip_level(desc.base_mip_level)
+    , mip_level_count(desc.mip_level_count)
+    , tex_width(desc.texture->width)
+    , tex_height(desc.texture->height)
+{
+
+}
+
+uint32_t TextureViewPool::erase(CGPUTextureId texture)
+{
+    auto prev_size = (uint32_t)views.size();
+    for (auto it = views.begin(); it != views.end();)
+    {
+        if (it->first.texture == texture)
+        {
+            cgpu_free_texture_view(it->second.texture_view);
+            it = views.erase(it);
+        }
+        else
+            ++it;
+    }
+    return prev_size - (uint32_t)views.size();
+}
+
+TextureViewPool::Key::operator size_t() const
+{
+    return skr_hash(this, sizeof(*this), (size_t)device);
+}
+
+void TextureViewPool::initialize(CGPUDeviceId device_)
+{
+    device = device_;
+}
+
+void TextureViewPool::finalize()
+{
+    for (auto&& view : views)
+    {
+        cgpu_free_texture_view(view.second.texture_view);
+    }
+    views.clear();
+}
+
+CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index)
+{
+    const TextureViewPool::Key key(device, desc);
+    auto&& found = views.find(key);
+    if (found != views.end() && found->first.texture == key.texture)
+    {
+        found->second.mark.frame_index = frame_index;
+        SKR_ASSERT(found->first.texture);
+        return found->second.texture_view;
+    }
+    else
+    {
+        CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
+        AllocationMark mark = {frame_index, 0};
+        views[key] = PooledTextureView(new_view, mark);
+        return new_view;
+    }
+}
+
+BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
+    : device(device)
+    , descriptors(desc.descriptors)
+    , memory_usage(desc.memory_usage)
+    , format(desc.format)
+    , flags(desc.flags)
+    , first_element(desc.first_element)
+    , elemet_count(desc.elemet_count)
+    , element_stride(desc.element_stride)
+{
+}
+
+BufferPool::Key::operator size_t() const
+{
+    return skr_hash(this, sizeof(*this), (size_t)device);
+}
+
+void BufferPool::initialize(CGPUDeviceId device_)
+{
+    device = device_;
+}
+
+void BufferPool::finalize()
+{
+    for (auto&& [key, queue] : buffers)
+    {
+        while (!queue.empty())
+        {
+            cgpu_free_buffer(queue.front().buffer);
+            queue.pop_front();
+        }
+    }
+}
+
+eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
+{
+    eastl::pair<CGPUBufferId, ECGPUResourceState> allocated = {
+        nullptr, CGPU_RESOURCE_STATE_UNDEFINED
+    };
+    auto key = make_zeroed<BufferPool::Key>(device, desc);
+    int32_t found_index = -1;
+    for (uint32_t i = 0; i < buffers[key].size(); ++i)
+    {
+        auto&& pooled = buffers[key][i];
+        if (pooled.mark.frame_index <= min_frame_index && pooled.buffer->size >= desc.size)
+        {
+            found_index = i;
+            break;
+        }
+    }
+    if ( found_index > 0 )
+    {
+        PooledBuffer found = buffers[key][found_index];
+        buffers[key].erase(buffers[key].begin() + found_index);
+        buffers[key].emplace_front(found.buffer, found.state, mark);
+    }
+    if ( found_index < 0 )
+    {
+        auto new_buffer = cgpu_create_buffer(device, &desc);
+        buffers[key].emplace_front(new_buffer, desc.start_state , mark);
+    }
+    allocated = { buffers[key].front().buffer, buffers[key].front().state };
+    buffers[key].pop_front();
+    return allocated;
+}
+
+void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, AllocationMark mark)
+{
+    auto key = make_zeroed<BufferPool::Key>(device, desc);
+    for (auto&& iter : buffers[key])
+    {
+        if (iter.buffer == buffer) 
+            return;
+    }
+    buffers[key].emplace_back(buffer, final_state, mark);
+}
+
+}
+}
+
+namespace skr
+{
+namespace render_graph
+{
 RenderGraphBackend::RenderGraphBackend(const RenderGraphBuilder& builder)
     : RenderGraph(builder)
     , gfx_queue(builder.gfx_queue)
