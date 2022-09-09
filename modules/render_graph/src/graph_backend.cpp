@@ -247,7 +247,7 @@ CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor
 
 uint64_t RenderGraphBackend::get_latest_finished_frame() SKR_NOEXCEPT
 {
-    uint64_t result = 0;
+    uint64_t result = frame_index - RG_MAX_FRAME_IN_FLIGHT;
     for (auto&& executor : executors)
     {
         if (!executor.exec_fence) continue;
@@ -880,6 +880,11 @@ uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame,
 
 uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
+    if (critical_frame > get_latest_finished_frame())
+    {
+        SKR_LOG_ERROR("undone frame on GPU detected, collect texture garbage may cause GPU Crash!!"
+                      "\n\tcurrent: %d, latest finished: %d", critical_frame, get_latest_finished_frame());
+    }
     uint32_t total_count = 0;
     for (auto&& [key, queue] : texture_pool.textures)
     {
@@ -907,6 +912,11 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
 
 uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
+    if (critical_frame > get_latest_finished_frame())
+    {
+        SKR_LOG_ERROR("undone frame on GPU detected, collect buffer garbage may cause GPU Crash!!"
+                      "\n\tcurrent: %d, latest finished: %d", critical_frame, get_latest_finished_frame());
+    }
     uint32_t total_count = 0;
     for (auto&& [key, queue] : buffer_pool.buffers)
     {
