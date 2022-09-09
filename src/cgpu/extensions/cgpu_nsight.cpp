@@ -128,7 +128,6 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
             dumpFile.write((const char*)pGpuCrashDump, gpuCrashDumpSize);
             dumpFile.close();
         }
-
         // Destroy the GPU crash dump decoder object.
         AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_DestroyDecoder(decoder));
     }
@@ -140,6 +139,12 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         void* pUserData)
     {
         SKR_LOG_INFO("NSIGHT GPU Crash Dump Callback");
+        for (auto tracker : _this->all_trackers)
+        {
+            auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);
+            if (auto callback = tracker_impl->descriptor.crash_dump_callback)
+                callback(pGpuCrashDump, gpuCrashDumpSize, tracker_impl->descriptor.user_data);
+        }
         ((CGPUNSightSingletonImpl*)_this)->WriteGpuCrashDumpToFile(pGpuCrashDump, gpuCrashDumpSize);
     }
 
@@ -150,7 +155,12 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         void* pUserData)
     {
         SKR_LOG_INFO("NSIGHT Shader Debug Info Callback");
-
+        for (auto tracker : _this->all_trackers)
+        {
+            auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);
+            if (auto callback = tracker_impl->descriptor.shader_debug_info_callback)
+                callback(pShaderDebugInfo, shaderDebugInfoSize, tracker_impl->descriptor.user_data);
+        }
     }
 
     // GPU crash dump description callback.
@@ -159,10 +169,16 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         void* pUserData)
     {
         SKR_LOG_INFO("NSIGHT Dump Description Callback");
-
+        for (auto tracker : _this->all_trackers)
+        {
+            auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);
+            if (auto callback = tracker_impl->descriptor.crash_dump_description_callback)
+                callback(addDescription, tracker_impl->descriptor.user_data);
+        }
     }
 
     // App-managed marker resolve callback
+    // Markers are desperated now, we use vkCmdFillBuffer & ID3D12GraphicsCommandList2::WriteBufferImmediate instead
     static void ResolveMarkerCallback(
         const void* pMarker,
         void* pUserData,
@@ -171,7 +187,6 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     )
     {
         SKR_LOG_INFO("NSIGHT Resolve Marker Callback");
-
     }
 
     skr::SharedLibrary nsight_library;
@@ -262,7 +277,8 @@ CGPUNSightSingleton* CGPUNSightSingleton::Get() SKR_NOEXCEPT
     return _this;
 }
 
-CGPUNSightTrackerBase::CGPUNSightTrackerBase() SKR_NOEXCEPT
+CGPUNSightTrackerBase::CGPUNSightTrackerBase(const CGPUNSightTrackerDescriptor* pdesc) SKR_NOEXCEPT
+    : descriptor(*pdesc)
 {
     singleton = CGPUNSightSingleton::Get();
     singleton->register_tracker(this);
@@ -276,7 +292,7 @@ CGPUNSightTrackerBase::~CGPUNSightTrackerBase() SKR_NOEXCEPT
 
 CGPUNSightTrackerId cgpu_create_nsight_tracker(CGPUInstanceId instance, const CGPUNSightTrackerDescriptor* descriptor)
 {
-    return cgpu_new<CGPUNSightTrackerBase>();
+    return cgpu_new<CGPUNSightTrackerBase>(descriptor);
 }
 
 void cgpu_free_nsight_tracker(CGPUNSightTrackerId tracker)

@@ -21,9 +21,10 @@ struct CGPUNSightSingleton
 
 struct CGPUNSightTrackerBase : public CGPUNSightTracker
 {
-    CGPUNSightTrackerBase() SKR_NOEXCEPT;
+    CGPUNSightTrackerBase(const CGPUNSightTrackerDescriptor* pdesc) SKR_NOEXCEPT;
     virtual ~CGPUNSightTrackerBase() SKR_NOEXCEPT;
 
     std::mutex mutex;
     CGPUNSightSingleton* singleton;
+    CGPUNSightTrackerDescriptor descriptor;
 };
