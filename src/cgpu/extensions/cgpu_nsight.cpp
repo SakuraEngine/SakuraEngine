@@ -207,6 +207,7 @@ CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
     bool nsight = nsight_library.load("GFSDK_Aftermath_Lib.dll") && llvm;
     if (nsight)
     {
+        SKR_LOG_INFO("NSIGHT Loaded");
         if (nsight_library.hasSymbol("GFSDK_Aftermath_EnableGpuCrashDumps"))
         {
             auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_EnableGpuCrashDumps");
@@ -243,6 +244,10 @@ CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
             aftermath_GpuCrashDump_DestroyDecoder = (PFN_GFSDK_Aftermath_GpuCrashDump_DestroyDecoder)addr;
         }
     }
+    else
+    {
+        SKR_LOG_INFO("NSIGHT dll not found");
+    }
     if (aftermath_EnableGpuCrashDumps)
     {
         AFTERMATH_CHECK_ERROR(aftermath_EnableGpuCrashDumps(
@@ -264,8 +269,8 @@ CGPUNSightSingletonImpl::~CGPUNSightSingletonImpl() SKR_NOEXCEPT
         aftermath_DisableGpuCrashDumps();
         SKR_LOG_TRACE("NSIGHT Aftermath Disabled");
     }
-    nsight_library.unload();
-    llvm_library.unload();
+    if (nsight_library.isLoaded()) nsight_library.unload();
+    if (llvm_library.isLoaded()) llvm_library.unload();
 }
 
 CGPUNSightSingleton* CGPUNSightSingleton::Get() SKR_NOEXCEPT
