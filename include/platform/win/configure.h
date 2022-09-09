@@ -9,7 +9,7 @@
     #include <stdio.h>
 
     #ifdef _DEBUG
-        #include "assert.h"
+        #include <assert.h>
     #else
         #ifndef assert
             #define assert(expr) (void)(expr);

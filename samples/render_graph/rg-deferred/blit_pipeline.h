@@ -2,8 +2,7 @@
 #include "math/vectormath.hpp"
 #include "../../cgpu/common/utils.h"
 
-CGPURenderPipelineId create_blit_render_pipeline(CGPUDeviceId device, CGPUSamplerId static_sampler,
-ECGPUFormat output_format)
+CGPURenderPipelineId create_blit_render_pipeline(CGPUDeviceId device, CGPUSamplerId static_sampler, ECGPUFormat output_format)
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;

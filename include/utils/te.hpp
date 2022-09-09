@@ -18,7 +18,6 @@ not defined(__cpp_delegating_constructors)
     #include "platform/memory.h"
     #include <type_traits>
     #include <utility>
-    #include <stdexcept>
     #include <memory>
 
 namespace boost
@@ -141,8 +140,9 @@ struct dynamic_storage {
         , copy{ [](const void* self) -> void* {
             if constexpr (std::is_copy_constructible_v<T_>)
                 return SkrNew<T_>(*reinterpret_cast<const T_*>(self));
-            else
-                throw std::runtime_error("dynamic_storage : erased type is not copy constructible");
+            return nullptr;
+            //else
+            //    throw std::runtime_error("dynamic_storage : erased type is not copy constructible");
         } }
     {
     }
@@ -216,14 +216,16 @@ struct local_storage {
         , copy{ [](const void* self, void* mem) -> void* {
             if constexpr (std::is_copy_constructible_v<T_>)
                 return new (mem) T_{ *reinterpret_cast<const T_*>(self) };
-            else
-                throw std::runtime_error("local_storage : erased type is not copy constructible");
+            return nullptr;
+            //else
+            //    throw std::runtime_error("local_storage : erased type is not copy constructible");
         } }
         , move{ [](void* self, void* mem) -> void* {
             if constexpr (std::is_move_constructible_v<T_>)
                 return new (mem) T_{ std::move(*reinterpret_cast<T_*>(self)) };
-            else
-                throw std::runtime_error("local_storage : erased type is not move constructible");
+            return nullptr;
+            //else
+            //    throw std::runtime_error("local_storage : erased type is not move constructible");
         } }
     {
         static_assert(sizeof(T_) <= Size, "insufficient size");
@@ -310,14 +312,16 @@ struct sbo_storage {
         , copy{ [](const void* self, void* mem) -> void* {
             if constexpr (std::is_copy_constructible_v<T_>)
                 return new (mem) T_{ *reinterpret_cast<const T_*>(self) };
-            else
-                throw std::runtime_error("sbo_storage : erased type is not copy constructible");
+            return nullptr;
+            //else
+            //    throw std::runtime_error("sbo_storage : erased type is not copy constructible");
         } }
         , move{ [](void*& self, void* mem) -> void* {
             if constexpr (std::is_move_constructible_v<T_>)
                 return new (mem) T_{ std::move(*reinterpret_cast<T_*>(self)) };
-            else
-                throw std::runtime_error("sbo_storage : erased type is not move constructible");
+            return nullptr;
+            //else
+            //    throw std::runtime_error("sbo_storage : erased type is not move constructible");
         } }
     {
     }
@@ -335,8 +339,9 @@ struct sbo_storage {
         , copy{ [](const void* self, void*) -> void* {
             if constexpr (std::is_copy_constructible_v<T_>)
                 return SkrNew<T_>(*reinterpret_cast<const T_*>(self));
-            else
-                throw std::runtime_error("dynamic_storage : erased type is not copy constructible");
+            return nullptr;
+            //else
+            //    throw std::runtime_error("dynamic_storage : erased type is not copy constructible");
         } }
         , move{ [](void*& self, void*) {
             return detail::exchange(self, nullptr);
