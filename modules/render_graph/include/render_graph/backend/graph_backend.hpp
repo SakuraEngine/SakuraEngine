@@ -53,8 +53,11 @@ public:
             cgpu_free_texture(aliasing_texture);
         }
         aliasing_textures.clear();
+
         marker_idx = 0;
         marker_messages.clear();
+        valid_marker_val++;
+
         cgpu_reset_command_pool(gfx_cmd_pool);
         cgpu_cmd_begin(gfx_cmd_buf);
         write_marker("Frame Begin");
@@ -62,7 +65,7 @@ public:
 
     void write_marker(const char* message)
     {
-        cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, 1);
+        cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, valid_marker_val);
         marker_messages.push_back(message);
     }
 
@@ -73,13 +76,13 @@ public:
         SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
         for (uint32_t i = 0; i < marker_messages.size(); i++)
         {
-            if (fill_data[i] == 0)
+            if (fill_data[i] != valid_marker_val)
             {
-                SKR_LOG_ERROR("\tFailed Command %d: %s", i, marker_messages[i].c_str());
+                SKR_LOG_ERROR("\tFailed Command %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
             }
             else
             {
-                SKR_LOG_INFO("\tCommand %d: %s", i, marker_messages[i].c_str());
+                SKR_LOG_INFO("\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
             }
         }
     }
@@ -111,6 +114,7 @@ public:
 
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
+    uint32_t valid_marker_val = 1;
     eastl::vector<eastl::string> marker_messages;
 };
 
