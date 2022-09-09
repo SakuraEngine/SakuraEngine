@@ -14,6 +14,7 @@ option_end()
 project_cxflags = {}
 project_mxflags = {}
 if(has_config("is_clang")) then
+    table.insert(project_cxflags, "-Wno-unused-command-line-argument")
     table.insert(project_cxflags, "-Wno-format")
     table.insert(project_cxflags, "-Wno-switch")
     table.insert(project_cxflags, "-Wno-unknown-pragmas")
@@ -26,11 +27,14 @@ end
 
 if(has_config("is_msvc")) then
     table.insert(project_cxflags, "/FC")
-    table.insert(project_cxflags, "/EHsc")
     table.insert(project_cxflags, "/GR-")
     table.insert(project_cxflags, "/wd4251")
-    if(has_config("is_clang")) then
-        table.insert(project_cxflags, "-fexceptions")
-        table.insert(project_cxflags, "-fcxx-exceptions")
-    end
+end
+
+-- exceptions
+if(has_config("is_msvc")) then
+    table.insert(project_cxflags, "/EHsc")
+elseif(has_config("is_clang")) then
+    table.insert(project_cxflags, "-fexceptions")
+    table.insert(project_cxflags, "-fcxx-exceptions")
 end

@@ -223,7 +223,7 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
     {
         static uint64_t submit_index = 0;
         auto D = (CGPUDevice_D3D12*)F->super.device;
-        HANDLE event_handle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+        HANDLE event_handle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
         CGPUDStorageQueueD3D12::ProfileTracer* tracer = nullptr;
         {
             SMutexLock profile_lock(Q->profile_mutex);
