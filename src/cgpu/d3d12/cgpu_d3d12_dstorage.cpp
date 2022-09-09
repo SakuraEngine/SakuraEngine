@@ -2,10 +2,7 @@
 #include "d3d12_utils.h"
 #include "../common/common_utils.h"
 
-#if !defined(XBOX)
-    #pragma comment(lib, "dstorage.lib")
-#endif
-
+#include "platform/shared_library.h"
 #include "dstorage.h"
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
@@ -49,14 +46,31 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     }
 };
 
+static skr::SharedLibrary dstorage_library;
+static skr::SharedLibrary dstorage_core;
+static bool dstorage_dll_dont_exist = false;
+
 thread_local static eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
 static uint64_t sDirectStorageStagingBufferSize = DSTORAGE_STAGING_BUFFER_SIZE_32MB;
 inline static IDStorageFactory* GetDStorageFactory()
 {
     static IDStorageFactory* pFactory = nullptr;
-    if (!pFactory)
+    if (!pFactory && !dstorage_dll_dont_exist)
     {
-        if (!SUCCEEDED(DStorageGetFactory(IID_PPV_ARGS(&pFactory))))
+        if (!dstorage_core.isLoaded()) dstorage_core.load("dstoragecore.dll");
+        if (!dstorage_library.isLoaded()) dstorage_library.load("dstorage.dll");
+        if (!dstorage_core.isLoaded() || !dstorage_library.isLoaded())
+        {
+            if (!dstorage_core.isLoaded()) SKR_LOG_INFO("dstoragecore.dll not found, direct storage is disabled");
+            if (!dstorage_library.isLoaded()) SKR_LOG_INFO("dstorage.dll not found, direct storage is disabled");
+            dstorage_dll_dont_exist = true;
+            return nullptr;
+        }
+        auto pfn_get_factory = 
+            (decltype(DStorageGetFactory)*)dstorage_library.getRawAddress("DStorageGetFactory");
+        if (!pfn_get_factory) return nullptr;
+        
+        if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&pFactory))))
         {
             SKR_LOG_ERROR("Failed to get DStorage factory!");
             return nullptr;
@@ -93,6 +107,7 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
     queueDesc.Name = desc->name;
     if(Device) queueDesc.Device = Device->pDxDevice;
     IDStorageFactory* pFactory = ::GetDStorageFactory();
+    if (!pFactory) return nullptr;
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
         SKR_LOG_ERROR("Failed to create DStorage queue!");
@@ -485,6 +500,7 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
 void cgpu_win_dstorage_set_staging_buffer_size(uint64_t size)
 {
     IDStorageFactory* pFactory = GetDStorageFactory();
+    if (!pFactory) return;
     pFactory->SetStagingBufferSize((uint32_t)size);
     sDirectStorageStagingBufferSize = size;
 }
@@ -492,6 +508,7 @@ void cgpu_win_dstorage_set_staging_buffer_size(uint64_t size)
 skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service()
 {
     IDStorageFactory* pFactory = GetDStorageFactory();
+    if (!pFactory) return nullptr;
     IDStorageCustomDecompressionQueue* pCompressionQueue = nullptr;
     if (!SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&pCompressionQueue))))
     {
