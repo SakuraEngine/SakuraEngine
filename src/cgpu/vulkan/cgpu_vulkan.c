@@ -1524,7 +1524,7 @@ CGPUCommandBufferId cgpu_create_command_buffer_vulkan(CGPUCommandPoolId pool, co
     cgpu_assert(Cmd);
 
     Cmd->mType = Q->super.type;
-    Cmd->mNodeIndex = SINGLE_GPU_NODE_MASK;
+    Cmd->mNodeIndex = CGPU_SINGLE_GPU_NODE_MASK;
 
     VkCommandBufferAllocateInfo alloc_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -2448,7 +2448,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
         Ts[i].super.width = extent.width;
         Ts[i].super.height = extent.height;
         Ts[i].super.mip_levels = 1;
-        Ts[i].super.node_index = SINGLE_GPU_NODE_INDEX;
+        Ts[i].super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
         Ts[i].super.owns_image = false;
     }
     CGPUTextureId* Vs = (CGPUTextureId*)(Ts + buffer_count);

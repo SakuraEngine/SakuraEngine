@@ -183,11 +183,11 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
         D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pCPUDescriptorHeaps[i]);
     }
     // One shader visible heap for each linked node
-    for (uint32_t i = 0; i < SINGLE_GPU_NODE_COUNT; ++i)
+    for (uint32_t i = 0; i < CGPU_SINGLE_GPU_NODE_COUNT; ++i)
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        desc.NodeMask = SINGLE_GPU_NODE_MASK;
+        desc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
 
         desc.NumDescriptors = 1 << 16;
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -224,7 +224,7 @@ void cgpu_query_video_memory_info_d3d12(const CGPUDeviceId device, uint64_t* tot
     const CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)device->adapter;
     DXGI_QUERY_VIDEO_MEMORY_INFO info = {};
     A->pDxActiveGPU->QueryVideoMemoryInfo(
-        SINGLE_GPU_NODE_INDEX, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info);
+        CGPU_SINGLE_GPU_NODE_INDEX, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info);
     *total = info.Budget;
     *used_bytes = info.CurrentUsage;
 }
@@ -234,7 +234,7 @@ void cgpu_query_shared_memory_info_d3d12(const CGPUDeviceId device, uint64_t* to
     const CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)device->adapter;
     DXGI_QUERY_VIDEO_MEMORY_INFO info = {};
     A->pDxActiveGPU->QueryVideoMemoryInfo(
-        SINGLE_GPU_NODE_INDEX, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &info);
+        CGPU_SINGLE_GPU_NODE_INDEX, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &info);
     *total = info.Budget;
     *used_bytes = info.CurrentUsage;
 }
@@ -508,7 +508,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     // #NOTE : In non SLI mode, mNodeCount will be 0 which sets nodeMask to
     // default value
     CHECK_HRESULT(D->pDxDevice->CreateRootSignature(
-        SINGLE_GPU_NODE_MASK,
+        CGPU_SINGLE_GPU_NODE_MASK,
         rootSignatureString->GetBufferPointer(),
         rootSignatureString->GetBufferSize(),
         IID_ARGS(&RS->pDxRootSignature)));
@@ -545,7 +545,7 @@ CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const 
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
     const CGPURootSignature_D3D12* RS = (const CGPURootSignature_D3D12*)desc->root_signature;
     CGPUDescriptorSet_D3D12* Set = cgpu_new<CGPUDescriptorSet_D3D12>();
-    const uint32_t nodeIndex = SINGLE_GPU_NODE_INDEX;
+    const uint32_t nodeIndex = CGPU_SINGLE_GPU_NODE_INDEX;
     struct D3D12Util_DescriptorHeap* pCbvSrvUavHeap = D->pCbvSrvUavHeaps[nodeIndex];
     struct D3D12Util_DescriptorHeap* pSamplerHeap = D->pSamplerHeaps[nodeIndex];
     (void)pSamplerHeap;
@@ -605,7 +605,7 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
     const CGPURootSignature_D3D12* RS = (const CGPURootSignature_D3D12*)set->root_signature;
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)set->root_signature->device;
     CGPUParameterTable* ParamTable = &RS->super.tables[set->index];
-    const uint32_t nodeIndex = SINGLE_GPU_NODE_INDEX;
+    const uint32_t nodeIndex = CGPU_SINGLE_GPU_NODE_INDEX;
     struct D3D12Util_DescriptorHeap* pCbvSrvUavHeap = D->pCbvSrvUavHeaps[nodeIndex];
     struct D3D12Util_DescriptorHeap* pSamplerHeap = D->pSamplerHeaps[nodeIndex];
     for (uint32_t i = 0; i < count; i++)
@@ -752,7 +752,7 @@ CGPUComputePipelineId cgpu_create_compute_pipeline_d3d12(CGPUDeviceId device, co
     pipeline_state_desc.CS = CS;
     pipeline_state_desc.CachedPSO = cached_pso_desc;
     pipeline_state_desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-    pipeline_state_desc.NodeMask = SINGLE_GPU_NODE_MASK;
+    pipeline_state_desc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
     // Pipeline cache
     HRESULT result = E_FAIL;
     wchar_t pipelineName[PSO_NAME_LENGTH] = {};
@@ -903,7 +903,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     DECLARE_ZERO(D3D12_GRAPHICS_PIPELINE_STATE_DESC, pipeline_state_desc);
     pipeline_state_desc.pRootSignature = RS->pDxRootSignature;
     // Single GPU
-    pipeline_state_desc.NodeMask = SINGLE_GPU_NODE_MASK;
+    pipeline_state_desc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
     pipeline_state_desc.VS = VS;
     pipeline_state_desc.PS = PS;
     pipeline_state_desc.DS = DS;
@@ -1052,7 +1052,7 @@ CGPUQueryPoolId cgpu_create_query_pool_d3d12(CGPUDeviceId device, const struct C
 
     D3D12_QUERY_HEAP_DESC Desc = {};
     Desc.Count = desc->query_count;
-    Desc.NodeMask = SINGLE_GPU_NODE_MASK;
+    Desc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
     Desc.Type = D3D12Util_ToD3D12QueryHeapType(desc->type);
     D->pDxDevice->CreateQueryHeap(&Desc, IID_ARGS(&pQueryPool->pDxQueryHeap));
 
@@ -1240,7 +1240,7 @@ CGPUCommandBufferId cgpu_create_command_buffer_d3d12(CGPUCommandPoolId pool, con
     cgpu_assert(Cmd);
 
     // set command pool of new command
-    Cmd->mNodeIndex = SINGLE_GPU_NODE_INDEX;
+    Cmd->mNodeIndex = CGPU_SINGLE_GPU_NODE_INDEX;
     Cmd->mType = Q->super.type;
 
     Cmd->pBoundHeaps[0] = D->pCbvSrvUavHeaps[Cmd->mNodeIndex];
@@ -1867,7 +1867,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
         Ts[i].super.width = desc->width;
         Ts[i].super.height = desc->height;
         Ts[i].super.mip_levels = 1;
-        Ts[i].super.node_index = SINGLE_GPU_NODE_INDEX;
+        Ts[i].super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
         Ts[i].super.owns_image = false;
     }
     CGPUTextureId* Vs = (CGPUTextureId*)(Ts + buffer_count);
