@@ -56,8 +56,19 @@ struct CGPURuntimeTable {
         new_queue.queue = queue;
         created_queues.push_back(new_queue);
     }
+    ~CGPURuntimeTable()
+    {
+        for (auto [name, callback] : custom_sweep_callbacks)
+        {
+            if (custom_data_map.find(name) != custom_data_map.end())
+            {
+                callback();
+            }
+        }
+    }
     eastl::vector<CreatedQueue> created_queues;
     eastl::string_map<void*> custom_data_map;
+    eastl::string_map<eastl::function<void()>> custom_sweep_callbacks;
 };
 
 struct CGPURuntimeTable* cgpu_create_runtime_table()
@@ -83,6 +94,13 @@ CGPUQueueId cgpu_runtime_table_try_get_queue(CGPUDeviceId device, ECGPUQueueType
 void cgpu_runtime_table_add_custom_data(struct CGPURuntimeTable* table, const char* key, void* data)
 {
     table->custom_data_map[key] = data;
+}
+
+void cgpu_runtime_table_add_sweep_callback(struct CGPURuntimeTable* table, const char* key, void(pfn)(void*), void* usrdata)
+{
+    table->custom_sweep_callbacks[key] = [=](){
+        pfn(usrdata);
+    };
 }
 
 void* cgpu_runtime_table_try_get_custom_data(struct CGPURuntimeTable* table, const char* key)

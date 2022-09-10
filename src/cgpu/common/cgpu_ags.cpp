@@ -40,6 +40,15 @@ struct CGPUAMDAGSSingleton
         }
         return _this->dll_dont_exist ? nullptr : _this;
     }
+
+    ~CGPUAMDAGSSingleton()
+    {
+        if (_agsDeInitialize) _agsDeInitialize(pAgsContext);
+        ags_library.unload();
+
+        SKR_LOG_TRACE("AMD AGS unloaded");
+    }
+
     SKR_SHARED_LIB_API_PFN(agsInitialize) _agsInitialize = nullptr;
     SKR_SHARED_LIB_API_PFN(agsDeInitialize) _agsDeInitialize = nullptr;
 
@@ -66,6 +75,10 @@ ECGPUAGSReturnCode cgpu_ags_init(struct CGPUInstance* Inst)
         char* stopstring;
         _this->driverVersion = strtoul(_this->gAgsGpuInfo.driverVersion, &stopstring, 10);
     }
+    else
+    {
+        SkrDelete(_this);
+    }
     return Inst->ags_status;
 #else
     return CGPU_AGS_NONE;
@@ -76,7 +89,7 @@ uint32_t cgpu_ags_get_driver_version(CGPUInstanceId instance)
 {
 #if defined(AMDAGS)
     auto _this = CGPUAMDAGSSingleton::Get(instance);
-    if (_this) return 0;
+    if (!_this) return 0;
     
     return _this->driverVersion;
 #endif
@@ -87,8 +100,8 @@ void cgpu_ags_exit(CGPUInstanceId instance)
 {
 #if defined(AMDAGS)
     auto _this = CGPUAMDAGSSingleton::Get(instance);
-    if (_this) return;
+    if (!_this) return;
 
-    _this->_agsDeInitialize(_this->pAgsContext);
+    SkrDelete(_this);
 #endif
 }

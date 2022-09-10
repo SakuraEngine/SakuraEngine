@@ -16,6 +16,7 @@
 // Instance Helpers
 void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* I, uint32_t* count, bool* foundSoftwareAdapter);
 bool D3D12Util_InitializeEnvironment(struct CGPUInstance* Inst);
+void D3D12Util_DeInitializeEnvironment(struct CGPUInstance* Inst);
 void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstanceDescriptor const* descriptor);
 
 // Device Helpers

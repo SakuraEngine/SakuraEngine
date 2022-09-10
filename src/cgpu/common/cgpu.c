@@ -85,8 +85,9 @@ RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance)
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->free_instance && "free_instance Proc Missing!");
 
-    cgpu_free_runtime_table(instance->runtime_table);
+    struct CGPURuntimeTable* runtime_table = instance->runtime_table;
     instance->proc_table->free_instance(instance);
+    cgpu_free_runtime_table(runtime_table);
 }
 
 void cgpu_enum_adapters(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num)

@@ -56,7 +56,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             B->pDxResource = nullptr;
         else
         {
-            SKR_LOG_DEBUG("[D3D12] Create CVV Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+            SKR_LOG_TRACE("[D3D12] Create CVV Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                 desc->name ? desc->name : "", allocationSize, desc->format);
         }
     }
@@ -74,14 +74,14 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
             CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
             &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
-            SKR_LOG_DEBUG("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+            SKR_LOG_TRACE("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                 desc->name ? desc->name : "", allocationSize, desc->format);
         }
         else
         {
             CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, res_states, 
             NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
-            SKR_LOG_DEBUG("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+            SKR_LOG_TRACE("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                 desc->name ? desc->name : "", allocationSize, desc->format);
         }
     }
@@ -585,7 +585,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                         is_dedicated = true;
                         can_alias_allocation = false;
                         pDxAllocation = nullptr;
-                        SKR_LOG_DEBUG("[D3D12] Create Texture With Fallback Driver API Succeed!");
+                        SKR_LOG_TRACE("[D3D12] Create Texture With Fallback Driver API Succeed!");
                     }
                     else
                     {
@@ -596,10 +596,10 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
             }
             else
             {
-                SKR_LOG_DEBUG("[D3D12] Create Texture Resource Succeed! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
+                SKR_LOG_TRACE("[D3D12] Create Texture Resource Succeed! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
                     desc->name ? desc->name : "", desc->width, desc->height, 
                     desc->format, desc->sample_count);
-                SKR_LOG_DEBUG("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
+                SKR_LOG_TRACE("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
                     A->adapter_detail.format_supports[desc->format].render_target_write,
                     A->adapter_detail.format_supports[desc->format].shader_read,
                     A->adapter_detail.format_supports[desc->format].shader_write);
