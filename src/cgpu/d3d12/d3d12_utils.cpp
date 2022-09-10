@@ -57,6 +57,14 @@ bool D3D12Util_InitializeEnvironment(struct CGPUInstance* Inst)
     return true;
 }
 
+void D3D12Util_DeInitializeEnvironment(struct CGPUInstance* Inst)
+{
+    cgpu_ags_exit(Inst);
+    Inst->ags_status = CGPU_AGS_NONE;
+    cgpu_nvapi_exit(Inst);
+    Inst->nvapi_status = CGPU_NVAPI_NONE;
+}
+
 void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstanceDescriptor const* descriptor)
 {
     if (descriptor->enable_debug_layer)

@@ -202,7 +202,7 @@ CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
     bool nsight = nsight_library.load("GFSDK_Aftermath_Lib.dll") && llvm;
     if (nsight)
     {
-        SKR_LOG_INFO("NSIGHT Loaded");
+        SKR_LOG_INFO("NSIGHT loaded");
         aftermath_EnableGpuCrashDumps = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_EnableGpuCrashDumps);
         aftermath_DisableGpuCrashDumps = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_DisableGpuCrashDumps);
         aftermath_GpuCrashDump_CreateDecoder = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_GpuCrashDump_CreateDecoder);
@@ -231,13 +231,11 @@ CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
 
 CGPUNSightSingletonImpl::~CGPUNSightSingletonImpl() SKR_NOEXCEPT
 {
-    if (aftermath_DisableGpuCrashDumps)
-    {
-        aftermath_DisableGpuCrashDumps();
-        SKR_LOG_TRACE("NSIGHT Aftermath Disabled");
-    }
+    if (aftermath_DisableGpuCrashDumps) aftermath_DisableGpuCrashDumps();
     if (nsight_library.isLoaded()) nsight_library.unload();
     if (llvm_library.isLoaded()) llvm_library.unload();
+
+    SKR_LOG_TRACE("NSIGHT aftermath unloaded");
 }
 
 CGPUNSightSingleton* CGPUNSightSingleton::Get(CGPUInstanceId instance) SKR_NOEXCEPT

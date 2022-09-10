@@ -57,6 +57,7 @@ void cgpu_query_instance_features_d3d12(CGPUInstanceId instance, struct CGPUInst
 void cgpu_free_instance_d3d12(CGPUInstanceId instance)
 {
     CGPUInstance_D3D12* to_destroy = (CGPUInstance_D3D12*)instance;
+    D3D12Util_DeInitializeEnvironment(&to_destroy->super);
     if (to_destroy->mAdaptersCount > 0)
     {
         for (uint32_t i = 0; i < to_destroy->mAdaptersCount; i++)

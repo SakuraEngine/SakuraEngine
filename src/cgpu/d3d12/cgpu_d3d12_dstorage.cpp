@@ -68,6 +68,8 @@ struct CGPUDStorageSingleton
                 }
                 else
                 {
+                    SKR_LOG_INFO("dstorage.dll loaded");
+
                     auto pfn_get_factory = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageGetFactory);
                     if (!pfn_get_factory) return nullptr;
                     
@@ -79,8 +81,23 @@ struct CGPUDStorageSingleton
                 }
             }
             cgpu_runtime_table_add_custom_data(instance->runtime_table, CGPU_DSTORAGE_SINGLETON_NAME, _this);
+            auto sweep = +[](void* usrdata)
+            {
+                auto _this = (CGPUDStorageSingleton*)usrdata;
+                SkrDelete(_this);
+            };
+            cgpu_runtime_table_add_sweep_callback(instance->runtime_table, CGPU_DSTORAGE_SINGLETON_NAME, sweep, _this);
         }
         return _this->dstorage_dll_dont_exist ? nullptr : _this;
+    }
+
+    ~CGPUDStorageSingleton()
+    {
+        if (pFactory) pFactory->Release();
+        if (dstorage_core.isLoaded()) dstorage_core.unload();
+        if (dstorage_library.isLoaded()) dstorage_library.unload();
+        
+        SKR_LOG_TRACE("Direct Storage unloaded");
     }
 
     IDStorageFactory* pFactory = nullptr;
