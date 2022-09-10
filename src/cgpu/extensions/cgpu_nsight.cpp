@@ -8,9 +8,6 @@
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDump.h"
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDumpDecoding.h"
 
-uint32_t CGPUNSightSingleton::rc = 0;
-CGPUNSightSingleton* CGPUNSightSingleton::_this = nullptr;
-
 inline eastl::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
 {
     switch (result)
@@ -43,17 +40,12 @@ inline static void AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_Result _result)
     }
 }
 
-GFSDK_Aftermath_PFN(GFSDK_AFTERMATH_CALL *PFN_GFSDK_Aftermath_EnableGpuCrashDumps2)(
-    GFSDK_Aftermath_Version apiVersion, uint32_t watchedApis, uint32_t flags, 
-    PFN_GFSDK_Aftermath_GpuCrashDumpCb gpuCrashDumpCb, PFN_GFSDK_Aftermath_ShaderDebugInfoCb shaderDebugInfoCb, 
-    PFN_GFSDK_Aftermath_GpuCrashDumpDescriptionCb, PFN_GFSDK_Aftermath_ResolveMarkerCb, void* pUserData);
-
 void CGPUNSightSingleton::register_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT
 {
     trackers_mutex.lock();
     all_trackers.emplace_back(tracker);
     trackers_mutex.unlock();
-    CGPUNSightSingleton::rc = all_trackers.size();
+    CGPUNSightSingleton::rc = (uint32_t)all_trackers.size();
 }
 
 void CGPUNSightSingleton::remove_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT
@@ -61,11 +53,11 @@ void CGPUNSightSingleton::remove_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCE
     trackers_mutex.lock();
     all_trackers.erase(eastl::remove(all_trackers.begin(), all_trackers.end(), tracker));
     trackers_mutex.unlock();
-    CGPUNSightSingleton::rc = all_trackers.size();
+    CGPUNSightSingleton::rc = (uint32_t)all_trackers.size();
     if (!CGPUNSightSingleton::rc)
     {
-        cgpu_delete(CGPUNSightSingleton::Get());
-        CGPUNSightSingleton::_this = nullptr;
+        auto _this = (CGPUNSightSingleton*)cgpu_runtime_table_try_get_custom_data(tracker->instance->runtime_table, CGPU_NSIGNT_SINGLETON_NAME);
+        cgpu_delete(_this);
     }
 }
 
@@ -138,6 +130,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         const uint32_t gpuCrashDumpSize,
         void* pUserData)
     {
+        auto _this = (CGPUNSightSingleton*)pUserData;
         SKR_LOG_INFO("NSIGHT GPU Crash Dump Callback");
         for (auto tracker : _this->all_trackers)
         {
@@ -154,6 +147,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         const uint32_t shaderDebugInfoSize,
         void* pUserData)
     {
+        auto _this = (CGPUNSightSingleton*)pUserData;
         SKR_LOG_INFO("NSIGHT Shader Debug Info Callback");
         for (auto tracker : _this->all_trackers)
         {
@@ -168,6 +162,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         PFN_GFSDK_Aftermath_AddGpuCrashDumpDescription addDescription,
         void* pUserData)
     {
+        auto _this = (CGPUNSightSingleton*)pUserData;
         SKR_LOG_INFO("NSIGHT Dump Description Callback");
         for (auto tracker : _this->all_trackers)
         {
@@ -191,13 +186,13 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
 
     skr::SharedLibrary nsight_library;
     skr::SharedLibrary llvm_library;
-    PFN_GFSDK_Aftermath_EnableGpuCrashDumps2 aftermath_EnableGpuCrashDumps = nullptr;
-    PFN_GFSDK_Aftermath_DisableGpuCrashDumps aftermath_DisableGpuCrashDumps = nullptr;
-    PFN_GFSDK_Aftermath_GpuCrashDump_CreateDecoder aftermath_GpuCrashDump_CreateDecoder = nullptr;
-    PFN_GFSDK_Aftermath_GpuCrashDump_GetBaseInfo aftermath_GpuCrashDump_GetBaseInfo = nullptr;
-    PFN_GFSDK_Aftermath_GpuCrashDump_GetDescriptionSize aftermath_GpuCrashDump_GetDescriptionSize = nullptr;
-    PFN_GFSDK_Aftermath_GpuCrashDump_GetDescription aftermath_GpuCrashDump_GetDescription = nullptr;
-    PFN_GFSDK_Aftermath_GpuCrashDump_DestroyDecoder aftermath_GpuCrashDump_DestroyDecoder = nullptr;
+    SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_EnableGpuCrashDumps) aftermath_EnableGpuCrashDumps = nullptr;
+    SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_DisableGpuCrashDumps) aftermath_DisableGpuCrashDumps = nullptr;
+    SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_GpuCrashDump_CreateDecoder) aftermath_GpuCrashDump_CreateDecoder = nullptr;
+    SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_GpuCrashDump_GetBaseInfo) aftermath_GpuCrashDump_GetBaseInfo = nullptr;
+    SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_GpuCrashDump_GetDescriptionSize) aftermath_GpuCrashDump_GetDescriptionSize = nullptr;
+    SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_GpuCrashDump_GetDescription) aftermath_GpuCrashDump_GetDescription = nullptr;
+    SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_GpuCrashDump_DestroyDecoder) aftermath_GpuCrashDump_DestroyDecoder = nullptr;
 };
 
 
@@ -208,41 +203,13 @@ CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
     if (nsight)
     {
         SKR_LOG_INFO("NSIGHT Loaded");
-        if (nsight_library.hasSymbol("GFSDK_Aftermath_EnableGpuCrashDumps"))
-        {
-            auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_EnableGpuCrashDumps");
-            aftermath_EnableGpuCrashDumps = (PFN_GFSDK_Aftermath_EnableGpuCrashDumps2)addr;
-        }
-        if (nsight_library.hasSymbol("GFSDK_Aftermath_DisableGpuCrashDumps"))
-        {
-            auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_DisableGpuCrashDumps");
-            aftermath_DisableGpuCrashDumps = (PFN_GFSDK_Aftermath_DisableGpuCrashDumps)addr;
-        }
-        if (nsight_library.hasSymbol("GFSDK_Aftermath_GpuCrashDump_CreateDecoder"))
-        {
-            auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_GpuCrashDump_CreateDecoder");
-            aftermath_GpuCrashDump_CreateDecoder = (PFN_GFSDK_Aftermath_GpuCrashDump_CreateDecoder)addr;
-        }
-        if (nsight_library.hasSymbol("GFSDK_Aftermath_GpuCrashDump_GetBaseInfo"))
-        {
-            auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_GpuCrashDump_GetBaseInfo");
-            aftermath_GpuCrashDump_GetBaseInfo = (PFN_GFSDK_Aftermath_GpuCrashDump_GetBaseInfo)addr;
-        }
-        if (nsight_library.hasSymbol("GFSDK_Aftermath_GpuCrashDump_GetDescriptionSize"))
-        {
-            auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_GpuCrashDump_GetDescriptionSize");
-            aftermath_GpuCrashDump_GetDescriptionSize = (PFN_GFSDK_Aftermath_GpuCrashDump_GetDescriptionSize)addr;
-        }
-        if (nsight_library.hasSymbol("GFSDK_Aftermath_GpuCrashDump_GetDescription"))
-        {
-            auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_GpuCrashDump_GetDescription");
-            aftermath_GpuCrashDump_GetDescription = (PFN_GFSDK_Aftermath_GpuCrashDump_GetDescription)addr;
-        }
-        if (nsight_library.hasSymbol("GFSDK_Aftermath_GpuCrashDump_DestroyDecoder"))
-        {
-            auto addr = nsight_library.getRawAddress("GFSDK_Aftermath_GpuCrashDump_DestroyDecoder");
-            aftermath_GpuCrashDump_DestroyDecoder = (PFN_GFSDK_Aftermath_GpuCrashDump_DestroyDecoder)addr;
-        }
+        aftermath_EnableGpuCrashDumps = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_EnableGpuCrashDumps);
+        aftermath_DisableGpuCrashDumps = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_DisableGpuCrashDumps);
+        aftermath_GpuCrashDump_CreateDecoder = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_GpuCrashDump_CreateDecoder);
+        aftermath_GpuCrashDump_GetBaseInfo = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_GpuCrashDump_GetBaseInfo);
+        aftermath_GpuCrashDump_GetDescriptionSize = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_GpuCrashDump_GetDescriptionSize);
+        aftermath_GpuCrashDump_GetDescription = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_GpuCrashDump_GetDescription);
+        aftermath_GpuCrashDump_DestroyDecoder = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_GpuCrashDump_DestroyDecoder);
     }
     else
     {
@@ -273,31 +240,34 @@ CGPUNSightSingletonImpl::~CGPUNSightSingletonImpl() SKR_NOEXCEPT
     if (llvm_library.isLoaded()) llvm_library.unload();
 }
 
-CGPUNSightSingleton* CGPUNSightSingleton::Get() SKR_NOEXCEPT
+CGPUNSightSingleton* CGPUNSightSingleton::Get(CGPUInstanceId instance) SKR_NOEXCEPT
 {
+    auto _this = (CGPUNSightSingleton*)cgpu_runtime_table_try_get_custom_data(instance->runtime_table, CGPU_NSIGNT_SINGLETON_NAME);
     if (_this == nullptr)
     {
         _this = cgpu_new<CGPUNSightSingletonImpl>();
+        cgpu_runtime_table_add_custom_data(instance->runtime_table, CGPU_NSIGNT_SINGLETON_NAME, _this);
     }
     return _this;
 }
 
-CGPUNSightTrackerBase::CGPUNSightTrackerBase(const CGPUNSightTrackerDescriptor* pdesc) SKR_NOEXCEPT
+CGPUNSightTrackerBase::CGPUNSightTrackerBase(CGPUInstanceId instance, const CGPUNSightTrackerDescriptor* pdesc) SKR_NOEXCEPT
     : descriptor(*pdesc)
 {
-    singleton = CGPUNSightSingleton::Get();
+    this->instance = instance;
+    singleton = CGPUNSightSingleton::Get(instance);
     singleton->register_tracker(this);
 }
 
 CGPUNSightTrackerBase::~CGPUNSightTrackerBase() SKR_NOEXCEPT
 {
-    singleton = CGPUNSightSingleton::Get();
+    singleton = CGPUNSightSingleton::Get(instance);
     singleton->remove_tracker(this);
 }
 
 CGPUNSightTrackerId cgpu_create_nsight_tracker(CGPUInstanceId instance, const CGPUNSightTrackerDescriptor* descriptor)
 {
-    return cgpu_new<CGPUNSightTrackerBase>(descriptor);
+    return cgpu_new<CGPUNSightTrackerBase>(instance, descriptor);
 }
 
 void cgpu_free_nsight_tracker(CGPUNSightTrackerId tracker)

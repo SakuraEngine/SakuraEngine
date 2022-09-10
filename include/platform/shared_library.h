@@ -71,7 +71,7 @@ public:
     template <typename SymT>
     SymT& get(const char* symbolName)
     {
-        return *(reinterpret_cast<SymT*>(reinterpret_cast<uintptr_t>(getImpl(symbolName))));
+        return *(reinterpret_cast<SymT*>(getImpl(symbolName)));
     }
     /**
      * @description:  Get the address of a symbol.
@@ -115,3 +115,6 @@ private:
 };
 
 } // namespace skr
+
+#define SKR_SHARED_LIB_API_PFN(api) decltype(&api)
+#define SKR_SHARED_LIB_LOAD_API(lib, api) (lib).hasSymbol(#api) ? &(lib).get<decltype(api)>(#api) : nullptr

@@ -58,8 +58,8 @@ void skr::Renderer::finalize()
 
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
-    cgpu_free_instance(instance);
     cgpu_free_nsight_tracker(nsight_tracker);
+    cgpu_free_instance(instance);
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
@@ -122,7 +122,7 @@ void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_
     if (supportDirectStorage)
     {
 #ifdef _WIN32
-        cgpu_win_dstorage_set_staging_buffer_size(4096 * 4096 * 8);
+        cgpu_win_dstorage_set_staging_buffer_size(instance, 4096 * 4096 * 8);
 #endif
         {
             auto queue_desc = make_zeroed<CGPUDStorageQueueDescriptor>();
@@ -154,7 +154,7 @@ void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
 
 #ifdef _WIN32
-    decompress_service = cgpu_win_create_decompress_service();
+    decompress_service = cgpu_win_create_decompress_service(instance);
 #endif
 }
 

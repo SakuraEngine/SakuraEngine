@@ -46,58 +46,77 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     }
 };
 
-static skr::SharedLibrary dstorage_library;
-static skr::SharedLibrary dstorage_core;
-static bool dstorage_dll_dont_exist = false;
 
-thread_local static eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
-static uint64_t sDirectStorageStagingBufferSize = DSTORAGE_STAGING_BUFFER_SIZE_32MB;
-inline static IDStorageFactory* GetDStorageFactory()
+#define CGPU_DSTORAGE_SINGLETON_NAME "CGPUDStorageSingleton"
+
+struct CGPUDStorageSingleton
 {
-    static IDStorageFactory* pFactory = nullptr;
-    if (!pFactory && !dstorage_dll_dont_exist)
+    static CGPUDStorageSingleton* Get(CGPUInstanceId instance)
     {
-        if (!dstorage_core.isLoaded()) dstorage_core.load("dstoragecore.dll");
-        if (!dstorage_library.isLoaded()) dstorage_library.load("dstorage.dll");
-        if (!dstorage_core.isLoaded() || !dstorage_library.isLoaded())
+        auto _this = (CGPUDStorageSingleton*)cgpu_runtime_table_try_get_custom_data(instance->runtime_table, CGPU_DSTORAGE_SINGLETON_NAME);
+        if (!_this)
         {
-            if (!dstorage_core.isLoaded()) SKR_LOG_INFO("dstoragecore.dll not found, direct storage is disabled");
-            if (!dstorage_library.isLoaded()) SKR_LOG_INFO("dstorage.dll not found, direct storage is disabled");
-            dstorage_dll_dont_exist = true;
-            return nullptr;
+            _this = SkrNew<CGPUDStorageSingleton>();
+            {
+                _this->dstorage_core.load("dstoragecore.dll");
+                _this->dstorage_library.load("dstorage.dll");
+                if (!_this->dstorage_core.isLoaded() || !_this->dstorage_library.isLoaded())
+                {
+                    if (!_this->dstorage_core.isLoaded()) SKR_LOG_INFO("dstoragecore.dll not found, direct storage is disabled");
+                    if (!_this->dstorage_library.isLoaded()) SKR_LOG_INFO("dstorage.dll not found, direct storage is disabled");
+                    _this->dstorage_dll_dont_exist = true;
+                }
+                auto pfn_get_factory = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageGetFactory);
+                if (!pfn_get_factory) return nullptr;
+                
+                if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&_this->pFactory))))
+                {
+                    SKR_LOG_ERROR("Failed to get DStorage factory!");
+                    return nullptr;
+                }
+            }
+            cgpu_runtime_table_add_custom_data(instance->runtime_table, CGPU_DSTORAGE_SINGLETON_NAME, _this);
         }
-        auto pfn_get_factory = 
-            (decltype(DStorageGetFactory)*)dstorage_library.getRawAddress("DStorageGetFactory");
-        if (!pfn_get_factory) return nullptr;
-        
-        if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&pFactory))))
-        {
-            SKR_LOG_ERROR("Failed to get DStorage factory!");
-            return nullptr;
-        }
+        return _this->dstorage_dll_dont_exist ? nullptr : _this;
     }
-    return pFactory;
+
+    IDStorageFactory* pFactory = nullptr;
+    skr::SharedLibrary dstorage_library;
+    skr::SharedLibrary dstorage_core;
+    bool dstorage_dll_dont_exist = false;
+    eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
+    uint64_t sDirectStorageStagingBufferSize = DSTORAGE_STAGING_BUFFER_SIZE_32MB;
+};
+
+inline static IDStorageFactory* GetDStorageFactory(CGPUInstanceId instance)
+{
+    return CGPUDStorageSingleton::Get(instance) ? CGPUDStorageSingleton::Get(instance)->pFactory : nullptr;
 }
 
 ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device)
 {
-    auto res = availability_map.find(device);
-    if (res == availability_map.end())
+    auto instance = device->adapter->instance;
+    auto _this = CGPUDStorageSingleton::Get(instance);
+    auto res = _this->availability_map.find(device);
+    if (res == _this->availability_map.end())
     {
-        if (!GetDStorageFactory())
+        if (!GetDStorageFactory(instance))
         {
-            availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_NONE;
+            _this->availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_NONE;
         }
         else
         {
-            availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_HARDWARE;
+            _this->availability_map[device] = CGPU_DSTORAGE_AVAILABILITY_HARDWARE;
         }
     }
-    return availability_map[device];
+    return _this->availability_map[device];
 }
 
 CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStorageQueueDescriptor* desc)
 {
+    auto _this = CGPUDStorageSingleton::Get(device->adapter->instance);
+    if (!_this) return nullptr;
+
     CGPUDStorageQueueD3D12* Q = SkrNew<CGPUDStorageQueueD3D12>();
     auto Device = (CGPUDevice_D3D12*)device;
     DSTORAGE_QUEUE_DESC queueDesc{};
@@ -106,7 +125,7 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
     Q->source_type = queueDesc.SourceType = (DSTORAGE_REQUEST_SOURCE_TYPE)desc->source;
     queueDesc.Name = desc->name;
     if(Device) queueDesc.Device = Device->pDxDevice;
-    IDStorageFactory* pFactory = ::GetDStorageFactory();
+    IDStorageFactory* pFactory = _this->pFactory;
     if (!pFactory) return nullptr;
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
@@ -117,7 +136,7 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const 
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
     skr_init_mutex_recursive(&Q->profile_mutex);
 #endif
-    Q->max_size = sDirectStorageStagingBufferSize;
+    Q->max_size = _this->sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
     Q->device = device;
     return Q;
@@ -497,17 +516,22 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
     } 
 }
 
-void cgpu_win_dstorage_set_staging_buffer_size(uint64_t size)
+void cgpu_win_dstorage_set_staging_buffer_size(CGPUInstanceId instance, uint64_t size)
 {
-    IDStorageFactory* pFactory = GetDStorageFactory();
-    if (!pFactory) return;
-    pFactory->SetStagingBufferSize((uint32_t)size);
-    sDirectStorageStagingBufferSize = size;
+    auto _this = CGPUDStorageSingleton::Get(instance);
+    if (!_this) return;
+    if (!_this->pFactory) return;
+    _this->pFactory->SetStagingBufferSize((uint32_t)size);
+    _this->sDirectStorageStagingBufferSize = size;
 }
 
-skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service()
+skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service(CGPUInstanceId instance)
 {
-    IDStorageFactory* pFactory = GetDStorageFactory();
+    auto _this = CGPUDStorageSingleton::Get(instance);
+    if (!_this) return nullptr;
+    if (!_this->pFactory) return nullptr;
+
+    IDStorageFactory* pFactory = _this->pFactory;
     if (!pFactory) return nullptr;
     IDStorageCustomDecompressionQueue* pCompressionQueue = nullptr;
     if (!SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&pCompressionQueue))))
