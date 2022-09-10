@@ -12,6 +12,7 @@
 #include "cgpu/drivers/cgpu_ags.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "common_utils.h"
+#include <EASTL/string_map.h>
 #include <EASTL/vector.h>
 
 // AGS
@@ -26,6 +27,7 @@ static uint32_t driverVersion = 0;
         #pragma comment(lib, "amd_ags_x86.lib")
     #endif
 #endif
+
 
 ECGPUAGSReturnCode cgpu_ags_init(struct CGPUInstance* Inst)
 {
@@ -157,6 +159,7 @@ struct CGPURuntimeTable {
         created_queues.push_back(new_queue);
     }
     eastl::vector<CreatedQueue> created_queues;
+    eastl::string_map<void*> custom_data_map;
 };
 
 struct CGPURuntimeTable* cgpu_create_runtime_table()
@@ -177,4 +180,26 @@ void cgpu_runtime_table_add_queue(CGPUQueueId queue, ECGPUQueueType type, uint32
 CGPUQueueId cgpu_runtime_table_try_get_queue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index)
 {
     return device->adapter->instance->runtime_table->TryFindQueue(device, type, index);
+}
+
+void cgpu_runtime_table_add_custom_data(struct CGPURuntimeTable* table, const char* key, void* data)
+{
+    table->custom_data_map[key] = data;
+}
+
+void* cgpu_runtime_table_try_get_custom_data(struct CGPURuntimeTable* table, const char* key)
+{
+    if (table->custom_data_map.find(key) != table->custom_data_map.end())
+    {
+        return table->custom_data_map[key];
+    }
+    return nullptr;
+}
+
+bool cgpu_runtime_table_remove_custom_data(struct CGPURuntimeTable* table, const char* key)
+{
+    if (table->custom_data_map.find(key) != table->custom_data_map.end())
+    {
+        return table->custom_data_map.erase(key);
+    }
 }

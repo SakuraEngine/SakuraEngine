@@ -33,10 +33,10 @@ typedef HRESULT (*skr_win_dstorage_decompress_callback_t)(skr_win_dstorage_decom
 // This operation is unsafe and may result in driver corruption.
 // Do not call this unless you are sure the backend queues are all idle.
 RUNTIME_EXTERN_C RUNTIME_API
-void cgpu_win_dstorage_set_staging_buffer_size(uint64_t size);
+void cgpu_win_dstorage_set_staging_buffer_size(CGPUInstanceId instance, uint64_t size);
 
 RUNTIME_EXTERN_C RUNTIME_API
-skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service();
+skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service(CGPUInstanceId instance);
 
 RUNTIME_EXTERN_C RUNTIME_API
 bool cgpu_win_decompress_service_register_callback(skr_win_dstorage_decompress_service_id service, CGPUDStorageCompression, skr_win_dstorage_decompress_callback_t, void*);
