@@ -66,13 +66,16 @@ struct CGPUDStorageSingleton
                     if (!_this->dstorage_library.isLoaded()) SKR_LOG_INFO("dstorage.dll not found, direct storage is disabled");
                     _this->dstorage_dll_dont_exist = true;
                 }
-                auto pfn_get_factory = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageGetFactory);
-                if (!pfn_get_factory) return nullptr;
-                
-                if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&_this->pFactory))))
+                else
                 {
-                    SKR_LOG_ERROR("Failed to get DStorage factory!");
-                    return nullptr;
+                    auto pfn_get_factory = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageGetFactory);
+                    if (!pfn_get_factory) return nullptr;
+                    
+                    if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&_this->pFactory))))
+                    {
+                        SKR_LOG_ERROR("Failed to get DStorage factory!");
+                        return nullptr;
+                    }
                 }
             }
             cgpu_runtime_table_add_custom_data(instance->runtime_table, CGPU_DSTORAGE_SINGLETON_NAME, _this);
@@ -97,6 +100,8 @@ ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId de
 {
     auto instance = device->adapter->instance;
     auto _this = CGPUDStorageSingleton::Get(instance);
+    if (!_this) return CGPU_DSTORAGE_AVAILABILITY_NONE;
+    
     auto res = _this->availability_map.find(device);
     if (res == _this->availability_map.end())
     {
