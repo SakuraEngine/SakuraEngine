@@ -63,7 +63,7 @@ RUNTIME_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* de
     instance->backend = desc->backend;
     instance->proc_table = tbl;
     instance->surfaces_table = s_tbl;
-    instance->runtime_table = cgpu_create_runtime_table();
+    if(!instance->runtime_table) instance->runtime_table = cgpu_create_runtime_table();
     return instance;
 }
 

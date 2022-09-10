@@ -1,20 +1,21 @@
 #pragma once
+#include "platform/configure.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "./../common/common_utils.h"
+#ifdef __cplusplus
 #include "D3D12MemAlloc.h"
+#include <EASTL/vector.h>
+#endif
 #ifdef CGPU_THREAD_SAFETY
     #include "platform/thread.h"
     #include "platform/atomic.h"
 #endif
-#include <EASTL/vector.h>
 
-#define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, \
-ArraySize)                                                                  \
-    ((MipSlice) + ((ArraySlice) * (MipLevels)) +                            \
-     ((PlaneSlice) * (MipLevels) * (ArraySize)))
+#define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize) ((MipSlice) + ((ArraySlice) * (MipLevels)) + ((PlaneSlice) * (MipLevels) * (ArraySize)))
 
 // Instance Helpers
 void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* I, uint32_t* count, bool* foundSoftwareAdapter);
+bool D3D12Util_InitializeEnvironment(struct CGPUInstance* Inst);
 void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstanceDescriptor const* descriptor);
 
 // Device Helpers
