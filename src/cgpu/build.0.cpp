@@ -15,6 +15,8 @@
 #endif
 
 #include "common/cgpu.cpp"
+#include "common/cgpu_ags.cpp"
+#include "common/cgpu_nvapi.cpp"
 
 #include "extensions/marker_buffer.cpp"
 #ifdef CGPU_USE_VULKAN

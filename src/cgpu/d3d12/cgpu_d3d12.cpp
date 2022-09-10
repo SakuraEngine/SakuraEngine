@@ -18,6 +18,9 @@
 CGPUInstanceId cgpu_create_instance_d3d12(CGPUInstanceDescriptor const* descriptor)
 {
     CGPUInstance_D3D12* result = cgpu_new<CGPUInstance_D3D12>();
+
+    D3D12Util_InitializeEnvironment(&result->super);
+
     D3D12Util_Optionalenable_debug_layer(result, descriptor);
 
     UINT flags = 0;

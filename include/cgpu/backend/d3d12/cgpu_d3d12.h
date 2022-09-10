@@ -170,8 +170,9 @@ typedef struct CGPUInstance_D3D12 {
     struct ID3D12Debug* pDXDebug;
     struct CGPUAdapter_D3D12* pAdapters;
     uint32_t mAdaptersCount;
+    struct CGPUAGSExtensionPFNTable_D3D12* pAGSExtensionPFNTable;
+    struct CGPUNVAPIExtensionPFNTable_D3D12* pNVAPIExtensionPFNTable;
 #if defined(__cplusplus)
-
 #endif
 } CGPUInstance_D3D12;
 

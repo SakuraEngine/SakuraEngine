@@ -13,6 +13,7 @@
 
 bool VkUtil_InitializeEnvironment(struct CGPUInstance* Inst)
 {
+    Inst->runtime_table = cgpu_create_runtime_table();
     // AGS
     bool AGS_started = false;
     AGS_started = (cgpu_ags_init(Inst) == CGPU_AGS_SUCCESS);
@@ -35,9 +36,9 @@ bool VkUtil_InitializeEnvironment(struct CGPUInstance* Inst)
 
 void VkUtil_DeInitializeEnvironment(struct CGPUInstance* Inst)
 {
-    cgpu_ags_exit();
+    cgpu_ags_exit(Inst);
     Inst->ags_status = CGPU_AGS_NONE;
-    cgpu_nvapi_exit();
+    cgpu_nvapi_exit(Inst);
     Inst->nvapi_status = CGPU_NVAPI_NONE;
 }
 
@@ -581,7 +582,7 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
 }
 
 static inline uint32_t VkUtil_CombineVersion(uint32_t a, uint32_t b) {
-   int times = 1;
+   uint32_t times = 1;
    while (times <= b)
       times *= 10;
    return a*times + b;

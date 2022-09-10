@@ -43,6 +43,20 @@ void cgpu_cmd_end_event_d3d12(CGPUCommandBufferId cmd)
     PIXEndEvent(Cmd->pDxCmdList);
 }
 
+bool D3D12Util_InitializeEnvironment(struct CGPUInstance* Inst)
+{
+    Inst->runtime_table = cgpu_create_runtime_table();
+    // AGS
+    bool AGS_started = false;
+    AGS_started = (cgpu_ags_init(Inst) == CGPU_AGS_SUCCESS);
+    (void)AGS_started;
+    // NVAPI
+    bool NVAPI_started = false;
+    NVAPI_started = (cgpu_nvapi_init(Inst) == CGPU_NVAPI_OK);
+    (void)NVAPI_started;
+    return true;
+}
+
 void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstanceDescriptor const* descriptor)
 {
     if (descriptor->enable_debug_layer)
@@ -167,9 +181,9 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     strncpy(adapter_detail.vendor_preset.gpu_name, str, MAX_GPU_VENDOR_STRING_LENGTH);
     // Get Driver Version
     if (I->super.nvapi_status == CGPU_NVAPI_OK)
-        vendor_preset.driver_version = cgpu_nvapi_get_driver_version();
+        vendor_preset.driver_version = cgpu_nvapi_get_driver_version(&I->super);
     else if (I->super.ags_status == CGPU_AGS_SUCCESS)
-        vendor_preset.driver_version = cgpu_ags_get_driver_version();
+        vendor_preset.driver_version = cgpu_ags_get_driver_version(&I->super);
     else
         vendor_preset.driver_version = 0;
     // Create a device for feature query
@@ -233,7 +247,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
 #ifdef NVAPI
     if (I->super.nvapi_status == CGPU_NVAPI_OK)
     {
-        adapter_detail.host_visible_vram_budget = cgpu_nvapi_d3d12_query_cpu_visible_vram(pCheckDevice);
+        adapter_detail.host_visible_vram_budget = cgpu_nvapi_d3d12_query_cpu_visible_vram(&I->super, pCheckDevice);
         adapter_detail.support_host_visible_vram = adapter_detail.host_visible_vram_budget > 0;
     }
 #endif
