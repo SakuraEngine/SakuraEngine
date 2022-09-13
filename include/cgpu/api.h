@@ -695,14 +695,7 @@ typedef struct CGPURenderPassEncoder {
 // Shaders
 typedef struct CGPUShaderResource {
     const char8_t* name;
-#if SIZE_MAX == UINT64_MAX
     uint64_t name_hash;
-#elif SIZE_MAX == UINT32_MAX
-    uint32_t name_hash;
-    uint32_t pad;
-#else
-    #error "unsupported hash size!"
-#endif
     ECGPUResourceType type;
     ECGPUTextureDimension dim;
     uint32_t set;

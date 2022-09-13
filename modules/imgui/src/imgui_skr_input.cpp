@@ -68,6 +68,8 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
             // pos_x -= window_x;
             // pos_y -= window_y;
             io.AddMousePosEvent((float)pos_x, (float)pos_y);
+            io.MousePos.x = (float)pos_x;
+            io.MousePos.y = (float)pos_y;
         }
     }
     else
@@ -79,6 +81,8 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
             int32_t pos_x, pos_y;
             skr_cursor_pos(&pos_x, &pos_y, CURSOR_COORDINATE_WINDOW);
             io.AddMousePosEvent((float)pos_x, (float)pos_y);
+            io.MousePos.x = (float)pos_x;
+            io.MousePos.y = (float)pos_y;
         }
     }
 }
