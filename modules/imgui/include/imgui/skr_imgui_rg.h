@@ -21,4 +21,7 @@ void render_graph_imgui_add_render_pass(skr::render_graph::RenderGraph* render_g
     skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action);
 
 RUNTIME_EXTERN_C SKR_IMGUI_API 
+void render_graph_imgui_present_sub_viewports();
+
+RUNTIME_EXTERN_C SKR_IMGUI_API 
 void render_graph_imgui_finalize();

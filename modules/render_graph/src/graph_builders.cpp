@@ -343,10 +343,10 @@ RenderGraph::BufferBuilder::BufferBuilder(RenderGraph& graph, BufferNode& node) 
 
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* name) SKR_NOEXCEPT
 {
-    node.descriptor.name = name;
     // blackboard
     graph.blackboard.named_buffers[name] = &node;
     node.set_name(name);
+    node.descriptor.name = node.get_name();
     return *this;
 }
 
@@ -483,10 +483,10 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
 
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name) SKR_NOEXCEPT
 {
-    node.descriptor.name = name;
     // blackboard
     graph.blackboard.named_textures[name] = &node;
     node.set_name(name);
+    node.descriptor.name = node.get_name();
     return *this;
 }
 

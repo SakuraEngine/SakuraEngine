@@ -1,6 +1,8 @@
 #include <EASTL/string.h>
+#include "imgui/skr_imgui.config.h"
 #include "platform/configure.h"
-#include "utils./log.h"
+#include "platform/memory.h"
+#include "utils/log.h"
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"
 #include "imgui/skr_imgui_rg.h"
@@ -10,12 +12,17 @@ namespace skr::imgui
 SKR_IMGUI_API CGPUTextureId font_texture;
 SKR_IMGUI_API CGPURootSignatureId root_sig;
 SKR_IMGUI_API CGPURenderPipelineId render_pipeline;
-SKR_IMGUI_API skr::render_graph::TextureHandle font_handle;
-SKR_IMGUI_API skr::render_graph::BufferHandle vertex_buffer_handle;
-SKR_IMGUI_API skr::render_graph::BufferHandle index_buffer_handle;
-SKR_IMGUI_API skr::render_graph::BufferHandle upload_buffer_handle;
 
 namespace rg = skr::render_graph;
+
+struct ImGuiWindowData
+{
+    CGPUSurfaceId surface = nullptr;
+    CGPUSwapChainId swapchain = nullptr;
+    CGPUFenceId fence = nullptr;
+    CGPUQueueId present_queue;
+    uint32_t backbuffer_index = 0;
+};
 
 void imgui_create_fonts(CGPUQueueId queue);
 void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc);
@@ -64,15 +71,19 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         auto device = render_graph->get_backend_device();
         size_t vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
         size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
-        font_handle = render_graph->create_texture(
+        auto font_handle = render_graph->create_texture(
             [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
-                builder.set_name("imgui_font_texture")
+                eastl::string name = "imgui_font-";
+                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                builder.set_name(name.c_str())
                     .import(font_texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
             });
         // vb & ib
-        vertex_buffer_handle = render_graph->create_buffer(
+        auto vertex_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                builder.set_name("imgui_vertex_buffer")
+                eastl::string name = "imgui_vertices-";
+                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                builder.set_name(name.c_str())
                     .size(vertex_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                     .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -80,9 +91,11 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                     .prefer_on_device()
                     .as_vertex_buffer();
             });
-        index_buffer_handle = render_graph->create_buffer(
+        auto index_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                builder.set_name("imgui_index_buffer")
+                eastl::string name = "imgui_indices-";
+                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                builder.set_name(name.c_str())
                     .size(index_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                     .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -92,20 +105,24 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             });
         if (!useCVV)
         {
-            upload_buffer_handle = render_graph->create_buffer(
+            auto upload_buffer_handle = render_graph->create_buffer(
                 [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                    builder.set_name("imgui_upload_buffer")
+                eastl::string name = "imgui_upload-";
+                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                builder.set_name(name.c_str())
                         .size(index_size + vertex_size)
                         .with_tags(kRenderGraphDefaultResourceTag)
                         .as_upload_buffer();
                 });
             render_graph->add_copy_pass(
                 [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-                    builder.set_name("imgui_geom_transfer")
+                eastl::string name = "imgui_copy-";
+                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                builder.set_name(name.c_str())
                         .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
                         .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
                 },
-                [](rg::RenderGraph& g, rg::CopyPassContext& context){
+                [upload_buffer_handle](rg::RenderGraph& g, rg::CopyPassContext& context){
                     auto upload_buffer = context.resolve(upload_buffer_handle);
                     ImDrawData* draw_data = ImGui::GetDrawData();
                     ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
@@ -122,7 +139,9 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         }
         auto constant_buffer = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                builder.set_name("imgui_cbuffer")
+                eastl::string name = "imgui_cbuffer-";
+                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                builder.set_name(name.c_str())
                     .size(sizeof(float) * 4 * 4)
                     .with_tags(kRenderGraphDynamicResourceTag)
                     .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
@@ -131,18 +150,20 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             });
         // add pass
         render_graph->add_render_pass([=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
-            builder.set_name("imgui_pass")
-                .set_pipeline(render_pipeline)
-                .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
-                .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
-                .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
-                .read("texture0", font_handle)
-                .write(0, target, load_action);
+                eastl::string name = "imgui_render-";
+                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                builder.set_name(name.c_str())
+                    .set_pipeline(render_pipeline)
+                    .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
+                    .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+                    .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
+                    .read("texture0", font_handle)
+                    .write(0, target, load_action);
         },
-        [target, useCVV, constant_buffer](rg::RenderGraph& g, rg::RenderPassContext& context) {
+        [target, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle]
+        (rg::RenderGraph& g, rg::RenderPassContext& context) {
             auto target_node = g.resolve(target);
             const auto& target_desc = target_node->get_desc();
-            ImDrawData* draw_data = ImGui::GetDrawData();
             {
                 float L = draw_data->DisplayPos.x;
                 float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
@@ -251,6 +272,24 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
     if (fb_width <= 0 || fb_height <= 0) return;
     
     imguir_render_draw_data(draw_data, render_graph, target, load_action);
+}
+
+void render_graph_imgui_present_sub_viewports()
+{
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    for (int i = 1; i < platform_io.Viewports.Size; i++)
+    {
+        ImGuiViewport* viewport = platform_io.Viewports[i];
+        if (viewport->Flags & ImGuiViewportFlags_Minimized)
+            continue;
+        if (auto rdata = (ImGuiWindowData*)viewport->RendererUserData)
+        {
+            CGPUQueuePresentDescriptor present_desc = {};
+            present_desc.index = rdata->backbuffer_index;
+            present_desc.swapchain = rdata->swapchain;
+            cgpu_queue_present(rdata->present_queue, &present_desc);
+        }
+    }
 }
 
 SKR_IMGUI_API void render_graph_imgui_finalize()
@@ -378,30 +417,52 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     render_pipeline = cgpu_create_render_pipeline(desc->queue->device, &rp_desc);
 }
 
+void imgui_recreate_swapchain(ImGuiViewport* viewport, CGPUDeviceId device, CGPUQueueId present_queue)
+{
+    ImGuiWindowData* rdata = (ImGuiWindowData*)viewport->RendererUserData;
+    const auto window = (SWindowHandle)viewport->PlatformHandle;
+
+    if (!rdata->fence) rdata->fence = cgpu_create_fence(device);
+    if (!rdata->surface) rdata->surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
+
+    if (rdata->fence) cgpu_wait_fences(&rdata->fence, 1);
+
+    if (rdata->swapchain) cgpu_free_swapchain(rdata->swapchain);
+
+    int32_t width, height;
+    skr_window_get_extent(window, &width, &height);
+    CGPUSwapChainDescriptor chain_desc = {};
+    chain_desc.surface = rdata->surface;
+    chain_desc.present_queues = &present_queue;
+    chain_desc.present_queues_count = 1;
+    chain_desc.width = width;
+    chain_desc.height = height;
+    chain_desc.imageCount = 2;
+    chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
+    chain_desc.enable_vsync = false;
+    rdata->swapchain = cgpu_create_swapchain(device, &chain_desc);
+    rdata->present_queue = present_queue;
+}
+
 void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
 {
     ImGuiIO& io = ImGui::GetIO();
     auto graph = (skr::render_graph::RenderGraph*)io.BackendRendererUserData;
-
-    CGPUSwapChainId swapchain = nullptr;
-    if (!viewport->RendererUserData)
-    {
-        // create & record swapchain here
-        //viewport->RendererUserData = 
-    }
+    auto rdata = (ImGuiWindowData*)viewport->RendererUserData;
     // if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear));
     
     CGPUAcquireNextDescriptor acquire = {};
-    acquire.fence = nullptr;
+    acquire.fence = rdata->fence;
     acquire.signal_semaphore = nullptr;
-    auto backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire);
-    CGPUTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
+    cgpu_wait_fences(&rdata->fence, 1);
+    auto backbuffer_index = rdata->backbuffer_index = cgpu_acquire_next_image(rdata->swapchain, &acquire);
+    CGPUTextureId native_backbuffer = rdata->swapchain->back_buffers[backbuffer_index];
 
     auto back_buffer = graph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            eastl::string res_name = "imgui-window-";
-            res_name.append(eastl::to_string(viewport->ID));
-            builder.set_name(res_name.c_str())
+            eastl::string buf_name = "imgui-window-";
+            buf_name.append(eastl::to_string(viewport->ID));
+            builder.set_name(buf_name.c_str())
                 .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
         });
@@ -410,28 +471,46 @@ void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
 
     graph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-            builder.set_name("present_pass")
-            .swapchain(swapchain, backbuffer_index)
-            .texture(back_buffer, true);
+            eastl::string pass_name = "imgui-present-";
+            pass_name.append(eastl::to_string(viewport->ID));
+            builder.set_name(pass_name.c_str())
+                .swapchain(rdata->swapchain, backbuffer_index)
+                .texture(back_buffer, true);
         });
 }
 
 void imguir_create_window(ImGuiViewport* viewport)
 {
-    SKR_LOG_INFO("imguir_create_window");
-
+    ImGuiIO& io = ImGui::GetIO();
+    auto graph = (skr::render_graph::RenderGraph*)io.BackendRendererUserData;
+    if (!viewport->RendererUserData)
+    {
+        // create & record swapchain here
+        viewport->RendererUserData = SkrNew<ImGuiWindowData>();
+        imgui_recreate_swapchain(viewport, graph->get_backend_device(), graph->get_gfx_queue());
+    }
 }
 
 void imguir_destroy_window(ImGuiViewport* viewport)
 {
-    SKR_LOG_INFO("imguir_destroy_window");
-
+    if (viewport->RendererUserData)
+    {
+        auto rdata = (ImGuiWindowData*)viewport->RendererUserData;
+        cgpu_wait_fences(&rdata->fence, 1);
+        auto device = rdata->fence->device;
+        cgpu_free_fence(rdata->fence);
+        cgpu_free_swapchain(rdata->swapchain);
+        cgpu_free_surface(device, rdata->surface);
+        viewport->RendererUserData = nullptr;
+        SkrDelete(rdata);
+    }
 }
 
 void imguir_resize_window(ImGuiViewport* viewport, ImVec2 size)
 {
-    SKR_LOG_INFO("imguir_resize_window");
-
+    ImGuiIO& io = ImGui::GetIO();
+    auto graph = (skr::render_graph::RenderGraph*)io.BackendRendererUserData;
+    imgui_recreate_swapchain(viewport, graph->get_backend_device(), graph->get_gfx_queue());
 }
 
 void imguir_swap_buffers(ImGuiViewport* viewport, void*)
