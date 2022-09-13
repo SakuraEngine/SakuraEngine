@@ -1,9 +1,7 @@
-struct Constants
+cbuffer Constants : register(b0)
 {
-    float2 invDisplaySize;
+    float4x4 ProjectionMatrix;
 };
-[[vk::push_constant]] 
-ConstantBuffer<Constants> push_constants : register(b0);
 
 struct VSIn
 {
@@ -22,10 +20,12 @@ struct VSOut
 VSOut main(VSIn input)
 {
     VSOut output;
-    output.out_pos.xy = 
-        input.pos.xy * push_constants.invDisplaySize *
-        float2(2.0, -2.0) + float2(-1.0, 1.0);
-    output.out_pos.zw = float2(0, 1);
+    // output.out_pos.xy = 
+    //    input.pos.xy * push_constants.invDisplaySize *
+    //    float2(2.0, -2.0) + float2(-1.0, 1.0);
+    // output.out_pos.zw = float2(0, 1);
+
+    output.out_pos = mul( ProjectionMatrix, float4(input.pos.xy, 0.f, 1.f) );
     output.out_col = input.col;
     output.out_uv = input.uv;
     return output;

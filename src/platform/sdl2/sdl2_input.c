@@ -233,7 +233,14 @@ RUNTIME_API bool skr_set_cursor(EMouseCursor cursor)
     }
 }
 
-RUNTIME_API void skr_cursor_pos(int32_t* x, int32_t* y)
+void skr_cursor_pos(int32_t* x, int32_t* y, ECursorCoordinate corrdinate)
 {
-    SDL_GetMouseState(x, y);
+    if (corrdinate == CURSOR_COORDINATE_WINDOW)
+    {
+        SDL_GetMouseState(x, y);
+    }
+    else if (corrdinate == CURSOR_COORDINATE_SCREEN)
+    {
+        SDL_GetGlobalMouseState(x, y);
+    }
 }

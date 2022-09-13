@@ -167,6 +167,10 @@ int InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
     const auto backend = device->adapter->instance->backend;
     const auto gfx_queue = renderer.renderGraph->get_gfx_queue();
     ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); 
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     ImGui::StyleColorsDark();
     {
         auto& style = ImGui::GetStyle();

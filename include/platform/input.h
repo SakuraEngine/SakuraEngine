@@ -194,6 +194,11 @@ typedef enum EMouseCursor
     MOUSE_CURSOR_WaitArrow
 } EMouseCursor;
 
+typedef enum ECursorCoordinate {
+    CURSOR_COORDINATE_SCREEN,
+    CURSOR_COORDINATE_WINDOW
+} ECursorCoordinate;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -202,7 +207,7 @@ skr_key_down(EKeyCode key_code);
 RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code);
 RUNTIME_API bool skr_set_cursor_pos(int32_t x, int32_t y);
 RUNTIME_API bool skr_set_cursor(EMouseCursor cursor);
-RUNTIME_API void skr_cursor_pos(int32_t* x, int32_t* y);
+RUNTIME_API void skr_cursor_pos(int32_t* x, int32_t* y, ECursorCoordinate corrdinate);
 #ifdef __cplusplus
 }
 #endif

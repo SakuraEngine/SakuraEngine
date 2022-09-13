@@ -276,6 +276,10 @@ int main(int argc, char* argv[])
         profilers[i].initialize(device);
     }
     ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); 
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     ImGui::StyleColorsDark();
     {
         auto& style = ImGui::GetStyle();

@@ -366,6 +366,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         while (SDL_PollEvent(&event))
         {
             ZoneScopedN("PollEvent");
+            ImGuiIO& io = ImGui::GetIO();
 
             if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
             {
@@ -378,8 +379,39 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         cgpu_wait_fences(&present_fence, 1);
                         swapchain = skr_renderer_recreate_window_swapchain(window);
                     }
+
+                    if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
+                        io.AddFocusEvent(true);
+                    else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
+                        io.AddFocusEvent(false);
+                    else if (window_event == SDL_WINDOWEVENT_LEAVE)
+                        io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+                        
+                    if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
+                        if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
+                        {
+                            if (window_event == SDL_WINDOWEVENT_CLOSE)
+                                viewport->PlatformRequestClose = true;
+                            if (window_event == SDL_WINDOWEVENT_MOVED)
+                                viewport->PlatformRequestMove = true;
+                            if (window_event == SDL_WINDOWEVENT_RESIZED)
+                                viewport->PlatformRequestResize = true;
+                        }
                 }
             }
+
+            if (event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                int mouse_button = -1;
+                if (event.button.button == SDL_BUTTON_LEFT) { mouse_button = 0; }
+                if (event.button.button == SDL_BUTTON_RIGHT) { mouse_button = 1; }
+                if (event.button.button == SDL_BUTTON_MIDDLE) { mouse_button = 2; }
+                if (event.button.button == SDL_BUTTON_X1) { mouse_button = 3; }
+                if (event.button.button == SDL_BUTTON_X2) { mouse_button = 4; }
+                if (mouse_button == -1) break;
+                io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
+            }
+
             if (event.type == SDL_SYSWMEVENT)
             {
                 SDL_SysWMmsg* msg = event.syswm.msg;
@@ -455,6 +487,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 float lerps[] = { 12.5, 20 };
                 auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
                 auto scales = (skr_scale_t*)dualV_get_owned_ro_local(view, localTypes[1]);
+                (void)scales;
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     auto lscale = (float)abs(sin(total_sec * 0.5));

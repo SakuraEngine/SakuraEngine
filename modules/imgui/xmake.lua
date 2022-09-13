@@ -14,6 +14,7 @@ target("SkrImGui")
     add_rules("skr.module", {api = "SKR_IMGUI"})
     add_deps("imgui", "SkrRT", "SkrRenderGraph")
     add_includedirs("include", {public=true})
+    add_includedirs(imgui_includes_dir, {public=true})
     add_files("src/build.*.cpp")
     -- add render graph shaders
     add_rules("utils.dxc", {
