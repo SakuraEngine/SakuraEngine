@@ -1873,6 +1873,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
         Ts[i].super.mip_levels = 1;
         Ts[i].super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
         Ts[i].super.owns_image = false;
+        Ts[i].super.native_handle = Ts[i].pDxResource;
     }
     CGPUTextureId* Vs = (CGPUTextureId*)(Ts + buffer_count);
     for (uint32_t i = 0; i < buffer_count; i++)
