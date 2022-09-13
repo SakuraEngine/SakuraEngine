@@ -51,9 +51,27 @@ void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y)
     if (y) *y = r.y;
 }
 
+bool skr_monitor_get_ddpi(SMonitorHandle monitor, float* ddpi, float* hdpi, float* vdpi)
+{
+    const uint64_t n = (uint64_t)monitor;
+    return !SDL_GetDisplayDPI(n, ddpi, hdpi, vdpi);
+}
+
 void skr_window_set_title(SWindowHandle window, const char8_t* name)
 {
     SDL_SetWindowTitle((SDL_Window*)window, name);
+}
+
+void skr_window_set_extent(SWindowHandle window, int32_t width, int32_t height)
+{
+    SDL_Window* sdl_window = (SDL_Window*)window;
+    SDL_SetWindowSize(sdl_window, width, height);
+}
+
+void skr_window_set_position(SWindowHandle window, int32_t x, int32_t y)
+{
+    SDL_Window* sdl_window = (SDL_Window*)window;
+    SDL_SetWindowPosition(sdl_window, x, y);
 }
 
 void skr_window_get_extent(SWindowHandle window, int32_t* width, int32_t* height)

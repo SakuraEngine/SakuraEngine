@@ -368,36 +368,41 @@ int SGameModule::main_module_exec(int argc, char** argv)
             ZoneScopedN("PollEvent");
             ImGuiIO& io = ImGui::GetIO();
 
-            if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
+            if (event.type == SDL_WINDOWEVENT)
             {
-                if (event.type == SDL_WINDOWEVENT)
+                Uint8 window_event = event.window.event;
+                if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
                 {
-                    Uint8 window_event = event.window.event;
                     if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                     {
                         cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
                         cgpu_wait_fences(&present_fence, 1);
                         swapchain = skr_renderer_recreate_window_swapchain(window);
                     }
-
-                    if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
-                        io.AddFocusEvent(true);
-                    else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
-                        io.AddFocusEvent(false);
-                    else if (window_event == SDL_WINDOWEVENT_LEAVE)
-                        io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-                        
-                    if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
-                        if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
-                        {
-                            if (window_event == SDL_WINDOWEVENT_CLOSE)
-                                viewport->PlatformRequestClose = true;
-                            if (window_event == SDL_WINDOWEVENT_MOVED)
-                                viewport->PlatformRequestMove = true;
-                            if (window_event == SDL_WINDOWEVENT_RESIZED)
-                                viewport->PlatformRequestResize = true;
-                        }
+                    if (window_event == SDL_WINDOWEVENT_CLOSE)
+                    {
+                        quit = true;
+                        break;
+                    }
                 }
+
+                if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
+                    io.AddFocusEvent(true);
+                else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
+                    io.AddFocusEvent(false);
+                else if (window_event == SDL_WINDOWEVENT_LEAVE)
+                    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+                    
+                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
+                    if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
+                    {
+                        if (window_event == SDL_WINDOWEVENT_CLOSE)
+                            viewport->PlatformRequestClose = true;
+                        if (window_event == SDL_WINDOWEVENT_MOVED)
+                            viewport->PlatformRequestMove = true;
+                        if (window_event == SDL_WINDOWEVENT_RESIZED)
+                            viewport->PlatformRequestResize = true;
+                    }
             }
 
             if (event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN)
@@ -408,7 +413,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 if (event.button.button == SDL_BUTTON_MIDDLE) { mouse_button = 2; }
                 if (event.button.button == SDL_BUTTON_X1) { mouse_button = 3; }
                 if (event.button.button == SDL_BUTTON_X2) { mouse_button = 4; }
-                if (mouse_button == -1) break;
+                if (mouse_button == -1) continue;
                 io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
             }
 
@@ -460,11 +465,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("ImGUI");
 
-            auto& io = ImGui::GetIO();
-            io.DisplaySize = ImVec2(
-                (float)swapchain->back_buffers[0]->width,
-                (float)swapchain->back_buffers[0]->height);
-            skr_imgui_new_frame(window, 1.f / 60.f);
+            skr_imgui_new_frame(window, deltaTime);
             {
                 ImGui::Begin(u8"Information");
                 ImGui::Text("RenderFPS: %d", (uint32_t)fps);
@@ -588,6 +589,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
             cgpu_queue_present(skr_renderer_get_gfx_queue(), &present_desc);
+            render_graph_imgui_present_sub_viewports();
         }
     }
     // clean up

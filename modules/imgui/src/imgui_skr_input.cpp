@@ -50,9 +50,6 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
         io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
     }
 
-    io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
-    io.MouseHoveredViewport = 0;
-
     // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
     io.MouseDown[0] = skr_mouse_key_down(EMouseKey::MOUSE_KEY_LB);
     io.MouseDown[1] = skr_mouse_key_down(EMouseKey::MOUSE_KEY_RB);
@@ -91,8 +88,8 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
     ImGuiIO& io = ImGui::GetIO();
 
     // Configure backend flags
-    // io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-    // io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+    io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
     io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
 
     int extent_w, extent_h;
@@ -130,25 +127,33 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         main_viewport->PlatformHandleRaw = skr_window_get_native_handle(window);
 
         // update monitors
-        eastl::vector<SMonitorHandle> skr_windows;
+        eastl::vector<SMonitorHandle> skr_monitors;
         platform_io.Monitors.resize(0);
         uint32_t monitor_count = 0;
         skr_get_all_monitors(&monitor_count, nullptr);
-        skr_windows.resize(monitor_count);
-        skr_get_all_monitors(&monitor_count, skr_windows.data());
+        skr_monitors.resize(monitor_count);
+        skr_get_all_monitors(&monitor_count, skr_monitors.data());
         platform_io.Monitors.resize(monitor_count);
         for (uint32_t i = 0; i < monitor_count; i++)
         {
             ImGuiPlatformMonitor& monitor = platform_io.Monitors[i];
             int32_t x, y, w, h;
-            skr_monitor_get_position(skr_windows[i], &x, &y);
-            skr_monitor_get_extent(skr_windows[i], &w, &h);
+            skr_monitor_get_position(skr_monitors[i], &x, &y);
+            skr_monitor_get_extent(skr_monitors[i], &w, &h);
             monitor.MainPos = monitor.WorkPos = ImVec2((float)x, (float)y);
             monitor.MainSize = monitor.WorkSize = ImVec2((float)w, (float)h);
+
+            float ddpi = 0.f;
+            const bool success = skr_monitor_get_ddpi(skr_monitors[i], &ddpi, nullptr, nullptr);
+            monitor.DpiScale = success ? (ddpi / 96.0f) : 1.f;
         }
     }
     // update inputs
-    imgui_update_mouse_and_buttons(window);
+    // ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    // for (int i = 0; i < platform_io.Viewports.Size; i++)
+    {
+        imgui_update_mouse_and_buttons(window);
+    }
 
     ImGui::NewFrame();
 }
@@ -156,8 +161,13 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
 void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
 {
     SWindowDescroptor desc = {};
+    desc.hidden = true;
     desc.boardless = viewport->Flags & ImGuiViewportFlags_NoDecoration;
     desc.resizable = !(viewport->Flags & ImGuiViewportFlags_NoDecoration);
+    desc.width = (uint32_t)viewport->Size.x;
+    desc.height = (uint32_t)viewport->Size.y;
+    desc.posx = (uint32_t)viewport->Pos.x;
+    desc.posy = (uint32_t)viewport->Pos.y;
     eastl::string title = "imgui-";
     title += eastl::to_string(viewport->ID);
     auto new_window = skr_create_window(title.c_str(), &desc);
@@ -208,8 +218,7 @@ ImVec2 skr::imgui::imgui_get_window_pos(ImGuiViewport* viewport)
 
 void skr::imgui::imgui_set_window_pos(ImGuiViewport* viewport, ImVec2 pos)
 {
-    SKR_LOG_INFO("imgui_set_window_pos");
-
+    skr_window_set_position((SWindowHandle)viewport->PlatformHandle, (int32_t)pos.x, (int32_t)pos.y);
 }
 
 ImVec2 skr::imgui::imgui_get_window_size(ImGuiViewport* viewport)
@@ -222,8 +231,7 @@ ImVec2 skr::imgui::imgui_get_window_size(ImGuiViewport* viewport)
 
 void skr::imgui::imgui_set_window_size(ImGuiViewport* viewport, ImVec2 size)
 {
-    SKR_LOG_INFO("imgui_set_window_size");
-
+    skr_window_set_extent((SWindowHandle)viewport->PlatformHandle, (int32_t)size.x, (int32_t)size.y);
 }
 
 void skr::imgui::imgui_set_window_title(ImGuiViewport* viewport, const char* title)

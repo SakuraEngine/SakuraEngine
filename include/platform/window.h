@@ -23,10 +23,13 @@ extern "C" {
 RUNTIME_API void skr_get_all_monitors(uint32_t* count, SMonitorHandle* monitors);
 RUNTIME_API void skr_monitor_get_extent(SMonitorHandle monitor, int32_t* width, int32_t* height);
 RUNTIME_API void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y);
+RUNTIME_API bool skr_monitor_get_ddpi(SMonitorHandle monitor, float* ddpi, float* hdpi, float* vdpi);
 
 RUNTIME_API SWindowHandle skr_create_window(const char8_t* name, const SWindowDescroptor* desc);
 RUNTIME_API void skr_show_window(SWindowHandle window);
 RUNTIME_API void skr_window_set_title(SWindowHandle window, const char8_t* name);
+RUNTIME_API void skr_window_set_extent(SWindowHandle window, int32_t width, int32_t height);
+RUNTIME_API void skr_window_set_position(SWindowHandle window, int32_t x, int32_t y);
 RUNTIME_API void skr_window_get_extent(SWindowHandle window, int32_t* width, int32_t* height);
 RUNTIME_API void skr_window_get_position(SWindowHandle window, int32_t* x, int32_t* y);
 RUNTIME_API bool skr_window_is_minimized(SWindowHandle window);
