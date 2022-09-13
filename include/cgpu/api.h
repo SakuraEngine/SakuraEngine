@@ -1322,6 +1322,7 @@ typedef struct CGPUTexture {
     /// In CGPU concept aliasing resource owns no memory
     uint32_t is_aliasing : 1;
     uint32_t can_alias : 1;
+    void* native_handle;
 } CGPUTexture;
 
 typedef struct CGPUTextureView {

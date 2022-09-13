@@ -1034,9 +1034,9 @@ CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDe
     CGPUSwapChain* swapchain = (CGPUSwapChain*)device->proc_table_cache->create_swapchain(device, desc);
     cgpu_assert(swapchain && "fatal cgpu_create_swapchain: NULL swapchain id returned from backend.");
     swapchain->device = device;
-    cgpu_trace("cgpu_create_swapchain: swapchain(%dx%d) %p created, buffers: [%p, %p].", 
+    cgpu_trace("cgpu_create_swapchain: swapchain(%dx%d) %p created, buffers: [%p, %p], surface: %p", 
         swapchain->back_buffers[0]->width, swapchain->back_buffers[0]->height, swapchain,
-        swapchain->back_buffers[0], swapchain->back_buffers[1]);
+        swapchain->back_buffers[0], swapchain->back_buffers[1], desc->surface);
 
     return swapchain;
 }
@@ -1056,7 +1056,7 @@ void cgpu_free_swapchain(CGPUSwapChainId swapchain)
     cgpu_assert(swapchain->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(swapchain->device->proc_table_cache->create_swapchain && "create_swapchain Proc Missing!");
 
-    cgpu_trace("cgpu_free_swapchain: swapchain(%dx%d) %p freed, buffers:  [%p, %p].", 
+    cgpu_trace("cgpu_free_swapchain: swapchain(%dx%d) %p freed, buffers:  [%p, %p]", 
         swapchain->back_buffers[0]->width, swapchain->back_buffers[0]->height, swapchain,
         swapchain->back_buffers[0], swapchain->back_buffers[1]);
 

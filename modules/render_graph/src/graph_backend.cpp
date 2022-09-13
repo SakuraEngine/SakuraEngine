@@ -22,6 +22,7 @@ TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& 
     , mip_level_count(desc.mip_level_count)
     , tex_width(desc.texture->width)
     , tex_height(desc.texture->height)
+    , native_handle((int64_t)desc.texture->native_handle)
 {
 
 }
@@ -65,14 +66,16 @@ CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& des
 {
     const TextureViewPool::Key key(device, desc);
     auto&& found = views.find(key);
-    if (found != views.end() && found->first.texture == key.texture)
+    if (found != views.end() && found->first.texture->native_handle == key.texture->native_handle && found->first.texture == key.texture)
     {
+        // SKR_LOG_TRACE("Reallocating texture view for texture %p (native %p)", desc.texture, key.texture->native_handle);
         found->second.mark.frame_index = frame_index;
         SKR_ASSERT(found->first.texture);
         return found->second.texture_view;
     }
     else
     {
+        // SKR_LOG_TRACE("Creating texture view for texture %p (native %p)", desc.texture, key.texture->native_handle);
         CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
         AllocationMark mark = {frame_index, 0};
         views[key] = PooledTextureView(new_view, mark);

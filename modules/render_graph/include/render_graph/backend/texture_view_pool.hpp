@@ -39,7 +39,7 @@ public:
         uint32_t mip_level_count = 0;
         uint32_t tex_width = 0;
         uint32_t tex_height = 0;
-        uint64_t _pad2 = 0;
+        int64_t native_handle = 0;
         
         operator size_t() const;
         friend class TextureViewPool;
