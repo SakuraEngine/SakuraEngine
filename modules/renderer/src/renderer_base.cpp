@@ -16,8 +16,6 @@
 
 void skr::Renderer::initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
-    auto mm = skr_get_module_manager();
-
     create_api_objects(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();

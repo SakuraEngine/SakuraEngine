@@ -365,6 +365,10 @@ void SVMemCCModule::create_swapchain()
 void SVMemCCModule::initialize_imgui()
 {
     ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); 
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     ImGui::StyleColorsDark();
     {
         auto& style = ImGui::GetStyle();

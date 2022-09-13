@@ -39,7 +39,6 @@ struct SKR_RENDERER_API Renderer : public ISkrRenderer {
 public:
     virtual ~Renderer() = default;
     virtual void initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name) override;
-    virtual void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) = 0;
     virtual void finalize() override;
 
     virtual CGPUDeviceId get_cgpu_device() const override

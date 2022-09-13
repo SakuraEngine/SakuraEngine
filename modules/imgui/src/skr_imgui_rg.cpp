@@ -1,4 +1,6 @@
+#include <EASTL/string.h>
 #include "platform/configure.h"
+#include "utils./log.h"
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"
 #include "imgui/skr_imgui_rg.h"
@@ -17,7 +19,11 @@ namespace rg = skr::render_graph;
 
 void imgui_create_fonts(CGPUQueueId queue);
 void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc);
-void imgui_render_window(ImGuiViewport* viewport, void*);
+void imguir_create_window(ImGuiViewport* viewport);
+void imguir_destroy_window(ImGuiViewport* viewport);
+void imguir_resize_window(ImGuiViewport* viewport, ImVec2 size);
+void imguir_render_window(ImGuiViewport* viewport, void*);
+void imguir_swap_buffers(ImGuiViewport* viewport, void*);
 }
 
 
@@ -38,26 +44,20 @@ SKR_IMGUI_API void render_graph_imgui_initialize(const RenderGraphImGuiDescripto
     imgui_create_pipeline(desc);
 
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    platform_io.Renderer_RenderWindow = imgui_render_window;
+    platform_io.Renderer_CreateWindow = &imguir_create_window;
+    platform_io.Renderer_DestroyWindow = &imguir_destroy_window;
+    platform_io.Renderer_SetWindowSize = &imguir_resize_window;
+    platform_io.Renderer_RenderWindow = &imguir_render_window;
+    platform_io.Renderer_SwapBuffers = &imguir_swap_buffers;
 }
 
-SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderGraph* render_graph,
-    skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
+void imguir_render_draw_data(ImDrawData* draw_data, 
+    skr::render_graph::RenderGraph* render_graph, skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
 {
-    ImGui::Render();
-    ImDrawData* draw_data = ImGui::GetDrawData();
-    if (!draw_data) return;
-
     bool useCVV = true;
 #ifdef SKR_OS_MACOSX
     useCVV = false;
 #endif
-
-    // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
-    int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
-    int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
-    if (fb_width <= 0 || fb_height <= 0)
-        return;
     if (draw_data->TotalVtxCount > 0)
     {
         // create or resize the vertex/index buffers
@@ -120,35 +120,53 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
                     }
                 });
         }
+        auto constant_buffer = render_graph->create_buffer(
+            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                builder.set_name("imgui_cbuffer")
+                    .size(sizeof(float) * 4 * 4)
+                    .with_tags(kRenderGraphDynamicResourceTag)
+                    .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
+                    .prefer_on_device()
+                    .as_uniform_buffer();
+            });
         // add pass
         render_graph->add_render_pass([=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
             builder.set_name("imgui_pass")
                 .set_pipeline(render_pipeline)
+                .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
                 .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
                 .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
                 .read("texture0", font_handle)
                 .write(0, target, load_action);
         },
-        [target, useCVV](rg::RenderGraph& g, rg::RenderPassContext& context) {
+        [target, useCVV, constant_buffer](rg::RenderGraph& g, rg::RenderPassContext& context) {
             auto target_node = g.resolve(target);
             const auto& target_desc = target_node->get_desc();
-            struct {
-                float inv_x;
-                float inv_y;
-            } invDisplaySize;
-            invDisplaySize.inv_x = 1.f / (float)target_desc.width;
-            invDisplaySize.inv_y = 1.f / (float)target_desc.height;
+            ImDrawData* draw_data = ImGui::GetDrawData();
+            {
+                float L = draw_data->DisplayPos.x;
+                float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
+                float T = draw_data->DisplayPos.y;
+                float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
+                float mvp[4][4] =
+                {
+                    { 2.0f/(R-L),   0.0f,           0.0f,       0.0f },
+                    { 0.0f,         2.0f/(T-B),     0.0f,       0.0f },
+                    { 0.0f,         0.0f,           0.5f,       0.0f },
+                    { (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
+                };
+                auto buf = context.resolve(constant_buffer);
+                memcpy(buf->cpu_mapped_address, mvp, sizeof(mvp));
+            }
             cgpu_render_encoder_set_viewport(context.encoder,
                 0.0f, 0.0f,
                 (float)target_desc.width,
                 (float)target_desc.height,
                 0.f, 1.f);
-            cgpu_render_encoder_push_constants(context.encoder, root_sig, "push_constants", &invDisplaySize);
             // drawcalls
-            ImDrawData* draw_data = ImGui::GetDrawData();
             // Will project scissor/clipping rectangles into framebuffer space
-            ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
-            ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
+            const ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
+            const ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
             // Render command lists
             // (Because we merged all buffers into a single one, we maintain our own offset into them)
             int global_vtx_offset = 0;
@@ -176,6 +194,7 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
                             (uint32_t)clip_rect.x, (uint32_t)clip_rect.y,
                             (uint32_t)(clip_rect.z - clip_rect.x),
                             (uint32_t)(clip_rect.w - clip_rect.y));
+
                         auto resolved_ib = context.resolve(index_buffer_handle);
                         auto resolved_vb = context.resolve(vertex_buffer_handle);
                         if (useCVV)
@@ -208,6 +227,30 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
             }
         });
     }
+}
+
+SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderGraph* render_graph,
+    skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
+{
+    ImGui::Render();
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    if (!draw_data) return;
+
+    ImGuiIO& io = ImGui::GetIO();
+    // Update and Render additional Platform Windows
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        io.BackendRendererUserData = render_graph;
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
+
+    // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
+    int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
+    int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
+    if (fb_width <= 0 || fb_height <= 0) return;
+    
+    imguir_render_draw_data(draw_data, render_graph, target, load_action);
 }
 
 SKR_IMGUI_API void render_graph_imgui_finalize()
@@ -335,11 +378,64 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     render_pipeline = cgpu_create_render_pipeline(desc->queue->device, &rp_desc);
 }
 
-void imgui_render_window(ImGuiViewport* viewport, void*)
+void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
 {
-    if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
+    ImGuiIO& io = ImGui::GetIO();
+    auto graph = (skr::render_graph::RenderGraph*)io.BackendRendererUserData;
+
+    CGPUSwapChainId swapchain = nullptr;
+    if (!viewport->RendererUserData)
     {
+        // create & record swapchain here
+        //viewport->RendererUserData = 
     }
+    // if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear));
+    
+    CGPUAcquireNextDescriptor acquire = {};
+    acquire.fence = nullptr;
+    acquire.signal_semaphore = nullptr;
+    auto backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire);
+    CGPUTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
+
+    auto back_buffer = graph->create_texture(
+        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            eastl::string res_name = "imgui-window-";
+            res_name.append(eastl::to_string(viewport->ID));
+            builder.set_name(res_name.c_str())
+                .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
+                .allow_render_target();
+        });
+
+    imguir_render_draw_data(viewport->DrawData, graph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
+
+    graph->add_present_pass(
+        [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+            builder.set_name("present_pass")
+            .swapchain(swapchain, backbuffer_index)
+            .texture(back_buffer, true);
+        });
 }
 
+void imguir_create_window(ImGuiViewport* viewport)
+{
+    SKR_LOG_INFO("imguir_create_window");
+
+}
+
+void imguir_destroy_window(ImGuiViewport* viewport)
+{
+    SKR_LOG_INFO("imguir_destroy_window");
+
+}
+
+void imguir_resize_window(ImGuiViewport* viewport, ImVec2 size)
+{
+    SKR_LOG_INFO("imguir_resize_window");
+
+}
+
+void imguir_swap_buffers(ImGuiViewport* viewport, void*)
+{
+    // noting needs to be done here... 
+}
 } // namespace skr::imgui
