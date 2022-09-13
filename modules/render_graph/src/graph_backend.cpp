@@ -661,14 +661,14 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = &ds_attachment;
     stack.cmd = executor.gfx_cmd_buf;
-    stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
     executor.write_marker(fmt::format("Pass-{}-BeginPass", pass->get_name()).c_str());
+    stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
     if (pass->pipeline) cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
         if (!desc_set->updated) continue;
         cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
-        executor.write_marker(fmt::format("Pass-{}-BindDescriptors", pass->get_name()).c_str());
+        // executor.write_marker(fmt::format("Pass-{}-BindDescriptors", pass->get_name()).c_str());
     }
     {
         ZoneScopedN("PassExecutor");

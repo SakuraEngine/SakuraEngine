@@ -607,7 +607,7 @@ const struct CGPURootSignatureDescriptor* desc)
         for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
         {
             uint32_t i_binding = param_table->resources[i_iter].binding;
-            VkDescriptorUpdateTemplateEntry* this_entry = template_entries + i_binding;
+            VkDescriptorUpdateTemplateEntry* this_entry = template_entries + i_iter;
             this_entry->descriptorCount = param_table->resources[i_iter].size;
             this_entry->descriptorType = VkUtil_TranslateResourceType(param_table->resources[i_iter].type);
             this_entry->dstBinding = i_binding;
@@ -724,7 +724,7 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
         }
     }
     SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[set->index];
-    CGPUParameterTable* ParamTable = &RS->super.tables[table_index];
+    const CGPUParameterTable* ParamTable = &RS->super.tables[table_index];
     VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
     memset(pUpdateData, 0, count * sizeof(VkDescriptorUpdateData));
     bool dirty = false;
@@ -732,7 +732,7 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
     {
         // Descriptor Info
         const CGPUDescriptorData* pParam = datas + i;
-        CGPUShaderResource* ResData = CGPU_NULLPTR;
+        const CGPUShaderResource* ResData = CGPU_NULLPTR;
         if (pParam->name != CGPU_NULLPTR)
         {
             size_t argNameHash = cgpu_hash(pParam->name, strlen(pParam->name), *(size_t*)&D);
@@ -746,7 +746,13 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
         }
         else
         {
-            ResData = ParamTable->resources + pParam->binding;
+            for (uint32_t p = 0; p < ParamTable->resources_count; p++)
+            {
+                if (ParamTable->resources[p].binding == pParam->binding)
+                {
+                    ResData = ParamTable->resources + p;
+                }
+            }
         }
         // Update Info
         const uint32_t arrayCount = cgpu_max(1U, pParam->count);
@@ -763,13 +769,13 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
                     cgpu_assert(pParam->textures[arr] && "cgpu_assert: Binding NULL texture!");
                     VkDescriptorUpdateData* Data = &pUpdateData[ResData->binding + arr];
                     Data->mImageInfo.imageView =
-                    ResData->type == CGPU_RESOURCE_TYPE_RW_TEXTURE ?
-                    TextureViews[arr]->pVkUAVDescriptor :
-                    TextureViews[arr]->pVkSRVDescriptor;
+                        ResData->type == CGPU_RESOURCE_TYPE_RW_TEXTURE ?
+                        TextureViews[arr]->pVkUAVDescriptor :
+                        TextureViews[arr]->pVkSRVDescriptor;
                     Data->mImageInfo.imageLayout =
                     ResData->type == CGPU_RESOURCE_TYPE_RW_TEXTURE ?
-                    VK_IMAGE_LAYOUT_GENERAL :
-                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        VK_IMAGE_LAYOUT_GENERAL :
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     Data->mImageInfo.sampler = VK_NULL_HANDLE;
                     dirty = true;
                 }

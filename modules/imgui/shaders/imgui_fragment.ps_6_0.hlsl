@@ -5,8 +5,10 @@ struct PSIn
     float2 uv  : TEXCOORD0;
 };
 
-sampler sampler0 : register(s0, space1);
+[[vk::binding(0, 1)]]
 Texture2D texture0 : register(t0);
+[[vk::binding(1, 1)]]
+sampler sampler0 : register(s0, space1);
 
 float4 main(PSIn input) : SV_Target
 {

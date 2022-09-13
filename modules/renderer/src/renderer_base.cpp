@@ -202,9 +202,10 @@ CGPUSwapChainId skr::Renderer::recreate_window_swapchain(SWindowHandle window)
         else old = _->second;
     }
     CGPUSurfaceId surface = nullptr;
-    // find registered
+    // free existed
     {
         auto _ = surfaces.find(window);
+        cgpu_free_swapchain(old);
         if (_ != surfaces.end())
         {
             cgpu_free_surface(device, _->second);
@@ -226,7 +227,6 @@ CGPUSwapChainId skr::Renderer::recreate_window_swapchain(SWindowHandle window)
     chain_desc.imageCount = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
-    cgpu_free_swapchain(old);
     auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
     swapchains[window] = swapchain;
     return swapchain;

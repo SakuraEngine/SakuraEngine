@@ -1,3 +1,4 @@
+[[vk::binding(0, 0)]]
 cbuffer Constants : register(b0)
 {
     float4x4 ProjectionMatrix;

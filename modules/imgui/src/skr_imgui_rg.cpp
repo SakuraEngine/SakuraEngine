@@ -237,7 +237,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                             const uint32_t stride = sizeof(ImDrawVert);
                         cgpu_render_encoder_bind_vertex_buffers(context.encoder,
                             1, &resolved_vb, &stride, NULL);
-                            cgpu_render_encoder_draw_indexed(context.encoder,
+                        cgpu_render_encoder_draw_indexed(context.encoder,
                             pcmd->ElemCount,
                             pcmd->IdxOffset + global_idx_offset,
                             pcmd->VtxOffset + global_vtx_offset);
@@ -419,6 +419,8 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
 
 void imgui_recreate_swapchain(ImGuiViewport* viewport, CGPUDeviceId device, CGPUQueueId present_queue)
 {
+    if (viewport == ImGui::GetMainViewport()) 
+        return;
     ImGuiWindowData* rdata = (ImGuiWindowData*)viewport->RendererUserData;
     const auto window = (SWindowHandle)viewport->PlatformHandle;
 
@@ -497,6 +499,7 @@ void imguir_destroy_window(ImGuiViewport* viewport)
     {
         auto rdata = (ImGuiWindowData*)viewport->RendererUserData;
         cgpu_wait_fences(&rdata->fence, 1);
+        cgpu_wait_queue_idle(rdata->present_queue);
         auto device = rdata->fence->device;
         cgpu_free_fence(rdata->fence);
         cgpu_free_swapchain(rdata->swapchain);
@@ -510,6 +513,8 @@ void imguir_resize_window(ImGuiViewport* viewport, ImVec2 size)
 {
     ImGuiIO& io = ImGui::GetIO();
     auto graph = (skr::render_graph::RenderGraph*)io.BackendRendererUserData;
+    // TODO: fix this hack
+    cgpu_wait_queue_idle(graph->get_gfx_queue());
     imgui_recreate_swapchain(viewport, graph->get_backend_device(), graph->get_gfx_queue());
 }
 
