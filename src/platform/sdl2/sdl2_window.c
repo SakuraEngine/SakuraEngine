@@ -2,15 +2,20 @@
 #include "SDL2/SDL_system.h"
 #include "SDL2/SDL_syswm.h"
 
+#define SDL_HAS_ALWAYS_ON_TOP SDL_VERSION_ATLEAST(2,0,5)
+
 SWindowHandle skr_create_window(const char8_t* name, const SWindowDescroptor* desc)
 {
     uint32_t flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN;
-    flags = desc->resizable ? (flags | SDL_WINDOW_RESIZABLE) : flags;
-    flags |= desc->boardless ? SDL_WINDOW_BORDERLESS : 0;
-    flags |= desc->hidden ? SDL_WINDOW_HIDDEN : 0;
+    flags |= (desc->flags & SKR_WINDOW_RESIZABLE) ? SDL_WINDOW_RESIZABLE : 0;
+    flags |= (desc->flags & SKR_WINDOW_BOARDLESS) ? SDL_WINDOW_BORDERLESS : 0;
+    flags |= (desc->flags & SKR_WINDOW_HIDDEN) ? SDL_WINDOW_HIDDEN : 0;
+#if SDL_HAS_ALWAYS_ON_TOP
+    flags |= (desc->flags & SKR_WINDOW_TOPMOST) ? SDL_WINDOW_ALWAYS_ON_TOP : 0;
+#endif
     SDL_Window* sdl_window = SDL_CreateWindow(name,
-        desc->centered ? SDL_WINDOWPOS_CENTERED : desc->posx,
-        desc->centered ? SDL_WINDOWPOS_CENTERED : desc->posy,
+        (desc->flags & SKR_WINDOW_CENTERED) ? SDL_WINDOWPOS_CENTERED : desc->posx,
+        (desc->flags & SKR_WINDOW_CENTERED) ? SDL_WINDOWPOS_CENTERED : desc->posy,
         desc->width, desc->height, flags);
     return (SWindowHandle)sdl_window;
 }

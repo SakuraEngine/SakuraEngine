@@ -45,10 +45,6 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
     {
         skr_set_cursor_pos((uint32_t)io.MousePos.x, (uint32_t)io.MousePos.y);
     }
-    else
-    {
-        io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
-    }
 
     // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
     io.MouseDown[0] = skr_mouse_key_down(EMouseKey::MOUSE_KEY_LB);
@@ -68,8 +64,6 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
             // pos_x -= window_x;
             // pos_y -= window_y;
             io.AddMousePosEvent((float)pos_x, (float)pos_y);
-            io.MousePos.x = (float)pos_x;
-            io.MousePos.y = (float)pos_y;
         }
     }
     else
@@ -81,8 +75,6 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
             int32_t pos_x, pos_y;
             skr_cursor_pos(&pos_x, &pos_y, CURSOR_COORDINATE_WINDOW);
             io.AddMousePosEvent((float)pos_x, (float)pos_y);
-            io.MousePos.x = (float)pos_x;
-            io.MousePos.y = (float)pos_y;
         }
     }
 }
@@ -165,9 +157,10 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
 void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
 {
     SWindowDescroptor desc = {};
-    desc.hidden = true;
-    desc.boardless = viewport->Flags & ImGuiViewportFlags_NoDecoration;
-    desc.resizable = !(viewport->Flags & ImGuiViewportFlags_NoDecoration);
+    desc.flags = SKR_WINDOW_HIDDEN;
+    desc.flags |= (viewport->Flags & ImGuiViewportFlags_NoDecoration) ? SKR_WINDOW_BOARDLESS : 0;
+    desc.flags |= !(viewport->Flags & ImGuiViewportFlags_NoDecoration) ? 0 : SKR_WINDOW_RESIZABLE;
+    desc.flags |= (viewport->Flags & ImGuiViewportFlags_TopMost) ? SKR_WINDOW_TOPMOST : 0;
     desc.width = (uint32_t)viewport->Size.x;
     desc.height = (uint32_t)viewport->Size.y;
     desc.posx = (uint32_t)viewport->Pos.x;

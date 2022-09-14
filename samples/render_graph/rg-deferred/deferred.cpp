@@ -254,8 +254,7 @@ int main(int argc, char* argv[])
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
     SWindowDescroptor window_desc = {};
-    window_desc.centered = true;
-    window_desc.resizable = true;
+    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     window = skr_create_window(gCGPUBackendNames[backend], &window_desc);

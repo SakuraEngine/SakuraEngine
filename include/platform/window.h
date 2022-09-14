@@ -6,15 +6,22 @@ typedef struct SWindow SWindow;
 typedef SWindow* SWindowHandle;
 typedef SMonitor* SMonitorHandle;
 
+typedef enum SWindowFlag {
+    SKR_WINDOW_CENTERED = 0x00000001,
+    SKR_WINDOW_RESIZABLE = 0x00000002,
+    SKR_WINDOW_BOARDLESS = 0x00000004,
+    SKR_WINDOW_HIDDEN = 0x00000008,
+    SKR_WINDOW_TOPMOST = 0x00000010,
+    SKR_WINDOW_FLAG_ENUM_MAX = 0x7FFFFFFF
+} SWindowFlag;
+typedef uint32_t SWindowFlags;
+
 typedef struct SWindowDescroptor {
     uint32_t width;
     uint32_t height;
     uint32_t posx;
     uint32_t posy;
-    bool centered;
-    bool resizable;
-    bool boardless;
-    bool hidden;
+    SWindowFlags flags;
 } SWindowDescroptor;
 
 #ifdef __cplusplus
