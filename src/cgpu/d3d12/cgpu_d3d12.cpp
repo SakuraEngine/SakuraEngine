@@ -184,6 +184,16 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
         desc.NodeMask = 0; // CPU Descriptor Heap - Node mask is irrelevant
         desc.NumDescriptors = gCpuDescriptorHeapProperties[i].mMaxDescriptors;
         desc.Type = (D3D12_DESCRIPTOR_HEAP_TYPE)i;
+#ifdef _DEBUG
+        auto sz = D->pDxDevice->GetDescriptorHandleIncrementSize(desc.Type);
+        const char* types[] = {
+            "CBV_SRV_UAV",
+            "SAMPLER",
+            "RTV",
+            "DSV",
+        };
+        cgpu_trace("D3D12 descriptor heap type: %s, increment size: %d, Total allocated: %d(bytes)", types[desc.Type], sz, sz * desc.NumDescriptors);
+#endif
         D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pCPUDescriptorHeaps[i]);
     }
     // One shader visible heap for each linked node

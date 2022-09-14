@@ -132,6 +132,7 @@ CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const CGPUDeviceDescripto
     cgpu_assert(adapter->proc_table_cache->create_device && "create_device Proc Missing!");
 
     CGPUDeviceId device = adapter->proc_table_cache->create_device(adapter, desc);
+    ((CGPUDevice*)device)->next_texture_id = 0;
     // ++ proc_table_cache
     if (device != CGPU_NULLPTR)
     {
@@ -946,6 +947,7 @@ CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureD
     CGPUTexture* texture = (CGPUTexture*)fn_create_texture(device, &new_desc);
     texture->device = device;
     texture->sample_count = desc->sample_count;
+    texture->unique_id = ((CGPUDevice*)device)->next_texture_id++;
     return texture;
 }
 
@@ -1037,6 +1039,11 @@ CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDe
     cgpu_trace("cgpu_create_swapchain: swapchain(%dx%d) %p created, buffers: [%p, %p], surface: %p", 
         swapchain->back_buffers[0]->width, swapchain->back_buffers[0]->height, swapchain,
         swapchain->back_buffers[0], swapchain->back_buffers[1], desc->surface);
+
+    for (uint32_t i = 0; i < swapchain->buffer_count; i++)
+    {
+        ((CGPUTexture*)swapchain->back_buffers[i])->unique_id = ((CGPUDevice*)device)->next_texture_id++;
+    }
 
     return swapchain;
 }
