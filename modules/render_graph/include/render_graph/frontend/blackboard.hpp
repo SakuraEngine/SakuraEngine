@@ -13,6 +13,7 @@ public:
     inline void clear()
     {
         named_passes.clear();
+        named_buffers.clear();
         named_textures.clear();
     }
 
