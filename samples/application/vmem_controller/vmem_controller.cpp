@@ -192,8 +192,7 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
 #endif
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
     SWindowDescroptor window_desc = {};
-    window_desc.centered = true;
-    window_desc.resizable = true;
+    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     window_desc.height = 1024;
     window_desc.width = 1024;
     window = skr_create_window(gCGPUBackendNames[backend], &window_desc);

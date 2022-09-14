@@ -245,8 +245,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         return -1;
     auto cgpuDevice = skr_renderer_get_cgpu_device();
     auto window_desc = make_zeroed<SWindowDescroptor>();
-    window_desc.centered = true;
-    window_desc.resizable = true;
+    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     window = skr_create_window(
