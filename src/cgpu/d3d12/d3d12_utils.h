@@ -91,8 +91,8 @@ typedef struct DescriptorHeapProperties {
 static const DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES] = {
     { 1024 * 256, D3D12_DESCRIPTOR_HEAP_FLAG_NONE }, // CBV SRV UAV
     { 2048, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },       // Sampler
-    { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // RTV
-    { 512, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
+    { 1024 * 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // RTV
+    { 1024 * 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
 };
 
 static const D3D12_BLEND_OP gDx12BlendOpTranslator[CGPU_BLEND_MODE_COUNT] = {

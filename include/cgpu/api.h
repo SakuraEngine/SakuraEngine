@@ -646,6 +646,7 @@ typedef struct CGPUDevice {
     {
     }
 #endif
+    uint64_t next_texture_id;
     bool is_lost SKR_IF_CPP(= false);
 } CGPUDevice;
 
@@ -1323,6 +1324,7 @@ typedef struct CGPUTexture {
     uint32_t is_aliasing : 1;
     uint32_t can_alias : 1;
     void* native_handle;
+    uint64_t unique_id;
 } CGPUTexture;
 
 typedef struct CGPUTextureView {
