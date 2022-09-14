@@ -116,7 +116,7 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         platform_io.Platform_ShowWindow = &skr::imgui::imgui_show_window;
         platform_io.Platform_SetWindowPos = &skr::imgui::imgui_set_window_pos;
         platform_io.Platform_GetWindowPos = &skr::imgui::imgui_get_window_pos;
-        platform_io.Platform_SetWindowSize = &skr::imgui::imgui_set_window_pos;
+        platform_io.Platform_SetWindowSize = &skr::imgui::imgui_set_window_size;
         platform_io.Platform_GetWindowSize = &skr::imgui::imgui_get_window_size;
         platform_io.Platform_SetWindowFocus = &skr::imgui::imgui_set_window_focus;
         platform_io.Platform_GetWindowFocus = &skr::imgui::imgui_get_window_focus;
