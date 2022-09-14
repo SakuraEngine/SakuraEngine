@@ -36,7 +36,6 @@ void imgui_swap_buffers(ImGuiViewport* viewport, void*);
 static void imgui_update_mouse_and_buttons(SWindowHandle window)
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseHoveredViewport = 0;
 
     // [1]
     // Only when requested by io.WantSetMousePos: set OS mouse pos from Dear ImGui mouse pos.
@@ -77,6 +76,28 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
             io.AddMousePosEvent((float)pos_x, (float)pos_y);
         }
     }
+#ifdef _WIN32
+    if (io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
+    {
+        ImGuiID mouse_viewport_id = 0;
+        POINT mouse_screen_pos;
+        ::GetCursorPos(&mouse_screen_pos);
+        if (HWND hovered_hwnd = ::WindowFromPoint(mouse_screen_pos))
+        {
+            ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+            for (uint32_t i = 0; i < platform_io.Viewports.size(); i++)
+            {
+                if (platform_io.Viewports[i]->PlatformHandleRaw == hovered_hwnd)
+                {
+                    mouse_viewport_id = platform_io.Viewports[i]->ID;
+                    break;
+                }
+            }
+        }
+        io.AddMouseViewportEvent(mouse_viewport_id);
+        io.MouseHoveredViewport = mouse_viewport_id;
+    }
+#endif
 }
 
 void skr_imgui_new_frame(SWindowHandle window, float delta_time)
@@ -87,6 +108,9 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
     io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
+#ifdef _WIN32
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
+#endif
 
     int extent_w, extent_h;
     skr_window_get_extent(window, &extent_w, &extent_h);

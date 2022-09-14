@@ -384,13 +384,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         break;
                     }
                 }
-
-                if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
-                    io.AddFocusEvent(true);
-                else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
-                    io.AddFocusEvent(false);
-                else if (window_event == SDL_WINDOWEVENT_LEAVE)
-                    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
                     
                 if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
                     if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
@@ -402,18 +395,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         if (window_event == SDL_WINDOWEVENT_RESIZED)
                             viewport->PlatformRequestResize = true;
                     }
-            }
-
-            if (event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN)
-            {
-                int mouse_button = -1;
-                if (event.button.button == SDL_BUTTON_LEFT) { mouse_button = 0; }
-                if (event.button.button == SDL_BUTTON_RIGHT) { mouse_button = 1; }
-                if (event.button.button == SDL_BUTTON_MIDDLE) { mouse_button = 2; }
-                if (event.button.button == SDL_BUTTON_X1) { mouse_button = 3; }
-                if (event.button.button == SDL_BUTTON_X2) { mouse_button = 4; }
-                if (mouse_button == -1) continue;
-                io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
             }
 
             if (event.type == SDL_SYSWMEVENT)
