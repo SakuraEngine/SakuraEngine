@@ -254,9 +254,6 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
     skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
 {
     ImGui::Render();
-    ImDrawData* draw_data = ImGui::GetDrawData();
-    if (!draw_data) return;
-
     ImGuiIO& io = ImGui::GetIO();
     // Update and Render additional Platform Windows
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -265,6 +262,8 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
     }
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    if (!draw_data) return;
 
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
     int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
