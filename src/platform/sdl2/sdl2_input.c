@@ -178,7 +178,7 @@ Uint32 MouseKeyCodeTranslator(EMouseKey keycode)
 RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code)
 {
     int x, y;
-    Uint32 button = SDL_GetMouseState(&x, &y);
+    Uint32 button = SDL_GetGlobalMouseState(&x, &y);
     if (button & MouseKeyCodeTranslator(key_code))
         return true;
     return false;
