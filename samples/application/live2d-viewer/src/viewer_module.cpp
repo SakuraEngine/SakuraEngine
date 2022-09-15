@@ -212,6 +212,20 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
                     }
                 }
             }
+            if (event.type == SDL_WINDOWEVENT)
+            {
+                Uint8 window_event = event.window.event;
+                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
+                if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
+                {
+                    if (window_event == SDL_WINDOWEVENT_CLOSE)
+                        viewport->PlatformRequestClose = true;
+                    if (window_event == SDL_WINDOWEVENT_MOVED)
+                        viewport->PlatformRequestMove = true;
+                    if (window_event == SDL_WINDOWEVENT_RESIZED)
+                        viewport->PlatformRequestResize = true;
+                }
+            }
             if (event.type == SDL_QUIT)
             {
                 quit = true;
@@ -305,6 +319,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
             cgpu_queue_present(skr_renderer_get_gfx_queue(), &present_desc);
+            render_graph_imgui_present_sub_viewports();
         }
     }
     cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
