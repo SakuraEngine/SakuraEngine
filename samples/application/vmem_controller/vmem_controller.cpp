@@ -190,7 +190,7 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) return -1;
     SWindowDescroptor window_desc = {};
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     window_desc.height = 1024;
@@ -231,6 +231,22 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
                     quit = true;
                 }
             }
+            
+            if (event.type == SDL_WINDOWEVENT)
+            {
+                Uint8 window_event = event.window.event;
+                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
+                if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
+                {
+                    if (window_event == SDL_WINDOWEVENT_CLOSE)
+                        viewport->PlatformRequestClose = true;
+                    if (window_event == SDL_WINDOWEVENT_MOVED)
+                        viewport->PlatformRequestMove = true;
+                    if (window_event == SDL_WINDOWEVENT_RESIZED)
+                        viewport->PlatformRequestResize = true;
+                }
+            }
+
             if (event.type == SDL_QUIT)
             {
                 quit = true;
@@ -279,6 +295,7 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
             cgpu_queue_present(gfx_queue, &present_desc);
+            render_graph_imgui_present_sub_viewports();
             // Avoid too much CPU Usage
             skr_thread_sleep(16);
         }

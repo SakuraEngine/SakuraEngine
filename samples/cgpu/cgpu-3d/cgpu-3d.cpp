@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
         eastl::string cmdArgv1 = argv[1];
         cmdBackend = cmdArgv1 == "-dx12" ? CGPU_BACKEND_D3D12 : CGPU_BACKEND_VULKAN;
     }
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) return -1;
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) return -1;
     RenderWindow* render_window = nullptr;
     auto render_device = CreateAndInitialize<RenderDevice>(cmdBackend, &render_window);
     auto renderer = CreateAndInitialize<SceneRenderer>(render_device.get());
