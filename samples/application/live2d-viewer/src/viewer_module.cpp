@@ -169,8 +169,9 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     window_desc.height = 1500;
     window_desc.width = 1500;
     window = skr_create_window(
-        fmt::format("Live2D Viewer [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
+        fmt::format("Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
         &window_desc);
+
     auto ram_service = SLive2DViewerModule::Get()->ram_service;
     auto vram_service = skr_renderer_get_vram_service();
     // Initialize renderer
