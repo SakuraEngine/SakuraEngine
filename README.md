@@ -81,6 +81,24 @@ Live2D 模型复合了多种源数据类型，所有数据类型异步地加载�
 
 Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubism 官方示例基准的十数倍。
 
+### [Cross-Process Presentation](samples/render_graph/cross-process)
+这个 demo 展示了引擎将会采用的跨进程技术雏形，即使用 LMDB 和 GRPC 的数据共享以及跨进程 CGPU 资源的视图呈现。
+
+### [RenderGraph Deferred](samples/render_graph/rg-deferred)
+这个 demo 展示了如何使用 RenderGraph 进行 Deferred 渲染，其中光照计算的部分有 ComputeShdaer 和 PixelShader 两种实现。实际的光照着色效果尚未在 demo 中完成，重点在于验证延迟流程的可行性。这个 demo 同样展示了如何使用自定义 Profiler 对 RenderGraph 的执行细节进行 Profile。
+
+<div align=center>
+
+![RenderGraphDeferred](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/rg-deferred.png)
+
+</div>
+
+
+### [RenderGraph Triangle](samples/render_graph/rg-triangle)
+这个 demo 展示了如何使用 RenderGraph 进行三角形渲染。
+
+
+
 ### [全异步glTF渲染器](samples/cgpu-3d)
 这个 demo 的所有 I/O 操作完全异步。从 Disk I/O 到 Memory，再从 Memory 流送到 VideoMemory，全部都是异步完成的。在有 AsyncCompute 支持的情况下，demo 会使用 CopyQueue 并处理好 Release/Acquire Barriers。在单一 Queue的情况下，demo 会使用单个的 Graphics Queue，通过多个分离的 TransferSubmit 完成异步的上传操作。
 
