@@ -16,6 +16,12 @@ option("build_samples")
     set_description("Toggle to build samples of SakuraRuntime")
 option_end()
 
+option("build_editors")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Toggle to build editors of SakuraRuntime")
+option_end()
+
 option("build_tests")
     set_default(true)
     set_showmenu(true)

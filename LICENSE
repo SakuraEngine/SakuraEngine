@@ -19,3 +19,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+-----------------------------------------------------------------------------
+Some source files under "/thirdparty" uses GNU LGPL License.
+This software uses them as only dynamic libraries and always keep them as unmodified.
+YOU SHOULD NEVER MODIFY THE FILES:
+    - Qt-Advanced-Docking-System: /thirdparty/QtAdvancedDocking/**.h
+                                  /thirdparty/QtAdvancedDocking/**.cpp
+                                  /thirdparty/QtAdvancedDocking/**.svg
+                                  /thirdparty/QtAdvancedDocking/**.qrc
+                                  /thirdparty/QtAdvancedDocking/**.css
