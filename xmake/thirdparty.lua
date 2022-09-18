@@ -1,3 +1,4 @@
+includes("thirdparty/lmdb.lua")
 includes("thirdparty/mimalloc.lua")
 includes("thirdparty/boost.lua")
 includes("thirdparty/gsl.lua")

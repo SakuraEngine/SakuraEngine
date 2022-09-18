@@ -245,12 +245,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
         return -1;
     auto cgpuDevice = skr_renderer_get_cgpu_device();
     auto window_desc = make_zeroed<SWindowDescroptor>();
-    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE | SKR_WINDOW_BOARDLESS;
-    window_desc.height = 720 * 1.5;
-    window_desc.width = 1024 * 1.5;
+    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;// | SKR_WINDOW_BOARDLESS;
+    window_desc.height = BACK_BUFFER_HEIGHT;
+    window_desc.width = BACK_BUFFER_WIDTH;
     window = skr_create_window(
-    fmt::format("Game [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
-    &window_desc);
+        fmt::format("Game [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
+        &window_desc);
     // Initialize renderer
     auto swapchain = skr_renderer_register_window(window);
     auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
