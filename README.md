@@ -1,4 +1,4 @@
-<h1 align="center">Sakura.Runtime</h1>
+<h1 align="center">SakuraEngine</h1>
 
 <a href="https://olivermak.es/">
   <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/logos/skr_icon.svg" width="100%" height="100%">
@@ -81,19 +81,16 @@ Live2D 模型复合了多种源数据类型，所有数据类型异步地加载�
 
 Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubism 官方示例基准的十数倍。
 
-### [热更三角形](samples/hot-triangle)
+### [全异步glTF渲染器](samples/cgpu-3d)
+这个 demo 的所有 I/O 操作完全异步。从 Disk I/O 到 Memory，再从 Memory 流送到 VideoMemory，全部都是异步完成的。在有 AsyncCompute 支持的情况下，demo 会使用 CopyQueue 并处理好 Release/Acquire Barriers。在单一 Queue的情况下，demo 会使用单个的 Graphics Queue，通过多个分离的 TransferSubmit 完成异步的上传操作。
 
-这是一个多后端的三角形绘制 demo。
-- 每个后端会拉起一个窗口, 并在一个独立的线程上绘制它；
-- drawcall 录制的逻辑可以运行在 host 程序或者 wasm 虚拟机后端中, host 程序和 wasm ‘脚本’共享[同一份C代码](samples/hot-triangle/triangle_module.wa.c)；
-- 实现了一个简单的 [filewatcher](samples/hot-triangle/hot_wasm.cpp)，自动对 drawcall 脚本进行变更检查，调用 SDK 编译 wasm，并基于产出物应用热修复。
+<div align=center> 
 
-<div align=center>
+！此 demo 较为过时，当前引擎版本更推荐使用 VRAM I/O Service 实现异步流送 ！
 
-![hot-triangle](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/hot-triangle.gif)
+![cgpu-glTF](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/AsyncGLTF.gif)
 
 </div>
-
 
 ### [纹理](samples/cgpu-texture)
 这个 demo 演示了如何在 CGPU 中使用纹理采样，demo 也演示了怎么在 CGPU 中启用 Static/Immutable Samplers。
@@ -104,15 +101,16 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 
 </div>
 
+### [热更三角形](samples/hot-triangle)
 
-### [全异步glTF渲染器](samples/cgpu-3d)
-这个 demo 的所有 I/O 操作完全异步。从 Disk I/O 到 Memory，再从 Memory 流送到 VideoMemory，全部都是异步完成的。在有 AsyncCompute 支持的情况下，demo 会使用 CopyQueue 并处理好 Release/Acquire Barriers。在单一 Queue的情况下，demo 会使用单个的 Graphics Queue，通过多个分离的 TransferSubmit 完成异步的上传操作。
+这是一个多后端的三角形绘制 demo。
+- 每个后端会拉起一个窗口, 并在一个独立的线程上绘制它；
+- drawcall 录制的逻辑可以运行在 host 程序或者 wasm 虚拟机后端中, host 程序和 wasm ‘脚本’共享[同一份C代码](samples/hot-triangle/triangle_module.wa.c)；
+- 实现了一个简单的 [filewatcher](samples/hot-triangle/hot_wasm.cpp)，自动对 drawcall 脚本进行变更检查，调用 SDK 编译 wasm，并基于产出物应用热修复。
 
-<div align=center> 
+<div align=center>
 
-！此 demo 较为过时，当前引擎版本更推荐使用 VRAM I/O Service 实现异步流送 ！
-
-![cgpu-glTF](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/AsyncGLTF.gif)
+![hot-triangle](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/hot-triangle.gif)
 
 </div>
 
