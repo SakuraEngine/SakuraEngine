@@ -36,7 +36,7 @@ inline static void dbi_create(MDB_env* env, MDB_dbi* pdb, bool readonly)
     {
         // ZoneScopedN("MDBQuery");
 
-        auto dbi_flags = MDB_DUPSORT | MDB_CREATE;
+        auto dbi_flags = MDB_CREATE;
         if (const int rc = mdb_dbi_open(txn, "proc-links", dbi_flags, pdb)) 
         {
             SKR_LOG_ERROR("mdb_dbi_open failed: %d", rc);

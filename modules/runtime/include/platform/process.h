@@ -3,7 +3,7 @@
 
 typedef struct SProcess SProcess;
 typedef struct SProcess* SProcessHandle;
-typedef int64_t SProcessId;
+typedef uint32_t SProcessId;
 
 RUNTIME_EXTERN_C RUNTIME_API
 SProcessHandle skr_run_process(const char* command, const char** arguments, uint32_t arg_count, const char* stdout_file);

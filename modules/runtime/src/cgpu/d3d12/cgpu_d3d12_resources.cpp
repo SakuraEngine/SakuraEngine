@@ -537,10 +537,6 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
             res_desc.Format = dxFormat;
         }
 #endif
-        if ( desc->flags & CGPU_TCF_EXPORT_BIT )
-        {
-            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
-        } 
         // Do allocation (TODO: mGPU)
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
         if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1 // for smaller alignment that not suitable for MSAA
@@ -552,13 +548,17 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
         }
+        is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
+        can_alias_allocation = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
+        if ( desc->flags & CGPU_TCF_EXPORT_BIT )
+        {
+            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
+        } 
         if (!desc->is_aliasing)
         {
             auto hres = D->pResourceAllocator->CreateResource(
                 &alloc_desc, &resDesc, res_states, pClearValue,
                 &pDxAllocation, IID_ARGS(&pDxResource));
-            is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
-            can_alias_allocation = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
             if (hres != S_OK)
             {
                 auto fallbackHres = hres;
@@ -691,43 +691,157 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
     return result == S_OK;
 }
 
+/*
+#include "d3d11on12.h"
+#pragma comment(lib, "D3D11.lib")
+
+static ID3D11On12Device* pDx11On12Device = nullptr;
+static ID3D11Device* pDx11Device = nullptr;
+static ID3D11DeviceContext* pDx11DeviceContext = nullptr;
+
+void initialize_d3d11_on_12(CGPUDeviceId device)
+{
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    if (!pDx11Device)
+    {
+        auto hres = D3D11On12CreateDevice
+          (D->pDxDevice, 0, nullptr, 0,
+           nullptr, 0, 0, 
+           &pDx11Device, &pDx11DeviceContext, nullptr);
+        if (FAILED(hres))
+        {
+            cgpu_error("Failed to create D3D11On12 device!");   
+        }
+        else
+        {
+            cgpu_trace("D3D11On12 device created!");
+            if (auto hr = pDx11Device->QueryInterface(IID_PPV_ARGS(&pDx11On12Device)); !SUCCEEDED(hr))
+            {
+                cgpu_error("Failed to query D3D11On12 device interface!");   
+            }
+            else 
+            {
+                cgpu_trace("D3D11On12 device interface queried!");
+            }
+        }
+    }
+}
+
+
 uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)
 {
-    HRESULT result = S_OK;
-    HANDLE hdl = INVALID_HANDLE_VALUE;
-    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    initialize_d3d11_on_12(device);
     CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)desc->texture;
-    result = D->pDxDevice->CreateSharedHandle(T->pDxResource, 
-        CGPU_NULLPTR, GENERIC_ALL, CGPU_NULLPTR, &hdl);
+
+    D3D11_RESOURCE_FLAGS wrapper_flags = {};
+    ID3D11Resource* pWrapper = nullptr;
+    auto hres = pDx11On12Device->CreateWrappedResource(
+        T->pDxResource, &wrapper_flags,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT,
+        IID_PPV_ARGS(&pWrapper));
+    if (FAILED(hres)) 
+    {
+        cgpu_error("Failed to create D3D11On12 wrapped resource!");
+        return UINT64_MAX;
+    }
+
+    HANDLE hdl = INVALID_HANDLE_VALUE;
+    IDXGIResource* pDXGIResource = nullptr;
+    if (auto hr = pWrapper->QueryInterface(IID_PPV_ARGS(&pDXGIResource)); !SUCCEEDED(hr))
+    {
+        cgpu_error("Query DXGI Interface Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d" ,
+            hr, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+        return HandleToLong(INVALID_HANDLE_VALUE);
+    }
+    
+    pDx11On12Device->AcquireWrappedResources(&pWrapper, 1);
+    HRESULT result = pDXGIResource->GetSharedHandle(&hdl);
+    pDx11On12Device->ReleaseWrappedResources(&pWrapper, 1);
+
+    auto hdl_long = HandleToLong(hdl);
     if (FAILED(result))
     {
-        cgpu_error("Create Shared Handle Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d",
+        cgpu_error("Create Shared Handle Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d" ,
             result, T->super.can_export, T->super.width, T->super.height, T->super.depth);
     }
     else
     {
-        cgpu_trace("Create Shared Handle Success! Handle: %d\n\tcan_export: %d\n\tsize:%dx%dx%d",
-            hdl, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+        cgpu_trace("Create Shared Handle Success! Handle: %lld(As Long %d)\n\tcan_export: %d\n\tsize:%dx%dx%d",
+            hdl, hdl_long, T->super.can_export, T->super.width, T->super.height, T->super.depth);
     }
-    return (uint64_t)hdl;
+    pWrapper->Release();
+    return (uint64_t)hdl_long;
+}
+*/
+
+uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)
+{
+    HRESULT result = S_OK;
+    HANDLE winHdl = INVALID_HANDLE_VALUE;
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)desc->texture;
+    
+    // encode process id & shared_id into handle
+    auto pid = (uint64_t)GetCurrentProcessId();
+    uint64_t shared_id = D->next_shared_id++;
+    uint64_t hdl = (pid << 31) | shared_id;
+
+    // calculate name
+    eastl::wstring name = L"cgpu-exported-texture";
+    name += eastl::to_wstring(hdl);
+
+    // create shared resource handle
+    result = D->pDxDevice->CreateSharedHandle(T->pDxResource, 
+        CGPU_NULLPTR, GENERIC_ALL, name.c_str(), &winHdl);
+    auto winHdlLong = HandleToLong(winHdl);
+
+    // deal with info & error
+    if (FAILED(result))
+    {
+        cgpu_error("Create Shared Handle Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d" ,
+            result, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+    }
+    else
+    {
+        cgpu_trace("Create Shared Handle Success! Handle: %lld(Windows handle %lld, As Long %d)\n\tcan_export: %d\n\tsize:%dx%dx%d",
+            hdl, winHdl, winHdlLong, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+    }
+    return hdl;
 }
 
 CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc)
 {
     HRESULT result = S_OK;
     ID3D12Resource* imported = CGPU_NULLPTR;
-    HANDLE handle = (HANDLE)desc->shared_handle;
+    HANDLE namedResourceHandle = (HANDLE)LongToHandle(desc->shared_handle);
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
-    result = D->pDxDevice->OpenSharedHandle(handle, IID_PPV_ARGS(&imported));
-    if (FAILED(result))
+
+    eastl::wstring name = L"cgpu-exported-texture";
+    name += eastl::to_wstring(desc->shared_handle);
+
+    result = D->pDxDevice->OpenSharedHandleByName(name.c_str(), GENERIC_ALL, &namedResourceHandle);
+    result = D->pDxDevice->OpenSharedHandle(namedResourceHandle, IID_PPV_ARGS(&imported));
+    auto winHdlLong = HandleToLong(namedResourceHandle);
+
+    if (FAILED(result) && !imported)
     {
-        cgpu_error("Import Shared Handle Failed! Error Code: %d", result);
+        cgpu_error("Import Shared Handle %lld(Windows handle %lld, As Long %d) Failed! Error Code: %d", 
+            desc->shared_handle, namedResourceHandle, winHdlLong, result);
+        return nullptr;
     }
+    else
+    {
+        cgpu_trace("Import Shared Handle %lld(Windows handle %lld, As Long %d) Succeed!", 
+            desc->shared_handle, namedResourceHandle, desc->shared_handle);
+    }
+    CloseHandle(namedResourceHandle);
+
     auto imported_desc = imported->GetDesc();
     auto T = cgpu_new<CGPUTexture_D3D12>();
     T->pDxResource = imported;
     T->pDxAllocation = CGPU_NULLPTR;
-    // T->super.format = DXGIUtil_TranslatePixelFormat
+    T->super.format = DXGIUtil_FormatToCGPU(imported_desc.Format);
     T->super.width = imported_desc.Width;
     T->super.height = imported_desc.Height;
     T->super.array_size_minus_one = imported_desc.DepthOrArraySize - 1;
@@ -740,7 +854,7 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     T->super.unique_id = D->super.next_texture_id++;
     T->super.mip_levels = imported_desc.MipLevels;
     T->super.is_cube = (imported_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D && imported_desc.DepthOrArraySize > 6);
-    T->super.is_imported = true;;
+    T->super.is_imported = true;
     // TODO: mGPU
     T->super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
     return &T->super;
@@ -760,6 +874,11 @@ void cgpu_free_texture_d3d12(CGPUTextureId texture)
         CGPUTextureAliasing_D3D12* AT = (CGPUTextureAliasing_D3D12*)T;
         SAFE_RELEASE(AT->pDxResource);
         cgpu_delete(AT);
+    }
+    else if (T->super.is_imported)
+    {
+        SAFE_RELEASE(T->pDxResource);
+        cgpu_delete(T);
     }
 }
 

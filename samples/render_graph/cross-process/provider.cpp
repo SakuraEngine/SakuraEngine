@@ -1,34 +1,58 @@
+#include "platform/memory.h"
 #include "platform/process.h"
 #include "mdb_utils.h"
 #include <ghc/filesystem.hpp>
 #include "../../cgpu/common/utils.h"
 #include "render_graph/frontend/render_graph.hpp"
 
-thread_local SDL_Window* sdl_window;
-thread_local SDL_SysWMinfo wmInfo;
-thread_local CGPUSurfaceId surface;
-thread_local CGPUSwapChainId swapchain;
-thread_local uint32_t backbuffer_index;
-thread_local CGPUFenceId present_fence;
+struct ProviderRenderer
+{
+    void create_window();
+    void create_api_objects();
+    void create_render_pipeline();
+    void create_blit_pipeline();
+    void finalize();
 
-#if _WIN32
-thread_local ECGPUBackend backend = CGPU_BACKEND_D3D12;
-#else
-thread_local ECGPUBackend backend = CGPU_BACKEND_VULKAN;
-#endif
+    SDL_Window* sdl_window;
+    SDL_SysWMinfo wmInfo;
+    CGPUSurfaceId surface;
+    CGPUSwapChainId swapchain;
+    uint32_t backbuffer_index;
+    CGPUFenceId present_fence;
 
-thread_local CGPUInstanceId instance;
-thread_local CGPUAdapterId adapter;
-thread_local CGPUDeviceId device;
-thread_local CGPUQueueId gfx_queue;
-thread_local CGPUSamplerId static_sampler;
+    #if _WIN32
+    ECGPUBackend backend = CGPU_BACKEND_D3D12;
+    #else
+    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
+    #endif
 
-thread_local CGPURootSignatureId root_sig;
-thread_local CGPURootSignatureId blit_root_sig;
-thread_local CGPURenderPipelineId pipeline;
-thread_local CGPURenderPipelineId blit_pipeline;
+    CGPUInstanceId instance;
+    CGPUAdapterId adapter;
+    CGPUDeviceId device;
+    CGPUQueueId gfx_queue;
+    CGPUSamplerId static_sampler;
 
-void create_api_objects()
+    CGPURootSignatureId root_sig;
+    CGPURootSignatureId blit_root_sig;
+    CGPURenderPipelineId pipeline;
+    CGPURenderPipelineId blit_pipeline;
+};
+
+
+void ProviderRenderer::create_window()
+{
+    eastl::string title = "Cross-Process Provider [";
+    title = title + gCGPUBackendNames[backend] + "]";
+    title = title + " PID: " + eastl::to_string(skr_get_current_process_id());
+    sdl_window = SDL_CreateWindow(title.c_str(),
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(sdl_window, &wmInfo);
+}
+
+void ProviderRenderer::create_api_objects()
 {
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
@@ -44,6 +68,9 @@ void create_api_objects()
     CGPUAdapterId adapters[64];
     cgpu_enum_adapters(instance, adapters, &adapters_count);
     adapter = adapters[0];
+
+    auto adapter_detail = cgpu_query_adapter_detail(adapter);
+    SKR_LOG_TRACE("Adapter: %s", adapter_detail->vendor_preset.gpu_name);
 
     // Create device
     CGPUQueueGroupDescriptor queue_group_desc = {};
@@ -85,7 +112,7 @@ void create_api_objects()
     swapchain = cgpu_create_swapchain(device, &chain_desc);
 }
 
-void create_render_pipeline()
+void ProviderRenderer::create_render_pipeline()
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
@@ -132,7 +159,7 @@ void create_render_pipeline()
     cgpu_free_shader_library(fragment_shader);
 }
 
-void create_blit_pipeline()
+void ProviderRenderer::create_blit_pipeline()
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
@@ -185,7 +212,7 @@ void create_blit_pipeline()
     cgpu_free_shader_library(blit_fs);
 }
 
-void finalize()
+void ProviderRenderer::finalize()
 {
     // Free cgpu objects
     cgpu_wait_queue_idle(gfx_queue);
@@ -203,25 +230,70 @@ void finalize()
     cgpu_free_instance(instance);
 }
 
-int provider_renderer(int argc, char* argv[])
+int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id, uint64_t shared_handle)
 {
+    // Open txn
+    {
+        // ZoneScopedN("MDBTransaction");
+        MDB_txn* txn;
+        if (const int rc = mdb_txn_begin(env, nullptr, 0, &txn)) 
+        {
+            SKR_LOG_ERROR("mdb_txn_begin failed: %d", rc);
+        }
+        // Txn body: write db
+        {
+            //Initialize the key with the key we're looking for
+            eastl::string keyString = eastl::to_string(provider_id);
+            MDB_val key = { (size_t)keyString.size(), (void*)keyString.data() };
+            MDB_val data = { sizeof(shared_handle), (void*)&shared_handle };
+
+            if (int rc = mdb_put(txn, dbi, &key, &data, 0))
+            {
+                SKR_LOG_ERROR("mdb_put failed: %d", rc);
+            }
+            else
+            {
+                SKR_LOG_TRACE("provider_set_shared_handle succeed: %d, proc: %s, shared_handle: %lld", rc, keyString.c_str(), shared_handle);
+            }
+            if (int rc = mdb_txn_commit(txn))
+            {
+                SKR_LOG_ERROR("mdb_txn_commit failed: %d", rc);
+            }
+        }
+    }
+    return 0;
+}
+
+int provider_main(int argc, char* argv[])
+{
+    // report process information
+    auto id = skr_get_current_process_id();
+    SKR_LOG_DEBUG("exec_mode: %s, process id: %lld", argv[1], id);
+    const SProcessId provider_id = skr_get_current_process_id();
+    SKR_LOG_TRACE("provider id: %d", provider_id);
+
+    // initialize db
+    MDB_env* env = nullptr;
+    env_create(&env);
+    MDB_dbi dbi;
+    dbi_create(env, &dbi, false);
+
+    // initialize renderer
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-    sdl_window = SDL_CreateWindow(gCGPUBackendNames[backend],
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-        SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(sdl_window, &wmInfo);
-    create_api_objects();
-    create_render_pipeline();
-    create_blit_pipeline();
-    // initialize
+    auto renderer = SkrNew<ProviderRenderer>();
+    renderer->create_window();
+    renderer->create_api_objects();
+    renderer->create_render_pipeline();
+    renderer->create_blit_pipeline();
+
+    // initialize render graph
     namespace render_graph = skr::render_graph;
     auto graph = render_graph::RenderGraph::create(
     [=](render_graph::RenderGraphBuilder& builder) {
-        builder.with_device(device)
-        .with_gfx_queue(gfx_queue);
+        builder.with_device(renderer->device)
+            .with_gfx_queue(renderer->gfx_queue);
     });
+
     // loop
     bool quit = false;
     while (!quit)
@@ -229,9 +301,9 @@ int provider_renderer(int argc, char* argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (SDL_GetWindowID(sdl_window) == event.window.windowID)
+            if (SDL_GetWindowID(renderer->sdl_window) == event.window.windowID)
             {
-                if (!SDLEventHandler(&event, sdl_window))
+                if (!SDLEventHandler(&event, renderer->sdl_window))
                 {
                     quit = true;
                 }
@@ -241,30 +313,30 @@ int provider_renderer(int argc, char* argv[])
                 Uint8 window_event = event.window.event;
                 if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
-                    cgpu_wait_queue_idle(gfx_queue);
-                    cgpu_free_swapchain(swapchain);
+                    cgpu_wait_queue_idle(renderer->gfx_queue);
+                    cgpu_free_swapchain(renderer->swapchain);
                     int width = 0, height = 0;
-                    SDL_GetWindowSize(sdl_window, &width, &height);
+                    SDL_GetWindowSize(renderer->sdl_window, &width, &height);
                     CGPUSwapChainDescriptor chain_desc = {};
-                    chain_desc.present_queues = &gfx_queue;
+                    chain_desc.present_queues = &renderer->gfx_queue;
                     chain_desc.present_queues_count = 1;
                     chain_desc.width = width;
                     chain_desc.height = height;
-                    chain_desc.surface = surface;
+                    chain_desc.surface = renderer->surface;
                     chain_desc.imageCount = 3;
                     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
                     chain_desc.enable_vsync = true;
-                    swapchain = cgpu_create_swapchain(device, &chain_desc);
+                    renderer->swapchain = cgpu_create_swapchain(renderer->device, &chain_desc);
                 }
             }
         }
         // acquire frame
-        cgpu_wait_fences(&present_fence, 1);
+        cgpu_wait_fences(&renderer->present_fence, 1);
         CGPUAcquireNextDescriptor acquire_desc = {};
-        acquire_desc.fence = present_fence;
-        backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
+        acquire_desc.fence = renderer->present_fence;
+        renderer->backbuffer_index = cgpu_acquire_next_image(renderer->swapchain, &acquire_desc);
         // render graph setup & compile & exec
-        CGPUTextureId to_import = swapchain->back_buffers[backbuffer_index];
+        CGPUTextureId to_import = renderer->swapchain->back_buffers[renderer->backbuffer_index];
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
@@ -283,20 +355,10 @@ int provider_renderer(int argc, char* argv[])
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("color_pass")
-                    .set_pipeline(pipeline)
+                    .set_pipeline(renderer->pipeline)
                     .write(0, target_buffer, CGPU_LOAD_ACTION_CLEAR);
             },
             [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
-                static CGPUTextureId cached_shared_texture = nullptr;
-                if (auto shared_texture = stack.resolve(target_buffer);shared_texture != cached_shared_texture)
-                {
-                    CGPUExportTextureDescriptor export_desc = {};
-                    export_desc.texture = shared_texture;
-                    auto shared_handle = cgpu_export_shared_texture_handle(device, &export_desc);
-                    SKR_LOG_INFO("shared texture handle exported: %p", shared_handle);
-                    cached_shared_texture = shared_texture;
-                }
-
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)to_import->width, (float)to_import->height,
@@ -307,11 +369,23 @@ int provider_renderer(int argc, char* argv[])
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("final_blit")
-                    .set_pipeline(blit_pipeline)
+                    .set_pipeline(renderer->blit_pipeline)
                     .read("input_color", target_buffer)
                     .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
             },
             [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                static CGPUTextureId cached_shared_texture = nullptr;
+                if (auto shared_texture = stack.resolve(target_buffer);shared_texture != cached_shared_texture)
+                {
+                    CGPUExportTextureDescriptor export_desc = {};
+                    export_desc.texture = shared_texture;
+                    auto shared_handle = cgpu_export_shared_texture_handle(renderer->device, &export_desc);
+                    SKR_LOG_TRACE("shared texture handle exported: %p", shared_handle);
+                    cached_shared_texture = shared_texture;
+
+                    provider_set_shared_handle(env, dbi, provider_id, shared_handle);
+                }
+
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
                     (float)to_import->width, (float)to_import->height,
@@ -322,73 +396,27 @@ int provider_renderer(int argc, char* argv[])
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                 builder.set_name("present")
-                .swapchain(swapchain, backbuffer_index)
+                .swapchain(renderer->swapchain, renderer->backbuffer_index)
                 .texture(back_buffer, true);
             });
         graph->compile();
         graph->execute();
         // present
-        cgpu_wait_queue_idle(gfx_queue);
+        cgpu_wait_queue_idle(renderer->gfx_queue);
         CGPUQueuePresentDescriptor present_desc = {};
-        present_desc.index = backbuffer_index;
-        present_desc.swapchain = swapchain;
-        cgpu_queue_present(gfx_queue, &present_desc);
+        present_desc.index = renderer->backbuffer_index;
+        present_desc.swapchain = renderer->swapchain;
+        cgpu_queue_present(renderer->gfx_queue, &present_desc);
     }
     render_graph::RenderGraph::destroy(graph);
     // clean up
-    finalize();
-    SDL_DestroyWindow(sdl_window);
+    renderer->finalize();
+    SDL_DestroyWindow(renderer->sdl_window);
+    SkrDelete(renderer);
     SDL_Quit();
-    return 0;
-}
-
-int provider_main(int argc, char* argv[])
-{
-    auto id = skr_get_current_process_id();
-    SKR_LOG_DEBUG("exec_mode: %s, process id: %lld", argv[1], id);
-    const SProcessId provider_id = skr_get_current_process_id();
-    SKR_LOG_INFO("provider id: %lld", provider_id);
-
-    MDB_env* env = nullptr;
-    env_create(&env);
-    MDB_dbi dbi;
-    dbi_create(env, &dbi, false);
-
-    // Open txn
-    {
-        // ZoneScopedN("MDBTransaction");
-        MDB_txn* parentTxn = nullptr;
-        MDB_txn* txn;
-        if (const int rc = mdb_txn_begin(env, parentTxn, 0, &txn)) 
-        {
-            SKR_LOG_ERROR("mdb_txn_begin failed: %d", rc);
-        }
-        else
-        {
-            SKR_LOG_INFO("mdb_txn_begin succeed: %d", rc);
-        }
-        // Txn body: write db
-        {
-            //Initialize the key with the key we're looking for
-            eastl::string keyString = eastl::to_string(provider_id);
-            MDB_val key = {(size_t)keyString.size(), (void *)keyString.data()};
-            MDB_val data = {sizeof(provider_id), (void *)&provider_id};
-
-            if (int rc = mdb_put(txn, dbi, &key, &data, 0))
-            {
-                SKR_LOG_ERROR("mdb_put failed: %d", rc);
-            }
-            else
-            {
-                SKR_LOG_INFO("mdb_put succeed: %d, key: %s, val: %lld", rc, keyString.c_str(), provider_id);
-            }
-            mdb_txn_commit(txn);
-        }
-    }
+    // quit db
     mdb_dbi_close(env, dbi);
     mdb_env_close(env);
-
-    provider_renderer(argc, argv);
-    
     return 0;
 }
+
