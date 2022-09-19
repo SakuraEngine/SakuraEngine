@@ -85,7 +85,7 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
         if (HWND hovered_hwnd = ::WindowFromPoint(mouse_screen_pos))
         {
             ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-            for (uint32_t i = 0; i < platform_io.Viewports.size(); i++)
+            for (auto i = 0; i < platform_io.Viewports.size(); i++)
             {
                 if (platform_io.Viewports[i]->PlatformHandleRaw == hovered_hwnd)
                 {

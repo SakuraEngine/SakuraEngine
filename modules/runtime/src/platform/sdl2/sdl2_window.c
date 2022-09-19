@@ -40,7 +40,7 @@ void skr_get_all_monitors(uint32_t* count, SMonitorHandle* monitors)
 
 void skr_monitor_get_extent(SMonitorHandle monitor, int32_t* width, int32_t* height)
 {
-    const uint64_t n = (uint64_t)monitor;
+    const int n = (int)(uint64_t)monitor;
     SDL_Rect r;
     SDL_GetDisplayBounds(n, &r);
     if (width) *width = r.w;
@@ -49,7 +49,7 @@ void skr_monitor_get_extent(SMonitorHandle monitor, int32_t* width, int32_t* hei
 
 void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y)
 {
-    const uint64_t n = (uint64_t)monitor;
+    const int n = (int)(uint64_t)monitor;
     SDL_Rect r;
     SDL_GetDisplayBounds(n, &r);
     if (x) *x = r.x;
@@ -58,7 +58,7 @@ void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y)
 
 bool skr_monitor_get_ddpi(SMonitorHandle monitor, float* ddpi, float* hdpi, float* vdpi)
 {
-    const uint64_t n = (uint64_t)monitor;
+    const int n = (int)(uint64_t)monitor;
     return !SDL_GetDisplayDPI(n, ddpi, hdpi, vdpi);
 }
 
