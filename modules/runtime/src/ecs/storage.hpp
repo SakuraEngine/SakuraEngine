@@ -157,11 +157,13 @@ struct dual_storage_t {
     void batch(const dual_entity_t* ents, EIndex count, dual_view_callback_t callback, void* u);
     void query(const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_view_callback_t callback, void* u);
     void query_groups(const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_group_callback_t callback, void* u);
+    bool match_group(const dual_filter_t& filter, const dual_meta_filter_t& meta, const dual_group_t* group);
     void query(const dual_group_t* group, const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_view_callback_t callback, void* u);
     dual_query_t* make_query(const dual_filter_t& filter, const dual_parameters_t& parameters);
     dual_query_t* make_query(const char* desc);
     void destroy_query(dual_query_t* query);
     void query(const dual_query_t* query, dual_view_callback_t callback, void* u);
+    void query_groups(const dual_query_t* query, dual_group_callback_t callback, void* u);
     void build_queries();
     const query_cache_t& get_query_cache(const dual_filter_t& filter);
     void update_query_cache(dual_group_t* group, bool isAdd);

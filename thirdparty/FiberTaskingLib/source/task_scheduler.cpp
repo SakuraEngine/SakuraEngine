@@ -496,7 +496,7 @@ TaskScheduler::~TaskScheduler()
     delete[] m_quitFibers;
 }
 
-void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter* const counter FTL_TASK_NAME(, const char* name))
+void TaskScheduler::AddTask(Task const task, TaskPriority priority, std::shared_ptr<TaskCounter> const &counter FTL_TASK_NAME(, const char* name))
 {
     FTL_ASSERT("Task given to TaskScheduler:AddTask has a nullptr Function", task.Function != nullptr);
 
@@ -530,7 +530,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, TaskCounter*
     }
 }
 
-void TaskScheduler::AddTasks(unsigned const numTasks, Task const* const tasks, TaskPriority priority, TaskCounter* const counter)
+void TaskScheduler::AddTasks(unsigned const numTasks, Task const* const tasks, TaskPriority priority, std::shared_ptr<TaskCounter> const &counter)
 {
     if (counter != nullptr)
     {

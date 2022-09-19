@@ -682,9 +682,9 @@ void dual_storage_t::merge(dual_storage_t& src)
     };
     forloop (i, 0, payloads.size())
         tasks[i] = { taskBody, &payloads[i] };
-    ftl::TaskCounter counter(scheduler->scheduler);
-    scheduler->scheduler->AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, &counter);
-    scheduler->scheduler->WaitForCounter(&counter);
+    auto counter = std::make_shared<ftl::TaskCounter>(scheduler->scheduler);
+    scheduler->scheduler->AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, counter);
+    scheduler->scheduler->WaitForCounter(counter.get());
     for (auto& i : src.groups)
     {
         dual_group_t* g = i.second;
@@ -900,6 +900,19 @@ dual_query_t* dualQ_from_literal(dual_storage_t* storage, const char* desc)
 void dualQ_get_views(dual_query_t* query, dual_view_callback_t callback, void* u)
 {
     return query->storage->query(query, callback, u);
+}
+
+void dualQ_get_groups(dual_query_t* query, dual_group_callback_t callback, void* u)
+{
+    return query->storage->query_groups(query, callback, u);
+}
+
+void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_callback_t callback, void* u)
+{
+    query->storage->build_queries();
+    if(!query->storage->match_group(query->buildedFilter, query->meta, group))
+        return;
+    query->storage->query(group, query->buildedFilter, query->meta, callback, u);
 }
 
 const char* dualQ_get_error()

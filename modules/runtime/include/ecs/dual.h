@@ -549,6 +549,9 @@ RUNTIME_API void dualQ_set_meta(dual_query_t* query, const dual_meta_filter_t* m
  * @param callback callback for each filtered chunk view
  */
 RUNTIME_API void dualQ_get_views(dual_query_t* query, dual_view_callback_t callback, void* u);
+RUNTIME_API void dualQ_get_groups(dual_query_t* query, dual_group_callback_t callback, void* u);
+RUNTIME_API void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_callback_t callback, void* u);
+
 /**
  * @brief test if group contains components, whether owned or shared
  *
@@ -632,6 +635,11 @@ RUNTIME_API void* dualV_get_owned_rw_local(const dual_chunk_view_t* view, dual_t
  * @return dual_entity_t const*
  */
 RUNTIME_API const dual_entity_t* dualV_get_entities(const dual_chunk_view_t* view);
+/**
+ * @brief copy data from 
+ * 
+ */
+RUNTIME_API void dualV_copy(const dual_chunk_view_t* dst, const dual_chunk_view_t* src);
 /**
  * @brief enable components in chunk view, has no effect if there's no mask component in this group
  *

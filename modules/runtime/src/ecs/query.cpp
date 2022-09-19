@@ -473,6 +473,8 @@ void dual_storage_t::destroy_query(dual_query_t* query)
 void dual_storage_t::build_queries()
 {
     using namespace dual;
+    if (queriesBuilt)
+        return;
     // solve phase collision (overloading)
     struct phase_entry {
         dual_type_index_t type;
@@ -549,9 +551,15 @@ void dual_storage_t::build_queries()
 
 void dual_storage_t::query(const dual_query_t* filter, dual_view_callback_t callback, void* u)
 {
-    if (!queriesBuilt)
-        build_queries();
+    build_queries();
     return query(filter->buildedFilter, filter->meta, callback, u);
+}
+
+
+void dual_storage_t::query_groups(const dual_query_t* filter, dual_group_callback_t callback, void* u)
+{
+    build_queries();
+    return query_groups(filter->buildedFilter, filter->meta, callback, u);
 }
 
 void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_group_callback_t callback, void* u)
@@ -596,6 +604,46 @@ void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_f
         }
         callback(u, group);
     }
+}
+
+bool dual_storage_t::match_group(const dual_filter_t& filter, const dual_meta_filter_t& meta, const dual_group_t* group)
+{
+    using namespace dual;
+    fixed_stack_scope_t _(localStack);
+    bool filterShared = (filter.all_shared.length + filter.any_shared.length + filter.none_shared.length) != 0;
+    dual_meta_filter_t* validatedMeta = nullptr;
+    if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
+    {
+        validatedMeta = localStack.allocate<dual_meta_filter_t>();
+        auto data = (char*)localStack.allocate(data_size(meta));
+        *validatedMeta = clone(meta, data);
+        validate(validatedMeta->all_meta);
+        validate(validatedMeta->any_meta);
+        validate(validatedMeta->none_meta);
+    }
+    else
+    {
+        validatedMeta = (dual_meta_filter_t*)&meta;
+    }
+    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
+    if (filterShared)
+    {
+        fixed_stack_scope_t _(localStack);
+        dual_type_set_t shared;
+        shared.length = 0;
+        // todo: is 256 enough?
+        shared.data = localStack.allocate<dual_type_index_t>(256);
+        group->get_shared_type(shared, localStack.allocate<dual_type_index_t>(256));
+        // check(shared.length < 256);
+        if (!match_group_shared(shared, filter))
+            return false;
+    }
+    if (filterMeta)
+    {
+        if (!match_group_meta(group->type, *validatedMeta))
+            return false;
+    }
+    return match_group_type(group->type, filter, group->archetype->withMask);
 }
 
 namespace dual
