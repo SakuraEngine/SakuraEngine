@@ -1031,7 +1031,10 @@ CGPUTextureId cgpu_import_shared_texture_handle(CGPUDeviceId device, const struc
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     CGPUProcImportSharedTextureHandle fn_import_shared_texture = device->proc_table_cache->import_shared_texture_handle;
     if (!fn_import_shared_texture) return CGPU_NULLPTR;
-    return fn_import_shared_texture(device, desc);
+    CGPUTexture* texture = (CGPUTexture*)fn_import_shared_texture(device, desc);
+    texture->device = device;
+    texture->unique_id = ((CGPUDevice*)device)->next_texture_id++;
+    return texture;
 }
 
 // SwapChain APIs

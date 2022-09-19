@@ -216,6 +216,7 @@ typedef struct CGPUDevice_D3D12 {
     struct D3D12Util_StaticSamplerMap* pStaticSamplersMap;
     ID3D12PipelineLibrary* pPipelineLibrary;
     void* pPSOCacheData;
+    uint32_t next_shared_id;
 } CGPUDevice_D3D12;
 
 typedef struct CGPUFence_D3D12 {

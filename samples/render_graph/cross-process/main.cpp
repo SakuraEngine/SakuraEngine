@@ -21,13 +21,13 @@ int main(int argc, char* argv[])
         auto provider = skr_run_process(exec_name, 
             provider_arguments, 2, "provider.log");
         const auto provider_id = skr_get_process_id(provider);
-        auto provider_result = skr_wait_process(provider);
 
         eastl::string providerIdString = eastl::to_string(provider_id);
         const char* receiver_arguments[] = { "receiver", providerIdString.c_str() };
         auto receiver = skr_run_process(exec_name, 
             receiver_arguments, 2, "receiver.log");
 
+        auto provider_result = skr_wait_process(provider);
         auto receriver_result = skr_wait_process(receiver);
         return receriver_result + provider_result;
     }
