@@ -95,7 +95,7 @@ static void move_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, u
             {
                 auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
                 auto arraySrc = (dual_array_component_t*)((size_t)j * size + src);
-                if (is_array_small(arraySrc)) // memory is on heap
+                if (!is_array_small(arraySrc)) // memory is on heap
                     *arrayDst = *arraySrc;    // just steal it
                 else                          // memory is in chunk
                 {
@@ -127,7 +127,7 @@ void memdup(void* dst, const void* src, size_t size, size_t count) noexcept
         memcpy((char*)dst + copied * size, dst, (count - copied) * size);
 }
 
-static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t srcIndex, type_index_t type, EIndex offset, EIndex dstOffset, uint32_t size, uint32_t elemSize, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
+static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t srcIndex, type_index_t type, EIndex offset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
 {
     char* dst = dstV.chunk->data() + (size_t)dstOffset + (size_t)size * dstV.start;
     const char* src = srcC->data() + (size_t)offset + (size_t)size * srcIndex;
@@ -155,9 +155,7 @@ static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* sr
                 }
                 else
                 {
-                    size_t arrOffset = ((char*)arraySrc->BeginX - (char*)arraySrc);
-                    size_t arraySize = ((char*)arraySrc->CapacityX - (char*)arraySrc->BeginX);
-                    new (arrayDst) dual_array_component_t((char*)arrayDst + arrOffset, arraySize);
+                    new_array(arrayDst, size, elemSize, align);
                 }
 
                 for (char *currDst = (char*)arrayDst->BeginX, *currSrc = (char*)arraySrc->BeginX;
@@ -373,7 +371,7 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
         else
         {
             if (srcT != kMaskComponent)
-                duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcElemSizes[srcI], srcType->callbacks[srcI].copy);
+                duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], srcType->callbacks[srcI].copy);
             if (dstMasks && srcMasks)
             {
                 forloop (i, 0, dstV.count)

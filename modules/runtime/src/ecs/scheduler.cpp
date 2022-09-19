@@ -23,7 +23,7 @@ dual::scheduler_t::scheduler_t()
 void dual::scheduler_t::initialize(ftl::TaskScheduler* inScheduler)
 {
     scheduler = inScheduler;
-    allCounter = eastl::make_shared<ftl::TaskCounter>(scheduler);
+    allCounter = std::make_shared<ftl::TaskCounter>(scheduler);
 }
 
 dual_entity_t dual::scheduler_t::add_resource()
@@ -56,7 +56,7 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
-    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
+    eastl::vector<std::shared_ptr<ftl::TaskCounter>> deps;
     skr_acquire_mutex(&entryMutex.mMutex);
     auto pair = dependencyEntries.find(type);
     if (pair == dependencyEntries.end())
@@ -87,7 +87,7 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
-    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> deps;
+    eastl::vector<std::shared_ptr<ftl::TaskCounter>> deps;
     skr_acquire_mutex(&entryMutex.mMutex);
     auto pair = dependencyEntries.find(type);
     if (pair == dependencyEntries.end()) 
@@ -127,13 +127,13 @@ namespace dual
 {
 struct hash_shared_ptr {
     template <class T>
-    size_t operator()(const eastl::shared_ptr<T>& value) const
+    size_t operator()(const std::shared_ptr<T>& value) const
     {
         return std::hash<void*>{}(value.get());
     }
 };
-using DependencySet = skr::flat_hash_set<eastl::shared_ptr<ftl::TaskCounter>, hash_shared_ptr>;
-void update_entry(job_dependency_entry_t& entry, eastl::shared_ptr<ftl::TaskCounter> job, bool readonly, bool atomic, DependencySet& dependencies)
+using DependencySet = skr::flat_hash_set<std::shared_ptr<ftl::TaskCounter>, hash_shared_ptr>;
+void update_entry(job_dependency_entry_t& entry, std::shared_ptr<ftl::TaskCounter> job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     if (readonly)
     {
@@ -161,7 +161,7 @@ void update_entry(job_dependency_entry_t& entry, eastl::shared_ptr<ftl::TaskCoun
 }
 } // namespace dual
 
-eastl::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+std::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
 {
     ZoneScopedN("SchedualECSJob");
@@ -460,7 +460,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 _tasks[i] = { taskBody, &payloads[i], TearDown };
             job->scheduler->allCounter->Add(static_cast<const uint32_t>(batchs.size()));
             job->query->storage->counter->Add(static_cast<const uint32_t>(batchs.size()));
-            job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks.data(), ftl::TaskPriority::Normal, job->counter.get());
+            job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks.data(), ftl::TaskPriority::Normal, job->counter);
             job->scheduler->allCounter->Decrement();
         }
     };
@@ -472,11 +472,11 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         query->storage->counter->Add(1);
     }
     auto counter = job->counter;
-    scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter.get());
+    scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter);
     return counter;
 }
 
-eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
+eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const std::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
@@ -561,13 +561,13 @@ eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_c
         }
     }
 
-    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> result;
+    eastl::vector<std::shared_ptr<ftl::TaskCounter>> result;
     for(auto& counter : dependencies)
         result.push_back(std::move(counter));
     return result;
 }
 
-eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resources(const eastl::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
+eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resources(const std::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
     skr_acquire_mutex(&resourceMutex.mMutex);
@@ -579,7 +579,7 @@ eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resou
         update_entry(entry, counter, readonly, atomic, dependencies);
     }
     skr_release_mutex(&resourceMutex.mMutex);
-    eastl::vector<eastl::shared_ptr<ftl::TaskCounter>> result;
+    eastl::vector<std::shared_ptr<ftl::TaskCounter>> result;
 
     result.resize(dependencies.size());
     uint32_t dependencyIndex = 0;
@@ -595,7 +595,7 @@ dual_job_t::~dual_job_t()
 
 dual_job_t::dual_job_t(dual::scheduler_t& scheduler)
     : scheduler(&scheduler)
-    , counter(eastl::make_shared<ftl::TaskCounter>(scheduler.scheduler))
+    , counter(std::make_shared<ftl::TaskCounter>(scheduler.scheduler))
 {
 }
 
@@ -619,7 +619,7 @@ void dualJ_remove_resource(dual_entity_t id)
 }
 
 struct dual_counter_t {
-    eastl::shared_ptr<ftl::TaskCounter> counter;
+    std::shared_ptr<ftl::TaskCounter> counter;
 };
 
 void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,

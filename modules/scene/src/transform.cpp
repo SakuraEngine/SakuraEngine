@@ -61,14 +61,18 @@ static void skr_relative_to_world_children(skr_children_t* children, skr_l2w_t* 
     using namespace skr::math;
     auto process = [&](skr_child_t child) {
         dual_chunk_view_t view;
+        //TODO: consider dualS_batch?
         dualS_access(storage, child.entity, &view);
         auto relative = (float4x4*)dualV_get_owned_ro(&view, dual_id_of<skr_l2r_t>::get());
-        if (!relative) return;
+        if (!relative) 
+            return;
         auto transform = (float4x4*)dualV_get_owned_ro(&view, dual_id_of<skr_l2w_t>::get());
-        if (!transform) return;
+        if (!transform) 
+            return;
         *transform = multiply(*relative, *(float4x4*)&parent->matrix);
         auto children = (skr_children_t*)dualV_get_owned_ro(&view, dual_id_of<skr_child_t>::get());
-        if (!children) return;
+        if (!children) 
+            return;
         skr_relative_to_world_children(children, (skr_l2w_t*)transform, storage);
     };
     if (children->size() > 256) // dispatch recursively

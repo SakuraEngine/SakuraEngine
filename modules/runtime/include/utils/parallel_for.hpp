@@ -1,5 +1,6 @@
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
+#include "EASTL/vector.h"
 
 namespace skr
 {
@@ -15,7 +16,8 @@ void parallel_for(ftl::TaskScheduler* scheduler, Iter begin, Iter end, size_t ba
     typename std::iterator_traits<Iter>::difference_type n = std::distance(begin, end);
     size_t batchCount = (n / batch) + 1;
     auto payloads = (Payload*)sakura_malloc(batchCount * sizeof(Payload));
-    ftl::Task* tasks = (ftl::Task*)sakura_malloc(batchCount * sizeof(ftl::Task));
+    eastl::vector<ftl::Task> tasks;
+    tasks.resize(batchCount);
     auto body = +[](ftl::TaskScheduler* task, void* data) {
         auto payload = (Payload*)data;
         (*payload->f)(payload->begin, payload->end);
@@ -30,10 +32,9 @@ void parallel_for(ftl::TaskScheduler* scheduler, Iter begin, Iter end, size_t ba
         payloads[i].end = begin;
         tasks[i] = { body, &payloads[i] };
     }
-    ftl::TaskCounter counter(scheduler);
-    scheduler->AddTasks(static_cast<uint32_t>(batchCount), tasks, ftl::TaskPriority::Normal, &counter);
-    sakura_free(tasks);
-    scheduler->WaitForCounter(&counter);
+    auto counter = std::make_shared<ftl::TaskCounter>(scheduler);
+    scheduler->AddTasks(static_cast<uint32_t>(batchCount), tasks.data(), ftl::TaskPriority::Normal, counter);
+    scheduler->WaitForCounter(counter.get());
     sakura_free(payloads);
 }
 } // namespace skr
