@@ -67,6 +67,11 @@ SProcessId skr_get_current_process_id()
 	return (SProcessId)GetCurrentProcessId();
 }
 
+SProcessId skr_get_process_id(SProcessHandle process)
+{
+	return (SProcessId)process->processInfo.dwProcessId;
+}
+
 int skr_wait_process(SProcessHandle process)
 {
 	WaitForSingleObject(process->processInfo.hProcess, INFINITE);

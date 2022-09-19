@@ -12,4 +12,7 @@ RUNTIME_EXTERN_C RUNTIME_API
 SProcessId skr_get_current_process_id();
 
 RUNTIME_EXTERN_C RUNTIME_API
+SProcessId skr_get_process_id(SProcessHandle);
+
+RUNTIME_EXTERN_C RUNTIME_API
 int skr_wait_process(SProcessHandle process);

@@ -20,3 +20,9 @@ int skr_wait_process(SProcessHandle process)
     SKR_UNIMPLEMENTED_FUNCTION();
     return -1;
 }
+
+SProcessId skr_get_process_id(SProcessHandle process)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return -1;
+}
