@@ -408,6 +408,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     D3D12_RESOURCE_DESC resDesc = make_zeroed<D3D12_RESOURCE_DESC>();
     DXGI_FORMAT dxFormat = DXGIUtil_TranslatePixelFormat(desc->format);
     CGPUResourceTypes descriptors = desc->descriptors;
+    D3D12MA::ALLOCATION_DESC alloc_desc = {};
     if (desc->native_handle == CGPU_NULLPTR)
     {
         D3D12_RESOURCE_DIMENSION resDim = D3D12_RESOURCE_DIMENSION_UNKNOWN;
@@ -455,12 +456,11 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
             D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaFeature, sizeof(msaaFeature));
             while (msaaFeature.NumQualityLevels == 0 && msaaFeature.SampleCount > 0)
             {
-                cgpu_warn(
-                "Sample Count (%u) not supported. Trying a lower sample count (%u)",
-                msaaFeature.SampleCount, msaaFeature.SampleCount / 2);
-                msaaFeature.SampleCount = resDesc.SampleDesc.Count / 2;
-                D->pDxDevice->CheckFeatureSupport(
-                D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaFeature, sizeof(msaaFeature));
+                cgpu_warn("Sample Count (%u) not supported. Trying a lower sample count (%u)",
+                    msaaFeature.SampleCount, msaaFeature.SampleCount / 2);
+                    msaaFeature.SampleCount = resDesc.SampleDesc.Count / 2;
+                D->pDxDevice->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+                    &msaaFeature, sizeof(msaaFeature));
             }
             resDesc.SampleDesc.Count = msaaFeature.SampleCount;
         }
@@ -537,20 +537,21 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
             res_desc.Format = dxFormat;
         }
 #endif
+        if ( desc->flags & CGPU_TCF_EXPORT_BIT )
+        {
+            alloc_desc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
+        } 
         // Do allocation (TODO: mGPU)
-        D3D12MA::ALLOCATION_DESC alloc_desc = {};
         alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
-        if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT ||
-            desc->sample_count != CGPU_SAMPLE_COUNT_1 // for smaller alignment that not suitable for MSAA
+        if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1 // for smaller alignment that not suitable for MSAA
         )
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
         }
-        if (!desc->is_dedicated && desc->sample_count == CGPU_SAMPLE_COUNT_1)
+        if (!desc->is_dedicated && desc->sample_count == CGPU_SAMPLE_COUNT_1 && !(desc->flags & CGPU_TCF_EXPORT_BIT))
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
         }
-
         if (!desc->is_aliasing)
         {
             auto hres = D->pResourceAllocator->CreateResource(
@@ -579,7 +580,8 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                     heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
                     heapProps.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
                     fallbackHres = D->pDxDevice->CreateCommittedResource(&heapProps, 
-                        D3D12_HEAP_FLAG_NONE, &resDesc, res_states, pClearValue, IID_ARGS(&pDxResource));
+                        alloc_desc.ExtraHeapFlags, &resDesc, res_states, 
+                        pClearValue, IID_ARGS(&pDxResource));
                     if (fallbackHres == S_OK)
                     {
                         is_dedicated = true;
@@ -639,6 +641,8 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     T->super.is_cube = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE));
     T->super.array_size_minus_one = desc->array_size - 1;
     T->super.format = desc->format;
+    T->super.can_export = (alloc_desc.ExtraHeapFlags & D3D12_HEAP_FLAG_SHARED);
+    T->super.is_imported = false;
     // Set debug name
     if (device->adapter->instance->enable_set_name && desc->name && T->pDxResource)
     {
@@ -685,6 +689,61 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
         }
     }
     return result == S_OK;
+}
+
+uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)
+{
+    HRESULT result = S_OK;
+    HANDLE hdl = INVALID_HANDLE_VALUE;
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)desc->texture;
+    result = D->pDxDevice->CreateSharedHandle(T->pDxResource, 
+        CGPU_NULLPTR, GENERIC_ALL, CGPU_NULLPTR, &hdl);
+    if (FAILED(result))
+    {
+        cgpu_error("Create Shared Handle Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d",
+            result, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+    }
+    else
+    {
+        cgpu_trace("Create Shared Handle Success! Handle: %d\n\tcan_export: %d\n\tsize:%dx%dx%d",
+            hdl, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+    }
+    return (uint64_t)hdl;
+}
+
+CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc)
+{
+    HRESULT result = S_OK;
+    ID3D12Resource* imported = CGPU_NULLPTR;
+    HANDLE handle = (HANDLE)desc->shared_handle;
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    result = D->pDxDevice->OpenSharedHandle(handle, IID_PPV_ARGS(&imported));
+    if (FAILED(result))
+    {
+        cgpu_error("Import Shared Handle Failed! Error Code: %d", result);
+    }
+    auto imported_desc = imported->GetDesc();
+    auto T = cgpu_new<CGPUTexture_D3D12>();
+    T->pDxResource = imported;
+    T->pDxAllocation = CGPU_NULLPTR;
+    // T->super.format = DXGIUtil_TranslatePixelFormat
+    T->super.width = imported_desc.Width;
+    T->super.height = imported_desc.Height;
+    T->super.array_size_minus_one = imported_desc.DepthOrArraySize - 1;
+    T->super.depth = imported_desc.DepthOrArraySize;
+    T->super.can_alias = false;
+    T->super.is_aliasing = false;
+    T->super.is_dedicated = false;
+    T->super.native_handle = imported;
+    T->super.owns_image = false;
+    T->super.unique_id = D->super.next_texture_id++;
+    T->super.mip_levels = imported_desc.MipLevels;
+    T->super.is_cube = (imported_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D && imported_desc.DepthOrArraySize > 6);
+    T->super.is_imported = true;;
+    // TODO: mGPU
+    T->super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
+    return &T->super;
 }
 
 void cgpu_free_texture_d3d12(CGPUTextureId texture)

@@ -490,6 +490,12 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* n
     return *this;
 }
 
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::with_flags(CGPUTextureCreationFlags flags) SKR_NOEXCEPT
+{
+    node.descriptor.flags |= flags;
+    return *this;
+}
+
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::with_tags(uint32_t tags) SKR_NOEXCEPT
 {
     node.tags |= tags;

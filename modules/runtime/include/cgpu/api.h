@@ -51,6 +51,9 @@ DEFINE_CGPU_OBJECT(CGPUDStorageQueue)
 DEFINE_CGPU_OBJECT(CGPUDStorageFile)
 typedef CGPUDStorageFileId CGPUDStorageFileHandle;
 
+struct CGPUExportTextureDescriptor;
+struct CGPUImportTextureDescriptor;
+
 struct CGPUBufferToBufferTransfer;
 struct CGPUBufferToTextureTransfer;
 struct CGPUTextureToTextureTransfer;
@@ -258,6 +261,12 @@ RUNTIME_API void cgpu_free_texture_view(CGPUTextureViewId render_target);
 typedef void (*CGPUProcFreeTextureView)(CGPUTextureViewId render_target);
 RUNTIME_API bool cgpu_try_bind_aliasing_texture(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
 typedef bool (*CGPUProcTryBindAliasingTexture)(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
+
+// Shared Resource APIs
+RUNTIME_API uint64_t cgpu_export_shared_texture_handle(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
+typedef uint64_t (*CGPUProcExportSharedTextureHandle)(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
+RUNTIME_API CGPUTextureId cgpu_import_shared_texture_handle(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
+typedef CGPUTextureId (*CGPUProcImportSharedTextureHandle)(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
 
 // Swapchain APIs
 RUNTIME_API CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const struct CGPUSwapChainDescriptor* desc);
@@ -504,6 +513,10 @@ typedef struct CGPUProcTable {
     const CGPUProcCreateTextureView create_texture_view;
     const CGPUProcFreeTextureView free_texture_view;
     const CGPUProcTryBindAliasingTexture try_bind_aliasing_texture;
+
+    // Shared Resource APIs
+    const CGPUProcExportSharedTextureHandle export_shared_texture_handle;
+    const CGPUProcImportSharedTextureHandle import_shared_texture_handle;
 
     // Swapchain APIs
     const CGPUProcCreateSwapChain create_swapchain;
@@ -1284,6 +1297,14 @@ typedef struct CGPUTextureDescriptor {
     uint32_t is_aliasing : 1;
 } CGPUTextureDescriptor;
 
+typedef struct CGPUExportTextureDescriptor {
+    CGPUTextureId texture;
+} CGPUExportTextureDescriptor;
+
+typedef struct CGPUImportTextureDescriptor {
+    uint64_t shared_handle;
+} CGPUImportTextureDescriptor;
+
 typedef struct CGPUTextureViewDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
@@ -1323,6 +1344,8 @@ typedef struct CGPUTexture {
     /// In CGPU concept aliasing resource owns no memory
     uint32_t is_aliasing : 1;
     uint32_t can_alias : 1;
+    uint32_t is_imported : 1;
+    uint32_t can_export : 1;
     void* native_handle;
     uint64_t unique_id;
 } CGPUTexture;

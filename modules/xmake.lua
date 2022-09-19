@@ -1,6 +1,7 @@
 set_project("Sakura.Modules")
 
 includes("runtime/xmake.lua")
+includes("lightning_storage/xmake.lua")
 includes("image_coder/xmake.lua")
 includes("scene/xmake.lua")
 includes("renderer/xmake.lua")

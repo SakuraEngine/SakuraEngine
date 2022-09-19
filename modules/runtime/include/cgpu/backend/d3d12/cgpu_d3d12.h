@@ -98,6 +98,10 @@ RUNTIME_API CGPUTextureViewId cgpu_create_texture_view_d3d12(CGPUDeviceId device
 RUNTIME_API void cgpu_free_texture_view_d3d12(CGPUTextureViewId render_target);
 RUNTIME_API bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
 
+// Shared Resource APIs
+RUNTIME_API uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
+RUNTIME_API CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
+
 // Swapchain APIs
 RUNTIME_API CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc);
 RUNTIME_API uint32_t cgpu_acquire_next_image_d3d12(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc);
