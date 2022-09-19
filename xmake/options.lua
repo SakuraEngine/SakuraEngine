@@ -17,7 +17,7 @@ option("build_samples")
 option_end()
 
 option("build_editors")
-    set_default(true)
+    set_default(false)
     set_showmenu(true)
     set_description("Toggle to build editors of SakuraRuntime")
 option_end()
