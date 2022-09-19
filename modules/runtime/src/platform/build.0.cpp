@@ -10,8 +10,10 @@
 #include "llfio/llfio_vfs.cpp"
 #ifdef SKR_OS_UNIX
     #include "unix/unix_vfs.cpp"
+    #include "unix/process.cpp"
 #elif defined(SKR_OS_WINDOWS)
     #include "windows/windows_vfs.cpp"
+    #include "windows/process.cpp"
 #endif
 
 #ifdef RUNTIME_SHARED

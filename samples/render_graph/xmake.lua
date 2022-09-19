@@ -15,3 +15,12 @@ target("rg-deferred")
     add_deps("SkrRT", "SkrRenderGraph", "SkrImGui")
     add_files("rg-deferred/*.cpp")
     add_files("rg-deferred/**.hlsl")
+
+target("cross-process")
+    add_rules("utils.dxc", {
+        spv_outdir = "/../resources/shaders/cross-process",
+        dxil_outdir = "/../resources/shaders/cross-process"})
+    set_kind("binary")
+    add_deps("lmdb", "SkrRT", "SkrRenderGraph", "SkrImGui")
+    add_files("cross-process/*.cpp")
+    add_files("cross-process/**.hlsl")
