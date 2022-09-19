@@ -179,6 +179,7 @@ public:
     public:
         friend class RenderGraph;
         TextureBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        TextureBuilder& with_flags(CGPUTextureCreationFlags tags) SKR_NOEXCEPT;
         TextureBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         TextureBuilder& import(CGPUTextureId texture, ECGPUResourceState init_state) SKR_NOEXCEPT;
         TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1) SKR_NOEXCEPT;

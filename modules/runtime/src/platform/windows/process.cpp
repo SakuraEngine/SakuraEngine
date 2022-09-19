@@ -42,7 +42,7 @@ SProcessHandle skr_run_process(const char* command, const char** arguments, uint
 	memset(&startupInfo, 0, sizeof startupInfo);
 	memset(&processInfo, 0, sizeof processInfo);
 	startupInfo.cb = sizeof(STARTUPINFO);
-	startupInfo.dwFlags |= STARTF_USESHOWWINDOW;
+	// startupInfo.dwFlags |= STARTF_USESHOWWINDOW;
 	if (stdOut)
 	{
 		startupInfo.dwFlags |= STARTF_USESTDHANDLES;
@@ -52,7 +52,7 @@ SProcessHandle skr_run_process(const char* command, const char** arguments, uint
 
 	if (!CreateProcessA(
 			NULL, (LPSTR)commandLine.c_str(), NULL,
-			NULL, stdOut ? TRUE : FALSE, CREATE_NO_WINDOW, 
+			NULL, stdOut ? TRUE : FALSE, 0/*CREATE_NO_WINDOW*/, 
 			NULL, NULL, &startupInfo, &processInfo))
 		return nullptr;
 
