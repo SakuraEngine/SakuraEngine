@@ -14,7 +14,7 @@ namespace skr
 {
 namespace render_graph
 {
-class SKR_RENDER_GRAPH_API ResourceNode : public RenderGraphNode
+class ResourceNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
@@ -30,7 +30,7 @@ public:
     };
     inline const bool is_imported() const SKR_NOEXCEPT { return imported; }
     inline const bool allow_lone() const SKR_NOEXCEPT { return canbe_lone; }
-    const LifeSpan lifespan() const SKR_NOEXCEPT;
+    SKR_RENDER_GRAPH_API const LifeSpan lifespan() const SKR_NOEXCEPT;
 
 protected:
     bool imported : 1;
@@ -39,7 +39,7 @@ protected:
     mutable LifeSpan frame_lifespan = { UINT32_MAX, UINT32_MAX };
 };
 
-class SKR_RENDER_GRAPH_API TextureNode : public ResourceNode
+class TextureNode : public ResourceNode
 {
 public:
     friend class RenderGraph;
@@ -69,7 +69,7 @@ protected:
     mutable bool frame_aliasing = false;
 };
 
-class SKR_RENDER_GRAPH_API BufferNode : public ResourceNode
+class BufferNode : public ResourceNode
 {
 public:
     friend class RenderGraph;

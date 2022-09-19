@@ -32,29 +32,29 @@ struct SKR_RENDER_GRAPH_API PassContext {
         return nullptr;
     }
 };
-class SKR_RENDER_GRAPH_API PassNode : public RenderGraphNode
+class PassNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    const bool before(const PassNode* other) const;
-    const bool after(const PassNode* other) const;
-    const PassHandle get_handle() const;
+    SKR_RENDER_GRAPH_API const bool before(const PassNode* other) const;
+    SKR_RENDER_GRAPH_API const bool after(const PassNode* other) const;
+    SKR_RENDER_GRAPH_API const PassHandle get_handle() const;
 
-    gsl::span<TextureReadEdge*> tex_read_edges();
-    gsl::span<TextureRenderEdge*> tex_write_edges();
-    gsl::span<TextureReadWriteEdge*> tex_readwrite_edges();
-    void foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)>);
+    SKR_RENDER_GRAPH_API gsl::span<TextureReadEdge*> tex_read_edges();
+    SKR_RENDER_GRAPH_API gsl::span<TextureRenderEdge*> tex_write_edges();
+    SKR_RENDER_GRAPH_API gsl::span<TextureReadWriteEdge*> tex_readwrite_edges();
+    SKR_RENDER_GRAPH_API void foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)>);
     inline uint32_t textures_count() const
     {
         return (uint32_t)(in_texture_edges.size() + out_texture_edges.size() + inout_texture_edges.size());
     }
 
-    gsl::span<BufferReadEdge*> buf_read_edges();
-    gsl::span<BufferReadWriteEdge*> buf_readwrite_edges();
-    gsl::span<PipelineBufferEdge*> buf_ppl_edges();
-    void foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)>);
+    SKR_RENDER_GRAPH_API gsl::span<BufferReadEdge*> buf_read_edges();
+    SKR_RENDER_GRAPH_API gsl::span<BufferReadWriteEdge*> buf_readwrite_edges();
+    SKR_RENDER_GRAPH_API gsl::span<PipelineBufferEdge*> buf_ppl_edges();
+    SKR_RENDER_GRAPH_API void foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)>);
     inline uint32_t buffers_count() const
     {
         return (uint32_t)(in_buffer_edges.size() + out_buffer_edges.size() + ppl_buffer_edges.size());
@@ -79,7 +79,7 @@ struct RenderPassContext : public PassContext {
     gsl::span<CGPUDescriptorSetId> desc_sets;
 };
 using RenderPassExecuteFunction = eastl::function<void(class RenderGraph&, RenderPassContext&)>;
-class SKR_RENDER_GRAPH_API RenderPassNode : public PassNode
+class RenderPassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -106,7 +106,7 @@ struct SKR_RENDER_GRAPH_API ComputePassContext : public PassContext {
     gsl::span<CGPUDescriptorSetId> desc_sets;
 };
 using ComputePassExecuteFunction = eastl::function<void(class RenderGraph&, ComputePassContext&)>;
-class SKR_RENDER_GRAPH_API ComputePassNode : public PassNode
+class ComputePassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -126,7 +126,7 @@ struct CopyPassContext : public PassContext {
     CGPUCommandBufferId cmd;
 };
 using CopyPassExecuteFunction = eastl::function<void(class RenderGraph&, CopyPassContext&)>;
-class SKR_RENDER_GRAPH_API CopyPassNode : public PassNode
+class CopyPassNode : public PassNode
 {
 public:
     friend class RenderGraph;
@@ -142,7 +142,7 @@ protected:
     eastl::vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>> b2bs;
 };
 
-class SKR_RENDER_GRAPH_API PresentPassNode : public PassNode
+class PresentPassNode : public PassNode
 {
 public:
     friend class RenderGraph;

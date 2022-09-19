@@ -176,7 +176,7 @@ public:
         }
         ~TaskBatch()
         {
-            uint32_t ds_fence_c = ds_fences.size();
+            uint32_t ds_fence_c = (uint32_t)ds_fences.size();
             uint32_t ds_idx = 0;
             for (auto& fence : ds_fences)
             {
