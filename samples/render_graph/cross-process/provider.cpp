@@ -383,10 +383,12 @@ int provider_main(int argc, char* argv[])
                     SKR_LOG_TRACE("shared texture handle exported: %p", shared_handle);
                     cached_shared_texture = shared_texture;
                     CGPUImportTextureDescriptor import_info = {};
+                    import_info.backend = renderer->backend;
                     import_info.shared_handle = shared_handle;
                     import_info.width = shared_texture->width;
                     import_info.height = shared_texture->height;
                     import_info.depth = shared_texture->depth;
+                    import_info.is_dedicated = shared_texture->is_dedicated;
                     import_info.format = (ECGPUFormat)shared_texture->format;
                     import_info.mip_levels = shared_texture->mip_levels;
                     provider_set_shared_handle(env, dbi, provider_id, import_info);

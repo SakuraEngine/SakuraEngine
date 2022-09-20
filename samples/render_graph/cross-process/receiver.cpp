@@ -298,9 +298,13 @@ int receiver_main(int argc, char* argv[])
             cached_shared_handle != imported_info.shared_handle && imported_info.shared_handle != UINT64_MAX)
         {
             if (cached_texture) cgpu_free_texture(cached_texture);
+            SKR_LOG_DEBUG("Try to import shared texture with handle %llu", imported_info.shared_handle);
             auto imported = cgpu_import_shared_texture_handle(renderer->device, &imported_info);
-            cached_shared_handle = imported_info.shared_handle;
-            cached_texture = imported;
+            if (imported)
+            {
+                cached_shared_handle = imported_info.shared_handle;
+                cached_texture = imported;
+            }
         }
         if (cached_texture)
         {

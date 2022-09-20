@@ -775,6 +775,7 @@ uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const stru
 }
 */
 
+const eastl::wstring shared_texture_name_format = L"cgpu-shared-texture-";
 uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)
 {
     HRESULT result = S_OK;
@@ -788,7 +789,7 @@ uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const stru
     uint64_t hdl = (pid << 32) | shared_id;
 
     // calculate name
-    eastl::wstring name = L"cgpu-exported-texture";
+    eastl::wstring name = shared_texture_name_format;
     name += eastl::to_wstring(hdl);
 
     // create shared resource handle
@@ -817,23 +818,49 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     HANDLE namedResourceHandle = (HANDLE)LongToHandle(desc->shared_handle);
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
 
-    eastl::wstring name = L"cgpu-exported-texture";
+    eastl::wstring name = shared_texture_name_format;
     name += eastl::to_wstring(desc->shared_handle);
 
     result = D->pDxDevice->OpenSharedHandleByName(name.c_str(), GENERIC_ALL, &namedResourceHandle);
-    result = D->pDxDevice->OpenSharedHandle(namedResourceHandle, IID_PPV_ARGS(&imported));
-    auto winHdlLong = HandleToLong(namedResourceHandle);
+    if (FAILED(result))
+    {
+        cgpu_error("Open Shared Handle %ls Failed! Error Code: %d size:%dx%dx%d" ,
+            name.c_str(), result, desc->width, desc->height, desc->depth);
+        return CGPU_NULLPTR;
+    }
+    else
+    {
+        cgpu_trace("Open Shared Handle %ls Success! Handle: %lld backend: %d is_dedicated: %d", 
+            name.c_str(), desc->shared_handle, desc->backend, desc->is_dedicated);
+    }
+
+    if (desc->backend == CGPU_BACKEND_D3D12)
+    {
+        result = D->pDxDevice->OpenSharedHandle(namedResourceHandle, IID_PPV_ARGS(&imported));
+    }
+    else if (desc->backend == CGPU_BACKEND_VULKAN)
+    {
+        CloseHandle(namedResourceHandle);
+        cgpu_warn("Not implementated!");
+        return nullptr;
+        // result = D->pDxDevice->OpenSharedHandle(namedResourceHandle, IID_PPV_ARGS(&imported_heap));
+    }
+    else
+    {
+        result = D->pDxDevice->OpenSharedHandle(namedResourceHandle, IID_PPV_ARGS(&imported));
+    }
 
     if (FAILED(result) && !imported)
     {
-        cgpu_error("Import Shared Handle %lld(Windows handle %lld, As Long %d) Failed! Error Code: %d", 
-            desc->shared_handle, namedResourceHandle, winHdlLong, result);
+        auto winHdlLong = HandleToLong(namedResourceHandle);
+        cgpu_error("Import Shared Handle %ls(Windows handle %lld, As Long %d) Failed! Error Code: %d", 
+            name.c_str(), namedResourceHandle, winHdlLong, result);
         return nullptr;
     }
     else
     {
-        cgpu_trace("Import Shared Handle %lld(Windows handle %lld, As Long %d) Succeed!", 
-            desc->shared_handle, namedResourceHandle, desc->shared_handle);
+        cgpu_trace("Import Shared Handle %ls(Windows handle %lld, As Long %d) Succeed!", 
+            name.c_str(), namedResourceHandle, desc->shared_handle);
     }
     CloseHandle(namedResourceHandle);
 
