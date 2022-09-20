@@ -947,7 +947,6 @@ CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureD
     CGPUTexture* texture = (CGPUTexture*)fn_create_texture(device, &new_desc);
     texture->device = device;
     texture->sample_count = desc->sample_count;
-    texture->unique_id = ((CGPUDevice*)device)->next_texture_id++;
     return texture;
 }
 
@@ -1032,8 +1031,11 @@ CGPUTextureId cgpu_import_shared_texture_handle(CGPUDeviceId device, const struc
     CGPUProcImportSharedTextureHandle fn_import_shared_texture = device->proc_table_cache->import_shared_texture_handle;
     if (!fn_import_shared_texture) return CGPU_NULLPTR;
     CGPUTexture* texture = (CGPUTexture*)fn_import_shared_texture(device, desc);
-    texture->device = device;
-    texture->unique_id = ((CGPUDevice*)device)->next_texture_id++;
+    if (texture)
+    {
+        texture->device = device;
+        texture->unique_id = ((CGPUDevice*)device)->next_texture_id++;
+    }
     return texture;
 }
 

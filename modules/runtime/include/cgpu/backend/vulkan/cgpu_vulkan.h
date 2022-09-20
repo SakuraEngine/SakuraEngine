@@ -224,7 +224,7 @@ typedef struct CGPUAdapter_Vulkan {
 } CGPUAdapter_Vulkan;
 
 typedef struct CGPUDevice_Vulkan {
-    const CGPUDevice super;
+    CGPUDevice super;
     VkDevice pVkDevice;
     VkPipelineCache pPipelineCache;
     struct VkUtil_DescriptorPool* pDescriptorPool;
@@ -293,8 +293,7 @@ typedef struct CGPUBuffer_Vulkan {
 
 typedef struct CGPUTexture_Vulkan {
     CGPUTexture super;
-    VkImageType mImageType : 8;
-    uint32_t shared_handle;
+    VkImageType mImageType;
     VkImage pVkImage;
     union
     {

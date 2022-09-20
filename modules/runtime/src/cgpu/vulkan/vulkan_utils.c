@@ -358,8 +358,7 @@ void VkUtil_FreeShaderReflection(CGPUShaderLibrary_Vulkan* S)
 }
 
 // VMA
-void VkUtil_CreateVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A,
-CGPUDevice_Vulkan* D)
+void VkUtil_CreateVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CGPUDevice_Vulkan* D)
 {
     VmaVulkanFunctions vulkanFunctions = {
         .vkAllocateMemory = D->mVkDeviceTable.vkAllocateMemory,

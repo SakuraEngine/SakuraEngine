@@ -13,16 +13,17 @@ CGPU_EXTERN_C uint64_t cgpu_export_shared_texture_handle_vulkan_win32(CGPUDevice
     CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)desc->texture;
 
     // vulkan shared handles are specified at allocation time
-    uint64_t shared_id = T->shared_handle;
+    uint64_t shared_handle = T->super.unique_id;
 
-    cgpu_debug("Vulkan Win32 Exported shared texture handle %llu", shared_id);
+    cgpu_trace("Vulkan Win32 Exported shared texture %p handle %llu size %dx%dx%d", 
+        T, shared_handle, T->super.width, T->super.height, T->super.depth);
 
 #ifdef _DEBUG
     auto pid = (uint64_t)GetCurrentProcessId();
-    //cgpu_assert(pid == (shared_id >> 32));
+    cgpu_assert(pid == (shared_handle >> 32));
 #endif
 
-    return T->shared_handle;
+    return T->super.unique_id;
 }
 
 CGPU_EXTERN_C CGPUTextureId cgpu_import_shared_texture_handle_vulkan_win32(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc)
@@ -40,7 +41,7 @@ CGPU_EXTERN_C CGPUTextureId cgpu_import_shared_texture_handle_vulkan_win32(CGPUD
     tex_desc.is_dedicated = true;
     tex_desc.is_aliasing = false;
 
-    cgpu_debug("Vulkan Win32 Imported shared texture handle %llu %dx%dx%d", 
+    cgpu_trace("Vulkan Win32 Imported shared texture handle %llu %dx%dx%d", 
         desc->shared_handle, desc->width, desc->height, desc->depth);
 
     return cgpu_create_texture(device, &tex_desc);

@@ -1301,10 +1301,12 @@ typedef struct CGPUExportTextureDescriptor {
 } CGPUExportTextureDescriptor;
 
 typedef struct CGPUImportTextureDescriptor {
+    ECGPUBackend backend;
     uint64_t shared_handle;
     uint32_t width;
     uint32_t height;
     uint32_t depth;
+    uint32_t is_dedicated;
     ECGPUFormat format;
     uint32_t mip_levels;
 } CGPUImportTextureDescriptor;
@@ -1330,10 +1332,10 @@ typedef struct CGPUTextureAliasingBindDescriptor {
 
 typedef struct CGPUTexture {
     CGPUDeviceId device;
-    ECGPUSampleCount sample_count : 16;
+    ECGPUSampleCount sample_count : 8;
     /// Current state of the buffer
-    uint32_t width : 12;
-    uint32_t height : 12;
+    uint32_t width : 24;
+    uint32_t height : 24;
     uint32_t depth : 12;
     uint32_t mip_levels : 6;
     uint32_t array_size_minus_one : 12;
