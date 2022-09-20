@@ -230,7 +230,7 @@ void ProviderRenderer::finalize()
     cgpu_free_instance(instance);
 }
 
-int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id, uint64_t shared_handle)
+int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id, CGPUImportTextureDescriptor info)
 {
     // Open txn
     {
@@ -245,7 +245,7 @@ int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id
             //Initialize the key with the key we're looking for
             eastl::string keyString = eastl::to_string(provider_id);
             MDB_val key = { (size_t)keyString.size(), (void*)keyString.data() };
-            MDB_val data = { sizeof(shared_handle), (void*)&shared_handle };
+            MDB_val data = { sizeof(info), (void*)&info };
 
             if (int rc = mdb_put(txn, dbi, &key, &data, 0))
             {
@@ -253,7 +253,7 @@ int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id
             }
             else
             {
-                SKR_LOG_TRACE("provider_set_shared_handle succeed: %d, proc: %s, shared_handle: %lld", rc, keyString.c_str(), shared_handle);
+                SKR_LOG_TRACE("provider_set_shared_handle succeed: %d, proc: %s, shared_handle: %lld", rc, keyString.c_str(), info.shared_handle);
             }
             if (int rc = mdb_txn_commit(txn))
             {
@@ -382,8 +382,14 @@ int provider_main(int argc, char* argv[])
                     auto shared_handle = cgpu_export_shared_texture_handle(renderer->device, &export_desc);
                     SKR_LOG_TRACE("shared texture handle exported: %p", shared_handle);
                     cached_shared_texture = shared_texture;
-
-                    provider_set_shared_handle(env, dbi, provider_id, shared_handle);
+                    CGPUImportTextureDescriptor import_info = {};
+                    import_info.shared_handle = shared_handle;
+                    import_info.width = shared_texture->width;
+                    import_info.height = shared_texture->height;
+                    import_info.depth = shared_texture->depth;
+                    import_info.format = (ECGPUFormat)shared_texture->format;
+                    import_info.mip_levels = shared_texture->mip_levels;
+                    provider_set_shared_handle(env, dbi, provider_id, import_info);
                 }
 
                 cgpu_render_encoder_set_viewport(stack.encoder,

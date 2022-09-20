@@ -179,9 +179,10 @@ void ReceiverRenderer::finalize()
 }
 
 
-uint64_t receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id)
+CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id)
 {
-    uint64_t what = UINT64_MAX;
+    CGPUImportTextureDescriptor what = {};
+    what.shared_handle = UINT64_MAX;
     MDB_txn* txn = nullptr;
     if (const int rc = mdb_txn_begin(env, nullptr, MDB_RDONLY, &txn)) 
     {
@@ -207,7 +208,7 @@ uint64_t receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provid
     }
     else
     {
-        what = *(uint64_t*)data.mv_data;
+        what = *(CGPUImportTextureDescriptor*)data.mv_data;
         mdb_cursor_close(cursor);
     }
     mdb_txn_commit(txn);
@@ -293,14 +294,12 @@ int receiver_main(int argc, char* argv[])
         // import shared texture
         static uint64_t cached_shared_handle = UINT64_MAX;
         static CGPUTextureId cached_texture = nullptr;
-        if (auto shared_handle = receiver_get_shared_handle(env, dbi, provider_id); 
-            cached_shared_handle != shared_handle && shared_handle != UINT64_MAX)
+        if (auto imported_info = receiver_get_shared_handle(env, dbi, provider_id); 
+            cached_shared_handle != imported_info.shared_handle && imported_info.shared_handle != UINT64_MAX)
         {
             if (cached_texture) cgpu_free_texture(cached_texture);
-            CGPUImportTextureDescriptor import_desc = {};
-            import_desc.shared_handle = shared_handle;
-            auto imported = cgpu_import_shared_texture_handle(renderer->device, &import_desc);
-            cached_shared_handle = shared_handle;
+            auto imported = cgpu_import_shared_texture_handle(renderer->device, &imported_info);
+            cached_shared_handle = imported_info.shared_handle;
             cached_texture = imported;
         }
         if (cached_texture)

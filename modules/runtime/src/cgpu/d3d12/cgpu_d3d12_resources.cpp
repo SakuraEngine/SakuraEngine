@@ -843,16 +843,20 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     T->pDxAllocation = CGPU_NULLPTR;
     T->super.format = DXGIUtil_FormatToCGPU(imported_desc.Format);
     T->super.width = imported_desc.Width;
+    cgpu_assert(imported_desc.Width == desc->width);
     T->super.height = imported_desc.Height;
-    T->super.array_size_minus_one = imported_desc.DepthOrArraySize - 1;
+    cgpu_assert(imported_desc.Height == desc->height);
     T->super.depth = imported_desc.DepthOrArraySize;
+    cgpu_assert(imported_desc.DepthOrArraySize == desc->depth);
+    T->super.mip_levels = imported_desc.MipLevels;
+    cgpu_assert(imported_desc.MipLevels == desc->mip_levels);
+    T->super.array_size_minus_one = imported_desc.DepthOrArraySize - 1;
     T->super.can_alias = false;
     T->super.is_aliasing = false;
     T->super.is_dedicated = false;
     T->super.native_handle = imported;
     T->super.owns_image = false;
     T->super.unique_id = D->super.next_texture_id++;
-    T->super.mip_levels = imported_desc.MipLevels;
     T->super.is_cube = (imported_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D && imported_desc.DepthOrArraySize > 6);
     T->super.is_imported = true;
     // TODO: mGPU
