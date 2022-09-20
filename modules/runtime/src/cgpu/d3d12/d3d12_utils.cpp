@@ -1,13 +1,13 @@
+#include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
-#include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.h"
 #include <dxcapi.h>
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
 #include "utils/make_zeroed.hpp"
 #include <EASTL/vector.h>
-#include <winsock.h>
+#include <comutil.h>
 
 #define USE_PIX
 #include "cgpu/drivers/WinPixEventRuntime/pix3.h"
@@ -252,7 +252,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
 #endif
     adapter_detail.host_visible_vram_budget = 0;
     adapter_detail.support_host_visible_vram = false;
-#ifdef NVAPI
+#ifdef CGPU_USE_NVAPI
     if (I->super.nvapi_status == CGPU_NVAPI_OK)
     {
         adapter_detail.host_visible_vram_budget = cgpu_nvapi_d3d12_query_cpu_visible_vram(&I->super, pCheckDevice);
