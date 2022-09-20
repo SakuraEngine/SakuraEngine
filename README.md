@@ -84,6 +84,12 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 ### [Cross-Process Presentation](samples/render_graph/cross-process)
 这个 demo 展示了引擎将会采用的跨进程技术雏形，即使用 LMDB 和 GRPC 的数据共享以及跨进程 CGPU 资源的视图呈现。
 
+<div align=center>
+
+[cross-processs](https://user-images.githubusercontent.com/39457738/191159690-638f9bf4-3120-49ca-8435-835f25121b89.mp4)
+
+</div>
+
 ### [RenderGraph Deferred](samples/render_graph/rg-deferred)
 这个 demo 展示了如何使用 RenderGraph 进行 Deferred 渲染，其中光照计算的部分有 ComputeShdaer 和 PixelShader 两种实现。实际的光照着色效果尚未在 demo 中完成，重点在于验证延迟流程的可行性。这个 demo 同样展示了如何使用自定义 Profiler 对 RenderGraph 的执行细节进行 Profile。
 
@@ -96,7 +102,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 
 ### [RenderGraph Triangle](samples/render_graph/rg-triangle)
 这个 demo 展示了如何使用 RenderGraph 进行三角形渲染。
-
 
 
 ### [全异步glTF渲染器](samples/cgpu-3d)
