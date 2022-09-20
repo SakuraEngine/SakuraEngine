@@ -54,7 +54,7 @@ void ReceiverRenderer::create_api_objects()
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
     instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
+    instance_desc.enable_gpu_based_validation = false;
     instance_desc.enable_set_name = true;
     instance = cgpu_create_instance(&instance_desc);
 
@@ -243,7 +243,8 @@ int receiver_main(int argc, char* argv[])
     });
 
     // loop
-        bool quit = false;
+    bool quit = false;
+    CGPUTextureId cached_texture = nullptr;
     while (!quit)
     {
         SDL_Event event;
@@ -293,7 +294,6 @@ int receiver_main(int argc, char* argv[])
             });
         // import shared texture
         static uint64_t cached_shared_handle = UINT64_MAX;
-        static CGPUTextureId cached_texture = nullptr;
         if (auto imported_info = receiver_get_shared_handle(env, dbi, provider_id); 
             cached_shared_handle != imported_info.shared_handle && imported_info.shared_handle != UINT64_MAX)
         {
@@ -307,7 +307,7 @@ int receiver_main(int argc, char* argv[])
             auto imported_texture = graph->create_texture(
                 [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                     builder.set_name("imported_texture")
-                        .import(cached_texture, CGPU_RESOURCE_STATE_COMMON);
+                        .import(cached_texture, CGPU_RESOURCE_STATE_UNDEFINED);
                 });
             graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
@@ -340,6 +340,7 @@ int receiver_main(int argc, char* argv[])
         present_desc.swapchain = renderer->swapchain;
         cgpu_queue_present(renderer->gfx_queue, &present_desc);
     }
+    if (cached_texture) cgpu_free_texture(cached_texture);
     render_graph::RenderGraph::destroy(graph);
     // clean up
     renderer->finalize();

@@ -568,24 +568,22 @@ typedef enum ECGPUTextureCreationFlag
     CGPU_TCF_EXPORT_BIT = 0x02,
     /// Texture will be allocated in memory which can be shared among multiple gpus
     CGPU_TCF_EXPORT_ADAPTER_BIT = 0x04,
-    /// Texture will be imported from a handle created in another process
-    CGPU_TCF_IMPORT_BIT = 0x08,
-    /// Use ESRAM to store this texture
-    CGPU_TCF_ESRAM = 0x10,
     /// Use on-tile memory to store this texture
-    CGPU_TCF_ON_TILE = 0x20,
+    CGPU_TCF_ON_TILE = 0x08,
     /// Prevent compression meta data from generating (XBox)
-    CGPU_TCF_NO_COMPRESSION = 0x40,
+    CGPU_TCF_NO_COMPRESSION = 0x10,
     /// Force 2D instead of automatically determining dimension based on width, height, depth
-    CGPU_TCF_FORCE_2D = 0x80,
+    CGPU_TCF_FORCE_2D = 0x20,
     /// Force 3D instead of automatically determining dimension based on width, height, depth
-    CGPU_TCF_FORCE_3D = 0x100,
+    CGPU_TCF_FORCE_3D = 0x40,
     /// Display target
-    CGPU_TCF_ALLOW_DISPLAY_TARGET = 0x200,
+    CGPU_TCF_ALLOW_DISPLAY_TARGET = 0x80,
     /// Create a normal map texture
-    CGPU_TCF_NORMAL_MAP = 0x800,
+    CGPU_TCF_NORMAL_MAP = 0x100,
     /// Fragment mask
-    CGPU_TCF_FRAG_MASK = 0x2000,
+    CGPU_TCF_FRAG_MASK = 0x200,
+    /// 
+    CGPU_TCF_USABLE_MAX = 0x40000,
     CGPU_TCF_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGPUTextureCreationFlag;
 typedef uint32_t CGPUTextureCreationFlags;

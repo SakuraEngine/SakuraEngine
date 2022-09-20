@@ -1264,7 +1264,6 @@ typedef struct CGPUBufferDescriptor {
 typedef struct CGPUTextureDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
-    /// Imported native image handle
     const void* native_handle;
     /// Texture creation flags (decides memory allocation strategy, sharing access,...)
     CGPUTextureCreationFlags flags;
@@ -1331,14 +1330,14 @@ typedef struct CGPUTextureAliasingBindDescriptor {
 
 typedef struct CGPUTexture {
     CGPUDeviceId device;
-    ECGPUSampleCount sample_count;
+    ECGPUSampleCount sample_count : 16;
     /// Current state of the buffer
-    uint32_t width : 16;
-    uint32_t height : 16;
-    uint32_t depth : 16;
-    uint32_t mip_levels : 5;
-    uint32_t array_size_minus_one : 11;
-    uint32_t format : 8;
+    uint32_t width : 12;
+    uint32_t height : 12;
+    uint32_t depth : 12;
+    uint32_t mip_levels : 6;
+    uint32_t array_size_minus_one : 12;
+    uint32_t format : 12;
     /// Flags specifying which aspects (COLOR,DEPTH,STENCIL) are included in the pVkImageView
     uint32_t aspect_mask : 4;
     uint32_t node_index : 4;

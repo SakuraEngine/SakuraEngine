@@ -80,6 +80,10 @@ const CGPUProcTable tbl_vk = {
     .free_texture_view = &cgpu_free_texture_view_vulkan,
     .try_bind_aliasing_texture = &cgpu_try_bind_aliasing_texture_vulkan,
 
+    // Shared Resource APIs
+    .export_shared_texture_handle = &cgpu_export_shared_texture_handle_vulkan,
+    .import_shared_texture_handle = &cgpu_import_shared_texture_handle_vulkan,
+
     // Sampler APIs
     .create_sampler = &cgpu_create_sampler_vulkan,
     .free_sampler = &cgpu_free_sampler_vulkan,
