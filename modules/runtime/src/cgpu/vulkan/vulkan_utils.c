@@ -395,7 +395,7 @@ CGPUDevice_Vulkan* D)
     }
     if (vmaCreateAllocator(&vmaInfo, &D->pVmaAllocator) != VK_SUCCESS)
     {
-        cgpu_assert(0);
+        cgpu_assert(0 && "Failed to create VMA Allocator");
     }
 }
 

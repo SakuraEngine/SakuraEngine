@@ -96,6 +96,10 @@ RUNTIME_API CGPUTextureViewId cgpu_create_texture_view_vulkan(CGPUDeviceId devic
 RUNTIME_API void cgpu_free_texture_view_vulkan(CGPUTextureViewId render_target);
 RUNTIME_API bool cgpu_try_bind_aliasing_texture_vulkan(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
 
+// Shared Resource APIs
+uint64_t cgpu_export_shared_texture_handle_vulkan(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
+CGPUTextureId cgpu_import_shared_texture_handle_vulkan(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
+
 // Swapchain APIs
 RUNTIME_API CGPUSwapChainId cgpu_create_swapchain_vulkan(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc);
 RUNTIME_API uint32_t cgpu_acquire_next_image_vulkan(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc);
@@ -225,9 +229,13 @@ typedef struct CGPUDevice_Vulkan {
     VkPipelineCache pPipelineCache;
     struct VkUtil_DescriptorPool* pDescriptorPool;
     struct VmaAllocator_T* pVmaAllocator;
+    struct VmaPool_T* pExternalMemoryVmaPools[VK_MAX_MEMORY_TYPES];
+    void* pExternalMemoryVmaPoolNexts[VK_MAX_MEMORY_TYPES];
+    struct VmaPool_T* pDedicatedAllocationVmaPools[VK_MAX_MEMORY_TYPES];
     struct VolkDeviceTable mVkDeviceTable;
     // Created renderpass table
     struct CGPUVkPassTable* pPassTable;
+    uint32_t next_shared_id;
 } CGPUDevice_Vulkan;
 
 typedef struct CGPUFence_Vulkan {
@@ -285,7 +293,8 @@ typedef struct CGPUBuffer_Vulkan {
 
 typedef struct CGPUTexture_Vulkan {
     CGPUTexture super;
-    VkImageType mImageType;
+    VkImageType mImageType : 8;
+    uint32_t shared_handle;
     VkImage pVkImage;
     union
     {

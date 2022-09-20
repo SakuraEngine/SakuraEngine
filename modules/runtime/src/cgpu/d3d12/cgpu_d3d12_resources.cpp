@@ -785,7 +785,7 @@ uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const stru
     // encode process id & shared_id into handle
     auto pid = (uint64_t)GetCurrentProcessId();
     uint64_t shared_id = D->next_shared_id++;
-    uint64_t hdl = (pid << 31) | shared_id;
+    uint64_t hdl = (pid << 32) | shared_id;
 
     // calculate name
     eastl::wstring name = L"cgpu-exported-texture";

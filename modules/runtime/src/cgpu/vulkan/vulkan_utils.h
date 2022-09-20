@@ -6,6 +6,9 @@
 #include "../common/common_utils.h"
 #include "cgpu/flags.h"
 
+#define CGPU_INNER_TCF_IMPORT_SHARED_HANDLE (CGPU_TCF_USABLE_MAX << 1)
+#define USE_EXTERNAL_MEMORY_EXTENSIONS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,12 +21,12 @@ void VkUtil_DeInitializeEnvironment(struct CGPUInstance* Inst);
 
 // Instance Helpers
 void VkUtil_EnableValidationLayer(
-CGPUInstance_Vulkan* I,
-const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
-const VkDebugReportCallbackCreateInfoEXT* report_info_ptr);
+    CGPUInstance_Vulkan* I,
+    const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
+    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr);
 void VkUtil_QueryAllAdapters(CGPUInstance_Vulkan* I,
-const char* const* device_layers, uint32_t device_layers_count,
-const char* const* device_extensions, uint32_t device_extension_count);
+    const char* const* device_layers, uint32_t device_layers_count,
+    const char* const* device_extensions, uint32_t device_extension_count);
 
 // Device Helpers
 void VkUtil_CreatePipelineCache(CGPUDevice_Vulkan* D);
@@ -184,6 +187,7 @@ static const char* cgpu_wanted_device_exts[] = {
     VK_EXT_SHADER_SUBGROUP_VOTE_EXTENSION_NAME,
     VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
     VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+
 #ifdef USE_EXTERNAL_MEMORY_EXTENSIONS
     VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
     VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
@@ -194,6 +198,7 @@ static const char* cgpu_wanted_device_exts[] = {
     VK_KHR_EXTERNAL_FENCE_WIN32_EXTENSION_NAME,
     #endif
 #endif
+
 // Debug marker extension in case debug utils is not supported
 #ifndef ENABLE_DEBUG_UTILS_EXTENSION
     VK_EXT_DEBUG_MARKER_EXTENSION_NAME,

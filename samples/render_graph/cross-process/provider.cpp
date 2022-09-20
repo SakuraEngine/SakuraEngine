@@ -58,7 +58,7 @@ void ProviderRenderer::create_api_objects()
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
     instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = true;
+    instance_desc.enable_gpu_based_validation = false;
     instance_desc.enable_set_name = true;
     instance = cgpu_create_instance(&instance_desc);
 
@@ -340,7 +340,7 @@ int provider_main(int argc, char* argv[])
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
-                .import(to_import, CGPU_RESOURCE_STATE_PRESENT)
+                .import(to_import, CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
             });
         auto target_buffer = graph->create_texture(

@@ -464,6 +464,17 @@ void cgpu_free_device_vulkan(CGPUDeviceId device)
     }
     cgpu_delete(D->pPassTable);
 
+    for (uint32_t i = 0; i < VK_MAX_MEMORY_TYPES; i++)
+    {
+        if (D->pExternalMemoryVmaPools[i])
+        {
+            vmaDestroyPool(D->pVmaAllocator, D->pExternalMemoryVmaPools[i]);
+        }
+        if (D->pExternalMemoryVmaPoolNexts[i])
+        {
+            cgpu_free(D->pExternalMemoryVmaPoolNexts[i]);
+        }
+    }
     VkUtil_FreeVMAAllocator(I, A, D);
     VkUtil_FreeDescriptorPool(D->pDescriptorPool);
     VkUtil_FreePipelineCache(I, A, D);
