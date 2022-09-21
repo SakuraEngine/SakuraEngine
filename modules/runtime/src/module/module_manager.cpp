@@ -97,6 +97,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
     {
         func = processSymbolTable.get<IModule*()>(initName.c_str());
     }
+#ifndef MODULE_AS_OBJECTS
     if (func == nullptr)
     {
         // try load dll
@@ -136,6 +137,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
         module->information = parseMetaData(module->get_meta_data());
         return module;
     }
+#endif
     SKR_LOG_FATAL("failed to read symbol: %s", initName.c_str());
     return nullptr;
 }
