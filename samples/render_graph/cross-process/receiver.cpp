@@ -1,5 +1,6 @@
 #include "platform/memory.h"
 #include "platform/process.h"
+#include "platform/time.h"
 #include "mdb_utils.h"
 #include <ghc/filesystem.hpp>
 #include "../../cgpu/common/utils.h"
@@ -20,7 +21,7 @@ struct ReceiverRenderer
     CGPUFenceId present_fence;
 
     #if _WIN32
-    ECGPUBackend backend = CGPU_BACKEND_D3D12;
+    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
     #else
     ECGPUBackend backend = CGPU_BACKEND_VULKAN;
     #endif
@@ -183,6 +184,7 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
 {
     CGPUImportTextureDescriptor what = {};
     what.shared_handle = UINT64_MAX;
+    if (dbi == ~0) return what;
     MDB_txn* txn = nullptr;
     if (const int rc = mdb_txn_begin(env, nullptr, MDB_RDONLY, &txn)) 
     {
@@ -224,8 +226,8 @@ int receiver_main(int argc, char* argv[])
 
     MDB_env* env = nullptr;
     env_create(&env);
-    MDB_dbi dbi;
-    dbi_create(env, &dbi, true);
+    
+    MDB_dbi dbi = ~0;
 
     // initialize renderer
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
@@ -245,8 +247,22 @@ int receiver_main(int argc, char* argv[])
     // loop
     bool quit = false;
     CGPUTextureId cached_texture = nullptr;
+    STimer db_timer;
+    int64_t elapsed_ms = 0;
+    skr_init_timer(&db_timer);
     while (!quit)
     {
+        if (dbi == ~0)
+        {
+            elapsed_ms += skr_timer_get_msec(&db_timer, true);
+            if (elapsed_ms >= 500)
+            {
+                dbi_create(env, &dbi, true);
+                SKR_LOG_TRACE("db id: %u", dbi);
+                elapsed_ms = 0;
+            }
+        }
+
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {

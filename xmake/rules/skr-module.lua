@@ -13,6 +13,7 @@ rule("skr.module")
         local api = target:extraconf("rules", "skr.module", "api")
         if(has_config("module_as_objects")) then
             target:set("kind", "object")
+            -- target:set("targetdir", "/build/windows/x64/debug-")
         else
             target:set("kind", "shared")
             target:add("defines", api.."_SHARED", {public=true})
