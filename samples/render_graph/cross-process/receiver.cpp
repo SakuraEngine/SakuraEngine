@@ -225,9 +225,8 @@ int receiver_main(int argc, char* argv[])
     SKR_LOG_TRACE("provider id: %lld", provider_id);
 
     MDB_env* env = nullptr;
-    env_create(&env);
-    
     MDB_dbi dbi = ~0;
+    env_create(&env);
 
     // initialize renderer
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;

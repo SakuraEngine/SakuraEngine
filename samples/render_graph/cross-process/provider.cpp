@@ -277,6 +277,7 @@ int provider_main(int argc, char* argv[])
     env_create(&env);
     MDB_dbi dbi;
     dbi_create(env, &dbi, false);
+    SKR_LOG_TRACE("db id: %u", dbi);
 
     // initialize renderer
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
