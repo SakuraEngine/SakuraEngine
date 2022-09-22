@@ -56,7 +56,7 @@ void skr::Renderer::finalize()
 
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
-    cgpu_free_nsight_tracker(nsight_tracker);
+    if (nsight_tracker) cgpu_free_nsight_tracker(nsight_tracker);
     cgpu_free_instance(instance);
 }
 
