@@ -80,7 +80,7 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
     dependencyEntries.erase(pair);
     skr_release_mutex(&entryMutex.mMutex);
     for (auto dep : deps)
-        scheduler->WaitForCounter(dep.get());
+        scheduler->WaitForCounter(dep.get(), true);
 }
 
 void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
@@ -117,7 +117,7 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 {
     if (!storage->counter)
         return;
-    scheduler->WaitForCounter(storage->counter.get());
+    scheduler->WaitForCounter(storage->counter.get(), true);
     storage->counter.reset();
     storage->scheduler = nullptr;
     storage->mainFiber = nullptr;
