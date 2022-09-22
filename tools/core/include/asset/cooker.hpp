@@ -53,7 +53,7 @@ struct TOOL_API SCooker {
 struct TOOL_API SCookContext { // context per job
     SAssetRecord* record;
     class skr::io::RAMService* ioService;
-    eastl::shared_ptr<ftl::TaskCounter> counter;
+    std::shared_ptr<ftl::TaskCounter> counter;
     ghc::filesystem::path output;
     eastl::vector<skr_guid_t> staticDependencies;
     eastl::vector<skr_guid_t> runtimeDependencies;
@@ -82,9 +82,9 @@ struct TOOL_API SCookSystem {
     ~SCookSystem() noexcept;
     void Initialize();
     void Shutdown();
-    eastl::shared_ptr<ftl::TaskCounter> AddCookTask(skr_guid_t resource);
+    std::shared_ptr<ftl::TaskCounter> AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
-    eastl::shared_ptr<ftl::TaskCounter> EnsureCooked(skr_guid_t resource);
+    std::shared_ptr<ftl::TaskCounter> EnsureCooked(skr_guid_t resource);
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
     ftl::TaskScheduler& GetScheduler();

@@ -97,11 +97,11 @@ skr::io::RAMService* SCookSystem::getIOService()
     return ioServices[cursor++];
 }
 
-eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
+std::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
 {
     SCookContext* jobContext;
     {
-        eastl::shared_ptr<ftl::TaskCounter> result;
+        std::shared_ptr<ftl::TaskCounter> result;
         cooking.lazy_emplace_l(
         guid, [&](SCookContext* ctx) { result = ctx->counter; },
         [&](const CookingMap::constructor& ctor) {
@@ -114,7 +114,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
 
     jobContext->record = GetAssetRecord(guid);
     jobContext->ioService = getIOService();
-    auto counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
+    auto counter = std::make_shared<ftl::TaskCounter>(scheduler);
     jobContext->counter = counter;
     auto Task = +[](ftl::TaskScheduler* scheduler, void* userdata) {
         SCookContext* jobContext = (SCookContext*)userdata;
@@ -164,7 +164,7 @@ eastl::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
     mainCounter->Add(1);
     auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
     const ftl::Task task = { Task, jobContext /*, TearDown */}; // TODO: deal with teardown 
-    scheduler->AddTask(task, ftl::TaskPriority::High, counter.get() FTL_TASK_NAME(, guidName.c_str()));
+    scheduler->AddTask(task, ftl::TaskPriority::High, counter FTL_TASK_NAME(, guidName.c_str()));
     return counter;
 }
 
@@ -178,10 +178,10 @@ void SCookSystem::UnregisterCooker(skr_guid_t guid)
 {
     cookers.erase(guid);
 }
-eastl::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
+std::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
 {
     {
-        eastl::shared_ptr<ftl::TaskCounter> result;
+        std::shared_ptr<ftl::TaskCounter> result;
         cooking.if_contains(guid, [&](SCookContext* ctx) {
             result = ctx->counter;
         });
