@@ -50,14 +50,14 @@ static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIn
             ((mask_t*)dst)[j] = maskValue;
     else if (type == kDirtyComponent)
         memset(dst, 0xFFFFFFFF, (size_t)size * view.count);
-    else if (type == kGuidComponent)
-    {
-        auto guidDst = (guid_t*)dst;
-        auto registry = type_registry_t::get();
-        forloop (j, 0, view.count)
-            guidDst[j] = registry.make_guid();
-        return;
-    }
+    // else if (type == kGuidComponent)
+    // {
+    //     auto guidDst = (guid_t*)dst;
+    //     auto& registry = type_registry_t::get();
+    //     forloop (j, 0, view.count)
+    //         guidDst[j] = registry.make_guid();
+    //     return;
+    // }
     else if (constructor)
         forloop (j, 0, view.count)
             constructor(view.chunk, view.start + j, (size_t)j * size + dst);
