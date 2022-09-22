@@ -34,7 +34,7 @@ void parallel_for(ftl::TaskScheduler* scheduler, Iter begin, Iter end, size_t ba
     }
     auto counter = std::make_shared<ftl::TaskCounter>(scheduler);
     scheduler->AddTasks(static_cast<uint32_t>(batchCount), tasks.data(), ftl::TaskPriority::Normal, counter);
-    scheduler->WaitForCounter(counter.get());
+    scheduler->WaitForCounter(counter.get(), true);
     sakura_free(payloads);
 }
 } // namespace skr
