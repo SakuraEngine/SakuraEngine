@@ -40,6 +40,7 @@ public:
 
     eastl::string Str() const
     {
+        SKR_ASSERT(_levelStack.size() == 0);
         return { buffer.data(), buffer.size() };
     }
 
