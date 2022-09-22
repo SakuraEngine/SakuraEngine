@@ -362,7 +362,7 @@ gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
     auto tex_read_edges = pass->tex_read_edges();
     auto tex_rw_edges = pass->tex_readwrite_edges();
     auto buf_read_edges = pass->buf_read_edges();
-    auto buf_rw_edges = pass->buf_readwrite_edges();
+    auto buf_rw_edges = pass->buf_readwrite_edges(); (void)buf_rw_edges;
     // Get Root Signature
     if (pass->pass_type == EPassType::Render)
         root_sig = ((RenderPassNode*)pass)->root_signature;

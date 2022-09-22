@@ -5,6 +5,7 @@
 #include <ghc/filesystem.hpp>
 #include "../../cgpu/common/utils.h"
 #include "render_graph/frontend/render_graph.hpp"
+#include "cgpu/extensions/cgpu_nsight.h"
 
 struct ReceiverRenderer
 {
@@ -34,6 +35,7 @@ struct ReceiverRenderer
 
     CGPURootSignatureId blit_root_sig;
     CGPURenderPipelineId blit_pipeline;
+    CGPUNSightTrackerId nsight_tracker;
 };
 
 void ReceiverRenderer::create_window()
@@ -55,7 +57,7 @@ void ReceiverRenderer::create_api_objects()
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = backend;
     instance_desc.enable_debug_layer = true;
-    instance_desc.enable_gpu_based_validation = false;
+    instance_desc.enable_gpu_based_validation = true;
     instance_desc.enable_set_name = true;
     instance = cgpu_create_instance(&instance_desc);
 
@@ -65,6 +67,12 @@ void ReceiverRenderer::create_api_objects()
     CGPUAdapterId adapters[64];
     cgpu_enum_adapters(instance, adapters, &adapters_count);
     adapter = adapters[0];
+
+    if (cgpux_adapter_is_nvidia(adapter))
+    {
+        CGPUNSightTrackerDescriptor desc = {};
+        nsight_tracker = cgpu_create_nsight_tracker(instance, &desc);
+    }
 
     auto adapter_detail = cgpu_query_adapter_detail(adapter);
     SKR_LOG_TRACE("Adapter: %s", adapter_detail->vendor_preset.gpu_name);
@@ -176,9 +184,9 @@ void ReceiverRenderer::finalize()
     cgpu_free_sampler(static_sampler);
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
+    if (nsight_tracker) cgpu_free_nsight_tracker(nsight_tracker);
     cgpu_free_instance(instance);
 }
-
 
 CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id)
 {
@@ -313,8 +321,9 @@ int receiver_main(int argc, char* argv[])
             cached_shared_handle != imported_info.shared_handle && imported_info.shared_handle != UINT64_MAX)
         {
             if (cached_texture) cgpu_free_texture(cached_texture);
-            SKR_LOG_DEBUG("Try to import shared texture with handle %llu", imported_info.shared_handle);
+            SKR_LOG_DEBUG("Receiver try to import shared texture with handle %llu", imported_info.shared_handle);
             auto imported = cgpu_import_shared_texture_handle(renderer->device, &imported_info);
+            SKR_LOG_DEBUG("Receiver imported shared texture with handle %llu", imported_info.shared_handle);
             if (imported)
             {
                 cached_shared_handle = imported_info.shared_handle;

@@ -544,7 +544,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
                 // format name wstring
                 unique_id = pImportDesc->shared_handle;
                 int size_needed = swprintf(CGPU_NULL, 0, nameFormat, unique_id);
-                win32Name = calloc(1 + size_needed, sizeof(wchar_t));
+                win32Name = cgpu_calloc(1 + size_needed, sizeof(wchar_t));
                 swprintf(win32Name, 1 + size_needed, nameFormat, unique_id);
                 // record import info
                 win32ImportInfo.handle = NULL;
@@ -578,6 +578,10 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
                 // bind memory
                 importRes = D->mVkDeviceTable.vkBindImageMemory(D->pVkDevice, pVkImage, pVkDeviceMemory, 0);
                 CHECK_VKRESULT(importRes);
+                if (importRes == VK_SUCCESS)
+                {
+                    cgpu_trace("Imported image %p with allocation %p", pVkImage, pVkDeviceMemory);
+                }
 #endif
             }
             else if (A->external_memory && desc->flags & CGPU_TCF_EXPORT_BIT)
@@ -593,7 +597,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
                 uint64_t shared_id = D->next_shared_id++;
                 unique_id = (pid << 32) | shared_id;
                 int size_needed = swprintf(CGPU_NULL, 0, nameFormat, unique_id);
-                win32Name = calloc(1 + size_needed, sizeof(wchar_t));
+                win32Name = cgpu_calloc(1 + size_needed, sizeof(wchar_t));
                 swprintf(win32Name, 1 + size_needed, nameFormat, unique_id);
                 // record export info
                 win32ExportMemoryInfo.dwAccess = GENERIC_ALL;

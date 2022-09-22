@@ -41,6 +41,13 @@ inline static void dbi_create(MDB_env* env, MDB_dbi* pdb, bool readonly)
         {
             SKR_LOG_ERROR("mdb_dbi_open failed: %d", rc);
         }
+        else if (!readonly)
+        {
+            if (const int rc = mdb_drop(txn, *pdb, 0) )
+            {
+                SKR_LOG_ERROR("mdb_dbi_drop failed: %d", rc);
+            }
+        }
     }
     mdb_txn_commit(txn);
 }

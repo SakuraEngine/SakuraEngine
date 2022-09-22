@@ -56,7 +56,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     .format(depth_format)
                     .owns_memory()
                     .allow_depth_stencil();
-            });
+            });(void)depth;
         if (drawcalls.count)
         {
             // IMGUI control shading rate
@@ -98,7 +98,6 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                     auto cb = stack.resolve(cbuffer);
                     SKR_ASSERT(cb && "cbuffer not found");
-                    auto idx = 0;
                     ::memcpy(cb->cpu_mapped_address, &list_data.view_projection, sizeof(list_data.view_projection));
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,

@@ -10,15 +10,15 @@ typedef void (*CGPUNSightTrackerShaderDebugInfoCallback)(const void* pShaderDebu
 typedef void (*CGPUNSightTrackerCrashDumpDescriptionCallback)(CGPUNSightProcAddGpuCrashDumpDescription addDescription, void* pUserData);
 
 typedef struct CGPUNSightTrackerDescriptor {
-    CGPUNSightTrackerCrashDumpCallback crash_dump_callback = nullptr;
-    CGPUNSightTrackerShaderDebugInfoCallback shader_debug_info_callback = nullptr;
-    CGPUNSightTrackerCrashDumpDescriptionCallback crash_dump_description_callback = nullptr;
-    void* user_data = nullptr;
+    CGPUNSightTrackerCrashDumpCallback crash_dump_callback SKR_IF_CPP(= nullptr);
+    CGPUNSightTrackerShaderDebugInfoCallback shader_debug_info_callback SKR_IF_CPP(= nullptr);
+    CGPUNSightTrackerCrashDumpDescriptionCallback crash_dump_description_callback SKR_IF_CPP(= nullptr);
+    void* user_data SKR_IF_CPP(= nullptr);
 } CGPUNSightTrackerDescriptor;
 
 struct CGPUNSightTracker
 {
-    CGPUInstanceId instance;
+    CGPUInstanceId instance SKR_IF_CPP(= nullptr);
 #ifdef __cplusplus
     virtual ~CGPUNSightTracker() = default;
 #endif
