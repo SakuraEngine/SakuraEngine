@@ -555,7 +555,7 @@
 
   <!-- /Users/saeruhikari/Documents/GitHub/Sakura.Runtime/src/ecs/dual.natvis -->
     <Type Name="skr_guid_t">
-        <DisplayString>{{{Data1,Xb}-{Data2,Xb}-{Data3,Xb}-{((uint16_t*)Data4)[0],Xb}-{((uint16_t*)Data4)[1],Xb}{((uint32_t*)Data4)[1],Xb}}}</DisplayString>
+        <DisplayString>{{{Data1,nvoXb}-{Data2,nvoXb}-{Data3,nvoXb}-{Data4[0],nvoXb}{Data4[1],nvoXb}-{Data4[2],nvoXb}{Data4[3],nvoXb}{Data4[4],nvoXb}{Data4[5],nvoXb}{Data4[6],nvoXb}{Data4[7],nvoXb}}}</DisplayString>
     </Type>
     <Type Name="dual_chunk_view_t">
         <Intrinsic Name="has_value" Expression="count != 0 &amp;&amp; chunk != nullptr"/>
@@ -625,7 +625,7 @@
         </Expand>
     </Type>
     <Type Name="dual::type_index_t">
-        <DisplayString>{{ {SkrRT.dll!g_dual_ctx-&gt;typeRegistry.descriptions.mpBegin[id].name,s} }}</DisplayString>
+        <DisplayString>{{ {SkrRT.dll!g_dual_ctx-&gt;typeRegistry.descriptions.mpBegin[id].name,s}, value={value} }}</DisplayString>
         <Expand>
           <ExpandedItem>SkrRT.dll!g_dual_ctx-&gt;typeRegistry.descriptions.mpBegin[id]</ExpandedItem>
         </Expand>
