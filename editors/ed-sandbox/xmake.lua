@@ -1,6 +1,7 @@
 target("SkrSandboxEditor")
     add_rules("qt.widgetapp")
-    add_deps("QtAdvancedDocking")
+    add_deps("SkrEditorCore")
+    add_frameworks(qt_frameworks)
     add_includedirs("include")
     add_files("src/*.cpp") 
     add_files("src/MainWindow.ui")
