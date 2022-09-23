@@ -5,7 +5,7 @@ qtad_source_dir = "$(projectdir)/thirdparty/QtAdvancedDocking"
 target("QtAdvancedDocking")
     add_rules("qt.shared")
     add_defines("ADS_SHARED_EXPORT")
-    add_frameworks("QtGui", "QtCore", "QtWidgets")
+    add_frameworks("QtGui", "QtCore", "QtWidgets", {public = true})
     add_files(qtad_include_dir_private.."/*.h")
     add_files(qtad_source_dir.."/*.cpp")
     add_files(qtad_source_dir.."/*.qrc")

@@ -1,6 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
-
+#pragma once
 #include <QMainWindow>
 #include "QtAdvancedDocking/DockManager.h"
 
@@ -22,5 +20,3 @@ private:
     Ui::MainWindow *ui;
     ads::CDockManager* m_DockManager;
 };
-
-#endif // MAINWINDOW_H
