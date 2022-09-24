@@ -675,7 +675,6 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     T->pVkImage = pVkImage;
     if (pVkDeviceMemory) T->pVkDeviceMemory = pVkDeviceMemory;
     if (vmaAllocation) T->pVkAllocation = vmaAllocation;
-    T->mImageType = mImageType;
     T->super.width = desc->width;
     T->super.height = desc->height;
     T->super.depth = desc->depth;
@@ -788,7 +787,8 @@ CGPUTextureViewId cgpu_create_texture_view_vulkan(CGPUDeviceId device, const str
     CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)desc->texture;
     CGPUTextureView_Vulkan* TV = (CGPUTextureView_Vulkan*)cgpu_calloc_aligned(1, sizeof(CGPUTextureView_Vulkan), _Alignof(CGPUTextureView_Vulkan));
     VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
-    switch (T->mImageType)
+    VkImageType mImageType = T->super.is_cube ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
+    switch (mImageType)
     {
         case VK_IMAGE_TYPE_1D:
             view_type = desc->array_layer_count > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;

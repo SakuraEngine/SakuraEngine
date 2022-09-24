@@ -2448,7 +2448,6 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     for (uint32_t i = 0; i < buffer_count; i++)
     {
         Ts[i].pVkImage = vimages[i];
-        Ts[i].mImageType = VK_IMAGE_TYPE_2D;
         Ts[i].super.is_cube = false;
         Ts[i].super.array_size_minus_one = 0;
         Ts[i].super.device = &D->super;

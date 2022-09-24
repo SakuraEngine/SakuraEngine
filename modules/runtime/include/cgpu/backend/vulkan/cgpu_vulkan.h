@@ -293,7 +293,6 @@ typedef struct CGPUBuffer_Vulkan {
 
 typedef struct CGPUTexture_Vulkan {
     CGPUTexture super;
-    VkImageType mImageType;
     VkImage pVkImage;
     union
     {

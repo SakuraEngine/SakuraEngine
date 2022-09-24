@@ -642,6 +642,12 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     T->super.array_size_minus_one = desc->array_size - 1;
     T->super.format = desc->format;
     T->super.can_export = (alloc_desc.ExtraHeapFlags & D3D12_HEAP_FLAG_SHARED);
+    {
+        auto ResDesc = T->pDxResource->GetDesc();
+        auto allocDesc = D->pDxDevice->GetResourceAllocationInfo(
+            CGPU_SINGLE_GPU_NODE_MASK, 1, &ResDesc);
+        T->super.size_in_bytes = allocDesc.SizeInBytes;
+    }
     T->super.is_imported = false;
     // Set debug name
     if (device->adapter->instance->enable_set_name && desc->name && T->pDxResource)
@@ -865,6 +871,8 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     CloseHandle(namedResourceHandle);
 
     auto imported_desc = imported->GetDesc();
+    D3D12_RESOURCE_ALLOCATION_INFO alloc_info 
+        = D->pDxDevice->GetResourceAllocationInfo(CGPU_SINGLE_GPU_NODE_MASK, 1, &imported_desc);
     auto T = cgpu_new<CGPUTexture_D3D12>();
     T->pDxResource = imported;
     T->pDxAllocation = CGPU_NULLPTR;
@@ -888,6 +896,7 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     T->super.is_imported = true;
     // TODO: mGPU
     T->super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
+    T->super.size_in_bytes = alloc_info.SizeInBytes;
     return &T->super;
 }
 

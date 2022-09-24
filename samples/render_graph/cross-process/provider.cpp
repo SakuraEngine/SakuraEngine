@@ -282,6 +282,11 @@ int provider_main(int argc, char* argv[])
     // initialize renderer
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     auto renderer = SkrNew<ProviderRenderer>();
+    if (argc >= 3)
+    {
+        renderer->backend = (strcmp(argv[2], "--d3d12") == 0) ? CGPU_BACKEND_D3D12 : renderer->backend;
+        renderer->backend = (strcmp(argv[2], "--vulkan") == 0) ? CGPU_BACKEND_VULKAN : renderer->backend;
+    }
     renderer->create_window();
     renderer->create_api_objects();
     renderer->create_render_pipeline();
@@ -392,6 +397,7 @@ int provider_main(int argc, char* argv[])
                     import_info.is_dedicated = shared_texture->is_dedicated;
                     import_info.format = (ECGPUFormat)shared_texture->format;
                     import_info.mip_levels = shared_texture->mip_levels;
+                    import_info.size_in_bytes = shared_texture->size_in_bytes;
                     provider_set_shared_handle(env, dbi, provider_id, import_info);
                 }
 
