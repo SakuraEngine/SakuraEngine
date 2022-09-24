@@ -7,3 +7,7 @@ includes("application/xmake.lua")
 if has_config("build_AAA") then 
     includes("AAA/xmake.lua")
 end
+
+if(has_config("build_editors")) then
+    includes("editor/xmake.lua")
+end

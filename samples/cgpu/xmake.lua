@@ -1,4 +1,4 @@
-target("cgpu-mandelbrot")
+target("Test-CGPUMandelbrot")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-mandelbrot",
         dxil_outdir = "/../resources/shaders/cgpu-mandelbrot"})
@@ -7,7 +7,7 @@ target("cgpu-mandelbrot")
     add_files("cgpu-mandelbrot/*.c")
     add_files("cgpu-mandelbrot/**.hlsl")
 
-target("cgpu-indexed-instance")
+target("Test-CGPUIndexedInstance")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-indexed-instance",
         dxil_outdir = "/../resources/shaders/cgpu-indexed-instance"})
@@ -16,7 +16,7 @@ target("cgpu-indexed-instance")
     add_files("cgpu-indexed-instance/*.c")
     add_files("cgpu-indexed-instance/**.hlsl")
 
-target("cgpu-texture")
+target("Test-CGPUTexture")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-texture",
         dxil_outdir = "/../resources/shaders/cgpu-texture"})
@@ -27,7 +27,7 @@ target("cgpu-texture")
     
 
 if (os.host() == "windows") then
-    target("hot-triangle")
+    target("Test-HotTriangle")
         add_rules("utils.dxc", {
             spv_outdir = "/../resources/shaders/hot-triangle",
             dxil_outdir = "/../resources/shaders/hot-triangle"})
@@ -37,7 +37,7 @@ if (os.host() == "windows") then
         add_files("hot-triangle/**.hlsl")
 end
 
-target("cgpu-3d")
+target("Test-CGPU3D")
     add_rules("utils.install-resources", {
         extensions = {".gltf", ".bin", ".png"},
         outdir = "/../resources", _png_outdir = "/../resources/textures"})

@@ -44,7 +44,7 @@ target("ISPCTextureCompressor")
     add_rules("utils.ispc")
     add_files("texture_compiler/src/**.ispc")
 
-target("TextureCompiler")
+target("SkrTextureCompiler")
     add_rules("skr.module", {api = "TEXTURE_COMPILER"})
     add_includedirs("texture_compiler/include", {public=true})
     add_deps("SkrTool", "GameRT", "ISPCTextureCompressor")
