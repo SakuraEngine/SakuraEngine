@@ -72,6 +72,8 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
     if (int rc = mdb_cursor_open(txn, dbi, &cursor)) 
     {
         SKR_LOG_ERROR("mdb_cursor_open failed: %d", rc);
+        mdb_txn_commit(txn);
+        return what;
     }
 
     //Initialize the key with the key we're looking for
@@ -98,12 +100,12 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
 skq::SQViewport::SQViewport(QWidget* parent, SProcessId provider) noexcept
     : QOpenGLWidget(parent), gl_vb(nullptr), gl_vao(nullptr), gl_shader(nullptr), provider_id(provider)
 {
-
+    env_create(&env);
 }
 
 skq::SQViewport::~SQViewport() noexcept
 {
-
+    SKR_LOG_DEBUG("SQViewport Deinitialize");
 }
 
 static const char* VIEWPORT_VERTEX_SHADER_CODE =
@@ -193,8 +195,6 @@ void skq::SQViewport::initializeGL()
 
     gl_vb->release();
     gl_vao->release();
-
-    env_create(&env);
 }
 
 skq::SQViewport::ImportedTexture skq::SQViewport::importTexture(uint64_t cgpu_handle, ECGPUBackend backend,

@@ -1,4 +1,4 @@
-target("rg-triangle")
+target("Test-RenderGraphTriangle")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-triangle",
         dxil_outdir = "/../resources/shaders/rg-triangle"})
@@ -7,7 +7,7 @@ target("rg-triangle")
     add_files("rg-triangle/*.cpp")
     add_files("rg-triangle/**.hlsl")
 
-target("rg-deferred")
+target("Test-RenderGraphDeferred")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-deferred",
         dxil_outdir = "/../resources/shaders/rg-deferred"})
@@ -16,7 +16,7 @@ target("rg-deferred")
     add_files("rg-deferred/*.cpp")
     add_files("rg-deferred/**.hlsl")
 
-target("cross-process")
+target("Test-RenderGraphCrossProcess")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cross-process",
         dxil_outdir = "/../resources/shaders/cross-process"})

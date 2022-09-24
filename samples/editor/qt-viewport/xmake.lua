@@ -1,4 +1,4 @@
-target("SkrSandboxEditor")
+target("Test-EditorDemo")
     add_rules("qt.widgetapp")
     add_deps("SkrEditorCore")
     add_frameworks(qt_frameworks)
