@@ -261,9 +261,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
             .with_gfx_queue(skr_renderer_get_gfx_queue())
             .enable_memory_aliasing();
     });
-#ifdef _WIN32
-    cgpu_d3d12_enable_DRED();
-#endif
     initialize_render_effects(renderGraph);
     create_test_scene();
     create_imgui_resources(renderGraph);

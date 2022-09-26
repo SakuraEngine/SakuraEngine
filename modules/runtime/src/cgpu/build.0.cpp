@@ -10,6 +10,7 @@
 
 #ifdef CGPU_USE_D3D12
     #include "d3d12/cgpu_d3d12.cpp"
+    #include "d3d12/cgpu_d3d12_dred.cpp"
     #include "d3d12/cgpu_d3d12_rdna2.cpp"
     #include "d3d12/cgpu_d3d12_dstorage.cpp"
     #include "d3d12/d3d12_utils.cpp"
