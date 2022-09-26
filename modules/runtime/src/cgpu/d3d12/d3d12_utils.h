@@ -22,6 +22,12 @@ void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstan
 // Device Helpers
 void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D);
 
+// Crash Report Helpers
+void D3D12Util_LogDREDPageFault(const D3D12_DRED_PAGE_FAULT_OUTPUT* pageFault);
+void D3D12Util_LogDREDBreadcrumbs(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT* breadcrumbs);
+void D3D12Util_LogDREDBreadcrumbs1(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1* breadcrumbs);
+void D3D12Util_ReportGPUCrash(ID3D12Device* device);
+
 // API Objects Helpers
 void D3D12Util_SignalFence(CGPUQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceValue);
 void D3D12Util_InitializeShaderReflection(CGPUDevice_D3D12* device, CGPUShaderLibrary_D3D12* library, const struct CGPUShaderLibraryDescriptor* desc);
@@ -42,6 +48,7 @@ void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
 const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap);
 void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
 void D3D12Util_FreeDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
+
 // Consume & Return
 D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(
 struct D3D12Util_DescriptorHeap* pHeap, uint32_t count);

@@ -5,6 +5,9 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include <string.h>
+#ifdef _WIN32
+#include "cgpu/extensions/cgpu_d3d12_exts.h"
+#endif
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
 SKR_MODULE_METADATA(u8R"(
@@ -32,6 +35,9 @@ extern skr::Renderer* create_renderer_impl();
 void SkrRendererModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr renderer loaded!");
+#ifdef _WIN32
+    cgpu_d3d12_enable_DRED();
+#endif
 
     renderer = create_renderer_impl();
     bool enable_debug_layer = false;

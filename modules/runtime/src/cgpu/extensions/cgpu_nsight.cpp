@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <EASTL/set.h>
 #include "../common/common_utils.h"
 #include "platform/shared_library.h"
 #include "cgpu/extensions/cgpu_nsight.h"
@@ -132,6 +133,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
         SKR_LOG_INFO("NSIGHT GPU Crash Dump Callback");
+        eastl::set<struct ID3D12Device*> devices; 
         for (auto tracker : _this->all_trackers)
         {
             auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);
@@ -194,7 +196,6 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_GpuCrashDump_GetDescription) aftermath_GpuCrashDump_GetDescription = nullptr;
     SKR_SHARED_LIB_API_PFN(GFSDK_Aftermath_GpuCrashDump_DestroyDecoder) aftermath_GpuCrashDump_DestroyDecoder = nullptr;
 };
-
 
 CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
 {

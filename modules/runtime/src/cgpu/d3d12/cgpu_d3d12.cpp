@@ -1,6 +1,7 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.h"
 #include "../common/common_utils.h"
+
 #include <dxcapi.h>
 #include <EASTL/string_hash_map.h>
 
@@ -1147,41 +1148,7 @@ void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDe
 #if defined(_WIN32)
         ID3D12Device* device = NULL;
         S->pDxSwapChain->GetDevice(IID_ARGS(&device));
-        HRESULT removeHr = -1;
-        auto failedCount = 0u;
-        const auto retryCount = 8u;
-        while (FAILED(removeHr) && (failedCount < retryCount))
-        {
-            removeHr = device->GetDeviceRemovedReason();
-            if (FAILED(removeHr))
-            {
-                cgpu_info("Device removed, waiting for driver to come back online...");
-                Sleep(500); // Wait for a few seconds to allow the driver to come
-                            // back online before doing a reset.
-                failedCount++;
-            }
-        }
-        if (failedCount >= retryCount)
-        {
-            cgpu_fatal("Device driver get lost, unable to get removed reason from DRED.");
-        }
-    #ifdef __ID3D12DeviceRemovedExtendedData_FWD_DEFINED__
-        ID3D12DeviceRemovedExtendedData* pDread;
-        if (SUCCEEDED(device->QueryInterface(IID_ARGS(&pDread))))
-        {
-            D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT breadcrumbs;
-            if (SUCCEEDED(pDread->GetAutoBreadcrumbsOutput(&breadcrumbs)))
-            {
-                cgpu_info("Gathered auto-breadcrumbs output.");
-            }
-            D3D12_DRED_PAGE_FAULT_OUTPUT pageFault;
-            if (SUCCEEDED(pDread->GetPageFaultAllocationOutput(&pageFault)))
-            {
-                cgpu_info("Gathered page fault allocation output.");
-            }
-        }
-        pDread->Release();
-    #endif
+        D3D12Util_ReportGPUCrash(device);
         device->Release();
         ((CGPUDevice*)queue->device)->is_lost = true;
 #endif
