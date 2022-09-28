@@ -123,6 +123,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         }
         // Destroy the GPU crash dump decoder object.
         AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_DestroyDecoder(decoder));
+        SKR_LOG_INFO("NSIGHT GPU Crash Dump File Saved");
     }
 
     // GPU crash dump callback.
