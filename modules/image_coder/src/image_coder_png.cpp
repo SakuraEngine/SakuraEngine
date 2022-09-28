@@ -263,10 +263,69 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
     return true;
 }
 
+#define Z_BEST_SPEED             1
+
 bool PNGImageCoder::encode() SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return false;
+    //Preserve old single thread code on some platform in relation to a type incompatibility at compile time.
+    SKR_ASSERT(width > 0);
+    SKR_ASSERT(height > 0);
+
+    // Reset to the beginning of file so we can use png_read_png(), which expects to start at the beginning.
+    read_offset = 0;
+
+    png_structp png_ptr	= png_create_write_struct(PNG_LIBPNG_VER_STRING, this, PNGImageCoderHelper::user_error_fn, PNGImageCoderHelper::user_warning_fn);
+    SKR_ASSERT(png_ptr);
+
+    png_infop info_ptr	= png_create_info_struct(png_ptr);
+    SKR_ASSERT(info_ptr);
+
+    png_bytep* row_pointers = (png_bytep*) png_malloc( png_ptr, height * sizeof(png_bytep) );
+    SKR_DEFER({ png_free(png_ptr, row_pointers); png_destroy_write_struct(&png_ptr, &info_ptr); });
+
+    // Store the current stack pointer in the jump buffer. setjmp will return non-zero in the case of a write error.
+#if PLATFORM_ANDROID || PLATFORM_LUMIN || PLATFORM_LUMINGL4
+    //Preserve old single thread code on some platform in relation to a type incompatibility at compile time.
+    if (setjmp(SetjmpBuffer) != 0)
+#else
+    //Use libPNG jump buffer solution to allow concurrent compression\decompression on concurrent threads.
+    if (setjmp(png_jmpbuf(png_ptr)) != 0)
+#endif
+    {
+        return false;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Anything allocated on the stack after this point will not be destructed correctly in the case of an error
+
+    {
+        png_set_compression_level(png_ptr, Z_BEST_SPEED);
+        png_set_IHDR(png_ptr, info_ptr, width, height, raw_bit_depth, 
+            (color_format == EImageCoderColorFormat::IMAGE_CODER_COLOR_FORMAT_Gray) ? PNG_COLOR_TYPE_GRAY : PNG_COLOR_TYPE_RGBA,
+            PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+        png_set_write_fn(png_ptr, this, PNGImageCoderHelper::user_write_compressed, PNGImageCoderHelper::user_flush_data);
+
+        const uint64_t PixelChannels = (color_format == EImageCoderColorFormat::IMAGE_CODER_COLOR_FORMAT_Gray) ? 1 : 4;
+        const uint64_t BytesPerPixel = (raw_bit_depth * PixelChannels) / 8;
+        const uint64_t BytesPerRow = BytesPerPixel * width;
+
+        for (int64_t i = 0; i < height; i++)
+        {
+            row_pointers[i]= &raw_view[i * BytesPerRow];
+        }
+        png_set_rows(png_ptr, info_ptr, row_pointers);
+
+        uint32_t Transform = (color_format == EImageCoderColorFormat::IMAGE_CODER_COLOR_FORMAT_BGRA) ? PNG_TRANSFORM_BGR : PNG_TRANSFORM_IDENTITY;
+
+        // PNG files store 16-bit pixels in network byte order (big-endian, ie. most significant bits first).
+        // We're little endian so we need to swap
+        if (raw_bit_depth == 16 && PNG_isLittleEndian())
+        {
+            Transform |= PNG_TRANSFORM_SWAP_ENDIAN;
+        }
+
+        png_write_png(png_ptr, info_ptr, Transform, NULL);
+    }
 }
 
 EImageCoderFormat PNGImageCoder::get_image_format() const SKR_NOEXCEPT
