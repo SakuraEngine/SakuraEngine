@@ -49,6 +49,7 @@ bool BaseImageCoder::set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEP
     memcpy(encoded_data.bytes, data, size);
 
     encoded_view = { (uint8_t*)data, size };
+    encoded_version++;
     return true;
 }
 
@@ -60,6 +61,7 @@ bool BaseImageCoder::move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
     encoded_data.size = size;
 
     encoded_view = { (uint8_t*)data, size };
+    encoded_version++;
     return true;
 }
 
@@ -68,6 +70,7 @@ bool BaseImageCoder::view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
     freeEncoded();
 
     encoded_view = { (uint8_t*)data, size };
+    encoded_version++;
     return true;
 }
 
@@ -82,6 +85,7 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
 
     raw_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
+    raw_version++;
     return true;
 }
 
@@ -95,6 +99,7 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
 
     raw_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
+    raw_version++;
     return true;
 }
 
@@ -105,6 +110,7 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
 
     encoded_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
+    raw_version++;
     return true;
 }
 
@@ -120,11 +126,12 @@ uint64_t BaseImageCoder::get_encoded_size() const SKR_NOEXCEPT
 
 bool BaseImageCoder::lazy_encode() const SKR_NOEXCEPT
 {
-    if (encoded_view.empty())
+    if (encoded_version < raw_version)
     {
         auto _this = const_cast<BaseImageCoder*>(this);
         if (!_this->encode())
         {
+            encoded_version++;
             return false;
         }
     }
@@ -133,11 +140,12 @@ bool BaseImageCoder::lazy_encode() const SKR_NOEXCEPT
 
 bool BaseImageCoder::lazy_decode(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
 {
-    if (raw_view.empty())
+    if (raw_version < encoded_version)
     {
         auto _this = const_cast<BaseImageCoder*>(this);
         if (_this->decode(format, bit_depth))
         {
+            raw_version++;
             return true;
         }
     }

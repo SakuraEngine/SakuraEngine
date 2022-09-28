@@ -26,7 +26,9 @@ class SVMemCCModule : public skr::IDynamicModule
 
     bool DPIAware = false;
     SWindowHandle window;
-    ECGPUBackend backend = CGPU_BACKEND_D3D12;
+    // Vulkan's memory heap is far more accurate than the one provided by D3D12
+    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
+    // ECGPUBackend backend = CGPU_BACKEND_D3D12;
 
     CGPUInstanceId instance = nullptr;
     CGPUAdapterId adapter = nullptr;

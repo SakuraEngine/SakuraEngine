@@ -57,6 +57,8 @@ private:
     void setRawProps(uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT;
 
     skr_blob_t raw_data;
+    mutable uint32_t raw_version = 0;
     skr_blob_t encoded_data;
+    mutable uint32_t encoded_version = 0;
 };
 } // namespace skr

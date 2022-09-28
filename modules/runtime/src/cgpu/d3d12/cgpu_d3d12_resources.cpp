@@ -617,7 +617,9 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
 
     CGPUTexture_D3D12* T = nullptr;
     if (desc->is_aliasing)
+    {
         T = cgpu_new<CGPUTextureAliasing_D3D12>(resDesc, desc->name);
+    }
     else
         T = cgpu_new<CGPUTexture_D3D12>();
 
@@ -642,6 +644,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     T->super.array_size_minus_one = desc->array_size - 1;
     T->super.format = desc->format;
     T->super.can_export = (alloc_desc.ExtraHeapFlags & D3D12_HEAP_FLAG_SHARED);
+    if (T->pDxResource)
     {
         auto ResDesc = T->pDxResource->GetDesc();
         auto allocDesc = D->pDxDevice->GetResourceAllocationInfo(
@@ -682,6 +685,8 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
             if (result == S_OK)
             {
                 Aliasing->pDxAllocation = Aliased->pDxAllocation;
+                Aliasing->super.size_in_bytes = Aliased->super.size_in_bytes;
+                Aliasing->super.native_handle = Aliased->super.native_handle;
                 // Set debug name
                 if (device->adapter->instance->enable_set_name)
                 {
