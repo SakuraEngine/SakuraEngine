@@ -56,9 +56,11 @@ private:
     void freeEncoded() SKR_NOEXCEPT;
     void setRawProps(uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT;
 
+    mutable uint32_t newest_version = 0;
+
     skr_blob_t raw_data;
-    mutable bool raw_data_dirty = 0;
+    mutable uint32_t raw_data_version = 0;
     skr_blob_t encoded_data;
-    mutable bool encoded_data_dirty = 0;
+    mutable uint32_t encoded_data_version = 0;
 };
 } // namespace skr
