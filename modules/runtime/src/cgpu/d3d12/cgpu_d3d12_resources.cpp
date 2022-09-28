@@ -544,11 +544,12 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
         }
+        is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
         if (!desc->is_dedicated && desc->sample_count == CGPU_SAMPLE_COUNT_1 && !(desc->flags & CGPU_TCF_EXPORT_BIT))
         {
             alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
+            is_dedicated = 0;
         }
-        is_dedicated = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
         can_alias_allocation = alloc_desc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
         if ( desc->flags & CGPU_TCF_EXPORT_BIT )
         {
