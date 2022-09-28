@@ -326,6 +326,7 @@ bool PNGImageCoder::encode() SKR_NOEXCEPT
 
         png_write_png(png_ptr, info_ptr, Transform, NULL);
     }
+    return true;
 }
 
 EImageCoderFormat PNGImageCoder::get_image_format() const SKR_NOEXCEPT
