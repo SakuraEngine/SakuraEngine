@@ -28,6 +28,11 @@
 - 清晰的 Render Graph 前端让您可以在不接触同步原语和复杂描述符的情况下完成高度异步的现代 GPU 管线编程，并充分利用 Memory Aliasing 等高级特性；
 - 完全异步、针对 NVMe 驱动以及 GPU 异步拷贝引擎优化的 I/O 服务，轻松享受 Direct Storage 的极限吞吐，打破 SSD 性能桎梏。
 
+<div align=center>
+
+https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-b331-347e3669f3ae.mp4
+
+</div>
 
 ## 组件支持矩阵
 
