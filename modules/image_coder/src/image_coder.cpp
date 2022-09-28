@@ -3,6 +3,7 @@
 #include "platform/memory.h"
 #include "skr_image_coder/skr_image_coder.h"
 #include "image_coder_png.hpp"
+#include "image_coder_jpeg.hpp"
 
 void SkrImageCoderModule::on_load(int argc, char** argv)
 {
@@ -40,6 +41,7 @@ skr_image_coder_id skr_image_coder_create_image(EImageCoderFormat format)
     case IMAGE_CODER_FORMAT_PNG:
         return SkrNew<skr::PNGImageCoder>();
     case IMAGE_CODER_FORMAT_JPEG:
+        return SkrNew<skr::JPEGImageCoder>();
     case IMAGE_CODER_FORMAT_GrayScaleJPEG:
     case IMAGE_CODER_FORMAT_BMP:
     case IMAGE_CODER_FORMAT_ICO:
@@ -77,6 +79,12 @@ bool skr_image_coder_set_raw(skr_image_coder_id image, const uint8_t* data, uint
 bool skr_image_coder_move_raw(skr_image_coder_id image, const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw)
 {
     return image->move_raw(data, size, width, height, format, bit_depth, bytes_per_raw);
+}
+bool skr_image_coder_view_raw(skr_image_coder_id image, const uint8_t* data, 
+    uint64_t size, uint32_t width, uint32_t height, 
+    EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw)
+{
+    return image->view_raw(data, size, width, height, format, bit_depth, bytes_per_raw);
 }
 
 bool skr_image_coder_get_raw_data_view(skr_image_coder_id image, uint8_t** pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth)
@@ -223,6 +231,29 @@ HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_re
             (uint8_t*)request->dst_buffer, &actualSize, 
             raw_format, coder->get_bit_depth()))
         {
+            /*
+            {
+                auto jcoder = skr_image_coder_create_image(IMAGE_CODER_FORMAT_JPEG);
+                const auto jbit_depth = skr_image_coder_get_bit_depth(coder);
+                const auto jwidth = skr_image_coder_get_width(coder);
+                const auto jheight = skr_image_coder_get_height(coder);
+                SKR_DEFER({ ZoneScopedN("DirectStorageJTestDecompressorFree"); skr_image_coder_free_image(jcoder); });
+                bool jview = skr_image_coder_view_raw(jcoder, (const uint8_t*)request->dst_buffer, actualSize, 
+                    jwidth, jheight,
+                    raw_format, jbit_depth, 4 * jwidth * jbit_depth / 8);
+                SKR_ASSERT(jview);
+                
+                uint8_t* encoded = nullptr;
+                uint64_t encoded_size = 0;
+                bool jencode = skr_image_coder_get_encoded_data_view(jcoder, &encoded, &encoded_size);
+                SKR_ASSERT(jencode);
+                
+                bool jraw = skr_image_coder_get_raw_data(jcoder, 
+                    (uint8_t*)request->dst_buffer, &actualSize, 
+                    raw_format, coder->get_bit_depth());
+                SKR_ASSERT(jraw);
+            }
+            */
             return 0L; // S_OK
         }
     }

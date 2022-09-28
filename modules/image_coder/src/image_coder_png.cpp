@@ -9,7 +9,7 @@ namespace skr
 {
 PNGImageCoder::~PNGImageCoder() SKR_NOEXCEPT
 {
-    BaseImageCoder::~BaseImageCoder();
+
 }
 
 bool PNGImageCoder::valid_data() const SKR_NOEXCEPT
@@ -263,7 +263,7 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
     return true;
 }
 
-#define Z_BEST_SPEED             1
+#define PNGDefaultZlibLevel 3
 
 bool PNGImageCoder::encode() SKR_NOEXCEPT
 {
@@ -299,10 +299,10 @@ bool PNGImageCoder::encode() SKR_NOEXCEPT
     // Anything allocated on the stack after this point will not be destructed correctly in the case of an error
 
     {
-        png_set_compression_level(png_ptr, Z_BEST_SPEED);
-        png_set_IHDR(png_ptr, info_ptr, width, height, raw_bit_depth, 
-            (color_format == EImageCoderColorFormat::IMAGE_CODER_COLOR_FORMAT_Gray) ? PNG_COLOR_TYPE_GRAY : PNG_COLOR_TYPE_RGBA,
-            PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+        png_set_compression_level(png_ptr, PNGDefaultZlibLevel);
+        //png_set_IHDR(png_ptr, info_ptr, width, height, raw_bit_depth, 
+        //    (color_format == EImageCoderColorFormat::IMAGE_CODER_COLOR_FORMAT_Gray) ? PNG_COLOR_TYPE_GRAY : PNG_COLOR_TYPE_RGBA,
+        //    PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
         png_set_write_fn(png_ptr, this, PNGImageCoderHelper::user_write_compressed, PNGImageCoderHelper::user_flush_data);
 
         const uint64_t PixelChannels = (color_format == EImageCoderColorFormat::IMAGE_CODER_COLOR_FORMAT_Gray) ? 1 : 4;

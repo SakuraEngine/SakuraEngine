@@ -49,7 +49,11 @@ bool BaseImageCoder::set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEP
     memcpy(encoded_data.bytes, data, size);
 
     encoded_view = { (uint8_t*)data, size };
-    encoded_version++;
+    if (!encoding)
+    {
+        SKR_ASSERT(!raw_data_dirty);
+        encoded_data_dirty = true;
+    }
     return true;
 }
 
@@ -61,7 +65,11 @@ bool BaseImageCoder::move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
     encoded_data.size = size;
 
     encoded_view = { (uint8_t*)data, size };
-    encoded_version++;
+    if (!encoding)
+    {
+        SKR_ASSERT(!raw_data_dirty);
+        encoded_data_dirty = true;
+    }
     return true;
 }
 
@@ -70,7 +78,11 @@ bool BaseImageCoder::view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCE
     freeEncoded();
 
     encoded_view = { (uint8_t*)data, size };
-    encoded_version++;
+    if (!encoding)
+    {
+        SKR_ASSERT(!raw_data_dirty);
+        encoded_data_dirty = true;
+    }
     return true;
 }
 
@@ -85,7 +97,11 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
 
     raw_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
-    raw_version++;
+    if (!decoding) 
+    {
+        SKR_ASSERT(!encoded_data_dirty);
+        raw_data_dirty = true;
+    }
     return true;
 }
 
@@ -99,7 +115,11 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
 
     raw_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
-    raw_version++;
+    if (!decoding) 
+    {
+        SKR_ASSERT(!encoded_data_dirty);
+        raw_data_dirty = true;
+    }
     return true;
 }
 
@@ -108,9 +128,13 @@ EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_N
 {
     freeRaw();
 
-    encoded_view = { (uint8_t*)data, size };
+    raw_view = { (uint8_t*)data, size };
     setRawProps(width, height, format, bit_depth, bytes_per_raw);
-    raw_version++;
+    if (!decoding) 
+    {
+        SKR_ASSERT(!encoded_data_dirty);
+        raw_data_dirty = true;
+    }
     return true;
 }
 
@@ -126,28 +150,36 @@ uint64_t BaseImageCoder::get_encoded_size() const SKR_NOEXCEPT
 
 bool BaseImageCoder::lazy_encode() const SKR_NOEXCEPT
 {
-    if (encoded_version < raw_version)
+    if (raw_data_dirty && !encoding)
     {
         auto _this = const_cast<BaseImageCoder*>(this);
-        if (!_this->encode())
+        encoding = true;
+        if (_this->encode())
         {
-            encoded_version++;
-            return false;
+            encoded_data_dirty = true;
+            raw_data_dirty = false;
+            encoding = false;
+            return true;
         }
+        return false;
     }
     return true;
 }
 
 bool BaseImageCoder::lazy_decode(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
 {
-    if (raw_version < encoded_version)
+    if (encoded_data_dirty && !decoding)
     {
         auto _this = const_cast<BaseImageCoder*>(this);
+        decoding = true;
         if (_this->decode(format, bit_depth))
         {
-            raw_version++;
+            raw_data_dirty = true;
+            encoded_data_dirty = false;
+            decoding = false;
             return true;
         }
+        return false;
     }
     return true;
 }
