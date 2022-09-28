@@ -1,5 +1,5 @@
 dxmath_includes_dir = "$(projectdir)/thirdparty/DirectXMath/DirectXMath"
-dxmath_unix_includes_dir = "$(projectdir)/thirdparty/DirectXMath/DirectXMath/Unix"
+dxmath_unix_includes_dir = "$(projectdir)/thirdparty/DirectXMath/Unix"
 
 target("DirectXMath")
     set_kind("headeronly")
