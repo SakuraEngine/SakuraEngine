@@ -75,6 +75,8 @@ struct SKR_IMAGE_CODER_API skr_image_coder_t {
     virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_bit_depth() const SKR_NOEXCEPT = 0;
+    mutable bool encoding = false;
+    mutable bool decoding = false;
 };
 #endif
 typedef struct skr_image_coder_t skr_image_coder_t;
