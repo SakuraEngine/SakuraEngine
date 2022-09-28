@@ -45,7 +45,7 @@ target("Test-CGPU3D")
         spv_outdir = "/../resources/shaders/cgpu-3d",
         dxil_outdir = "/../resources/shaders/cgpu-3d"})
     set_kind("binary")
-    add_deps("SkrRT")
+    add_deps("cgltf", "SkrRT")
     add_files("cgpu-3d/**.cpp")
     add_files("cgpu-3d/**.hlsl")
     add_files("cgpu-3d/**.bin", "cgpu-3d/**.gltf", "cgpu-3d/**.png")

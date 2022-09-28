@@ -10,7 +10,6 @@ set_languages("c11", "cxx17")
 include_dir_list = {"include"}
 source_list = {}
 packages_list = {}
-deps_list = {}
 defs_list = {}
 links_list = {}
 generator_list = {}

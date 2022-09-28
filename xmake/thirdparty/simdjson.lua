@@ -2,7 +2,6 @@ simdjson_include_dir = "$(projectdir)/thirdparty/simdjson/include"
 simdjson_source_dir = "$(projectdir)/thirdparty/simdjson/source"
 
 table.insert(include_dir_list, simdjson_include_dir)
-table.insert(deps_list, "simdjson")
 
 target("simdjson")
     set_kind("static")
