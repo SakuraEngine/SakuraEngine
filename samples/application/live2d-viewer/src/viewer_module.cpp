@@ -187,6 +187,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     create_imgui_resources(renderGraph, resource_vfs);
     skr_live2d_initialize_render_effects(renderGraph, resource_vfs);
     create_test_scene(resource_vfs, ram_service, vram_service);
+    uint64_t frame_index = 0;
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
     int64_t elapsed_frame = 0;
@@ -306,7 +307,9 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         }
         {
             ZoneScopedN("ExecuteRenderGraph");
-            auto frame_index = renderGraph->execute();
+            if (frame_index == 1000)
+                render_graph::RenderGraphViz::write_graphviz(*renderGraph, "render_graph_L2D.gv");
+            frame_index = renderGraph->execute();
             {
                 ZoneScopedN("CollectGarbage");
                 if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)

@@ -53,9 +53,12 @@ public:
     inline const CGPUTextureDescriptor& get_desc() const SKR_NOEXCEPT { return descriptor; }
     inline const uint32_t get_size() const SKR_NOEXCEPT
     {
-        return descriptor.array_size * descriptor.mip_levels *
-               descriptor.width * descriptor.depth * descriptor.height *
-               FormatUtil_BitSizeOfBlock(descriptor.format);
+        uint32_t asize = cgpu_max(descriptor.array_size, 1);
+        uint32_t mips = cgpu_max(descriptor.mip_levels, 1);
+        uint32_t width = cgpu_max(descriptor.width, 1);
+        uint32_t height = cgpu_max(descriptor.height, 1);
+        uint32_t depth = cgpu_max(descriptor.depth, 1);
+        return asize * mips * width * height * depth * FormatUtil_BitSizeOfBlock(descriptor.format);
     }
     inline const ECGPUSampleCount get_sample_count() const SKR_NOEXCEPT { return descriptor.sample_count; }
     inline const TextureNode* get_aliasing_parent() const SKR_NOEXCEPT { return frame_aliasing_source; }
