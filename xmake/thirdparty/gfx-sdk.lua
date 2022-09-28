@@ -15,4 +15,6 @@ task("unzip-gfx-sdk")
 
 vk_includes_dir = "$(projectdir)/SDKs/vulkan"
 
-table.insert(include_dir_list, vk_includes_dir)
+target("vulkan")
+    set_kind("headeronly")
+    add_includedirs(vk_includes_dir, {public=true})

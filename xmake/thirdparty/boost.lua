@@ -1,3 +1,5 @@
 boost_includes_dir = "$(projectdir)/thirdparty/boost"
 
-table.insert(include_dir_list, boost_includes_dir)
+target("boost")
+    set_kind("headeronly")
+    add_includedirs(boost_includes_dir, {public=true})

@@ -5,6 +5,6 @@ target("SkrRenderer")
         rootdir = "include/",
         api = "SKR_RENDERER"
     })
-    add_deps("SkrScene", "SkrRenderGraph", "SkrImGui")
+    add_deps("cgltf", "SkrScene", "SkrRenderGraph", "SkrImGui")
     add_includedirs("include", {public=true})
     add_files("src/*.cpp")

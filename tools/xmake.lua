@@ -36,11 +36,12 @@ target("GLTFTool")
     })
     add_includedirs("gltf_tool/include", {public=true})
     add_packages("vcpkg::usd")
-    add_deps("SkrTool", "GameRT")
+    add_deps("cgltf", "SkrTool", "GameRT")
     add_files("gltf_tool/src/**.cpp")
 
 target("ISPCTextureCompressor")
     set_kind("object")
+    set_policy("build.across_targets_in_parallel", false)
     add_rules("utils.ispc")
     add_files("texture_compiler/src/**.ispc")
 

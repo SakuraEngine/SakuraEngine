@@ -172,6 +172,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - fast_float v3.4.0
 - llfio 28ed462
 - ghc::filesystem v1.5.12
+- zlib v1.2.8
 
 ## 接入的扩展API以及版本
 - nvapi R510
