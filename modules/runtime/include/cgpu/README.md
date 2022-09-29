@@ -52,7 +52,7 @@
 - Vertex Layout :heavy_check_mark:
 - Root Constant :heavy_check_mark:
 - Constant Spec :heavy_exclamation_mark:
-- Shading Rate :heavy_exclamation_mark:
+- Shading Rate :heavy_check_mark:
 
 ### MeshPipeline
 
