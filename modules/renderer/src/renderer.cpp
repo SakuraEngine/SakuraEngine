@@ -79,7 +79,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         processors.clear();
     }
 
-    SRenderDeviceId get_render_device() const
+    SRenderDeviceId get_render_device() const override
     {
         return render_device;
     }
