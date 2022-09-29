@@ -26,8 +26,9 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-    cprint("${cyan}generating.meta ${clear}%s", path.absolute(metadir))
+    cprint("${green}%s.compiling.meta ${clear}%s", target:name(), path.absolute(metadir))
     os.runv(meta.vexec, argv)
+    cprint("${green}%s.finish.meta ${clear}%s", target:name(), path.absolute(metadir))
     return argv
 end
 
