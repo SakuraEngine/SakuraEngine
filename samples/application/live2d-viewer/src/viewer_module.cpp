@@ -37,6 +37,7 @@ public:
     SWindowHandle window;
     uint32_t backbuffer_index;
 
+    SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr::io::RAMService* ram_service = nullptr;
 };
@@ -61,7 +62,6 @@ SKR_MODULE_METADATA(u8R"(
 )",
 Live2DViewer)
 
-
 SLive2DViewerModule* SLive2DViewerModule::Get()
 {
     auto mm = skr_get_module_manager();
@@ -78,6 +78,9 @@ void SLive2DViewerModule::on_load(int argc, char** argv)
     vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
     vfs_desc.override_mount_dir = resourceRoot.c_str();
     resource_vfs = skr_create_vfs(&vfs_desc);
+
+    auto render_device = skr_get_default_render_device();
+    l2d_renderer = skr_create_renderer(render_device);
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
     ioServiceDesc.name = "Live2DViewerRAMIOService";
@@ -103,14 +106,14 @@ void SLive2DViewerModule::on_unload()
     skr_free_vfs(resource_vfs);
 }
 
-extern void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
+extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 #include "ecs/dual.h"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
 
-void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service)
+void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service)
 {
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
     renderableT_builder
@@ -119,13 +122,13 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
     auto live2dEntSetup = [&](dual_chunk_view_t* view) {
-        auto renderer = skr_renderer_get_renderer();
         skr_render_effect_attach(renderer, view, "Live2DEffect");
         
         auto ents = (dual_entity_t*)dualV_get_entities(view);
         auto modelSetup = [=](dual_chunk_view_t* view) {
-            auto file_dstorage_queue = skr_renderer_get_file_dstorage_queue();
-            auto memory_dstorage_queue = skr_renderer_get_memory_dstorage_queue();
+            auto render_device = renderer->get_render_device();
+            auto file_dstorage_queue = render_device->get_file_dstorage_queue();
+            auto memory_dstorage_queue = render_device->get_memory_dstorage_queue();
             auto mesh_comps = (skr_live2d_render_model_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_live2d_render_model_comp_t>::get());
             for (uint32_t i = 0; i < view->count; i++)
             {
@@ -134,16 +137,18 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
                 vram_request.file_dstorage_queue_override = file_dstorage_queue;
                 vram_request.memory_dstorage_queue_override = memory_dstorage_queue;
                 vram_request.vfs_override = resource_vfs;
-                vram_request.queue_override = skr_renderer_get_gfx_queue();
+                vram_request.queue_override = render_device->get_gfx_queue();
                 ram_request.vfs_override = resource_vfs;
                 ram_request.callback_data = &vram_request;
                 ram_request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)
                 {
-                    auto ram_service = SLive2DViewerModule::Get()->ram_service;
-                    auto vram_service = skr_renderer_get_vram_service();
                     auto pRenderModelRequest = (skr_live2d_render_model_request_t*)data;
-                    auto cgpuDevice = skr_renderer_get_cgpu_device();
-                    skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpuDevice, request->model_resource, pRenderModelRequest);
+                    auto ram_service = SLive2DViewerModule::Get()->ram_service;
+                    auto renderer = SLive2DViewerModule::Get()->l2d_renderer;
+                    auto render_device = renderer->get_render_device();
+                    auto vram_service = render_device->get_vram_service();
+                    auto cgpu_device = render_device->get_cgpu_device();
+                    skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpu_device, request->model_resource, pRenderModelRequest);
                 };
                 if (i == 1)
                     skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
@@ -151,7 +156,7 @@ void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_servic
                     skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
             }
         };
-        skr_render_effect_access(skr_renderer_get_renderer(), ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
+        skr_render_effect_access(renderer, ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
     };
     dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
 }
@@ -161,32 +166,34 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     SKR_LOG_INFO("live2d viewer executed!");
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 
         return -1;
-    auto cgpuDevice = skr_renderer_get_cgpu_device();
-    auto adapter_detail = cgpu_query_adapter_detail(cgpuDevice->adapter);
+    auto render_device = skr_get_default_render_device();
+    auto cgpu_device = render_device->get_cgpu_device();
+    auto gfx_queue = render_device->get_gfx_queue();
+    auto adapter_detail = cgpu_query_adapter_detail(cgpu_device->adapter);
     auto window_desc = make_zeroed<SWindowDescroptor>();
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     // TODO: Resizable swapchain
     window_desc.height = 1500;
     window_desc.width = 1500;
     window = skr_create_window(
-        fmt::format("Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
+        fmt::format("Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
         &window_desc);
 
     auto ram_service = SLive2DViewerModule::Get()->ram_service;
-    auto vram_service = skr_renderer_get_vram_service();
+    auto vram_service = render_device->get_vram_service();
     // Initialize renderer
-    auto swapchain = skr_renderer_register_window(window);
-    auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
+    auto swapchain = skr_render_device_register_window(render_device, window);
+    auto present_fence = cgpu_create_fence(cgpu_device);
     namespace render_graph = skr::render_graph;
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
-        builder.with_device(skr_renderer_get_cgpu_device())
-            .with_gfx_queue(skr_renderer_get_gfx_queue())
+        builder.with_device(cgpu_device)
+            .with_gfx_queue(gfx_queue)
             .enable_memory_aliasing();
     });
-    create_imgui_resources(renderGraph, resource_vfs);
-    skr_live2d_initialize_render_effects(renderGraph, resource_vfs);
-    create_test_scene(resource_vfs, ram_service, vram_service);
+    create_imgui_resources(render_device, renderGraph, resource_vfs);
+    skr_live2d_initialize_render_effects(l2d_renderer, renderGraph, resource_vfs);
+    create_test_scene(l2d_renderer, resource_vfs, ram_service, vram_service);
     uint64_t frame_index = 0;
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
@@ -208,9 +215,9 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
                     Uint8 window_event = event.window.event;
                     if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                     {
-                        cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+                        cgpu_wait_queue_idle(gfx_queue);
                         cgpu_wait_fences(&present_fence, 1);
-                        swapchain = skr_renderer_recreate_window_swapchain(window);
+                        swapchain = skr_render_device_recreate_window_swapchain(render_device, window);
                     }
                 }
             }
@@ -289,7 +296,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         });
         {
             ZoneScopedN("RenderScene");
-            skr_renderer_render_frame(renderGraph, skr_runtime_get_dual_storage());
+            skr_renderer_render_frame(l2d_renderer, renderGraph, skr_runtime_get_dual_storage());
         }
         {
             ZoneScopedN("RenderIMGUI");
@@ -322,15 +329,16 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
-            cgpu_queue_present(skr_renderer_get_gfx_queue(), &present_desc);
+            cgpu_queue_present(gfx_queue, &present_desc);
             render_graph_imgui_present_sub_viewports();
         }
     }
-    cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+    cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
     render_graph::RenderGraph::destroy(renderGraph);
-    skr_live2d_finalize_render_effects(renderGraph, resource_vfs);
+    skr_live2d_finalize_render_effects(l2d_renderer, renderGraph, resource_vfs);
     render_graph_imgui_finalize();
+    skr_free_renderer(l2d_renderer);
     return 0;
 }

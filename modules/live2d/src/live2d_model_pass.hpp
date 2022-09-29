@@ -10,12 +10,12 @@
 const skr_render_pass_name_t live2d_pass_name = "Live2DPass";
 
 struct RenderPassLive2D : public IPrimitiveRenderPass {
-    void on_register(ISkrRenderer* renderer) override
+    void on_register(SRendererId renderer) override
     {
 
     }
 
-    void on_unregister(ISkrRenderer* renderer) override
+    void on_unregister(SRendererId renderer) override
     {
 
     }

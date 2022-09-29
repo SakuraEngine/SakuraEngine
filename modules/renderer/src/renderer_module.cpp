@@ -30,8 +30,6 @@ SKR_MODULE_METADATA(u8R"(
 )",
 SkrRenderer)
 
-extern skr::Renderer* create_renderer_impl();
-
 void SkrRendererModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("skr renderer loaded!");
@@ -39,7 +37,6 @@ void SkrRendererModule::on_load(int argc, char** argv)
     cgpu_d3d12_enable_DRED();
 #endif
 
-    renderer = create_renderer_impl();
     bool enable_debug_layer = false;
     bool enable_gpu_based_validation = false;
     bool enable_set_name = true;
@@ -47,32 +44,32 @@ void SkrRendererModule::on_load(int argc, char** argv)
     {
         if (::strcmp(argv[i], "--vulkan") == 0)
         {
-            renderer->backend = CGPU_BACKEND_VULKAN;
+            render_device.backend = CGPU_BACKEND_VULKAN;
         }
         else if (::strcmp(argv[i], "--d3d12") == 0)
         {
-            renderer->backend = CGPU_BACKEND_D3D12;
+            render_device.backend = CGPU_BACKEND_D3D12;
         }
         else
         {
 #ifdef _WIN32
-            renderer->backend = CGPU_BACKEND_D3D12;
+            render_device.backend = CGPU_BACKEND_D3D12;
 #else
-            renderer->backend = CGPU_BACKEND_VULKAN;
+            render_device.backend = CGPU_BACKEND_VULKAN;
 #endif
         }
         enable_debug_layer |= (0 == ::strcmp(argv[i], "--debug_layer"));
         enable_gpu_based_validation |= (0 == ::strcmp(argv[i], "--gpu_based_validation"));
         enable_set_name |= (0 == ::strcmp(argv[i], "--gpu_obj_name"));
     }
-    renderer->initialize(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
+    render_device.initialize(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 }
 
 void SkrRendererModule::on_unload()
 {
     SKR_LOG_INFO("skr renderer unloaded!");
 
-    renderer->finalize();
+    render_device.finalize();
 }
 
 SkrRendererModule* SkrRendererModule::Get()
@@ -82,126 +79,84 @@ SkrRendererModule* SkrRendererModule::Get()
     return rm;
 }
 
-ECGPUFormat SkrRendererModule::get_swapchain_format() const
+SRenderDeviceId SkrRendererModule::get_render_device()
 {
-    if (renderer->swapchains.size() > 0)
-        return (ECGPUFormat)renderer->swapchains.at(0).second->back_buffers[0]->format;
-    return CGPU_FORMAT_B8G8R8A8_UNORM;
+    return &render_device;
 }
 
-CGPUSamplerId SkrRendererModule::get_linear_sampler() const
+SRenderDeviceId skr_get_default_render_device()
 {
-    return renderer->linear_sampler;
+    return SkrRendererModule::Get()->get_render_device();
 }
 
-CGPUDeviceId SkrRendererModule::get_cgpu_device() const
+CGPUSwapChainId skr_render_device_register_window(SRenderDeviceId device, SWindowHandle window)
 {
-    return renderer->device;
+    return device->register_window(window);
 }
 
-CGPURootSignaturePoolId SkrRendererModule::get_root_signature_pool() const
+CGPUSwapChainId skr_render_device_recreate_window_swapchain(SRenderDeviceId device, SWindowHandle window)
 {
-    return renderer->root_signature_pool;
+    return device->recreate_window_swapchain(window);
 }
 
-skr_io_vram_service_t* SkrRendererModule::get_vram_service() const
+ECGPUFormat skr_render_device_get_swapchain_format(SRenderDeviceId device)
 {
-    return renderer->vram_service;
+    return device->get_swapchain_format();
 }
 
-CGPUQueueId SkrRendererModule::get_gfx_queue() const
+CGPUSamplerId skr_render_device_get_linear_sampler(SRenderDeviceId device)
 {
-    return renderer->gfx_queue;
+    return device->get_linear_sampler();
 }
 
-CGPUQueueId SkrRendererModule::get_cpy_queue(uint32_t idx) const
+CGPURootSignaturePoolId skr_render_device_get_root_signature_pool(SRenderDeviceId device)
 {
-    return renderer->get_cpy_queue(idx);
+    return device->get_root_signature_pool();
 }
 
-CGPUDStorageQueueId SkrRendererModule::get_file_dstorage_queue() const
+CGPUQueueId skr_render_device_get_gfx_queue(SRenderDeviceId device)
 {
-    return renderer->get_file_dstorage_queue();
+    return device->get_gfx_queue();
 }
 
-CGPUDStorageQueueId SkrRendererModule::get_memory_dstorage_queue() const
+CGPUQueueId skr_render_device_get_cpy_queue(SRenderDeviceId device)
 {
-    return renderer->get_memory_dstorage_queue();
+    return device->get_cpy_queue();
 }
 
-struct ISkrRenderer* skr_renderer_get_renderer()
+CGPUQueueId skr_render_device_get_nth_cpy_queue(SRenderDeviceId device, uint32_t n)
 {
-    return (ISkrRenderer*)SkrRendererModule::Get()->get_renderer();
+    return device->get_cpy_queue(n);
 }
 
-CGPUSwapChainId skr_renderer_register_window(SWindowHandle window)
+CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device)
 {
-    return SkrRendererModule::Get()->get_renderer()->register_window(window);
+    return device->get_cgpu_device();
 }
 
-CGPUSwapChainId skr_renderer_recreate_window_swapchain(SWindowHandle window)
+skr_io_vram_service_t* skr_render_device_get_vram_service(SRenderDeviceId device)
 {
-    return SkrRendererModule::Get()->get_renderer()->recreate_window_swapchain(window);
+    return device->get_vram_service();
 }
 
-ECGPUFormat skr_renderer_get_swapchain_format()
+void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage)
 {
-    return SkrRendererModule::Get()->get_swapchain_format();
+    renderer->render(render_graph, storage);
 }
 
-CGPUSamplerId skr_renderer_get_linear_sampler()
+CGPUDStorageQueueId skr_render_device_get_file_dstorage_queue(SRenderDeviceId device)
 {
-    return SkrRendererModule::Get()->get_linear_sampler();
+    return device->get_file_dstorage_queue();
 }
-
-CGPURootSignaturePoolId skr_renderer_get_root_signature_pool()
+CGPUDStorageQueueId skr_render_device_get_memory_dstorage_queue(SRenderDeviceId device)
 {
-    return SkrRendererModule::Get()->get_root_signature_pool();
-}
-
-CGPUQueueId skr_renderer_get_gfx_queue()
-{
-    return SkrRendererModule::Get()->get_gfx_queue();
-}
-
-CGPUQueueId skr_renderer_get_cpy_queue()
-{
-    return SkrRendererModule::Get()->get_cpy_queue();
-}
-
-CGPUQueueId skr_renderer_get_nth_cpy_queue(uint32_t n)
-{
-    return SkrRendererModule::Get()->get_cpy_queue(n);
-}
-
-CGPUDeviceId skr_renderer_get_cgpu_device()
-{
-    return SkrRendererModule::Get()->get_cgpu_device();
-}
-
-skr_io_vram_service_t* skr_renderer_get_vram_service()
-{
-    return SkrRendererModule::Get()->get_vram_service();
-}
-
-void skr_renderer_render_frame(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage)
-{
-    SkrRendererModule::Get()->get_renderer()->render(render_graph, storage);
-}
-
-CGPUDStorageQueueId skr_renderer_get_file_dstorage_queue()
-{
-    return SkrRendererModule::Get()->get_file_dstorage_queue();
-}
-CGPUDStorageQueueId skr_renderer_get_memory_dstorage_queue()
-{
-    return SkrRendererModule::Get()->get_memory_dstorage_queue();
+    return device->get_memory_dstorage_queue();
 }
 
 #ifdef _WIN32
 skr_win_dstorage_decompress_service_id SkrRendererModule::get_win_dstorage_decompress_service() const
 {
-    return renderer->decompress_service;
+    return render_device.decompress_service;
 }
 
 skr_win_dstorage_decompress_service_id skr_renderer_get_win_dstorage_decompress_service()

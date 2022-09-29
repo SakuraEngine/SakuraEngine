@@ -58,7 +58,7 @@ void setup_render_mesh(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh
     }
 }
 
-void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, const char* path, skr_render_mesh_request_t* request)
+void skr_render_mesh_create_from_gltf(SRenderDeviceId render_device, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, const char* path, skr_render_mesh_request_t* request)
 {
     ZoneScopedN("ioRAM & VRAM Mesh Request");
 
@@ -66,6 +66,7 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
     {
         CGPUDStorageQueueId dstorage_queue;
         skr_render_mesh_request_t* request = nullptr;
+        SRenderDeviceId render_device = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
         skr_io_vram_service_t* vram_service = nullptr;
         // buffer io
@@ -80,8 +81,11 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
     };
     SKR_ASSERT((!request->queue_override || !request->dstorage_queue_override) && "only one type of override queue should be set!");
     SKR_ASSERT(request->mesh_resource_request.vfs_override && "vfs_override is null, only support override mode now!");
-    auto dstorage_queue = (request->dstorage_source == CGPU_DSTORAGE_SOURCE_FILE) ? skr_renderer_get_file_dstorage_queue() : skr_renderer_get_memory_dstorage_queue();
+    auto dstorage_queue = (request->dstorage_source == CGPU_DSTORAGE_SOURCE_FILE) ?
+        render_device->get_file_dstorage_queue() : 
+        render_device->get_memory_dstorage_queue();
     auto cbData = SkrNew<CallbackData>();
+    cbData->render_device = render_device;
     cbData->ram_service = ram_service;
     cbData->vram_service = vram_service;
     cbData->dstorage_queue = dstorage_queue;
@@ -91,8 +95,8 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
     request->mesh_resource_request.callback_data = cbData;
     request->mesh_resource_request.callback = +[](skr_gltf_ram_io_request_t* gltf_request, void* data)
     {
-        auto device = skr_renderer_get_cgpu_device();
         auto cbData = (CallbackData*)data;
+        auto device = cbData->render_device->get_cgpu_device();
         auto request = cbData->request;
         auto vram_service = cbData->vram_service;
 
@@ -108,7 +112,7 @@ void skr_render_mesh_create_from_gltf(skr_io_ram_service_t* ram_service, skr_io_
         {
             auto mesh_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
             mesh_buffer_io.device = device;
-            mesh_buffer_io.transfer_queue = request->queue_override ? request->queue_override : skr_renderer_get_cpy_queue();
+            mesh_buffer_io.transfer_queue = request->queue_override ? request->queue_override : cbData->render_device->get_cpy_queue();
             // dstorage
             auto gltfPath = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
             mesh_buffer_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;

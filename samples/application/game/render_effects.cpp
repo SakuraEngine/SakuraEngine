@@ -28,12 +28,12 @@ const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
-    void on_register(ISkrRenderer* renderer) override
+    void on_register(SRendererId renderer) override
     {
 
     }
 
-    void on_unregister(ISkrRenderer* renderer) override
+    void on_unregister(SRendererId renderer) override
     {
 
     }
@@ -157,7 +157,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     dual::type_builder_t type_builder;
     dual_type_set_t typeset;
 
-    void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override
+    void on_register(SRendererId renderer, dual_storage_t* storage) override
     {
         // make identity component type
         {
@@ -181,7 +181,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         prepare_geometry_resources(renderer);
     }
 
-    void on_unregister(ISkrRenderer* renderer, dual_storage_t* storage) override
+    void on_unregister(SRendererId renderer, dual_storage_t* storage) override
     {
         auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
             auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
@@ -209,7 +209,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         return identity_type;
     }
 
-    void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) override
+    void initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) override
     {
         auto game_ents = dualV_get_entities(game_cv);
         auto identities = (forward_effect_identity_t*)dualV_get_owned_ro(render_cv, identity_type);
@@ -371,10 +371,10 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
 protected:
     // TODO: move these anywhere else
-    void prepare_geometry_resources(ISkrRenderer* renderer);
-    void free_geometry_resources(ISkrRenderer* renderer);
-    void prepare_pipeline(ISkrRenderer* renderer);
-    void free_pipeline(ISkrRenderer* renderer);
+    void prepare_geometry_resources(SRendererId renderer);
+    void free_geometry_resources(SRendererId renderer);
+    void prepare_pipeline(SRendererId renderer);
+    void free_pipeline(SRendererId renderer);
     // render resources
     skr_vertex_buffer_view_t vbvs[4];
     skr_index_buffer_view_t ibv;
@@ -394,10 +394,11 @@ protected:
 };
 RenderEffectForward* forward_effect = new RenderEffectForward();
 
-void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
+void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
 {
-    const auto device = renderer->get_cgpu_device();
-    const auto gfx_queue = renderer->get_gfx_queue();
+    const auto render_device = renderer->get_render_device();
+    const auto device = render_device->get_cgpu_device();
+    const auto gfx_queue = render_device->get_gfx_queue();
     // upload
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = "UploadBuffer";
@@ -490,16 +491,17 @@ void RenderEffectForward::prepare_geometry_resources(ISkrRenderer* renderer)
     ibv.stride = sizeof(uint32_t);
 }
 
-void RenderEffectForward::free_geometry_resources(ISkrRenderer* renderer)
+void RenderEffectForward::free_geometry_resources(SRendererId renderer)
 {
     cgpu_free_buffer(index_buffer);
     cgpu_free_buffer(vertex_buffer);
 }
 
-void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
+void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 {
+    const auto render_device = renderer->get_render_device();
     auto moduleManager = skr_get_module_manager();
-    const auto device = renderer->get_cgpu_device();
+    const auto device = render_device->get_cgpu_device();
     const auto backend = device->adapter->instance->backend;
 
     // read shaders
@@ -551,7 +553,7 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     rs_desc.push_constant_names = &push_constants_name;
     rs_desc.shader_count = 2;
     rs_desc.shaders = ppl_shaders;
-    rs_desc.pool = skr_renderer_get_root_signature_pool();
+    rs_desc.pool = render_device->get_root_signature_pool();
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
     CGPUVertexLayout vertex_layout = {};
@@ -591,25 +593,21 @@ void RenderEffectForward::prepare_pipeline(ISkrRenderer* renderer)
     cgpu_free_shader_library(_fs);
 }
 
-void RenderEffectForward::free_pipeline(ISkrRenderer* renderer)
+void RenderEffectForward::free_pipeline(SRendererId renderer)
 {
     auto sig_to_free = pipeline->root_signature;
     cgpu_free_render_pipeline(pipeline);
     cgpu_free_root_signature(sig_to_free);
 }
 
-void initialize_render_effects(skr::render_graph::RenderGraph* renderGraph)
+void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph)
 {
-    auto renderer = skr_renderer_get_renderer();
     skr_renderer_register_render_pass(renderer, forward_pass_name, forward_pass);
     skr_renderer_register_render_effect(renderer, forward_effect_name, forward_effect);
 }
 
-void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph)
+void game_finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph)
 {
-    auto renderer = skr_renderer_get_renderer();
     skr_renderer_remove_render_pass(renderer, forward_pass_name);
     skr_renderer_remove_render_effect(renderer, forward_effect_name);
-    delete forward_effect;
-    delete forward_pass;
 }
