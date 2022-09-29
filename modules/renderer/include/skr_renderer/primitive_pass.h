@@ -16,8 +16,8 @@ struct IPrimitiveRenderPass {
 #ifdef __cplusplus
     virtual ~IPrimitiveRenderPass() = default;
 
-    virtual void on_register(ISkrRenderer* renderer) = 0;
-    virtual void on_unregister(ISkrRenderer* renderer) = 0;
+    virtual void on_register(SRendererId renderer) = 0;
+    virtual void on_unregister(SRendererId renderer) = 0;
 
     virtual void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t dc) = 0;
     virtual skr_render_pass_name_t identity() const = 0;
@@ -29,10 +29,10 @@ extern "C" {
 #endif
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void
-skr_renderer_register_render_pass(ISkrRenderer* renderer, skr_render_pass_name_t name, IPrimitiveRenderPass* pass);
+skr_renderer_register_render_pass(SRendererId renderer, skr_render_pass_name_t name, IPrimitiveRenderPass* pass);
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void
-skr_renderer_remove_render_pass(ISkrRenderer* renderer, skr_render_pass_name_t name);
+skr_renderer_remove_render_pass(SRendererId renderer, skr_render_pass_name_t name);
 
 #ifdef __cplusplus
 }

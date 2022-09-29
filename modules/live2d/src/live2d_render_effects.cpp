@@ -77,7 +77,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     dual::type_builder_t type_builder;
     dual_type_index_t identity_type = {};
 
-    void on_register(ISkrRenderer* renderer, dual_storage_t* storage) override
+    void on_register(SRendererId renderer, dual_storage_t* storage) override
     {
         // make identity component type
         {
@@ -102,7 +102,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         skr_live2d_render_view_reset(&view_);
     }
 
-    void on_unregister(ISkrRenderer* renderer, dual_storage_t* storage) override
+    void on_unregister(SRendererId renderer, dual_storage_t* storage) override
     {
         auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
         auto meshes = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
@@ -135,7 +135,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         return identity_type;
     }
 
-    void initialize_data(ISkrRenderer* renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) override
+    void initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) override
     {
 
     }
@@ -455,12 +455,12 @@ protected:
     }
 
     void prepare_pipeline_settings();
-    void prepare_pipeline(ISkrRenderer* renderer);
-    void prepare_mask_pipeline(ISkrRenderer* renderer);
-    void free_pipeline(ISkrRenderer* renderer);
-    void free_mask_pipeline(ISkrRenderer* renderer);
-    uint32_t* read_shader_bytes(ISkrRenderer* renderer, const char* name, uint32_t* out_length);
-    CGPUShaderLibraryId create_shader_library(ISkrRenderer* renderer, const char* name, ECGPUShaderStage stage);
+    void prepare_pipeline(SRendererId renderer);
+    void prepare_mask_pipeline(SRendererId renderer);
+    void free_pipeline(SRendererId renderer);
+    void free_mask_pipeline(SRendererId renderer);
+    uint32_t* read_shader_bytes(SRendererId renderer, const char* name, uint32_t* out_length);
+    CGPUShaderLibraryId create_shader_library(SRendererId renderer, const char* name, ECGPUShaderStage stage);
 
     struct PushConstants {
         skr::math::float4x4 projection_matrix;
@@ -488,10 +488,11 @@ MaskPassLive2D* live2d_mask_pass = new MaskPassLive2D();
 RenderPassLive2D* live2d_pass = new RenderPassLive2D();
 RenderEffectLive2D* live2d_effect = new RenderEffectLive2D();
 
-uint32_t* RenderEffectLive2D::read_shader_bytes(ISkrRenderer* renderer, const char* name, uint32_t* out_length)
+uint32_t* RenderEffectLive2D::read_shader_bytes(SRendererId renderer, const char* name, uint32_t* out_length)
 {
-    const auto device = renderer->get_cgpu_device();
-    const auto backend = device->adapter->instance->backend;
+    const auto render_device = renderer->get_render_device();
+    const auto cgpu_device = render_device->get_cgpu_device();
+    const auto backend = cgpu_device->adapter->instance->backend;
     eastl::string shader_name = name;
     shader_name.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     auto shader_file = skr_vfs_fopen(resource_vfs, shader_name.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
@@ -503,9 +504,10 @@ uint32_t* RenderEffectLive2D::read_shader_bytes(ISkrRenderer* renderer, const ch
     return shader_bytes;
 }
 
-CGPUShaderLibraryId RenderEffectLive2D::create_shader_library(ISkrRenderer* renderer, const char* name, ECGPUShaderStage stage)
+CGPUShaderLibraryId RenderEffectLive2D::create_shader_library(SRendererId renderer, const char* name, ECGPUShaderStage stage)
 {
-    const auto device = renderer->get_cgpu_device();
+    const auto render_device = renderer->get_render_device();
+    const auto cgpu_device = render_device->get_cgpu_device();
     uint32_t shader_length = 0;
     uint32_t* shader_bytes = read_shader_bytes(renderer, name, &shader_length);
     CGPUShaderLibraryDescriptor shader_desc = {};
@@ -513,7 +515,7 @@ CGPUShaderLibraryId RenderEffectLive2D::create_shader_library(ISkrRenderer* rend
     shader_desc.stage = stage;
     shader_desc.code = shader_bytes;
     shader_desc.code_size = shader_length;
-    CGPUShaderLibraryId shader = cgpu_create_shader_library(device, &shader_desc);
+    CGPUShaderLibraryId shader = cgpu_create_shader_library(cgpu_device, &shader_desc);
     sakura_free(shader_bytes);
     return shader;
 }
@@ -537,9 +539,10 @@ void RenderEffectLive2D::prepare_pipeline_settings()
     depth_state.depth_test = false;
 }
 
-void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
+void RenderEffectLive2D::prepare_pipeline(SRendererId renderer)
 {
-    const auto device = renderer->get_cgpu_device();
+    const auto render_device = renderer->get_render_device();
+    const auto cgpu_device = render_device->get_cgpu_device();
 
     CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_vs", CGPU_SHADER_STAGE_VERT);
     CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_ps", CGPU_SHADER_STAGE_FRAG);
@@ -555,17 +558,17 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     ppl_ps.entry = "main";
 
     const char* static_sampler_name = "color_sampler";
-    auto static_sampler = skr_renderer_get_linear_sampler();
+    auto static_sampler = render_device->get_linear_sampler();
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
     rs_desc.push_constant_names = &push_constants_name;
     rs_desc.shader_count = 2;
     rs_desc.shaders = ppl_shaders;
-    rs_desc.pool = skr_renderer_get_root_signature_pool();
+    rs_desc.pool = render_device->get_root_signature_pool();
     rs_desc.static_sampler_count = 1;
     rs_desc.static_sampler_names = &static_sampler_name;
     rs_desc.static_samplers = &static_sampler;
-    auto root_sig = cgpu_create_root_signature(device, &rs_desc);
+    auto root_sig = cgpu_create_root_signature(cgpu_device, &rs_desc);
 
     CGPURenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = root_sig;
@@ -598,22 +601,23 @@ void RenderEffectLive2D::prepare_pipeline(ISkrRenderer* renderer)
     rp_desc.blend_state = &blend_state;
     rp_desc.rasterizer_state = &rs_state;
     rp_desc.depth_state = &depth_state;
-    pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+    pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
 
     cgpu_free_shader_library(vs);
     cgpu_free_shader_library(ps);
 }
 
-void RenderEffectLive2D::free_pipeline(ISkrRenderer* renderer)
+void RenderEffectLive2D::free_pipeline(SRendererId renderer)
 {
     auto sig_to_free = pipeline->root_signature;
     cgpu_free_render_pipeline(pipeline);
     cgpu_free_root_signature(sig_to_free);
 }
 
-void RenderEffectLive2D::prepare_mask_pipeline(ISkrRenderer* renderer)
+void RenderEffectLive2D::prepare_mask_pipeline(SRendererId renderer)
 {
-    const auto device = renderer->get_cgpu_device();
+    const auto render_device = renderer->get_render_device();
+    const auto cgpu_device = render_device->get_cgpu_device();
     
     CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_mask_vs", CGPU_SHADER_STAGE_VERT);
     CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_mask_ps", CGPU_SHADER_STAGE_FRAG);
@@ -629,17 +633,17 @@ void RenderEffectLive2D::prepare_mask_pipeline(ISkrRenderer* renderer)
     ppl_ps.entry = "main";
 
     const char* static_sampler_name = "color_sampler";
-    auto static_sampler = skr_renderer_get_linear_sampler();
+    auto static_sampler = render_device->get_linear_sampler();
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
     rs_desc.push_constant_names = &push_constants_name;
     rs_desc.shader_count = 2;
     rs_desc.shaders = ppl_shaders;
-    rs_desc.pool = skr_renderer_get_root_signature_pool();
+    rs_desc.pool = render_device->get_root_signature_pool();
     rs_desc.static_sampler_count = 1;
     rs_desc.static_sampler_names = &static_sampler_name;
     rs_desc.static_samplers = &static_sampler;
-    auto root_sig = cgpu_create_root_signature(device, &rs_desc);
+    auto root_sig = cgpu_create_root_signature(cgpu_device, &rs_desc);
 
     CGPURenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = root_sig;
@@ -672,31 +676,29 @@ void RenderEffectLive2D::prepare_mask_pipeline(ISkrRenderer* renderer)
     rp_desc.blend_state = &blend_state;
     rp_desc.rasterizer_state = &rs_state;
     rp_desc.depth_state = &depth_state;
-    mask_pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+    mask_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
 
     cgpu_free_shader_library(vs);
     cgpu_free_shader_library(ps);
 }
 
-void RenderEffectLive2D::free_mask_pipeline(ISkrRenderer* renderer)
+void RenderEffectLive2D::free_mask_pipeline(SRendererId renderer)
 {
     auto sig_to_free = mask_pipeline->root_signature;
     cgpu_free_render_pipeline(mask_pipeline);
     cgpu_free_root_signature(sig_to_free);
 }
 
-void skr_live2d_initialize_render_effects(live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs)
+void skr_live2d_initialize_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs)
 {
-    auto renderer = skr_renderer_get_renderer();
     live2d_effect->resource_vfs = resource_vfs;
     skr_renderer_register_render_pass(renderer, live2d_mask_pass_name, live2d_mask_pass);
     skr_renderer_register_render_pass(renderer, live2d_pass_name, live2d_pass);
     skr_renderer_register_render_effect(renderer, live2d_effect_name, live2d_effect);
 }
 
-void skr_live2d_finalize_render_effects(live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs)
+void skr_live2d_finalize_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs)
 {
-    auto renderer = skr_renderer_get_renderer();
     skr_renderer_remove_render_pass(renderer, live2d_pass_name);
     skr_renderer_remove_render_pass(renderer, live2d_mask_pass_name);
     skr_renderer_remove_render_effect(renderer, live2d_effect_name);

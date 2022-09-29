@@ -19,10 +19,8 @@
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
 
-void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph)
+void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph)
 {
-    auto moduleManager = skr_get_module_manager();
-    auto renderModule = static_cast<SkrRendererModule*>(moduleManager->get_module("SkrRenderer"));
     const auto device = renderGraph->get_backend_device();
     const auto backend = device->adapter->instance->backend;
     const auto gfx_queue = renderGraph->get_gfx_queue();
@@ -73,6 +71,8 @@ void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph)
     eastl::string fsname = u8"shaders/imgui_fragment";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+
+    auto moduleManager = skr_get_module_manager();
     auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
     auto vsfile = skr_vfs_fopen(gamert->resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t im_vs_length = (uint32_t)skr_vfs_fsize(vsfile);
@@ -100,7 +100,7 @@ void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph)
     sakura_free(im_fs_bytes);
     RenderGraphImGuiDescriptor imgui_graph_desc = {};
     imgui_graph_desc.render_graph = renderGraph;
-    imgui_graph_desc.backbuffer_format = renderModule->get_swapchain_format();
+    imgui_graph_desc.backbuffer_format = render_device->get_swapchain_format();
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
     imgui_graph_desc.vs.entry = "main";
@@ -108,7 +108,7 @@ void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph)
     imgui_graph_desc.ps.stage = CGPU_SHADER_STAGE_FRAG;
     imgui_graph_desc.ps.entry = "main";
     imgui_graph_desc.queue = gfx_queue;
-    imgui_graph_desc.static_sampler = renderModule->get_linear_sampler();
+    imgui_graph_desc.static_sampler = render_device->get_linear_sampler();
     render_graph_imgui_initialize(&imgui_graph_desc);
     cgpu_free_shader_library(imgui_vs);
     cgpu_free_shader_library(imgui_fs);

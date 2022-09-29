@@ -38,9 +38,9 @@
 
 SWindowHandle window;
 uint32_t backbuffer_index;
-extern void create_imgui_resources(skr::render_graph::RenderGraph* renderGraph);
-extern void initialize_render_effects(skr::render_graph::RenderGraph* renderGraph);
-extern void finalize_render_effects(skr::render_graph::RenderGraph* renderGraph);
+extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
+extern void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
+extern void game_finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
 SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
@@ -57,6 +57,7 @@ class SGameModule : public skr::IDynamicModule
     virtual void on_unload() override;
 
     ftl::TaskScheduler scheduler;
+    SRendererId game_renderer = nullptr;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SGameModule, Game);
@@ -81,6 +82,10 @@ Game)
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
+
+    auto render_device = skr_get_default_render_device();
+    game_renderer = skr_create_renderer(render_device);
+
     if (bUseJob)
     {
         auto options = make_zeroed<ftl::TaskSchedulerInitOptions>();
@@ -97,7 +102,7 @@ void SGameModule::on_load(int argc, char** argv)
     vertex_layout.attribute_count = 3;
 }
 
-void create_test_scene()
+void create_test_scene(SRendererId renderer)
 {
     // allocate 100 movable cubes
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
@@ -129,7 +134,6 @@ void create_test_scene()
                 scales[i].value = { 1.f, 1.f, 1.f };
             }
         }
-        auto renderer = skr_renderer_get_renderer();
 
         auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get());
         if(feature_arrs)
@@ -162,7 +166,8 @@ void create_test_scene()
     SKR_LOG_DEBUG("Create Scene 2!");
 }
 
-void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, const char* path, skr_render_mesh_request_t* request)
+void attach_mesh_on_static_ents(SRendererId renderer, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
+    const char* path, skr_render_mesh_request_t* request)
 {
     auto filter = make_zeroed<dual_filter_t>();
     auto meta = make_zeroed<dual_meta_filter_t>();
@@ -177,26 +182,28 @@ void attach_mesh_on_static_ents(skr_io_ram_service_t* ram_service, skr_io_vram_s
         auto requestSetup = [=](dual_chunk_view_t* view) {
             auto mesh_comps = (skr_render_mesh_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_mesh_comp_t>::get());
             mesh_comps->async_request = *request;
-            skr_render_mesh_create_from_gltf(ram_service, vram_service, path, &mesh_comps->async_request);
+            auto render_device = renderer->get_render_device();
+            skr_render_mesh_create_from_gltf(render_device, ram_service, vram_service, path, &mesh_comps->async_request);
         };
-        skr_render_effect_access(skr_renderer_get_renderer(), ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
+        skr_render_effect_access(renderer, ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
     };
     dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
 const char* gltf_file = "scene.gltf";
 const char* gltf_file2 = "scene.gltf";
-void imgui_button_spawn_girl()
+void imgui_button_spawn_girl(SRendererId renderer)
 {
     static bool onceGuard  = true;
     if (onceGuard)
     {
+        auto render_device = skr_get_default_render_device();
         auto girl_mesh_request = make_zeroed<skr_render_mesh_request_t>();
         ImGui::Begin(u8"AsyncMesh");
-        auto dstroage_queue = skr_renderer_get_file_dstorage_queue();
+        auto dstroage_queue = render_device->get_file_dstorage_queue();
         auto resource_vfs = skr_game_runtime_get_vfs();
         auto ram_service = skr_game_runtime_get_ram_service();
-        auto vram_service = skr_renderer_get_vram_service();
+        auto vram_service = render_device->get_vram_service();
         girl_mesh_request.mesh_name = gltf_file2;
         girl_mesh_request.mesh_resource_request.shuffle_layout = &vertex_layout;
         if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
@@ -204,7 +211,7 @@ void imgui_button_spawn_girl()
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.dstorage_queue_override = dstroage_queue;
             girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_FILE;
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
+            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         else if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Memory])"))
@@ -212,21 +219,21 @@ void imgui_button_spawn_girl()
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.dstorage_queue_override = dstroage_queue;
             girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_MEMORY;
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
+            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-            girl_mesh_request.queue_override = skr_renderer_get_cpy_queue();
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
+            girl_mesh_request.queue_override = render_device->get_cpy_queue();
+            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         else if (ImGui::Button(u8"LoadMesh(GraphicsQueue)"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-            girl_mesh_request.queue_override = skr_renderer_get_gfx_queue();
-            attach_mesh_on_static_ents(ram_service, vram_service, gltf_file2, &girl_mesh_request);
+            girl_mesh_request.queue_override = render_device->get_cpy_queue();
+            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
             onceGuard = false;
         }
         ImGui::End();  
@@ -243,27 +250,29 @@ int SGameModule::main_module_exec(int argc, char** argv)
     
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
         return -1;
-    auto cgpuDevice = skr_renderer_get_cgpu_device();
+    auto render_device = skr_get_default_render_device();
+    auto cgpu_device = render_device->get_cgpu_device();
+    auto gfx_queue = render_device->get_gfx_queue();
     auto window_desc = make_zeroed<SWindowDescroptor>();
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;// | SKR_WINDOW_BOARDLESS;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     window = skr_create_window(
-        fmt::format("Game [{}]", gCGPUBackendNames[cgpuDevice->adapter->instance->backend]).c_str(),
+        fmt::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
         &window_desc);
     // Initialize renderer
-    auto swapchain = skr_renderer_register_window(window);
-    auto present_fence = cgpu_create_fence(skr_renderer_get_cgpu_device());
+    auto swapchain = skr_render_device_register_window(render_device, window);
+    auto present_fence = cgpu_create_fence(cgpu_device);
     namespace render_graph = skr::render_graph;
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
-        builder.with_device(skr_renderer_get_cgpu_device())
-            .with_gfx_queue(skr_renderer_get_gfx_queue())
+        builder.with_device(cgpu_device)
+            .with_gfx_queue(gfx_queue)
             .enable_memory_aliasing();
     });
-    initialize_render_effects(renderGraph);
-    create_test_scene();
-    create_imgui_resources(renderGraph);
+    game_initialize_render_effects(game_renderer, renderGraph);
+    create_test_scene(game_renderer);
+    create_imgui_resources(render_device, renderGraph);
     // Initialize Input
     skr::input::InputSystem inputSystem;
     if (bUseInputSystem)
@@ -371,9 +380,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 {
                     if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                     {
-                        cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+                        cgpu_wait_queue_idle(gfx_queue);
                         cgpu_wait_fences(&present_fence, 1);
-                        swapchain = skr_renderer_recreate_window_swapchain(window);
+                        swapchain = skr_render_device_recreate_window_swapchain(render_device, window);
                     }
                     if (window_event == SDL_WINDOWEVENT_CLOSE)
                     {
@@ -448,7 +457,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ImGui::Text("RenderFPS: %d", (uint32_t)fps);
                 ImGui::End();
             }
-            imgui_button_spawn_girl();
+            imgui_button_spawn_girl(game_renderer);
             // quit |= skg::GameLoop(ctx);
         }
         // move
@@ -534,7 +543,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         });
         {
             ZoneScopedN("RenderScene");
-            skr_renderer_render_frame(renderGraph, skr_runtime_get_dual_storage());
+            skr_renderer_render_frame(game_renderer, renderGraph, skr_runtime_get_dual_storage());
         }
         {
             ZoneScopedN("RenderIMGUI");
@@ -565,17 +574,18 @@ int SGameModule::main_module_exec(int argc, char** argv)
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;
-            cgpu_queue_present(skr_renderer_get_gfx_queue(), &present_desc);
+            cgpu_queue_present(gfx_queue, &present_desc);
             render_graph_imgui_present_sub_viewports();
         }
     }
     // clean up
-    cgpu_wait_queue_idle(skr_renderer_get_gfx_queue());
+    cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
     cgpu_free_fence(present_fence);
     render_graph::RenderGraph::destroy(renderGraph);
-    finalize_render_effects(renderGraph);
+    game_finalize_render_effects(game_renderer, renderGraph);
     render_graph_imgui_finalize();
+    skr_free_renderer(game_renderer);
     skr_free_window(window);
     SDL_Quit();
     return 0;

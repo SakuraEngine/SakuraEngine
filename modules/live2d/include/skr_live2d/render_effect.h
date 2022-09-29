@@ -3,10 +3,13 @@
 #include "platform/configure.h"
 
 #ifdef __cplusplus
+struct SRenderer;
 namespace skr { namespace render_graph { class RenderGraph; } }
 using live2d_render_graph_t = skr::render_graph::RenderGraph;
+using live2d_renderer_t = SRenderer;
 #else
 typedef struct skr_render_graph_t live2d_render_graph_t;
+typedef struct SRenderer live2d_renderer_t;
 #endif
 
 typedef struct live2d_render_view_t live2d_render_view_t;
@@ -31,7 +34,7 @@ SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API
 void skr_live2d_free_render_view(live2d_render_view_id view);
 
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API
-void skr_live2d_initialize_render_effects(live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs);
+void skr_live2d_initialize_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs);
 
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API
-void skr_live2d_finalize_render_effects(live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs);
+void skr_live2d_finalize_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs);

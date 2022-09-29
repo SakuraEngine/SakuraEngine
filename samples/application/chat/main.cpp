@@ -91,7 +91,7 @@ int CreateMainWindow()
 
 int CreateRenderer(SWindowHandle window)
 {
-    renderer.swapChain = skr_renderer_register_window(window);
+    renderer.swapChain = skr_render_device_register_window(window);
     renderer.presentFence = cgpu_create_fence(skr_renderer_get_cgpu_device());
     renderer.renderGraph = skr::render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {

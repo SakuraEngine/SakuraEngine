@@ -5,7 +5,6 @@
 #include "cgpu/io.h"
 
 #ifdef __cplusplus
-
 struct skr_render_mesh_t {
     skr_mesh_resource_id mesh_resource_id;
     eastl::vector<skr_async_io_request_t> vio_requests;
@@ -15,6 +14,7 @@ struct skr_render_mesh_t {
     eastl::vector<skr_render_primitive_command_t> primitive_commands;
 };
 #endif
+
 typedef struct skr_render_primitive_command_t skr_render_primitive_command_t;
 typedef struct skr_render_mesh_t skr_render_mesh_t;
 typedef struct skr_render_mesh_t* skr_render_mesh_id;
@@ -50,7 +50,7 @@ typedef struct skr_render_mesh_comp_t skr_render_mesh_comp_t;
 
 #ifndef SKR_SERIALIZE_GURAD
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
-skr_render_mesh_create_from_gltf(skr_io_ram_service_t*, skr_io_vram_service_t*, const char* path, skr_render_mesh_request_t* request);
+skr_render_mesh_create_from_gltf(SRenderDevice*, skr_io_ram_service_t*, skr_io_vram_service_t*, const char* path, skr_render_mesh_request_t* request);
 #endif
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 

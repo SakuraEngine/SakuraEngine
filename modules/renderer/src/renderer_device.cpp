@@ -14,7 +14,7 @@
 #define BACK_BUFFER_HEIGHT 900
 #define BACK_BUFFER_WIDTH 900
 
-void skr::Renderer::initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
+void skr::RendererDevice::initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
     create_api_objects(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
 
@@ -27,7 +27,7 @@ void skr::Renderer::initialize(bool enable_debug_layer, bool enable_gpu_based_va
     vram_service = skr::io::VRAMService::create(&vram_service_desc);
 }
 
-void skr::Renderer::finalize()
+void skr::RendererDevice::finalize()
 {
     skr::io::VRAMService::destroy(vram_service);
 
@@ -61,7 +61,7 @@ void skr::Renderer::finalize()
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
-void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
+void skr::RendererDevice::create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
 {
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
@@ -156,7 +156,7 @@ void skr::Renderer::create_api_objects(bool enable_debug_layer, bool enable_gpu_
 #endif
 }
 
-CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
+CGPUSwapChainId skr::RendererDevice::register_window(SWindowHandle window)
 {
     // find registered
     {
@@ -192,7 +192,7 @@ CGPUSwapChainId skr::Renderer::register_window(SWindowHandle window)
     return swapchain;
 }
 
-CGPUSwapChainId skr::Renderer::recreate_window_swapchain(SWindowHandle window)
+CGPUSwapChainId skr::RendererDevice::recreate_window_swapchain(SWindowHandle window)
 {
     // find registered
     CGPUSwapChainId old = nullptr;

@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRenderer/skr_renderer.configure.h"
+#include "fwd_types.h"
 #include "cgpu/api.h"
 
 #ifdef __cplusplus
@@ -7,7 +8,8 @@
 extern "C" {
 #endif
 
-typedef struct ISkrRenderer ISkrRenderer;
+typedef struct SRenderer SRenderer;
+typedef struct SRenderer* SRendererId;
 
 typedef struct skr_vertex_buffer_view_t {
     CGPUBufferId buffer;
