@@ -31,6 +31,8 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
 end
 
 function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+    import("find_sdk")
+    local python = find_sdk.find_program("python3")
     -- generate headers dummy
     local changedfiles = {}
     local pre_generators = {
@@ -56,13 +58,13 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
         },
         {
-            os.projectdir()..vformat("/tools/codegen/config_resource.py"),
-            os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
-        },
-        {
             os.projectdir()..vformat("/tools/codegen/rtti.py"),
             os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/config_resource.py"),
+            os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/config_asset.py"),
@@ -102,7 +104,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         depend.on_changed(function ()
             table.insert(changedfiles, headerfile);
             if (not disable_reflection) then
-                cprint("${cyan}reflection.header ${clear}%s", headerfile)
+                cprint("${magenta}%s.reflection.header ${clear}%s", target:name(), headerfile)
             end
         end, {dependfile = dependfile, files = {headerfile}})
     end
@@ -115,9 +117,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
         -- gen configure file
         local function pre_task(index)
             local pre_generator = pre_generators[index][1]
-            cprint("${cyan}generating.%s${clear} %s", path.filename(pre_generator), path.absolute(metadir))
-            import("find_sdk")
-            local python = find_sdk.find_program("python3")
+            cprint("${cyan}%s.%s${clear} %s", target:name(), path.filename(pre_generator), path.absolute(metadir))
             local command = {
                 pre_generator,
                 path.absolute(metadir), path.absolute(pre_generators[index].gendir or gendir), api or target:name()
@@ -127,7 +127,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             end
             os.iorunv(python.program, command)
         end
-        runjobs("pre_codegen.cpp", pre_task, {total = #pre_generators})
+        runjobs(target:name()..".pre_codegen.cpp", pre_task, {total = #pre_generators})
         -- compile jsons to c++
         if (not disable_reflection) then
             -- generate dummy .h file
@@ -152,9 +152,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             -- compile jsons to c++
             local function task(index)
                 local generator = generators[index][1]
-                cprint("${cyan}generating.%s${clear} %s", path.filename(generator), path.absolute(metadir))
-                import("find_sdk")
-                local python = find_sdk.find_program("python3")
+                cprint("${cyan}%s.%s${clear} %s", target:name(), path.filename(generator), path.absolute(metadir))
                 local command = {
                     generator,
                     path.absolute(metadir), path.absolute(generators[index].gendir or gendir), api or target:name()
@@ -164,7 +162,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
                 end
                 os.iorunv(python.program, command)
             end
-            runjobs("codegen.cpp", task, {total = #generators})
+            runjobs(target:name()..".codegen.cpp", task, {total = #generators})
         end
     end
 end
@@ -185,6 +183,58 @@ function generate_code_files(target, rootdir, opt)
             end
         end
     end
+end
+
+function _generate_once()
+    import("core.project.project")
+    import("private.async.runjobs")
+    local targets = project.ordertargets()
+    local task = function (target)
+        local opt = {}
+        if has_config("is_msvc") then
+            opt.cl = true
+        end
+        local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
+        local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+        target:add("includedirs", gendir, {public = true})
+        target:add("includedirs", path.join(gendir, target:name()))
+
+        generate_code_files(target, abs_rootdir, opt)
+
+        -- add to sourcebatch
+        local sourcebatches = target:sourcebatches()
+        local cppfiles = os.files(path.join(gendir, "/**.cpp"))
+        for _, file in ipairs(cppfiles) do
+            target:add("files", file)
+        end
+    end
+
+    import("core.base.scheduler")
+    for _, target in ipairs(targets) do
+        if (target:rule("c++.codegen")) then
+            scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
+                for _, dep in pairs(target:deps()) do
+                    if dep:rule("c++.codegen") then
+                        scheduler.co_group_wait(dep:name()..".cpp-codegen")
+                    end
+                end
+                scheduler.co_start(task, target)
+            end)
+        end
+    end
+    for _, target in ipairs(targets) do
+        if (target:rule("c++.codegen")) then
+            scheduler.co_group_wait(target:name()..".cpp-codegen")
+        end
+    end
+end
+
+function generate_once()
+    if not _g.generated then
+         _generate_once()
+        _g.generated = true
+    end  
 end
 
 function main(target, headerfiles)
