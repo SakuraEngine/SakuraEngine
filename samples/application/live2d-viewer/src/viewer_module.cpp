@@ -37,6 +37,7 @@ public:
     SWindowHandle window;
     uint32_t backbuffer_index;
 
+    struct dual_storage_t* l2d_world = nullptr;
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr::io::RAMService* ram_service = nullptr;
@@ -79,8 +80,10 @@ void SLive2DViewerModule::on_load(int argc, char** argv)
     vfs_desc.override_mount_dir = resourceRoot.c_str();
     resource_vfs = skr_create_vfs(&vfs_desc);
 
+    l2d_world = dualS_create();
+
     auto render_device = skr_get_default_render_device();
-    l2d_renderer = skr_create_renderer(render_device);
+    l2d_renderer = skr_create_renderer(render_device, l2d_world);
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
     ioServiceDesc.name = "Live2DViewerRAMIOService";
@@ -104,10 +107,11 @@ void SLive2DViewerModule::on_unload()
 
     skr::io::RAMService::destroy(ram_service);
     skr_free_vfs(resource_vfs);
+
+    dualS_release(l2d_world);
 }
 
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 
 #include "ecs/dual.h"
 #include "ecs/callback.hpp"
@@ -158,7 +162,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
         };
         skr_render_effect_access(renderer, ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
     };
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
+    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
 }
 
 int SLive2DViewerModule::main_module_exec(int argc, char** argv)
@@ -296,7 +300,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         });
         {
             ZoneScopedN("RenderScene");
-            skr_renderer_render_frame(l2d_renderer, renderGraph, skr_runtime_get_dual_storage());
+            skr_renderer_render_frame(l2d_renderer, renderGraph);
         }
         {
             ZoneScopedN("RenderIMGUI");

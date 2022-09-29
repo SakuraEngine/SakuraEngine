@@ -41,7 +41,6 @@ uint32_t backbuffer_index;
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
 extern void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
 extern void game_finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
 const bool bUseJob = true;
@@ -55,6 +54,8 @@ class SGameModule : public skr::IDynamicModule
     virtual void on_load(int argc, char** argv) override;
     virtual int main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
+
+    struct dual_storage_t* game_world = nullptr;
 
     ftl::TaskScheduler scheduler;
     SRendererId game_renderer = nullptr;
@@ -83,8 +84,10 @@ void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
 
+    game_world = dualS_create();
+
     auto render_device = skr_get_default_render_device();
-    game_renderer = skr_create_renderer(render_device);
+    game_renderer = skr_create_renderer(render_device, game_world);
 
     if (bUseJob)
     {
@@ -139,7 +142,7 @@ void create_test_scene(SRendererId renderer)
         if(feature_arrs)
             skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 0!");
 
@@ -150,7 +153,7 @@ void create_test_scene(SRendererId renderer)
         .with<skr_camera_t>();
     auto playerT = make_zeroed<dual_entity_type_t>();
     playerT.type = playerT_builder.build();
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(renderer->get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 1!");
 
@@ -161,7 +164,7 @@ void create_test_scene(SRendererId renderer)
         .with<skr_render_effect_t>();
     auto static_renderableT = make_zeroed<dual_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
-    dualS_allocate_type(skr_runtime_get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(renderer->get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 2!");
 }
@@ -187,7 +190,7 @@ void attach_mesh_on_static_ents(SRendererId renderer, skr_io_ram_service_t* ram_
         };
         skr_render_effect_access(renderer, ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
     };
-    dualS_query(skr_runtime_get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
+    dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
 const char* gltf_file = "scene.gltf";
@@ -355,9 +358,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
     bool quit = false;
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
-    moveQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), 
+    moveQuery = dualQ_from_literal(game_world, 
         "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, !skr_camera_t");
-    cameraQuery = dualQ_from_literal(skr_runtime_get_dual_storage(), 
+    cameraQuery = dualQ_from_literal(game_world, 
         "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
     while (!quit)
     {
@@ -543,7 +546,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         });
         {
             ZoneScopedN("RenderScene");
-            skr_renderer_render_frame(game_renderer, renderGraph, skr_runtime_get_dual_storage());
+            skr_renderer_render_frame(game_renderer, renderGraph);
         }
         {
             ZoneScopedN("RenderIMGUI");
@@ -594,4 +597,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
 void SGameModule::on_unload()
 {
     SKR_LOG_INFO("game unloaded!");
+
+    dualS_release(game_world);
 }

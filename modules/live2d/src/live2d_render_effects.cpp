@@ -27,8 +27,6 @@
 
 #include "tracy/Tracy.hpp"
 
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
-
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper
 {
     RegisterComponentskr_live2d_render_model_comp_tHelper()

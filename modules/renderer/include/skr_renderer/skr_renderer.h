@@ -2,14 +2,14 @@
 #include "SkrRenderer/skr_renderer.configure.h"
 #include "primitive_pass.h"
 #include "effect_processor.h"
-#include "cgpu/io.h"
 
 struct SKR_RENDERER_API SRenderer {
 #ifdef __cplusplus
     virtual ~SRenderer() = default;
-    virtual void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) = 0;
+    virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
 
     virtual SRenderDeviceId get_render_device() const = 0;
+    virtual dual_storage_t* get_dual_storage() const = 0;
 #endif
 };
 
@@ -34,7 +34,7 @@ protected:
 #endif
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
-SRendererId skr_create_renderer(SRenderDeviceId render_device);
+SRendererId skr_create_renderer(SRenderDeviceId render_device, dual_storage_t* storage);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
 void skr_free_renderer(SRendererId renderer);
@@ -43,7 +43,7 @@ RUNTIME_EXTERN_C SKR_RENDERER_API
 SRenderDeviceId skr_get_default_render_device();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
-void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage);
+void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGraph* render_graph);
 
 #ifdef _WIN32
 RUNTIME_EXTERN_C SKR_RENDERER_API

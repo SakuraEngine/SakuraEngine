@@ -34,14 +34,10 @@ void SkrRuntimeModule::on_load(int argc, char** argv)
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
-
-    ecs_world = dualS_create();
 }
 void SkrRuntimeModule::on_unload()
 {
     SKR_LOG_INFO("SkrRuntime module unloaded!");
-
-    dualS_release(ecs_world);
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()
@@ -54,9 +50,4 @@ SkrRuntimeModule* SkrRuntimeModule::Get()
 RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware()
 {
     return SkrRuntimeModule::Get()->DPIAware;
-}
-
-RUNTIME_EXTERN_C RUNTIME_API dual_storage_t* skr_runtime_get_dual_storage()
-{
-    return SkrRuntimeModule::Get()->ecs_world;
 }

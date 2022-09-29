@@ -139,11 +139,6 @@ skr_io_vram_service_t* skr_render_device_get_vram_service(SRenderDeviceId device
     return device->get_vram_service();
 }
 
-void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage)
-{
-    renderer->render(render_graph, storage);
-}
-
 CGPUDStorageQueueId skr_render_device_get_file_dstorage_queue(SRenderDeviceId device)
 {
     return device->get_file_dstorage_queue();
