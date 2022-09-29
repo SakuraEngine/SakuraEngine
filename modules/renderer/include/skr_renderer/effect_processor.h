@@ -40,14 +40,14 @@ SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_detach(SRendererId
 typedef void (*SProcRenderEffectDetach)(SRendererId, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name);
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_add_delta(SRendererId, const SGameEntity* entities, uint32_t count,
-skr_render_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
+    skr_render_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
 typedef void (*SProcRenderEffectAddDelta)(SRendererId, const SGameEntity* entities, uint32_t count,
-skr_render_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
+    skr_render_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_access(SRendererId, const SGameEntity* entities, uint32_t count,
-skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
+    skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
 typedef void (*SProcRenderEffectAccess)(SRendererId, const SGameEntity* entities, uint32_t count,
-skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
+    skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
 
 // Effect interfaces
 typedef void (*SProcRenderEffectOnRegister)(SRendererId, dual_storage_t*);

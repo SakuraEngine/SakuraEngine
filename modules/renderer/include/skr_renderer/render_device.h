@@ -16,6 +16,7 @@ namespace skr
 {
 struct SKR_RENDERER_API RendererDevice
 {
+    friend class ::SkrRendererModule;
     void initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name);
     void finalize();
 
@@ -72,6 +73,7 @@ struct SKR_RENDERER_API RendererDevice
         return vram_service;
     }
 
+protected:
     // Device objects
     uint32_t backbuffer_index = 0;
     eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
