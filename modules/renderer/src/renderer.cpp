@@ -9,8 +9,6 @@
 #include "EASTL/unordered_map.h"
 #include "EASTL/vector.h"
 
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
-
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
     RenderEffectProcessorVtblProxy(VtblRenderEffectProcessor vtbl)
         : vtbl(vtbl)
@@ -63,8 +61,8 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
 {
     friend class ::SkrRendererModule;
 
-    SkrRendererImpl(SRenderDeviceId render_device) SKR_NOEXCEPT
-        : render_device(render_device)
+    SkrRendererImpl(SRenderDeviceId render_device, dual_storage_t* storage) SKR_NOEXCEPT
+        : render_device(render_device), storage(storage)
     {
 
     }
@@ -83,8 +81,13 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     {
         return render_device;
     }
+    
+    dual_storage_t* get_dual_storage() const override
+    {
+        return storage;
+    }
 
-    void render(skr::render_graph::RenderGraph* render_graph, dual_storage_t* storage) override
+    void render(skr::render_graph::RenderGraph* render_graph) override
     {
         // produce draw calls
         for (auto& pass : passes)
@@ -124,16 +127,22 @@ protected:
     eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_packet_t>> draw_packets;
 
     SRenderDevice* render_device = nullptr;
+    dual_storage_t* storage = nullptr;
 };
 
-SRendererId skr_create_renderer(SRenderDeviceId render_device)
+SRendererId skr_create_renderer(SRenderDeviceId render_device, dual_storage_t* storage)
 {
-    return SkrNew<SkrRendererImpl>(render_device);
+    return SkrNew<SkrRendererImpl>(render_device, storage);
 }
 
 void skr_free_renderer(SRendererId renderer)
 {
     SkrDelete(renderer);
+}
+
+void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGraph* render_graph)
+{
+    renderer->render(render_graph);
 }
 
 void skr_renderer_register_render_pass(SRendererId r, skr_render_effect_name_t name, IPrimitiveRenderPass* pass)
@@ -160,8 +169,8 @@ void skr_renderer_remove_render_pass(SRendererId r, skr_render_pass_name_t name)
 
 void skr_renderer_register_render_effect(SRendererId r, skr_render_effect_name_t name, IRenderEffectProcessor* processor)
 {
-    auto storage = skr_runtime_get_dual_storage();
     auto renderer = (SkrRendererImpl*)r;
+    auto storage = renderer->get_dual_storage();
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
     {
         SKR_ASSERT(false && "Render effect processor already registered");
@@ -187,7 +196,7 @@ void skr_renderer_register_render_effect_vtbl(SRendererId r, skr_render_effect_n
 void skr_renderer_remove_render_effect(SRendererId r, skr_render_effect_name_t name)
 {
     auto renderer = (SkrRendererImpl*)r;
-    auto storage = skr_runtime_get_dual_storage();
+    auto storage = renderer->get_dual_storage();
     if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
     {
         _->second->on_unregister(r, storage);
@@ -204,7 +213,7 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
     SKR_ASSERT(feature_arrs && "No render effect component in chunk view");
     if (feature_arrs)
     {
-        auto world = skr_runtime_get_dual_storage();
+        auto world = renderer->get_dual_storage();
         auto&& i_processor = renderer->processors.find(effect_name);
 
         if (i_processor == renderer->processors.end())
@@ -283,7 +292,7 @@ dual_cast_callback_t callback, void* user_data)
 {
     if (count)
     {
-        auto storage = skr_runtime_get_dual_storage();
+        auto storage = r->get_dual_storage();
         SKR_ASSERT(storage && "No dual storage");
         eastl::vector<dual_entity_t> render_effects;
         render_effects.reserve(count);
@@ -318,7 +327,7 @@ void skr_render_effect_access(SRendererId r, const SGameEntity* entities, uint32
 {
     if (count)
     {
-        auto storage = skr_runtime_get_dual_storage();
+        auto storage = r->get_dual_storage();
         SKR_ASSERT(storage && "No dual storage");
         eastl::vector<dual_entity_t> batch_render_effects;
         batch_render_effects.reserve(count);

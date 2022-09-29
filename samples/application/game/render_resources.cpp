@@ -16,7 +16,6 @@
 #include "imgui/skr_imgui_rg.h"
 #include "gamert.h"
 
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
 
 void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph)

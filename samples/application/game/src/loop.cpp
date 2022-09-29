@@ -5,13 +5,10 @@
 #include "imgui/imgui.h"
 #include "skr_scene/scene.h"
 
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
-
 namespace skg
 {
-bool GameLoop(GameContext& ctx)
+bool GameLoop(GameContext& ctx, dual_storage_t* world)
 {
-    auto world = skr_runtime_get_dual_storage();
     ImGui::Begin(u8"Game");
     dual_filter_t filter;
     std::memset(&filter, 0, sizeof(dual_filter_t));

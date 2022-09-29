@@ -23,7 +23,6 @@
 
 #include "tracy/Tracy.hpp"
 
-SKR_IMPORT_API struct dual_storage_t* skr_runtime_get_dual_storage();
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
@@ -261,7 +260,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         }
         if (strcmp(pass->identity(), forward_pass_name) == 0)
         {
-            auto storage = skr_runtime_get_dual_storage();
             auto view = skr::math::look_at_matrix(
                 { 0.f, -135.f, 55.f } /*eye*/, 
                 { 0.f, 0.f, 50.f } /*at*/,
