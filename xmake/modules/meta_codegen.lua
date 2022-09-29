@@ -1,5 +1,6 @@
 import("core.project.depend")
-import("private.async.runjobs")
+import("core.base.scheduler")
+
 function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     import("core.base.option")
     import("core.base.object")
@@ -127,7 +128,14 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             end
             os.iorunv(python.program, command)
         end
-        runjobs(target:name()..".pre_codegen.cpp", pre_task, {total = #pre_generators})
+        -- gen configure file
+        scheduler.co_group_begin(target:name()..".cpp-codegen.pre", function ()
+            for _, pre_generator in pairs(pre_generators) do
+                scheduler.co_start(pre_task, _)
+            end
+        end)
+        scheduler.co_group_wait(target:name()..".cpp-codegen.pre")
+
         -- compile jsons to c++
         if (not disable_reflection) then
             -- generate dummy .h file
@@ -162,7 +170,12 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
                 end
                 os.iorunv(python.program, command)
             end
-            runjobs(target:name()..".codegen.cpp", task, {total = #generators})
+            scheduler.co_group_begin(target:name()..".cpp-codegen.norm", function ()
+                for _, generator in pairs(generators) do
+                    scheduler.co_start(task, _)
+                end
+            end)
+            scheduler.co_group_wait(target:name()..".cpp-codegen.norm")
         end
     end
 end
@@ -187,7 +200,6 @@ end
 
 function _generate_once()
     import("core.project.project")
-    import("private.async.runjobs")
     local targets = project.ordertargets()
     local task = function (target)
         local opt = {}
@@ -210,7 +222,6 @@ function _generate_once()
         end
     end
 
-    import("core.base.scheduler")
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
             scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
