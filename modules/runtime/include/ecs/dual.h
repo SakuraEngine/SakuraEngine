@@ -670,6 +670,12 @@ RUNTIME_API void dualS_set_version(dual_storage_t* storage, uint64_t number);
  */
 RUNTIME_API dual_group_t* dualC_get_group(const dual_chunk_t* chunk);
 /**
+ * @brief get storage of chunk
+ *
+ * @param chunk
+ */
+RUNTIME_API dual_storage_t* dualC_get_storage(const dual_chunk_t* chunk);
+/**
  * @brief get count of chunk
  *
  * @param chunk
