@@ -1,7 +1,7 @@
 import("core.project.depend")
 import("core.base.scheduler")
 
-function cmd_compile(sourcefile, rootdir, metadir, target, opt)
+function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
     import("core.base.option")
     import("core.base.object")
     import("core.tool.compiler")
@@ -32,7 +32,7 @@ function cmd_compile(sourcefile, rootdir, metadir, target, opt)
     return argv
 end
 
-function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+function _meta_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
     import("find_sdk")
     local python = find_sdk.find_program("python3")
     -- generate headers dummy
@@ -43,59 +43,9 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             os.projectdir()..vformat("/tools/codegen/configure.h.mako"),
         },
     }
-    local generators = {
-        {
-            os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
-            os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_reader.cpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_writer.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_writer.cpp.mako")
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/serialize.py"),
-            os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/typeid.py"),
-            os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/rtti.py"),
-            os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/config_resource.py"),
-            os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/config_asset.py"),
-            os.projectdir()..vformat("/tools/codegen/config_asset.cpp.mako"),
-            gendir = toolgendir
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/importer.py"),
-            os.projectdir()..vformat("/tools/codegen/importer.cpp.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/cooker.py"),
-            os.projectdir()..vformat("/tools/codegen/cooker.cpp.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/component.py"),
-            os.projectdir()..vformat("/tools/codegen/component.cpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
-        },
-    }
     local disable_reflection = target:extraconf("rules", "c++.codegen", "disable_reflection")
     local rebuild = false
     for _, generator in ipairs(pre_generators) do
-        local dependfile = target:dependfile(generator[1])
-        depend.on_changed(function ()
-            rebuild = true
-        end, {dependfile = dependfile, files = generator});
-    end
-    for _, generator in ipairs(generators) do
         local dependfile = target:dependfile(generator[1])
         depend.on_changed(function ()
             rebuild = true
@@ -147,7 +97,67 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             end
             reflfile:close()
             -- build generated cpp to json
-            cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
+            meta_cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
+            target:data_set("reflection.need_mako", true)
+        end
+    end
+end
+
+function _mako_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+    import("find_sdk")
+    local python = find_sdk.find_program("python3")
+    -- generate headers dummy
+    local generators = {
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
+            os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_reader.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_writer.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_writer.cpp.mako")
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize.py"),
+            os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/typeid.py"),
+            os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/rtti.py"),
+            os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/config_resource.py"),
+            os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/config_asset.py"),
+            os.projectdir()..vformat("/tools/codegen/config_asset.cpp.mako"),
+            gendir = toolgendir
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/importer.py"),
+            os.projectdir()..vformat("/tools/codegen/importer.cpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/cooker.py"),
+            os.projectdir()..vformat("/tools/codegen/cooker.cpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/component.py"),
+            os.projectdir()..vformat("/tools/codegen/component.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
+        },
+    }
+    local disable_reflection = target:extraconf("rules", "c++.codegen", "disable_reflection")
+    local need_mako = target:data("reflection.need_mako")
+    -- generate dummy .cpp file
+    if(need_mako) then
+        local api = target:extraconf("rules", "c++.codegen", "api")
+        -- compile jsons to c++
+        if (not disable_reflection) then
             local depsmeta = {}
             for _, dep in pairs(target:deps()) do
                 local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
@@ -178,7 +188,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
     end
 end
 
-function generate_code_files(target, rootdir, opt)
+function meta_compile(target, rootdir, opt)
     local refl_batch = target:data("reflection.batch")
     if refl_batch then
         for _, sourceinfo in ipairs(refl_batch) do
@@ -189,7 +199,25 @@ function generate_code_files(target, rootdir, opt)
                 local gendir = sourceinfo.gendir
                 local toolgendir = sourceinfo.toolgendir
                 if headerfiles then
-                    _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+                    _meta_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+                end
+            end
+        end
+    end
+end
+
+function mako_compile(target, rootdir, opt)
+    local refl_batch = target:data("reflection.batch")
+    if refl_batch then
+        for _, sourceinfo in ipairs(refl_batch) do
+            if sourceinfo then
+                local headerfiles = sourceinfo.headerfiles
+                local sourcefile_refl = sourceinfo.sourcefile
+                local metadir = sourceinfo.metadir
+                local gendir = sourceinfo.gendir
+                local toolgendir = sourceinfo.toolgendir
+                if headerfiles then
+                    _mako_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
                 end
             end
         end
@@ -199,7 +227,7 @@ end
 function _generate_once()
     import("core.project.project")
     local targets = project.ordertargets()
-    local task = function (target)
+    local meta_task = function (target)
         local opt = {}
         if has_config("is_msvc") then
             opt.cl = true
@@ -210,7 +238,21 @@ function _generate_once()
         target:add("includedirs", gendir, {public = true})
         target:add("includedirs", path.join(gendir, target:name()))
 
-        generate_code_files(target, abs_rootdir, opt)
+        meta_compile(target, abs_rootdir, opt)
+    end
+
+    local mako_task = function (target)
+        local opt = {}
+        if has_config("is_msvc") then
+            opt.cl = true
+        end
+        local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
+        local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+        target:add("includedirs", gendir, {public = true})
+        target:add("includedirs", path.join(gendir, target:name()))
+
+        mako_compile(target, abs_rootdir, opt)
 
         -- add to sourcebatch
         local sourcebatches = target:sourcebatches()
@@ -219,19 +261,29 @@ function _generate_once()
             target:add("files", file)
         end
     end
+    -- generate meta files
+    for _, target in ipairs(targets) do
+        if (target:rule("c++.codegen")) then
+            scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
+                scheduler.co_start(meta_task, target)
+            end)
+        end
+    end
 
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
             scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
                 for _, dep in pairs(target:deps()) do
                     if dep:rule("c++.codegen") then
-                        scheduler.co_group_wait(dep:name()..".cpp-codegen")
+                        scheduler.co_group_wait(dep:name()..".cpp-codegen.meta")
                     end
                 end
-                scheduler.co_start(task, target)
+                scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
+                scheduler.co_start(mako_task, target)
             end)
         end
     end
+    -- wait all
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
             scheduler.co_group_wait(target:name()..".cpp-codegen")
