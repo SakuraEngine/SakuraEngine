@@ -29,6 +29,7 @@
 #include "skr_renderer/skr_renderer.h"
 #include "imgui/skr_imgui_rg.h"
 #include "tracy/Tracy.hpp"
+#include "utils/make_zeroed.hpp"
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
@@ -80,9 +81,8 @@ int CreateMainWindow()
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-    SWindowDescroptor window_desc = {};
-    window_desc.centered = true;
-    window_desc.resizable = true;
+    auto window_desc = make_zeroed<SWindowDescroptor>();
+    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     mainWindow = skr_create_window("AAA", &window_desc);
