@@ -1,4 +1,5 @@
 target("SkrGAInput")
+    set_group("01.modules")
     add_rules("skr.module", {api = "GAINPUT_LIB"})
     add_defines("GAINPUT_DEV", {public = true})
     add_defines("GAINPUT_LIB_IMPL", {public = true}) --??WTF?

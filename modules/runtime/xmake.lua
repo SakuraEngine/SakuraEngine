@@ -1,4 +1,5 @@
 target("SkrDependencyGraph")
+    set_group("01.modules")
     set_kind("static")
     add_deps("boost", "gsl", {public = true})
     set_optimize("fastest")
@@ -8,6 +9,7 @@ target("SkrDependencyGraph")
     add_includedirs(include_dir_list, {public = true})
 
 target("SkrRT") 
+    set_group("01.modules")
     add_rules("skr.module", {api = "RUNTIME"})
     add_deps("SkrDependencyGraph", {public = false})
     add_deps("simdjson", "gsl", "fmt", "ghc_fs", "bitsery", "DirectXMath", "vulkan")

@@ -1,4 +1,5 @@
 target("GameRT")
+    set_group("04.examples/application")
     add_rules("skr.module", {api = "GAMERT"})
     add_rules("c++.codegen", {
         files = {"game/**.h", "game/**.hpp"},
@@ -9,6 +10,7 @@ target("GameRT")
     add_files("game/src/**.cpp")
 
 target("Game")
+    set_group("04.examples/application")
     set_kind("binary")
     add_deps("GameRT")
     add_rules("utils.install-resources", {
@@ -25,6 +27,7 @@ target("Game")
     end
 
 target("GameTool")
+    set_group("04.examples/application")
     add_rules("skr.module", {api = "GAMETOOL"})
     add_rules("c++.codegen", {
         files = {"gametool/**.h", "gametool/**.hpp"},
@@ -45,7 +48,8 @@ target("GameTool")
         end
     end)
 
-target("Test-VMemController")
+target("Example-VMemController")
+    set_group("04.examples/application")
     set_kind("binary")
     add_deps("SkrImGui", "SkrRenderGraph")
     add_files("vmem_controller/**.cpp")
@@ -58,7 +62,8 @@ if (os.host() == "windows" and has_config("build_chat")) then
 end
 
 if (os.host() == "windows") then
-    target("Test-Live2DViewer")
+    target("Example-Live2DViewer")
+        set_group("04.examples/application")
         set_kind("binary")
         add_deps("SkrLive2D", "SkrImGui")
         add_rules("utils.install-resources", {

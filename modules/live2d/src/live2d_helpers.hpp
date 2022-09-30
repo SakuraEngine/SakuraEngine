@@ -48,8 +48,8 @@ struct L2DRequestCallbackData
 };
 
 namespace Live2D { namespace Cubism { namespace Framework {
-    static constexpr csmChar* kMotionGroupIdle = "Idle"; // アイドリング
-    static constexpr csmChar* kMotionGroupTapBody = "TapBody"; // 体をタップしたとき
+    static const csmChar* kMotionGroupIdle = "Idle"; // アイドリング
+    static const csmChar* kMotionGroupTapBody = "TapBody"; // 体をタップしたとき
     // モーションの優先度定数
     static constexpr csmInt32 kPriorityNone = 0;
     static constexpr csmInt32 kPriorityIdle = 1;

@@ -2,6 +2,7 @@ imgui_sources_dir = "$(projectdir)/thirdparty/imgui"
 imgui_includes_dir = "$(projectdir)/thirdparty/imgui/include"
 
 target("imgui")
+    set_group("00.thirdparty")
     set_kind("static")
     add_files(imgui_sources_dir.."/unitybuild.cpp")
     add_includedirs(imgui_includes_dir, {public=true})
@@ -11,6 +12,7 @@ target("imgui")
     end)
 
 target("SkrImGui")
+    set_group("01.modules")
     add_rules("skr.module", {api = "SKR_IMGUI"})
     add_deps("imgui", "SkrRT", "SkrRenderGraph")
     add_includedirs("include", {public=true})

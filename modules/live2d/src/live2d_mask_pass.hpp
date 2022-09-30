@@ -29,7 +29,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                 .format(live2d_mask_format)
                 .owns_memory()
                 .allow_render_target();
-        });
+        });(void)mask;
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             builder.set_name("mask_depth")
@@ -37,7 +37,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                 .format(live2d_depth_format)
                 .owns_memory()
                 .allow_depth_stencil();
-        });
+        });(void)depth;
         if (drawcalls.count)
         {
             renderGraph->add_render_pass(

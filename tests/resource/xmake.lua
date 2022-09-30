@@ -1,4 +1,5 @@
 target("resource-design")
+    set_group("05.tests")
     set_kind("binary")
     add_deps("SkrRT")
     add_files("design/main.cpp")
