@@ -117,7 +117,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
     if(#changedfiles > 0) then
         local api = target:extraconf("rules", "c++.codegen", "api")
         -- gen configure file
-        local function pre_task(index)
+        local function meta_task(index)
             local pre_generator = pre_generators[index][1]
             cprint("${cyan}%s.%s${clear} %s", target:name(), path.filename(pre_generator), path.absolute(metadir))
             local command = {
@@ -130,12 +130,9 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
             os.iorunv(python.program, command)
         end
         -- gen configure file
-        scheduler.co_group_begin(target:name()..".cpp-codegen.pre", function ()
-            for _, pre_generator in pairs(pre_generators) do
-                scheduler.co_start(pre_task, _)
-            end
-        end)
-        scheduler.co_group_wait(target:name()..".cpp-codegen.pre")
+        for index, pre_generator in pairs(pre_generators) do
+            meta_task(index)
+        end
 
         -- compile jsons to c++
         if (not disable_reflection) then
@@ -159,7 +156,7 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
                 end
             end
             -- compile jsons to c++
-            local function task(index)
+            local function mako_task(index)
                 local generator = generators[index][1]
                 cprint("${cyan}%s.%s${clear} %s", target:name(), path.filename(generator), path.absolute(metadir))
                 local command = {
@@ -171,12 +168,12 @@ function _merge_reflfile(target, rootdir, metadir, gendir, toolgendir, sourcefil
                 end
                 os.iorunv(python.program, command)
             end
-            scheduler.co_group_begin(target:name()..".cpp-codegen.norm", function ()
-                for _, generator in pairs(generators) do
-                    scheduler.co_start(task, _)
+            scheduler.co_group_begin(target:name()..".cpp-codegen.mako", function ()
+                for index, generator in pairs(generators) do
+                    scheduler.co_start(mako_task, index)
                 end
             end)
-            scheduler.co_group_wait(target:name()..".cpp-codegen.norm")
+            scheduler.co_group_wait(target:name()..".cpp-codegen.mako")
         end
     end
 end
