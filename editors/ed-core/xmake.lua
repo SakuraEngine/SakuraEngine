@@ -1,4 +1,5 @@
 target("SkrEditorCore")
+    set_group("03.editors")
     add_rules("qt.shared")
     -- set_kind("shared")
     add_deps("SkrLightningStorage", "QtAdvancedDocking")

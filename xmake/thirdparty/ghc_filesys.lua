@@ -2,6 +2,7 @@ ghc_fs_include_dir = "$(projectdir)/thirdparty/ghc_fs/include"
 ghc_fs_source_dir = "$(projectdir)/thirdparty/ghc_fs"
 
 target("ghc_fs")
+    set_group("00.thirdparty")
     set_kind("static")
     add_files(ghc_fs_source_dir.."/filesystem.cpp")
     if is_os("windows") then

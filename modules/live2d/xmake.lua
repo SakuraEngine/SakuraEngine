@@ -1,4 +1,5 @@
 target("SkrLive2D")
+    set_group("01.modules")
     add_rules("skr.module", {api = "SKR_LIVE2D"})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},

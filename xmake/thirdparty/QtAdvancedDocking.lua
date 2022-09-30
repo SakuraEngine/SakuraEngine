@@ -3,6 +3,7 @@ qtad_include_dir_private = "$(projectdir)/thirdparty/QtAdvancedDocking/include/Q
 qtad_source_dir = "$(projectdir)/thirdparty/QtAdvancedDocking"
 
 target("QtAdvancedDocking")
+    set_group("00.thirdparty")
     add_rules("qt.shared")
     add_defines("ADS_SHARED_EXPORT")
     add_frameworks("QtGui", "QtCore", "QtWidgets", {public = true})

@@ -2,6 +2,7 @@ zlib_include_dir = "$(projectdir)/thirdparty/zlib/include"
 zlib_lib_dir = "$(projectdir)/thirdparty/zlib/lib"
 
 target("zlib")
+    set_group("00.thirdparty")
     set_kind("headeronly")
     add_includedirs(zlib_include_dir, {public=true})
     if (is_os("windows")) then 

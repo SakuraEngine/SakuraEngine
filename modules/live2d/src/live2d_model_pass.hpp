@@ -31,7 +31,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                 .format(live2d_depth_format)
                 .owns_memory()
                 .allow_depth_stencil();
-        });
+        });(void)depth;
         if (drawcalls.count)
         {
             renderGraph->add_render_pass(

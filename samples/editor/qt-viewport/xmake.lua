@@ -1,4 +1,5 @@
-target("Test-EditorDemo")
+target("Example-EditorDemo")
+    set_group("04.examples/editor")
     add_rules("qt.widgetapp")
     add_deps("SkrEditorCore")
     add_frameworks(qt_frameworks)

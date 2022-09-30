@@ -1,4 +1,5 @@
 target("SkrImageCoder")
+    set_group("01.modules")
     add_rules("skr.module", {api = "SKR_IMAGE_CODER"})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},

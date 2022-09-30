@@ -5,6 +5,7 @@ if(has_config("build_usdtool")) then
 end
 
 target("SkrTool")
+    set_group("02.tools")
     add_rules("skr.module", {api = "TOOL"})
     add_files("core/src/**.cpp")
     add_deps("SkrRT")
@@ -17,6 +18,7 @@ target("SkrTool")
 
 if(has_config("build_usdtool")) then
 target("UsdTool")
+    set_group("02.tools")
     add_rules("skr.module", {api = "USDTOOL"})
     add_rules("c++.codegen", {
         files = {"usdtool/**.h", "usdtool/**.hpp"},
@@ -29,6 +31,7 @@ target("UsdTool")
 end 
 
 target("GLTFTool")
+    set_group("02.tools")
     add_rules("skr.module", {api = "GLTFTool"})
     add_rules("c++.codegen", {
         files = {"gltf_tool/**.h", "gltf_tool/**.hpp"},
@@ -40,18 +43,21 @@ target("GLTFTool")
     add_files("gltf_tool/src/**.cpp")
 
 target("ISPCTextureCompressor")
+    set_group("02.tools")
     set_kind("object")
     set_policy("build.across_targets_in_parallel", false)
     add_rules("utils.ispc")
     add_files("texture_compiler/src/**.ispc")
 
 target("SkrTextureCompiler")
+    set_group("02.tools")
     add_rules("skr.module", {api = "TEXTURE_COMPILER"})
     add_includedirs("texture_compiler/include", {public=true})
     add_deps("SkrTool", "GameRT", "ISPCTextureCompressor")
     add_files("texture_compiler/src/**.cpp")
 
 target("SkrCompiler")
+    set_group("02.tools")
     -- add_rules("grpc.cpp")
     set_kind("binary")
     add_deps("GameTool", "SkrTool", "GLTFTool")

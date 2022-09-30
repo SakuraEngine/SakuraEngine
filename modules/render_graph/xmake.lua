@@ -1,4 +1,5 @@
 target("SkrRenderGraph")
+    set_group("01.modules")
     add_rules("skr.module", {api = "SKR_RENDER_GRAPH"})
     add_deps("SkrRT")
     add_includedirs("include", {public=true})
