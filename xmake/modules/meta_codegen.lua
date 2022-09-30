@@ -1,5 +1,9 @@
 import("core.project.depend")
 import("core.base.scheduler")
+import("find_sdk")
+
+meta = find_sdk.find_program("meta")
+python = find_sdk.find_program("python3")
 
 function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
     import("core.base.option")
@@ -20,8 +24,6 @@ function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
         table.insert(argv, "--driver-mode=cl")
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
-    import("find_sdk")
-    local meta = find_sdk.find_program("meta")
     local argv2 = {sourcefile, "--output="..path.absolute(metadir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
@@ -33,8 +35,6 @@ function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
 end
 
 function _meta_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
-    import("find_sdk")
-    local python = find_sdk.find_program("python3")
     -- generate headers dummy
     local changedfiles = {}
     local pre_generators = {
