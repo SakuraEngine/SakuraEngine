@@ -77,6 +77,11 @@ dual_group_t* dualC_get_group(const dual_chunk_t* chunk)
     return chunk->group;
 }
 
+dual_storage_t* dualC_get_storage(const dual_chunk_t* chunk)
+{
+    return chunk->group->archetype->storage;
+}
+
 uint32_t dualC_get_count(const dual_chunk_t* chunk)
 {
     return chunk->count;
