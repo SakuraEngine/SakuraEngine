@@ -1,7 +1,8 @@
 #pragma once
 #include "module.hpp"
 
-extern "C" RUNTIME_API skr::ModuleManager* __stdcall skr_get_module_manager();
+RUNTIME_EXTERN_C RUNTIME_API 
+skr::ModuleManager* skr_get_module_manager();
 
 namespace skr
 {

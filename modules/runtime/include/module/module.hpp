@@ -95,7 +95,8 @@ struct RUNTIME_API IDynamicModule : public IModule {
     {
         eastl::string symbolname = "__skr_module_meta__";
         symbolname.append(information.name);
-        return sharedLib->get<const char*>(symbolname.c_str());
+        const char* symbol_str = symbolname.c_str();
+        return sharedLib->get<const char*>(symbol_str);
     }
 };
 struct IStaticModule : public IModule {

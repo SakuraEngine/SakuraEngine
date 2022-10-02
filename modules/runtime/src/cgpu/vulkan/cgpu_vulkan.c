@@ -1228,8 +1228,12 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
         .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,
     };
-    CHECK_VKRESULT(D->mVkDeviceTable.vkCreateGraphicsPipelines(D->pVkDevice,
-        D->pPipelineCache, 1, &pipelineInfo, GLOBAL_VkAllocationCallbacks, &RP->pVkPipeline));
+    VkResult createResult = D->mVkDeviceTable.vkCreateGraphicsPipelines(D->pVkDevice,
+        D->pPipelineCache, 1, &pipelineInfo, GLOBAL_VkAllocationCallbacks, &RP->pVkPipeline);
+    if (createResult != VK_SUCCESS)
+    {
+        cgpu_fatal("CGPU VULKAN: Failed to create Graphics Pipeline! Error Code: %d", createResult);
+    }
     return &RP->super;
 }
 /* clang-format on */

@@ -312,9 +312,3 @@ eastl::string_view ModuleManagerImpl::get_root(void)
 }
 
 } // namespace skr
-
-extern "C" RUNTIME_API skr::ModuleManager* __stdcall skr_get_module_manager()
-{
-    static auto sModuleManager = eastl::make_unique<skr::ModuleManagerImpl>();
-    return sModuleManager.get();
-}
