@@ -51,9 +51,9 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
 } _RegisterComponentskr_live2d_render_model_comp_tHelper;
 
 template<>
-struct dual_id_of<skr_live2d_render_model_comp_t>
+struct SKR_LIVE2D_API dual_id_of<skr_live2d_render_model_comp_t>
 {
-    SKR_LIVE2D_API static dual_type_index_t get()
+    static dual_type_index_t get()
     {
         return _RegisterComponentskr_live2d_render_model_comp_tHelper.type;
     }

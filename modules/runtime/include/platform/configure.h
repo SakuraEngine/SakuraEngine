@@ -88,7 +88,7 @@
     #if defined(_MSC_VER)
         #define RUNTIME_IMPORT __declspec(dllimport)
     #else
-        #define RUNTIME_IMPORT
+        #define RUNTIME_IMPORT __attribute__((visibility("default")))
     #endif
 #endif
 
@@ -96,7 +96,7 @@
     #if defined(_MSC_VER)
         #define RUNTIME_EXPORT __declspec(dllexport)
     #else
-        #define RUNTIME_EXPORT
+        #define RUNTIME_EXPORT __attribute__((visibility("default")))
     #endif
 #endif
 
