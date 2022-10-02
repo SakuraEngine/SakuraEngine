@@ -757,7 +757,7 @@ const char* const* instance_extensions, uint32_t instance_extension_count)
                 }
             }
         }
-        VkInstance->mExtensionsCount = filled_exts;
+         VkInstance->mExtensionsCount = filled_exts;
     }
     return;
 }
