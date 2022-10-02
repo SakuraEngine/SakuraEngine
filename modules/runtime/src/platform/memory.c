@@ -108,7 +108,11 @@ RUNTIME_API void* sakura_realloc(void* p, size_t newsize) SKR_NOEXCEPT
 FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignment)
 {
 #if !defined(_WIN32)
-    void* ptr = aligned_alloc(alignment, size * count);
+    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(alignment, size * count);
+    if (!ptr)
+    {
+        posix_memalign(&ptr, alignment, size);
+    }
 #else
     void* ptr = _aligned_malloc(size * count, alignment);
 #endif
@@ -134,7 +138,11 @@ RUNTIME_API void* sakura_calloc_aligned(size_t count, size_t size, size_t alignm
 RUNTIME_API void* sakura_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT
 {
 #if !defined(_WIN32)
-    void* ptr = aligned_alloc(size, alignment);
+    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
+    if (!ptr)
+    {
+        posix_memalign(&ptr, alignment, size);
+    }
 #else
     void* ptr = _aligned_malloc(size, alignment);
 #endif
@@ -144,7 +152,11 @@ RUNTIME_API void* sakura_malloc_aligned(size_t size, size_t alignment) SKR_NOEXC
 RUNTIME_API void* sakura_new_aligned(size_t size, size_t alignment)
 {
 #if !defined(_WIN32)
-    void* ptr = aligned_alloc(size, alignment);
+    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
+    if (!ptr)
+    {
+        posix_memalign(&ptr, alignment, size);
+    }
 #else
     void* ptr = _aligned_malloc(size, alignment);
 #endif

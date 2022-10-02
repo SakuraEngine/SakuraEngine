@@ -73,7 +73,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
     {
         _lastError.clear();
         // dlclose returns 0 on success
-        if (dlclose(_handle) != 0)
+        if (_handle != nullptr && dlclose(_handle) != 0)
         {
             _lastError = dlerror();
             return false;
@@ -86,6 +86,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
     {
         _lastError.clear();
         dlerror();
+        if (!_handle) _handle = dlopen(NULL, RTLD_LAZY | RTLD_LOCAL);
         void* symbol = dlsym(_handle, symbolName);
         const char* error = dlerror();
         if (error)
