@@ -388,10 +388,12 @@ void VkUtil_CreateVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CG
         .pVulkanFunctions = &vulkanFunctions,
         .pAllocationCallbacks = GLOBAL_VkAllocationCallbacks
     };
+#if !defined(_MACOS)
     if (A->dedicated_allocation)
     {
         vmaInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT;
     }
+#endif
     if (vmaCreateAllocator(&vmaInfo, &D->pVmaAllocator) != VK_SUCCESS)
     {
         cgpu_assert(0 && "Failed to create VMA Allocator");
@@ -814,7 +816,8 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 if (strcmp(ext_props[i].extensionName, device_extensions[j]) == 0)
                 {
                     VkAdapter->pExtensionProperties[filled_exts] = ext_props[i];
-                    VkAdapter->pExtensionNames[filled_exts] = VkAdapter->pExtensionProperties[filled_exts].extensionName;
+                    const char* enabledName = VkAdapter->pExtensionProperties[filled_exts].extensionName;
+                    VkAdapter->pExtensionNames[filled_exts] = enabledName;
                     filled_exts++;
                     continue;
                 }
