@@ -63,4 +63,11 @@ struct skr_live2d_render_model_t {
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
     eastl::vector<skr_render_primitive_command_t> primitive_commands;
 };
+
+#include "ecs/dual.h"
+template<>
+struct SKR_LIVE2D_API dual_id_of<skr_live2d_render_model_comp_t>
+{
+    static dual_type_index_t get();
+};
 #endif
