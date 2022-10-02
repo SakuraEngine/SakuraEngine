@@ -53,8 +53,8 @@ public:
                 if (exts_desc->ppDeviceExtensions != NULL && exts_desc->mDeviceExtensionCount != 0)
                 {
                     device_extensions.insert(device_extensions.end(),
-                    exts_desc->ppDeviceExtensions,
-                    exts_desc->ppDeviceExtensions + exts_desc->mDeviceExtensionCount);
+                        exts_desc->ppDeviceExtensions,
+                        exts_desc->ppDeviceExtensions + exts_desc->mDeviceExtensionCount);
                 }
             }
         }
@@ -264,14 +264,17 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
 
     // Select Instance Layers & Layer Extensions
     VkUtil_SelectInstanceLayers(I,
-    blackboard.instance_layers.data(),
-    (uint32_t)blackboard.instance_layers.size());
+        blackboard.instance_layers.data(),
+        (uint32_t)blackboard.instance_layers.size());
     // Select Instance Extensions
     VkUtil_SelectInstanceExtensions(I,
-    blackboard.instance_extensions.data(),
-    (uint32_t)blackboard.instance_extensions.size());
+        blackboard.instance_extensions.data(),
+        (uint32_t)blackboard.instance_extensions.size());
 
     DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
+#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+    createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
     // Instance Layers
@@ -323,8 +326,8 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     const char* const* wanted_device_layers = blackboard.device_layers.data();
     const auto wanted_device_layers_count = (uint32_t)blackboard.device_layers.size();
     VkUtil_QueryAllAdapters(I,
-    wanted_device_layers, wanted_device_layers_count,
-    wanted_device_extensions, wanted_device_extensions_count);
+        wanted_device_layers, wanted_device_layers_count,
+        wanted_device_extensions, wanted_device_extensions_count);
     // sort by GPU type
     eastl::stable_sort(I->pVulkanAdapters, I->pVulkanAdapters + I->mPhysicalDeviceCount, 
     [](const CGPUAdapter_Vulkan& a, const CGPUAdapter_Vulkan& b) {
@@ -431,6 +434,7 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
 
     // Single Device Only.
     volkLoadDeviceTable(&D->mVkDeviceTable, D->pVkDevice);
+    cgpu_assert(D->mVkDeviceTable.vkCreateSwapchainKHR && "failed to load swapchain proc!");
 
     // Create Pipeline Cache
     D->pPipelineCache = CGPU_NULLPTR;
