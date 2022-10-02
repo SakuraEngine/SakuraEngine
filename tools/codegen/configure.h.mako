@@ -10,7 +10,7 @@
     #if defined(_MSC_VER)
         #define ${api}_EXPORT __declspec(dllexport)
     #else
-        #define ${api}_EXPORT
+        #define ${api}_EXPORT __attribute__((visibility("default")))
     #endif
 #endif
 
