@@ -1,3 +1,7 @@
+import("core.base.option")
+import("core.base.object")
+import("core.tool.compiler")
+import("core.language.language")
 import("core.project.depend")
 import("core.base.scheduler")
 import("find_sdk")
@@ -6,11 +10,6 @@ meta = find_sdk.find_program("meta")
 python = find_sdk.find_program("python3")
 
 function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
-    import("core.base.option")
-    import("core.base.object")
-    import("core.tool.compiler")
-    import("core.language.language")
-    -- bind target if exists
     opt = opt or {}
     opt.target = target
     -- load compiler and get compilation command
@@ -34,7 +33,7 @@ function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
     return argv
 end
 
-function _meta_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
     -- generate headers dummy
     local changedfiles = {}
     local pre_generators = {
@@ -86,24 +85,23 @@ function _meta_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_
 
         -- compile jsons to c++
         if (not disable_reflection) then
-            -- generate dummy .h file
-            local reflfile = io.open(sourcefile_refl, "w")
+            local unity_cpp = io.open(unity_file, "w")
             for _, headerfile in ipairs(changedfiles) do
                 headerfile = path.absolute(headerfile)
-                sourcefile_refl =
-                path.absolute(sourcefile_refl)
-                headerfile = path.relative(headerfile, path.directory(sourcefile_refl))
-                reflfile:print("#include \"%s\"", headerfile)
+                unity_file =
+                path.absolute(unity_file)
+                headerfile = path.relative(headerfile, path.directory(unity_file))
+                unity_cpp:print("#include \"%s\"", headerfile)
             end
-            reflfile:close()
+            unity_cpp:close()
             -- build generated cpp to json
-            meta_cmd_compile(sourcefile_refl, rootdir, metadir, target, opt)
+            meta_cmd_compile(unity_file, rootdir, metadir, target, opt)
             target:data_set("reflection.need_mako", true)
         end
     end
 end
 
-function _mako_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
     import("find_sdk")
     local python = find_sdk.find_program("python3")
     -- generate headers dummy
@@ -194,12 +192,12 @@ function meta_compile(target, rootdir, opt)
         for _, sourceinfo in ipairs(refl_batch) do
             if sourceinfo then
                 local headerfiles = sourceinfo.headerfiles
-                local sourcefile_refl = sourceinfo.sourcefile
+                local unity_file = sourceinfo.sourcefile
                 local metadir = sourceinfo.metadir
                 local gendir = sourceinfo.gendir
                 local toolgendir = sourceinfo.toolgendir
                 if headerfiles then
-                    _meta_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+                    _meta_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
                 end
             end
         end
@@ -212,12 +210,12 @@ function mako_compile(target, rootdir, opt)
         for _, sourceinfo in ipairs(refl_batch) do
             if sourceinfo then
                 local headerfiles = sourceinfo.headerfiles
-                local sourcefile_refl = sourceinfo.sourcefile
+                local unity_file = sourceinfo.sourcefile
                 local metadir = sourceinfo.metadir
                 local gendir = sourceinfo.gendir
                 local toolgendir = sourceinfo.toolgendir
                 if headerfiles then
-                    _mako_compile(target, rootdir, metadir, gendir, toolgendir, sourcefile_refl, headerfiles, opt)
+                    _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
                 end
             end
         end
@@ -309,19 +307,19 @@ function main(target, headerfiles)
     local id = 1
     local count = 0
     for idx, headerfile in pairs(headerfiles) do
-        local sourcefile_reflection
+        local unity_file
         if batchsize and count >= batchsize then
             id = id + 1
             count = 0
         end
-        sourcefile_reflection = path.join(sourcedir, "reflection_" .. tostring(id) .. ".cpp")
+        unity_file = path.join(sourcedir, "reflection_" .. tostring(id) .. ".cpp")
         count = count + 1
         -- batch
-        if sourcefile_reflection then
+        if unity_file then
             local sourceinfo = reflection_batch[id]
             if not sourceinfo then
                 sourceinfo = {}
-                sourceinfo.sourcefile = sourcefile_reflection
+                sourceinfo.sourcefile = unity_file
                 sourceinfo.metadir = metadir
                 sourceinfo.gendir = gendir
                 sourceinfo.toolgendir = toolgendir
