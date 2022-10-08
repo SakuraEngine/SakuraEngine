@@ -162,6 +162,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - log.c f9ea349 (MIT)
 - mimalloc v2.0.6 (MIT)
 - xxhash 0.8.1 (BSD)
+- concurrentqueue d49fa2b Simplified BSD
 - VulkanMemoryAllocator 3.0.1, release
 - D3D12MemoryAllocator 2.0.1 release
 - SPIRV-Reflect b68b5a8 (Apache-2.0)
@@ -178,6 +179,10 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - llfio 28ed462
 - ghc::filesystem v1.5.12
 - zlib v1.2.8
+- cgltf v1.13 (MIT)
+
+## 作为动态库引入的开源库和版本
+- Qt-Advanced-Docking-System 3cd6d76 LGPL-2.1 
 
 ## 接入的扩展API以及版本
 - nvapi R510
