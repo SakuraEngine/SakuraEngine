@@ -74,6 +74,7 @@ public:
     BaseCounter& operator=(BaseCounter&&) noexcept = delete;
     ~BaseCounter();
 
+    TaskScheduler* GetScheduler() { return  m_taskScheduler; }
 protected:
     /* The TaskScheduler this counter is associated with */
     TaskScheduler* m_taskScheduler;
