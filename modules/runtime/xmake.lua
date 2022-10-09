@@ -39,6 +39,7 @@ target("SkrRT")
     -- unzip & link sdks
     before_build(function(target)
         import("core.project.task")
+        task.run("run-codegen-jobs")
         task.run("unzip-tracyclient")
         --task.run("unzip-wasm3")
         task.run("unzip-platform-sdks")

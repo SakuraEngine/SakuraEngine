@@ -1,10 +1,19 @@
+task("run-codegen-jobs")
+    on_run(function ()
+        import("core.base.scheduler")
+        import("meta_codegen")
+        scheduler.co_start(meta_codegen)
+    end)
+
 rule("c++.codegen")
     -- add_deps("c++")
     set_sourcekinds("cxx")
+    --[[
     on_config(function (target, opt)
         import("meta_codegen")
         meta_codegen()
     end)
+    --]]
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}
