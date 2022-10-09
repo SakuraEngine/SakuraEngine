@@ -6,7 +6,7 @@ target("SkrRenderer")
         rootdir = "include/",
         api = "SKR_RENDERER"
     })
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_deps("cgltf", "SkrScene", "SkrRenderGraph", "SkrImGui")
     add_includedirs("include", {public=true})
     add_files("src/*.cpp")

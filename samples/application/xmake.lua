@@ -5,7 +5,7 @@ target("GameRT")
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("game/include", {public=true})
     add_deps("SkrRT", "SkrScene", "SkrRenderer", "SkrImGui", "SkrInputSystem")
     add_files("game/src/**.cpp")
@@ -73,7 +73,7 @@ target("Example-Live2DViewer")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Live2DViewer",
         dxil_outdir = "/../resources/shaders/Live2DViewer"})
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("live2d-viewer/include", {public=true})
     add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")
     -- add_files("live2d-viewer/shaders/**.hlsl")

@@ -6,7 +6,7 @@ target("SkrLive2D")
         rootdir = "include/", disable_meta = true,
         api = "SKR_LIVE2D"
     })
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_deps("SkrRenderer", "SkrImageCoder")
     add_includedirs("include", "CubismNativeCore/include", {public=true})
     add_includedirs("src/Framework", {public=false})

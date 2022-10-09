@@ -15,7 +15,7 @@ target("SkrTool")
         rootdir = "core/",
         api = "TOOL"
     })
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
 if(has_config("build_usdtool")) then
 target("UsdTool")
@@ -38,7 +38,7 @@ target("GLTFTool")
         files = {"gltf_tool/**.h", "gltf_tool/**.hpp"},
         rootdir = "gltf_tool/"
     })
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("gltf_tool/include", {public=true})
     add_packages("vcpkg::usd")
     add_deps("cgltf", "SkrTool", "GameRT")
@@ -77,4 +77,4 @@ target("SkrCompiler")
         files = {"compiler/**.h", "compiler/**.hpp"},
         rootdir = "compiler/"
     })
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})

@@ -7,6 +7,8 @@ includes("xmake/options.lua")
 
 set_languages("c11", "cxx17")
 
+default_unity_batch_size = 4
+
 include_dir_list = {"include"}
 source_list = {}
 packages_list = {}
