@@ -36,14 +36,21 @@ target("SkrRT")
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
         add_files("src/**/build.*.m", "src/**/build.*.mm")
     end
+    
     -- unzip & link sdks
     before_build(function(target)
-        import("core.project.task")
-        task.run("run-codegen-jobs")
-        task.run("unzip-tracyclient")
-        --task.run("unzip-wasm3")
-        task.run("unzip-platform-sdks")
+        import("core.base.scheduler")
+        local function upzip_tasks()
+            import("core.project.task")
+
+            task.run("run-codegen-jobs")
+            task.run("unzip-tracyclient")
+            --task.run("unzip-wasm3")
+            task.run("unzip-platform-sdks")
+        end
+        scheduler.co_start(upzip_tasks)
     end)
+
     add_links(links_list, {public = true})
     -- boost ctx
     do
