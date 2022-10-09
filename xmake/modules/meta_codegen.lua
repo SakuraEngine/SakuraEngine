@@ -184,119 +184,15 @@ function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, 
     end
 end
 
-function meta_compile(target, rootdir, opt)
-    local refl_batch = target:data("meta.batch")
-    if refl_batch then
-        for _, sourceinfo in ipairs(refl_batch) do
-            if sourceinfo then
-                local headerfiles = sourceinfo.headerfiles
-                local unityfile = sourceinfo.sourcefile
-                local metadir = sourceinfo.metadir
-                local gendir = sourceinfo.gendir
-                local toolgendir = sourceinfo.toolgendir
-                if headerfiles then
-                    _meta_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
-                end
-            end
+function collect_batch(target)
+    local headerfiles = {}
+    local files = target:extraconf("rules", "c++.codegen", "files")
+    for _, file in ipairs(files) do
+        local p = path.join(target:scriptdir(), file)
+        for __, filepath in ipairs(os.files(p)) do
+            table.insert(headerfiles, filepath)
         end
     end
-end
-
-function mako_compile(target, rootdir, opt)
-    local refl_batch = target:data("meta.batch")
-    if refl_batch then
-        for _, sourceinfo in ipairs(refl_batch) do
-            if sourceinfo then
-                local headerfiles = sourceinfo.headerfiles
-                local unityfile = sourceinfo.sourcefile
-                local metadir = sourceinfo.metadir
-                local gendir = sourceinfo.gendir
-                local toolgendir = sourceinfo.toolgendir
-                if headerfiles then
-                    _mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
-                end
-            end
-        end
-    end
-end
-
-function _generate_once()
-    local targets = project.ordertargets()
-    local meta_task = function (target)
-        local opt = {}
-        if has_config("is_msvc") then
-            opt.cl = true
-        end
-        local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
-        local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
-        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
-        target:add("includedirs", gendir, {public = true})
-        target:add("includedirs", path.join(gendir, target:name()))
-
-        meta_compile(target, abs_rootdir, opt)
-    end
-
-    local mako_task = function (target)
-        local opt = {}
-        if has_config("is_msvc") then
-            opt.cl = true
-        end
-        local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
-        local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
-        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
-        target:add("includedirs", gendir, {public = true})
-        target:add("includedirs", path.join(gendir, target:name()))
-
-        mako_compile(target, abs_rootdir, opt)
-
-        -- add to sourcebatch
-        local sourcebatches = target:sourcebatches()
-        local cppfiles = os.files(path.join(gendir, "/**.cpp"))
-        for _, file in ipairs(cppfiles) do
-            target:add("files", file)
-        end
-    end
-
-    -- compile meta files
-    for _, target in ipairs(targets) do
-        if (target:rule("c++.codegen")) then
-            scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
-                scheduler.co_start(meta_task, target)
-            end)
-        end
-    end
-
-    -- compile mako templates
-    for _, target in ipairs(targets) do
-        if (target:rule("c++.codegen")) then
-            scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
-                for _, dep in pairs(target:deps()) do
-                    if dep:rule("c++.codegen") then
-                        scheduler.co_group_wait(dep:name()..".cpp-codegen.meta")
-                    end
-                end
-                scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
-                scheduler.co_start(mako_task, target)
-            end)
-        end
-    end
-    
-    -- wait all
-    for _, target in ipairs(targets) do
-        if (target:rule("c++.codegen")) then
-            scheduler.co_group_wait(target:name()..".cpp-codegen")
-        end
-    end
-end
-
-function generate_once()
-    if not _g.generated then
-         _generate_once()
-        _g.generated = true
-    end  
-end
-
-function main(target, headerfiles)
     local batchsize = extraconf and extraconf.batchsize or 10
     local extraconf = target:extraconf("rules", "c++.codegen")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
@@ -330,5 +226,112 @@ function main(target, headerfiles)
         end
     end
     -- save unit batch
-    target:data_set("meta.batch", meta_batch)
+    target:data_set("meta.batch.data", meta_batch)
+end
+
+function meta_compile(target, rootdir, opt)
+    collect_batch(target)
+    local refl_batch = target:data("meta.batch.data")
+    if refl_batch then
+        for _, sourceinfo in ipairs(refl_batch) do
+            if sourceinfo then
+                local headerfiles = sourceinfo.headerfiles
+                local unityfile = sourceinfo.sourcefile
+                local metadir = sourceinfo.metadir
+                local gendir = sourceinfo.gendir
+                local toolgendir = sourceinfo.toolgendir
+                if headerfiles then
+                    _meta_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
+                end
+            end
+        end
+    end
+end
+
+function mako_compile(target, rootdir, opt)
+    local refl_batch = target:data("meta.batch.data")
+    if refl_batch then
+        for _, sourceinfo in ipairs(refl_batch) do
+            if sourceinfo then
+                local headerfiles = sourceinfo.headerfiles
+                local unityfile = sourceinfo.sourcefile
+                local metadir = sourceinfo.metadir
+                local gendir = sourceinfo.gendir
+                local toolgendir = sourceinfo.toolgendir
+                if headerfiles then
+                    _mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
+                end
+            end
+        end
+    end
+end
+
+function generate_once()
+    local targets = project.ordertargets()
+    local meta_task = function (target)
+        local opt = {}
+        if has_config("is_msvc") then
+            opt.cl = true
+        end
+        local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
+        local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+        target:add("includedirs", gendir, {public = true})
+        target:add("includedirs", path.join(gendir, target:name()))
+
+        meta_compile(target, abs_rootdir, opt)
+    end
+
+    local mako_task = function (target)
+        local opt = {}
+        if has_config("is_msvc") then
+            opt.cl = true
+        end
+        local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
+        local abs_rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+
+        mako_compile(target, abs_rootdir, opt)
+
+        -- add to sourcebatch
+        local sourcebatches = target:sourcebatches()
+        local cppfiles = os.files(path.join(gendir, "/**.cpp"))
+        
+        local meta_batch_cpp = {}
+        for _, file in ipairs(cppfiles) do
+            table.insert(meta_batch_cpp, file)
+        end
+        target:data_set("meta.batch.cpp", meta_batch_cpp)
+    end
+
+    -- compile meta files
+    for _, target in ipairs(targets) do
+        if (target:rule("c++.codegen")) then
+            scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
+                scheduler.co_start(meta_task, target)
+            end)
+        end
+    end
+
+    -- compile mako templates
+    for _, target in ipairs(targets) do
+        if (target:rule("c++.codegen")) then
+            scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
+                for _, dep in pairs(target:deps()) do
+                    if dep:rule("c++.codegen") then
+                        scheduler.co_group_wait(dep:name()..".cpp-codegen.meta")
+                    end
+                end
+                scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
+                scheduler.co_start(mako_task, target)
+            end)
+        end
+    end
+end
+
+function main()
+    if not _g.generated then
+        generate_once()
+        _g.generated = true
+    end  
 end
