@@ -13,7 +13,7 @@
 #include "ftl/task_scheduler.h"
 #include "platform/memory.h"
 #include "platform/configure.h"
-#include "utils/log.h"
+#include "utils/log.hpp"
 #include "json/reader.h"
 #include "json/writer.h"
 #include <mutex>

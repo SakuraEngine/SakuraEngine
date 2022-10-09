@@ -2,6 +2,7 @@
 #include "utils/log.h"
 #include "lmdb/lmdb.h"
 #include <ghc/filesystem.hpp>
+#include <EASTL/string.h>
 
 #include "tracy/Tracy.hpp"
 

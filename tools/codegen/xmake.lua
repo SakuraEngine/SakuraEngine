@@ -3,9 +3,8 @@ generator_list["json"] =
         {
             os.projectdir().."/tools/codegen/serialize_json.py",
             os.projectdir().."/tools/codegen/json_reader.h.mako",
-            os.projectdir().."/tools/codegen/json_reader.cpp.mako",
             os.projectdir().."/tools/codegen/json_writer.h.mako",
-            os.projectdir().."/tools/codegen/json_writer.cpp.mako"
+            os.projectdir().."/tools/codegen/json_serialize.cpp.mako"
         };
 generator_list["serialize"] = 
         {

@@ -1,5 +1,6 @@
 #include "editor_core/sq_viewport.h"
 #include <QtGui/qopenglext.h>
+#include <EASTL/string.h>
 
 #include "utils/log.h"
 
