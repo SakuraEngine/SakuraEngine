@@ -41,7 +41,7 @@ target("SkrRT")
         import("core.project.task")
         task.run("unzip-tracyclient")
         --task.run("unzip-wasm3")
-        task.run("unzip-gfx-sdk")
+        task.run("unzip-platform-sdks")
     end)
     add_links(links_list, {public = true})
     -- boost ctx
