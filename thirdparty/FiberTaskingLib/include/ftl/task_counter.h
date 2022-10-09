@@ -60,6 +60,11 @@ public:
     ~TaskCounter() = default;
 
 public:
+    void Reset(unsigned const x)
+    {
+        m_value.store(x);
+    }
+
     /**
      * Adds the value to the counter. It will not check any waiting tasks, since it is assumed they're waiting
      * for a final value of 0.
