@@ -1,15 +1,16 @@
 import("core.base.option")
 import("core.base.object")
-import("core.tool.compiler")
-import("core.language.language")
-import("core.project.depend")
 import("core.base.scheduler")
+import("core.project.depend")
+import("core.project.project")
+import("core.language.language")
+import("core.tool.compiler")
 import("find_sdk")
 
 meta = find_sdk.find_program("meta")
 python = find_sdk.find_program("python3")
 
-function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
+function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     opt = opt or {}
     opt.target = target
     -- load compiler and get compilation command
@@ -23,26 +24,26 @@ function meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
         table.insert(argv, "--driver-mode=cl")
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
-    local argv2 = {sourcefile, "--output="..path.absolute(metadir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
+    local argv2 = {sourcefile, "--output="..path.absolute(outdir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-    cprint("${green}%s.compiling.meta ${clear}%s", target:name(), path.absolute(metadir))
+    cprint("${green}%s.compiling.meta ${clear}%s", target:name(), path.absolute(outdir))
     os.runv(meta.vexec, argv)
-    cprint("${green}%s.finish.meta ${clear}%s", target:name(), path.absolute(metadir))
+    cprint("${green}%s.finish.meta ${clear}%s", target:name(), path.absolute(outdir))
     return argv
 end
 
-function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
+function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
     -- generate headers dummy
-    local changedfiles = {}
+    local changedheaders = {}
     local pre_generators = {
         {
             os.projectdir()..vformat("/tools/codegen/configure.py"),
             os.projectdir()..vformat("/tools/codegen/configure.h.mako"),
         },
     }
-    local disable_reflection = target:extraconf("rules", "c++.codegen", "disable_reflection")
+    local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
     local rebuild = false
     for _, generator in ipairs(pre_generators) do
         local dependfile = target:dependfile(generator[1])
@@ -53,17 +54,17 @@ function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unity_file,
     for _, headerfile in ipairs(headerfiles) do
         local dependfile = target:dependfile(headerfile.."meta")
         depend.on_changed(function ()
-            table.insert(changedfiles, headerfile);
-            if (not disable_reflection) then
+            table.insert(changedheaders, headerfile);
+            if (not disable_meta) then
                 cprint("${magenta}%s.reflection.header ${clear}%s", target:name(), headerfile)
             end
         end, {dependfile = dependfile, files = {headerfile}})
     end
     if rebuild then
-        changedfiles = headerfiles
+        changedheaders = headerfiles
     end
     -- generate dummy .cpp file
-    if(#changedfiles > 0) then
+    if(#changedheaders > 0) then
         local api = target:extraconf("rules", "c++.codegen", "api")
         -- gen configure file
         local function meta_task(index)
@@ -84,28 +85,25 @@ function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unity_file,
         end
 
         -- compile jsons to c++
-        if (not disable_reflection) then
-            local unity_cpp = io.open(unity_file, "w")
-            for _, headerfile in ipairs(changedfiles) do
+        if (not disable_meta) then
+            local unity_cpp = io.open(unityfile, "w")
+            for _, headerfile in ipairs(changedheaders) do
                 headerfile = path.absolute(headerfile)
-                unity_file =
-                path.absolute(unity_file)
-                headerfile = path.relative(headerfile, path.directory(unity_file))
+                unityfile = path.absolute(unityfile)
+                headerfile = path.relative(headerfile, path.directory(unityfile))
                 unity_cpp:print("#include \"%s\"", headerfile)
             end
             unity_cpp:close()
             -- build generated cpp to json
-            meta_cmd_compile(unity_file, rootdir, metadir, target, opt)
+            meta_cmd_compile(unityfile, rootdir, metadir, target, opt)
             target:data_set("reflection.need_mako", true)
         end
     end
 end
 
-function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
-    import("find_sdk")
-    local python = find_sdk.find_program("python3")
+function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
     -- generate headers dummy
-    local generators = {
+    local mako_generators = {
         {
             os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
             os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
@@ -149,13 +147,13 @@ function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file,
             os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
         },
     }
-    local disable_reflection = target:extraconf("rules", "c++.codegen", "disable_reflection")
+    local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
     local need_mako = target:data("reflection.need_mako")
     -- generate dummy .cpp file
-    if(need_mako) then
+    if (need_mako) then
         local api = target:extraconf("rules", "c++.codegen", "api")
         -- compile jsons to c++
-        if (not disable_reflection) then
+        if (not disable_meta) then
             local depsmeta = {}
             for _, dep in pairs(target:deps()) do
                 local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
@@ -165,11 +163,11 @@ function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file,
             end
             -- compile jsons to c++
             local function mako_task(index)
-                local generator = generators[index][1]
+                local generator = mako_generators[index][1]
                 cprint("${cyan}%s.%s${clear} %s", target:name(), path.filename(generator), path.absolute(metadir))
                 local command = {
                     generator,
-                    path.absolute(metadir), path.absolute(generators[index].gendir or gendir), api or target:name()
+                    path.absolute(metadir), path.absolute(mako_generators[index].gendir or gendir), api or target:name()
                 }
                 for _, dep in ipairs(depsmeta) do
                     table.insert(command, dep)
@@ -177,7 +175,7 @@ function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file,
                 os.iorunv(python.program, command)
             end
             scheduler.co_group_begin(target:name()..".cpp-codegen.mako", function ()
-                for index, generator in pairs(generators) do
+                for index, generator in pairs(mako_generators) do
                     scheduler.co_start(mako_task, index)
                 end
             end)
@@ -187,17 +185,17 @@ function _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file,
 end
 
 function meta_compile(target, rootdir, opt)
-    local refl_batch = target:data("reflection.batch")
+    local refl_batch = target:data("meta.batch")
     if refl_batch then
         for _, sourceinfo in ipairs(refl_batch) do
             if sourceinfo then
                 local headerfiles = sourceinfo.headerfiles
-                local unity_file = sourceinfo.sourcefile
+                local unityfile = sourceinfo.sourcefile
                 local metadir = sourceinfo.metadir
                 local gendir = sourceinfo.gendir
                 local toolgendir = sourceinfo.toolgendir
                 if headerfiles then
-                    _meta_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
+                    _meta_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
                 end
             end
         end
@@ -205,17 +203,17 @@ function meta_compile(target, rootdir, opt)
 end
 
 function mako_compile(target, rootdir, opt)
-    local refl_batch = target:data("reflection.batch")
+    local refl_batch = target:data("meta.batch")
     if refl_batch then
         for _, sourceinfo in ipairs(refl_batch) do
             if sourceinfo then
                 local headerfiles = sourceinfo.headerfiles
-                local unity_file = sourceinfo.sourcefile
+                local unityfile = sourceinfo.sourcefile
                 local metadir = sourceinfo.metadir
                 local gendir = sourceinfo.gendir
                 local toolgendir = sourceinfo.toolgendir
                 if headerfiles then
-                    _mako_compile(target, rootdir, metadir, gendir, toolgendir, unity_file, headerfiles, opt)
+                    _mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
                 end
             end
         end
@@ -223,7 +221,6 @@ function mako_compile(target, rootdir, opt)
 end
 
 function _generate_once()
-    import("core.project.project")
     local targets = project.ordertargets()
     local meta_task = function (target)
         local opt = {}
@@ -259,7 +256,8 @@ function _generate_once()
             target:add("files", file)
         end
     end
-    -- generate meta files
+
+    -- compile meta files
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
             scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
@@ -268,6 +266,7 @@ function _generate_once()
         end
     end
 
+    -- compile mako templates
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
             scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
@@ -281,6 +280,7 @@ function _generate_once()
             end)
         end
     end
+    
     -- wait all
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
@@ -303,32 +303,32 @@ function main(target, headerfiles)
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
     local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen", target:name())
     local toolgendir = path.join(target:autogendir({root = true}), target:plat(), "tool/generated", target:name())
-    local reflection_batch = {}
+    local meta_batch = {}
     local id = 1
     local count = 0
     for idx, headerfile in pairs(headerfiles) do
-        local unity_file
+        local unityfile
         if batchsize and count >= batchsize then
             id = id + 1
             count = 0
         end
-        unity_file = path.join(sourcedir, "reflection_" .. tostring(id) .. ".cpp")
+        unityfile = path.join(sourcedir, "reflection_" .. tostring(id) .. ".cpp")
         count = count + 1
         -- batch
-        if unity_file then
-            local sourceinfo = reflection_batch[id]
+        if unityfile then
+            local sourceinfo = meta_batch[id]
             if not sourceinfo then
                 sourceinfo = {}
-                sourceinfo.sourcefile = unity_file
+                sourceinfo.sourcefile = unityfile
                 sourceinfo.metadir = metadir
                 sourceinfo.gendir = gendir
                 sourceinfo.toolgendir = toolgendir
-                reflection_batch[id] = sourceinfo
+                meta_batch[id] = sourceinfo
             end
             sourceinfo.headerfiles = sourceinfo.headerfiles or {}
             table.insert(sourceinfo.headerfiles, headerfile)
         end
     end
     -- save unit batch
-    target:data_set("reflection.batch", reflection_batch)
+    target:data_set("meta.batch", meta_batch)
 end

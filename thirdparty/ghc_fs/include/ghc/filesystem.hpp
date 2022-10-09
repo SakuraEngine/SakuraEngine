@@ -45,6 +45,12 @@
 #ifndef GHC_FILESYSTEM_H
 #define GHC_FILESYSTEM_H
 
+#ifndef GHC_FILESYSTEM_IMPLEMENTATION
+    #ifndef GHC_FILESYSTEM_FWD
+        #define GHC_FILESYSTEM_FWD
+    #endif
+#endif
+
 // #define BSD manifest constant only in
 // sys/param.h
 #ifndef _WIN32
@@ -100,52 +106,53 @@
 #if defined(GHC_FILESYSTEM_IMPLEMENTATION)
 #define GHC_EXPAND_IMPL
 #define GHC_INLINE
-#ifdef GHC_OS_WINDOWS
-#ifndef GHC_FS_API
-#define GHC_FS_API
-#endif
-#ifndef GHC_FS_API_CLASS
-#define GHC_FS_API_CLASS
-#endif
-#else
-#ifndef GHC_FS_API
-#define GHC_FS_API __attribute__((visibility("default")))
-#endif
-#ifndef GHC_FS_API_CLASS
-#define GHC_FS_API_CLASS __attribute__((visibility("default")))
-#endif
-#endif
+    #ifdef GHC_OS_WINDOWS
+        #ifndef GHC_FS_API
+            #define GHC_FS_API
+        #endif
+        #ifndef GHC_FS_API_CLASS
+            #define GHC_FS_API_CLASS
+        #endif
+    #else
+        #ifndef GHC_FS_API
+            #define GHC_FS_API __attribute__((visibility("default")))
+        #endif
+        #ifndef GHC_FS_API_CLASS
+            #define GHC_FS_API_CLASS __attribute__((visibility("default")))
+        #endif
+    #endif
 #elif defined(GHC_FILESYSTEM_FWD)
-#define GHC_INLINE
-#ifdef GHC_OS_WINDOWS
-#ifndef GHC_FS_API
-#define GHC_FS_API extern
-#endif
-#ifndef GHC_FS_API_CLASS
-#define GHC_FS_API_CLASS
-#endif
+    #define GHC_INLINE
+    #ifdef GHC_OS_WINDOWS
+        #ifndef GHC_FS_API
+            #define GHC_FS_API extern
+        #endif
+        #ifndef GHC_FS_API_CLASS
+            #define GHC_FS_API_CLASS
+        #endif
+    #else
+        #ifndef GHC_FS_API
+            #define GHC_FS_API extern
+        #endif
+        #ifndef GHC_FS_API_CLASS
+            #define GHC_FS_API_CLASS
+        #endif
+    #endif
 #else
-#ifndef GHC_FS_API
-#define GHC_FS_API extern
-#endif
-#ifndef GHC_FS_API_CLASS
-#define GHC_FS_API_CLASS
-#endif
-#endif
-#else
-#define GHC_EXPAND_IMPL
-#define GHC_INLINE inline
-#ifndef GHC_FS_API
-#define GHC_FS_API
-#endif
-#ifndef GHC_FS_API_CLASS
-#define GHC_FS_API_CLASS
-#endif
+    #define GHC_EXPAND_IMPL
+    #define GHC_INLINE inline
+        #ifndef GHC_FS_API
+            #define GHC_FS_API
+        #endif
+        #ifndef GHC_FS_API_CLASS
+            #define GHC_FS_API_CLASS
+        #endif
 #endif
 
 #ifdef GHC_EXPAND_IMPL
 
 #ifdef GHC_OS_WINDOWS
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 // additional includes
 #include <shellapi.h>

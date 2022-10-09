@@ -12,7 +12,7 @@ using namespace Live2D::Cubism::Framework;
 
 namespace Live2D { namespace Cubism { namespace Framework {
 
-namespace {
+namespace Pose {
 const csmFloat32 Epsilon= 0.001f;
 const csmFloat32 DefaultFadeInSeconds = 0.5f;
 
@@ -61,7 +61,7 @@ void CubismPose::PartData::Initialize(CubismModel* model)
     model->SetParameterValue(ParameterIndex, 1);
 }
 
-CubismPose::CubismPose() : _fadeTimeSeconds(DefaultFadeInSeconds)
+CubismPose::CubismPose() : _fadeTimeSeconds(Pose::DefaultFadeInSeconds)
                          , _lastModel(NULL)
 { }
 
@@ -70,6 +70,7 @@ CubismPose::~CubismPose()
 
 CubismPose* CubismPose::Create(const csmByte* pose3json, csmSizeInt size)
 {
+    using namespace Pose;
     CubismPose*         ret = CSM_NEW CubismPose();
     Utils::CubismJson*  json = Utils::CubismJson::Create(pose3json, size);
     Utils::Value&       root = json->GetRoot();
@@ -205,6 +206,8 @@ void CubismPose::CopyPartOpacities(CubismModel* model)
 
 void CubismPose::DoFade(CubismModel* model, csmFloat32 deltaTimeSeconds, csmInt32 beginIndex, csmInt32 partGroupCount)
 {
+    using namespace Pose;
+
     csmInt32    visiblePartIndex = -1;
     csmFloat32  newOpacity = 1.0f;
 
