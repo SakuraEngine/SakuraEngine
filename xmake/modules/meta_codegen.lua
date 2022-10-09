@@ -125,9 +125,8 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
         {
             os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
             os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_reader.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/json_writer.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_writer.cpp.mako")
+            os.projectdir()..vformat("/tools/codegen/json_serialize.cpp.mako")
         },
         {
             os.projectdir()..vformat("/tools/codegen/serialize.py"),

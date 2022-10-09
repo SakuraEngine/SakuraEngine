@@ -15,6 +15,8 @@ struct sreflect sattr(
 )
 GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
+    skr_guid_t placeHolder;
+
     using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };

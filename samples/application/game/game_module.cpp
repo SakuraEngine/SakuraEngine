@@ -4,6 +4,7 @@
 #include "platform/configure.h"
 #include "ghc/filesystem.hpp"
 #include "platform/memory.h"
+#include "utils/format.hpp"
 #include "resource/resource_system.h"
 #include "resource/local_resource_registry.h"
 #include "ecs/dual.h"

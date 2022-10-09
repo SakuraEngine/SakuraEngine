@@ -1,3 +1,4 @@
+#include <EASTL/string.h>
 #include "platform/vfs.h"
 #include "utils/io.hpp"
 #include "io_service_util.hpp"

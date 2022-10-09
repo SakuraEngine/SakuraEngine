@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <EASTL/set.h>
+#include <EASTL/string.h>
 #include "../common/common_utils.h"
 #include "platform/shared_library.h"
 #include "cgpu/extensions/cgpu_nsight.h"
@@ -16,7 +17,7 @@ inline eastl::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
     case GFSDK_Aftermath_Result_FAIL_DriverVersionNotSupported:
         return "Unsupported driver version - requires an NVIDIA R495 display driver or newer.";
     default:
-        return "Aftermath Error 0x" + eastl::to_string(result - GFSDK_Aftermath_Result_Fail);
+        return eastl::string("Aftermath Error 0x") + eastl::to_string(result - GFSDK_Aftermath_Result_Fail);
     }
 }
 
@@ -105,17 +106,17 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         // driver release) we may see redundant crash dumps. As a workaround,
         // attach a unique count to each generated file name.
         static int count = 0;
-        const std::string baseFileName =
-            applicationNameLength ? std::string(applicationName.data()) : std::string("CGPUApplication")
+        const eastl::string baseFileName =
+            applicationNameLength ? eastl::string(applicationName.data()) : eastl::string("CGPUApplication")
             + "-"
-            + std::to_string(baseInfo.pid)
+            + eastl::to_string(baseInfo.pid)
             + "-"
-            + std::to_string(++count);
+            + eastl::to_string(++count);
 
         // Write the crash dump data to a file using the .nv-gpudmp extension
         // registered with Nsight Graphics.
-        const std::string crashDumpFileName = baseFileName + ".nv-gpudmp";
-        std::ofstream dumpFile(crashDumpFileName, std::ios::out | std::ios::binary);
+        const eastl::string crashDumpFileName = baseFileName + ".nv-gpudmp";
+        std::ofstream dumpFile(crashDumpFileName.c_str(), std::ios::out | std::ios::binary);
         if (dumpFile)
         {
             dumpFile.write((const char*)pGpuCrashDump, gpuCrashDumpSize);

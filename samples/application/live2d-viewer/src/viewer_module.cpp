@@ -1,12 +1,12 @@
 #include <EASTL/algorithm.h>
 
 #include "../../../cgpu/common/utils.h"
-#include "utils/log.h"
+
+#include "utils/log.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/skr_imgui_rg.h"
 #include "imgui/imgui.h"
 
-#include "ghc/filesystem.hpp"
 #include "platform/vfs.h"
 #include "platform/thread.h"
 #include "platform/time.h"
@@ -41,7 +41,9 @@ public:
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr::io::RAMService* ram_service = nullptr;
+
 };
+#include "ghc/filesystem.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SLive2DViewerModule, Live2DViewer);
 SKR_MODULE_METADATA(u8R"(

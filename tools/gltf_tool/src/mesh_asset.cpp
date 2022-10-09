@@ -4,7 +4,7 @@
 #include "skr_renderer/mesh_resource.h"
 #include "resource/resource_factory.h"
 #include "utils/defer.hpp"
-#include "utils/log.h"
+#include "utils/log.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 
