@@ -3,7 +3,7 @@ target("SkrImageCoder")
     add_rules("skr.module", {api = "SKR_IMAGE_CODER"})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/", disable_reflection = true,
+        rootdir = "include/", disable_meta = true,
         api = "SKR_IMAGE_CODER"
     })
     add_deps("SkrRT", "zlib")

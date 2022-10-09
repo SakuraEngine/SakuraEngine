@@ -13,7 +13,7 @@ rule("utils.dxc")
         local spv_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "dxc-spv")
         local spvfilepath = path.join(spv_outputdir, hlsl_basename .. ".spv")
         local spvTextpath = path.join(spv_outputdir, hlsl_basename .. ".h")
-        batchcmds:show_progress(opt.progress, "${color.build.object}generating.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
+        batchcmds:show_progress(opt.progress, "${color.build.object}compiling.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
         batchcmds:mkdir(spv_outputdir)
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes",
@@ -29,7 +29,7 @@ rule("utils.dxc")
         -- hlsl to dxil
         local dxil_outputdir = path.join(path.absolute(target:autogendir()), "rules", "utils", "dxc-dxil")
         local dxilfilepath = path.join(dxil_outputdir, hlsl_basename .. ".dxil")
-        batchcmds:show_progress(opt.progress, "${color.build.object}generating.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
+        batchcmds:show_progress(opt.progress, "${color.build.object}compiling.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
         batchcmds:mkdir(dxil_outputdir)
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes", 

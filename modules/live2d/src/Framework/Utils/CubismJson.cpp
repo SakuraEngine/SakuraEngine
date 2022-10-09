@@ -10,10 +10,10 @@
 #include "Type/csmString.hpp"
 #include "CubismDebug.hpp"
 
-using namespace std; // for strtof
-
 //------------ LIVE2D NAMESPACE ------------
 namespace Live2D { namespace Cubism { namespace Framework { namespace Utils {
+
+using namespace std; // for strtof
 
 //StaticInitializeNotForClientCall()で初期化する
 Boolean* Boolean::TrueValue = NULL;
