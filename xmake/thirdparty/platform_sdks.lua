@@ -1,4 +1,4 @@
-task("unzip-gfx-sdk")
+task("unzip-platform-sdks")
     on_run(function ()
         import("find_sdk")
         if(os.host() == "windows") then
