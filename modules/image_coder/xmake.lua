@@ -6,7 +6,7 @@ target("SkrImageCoder")
         rootdir = "include/", disable_meta = true,
         api = "SKR_IMAGE_CODER"
     })
-    add_rules("c++.unity_build", {batchsize = 10})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     
     add_deps("SkrRT", "zlib")
     add_includedirs("include", {public=true})
