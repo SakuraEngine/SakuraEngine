@@ -21,6 +21,8 @@
 #ifndef STRINGIFY
     #define STRINGIFY(...) #__VA_ARGS__
 #endif
+
+#define sruntime_attr_name(index, expr) "\"RuntimeAttribute" # index "\" : \"" # expr "\""
 #ifdef __meta__
     #define sreflect __attribute__((annotate("__reflect__")))
     #define sfull_reflect __attribute__((annotate("__full_reflect__")))
@@ -28,6 +30,8 @@
     #define sattr(...) __attribute__((annotate(STRINGIFY(__VA_ARGS__))))
     #define spush_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
     #define spop_attr() __attribute__((annotate("__pop__")))
+
+    #define sruntime_attr(index, expr) __attribute__((annotate(sruntime_attr_name(index, expr)))) 
 #else
     #define sreflect
     #define sfull_reflect
@@ -35,6 +39,8 @@
     #define sattr(...)
     #define spush_attr(...)
     #define spop_attr()
+
+    #define sruntime_attr(index, expr) __attribute__((assume(((void)expr, true))))
 #endif
 
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
