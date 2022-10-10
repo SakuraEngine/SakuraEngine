@@ -88,7 +88,14 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
 
     // MemMaps
     if (desc->flags & CGPU_BCF_PERSISTENT_MAP_BIT)
-        B->pDxResource->Map(0, NULL, &B->super.cpu_mapped_address);
+    {
+        auto mapResult = B->pDxResource->Map(0, NULL, &B->super.cpu_mapped_address);
+        if (!SUCCEEDED(mapResult))
+        {
+            cgpu_warn("[D3D12] Map Buffer Resource Failed %d! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+                mapResult, desc->name ? desc->name : "", allocationSize, desc->format);
+        }
+    }
     B->mDxGpuAddress = B->pDxResource->GetGPUVirtualAddress();
 #if defined(XBOX)
     B->super.cpu_mapped_address->pCpuMappedAddress = (void*)B->mDxGpuAddress;
