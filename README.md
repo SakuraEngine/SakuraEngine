@@ -176,7 +176,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - simdjson v2.2.2 (Apache-2.0)
 - bitsery v5.2.2 (MIT)
 - fast_float v3.4.0
-- llfio 28ed462
 - ghc::filesystem v1.5.12
 - zlib v1.2.8
 - cgltf v1.13 (MIT)

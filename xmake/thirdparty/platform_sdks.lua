@@ -10,7 +10,6 @@ task("unzip-platform-sdks")
             find_sdk.install_lib("SDL2")
             find_sdk.install_lib("m3")
         end
-        find_sdk.install_lib("llfio")
     end)
 
 vk_includes_dir = "$(projectdir)/SDKs/vulkan"
