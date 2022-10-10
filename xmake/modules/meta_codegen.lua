@@ -264,9 +264,23 @@ function compile_task(compile_func, target, opt)
         end
     end
 end
-
-function generate_once()
-    local targets = project.ordertargets()
+function generate_once(targetname)
+    local all_targets = project.ordertargets()
+    local targets = {}
+    if (targetname ~= nil and targetname ~= "") then
+        table.insert(targets, project.target(targetname))
+        local deps = project.target(targetname):deps()
+        for _, pending_target in pairs(all_targets) do
+            -- ensure needed
+            for __, dep in pairs(deps) do
+                if (pending_target:name() == dep:name()) then
+                    table.insert(targets, pending_target)
+                end
+            end
+        end
+    else
+        targets = all_targets
+    end
 
     -- parameters
     local opt = {}
@@ -324,9 +338,9 @@ function generate_once()
     end
 end
 
-function main()
+function main(targetname)
     if not _g.generated then
-        generate_once()
+        generate_once(targetname)
         _g.generated = true
     end  
 end

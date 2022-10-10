@@ -68,7 +68,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
     if (draw_data->TotalVtxCount > 0)
     {
         // create or resize the vertex/index buffers
-        auto device = render_graph->get_backend_device();
+        // auto device = render_graph->get_backend_device();
         size_t vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
         size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
         auto font_handle = render_graph->create_texture(
