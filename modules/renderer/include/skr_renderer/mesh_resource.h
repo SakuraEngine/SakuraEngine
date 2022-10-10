@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRenderer/skr_renderer.configure.h"
-#include "platform/guid.h"
 #include "utils/types.h"
 
 typedef uint64_t skr_vertex_layout_id;
@@ -31,6 +30,7 @@ typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
 
 #ifdef __cplusplus
 #include <EASTL/vector.h>
+#include <EASTL/string.h>
 
 struct skr_mesh_primitive_t {
     skr_vertex_layout_id vertex_layout_id;

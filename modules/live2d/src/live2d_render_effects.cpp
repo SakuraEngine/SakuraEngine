@@ -1,8 +1,9 @@
+#include "math/vectormath.hpp"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/time.h"
+#include "platform/guid.hpp"
 #include "platform/thread.h"
-#include "math/vectormath.hpp"
 #include "utils/make_zeroed.hpp"
 
 #include "ecs/type_builder.hpp"

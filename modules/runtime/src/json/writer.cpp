@@ -1,5 +1,5 @@
 #include "json/writer.h"
-#include "platform/guid.h"
+#include "platform/guid.hpp"
 #include "utils/format.hpp"
 
 namespace skr::json

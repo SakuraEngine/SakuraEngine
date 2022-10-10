@@ -1,25 +1,22 @@
-#include "asset/cooker.hpp"
-#include "EASTL/shared_ptr.h"
-#include "asset/importer.hpp"
+#include <EASTL/shared_ptr.h>
+#include <ghc/filesystem.hpp>
+#include "simdjson.h"
 #include "ftl/task_counter.h"
-#include "ghc/filesystem.hpp"
+#include "ftl/task_scheduler.h"
+#include "asset/cooker.hpp"
+#include "asset/importer.hpp"
+#include "platform/memory.h"
 #include "platform/debug.h"
-#include "platform/guid.h"
+#include "platform/guid.hpp"
 #include "platform/vfs.h"
 #include "platform/thread.h"
-#include "simdjson.h"
 #include "utils/defer.hpp"
 #include "utils/format.hpp"
-#include "ftl/task_scheduler.h"
-#include "platform/memory.h"
-#include "platform/configure.h"
 #include "utils/log.hpp"
+#include "utils/io.hpp"
+
 #include "json/reader.h"
 #include "json/writer.h"
-#include <mutex>
-#include <stdio.h>
-#include "utils/io.hpp"
-#include "platform/vfs.h"
 
 namespace skd::asset
 {

@@ -1,7 +1,6 @@
 #include "type/type_registry.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
-#include "platform/guid.h"
 #include "platform/memory.h"
 #include "resource/resource_handle.h"
 #include "utils/hash.h"
