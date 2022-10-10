@@ -5,6 +5,7 @@ qtad_source_dir = "$(projectdir)/thirdparty/QtAdvancedDocking"
 target("QtAdvancedDocking")
     set_group("00.thirdparty")
     add_rules("qt.shared")
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = 5})
     add_defines("ADS_SHARED_EXPORT")
     add_frameworks("QtGui", "QtCore", "QtWidgets", {public = true})

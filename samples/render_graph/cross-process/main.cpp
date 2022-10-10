@@ -38,10 +38,11 @@ int main(int argc, char* argv[])
         SKR_LOG_DEBUG("exec_mode: %s, process id: %lld", argv[1], id);
         auto is_receiver = (strcmp(argv[1], "receiver") == 0);
 
-        if (!ghc::filesystem::exists("./cross-proc"))
+        std::error_code ec = {};
+        if (!ghc::filesystem::exists("./cross-proc", ec))
         {
             SKR_LOG_INFO("subdir cross-proc not existed, create it");
-            ghc::filesystem::create_directories(ghc::filesystem::path("./cross-proc"));
+            ghc::filesystem::create_directories(ghc::filesystem::path("./cross-proc"), ec);
         }
 
         if (is_receiver) 

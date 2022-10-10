@@ -5,12 +5,12 @@
     #pragma clang diagnostic ignored "-Wuninitialized-const-reference"
 #endif
 
+#include "utils/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
 #include "gtest/gtest.h"
 #include <EASTL/string.h>
 #include <fstream>
 #include <iostream>
-#include "utils/DAG.boost.hpp"
 
 class GraphTest : public ::testing::Test
 {

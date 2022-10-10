@@ -3,6 +3,7 @@ target("Example-RenderGraphTriangle")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-triangle",
         dxil_outdir = "/../resources/shaders/rg-triangle"})
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     set_kind("binary")
     add_deps("SkrRT", "SkrRenderGraph")
@@ -14,6 +15,7 @@ target("Example-RenderGraphDeferred")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-deferred",
         dxil_outdir = "/../resources/shaders/rg-deferred"})
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     set_kind("binary")
     add_deps("SkrRT", "SkrRenderGraph", "SkrImGui")
@@ -25,6 +27,7 @@ target("Example-RenderGraphCrossProcess")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cross-process",
         dxil_outdir = "/../resources/shaders/cross-process"})
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     set_kind("binary")
     add_deps("lmdb", "SkrRT", "SkrRenderGraph", "SkrImGui")
