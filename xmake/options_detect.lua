@@ -35,11 +35,3 @@ if(has_config("is_msvc")) then
     table.insert(project_cxflags, "/GR-")
     table.insert(project_cxflags, "/wd4251")
 end
-
--- exceptions
-if(has_config("is_msvc")) then
-    table.insert(project_cxflags, "/EHsc")
-elseif(has_config("is_clang")) then
-    table.insert(project_cxflags, "-fexceptions")
-    table.insert(project_cxflags, "-fcxx-exceptions")
-end

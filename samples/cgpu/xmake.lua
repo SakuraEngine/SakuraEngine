@@ -34,8 +34,8 @@ target("Example-CGPUTexture")
     add_files("cgpu-texture/*.c")
     add_files("cgpu-texture/**.hlsl")
     
-
-if (os.host() == "windows") then
+-- close this demo until we fix exception rule issue
+if (os.host() == "windows" and false) then
     target("Example-HotTriangle")
         set_group("04.examples/cgpu")
         add_rules("utils.dxc", {
@@ -43,7 +43,7 @@ if (os.host() == "windows") then
             dxil_outdir = "/../resources/shaders/hot-triangle"})
         set_kind("binary")
         -- file_watch.hpp needs exceptions
-        -- add_rules("c++.exception")
+        add_rules("c++.exception")
         add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
         add_deps("SkrRT", "SkrWASM")
         add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
