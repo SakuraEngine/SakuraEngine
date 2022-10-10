@@ -4,7 +4,6 @@
 #include "ecs/dual.h"
 #include "ftl/task_counter.h"
 #include "ghc/filesystem.hpp"
-#include "platform/guid.h"
 #include "platform/thread.h"
 #include "resource/config_resource.h"
 #include "resource/resource_header.h"
@@ -18,8 +17,6 @@
 #include "utils/format.hpp"
 #include "module/module_manager.hpp"
 #include "platform/vfs.h"
-#include <string>
-#include <vector>
 #include "utils/log.h"
 
 /*

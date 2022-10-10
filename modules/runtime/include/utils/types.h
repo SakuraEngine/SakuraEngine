@@ -1,6 +1,13 @@
 #pragma once
 #include "platform/configure.h"
 
+typedef struct skr_guid_t {
+    uint32_t Data1;
+    uint16_t Data2;
+    uint16_t Data3;
+    uint8_t Data4[8];
+} skr_guid_t;
+
 typedef struct skr_float2_t {
     struct
     {

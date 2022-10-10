@@ -1,22 +1,14 @@
 #pragma once
-#include "platform/configure.h"
-
-typedef struct skr_guid_t {
-    uint32_t Data1;
-    uint16_t Data2;
-    uint16_t Data3;
-    uint8_t Data4[8];
-} skr_guid_t;
-
-#if defined(__cplusplus)
-    #include <EASTL/string.h>
-    #include <string_view>
-    #include "platform/debug.h"
-    #include "utils/hash.h"
+#include "utils/types.h"
+#include <EASTL/string.h>
+#include "platform/debug.h"
+#include "utils/hash.h"
+    
 inline bool operator==(const skr_guid_t& a, const skr_guid_t& b)
 {
     return std::memcmp(&a, &b, sizeof(skr_guid_t)) == 0;
 }
+
 namespace skr::guid
 {
 struct hash {
@@ -25,6 +17,7 @@ struct hash {
         return skr_hash(&a, sizeof(skr_guid_t), 0);
     }
 };
+
 namespace details
 {
 constexpr const size_t short_guid_form_length = 36; // XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
@@ -87,7 +80,7 @@ constexpr skr_guid_t make_guid(const char (&str)[N])
 
     return make_guid_helper(str + (N == (long_guid_form_length + 1) ? 1 : 0));
 }
-constexpr skr_guid_t make_guid(const std::string_view& str)
+constexpr skr_guid_t make_guid(const eastl::string_view& str)
 {
     using namespace eastl::string_literals;
     if (str.size() != (long_guid_form_length + 1) && str.size() == (short_guid_form_length + 1))
@@ -121,4 +114,3 @@ constexpr skr_guid_t operator""_guid(const char* str, size_t N)
 } // namespace literals
 
 } // namespace skr::guid
-#endif
