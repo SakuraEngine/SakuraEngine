@@ -1,5 +1,6 @@
 target("Example-CGPUMandelbrot")
     set_group("04.examples/cgpu")
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-mandelbrot",
@@ -11,6 +12,7 @@ target("Example-CGPUMandelbrot")
 
 target("Example-CGPUIndexedInstance")
     set_group("04.examples/cgpu")
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-indexed-instance",
@@ -22,6 +24,7 @@ target("Example-CGPUIndexedInstance")
 
 target("Example-CGPUTexture")
     set_group("04.examples/cgpu")
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-texture",
@@ -39,6 +42,8 @@ if (os.host() == "windows") then
             spv_outdir = "/../resources/shaders/hot-triangle",
             dxil_outdir = "/../resources/shaders/hot-triangle"})
         set_kind("binary")
+        -- file_watch.hpp needs exceptions
+        -- add_rules("c++.exception")
         add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
         add_deps("SkrRT", "SkrWASM")
         add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
@@ -47,6 +52,7 @@ end
 
 target("Example-CGPU3D")
     set_group("04.examples/cgpu")
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.install-resources", {
         extensions = {".gltf", ".bin", ".png"},

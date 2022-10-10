@@ -5,6 +5,7 @@ target("GameRT")
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("game/include", {public=true})
     add_deps("SkrRT", "SkrScene", "SkrRenderer", "SkrImGui", "SkrInputSystem")
@@ -13,6 +14,7 @@ target("GameRT")
 target("Game")
     set_group("04.examples/application")
     set_kind("binary")
+    add_rules("c++.noexception")
     add_deps("GameRT")
     add_rules("utils.install-resources", {
         extensions = {".gltf", ".bin", ".png"},
@@ -35,6 +37,7 @@ target("GameTool")
         rootdir = "gametool/"
     })
     add_includedirs("gametool/include", {public=true})
+    add_rules("c++.noexception")
     add_deps("SkrTool", "GameRT")
     add_files("gametool/src/**.cpp")
     on_config(function (target, opt)
@@ -53,6 +56,7 @@ target("Example-VMemController")
     set_group("04.examples/application")
     set_kind("binary")
     add_deps("SkrImGui", "SkrRenderGraph")
+    add_rules("c++.noexception")
     add_files("vmem_controller/**.cpp")
     if (is_os("windows")) then 
         add_files("/../../resources/windows/sakura.rc")
@@ -73,6 +77,7 @@ target("Example-Live2DViewer")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Live2DViewer",
         dxil_outdir = "/../resources/shaders/Live2DViewer"})
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("live2d-viewer/include", {public=true})
     add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")

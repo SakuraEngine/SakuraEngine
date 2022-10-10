@@ -6,6 +6,7 @@ target("SkrInputSystem")
         rootdir = "include/",
         api = "SKR_INPUTSYSTEM"
     })
+    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_deps("SkrGAInput")
     add_includedirs("include", {public=true})

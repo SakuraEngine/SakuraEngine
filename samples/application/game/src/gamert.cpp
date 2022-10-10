@@ -31,7 +31,8 @@ GameRT)
 void SGameRTModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
-    auto resourceRoot = (ghc::filesystem::current_path() / "../resources").u8string();
+    std::error_code ec = {};
+    auto resourceRoot = (ghc::filesystem::current_path(ec) / "../resources").u8string();
     skr_vfs_desc_t vfs_desc = {};
     vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
     vfs_desc.override_mount_dir = resourceRoot.c_str();

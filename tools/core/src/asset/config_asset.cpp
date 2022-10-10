@@ -71,7 +71,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     skr_config_resource_t* resource = skr::resource::SConfigFactory::NewConfig(configType);
-    iter->second.Import(doc.value(), resource->configData);
+    iter->second.Import(doc.get_value().value_unsafe(), resource->configData);
     return resource; //导入具体数据
 }
 uint32_t SConfigCooker::Version()
