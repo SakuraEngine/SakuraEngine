@@ -1,8 +1,8 @@
 task("run-codegen-jobs")
-    on_run(function ()
+    on_run(function (targetname)
         import("core.base.scheduler")
         import("meta_codegen")
-        scheduler.co_start(meta_codegen)
+        scheduler.co_start(meta_codegen, targetname)
     end)
 
 rule("c++.codegen")

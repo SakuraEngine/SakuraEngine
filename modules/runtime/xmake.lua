@@ -39,16 +39,19 @@ target("SkrRT")
     
     -- unzip & link sdks
     before_build(function(target)
+        import("core.base.option")
+        local targetname = option.get("target")
+
         import("core.base.scheduler")
-        local function upzip_tasks()
+        local function upzip_tasks(targetname)
             import("core.project.task")
 
-            task.run("run-codegen-jobs")
+            task.run("run-codegen-jobs", {}, targetname)
             task.run("unzip-tracyclient")
             --task.run("unzip-wasm3")
             task.run("unzip-platform-sdks")
         end
-        scheduler.co_start(upzip_tasks)
+        scheduler.co_start(upzip_tasks, targetname)
     end)
 
     add_links(links_list, {public = true})
