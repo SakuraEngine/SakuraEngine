@@ -7,7 +7,7 @@
 #include "platform/configure.h"
 #include "debug.cpp"
 #include "vfs.cpp"
-#include "llfio/llfio_vfs.cpp"
+#include "standard/stdio_vfs.cpp"
 #ifdef SKR_OS_UNIX
     #include "unix/unix_vfs.cpp"
     #include "unix/process.cpp"
