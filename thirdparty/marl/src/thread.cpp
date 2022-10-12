@@ -55,6 +55,11 @@ namespace marl { using std::sort; using std::numeric_limits; using std::vector; 
 #include <thread>
 #endif
 
+size_t eastl::hash<class std::thread::id>::operator()(const class std::thread::id& _Keyval) const noexcept {
+    std::hash<std::thread::id> hasher;
+    return hasher(_Keyval);
+}
+
 namespace {
 
 struct CoreHasher {
