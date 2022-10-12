@@ -13,6 +13,7 @@ if (is_os("windows")) then
     includes("thirdparty/wasm3.lua")
 end
 includes("thirdparty/parallel_hashmap.lua")
+includes("thirdparty/marl.lua")
 includes("thirdparty/FiberTaskingLib.lua")
 includes("thirdparty/simdjson.lua")
 includes("thirdparty/bitsery.lua")
