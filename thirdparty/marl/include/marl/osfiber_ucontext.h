@@ -21,7 +21,14 @@
 #include "marl/debug.h"
 #include "marl/memory.h"
 
+#ifdef MARL_USE_EASTL
+#include <EASTL/functional.h>
+namespace marl { using eastl::function; }
+#else
 #include <functional>
+namespace marl { using std::function; }
+#endif
+
 #include <memory>
 
 #include <ucontext.h>
@@ -49,7 +56,7 @@ class OSFiber {
   static inline Allocator::unique_ptr<OSFiber> createFiber(
       Allocator* allocator,
       size_t stackSize,
-      const std::function<void()>& func);
+      const marl::function<void()>& func);
 
   // switchTo() immediately switches execution to the given fiber.
   // switchTo() must be called on the currently executing fiber.
@@ -58,7 +65,7 @@ class OSFiber {
  private:
   Allocator* allocator;
   ucontext_t context;
-  std::function<void()> target;
+  marl::function<void()> target;
   Allocation stack;
 };
 
@@ -81,7 +88,7 @@ Allocator::unique_ptr<OSFiber> OSFiber::createFiberFromCurrentThread(
 Allocator::unique_ptr<OSFiber> OSFiber::createFiber(
     Allocator* allocator,
     size_t stackSize,
-    const std::function<void()>& func) {
+    const marl::function<void()>& func) {
   union Args {
     OSFiber* self;
     struct {

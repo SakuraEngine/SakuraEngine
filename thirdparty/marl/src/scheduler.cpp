@@ -272,7 +272,7 @@ Allocator::unique_ptr<Scheduler::Fiber> Scheduler::Fiber::create(
     Allocator* allocator,
     uint32_t id,
     size_t stackSize,
-    const std::function<void()>& func) {
+    const marl::function<void()>& func) {
   return allocator->make_unique<Fiber>(
       OSFiber::createFiber(allocator, stackSize, func), id);
 }

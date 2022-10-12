@@ -53,7 +53,7 @@ class Event {
 // A simple multi-thread, single-queue task executor that shares a single mutex
 // across N threads. This implementation suffers from lock contention.
 static void SingleQueueTaskExecutor(benchmark::State& state) {
-  using Task = std::function<uint32_t(uint32_t)>;
+  using Task = marl::function<uint32_t(uint32_t)>;
 
   auto const numTasks = Schedule::numTasks(state);
   auto const numThreads = Schedule::numThreads(state);
@@ -120,7 +120,7 @@ BENCHMARK(SingleQueueTaskExecutor)->Apply(Schedule::args);
 // Tasks queues are evenly balanced, and each should take an equal amount of
 // time to execute.
 static void MultiQueueTaskExecutor(benchmark::State& state) {
-  using Task = std::function<uint32_t(uint32_t)>;
+  using Task = marl::function<uint32_t(uint32_t)>;
   using TaskQueue = std::vector<Task>;
 
   auto const numTasks = Schedule::numTasks(state);

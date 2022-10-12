@@ -17,19 +17,61 @@
 
 #include "debug.h"
 #include "memory.h"
-
-#include <algorithm>  // std::max
 #include <cstddef>    // size_t
-#include <utility>    // std::move
 
+#ifdef MARL_USE_EASTL
+#include <EASTL/deque.h>
+#include <EASTL/map.h>
+#include <EASTL/set.h>
+#include <EASTL/unordered_map.h>
+#include <EASTL/unordered_set.h>
+namespace marl { using eastl::map; using eastl::deque; using eastl::set; using eastl::unordered_map; using eastl::unordered_set; }
+template <>
+struct eastl::hash<std::thread::id> {
+    _CXX17_DEPRECATE_ADAPTOR_TYPEDEFS typedef std::thread::id _ARGUMENT_TYPE_NAME;
+    _CXX17_DEPRECATE_ADAPTOR_TYPEDEFS typedef size_t _RESULT_TYPE_NAME;
+
+    _NODISCARD size_t operator()(const std::thread::id _Keyval) const noexcept {
+        std::hash<std::thread::id> hasher;
+        return hasher(_Keyval);
+    }
+};
+
+#else
+#include <algorithm>  // std::max
+#include <utility>    // std::move
 #include <deque>
 #include <map>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
+namespace marl { using std::map; using std::deque; using std::set; using std::unordered_map; using std::unordered_set; }
+#endif
+
+#ifdef MARL_USE_EASTL
 
 namespace marl {
 namespace containers {
+template <typename T>
+using deque = marl::deque<T, EASTLAllocator>;
+
+template <typename K, typename V, typename C = eastl::less<K>>
+using map = marl::map<K, V, C, EASTLAllocator>;
+
+template <typename K, typename C = eastl::less<K>>
+using set = marl::set<K, C, EASTLAllocator>;
+
+template <typename K,
+          typename V,
+          typename H = eastl::hash<K>,
+          typename E = eastl::equal_to<K>>
+using unordered_map =
+    marl::unordered_map<K, V, H, E, EASTLAllocator>;
+
+template <typename K, typename H = eastl::hash<K>, typename E = eastl::equal_to<K>>
+using unordered_set = marl::unordered_set<K, H, E, EASTLAllocator>;
+
+#else
 
 ////////////////////////////////////////////////////////////////////////////////
 // STL wrappers
@@ -38,23 +80,25 @@ namespace containers {
 // See: https://github.com/google/marl/issues/129
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-using deque = std::deque<T, StlAllocator<T>>;
+using deque = marl::deque<T, StlAllocator<T>>;
 
 template <typename K, typename V, typename C = std::less<K>>
-using map = std::map<K, V, C, StlAllocator<std::pair<const K, V>>>;
+using map = marl::map<K, V, C, StlAllocator<std::pair<const K, V>>>;
 
 template <typename K, typename C = std::less<K>>
-using set = std::set<K, C, StlAllocator<K>>;
+using set = marl::set<K, C, StlAllocator<K>>;
 
 template <typename K,
           typename V,
           typename H = std::hash<K>,
           typename E = std::equal_to<K>>
 using unordered_map =
-    std::unordered_map<K, V, H, E, StlAllocator<std::pair<const K, V>>>;
+    marl::unordered_map<K, V, H, E, StlAllocator<std::pair<const K, V>>>;
 
 template <typename K, typename H = std::hash<K>, typename E = std::equal_to<K>>
-using unordered_set = std::unordered_set<K, H, E, StlAllocator<K>>;
+using unordered_set = marl::unordered_set<K, H, E, StlAllocator<K>>;
+
+#endif
 
 // take() takes and returns the front value from the deque.
 template <typename T>

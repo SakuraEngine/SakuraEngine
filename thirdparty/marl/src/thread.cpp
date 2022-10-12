@@ -18,7 +18,18 @@
 #include "marl/defer.h"
 #include "marl/trace.h"
 
+#ifdef MARL_USE_EASTL
+#include <EASTL/sort.h>
+#include <EASTL/numeric_limits.h> 
+#include <EASTL/vector.h> 
+namespace marl { using eastl::sort; using eastl::numeric_limits; using eastl::vector; }
+#else
 #include <algorithm>  // std::sort
+#include <limits>   // std::numeric_limits
+#include <vector>
+#include <array>
+namespace marl { using std::sort; using std::numeric_limits; using std::vector; }
+#endif
 
 #include <cstdarg>
 #include <cstdio>
@@ -26,10 +37,7 @@
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
-#include <array>
 #include <cstdlib>  // mbstowcs
-#include <limits>   // std::numeric_limits
-#include <vector>
 #undef max
 #elif defined(__APPLE__)
 #include <mach/thread_act.h>
@@ -61,9 +69,9 @@ namespace marl {
 
 #if defined(_WIN32)
 static constexpr size_t MaxCoreCount =
-    std::numeric_limits<decltype(Thread::Core::windows.index)>::max() + 1ULL;
+    marl::numeric_limits<decltype(Thread::Core::windows.index)>::max() + 1ULL;
 static constexpr size_t MaxGroupCount =
-    std::numeric_limits<decltype(Thread::Core::windows.group)>::max() + 1ULL;
+    marl::numeric_limits<decltype(Thread::Core::windows.group)>::max() + 1ULL;
 static_assert(sizeof(KAFFINITY) * 8ULL <= MaxCoreCount,
               "Thread::Core::windows.index is too small");
 
@@ -82,7 +90,7 @@ struct ProcessorGroup {
 };
 
 struct ProcessorGroups {
-  std::array<ProcessorGroup, MaxGroupCount> groups;
+  marl::array<ProcessorGroup, MaxGroupCount> groups;
   size_t count;
 };
 
@@ -183,7 +191,7 @@ Thread::Affinity Thread::Affinity::all(
   return affinity;
 }
 
-std::shared_ptr<Thread::Affinity::Policy> Thread::Affinity::Policy::anyOf(
+marl::shared_ptr<Thread::Affinity::Policy> Thread::Affinity::Policy::anyOf(
     Affinity&& affinity,
     Allocator* allocator /* = Allocator::Default */) {
   struct Policy : public Thread::Affinity::Policy {
@@ -214,7 +222,7 @@ std::shared_ptr<Thread::Affinity::Policy> Thread::Affinity::Policy::anyOf(
   return allocator->make_shared<Policy>(std::move(affinity));
 }
 
-std::shared_ptr<Thread::Affinity::Policy> Thread::Affinity::Policy::oneOf(
+marl::shared_ptr<Thread::Affinity::Policy> Thread::Affinity::Policy::oneOf(
     Affinity&& affinity,
     Allocator* allocator /* = Allocator::Default */) {
   struct Policy : public Thread::Affinity::Policy {
@@ -251,7 +259,7 @@ Thread::Affinity& Thread::Affinity::add(const Thread::Affinity& other) {
       cores.push_back(core);
     }
   }
-  std::sort(cores.begin(), cores.end());
+  marl::sort(cores.begin(), cores.end());
   return *this;
 }
 
@@ -266,7 +274,7 @@ Thread::Affinity& Thread::Affinity::remove(const Thread::Affinity& other) {
       cores.resize(cores.size() - 1);
     }
   }
-  std::sort(cores.begin(), cores.end());
+  marl::sort(cores.begin(), cores.end());
   return *this;
 }
 
@@ -290,7 +298,7 @@ Thread::Thread(Affinity&& affinity, Func&& func) {
   MARL_ASSERT(size > 0,
               "InitializeProcThreadAttributeList() did not give a size");
 
-  std::vector<uint8_t> buffer(size);
+  marl::vector<uint8_t> buffer(size);
   LPPROC_THREAD_ATTRIBUTE_LIST attributes =
       reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(buffer.data());
   CHECK_WIN32(InitializeProcThreadAttributeList(attributes, 1, 0, &size));

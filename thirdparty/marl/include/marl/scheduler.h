@@ -46,8 +46,8 @@ class Scheduler {
 
  public:
   using TimePoint = std::chrono::system_clock::time_point;
-  using Predicate = std::function<bool()>;
-  using ThreadInitializer = std::function<void(int workerId)>;
+  using Predicate = marl::function<bool()>;
+  using ThreadInitializer = marl::function<void(int workerId)>;
 
   // Config holds scheduler configuration settings that can be passed to the
   // Scheduler constructor.
@@ -64,7 +64,7 @@ class Scheduler {
       ThreadInitializer initializer;
 
       // Thread affinity policy to use for worker threads.
-      std::shared_ptr<Thread::Affinity::Policy> affinityPolicy;
+      marl::shared_ptr<Thread::Affinity::Policy> affinityPolicy;
     };
 
     WorkerThread workerThread;
@@ -88,7 +88,7 @@ class Scheduler {
     MARL_NO_EXPORT inline Config& setWorkerThreadInitializer(
         const ThreadInitializer&);
     MARL_NO_EXPORT inline Config& setWorkerThreadAffinityPolicy(
-        const std::shared_ptr<Thread::Affinity::Policy>&);
+        const marl::shared_ptr<Thread::Affinity::Policy>&);
   };
 
   // Constructor.
@@ -255,7 +255,7 @@ class Scheduler {
         Allocator* allocator,
         uint32_t id,
         size_t stackSize,
-        const std::function<void()>& func);
+        const marl::function<void()>& func);
 
     // createFromCurrentThread() constructs and returns a new fiber with the
     // given identifier for the current thread.
@@ -540,7 +540,7 @@ Scheduler::Config& Scheduler::Config::setWorkerThreadInitializer(
 }
 
 Scheduler::Config& Scheduler::Config::setWorkerThreadAffinityPolicy(
-    const std::shared_ptr<Thread::Affinity::Policy>& policy) {
+    const marl::shared_ptr<Thread::Affinity::Policy>& policy) {
   workerThread.affinityPolicy = policy;
   return *this;
 }

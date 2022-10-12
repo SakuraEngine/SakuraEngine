@@ -24,13 +24,13 @@ namespace eastl
 	class EASTL_API allocator_forge
 	{
 	public:
-		allocator_forge(const char* = NULL) {}
+		inline allocator_forge(const char* = NULL) {}
 
-		allocator_forge(const allocator_forge&) {}
+		inline allocator_forge(const allocator_forge&) {}
 
-		allocator_forge(const allocator_forge&, const char*) {}
+		inline allocator_forge(const allocator_forge&, const char*) {}
 
-		allocator_forge& operator=(const allocator_forge&) { return *this; }
+		inline allocator_forge& operator=(const allocator_forge&) { return *this; }
 
 		bool operator==(const allocator_forge&) { return true; }
 

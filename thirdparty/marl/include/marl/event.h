@@ -120,12 +120,12 @@ class Event {
 
     marl::mutex mutex;
     ConditionVariable cv;
-    containers::vector<std::shared_ptr<Shared>, 1> deps;
+    containers::vector<marl::shared_ptr<Shared>, 1> deps;
     const Mode mode;
     bool signalled;
   };
 
-  const std::shared_ptr<Shared> shared;
+  const marl::shared_ptr<Shared> shared;
 };
 
 Event::Shared::Shared(Allocator* allocator, Mode mode, bool initialState)

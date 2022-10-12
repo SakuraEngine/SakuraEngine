@@ -45,7 +45,13 @@
 #include "marl/export.h"
 #include "marl/memory.h"
 
+#ifdef MARL_USE_EASTL
+#include <EASTL/functional.h>
+namespace marl { using eastl::function; }
+#else
 #include <functional>
+namespace marl { using std::function; }
+#endif
 #include <memory>
 
 extern "C" {
@@ -80,7 +86,7 @@ class OSFiber {
   MARL_NO_EXPORT static inline Allocator::unique_ptr<OSFiber> createFiber(
       Allocator* allocator,
       size_t stackSize,
-      const std::function<void()>& func);
+      const marl::function<void()>& func);
 
   // switchTo() immediately switches execution to the given fiber.
   // switchTo() must be called on the currently executing fiber.
@@ -92,7 +98,7 @@ class OSFiber {
 
   Allocator* allocator;
   marl_fiber_context context;
-  std::function<void()> target;
+  marl::function<void()> target;
   Allocation stack;
 };
 
@@ -114,7 +120,7 @@ Allocator::unique_ptr<OSFiber> OSFiber::createFiberFromCurrentThread(
 Allocator::unique_ptr<OSFiber> OSFiber::createFiber(
     Allocator* allocator,
     size_t stackSize,
-    const std::function<void()>& func) {
+    const marl::function<void()>& func) {
   Allocation::Request request;
   request.size = stackSize;
   request.alignment = 16;
