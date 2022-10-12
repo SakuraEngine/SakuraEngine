@@ -18,6 +18,7 @@
 #include "debug.h"
 #include "memory.h"
 #include <cstddef>    // size_t
+#include <thread>
 
 #ifdef MARL_USE_EASTL
 #include <EASTL/deque.h>
@@ -28,8 +29,8 @@
 
 namespace marl { using eastl::map; using eastl::deque; using eastl::set; using eastl::unordered_map; using eastl::unordered_set; }
 template <>
-struct eastl::hash<class std::thread::id> {
-  size_t operator()(const class std::thread::id& _Keyval) const noexcept;
+struct eastl::hash<std::thread::id> {
+  size_t operator()(const std::thread::id _Keyval) const noexcept;
 };
 
 #else
