@@ -1,4 +1,3 @@
-add_requires("gamenetworkingsockets", {configs={shared=true, webrtc=true, vs_runtime="MT"}})
 add_requires("marl")
 
 target("SkrDependencyGraph")

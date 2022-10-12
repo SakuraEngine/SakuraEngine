@@ -1,4 +1,3 @@
-
 generator_list["json"] = 
         {
             os.projectdir().."/tools/codegen/serialize_json.py",
