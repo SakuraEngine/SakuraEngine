@@ -40,8 +40,10 @@ namespace skr::task
         void wait(bool pin) { internal->GetScheduler()->WaitForCounter(internal.get(), pin); }
         void signal() { internal->Decrement(); }
         void clear() { internal->Reset(1); }
-        bool test() { return internal->Done(); }
+        bool test() const { return internal->Done(); }
     private:
+        static size_t gId;
+        size_t id;
         internal_t internal;
         friend scheduler_t;
     };
@@ -123,7 +125,7 @@ namespace skr::task
         void wait(bool pin) { internal.wait(); }
         void signal() { internal.signal(); }
         void clear() { internal.clear(); }
-        bool test() { return internal.test(); }
+        bool test() const { return internal.test(); }
     private:
         internal_t internal;
     };
@@ -144,7 +146,7 @@ namespace skr::task
     {
         if(event)
         {
-            marl::schedule([event = *event, lambda] mutable
+            marl::schedule([event = *event, lambda]() mutable
             {
                 SKR_DEFER({ event.signal(); });
                 lambda();
