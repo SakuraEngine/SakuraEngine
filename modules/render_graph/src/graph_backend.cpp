@@ -395,8 +395,8 @@ gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
                 update.count = 1;
                 update.binding = read_set_binding.second;
                 update.binding_type = resource_type;
-                auto buffer = resolve(executor, *buffer_readed);
-                update.buffers = &buffer;
+                cbvs[e_idx] = resolve(executor, *buffer_readed);
+                update.buffers = &cbvs[e_idx];
                 desc_set_updates.emplace_back(update);
             }
         }
