@@ -1,3 +1,4 @@
+#ifdef _WIN32
 #include "marl/debug.h"
 #include "marl/osfiber_windows.h"
 #define WIN32_LEAN_AND_MEAN 1
@@ -52,3 +53,4 @@ void __stdcall OSFiber::run(void* self) {
   func();
 }
 }
+#endif
