@@ -4,7 +4,6 @@
 #include "chunk_view.hpp"
 #include "entity.hpp"
 #include "ecs/dual.h"
-#include "ftl/task_counter.h"
 #include "stack.hpp"
 #include "type.hpp"
 #include "query.hpp"
@@ -20,8 +19,8 @@
 #include "type.hpp"
 #include "set.hpp"
 #include "utils/hashmap.hpp"
-#include "ftl/fiber.h"
 #include "EASTL/shared_ptr.h"
+#include "task/task.hpp"
 
 namespace dual
 {
@@ -118,8 +117,8 @@ struct dual_storage_t {
     uint32_t timestamp;
     std::unique_ptr<uint32_t[]> typeTimestamps;
     mutable dual::scheduler_t* scheduler;
-    mutable ftl::Fiber* mainFiber = nullptr;
-    mutable eastl::shared_ptr<ftl::TaskCounter> counter;
+    mutable std::thread::id currentThread;
+    mutable skr::task::counter_t counter;
 
     dual_storage_t();
     ~dual_storage_t();
