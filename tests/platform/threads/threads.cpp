@@ -46,12 +46,39 @@ TEST(Threads, CondVar)
     skr_init_mutex(&sm);
     std::cout << "Hello0" << std::endl;
     auto future = std::async([&]() {
+        SMutexLock lock(sm);
         skr_wait_condition_vars(&cv, &sm, UINT32_MAX);
         std::cout << "Hello2" << std::endl;
     });
     skr_thread_sleep(1000);
     std::cout << "Hello1" << std::endl;
-    skr_wake_condition_var(&cv);
+    {
+        SMutexLock lock(sm);
+        skr_wake_condition_var(&cv);
+    }
+    future.wait();
+    skr_destroy_condition_var(&cv);
+    skr_destroy_mutex(&sm);
+}
+
+TEST(Threads, RecursiveCondVar)
+{
+    SConditionVariable cv;
+    SMutex sm;
+    skr_init_condition_var(&cv);
+    skr_init_mutex_recursive(&sm);
+    std::cout << "Hello0" << std::endl;
+    auto future = std::async([&]() {
+        SMutexLock lock(sm);
+        skr_wait_condition_vars(&cv, &sm, UINT32_MAX);
+        std::cout << "Hello2" << std::endl;
+    });
+    skr_thread_sleep(1000);
+    std::cout << "Hello1" << std::endl;
+    {
+        SMutexLock lock(sm);
+        skr_wake_condition_var(&cv);
+    }
     future.wait();
     skr_destroy_condition_var(&cv);
     skr_destroy_mutex(&sm);
