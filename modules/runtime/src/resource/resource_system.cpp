@@ -383,9 +383,9 @@ void SResourceRequest::Update()
             if(factory->AsyncIO())
             {
                 skr_ram_io_t ramIO = {};
-                ramIO.bytes = nullptr;
+                //ramIO.bytes = nullptr;
                 ramIO.offset = 0;
-                ramIO.size = 0;
+                //ramIO.size = 0;
                 ramIO.path = u8path.c_str();
                 system->ioService->request(vfs, &ramIO, &request, &destination);
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;

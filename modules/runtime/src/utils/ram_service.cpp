@@ -104,6 +104,7 @@ void __ioThreadTask_RAM(void* arg)
         }
         __ioThreadTask_RAM_execute(service);
     }
+    return;
 }
 
 void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
