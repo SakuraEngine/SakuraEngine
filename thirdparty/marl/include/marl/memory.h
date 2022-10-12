@@ -25,8 +25,10 @@
 #include <EASTL/shared_ptr.h>
 #include <EASTL/unique_ptr.h>
 
+namespace marl { using eastl::pair; using eastl::make_pair; }
 namespace marl { using eastl::array; using eastl::swap; }
-namespace marl { using eastl::unique_ptr; using eastl::shared_ptr; }
+namespace marl { using eastl::unique_ptr; }
+namespace marl { using eastl::make_shared; using eastl::shared_ptr; }
 namespace marl { using eastl::forward; }
 #else
 #include <array>
@@ -34,6 +36,8 @@ namespace marl { using eastl::forward; }
 #include <memory>
 #include <mutex>
 #include <utility>  // std::forward
+
+namespace marl { using std::pair; using std::make_pair; }
 namespace marl { using std::array; using std::swap; }
 namespace marl { using std::unique_ptr; }
 namespace marl { using std::mutex; using std::forward; }

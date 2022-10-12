@@ -25,6 +25,8 @@
 #include <EASTL/set.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/unordered_set.h>
+#include <thread>
+
 namespace marl { using eastl::map; using eastl::deque; using eastl::set; using eastl::unordered_map; using eastl::unordered_set; }
 template <>
 struct eastl::hash<std::thread::id> {

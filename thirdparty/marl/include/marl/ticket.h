@@ -77,7 +77,7 @@ class Ticket {
     MARL_NO_EXPORT inline void take(size_t count, const F& f);
 
    private:
-    std::shared_ptr<Shared> shared = std::make_shared<Shared>();
+    marl::shared_ptr<Shared> shared = marl::make_shared<Shared>();
     UnboundedPool<Record> pool;
   };
 
@@ -110,7 +110,7 @@ class Ticket {
 
     ConditionVariable isCalledCondVar;
 
-    std::shared_ptr<Shared> shared;
+    marl::shared_ptr<Shared> shared;
     Record* next = nullptr;  // guarded by shared->mutex
     Record* prev = nullptr;  // guarded by shared->mutex
     OnCall onCall;           // guarded by shared->mutex

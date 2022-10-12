@@ -72,14 +72,14 @@ class WaitGroup {
     ConditionVariable cv;
     marl::mutex mutex;
   };
-  const std::shared_ptr<Data> data;
+  const marl::shared_ptr<Data> data;
 };
 
 WaitGroup::Data::Data(Allocator* allocator) : cv(allocator) {}
 
 WaitGroup::WaitGroup(unsigned int initialCount /* = 0 */,
                      Allocator* allocator /* = Allocator::Default */)
-    : data(std::make_shared<Data>(allocator)) {
+    : data(marl::make_shared<Data>(allocator)) {
   data->count = initialCount;
 }
 
