@@ -227,7 +227,7 @@ class BoundedPool : public Pool<T> {
   // blocking.
   // The boolean of the returned pair is true on success, or false if the pool
   // is empty.
-  MARL_NO_EXPORT inline std::pair<Loan, bool> tryBorrow() const;
+  MARL_NO_EXPORT inline marl::pair<Loan, bool> tryBorrow() const;
 
  private:
   class Storage : public Pool<T>::Storage {
@@ -294,13 +294,13 @@ void BoundedPool<T, N, POLICY>::borrow(size_t n, const F& f) const {
 }
 
 template <typename T, int N, PoolPolicy POLICY>
-std::pair<typename BoundedPool<T, N, POLICY>::Loan, bool>
+marl::pair<typename BoundedPool<T, N, POLICY>::Loan, bool>
 BoundedPool<T, N, POLICY>::tryBorrow() const {
   Item* item = nullptr;
   {
     marl::lock lock(storage->mutex);
     if (storage->free == nullptr) {
-      return std::make_pair(Loan(), false);
+      return marl::make_pair(Loan(), false);
     }
     item = storage->free;
     storage->free = storage->free->next;
@@ -309,7 +309,7 @@ BoundedPool<T, N, POLICY>::tryBorrow() const {
   if (POLICY == PoolPolicy::Reconstruct) {
     item->construct();
   }
-  return std::make_pair(Loan(item, storage), true);
+  return marl::make_pair(Loan(item, storage), true);
 }
 
 template <typename T, int N, PoolPolicy POLICY>

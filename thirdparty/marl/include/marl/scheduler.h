@@ -496,11 +496,11 @@ class Scheduler {
   // The immutable configuration used to build the scheduler.
   const Config cfg;
 
-  std::array<std::atomic<int>, 8> spinningWorkers;
+  marl::array<std::atomic<int>, 8> spinningWorkers;
   std::atomic<unsigned int> nextSpinningWorkerIdx = {0x8000000};
 
   std::atomic<unsigned int> nextEnqueueIndex = {0};
-  std::array<Worker*, MaxWorkerThreads> workerThreads;
+  marl::array<Worker*, MaxWorkerThreads> workerThreads;
 
   struct SingleThreadedWorkers {
     inline SingleThreadedWorkers(Allocator*);
