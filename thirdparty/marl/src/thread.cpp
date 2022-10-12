@@ -20,15 +20,13 @@
 
 #ifdef MARL_USE_EASTL
 #include <EASTL/sort.h>
-#include <EASTL/numeric_limits.h> 
 #include <EASTL/vector.h> 
-namespace marl { using eastl::sort; using eastl::numeric_limits; using eastl::vector; }
+namespace marl { using eastl::sort; using eastl::vector; }
 #else
 #include <algorithm>  // std::sort
-#include <limits>   // std::numeric_limits
 #include <vector>
 #include <array>
-namespace marl { using std::sort; using std::numeric_limits; using std::vector; }
+namespace marl { using std::sort; using std::vector; }
 #endif
 
 #include <cstdarg>
@@ -55,7 +53,7 @@ namespace marl { using std::sort; using std::numeric_limits; using std::vector; 
 #include <thread>
 #endif
 
-size_t eastl::hash<class std::thread::id>::operator()(const std::thread::id _Keyval) const noexcept {
+size_t eastl::hash<std::thread::id>::operator()(const std::thread::id _Keyval) const noexcept {
     std::hash<std::thread::id> hasher;
     return hasher(_Keyval);
 }

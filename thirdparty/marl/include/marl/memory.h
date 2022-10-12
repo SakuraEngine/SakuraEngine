@@ -24,23 +24,29 @@
 #include <EASTL/array.h>
 #include <EASTL/shared_ptr.h>
 #include <EASTL/unique_ptr.h>
+#include <EASTL/numeric_limits.h> 
 
 namespace marl { using eastl::pair; using eastl::make_pair; }
 namespace marl { using eastl::array; using eastl::swap; }
 namespace marl { using eastl::unique_ptr; }
+namespace marl { using eastl::numeric_limits; }
 namespace marl { using eastl::make_shared; using eastl::shared_ptr; }
-namespace marl { using eastl::forward; }
+namespace marl { using eastl::forward; using eastl::move; }
+namespace marl { using stdmutex = eastl::Internal::mutex; }
 #else
 #include <array>
 #include <cstdlib>
 #include <memory>
 #include <mutex>
 #include <utility>  // std::forward
+#include <limits>   // std::numeric_limits
 
 namespace marl { using std::pair; using std::make_pair; }
 namespace marl { using std::array; using std::swap; }
 namespace marl { using std::unique_ptr; }
-namespace marl { using std::mutex; using std::forward; }
+namespace marl { using std::numeric_limits; }
+namespace marl { using std::forward; using std::move; }
+namespace marl { using stdmutex = std::mutex; }
 #endif
 
 namespace marl {
@@ -286,7 +292,7 @@ class TrackedAllocator : public Allocator {
 
  private:
   Allocator* const allocator;
-  std::mutex mutex;
+  marl::stdmutex mutex;
   Stats stats_;
 };
 
@@ -309,14 +315,24 @@ size_t TrackedAllocator::Stats::bytesAllocated() const {
 TrackedAllocator::TrackedAllocator(Allocator* allocator)
     : allocator(allocator) {}
 
+namespace
+{
+struct __simple_lock
+{
+  inline __simple_lock(marl::stdmutex& mutex) : pmutex(&mutex) { pmutex->lock(); }
+  inline ~__simple_lock() { pmutex->unlock(); }
+  marl::stdmutex* pmutex;
+};
+}
+
 TrackedAllocator::Stats TrackedAllocator::stats() {
-  std::unique_lock<std::mutex> lock(mutex);
+  __simple_lock lock(mutex);
   return stats_;
 }
 
 Allocation TrackedAllocator::allocate(const Allocation::Request& request) {
   {
-    std::unique_lock<std::mutex> lock(mutex);
+    __simple_lock lock(mutex);
     auto& usageStats = stats_.byUsage[int(request.usage)];
     ++usageStats.count;
     usageStats.bytes += request.size;
@@ -326,7 +342,7 @@ Allocation TrackedAllocator::allocate(const Allocation::Request& request) {
 
 void TrackedAllocator::free(const Allocation& allocation) {
   {
-    std::unique_lock<std::mutex> lock(mutex);
+    __simple_lock lock(mutex);
     auto& usageStats = stats_.byUsage[int(allocation.request.usage)];
     MARL_ASSERT(usageStats.count > 0,
                 "TrackedAllocator detected abnormal free()");
@@ -489,7 +505,7 @@ void StlAllocator<T>::deallocate(T* p, std::size_t n) {
 
 template <typename T>
 typename StlAllocator<T>::size_type StlAllocator<T>::max_size() const {
-  return std::numeric_limits<size_type>::max() / sizeof(value_type);
+  return marl::numeric_limits<size_type>::max() / sizeof(value_type);
 }
 
 template <typename T>

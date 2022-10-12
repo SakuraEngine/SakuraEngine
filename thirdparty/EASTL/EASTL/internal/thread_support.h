@@ -19,7 +19,8 @@
 //
 // fatal error C1189: <mutex> is not supported when compiling with /clr or /clr:pure 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(EA_HAVE_CPP11_MUTEX) && !defined(EA_COMPILER_MANAGED_CPP) && !defined(__wasi__)
+#define EASTL_FORCE_NO_CPP11_MUTEX 1
+#if defined(EA_HAVE_CPP11_MUTEX) && !defined(EA_COMPILER_MANAGED_CPP) && !defined(__wasi__) && !defined(EASTL_FORCE_NO_CPP11_MUTEX)
 	#define EASTL_CPP11_MUTEX_ENABLED 1
 #else
 	#define EASTL_CPP11_MUTEX_ENABLED 0
