@@ -81,9 +81,7 @@ typedef struct skr_ram_io_service_desc_t {
 typedef void (*skr_async_io_callback_t)(skr_async_io_request_t* request, void* data);
 typedef struct skr_ram_io_t {
     const char8_t* path SKR_IF_CPP(= nullptr);
-    uint8_t* bytes SKR_IF_CPP(= nullptr);
     uint64_t offset SKR_IF_CPP(= 0);
-    uint64_t size SKR_IF_CPP(= 0);
     SkrIOServicePriority priority SKR_IF_CPP(= SKR_IO_SERVICE_PRIORITY_NORMAL);
     float sub_priority SKR_IF_CPP(= 0.f); /*0.f ~ 1.f*/
     skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
