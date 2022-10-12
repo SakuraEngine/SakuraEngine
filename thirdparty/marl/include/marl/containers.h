@@ -30,10 +30,7 @@
 namespace marl { using eastl::map; using eastl::deque; using eastl::set; using eastl::unordered_map; using eastl::unordered_set; }
 template <>
 struct eastl::hash<std::thread::id> {
-    _CXX17_DEPRECATE_ADAPTOR_TYPEDEFS typedef std::thread::id _ARGUMENT_TYPE_NAME;
-    _CXX17_DEPRECATE_ADAPTOR_TYPEDEFS typedef size_t _RESULT_TYPE_NAME;
-
-    _NODISCARD size_t operator()(const std::thread::id _Keyval) const noexcept {
+    size_t operator()(const std::thread::id _Keyval) const noexcept {
         std::hash<std::thread::id> hasher;
         return hasher(_Keyval);
     }
