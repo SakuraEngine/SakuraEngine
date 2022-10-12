@@ -20,11 +20,24 @@
 
 #include <stdint.h>
 
+#ifdef MARL_USE_EASTL
+#include <EASTL/array.h>
+#include <EASTL/shared_ptr.h>
+#include <EASTL/unique_ptr.h>
+
+namespace marl { using eastl::array; using eastl::swap; }
+namespace marl { using eastl::unique_ptr; using eastl::shared_ptr; }
+namespace marl { using eastl::forward; }
+#else
 #include <array>
 #include <cstdlib>
 #include <memory>
 #include <mutex>
 #include <utility>  // std::forward
+namespace marl { using std::array; using std::swap; }
+namespace marl { using std::unique_ptr; }
+namespace marl { using std::mutex; using std::forward; }
+#endif
 
 namespace marl {
 
@@ -107,7 +120,7 @@ class Allocator {
 
   // unique_ptr<T> is an alias to std::unique_ptr<T, Deleter>.
   template <typename T>
-  using unique_ptr = std::unique_ptr<T, Deleter>;
+  using unique_ptr = marl::unique_ptr<T, Deleter>;
 
   virtual ~Allocator() = default;
 
@@ -144,7 +157,7 @@ class Allocator {
   // make_shared() returns a new object allocated from the allocator
   // wrapped in a std::shared_ptr that respects the alignment of the type.
   template <typename T, typename... ARGS>
-  inline std::shared_ptr<T> make_shared(ARGS&&... args);
+  inline eastl::shared_ptr<T> make_shared(ARGS&&... args);
 
  protected:
   Allocator() = default;
@@ -218,7 +231,7 @@ Allocator::unique_ptr<T> Allocator::make_unique_n(size_t n, ARGS&&... args) {
 }
 
 template <typename T, typename... ARGS>
-std::shared_ptr<T> Allocator::make_shared(ARGS&&... args) {
+marl::shared_ptr<T> Allocator::make_shared(ARGS&&... args) {
   Allocation::Request request;
   request.size = sizeof(T);
   request.alignment = alignof(T);
@@ -226,7 +239,7 @@ std::shared_ptr<T> Allocator::make_shared(ARGS&&... args) {
 
   auto alloc = allocate(request);
   new (alloc.ptr) T(std::forward<ARGS>(args)...);
-  return std::shared_ptr<T>(reinterpret_cast<T*>(alloc.ptr), Deleter{this, 1});
+  return marl::shared_ptr<T>(reinterpret_cast<T*>(alloc.ptr), Deleter{this, 1});
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -254,7 +267,7 @@ class TrackedAllocator : public Allocator {
     inline size_t bytesAllocated() const;
 
     // Statistics per usage.
-    std::array<UsageStats, size_t(Allocation::Usage::Count)> byUsage;
+    marl::array<UsageStats, size_t(Allocation::Usage::Count)> byUsage;
   };
 
   // Constructor that wraps an existing allocator.
@@ -320,6 +333,56 @@ void TrackedAllocator::free(const Allocation& allocation) {
   }
   return allocator->free(allocation);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// EASTLAllocator
+///////////////////////////////////////////////////////////////////////////////
+
+struct EASTLAllocator {
+  inline EASTLAllocator(Allocator* allocator);
+
+  inline void* allocate(size_t n, int /*flags*/ = 0)
+  {
+    Allocation::Request req = {};
+    req.size = n;
+    req.alignment = alignof(uint8_t);
+    req.usage = Allocation::Usage::Stl;
+    Allocation result = allocator->allocate(req);
+    return result.ptr;
+  }
+
+  inline void* allocate(size_t n, size_t alignment, size_t alignmentOffset, int /*flags*/ = 0)
+  {
+    if ((alignmentOffset % alignment) == 0) // We check for (offset % alignmnent == 0) instead of (offset == 0) because any block which is
+                        // aligned on e.g. 64 also is aligned at an offset of 64 by definition.
+    {
+      Allocation::Request req = {};
+      req.size = n;
+      req.alignment = alignment;
+      req.usage = Allocation::Usage::Stl;
+      Allocation result = allocator->allocate(req);
+      return result.ptr;
+    }
+    return NULL;
+  }
+
+  inline void deallocate(void* p, size_t n)
+  { 
+    Allocation::Request req = {};
+    req.size = n;
+    req.alignment = alignof(uint8_t);
+    req.usage = Allocation::Usage::Stl;
+
+    Allocation alloc;
+    alloc.ptr = p;
+    alloc.request = req;
+    allocator->free(alloc);
+  }
+
+  Allocator* allocator;
+};
+
+EASTLAllocator::EASTLAllocator(Allocator* allocator) : allocator(allocator) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 // StlAllocator

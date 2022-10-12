@@ -48,11 +48,11 @@ struct DAGRunContext<void> {
 };
 template <typename T>
 struct DAGWork {
-  using type = std::function<void(T)>;
+  using type = marl::function<void(T)>;
 };
 template <>
 struct DAGWork<void> {
-  using type = std::function<void()>;
+  using type = marl::function<void()>;
 };
 }  // namespace detail
 

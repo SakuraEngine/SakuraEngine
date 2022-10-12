@@ -18,14 +18,20 @@
 #include "containers.h"
 #include "export.h"
 
+#ifdef MARL_USE_EASTL
+#include <EASTL/functional.h>
+namespace marl { using eastl::function; }
+#else
 #include <functional>
+namespace marl { using std::function; }
+#endif
 
 namespace marl {
 
 // Thread provides an OS abstraction for threads of execution.
 class Thread {
  public:
-  using Func = std::function<void()>;
+  using Func = marl::function<void()>;
 
   // Core identifies a logical processor unit.
   // How a core is identified varies by platform.
@@ -71,7 +77,7 @@ class Thread {
       // Windows requires that each thread is only associated with a
       // single affinity group, so the Policy's returned affinity will contain
       // cores all from the same group.
-      MARL_EXPORT static std::shared_ptr<Policy> anyOf(
+      MARL_EXPORT static marl::shared_ptr<Policy> anyOf(
           Affinity&& affinity,
           Allocator* allocator = Allocator::Default);
 
@@ -79,7 +85,7 @@ class Thread {
       // core from affinity. The single enabled core in the Policy's returned
       // affinity is:
       //      affinity[threadId % affinity.count()]
-      MARL_EXPORT static std::shared_ptr<Policy> oneOf(
+      MARL_EXPORT static marl::shared_ptr<Policy> oneOf(
           Affinity&& affinity,
           Allocator* allocator = Allocator::Default);
 

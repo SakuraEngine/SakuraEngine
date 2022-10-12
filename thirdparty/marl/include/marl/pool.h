@@ -54,7 +54,7 @@ class Pool {
   class Loan {
    public:
     MARL_NO_EXPORT inline Loan() = default;
-    MARL_NO_EXPORT inline Loan(Item*, const std::shared_ptr<Storage>&);
+    MARL_NO_EXPORT inline Loan(Item*, const marl::shared_ptr<Storage>&);
     MARL_NO_EXPORT inline Loan(const Loan&);
     MARL_NO_EXPORT inline Loan(Loan&&);
     MARL_NO_EXPORT inline ~Loan();
@@ -67,7 +67,7 @@ class Pool {
 
    private:
     Item* item = nullptr;
-    std::shared_ptr<Storage> storage;
+    marl::shared_ptr<Storage> storage;
   };
 
  protected:
@@ -124,7 +124,7 @@ void Pool<T>::Item::destruct() {
 // Pool<T>::Loan
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-Pool<T>::Loan::Loan(Item* item, const std::shared_ptr<Storage>& storage)
+Pool<T>::Loan::Loan(Item* item, const marl::shared_ptr<Storage>& storage)
     : item(item), storage(storage) {
   item->refcount++;
 }
@@ -175,8 +175,8 @@ typename Pool<T>::Loan& Pool<T>::Loan::operator=(const Loan& rhs) {
 template <typename T>
 typename Pool<T>::Loan& Pool<T>::Loan::operator=(Loan&& rhs) {
   reset();
-  std::swap(item, rhs.item);
-  std::swap(storage, rhs.storage);
+  marl::swap(item, rhs.item);
+  marl::swap(storage, rhs.storage);
   return *this;
 }
 
@@ -241,7 +241,7 @@ class BoundedPool : public Pool<T> {
     ConditionVariable returned;
     Item* free = nullptr;
   };
-  std::shared_ptr<Storage> storage;
+  marl::shared_ptr<Storage> storage;
 };
 
 template <typename T, int N, PoolPolicy POLICY>
@@ -369,7 +369,7 @@ class UnboundedPool : public Pool<T> {
   };
 
   Allocator* allocator;
-  std::shared_ptr<Storage> storage;
+  marl::shared_ptr<Storage> storage;
 };
 
 template <typename T, PoolPolicy POLICY>

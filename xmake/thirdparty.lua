@@ -1,8 +1,10 @@
+-- this must be on the top because other thirdparty libs may depend on it
+-- once a lib uses EASTL, it must link to SkrRT runtime
+includes("thirdparty/EASTL.lua") 
 includes("thirdparty/lmdb.lua")
 includes("thirdparty/mimalloc.lua")
 includes("thirdparty/boost.lua")
 includes("thirdparty/gsl.lua")
-includes("thirdparty/EASTL.lua")
 includes("thirdparty/DirectXMath.lua")
 includes("thirdparty/SDL2.lua")
 includes("thirdparty/cgltf.lua")

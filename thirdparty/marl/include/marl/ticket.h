@@ -62,7 +62,7 @@ class Ticket {
   struct Record;
 
  public:
-  using OnCall = std::function<void()>;
+  using OnCall = marl::function<void()>;
 
   // Queue hands out Tickets.
   class Queue {

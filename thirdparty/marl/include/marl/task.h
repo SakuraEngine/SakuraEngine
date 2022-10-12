@@ -17,14 +17,20 @@
 
 #include "export.h"
 
+#ifdef MARL_USE_EASTL
+#include <EASTL/functional.h>
+namespace marl { using eastl::function; }
+#else
 #include <functional>
+namespace marl { using std::function; }
+#endif
 
 namespace marl {
 
 // Task is a unit of work for the scheduler.
 class Task {
  public:
-  using Function = std::function<void()>;
+  using Function = marl::function<void()>;
 
   enum class Flags {
     None = 0,
