@@ -8,6 +8,7 @@
 #include "ecs/constants.hpp"
 #include "type_registry.hpp"
 #include "guid.hpp"
+#include "platform/guid.hpp"
 #include "sole.hpp"
 #if __SSE2__
     #include <emmintrin.h>

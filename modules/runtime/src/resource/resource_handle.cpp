@@ -1,7 +1,6 @@
 #include "resource/resource_handle.h"
 #include "platform/debug.h"
-#include "platform/guid.h"
-#include "platform/configure.h"
+#include "utils/types.h"
 #include "resource/resource_header.h"
 #include "resource/resource_system.h"
 

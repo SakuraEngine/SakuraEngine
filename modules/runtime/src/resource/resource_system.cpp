@@ -3,7 +3,7 @@
 #include "platform/thread.h"
 #include "utils/defer.hpp"
 #include "utils/io.hpp"
-#include "utils/log.h"
+#include "utils/log.hpp"
 #include "resource/resource_handle.h"
 #include "resource/resource_header.h"
 #include "platform/vfs.h"

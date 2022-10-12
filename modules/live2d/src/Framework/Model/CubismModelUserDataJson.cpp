@@ -11,7 +11,7 @@
 //--------- LIVE2D NAMESPACE ------------
 namespace Live2D {  namespace Cubism {  namespace Framework {
 
-namespace {
+namespace ModelUsrData {
 const csmChar* Meta = "Meta";
 const csmChar* UserDataCount = "UserDataCount";
 const csmChar* TotalUserDataSize = "TotalUserDataSize";
@@ -32,26 +32,31 @@ CubismModelUserDataJson::~CubismModelUserDataJson()
 
 csmInt32 CubismModelUserDataJson::GetUserDataCount() const
 {
+    using namespace ModelUsrData;
     return _json->GetRoot()[Meta][UserDataCount].ToInt();
 }
 
 csmInt32 CubismModelUserDataJson::GetTotalUserDataSize() const
 {
+    using namespace ModelUsrData;
     return _json->GetRoot()[Meta][TotalUserDataSize].ToInt();
 }
 
 csmString CubismModelUserDataJson::GetUserDataTargetType(const csmInt32 i) const
 {
+    using namespace ModelUsrData;
     return  _json->GetRoot()[UserData][i][Target].GetRawString();
 }
 
 CubismIdHandle CubismModelUserDataJson::GetUserDataId(const csmInt32 i) const
 {
+    using namespace ModelUsrData;
     return CubismFramework::GetIdManager()->GetId(_json->GetRoot()[UserData][i][Id].GetRawString());
 }
 
 const csmChar* CubismModelUserDataJson::GetUserDataValue(const csmInt32 i) const
 {
+    using namespace ModelUsrData;
     return _json->GetRoot()[UserData][i][Value].GetRawString();
 }
 

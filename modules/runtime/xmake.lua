@@ -3,6 +3,7 @@ add_requires("marl")
 
 target("SkrDependencyGraph")
     set_group("01.modules")
+    add_rules("c++.noexception")
     set_kind("static")
     add_deps("boost", "gsl", {public = true})
     set_optimize("fastest")
@@ -13,6 +14,7 @@ target("SkrDependencyGraph")
 
 target("SkrRT") 
     set_group("01.modules")
+    add_rules("c++.noexception")
     add_rules("skr.module", {api = "RUNTIME"})
     add_deps("SkrDependencyGraph", {public = false})
     add_deps("simdjson", "gsl", "fmt", "ghc_fs", "bitsery", "DirectXMath", "vulkan")
@@ -40,13 +42,24 @@ target("SkrRT")
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
         add_files("src/**/build.*.m", "src/**/build.*.mm")
     end
+    
     -- unzip & link sdks
     before_build(function(target)
-        import("core.project.task")
-        task.run("unzip-tracyclient")
-        --task.run("unzip-wasm3")
-        task.run("unzip-gfx-sdk")
+        import("core.base.option")
+        local targetname = option.get("target")
+
+        import("core.base.scheduler")
+        local function upzip_tasks(targetname)
+            import("core.project.task")
+
+            task.run("run-codegen-jobs", {}, targetname)
+            task.run("unzip-tracyclient")
+            --task.run("unzip-wasm3")
+            task.run("unzip-platform-sdks")
+        end
+        scheduler.co_start(upzip_tasks, targetname)
     end)
+
     add_links(links_list, {public = true})
     -- boost ctx
     do

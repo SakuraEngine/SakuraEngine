@@ -3,9 +3,11 @@ target("SkrLive2D")
     add_rules("skr.module", {api = "SKR_LIVE2D"})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/", disable_reflection = true,
+        rootdir = "include/", disable_meta = true,
         api = "SKR_LIVE2D"
     })
+    add_rules("c++.noexception")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_deps("SkrRenderer", "SkrImageCoder")
     add_includedirs("include", "CubismNativeCore/include", {public=true})
     add_includedirs("src/Framework", {public=false})

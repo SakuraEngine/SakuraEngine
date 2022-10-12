@@ -1,4 +1,3 @@
-#include <ghc/filesystem.hpp>
 #include "utils/io.hpp"
 #include "utils/log.h"
 #include "platform/debug.h"
@@ -7,6 +6,7 @@
 #include "utils/make_zeroed.hpp"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_mesh.h"
+#include <ghc/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 

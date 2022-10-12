@@ -17,7 +17,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
  * @brief   Model3Jsonのキー文字列
  *
  */
-namespace {
+namespace ModelSettings {
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -127,20 +127,20 @@ csmBool CubismModelSettingJson::IsExistMotionGroupName(const csmChar* groupName)
 }
 csmBool CubismModelSettingJson::IsExistMotionSoundFile(const csmChar* groupName, csmInt32 index) const
 {
-    Utils::Value& node = (*_jsonValue[FrequentNode_Motions])[groupName][index][SoundPath];
+    Utils::Value& node = (*_jsonValue[FrequentNode_Motions])[groupName][index][ModelSettings::SoundPath];
     return !node.IsNull() && !node.IsError();
 }
 csmBool CubismModelSettingJson::IsExistMotionFadeIn(const csmChar* groupName, csmInt32 index) const
 {
-    Utils::Value& node = (*_jsonValue[FrequentNode_Motions])[groupName][index][FadeInTime];
+    Utils::Value& node = (*_jsonValue[FrequentNode_Motions])[groupName][index][ModelSettings::FadeInTime];
     return !node.IsNull() && !node.IsError();
 }
 csmBool CubismModelSettingJson::IsExistMotionFadeOut(const csmChar* groupName, csmInt32 index) const
 {
-    Utils::Value& node = (*_jsonValue[FrequentNode_Motions])[groupName][index][FadeOutTime];
+    Utils::Value& node = (*_jsonValue[FrequentNode_Motions])[groupName][index][ModelSettings::FadeOutTime];
     return !node.IsNull() && !node.IsError();
 }
-csmBool CubismModelSettingJson::IsExistUserDataFile() const { return !_json->GetRoot()[FileReferences][UserData].IsNull(); }
+csmBool CubismModelSettingJson::IsExistUserDataFile() const { return !_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::UserData].IsNull(); }
 
 
 csmBool CubismModelSettingJson::IsExistEyeBlinkParameters() const
@@ -152,7 +152,7 @@ csmBool CubismModelSettingJson::IsExistEyeBlinkParameters() const
 
     for (csmInt32 i = 0; i < _jsonValue[FrequentNode_Groups]->GetSize(); ++i)
     {
-        if (strcmp((*_jsonValue[FrequentNode_Groups])[i][Name].GetRawString(), EyeBlink) == 0)
+        if (strcmp((*_jsonValue[FrequentNode_Groups])[i][ModelSettings::Name].GetRawString(), ModelSettings::EyeBlink) == 0)
         {
             return true;
         }
@@ -169,7 +169,7 @@ csmBool CubismModelSettingJson::IsExistLipSyncParameters() const
 
     for (csmInt32 i = 0; i < _jsonValue[FrequentNode_Groups]->GetSize(); ++i)
     {
-        if (strcmp((*_jsonValue[FrequentNode_Groups])[i][Name].GetRawString(), LipSync) == 0)
+        if (strcmp((*_jsonValue[FrequentNode_Groups])[i][ModelSettings::Name].GetRawString(), ModelSettings::LipSync) == 0)
         {
             return true;
         }
@@ -186,15 +186,15 @@ CubismModelSettingJson::CubismModelSettingJson(const csmByte* buffer, csmSizeInt
         _jsonValue.Clear();
 
         // 順番はenum FrequentNodeと一致させる
-        _jsonValue.PushBack(&(_json->GetRoot()[Groups]));
-        _jsonValue.PushBack(&(_json->GetRoot()[FileReferences][Moc]));
-        _jsonValue.PushBack(&(_json->GetRoot()[FileReferences][Motions]));
-        _jsonValue.PushBack(&(_json->GetRoot()[FileReferences][DisplayInfo]));
-        _jsonValue.PushBack(&(_json->GetRoot()[FileReferences][Expressions]));
-        _jsonValue.PushBack(&(_json->GetRoot()[FileReferences][Textures]));
-        _jsonValue.PushBack(&(_json->GetRoot()[FileReferences][Physics]));
-        _jsonValue.PushBack(&(_json->GetRoot()[FileReferences][Pose]));
-        _jsonValue.PushBack(&(_json->GetRoot()[HitAreas]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::Groups]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::Moc]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::Motions]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::DisplayInfo]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::Expressions]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::Textures]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::Physics]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::FileReferences][ModelSettings::Pose]));
+        _jsonValue.PushBack(&(_json->GetRoot()[ModelSettings::HitAreas]));
     }
 }
 
@@ -276,11 +276,13 @@ csmInt32 CubismModelSettingJson::GetHitAreasCount()
 
 CubismIdHandle CubismModelSettingJson::GetHitAreaId(csmInt32 index)
 {
+    using namespace ModelSettings;
     return CubismFramework::GetIdManager()->GetId((*_jsonValue[FrequentNode_HitAreas])[index][Id].GetRawString());
 }
 
 const csmChar* CubismModelSettingJson::GetHitAreaName(csmInt32 index)
 {
+    using namespace ModelSettings;
     return (*_jsonValue[FrequentNode_HitAreas])[index][Name].GetRawString();
 }
 
@@ -311,11 +313,13 @@ csmInt32 CubismModelSettingJson::GetExpressionCount()
 
 const csmChar* CubismModelSettingJson::GetExpressionName(csmInt32 index)
 {
+    using namespace ModelSettings;
     return (*_jsonValue[FrequentNode_Expressions])[index][Name].GetRawString();
 }
 
 const csmChar* CubismModelSettingJson::GetExpressionFileName(csmInt32 index)
 {
+    using namespace ModelSettings;
     return (*_jsonValue[FrequentNode_Expressions])[index][FilePath].GetRawString();
 }
 
@@ -346,24 +350,28 @@ csmInt32 CubismModelSettingJson::GetMotionCount(const csmChar* groupName)
 
 const csmChar* CubismModelSettingJson::GetMotionFileName(const csmChar* groupName, csmInt32 index)
 {
+    using namespace ModelSettings;
     if (!IsExistMotionGroupName(groupName))return "";
     return (*_jsonValue[FrequentNode_Motions])[groupName][index][FilePath].GetRawString();
 }
 
 const csmChar* CubismModelSettingJson::GetMotionSoundFileName(const csmChar* groupName, csmInt32 index)
 {
+    using namespace ModelSettings;
     if (!IsExistMotionSoundFile(groupName, index))return "";
     return (*_jsonValue[FrequentNode_Motions])[groupName][index][SoundPath].GetRawString();
 }
 
 csmFloat32 CubismModelSettingJson::GetMotionFadeInTimeValue(const csmChar* groupName, csmInt32 index)
 {
+    using namespace ModelSettings;
     if (!IsExistMotionFadeIn(groupName, index))return -1.0f;
     return (*_jsonValue[FrequentNode_Motions])[groupName][index][FadeInTime].ToFloat();
 }
 
 csmFloat32 CubismModelSettingJson::GetMotionFadeOutTimeValue(const csmChar* groupName, csmInt32 index)
 {
+    using namespace ModelSettings;
     if (!IsExistMotionFadeOut(groupName, index))return -1.0f;
     return (*_jsonValue[FrequentNode_Motions])[groupName][index][FadeOutTime].ToFloat();
 }
@@ -371,6 +379,7 @@ csmFloat32 CubismModelSettingJson::GetMotionFadeOutTimeValue(const csmChar* grou
 
 const csmChar* CubismModelSettingJson::GetUserDataFile()
 {
+    using namespace ModelSettings;
     if (!IsExistUserDataFile())
     {
         return "";
@@ -380,6 +389,7 @@ const csmChar* CubismModelSettingJson::GetUserDataFile()
 
 csmBool CubismModelSettingJson::GetLayoutMap(csmMap<csmString, csmFloat32>& outLayoutMap)
 {
+    using namespace ModelSettings;
     csmMap<csmString, Utils::Value*>* map = _json->GetRoot()[Layout].GetMap();
     if (map == NULL)
     {
@@ -397,6 +407,7 @@ csmBool CubismModelSettingJson::GetLayoutMap(csmMap<csmString, csmFloat32>& outL
 
 csmInt32 CubismModelSettingJson::GetEyeBlinkParameterCount()
 {
+    using namespace ModelSettings;
     if (!IsExistEyeBlinkParameters())
     {
         return 0;
@@ -423,6 +434,7 @@ csmInt32 CubismModelSettingJson::GetEyeBlinkParameterCount()
 
 CubismIdHandle CubismModelSettingJson::GetEyeBlinkParameterId(csmInt32 index)
 {
+    using namespace ModelSettings;
     if (!IsExistEyeBlinkParameters())
     {
         return NULL;
@@ -446,6 +458,7 @@ CubismIdHandle CubismModelSettingJson::GetEyeBlinkParameterId(csmInt32 index)
 
 csmInt32 CubismModelSettingJson::GetLipSyncParameterCount()
 {
+    using namespace ModelSettings;
     if (!IsExistLipSyncParameters())
     {
         return 0;
@@ -472,6 +485,7 @@ csmInt32 CubismModelSettingJson::GetLipSyncParameterCount()
 
 CubismIdHandle CubismModelSettingJson::GetLipSyncParameterId(csmInt32 index)
 {
+    using namespace ModelSettings;
     if (!IsExistLipSyncParameters())
     {
         return NULL;

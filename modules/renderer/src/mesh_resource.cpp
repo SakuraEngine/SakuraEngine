@@ -10,7 +10,7 @@
 #include <EASTL/vector_map.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/hash_set.h>
-#include "ghc/filesystem.hpp"
+#include <ghc/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 

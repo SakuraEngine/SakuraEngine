@@ -1,6 +1,8 @@
 target("SkrGAInput")
     set_group("01.modules")
     add_rules("skr.module", {api = "GAINPUT_LIB"})
+    add_rules("c++.noexception")
+    -- add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_defines("GAINPUT_DEV", {public = true})
     add_defines("GAINPUT_LIB_IMPL", {public = true}) --??WTF?
     add_deps("SkrRT")

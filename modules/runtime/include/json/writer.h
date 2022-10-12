@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/configure.h"
 
 typedef enum ESkrJsonType
 {
@@ -10,13 +11,10 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
-    #include <stdint.h>
-    #include <iterator>
+    #include <EASTL/string.h>
     #include <EASTL/vector.h>
-    #include "utils/allocator.hpp"
     #include "resource/resource_handle.h"
     #include "fmt/format.h"
-    #include <EASTL/string.h>
     #include "utils/hashmap.hpp"
 
 struct RUNTIME_API skr_json_writer_t {

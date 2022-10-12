@@ -126,28 +126,17 @@ static FORCEINLINE const char* skr_vfs_filemode_to_string(ESkrFileMode mode)
     mode = (ESkrFileMode)(mode & ~SKR_FM_ALLOW_READ);
     switch (mode)
     {
-        case SKR_FM_READ:
-            return "r";
-        case SKR_FM_WRITE:
-            return "w";
-        case SKR_FM_APPEND:
-            return "a";
-        case SKR_FM_READ_BINARY:
-            return "rb";
-        case SKR_FM_WRITE_BINARY:
-            return "wb";
-        case SKR_FM_APPEND_BINARY:
-            return "ab";
-        case SKR_FM_READ_WRITE:
-            return "r+";
-        case SKR_FM_READ_APPEND:
-            return "a+";
-        case SKR_FM_READ_WRITE_BINARY:
-            return "rb+";
-        case SKR_FM_READ_APPEND_BINARY:
-            return "ab+";
-        default:
-            return "r";
+        case SKR_FM_READ: return "r";
+        case SKR_FM_WRITE: return "w";
+        case SKR_FM_APPEND: return "a";
+        case SKR_FM_READ_BINARY: return "rb";
+        case SKR_FM_WRITE_BINARY: return "wb";
+        case SKR_FM_APPEND_BINARY: return "ab";
+        case SKR_FM_READ_WRITE: return "r+";
+        case SKR_FM_READ_APPEND: return "a+";
+        case SKR_FM_READ_WRITE_BINARY: return "rb+";
+        case SKR_FM_READ_APPEND_BINARY: return "ab+";
+        default: return "r";
     }
 }
 static FORCEINLINE const char* skr_vfs_overwirte_filemode_to_string(ESkrFileMode mode)

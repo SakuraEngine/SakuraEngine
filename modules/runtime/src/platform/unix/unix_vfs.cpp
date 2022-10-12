@@ -14,7 +14,8 @@ ESkrFileMode mode, const char8_t* password, skr_vfile_t* out_file)
     filePath /= path;
     const char8_t* modeStr = skr_vfs_filemode_to_string(mode);
     FILE* cfile = fopen(filePath.c_str(), modeStr);
-    SKR_LOG_INFO("CurrentPath: %s", ghc::filesystem::current_path().c_str());
+    std::error_code ec = {};
+    SKR_LOG_INFO("CurrentPath: %s", ghc::filesystem::current_path(ec).c_str());
     // Might fail to open the file for read+write if file doesn't exist
     if (!cfile)
     {

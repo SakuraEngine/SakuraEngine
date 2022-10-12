@@ -4,7 +4,6 @@
 #include "ecs/dual.h"
 #include "ftl/task_counter.h"
 #include "ghc/filesystem.hpp"
-#include "platform/guid.h"
 #include "platform/thread.h"
 #include "resource/config_resource.h"
 #include "resource/resource_header.h"
@@ -18,8 +17,6 @@
 #include "utils/format.hpp"
 #include "module/module_manager.hpp"
 #include "platform/vfs.h"
-#include <string>
-#include <vector>
 #include "utils/log.h"
 
 /*
@@ -115,7 +112,8 @@ bool IsAsset(ghc::filesystem::path path)
     if (path.extension() != ".asset")
     {
         auto metaPath = path.string() + ".asset";
-        if (!ghc::filesystem::exists(metaPath)) // skip asset without meta
+        std::error_code ec = {};
+        if (!ghc::filesystem::exists(metaPath, ec)) // skip asset without meta
             return false;
         return true;
     }
@@ -126,7 +124,8 @@ int main(int argc, char** argv)
 {
     FrameMark;
     auto moduleManager = skr_get_module_manager();
-    auto root = ghc::filesystem::current_path();
+    std::error_code ec = {};
+    auto root = ghc::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameTool", true);
     moduleManager->init_module_graph(argc, argv);
@@ -151,12 +150,15 @@ int main(int argc, char** argv)
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
 
-    ghc::filesystem::recursive_directory_iterator iter(project->assetPath);
+    ghc::filesystem::recursive_directory_iterator iter(project->assetPath, ec);
     //----- scan project directory
     eastl::vector<ghc::filesystem::path> paths;
-    for (auto& entry : iter)
-        if (entry.is_regular_file() && IsAsset(entry.path()))
+    while (iter != end(iter))
+    {
+        if (iter->is_regular_file(ec) && IsAsset(iter->path()))
             paths.push_back(*iter);
+        iter.increment(ec);
+    }
     SKR_LOG_INFO("Project dir scan finished.");
     //----- import project assets (guid & type & path)
     {
@@ -169,8 +171,8 @@ int main(int argc, char** argv)
         });
     }
     SKR_LOG_INFO("Project asset import finished.");
-    ghc::filesystem::create_directories(project->outputPath);
-    ghc::filesystem::create_directories(project->dependencyPath);
+    ghc::filesystem::create_directories(project->outputPath, ec);
+    ghc::filesystem::create_directories(project->dependencyPath, ec);
     //----- schedule cook tasks (checking dependencies)
     {
         using iter_t = typename decltype(system.assets)::iterator;
