@@ -41,7 +41,6 @@ static inline T withUTF16Path(const char* path, T (*function)(const wchar_t*)) S
 skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
 {
     SKR_ASSERT(desc);
-    bool success = true;
     auto fs = (skr_vfs_t*)sakura_calloc(1, sizeof(skr_vfs_t));
     fs->mount_type = desc->mount_type;
     skr_vfs_get_native_procs(&fs->procs);
