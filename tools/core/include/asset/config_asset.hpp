@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrTool/tool.configure.h"
-#include "platform/guid.h"
-#include "asset/importer.hpp"
-#include "asset/cooker.hpp"
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
+#include "utils/types.h"
+#include "asset/importer.hpp"
+#include "asset/cooker.hpp"
 
 namespace skd sreflect
 {

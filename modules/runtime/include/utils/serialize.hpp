@@ -8,13 +8,10 @@
 #include "EASTL/string.h"
 #include "EASTL/fixed_vector.h"
 #include "gsl/span"
-#include "platform/guid.h"
 #include "platform/memory.h"
 #include "utils/types.h"
 #include "utils/te.hpp"
 #include "resource/resource_handle.h"
-#include <limits>
-#include <memory>
 
 namespace bitsery
 {

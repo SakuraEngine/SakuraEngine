@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "platform/guid.h"
+#include "utils/types.h"
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
 
@@ -50,14 +50,11 @@ void skr_typeid_xxxx(skr_type_id_t* id);
 #endif
 
 #if defined(__cplusplus)
-
+    #include "platform/guid.hpp"
     #include "EASTL/string.h"
     #include "gsl/span"
     #include "EASTL/vector.h"
     #include "utils/hashmap.hpp"
-    #include <memory>
-    #include <type_traits>
-    #include <new>
 
 namespace skr
 {

@@ -1,25 +1,22 @@
-#include "asset/cooker.hpp"
-#include "EASTL/shared_ptr.h"
-#include "asset/importer.hpp"
+#include <EASTL/shared_ptr.h>
+#include <ghc/filesystem.hpp>
+#include "simdjson.h"
 #include "ftl/task_counter.h"
-#include "ghc/filesystem.hpp"
+#include "ftl/task_scheduler.h"
+#include "asset/cooker.hpp"
+#include "asset/importer.hpp"
+#include "platform/memory.h"
 #include "platform/debug.h"
-#include "platform/guid.h"
+#include "platform/guid.hpp"
 #include "platform/vfs.h"
 #include "platform/thread.h"
-#include "simdjson.h"
 #include "utils/defer.hpp"
 #include "utils/format.hpp"
-#include "ftl/task_scheduler.h"
-#include "platform/memory.h"
-#include "platform/configure.h"
-#include "utils/log.h"
+#include "utils/log.hpp"
+#include "utils/io.hpp"
+
 #include "json/reader.h"
 #include "json/writer.h"
-#include <mutex>
-#include <stdio.h>
-#include "utils/io.hpp"
-#include "platform/vfs.h"
 
 namespace skd::asset
 {
@@ -120,7 +117,8 @@ std::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
         SCookContext* jobContext = (SCookContext*)userdata;
         auto metaAsset = jobContext->record;
         auto outputPath = metaAsset->project->outputPath;
-        ghc::filesystem::create_directories(outputPath);
+        std::error_code ec = {};
+        ghc::filesystem::create_directories(outputPath, ec);
         // TODO: platform dependent directory
         jobContext->output = outputPath / fmt::format("{}.bin", metaAsset->guid);
         auto system = GetCookSystem();
@@ -197,18 +195,19 @@ std::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
     auto resourcePath = metaAsset->project->outputPath / fmt::format("{}.bin", metaAsset->guid);
     auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
     auto checkUpToDate = [&]() -> bool {
-        if (!ghc::filesystem::is_regular_file(resourcePath))
+        std::error_code ec = {};
+        if (!ghc::filesystem::is_regular_file(resourcePath, ec))
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] resource not exist! resource guid: {}", guid);
             return false;
         }
-        if (!ghc::filesystem::is_regular_file(dependencyPath))
+        if (!ghc::filesystem::is_regular_file(dependencyPath, ec))
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file not exist! resource guid: {}", guid);
             return false;
         }
-        auto timestamp = ghc::filesystem::last_write_time(resourcePath);
-        if (ghc::filesystem::last_write_time(metaAsset->path) > timestamp)
+        auto timestamp = ghc::filesystem::last_write_time(resourcePath, ec);
+        if (ghc::filesystem::last_write_time(metaAsset->path, ec) > timestamp)
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] meta file modified! resource guid: {}", guid);
             return false;
@@ -258,7 +257,7 @@ std::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
             }
             if (record->type == skr_guid_t{})
             {
-                if (ghc::filesystem::last_write_time(record->path) > timestamp)
+                if (ghc::filesystem::last_write_time(record->path, ec) > timestamp)
                 {
                     SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file {} modified! resource guid: {}", record->path.u8string(), guid);
                     return false;
@@ -324,19 +323,20 @@ void* SCookContext::AddStaticDependency(skr_guid_t resource)
 
 SAssetRecord* SCookSystem::ImportAsset(SProject* project, ghc::filesystem::path path)
 {
+    std::error_code ec = {};
     if (path.is_relative())
         path = project->assetPath / path;
     auto metaPath = path;
     if(metaPath.extension() != ".meta")
         metaPath = path.string() + ".asset";
-    if (!ghc::filesystem::exists(metaPath))
+    if (!ghc::filesystem::exists(metaPath, ec))
     {
         SKR_LOG_ERROR("[SAssetRegistry::ImportAsset] meta file %s not exist", path.u8string().c_str());
         return nullptr;
     }
     auto record = SkrNew<SAssetRecord>();
     // TODO: replace file load with skr api
-    record->meta = simdjson::padded_string::load(metaPath.u8string());
+    record->meta = simdjson::padded_string::load(metaPath.u8string()).value_unsafe();
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
     skr::json::Read(doc["guid"].value_unsafe(), record->guid);

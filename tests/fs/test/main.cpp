@@ -16,7 +16,8 @@ public:
         abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
         abs_fs = skr_create_vfs(&abs_fs_desc);
         EXPECT_NE(abs_fs, nullptr);
-        const auto current_path = ghc::filesystem::current_path().u8string();
+        std::error_code ec = {};
+        const auto current_path = ghc::filesystem::current_path(ec).u8string();
         EXPECT_EQ(std::string(abs_fs->mount_dir), current_path);
     }
     void TearDown() override

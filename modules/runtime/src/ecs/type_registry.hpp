@@ -1,7 +1,6 @@
 #pragma once
 #include "arena.hpp"
 #include "type.hpp"
-#include "type.hpp"
 #include <assert.h>
 #include <EASTL/map.h>
 #include <EASTL/string_view.h>

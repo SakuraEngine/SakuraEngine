@@ -2,7 +2,7 @@
 #include "fmt/core.h"
 #include "fmt/format.h"
 #include "EASTL/string.h"
-#include "platform/guid.h"
+#include "utils/types.h"
 
 namespace fmt
 {

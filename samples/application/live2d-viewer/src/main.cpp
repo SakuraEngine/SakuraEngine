@@ -5,7 +5,8 @@
 int main(int argc, char** argv)
 {
     auto moduleManager = skr_get_module_manager();
-    auto root = ghc::filesystem::current_path();
+    std::error_code ec = {};
+    auto root = ghc::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("Live2DViewer", true);
     auto result = moduleManager->init_module_graph(argc, argv);

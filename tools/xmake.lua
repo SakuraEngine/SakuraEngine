@@ -15,10 +15,13 @@ target("SkrTool")
         rootdir = "core/",
         api = "TOOL"
     })
+    add_rules("c++.noexception")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
 if(has_config("build_usdtool")) then
 target("UsdTool")
     set_group("02.tools")
+    add_rules("c++.noexception")
     add_rules("skr.module", {api = "USDTOOL"})
     add_rules("c++.codegen", {
         files = {"usdtool/**.h", "usdtool/**.hpp"},
@@ -37,6 +40,8 @@ target("GLTFTool")
         files = {"gltf_tool/**.h", "gltf_tool/**.hpp"},
         rootdir = "gltf_tool/"
     })
+    add_rules("c++.noexception")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("gltf_tool/include", {public=true})
     add_packages("vcpkg::usd")
     add_deps("cgltf", "SkrTool", "GameRT")
@@ -51,6 +56,7 @@ target("ISPCTextureCompressor")
 
 target("SkrTextureCompiler")
     set_group("02.tools")
+    add_rules("c++.noexception")
     add_rules("skr.module", {api = "TEXTURE_COMPILER"})
     add_includedirs("texture_compiler/include", {public=true})
     add_deps("SkrTool", "GameRT", "ISPCTextureCompressor")
@@ -75,3 +81,5 @@ target("SkrCompiler")
         files = {"compiler/**.h", "compiler/**.hpp"},
         rootdir = "compiler/"
     })
+    add_rules("c++.noexception")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})

@@ -19,7 +19,6 @@ namespace skr::type
         return base;
     }
 %endif
-
     static skr_type_t* type_of_${record.id};
     const skr_type_t* type_of<${record.name}>::get()
     {

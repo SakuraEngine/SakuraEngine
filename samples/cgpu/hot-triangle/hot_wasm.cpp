@@ -126,16 +126,9 @@ struct SourceWatcher {
 
 void* watch_source()
 {
-    try
-    {
-        std::filesystem::path watch_path = __FILE__;
-        watch_path = watch_path.parent_path();
-        return new SourceWatcher(watch_path);
-    } //
-    catch (std::system_error err)
-    {
-        std::cout << err.what() << std::endl;
-    }
+    std::filesystem::path watch_path = __FILE__;
+    watch_path = watch_path.parent_path();
+    return new SourceWatcher(watch_path);
     return nullptr;
 }
 
