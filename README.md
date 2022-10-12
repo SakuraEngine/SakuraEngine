@@ -55,8 +55,8 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 
 | Platform                                                     | PNG             | JPEG                     | BMP                      | ICO                      | EXR                      | TGA                      |
 | ------------------------------------------------------------ | --------------- | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ |
-| <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Windows.png" height="20" /> Windows | libpng(v1.5.2)  | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: |
-| <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/MacOS.png" height="20" /> macOS | libpng(v1.5.27) | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: |
+| <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/Windows.png" height="20" /> Windows | libpng(v1.5.2)  | libjpeg-turbo | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: |
+| <img src="https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/platform-icons/MacOS.png" height="20" /> macOS | libpng(v1.5.27) | libjpeg-turbo | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: |
 
 
 
