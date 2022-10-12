@@ -11,6 +11,7 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
+    #include <EASTL/string.h>
     #include <EASTL/vector.h>
     #include "resource/resource_handle.h"
     #include "fmt/format.h"
