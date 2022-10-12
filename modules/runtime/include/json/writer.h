@@ -16,6 +16,7 @@ typedef enum ESkrJsonType
     #include "resource/resource_handle.h"
     #include "fmt/format.h"
     #include "utils/hashmap.hpp"
+    #include "platform/debug.h"
 
 struct RUNTIME_API skr_json_writer_t {
 public:

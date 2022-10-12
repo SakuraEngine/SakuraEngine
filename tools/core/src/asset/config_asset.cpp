@@ -43,11 +43,9 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     ftl::AtomicFlag counter(&GetCookSystem()->GetScheduler());
     counter.Set();
     skr_ram_io_t ramIO = {};
-    ramIO.bytes = nullptr;
     ramIO.offset = 0;
-    ramIO.size = 0;
     ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request,void* data) noexcept {
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
         auto pCounter = (ftl::AtomicFlag*)data;
         pCounter->Clear();
     };

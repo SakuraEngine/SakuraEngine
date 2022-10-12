@@ -29,9 +29,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
     counter.Set();
     // prepare io
     skr_ram_io_t ramIO = {};
-    ramIO.bytes = nullptr;
     ramIO.offset = 0;
-    ramIO.size = 0;
     ramIO.path = u8Path.c_str();
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
