@@ -55,30 +55,30 @@ void dual::scheduler_t::set_main_thread(const dual_storage_t* storage)
 void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
 {
     SKR_ASSERT(is_main_thread(type->storage));
-    // TODO: performance optimization
     eastl::vector<std::shared_ptr<ftl::TaskCounter>> deps;
-    skr_acquire_mutex(&entryMutex.mMutex);
-    auto pair = dependencyEntries.find(type);
-    if (pair == dependencyEntries.end())
     {
-        skr_release_mutex(&entryMutex.mMutex);
-        return;
+        // TODO: performance optimization
+        SMutexLock entryLock(entryMutex.mMutex);
+        auto pair = dependencyEntries.find(type);
+        if (pair == dependencyEntries.end())
+        {
+            return;
+        }
+        auto entries = pair->second.data();
+        auto count = type->type.length;
+        forloop (i, 0, count)
+        {
+            if (type_index_t(type->type.data[i]).is_tag())
+                break;
+            for (auto dep : entries[i].owned)
+                deps.push_back(dep);
+            for (auto p : entries[i].shared)
+                deps.push_back(p);
+            entries[i].shared.clear();
+            entries[i].owned.clear();
+        }
+        dependencyEntries.erase(pair);
     }
-    auto entries = pair->second.data();
-    auto count = type->type.length;
-    forloop (i, 0, count)
-    {
-        if (type_index_t(type->type.data[i]).is_tag())
-            break;
-        for (auto dep : entries[i].owned)
-            deps.push_back(dep);
-        for (auto p : entries[i].shared)
-            deps.push_back(p);
-        entries[i].shared.clear();
-        entries[i].owned.clear();
-    }
-    dependencyEntries.erase(pair);
-    skr_release_mutex(&entryMutex.mMutex);
     for (auto dep : deps)
         scheduler->WaitForCounter(dep.get(), true);
 }
@@ -88,21 +88,21 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
     eastl::vector<std::shared_ptr<ftl::TaskCounter>> deps;
-    skr_acquire_mutex(&entryMutex.mMutex);
-    auto pair = dependencyEntries.find(type);
-    if (pair == dependencyEntries.end()) 
     {
-        skr_release_mutex(&entryMutex.mMutex);
-        return;
-    };
-    auto entries = pair->second.data();
-    for (auto dep : entries[i].owned)
-        deps.push_back(dep);
-    for (auto p : entries[i].shared)
-        deps.push_back(p);
-    entries[i].shared.clear();
-    entries[i].owned.clear();
-    skr_release_mutex(&entryMutex.mMutex);
+        SMutexLock entryLock(entryMutex.mMutex);
+        auto pair = dependencyEntries.find(type);
+        if (pair == dependencyEntries.end()) 
+        {
+            return;
+        };
+        auto entries = pair->second.data();
+        for (auto dep : entries[i].owned)
+            deps.push_back(dep);
+        for (auto p : entries[i].shared)
+            deps.push_back(p);
+        entries[i].shared.clear();
+        entries[i].owned.clear();
+    }
     for (auto dep : deps)
         scheduler->WaitForCounter(dep.get(), true);
 }
@@ -241,18 +241,19 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         if (syncedEntry.find(pair) != syncedEntry.end())
             return;
         syncedEntry.insert(pair);
-        skr_acquire_mutex(&entryMutex.mMutex);
-        auto iter = dependencyEntries.find(at);
-        if (iter == dependencyEntries.end())
         {
-            eastl::vector<job_dependency_entry_t> entries(at->type.length);
-            iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
-        }
+            SMutexLock entryLock(entryMutex.mMutex);
+            auto iter = dependencyEntries.find(at);
+            if (iter == dependencyEntries.end())
+            {
+                eastl::vector<job_dependency_entry_t> entries(at->type.length);
+                iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
+            }
 
-        auto entries = (*iter).second.data();
-        auto& entry = entries[localType];
-        update_entry(entry, job->counter, readonly, atomic, dependencies);
-        skr_release_mutex(&entryMutex.mMutex);
+            auto entries = (*iter).second.data();
+            auto& entry = entries[localType];
+            update_entry(entry, job->counter, readonly, atomic, dependencies);
+        }
     };
 
     auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
@@ -268,7 +269,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     {
         ZoneScopedN("UpdateResourceEntries");
 
-        skr_acquire_mutex(&resourceMutex.mMutex);
+        SMutexLock resourceLock(resourceMutex.mMutex);
         forloop (i, 0, resources->count)
         {
             auto& entry = allResources[e_id(resources->resources[i])];
@@ -276,7 +277,6 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             auto atomic = resources->atomic[i];
             update_entry(entry, job->counter, readonly, atomic, dependencies);
         }
-        skr_release_mutex(&resourceMutex.mMutex);
     }
 
     forloop (i, 0, query->parameters.length)
@@ -488,18 +488,19 @@ eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_cus
         if (syncedEntry.find(pair) != syncedEntry.end())
             return;
         syncedEntry.insert(pair);
-        skr_acquire_mutex(&entryMutex.mMutex);
-        auto iter = dependencyEntries.find(at);
-        if (iter == dependencyEntries.end())
         {
-            eastl::vector<job_dependency_entry_t> entries(at->type.length);
-            iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
-        }
+            SMutexLock entryLock(entryMutex.mMutex);
+            auto iter = dependencyEntries.find(at);
+            if (iter == dependencyEntries.end())
+            {
+                eastl::vector<job_dependency_entry_t> entries(at->type.length);
+                iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
+            }
 
-        auto entries = (*iter).second.data();
-        auto& entry = entries[localType];
-        update_entry(entry, counter, readonly, atomic, dependencies);
-        skr_release_mutex(&entryMutex.mMutex);
+            auto entries = (*iter).second.data();
+            auto& entry = entries[localType];
+            update_entry(entry, counter, readonly, atomic, dependencies);
+        }
     };
 
     auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
@@ -513,7 +514,7 @@ eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_cus
 
     if (resources)
     {
-        skr_acquire_mutex(&resourceMutex.mMutex);
+        SMutexLock resourceLock(resourceMutex.mMutex);
         forloop (i, 0, resources->count)
         {
             auto& entry = allResources[e_id(resources->resources[i])];
@@ -521,7 +522,6 @@ eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_cus
             auto atomic = resources->atomic[i];
             update_entry(entry, counter, readonly, atomic, dependencies);
         }
-        skr_release_mutex(&resourceMutex.mMutex);
     }
 
     llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
@@ -570,17 +570,18 @@ eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_cus
 eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resources(const std::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
-    skr_acquire_mutex(&resourceMutex.mMutex);
-    forloop (i, 0, resources->count)
     {
-        auto& entry = allResources[e_id(resources->resources[i])];
-        auto readonly = resources->readonly[i];
-        auto atomic = resources->atomic[i];
-        update_entry(entry, counter, readonly, atomic, dependencies);
+        SMutexLock resourceLock(resourceMutex.mMutex);
+        forloop (i, 0, resources->count)
+        {
+            auto& entry = allResources[e_id(resources->resources[i])];
+            auto readonly = resources->readonly[i];
+            auto atomic = resources->atomic[i];
+            update_entry(entry, counter, readonly, atomic, dependencies);
+        }
     }
-    skr_release_mutex(&resourceMutex.mMutex);
+    
     eastl::vector<std::shared_ptr<ftl::TaskCounter>> result;
-
     result.resize(dependencies.size());
     uint32_t dependencyIndex = 0;
     for (auto dependency : dependencies)
