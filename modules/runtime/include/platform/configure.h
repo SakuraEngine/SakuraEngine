@@ -6,6 +6,9 @@
     #include <stdint.h>
 #endif
 
+#define SKR_IS_BIG_ENDIAN 0
+#define SKR_IS_LITTLE_ENDIAN 1
+
 #ifdef __cplusplus
     #define SKR_IF_CPP(...) __VA_ARGS__
 #else
@@ -76,6 +79,12 @@
     #define FORCEINLINE __forceinline
 #else
     #define FORCEINLINE inline __attribute__((always_inline))
+#endif
+
+#if defined(__cplusplus)
+    #define SKR_CONSTEXPR constexpr
+#else
+    #define SKR_CONSTEXPR
 #endif
 
 #ifdef __cplusplus
