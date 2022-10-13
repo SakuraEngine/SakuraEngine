@@ -15,9 +15,9 @@ sattr(
 sruntime_attr(0, CreateAttribute())
 TestEnum : uint32_t
 {
-    Value0, 
-    Value1, 
-    Value2 
+    Value0 = 0, 
+    Value1 = 1, 
+    Value2 = 2 
 };
 
 }

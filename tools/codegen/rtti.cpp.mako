@@ -1,6 +1,7 @@
 //DO NOT MODIFY THIS FILE
 //generated from rtti.cpp.mako
 #include "type/type_registry.h"
+#include "platform/debug.h"
 #include "utils/hash.h"
 #include "utils/log.h"
 %for header in db.headers:
@@ -36,7 +37,7 @@ namespace skr::type
             %endif
                 ObjectMethodTable nativeMethods {
                     +[](void* self) { ((${record.name}*)self)->~${record.short_name}(); }, //dtor
-                    +[](void* self, struct Value* param, size_t nparam) { /*TODO*/ }, //ctor
+                    +[](void* self, struct skr_value_t* param, size_t nparam) { /*TODO*/ }, //ctor
                     GetCopyCtor<${record.name}>(),
                     GetMoveCtor<${record.name}>(),
         %if record.hashable:
@@ -76,9 +77,9 @@ namespace skr::type
                         type_of<${method.descs[0].retType}>::get(), 
                     %endif
                         ${method.short_name}Params,
-                        +[](void* self, struct ValueRef* args, size_t nargs)
+                        +[](void* self, struct skr_value_ref_t* args, size_t nargs)
                         {   
-                            Value result = {};
+                            skr_value_t result = {};
                             if(nargs < ${len(method.descs[0].fields)})
                             {
                                 SKR_LOG_ERROR("[${method.name}] not enough arguments provided.");
@@ -119,7 +120,7 @@ namespace skr::type
             using namespace skr::type;
             auto registry = GetTypeRegistry();
             constexpr skr_guid_t guid = {${record.guidConstant}};
-            registry->types.insert(std::make_pair(guid, type_of<${record.name}>::get()));
+            registry->register_type(guid, type_of<${record.name}>::get());
         }
     } _RegisterRTTI${record.id}Helper;
 %endfor
@@ -147,7 +148,7 @@ namespace skr::type
                 switch(hash)
                 {
                 %for enumerator in enum.enumerators:
-                    case hash_crc32<char>("${enumerator.name}"): if( enumStr.compare("${enumerator.name}") == 0) This = ${enumerator.name}; return;
+                    case hash_crc32<char>("${enumerator.short_name}"): if( enumStr.compare("${enumerator.short_name}") == 0) This = ${enumerator.name}; return;
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
@@ -176,7 +177,7 @@ namespace skr::type
             using namespace skr::type;
             auto registry = GetTypeRegistry();
             constexpr skr_guid_t guid = {${enum.guidConstant}};
-            registry->types.insert(std::make_pair(guid, type_of<${enum.name}>::get()));
+            registry->register_type(guid, type_of<${enum.name}>::get());
         }
     } _RegisterRTTI${enum.id}Helper;
 %endfor

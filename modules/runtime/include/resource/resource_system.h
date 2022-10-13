@@ -1,13 +1,14 @@
 #pragma once
-
 #include "EASTL/fixed_vector.h"
 #include "ecs/entities.hpp"
 #include "platform/thread.h"
+#include "platform/guid.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_handle.h"
 #include "utils/hashmap.hpp"
 #include "resource/resource_header.h"
 #include "utils/io.h"
+
 namespace skr::io
 {
 class RAMService;

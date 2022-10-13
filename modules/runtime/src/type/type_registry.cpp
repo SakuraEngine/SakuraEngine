@@ -1,94 +1,47 @@
-#include "type/type_registry.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
-#include "platform/memory.h"
-#include "resource/resource_handle.h"
-#include "utils/hash.h"
 #include "utils/format.hpp"
 #include "utils/fast_float.h"
+#include "platform/memory.h"
+#include "platform/guid.hpp"
+#include "resource/resource_handle.h"
+#include "type/type_registry.h"
 #include <charconv>
 
 namespace skr::type
 {
+struct STypeRegistryImpl final : public STypeRegistry
+{
+    const skr_type_t* get_type(skr_guid_t guid) final
+    {
+        auto it = types.find(guid);
+        if (it != types.end())
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    const void register_type(skr_guid_t tid, const skr_type_t* type) final
+    {
+        types.insert({ tid, type });
+    }
+
+    skr::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
+};
+
 RUNTIME_API STypeRegistry* GetTypeRegistry()
 {
-    static STypeRegistry registry;
+    static STypeRegistryImpl registry = {};
     return &registry;
 }
 } // namespace skr::type
 
-namespace skr
+skr_type_t::skr_type_t(skr_type_category_t type)
+    : type(type)
 {
-namespace type
-{
-const skr_type_t* type_of<bool>::get()
-{
-    static BoolType type;
-    return &type;
-}
 
-const skr_type_t* type_of<int32_t>::get()
-{
-    static Int32Type type;
-    return &type;
 }
-
-const skr_type_t* type_of<int64_t>::get()
-{
-    static Int64Type type;
-    return &type;
-}
-
-const skr_type_t* type_of<uint32_t>::get()
-{
-    static UInt32Type type;
-    return &type;
-}
-
-const skr_type_t* type_of<uint64_t>::get()
-{
-    static UInt64Type type;
-    return &type;
-}
-
-const skr_type_t* type_of<float>::get()
-{
-    static Float32Type type;
-    return &type;
-}
-
-const skr_type_t* type_of<double>::get()
-{
-    static Float64Type type;
-    return &type;
-}
-
-const skr_type_t* type_of<skr_guid_t>::get()
-{
-    static GUIDType type;
-    return &type;
-}
-
-const skr_type_t* type_of<skr_resource_handle_t>::get()
-{
-    static HandleType type{nullptr};
-    return &type;
-}
-
-const skr_type_t* type_of<eastl::string>::get()
-{
-    static StringType type;
-    return &type;
-}
-
-const skr_type_t* type_of<eastl::string_view>::get()
-{
-    static StringViewType type;
-    return &type;
-}
-
-} // namespace type
-} // namespace skr
 
 size_t skr_type_t::Size() const
 {
@@ -976,60 +929,10 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, skr::type::ValueS
     }
 }
 
-size_t Hash(bool value, size_t base)
-{
-    return skr_hash(&value, 1, base);
-}
-size_t Hash(int32_t value, size_t base)
-{
-    return skr_hash(&value, sizeof(value), base);
-}
-size_t Hash(int64_t value, size_t base)
-{
-    return skr_hash(&value, sizeof(value), base);
-}
-size_t Hash(uint32_t value, size_t base)
-{
-    return skr_hash(&value, sizeof(value), base);
-}
-size_t Hash(uint64_t value, size_t base)
-{
-    return skr_hash(&value, sizeof(value), base);
-}
-size_t Hash(float value, size_t base)
-{
-    return skr_hash(&value, sizeof(value), base);
-}
-size_t Hash(double value, size_t base)
-{
-    return skr_hash(&value, sizeof(value), base);
-}
-size_t Hash(const skr_guid_t& value, size_t base)
-{
-    return skr_hash(&value, sizeof(value), base);
-}
-size_t Hash(const skr_resource_handle_t& value, size_t base)
-{
-    auto guid = value.get_guid();
-    return skr_hash(&guid, sizeof(guid), base);
-}
-size_t Hash(void* value, size_t base)
-{
-    return skr_hash((void*)&value, sizeof(value), base);
-}
-size_t Hash(const eastl::string& value, size_t base)
-{
-    return skr_hash(value.data(), value.size(), base);
-}
-size_t Hash(const eastl::string_view& value, size_t base)
-{
-    return skr_hash(value.data(), value.size(), base);
-}
-
 template <class T>
 size_t HashImpl(const void* dst, size_t base)
 {
-    return Hash(*(T*)dst, base);
+    return skr::type::Hash(*(const T*)dst, base);
 }
 
 size_t skr_type_t::Hash(const void* dst, size_t base) const
@@ -1425,141 +1328,8 @@ bool skr::type::RecordType::IsBaseOf(const RecordType& other) const
     return false;
 }
 
-skr_type_t* skr_get_type(const skr_type_id_t* id)
+const skr_type_t* skr_get_type(const skr_type_id_t* id)
 {
-    auto& types = skr::type::GetTypeRegistry()->types;
-    auto iter = types.find(*id);
-    if (iter == types.end())
-        return nullptr;
-    return (skr_type_t*)iter->second;
+    auto registry = skr::type::GetTypeRegistry();
+    return registry->get_type(*id);
 }
-
-namespace skr::type
-{
-Value::Value()
-    : type(nullptr)
-{
-}
-
-Value::Value(const Value& other)
-{
-    _Copy(other);
-}
-
-Value::Value(Value&& other)
-{
-    _Move(std::move(other));
-}
-
-Value& Value::operator=(const Value& other)
-{
-    Reset();
-    _Copy(other);
-    return *this;
-}
-
-Value& Value::operator=(Value&& other)
-{
-    Reset();
-    _Move(std::move(other));
-    return *this;
-}
-
-void* Value::Ptr()
-{
-    if (!type)
-        return nullptr;
-    if (type->Size() < smallSize)
-        return &_smallObj[0];
-    else
-        return _ptr;
-}
-
-const void* Value::Ptr() const
-{
-    if (!type)
-        return nullptr;
-    if (type->Size() < smallSize)
-        return &_smallObj[0];
-    else
-        return _ptr;
-}
-
-void Value::Reset()
-{
-    if (!type)
-        return;
-    if (type->Size() < smallSize)
-        type->Destruct(&_smallObj[0]);
-    else
-    {
-        type->Destruct(_ptr);
-        free(_ptr);
-    }
-    type = nullptr;
-}
-
-size_t Value::Hash() const
-{
-    if (!type)
-        return 0;
-    return type->Hash(Ptr(), 0);
-}
-
-eastl::string Value::ToString() const
-{
-    if (!type)
-        return {};
-    return type->ToString(Ptr());
-}
-
-void* Value::_Alloc()
-{
-    if (!type)
-        return nullptr;
-    auto size = type->Size();
-    if (size < smallSize)
-        return &_smallObj[0];
-    else
-        return _ptr = malloc(size);
-}
-
-void Value::_Copy(const Value& other)
-{
-    type = other.type;
-    if (!type)
-        return;
-    auto ptr = _Alloc();
-    type->Copy(ptr, other.Ptr());
-}
-
-void Value::_Move(Value&& other)
-{
-    type = other.type;
-    if (!type)
-        return;
-    auto ptr = _Alloc();
-    type->Move(ptr, other.Ptr());
-    other.Reset();
-}
-
-void ValueRef::Reset()
-{
-    type = nullptr;
-    ptr = nullptr;
-}
-
-size_t ValueRef::Hash() const
-{
-    if (!type)
-        return 0;
-    return type->Hash(ptr, 0);
-}
-
-eastl::string ValueRef::ToString() const
-{
-    if (!type)
-        return {};
-    return type->ToString(ptr);
-}
-} // namespace skr::type
