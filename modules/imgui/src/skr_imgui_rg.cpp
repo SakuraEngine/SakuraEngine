@@ -68,7 +68,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
     if (draw_data->TotalVtxCount > 0)
     {
         // create or resize the vertex/index buffers
-        auto device = render_graph->get_backend_device();
+        // auto device = render_graph->get_backend_device();
         size_t vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
         size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
         auto font_handle = render_graph->create_texture(
@@ -143,7 +143,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                 name.append(eastl::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
                     .size(sizeof(float) * 4 * 4)
-                    .with_tags(kRenderGraphDynamicResourceTag)
+                    .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
                     .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
                     .prefer_on_device()
                     .as_uniform_buffer();

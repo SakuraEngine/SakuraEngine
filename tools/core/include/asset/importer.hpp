@@ -1,12 +1,12 @@
 #pragma once
 #include "SkrTool/tool.configure.h"
-#include "EASTL/vector.h"
-#include "platform/guid.h"
-#include "resource/resource_header.h"
-#include "platform/configure.h"
+#include <EASTL/vector.h>
 #include "simdjson.h"
-#include "asset/cooker.hpp"
+#include "platform/configure.h"
+#include "utils/types.h"
 #include "utils/hashmap.hpp"
+#include "resource/resource_header.h"
+#include "asset/cooker.hpp"
 
 namespace skr::io
 {

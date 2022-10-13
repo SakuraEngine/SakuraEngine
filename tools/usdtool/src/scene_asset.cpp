@@ -8,7 +8,7 @@
 #include "ecs/dual.h"
 #include "resource/resource_factory.h"
 #include "utils/defer.hpp"
-#include "utils/log.h"
+#include "utils/log.hpp"
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
 #include "ecs/type_builder.hpp"

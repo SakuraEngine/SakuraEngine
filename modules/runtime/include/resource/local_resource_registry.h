@@ -1,9 +1,10 @@
 #pragma once
 #include "ghc/filesystem.hpp"
-#include "platform/guid.h"
+#include "utils/types.h"
 #include "resource_system.h"
 #include "utils/hash.h"
 #include "utils/hashmap.hpp"
+
 struct skr_vfs_t;
 namespace skr::resource
 {

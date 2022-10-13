@@ -9,7 +9,7 @@
 #include <EASTL/vector_map.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/hash_set.h>
-#include "ghc/filesystem.hpp"
+#include <ghc/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 
@@ -187,9 +187,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
     };
     auto callbackData = SkrNew<CallbackData>();
     skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
-    ramIO.bytes = nullptr;
     ramIO.offset = 0;
-    ramIO.size = 0;
     ramIO.path = path;
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;

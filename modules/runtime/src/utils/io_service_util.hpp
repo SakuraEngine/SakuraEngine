@@ -383,6 +383,7 @@ public:
         const auto sleepTimeVal = skr_atomic32_load_acquire(&_sleepTime);
         if (sleepTimeVal == SKR_IO_SERVICE_SLEEP_TIME_MAX && sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
         {
+            SMutexLock sleepLock(sleepMutex);
             skr_wake_condition_var(&sleepCv);
         }
     }
@@ -392,6 +393,11 @@ public:
         auto service = this;
         AsyncServiceBase::destroy_();
         service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
+        if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
+        {
+            SMutexLock sleepLock(service->sleepMutex);
+            skr_wake_condition_var(&service->sleepCv);
+        }
         skr_join_thread(service->serviceThread);
         skr_destroy_thread(service->serviceThread);
     }

@@ -1,3 +1,4 @@
+#include <EASTL/string.h>
 #include "platform/vfs.h"
 #include "utils/io.hpp"
 #include "io_service_util.hpp"
@@ -56,7 +57,7 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
         {
             ZoneScopedNC("FOpen", tracy::Color::LightBlue);
             vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
-                ESkrFileMode::SKR_FM_READ, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+                ESkrFileMode::SKR_FM_READ_BINARY, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
         }
         if (task->destination->bytes == nullptr)
         {
@@ -103,6 +104,7 @@ void __ioThreadTask_RAM(void* arg)
         }
         __ioThreadTask_RAM_execute(service);
     }
+    return;
 }
 
 void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 

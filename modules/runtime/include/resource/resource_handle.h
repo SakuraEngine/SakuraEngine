@@ -1,5 +1,4 @@
 #pragma once
-#include "platform/guid.h"
 #include "utils/types.h"
 #include <EASTL/vector.h>
 

@@ -183,9 +183,7 @@ void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint3
     if (pMutex->isSRW)
     {
         PSRWLOCK pSrwlock = (PSRWLOCK)(pMutex->muStorage_);
-        BOOLEAN acquired = TryAcquireSRWLockExclusive(pSrwlock);
         SleepConditionVariableSRW((PCONDITION_VARIABLE)cv_, pSrwlock, ms, 0);
-        if (acquired) ReleaseSRWLockExclusive(pSrwlock);
     }
     else
     {

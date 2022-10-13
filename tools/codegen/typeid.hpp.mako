@@ -1,12 +1,24 @@
 #pragma once
-#include "platform/guid.h"
+#include "type/type_id.hpp"
+
 %for type in db.types:
-%if hasattr(type, 'namespace'):
-namespace ${type.namespace} {
-%endif
-inline static constexpr skr_guid_t get_type_id_${type.short_name}()
-{ return {${type.guidConstant}}; }
-%if hasattr(type, 'namespace'):
-}
+%if hasattr(type, "namespace"):
+namespace ${type.namespace} { struct ${type.short_name}; }
+%else:
+struct ${type.short_name};
 %endif
 %endfor
+
+namespace skr::type
+{
+%for type in db.types:
+    template<>
+    struct type_id<::${type.name}>
+    {
+        inline static SKR_CONSTEXPR skr_guid_t get()
+        {
+            return {${type.guidConstant}}; 
+        }
+    };
+%endfor
+}

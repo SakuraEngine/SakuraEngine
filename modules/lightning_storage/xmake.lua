@@ -3,7 +3,7 @@ target("SkrLightningStorage")
     add_rules("skr.module", {api = "SKR_LIGHTNING_STORAGE"})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/", disable_reflection = true,
+        rootdir = "include/", disable_meta = true,
         api = "SKR_LIGHTNING_STORAGE"
     })
     add_deps("lmdb", "SkrRT")

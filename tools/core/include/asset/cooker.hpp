@@ -3,14 +3,11 @@
 #include "EASTL/vector.h"
 #include "EASTL/shared_ptr.h"
 #include "platform/memory.h"
+#include "platform/guid.hpp"
 #include "platform/thread.h"
-#include "resource/resource_header.h"
-#include "platform/configure.h"
-#include "platform/guid.h"
 #include "utils/hashmap.hpp"
 #include "utils/parallel_for.hpp"
-#include "ghc/filesystem.hpp"
-#include "simdjson.h"
+#include "resource/resource_header.h"
 #include "task/task.hpp"
 
 struct skr_vfs_t;
