@@ -5,7 +5,7 @@
 struct SRuntimeAttribute* CreateAttribute();
 
 enum sreflect
-sattr("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")
+sattr("guid" : "9688e3fe-72eb-4c8d-a6f2-0a38585fbe26")
 sattr("asdsad" : true)
 sattr("fuck" : { "dddd" : [ true, false ] }) 
 sruntime_attr(0, CreateAttribute())
