@@ -6,7 +6,6 @@
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
 #include "utils/parallel_for.hpp"
-#include "ftl/task.h"
 #include "math/vector.hpp"
 #include "math/vectormath.hpp"
 #include "skr_scene/scene.h"
@@ -78,7 +77,7 @@ static void skr_relative_to_world_children(skr_children_t* children, skr_l2w_t* 
     if (children->size() > 256) // dispatch recursively
     {
         using iter_t = typename skr_children_t::iterator;
-        skr::parallel_for((ftl::TaskScheduler*)dualJ_get_scheduler(), children->begin(), children->end(), 128,
+        skr::parallel_for(children->begin(), children->end(), 128,
         [&](iter_t begin, iter_t end) {
             for (auto i = begin; i != end; ++i)
                 process(*i);

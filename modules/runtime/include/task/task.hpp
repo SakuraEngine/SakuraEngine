@@ -37,13 +37,15 @@ namespace skr::task
     public:
         using internal_t = std::shared_ptr<ftl::TaskCounter>;
         event_t();
+        event_t(nullptr_t);
         void wait(bool pin) { internal->GetScheduler()->WaitForCounter(internal.get(), pin); }
         void signal() { internal->Decrement(); }
         void clear() { internal->Reset(1); }
         bool test() const { return internal->Done(); }
+        size_t hash() const { return std::hash<void*>{}(internal.get()); }
+        explicit operator bool() const { return (bool)internal; }
+        
     private:
-        static size_t gId;
-        size_t id;
         internal_t internal;
         friend scheduler_t;
     };
@@ -58,15 +60,15 @@ namespace skr::task
         template<class F>
         void schedule(F&& lambda, event_t* event, const char* name = nullptr)
         {
-            auto f = new auto(std::forward<F>(lambda));
+            auto f = SkrNewLambda(std::forward<F>(lambda));
             using f_t = decltype(f);
             auto t = +[](ftl::TaskScheduler* taskScheduler, void* data)
             {
                 auto f = (f_t)data;
+                SKR_DEFER({SkrDelete(f);});
                 f->operator()(); 
             };
-            auto clear = ftl::PostTask([f] { delete f; });
-            ftl::Task task{t, f, clear};
+            ftl::Task task{t, f};
             internal->AddTask(task, ftl::TaskPriority::Normal, event ? event->internal : nullptr, name);
         }
         ~scheduler_t();

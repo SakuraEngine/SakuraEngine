@@ -2,7 +2,6 @@
 #include "asset/importer.hpp"
 #include "bitsery/adapter/buffer.h"
 #include "ecs/dual.h"
-#include "ftl/task_counter.h"
 #include "ghc/filesystem.hpp"
 #include "platform/guid.h"
 #include "platform/thread.h"
@@ -134,9 +133,11 @@ int main(int argc, char** argv)
     #ifdef WITH_USDTOOL
     moduleManager->patch_module_graph("UsdTool", true);
     #endif
+    skr::task::scheduler_t scheduler;
+    scheduler.initialize(skr::task::scheudler_config_t());
+    scheduler.bind();
     auto& system = *skd::asset::GetCookSystem();
     system.Initialize();
-    dualJ_initialize((dual_scheduler_t*)&system.GetScheduler());
     //----- register project
     // TODO: project discover?
     auto project = SkrNew<skd::asset::SProject>();

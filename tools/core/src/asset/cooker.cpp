@@ -1,7 +1,6 @@
 #include "asset/cooker.hpp"
 #include "EASTL/shared_ptr.h"
 #include "asset/importer.hpp"
-#include "ftl/task_counter.h"
 #include "ghc/filesystem.hpp"
 #include "platform/debug.h"
 #include "platform/guid.h"
@@ -10,7 +9,6 @@
 #include "simdjson.h"
 #include "utils/defer.hpp"
 #include "utils/format.hpp"
-#include "ftl/task_scheduler.h"
 #include "platform/memory.h"
 #include "platform/configure.h"
 #include "utils/log.h"
@@ -46,28 +44,8 @@ SCookSystem::SCookSystem() noexcept
         }
     }
 }
-void SCookSystem::Initialize()
-{
-    scheduler = SkrNew<ftl::TaskScheduler>();
-    mainCounter = SkrNew<ftl::TaskCounter>(scheduler);
-    ftl::TaskSchedulerInitOptions options = {};
-    options.Behavior = ftl::EmptyQueueBehavior::Sleep;
-    scheduler->Init(options);
-}
-void SCookSystem::Shutdown()
-{
-    SkrDelete(mainCounter);
-    SkrDelete(scheduler);
-    scheduler = nullptr;
-    mainCounter = nullptr;
-}
-ftl::TaskScheduler& SCookSystem::GetScheduler()
-{
-    return *scheduler;
-}
 SCookSystem::~SCookSystem() noexcept
 {
-    SKR_ASSERT(scheduler == nullptr);
     skr_destroy_mutex(&ioMutex);
     for (auto ioService : ioServices)
     {
@@ -85,7 +63,7 @@ SProject::~SProject() noexcept
 }
 void SCookSystem::WaitForAll()
 {
-    scheduler->WaitForCounter(mainCounter);
+    mainCounter.wait(true);
 }
 
 #include <atomic>
@@ -97,27 +75,35 @@ skr::io::RAMService* SCookSystem::getIOService()
     return ioServices[cursor++];
 }
 
-std::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
+skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
 {
     SCookContext* jobContext;
     {
-        std::shared_ptr<ftl::TaskCounter> result;
+        skr::task::event_t result;
         cooking.lazy_emplace_l(
         guid, [&](SCookContext* ctx) { result = ctx->counter; },
         [&](const CookingMap::constructor& ctor) {
             jobContext = SkrNew<SCookContext>();
             ctor(guid, jobContext);
         });
-        if (result)
+        if(result)
             return result;
     }
 
     jobContext->record = GetAssetRecord(guid);
     jobContext->ioService = getIOService();
-    auto counter = std::make_shared<ftl::TaskCounter>(scheduler);
+    skr::task::event_t counter;
     jobContext->counter = counter;
-    auto Task = +[](ftl::TaskScheduler* scheduler, void* userdata) {
-        SCookContext* jobContext = (SCookContext*)userdata;
+    auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
+    mainCounter.add(1);
+    skr::task::schedule([jobContext]()
+    {
+        SKR_DEFER({
+            auto system = GetCookSystem();
+            auto guid = jobContext->record->guid;
+            system->cooking.erase_if(guid, [](SCookContext* context) { SkrDelete(context); return true; });
+            system->mainCounter.decrement();
+        });
         auto metaAsset = jobContext->record;
         auto outputPath = metaAsset->project->outputPath;
         ghc::filesystem::create_directories(outputPath);
@@ -153,18 +139,7 @@ std::shared_ptr<ftl::TaskCounter> SCookSystem::AddCookTask(skr_guid_t guid)
             SKR_DEFER({ fclose(file); });
             fwrite(writer.buffer.data(), 1, writer.buffer.size(), file);
         }
-    };
-    auto TearDown = +[](void* userdata) {
-        SCookContext* jobContext = (SCookContext*)userdata;
-        auto system = GetCookSystem();
-        auto guid = jobContext->record->guid;
-        system->cooking.erase_if(guid, [](SCookContext* context) { SkrDelete(context); return true; });
-        system->mainCounter->Decrement();
-    };
-    mainCounter->Add(1);
-    auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
-    const ftl::Task task = { Task, jobContext /*, TearDown */}; // TODO: deal with teardown 
-    scheduler->AddTask(task, ftl::TaskPriority::High, counter FTL_TASK_NAME(, guidName.c_str()));
+    }, &counter, guidName.c_str());
     return counter;
 }
 
@@ -178,10 +153,11 @@ void SCookSystem::UnregisterCooker(skr_guid_t guid)
 {
     cookers.erase(guid);
 }
-std::shared_ptr<ftl::TaskCounter> SCookSystem::EnsureCooked(skr_guid_t guid)
+
+skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
 {
     {
-        std::shared_ptr<ftl::TaskCounter> result;
+        skr::task::event_t result;
         cooking.if_contains(guid, [&](SCookContext* ctx) {
             result = ctx->counter;
         });
@@ -280,7 +256,7 @@ void* SCookSystem::CookOrLoad(skr_guid_t resource)
 {
     auto counter = EnsureCooked(resource);
     if (counter)
-        scheduler->WaitForCounter(counter.get());
+        counter.wait(false);
     SKR_UNIMPLEMENTED_FUNCTION();
     // LOAD
     return nullptr;
