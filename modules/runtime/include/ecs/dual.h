@@ -743,10 +743,6 @@ RUNTIME_API void dualJ_wait_all();
  */
 RUNTIME_API void dualJ_wait_storage(dual_storage_t* storage);
 
-typedef struct dual_scheduler_t dual_scheduler_t;
-RUNTIME_API void dualJ_initialize(dual_scheduler_t* scheduler);
-RUNTIME_API dual_scheduler_t* dualJ_get_scheduler();
-
 #if defined(__cplusplus)
 }
 #endif

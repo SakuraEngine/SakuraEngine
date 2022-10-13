@@ -12,6 +12,9 @@ event_t::event_t()
 {
     internal = std::make_shared<internal_t>(details::get_scheduler()->internal);
 }
+event_t::event_t(nullptr_t)
+{
+}
 thread_local scheduler_t* scheduler = nullptr;
 void scheduler_t::initialize(const scheudler_config_t& config)
 {
@@ -20,6 +23,15 @@ void scheduler_t::initialize(const scheudler_config_t& config)
 void scheduler_t::bind()
 {
     internal = new ftl::TaskScheduler();
+    options.Callbacks.Context = this;
+    options.Callbacks.OnWorkerThreadStarted = [](void* context, unsigned threadIndex)
+    {
+        scheduler = (scheduler_t*)context;
+    };
+    options.Callbacks.OnWorkerThreadEnded = [](void* context, unsigned threadIndex)
+    {
+        scheduler = nullptr;
+    };
     internal->Init(options);
     scheduler = this;
     binded = true;

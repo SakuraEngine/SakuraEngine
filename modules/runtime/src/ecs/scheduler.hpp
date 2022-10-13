@@ -2,8 +2,7 @@
 #include "arena.hpp"
 
 #include "ecs/dual.h"
-#include "ftl/task_counter.h"
-#include "ftl/task_scheduler.h"
+#include "task/task.hpp"
 #include "mask.hpp"
 #include "archetype.hpp"
 #include <bitset>
@@ -14,18 +13,16 @@
 #include "EASTL/shared_ptr.h"
 #include "EASTL/vector.h"
 
-struct dual_ecs_job_t;
 namespace dual
 {
 struct job_dependency_entry_t {
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> owned;
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> shared;
+    eastl::vector<skr::task::event_t> owned;
+    eastl::vector<skr::task::event_t> shared;
 };
 
 struct scheduler_t {
-    ftl::TaskScheduler *scheduler;
     dual::entity_registry_t registry;
-    std::shared_ptr<ftl::TaskCounter> allCounter;
+    skr::task::counter_t allCounter;
     eastl::vector<dual::job_dependency_entry_t> allResources;
     skr::flat_hash_map<dual::archetype_t*, eastl::vector<job_dependency_entry_t>> dependencyEntries;
     SMutexObject entryMutex;
@@ -33,7 +30,6 @@ struct scheduler_t {
 
     scheduler_t();
     static scheduler_t& get();
-    void initialize(ftl::TaskScheduler *scheduler);
     bool is_main_thread(const dual_storage_t* storage);
     void set_main_thread(const dual_storage_t* storage);
     dual_entity_t add_resource();
@@ -42,12 +38,13 @@ struct scheduler_t {
     void sync_entry(dual::archetype_t* type, dual_type_index_t entry);
     void sync_all();
     void sync_storage(const dual_storage_t* storage);
-    std::shared_ptr<ftl::TaskCounter> schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> schedule_custom_job(const dual_query_t* query, const std::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources);
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> sync_resources(const std::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources);
+    skr::task::event_t schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
+    eastl::vector<skr::task::event_t> schedule_custom_job(const dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources);
+    eastl::vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources);
 };
 } // namespace dual
 
+/*
 enum class dual_job_type
 {
     simple,
@@ -57,8 +54,8 @@ enum class dual_job_type
 struct dual_job_t {
     dual::scheduler_t* scheduler;
     dual_job_type type;
-    std::shared_ptr<ftl::TaskCounter> counter;
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> dependencies;
+    skr::task::event_t counter;
+    eastl::vector<skr::task::event_t> dependencies;
     int dependencyCount;
     dual_job_t(dual::scheduler_t& scheduler);
     virtual ~dual_job_t();
@@ -85,3 +82,4 @@ struct dual_ecs_job_t : dual_job_t {
     void* tasks;
     ~dual_ecs_job_t();
 };
+*/
