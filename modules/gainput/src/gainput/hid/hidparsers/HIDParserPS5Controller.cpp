@@ -182,7 +182,7 @@ struct PS5CInputReportSimple
     uint8_t  trigger[2];
 };
 
-double DEADZONE = 0.05;
+#define DEADZONE 0.05
 #define DEADZONE_OFFSET (uint8_t)(0x7F * DEADZONE)
 #define UPPER_OFFSET (0x7F + DEADZONE_OFFSET)
 #define LOWER_OFFSET (0x7F - DEADZONE_OFFSET)

@@ -1,8 +1,9 @@
+#include "math/vectormath.hpp"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/time.h"
+#include "platform/guid.hpp"
 #include "platform/thread.h"
-#include "math/vectormath.hpp"
 #include "utils/make_zeroed.hpp"
 
 #include "ecs/type_builder.hpp"
@@ -50,14 +51,10 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
     dual_type_index_t type = DUAL_NULL_TYPE;
 } _RegisterComponentskr_live2d_render_model_comp_tHelper;
 
-template<>
-struct SKR_LIVE2D_API dual_id_of<skr_live2d_render_model_comp_t>
+SKR_LIVE2D_API dual_type_index_t dual_id_of<skr_live2d_render_model_comp_t>::get()
 {
-    static dual_type_index_t get()
-    {
-        return _RegisterComponentskr_live2d_render_model_comp_tHelper.type;
-    }
-};
+    return _RegisterComponentskr_live2d_render_model_comp_tHelper.type;
+}
 
 typedef struct live2d_effect_identity_t {
     dual_entity_t game_entity;

@@ -1,6 +1,6 @@
 #include "../../cgpu/common/utils.h"
 #include "utils/make_zeroed.hpp"
-#include "utils/log.h"
+#include "utils/log.hpp"
 #include "cgpu/api.h"
 #include "platform/memory.h"
 #include "platform/thread.h"

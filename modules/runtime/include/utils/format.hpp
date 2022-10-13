@@ -2,7 +2,7 @@
 #include "fmt/core.h"
 #include "fmt/format.h"
 #include "EASTL/string.h"
-#include "platform/guid.h"
+#include "utils/types.h"
 
 namespace fmt
 {
@@ -34,7 +34,9 @@ struct formatter<skr_guid_t> {
     auto format(skr_guid_t const& g, FormatContext& ctx) const
     -> decltype(ctx.out())
     {
-        return format_to(ctx.out(), "{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}", g.Data1, g.Data2, g.Data3, g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+        return format_to(ctx.out(), "{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}"
+        , g.Data1(), g.Data2(), g.Data3()
+        , g.Data4(0), g.Data4(1), g.Data4(2), g.Data4(3), g.Data4(4), g.Data4(5), g.Data4(6), g.Data4(7));
     }
 };
 } // namespace fmt

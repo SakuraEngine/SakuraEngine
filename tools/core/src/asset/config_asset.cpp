@@ -10,7 +10,7 @@
 #include "platform/debug.h"
 #include "simdjson.h"
 #include "type/type_registry.h"
-#include "utils/log.h"
+#include "utils/log.hpp"
 #include "utils/defer.hpp"
 #include "utils/io.hpp"
 
@@ -41,9 +41,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
 #if 1
     skr::task::event_t counter;
     skr_ram_io_t ramIO = {};
-    ramIO.bytes = nullptr;
     ramIO.offset = 0;
-    ramIO.size = 0;
     ramIO.path = u8Path.c_str();
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request,void* data) noexcept {
         auto pCounter = (skr::task::event_t*)data;
@@ -69,7 +67,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     skr_config_resource_t* resource = skr::resource::SConfigFactory::NewConfig(configType);
-    iter->second.Import(doc.value(), resource->configData);
+    iter->second.Import(doc.get_value().value_unsafe(), resource->configData);
     return resource; //导入具体数据
 }
 uint32_t SConfigCooker::Version()

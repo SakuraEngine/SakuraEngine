@@ -1,5 +1,5 @@
-#include "module/module_manager.hpp"
 #include "utils/DAG.boost.hpp"
+#include "module/module_manager.hpp"
 #include "platform/memory.h"
 #include "EASTL/map.h"
 #include "utils/log.h"

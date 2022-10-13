@@ -4,7 +4,7 @@
 #include "skr_renderer/mesh_resource.h"
 #include "resource/resource_factory.h"
 #include "utils/defer.hpp"
-#include "utils/log.h"
+#include "utils/log.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 
@@ -28,9 +28,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
     callbackData.u8Path = u8Path.c_str();
     // prepare io
     skr_ram_io_t ramIO = {};
-    ramIO.bytes = nullptr;
     ramIO.offset = 0;
-    ramIO.size = 0;
     ramIO.path = u8Path.c_str();
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;

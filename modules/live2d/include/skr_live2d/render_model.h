@@ -1,9 +1,9 @@
 #pragma once
-#include "platform/guid.h"
-#include "model_resource.h"
-#include "skr_renderer/primitive_draw.h"
+#include "utils/types.h"
 #include "cgpu/api.h"
 #include "cgpu/io.h"
+#include "skr_renderer/primitive_draw.h"
+#include "model_resource.h"
 
 typedef struct skr_live2d_clipping_manager_t skr_live2d_clipping_manager_t;
 typedef struct skr_live2d_clipping_manager_t* skr_live2d_clipping_manager_id;
@@ -62,5 +62,12 @@ struct skr_live2d_render_model_t {
     eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
     eastl::vector<skr_render_primitive_command_t> primitive_commands;
+};
+
+#include "ecs/dual.h"
+template<>
+struct SKR_LIVE2D_API dual_id_of<skr_live2d_render_model_comp_t>
+{
+    static dual_type_index_t get();
 };
 #endif

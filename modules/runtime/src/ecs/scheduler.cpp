@@ -48,28 +48,28 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
     eastl::vector<skr::task::event_t> deps;
-    skr_acquire_mutex(&entryMutex.mMutex);
-    auto pair = dependencyEntries.find(type);
-    if (pair == dependencyEntries.end())
     {
-        skr_release_mutex(&entryMutex.mMutex);
-        return;
+        SMutexLock entryLock(entryMutex.mMutex);
+        auto pair = dependencyEntries.find(type);
+        if (pair == dependencyEntries.end())
+        {
+            return;
+        }
+        auto entries = pair->second.data();
+        auto count = type->type.length;
+        forloop (i, 0, count)
+        {
+            if (type_index_t(type->type.data[i]).is_tag())
+                break;
+            for (auto dep : entries[i].owned)
+                deps.push_back(dep);
+            for (auto p : entries[i].shared)
+                deps.push_back(p);
+            entries[i].shared.clear();
+            entries[i].owned.clear();
+        }
+        dependencyEntries.erase(pair);
     }
-    auto entries = pair->second.data();
-    auto count = type->type.length;
-    forloop (i, 0, count)
-    {
-        if (type_index_t(type->type.data[i]).is_tag())
-            break;
-        for (auto dep : entries[i].owned)
-            deps.push_back(dep);
-        for (auto p : entries[i].shared)
-            deps.push_back(p);
-        entries[i].shared.clear();
-        entries[i].owned.clear();
-    }
-    dependencyEntries.erase(pair);
-    skr_release_mutex(&entryMutex.mMutex);
     for (auto dep : deps)
         dep.wait(true);
 }
@@ -79,21 +79,23 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
     eastl::vector<skr::task::event_t> deps;
-    skr_acquire_mutex(&entryMutex.mMutex);
-    auto pair = dependencyEntries.find(type);
-    if (pair == dependencyEntries.end()) 
+    
     {
-        skr_release_mutex(&entryMutex.mMutex);
-        return;
-    };
-    auto entries = pair->second.data();
-    for (auto dep : entries[i].owned)
-        deps.push_back(dep);
-    for (auto p : entries[i].shared)
-        deps.push_back(p);
-    entries[i].shared.clear();
-    entries[i].owned.clear();
-    skr_release_mutex(&entryMutex.mMutex);
+        SMutexLock entryLock(entryMutex.mMutex);
+        auto pair = dependencyEntries.find(type);
+        if (pair == dependencyEntries.end()) 
+        {
+            return;
+        };
+        auto entries = pair->second.data();
+        for (auto dep : entries[i].owned)
+            deps.push_back(dep);
+        for (auto p : entries[i].shared)
+            deps.push_back(p);
+        entries[i].shared.clear();
+        entries[i].owned.clear();
+    }
+            
     for (auto dep : deps)
         dep.wait(true);
 }
@@ -265,10 +267,10 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
             }
 
-        auto entries = (*iter).second.data();
-        auto& entry = entries[localType];
-        update_entry(entry, result, readonly, atomic, dependencySet);
-        skr_release_mutex(&entryMutex.mMutex);
+            auto entries = (*iter).second.data();
+            auto& entry = entries[localType];
+            update_entry(entry, result, readonly, atomic, dependencySet);
+        }
     };
 
     auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
@@ -562,15 +564,16 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
 eastl::vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
-    skr_acquire_mutex(&resourceMutex.mMutex);
-    forloop (i, 0, resources->count)
     {
-        auto& entry = allResources[e_id(resources->resources[i])];
-        auto readonly = resources->readonly[i];
-        auto atomic = resources->atomic[i];
-        update_entry(entry, counter, readonly, atomic, dependencies);
+        SMutexLock entryLock(entryMutex.mMutex);
+        forloop (i, 0, resources->count)
+        {
+            auto& entry = allResources[e_id(resources->resources[i])];
+            auto readonly = resources->readonly[i];
+            auto atomic = resources->atomic[i];
+            update_entry(entry, counter, readonly, atomic, dependencies);
+        }
     }
-    skr_release_mutex(&resourceMutex.mMutex);
     eastl::vector<skr::task::event_t> result;
 
     result.resize(dependencies.size());

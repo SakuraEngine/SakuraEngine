@@ -8,13 +8,10 @@
 #include "EASTL/string.h"
 #include "EASTL/fixed_vector.h"
 #include "gsl/span"
-#include "platform/guid.h"
 #include "platform/memory.h"
 #include "utils/types.h"
 #include "utils/te.hpp"
 #include "resource/resource_handle.h"
-#include <limits>
-#include <memory>
 
 namespace bitsery
 {
@@ -86,11 +83,10 @@ namespace bitsery
 template <class S>
 void serialize(S& s, skr_guid_t& guid)
 {
-    s.value4b(guid.Data1);
-    s.value2b(guid.Data2);
-    s.value2b(guid.Data3);
-    for (int i = 0; i < 8; ++i)
-        s.value1b(guid.Data4[i]);
+    s.value4b(guid.Storage0);
+    s.value4b(guid.Storage1);
+    s.value4b(guid.Storage2);
+    s.value4b(guid.Storage3);
 }
 template <class S>
 void serialize(S& s, skr_resource_handle_t& handle)

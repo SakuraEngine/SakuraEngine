@@ -1,6 +1,6 @@
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
-#include "platform/guid.h"
+#include "utils/types.h"
 #include "json/reader.h"
 
 namespace skd::asset

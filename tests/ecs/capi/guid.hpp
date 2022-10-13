@@ -38,20 +38,20 @@ namespace guid_parse
 
         constexpr guid_t make_guid_helper(const char* begin)
         {
-            guid_t result{};
-            result.Data1 = parse_hex<uint32_t>(begin);
+            auto Data1 = parse_hex<uint32_t>(begin);
             begin += 8 + 1;
-            result.Data2 = parse_hex<uint16_t>(begin);
+            auto Data2 = parse_hex<uint16_t>(begin);
             begin += 4 + 1;
-            result.Data3 = parse_hex<uint16_t>(begin);
+            auto Data3 = parse_hex<uint16_t>(begin);
             begin += 4 + 1;
-            result.Data4[0] = parse_hex<uint8_t>(begin);
+            uint8_t Data4[8];
+            Data4[0] = parse_hex<uint8_t>(begin);
             begin += 2;
-            result.Data4[1] = parse_hex<uint8_t>(begin);
+            Data4[1] = parse_hex<uint8_t>(begin);
             begin += 2 + 1;
             for (size_t i = 0; i < 6; ++i)
-                result.Data4[i + 2] = parse_hex<uint8_t>(begin + i * 2);
-            return result;
+                Data4[i + 2] = parse_hex<uint8_t>(begin + i * 2);
+            return guid_t(Data1, Data2, Data3, Data4);
         }
 
         template<size_t N>

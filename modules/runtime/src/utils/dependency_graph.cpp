@@ -1,5 +1,5 @@
-#include "boost/graph/named_graph.hpp"
 #include "utils/DAG.boost.hpp"
+#include "boost/graph/named_graph.hpp"
 #include "utils/dependency_graph.hpp"
 
 #include "tracy/Tracy.hpp"

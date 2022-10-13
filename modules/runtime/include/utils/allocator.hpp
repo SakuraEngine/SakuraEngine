@@ -5,13 +5,13 @@
 namespace skr
 {
 template <class _Ty>
-class RUNTIME_API mi_allocator
+class RUNTIME_API skr_allocator
 {
 public:
     static_assert(!std::is_const_v<_Ty>, "The C++ Standard forbids containers of const elements "
                                          "because allocator<const T> is ill-formed.");
 
-    using _From_primary = mi_allocator;
+    using _From_primary = skr_allocator;
 
     using value_type = _Ty;
 
@@ -20,13 +20,13 @@ public:
 
     using propagate_on_container_move_assignment = std::true_type;
 
-    constexpr mi_allocator() noexcept {}
+    constexpr skr_allocator() noexcept {}
 
-    constexpr mi_allocator(const mi_allocator&) noexcept = default;
+    constexpr skr_allocator(const skr_allocator&) noexcept = default;
     template <class _Other>
-    constexpr mi_allocator(const mi_allocator<_Other>&) noexcept {}
-    ~mi_allocator() = default;
-    mi_allocator& operator=(const mi_allocator&) = default;
+    constexpr skr_allocator(const skr_allocator<_Other>&) noexcept {}
+    ~skr_allocator() = default;
+    skr_allocator& operator=(const skr_allocator&) = default;
 
     void deallocate(_Ty* const _Ptr, const size_t _Count)
     {
