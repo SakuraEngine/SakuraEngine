@@ -1,6 +1,5 @@
 #pragma once
 #include "ecs/dual.h"
-#include <assert.h>
 #include <string>
 
 namespace guid_parse
@@ -22,7 +21,7 @@ namespace guid_parse
             else if ('A' <= c && c <= 'F')
                 return 10 + c - 'A';
             else
-                assert(0 && "invalid character in GUID");
+                SKR_ASSERT(0 && "invalid character in GUID");
             return -1;
         }
 
@@ -63,7 +62,7 @@ namespace guid_parse
             if constexpr (N == (long_guid_form_length + 1))
             {
                 if (str[0] != '{' || str[long_guid_form_length - 1] != '}')
-                    assert(0 && "Missing opening or closing brace");
+                    SKR_ASSERT(0 && "Missing opening or closing brace");
             }
 
             return make_guid_helper(str + (N == (long_guid_form_length + 1) ? 1 : 0));
