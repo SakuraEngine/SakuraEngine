@@ -28,7 +28,6 @@ struct scheduler_t {
     skr::flat_hash_map<dual::archetype_t*, eastl::vector<job_dependency_entry_t>> dependencyEntries;
     SMutexObject entryMutex;
     SMutexObject resourceMutex;
-    bool registered = false;
     eastl::vector<dual_storage_t*> storages;
     SMutexObject storageMutex;
 
