@@ -63,7 +63,7 @@ struct TaskSchedulerInitOptions {
     /* The size of the thread pool to run. 0 corresponds to NumHardwareThreads() */
     unsigned ThreadPoolSize = 0;
     /* The behavior of the threads after they have no work to do */
-    EmptyQueueBehavior Behavior = EmptyQueueBehavior::Spin;
+    EmptyQueueBehavior Behavior = EmptyQueueBehavior::Yield;
     /* Callbacks to run at various points to allow for e.g. hooking a profiler to fiber states */
     EventCallbacks Callbacks;
 };
@@ -161,6 +161,8 @@ private:
         unsigned LoPriLastSuccessfulSteal{ 1 };
 
         unsigned FailedQueuePopAttempts{ 0 };
+
+        unsigned SpinAttempts { 0 };
     };
 
 private:
