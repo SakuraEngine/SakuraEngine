@@ -30,6 +30,8 @@
 #include "ftl/task.h"
 #include "ftl/thread_abstraction.h"
 #include "ftl/wait_free_queue.h"
+#include "EASTL/shared_ptr.h"
+#include "EASTL/vector.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -99,7 +101,7 @@ private:
      */
     struct TaskBundle {
         Task TaskToExecute;
-        std::shared_ptr<TaskCounter> Counter;
+        eastl::shared_ptr<TaskCounter> Counter;
         const char* name;
     };
 
@@ -130,7 +132,7 @@ private:
         std::atomic<bool>* OldFiberStoredFlag{ nullptr };
 
         /* The queue of ready waiting Fibers that were pinned to this thread */
-        std::vector<ReadyFiberBundle*> PinnedReadyFibers;
+        eastl::vector<ReadyFiberBundle*> PinnedReadyFibers;
 
         /**
          * The current fiber implementation requires that fibers created from threads finish on the same thread where
@@ -229,7 +231,7 @@ public:
      * @param counter     An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
      *                    completes, it will be decremented.
      */
-    void AddTask(Task task, TaskPriority priority, const std::shared_ptr<TaskCounter>& counter = nullptr FTL_TASK_NAME(, const char* name = nullptr));
+    void AddTask(Task task, TaskPriority priority, const eastl::shared_ptr<TaskCounter>& counter = nullptr FTL_TASK_NAME(, const char* name = nullptr));
     /**
      * Adds a group of tasks to the internal queue
      *
@@ -241,7 +243,7 @@ public:
      * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be incremented by
      *                    numTasks. When each task completes, it will be decremented.
      */
-    void AddTasks(unsigned numTasks, Task const* tasks, TaskPriority priority, std::shared_ptr<TaskCounter> const &counter = nullptr);
+    void AddTasks(unsigned numTasks, Task const* tasks, TaskPriority priority, eastl::shared_ptr<TaskCounter> const &counter = nullptr);
 
     /**
      * Yields execution to another task until counter == 0
