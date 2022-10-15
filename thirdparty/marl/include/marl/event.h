@@ -43,6 +43,16 @@ class Event {
   MARL_NO_EXPORT inline Event(Mode mode = Mode::Auto,
                               bool initialState = false,
                               Allocator* allocator = Allocator::Default);
+  
+  MARL_NO_EXPORT inline Event(nullptr_t) {}
+
+  MARL_NO_EXPORT inline Event(const Event&) = default;
+  MARL_NO_EXPORT inline Event(Event&&) = default;
+  MARL_NO_EXPORT inline Event& operator=(const Event& other) { shared = other.shared; return *this; }
+  MARL_NO_EXPORT inline explicit operator bool() const { return (bool)shared; }
+  MARL_NO_EXPORT inline bool operator==(const Event& other) const { return shared == other.shared; }
+  MARL_NO_EXPORT inline size_t hash() const { return std::hash<void*>{}(shared.get()); }
+
 
   // signal() signals the event, possibly unblocking a call to wait().
   MARL_NO_EXPORT inline void signal() const;
@@ -125,7 +135,7 @@ class Event {
     bool signalled;
   };
 
-  const marl::shared_ptr<Shared> shared;
+  marl::shared_ptr<Shared> shared;
 };
 
 Event::Shared::Shared(Allocator* allocator, Mode mode, bool initialState)
