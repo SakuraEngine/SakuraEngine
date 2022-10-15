@@ -14,13 +14,14 @@ void parallel_for(Iter begin, Iter end, size_t batch, F f)
     {
         auto toAdvance = std::min((size_t)n, batch);
         auto l = begin;
-        auto r = std::advance(begin, toAdvance);
+        auto r = begin;
+        std::advance(r, toAdvance);
         n -= toAdvance;
         skr::task::schedule([counter, f, l, r] () mutable
             {
                 SKR_DEFER({counter.decrement();});
                 f(l, r);
-            });
+            }, nullptr);
         begin = r;
     }
     counter.wait(true);

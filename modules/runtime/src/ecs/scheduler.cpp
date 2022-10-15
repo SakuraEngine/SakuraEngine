@@ -18,6 +18,19 @@ dual::scheduler_t::scheduler_t()
 {
 }
 
+dual::scheduler_t::~scheduler_t()
+{
+    if(registered)
+    {
+        skr::task::on_fiber_dettached([this](eastl::vector<skr::task::fiber_listener_t>& delegate)
+        {
+            delegate.erase(std::remove_if(delegate.begin(), delegate.end(), [this](const skr::task::fiber_listener_t& d) {
+                return d.self == this;
+            }), delegate.end());
+        });
+    }
+}
+
 dual_entity_t dual::scheduler_t::add_resource()
 {
     dual_entity_t result;
@@ -33,14 +46,48 @@ void dual::scheduler_t::remove_resource(dual_entity_t id)
 bool dual::scheduler_t::is_main_thread(const dual_storage_t* storage)
 {
     SKR_ASSERT(storage->scheduler == this);
-    return storage->currentThread == std::this_thread::get_id();
+    return storage->currentFiber == skr::task::current_fiber();
 }
 
 void dual::scheduler_t::set_main_thread(const dual_storage_t* storage)
 {
     SKR_ASSERT(storage->scheduler == this);
-    sync_storage(storage);
-    storage->currentThread = std::this_thread::get_id();
+    if(storage->counter)
+        storage->counter->wait(true);
+    if(!registered)
+    {
+        
+        skr::task::on_fiber_dettached([this](eastl::vector<skr::task::fiber_listener_t>& delegate)
+        {
+            delegate.push_back(skr::task::fiber_listener_t{this});
+        });
+        registered = true;
+    }
+    storage->currentFiber = skr::task::current_fiber();
+}
+
+void dual::scheduler_t::on_fiber_dettached(void* fiber)
+{
+    SMutexLock lock(storageMutex.mMutex);
+    for(auto& storage : storages)
+    {
+        if(storage->currentFiber == fiber)
+        {
+            storage->currentFiber = nullptr;
+        }
+    }
+}
+
+
+void dual::scheduler_t::add_storage(dual_storage_t* storage)
+{
+    SMutexLock lock(storageMutex.mMutex);
+    storages.push_back(storage);
+}
+void dual::scheduler_t::remove_storage(const dual_storage_t* storage)
+{
+    SMutexLock lock(storageMutex.mMutex);
+    storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
 }
 
 void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
@@ -102,16 +149,18 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
 
 void dual::scheduler_t::sync_all()
 {
-    allCounter.wait(true);
+    allCounter.then([](skr::task::counter_t& e) { e.wait(true); });
 }
 
 void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 {
     if (!storage->scheduler)
         return;
-    storage->counter.wait(true);
+    if(storage->counter)
+        storage->counter->wait(true);
     storage->scheduler = nullptr;
-    storage->currentThread = std::this_thread::get_id();
+    remove_storage(storage);
+    storage->currentFiber = nullptr;
 }
 
 namespace dual
@@ -160,6 +209,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     if (query->storage->scheduler == nullptr)
     {
         query->storage->scheduler = this;
+        add_storage(query->storage);
         set_main_thread(query->storage);
     }
     SKR_ASSERT(is_main_thread(query->storage));
@@ -177,55 +227,45 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     };
     struct SharedData
     {
+        const dual_query_t* query;
         dual_group_t** groups;
         uint32_t groupCount;
         std::bitset<32>* readonly;
         dual_type_index_t* localTypes;
         std::bitset<32>* atomic;
         std::bitset<32>* randomAccess;
-        // dual_resource_operation_t resources;
         bool hasRandomWrite;
         EIndex entityCount;
         dual_system_callback_t callback;
         void* userdata;
         eastl::vector<task_t> tasks;
     };
+    SharedData* job = nullptr;
     std::shared_ptr<SharedData> sharedData;
 
 
     auto groupCount = (uint32_t)groups.size();
-    size_t arenaSize = 0;
-    arenaSize += sizeof(SharedData);
-    // if(resources)
-    //     arenaSize += resources->count * (sizeof(dual_entity_t) + sizeof(int) * 2); // job.resources
-    arenaSize += groupCount * sizeof(dual_group_t*);   // job.groups
-    arenaSize += groupCount * sizeof(dual_type_index_t) * params.length;   // job.localTypes
-    arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.readonly
-    arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.atomic
-    arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.randomAccess
-    fixed_arena_t arena{ arenaSize };
-    SharedData* job = new (arena.allocate<SharedData>()) SharedData();
     {
         ZoneScopedN("AllocateSharedData");
-        job->groups = arena.allocate<dual_group_t*>(groupCount);
-        job->localTypes = arena.allocate<dual_type_index_t>(groupCount * params.length);
-        job->readonly = arena.allocate<std::bitset<32>>(groupCount);
-        job->atomic = arena.allocate<std::bitset<32>>(groupCount);
-        job->randomAccess = arena.allocate<std::bitset<32>>(groupCount);
-        // if(resources)
-        // {
-        //     job->resources.atomic = arena.allocate<int>(resources->count);
-        //     job->resources.resources = arena.allocate<dual_entity_t>(resources->count);
-        //     job->resources.readonly = arena.allocate<int>(resources->count);
-        //     job->resources.count = resources->count;
-        // }
+        struct_arena_t<SharedData> arena;
+        arena.record(&SharedData::groups, groupCount);
+        arena.record(&SharedData::localTypes, groupCount * params.length);
+        arena.record(&SharedData::readonly, groupCount);
+        arena.record(&SharedData::atomic, groupCount);
+        arena.record(&SharedData::randomAccess, groupCount);  
+        job = arena.end();
+        job->groups =       arena.get(&SharedData::groups, groupCount);
+        job->localTypes =   arena.get(&SharedData::localTypes, groupCount * params.length);
+        job->readonly =     arena.get(&SharedData::readonly, groupCount);
+        job->atomic =       arena.get(&SharedData::atomic, groupCount);
+        job->randomAccess = arena.get(&SharedData::randomAccess, groupCount);
     }
     job->groupCount = groupCount;
     job->hasRandomWrite = false;
     job->entityCount = 0;
     job->callback = callback;
     job->userdata = u;
-    arena.forget();
+    job->query = query;
     sharedData.reset(job, [](SharedData* p)
     {
         SkrDelete(p);
@@ -342,8 +382,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     
     {
         ZoneScopedN("AllocateCounter");
-        allCounter.add(1);
-        query->storage->counter.add(1);
+        allCounter->add(1);
+        query->storage->counter->add(1);
     }
     skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
     {
@@ -358,8 +398,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 init(sharedData->userdata, sharedData->entityCount);
         }
         SKR_DEFER({ 
-            allCounter.decrement();
-            query->storage->counter.decrement();
+            allCounter->decrement();
+            query->storage->counter->decrement();
         });
         fixed_stack_scope_t _(localStack);
         dual_meta_filter_t validatedMeta;
@@ -437,23 +477,19 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                     
                 }
                 
-                allCounter.add(static_cast<const uint32_t>(batches.size()));
-                query->storage->counter.add(static_cast<const uint32_t>(batches.size()));
                 skr::task::counter_t counter;
                 counter.add(batches.size());
                 for(auto batch : batches)
                 {
-                    skr::task::schedule([batch, sharedData, query, this, counter]() mutable
+                    skr::task::schedule([batch, sharedData, counter]() mutable
                     {
                         SKR_DEFER({
-                            allCounter.decrement();
-                            query->storage->counter.decrement();
                             counter.decrement();
                         });
                         forloop (i, batch.startTask, batch.endTask)
                         {
                             auto task = &sharedData->tasks[i];
-                            sharedData->callback(sharedData->userdata, query->storage, &task->view, sharedData->localTypes + task->groupIndex * query->parameters.length, task->startIndex);
+                            sharedData->callback(sharedData->userdata, sharedData->query->storage, &task->view, sharedData->localTypes + task->groupIndex * sharedData->query->parameters.length, task->startIndex);
                         }
                     }, nullptr);
                 }

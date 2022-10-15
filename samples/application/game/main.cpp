@@ -1,9 +1,13 @@
 #include "module/module_manager.hpp"
 #include "ghc/filesystem.hpp"
 #include "utils/log.h"
+#include "task/task.hpp"
 
 int main(int argc, char** argv)
 {
+    //skr::task::scheduler_t scheduler;
+    //scheduler.initialize(skr::task::scheudler_config_t{});
+    //scheduler.bind();
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
     auto root = ghc::filesystem::current_path(ec);

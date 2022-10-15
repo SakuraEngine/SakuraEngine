@@ -4,13 +4,18 @@
 namespace skr::task
 {
 #if !SKR_TASK_MARL
+scheudler_config_t::scheudler_config_t()
+{
+    numThreads = ftl::GetNumHardwareThreads();
+}
+
 counter_t::counter_t()
 {
-    internal = std::make_shared<internal_t>(details::get_scheduler()->internal);
+    internal = eastl::make_shared<ftl::TaskCounter>(details::get_scheduler()->internal);
 }
 event_t::event_t()
 {
-    internal = std::make_shared<internal_t>(details::get_scheduler()->internal);
+    internal = eastl::make_shared<ftl::TaskCounter>(details::get_scheduler()->internal);
 }
 event_t::event_t(nullptr_t)
 {
@@ -22,6 +27,8 @@ void scheduler_t::initialize(const scheudler_config_t& config)
 }
 void scheduler_t::bind()
 {
+    SKR_ASSERT(scheduler == nullptr);
+    SKR_ASSERT(internal == nullptr);
     internal = new ftl::TaskScheduler();
     options.Callbacks.Context = this;
     options.Callbacks.OnWorkerThreadStarted = [](void* context, unsigned threadIndex)
@@ -32,16 +39,23 @@ void scheduler_t::bind()
     {
         scheduler = nullptr;
     };
+    options.Callbacks.OnFiberDetached = [](void* context, ftl::Fiber* fiberIndex, bool isMidTask)
+    {
+        auto s = (scheduler_t*)context;
+        for(auto& f : s->onFiberDettached)
+        {
+            if(!isMidTask)
+                f.on_fiber_dettached(fiberIndex);
+        }
+    };
     internal->Init(options);
     scheduler = this;
-    binded = true;
 }
 void scheduler_t::unbind()
 {
-    SKR_ASSERT(binded);
+    SKR_ASSERT(internal);
     SKR_ASSERT(scheduler == this);
     scheduler = nullptr;
-    binded = false;
     delete internal;
     internal = nullptr;
 }
@@ -54,6 +68,16 @@ scheduler_t::~scheduler_t()
 {
     if(internal)
         delete internal;
+}
+
+void* scheduler_t::current_fiber()
+{
+    return internal->GetCurrentFiber();
+}
+
+void* current_fiber()
+{
+    return details::get_scheduler()->current_fiber();
 }
 #else
 void scheduler_t::initialize(const scheudler_config_t& config)

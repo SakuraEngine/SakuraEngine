@@ -21,6 +21,7 @@
 #include "utils/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
 #include "task/task.hpp"
+#include "utils/lazy.hpp"
 
 namespace dual
 {
@@ -117,8 +118,8 @@ struct dual_storage_t {
     uint32_t timestamp;
     std::unique_ptr<uint32_t[]> typeTimestamps;
     mutable dual::scheduler_t* scheduler;
-    mutable std::thread::id currentThread;
-    mutable skr::task::counter_t counter;
+    mutable void* currentFiber;
+    mutable skr::lazy_t<skr::task::counter_t> counter;
 
     dual_storage_t();
     ~dual_storage_t();
