@@ -24,7 +24,7 @@ dual_storage_t::dual_storage_t()
 dual_storage_t::~dual_storage_t()
 {
     if(scheduler)
-        scheduler->sync_storage(this);
+        scheduler->remove_storage(this);
     scheduler = nullptr;
     for(auto q : queries)
         ::sakura_free((void*)q);
