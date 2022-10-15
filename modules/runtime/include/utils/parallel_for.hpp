@@ -1,5 +1,7 @@
 #include "task/task.hpp"
 #include "EASTL/vector.h"
+#include <algorithm>
+#include <iterator>
 
 namespace skr
 {

@@ -95,6 +95,7 @@ void SGameModule::on_load(int argc, char** argv)
         options.numThreads = 0;
         scheduler.initialize(options);
         scheduler.bind();
+        dualJ_bind_storage(game_world);
     }
     // TODO: Refactor this
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
@@ -596,6 +597,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
 void SGameModule::on_unload()
 {
     SKR_LOG_INFO("game unloaded!");
-
+    dualJ_unbind_storage(game_world);
     dualS_release(game_world);
 }
