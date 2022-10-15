@@ -3,7 +3,7 @@
 
 namespace skr::task
 {
-#if !SKR_TASK_MARL
+#if !defined(SKR_TASK_MARL)
 scheudler_config_t::scheudler_config_t()
 {
     numThreads = ftl::GetNumHardwareThreads();
@@ -16,9 +16,6 @@ counter_t::counter_t()
 event_t::event_t()
 {
     internal = eastl::make_shared<ftl::TaskCounter>(details::get_scheduler()->internal);
-}
-event_t::event_t(nullptr_t)
-{
 }
 thread_local scheduler_t* scheduler = nullptr;
 void scheduler_t::initialize(const scheudler_config_t& config)

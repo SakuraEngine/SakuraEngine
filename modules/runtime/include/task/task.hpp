@@ -36,7 +36,7 @@ namespace skr::task
     };
 }
 //#define SKR_TASK_MARL
-#if !SKR_TASK_MARL
+#if !defined(SKR_TASK_MARL)
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
 namespace skr::task
@@ -46,11 +46,14 @@ namespace skr::task
     public:
         using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
         counter_t();
+        counter_t(nullptr_t) {}
 
         bool operator==(const counter_t& other) const { return internal == other.internal; }
         void wait(bool pin) { internal->GetScheduler()->WaitForCounter(internal.get(), pin); }
         void add(const unsigned int x) { internal->Add(x); }
         void decrement() { internal->Decrement(); }
+        size_t hash() const { return std::hash<void*>{}(internal.get()); }
+        explicit operator bool() const { return (bool)internal; }
     private:
         internal_t internal;
         friend scheduler_t;
@@ -61,7 +64,7 @@ namespace skr::task
     public:
         using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
         event_t();
-        event_t(nullptr_t);
+        event_t(nullptr_t) {}
         bool operator==(const event_t& other) const { return internal == other.internal; }
         void wait(bool pin) { internal->GetScheduler()->WaitForCounter(internal.get(), pin); }
         void signal() { internal->Decrement(); }
@@ -152,6 +155,12 @@ namespace skr::task
     {
     public:
         using internal_t = marl::WaitGroup;
+        counter_t() = default;
+        counter_t(nullptr_t) : internal(nullptr) {}
+
+        bool operator==(const counter_t& other) const { return internal == other.internal; }
+        size_t hash() const { return internal.hash(); }
+        explicit operator bool() const { return (bool)internal; }
         void wait(bool pin) { internal.wait(); }
         void add(const unsigned int x) { internal.add(x); }
         void decrement() { internal.done(); }
@@ -163,10 +172,16 @@ namespace skr::task
     {
     public:
         using internal_t = marl::Event;
+        event_t() = default;
+        event_t(nullptr_t) : internal(nullptr) {}
+
+        bool operator==(const event_t& other) const { return internal == other.internal; }
         void wait(bool pin) { internal.wait(); }
         void signal() { internal.signal(); }
         void clear() { internal.clear(); }
         bool test() const { return internal.test(); }
+        size_t hash() const { return internal.hash(); }
+        explicit operator bool() const { return (bool)internal; }
     private:
         internal_t internal;
     };

@@ -64,6 +64,14 @@ class WaitGroup {
   // wait() blocks until the WaitGroup counter reaches zero.
   MARL_NO_EXPORT inline void wait() const;
 
+  MARL_NO_EXPORT inline WaitGroup(nullptr_t) {}
+
+  MARL_NO_EXPORT inline WaitGroup(const WaitGroup&) = default;
+  MARL_NO_EXPORT inline WaitGroup(WaitGroup&&) = default;
+  MARL_NO_EXPORT inline WaitGroup& operator=(const WaitGroup& other) { data = other.data; return *this; }
+  MARL_NO_EXPORT inline explicit operator bool() const { return (bool)data; }
+  MARL_NO_EXPORT inline bool operator==(const WaitGroup& other) const { return data == other.data; }
+  MARL_NO_EXPORT inline size_t hash() const { return std::hash<void*>{}(data.get()); }
  private:
   struct Data {
     MARL_NO_EXPORT inline Data(Allocator* allocator);
@@ -72,7 +80,7 @@ class WaitGroup {
     ConditionVariable cv;
     marl::mutex mutex;
   };
-  const marl::shared_ptr<Data> data;
+  marl::shared_ptr<Data> data;
 };
 
 WaitGroup::Data::Data(Allocator* allocator) : cv(allocator) {}
