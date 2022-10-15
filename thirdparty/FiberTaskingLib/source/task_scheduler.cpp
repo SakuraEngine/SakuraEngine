@@ -222,7 +222,8 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             taskScheduler->CleanUpOldFiber();
 
             // Get a fresh instance of TLS, since we could be on a new thread now
-            tls = &taskScheduler->m_tls[taskScheduler->GetCurrentThreadIndex()];
+            threadIndex = taskScheduler->GetCurrentThreadIndex();
+            tls = &taskScheduler->m_tls[threadIndex];
 
             if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) == EmptyQueueBehavior::Sleep)
             {
@@ -261,6 +262,9 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                             nextTask.TaskToExecute.RefCounter.reset();
                         }
                     }
+                    // Get a fresh instance of TLS, since we could be on a new thread now
+                    threadIndex = taskScheduler->GetCurrentThreadIndex();
+                    tls = &taskScheduler->m_tls[threadIndex];
                 }
             }
             else
@@ -502,7 +506,7 @@ TaskScheduler::~TaskScheduler()
     delete[] m_quitFibers;
 }
 
-void TaskScheduler::AddTask(Task const task, TaskPriority priority, std::shared_ptr<TaskCounter> const &counter FTL_TASK_NAME(, const char* name))
+void TaskScheduler::AddTask(Task const task, TaskPriority priority, eastl::shared_ptr<TaskCounter> const &counter FTL_TASK_NAME(, const char* name))
 {
     FTL_ASSERT("Task given to TaskScheduler:AddTask has a nullptr Function", task.Function != nullptr);
 
@@ -536,7 +540,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, std::shared_
     }
 }
 
-void TaskScheduler::AddTasks(unsigned const numTasks, Task const* const tasks, TaskPriority priority, std::shared_ptr<TaskCounter> const &counter)
+void TaskScheduler::AddTasks(unsigned const numTasks, Task const* const tasks, TaskPriority priority, eastl::shared_ptr<TaskCounter> const &counter)
 {
     if (counter != nullptr)
     {
@@ -918,7 +922,7 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     Fiber* currentFiber = tls.CurrentFiber;
 
     unsigned pinnedThreadIndex;
-    if (pinToCurrentThread)
+    if (pinToCurrentThread || currentFiber == &m_mainFiber)
     {
         pinnedThreadIndex = GetCurrentThreadIndex();
     }
