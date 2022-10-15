@@ -742,6 +742,16 @@ RUNTIME_API void dualJ_wait_all();
  *
  */
 RUNTIME_API void dualJ_wait_storage(dual_storage_t* storage);
+/**
+ * @brief enable job for storage
+ *
+ */
+RUNTIME_API void dualJ_bind_storage(dual_storage_t* storage);
+/**
+ * @brief disable job for storage
+ *
+ */
+RUNTIME_API void dualJ_unbind_storage(dual_storage_t* storage);
 
 #if defined(__cplusplus)
 }
@@ -752,4 +762,20 @@ template <class C>
 struct dual_id_of {
     static dual_type_index_t get();
 };
+namespace dual
+{
+    struct dualJ_storage_scope_t
+    {
+        dual_storage_t* storage;
+        dualJ_storage_scope_t(dual_storage_t* storage)
+            : storage(storage)
+        {
+            dualJ_bind_storage(storage);
+        }
+        ~dualJ_storage_scope_t()
+        {
+            dualJ_unbind_storage(storage);
+        }
+    };
+}
 #endif
