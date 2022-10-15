@@ -35,7 +35,7 @@ namespace skr::task
         void(*on_fiber_dettached_ptr)(void* self, void* fiber) = nullptr;
     };
 }
-//#define SKR_TASK_MARL
+#define SKR_TASK_MARL
 #if !defined(SKR_TASK_MARL)
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
@@ -151,7 +151,7 @@ namespace skr::task
 
 namespace skr::task
 {
-    class counter_t
+    class RUNTIME_API counter_t
     {
     public:
         using internal_t = marl::WaitGroup;
@@ -168,11 +168,11 @@ namespace skr::task
         internal_t internal;
     };
 
-    class event_t
+    class RUNTIME_API event_t
     {
     public:
         using internal_t = marl::Event;
-        event_t() = default;
+        event_t() : internal(marl::Event::Mode::Manual) {}
         event_t(nullptr_t) : internal(nullptr) {}
 
         bool operator==(const event_t& other) const { return internal == other.internal; }
@@ -186,8 +186,9 @@ namespace skr::task
         internal_t internal;
     };
 
-    class scheduler_t
+    class RUNTIME_API scheduler_t
     {
+    public:
         using internal_t = marl::Scheduler*;
         void initialize(const scheudler_config_t&);
         void bind() { internal->bind(); }
@@ -197,12 +198,14 @@ namespace skr::task
         internal_t internal = nullptr;
     };
 
+    inline void* current_fiber() { return marl::Scheduler::Fiber::current(); }
+
     template<class F>
     void schedule(F&& lambda, event_t* event)
     {
         if(event)
         {
-            marl::schedule([event = *event, lambda]() mutable
+            marl::schedule([event = *event, lambda = std::forward<F>(lambda)]() mutable
             {
                 SKR_DEFER({ event.signal(); });
                 lambda();
@@ -210,7 +213,7 @@ namespace skr::task
         }
         else
         {
-            marl::schedule([lambda]
+            marl::schedule([lambda = std::forward<F>(lambda)]() mutable
             {
                 lambda();
             });
