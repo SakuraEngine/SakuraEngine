@@ -10,6 +10,7 @@
 #include "query.hpp"
 #include "storage.hpp"
 #include "ecs/callback.hpp"
+#include "tracy/Tracy.hpp"
 #include "type.hpp"
 #include "set.hpp"
 #include "utils/hash.h"
@@ -20,15 +21,6 @@ dual::scheduler_t::scheduler_t()
 
 dual::scheduler_t::~scheduler_t()
 {
-    if(registered)
-    {
-        skr::task::on_fiber_dettached([this](eastl::vector<skr::task::fiber_listener_t>& delegate)
-        {
-            delegate.erase(std::remove_if(delegate.begin(), delegate.end(), [this](const skr::task::fiber_listener_t& d) {
-                return d.self == this;
-            }), delegate.end());
-        });
-    }
 }
 
 dual_entity_t dual::scheduler_t::add_resource()
@@ -54,15 +46,6 @@ void dual::scheduler_t::set_main_thread(const dual_storage_t* storage)
     SKR_ASSERT(storage->scheduler == this);
     if(storage->counter)
         storage->counter->wait(true);
-    if(!registered)
-    {
-        
-        skr::task::on_fiber_dettached([this](eastl::vector<skr::task::fiber_listener_t>& delegate)
-        {
-            delegate.push_back(skr::task::fiber_listener_t{this});
-        });
-        registered = true;
-    }
     storage->currentFiber = skr::task::current_fiber();
 }
 
@@ -82,11 +65,16 @@ void dual::scheduler_t::on_fiber_dettached(void* fiber)
 void dual::scheduler_t::add_storage(dual_storage_t* storage)
 {
     SMutexLock lock(storageMutex.mMutex);
+    storage->scheduler = this;
+    storage->currentFiber = skr::task::current_fiber();
     storages.push_back(storage);
 }
 void dual::scheduler_t::remove_storage(const dual_storage_t* storage)
 {
+    sync_storage(storage);
     SMutexLock lock(storageMutex.mMutex);
+    storage->scheduler = nullptr;
+    storage->currentFiber = nullptr;
     storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
 }
 
@@ -158,9 +146,6 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
         return;
     if(storage->counter)
         storage->counter->wait(true);
-    storage->scheduler = nullptr;
-    remove_storage(storage);
-    storage->currentFiber = nullptr;
 }
 
 namespace dual
@@ -206,12 +191,6 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     skr::task::event_t result;
     ZoneScopedN("SchedualECSJob");
 
-    if (query->storage->scheduler == nullptr)
-    {
-        query->storage->scheduler = this;
-        add_storage(query->storage);
-        set_main_thread(query->storage);
-    }
     SKR_ASSERT(is_main_thread(query->storage));
     SKR_ASSERT(query->parameters.length < 32);
     llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
@@ -675,5 +654,15 @@ void dualJ_wait_all()
 void dualJ_wait_storage(dual_storage_t* storage)
 {
     dual::scheduler_t::get().sync_storage(storage);
+}
+
+void dualJ_bind_storage(dual_storage_t* storage)
+{
+    dual::scheduler_t::get().add_storage(storage);
+}
+
+void dualJ_unbind_storage(dual_storage_t* storage)
+{
+    dual::scheduler_t::get().remove_storage(storage);
 }
 }
