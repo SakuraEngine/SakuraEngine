@@ -129,7 +129,7 @@ eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBuf
     for (uint32_t i = 0; i < buffers[key].size(); ++i)
     {
         auto&& pooled = buffers[key][i];
-        if (pooled.mark.frame_index <= min_frame_index && pooled.buffer->size >= desc.size)
+        if (pooled.mark.frame_index < min_frame_index && pooled.buffer->size >= desc.size)
         {
             found_index = i;
             break;
