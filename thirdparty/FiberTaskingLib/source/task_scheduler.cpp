@@ -54,7 +54,7 @@
 namespace ftl
 {
 
-constexpr static unsigned kFailedPopAttemptsHeuristic = 5;
+constexpr static unsigned kFailedPopAttemptsHeuristic = 25;
 constexpr static int kInitErrorDoubleCall = -30;
 constexpr static int kInitErrorFailedToCreateWorkerThread = -60;
 
@@ -123,6 +123,14 @@ ReadyFiberDummyTask(TaskScheduler* taskScheduler, void* arg)
     (void)arg;
 }
 
+inline void nop() {
+#if defined(_WIN32)
+  __nop();
+#else
+  __asm__ __volatile__("nop");
+#endif
+}
+
 static thread_local uint32_t dispatch_depth = 0; 
 #define DISPATCH_GRAY 0x2f2f2f
 void TaskScheduler::FiberStartFunc(void* const arg)
@@ -154,6 +162,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         // Check if there is a ready pinned waiting fiber
         {
             std::lock_guard<std::mutex> guard(tls->PinnedReadyFibersLock);
+
 
             for (auto bundle = tls->PinnedReadyFibers.begin(); bundle != tls->PinnedReadyFibers.end(); ++bundle)
             {
@@ -225,10 +234,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             threadIndex = taskScheduler->GetCurrentThreadIndex();
             tls = &taskScheduler->m_tls[threadIndex];
 
-            if (taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed) == EmptyQueueBehavior::Sleep)
-            {
-                tls->FailedQueuePopAttempts = 0;
-            }
+            tls->FailedQueuePopAttempts = 0;
         }
         else
         {
@@ -239,14 +245,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 foundTask = taskScheduler->GetNextLoPriTask(&nextTask);
             }
 
-            EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
 
             if (foundTask)
             {
-                if (behavior == EmptyQueueBehavior::Sleep)
-                {
-                    tls->FailedQueuePopAttempts = 0;
-                }
+                tls->FailedQueuePopAttempts = 0;
 
                 {
                     ZoneScopedNC("Task", DISPATCH_GRAY);
@@ -269,13 +271,24 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             }
             else
             {
+                EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
                 // We failed to find a Task from any of the queues
                 // What we do now depends on m_emptyQueueBehavior, which we loaded above
                 switch (behavior)
                 {
                     case EmptyQueueBehavior::Yield:
                     {
-                        YieldThread();
+                        // If we have a ready waiting fiber, prevent sleep
+                        if (!readyWaitingFibers)
+                        {
+                            ++tls->FailedQueuePopAttempts;
+                            // Go to sleep if we've failed to find a task kFailedPopAttemptsHeuristic times
+                            if (tls->FailedQueuePopAttempts >= kFailedPopAttemptsHeuristic)
+                            {
+                                YieldThread();
+                                tls->FailedQueuePopAttempts = 0;
+                            }
+                        }
                         break;
                     }
 
