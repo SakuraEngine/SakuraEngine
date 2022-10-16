@@ -201,8 +201,9 @@ namespace skr::task
     inline void* current_fiber() { return marl::Scheduler::Fiber::current(); }
 
     template<class F>
-    void schedule(F&& lambda, event_t* event)
+    void schedule(F&& lambda, event_t* event, const char* name = nullptr)
     {
+        //TODO: trace name
         if(event)
         {
             marl::schedule([event = *event, lambda = std::forward<F>(lambda)]() mutable
