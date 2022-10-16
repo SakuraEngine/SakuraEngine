@@ -144,7 +144,7 @@ bool make_guid(const eastl::string_view& str, skr_guid_t& value)
     constexpr size_t short_guid_form_length = 36;
     constexpr size_t long_guid_form_length = 38;
 
-    if (str.size() != (long_guid_form_length + 1) && str.size() != (short_guid_form_length + 1))
+    if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
     {
         eastl::string str2(str.data(), str.size());
         SKR_LOG_ERROR("String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected, got %s", str2.c_str());
