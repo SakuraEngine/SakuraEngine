@@ -9,6 +9,8 @@
 #include "utils/parallel_for.hpp"
 #include "resource/resource_header.h"
 #include "task/task.hpp"
+#include "ghc/filesystem.hpp"
+#include "simdjson.h"
 
 struct skr_vfs_t;
 namespace skr::io
@@ -74,8 +76,8 @@ struct TOOL_API SCookContext { // context per job
 struct TOOL_API SCookSystem {
     SCookSystem() noexcept;
     ~SCookSystem() noexcept;
-    void Initialize();
-    void Shutdown();
+    void Initialize() {}
+    void Shutdown() {}
     skr::task::event_t AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
     skr::task::event_t EnsureCooked(skr_guid_t resource);

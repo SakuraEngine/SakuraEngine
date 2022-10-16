@@ -14,7 +14,6 @@ target("SkrRT")
     add_rules("c++.noexception")
     add_rules("skr.module", {api = "RUNTIME"})
     add_deps("SkrDependencyGraph", {public = false})
-    add_deps("marl", {public = true})
     add_deps("simdjson", "gsl", "fmt", "ghc_fs", "bitsery", "DirectXMath", "vulkan")
     add_defines(defs_list, {public = true})
     add_packages(packages_list, {public = true})
@@ -25,8 +24,8 @@ target("SkrRT")
     -- runtime compile definitions
     after_load(function (target,  opt)
         if (target:get("kind") == "shared") then
-            target:add("defines", "MI_SHARED_LIB", "EA_DLL", {public = true})
-            target:add("defines", "MI_SHARED_LIB_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT")
+            target:add("defines", "MI_SHARED_LIB", "EA_DLL", "MARL_DLL", {public = true})
+            target:add("defines", "MI_SHARED_LIB_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT", "MARL_BUILDING_DLL")
         end
     end)
     -- link system libs/frameworks
@@ -127,3 +126,14 @@ target("SkrRT")
         add_syslinks("pthread")
     end 
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/*.cpp")
+    
+    -- add marl source
+    add_defines("MARL_USE_EASTL", {public = true})
+    local marl_source_dir = "$(projectdir)/thirdparty/marl"
+    add_files(marl_source_dir.."/src/**.cpp")
+    if not has_config("is_msvc") then 
+        add_files(marl_source_dir.."/src/**.c")
+        add_files(marl_source_dir.."/src/**.S")
+    end
+    add_includedirs("$(projectdir)/thirdparty/marl/include", {public = true})
+    add_includedirs("$(projectdir)/thirdparty/marl/include/marl", {public = true})

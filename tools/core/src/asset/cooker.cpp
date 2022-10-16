@@ -76,7 +76,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
 {
     SCookContext* jobContext;
     {
-        skr::task::event_t result;
+        skr::task::event_t result{nullptr};
         cooking.lazy_emplace_l(
         guid, [&](SCookContext* ctx) { result = ctx->counter; },
         [&](const CookingMap::constructor& ctor) {
@@ -155,7 +155,7 @@ void SCookSystem::UnregisterCooker(skr_guid_t guid)
 skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
 {
     {
-        skr::task::event_t result;
+        skr::task::event_t result{nullptr};
         cooking.if_contains(guid, [&](SCookContext* ctx) {
             result = ctx->counter;
         });
