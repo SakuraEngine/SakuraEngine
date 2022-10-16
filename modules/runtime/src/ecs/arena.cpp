@@ -24,10 +24,29 @@ void fixed_arena_t::forget()
 
 void* fixed_arena_t::allocate(size_t s, size_t a)
 {
+    //TODO: waste memory
     size_t offset = size.fetch_add(s + a - 1);
     offset = ((offset + a - 1) / a) * a;
     SKR_ASSERT(offset < capacity);
     return (char*)buffer + offset;
+}
+
+
+void* struct_arena_base_t::allocate(size_t s, size_t a)
+{
+    size = ((size + a - 1) / a) * a;
+    SKR_ASSERT(size + s <= capacity);
+    size += s;
+    return (char*)buffer + size - s;
+}
+void struct_arena_base_t::initialize(size_t a)
+{
+    buffer = ::dual_malloc_aligned(capacity, a);
+}
+void struct_arena_base_t::record(size_t s, size_t a)
+{
+    capacity = ((capacity + a - 1) / a) * a;
+    capacity += s;
 }
 
 block_arena_t::block_arena_t(pool_t& pool)

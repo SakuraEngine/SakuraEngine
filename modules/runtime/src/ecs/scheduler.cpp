@@ -5,25 +5,22 @@
 
 #include "ecs/constants.hpp"
 #include "ecs/dual.h"
-#include "ftl/task.h"
-#include "ftl/task_counter.h"
-#include "ftl/task_scheduler.h"
 #include "mask.hpp"
 #include "phmap.h"
 #include "query.hpp"
 #include "storage.hpp"
 #include "ecs/callback.hpp"
+#include "tracy/Tracy.hpp"
 #include "type.hpp"
 #include "set.hpp"
+#include "utils/hash.h"
 
 dual::scheduler_t::scheduler_t()
 {
 }
 
-void dual::scheduler_t::initialize(ftl::TaskScheduler* inScheduler)
+dual::scheduler_t::~scheduler_t()
 {
-    scheduler = inScheduler;
-    allCounter = std::make_shared<ftl::TaskCounter>(scheduler);
 }
 
 dual_entity_t dual::scheduler_t::add_resource()
@@ -41,23 +38,52 @@ void dual::scheduler_t::remove_resource(dual_entity_t id)
 bool dual::scheduler_t::is_main_thread(const dual_storage_t* storage)
 {
     SKR_ASSERT(storage->scheduler == this);
-    auto mainFiber = storage->mainFiber != nullptr ? storage->mainFiber : scheduler->GetMainFiber();
-    return scheduler->GetCurrentFiber() == mainFiber;
+    return storage->currentFiber == skr::task::current_fiber();
 }
 
 void dual::scheduler_t::set_main_thread(const dual_storage_t* storage)
 {
     SKR_ASSERT(storage->scheduler == this);
+    if(storage->counter)
+        storage->counter->wait(true);
+    storage->currentFiber = skr::task::current_fiber();
+}
+
+void dual::scheduler_t::on_fiber_dettached(void* fiber)
+{
+    SMutexLock lock(storageMutex.mMutex);
+    for(auto& storage : storages)
+    {
+        if(storage->currentFiber == fiber)
+        {
+            storage->currentFiber = nullptr;
+        }
+    }
+}
+
+
+void dual::scheduler_t::add_storage(dual_storage_t* storage)
+{
+    SMutexLock lock(storageMutex.mMutex);
+    storage->scheduler = this;
+    storage->currentFiber = skr::task::current_fiber();
+    storages.push_back(storage);
+}
+void dual::scheduler_t::remove_storage(const dual_storage_t* storage)
+{
     sync_storage(storage);
-    storage->mainFiber = scheduler->GetCurrentFiber();
+    SMutexLock lock(storageMutex.mMutex);
+    storage->scheduler = nullptr;
+    storage->currentFiber = nullptr;
+    storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
 }
 
 void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
 {
     SKR_ASSERT(is_main_thread(type->storage));
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> deps;
+    // TODO: performance optimization
+    eastl::vector<skr::task::event_t> deps;
     {
-        // TODO: performance optimization
         SMutexLock entryLock(entryMutex.mMutex);
         auto pair = dependencyEntries.find(type);
         if (pair == dependencyEntries.end())
@@ -80,14 +106,15 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
         dependencyEntries.erase(pair);
     }
     for (auto dep : deps)
-        scheduler->WaitForCounter(dep.get(), true);
+        dep.wait(true);
 }
 
 void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> deps;
+    eastl::vector<skr::task::event_t> deps;
+    
     {
         SMutexLock entryLock(entryMutex.mMutex);
         auto pair = dependencyEntries.find(type);
@@ -103,37 +130,34 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
         entries[i].shared.clear();
         entries[i].owned.clear();
     }
+            
     for (auto dep : deps)
-        scheduler->WaitForCounter(dep.get(), true);
+        dep.wait(true);
 }
 
 void dual::scheduler_t::sync_all()
 {
-    SKR_ASSERT(scheduler->GetCurrentThreadIndex() == 0);
-    scheduler->WaitForCounter(allCounter.get(), true);
+    allCounter.then([](skr::task::counter_t& e) { e.wait(true); });
 }
 
 void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 {
-    if (!storage->counter)
+    if (!storage->scheduler)
         return;
-    scheduler->WaitForCounter(storage->counter.get(), true);
-    storage->counter.reset();
-    storage->scheduler = nullptr;
-    storage->mainFiber = nullptr;
+    if(storage->counter)
+        storage->counter->wait(true);
 }
 
 namespace dual
 {
 struct hash_shared_ptr {
-    template <class T>
-    size_t operator()(const std::shared_ptr<T>& value) const
+    size_t operator()(const skr::task::event_t& value) const
     {
-        return std::hash<void*>{}(value.get());
+        return value.hash();
     }
 };
-using DependencySet = skr::flat_hash_set<std::shared_ptr<ftl::TaskCounter>, hash_shared_ptr>;
-void update_entry(job_dependency_entry_t& entry, std::shared_ptr<ftl::TaskCounter> job, bool readonly, bool atomic, DependencySet& dependencies)
+using DependencySet = skr::flat_hash_set<skr::task::event_t, hash_shared_ptr>;
+void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     if (readonly)
     {
@@ -161,16 +185,12 @@ void update_entry(job_dependency_entry_t& entry, std::shared_ptr<ftl::TaskCounte
 }
 } // namespace dual
 
-std::shared_ptr<ftl::TaskCounter> dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+skr::task::event_t dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
 {
+    skr::task::event_t result;
     ZoneScopedN("SchedualECSJob");
 
-    if (query->storage->scheduler == nullptr)
-    {
-        query->storage->scheduler = this;
-        set_main_thread(query->storage);
-    }
     SKR_ASSERT(is_main_thread(query->storage));
     SKR_ASSERT(query->parameters.length < 32);
     llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
@@ -179,40 +199,56 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     };
     auto& params = query->parameters;
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
-    auto groupCount = (uint32_t)groups.size();
-    size_t arenaSize = 0;
-    arenaSize += sizeof(dual_ecs_job_t);
-    if(resources)
-        arenaSize += resources->count * (sizeof(dual_entity_t) + sizeof(int)); // job.resources
-    arenaSize += groupCount * sizeof(dual_group_t*);   // job.groups
-    arenaSize += groupCount * sizeof(dual_type_index_t) * params.length;   // job.localTypes
-    arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.readonly
-    arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.atomic
-    arenaSize += groupCount * sizeof(std::bitset<32>);                     // job.randomAccess
-    fixed_arena_t arena{ arenaSize * 2 };                                      // todo: pool?
-    dual_ecs_job_t* job = new (arena.allocate<dual_ecs_job_t>()) dual_ecs_job_t(*this);
-    job->type = dual_job_type::ecs;
-    job->query = query;
+    struct task_t {
+        uint32_t groupIndex;
+        uint32_t startIndex;
+        dual_chunk_view_t view;
+    };
+    struct SharedData
     {
-        ZoneScopedN("AllocateGroupData");
-        job->groups = arena.allocate<dual_group_t*>(groupCount);
-        job->groupCount = groupCount;
-        job->localTypes = arena.allocate<dual_type_index_t>(groupCount * params.length);
-        job->readonly = arena.allocate<std::bitset<32>>(groupCount);
-        job->atomic = arena.allocate<std::bitset<32>>(groupCount);
-        job->randomAccess = arena.allocate<std::bitset<32>>(groupCount);
+        const dual_query_t* query;
+        dual_group_t** groups;
+        uint32_t groupCount;
+        std::bitset<32>* readonly;
+        dual_type_index_t* localTypes;
+        std::bitset<32>* atomic;
+        std::bitset<32>* randomAccess;
+        bool hasRandomWrite;
+        EIndex entityCount;
+        dual_system_callback_t callback;
+        void* userdata;
+        eastl::vector<task_t> tasks;
+    };
+    SharedData* job = nullptr;
+    std::shared_ptr<SharedData> sharedData;
+
+
+    auto groupCount = (uint32_t)groups.size();
+    {
+        ZoneScopedN("AllocateSharedData");
+        struct_arena_t<SharedData> arena;
+        arena.record(&SharedData::groups, groupCount);
+        arena.record(&SharedData::localTypes, groupCount * params.length);
+        arena.record(&SharedData::readonly, groupCount);
+        arena.record(&SharedData::atomic, groupCount);
+        arena.record(&SharedData::randomAccess, groupCount);  
+        job = arena.end();
+        job->groups =       arena.get(&SharedData::groups, groupCount);
+        job->localTypes =   arena.get(&SharedData::localTypes, groupCount * params.length);
+        job->readonly =     arena.get(&SharedData::readonly, groupCount);
+        job->atomic =       arena.get(&SharedData::atomic, groupCount);
+        job->randomAccess = arena.get(&SharedData::randomAccess, groupCount);
     }
+    job->groupCount = groupCount;
     job->hasRandomWrite = false;
     job->entityCount = 0;
     job->callback = callback;
     job->userdata = u;
-    job->batchSize = batchSize;
-    job->init = init;
-    job->teardown = teardown;
-    job->scheduler = this;
-    job->tasks = nullptr;
-    job->payloads = nullptr;
-    arena.forget();
+    job->query = query;
+    sharedData.reset(job, [](SharedData* p)
+    {
+        SkrDelete(p);
+    });
     std::memcpy(job->groups, groups.data(), groupCount * sizeof(dual_group_t*));
     int groupIndex = 0;
     for (auto group : groups)
@@ -231,7 +267,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         ++groupIndex;
     }
 
-    DependencySet dependencies;
+    DependencySet dependencySet;
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
     auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
         if (localType == kInvalidTypeIndex)
@@ -252,7 +288,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 
             auto entries = (*iter).second.data();
             auto& entry = entries[localType];
-            update_entry(entry, job->counter, readonly, atomic, dependencies);
+            update_entry(entry, result, readonly, atomic, dependencySet);
         }
     };
 
@@ -275,65 +311,75 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             auto& entry = allResources[e_id(resources->resources[i])];
             auto readonly = resources->readonly[i];
             auto atomic = resources->atomic[i];
-            update_entry(entry, job->counter, readonly, atomic, dependencies);
+            update_entry(entry, result, readonly, atomic, dependencySet);
         }
     }
 
-    forloop (i, 0, query->parameters.length)
     {
-        if (type_index_t(params.types[i]).is_tag())
-            continue;
-        if (params.accesses[i].randomAccess == DOS_GLOBAL)
+        ZoneScopedN("UpdateArchetypeEntries");
+
+        forloop (i, 0, query->parameters.length)
         {
-            sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
-        }
-        else
-        {
-            groupIndex = 0;
-            for (auto group : groups)
+            if (type_index_t(params.types[i]).is_tag())
+                continue;
+            if (params.accesses[i].randomAccess == DOS_GLOBAL)
             {
-                auto localType = job->localTypes[groupIndex * params.length + i];
-                if (localType == kInvalidTypeIndex)
+                sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
+            }
+            else
+            {
+                groupIndex = 0;
+                for (auto group : groups)
                 {
-                    auto g = group->get_owner(params.types[i]);
-                    if (g)
+                    auto localType = job->localTypes[groupIndex * params.length + i];
+                    if (localType == kInvalidTypeIndex)
                     {
-                        sync_entry(g, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
+                        auto g = group->get_owner(params.types[i]);
+                        if (g)
+                        {
+                            sync_entry(g, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
+                        }
                     }
+                    else
+                    {
+                        sync_entry(group, localType, params.accesses[i].readonly, params.accesses[i].atomic);
+                    }
+                    ++groupIndex;
                 }
-                else
-                {
-                    sync_entry(group, localType, params.accesses[i].readonly, params.accesses[i].atomic);
-                }
-                ++groupIndex;
             }
         }
     }
-
+    
+    eastl::vector<skr::task::event_t> dependencies;
     {
         ZoneScopedN("AllocateDependencyData");
-        job->dependencies.resize(dependencies.size());
-        job->dependencyCount = (int)dependencies.size();
+        dependencies.resize(dependencySet.size());
         uint32_t dependencyIndex = 0;
-        for (auto dependency : dependencies)
-            job->dependencies[dependencyIndex++] = dependency;
+        for (auto& dependency : dependencySet)
+            dependencies[dependencyIndex++] = dependency;
     }
-
-    auto body = +[](ftl::TaskScheduler*, void* data) {
-        ZoneScopedN("ECSJobBody");
-
-        auto job = (dual_ecs_job_t*)data;
+    
+    {
+        ZoneScopedN("AllocateCounter");
+        allCounter->add(1);
+        query->storage->counter->add(1);
+    }
+    skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
+    {
         {
             ZoneScopedN("JobWaitDependencies");
-            forloop (i, 0, job->dependencyCount)
-                job->scheduler->scheduler->WaitForCounter(job->dependencies[i].get());
+            for(auto& dependency : dependencies)
+                dependency.wait(false);
         }
         {
             ZoneScopedN("JobInitialize");
-            if (job->init)
-                job->init(job->userdata, job->entityCount);
+            if (init)
+                init(sharedData->userdata, sharedData->entityCount);
         }
-        auto query = job->query;
+        SKR_DEFER({ 
+            allCounter->decrement();
+            query->storage->counter->decrement();
+        });
         fixed_stack_scope_t _(localStack);
         dual_meta_filter_t validatedMeta;
         {
@@ -346,49 +392,37 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             query->storage->validate(validatedMeta.any_meta);
             query->storage->validate(validatedMeta.none_meta);
         }
-        if (job->hasRandomWrite || job->batchSize == 0)
+        if (sharedData->hasRandomWrite || batchSize == 0)
         {
             uint32_t startIndex = 0;
             auto processView = [&](dual_chunk_view_t* view) {
-                job->callback(job->userdata, job->query->storage, view, job->localTypes, startIndex);
+                sharedData->callback(sharedData->userdata, query->storage, view, sharedData->localTypes, startIndex);
                 startIndex += view->count;
             };
-            forloop (i, 0, job->groupCount)
+            forloop (i, 0, sharedData->groupCount)
             {
-                auto group = job->groups[i];
+                auto group = sharedData->groups[i];
                 query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(processView));
             }
-
-            {
-                ZoneScopedN("JobTearDown0");
-                if(job->teardown)
-                    job->teardown(job->userdata, job->entityCount);
-            }
-            job->scheduler->allCounter->Decrement();
         }
         else
         {
-            struct task_t {
-                uint32_t groupIndex;
-                uint32_t startIndex;
-                dual_chunk_view_t view;
-            };
             struct batch_t {
                 intptr_t startTask;
                 intptr_t endTask;
             };
-            eastl::vector<batch_t> batchs;
-            eastl::vector<task_t> tasks;
+            eastl::vector<batch_t> batches;
+            eastl::vector<task_t>& tasks = sharedData->tasks;
             {
                 ZoneScopedN("JobPrepareBatch");
 
-                batchs.reserve(job->entityCount / job->batchSize);
-                tasks.reserve(batchs.capacity());
-                uint32_t batchRemain = job->batchSize;
+                batches.reserve(sharedData->entityCount / batchSize);
+                tasks.reserve(batches.capacity());
+                uint32_t batchRemain = batchSize;
                 EIndex startIndex = 0;
                 batch_t currBatch;
                 currBatch.startTask = currBatch.endTask = 0;
-                forloop (i, 0, job->groupCount)
+                forloop (i, 0, sharedData->groupCount)
                 {
                     auto scheduleView = [&](dual_chunk_view_t* view) {
                         uint32_t allocated = 0;
@@ -406,77 +440,52 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                             if (batchRemain == 0) // batch filled
                             {
                                 currBatch.endTask = tasks.size();
-                                batchs.push_back(currBatch);
+                                batches.push_back(currBatch);
                                 currBatch.startTask = currBatch.endTask; // new batch
-                                batchRemain = job->batchSize;
+                                batchRemain = batchSize;
                             }
                         }
                     };
-                    auto group = job->groups[i];
+                    auto group = sharedData->groups[i];
                     query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(scheduleView));
                 };
                 if (currBatch.endTask != tasks.size())
                 {
                     currBatch.endTask = tasks.size();
-                    batchs.push_back(currBatch);
-                }
-            }
-            struct task_payload_t {
-                batch_t batch;
-                dual_ecs_job_t* job;
-            };
-            task_payload_t* payloads = (task_payload_t*)::dual_malloc(sizeof(task_payload_t) * batchs.size());
-            uint32_t payloadIndex = 0;
-            for (auto& batch : batchs)
-            {
-                batch.startTask = (intptr_t)(tasks.data() + batch.startTask);
-                batch.endTask = (intptr_t)(tasks.data() + batch.endTask);
-                payloads[payloadIndex++] = { batch, job };
-            }
-            job->tasks = tasks.data();
-            tasks.reset_lose_memory();
-            job->payloads = payloads;
-
-            auto taskBody = +[](ftl::TaskScheduler* taskScheduler, void* data) {
-                task_payload_t* payload = (task_payload_t*)data;
-                auto job = payload->job;
-                for (auto task = (task_t*)payload->batch.startTask; task != (task_t*)payload->batch.endTask; ++task)
-                    job->callback(job->userdata, job->query->storage, &task->view, &job->localTypes[job->query->parameters.length * task->groupIndex], task->startIndex);
-                job->scheduler->allCounter->Decrement();
-                job->query->storage->counter->Decrement();
-            };
-            eastl::vector<ftl::Task> _tasks;
-            _tasks.resize(batchs.size());
-
-            auto TearDown = ftl::PostTask([job] {
-                ZoneScopedN("JobTearDown1");
-                if(job->teardown)
-                    job->teardown(job->userdata, job->entityCount);
+                    batches.push_back(currBatch);
                     
-                job->~dual_ecs_job_t();
-                sakura_free(job);
-            });
-            forloop (i, 0, batchs.size())
-                _tasks[i] = { taskBody, &payloads[i], TearDown };
-            job->scheduler->allCounter->Add(static_cast<const uint32_t>(batchs.size()));
-            job->query->storage->counter->Add(static_cast<const uint32_t>(batchs.size()));
-            job->scheduler->scheduler->AddTasks((unsigned int)batchs.size(), _tasks.data(), ftl::TaskPriority::Normal, job->counter);
-            job->scheduler->allCounter->Decrement();
+                }
+                
+                skr::task::counter_t counter;
+                counter.add(batches.size());
+                for(auto batch : batches)
+                {
+                    skr::task::schedule([batch, sharedData, counter]() mutable
+                    {
+                        SKR_DEFER({
+                            counter.decrement();
+                        });
+                        forloop (i, batch.startTask, batch.endTask)
+                        {
+                            auto task = &sharedData->tasks[i];
+                            sharedData->callback(sharedData->userdata, sharedData->query->storage, &task->view, sharedData->localTypes + task->groupIndex * sharedData->query->parameters.length, task->startIndex);
+                        }
+                    }, nullptr);
+                }
+                counter.wait(false);
+            }
         }
-    };
-    {
-        ZoneScopedN("AllocateCounter");
-        allCounter->Add(1);
-        if (!query->storage->counter)
-            query->storage->counter = eastl::make_shared<ftl::TaskCounter>(scheduler);
-        query->storage->counter->Add(1);
-    }
-    auto counter = job->counter;
-    scheduler->AddTask({ body, job }, ftl::TaskPriority::High, job->counter);
-    return counter;
+
+        {
+            ZoneScopedN("JobTearDown0");
+            if(teardown)
+                teardown(sharedData->userdata, sharedData->entityCount);
+        }
+    }, &result);
+    return result;
 }
 
-eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const std::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
+eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
@@ -561,17 +570,17 @@ eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::schedule_cus
         }
     }
 
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> result;
+    eastl::vector<skr::task::event_t> result;
     for(auto& counter : dependencies)
         result.push_back(std::move(counter));
     return result;
 }
 
-eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resources(const std::shared_ptr<ftl::TaskCounter>& counter, dual_resource_operation_t* resources)
+eastl::vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
     {
-        SMutexLock resourceLock(resourceMutex.mMutex);
+        SMutexLock entryLock(entryMutex.mMutex);
         forloop (i, 0, resources->count)
         {
             auto& entry = allResources[e_id(resources->resources[i])];
@@ -580,32 +589,14 @@ eastl::vector<std::shared_ptr<ftl::TaskCounter>> dual::scheduler_t::sync_resourc
             update_entry(entry, counter, readonly, atomic, dependencies);
         }
     }
-    
-    eastl::vector<std::shared_ptr<ftl::TaskCounter>> result;
+    eastl::vector<skr::task::event_t> result;
+
     result.resize(dependencies.size());
     uint32_t dependencyIndex = 0;
     for (auto dependency : dependencies)
         result[dependencyIndex++] = dependency;
 
     return result;
-}
-
-dual_job_t::~dual_job_t()
-{
-}
-
-dual_job_t::dual_job_t(dual::scheduler_t& scheduler)
-    : scheduler(&scheduler)
-    , counter(std::make_shared<ftl::TaskCounter>(scheduler.scheduler))
-{
-}
-
-dual_ecs_job_t::~dual_ecs_job_t()
-{
-    if(payloads)
-        dual_free(payloads);
-    if(tasks)
-        dual_free_aligned(tasks, 1); // tasks moved from eastl::vector uses aligned allocation
 }
 
 extern "C" {
@@ -620,7 +611,7 @@ void dualJ_remove_resource(dual_entity_t id)
 }
 
 struct dual_counter_t {
-    std::shared_ptr<ftl::TaskCounter> counter;
+    skr::task::event_t counter;
 };
 
 void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
@@ -647,7 +638,7 @@ void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, d
 
 void dualJ_wait_counter(dual_counter_t* counter, int pin)
 {
-    dual::scheduler_t::get().scheduler->WaitForCounter(counter->counter.get(), pin);
+    counter->counter.wait(pin);
 }
 
 void dualJ_release_counter(dual_counter_t* counter)
@@ -664,14 +655,14 @@ void dualJ_wait_storage(dual_storage_t* storage)
 {
     dual::scheduler_t::get().sync_storage(storage);
 }
+
+void dualJ_bind_storage(dual_storage_t* storage)
+{
+    dual::scheduler_t::get().add_storage(storage);
 }
 
-void dualJ_initialize(dual_scheduler_t* scheduler)
+void dualJ_unbind_storage(dual_storage_t* storage)
 {
-    dual::scheduler_t::get().initialize((ftl::TaskScheduler*)scheduler);
+    dual::scheduler_t::get().remove_storage(storage);
 }
-
-dual_scheduler_t* dualJ_get_scheduler()
-{
-    return (dual_scheduler_t*)dual::scheduler_t::get().scheduler;
 }

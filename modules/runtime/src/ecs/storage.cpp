@@ -3,8 +3,6 @@
 
 #include "ecs/dual.h"
 #include "entity.hpp"
-#include "ftl/task.h"
-#include "ftl/task_scheduler.h"
 #include "query.hpp"
 #include "set.hpp"
 #include "storage.hpp"
@@ -25,6 +23,9 @@ dual_storage_t::dual_storage_t()
 
 dual_storage_t::~dual_storage_t()
 {
+    if(scheduler)
+        scheduler->remove_storage(this);
+    scheduler = nullptr;
     for(auto q : queries)
         ::sakura_free((void*)q);
     for (auto iter : groups)
@@ -668,23 +669,24 @@ void dual_storage_t::merge(dual_storage_t& src)
         payload.end = (uint32_t)chunks.size();
         payloads.push_back(payload);
     }
-    ftl::Task* tasks = new ftl::Task[payloads.size()];
-    auto taskBody = [](ftl::TaskScheduler*, void* data) {
-        auto payload = (payload_t*)data;
-        forloop (i, payload->start, payload->end)
+    skr::task::counter_t counter;
+    counter.add(payloads.size());
+    for(auto payload : payloads)
+    {
+        skr::task::schedule([payload, counter]() mutable
         {
-            auto c = payload->chunks[i];
-            auto ents = (dual_entity_t*)c->get_entities();
-            forloop (j, 0, c->count)
-                payload->m->map(ents[j]);
-            iterator_ref_view({ c, 0, c->count }, *payload->m);
-        }
-    };
-    forloop (i, 0, payloads.size())
-        tasks[i] = { taskBody, &payloads[i] };
-    auto counter = std::make_shared<ftl::TaskCounter>(scheduler->scheduler);
-    scheduler->scheduler->AddTasks((uint32_t)payloads.size(), tasks, ftl::TaskPriority::High, counter);
-    scheduler->scheduler->WaitForCounter(counter.get());
+            forloop (i, payload.start, payload.end)
+            {
+                auto c = payload.chunks[i];
+                auto ents = (dual_entity_t*)c->get_entities();
+                forloop (j, 0, c->count)
+                    payload.m->map(ents[j]);
+                iterator_ref_view({ c, 0, c->count }, *payload.m);
+            }
+            counter.decrement();
+        }, nullptr);
+    }
+    counter.wait(true);
     for (auto& i : src.groups)
     {
         dual_group_t* g = i.second;

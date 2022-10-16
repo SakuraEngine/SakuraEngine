@@ -1,7 +1,6 @@
 #include "asset/config_asset.hpp"
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
-#include "ftl/fibtex.h"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "platform/vfs.h"
@@ -40,20 +39,19 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
 
     auto u8Path = record->path.u8string();
 #if 1
-    ftl::AtomicFlag counter(&GetCookSystem()->GetScheduler());
-    counter.Set();
+    skr::task::event_t counter;
     skr_ram_io_t ramIO = {};
     ramIO.offset = 0;
     ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
-        auto pCounter = (ftl::AtomicFlag*)data;
-        pCounter->Clear();
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request,void* data) noexcept {
+        auto pCounter = (skr::task::event_t*)data;
+        pCounter->signal();
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_io_request_t ioRequest = {};
     skr_async_ram_destination_t ioDestination = {};
     ioService->request(record->project->vfs, &ramIO, &ioRequest, &ioDestination);
-    GetCookSystem()->scheduler->WaitForCounter(&counter, true);
+    counter.wait(false);
     auto jsonString = simdjson::padded_string((char8_t*)ioDestination.bytes, ioDestination.size);
     sakura_free(ioDestination.bytes);
 #else
