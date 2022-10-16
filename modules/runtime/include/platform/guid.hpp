@@ -72,10 +72,10 @@ constexpr skr_guid_t make_guid_helper(const char* begin)
 }
 
 template <size_t N>
-constexpr skr_guid_t make_guid(const char (&str)[N])
+constexpr skr_guid_t make_guid_unsafe(const char (&str)[N])
 {
     using namespace eastl::string_literals;
-    static_assert(N == (long_guid_form_length + 1) || N == (short_guid_form_length + 1), "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
+    static_assert(N == (long_guid_form_length + 1) && N != (short_guid_form_length + 1), "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
     if constexpr (N == (long_guid_form_length + 1))
     {
@@ -85,10 +85,10 @@ constexpr skr_guid_t make_guid(const char (&str)[N])
 
     return make_guid_helper(str + (N == (long_guid_form_length + 1) ? 1 : 0));
 }
-constexpr skr_guid_t make_guid(const eastl::string_view& str)
+constexpr skr_guid_t make_guid_unsafe(const eastl::string_view& str)
 {
     using namespace eastl::string_literals;
-    if (str.size() != (long_guid_form_length + 1) && str.size() == (short_guid_form_length + 1))
+    if (str.size() != (long_guid_form_length + 1) && str.size() != (short_guid_form_length + 1))
         SKR_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
     if (str.size() == (long_guid_form_length + 1))
@@ -100,7 +100,7 @@ constexpr skr_guid_t make_guid(const eastl::string_view& str)
     return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0));
 }
 } // namespace details
-using details::make_guid;
+using details::make_guid_unsafe;
 
 namespace literals
 {
