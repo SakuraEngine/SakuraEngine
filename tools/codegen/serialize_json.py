@@ -103,6 +103,8 @@ class Database(object):
             for base in record.bases:
                 if base in self.name_to_record:
                     bases.append(self.name_to_record[base])
+                else:
+                    abort("base %s not reflected" % base) 
             record.bases = bases
 
     def add_record(self, record):
@@ -165,7 +167,6 @@ def main():
                 db.add_record(parseRecord(key, value))
             for key, value in meta["enums"].items():
                 db.add_enum(parseEnum(key, value))
-    db.resolve_base()
 
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     for meta in metas:
@@ -180,6 +181,8 @@ def main():
                 enum = db.name_to_enum[key]
                 data.enums.append(enum)
                 data.headers.add(GetInclude(enum.fileName))
+                
+    db.resolve_base()
     if data.enums or data.records:
         template = os.path.join(BASE, "json_serialize.cpp.mako")
         content = render(template, db=data)
