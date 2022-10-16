@@ -4,7 +4,6 @@
 #include "cgpu/cgpux.hpp"
 #include "utils/io.hpp"
 #include "utils/make_zeroed.hpp"
-#include "ftl/atomic_counter.h"
 #include "cgltf/cgltf.h"
 #include "platform/thread.h"
 #include <EASTL/vector_map.h>

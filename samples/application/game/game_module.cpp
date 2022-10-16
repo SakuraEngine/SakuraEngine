@@ -9,8 +9,6 @@
 #include "resource/local_resource_registry.h"
 #include "ecs/dual.h"
 #include "../../cgpu/common/utils.h"
-#include "ftl/task.h"
-#include "ftl/task_scheduler.h"
 #include "ghc/filesystem.hpp"
 #include "platform/time.h"
 #include "platform/window.h"
@@ -34,6 +32,7 @@
 #include "skr_input/inputSystem.h"
 #include "skr_renderer/render_mesh.h"
 #include "math/vector.hpp"
+#include "task/task.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -58,7 +57,7 @@ class SGameModule : public skr::IDynamicModule
 
     struct dual_storage_t* game_world = nullptr;
 
-    ftl::TaskScheduler scheduler;
+    skr::task::scheduler_t scheduler;
     SRendererId game_renderer = nullptr;
 };
 
@@ -92,11 +91,11 @@ void SGameModule::on_load(int argc, char** argv)
 
     if (bUseJob)
     {
-        auto options = make_zeroed<ftl::TaskSchedulerInitOptions>();
-        options.ThreadPoolSize = 0;
-        options.Behavior = ftl::EmptyQueueBehavior::Sleep;
-        scheduler.Init(options);
-        dualJ_initialize((dual_scheduler_t*)&scheduler);
+        auto options = make_zeroed<skr::task::scheudler_config_t>();
+        options.numThreads = 0;
+        scheduler.initialize(options);
+        scheduler.bind();
+        dualJ_bind_storage(game_world);
     }
     // TODO: Refactor this
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
@@ -598,6 +597,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
 void SGameModule::on_unload()
 {
     SKR_LOG_INFO("game unloaded!");
-
+    dualJ_unbind_storage(game_world);
     dualS_release(game_world);
 }

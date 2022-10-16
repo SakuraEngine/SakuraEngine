@@ -1,19 +1,14 @@
 #pragma once
 #include "SkrTool/tool.configure.h"
-#include <ghc/filesystem.hpp>
-#include <EASTL/vector.h>
-#include <EASTL/shared_ptr.h>
-#include "simdjson.h"
-#include "ftl/task.h"
-#include "ftl/fibtex.h"
-#include "ftl/task_counter.h"
-#include "ftl/task_scheduler.h"
+#include "EASTL/vector.h"
+#include "EASTL/shared_ptr.h"
 #include "platform/memory.h"
 #include "platform/guid.hpp"
 #include "platform/thread.h"
 #include "utils/hashmap.hpp"
 #include "utils/parallel_for.hpp"
 #include "resource/resource_header.h"
+#include "task/task.hpp"
 
 struct skr_vfs_t;
 namespace skr::io
@@ -52,7 +47,7 @@ struct TOOL_API SCooker {
 struct TOOL_API SCookContext { // context per job
     SAssetRecord* record;
     class skr::io::RAMService* ioService;
-    std::shared_ptr<ftl::TaskCounter> counter;
+    skr::task::event_t counter;
     ghc::filesystem::path output;
     eastl::vector<skr_guid_t> staticDependencies;
     eastl::vector<skr_guid_t> runtimeDependencies;
@@ -81,12 +76,11 @@ struct TOOL_API SCookSystem {
     ~SCookSystem() noexcept;
     void Initialize();
     void Shutdown();
-    std::shared_ptr<ftl::TaskCounter> AddCookTask(skr_guid_t resource);
+    skr::task::event_t AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
-    std::shared_ptr<ftl::TaskCounter> EnsureCooked(skr_guid_t resource);
+    skr::task::event_t EnsureCooked(skr_guid_t resource);
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
-    ftl::TaskScheduler& GetScheduler();
     void WaitForAll();
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
@@ -95,8 +89,7 @@ struct TOOL_API SCookSystem {
     class skr::io::RAMService* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 4;
     class skr::io::RAMService* ioServices[ioServicesMaxCount];
-    ftl::TaskScheduler* scheduler = nullptr;
-    ftl::TaskCounter* mainCounter = nullptr;
+    skr::task::counter_t mainCounter;
 
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(SProject* project, ghc::filesystem::path path);
@@ -106,7 +99,7 @@ struct TOOL_API SCookSystem {
     template <class F, class Iter>
     void ParallelFor(Iter begin, Iter end, size_t batch, F f)
     {
-        skr::parallel_for(scheduler, std::move(begin), std::move(end), batch, std::move(f));
+        skr::parallel_for(std::move(begin), std::move(end), batch, std::move(f));
     }
 };
 TOOL_API SCookSystem* GetCookSystem();

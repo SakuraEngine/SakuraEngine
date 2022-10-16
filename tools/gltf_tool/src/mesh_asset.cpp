@@ -17,16 +17,15 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
     }
     // prepare callback
     auto u8Path = record->path.u8string();
-    ftl::AtomicFlag counter(&GetCookSystem()->GetScheduler());
+    skr::task::event_t counter;
     struct CallbackData
     {
         skr_async_ram_destination_t destination;
-        ftl::AtomicFlag* pCounter;   
+        skr::task::event_t* pCounter;   
         eastl::string u8Path;
     } callbackData;
     callbackData.pCounter = &counter;
     callbackData.u8Path = u8Path.c_str();
-    counter.Set();
     // prepare io
     skr_ram_io_t ramIO = {};
     ramIO.offset = 0;
@@ -55,12 +54,12 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
         sakura_free(cbData->destination.bytes);
         cbData->destination.bytes = (uint8_t*)gltf_data_;
         cbData->destination.size = MAGIC_SIZE_GLTF_PARSE_READY;
-        cbData->pCounter->Clear();
+        cbData->pCounter->signal();
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
     skr_async_io_request_t ioRequest = {};
     ioService->request(record->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
-    GetCookSystem()->scheduler->WaitForCounter(&counter, true);
+    counter.wait(false);
     // parse
     if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
     {
