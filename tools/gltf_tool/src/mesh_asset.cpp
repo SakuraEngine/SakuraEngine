@@ -79,6 +79,11 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
 bool skd::asset::SMeshCooker::Cook(SCookContext * ctx)
 { 
     auto resource = ctx->Import<skr_mesh_resource_t>();
+    if(!resource)
+    {
+        return false;
+    }
+    SKR_DEFER({ SkrDelete(resource); });
     //-----write resource header
     eastl::vector<uint8_t> buffer;
     skr::resource::SBinarySerializer archive(buffer);
