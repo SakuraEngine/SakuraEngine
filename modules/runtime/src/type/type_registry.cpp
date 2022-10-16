@@ -916,10 +916,10 @@ void skr_type_t::FromString(void* dst, eastl::string_view str, skr::type::ValueS
                 fast_float::from_chars(str.begin(), str.end(), *(double*)dst);
                 break;
             case SKR_TYPE_CATEGORY_GUID:
-                *(skr_guid_t*)dst = skr::guid::make_guid({ str.data(), str.size() });
+                *(skr_guid_t*)dst = skr::guid::make_guid_unsafe({ str.data(), str.size() });
                 break;
             case SKR_TYPE_CATEGORY_HANDLE:
-                (*(skr_resource_handle_t*)dst).set_guid(skr::guid::make_guid({ str.data(), str.size() }));
+                (*(skr_resource_handle_t*)dst).set_guid(skr::guid::make_guid_unsafe({ str.data(), str.size() }));
             case SKR_TYPE_CATEGORY_ENUM:
                 ((const EnumType*)this)->FromString(dst, str);
                 break;
