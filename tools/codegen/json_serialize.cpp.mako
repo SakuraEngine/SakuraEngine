@@ -2,6 +2,7 @@
 // START READER IMPLEMENTATION
 #include "utils/hash.h"
 #include "platform/debug.h"
+#include "utils/log.h"
 #include "json_reader.generated.h"
 %for header in db.headers:
 #include "${header}"
@@ -10,15 +11,21 @@
 namespace skr::json {
 %for enum in db.enums:
 template<>
-void ReadValue(simdjson::ondemand::value&& json, ${enum.name}& e)
+error_code ReadValue(simdjson::ondemand::value&& json, ${enum.name}& e)
 {
-    std::string_view enumStr = json.get_string().value_unsafe();
+    auto value = json.get_string();
+    if (value.error() != simdjson::SUCCESS)
+        return (error_code)value.error();
+    std::string_view enumStr = value.value_unsafe();
     auto hash = hash_crc32(enumStr);
     switch(hash)
     {
     %for enumerator in enum.enumerators:
-        case hash_crc32<char>("${enumerator.name}"): if( enumStr == "${enumerator.name}") e = ${enumerator.name}; return;
+        case hash_crc32<char>("${enumerator.name}"): if( enumStr == "${enumerator.name}") e = ${enumerator.name}; return error_code::SUCCESS;
     %endfor
+        default:
+            SKR_LOG_ERROR("Unknown enumerator while reading enum ${enum.name}: %s", enumStr);
+            return error_code::ENUMERATOR_ERROR;
     }
     SKR_UNREACHABLE_CODE();
 } 
@@ -26,11 +33,32 @@ void ReadValue(simdjson::ondemand::value&& json, ${enum.name}& e)
 
 %for record in db.records:
 template<>
-void ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
+error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
 {
     %for field in record.allFields():
-    skr::json::Read(json["${field.name}"].value_unsafe(), (${field.type}&)record.${field.name});
+    {
+        auto field = json["${field.name}"];
+        if (field.error() == simdjson::NO_SUCH_FIELD)
+        {
+            SKR_LOG_ERROR("Field ${field.name} in record ${record.name} not found while reading");
+        }
+        else if (field.error() != simdjson::SUCCESS)
+        {
+            SKR_LOG_ERROR("Failed to read record ${record.name} %s", error_message((error_code)field.error()));
+            return (error_code)field.error();
+        }
+        else
+        {
+            error_code result = skr::json::Read(std::move(field).value_unsafe(), (${field.type}&)record.${field.name});
+            if(result != error_code::SUCCESS)
+            {
+                SKR_LOG_ERROR("Failed to read field ${field.name} of record ${record.name} %s", error_message(result));
+                return result;
+            }
+        }
+    }
     %endfor
+    return error_code::SUCCESS;
 } 
 %endfor
 }
