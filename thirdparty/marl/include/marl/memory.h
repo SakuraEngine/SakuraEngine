@@ -29,7 +29,7 @@
 namespace marl { using eastl::pair; using eastl::make_pair; }
 namespace marl { using eastl::array; using eastl::swap; }
 namespace marl { using eastl::unique_ptr; }
-namespace marl { using eastl::numeric_limits; }
+namespace marl { using eastl::numeric_limits; using std::nullptr_t; }
 namespace marl { using eastl::make_shared; using eastl::shared_ptr; }
 namespace marl { using eastl::forward; using eastl::move; }
 namespace marl { using stdmutex = eastl::Internal::mutex; }
@@ -44,7 +44,7 @@ namespace marl { using stdmutex = eastl::Internal::mutex; }
 namespace marl { using std::pair; using std::make_pair; }
 namespace marl { using std::array; using std::swap; }
 namespace marl { using std::unique_ptr; }
-namespace marl { using std::numeric_limits; }
+namespace marl { using std::numeric_limits; using std::nullptr_t; }
 namespace marl { using std::forward; using std::move; }
 namespace marl { using stdmutex = std::mutex; }
 #endif
