@@ -289,8 +289,8 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
         graph->compile();
         frame_index = graph->execute();
         {
-            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
-                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
+            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
+                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
         }
         {
             CGPUQueuePresentDescriptor present_desc = {};

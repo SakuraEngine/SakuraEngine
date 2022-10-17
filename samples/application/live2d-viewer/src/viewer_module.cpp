@@ -326,8 +326,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             frame_index = renderGraph->execute();
             {
                 ZoneScopedN("CollectGarbage");
-                if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
-                    renderGraph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
+                if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
+                    renderGraph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
             }
         }
         {
