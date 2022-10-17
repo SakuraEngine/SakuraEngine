@@ -40,6 +40,7 @@
 #endif
 #ifdef _WIN32
 #include <malloc.h>
+#define WIN32_MEAN_AND_LEAN
 #include <windows.h>
 #include <wchar.h>				/* get wcscpy() */
 
