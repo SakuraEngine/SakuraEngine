@@ -124,10 +124,22 @@ namespace ImGui
 }
 */
 
+#ifndef IMGUI_IMPORT
+#ifdef RUNTIME_ALL_STATIC
+    #define IMGUI_IMPORT
+#else
+    #if defined(_MSC_VER)
+        #define IMGUI_IMPORT __declspec(dllimport)
+    #else
+        #define IMGUI_IMPORT __attribute__((visibility("default")))
+    #endif
+#endif
+#endif
+
 struct ImGuiContext;
 namespace skr::imgui
 {
-SKR_IMGUI_API ImGuiContext*& imgui_context();
+IMGUI_IMPORT ImGuiContext*& imgui_context();
 }
 
 #define GImGui skr::imgui::imgui_context()

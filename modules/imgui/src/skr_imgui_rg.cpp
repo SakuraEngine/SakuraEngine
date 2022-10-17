@@ -1,5 +1,4 @@
 #include <EASTL/string.h>
-#include "imgui/skr_imgui.config.h"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "utils/log.h"

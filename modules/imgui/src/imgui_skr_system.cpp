@@ -1,4 +1,3 @@
-#include "imgui/skr_imgui.config.h"
 #include "utils/log.h"
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"
