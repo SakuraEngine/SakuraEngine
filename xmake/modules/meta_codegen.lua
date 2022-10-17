@@ -163,6 +163,15 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
             os.projectdir()..vformat("/tools/codegen/component.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
         },
+        {
+            os.projectdir()..vformat("/tools/codegen/rtti.py"),
+            os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize.py"),
+            os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
+        },
     }
     -- calculate if weak makos need to be rebuild
     local need_mako = target:data("reflection.need_mako")
@@ -189,15 +198,6 @@ function _strong_mako_compile(target, rootdir, metadir, gendir, toolgendir, unit
             os.projectdir()..vformat("/tools/codegen/json_writer.h.mako"),
             os.projectdir()..vformat("/tools/codegen/json_serialize.cpp.mako")
         },
-        {
-            os.projectdir()..vformat("/tools/codegen/serialize.py"),
-            os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/rtti.py"),
-            os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
-        }
     }
     -- calculate if strong makos need to be rebuild
     local need_mako = target:data("reflection.need_mako")
