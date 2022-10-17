@@ -5,6 +5,7 @@
 #include "platform/configure.h"
 #include "utils/types.h"
 #include "utils/hashmap.hpp"
+#include "json/reader.h"
 #include "resource/resource_header.h"
 #include "asset/cooker.hpp"
 #if !defined(__meta__) 
