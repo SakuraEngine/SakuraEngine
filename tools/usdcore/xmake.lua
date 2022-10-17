@@ -1,13 +1,13 @@
 target("UsdCore")
     set_group("02.tools")
-        
+    add_deps("SkrRoot")
+
+    -- enable exceptions
     if(has_config("is_msvc")) then
         add_cxflags("/EHsc")
-        add_cxxflags("/EHsc")
         add_defines("_HAS_EXCEPTIONS=1")
     elseif(has_config("is_clang")) then
         add_cxflags("-fexceptions", "-fcxx-exceptions")
-        add_cxxflags("-fexceptions", "-fcxx-exceptions")
     end
 
     add_rules("skr.module", {api = "USDCORE"})
@@ -16,21 +16,26 @@ target("UsdCore")
         rootdir = "include/"
     })
     add_includedirs("include",{public=true})
-    add_deps("SkrTool", "GameRT")
     add_files("src/**.cpp")
-    -- TODO: make these private
-    add_includedirs("thirdparty", "thirdparty/python3", {public=true})
-    add_defines("__TBB_NO_IMPLICIT_LINKAGE=1", {public=true})
-    add_defines("BOOST_PYTHON_NO_LIB=1", {public=true})
-    add_defines("Py_NO_ENABLE_SHARED=1", {public=true})
+
+    -- unzip sdk
     before_build(function(target)
-        import("core.base.scheduler")
-        local function upzip_tasks(targetname)
-            import("core.project.task")
-            task.run("unzip-usd")
-        end
-        scheduler.co_start(upzip_tasks, targetname)
+        import("core.project.task")
+        task.run("unzip-usd")
     end)
-    add_links("ar", "arch", "gf", "js", "kind", "ndr", "pcp", "plug", "sdf", "sdr", "tf", "trace", {public=true})
-    add_links("usd", "usdGeom", "usdHydra", "usdLux", "usdMedia", "usdPhysics", "usdRender", "usdRi", "usdShade", "usdUtils", {public=true})
-    add_links("vt", "work", {public=true})
+
+    -- TODO: make these private
+    if is_plat("windows") then
+        set_runtimes("MD")
+        add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
+        add_links("ar", "arch", "gf", "js", "kind", "ndr", "pcp", "plug", "sdf", "sdr", "tf", "trace", {public=true})
+        add_links("usd", "usdGeom", "usdHydra", "usdLux", "usdMedia", "usdPhysics", "usdRender", "usdRi", "usdShade", "usdUtils", {public=true})
+        add_links("usdVol", "usdSkel", "vt", "work", {public=true})
+        add_links("boost_python39-vc142-mt-x64-1_70", {public=true}) -- boost 1.70
+    end
+    add_includedirs("thirdparty", "thirdparty/python3", {public=true})
+    add_defines("__TBB_NO_IMPLICIT_LINKAGE=1", {public=true}) -- tbb
+    add_defines("BOOST_PYTHON_NO_LIB=1", {public=true}) -- boost_python
+    --add_defines("BOOST_PYTHON_STATIC_LIB=0", {public=true}) -- py39
+    --add_defines("Py_NO_ENABLE_SHARED=1", {public=true}) -- py39
+
