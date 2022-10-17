@@ -20,18 +20,20 @@ rule("c++.codegen")
         target:add("includedirs", private_gendir)
     end)
     
+    before_build(function(target)
+        import("core.base.scheduler")
+        scheduler.co_group_wait(target:name()..".cpp-codegen.early_mako")
+        scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
+        scheduler.co_group_wait(target:name()..".cpp-codegen.weak_mako")
+        scheduler.co_group_wait(target:name()..".cpp-codegen.strong_mako")
+    end)
+
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}
     end)
 
     on_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
-        import("core.base.scheduler")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.early_mako")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.weak_mako")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.strong_mako")
-
         -- add to sourcebatch
         local gendir = target:data("meta.codegen.dir")
         local sourcebatches = target:sourcebatches()
