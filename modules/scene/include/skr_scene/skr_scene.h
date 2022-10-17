@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrScene/skr_scene.configure.h"
+#include "SkrScene/module.configure.h"
 #include "scene.h"
 
 #ifdef __cplusplus

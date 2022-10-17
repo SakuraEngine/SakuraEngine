@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrLive2D/skr_live2d.configure.h"
+#include "SkrLive2D/module.configure.h"
 
 #ifdef __cplusplus
 namespace Live2D { namespace Cubism { namespace Framework {

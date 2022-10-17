@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/skr_renderer.configure.h"
+#include "SkrRenderer/module.configure.h"
 #include "utils/types.h"
 
 typedef uint64_t skr_vertex_layout_id;

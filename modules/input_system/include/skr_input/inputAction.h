@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "EASTL/internal/function.h"
 #include "EASTL/vector.h"
-#include "SkrInputSystem/skr_inputsystem.configure.h"
+#include "SkrInputSystem/module.configure.h"
 #include "gainput/gainput.h"
 #include "skr_input/controls.h"
 

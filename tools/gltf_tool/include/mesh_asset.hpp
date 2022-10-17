@@ -1,5 +1,5 @@
 #pragma once
-#include "GLTFTool/gltftool.configure.h"
+#include "GLTFTool/module.configure.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
 #include "cgltf/cgltf.h"

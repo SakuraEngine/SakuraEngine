@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrTool/tool.configure.h"
+#include "SkrTool/module.configure.h"
 #include <EASTL/vector.h>
 #include "simdjson.h"
 #include "platform/configure.h"

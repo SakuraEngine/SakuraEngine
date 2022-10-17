@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrTool/tool.configure.h"
+#include "SkrTool/module.configure.h"
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
 #include "utils/types.h"

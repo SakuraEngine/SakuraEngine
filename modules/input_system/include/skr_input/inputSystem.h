@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "SkrInputSystem/skr_inputsystem.configure.h"
+#include "SkrInputSystem/module.configure.h"
 #include "gainput/gainput.h"
 #include "platform/window.h"
 #include <EASTL/vector.h>
