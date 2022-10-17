@@ -13,10 +13,7 @@
 #include "utils/make_zeroed.hpp"
 #include <EASTL/sort.h>
 #include <EASTL/bitset.h>
-
-#ifndef forloop
-    #define forloop(i, z, n) for (auto i = eastl::decay_t<decltype(n)>(z); i < (n); ++i)
-#endif
+#include "internal/utils.hpp"
 
 namespace dual
 {

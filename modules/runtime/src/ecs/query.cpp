@@ -22,7 +22,7 @@
 #if __SSE2__
     #include <emmintrin.h>
 #endif
-#define forloop(i, z, n) for (auto i = eastl::decay_t<decltype(n)>(z); i < (n); ++i)
+#include "internal/utils.hpp"
 
 namespace eastl
 {
@@ -483,7 +483,7 @@ void dual_storage_t::build_queries()
         llvm_vecsmall::SmallVector<dual_query_t*, 8> queries;
     };
     queryBuildArena.reset();
-    std::vector<phase_entry> entries;
+    eastl::vector<phase_entry> entries;
     for (auto query : queries)
     {
         auto parameters = query->parameters;
