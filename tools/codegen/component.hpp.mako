@@ -1,6 +1,4 @@
 #pragma once
-
-#pragma once
 #include "${config}"
 #include "ecs/dual.h"
 

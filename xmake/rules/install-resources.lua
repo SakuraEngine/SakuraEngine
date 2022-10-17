@@ -16,7 +16,7 @@ rule("utils.install-resources")
             rel_out = path.join(rel_out, rel_root)
         end
         local abs_out = path.absolute(rel_out).."/"..path.filename(sourcefile)
-        batchcmds:show_progress(opt.progress, "${green}%s.install.resource ${clear}%s", target:name(), sourcefile)
+        batchcmds:show_progress(opt.progress, "${green}[%s]: install.resource ${clear}%s", target:name(), sourcefile)
         batchcmds:cp(abs_source, abs_out)
 
         batchcmds:add_depfiles(abs_source)
