@@ -64,7 +64,7 @@ class WaitGroup {
   // wait() blocks until the WaitGroup counter reaches zero.
   MARL_NO_EXPORT inline void wait() const;
 
-  MARL_NO_EXPORT inline WaitGroup(marl::nullptr_t) {}
+  MARL_NO_EXPORT inline WaitGroup(std::nullptr_t) {}
 
   MARL_NO_EXPORT inline WaitGroup(const WaitGroup&) = default;
   MARL_NO_EXPORT inline WaitGroup(WaitGroup&&) = default;
