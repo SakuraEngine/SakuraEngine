@@ -44,6 +44,8 @@ typedef struct skr_guid_t {
     uint32_t Storage3 SKR_IF_CPP( = 0);
 } skr_guid_t;
 
+extern const skr_guid_t $guid;
+
 typedef struct skr_float2_t {
     struct
     {

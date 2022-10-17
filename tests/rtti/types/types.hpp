@@ -11,7 +11,7 @@ struct SRuntimeAttribute
 
 template<typename T>
 void XXXInformation(int);
-void PrintField();
+void PrintField(const char* name);
 inline void CreateBuffers()
 {
 
@@ -30,7 +30,7 @@ TestEnum : uint32_t
     Value1 = 1, 
     Value2 = 2 
 }
-sstatic_ctor(1, XXXInformation<TestEnum>(1));
+sstatic_ctor(1, XXXInformation<$T>(1));
 
 sreflect_struct("guid" : "25809bab-41e8-48c5-806b-1ae4af3edfef")
 sattr("rtti" : true)
@@ -46,7 +46,7 @@ TestSon : public TestParent
 {
     eastl::string sex;
 }
-sstatic_ctor(0, XXXInformation<TestSon>(1));
+sstatic_ctor(0, XXXInformation<$T>(1));
 
 }
 

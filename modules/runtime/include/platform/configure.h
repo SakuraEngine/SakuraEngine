@@ -62,6 +62,10 @@
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
 
+typedef struct $T $T;
+typedef struct $Super $Super;
+typedef struct $Owner $Owner;
+extern const char* $name;
 
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
     #define SKR_OS_UNIX
@@ -479,4 +483,11 @@ struct SInterface
     virtual uint32_t release() = 0;
 };
 }
+
+typedef struct Dummy {
+    int dummy;
+    int dummy2();
+} Dummy;
+extern const int Dummy::* $field_ptr;
+extern int(Dummy::* $method_ptr)();
 #endif
