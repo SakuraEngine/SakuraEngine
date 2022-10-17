@@ -209,10 +209,10 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         const dual_query_t* query;
         dual_group_t** groups;
         uint32_t groupCount;
-        std::bitset<32>* readonly;
+        eastl::bitset<32>* readonly;
         dual_type_index_t* localTypes;
-        std::bitset<32>* atomic;
-        std::bitset<32>* randomAccess;
+        eastl::bitset<32>* atomic;
+        eastl::bitset<32>* randomAccess;
         bool hasRandomWrite;
         EIndex entityCount;
         dual_system_callback_t callback;
@@ -220,8 +220,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         eastl::vector<task_t> tasks;
     };
     SharedData* job = nullptr;
-    std::shared_ptr<SharedData> sharedData;
-
+    eastl::shared_ptr<SharedData> sharedData;
 
     auto groupCount = (uint32_t)groups.size();
     {

@@ -1,6 +1,7 @@
 #pragma once
 #include "pool.hpp"
 #include <iterator>
+
 namespace dual
 {
     struct cache_base_t

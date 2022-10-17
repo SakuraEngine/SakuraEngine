@@ -1,9 +1,8 @@
 #pragma once
 #include "ecs/dual.h"
-
 #include "hash.hpp"
-#include <algorithm>
-#include <bitset>
+#include <EASTL/algorithm.h>
+#include <EASTL/bitset.h>
 
 namespace dual
 {
@@ -38,7 +37,7 @@ namespace dual
         }
 
         template<class S>
-        static S merge_with_mask(const S& lhs, const S& rhs, std::bitset<32> mask, void* d)
+        static S merge_with_mask(const S& lhs, const S& rhs, eastl::bitset<32> mask, void* d)
         {
             SIndex i = 0, j = 0, k = 0;
             T* dst = (T*)d;

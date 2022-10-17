@@ -32,7 +32,7 @@ scheduler_t& scheduler_t::get()
 {
     return dual_get_context()->scheduler;
 }
-std::string& get_error()
+eastl::string& get_error()
 {
     return dual_get_context()->error;
 }

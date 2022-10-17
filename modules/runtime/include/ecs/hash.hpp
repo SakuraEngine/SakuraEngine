@@ -1,5 +1,6 @@
 #pragma once
-#include <inttypes.h>
+#include "platform/configure.h"
+
 namespace dual
 {
 #ifdef __EMSCRIPTEN__

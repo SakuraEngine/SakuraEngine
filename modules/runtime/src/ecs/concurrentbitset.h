@@ -65,7 +65,7 @@ class ConcurrentBitSet {
    * Note that the operation is a read-modify-write operation due to the use
    * of fetch_and or fetch_or.
    *
-   * Yes, this is an overload of set(), to keep as close to std::bitset's
+   * Yes, this is an overload of set(), to keep as close to eastl::bitset's
    * interface as possible.
    */
   bool set(

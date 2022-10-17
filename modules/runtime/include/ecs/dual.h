@@ -5,6 +5,7 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
+
 // objects
 #define DUAL_DECLARE(name) typedef struct dual_##name dual_##name
 DUAL_DECLARE(context_t);
