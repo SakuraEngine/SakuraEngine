@@ -156,7 +156,7 @@ Scheduler::~Scheduler() {
     // Wait until all the single threaded workers have been unbound.
     marl::lock lock(singleThreadedWorkers.mutex);
     lock.wait(singleThreadedWorkers.unbind,
-              [this]() REQUIRES(singleThreadedWorkers.mutex) {
+              [this]() MARL_REQUIRES(singleThreadedWorkers.mutex) {
                 return singleThreadedWorkers.byTid.empty();
               });
   }
@@ -583,7 +583,7 @@ void Scheduler::Worker::run() {
     // This is the entry point for a multi-threaded worker.
     // Start with a regular condition-variable wait for work. This avoids
     // starting the thread with a spinForWork().
-    work.wait([this]() REQUIRES(work.mutex) {
+    work.wait([this]() MARL_REQUIRES(work.mutex) {
       return work.num > 0 || work.waiting || shutdown;
     });
   }
@@ -613,7 +613,7 @@ void Scheduler::Worker::waitForWork() {
     work.mutex.lock();
   }
 
-  work.wait([this]() REQUIRES(work.mutex) {
+  work.wait([this]() MARL_REQUIRES(work.mutex) {
     return work.num > 0 || (shutdown && work.numBlockedFibers == 0U);
   });
   if (work.waiting) {
@@ -726,7 +726,7 @@ Scheduler::Fiber* Scheduler::Worker::createWorkerFiber() {
   DBG_LOG("%d: CREATE(%d)", (int)id, (int)fiberId);
   auto fiber = Fiber::create(scheduler->cfg.allocator, fiberId,
                              scheduler->cfg.fiberStackSize,
-                             [&]() REQUIRES(work.mutex) { run(); });
+                             [&]() MARL_REQUIRES(work.mutex) { run(); });
   auto ptr = fiber.get();
   workerFibers.emplace_back(std::move(fiber));
   return ptr;

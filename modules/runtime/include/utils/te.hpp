@@ -590,8 +590,8 @@ concept bool conceptify = requires
 } // namespace ext
 } // namespace boost
 
-    #if not defined(REQUIRES)
-        #define REQUIRES(R, name, ...)                                                                          \
+    #if not defined(TE_REQUIRES)
+        #define TE_REQUIRES(R, name, ...)                                                                          \
             R                                                                                                   \
             {                                                                                                   \
                 return ::te::call<R>(                                                                           \

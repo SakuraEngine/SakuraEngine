@@ -31,20 +31,20 @@ namespace marl {
 // annotations.
 // mutex also holds methods for performing std::condition_variable::wait() calls
 // as these require a std::unique_lock<> which are unsupported by the TSA.
-class CAPABILITY("mutex") mutex {
+class MARL_CAPABILITY("mutex") mutex {
  public:
-  MARL_NO_EXPORT inline void lock() ACQUIRE() { _.lock(); }
+  MARL_NO_EXPORT inline void lock() MARL_ACQUIRE() { _.lock(); }
 
-  MARL_NO_EXPORT inline void unlock() RELEASE() { _.unlock(); }
+  MARL_NO_EXPORT inline void unlock() MARL_RELEASE() { _.unlock(); }
 
-  MARL_NO_EXPORT inline bool try_lock() TRY_ACQUIRE(true) {
+  MARL_NO_EXPORT inline bool try_lock() MARL_TRY_ACQUIRE(true) {
     return _.try_lock();
   }
 
   // wait_locked calls cv.wait() on this already locked mutex.
   template <typename Predicate>
   MARL_NO_EXPORT inline void wait_locked(std::condition_variable& cv,
-                                         Predicate&& p) REQUIRES(this) {
+                                         Predicate&& p) MARL_REQUIRES(this) {
     std::unique_lock<std::mutex> lock(_, std::adopt_lock);
     cv.wait(lock, std::forward<Predicate>(p));
     lock.release();  // Keep lock held.
@@ -54,7 +54,7 @@ class CAPABILITY("mutex") mutex {
   template <typename Predicate, typename Time>
   MARL_NO_EXPORT inline bool wait_until_locked(std::condition_variable& cv,
                                                Time&& time,
-                                               Predicate&& p) REQUIRES(this) {
+                                               Predicate&& p) MARL_REQUIRES(this) {
     std::unique_lock<std::mutex> lock(_, std::adopt_lock);
     auto res = cv.wait_until(lock, std::forward<Time>(time),
                              std::forward<Predicate>(p));
@@ -70,10 +70,10 @@ class CAPABILITY("mutex") mutex {
 // lock is a RAII lock helper that offers Thread Safety Analysis annotations.
 // lock also holds methods for performing std::condition_variable::wait()
 // calls as these require a std::unique_lock<> which are unsupported by the TSA.
-class SCOPED_CAPABILITY lock {
+class MARL_SCOPED_CAPABILITY lock {
  public:
-  inline lock(mutex& m) ACQUIRE(m) : _(m._) {}
-  inline ~lock() RELEASE() {}
+  inline lock(mutex& m) MARL_ACQUIRE(m) : _(m._) {}
+  inline ~lock() MARL_RELEASE() {}
 
   // wait calls cv.wait() on this lock.
   template <typename Predicate>
