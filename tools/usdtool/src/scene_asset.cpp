@@ -154,12 +154,12 @@ void SSceneImporterFactory::CreateImporter(const SAssetRecord *record)
 {
     auto u8Path = record->path.u8string();
     pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
-    SSceneImporter sceneImporter(record->guid);
+    SSceneImporter sceneImporter;
     for(auto prim : stage->Traverse())
     {
         if(prim.IsA<pxr::UsdGeomMesh>())
         {
-            SUSDMeshImporter meshImporter(record->guid);
+            SUSDMeshImporter meshImporter;
         }
     }
 }
