@@ -151,14 +151,6 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
             gendir = toolgendir
         },
         {
-            os.projectdir()..vformat("/tools/codegen/importer.py"),
-            os.projectdir()..vformat("/tools/codegen/importer.cpp.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/cooker.py"),
-            os.projectdir()..vformat("/tools/codegen/cooker.cpp.mako"),
-        },
-        {
             os.projectdir()..vformat("/tools/codegen/component.py"),
             os.projectdir()..vformat("/tools/codegen/component.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),

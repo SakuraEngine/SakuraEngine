@@ -7,6 +7,9 @@
 #include "utils/hashmap.hpp"
 #include "resource/resource_header.h"
 #include "asset/cooker.hpp"
+#if !defined(__meta__) 
+#include "SkrTool/json_reader.generated.h"
+#endif
 
 namespace skr::io
 {
@@ -18,6 +21,10 @@ namespace skd sreflect
 using namespace skr;
 namespace asset sreflect
 {
+
+template<class T>
+void RegisterImporter(skr_guid_t guid);
+#define sregister_importer(idx) sstatic_ctor(idx, skd::asset::RegisterImporter<$T>($guid));
 struct sreflect sattr(
 "guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
 "serialize" : "json"
@@ -28,6 +35,7 @@ TOOL_API SImporter
     virtual ~SImporter() {}
     virtual void* Import(skr::io::RAMService*, const SAssetRecord* record) = 0;
 };
+
 struct SImporterRegistry {
     SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object);
     skr::flat_hash_map<skr_guid_t, SImporter* (*)(const SAssetRecord* record, simdjson::ondemand::value&& object), skr::guid::hash> loaders;
@@ -38,5 +46,19 @@ struct SImporterFactory {
     virtual skr_guid_t GetResourceType() = 0;
     virtual void CreateImporter(const SAssetRecord* record) = 0;
 };
+
+template<class T>
+void RegisterImporter(skr_guid_t guid)
+{
+    auto registry = GetImporterRegistry();
+    auto loader = 
+        +[](const SAssetRecord* record, simdjson::ondemand::value&& object) -> SImporter*
+        {
+            auto importer = SkrNew<T>();
+            skr::json::Read(std::move(object), *importer);
+            return importer;
+        };
+    registry->loaders.insert(std::make_pair(guid, loader));
+}
 } // namespace sreflect
 } // namespace sreflect
