@@ -272,6 +272,11 @@ void* SCookContext::_Import()
         auto importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe());
         //-----import raw data
         auto asset = GetCookSystem()->GetAssetRecord(importer->assetGuid);
+        if(!asset)
+        {
+            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] asset not exist! asset guid: {}", importer->assetGuid);
+            return nullptr;
+        }
         staticDependencies.push_back(asset->guid);
         auto rawData = importer->Import(ioService, asset);
         SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset imported for resource {}! path: {}", record->guid, asset->path.u8string());
