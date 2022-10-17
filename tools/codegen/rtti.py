@@ -19,7 +19,6 @@ class Field(object):
         self.offset = offset
         self.comment = comment
 
-
 class FunctionDesc(object):
     def __init__(self, retType, fields, isConst, comment):
         self.retType = retType
@@ -33,14 +32,11 @@ class FunctionDesc(object):
     def getSignature(self, record):
         return self.retType + "(" + (record.name + "::" if record else "") + "*)(" + str.join(", ",  [x.type for x in self.fields]) + ")" + ("const" if self.isConst else "")
 
-
 class Function(object):
     def __init__(self, name):
         self.name = name
         self.short_name = str.rsplit(name, "::", 1)[-1]
         self.descs = []
-
-
 class Record(object):
     def __init__(self, name, guid, fields, methods, bases, comment, fileName):
         self.name = name
@@ -59,22 +55,6 @@ class Record(object):
         self.hashable = False
         self.guidConstant = "0x{}, 0x{}, 0x{}, {{0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}}}".format(
             guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
-
-    def allFields(self):
-        result = []
-        result.extend(self.fields)
-        for base in self.bases:
-            result.extend(base.allFields())
-        return result
-
-    def allMethods(self):
-        result = dict(self.methods)
-        for base in self.bases:
-            for k, v in base.allMethods().items():
-                function = result.setdefault(k, Function(k))
-                function.descs.extend(v.descs)
-        return result
-
 
 def parseRecord(name, json):
     if not "guid" in json["attrs"]:
@@ -148,16 +128,6 @@ class Database(object):
         self.name_to_record = {}
         self.name_to_enum = {}
 
-    def resolve_base(self):
-        for record in self.records:
-            bases = []
-            for base in record.bases:
-                if base in self.name_to_record:
-                    bases.append(self.name_to_record[base])
-                else:
-                    abort("rtti: baseclass %s not reflected" % base)
-            record.bases = bases
-
     def add_record(self, record):
         if not record:
             return
@@ -183,19 +153,16 @@ def main():
     config = "module.configure.h"
     api = api.upper()+"_API"
     includes = sys.argv[4:].copy()
-    includes.append(root)
-    for path in includes:
-        metas = glob.glob(os.path.join(path, "**", "*.h.meta"), recursive=True)
-        for meta in metas:
-            meta = json.load(open(meta))
-            for key, value in meta["records"].items():
-                db.add_record(parseRecord(key, value))
-            for key, value in meta["enums"].items():
-                db.add_enum(parseEnum(key, value))
-    db.resolve_base()
+    
+    metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
+    for meta in metas:
+        meta = json.load(open(meta))
+        for key, value in meta["records"].items():
+            db.add_record(parseRecord(key, value))
+        for key, value in meta["enums"].items():
+            db.add_enum(parseEnum(key, value))
 
     data = Binding()
-    metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     for meta in metas:
         data2 = Binding()
         filename = os.path.split(meta)[1][:-7]
