@@ -1,8 +1,8 @@
 #pragma once
-#include "fmt/core.h"
-#include "fmt/format.h"
 #include "EASTL/string.h"
 #include "utils/types.h"
+#include "fmt/core.h"
+#include "fmt/format.h"
 
 namespace fmt
 {

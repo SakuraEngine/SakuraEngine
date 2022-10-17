@@ -35,14 +35,14 @@ extern thread_local fixed_stack_t localStack;
 // };
 // struct storage_delta_t
 // {
-//     using array_delta = std::vector<blob_ref_T<char>>;
+//     using array_delta = eastl::vector<blob_ref_T<char>>;
 //     struct vector_delta
 //     {
 //         size_t length;
 //         array_delta content;
 //     };
 //     using component_delta = std::unique_ptr<array_delta[]>;
-//     using buffer_delta = std::unique_ptr<std::vector<vector_delta>[]>;
+//     using buffer_delta = std::unique_ptr<eastl::vector<vector_delta>[]>;
 //     struct slice_delta
 //     {
 //         dual_entity_type_t type;
@@ -55,10 +55,10 @@ extern thread_local fixed_stack_t localStack;
 //         dual_entity_type_t type;
 //         intptr_t offset;
 //     };
-//     std::vector<slice_delta> changed;
-//     std::vector<slice_data> created;
-//     std::vector<dual_entity_t> destroyed;
-//     std::vector<char> store;
+//     eastl::vector<slice_delta> changed;
+//     eastl::vector<slice_data> created;
+//     eastl::vector<dual_entity_t> destroyed;
+//     eastl::vector<char> store;
 // };
 
 template <class T>
