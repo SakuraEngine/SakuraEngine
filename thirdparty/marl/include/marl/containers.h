@@ -29,7 +29,7 @@
 
 namespace marl { using eastl::map; using eastl::deque; using eastl::set; using eastl::unordered_map; using eastl::unordered_set; }
 template <>
-struct eastl::hash<std::thread::id> {
+struct MARL_EXPORT eastl::hash<std::thread::id> {
   size_t operator()(const std::thread::id _Keyval) const noexcept;
 };
 

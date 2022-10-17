@@ -24,7 +24,7 @@ namespace marl { using std::function; }
 
 namespace marl {
 
-class OSFiber {
+class MARL_EXPORT OSFiber {
  public:
   ~OSFiber();
 
