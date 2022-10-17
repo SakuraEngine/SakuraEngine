@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/skr_renderer.configure.h"
+#include "SkrRenderer/module.configure.h"
 #include "primitive_pass.h"
 #include "effect_processor.h"
 

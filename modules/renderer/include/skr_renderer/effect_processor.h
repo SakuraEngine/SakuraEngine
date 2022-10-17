@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/skr_renderer.configure.h"
+#include "SkrRenderer/module.configure.h"
 #include "ecs/dual.h"
 #include "ecs/dualX.h"
 #include "skr_renderer/primitive_pass.h"

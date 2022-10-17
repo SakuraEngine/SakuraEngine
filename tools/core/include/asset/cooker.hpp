@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrTool/tool.configure.h"
+#include "SkrTool/module.configure.h"
 #include "EASTL/vector.h"
 #include "EASTL/shared_ptr.h"
 #include "platform/memory.h"

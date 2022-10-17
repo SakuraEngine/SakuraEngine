@@ -30,7 +30,7 @@ def main():
 
     template = os.path.join(BASE, "configure.h.mako")
     content = render(template, api=api.upper())
-    output = os.path.join(outdir, api.lower()+".configure.h")
+    output = os.path.join(outdir, "module.configure.h")
     write(output, content)
 
 

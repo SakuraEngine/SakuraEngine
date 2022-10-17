@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrImageCoder/skr_image_coder.configure.h"
+#include "SkrImageCoder/module.configure.h"
 
 #ifdef __cplusplus
     #include "module/module_manager.hpp"

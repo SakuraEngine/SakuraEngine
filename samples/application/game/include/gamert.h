@@ -1,5 +1,5 @@
 #pragma once
-#include "GameRT/gamert.configure.h"
+#include "GameRT/module.configure.h"
 #include "platform/vfs.h"
 #include "utils/log.h"
 #ifdef __cplusplus

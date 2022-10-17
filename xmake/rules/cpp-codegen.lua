@@ -10,13 +10,9 @@ rule("c++.codegen")
     set_sourcekinds("cxx")
     on_config(function (target, opt)
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
-        local private_gendir = path.join(gendir, target:name())
 
         if (not os.exists(gendir)) then
             io.open(path.join(gendir, "dummy.json"), "w")
-        end
-        if (not os.exists(private_gendir)) then
-            io.open(path.join(private_gendir, "dummy.json"), "w")
         end
 
         target:data_set("meta.codegen.dir", gendir)

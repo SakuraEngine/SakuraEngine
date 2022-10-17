@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrScene/skr_scene.configure.h"
+#include "SkrScene/module.configure.h"
 #include "utils/types.h"
 #include "ecs/dual.h"
 #if !defined(__meta__) && defined(__cplusplus)

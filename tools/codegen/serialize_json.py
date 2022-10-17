@@ -150,7 +150,7 @@ def main():
     root = sys.argv[1]
     outdir = sys.argv[2]
     api = sys.argv[3]
-    config = api.lower()+".configure.h"
+    config = "module.configure.h"
     api = api.upper()+"_API"
     includes = sys.argv[4:].copy()
     includes.append(root)

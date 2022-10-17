@@ -6,7 +6,7 @@
 #include "EASTL/vector.h"
 #include "skr_input/Interactions.h"
 #include "skr_input/processor.h"
-#include "SkrInputSystem/skr_inputsystem.configure.h"
+#include "SkrInputSystem/module.configure.h"
 #include "gainput/gainput.h"
 #include "math/vector.hpp"
 #include <cstddef>

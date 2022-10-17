@@ -1,6 +1,6 @@
 #pragma once
 #include "EASTL/map.h"
-#include "SkrInputSystem/skr_inputsystem.configure.h"
+#include "SkrInputSystem/module.configure.h"
 #include "skr_input/Interactions.h"
 #include "skr_input/controls.h"
 
