@@ -21,7 +21,7 @@ class Field(object):
         self.static_ctor_exprs = static_ctor_exprs
 
     def realize_expr(self, record, expr):
-        expr = re.sub(r"STEXT\(.*?\)", r"\"\0\"", expr)
+        
         expr = expr.replace("$T", self.type)
         expr = expr.replace("$name", "\"%s\""%self.name)
         expr = expr.replace("$field_ptr", "&{}::{}".format(record.name, self.name))
@@ -45,7 +45,7 @@ class FunctionDesc(object):
         return self.retType + "(" + (record.name + "::" if record else "") + "*)(" + str.join(", ",  [x.type for x in self.fields]) + ")" + ("const" if self.isConst else "")
 
     def realize_expr(self, record, expr):
-        expr = re.sub(r"STEXT\(.*?\)", r"\"\0\"", expr)
+        
         expr = expr.replace("$name", "\"%s\""%self.name)
         expr = expr.replace("$method_ptr", "&{}::{}".format(record.name, self.name))
         expr = expr.replace("$Owner", record.name)
@@ -78,22 +78,26 @@ class Record(object):
         self.post_static_ctor_exprs = post_static_ctor_exprs
         self.realized_expr = []
         self.shortFileName = shortFileName
-        self.guidConstant = "0x{}, 0x{}, 0x{}, {{0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}}}".format(
-            guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
+        if guid:
+            self.guidConstant = "0x{}, 0x{}, 0x{}, {{0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}}}".format(
+                guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
 
     def realize_expr(self, expr : str):
-        expr = re.sub(r"STEXT\((.*?)\)", r"\"\0\"", expr)
+        
         expr = expr.replace("$T", self.name)
         if self.bases:
             expr = expr.replace("$Super", self.bases[0])
-        expr = expr.replace("$guid", "skr::guid_t{%s}"%self.guidConstant)
+        if self.guid:
+            expr = expr.replace("$guid", "skr_guid_t{%s}"%self.guidConstant)
         expr = expr.replace("$rtti", "skr::type::type_of<%s>::get()"%self.name)
         return expr
 
 
 def parseRecord(name, json, shortFileName):
     if not "guid" in json["attrs"]:
-        return
+        guid = None
+    else:
+        guid = json["attrs"]["guid"]
     record_static_ctor_exprs = []
     record_post_static_ctor_exprs = []
     for attrkey, attrvalue in json["attrs"].items():
@@ -115,7 +119,7 @@ def parseRecord(name, json, shortFileName):
     bases = []
     for value in json["bases"]:
         bases.append(value)
-    return Record(name, json["attrs"]["guid"], fields, functions,
+    return Record(name, guid, fields, functions,
                   bases, json["comment"], json["fileName"], record_static_ctor_exprs, record_post_static_ctor_exprs, shortFileName)
 
 def parseFunctions(dict):
@@ -164,14 +168,16 @@ class Enum(object):
         self.shortFileName = shortFileName
         self.static_ctor_exprs = static_ctor_exprs
         self.realized_expr = []
-        self.guidConstant = "0x{}, 0x{}, 0x{}, {{0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}}}".format(
-            guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
+        if guid:
+            self.guidConstant = "0x{}, 0x{}, 0x{}, {{0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}}}".format(
+                guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
 
             
     def realize_expr(self, expr : str):
-        expr = re.sub(r"STEXT\(.*?\)", r"\"\0\"", expr)
+        
         expr = expr.replace("$T", self.name)
-        expr = expr.replace("$guid", "skr::guid_t{%s}"%self.guidConstant)
+        if self.guid:
+            expr = expr.replace("$guid", "skr_guid_t{%s}"%self.guidConstant)
         expr = expr.replace("$rtti", "skr::type::type_of<%s>::get()"%self.name)
         return expr
 
@@ -182,13 +188,16 @@ def parseEnum(name, json, shortFileName):
     for attrkey, attrvalue in attr.items():
         if attrkey.startswith("StaticCtor"):
             enum_static_ctor_exprs.append(attrvalue)
+    
     if not "guid" in attr:
-        return
+        guid = None
+    else:
+        guid = attr["guid"]
     enumerators = []
     for key, value in json["values"].items():
         enumerators.append(Enumerator(
             key, value["value"], value["comment"]))
-    return Enum(name, attr["guid"], json["underlying_type"],
+    return Enum(name, guid, json["underlying_type"],
                 enumerators, json["comment"], json["fileName"], enum_static_ctor_exprs, shortFileName)
 
 

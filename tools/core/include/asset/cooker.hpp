@@ -106,4 +106,11 @@ struct TOOL_API SCookSystem {
     }
 };
 TOOL_API SCookSystem* GetCookSystem();
+#define sregister_cooker(idx, literal) sstatic_ctor(idx, skd::asset::RegisterCooker<$T>(skr::guid::make_guid_unsafe(literal)))
+template<class T>
+void RegisterCooker(skr_guid_t guid)
+{
+    static T instance;
+    GetCookSystem()->cookers.insert(std::make_pair(guid, &instance));
+}
 } // namespace skd::assetsreflect

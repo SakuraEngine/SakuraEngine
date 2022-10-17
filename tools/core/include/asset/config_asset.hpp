@@ -22,23 +22,23 @@ struct TOOL_API SConfigRegistry {
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
 struct sreflect sattr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
-"serialize" : "json",
-"importer" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
+"serialize" : "json"
 )
 TOOL_API SJsonConfigImporter final : public SImporter
 {
     skr_guid_t configType;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
-};
+}
+sregister_importer(0);
 
-struct sreflect sattr(
-"cooker" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
-)
+struct sreflect
+
 TOOL_API SConfigCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
-};
+}
+sregister_cooker(0, "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
 
 struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override;
