@@ -4,6 +4,11 @@ imgui_includes_dir = "$(projectdir)/thirdparty/imgui/include"
 target("imgui")
     set_group("00.thirdparty")
     set_kind("static")
+    if(has_config("module_as_objects")) then
+        add_defines("RUNTIME_ALL_STATIC")
+    else
+        add_defines("RUNTIME_SHARED")
+    end
     add_files(imgui_sources_dir.."/unitybuild.cpp")
     add_includedirs(imgui_includes_dir, {public=true})
     after_build(function(target)
