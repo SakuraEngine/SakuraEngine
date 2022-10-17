@@ -13,6 +13,12 @@
 #include "skr_scene/scene.h"
 #include "ecs/type_builder.hpp"
 
+#if defined(_DEBUG) && !defined(NDEBUG)	// Use !defined(NDEBUG) to check to see if we actually are linking with Debug third party libraries (bDebugBuildsActuallyUseDebugCRT)
+	#ifndef TBB_USE_DEBUG
+		#define TBB_USE_DEBUG 1
+	#endif
+#endif
+
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usd/stage.h"
 #include "pxr/usd/usd/primRange.h"
