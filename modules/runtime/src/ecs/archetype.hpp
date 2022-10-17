@@ -1,5 +1,4 @@
 #pragma once
-
 #include "ecs/dual.h"
 
 namespace dual
@@ -19,7 +18,6 @@ struct archetype_t {
     uint32_t sizeToPatch;
     bool withMask;
     bool withDirty;
-
     /*
         uint32_t offsets[3][firstTag];
         uint32_t sizes[firstTag];

@@ -11,10 +11,11 @@
 #include "stack.hpp"
 #include "storage.hpp"
 #include "utils/make_zeroed.hpp"
-#include <algorithm>
-#include <bitset>
+#include <EASTL/sort.h>
+#include <EASTL/bitset.h>
+
 #ifndef forloop
-    #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+    #define forloop(i, z, n) for (auto i = eastl::decay_t<decltype(n)>(z); i < (n); ++i)
 #endif
 
 namespace dual
@@ -25,7 +26,7 @@ thread_local fixed_stack_t localStack(4096 * 8);
 SIndex archetype_t::index(dual_type_index_t inType) const noexcept
 {
     auto end = type.data + type.length;
-    const dual_type_index_t* result = std::lower_bound(type.data, end, inType);
+    const dual_type_index_t* result = eastl::lower_bound(type.data, end, inType);
     if (result != end && *result == inType)
         return (SIndex)(result - type.data);
     else
@@ -51,7 +52,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
     proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
-    std::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
+    ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
         proto.callbacks[i] = registry.descriptions[type_index_t(proto.type.data[i]).index()].callback;
@@ -77,7 +78,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         if (desc.entityFieldsCount != 0)
             proto.sizeToPatch += desc.size;
     }
-    std::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
+    eastl::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
     size_t caps[] = { kSmallBinSize, kFastBinSize, kLargeBinSize };
@@ -144,7 +145,7 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
         if (t == kDisableComponent)
             proto.disabled = true;
     }
-    // std::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
+    // eastl::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
     proto.archetype = archetype;
     proto.size = 0;
     proto.timestamp = 0;
@@ -347,7 +348,7 @@ TIndex dual_group_t::index(dual_type_index_t inType) const noexcept
 {
     using namespace dual;
     auto end = type.type.data + type.type.length;
-    const dual_type_index_t* result = std::lower_bound(type.type.data, end, inType);
+    const dual_type_index_t* result = eastl::lower_bound(type.type.data, end, inType);
     if (result != end && *result == inType)
         return (TIndex)(result - type.type.data);
     else
@@ -392,7 +393,7 @@ bool dual_group_t::share(const dual_type_set_t& subtype) const noexcept
 dual_mask_component_t dual_group_t::get_shared_mask(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
-    std::bitset<32> mask;
+    eastl::bitset<32> mask;
     for (SIndex i = 0; i < subtype.length; ++i)
     {
         if (share(subtype.data[i]))
@@ -460,7 +461,7 @@ const void* dual_group_t::get_shared_ro(dual_type_index_t t) const noexcept
 dual_mask_component_t dual_group_t::get_mask(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
-    std::bitset<32> mask;
+    eastl::bitset<32> mask;
     SIndex i = 0, j = 0;
     auto stype = type.type;
     while (i < stype.length && j < subtype.length)

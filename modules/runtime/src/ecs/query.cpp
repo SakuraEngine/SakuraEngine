@@ -1,3 +1,4 @@
+#include "utils/format.hpp"
 #include "ecs/SmallVector.h"
 #include "archetype.hpp"
 #include "chunk_view.hpp"
@@ -13,15 +14,15 @@
 #include "set.hpp"
 #include "ecs/constants.hpp"
 #include "ecs/callback.hpp"
-#include <algorithm>
-#include <numeric>
+#include <EASTL/sort.h>
+#include <EASTL/algorithm.h>
+#include <EASTL/numeric.h>
 #include "utils/format.hpp"
-#include <string>
-#include <string_view>
+#include <EASTL/string.h>
 #if __SSE2__
     #include <emmintrin.h>
 #endif
-#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#define forloop(i, z, n) for (auto i = eastl::decay_t<decltype(n)>(z); i < (n); ++i)
 
 namespace eastl
 {
@@ -38,16 +39,16 @@ inline void split(const string_view& s, vector<string_view>& tokens, const strin
     }
 }
 
-inline bool ends_with(std::string_view const& value, std::string_view const& ending)
+inline bool ends_with(std::string_view const& value, eastl::string_view const& ending)
 {
     if (ending.size() > value.size()) return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+    return eastl::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-inline bool starts_with(std::string_view const& value, std::string_view const& starting)
+inline bool starts_with(eastl::string_view const& value, eastl::string_view const& starting)
 {
     if (starting.size() > value.size()) return false;
-    return std::equal(starting.begin(), starting.end(), value.begin());
+    return eastl::equal(starting.begin(), starting.end(), value.begin());
 }
 } // namespace eastl
 
@@ -167,7 +168,7 @@ void dual_storage_t::update_query_cache(dual_group_t* group, bool isAdd)
                 if (j == count)
                     continue;
                 if (j != (count - 1))
-                    std::swap(gs[j], gs[count - 1]);
+                    eastl::swap(gs[j], gs[count - 1]);
                 gs.pop_back();
             }
             else
@@ -199,9 +200,9 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     using namespace dual;
     eastl::string desc(inDesc);
 #ifdef _WIN32
-    desc.erase(std::remove_if(desc.begin(), desc.end(), std::isspace), desc.end());
+    desc.erase(eastl::remove_if(desc.begin(), desc.end(), std::isspace), desc.end());
 #else
-    desc.erase(std::remove_if(desc.begin(), desc.end(), isspace), desc.end());
+    desc.erase(eastl::remove_if(desc.begin(), desc.end(), isspace), desc.end());
 #endif
     eastl::vector<eastl::string_view> parts;
     eastl::string spliter = ",";
@@ -245,7 +246,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 ++i;
             if (i == part.size())
             {
-                error = fmt::format("unexpected [ without ], loc {}.", errorPos);
+                error = fmt::format("unexpected [ without ], loc {}.", errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -269,7 +270,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 filterOnly = true;
             else
             {
-                error = fmt::format("unknown access modifier, loc {}.", errorPos);
+                error = fmt::format("unknown access modifier, loc {}.", errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -283,7 +284,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 ++i;
             if (i == part.size())
             {
-                error = fmt::format("unexpected [ without ], loc {}.", errorPos);
+                error = fmt::format("unexpected [ without ], loc {}.", errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -295,7 +296,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 operation.randomAccess = DOS_SEQ;
             else
             {
-                error = fmt::format("unknown sequence modifier, loc {}.", errorPos);
+                error = fmt::format("unknown sequence modifier, loc {}.", errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -304,7 +305,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         if (i == part.size())
         {
             errorPos = partBegin + i;
-            error = fmt::format("unexpected end of part, loc {}.", errorPos);
+            error = fmt::format("unexpected end of part, loc {}.", errorPos).c_str();
             SKR_ASSERT(false);
             return nullptr;
         }
@@ -315,7 +316,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 if (!operation.readonly)
                 {
                     errorPos = partBegin + i;
-                    error = fmt::format("shared component is readonly, loc {}.", errorPos);
+                    error = fmt::format("shared component is readonly, loc {}.", errorPos).c_str();
                     SKR_ASSERT(false);
                     return nullptr;
                 }
@@ -335,7 +336,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             else
             {
                 errorPos = partBegin + i;
-                error = fmt::format("unknown selector '{}', loc {}.", part[i], errorPos);
+                error = fmt::format("unknown selector '{}', loc {}.", part[i], errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -344,7 +345,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         if (i == part.size() || !std::isalpha(part[i]))
         {
             errorPos = partBegin + i;
-            error = fmt::format("no type specified, loc {}.", errorPos);
+            error = fmt::format("no type specified, loc {}.", errorPos).c_str();
             SKR_ASSERT(false);
             return nullptr;
         }
@@ -362,7 +363,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             if (type == kInvalidTypeIndex)
             {
                 errorPos = partBegin + i;
-                error = fmt::format("unknown type name '{}', loc {}.", name, errorPos);
+                error = fmt::format("unknown type name '{}', loc {}.", name, errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -374,14 +375,14 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             if (i < part.size())
             {
                 errorPos = partBegin + i;
-                error = fmt::format("unexpected character, ',' expected, loc {}.", errorPos);
+                error = fmt::format("unexpected character, ',' expected, loc {}.", errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
             if (i > j && operation.phase == 0)
             {
                 errorPos = partBegin + j;
-                error = fmt::format("unexpected phase modifier.([out] is always phase 0), loc {}.", errorPos);
+                error = fmt::format("unexpected phase modifier.([out] is always phase 0), loc {}.", errorPos).c_str();
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -436,7 +437,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     // parse finished, save result into query
     auto result = arena.allocate<dual_query_t>();
 #define FILTER_PART(NAME)                \
-    std::sort(NAME.begin(), NAME.end()); \
+    eastl::sort(NAME.begin(), NAME.end()); \
     result->filter.NAME = dual_type_set_t{ NAME.data(), (SIndex)NAME.size() };
     FILTER_PART(all);
     FILTER_PART(any);
@@ -455,7 +456,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     result->buildedFilter = result->filter;
     result->storage = this;
     queriesBuilt = false;
-    std::memset(&result->meta, 0, sizeof(dual_meta_filter_t));
+    ::memset(&result->meta, 0, sizeof(dual_meta_filter_t));
     queries.push_back(result);
     arena.forget();
     return result;
@@ -463,7 +464,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
 
 void dual_storage_t::destroy_query(dual_query_t* query)
 {
-    auto iter = std::find(queries.begin(), queries.end(), query);
+    auto iter = eastl::find(queries.begin(), queries.end(), query);
     SKR_ASSERT(iter != queries.end());
     delete query;
     queries.erase(iter);

@@ -1,6 +1,6 @@
 #pragma once
-
 #include "ftl/coqueue.h"
+
 namespace dual
 {
 struct pool_t {

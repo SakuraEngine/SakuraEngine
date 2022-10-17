@@ -1,6 +1,7 @@
 #pragma once
-#include <vector>
+#include <EASTL/vector.h>
 #include "dual.h"
+
 namespace dual
 {
 struct entity_registry_t {
@@ -9,8 +10,8 @@ struct entity_registry_t {
         uint32_t indexInChunk : 24;
         uint32_t version : 8;
     };
-    std::vector<entry_t> entries;
-    std::vector<EIndex> freeEntries;
+    eastl::vector<entry_t> entries;
+    eastl::vector<EIndex> freeEntries;
 
     void reset();
     void shrink();

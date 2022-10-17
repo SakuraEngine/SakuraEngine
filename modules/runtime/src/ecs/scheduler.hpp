@@ -1,11 +1,9 @@
 #pragma once
 #include "arena.hpp"
-
 #include "ecs/dual.h"
 #include "task/task.hpp"
 #include "mask.hpp"
 #include "archetype.hpp"
-#include <bitset>
 #include <phmap.h>
 #include "ecs/entities.hpp"
 #include "platform/thread.h"
@@ -73,9 +71,9 @@ struct dual_ecs_job_t : dual_job_t {
     dual_group_t** groups;
     uint32_t groupCount;
     dual_type_index_t* localTypes;
-    std::bitset<32>* readonly;
-    std::bitset<32>* atomic;
-    std::bitset<32>* randomAccess;
+    eastl::bitset<32>* readonly;
+    eastl::bitset<32>* atomic;
+    eastl::bitset<32>* randomAccess;
     bool hasRandomWrite;
     EIndex entityCount;
     dual_resource_operation_t resources;

@@ -12,7 +12,6 @@
 #include "arena.hpp"
 #include "pool.hpp"
 #include "ecs/entities.hpp"
-#include <algorithm>
 #include <phmap.h>
 #include <stdint.h>
 #include "cache.hpp"
@@ -103,7 +102,7 @@ struct dual_storage_t {
     using archetype_t = dual::archetype_t;
     using serializer_t = dual::serializer_t;
     using query_caches_t = skr::flat_hash_map<dual_filter_t, query_cache_t, dual::query_cache_hasher, dual::query_cache_equal>;
-    using queries_t = std::vector<dual_query_t*>;
+    using queries_t = eastl::vector<dual_query_t*>;
     using groups_t = skr::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
     using archetypes_t = skr::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
     archetypes_t archetypes;
@@ -116,7 +115,7 @@ struct dual_storage_t {
     dual::fixed_pool_t groupPool;
     dual::entity_registry_t entities;
     uint32_t timestamp;
-    std::unique_ptr<uint32_t[]> typeTimestamps;
+    eastl::unique_ptr<uint32_t[]> typeTimestamps;
     mutable dual::scheduler_t* scheduler;
     mutable void* currentFiber;
     mutable skr::lazy_t<skr::task::counter_t> counter;

@@ -21,7 +21,6 @@
 #include <cstring>
 #include <initializer_list>
 #include <iterator>
-#include <memory>
 #include "ecs/dual_config.h"
 
 // LLVM Macros

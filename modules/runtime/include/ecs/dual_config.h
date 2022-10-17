@@ -1,6 +1,6 @@
 #pragma once
-
 #include "platform/configure.h"
+
 #if __cplusplus > 201703L
     #define DUAL_UNLIKELY [[unlikely]]
 #else
