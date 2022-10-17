@@ -155,7 +155,7 @@ class Database(object):
                 if base in self.name_to_record:
                     bases.append(self.name_to_record[base])
                 else:
-                    abort("base %s not reflected" % base)
+                    abort("rtti: baseclass %s not reflected" % base)
             record.bases = bases
 
     def add_record(self, record):
