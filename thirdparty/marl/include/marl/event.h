@@ -44,7 +44,7 @@ class Event {
                               bool initialState = false,
                               Allocator* allocator = Allocator::Default);
   
-  MARL_NO_EXPORT inline Event(nullptr_t) {}
+  MARL_NO_EXPORT inline Event(marl::nullptr_t) {}
 
   MARL_NO_EXPORT inline Event(const Event&) = default;
   MARL_NO_EXPORT inline Event(Event&&) = default;
