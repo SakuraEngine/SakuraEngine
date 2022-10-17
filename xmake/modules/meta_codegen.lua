@@ -123,16 +123,6 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
     -- generate headers dummy
     local weak_mako_generators = {
         {
-            os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
-            os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_writer.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_serialize.cpp.mako")
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/serialize.py"),
-            os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
-        },
-        {
             os.projectdir()..vformat("/tools/codegen/typeid.py"),
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
         },
@@ -178,6 +168,16 @@ end
 function _strong_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local strong_mako_generators = {
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
+            os.projectdir()..vformat("/tools/codegen/json_reader.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_writer.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_serialize.cpp.mako")
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize.py"),
+            os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
+        },
         {
             os.projectdir()..vformat("/tools/codegen/rtti.py"),
             os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
