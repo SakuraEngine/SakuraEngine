@@ -3,6 +3,7 @@
 #include "utils/types.h"
 #if !defined(__meta__) && defined(__cplusplus)
     #include "GameRT/backend_config.rtti.generated.hpp"
+    #include "GameRT/json_reader.generated.h"
 #endif
 
 enum sreflect sattr(
