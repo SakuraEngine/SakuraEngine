@@ -41,11 +41,13 @@ struct formatter<skr_guid_t> {
 };
 } // namespace fmt
 
+namespace skr
+{
 template <typename... T>
-auto format(fmt::string_view fmt, T&&... args)
--> eastl::string
+auto format(fmt::string_view fmt, T&&... args) -> eastl::string
 {
     auto buffer = fmt::memory_buffer();
     fmt::detail::vformat_to(buffer, fmt, fmt::make_format_args(args...));
     return eastl::string{ buffer.data(), buffer.size() };
+}
 }

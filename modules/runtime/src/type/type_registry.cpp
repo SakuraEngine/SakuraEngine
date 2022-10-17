@@ -168,15 +168,15 @@ eastl::string skr_type_t::Name() const
             return "eastl::string_view";
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (ArrayType&)(*this);
-            return format("{}[{}]", arr.elementType->Name(), (int)arr.num);
+            return skr::format("{}[{}]", arr.elementType->Name(), (int)arr.num);
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
             auto& arr = (DynArrayType&)(*this);
-            return format("eastl::vector<{}>", arr.elementType->Name());
+            return skr::format("eastl::vector<{}>", arr.elementType->Name());
         }
         case SKR_TYPE_CATEGORY_ARRV: {
             auto& arr = (ArrayViewType&)(*this);
-            return format("gsl::span<{}>", arr.elementType->Name());
+            return skr::format("gsl::span<{}>", arr.elementType->Name());
         }
         case SKR_TYPE_CATEGORY_OBJ:
             return eastl::string(((RecordType*)this)->name);
@@ -187,7 +187,7 @@ eastl::string skr_type_t::Name() const
             switch (ref.ownership)
             {
                 case ReferenceType::Shared:
-                    return format("std::shared_ptr<{}>", ref.pointee ? ref.pointee->Name() : "void");
+                    return skr::format("std::shared_ptr<{}>", ref.pointee ? ref.pointee->Name() : "void");
                 case ReferenceType::Observed:
                     return ref.pointee ? (ref.pointee->Name() + " *") : "void*";
             }
@@ -855,21 +855,21 @@ eastl::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePol
             case SKR_TYPE_CATEGORY_BOOL:
                 return *(bool*)dst == true ? "true" : "false";
             case SKR_TYPE_CATEGORY_I32:
-                return format("{}", *(int32_t*)dst);
+                return skr::format("{}", *(int32_t*)dst);
             case SKR_TYPE_CATEGORY_I64:
-                return format("{}", *(int64_t*)dst);
+                return skr::format("{}", *(int64_t*)dst);
             case SKR_TYPE_CATEGORY_U32:
-                return format("{}", *(uint32_t*)dst);
+                return skr::format("{}", *(uint32_t*)dst);
             case SKR_TYPE_CATEGORY_U64:
-                return format("{}", *(uint64_t*)dst);
+                return skr::format("{}", *(uint64_t*)dst);
             case SKR_TYPE_CATEGORY_F32:
-                return format("{}", *(float*)dst);
+                return skr::format("{}", *(float*)dst);
             case SKR_TYPE_CATEGORY_F64:
-                return format("{}", *(double*)dst);
+                return skr::format("{}", *(double*)dst);
             case SKR_TYPE_CATEGORY_GUID:
-                return format("{}", *(skr_guid_t*)dst);
+                return skr::format("{}", *(skr_guid_t*)dst);
             case SKR_TYPE_CATEGORY_HANDLE:
-                return format("{}", (*(skr_resource_handle_t*)dst).get_serialized());
+                return skr::format("{}", (*(skr_resource_handle_t*)dst).get_serialized());
             case SKR_TYPE_CATEGORY_ENUM:
                 return ((const EnumType*)this)->ToString(dst);
             default:
