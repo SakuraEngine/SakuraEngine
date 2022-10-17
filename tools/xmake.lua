@@ -16,7 +16,7 @@ target("SkrTool")
         api = "TOOL"
     })
     add_rules("c++.noexception")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    -- add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
 if(has_config("build_usdtool")) then
 target("UsdTool")

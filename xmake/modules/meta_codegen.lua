@@ -28,9 +28,9 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-    cprint("${green}%s.compiling.meta ${clear}%s", target:name(), path.relative(outdir))
+    cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
     os.runv(meta.vexec, argv)
-    cprint("${green}%s.finish.meta ${clear}%s", target:name(), path.relative(outdir))
+    cprint("${green}[%s]: finish.meta ${clear}%s", target:name(), path.relative(outdir))
     return argv
 end
 
@@ -47,7 +47,7 @@ function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, 
                 unityfile = path.absolute(unityfile)
                 local relative_include = path.relative(headerfile, path.directory(unityfile))
                 unity_cpp:print("#include \"%s\"", relative_include)
-                cprint("${magenta}%s.reflection.header ${clear}%s", target:name(), path.relative(headerfile))
+                cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
             end
             unity_cpp:close()
             -- build generated cpp to json
@@ -72,7 +72,7 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
     -- compile jsons to c++
     local function template_mako_task(index, depsmeta)
         local generator = mako_generators[index][1]
-        cprint("${cyan}%s.%s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
+        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
         local command = {
             generator,
             path.absolute(metadir), path.absolute(mako_generators[index].gendir or gendir), api or target:name()

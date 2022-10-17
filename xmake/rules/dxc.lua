@@ -14,7 +14,6 @@ rule("utils.dxc")
         local spvfilepath = path.join(spv_outputdir, hlsl_basename .. ".spv")
         local spvTextpath = path.join(spv_outputdir, hlsl_basename .. ".h")
 
-        local spv_last = os.time()
         if not opt.quiet then
             batchcmds:show_progress(opt.progress, "${color.build.object}compiling.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
         end
@@ -31,16 +30,11 @@ rule("utils.dxc")
             "-T", target_profile,
             path.join(os.projectdir(), sourcefile_hlsl)})
 
-        local spv_now = os.time()
-        if not opt.quiet then
-            batchcmds:show_progress(opt.progress, "${color.success}compiled.spriv %s cost %s seconds", sourcefile_hlsl, spv_now - spv_last)
-        end
-    
+
         -- hlsl to dxil
         local dxil_outputdir = path.join(path.absolute(target:autogendir()), "rules", "utils", "dxc-dxil")
         local dxilfilepath = path.join(dxil_outputdir, hlsl_basename .. ".dxil")
 
-        local dxil_last = os.time()
         if not opt.quiet then
             batchcmds:show_progress(opt.progress, "${color.build.object}compiling.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
         end
@@ -52,12 +46,7 @@ rule("utils.dxc")
             "-T ", target_profile,
             path.join(os.projectdir(), sourcefile_hlsl)})
 
-
-        local dxil_now = os.time()
-        if not opt.quiet then
-            batchcmds:show_progress(opt.progress, "${color.success}compiled.dxil %s cost %s seconds", sourcefile_hlsl, dxil_now - dxil_last)
-        end
-
+            
         -- add deps
         batchcmds:add_depfiles(sourcefile_hlsl)
         batchcmds:set_depmtime(os.mtime(spvfilepath))

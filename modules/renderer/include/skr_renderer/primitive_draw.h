@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "fwd_types.h"
+#include "skr_renderer/fwd_types.h"
 #include "cgpu/api.h"
 
 #ifdef __cplusplus
