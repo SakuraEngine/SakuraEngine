@@ -96,6 +96,7 @@ struct TOOL_API SCookSystem {
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(SProject* project, ghc::filesystem::path path);
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
+    eastl::vector<SAssetRecord*> metaAssets;
     SMutex assetMutex;
 
     template <class F, class Iter>

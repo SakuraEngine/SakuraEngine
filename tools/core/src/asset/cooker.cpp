@@ -325,6 +325,8 @@ SAssetRecord* SCookSystem::ImportAsset(SProject* project, ghc::filesystem::path 
     record->project = project;
     SMutexLock lock(assetMutex);
     assets.insert(std::make_pair(record->guid, record));
+    if(metaPath.extension() == ".meta")
+        metaAssets.push_back(record);
     return record;
 }
 SAssetRecord* SCookSystem::GetAssetRecord(const skr_guid_t& guid)
