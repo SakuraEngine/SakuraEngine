@@ -61,13 +61,9 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
     local api = target:extraconf("rules", "c++.codegen", "api")
     -- compile jsons to c++
     local depsmeta = {}
-    if (use_deps_data) then
-        for _, dep in pairs(target:deps()) do
-            local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
-            if os.exists(depmetadir) then
-                table.insert(depsmeta, depmetadir)
-            end
-        end
+    for _, dep in pairs(target:deps()) do
+        local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
+        table.insert(depsmeta, depmetadir)
     end
     -- compile jsons to c++
     local function template_mako_task(index, depsmeta)
