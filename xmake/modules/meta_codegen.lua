@@ -13,6 +13,7 @@ python = find_sdk.find_program("python3")
 function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     opt = opt or {}
     opt.target = target
+    local last = os.time()
     -- load compiler and get compilation command
     local sourcekind = opt.sourcekind
     if not sourcekind and type(sourcefile) == "string" then
@@ -28,9 +29,18 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-    cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
+    
+    if not opt.quiet then
+        cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
+    end
+
     os.runv(meta.vexec, argv)
-    cprint("${green}[%s]: finish.meta ${clear}%s", target:name(), path.relative(outdir))
+
+    if not opt.quiet then
+        local now = os.time()
+        cprint("${green}[%s]: finish.meta ${clear}%s cost ${red}%d seconds", target:name(), path.relative(outdir), now - last)
+    end
+
     return argv
 end
 
@@ -57,7 +67,7 @@ function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, 
     end
 end
 
-function _mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir)
+function _mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt)
     local api = target:extraconf("rules", "c++.codegen", "api")
     -- compile jsons to c++
     local depsmeta = {}
@@ -66,9 +76,13 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
         table.insert(depsmeta, depmetadir)
     end
     -- compile jsons to c++
-    local function template_mako_task(index, depsmeta)
+    local function template_mako_task(index, depsmeta, opt)
         local generator = mako_generators[index][1]
-        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
+        local last = os.time()
+        if not opt.quiet then
+            cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
+        end
+
         local command = {
             generator,
             path.absolute(metadir), path.absolute(mako_generators[index].gendir or gendir), api or target:name()
@@ -77,9 +91,14 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
             table.insert(command, dep)
         end
         os.iorunv(python.program, command)
+
+        if not opt.quiet then
+            local now = os.time()
+            cprint("${cyan}[%s]: %s${clear} %s cost ${red}%d seconds", target:name(), path.filename(generator), path.relative(metadir), now - last)
+        end
     end
     for index, generator in pairs(mako_generators) do
-        template_mako_task(index, depsmeta)
+        template_mako_task(index, depsmeta, opt)
     end
 end
 
@@ -110,7 +129,7 @@ function _early_mako_compile(target, rootdir, metadir, gendir, toolgendir, unity
     end
     -- generate dummy .cpp file
     if(#changedheaders > 0) then
-        _mako_compile_template(target, early_generators, false, metadir, gendir)
+        _mako_compile_template(target, early_generators, false, metadir, gendir, opt)
         target:data_set("reflection.changedheaders", changedheaders)
     end
 end
@@ -157,7 +176,7 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
     end
     -- rebuild
     if (rebuild) then
-        _mako_compile_template(target, weak_mako_generators, false, metadir, gendir)
+        _mako_compile_template(target, weak_mako_generators, false, metadir, gendir, opt)
     end
 end
 
@@ -192,7 +211,7 @@ function _strong_mako_compile(target, rootdir, metadir, gendir, toolgendir, unit
     end
     -- rebuild
     if (rebuild) then
-        _mako_compile_template(target, strong_mako_generators, true, metadir, gendir)
+        _mako_compile_template(target, strong_mako_generators, true, metadir, gendir, opt)
     end
 end
 

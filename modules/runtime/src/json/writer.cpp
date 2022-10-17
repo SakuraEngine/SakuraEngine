@@ -20,7 +20,7 @@ void WriteValue(skr_json_writer_t* writer, const eastl::string& str) { writer->S
 template <>
 void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid)
 {
-    auto str = format("{}", guid);
+    auto str = skr::format("{}", guid);
     writer->String(str.data(), (TSize)str.size());
 }
 template <>
