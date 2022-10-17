@@ -18,7 +18,7 @@ static struct RegisterImporter${type.id}Helper
         auto loader = 
             +[](const SAssetRecord* record, simdjson::ondemand::value&& object) -> SImporter*
             {
-                auto importer = SkrNew<${type.name}>(record->guid);
+                auto importer = SkrNew<${type.name}>();
                 skr::json::Read(std::move(object), *importer);
                 return importer;
             };

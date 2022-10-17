@@ -62,7 +62,11 @@ RUNTIME_API const char* error_message(error_code err) noexcept;
 RUNTIME_API void set_error_message(error_code err) noexcept;
 
 template <class T>
-error_code ReadValue(simdjson::ondemand::value&& json, T& value);
+error_code ReadValue(simdjson::ondemand::value&& json, T& value)
+{
+    static_assert(false, "ReadValue not implemented for this type");
+    return error_code::SUCCESS;
+}
 
 template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, bool& b);

@@ -3,6 +3,9 @@
 #include "asset/importer.hpp"
 #include "platform/configure.h"
 #include "cgltf/cgltf.h"
+#if !defined(__meta__) && defined(__cplusplus)
+    #include "GLTFTool/json_reader.generated.h"
+#endif
 
 namespace skd sreflect
 {
@@ -16,8 +19,6 @@ struct sreflect sattr(
 GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
     skr_guid_t placeHolder;
-
-    using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
 

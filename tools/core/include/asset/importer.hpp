@@ -25,10 +25,6 @@ struct sreflect sattr(
 TOOL_API SImporter
 {
     skr_guid_t assetGuid;
-    SImporter(skr_guid_t inAsset)
-        : assetGuid(inAsset)
-    {
-    }
     virtual ~SImporter() {}
     virtual void* Import(skr::io::RAMService*, const SAssetRecord* record) = 0;
 };
