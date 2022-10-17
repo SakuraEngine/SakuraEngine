@@ -29,6 +29,8 @@ if (os.host() == "windows") then
     find_sdk.sdk_from_github("SDL2-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient_d-windows-x64.zip")
+    --
+    find_sdk.sdk_from_github("usd-windows-x64.zip")
 end
 
 if (os.host() == "macosx") then
