@@ -5,6 +5,9 @@
 #include "utils/types.h"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"
+#if !defined(__meta__) && defined(__cplusplus)
+    #include "SkrTool/json_reader.generated.h"
+#endif
 
 namespace skd sreflect
 {
@@ -25,7 +28,6 @@ struct sreflect sattr(
 TOOL_API SJsonConfigImporter final : public SImporter
 {
     skr_guid_t configType;
-    using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "EASTL/functional.h"
 #include "usdtool_configure.h"
-#include "platform/guid.h"
+#include "platform/guid.hpp"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"
 #include "platform/configure.h"
@@ -21,7 +21,6 @@ USDTOOL_API SSceneImporter final : public SImporter
     // mapping from asset path to resource
     // by default importer will resolve the path to find resource if redirector is not exist
     skr::flat_hash_map<eastl::string, skr_guid_t, eastl::string_hash<eastl::string>> redirectors;
-    using SImporter::SImporter;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 };
 struct sreflect sattr(
