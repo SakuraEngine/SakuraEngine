@@ -10,8 +10,16 @@ struct SRuntimeAttribute
 };
 
 template<typename T>
-void XXXInformation(int);
-void PrintField(const char* name);
+inline static void XXXInformation()
+{
+
+}
+
+inline static void PrintField(const char* name)
+{
+
+}
+
 inline void CreateBuffers()
 {
 
@@ -30,7 +38,7 @@ TestEnum : uint32_t
     Value1 = 1, 
     Value2 = 2 
 }
-sstatic_ctor(1, XXXInformation<$T>(1));
+sstatic_ctor(1, XXXInformation<$T>());
 
 sreflect_struct("guid" : "25809bab-41e8-48c5-806b-1ae4af3edfef")
 sattr("rtti" : true)
@@ -46,7 +54,7 @@ TestSon : public TestParent
 {
     eastl::string sex;
 }
-sstatic_ctor(0, XXXInformation<$T>(1));
+sstatic_ctor(0, XXXInformation<$T>());
 
 }
 
@@ -65,22 +73,8 @@ struct eastl::default_delete<struct SRuntimeAttribue>
     }
 };
 
-sattr("target" : [ "field", "method" ])
-inline void PrintField()
+
+inline static void DontCreateObject()
 {
 
-}
-
-inline void DontCreateObject()
-{
-
-}
-
-template<typename T>
-void XXXInformation()
-{
-    // return nullptr;
-    // return eastl::make_unique<XXXInformationAttribute<T>>();
-    // ->
-    // registry->add_runtime_attribute(eastl::make_unique<XXXInformationAttribute<T>>());
 }
