@@ -18,6 +18,27 @@ generator_list = {}
 
 includes("xmake/options_detect.lua")
 includes("xmake/rules.lua")
+
+target("SkrRoot")
+    set_kind("headeronly")
+    -- unzip & link sdks
+    before_build(function(target)
+        import("core.base.option")
+        local targetname = option.get("target")
+
+        import("core.base.scheduler")
+        local function upzip_tasks(targetname)
+            import("core.project.task")
+
+            task.run("run-codegen-jobs", {}, targetname)
+            task.run("unzip-tracyclient")
+            --task.run("unzip-wasm3")
+            task.run("unzip-platform-sdks")
+        end
+        scheduler.co_start(upzip_tasks, targetname)
+    end)
+target_end()
+
 includes("xmake/thirdparty.lua")
 includes("tools/codegen/xmake.lua")
 

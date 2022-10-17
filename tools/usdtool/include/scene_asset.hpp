@@ -1,14 +1,13 @@
 #pragma once
 #include "EASTL/functional.h"
 #include "usdtool_configure.h"
-#include "platform/guid.hpp"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
 
 #if !defined(__meta__) && defined(__cplusplus)
-    #include "usdtool/json_reader.generated.h"
+    #include "UsdTool/json_reader.generated.h"
 #endif
 
 namespace skd sreflect

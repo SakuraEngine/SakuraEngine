@@ -27,6 +27,8 @@
 #include "pxr/usd/usdGeom/sphere.h"
 #include "pxr/usd/usdGeom/mesh.h"
 
+#include "UsdCore/stage.hpp"
+
 namespace skd::asset
 {
 
@@ -103,6 +105,7 @@ void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, children_t* child
 void* SSceneImporter::Import(skr::io::RAMService*, const SAssetRecord* record)
 {
     auto u8Path = record->path.u8string();
+    skd::OpenUSDStage(u8Path.c_str());
     pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
     auto world = dualS_create();
     TranverseContext ctx;
