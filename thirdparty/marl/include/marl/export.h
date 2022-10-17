@@ -17,18 +17,23 @@
 
 #ifdef MARL_DLL
 
-#if MARL_BUILDING_DLL
-#define MARL_EXPORT __declspec(dllexport)
-#else
-#define MARL_EXPORT __declspec(dllimport)
-#endif
+    #ifdef _MSC_VER
+        #if MARL_BUILDING_DLL
+        #define MARL_EXPORT __declspec(dllexport)
+        #else
+        #define MARL_EXPORT __declspec(dllimport)
+        #endif
+    #else // #ifdef _MSC_VER
+        #define MARL_EXPORT __attribute__((visibility("default")))
+        #define MARL_NO_EXPORT __attribute__((visibility("hidden")))
+    #endif
 
 #else  // #ifdef MARL_DLL
 
-#if __GNUC__ >= 4
-#define MARL_EXPORT __attribute__((visibility("default")))
-#define MARL_NO_EXPORT __attribute__((visibility("hidden")))
-#endif
+    #if __GNUC__ >= 4
+        #define MARL_EXPORT __attribute__((visibility("default")))
+        #define MARL_NO_EXPORT __attribute__((visibility("hidden")))
+    #endif
 
 #endif
 

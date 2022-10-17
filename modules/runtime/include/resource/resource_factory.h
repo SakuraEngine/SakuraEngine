@@ -1,5 +1,4 @@
 #pragma once
-#include "ghc/filesystem.hpp"
 #include "platform/configure.h"
 #include "resource/resource_header.h"
 
@@ -17,7 +16,6 @@ typedef enum ESkrLoadStatus
 } ESkrLoadStatus;
 typedef struct skr_vfs_t skr_vfs_t;
 #if defined(__cplusplus)
-    #include "utils/serialize.hpp"
     #include "bitsery/serializer.h"
 namespace skr
 {

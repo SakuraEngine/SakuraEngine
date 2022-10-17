@@ -55,7 +55,7 @@ FORCEINLINE static void D3D12Util_CreateDSV(CGPUDevice_D3D12* D,
 
 #ifdef __ID3D12GraphicsCommandList5_INTERFACE_DEFINED__
 #define D3D12_HEADER_SUPPORT_VRS
-D3D12_SHADING_RATE_COMBINER D3D12Util_TranslateShadingRateCombiner(ECGPUShadingRateCombiner combiner)
+inline static D3D12_SHADING_RATE_COMBINER D3D12Util_TranslateShadingRateCombiner(ECGPUShadingRateCombiner combiner)
 {
 	switch (combiner)
 	{
@@ -67,7 +67,7 @@ D3D12_SHADING_RATE_COMBINER D3D12Util_TranslateShadingRateCombiner(ECGPUShadingR
 	}
 }
 
-D3D12_SHADING_RATE D3D12Util_TranslateShadingRate(ECGPUShadingRate shadingRate)
+inline static D3D12_SHADING_RATE D3D12Util_TranslateShadingRate(ECGPUShadingRate shadingRate)
 {
 	switch (shadingRate)
 	{
@@ -159,7 +159,7 @@ FORCEINLINE static D3D12_FILTER D3D12Util_TranslateFilter(ECGPUFilterType minFil
   return (D3D12_FILTER)(baseFilter + filter);
 }
 
-D3D12_TEXTURE_ADDRESS_MODE D3D12Util_TranslateAddressMode(ECGPUAddressMode addressMode) 
+inline static D3D12_TEXTURE_ADDRESS_MODE D3D12Util_TranslateAddressMode(ECGPUAddressMode addressMode) 
 {
   switch (addressMode) {
   case CGPU_ADDRESS_MODE_MIRROR:

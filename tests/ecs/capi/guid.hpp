@@ -43,7 +43,7 @@ namespace guid_parse
             begin += 4 + 1;
             auto Data3 = parse_hex<uint16_t>(begin);
             begin += 4 + 1;
-            uint8_t Data4[8];
+            uint8_t Data4[8] = {};
             Data4[0] = parse_hex<uint8_t>(begin);
             begin += 2;
             Data4[1] = parse_hex<uint8_t>(begin);

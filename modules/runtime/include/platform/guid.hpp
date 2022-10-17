@@ -1,8 +1,8 @@
 #pragma once
-#include "utils/types.h"
 #include <EASTL/string.h>
-#include "platform/debug.h"
+#include "utils/types.h"
 #include "utils/hash.h"
+#include "platform/debug.h"
 
 inline SKR_CONSTEXPR bool operator==(skr_guid_t a, skr_guid_t b)
 {

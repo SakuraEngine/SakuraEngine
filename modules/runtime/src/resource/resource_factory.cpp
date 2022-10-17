@@ -1,7 +1,4 @@
 #include "resource/resource_factory.h"
-#include "bitsery/brief_syntax.h"
-#include "bitsery/deserializer.h"
-#include "bitsery/details/adapter_common.h"
 #include "resource/resource_header.h"
 #include "platform/debug.h"
 

@@ -13,7 +13,12 @@ rule("utils.dxc")
         local spv_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "dxc-spv")
         local spvfilepath = path.join(spv_outputdir, hlsl_basename .. ".spv")
         local spvTextpath = path.join(spv_outputdir, hlsl_basename .. ".h")
-        batchcmds:show_progress(opt.progress, "${color.build.object}compiling.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
+
+        local spv_last = os.time()
+        if not opt.quiet then
+            batchcmds:show_progress(opt.progress, "${color.build.object}compiling.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
+        end
+
         batchcmds:mkdir(spv_outputdir)
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes",
@@ -26,16 +31,32 @@ rule("utils.dxc")
             "-T", target_profile,
             path.join(os.projectdir(), sourcefile_hlsl)})
 
+        local spv_now = os.time()
+        if not opt.quiet then
+            batchcmds:show_progress(opt.progress, "${color.success}compiled.spriv %s cost %s seconds", sourcefile_hlsl, spv_now - spv_last)
+        end
+    
         -- hlsl to dxil
         local dxil_outputdir = path.join(path.absolute(target:autogendir()), "rules", "utils", "dxc-dxil")
         local dxilfilepath = path.join(dxil_outputdir, hlsl_basename .. ".dxil")
-        batchcmds:show_progress(opt.progress, "${color.build.object}compiling.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
+
+        local dxil_last = os.time()
+        if not opt.quiet then
+            batchcmds:show_progress(opt.progress, "${color.build.object}compiling.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
+        end
+
         batchcmds:mkdir(dxil_outputdir)
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes", 
             "-Fo ", dxilfilepath, 
             "-T ", target_profile,
             path.join(os.projectdir(), sourcefile_hlsl)})
+
+
+        local dxil_now = os.time()
+        if not opt.quiet then
+            batchcmds:show_progress(opt.progress, "${color.success}compiled.dxil %s cost %s seconds", sourcefile_hlsl, dxil_now - dxil_last)
+        end
 
         -- add deps
         batchcmds:add_depfiles(sourcefile_hlsl)
