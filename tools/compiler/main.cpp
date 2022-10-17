@@ -176,14 +176,14 @@ int main(int argc, char** argv)
     ghc::filesystem::create_directories(project->dependencyPath, ec);
     //----- schedule cook tasks (checking dependencies)
     {
-        using iter_t = typename decltype(system.assets)::iterator;
-        system.ParallelFor(system.assets.begin(), system.assets.end(), 10,
+        using iter_t = typename decltype(system.metaAssets)::iterator;
+        system.ParallelFor(system.metaAssets.begin(), system.metaAssets.end(), 10,
         [](iter_t begin, iter_t end) {
             ZoneScopedN("EnsureCooked");
             auto& system = *skd::asset::GetCookSystem();
             for (auto i = begin; i != end; ++i)
-                if (!(i->second->type == skr_guid_t{}))
-                    system.EnsureCooked(i->second->guid);
+                if (!((*i)->type == skr_guid_t{}))
+                    system.EnsureCooked((*i)->guid);
         });
     }
     SKR_LOG_INFO("Project asset import finished.");
