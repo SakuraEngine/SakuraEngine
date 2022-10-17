@@ -274,7 +274,7 @@ void* SCookContext::_Import()
         auto asset = GetCookSystem()->GetAssetRecord(importer->assetGuid);
         if(!asset)
         {
-            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] asset not exist! asset guid: {}", importer->assetGuid);
+            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] asset not exist! asset guid: {} referenced by meta: {}", importer->assetGuid, record->guid);
             return nullptr;
         }
         staticDependencies.push_back(asset->guid);
