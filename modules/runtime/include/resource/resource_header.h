@@ -42,7 +42,7 @@ typedef enum ESkrLoadingStatus : uint32_t
 typedef struct skr_resource_record_t skr_resource_record_t;
 
 #if defined(__cplusplus)
-    #include "EASTL/vector.h"
+    #include <EASTL/vector.h>
 namespace skr::resource
 {
 struct SResourceRequest;

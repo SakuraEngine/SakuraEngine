@@ -208,8 +208,8 @@ namespace type
 #endif
 
 #if defined(__cplusplus)
-    #include "gsl/span"
-    #include "EASTL/vector.h"
+    #include <gsl/span>
+    #include <EASTL/vector.h>
     #include "utils/hashmap.hpp"
 
 namespace skr

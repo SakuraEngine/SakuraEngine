@@ -1,5 +1,5 @@
 #pragma once
-#include "EASTL/fixed_vector.h"
+#include <EASTL/fixed_vector.h>
 #include "ecs/entities.hpp"
 #include "platform/thread.h"
 #include "platform/guid.hpp"
@@ -8,11 +8,13 @@
 #include "utils/hashmap.hpp"
 #include "resource/resource_header.h"
 #include "utils/io.h"
+#include "utils/types.h"
 
 namespace skr::io
 {
 class RAMService;
 }
+
 typedef enum ESkrLoadingPhase
 {
     SKR_LOADING_PHASE_NONE = -1,
@@ -42,7 +44,7 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_FINISHED,
 } ESkrLoadingPhase;
 #if defined(__cplusplus)
-    #include "ghc/filesystem.hpp"
+    #include <ghc/filesystem.hpp>
 namespace skr
 {
 namespace resource

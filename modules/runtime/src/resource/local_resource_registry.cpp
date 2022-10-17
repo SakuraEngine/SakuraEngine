@@ -1,9 +1,8 @@
-﻿#include "resource/local_resource_registry.h"
-#include "ghc/filesystem.hpp"
-#include "platform/guid.hpp"
-#include "platform/vfs.h"
+﻿#include <ghc/filesystem.hpp>
 #include "utils/defer.hpp"
 #include "utils/format.hpp"
+#include "platform/vfs.h"
+#include "resource/local_resource_registry.h"
 #include "resource/resource_header.h"
 
 namespace skr::resource

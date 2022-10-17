@@ -60,7 +60,7 @@ SKR_IMGUI_API void render_graph_imgui_initialize(const RenderGraphImGuiDescripto
 void imguir_render_draw_data(ImDrawData* draw_data, 
     skr::render_graph::RenderGraph* render_graph, skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
 {
-    bool useCVV = true;
+    bool useCVV = false;
 #ifdef SKR_OS_MACOSX
     useCVV = false;
 #endif

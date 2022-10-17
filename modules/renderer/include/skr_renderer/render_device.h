@@ -92,7 +92,7 @@ protected:
 #ifdef _WIN32
     skr_win_dstorage_decompress_service_id decompress_service = nullptr;
 #endif
-    CGPUNSightTrackerId nsight_tracker;
+    CGPUNSightTrackerId nsight_tracker = nullptr;
 };
 } // namespace skr
 #endif

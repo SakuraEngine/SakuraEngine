@@ -123,9 +123,11 @@ namespace skr::type
             registry->register_type(guid, type_of<${record.name}>::get());
         }
     } _RegisterRTTI${record.id}Helper;
+
 %endfor
 
 %for enum in db.enums: 
+
 namespace skr::type
 {
     const skr_type_t* type_of<${enum.name}>::get()
@@ -148,7 +150,7 @@ namespace skr::type
                 switch(hash)
                 {
                 %for enumerator in enum.enumerators:
-                    case hash_crc32<char>("${enumerator.short_name}"): if( enumStr.compare("${enumerator.short_name}") == 0) This = ${enumerator.name}; return;
+                    case hash_crc32<char>("${enumerator.short_name}"): if( enumStr.compare("${enumerator.short_name}") == 0) This = ${enum.name}::${enumerator.short_name}; return;
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
@@ -159,7 +161,7 @@ namespace skr::type
                 switch(This)
                 {
                 %for enumerator in enum.enumerators:
-                    case ${enumerator.name}: return eastl::string("${enumerator.short_name}");
+                    case ${enum.name}::${enumerator.short_name}: return eastl::string("${enumerator.short_name}");
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
@@ -180,4 +182,5 @@ namespace skr::type
             registry->register_type(guid, type_of<${enum.name}>::get());
         }
     } _RegisterRTTI${enum.id}Helper;
+    
 %endfor

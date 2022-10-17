@@ -538,11 +538,11 @@ int main(int argc, char* argv[])
                 graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                     builder.set_name("light_pass_fs")
-                    .set_pipeline(lighting_pipeline)
-                    .read("gbuffer_color", gbuffer_color.read_mip(0, 1))
-                    .read("gbuffer_normal", gbuffer_normal)
-                    .read("gbuffer_depth", gbuffer_depth)
-                    .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
+                        .set_pipeline(lighting_pipeline)
+                        .read("gbuffer_color", gbuffer_color.read_mip(0, 1))
+                        .read("gbuffer_normal", gbuffer_normal)
+                        .read("gbuffer_depth", gbuffer_depth)
+                        .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,

@@ -43,8 +43,8 @@ struct CGPUAMDAGSSingleton
 
     ~CGPUAMDAGSSingleton()
     {
-        if (_agsDeInitialize) _agsDeInitialize(pAgsContext);
-        ags_library.unload();
+        if (_agsDeInitialize && (agsStatus == AGS_SUCCESS)) _agsDeInitialize(pAgsContext);
+        if (ags_library.isLoaded()) ags_library.unload();
 
         SKR_LOG_TRACE("AMD AGS unloaded");
     }
@@ -52,6 +52,7 @@ struct CGPUAMDAGSSingleton
     SKR_SHARED_LIB_API_PFN(agsInitialize) _agsInitialize = nullptr;
     SKR_SHARED_LIB_API_PFN(agsDeInitialize) _agsDeInitialize = nullptr;
 
+    AGSReturnCode agsStatus = AGS_SUCCESS;
     AGSContext* pAgsContext = NULL;
     AGSGPUInfo gAgsGpuInfo = {};
     uint32_t driverVersion = 0;
@@ -68,16 +69,12 @@ ECGPUAGSReturnCode cgpu_ags_init(struct CGPUInstance* Inst)
     
     AGSConfiguration config = {};
     int apiVersion = AGS_MAKE_VERSION(6, 0, 1);
-    auto Status = _this->_agsInitialize(apiVersion, &config, &_this->pAgsContext, &_this->gAgsGpuInfo);
+    auto Status = _this->agsStatus = _this->_agsInitialize(apiVersion, &config, &_this->pAgsContext, &_this->gAgsGpuInfo);
     Inst->ags_status = (ECGPUAGSReturnCode)Status;
     if (Status == AGS_SUCCESS)
     {
         char* stopstring;
         _this->driverVersion = strtoul(_this->gAgsGpuInfo.driverVersion, &stopstring, 10);
-    }
-    else
-    {
-        SkrDelete(_this);
     }
     return Inst->ags_status;
 #else

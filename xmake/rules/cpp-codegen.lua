@@ -49,10 +49,19 @@ rule("c++.codegen")
 
             table.insert(target:objectfiles(), objectfile)
 
+            local last = os.time()
+            if not opt.quiet then
+                batchcmds:show_progress(opt.progress, "${color.build.object}compiling.codegen %s", file)
+            end
+
             -- add commands
-            batchcmds:show_progress(opt.progress, "${color.build.object}compiling.codegen %s", file)
             batchcmds:mkdir(path.directory(sourcefile_cx))
             batchcmds:compile(sourcefile_cx, objectfile)
+
+            local now = os.time()
+            if not opt.quiet then
+                batchcmds:show_progress(opt.progress, "${color.success}compiled.codegen %s cost %s seconds", file, now - last)
+            end
 
             -- add deps
             batchcmds:add_depfiles(sourcefile_cx)
