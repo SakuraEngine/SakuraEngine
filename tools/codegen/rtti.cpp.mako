@@ -31,7 +31,7 @@ namespace skr::type
                 size_t align = alignof(${record.name});
                 eastl::string_view name = "${record.name}";
             %if record.bases:
-                auto base = (const RecordType*)type_of<${record.bases[0].name}>::get();
+                auto base = (const RecordType*)type_of<${record.bases[0]}>::get();
             %else:
                 auto base = (const RecordType*)nullptr;
             %endif

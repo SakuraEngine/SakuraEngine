@@ -172,6 +172,10 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
             os.projectdir()..vformat("/tools/codegen/serialize.py"),
             os.projectdir()..vformat("/tools/codegen/serialize.h.mako"),
         },
+        {
+            os.projectdir()..vformat("/tools/codegen/static_ctor.py"),
+            os.projectdir()..vformat("/tools/codegen/static_ctor.cpp.mako"),
+        },
     }
     -- calculate if weak makos need to be rebuild
     local need_mako = target:data("reflection.need_mako")

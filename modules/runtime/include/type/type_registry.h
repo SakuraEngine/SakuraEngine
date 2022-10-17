@@ -170,9 +170,17 @@ uint32_t skr_get_type_size(const struct skr_type_t* type);
 RUNTIME_EXTERN_C RUNTIME_API 
 void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
 RUNTIME_EXTERN_C RUNTIME_API 
+skr_field_t* skr_get_field(const struct skr_type_t* type, const char* name);
+RUNTIME_EXTERN_C RUNTIME_API 
+skr_method_t* skr_get_method(const struct skr_type_t* type, const char* name);
+RUNTIME_EXTERN_C RUNTIME_API 
 struct skr_type_t* skr_get_field_type(const skr_field_t* field);
 RUNTIME_EXTERN_C RUNTIME_API 
 const char* skr_get_field_name(const skr_field_t* field);
+
+extern const skr_type_t* $type;
+extern const skr_field_t* $field;
+extern const skr_method_t* $method;
 
 #if defined(__cplusplus)
     #include "EASTL/string.h"
