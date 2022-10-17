@@ -17,9 +17,7 @@
 #include <atomic>
 #include "set.hpp"
 #include "scheduler.hpp"
-#ifndef forloop
-    #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
-#endif
+#include "internal/utils.hpp"
 
 namespace dual
 {
