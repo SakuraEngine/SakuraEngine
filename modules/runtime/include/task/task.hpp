@@ -46,7 +46,7 @@ namespace skr::task
     public:
         using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
         counter_t();
-        counter_t(nullptr_t) {}
+        counter_t(std::nullptr_t) {}
 
         bool operator==(const counter_t& other) const { return internal == other.internal; }
         void wait(bool pin) { internal->GetScheduler()->WaitForCounter(internal.get(), pin); }
@@ -64,7 +64,7 @@ namespace skr::task
     public:
         using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
         event_t();
-        event_t(nullptr_t) {}
+        event_t(std::nullptr_t) {}
         bool operator==(const event_t& other) const { return internal == other.internal; }
         void wait(bool pin) { internal->GetScheduler()->WaitForCounter(internal.get(), pin); }
         void signal() { internal->Decrement(); }
@@ -156,7 +156,7 @@ namespace skr::task
     public:
         using internal_t = marl::WaitGroup;
         counter_t() = default;
-        counter_t(nullptr_t) : internal(nullptr) {}
+        counter_t(std::nullptr_t) : internal(nullptr) {}
 
         bool operator==(const counter_t& other) const { return internal == other.internal; }
         size_t hash() const { return internal.hash(); }
@@ -173,7 +173,7 @@ namespace skr::task
     public:
         using internal_t = marl::Event;
         event_t() : internal(marl::Event::Mode::Manual) {}
-        event_t(nullptr_t) : internal(nullptr) {}
+        event_t(std::nullptr_t) : internal(nullptr) {}
 
         bool operator==(const event_t& other) const { return internal == other.internal; }
         void wait(bool pin) { internal.wait(); }
