@@ -628,8 +628,8 @@ int main(int argc, char* argv[])
         // present
         {
             ZoneScopedN("CollectGarbage");
-            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT)
-                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT);
+            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
+                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
         }
         {
             ZoneScopedN("Present");
