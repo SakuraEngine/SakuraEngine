@@ -7,11 +7,9 @@
     #include "GameRT/binary_serialize.generated.h"
 #endif
 
-enum sreflect sattr(
-"guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1",
-"serialize" : ["json", "bin"],
-"rtti" : true
-)
+sreflect_enum("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")
+sattr("serialize" : ["json", "bin"])
+sattr("rtti" : true)
 ECGPUBackEnd SKRENUM(uint32_t){
     Vulkan,
     DX12,
@@ -26,5 +24,6 @@ config_backend_t
 }
 sattr("serialize" : ["json", "bin"])
 sattr("rtti" : true)
+sattr("config" : true)
 sregister_config(0);
 typedef struct config_backend_t config_backend_t;

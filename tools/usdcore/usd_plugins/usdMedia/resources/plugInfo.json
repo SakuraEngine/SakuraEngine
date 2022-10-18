@@ -18,7 +18,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdMedia.dll", 
+            "LibraryPath": "../../usdMedia.dll", 
             "Name": "usdMedia", 
             "ResourcePath": "resources", 
             "Root": "..", 

@@ -22,15 +22,13 @@ struct TOOL_API SConfigRegistry {
 };
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
 
-struct sreflect sattr(
-"guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
-"serialize" : "json"
-)
+sreflect_struct("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6")
 TOOL_API SJsonConfigImporter final : public SImporter
 {
     skr_guid_t configType;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 }
+sattr("serialize" : "json")
 sregister_importer(0);
 
 struct sreflect TOOL_API SConfigCooker final : public SCooker
@@ -45,5 +43,5 @@ struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     skr_guid_t GetResourceType() override;
     void CreateImporter(const SAssetRecord* record) override;
 };
-} // namespace sreflect
-} // namespace sreflect
+} // namespace asset
+} // namespace skd

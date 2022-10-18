@@ -128,7 +128,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdShade.dll", 
+            "LibraryPath": "../../usdShade.dll", 
             "Name": "usdShade", 
             "ResourcePath": "resources", 
             "Root": "..", 

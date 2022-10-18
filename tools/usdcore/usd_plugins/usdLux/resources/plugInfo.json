@@ -180,7 +180,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdLux.dll", 
+            "LibraryPath": "../../usdLux.dll", 
             "Name": "usdLux", 
             "ResourcePath": "resources", 
             "Root": "..", 

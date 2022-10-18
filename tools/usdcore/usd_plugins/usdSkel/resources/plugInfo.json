@@ -81,7 +81,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdSkel.dll", 
+            "LibraryPath": "../../usdSkel.dll", 
             "Name": "usdSkel", 
             "ResourcePath": "resources", 
             "Root": "..", 

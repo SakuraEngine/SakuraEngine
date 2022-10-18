@@ -65,7 +65,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdRender.dll", 
+            "LibraryPath": "../../usdRender.dll", 
             "Name": "usdRender", 
             "ResourcePath": "resources", 
             "Root": "..", 
