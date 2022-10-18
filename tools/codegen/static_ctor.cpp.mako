@@ -1,4 +1,4 @@
-
+//DO NOT MODIFY THIS FILE
 #include "platform/debug.h"
 #include "platform/guid.hpp"
 #include "platform/memory.h"

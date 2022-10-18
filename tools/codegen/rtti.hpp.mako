@@ -1,3 +1,4 @@
+//DO NOT MODIFY THIS FILE
 #pragma once
 #include "${config}"
 #include "type/type_registry.h"

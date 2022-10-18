@@ -1,3 +1,4 @@
+//DO NOT MODIFY THIS FILE
 #pragma once
 #include "${config}"
 #include "ecs/dual.h"

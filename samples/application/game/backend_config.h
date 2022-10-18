@@ -4,10 +4,7 @@
 #include "resource/config_resource.h"
 #if !defined(__meta__) && defined(__cplusplus)
     #include "GameRT/backend_config.rtti.generated.hpp"
-    #include "GameRT/json_reader.generated.h"
-    #include "GameRT/serialize.generated.h"
 #endif
-
 
 enum sreflect sattr(
 "guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1",
@@ -32,3 +29,8 @@ config_backend_t
 }
 sregister_config(0);
 typedef struct config_backend_t config_backend_t;
+
+#if !defined(__meta__) && defined(__cplusplus)
+    #include "GameRT/json_reader.generated.h"
+    #include "GameRT/serialize.generated.h"
+#endif
