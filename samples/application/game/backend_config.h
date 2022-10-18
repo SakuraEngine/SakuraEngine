@@ -1,6 +1,5 @@
 #pragma once
 #include "platform/configure.h"
-#include "utils/types.h"
 #include "resource/config_resource.h"
 #if !defined(__meta__) && defined(__cplusplus)
     #include "GameRT/backend_config.rtti.generated.hpp"
@@ -20,14 +19,12 @@ ECGPUBackEnd SKRENUM(uint32_t){
 };
 typedef enum ECGPUBackEnd ECGPUBackEnd;
 
-struct sreflect sattr(
-"guid" : "b537f7b1-6d2d-44f6-b313-bcb559d3f490",
-"serialize" : ["json", "bin"],
-"rtti" : true
-)
+sreflect_struct("guid" : "b537f7b1-6d2d-44f6-b313-bcb559d3f490")
 config_backend_t
 {
-    enum ECGPUBackEnd backend;
+    ECGPUBackEnd backend;
 }
+sattr("serialize" : ["json", "bin"])
+sattr("rtti" : true)
 sregister_config(0);
 typedef struct config_backend_t config_backend_t;

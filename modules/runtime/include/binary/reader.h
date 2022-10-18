@@ -146,6 +146,7 @@ struct ReadHelper<eastl::vector<V, Allocator>> {
             temp.push_back(std::move(value));
         }
         vec = std::move(temp);
+        return 0;
     }
 };
 
