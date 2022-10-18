@@ -1,7 +1,7 @@
 target("SkrDependencyGraph")
     set_group("01.modules")
     add_rules("c++.noexception")
-    set_kind("static")
+    add_rules("skr.static_module", {api = "SKR_DEPENDENCY_GRAPH"})
     add_deps("SkrRoot")
     set_optimize("fastest")
     add_files("src/**/dependency_graph.cpp")
@@ -24,6 +24,10 @@ target("SkrRT")
     -- runtime compile definitions
     after_load(function (target,  opt)
         if (target:get("kind") == "shared") then
+            import("core.project.project")
+            local depgraph_lib = project.target("SkrDependencyGraph")
+            depgraph_lib:add("defines", "EA_DLL", {public = true})
+
             target:add("defines", "MI_SHARED_LIB", "EA_DLL", "MARL_DLL", {public = true})
             target:add("defines", "MI_SHARED_LIB_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT", "MARL_BUILDING_DLL")
         end

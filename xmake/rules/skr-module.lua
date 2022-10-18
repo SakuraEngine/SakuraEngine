@@ -19,3 +19,15 @@ rule("skr.module")
             target:add("defines", api.."_IMPL")
         end
     end)
+
+rule("skr.static_module")
+    on_load(function (target, opt)
+        local api = target:extraconf("rules", "skr.static_module", "api")
+        if(has_config("module_as_objects")) then
+            target:set("kind", "object")
+        else
+            target:set("kind", "static")
+            target:add("defines", api.."_STATIC", {public=true})
+            target:add("defines", api.."_IMPL")
+        end
+    end)
