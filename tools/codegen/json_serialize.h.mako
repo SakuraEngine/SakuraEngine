@@ -2,6 +2,7 @@
 #pragma once
 #include "${config}"
 #include "json/reader.h"
+#include "json/writer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -9,11 +10,13 @@ extern "C" {
 %for enum in db.enums:
 %if enum.export_to_c:
 ${api} void skr_deserialize_json_${enum.name}(uint64_t* e, skr_json_reader_t* reader);
+${api} void skr_serialize_json_${enum.name}(uint64_t e, skr_json_writer_t* writer);
 %endif
 %endfor
 %for record in db.records:
 %if record.export_to_c:
 ${api} void skr_deserialize_json_${record.name}(struct ${record.name}* record, skr_json_reader_t* reader);
+${api} void skr_serialize_json_${record.name}(struct ${record.name}* record, skr_json_writer_t* writer);
 %endif
 %endfor
 #ifdef __cplusplus
@@ -39,10 +42,14 @@ namespace skr::json
 %for record in db.records:
     template <>
     ${api} error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& v);
+    template <>
+    ${api} void WriteValue(skr_json_writer_t* writer, const ${record.name}& v);
 %endfor
 %for enum in db.enums:
     template <>
     ${api} error_code ReadValue(simdjson::ondemand::value&& json, ${enum.name}& v);
+    template <>
+    ${api} void WriteValue(skr_json_writer_t* writer, ${enum.name} v);
 %endfor
 }
 #endif

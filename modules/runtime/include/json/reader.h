@@ -94,7 +94,7 @@ template <class T>
 struct ReadHelper {
     static error_code Read(simdjson::ondemand::value&& json, T& map)
     {
-        return ReadValue<T&>(std::move(json), map);
+        return ReadValue<T>(std::move(json), map);
     }
 };
 

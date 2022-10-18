@@ -100,7 +100,6 @@ struct scheduler_t;
 struct dual_storage_t {
     using query_cache_t = dual::query_cache_t;
     using archetype_t = dual::archetype_t;
-    using serializer_t = dual::serializer_t;
     using query_caches_t = skr::flat_hash_map<dual_filter_t, query_cache_t, dual::query_cache_hasher, dual::query_cache_equal>;
     using queries_t = eastl::vector<dual_query_t*>;
     using groups_t = skr::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
@@ -167,15 +166,16 @@ struct dual_storage_t {
     const query_cache_t& get_query_cache(const dual_filter_t& filter);
     void update_query_cache(dual_group_t* group, bool isAdd);
 
-    void serialize_single(dual_entity_t e, serializer_t s);
-    dual_entity_t deserialize_single(serializer_t s);
-    void serialize_type(const dual_entity_type_t& g, serializer_t s, bool keepMeta);
-    dual_entity_type_t deserialize_type(dual::fixed_stack_t& stack, serializer_t s, bool keepMeta);
-    void serialize_prefab(dual_entity_t e, serializer_t s);
-    void serialize_prefab(dual_entity_t* es, EIndex n, serializer_t s);
-    dual_entity_t deserialize_prefab(serializer_t s);
-    void serialize(serializer_t s);
-    void deserialize(serializer_t s);
+    void serialize_single(dual_entity_t e, skr_binary_writer_t* s);
+    dual_entity_t deserialize_single(skr_binary_reader_t* s);
+    void serialize_type(const dual_entity_type_t& g, skr_binary_writer_t* s, bool keepMeta);
+    dual_entity_type_t deserialize_type(dual::fixed_stack_t& stack, skr_binary_reader_t* s, bool keepMeta);
+    void serialize_prefab(dual_entity_t e, skr_binary_writer_t* s);
+    void serialize_prefab(dual_entity_t* es, EIndex n, skr_binary_writer_t* s);
+    dual_entity_t deserialize_prefab(skr_binary_reader_t* s);
+    void serialize_view(dual_group_t* group, dual_chunk_view_t& v, skr_binary_writer_t* s, skr_binary_reader_t* ds, bool withEntities = true);
+    void serialize(skr_binary_writer_t* s);
+    void deserialize(skr_binary_reader_t* s);
 
     void merge(dual_storage_t& src);
     void reset();

@@ -188,13 +188,9 @@ def main():
         content = render(template, db=data)
         output = os.path.join(outdir, "json_serialize.generated.cpp")
         write(output, content)
-        template = os.path.join(BASE, "json_writer.h.mako")
+        template = os.path.join(BASE, "json_serialize.h.mako")
         content = render(template, db=data, api=api, config=config)
-        output = os.path.join(outdir, "json_writer.generated.h")
-        write(output, content)
-        template = os.path.join(BASE, "json_reader.h.mako")
-        content = render(template, db=data, api=api, config=config)
-        output = os.path.join(outdir, "json_reader.generated.h")
+        output = os.path.join(outdir, "json_serialize.generated.h")
         write(output, content)
 
 

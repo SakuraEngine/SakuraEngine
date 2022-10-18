@@ -14,8 +14,9 @@ namespace skg::resource
 
     ESkrLoadStatus SSceneFactory::Load(skr_resource_record_t* record)
     {
+        namespace bin = skr::binary;
         SBinaryDeserializer archive{ record->activeRequest->GetData() };
-        bitsery::serialize(archive, record->header);
+        bin::Archive(&archive, record->header);
         dual_serializer_v v;
         v.is_serialize = +[](void*) { return 0;};
         v.peek = +[](void* u, void* dst, uint32_t size)

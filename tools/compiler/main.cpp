@@ -1,6 +1,5 @@
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
-#include "bitsery/adapter/buffer.h"
 #include "ecs/dual.h"
 #include "ghc/filesystem.hpp"
 #include "platform/thread.h"
@@ -8,7 +7,6 @@
 #include "resource/resource_header.h"
 #include <mutex>
 #include "asset/config_asset.hpp"
-#include "bitsery/serializer.h"
 #include "tracy/Tracy.hpp"
 #include "type/type_registry.h"
 #include "utils/defer.hpp"

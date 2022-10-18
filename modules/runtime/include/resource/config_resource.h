@@ -4,6 +4,8 @@
 #include "platform/guid.hpp"
 #include "resource/resource_factory.h"
 #include "type/type_registry.h"
+#include "binary/reader.h"
+#include "binary/writer.h"
 
 typedef struct sreflect sattr(
     "guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74"
@@ -26,7 +28,8 @@ namespace skr
 namespace resource
 {
 struct SConfigTypeInfo {
-    void (*Serialize)(void* address, SBinaryArchive& archive);
+    void (*Serialize)(void* address, skr_binary_writer_t& archive) = nullptr;
+    void (*Deserialize)(void* address, skr_binary_reader_t& archive) = nullptr;
 };
 struct SConfigRegistry {
     skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
@@ -38,24 +41,23 @@ struct RUNTIME_API SConfigFactory : public SResourceFactory {
     static skr_config_resource_t* NewConfig(skr_type_id_t& id);
     bool AsyncIO() override { return false; }
     ESkrLoadStatus Load(skr_resource_record_t* record) override;
-    bool Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive);
-    static void Serialize(const skr_config_resource_t& config, SBinarySerializer& archive);
-    static void DeserializeConfig(const skr_type_id_t& id, void* address, SBinaryDeserializer& archive);
-    static void SerializeConfig(const skr_type_id_t& id, void* address, SBinarySerializer& archive);
+    bool Deserialize(skr_resource_record_t* record, skr_binary_reader_t& archive);
+    static void Serialize(const skr_config_resource_t& config, skr_binary_writer_t& archive);
+    static void DeserializeConfig(const skr_type_id_t& id, void* address, skr_binary_reader_t& archive);
+    static void SerializeConfig(const skr_type_id_t& id, void* address, skr_binary_writer_t& archive);
 };
 
 template<class T>
 inline static void RegisterConfig(skr_guid_t guid)
 {
     SConfigTypeInfo typeInfo {
-        +[](void* address, skr::resource::SBinaryArchive& archive)
+        +[](void* address, skr_binary_writer_t& archive)
         {
-            if(archive.serializer)
-                bitsery::serialize(*archive.serializer, *(T*)address);
-            else if(archive.deserializer)
-                bitsery::serialize(*archive.deserializer, *(T*)address);
-            else
-                SKR_UNREACHABLE_CODE();
+            skr::binary::WriteValue<const T&>(&archive, *(T*)address);
+        },
+        +[](void* address, skr_binary_reader_t& archive)
+        {
+            skr::binary::ReadValue<T>(&archive, *(T*)address);
         }
     };
     GetConfigRegistry()->typeInfos.insert(std::make_pair(guid, typeInfo));

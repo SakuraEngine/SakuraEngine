@@ -21,12 +21,13 @@ static void iter_ref_impl(const dual_chunk_view_t& view, type_index_t type, EInd
     if (desc.entityFieldsCount == 0 && !map)
         return;
     auto iter_element = [&](dual_chunk_t* chunk, EIndex index, char* curr) {
-        dual_mapper_v mapper;
-        mapper.map = +[](dual_mapper_t* iter, dual_entity_t* ent) {
-            ((std::remove_reference_t<F>*)iter)->map(*(dual_entity_t*)ent);
+        dual_mapper_t mapper;
+        mapper.map = +[](void* user, dual_entity_t* ent) {
+            ((std::remove_reference_t<F>*)user)->map(*(dual_entity_t*)ent);
         };
+        mapper.user = &iter;
         if (map)
-            map(chunk, index, curr, (dual_mapper_t*)&iter, &mapper);
+            map(chunk, index, curr, &mapper);
         else
         {
             forloop (i, 0, desc.entityFieldsCount)

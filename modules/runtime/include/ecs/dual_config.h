@@ -19,7 +19,7 @@
 #include "inttypes.h"
 typedef uint32_t EIndex;
 typedef uint32_t TIndex;
-typedef uint16_t SIndex;
+typedef uint32_t SIndex;
 typedef uint32_t dual_entity_t;
 
 typedef struct dual_entity_debug_proxy_t {

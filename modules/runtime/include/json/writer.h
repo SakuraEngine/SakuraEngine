@@ -309,7 +309,7 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
 };
 
 template <class T>
-struct WriteHelper<const skr::resource::TResourceHandle<T>> {
+struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
     static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
     {
         WriteValue<const skr_resource_handle_t&>(json, (const skr_resource_handle_t&)handle);
@@ -317,7 +317,7 @@ struct WriteHelper<const skr::resource::TResourceHandle<T>> {
 };
 
 template <class V, class Allocator>
-struct WriteHelper<const eastl::vector<V, Allocator>> {
+struct WriteHelper<const eastl::vector<V, Allocator>&> {
     static void Write(skr_json_writer_t* json, const eastl::vector<V, Allocator>& vec)
     {
         json->StartArray();

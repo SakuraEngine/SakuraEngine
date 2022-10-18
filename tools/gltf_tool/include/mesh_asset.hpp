@@ -4,7 +4,7 @@
 #include "platform/configure.h"
 #include "cgltf/cgltf.h"
 #if !defined(__meta__) && defined(__cplusplus)
-    #include "GLTFTool/json_reader.generated.h"
+    #include "GLTFTool/json_serialize.generated.h"
 #endif
 
 namespace skd sreflect

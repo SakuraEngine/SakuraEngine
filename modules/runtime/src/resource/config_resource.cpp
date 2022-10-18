@@ -1,7 +1,5 @@
 #include "resource/config_resource.h"
 #include "EASTL/vector.h"
-#include "bitsery/deserializer.h"
-#include "bitsery/details/adapter_common.h"
 #include "platform/configure.h"
 #include "platform/debug.h"
 #include "platform/memory.h"
@@ -44,20 +42,33 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
 ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)
 {
     auto data = record->activeRequest->GetData();
-    SBinaryDeserializer archive{ data.begin(), data.end() };
+    struct SpanReader
+    {
+        gsl::span<uint8_t> data;
+        size_t offset = 0;
+        int read(void* dst, size_t size)
+        {
+            if (offset + size > data.size())
+                return -1;
+            memcpy(dst, data.data() + offset, size);
+            offset += size;
+            return 0;
+        }
+    } reader = {data};
+    skr_binary_reader_t archive{reader};
     if (Deserialize(record, archive))
         return SKR_LOAD_STATUS_SUCCEED;
     else
         return SKR_LOAD_STATUS_FAILED;
 }
 
-bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeserializer& archive)
+bool SConfigFactory::Deserialize(skr_resource_record_t* record, skr_binary_reader_t& archive)
 {
-    bitsery::serialize(archive, record->header);
-    if (archive.adapter().error() != bitsery::ReaderError::NoError)
+    namespace bin = skr::binary;
+    if(bin::Archive(&archive, record->header) != 0)
         return false;
     skr_type_id_t typeId;
-    archive(typeId);
+    bin::Archive(&archive, typeId);
     auto res = NewConfig(typeId);
     DeserializeConfig(typeId, res->configData, archive);
     record->resource = res;
@@ -67,32 +78,29 @@ bool SConfigFactory::Deserialize(skr_resource_record_t* record, SBinaryDeseriali
         type->Destruct(res->configData);
         SkrDelete(res);
     };
-    return archive.adapter().error() == bitsery::ReaderError::NoError;
+    return true;
 }
 
-void SConfigFactory::Serialize(const skr_config_resource_t& config, SBinarySerializer& archive)
+void SConfigFactory::Serialize(const skr_config_resource_t& config, skr_binary_writer_t& archive)
 {
-    archive(config.configType);
+    namespace bin = skr::binary;
+    bin::Archive(&archive, config.configType);
     SConfigFactory::SerializeConfig(config.configType, config.configData, archive);
 }
 
-void SConfigFactory::DeserializeConfig(const skr_type_id_t& id, void* address, SBinaryDeserializer& deserializer)
+void SConfigFactory::DeserializeConfig(const skr_type_id_t& id, void* address, skr_binary_reader_t& archive)
 {
     auto registry = GetConfigRegistry();
     auto iter = registry->typeInfos.find(id);
     SKR_ASSERT(registry->typeInfos.end() != iter);
-    SBinaryArchive archive{};
-    archive.deserializer = &deserializer;
-    iter->second.Serialize(address, archive);
+    iter->second.Deserialize(address, archive);
 }
 
-void SConfigFactory::SerializeConfig(const skr_type_id_t& id, void* address, SBinarySerializer& serializer)
+void SConfigFactory::SerializeConfig(const skr_type_id_t& id, void* address, skr_binary_writer_t& archive)
 {
     auto registry = GetConfigRegistry();
     auto iter = registry->typeInfos.find(id);
     SKR_ASSERT(registry->typeInfos.end() != iter);
-    SBinaryArchive archive{};
-    archive.serializer = &serializer;
     iter->second.Serialize(address, archive);
 }
 } // namespace resource

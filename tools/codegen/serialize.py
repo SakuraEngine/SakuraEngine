@@ -1,3 +1,4 @@
+
 import json
 import os
 import sys
@@ -17,13 +18,40 @@ class Field(object):
 
 
 class Record(object):
-    def __init__(self, name, fields, bases):
+    def __init__(self, name, fields, bases, fileName):
         self.name = name
         self.luaName = name.replace("::", ".")
-        self.short_name = str.rsplit(name, "::", 1)[-1]
+        var = str.rsplit(name, "::", 1)
+        self.short_name = var[-1]
+        if len(var) > 1:
+            self.namespace = var[0]
         self.export_to_c = not "::" in name
         self.fields = fields
         self.bases = bases
+        self.fileName = fileName
+
+    def allFields(self):
+        result = []
+        result.extend(self.fields)
+        for base in self.bases:
+            result.extend(base.allFields())
+        return result
+
+
+def parseRecord(name, json):
+    fields = []
+    if shouldSkip(json):
+        return
+    for key, value in json["fields"].items():
+        attr = value["attrs"]
+        if "transient" in attr:
+            continue
+        field = Field(key, value["type"])
+        fields.append(field)
+    bases = []
+    for value in json["bases"]:
+        bases.append(value)
+    return Record(name, fields, bases, json["fileName"])
 
 
 class Enumerator(object):
@@ -35,27 +63,69 @@ class Enumerator(object):
 
 
 class Enum(object):
-    def __init__(self, name, enumerators):
+    def __init__(self, name, underlying_type, enumerators, fileName):
         self.name = name
-        self.short_name = str.rsplit(name, "::", 1)[-1]
+        if underlying_type == "unfixed":
+            abort(name + " is not fixed enum!")
+        self.postfix = ": " + underlying_type
+        var = str.rsplit(name, "::", 1)
+        self.short_name = var[-1]
+        if len(var) > 1:
+            self.namespace = var[0]
         self.enumerators = enumerators
         self.export_to_c = not "::" in name
+        self.fileName = fileName
         for enumerator in enumerators:
             if not enumerator.export_to_c:
                 self.export_to_c = False
                 break
 
 
-class Binding(object):
+def parseEnum(name, json):
+    if shouldSkip(json):
+        return
+    enumerators = []
+    for key2, value2 in json["values"].items():
+        enumerators.append(Enumerator(
+            key2, value2["value"]))
+    return Enum(name, json["underlying_type"], enumerators, json["fileName"])
+
+
+class Database(object):
     def __init__(self):
         self.records = []
         self.enums = []
         self.name_to_record = {}
-        self.headers = set()
+        self.name_to_enum = {}
+
+    def resolve_base(self):
+        for record in self.records:
+            bases = []
+            for base in record.bases:
+                if base in self.name_to_record:
+                    bases.append(self.name_to_record[base])
+                else:
+                    abort("serialize_json: baseclass %s not reflected" % base)
+            record.bases = bases
 
     def add_record(self, record):
+        if not record:
+            return
         self.records.append(record)
         self.name_to_record[record.name] = record
+
+    def add_enum(self, enum):
+        if not enum:
+            return
+        self.enums.append(enum)
+        self.name_to_enum[enum.name] = enum
+
+
+class Binding(object):
+    def __init__(self):
+        self.records = []
+        self.enums = []
+        self.headers = set()
 
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
@@ -76,43 +146,52 @@ def shouldSkip(value):
 
 
 def main():
-    db = Binding()
+    db = Database()
+    data = Binding()
     root = sys.argv[1]
     outdir = sys.argv[2]
+    api = sys.argv[3]
+    config = "module.configure.h"
+    api = api.upper()+"_API"
+    includes = sys.argv[4:].copy()
+    includes.append(root)
+
+    for path in includes:
+        metas = glob.glob(os.path.join(path, "**", "*.h.meta"), recursive=True)
+        for meta in metas:
+            try:
+                meta = json.load(open(meta))
+            except json.decoder.JSONDecodeError as e:
+                print(e)
+                abort(meta)
+            for key, value in meta["records"].items():
+                db.add_record(parseRecord(key, value))
+            for key, value in meta["enums"].items():
+                db.add_enum(parseEnum(key, value))
+
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     for meta in metas:
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
-            file = value["fileName"]
-            fields = []
-            if shouldSkip(value):
-                continue
-            for key2, value2 in value["fields"].items():
-                attr = value2["attrs"]
-                if "transient" in attr:
-                    continue
-                field = Field(key2, value2["type"])
-                fields.append(field)
-            bases = []
-            for value3 in value["bases"]:
-                bases.append(value3)
-            db.headers.add(GetInclude(file))
-            db.add_record(Record(key, fields, bases))
+            if key in db.name_to_record:
+                record = db.name_to_record[key]
+                data.records.append(record)
+                data.headers.add(GetInclude(record.fileName))
         for key, value in meta["enums"].items():
-            attr = value["attrs"]
-            file = value["fileName"]
-            if shouldSkip(value):
-                continue
-            db.headers.add(GetInclude(file))
-            enumerators = []
-            for key2, value2 in value["values"].items():
-                enumerators.append(Enumerator(
-                    key2, value2["value"]))
-            db.enums.append(Enum(key, enumerators))
-    if db.records or db.enums:
-        template = os.path.join(BASE, "serialize.h.mako")
-        content = render(template, db=db)
-        output = os.path.join(outdir, "serialize.generated.h")
+            if key in db.name_to_enum:
+                enum = db.name_to_enum[key]
+                data.enums.append(enum)
+                data.headers.add(GetInclude(enum.fileName))
+                
+    db.resolve_base()
+    if data.enums or data.records:
+        template = os.path.join(BASE, "binary_serialize.cpp.mako")
+        content = render(template, db=data)
+        output = os.path.join(outdir, "binary_serialize.generated.cpp")
+        write(output, content)
+        template = os.path.join(BASE, "binary_serialize.h.mako")
+        content = render(template, db=data, api=api, config=config)
+        output = os.path.join(outdir, "binary_serialize.generated.h")
         write(output, content)
 
 

@@ -99,7 +99,16 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     }
     //-----write resource header
     eastl::vector<uint8_t> buffer;
-    skr::resource::SBinarySerializer archive(buffer);
+    struct VectorWriter
+    {
+        eastl::vector<uint8_t>* buffer;
+        int write(const void* data, size_t size)
+        {
+            buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
+            return 0;
+        }
+    } writer{&buffer};
+    skr_binary_writer_t archive(writer);
     ctx->WriteHeader(archive, this);
     //------write resource object
     skr::resource::SConfigFactory::Serialize(*resource, archive);
@@ -111,7 +120,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
         return false;
     }
     SKR_DEFER({ fclose(file); });
-    fwrite(buffer.data(), 1, archive.adapter().writtenBytesCount(), file);
+    fwrite(buffer.data(), 1, buffer.size(), file);
     return true;
 }
 

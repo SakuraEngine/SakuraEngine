@@ -1,6 +1,9 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "utils/types.h"
+#if !defined (__meta__) && defined (__cplusplus)
+    #include "SkrRenderer/binary_serialize.generated.h"
+#endif
 
 typedef uint64_t skr_vertex_layout_id;
 
@@ -66,9 +69,12 @@ struct sreflect sattr(
 skr_mesh_resource_t
 {
     eastl::string name;
+    sattr("transient": true)
     eastl::vector<skr_mesh_section_t> sections;
+    sattr("transient": true)
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_mesh_bin_t> bins;
+    sattr("transient": true)
     void* gltf_data;
 };
 #endif
