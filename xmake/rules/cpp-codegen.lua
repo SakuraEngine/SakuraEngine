@@ -33,7 +33,7 @@ rule("c++.codegen")
         -- add to sourcebatch
         local gendir = target:data("meta.codegen.dir")
         local sourcebatches = target:sourcebatches()
-        local cppfiles = os.files(path.join(gendir, "/*.cpp"))
+        local cppfiles = os.files(path.join(gendir, target:name(), "/*.cpp"))
         
         -- compile generated cpp files
         for _, file in ipairs(cppfiles) do

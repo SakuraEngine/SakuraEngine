@@ -3,7 +3,7 @@
 #include "utils/types.h"
 #include "ecs/dual.h"
 #if !defined(__meta__) && defined(__cplusplus)
-    #include "SkrScene/scene.dual.generated.hpp"
+    #include "SkrScene/dual.generated.hpp"
 #endif
 
 // scene hierarchy

@@ -69,23 +69,21 @@ def main():
     print(metas)
 
     for meta in metas:
-        db2 = Binding()
         filename = os.path.split(meta)[1][:-7]
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
             if not "component" in value["attrs"]:
                 continue
-            db2.types.append(parseRecord(key, value, db))
-        if db2.types:
-            template = os.path.join(BASE, "component.hpp.mako")
-            content = render(template, db=db2, api=api,  config=config)
-            db.headers.add("%s.dual.generated.hpp" % filename)
-            output = os.path.join(outdir, "%s.dual.generated.hpp" % filename)
-            write(output, content)
+            parseRecord(key, value, db)
     if db.types:
         template = os.path.join(BASE, "component.cpp.mako")
         content = render(template, db=db)
         output = os.path.join(outdir, "component.generated.cpp")
+        write(output, content)
+        
+        template = os.path.join(BASE, "component.hpp.mako")
+        content = render(template, db=db, api=api,  config=config)
+        output = os.path.join(outdir, "dual.generated.hpp")
         write(output, content)
 
 
