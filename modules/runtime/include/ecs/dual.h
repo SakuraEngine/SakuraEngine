@@ -36,26 +36,21 @@ typedef skr_guid_t dual_guid_t;
  *
  */
 typedef void (*guid_func_t)(dual_guid_t* guid);
+typedef struct dual_mapper_t {
+    void (*map)(void* user, dual_entity_t* ent);
+    void* user;
+} dual_mapper_t;
 
-typedef struct dual_serializer_v {
-    void (*stream)(void* s, void* data, uint32_t bytes);
-    void (*peek)(void* s, void* data, uint32_t bytes);
-    int (*is_serialize)(void* s);
-} dual_serializer_v;
-
-typedef struct dual_mapper_t dual_mapper_t;
-
-typedef struct dual_mapper_v {
-    void (*map)(dual_mapper_t* mapper, dual_entity_t* ent);
-} dual_mapper_v;
-
+typedef struct skr_binary_writer_t skr_binary_writer_t;
+typedef struct skr_binary_reader_t skr_binary_reader_t;
 typedef struct dual_callback_v {
     void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data);
     void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src);
     void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data);
     void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src);
-    void (*serialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, const dual_serializer_v* v, void* s);
-    void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* p, dual_mapper_v* v);
+    void (*serialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer);
+    void (*deserialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader);
+    void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* v);
 } dual_callback_v;
 
 enum type_flags
@@ -426,7 +421,7 @@ RUNTIME_API dual_storage_delta_t* dualS_diff(dual_storage_t* storage, dual_stora
  * @param t serializer state
  * @see dual_serializer_v
  */
-RUNTIME_API void dualS_serialize(dual_storage_t* storage, const dual_serializer_v* v, void* t);
+RUNTIME_API void dualS_serialize(dual_storage_t* storage, skr_binary_writer_t* v);
 /**
  * @brief deserialize the storage
  *
@@ -435,7 +430,7 @@ RUNTIME_API void dualS_serialize(dual_storage_t* storage, const dual_serializer_
  * @param t serializer state
  * @see dual_serializer_v
  */
-RUNTIME_API void dualS_deserialize(dual_storage_t* storage, const dual_serializer_v* v, void* t);
+RUNTIME_API void dualS_deserialize(dual_storage_t* storage, skr_binary_reader_t* v);
 /**
  * @brief test if given entity exist in storage
  * entity can be invalid(id not exist) or be dead(version not match)
@@ -456,25 +451,22 @@ RUNTIME_API int dualS_components_enabled(dual_storage_t* storage, dual_entity_t 
  * @brief deserialize entity, if there's multiple entity, they will be deserialized together
  * @param storage
  * @param v serializer callback
- * @param t serializer state
  */
-RUNTIME_API dual_entity_t dualS_deserialize_entity(dual_storage_t* storage, const dual_serializer_v* v, void* t);
+RUNTIME_API dual_entity_t dualS_deserialize_entity(dual_storage_t* storage, skr_binary_reader_t* v);
 /**
  * @brief serialize entity
  * @param storage
  * @param ent
  * @param v
- * @param t
  */
-RUNTIME_API void dualS_serialize_entity(dual_storage_t* storage, dual_entity_t ent, const dual_serializer_v* v, void* t);
+RUNTIME_API void dualS_serialize_entity(dual_storage_t* storage, dual_entity_t ent, skr_binary_writer_t* v);
 /**
  * @brief serialize entities, internal reference will be kept
  * @param storage
  * @param ent
  * @param v
- * @param t
  */
-RUNTIME_API void dualS_serialize_entities(dual_storage_t* storage, dual_entity_t* ents, EIndex n, const dual_serializer_v* v, void* t);
+RUNTIME_API void dualS_serialize_entities(dual_storage_t* storage, dual_entity_t* ents, EIndex n, skr_binary_writer_t* v);
 /**
  * @brief reset the storage
  * release all entities and all queries

@@ -9,7 +9,7 @@
 #include "resource/resource_header.h"
 #include "asset/cooker.hpp"
 #if !defined(__meta__) 
-#include "SkrTool/json_reader.generated.h"
+#include "SkrTool/json_serialize.generated.h"
 #endif
 
 namespace skr::io

@@ -135,18 +135,19 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     //TODO: iterate though all component & find resource handle fields
     //-----write resource header
     eastl::vector<uint8_t> buffer;
-    skr::resource::SBinarySerializer archive(buffer);
+    struct VectorWriter
+    {
+        eastl::vector<uint8_t>* buffer;
+        int write(const void* data, size_t size)
+        {
+            buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
+            return 0;
+        }
+    } writer{&buffer};
+    skr_binary_writer_t archive(writer);
     ctx->WriteHeader(archive, this);
     //------write resource object
-    dual_serializer_v serializer;
-    serializer.is_serialize = +[](void*){return 1;};
-    serializer.stream = +[](void* u, void* data, uint32_t size)
-    {
-        auto& archive = *(skr::resource::SBinarySerializer*)u;
-        archive.adapter().writeBuffer<1>((uint8_t*)data, size);
-    };
-    serializer.peek = +[](void* u, void* data, uint32_t size) {};
-    dualS_serialize(world, &serializer, &archive);
+    dualS_serialize(world, &archive);
     //------save resource to disk
     auto file = fopen(ctx->output.u8string().c_str(), "wb");
     if (!file)
@@ -155,7 +156,7 @@ bool SSceneCooker::Cook(SCookContext* ctx)
         return false;
     }
     SKR_DEFER({ fclose(file); });
-    fwrite(buffer.data(), 1, archive.adapter().writtenBytesCount(), file);
+    fwrite(buffer.data(), 1, buffer.size(), file);
     return true;
 }
 

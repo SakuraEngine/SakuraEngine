@@ -7,7 +7,7 @@
 #include "utils/hashmap.hpp"
 
 #if !defined(__meta__) && defined(__cplusplus)
-    #include "UsdTool/json_reader.generated.h"
+    #include "UsdTool/json_serialize.generated.h"
 #endif
 
 namespace skd sreflect

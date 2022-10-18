@@ -69,7 +69,7 @@ struct TOOL_API SCookContext { // context per job
         header.type = record->type;
         header.version = cooker->Version();
         header.dependencies.insert(header.dependencies.end(), runtimeDependencies.begin(), runtimeDependencies.end());
-        bitsery::serialize(s, header);
+        skr::binary::Archive(&s, header);
     }
 };
 

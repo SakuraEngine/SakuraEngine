@@ -16,17 +16,12 @@ typedef enum ESkrLoadStatus
 } ESkrLoadStatus;
 typedef struct skr_vfs_t skr_vfs_t;
 #if defined(__cplusplus)
-    #include "bitsery/serializer.h"
+    #include "binary/reader.h"
+    #include "binary/writer.h"
 namespace skr
 {
 namespace resource
 {
-using SBinaryDeserializer = bitsery::Deserializer<bitsery::InputBufferAdapter<gsl::span<uint8_t>>>;
-using SBinarySerializer = bitsery::Serializer<bitsery::OutputBufferAdapter<eastl::vector<uint8_t>>>;
-struct SBinaryArchive {
-    SBinaryDeserializer* deserializer;
-    SBinarySerializer* serializer;
-};
 /*
     resource load phase:
     Unloaded => request -> load binary -> deserialize => Loaded

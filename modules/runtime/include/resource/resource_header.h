@@ -3,8 +3,8 @@
 #include "type/type_registry.h"
 
 #if defined(__cplusplus)
-    #include "bitsery/brief_syntax.h"
-    #include "utils/serialize.hpp"
+    #include "binary/reader.h"
+    #include "binary/writer.h"
     #include "EASTL/fixed_vector.h"
 
 typedef struct skr_resource_header_t {
@@ -13,19 +13,13 @@ typedef struct skr_resource_header_t {
     skr_type_id_t type;
     eastl::fixed_vector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
-namespace bitsery
+namespace skr::binary
 {
-template <class S>
-void serialize(S& s, skr_resource_header_t& header)
-{
-    uint32_t version = 0; // version of this function
-    s.value4b(version);
-    s.value4b(header.version);
-    s.object(header.guid);
-    s.object(header.type);
-    s.container(header.dependencies, 1024);
-}
-} // namespace bitsery
+    template <>
+    RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_resource_header_t& header);
+    template <>
+    RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_resource_header_t& header);
+} // namespace skr::binary
 #endif
 typedef enum ESkrLoadingStatus : uint32_t
 {

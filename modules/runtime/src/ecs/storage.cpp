@@ -788,14 +788,14 @@ void dualS_merge(dual_storage_t* storage, dual_storage_t* source)
     storage->merge(*source);
 }
 
-void dualS_serialize(dual_storage_t* storage, const dual_serializer_v* v, void* t)
+void dualS_serialize(dual_storage_t* storage, skr_binary_writer_t* v)
 {
-    storage->serialize({ t, v });
+    storage->serialize(v);
 }
 
-void dualS_deserialize(dual_storage_t* storage, const dual_serializer_v* v, void* t)
+void dualS_deserialize(dual_storage_t* storage, skr_binary_reader_t* v)
 {
-    storage->deserialize({ t, v });
+    storage->deserialize(v);
 }
 
 int dualS_exist(dual_storage_t* storage, dual_entity_t ent)
@@ -809,19 +809,19 @@ int dualS_components_enabled(dual_storage_t* storage, dual_entity_t ent, const d
     return storage->components_enabled(ent, *types);
 }
 
-dual_entity_t dualS_deserialize_entity(dual_storage_t* storage, const dual_serializer_v* v, void* t)
+dual_entity_t dualS_deserialize_entity(dual_storage_t* storage, skr_binary_reader_t* v)
 {
-    return storage->deserialize_prefab({ t, v });
+    return storage->deserialize_prefab(v);
 }
 
-void dualS_serialize_entity(dual_storage_t* storage, dual_entity_t ent, const dual_serializer_v* v, void* t)
+void dualS_serialize_entity(dual_storage_t* storage, dual_entity_t ent, skr_binary_writer_t* v)
 {
-    storage->serialize_prefab(ent, { t, v });
+    storage->serialize_prefab(ent, v);
 }
 
-void dualS_serialize_entities(dual_storage_t* storage, dual_entity_t* ents, EIndex n, const dual_serializer_v* v, void* t)
+void dualS_serialize_entities(dual_storage_t* storage, dual_entity_t* ents, EIndex n, skr_binary_writer_t* v)
 {
-    storage->serialize_prefab(ents, n, { t, v });
+    storage->serialize_prefab(ents, n, v);
 }
 
 void dualS_reset(dual_storage_t* storage)

@@ -33,7 +33,7 @@ struct dual_group_t {
     dual_chunk_t* firstChunk;
     dual_chunk_t* lastChunk;
     dual_chunk_t* firstFree;
-    uint16_t chunkCount;
+    uint32_t chunkCount;
     uint32_t timestamp;
     uint32_t size;
     dual_entity_type_t type;
