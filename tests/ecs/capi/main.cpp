@@ -300,9 +300,11 @@ auto register_managed_component()
         +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) { *(managed*)dst = *(const managed*)src; },
         +[](dual_chunk_t* chunk, EIndex index, char* data) { ((managed*)data)->~managed(); },
         +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) { *(managed*)dst = std::move(*(managed*)src); },
-        +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, const dual_serializer_v* v, void* s) {
-            if (!v->is_serialize(s))
-                new (data) managed;
+        +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* v) {
+        },
+        +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* v)
+        {
+            new (data) managed;
         },
         nullptr
     };
