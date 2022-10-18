@@ -83,6 +83,27 @@ IModule* ModuleManagerImpl::spawnStaticModule(const eastl::string& name)
     return modulesMap[name].get();
 }
 
+class SDefaultDynamicModule : public skr::IDynamicModule
+{
+public:
+    SDefaultDynamicModule(const char* name) : name(name) {}
+    virtual void on_load(int argc, char** argv) override
+    {
+        SKR_LOG_DEBUG("[default implementation] dynamic module %s loaded!", name.c_str());
+    }
+    virtual int main_module_exec(int argc, char** argv) override
+    {
+        SKR_LOG_DEBUG("[default implementation] dynamic module %s executed!", name.c_str());
+        return 0;
+    }
+    virtual void on_unload() override
+    {
+        SKR_LOG_DEBUG("[default implementation] dynamic module %s unloaded!", name.c_str());
+    }
+
+    eastl::string name = "";
+};
+
 IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
 {
     if (modulesMap.find(name) != modulesMap.end())
@@ -102,44 +123,47 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
     {
         // try load dll
         eastl::string filename;
-#if defined(SKR_OS_MACOSX)
-        filename.append("lib").append(name);
-        filename.append(".dylib");
-#elif defined(SKR_OS_UNIX)
-        filename.append("lib").append(name);
-        filename.append(".so");
-#elif defined(SKR_OS_WINDOWS)
-        filename.append(name);
-        filename.append(".dll");
-#endif
+    #if defined(SKR_OS_MACOSX)
+            filename.append("lib").append(name);
+            filename.append(".dylib");
+    #elif defined(SKR_OS_UNIX)
+            filename.append("lib").append(name);
+            filename.append(".so");
+    #elif defined(SKR_OS_WINDOWS)
+            filename.append(name);
+            filename.append(".dll");
+    #endif
         auto finalPath = (ghc::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
         if (!sharedLib->load(finalPath.c_str()))
         {
             SKR_LOG_ERROR("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
             return nullptr;
         }
-#ifdef SPA_OUTPUT_LOG
-        else
-            std::cout << filename << ": Load dll success!" << std::endl;
-#endif
+    #ifdef SPA_OUTPUT_LOG
+            else
+                std::cout << filename << ": Load dll success!" << std::endl;
+    #endif
         if (sharedLib->hasSymbol(initName.c_str()))
         {
             func = sharedLib->get<IModule*()>(initName.c_str());
         }
     }
+#endif
     if (func)
     {
         modulesMap[name] = eastl::unique_ptr<IModule>(func());
-        IDynamicModule* module = (IDynamicModule*)modulesMap[name].get();
-        module->sharedLib = eastl::move(sharedLib);
-        // pre-init name for meta reading
-        module->information.name = name;
-        module->information = parseMetaData(module->get_meta_data());
-        return module;
     }
-#endif
-    SKR_LOG_FATAL("failed to read symbol: %s", initName.c_str());
-    return nullptr;
+    else
+    {
+        SKR_LOG_DEBUG("no user defined symbol: %s", initName.c_str());
+        modulesMap[name] = eastl::make_unique<SDefaultDynamicModule>(name.c_str());
+    }
+    IDynamicModule* module = (IDynamicModule*)modulesMap[name].get();
+    module->sharedLib = eastl::move(sharedLib);
+    // pre-init name for meta reading
+    module->information.name = name;
+    module->information = parseMetaData(module->get_meta_data());
+    return module;
 }
 
 ModuleInfo ModuleManagerImpl::parseMetaData(const char* metadata)
