@@ -34,7 +34,7 @@ namespace skd::asset
 
 struct TranverseContext
 {
-    dual_storage_t* world;
+    dual_storage_t* world = nullptr;
 };
 
 using children_t = llvm_vecsmall::SmallVector<dual_entity_t, 10>;
@@ -104,14 +104,20 @@ void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, children_t* child
 
 void* SSceneImporter::Import(skr::io::RAMService*, const SAssetRecord* record)
 {
+    dual_storage_t* world = nullptr;
     auto u8Path = record->path.u8string();
-    skd::OpenUSDStage(u8Path.c_str());
-    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
-    auto world = dualS_create();
-    TranverseContext ctx;
-    ctx.world = world;
-    auto root = stage->GetPseudoRoot();
-    ImportTraversal(root, ctx, nullptr);
+    if (bool suppoted = skd::USDCoreSupportFile(u8Path.c_str()))
+    {
+        world = dualS_create();
+        {
+            auto _stage = skd::USDCoreOpenStage(u8Path.c_str()); (void)_stage;
+        }
+        pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
+        TranverseContext ctx;
+        ctx.world = world;
+        auto root = stage->GetPseudoRoot();
+        ImportTraversal(root, ctx, nullptr);
+    }
     return world;
 }
 
