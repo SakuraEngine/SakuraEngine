@@ -14,7 +14,6 @@ using module_registerer = eastl::function<eastl::unique_ptr<IModule>(void)>;
 class ModuleManager
 {
     friend struct IModule;
-
 public:
     ModuleManager() = default;
     virtual ~ModuleManager() = default;
