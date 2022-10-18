@@ -35,7 +35,8 @@
     #define STRINGIFY(...) #__VA_ARGS__
 #endif
 
-#define sstatic_ctor_name(index, expr) "\"StaticCtor" # index "\" : " #expr
+#define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" # index "\" : " #expr
+#define sstatic_ctor_name(index, expr) sstatic_ctor_name_impl(index, #expr)
 #ifdef __meta__
     #define sreflect __attribute__((annotate("__reflect__")))
     #define sfull_reflect __attribute__((annotate("__full_reflect__")))
@@ -44,7 +45,7 @@
     #define spush_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
     #define spop_attr() __attribute__((annotate("__pop__")))
 
-    #define sstatic_ctor(index, expr) __attribute__((annotate(sstatic_ctor_name(index, #expr)))) 
+    #define sstatic_ctor(index, expr) __attribute__((annotate(sstatic_ctor_name(index, expr)))) 
 #else
     #define sreflect
     #define sfull_reflect
@@ -59,6 +60,7 @@
         #define sstatic_ctor(index, expr)
     #endif
 #endif
+sstatic_ctor(0, "Hello World")
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
 
