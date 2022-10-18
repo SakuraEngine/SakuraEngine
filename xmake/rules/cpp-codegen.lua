@@ -9,7 +9,7 @@ task("run-codegen-jobs")
 rule("c++.codegen")
     -- add_deps("c++")
     set_sourcekinds("cxx")
-    on_config(function (target, opt)
+    on_load(function (target, opt)
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
 
         if (not os.exists(gendir)) then
@@ -18,7 +18,6 @@ rule("c++.codegen")
 
         target:data_set("meta.codegen.dir", gendir)
         target:add("includedirs", gendir, {public = true})
-        target:add("includedirs", private_gendir)
     end)
 
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
