@@ -142,10 +142,6 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
         },
         {
-            os.projectdir()..vformat("/tools/codegen/config_resource.py"),
-            os.projectdir()..vformat("/tools/codegen/config_resource.cpp.mako"),
-        },
-        {
             os.projectdir()..vformat("/tools/codegen/config_asset.py"),
             os.projectdir()..vformat("/tools/codegen/config_asset.cpp.mako"),
             gendir = toolgendir

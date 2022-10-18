@@ -43,6 +43,28 @@ struct RUNTIME_API SConfigFactory : public SResourceFactory {
     static void DeserializeConfig(const skr_type_id_t& id, void* address, SBinaryDeserializer& archive);
     static void SerializeConfig(const skr_type_id_t& id, void* address, SBinarySerializer& archive);
 };
+
+
+template<class T>
+void RegisterConfig(skr_guid_t guid);
+#define sregister_config(idx) sstatic_ctor(idx, skr::resource::RegisterConfig<$T>($guid));
+
+template<class T>
+void RegisterConfig(skr_guid_t guid)
+{
+    SConfigTypeInfo typeInfo {
+        +[](void* address, skr::resource::SBinaryArchive& archive)
+        {
+            if(archive.serializer)
+                bitsery::serialize(*archive.serializer, *(T*)address);
+            else if(archive.deserializer)
+                bitsery::serialize(*archive.deserializer, *(T*)address);
+            else
+                SKR_UNREACHABLE_CODE();
+        }
+    };
+    GetConfigRegistry()->typeInfos.insert(std::make_pair(guid, typeInfo));
+}
 } // namespace resource
 } // namespace skr
 #endif
