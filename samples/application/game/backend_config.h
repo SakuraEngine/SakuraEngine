@@ -2,7 +2,7 @@
 #include "platform/configure.h"
 #include "resource/config_resource.h"
 #if !defined(__meta__) && defined(__cplusplus)
-    #include "GameRT/backend_config.rtti.generated.hpp"
+    #include "GameRT/rtti.generated.hpp"
     #include "GameRT/json_serialize.generated.h"
     #include "GameRT/binary_serialize.generated.h"
 #endif

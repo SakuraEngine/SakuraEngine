@@ -34,7 +34,7 @@ TEST_F(RTTI, TypeId)
 }
 
 #if !defined(__meta__) && defined(__cplusplus)
-#include "rtti-test-types/types.rtti.generated.hpp"
+#include "rtti-test-types/rtti.generated.hpp"
 #endif
 
 TEST_F(RTTI, TestEnumType)

@@ -6,7 +6,7 @@
 #include "rtti-test-types/module.configure.h"
 #ifndef __meta__
     #include "rtti-test-types/typeid.generated.hpp"
-    #include "rtti-test-types/types.rtti.generated.hpp"
+    #include "rtti-test-types/rtti.generated.hpp"
 #endif
 
 // TODO: Move To Core

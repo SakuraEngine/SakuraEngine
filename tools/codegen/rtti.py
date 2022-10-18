@@ -164,7 +164,6 @@ def main():
 
     data = Binding()
     for meta in metas:
-        data2 = Binding()
         filename = os.path.split(meta)[1][:-7]
         meta = json.load(open(meta))
         for key, value in meta["records"].items():
@@ -175,7 +174,6 @@ def main():
             record = db.name_to_record[key]
             data.headers.add(GetInclude(record.fileName))
             data.records.append(record)
-            data2.records.append(record)
 
         for key, value in meta["enums"].items():
             if not "guid" in value["attrs"]:
@@ -185,14 +183,12 @@ def main():
             enum = db.name_to_enum[key]
             data.headers.add(GetInclude(enum.fileName))
             data.enums.append(enum)
-            data2.enums.append(enum)
-        if data2.enums or data2.records:
-            template = os.path.join(BASE, "rtti.hpp.mako")
-            content = render(template, db=data2, api=api,  config=config)
-            data.headers.add("%s.rtti.generated.hpp" % filename)
-            output = os.path.join(outdir, "%s.rtti.generated.hpp" % filename)
-            write(output, content)
     if data.enums or data.records:
+        template = os.path.join(BASE, "rtti.hpp.mako")
+        content = render(template, db=data, api=api,  config=config)
+        output = os.path.join(outdir, "rtti.generated.hpp")
+        write(output, content)
+
         template = os.path.join(BASE, "rtti.cpp.mako")
         content = render(template, db=data)
         output = os.path.join(outdir, "rtti.generated.cpp")
