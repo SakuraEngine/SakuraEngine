@@ -1,4 +1,4 @@
-
+//DO NOT MODIFY THIS FILE
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 %for header in db.headers:

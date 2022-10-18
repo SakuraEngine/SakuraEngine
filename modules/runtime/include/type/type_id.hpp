@@ -10,7 +10,10 @@ namespace type {
 
 template <class T>
 struct type_id {
-    static const skr_guid_t get();
+    static const skr_guid_t get()
+    {
+        static_assert(!sizeof(T), "type_id<T> is not specialized for this type");
+    }
 };
 
 template <class T>
