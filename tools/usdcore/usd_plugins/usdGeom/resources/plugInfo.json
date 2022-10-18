@@ -336,7 +336,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdGeom.dll", 
+            "LibraryPath": "../../usdGeom.dll", 
             "Name": "usdGeom", 
             "ResourcePath": "resources", 
             "Root": "..", 

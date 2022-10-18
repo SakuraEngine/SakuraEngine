@@ -208,7 +208,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdRi.dll", 
+            "LibraryPath": "../../usdRi.dll", 
             "Name": "usdRi", 
             "ResourcePath": "resources", 
             "Root": "..", 

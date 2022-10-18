@@ -131,7 +131,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usd.dll", 
+            "LibraryPath": "../../usd.dll", 
             "Name": "usd", 
             "ResourcePath": "resources", 
             "Root": "..", 

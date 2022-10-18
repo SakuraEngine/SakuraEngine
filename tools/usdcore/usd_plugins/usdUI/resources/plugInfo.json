@@ -38,7 +38,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdUI.dll", 
+            "LibraryPath": "../../usdUI.dll", 
             "Name": "usdUI", 
             "ResourcePath": "resources", 
             "Root": "..", 

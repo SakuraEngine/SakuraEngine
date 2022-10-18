@@ -178,7 +178,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdPhysics.dll", 
+            "LibraryPath": "../../usdPhysics.dll", 
             "Name": "usdPhysics", 
             "ResourcePath": "resources", 
             "Root": "..", 

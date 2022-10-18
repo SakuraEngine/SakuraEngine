@@ -58,7 +58,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdVol.dll", 
+            "LibraryPath": "../../usdVol.dll", 
             "Name": "usdVol", 
             "ResourcePath": "resources", 
             "Root": "..", 

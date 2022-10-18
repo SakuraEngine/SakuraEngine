@@ -12,7 +12,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../../../usdHydra.dll", 
+            "LibraryPath": "../../usdHydra.dll", 
             "Name": "usdHydra", 
             "ResourcePath": "resources", 
             "Root": "..", 
