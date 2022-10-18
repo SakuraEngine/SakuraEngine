@@ -31,7 +31,7 @@ target("Game")
 
 target("GameTool")
     set_group("04.examples/application")
-    add_rules("skr.module", {api = "GAMETOOL"})
+    add_rules("skr.module", {api = "GAMETOOL"}) 
     add_rules("c++.codegen", {
         files = {"gametool/**.h", "gametool/**.hpp"},
         rootdir = "gametool/"
@@ -42,10 +42,10 @@ target("GameTool")
     add_files("gametool/src/**.cpp")
     on_config(function (target, opt)
         local dep = target:dep("GameRT");
-        local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "tool/generated", dep:name())
+        local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "codegen", dep:name(), "tool")
         if os.exists(toolgendir) then
             target:add("includedirs", toolgendir)
-            local cppfiles = os.files(path.join(toolgendir, "/**.cpp"))
+            local cppfiles = os.files(path.join(toolgendir, "/*.cpp"))
             for _, file in ipairs(cppfiles) do
                 target:add("files", file)
             end
