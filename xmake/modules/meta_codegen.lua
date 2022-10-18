@@ -329,20 +329,19 @@ function generate_once(targetname)
     -- compile mako templates
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
-            -- wait self metas
-            scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
-            -- resume weak makos
-            scheduler.co_group_begin(target:name()..".cpp-codegen.weak_mako", function ()
-                scheduler.co_start(compile_task, _weak_mako_compile, target, opt)
-            end)
-            -- wait deps metas
-            for _, dep in pairs(target:deps()) do
-                if dep:rule("c++.codegen") then
-                    scheduler.co_group_wait(dep:name()..".cpp-codegen.meta")
+            scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
+                -- wait self metas
+                scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
+                -- resume weak makos
+                scheduler.co_group_begin(target:name()..".cpp-codegen.weak_mako", function ()
+                    scheduler.co_start(compile_task, _weak_mako_compile, target, opt)
+                end)
+                -- wait deps metas
+                for _, dep in pairs(target:deps()) do
+                    if dep:rule("c++.codegen") then
+                        scheduler.co_group_wait(dep:name()..".cpp-codegen.meta")
+                    end
                 end
-            end
-            -- resume strong makos
-            scheduler.co_group_begin(target:name()..".cpp-codegen.strong_mako", function ()
                 scheduler.co_start(compile_task, _strong_mako_compile, target, opt)
             end)
         end

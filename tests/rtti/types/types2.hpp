@@ -1,3 +1,4 @@
+#pragma once
 #include "types.hpp"
 
 namespace Types sreflect

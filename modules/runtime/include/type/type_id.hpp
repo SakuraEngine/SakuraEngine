@@ -9,7 +9,9 @@ namespace skr {
 namespace type {
 
 template <class T>
-struct type_id { };
+struct type_id {
+    static const skr_guid_t get();
+};
 
 template <class T>
 struct type_of {

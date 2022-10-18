@@ -1,7 +1,13 @@
 #pragma once
 #include "platform/configure.h"
+#include "utils/log.hpp"
 #include <EASTL/string.h>
 #include <EASTL/unique_ptr.h>
+#include "rtti-test-types/module.configure.h"
+#ifndef __meta__
+    #include "rtti-test-types/typeid.generated.hpp"
+    #include "rtti-test-types/types.rtti.generated.hpp"
+#endif
 
 // TODO: Move To Core
 struct SRuntimeAttribute
@@ -10,15 +16,15 @@ struct SRuntimeAttribute
 };
 
 template<typename T>
-inline static void XXXInformation()
+void XXXInformation()
 {
-
+    auto registry = skr::type::GetTypeRegistry();
+    const auto tid = skr::type::type_id<T>::get();
+    auto type = registry->get_type(tid);
+    SKR_LOG_FMT_DEBUG("Static Ctor: {} with id {}", type->Name(), tid);
 }
 
-inline static void PrintField(const char* name)
-{
-
-}
+RTTI_TEST_TYPES_API void PrintField(const char* name);
 
 inline void CreateBuffers()
 {

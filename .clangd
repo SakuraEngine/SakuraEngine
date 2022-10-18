@@ -1,2 +1,2 @@
 CompileFlags:
-  Add: [-D__skr_clangd__]
+  Add: [-D__skr_clangd__, -Wno-ignored-attributes]
