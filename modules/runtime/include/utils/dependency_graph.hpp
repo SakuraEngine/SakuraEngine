@@ -9,7 +9,6 @@ class DependencyGraphEdge;
 class DependencyGraphNode
 {
     friend class DependencyGraphImpl;
-
 public:
     DependencyGraphNode() = default;
     using Type = DependencyGraphNode;
