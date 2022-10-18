@@ -1,4 +1,5 @@
 //DO NOT MODIFY THIS FILE
+#pragma once
 #include <type_traits>
 %for header in db.headers:
 #include "${header}"
