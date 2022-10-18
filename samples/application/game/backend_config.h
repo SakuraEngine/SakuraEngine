@@ -25,5 +25,5 @@ config_backend_t
 sattr("serialize" : ["json", "bin"])
 sattr("rtti" : true)
 sattr("config" : true)
-sregister_config(0);
+sregister_config(); 
 typedef struct config_backend_t config_backend_t;

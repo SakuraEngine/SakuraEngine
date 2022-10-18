@@ -20,7 +20,7 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter
     skr_guid_t placeHolder;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 }
-sregister_importer(0);
+sregister_importer();
 
 struct sreflect
 GLTFTOOL_API SMeshCooker final : public SCooker
@@ -28,6 +28,6 @@ GLTFTOOL_API SMeshCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker(0, "3b8ca511-33d1-4db4-b805-00eea6a8d5e1");
+sregister_cooker("3b8ca511-33d1-4db4-b805-00eea6a8d5e1");
 } // namespace sreflect
 } // namespace sreflect

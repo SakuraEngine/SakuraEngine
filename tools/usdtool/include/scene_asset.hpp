@@ -25,14 +25,14 @@ USDTOOL_API SSceneImporter final : public SImporter
     skr::flat_hash_map<eastl::string, skr_guid_t, eastl::string_hash<eastl::string>> redirectors;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 }
-sregister_importer(0);
+sregister_importer();
 struct sreflect
 USDTOOL_API SSceneCooker final : public SCooker 
 { 
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker(0, "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A");
+sregister_cooker("EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A");
 
 struct USDTOOL_API SSceneImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override { return false; } 

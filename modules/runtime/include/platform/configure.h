@@ -45,7 +45,6 @@
     #define spush_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
     #define spop_attr() __attribute__((annotate("__pop__")))
 
-    #define sstatic_ctor(index, expr) __attribute__((annotate(sstatic_ctor_name(index, expr)))) 
 #else
     #define sreflect
     #define sfull_reflect
@@ -55,12 +54,11 @@
     #define spop_attr()
 
 	#if __skr_clangd__
-        #define sstatic_ctor(index, expr) __attribute__((assume(((void)expr, true))))
+        #define sstatic_ctor(expr) __attribute__((assume(((void)expr, true))))
     #else
-        #define sstatic_ctor(index, expr)
+        #define sstatic_ctor(expr)
     #endif
 #endif
-sstatic_ctor(0, "Hello World")
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
 
