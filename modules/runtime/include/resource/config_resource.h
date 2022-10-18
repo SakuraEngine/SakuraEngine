@@ -44,11 +44,6 @@ struct RUNTIME_API SConfigFactory : public SResourceFactory {
     static void SerializeConfig(const skr_type_id_t& id, void* address, SBinarySerializer& archive);
 };
 
-
-template<class T>
-void RegisterConfig(skr_guid_t guid);
-#define sregister_config(idx) sstatic_ctor(idx, skr::resource::RegisterConfig<$T>($guid));
-
 template<class T>
 inline static void RegisterConfig(skr_guid_t guid)
 {
@@ -65,6 +60,9 @@ inline static void RegisterConfig(skr_guid_t guid)
     };
     GetConfigRegistry()->typeInfos.insert(std::make_pair(guid, typeInfo));
 }
+
+#define sregister_config(idx) sstatic_ctor(idx, skr::resource::RegisterConfig<$T>($guid));
+
 } // namespace resource
 } // namespace skr
 #endif
