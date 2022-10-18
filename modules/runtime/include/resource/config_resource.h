@@ -50,7 +50,7 @@ void RegisterConfig(skr_guid_t guid);
 #define sregister_config(idx) sstatic_ctor(idx, skr::resource::RegisterConfig<$T>($guid));
 
 template<class T>
-void RegisterConfig(skr_guid_t guid)
+inline static void RegisterConfig(skr_guid_t guid)
 {
     SConfigTypeInfo typeInfo {
         +[](void* address, skr::resource::SBinaryArchive& archive)
