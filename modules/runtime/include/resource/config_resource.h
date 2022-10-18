@@ -61,11 +61,11 @@ inline static void RegisterConfig(skr_guid_t guid)
     };
     GetConfigRegistry()->typeInfos.insert(std::make_pair(guid, typeInfo));
 }
+#define sregister_config() sstatic_ctor(skr::resource::RegisterConfig<$T>($guid));
 } // namespace resource
 } // namespace skr
 #endif
 
-#define sregister_config(idx) sstatic_ctor(idx, skr::resource::RegisterConfig<$T>($guid));
 
 sreflect_struct("guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74")
 skr_config_resource_t 
@@ -73,5 +73,5 @@ skr_config_resource_t
     typedef struct skr_config_resource_t RawData;
     skr_type_id_t configType;
     void* configData;
-} sregister_config(0);
+};
 typedef struct skr_config_resource_t skr_config_resource_t;

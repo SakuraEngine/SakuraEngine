@@ -17,6 +17,6 @@ USDTOOL_API SUSDMeshImporter final : public SImporter
     eastl::string path;
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override { return nullptr; }
 }
-sregister_importer(0);
+sregister_importer();
 } // namespace sreflect
 } // namespace sreflect
