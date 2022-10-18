@@ -44,7 +44,7 @@ TestEnum : uint32_t
     Value1 = 1, 
     Value2 = 2 
 }
-sstatic_ctor(1, XXXInformation<$T>());
+sstatic_ctor(XXXInformation<$T>());
 
 sreflect_struct("guid" : "25809bab-41e8-48c5-806b-1ae4af3edfef")
 sattr("rtti" : true)
@@ -52,7 +52,7 @@ TestParent
 {
     eastl::string buffer;
 }
-sstatic_ctor(0, CreateBuffers());
+sstatic_ctor(CreateBuffers());
 
 sreflect_struct("guid" : "d55175b2-9d7f-47b8-bccd-a06aeac55240")
 sattr("rtti" : true)
@@ -60,7 +60,7 @@ TestSon : public TestParent
 {
     eastl::string sex;
 }
-sstatic_ctor(0, XXXInformation<$T>());
+sstatic_ctor(XXXInformation<$T>());
 
 }
 
