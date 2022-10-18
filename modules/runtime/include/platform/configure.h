@@ -62,9 +62,9 @@
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
 
-typedef struct $T $T;
-typedef struct $Super $Super;
-typedef struct $Owner $Owner;
+typedef struct $T { uint32_t _; } $T;
+typedef struct $Super { uint32_t _; } $Super;
+typedef struct $Owner { uint32_t _; } $Owner;
 extern const char* $name;
 
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))

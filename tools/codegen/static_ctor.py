@@ -83,7 +83,6 @@ class Record(object):
                 guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
 
     def realize_expr(self, expr : str):
-        
         expr = expr.replace("$T", self.name)
         if self.bases:
             expr = expr.replace("$Super", self.bases[0])

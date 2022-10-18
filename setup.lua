@@ -47,6 +47,10 @@ end
 find_sdk.install_tool("dxc")
 find_sdk.install_tool("reflector")
 find_sdk.install_tool("ispc")
-if (os.host() == "windows") then
-    find_sdk.install_tool("wasm-clang")
+
+local setups = os.files("**/setup.lua")
+for _, setup in ipairs(setups) do
+    local dir = path.directory(setup)
+    local basename = path.basename(setup)
+    import(path.join(dir, basename))
 end

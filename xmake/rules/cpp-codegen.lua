@@ -2,6 +2,7 @@ task("run-codegen-jobs")
     on_run(function (targetname)
         import("core.base.scheduler")
         import("meta_codegen")
+        -- meta_codegen(target)
         scheduler.co_start(meta_codegen, targetname)
     end)
 
@@ -28,10 +29,7 @@ rule("c++.codegen")
     on_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
         -- wait finisg
         import("core.base.scheduler")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.early_mako")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.weak_mako")
-        scheduler.co_group_wait(target:name()..".cpp-codegen.strong_mako")
+        scheduler.co_group_wait(target:name()..".cpp-codegen")
         
         -- add to sourcebatch
         local gendir = target:data("meta.codegen.dir")

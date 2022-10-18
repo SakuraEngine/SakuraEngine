@@ -1,8 +1,9 @@
 #include "gtest/gtest.h"
 #include "utils/log.hpp"
 #include "platform/guid.hpp"
+#include "../types/types.hpp"
 #if !defined(__meta__) && defined(__cplusplus)
-#include "rtti-test/typeid.generated.hpp"
+#include "rtti-test-types/typeid.generated.hpp"
 #endif
 
 class RTTI : public ::testing::Test
@@ -10,6 +11,7 @@ class RTTI : public ::testing::Test
 protected:
     void SetUp() override
     {
+        PrintField("importModule\n");
     }
 
     void TearDown() override
@@ -17,7 +19,7 @@ protected:
     }
 };
 
-TEST(RTTI, TypeId)
+TEST_F(RTTI, TypeId)
 {
     using namespace skr::guid::literals;
 
@@ -32,11 +34,10 @@ TEST(RTTI, TypeId)
 }
 
 #if !defined(__meta__) && defined(__cplusplus)
-#include "rtti-test/types.rtti.generated.hpp"
+#include "rtti-test-types/types.rtti.generated.hpp"
 #endif
-#include "types/types.hpp"
 
-TEST(RTTI, TestEnumType)
+TEST_F(RTTI, TestEnumType)
 {
     auto registry = skr::type::GetTypeRegistry();
     //auto enumType = skr::type::EnumType::FromName("Types::TestEnum");
