@@ -259,7 +259,10 @@ using TSize = skr_json_writer_t::TSize;
 template <class T>
 using TParamType = std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v<T>, T, const T&>;
 template <class T>
-void WriteValue(skr_json_writer_t* writer, T value);
+void WriteValue(skr_json_writer_t* writer, T value)
+{
+    static_assert(!sizeof(T), "WriteValue not implemented for this type");
+}
 
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, bool b);
@@ -287,7 +290,7 @@ template <class T>
 struct WriteHelper {
     static void Write(skr_json_writer_t* json, T map)
     {
-        WriteValue<T>(json, map);
+        WriteValue<TParamType<T>>(json, map);
     }
 };
 
@@ -306,10 +309,23 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
 };
 
 template <class T>
-struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
+struct WriteHelper<const skr::resource::TResourceHandle<T>> {
     static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
     {
-        skr::json::Write<const skr_resource_handle_t&>(json, (const skr_resource_handle_t&)handle);
+        WriteValue<const skr_resource_handle_t&>(json, (const skr_resource_handle_t&)handle);
+    }
+};
+
+template <class V, class Allocator>
+struct WriteHelper<const eastl::vector<V, Allocator>> {
+    static void Write(skr_json_writer_t* json, const eastl::vector<V, Allocator>& vec)
+    {
+        json->StartArray();
+        for (auto& v : vec)
+        {
+            skr::json::Write<TParamType<V>>(json, v);
+        }
+        json->EndArray();
     }
 };
 
