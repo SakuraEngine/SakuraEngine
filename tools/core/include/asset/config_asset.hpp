@@ -29,19 +29,33 @@ TOOL_API SJsonConfigImporter final : public SImporter
     void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
 }
 sattr("serialize" : "json")
-sregister_importer(0);
+sregister_importer();
 
 struct sreflect TOOL_API SConfigCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker(0, "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
+sregister_cooker("8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
 
 struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override;
     skr_guid_t GetResourceType() override;
     void CreateImporter(const SAssetRecord* record) override;
 };
+
+
+template<class T>
+inline static void RegisterConfig(skr_guid_t guid)
+{
+    SConfigTypeInfo typeInfo {
+        +[](simdjson::ondemand::value&& json, void* address)
+        {
+            skr::json::Read(std::move(json), *static_cast<T*>(address));
+        }
+    };
+    GetConfigRegistry()->typeInfos.insert(std::make_pair(guid, typeInfo));
+}
+#define sregister_config_asset() sstatic_ctor(skd::asset::RegisterConfig<$T>($guid));
 } // namespace asset
 } // namespace skd

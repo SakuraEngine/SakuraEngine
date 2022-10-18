@@ -44,7 +44,7 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     return argv
 end
 
-function _meta_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
+function _meta_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local changedheaders = target:data("reflection.changedheaders")
     -- generate dummy .cpp file
@@ -102,7 +102,7 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
     end
 end
 
-function _early_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
+function _early_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local changedheaders = {}
     local early_generators = {
@@ -134,7 +134,7 @@ function _early_mako_compile(target, rootdir, metadir, gendir, toolgendir, unity
     end
 end
 
-function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
+function _weak_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local weak_mako_generators = {
         {
@@ -144,7 +144,6 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
         {
             os.projectdir()..vformat("/tools/codegen/config_asset.py"),
             os.projectdir()..vformat("/tools/codegen/config_asset.cpp.mako"),
-            gendir = toolgendir
         },
         {
             os.projectdir()..vformat("/tools/codegen/component.py"),
@@ -177,7 +176,7 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityf
     end
 end
 
-function _strong_mako_compile(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
+function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local strong_mako_generators = {
         {
@@ -221,7 +220,6 @@ function collect_headers_batch(target)
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
     local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen", target:name())
-    local toolgendir = path.join(target:autogendir({root = true}), target:plat(), "tool/generated", target:name())
     local meta_batch = {}
     local id = 1
     local count = 0
@@ -241,7 +239,6 @@ function collect_headers_batch(target)
                 sourceinfo.sourcefile = unityfile
                 sourceinfo.metadir = metadir
                 sourceinfo.gendir = gendir
-                sourceinfo.toolgendir = toolgendir
                 meta_batch[id] = sourceinfo
             end
             sourceinfo.headerfiles = sourceinfo.headerfiles or {}
@@ -263,9 +260,8 @@ function compile_task(compile_func, target, opt)
                 local unityfile = sourceinfo.sourcefile
                 local metadir = sourceinfo.metadir
                 local gendir = sourceinfo.gendir
-                local toolgendir = sourceinfo.toolgendir
                 if headerfiles then
-                    compile_func(target, rootdir, metadir, gendir, toolgendir, unityfile, headerfiles, opt)
+                    compile_func(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
                 end
             end
         end

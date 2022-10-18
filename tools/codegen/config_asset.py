@@ -34,7 +34,7 @@ BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 def main():
     db = Binding()
     root = sys.argv[1]
-    outdir = sys.argv[2]
+    outdir = os.path.join(sys.argv[2], "tool")
     metas = glob.glob(os.path.join(root, "**", "*.h.meta"), recursive=True)
     print(metas)
 
