@@ -21,6 +21,8 @@ includes("xmake/rules.lua")
 
 target("SkrRoot")
     set_kind("headeronly")
+    -- core deps
+    add_deps("simdjson", "gsl", "fmt", "ghc_fs", "bitsery", "boost", "gsl", {public = true})
     -- unzip & link sdks
     before_build(function(target)
         import("core.base.option")

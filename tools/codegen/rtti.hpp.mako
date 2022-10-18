@@ -3,6 +3,7 @@
 #include "${config}"
 #include "type/type_registry.h"
 
+// fwd declarations
 %for record in db.records:
 %if hasattr(record, "namespace"):
 namespace ${record.namespace} { struct ${record.short_name}; }

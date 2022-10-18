@@ -1,5 +1,6 @@
 -- this must be on the top because other thirdparty libs may depend on it
 -- once a lib uses EASTL, it must link to SkrRT runtime
+includes("thirdparty/bitsery.lua")
 includes("thirdparty/EASTL.lua") 
 includes("thirdparty/lmdb.lua")
 includes("thirdparty/mimalloc.lua")
@@ -18,7 +19,6 @@ includes("thirdparty/parallel_hashmap.lua")
 includes("thirdparty/marl.lua")
 includes("thirdparty/FiberTaskingLib.lua")
 includes("thirdparty/simdjson.lua")
-includes("thirdparty/bitsery.lua")
 includes("thirdparty/fmt.lua")
 includes("thirdparty/ghc_filesys.lua")
 includes("thirdparty/zlib.lua")
