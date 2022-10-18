@@ -1,11 +1,10 @@
 target("UsdCore")
     set_group("02.tools")
-    add_deps("SkrRoot")
-
-    add_rules("skr.module", {api = "USDCORE"})
+    add_deps("SkrTool")
+    add_rules("skr.shared", {api = "USDCORE"})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/"
+        rootdir = "include/", disable_meta = true
     })
     add_includedirs("include",{public=true})
     add_files("src/**.cpp")
