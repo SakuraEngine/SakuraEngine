@@ -16,10 +16,12 @@ namespace asset sreflect
 struct TOOL_API SConfigTypeInfo {
     void (*Import)(simdjson::ondemand::value&& json, void* address);
 };
+
 struct TOOL_API SConfigRegistry {
     skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
 };
 TOOL_API struct SConfigRegistry* GetConfigRegistry();
+
 struct sreflect sattr(
 "guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6",
 "serialize" : "json"
@@ -31,9 +33,7 @@ TOOL_API SJsonConfigImporter final : public SImporter
 }
 sregister_importer(0);
 
-struct sreflect
-
-TOOL_API SConfigCooker final : public SCooker
+struct sreflect TOOL_API SConfigCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;

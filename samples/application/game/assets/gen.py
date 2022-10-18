@@ -32,7 +32,7 @@ def main():
     for i in range(10000, 15000):
         resourceGuid = uuid.uuid1()
         write(os.path.join(BASE, "stressTest", fileName + ".config.meta"),
-              resource.format(resourceGuid, "5F47668A-2C6B-448B-9E58-42B138F0D303"))
+              resource.format(resourceGuid, "b537f7b1-6d2d-44f6-b313-bcb559d3f490"))
 
 
 def write(path, content):
