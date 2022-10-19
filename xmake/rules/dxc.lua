@@ -15,7 +15,8 @@ rule("utils.dxc")
         local spvTextpath = path.join(spv_outputdir, hlsl_basename .. ".h")
 
         if not opt.quiet then
-            batchcmds:show_progress(opt.progress, "${color.build.object}compiling.spirv %s -> %s", sourcefile_hlsl, hlsl_basename .. ".spv")
+            batchcmds:show_progress(opt.progress, "${color.build.object}[%s]: compiling.spirv %s -> %s", 
+                target:name(), sourcefile_hlsl, hlsl_basename .. ".spv")
         end
 
         batchcmds:mkdir(spv_outputdir)
@@ -36,7 +37,8 @@ rule("utils.dxc")
         local dxilfilepath = path.join(dxil_outputdir, hlsl_basename .. ".dxil")
 
         if not opt.quiet then
-            batchcmds:show_progress(opt.progress, "${color.build.object}compiling.dxil %s -> %s", sourcefile_hlsl, hlsl_basename .. ".dxil")
+            batchcmds:show_progress(opt.progress, "${color.build.object}[%s]: compiling.dxil %s -> %s", 
+                target:name(), sourcefile_hlsl, hlsl_basename .. ".dxil")
         end
 
         batchcmds:mkdir(dxil_outputdir)

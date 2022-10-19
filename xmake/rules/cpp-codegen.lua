@@ -49,7 +49,7 @@ rule("c++.codegen")
             table.insert(target:objectfiles(), objectfile)
 
             if not opt.quiet then
-                batchcmds:show_progress(opt.progress, "${color.build.object}compiling.codegen %s", file)
+                batchcmds:show_progress(opt.progress, "${color.build.object}[%s]: compiling.codegen %s", target:name(), file)
             end
 
             -- add commands
