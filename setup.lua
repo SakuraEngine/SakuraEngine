@@ -9,11 +9,19 @@ if (os.host() =="macosx") then
     os.exec("brew install sdl2")
     os.exec("brew install googletest")
 end
-import("find_sdk")
-pip = find_sdk.find_program("pip3") or find_sdk.find_program("pip") or {program = "pip"}
-os.runv(pip.program, {"install", "mako"})
 
+import("find_sdk")
+
+-- python
 find_sdk.sdk_from_github("SourceSansPro-Regular.ttf")
+if (os.host() == "windows") then
+    find_sdk.sdk_from_github("python-embed-windows-x64.zip")
+    find_sdk.install_tool("python-embed")
+else
+    pip = find_sdk.find_program("pip3") or find_sdk.find_program("pip") or {program = "pip"}
+    os.runv(pip.program, {"install", "mako"})
+end
+
 if (os.host() == "windows") then
     find_sdk.sdk_from_github("wasm-clang-windows-x64.zip")
     -- gfx

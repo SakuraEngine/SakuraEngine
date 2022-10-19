@@ -32,12 +32,8 @@ function install_tool(tool_name)
     import("utils.archive")
     import("lib.detect.find_file")
 
-    zip_file = find_tool_zip(tool_name)
-    --if(zip_file.dir == nil) then
-    --    sdk_from_github(zip_file.name)
-    --    zip_file = find_tool_zip(tool_name)
-    --end
-    
+    local zip_file = find_tool_zip(tool_name)
+
     if(zip_file.dir ~= nil) then
         print("install: "..zip_file.name)
         archive.extract(zip_file.dir, tooldir())
@@ -70,28 +66,32 @@ function install_lib(lib_name)
 end
 
 function Split(s, delimiter)
-    result = {};
+    local result = {};
     for match in (s..delimiter):gmatch("(.-)"..delimiter) do
         table.insert(result, match);
     end
     return result;
 end
 
-split_string = Split("Hello World!", " ")
-
 function find_program(name, sdkdir, use_which)
-    import("lib.detect.find_file")
-    import("lib.detect.find_program")
-    import("lib.detect.find_tool")
-
+    local detect = import("lib.detect")
     local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
+
+    -- find in project embed tool dir
+    local prog = detect.find_program(name, {paths = {sdkdir}}) 
+
+    -- use xmake find_tool / find_program in path
     local paths = nil
     if(os.host() == "windows") then
         paths = Split(os.getenv("PATH"), ";")
     end
-    local tool = find_tool(name, {pathes = {sdkdir, "/usr/local/bin", paths}})
-    local prog = tool and tool.program or find_program(name, {pathes = {sdkdir, "/usr/local/bin"}})
-    local vexec
+    if(prog == nil) then
+        local tool = tool or detect.find_tool(name, {paths = {sdkdir, "/usr/local/bin", paths}})
+        prog = tool and tool.program or detect.find_program(name, {paths = {sdkdir, "/usr/local/bin"}})
+    end
+
+    -- calc vexec
+    local vexec = nil
     if(prog == nil) then
         if(os.host() ~= "windows" and use_which ~= nil and use_which == true) then
             local outdata, errdata = os.iorun("which "..name)
@@ -100,12 +100,14 @@ function find_program(name, sdkdir, use_which)
             end
         end
     end
+
+    -- find with find_file
     if(prog == nil) then
         vprint(name.." not found! under "..sdkdir)
-        local progf = find_file(name, {sdkdir})
+        local progf = detect.find_file(name, {sdkdir})
         if(os.host() == "windows") then
             if(progf == nil) then
-                progf = find_file(name..".exe", {sdkdir})
+                progf = detect.find_file(name..".exe", {sdkdir})
             end
         end
         if(progf == nil) then
@@ -119,4 +121,10 @@ function find_program(name, sdkdir, use_which)
         vexec = prog
     end
     return {program = prog, vexec = vexec}
+end
+
+function find_embed_python()
+    local embed = find_program("python", path.join(os.projectdir(), tooldir(), "python-embed"))
+    print(embed)
+    return embed
 end

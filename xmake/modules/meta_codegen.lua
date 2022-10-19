@@ -8,7 +8,7 @@ import("core.tool.compiler")
 import("find_sdk")
 
 meta = find_sdk.find_program("meta")
-python = find_sdk.find_program("python3")
+python = find_sdk.find_embed_python() or find_sdk.find_program("python3")
 
 function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     opt = opt or {}
