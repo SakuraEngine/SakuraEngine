@@ -11,9 +11,14 @@ rule("c++.codegen")
     set_sourcekinds("cxx")
     on_load(function (target, opt)
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+        local target_gendir = path.join(gendir, target:name())
 
-        if (not os.exists(gendir)) then
-            io.open(path.join(gendir, "dummy.json"), "w")
+        if (not os.exists(target_gendir)) then
+            io.open(path.join(target_gendir, "module.configure.h"), "w")
+            io.open(path.join(target_gendir, "binary_serialize.generated.h"), "w")
+            io.open(path.join(target_gendir, "json_serialize.generated.h"), "w")
+            io.open(path.join(target_gendir, "rtti.generated.hpp"), "w")
+            io.open(path.join(target_gendir, "typeid.generated.hpp"), "w")
         end
 
         target:data_set("meta.codegen.dir", gendir)
