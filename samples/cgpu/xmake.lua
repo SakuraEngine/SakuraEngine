@@ -6,7 +6,7 @@ target("Example-CGPUMandelbrot")
         spv_outdir = "/../resources/shaders/cgpu-mandelbrot",
         dxil_outdir = "/../resources/shaders/cgpu-mandelbrot"})
     set_kind("binary")
-    add_deps("SkrRT")
+    public_dependency("SkrRT", engine_version)
     add_files("cgpu-mandelbrot/*.c")
     add_files("cgpu-mandelbrot/**.hlsl")
 
@@ -18,7 +18,7 @@ target("Example-CGPUIndexedInstance")
         spv_outdir = "/../resources/shaders/cgpu-indexed-instance",
         dxil_outdir = "/../resources/shaders/cgpu-indexed-instance"})
     set_kind("binary")
-    add_deps("SkrRT")
+    public_dependency("SkrRT", engine_version)
     add_files("cgpu-indexed-instance/*.c")
     add_files("cgpu-indexed-instance/**.hlsl")
 
@@ -30,7 +30,7 @@ target("Example-CGPUTexture")
         spv_outdir = "/../resources/shaders/cgpu-texture",
         dxil_outdir = "/../resources/shaders/cgpu-texture"})
     set_kind("binary")
-    add_deps("SkrRT")
+    public_dependency("SkrRT", engine_version)
     add_files("cgpu-texture/*.c")
     add_files("cgpu-texture/**.hlsl")
     
@@ -45,7 +45,8 @@ if (os.host() == "windows" and false) then
         -- file_watch.hpp needs exceptions
         add_rules("c++.exception")
         add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-        add_deps("SkrRT", "SkrWASM")
+        public_dependency("SkrRT", engine_version)
+        public_dependency("SkrWASM", engine_version)
         add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
         add_files("hot-triangle/**.hlsl")
 end
@@ -61,7 +62,8 @@ target("Example-CGPU3D")
         spv_outdir = "/../resources/shaders/cgpu-3d",
         dxil_outdir = "/../resources/shaders/cgpu-3d"})
     set_kind("binary")
-    add_deps("cgltf", "SkrRT")
+    public_dependency("SkrRT", engine_version)
     add_files("cgpu-3d/**.cpp")
     add_files("cgpu-3d/**.hlsl")
     add_files("cgpu-3d/**.bin", "cgpu-3d/**.gltf", "cgpu-3d/**.png")
+    add_deps("cgltf")
