@@ -19,7 +19,6 @@ jobs:
       run: |
         xmake g -c
         xmake l setup.lua
-        xmake l modules/wasm/setup.lua
         VULKAN_SDK=$GITHUB_WORKSPACE/../vulkansdk-macos-${{env.VulkanSDKVersion}}/macOS
         echo ::set-output name=VULKAN_SDK::$VULKAN_SDK
         echo "VK_LAYER_PATH=$VULKAN_SDK/etc/vulkan/explicit_layer.d" >> $GITHUB_ENV
