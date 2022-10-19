@@ -74,6 +74,11 @@ function Split(s, delimiter)
 end
 
 function find_program(name, sdkdir, use_which, force_in_sdkdir)
+    if (force_in_sdkdir) then
+        if (not os.exists(sdkdir)) then
+            return nil
+        end
+    end
     local detect = import("lib.detect")
     local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
 
@@ -122,6 +127,7 @@ function find_program(name, sdkdir, use_which, force_in_sdkdir)
     else
         vexec = prog
     end
+
     return {program = prog, vexec = vexec}
 end
 
