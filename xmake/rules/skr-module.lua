@@ -123,3 +123,14 @@ function public_dependency(dep, version)
     add_values("skr.module.public_dependencies", dep)
     add_values(dep..".version", version)
 end
+
+function shared_module(name, api, version, opt)
+    target(name)
+    add_rules("skr.module", { api = api, version = engine_version }) 
+    opt = opt or {}
+    if opt.exception and not opt.noexception then
+        add_rules("c++.exception")
+    else
+        add_rules("c++.noexception")
+    end
+end

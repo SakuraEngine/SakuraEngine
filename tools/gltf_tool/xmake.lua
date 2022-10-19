@@ -1,6 +1,5 @@
-target("GLTFTool")
+shared_module("GLTFTool", "GLTFTool", engine_version)
     set_group("02.tools")
-    add_rules("skr.module", {api = "GLTFTool", version = engine_version})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/"
@@ -9,6 +8,5 @@ target("GLTFTool")
     public_dependency("GameRT", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")
-    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_deps("cgltf")

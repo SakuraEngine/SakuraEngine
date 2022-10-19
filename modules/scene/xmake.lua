@@ -1,6 +1,5 @@
-target("SkrScene")
+shared_module("SkrScene", "SKR_SCENE", engine_version)
     set_group("01.modules")
-    add_rules("skr.module", {api = "SKR_SCENE", version = engine_version})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/",
