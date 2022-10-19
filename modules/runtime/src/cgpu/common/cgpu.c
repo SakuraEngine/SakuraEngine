@@ -86,8 +86,8 @@ RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance)
     cgpu_assert(instance->proc_table->free_instance && "free_instance Proc Missing!");
 
     struct CGPURuntimeTable* runtime_table = instance->runtime_table;
-    cgpu_free_runtime_table(runtime_table);
     instance->proc_table->free_instance(instance);
+    cgpu_free_runtime_table(runtime_table);
 }
 
 void cgpu_enum_adapters(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num)
