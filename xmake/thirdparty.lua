@@ -8,7 +8,6 @@ includes("thirdparty/gsl.lua")
 includes("thirdparty/DirectXMath.lua")
 includes("thirdparty/SDL2.lua")
 includes("thirdparty/cgltf.lua")
-includes("thirdparty/imgui.lua")
 includes("thirdparty/tracy.lua")
 includes("thirdparty/platform_sdks.lua")
 if (is_os("windows")) then 

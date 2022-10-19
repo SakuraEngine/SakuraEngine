@@ -68,6 +68,8 @@ ECGPUBackend backend)
 }
 
 #ifdef __cplusplus
+#include <type_traits>
+
 template <typename Pipeline>
 inline static void free_pipeline_and_signature(Pipeline* pipeline)
 {
