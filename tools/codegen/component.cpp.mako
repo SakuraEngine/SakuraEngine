@@ -1,6 +1,7 @@
 //DO NOT MODIFY THIS FILE
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
+#include "./dual.generated.hpp"
 %for header in db.headers:
 #include "${header}"
 %endfor
@@ -52,4 +53,5 @@ dual_type_index_t dual_id_of<::${type.name}>::get()
     SKR_ASSERT(result != DUAL_NULL_TYPE);
     return result;
 }
+
 %endfor
