@@ -73,30 +73,32 @@ function Split(s, delimiter)
     return result;
 end
 
-function find_program(name, sdkdir, use_which)
+function find_program(name, sdkdir, use_which, force_in_sdkdir)
     local detect = import("lib.detect")
     local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
 
     -- find in project embed tool dir
     local prog = detect.find_program(name, {paths = {sdkdir}}) 
-
-    -- use xmake find_tool / find_program in path
-    local paths = nil
-    if(os.host() == "windows") then
-        paths = Split(os.getenv("PATH"), ";")
-    end
-    if(prog == nil) then
-        local tool = tool or detect.find_tool(name, {paths = {sdkdir, "/usr/local/bin", paths}})
-        prog = tool and tool.program or detect.find_program(name, {paths = {sdkdir, "/usr/local/bin"}})
-    end
-
-    -- calc vexec
     local vexec = nil
-    if(prog == nil) then
-        if(os.host() ~= "windows" and use_which ~= nil and use_which == true) then
-            local outdata, errdata = os.iorun("which "..name)
-            if(errdata~= nil or errdata ~= "") then
-                prog = string.gsub(outdata, "%s+", "")
+
+    if (not force_in_sdkdir) then
+        -- use xmake find_tool / find_program in path
+        local paths = nil
+        if(os.host() == "windows") then
+            paths = Split(os.getenv("PATH"), ";")
+        end
+        if(prog == nil) then
+            local tool = tool or detect.find_tool(name, {paths = {sdkdir, "/usr/local/bin", paths}})
+            prog = tool and tool.program or detect.find_program(name, {paths = {sdkdir, "/usr/local/bin"}})
+        end
+
+        -- use which
+        if(prog == nil) then
+            if(os.host() ~= "windows" and use_which ~= nil and use_which == true) then
+                local outdata, errdata = os.iorun("which "..name)
+                if(errdata~= nil or errdata ~= "") then
+                    prog = string.gsub(outdata, "%s+", "")
+                end
             end
         end
     end
@@ -124,7 +126,12 @@ function find_program(name, sdkdir, use_which)
 end
 
 function find_embed_python()
-    local embed = find_program("python", path.join(os.projectdir(), tooldir(), "python-embed"))
-    print(embed)
+    local embed = find_program("python", path.join(os.projectdir(), tooldir(), "python-embed"), false, true)
+    import("core.base.option")
+    local verbose = option.get("verbose")
+    if verbose then
+        print("found embed python:")
+        print(embed)
+    end
     return embed
 end
