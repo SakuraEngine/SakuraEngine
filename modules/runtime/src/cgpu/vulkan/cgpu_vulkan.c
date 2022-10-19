@@ -2342,8 +2342,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
             uint32_t queueFamilyPropertyCount = 0;
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, NULL);
             DECLARE_ZERO_VLA(VkQueueFamilyProperties, queueFamilyProperties, queueFamilyPropertyCount)
-            vkGetPhysicalDeviceQueueFamilyProperties(
-            A->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
+            vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
 
             // Check if hardware provides dedicated present queue
             if (queueFamilyPropertyCount)

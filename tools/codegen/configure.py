@@ -9,17 +9,6 @@ from pathlib import Path
 import itertools
 
 
-class Type(object):
-    def __init__(self, name, guid):
-        self.name = name
-        self.id = name.replace("::", "_")
-        var = str.rsplit(name, "::", 1)
-        self.short_name = var[-1]
-        self.guid = guid
-        self.guidConstant = "0x{}, 0x{}, 0x{}, {{0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}}}".format(
-            guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
-
-
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 

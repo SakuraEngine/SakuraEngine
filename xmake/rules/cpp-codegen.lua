@@ -21,6 +21,15 @@ rule("c++.codegen")
             io.open(path.join(target_gendir, "typeid.generated.hpp"), "w")
         end
 
+        --local jsonf = io.open(path.join(target_gendir, "module.configure.json"), "w")
+        --jsonf:print("{\n\"module\": {")
+       
+        --jsonf:print("\t\"name\": \"" .. target:name().."\",")
+        --jsonf:print("\t\"version\": \"0.1.0\",")
+        --jsonf:print("\t\"linking\": \""..target:kind().."\",")
+
+        --jsonf:print("}\n}")
+
         target:data_set("meta.codegen.dir", gendir)
         target:add("includedirs", gendir, {public = true})
     end)
