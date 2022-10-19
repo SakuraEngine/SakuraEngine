@@ -1,6 +1,5 @@
-target("GameRT")
+shared_module("GameRT", "GAMERT", engine_version)
     set_group("04.examples/application")
-    add_rules("skr.module", {api = "GAMERT", version = engine_version})
     add_rules("c++.codegen", {
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
@@ -10,7 +9,6 @@ target("GameRT")
     public_dependency("SkrInputSystem", "0.1.0")
     add_includedirs("game/include", {public=true})
     add_files("game/src/**.cpp")
-    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
 target("Game")
@@ -31,17 +29,15 @@ target("Game")
         add_files("/../../resources/windows/sakura.rc")
     end
 
-target("GameTool")
+shared_module("GameTool", "GAMETOOL", engine_version)
     set_group("04.examples/application")
-    add_rules("skr.module", {api = "GAMETOOL", version = engine_version}) 
+    public_dependency("SkrTool", "0.1.0")
+    public_dependency("GameRT", "0.1.0")
     add_rules("c++.codegen", {
         files = {"gametool/**.h", "gametool/**.hpp"},
         rootdir = "gametool/"
     })
     add_includedirs("gametool/include", {public=true})
-    add_rules("c++.noexception")
-    public_dependency("SkrTool", "0.1.0")
-    public_dependency("GameRT", "0.1.0")
     add_files("gametool/src/**.cpp")
     on_config(function (target, opt)
         local dep = target:dep("GameRT");

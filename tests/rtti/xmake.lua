@@ -1,6 +1,5 @@
-target("rtti-test-types")
+shared_module("rtti-test-types", "RTTI_TEST_TYPES", engine_version)
     set_group("05.tests")
-    add_rules("skr.module", {api = "RTTI_TEST_TYPES", version = engine_version})
     public_dependency("SkrRT", engine_version)
     add_files("types/types.cpp")
     set_languages("c++17")

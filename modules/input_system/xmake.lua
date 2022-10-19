@@ -1,6 +1,5 @@
-target("SkrInputSystem")
+shared_module("SkrInputSystem", "SKR_INPUTSYSTEM", engine_version)
     set_group("01.modules")
-    add_rules("skr.module", {api = "SKR_INPUTSYSTEM", version = engine_version})
     add_rules("c++.codegen", {
         files = {"include/**.h"},
         rootdir = "include/",
@@ -10,5 +9,4 @@ target("SkrInputSystem")
     add_includedirs("include", {public=true})
     add_files("src/*.cpp")
     
-    add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})

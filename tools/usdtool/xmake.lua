@@ -1,6 +1,5 @@
-target("UsdTool")
+shared_module("UsdTool", "USDTOOL", engine_version)
     set_group("02.tools")
-    add_rules("skr.module", {api = "USDTOOL", version = engine_version})
     public_dependency("SkrTool", "0.1.0")
     public_dependency("GameRT", "0.1.0")
     add_deps("UsdCore")
