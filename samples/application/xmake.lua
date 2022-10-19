@@ -1,21 +1,23 @@
 target("GameRT")
     set_group("04.examples/application")
-    add_rules("skr.module", {api = "GAMERT"})
+    add_rules("skr.module", {api = "GAMERT", version = engine_version})
     add_rules("c++.codegen", {
         files = {"game/**.h", "game/**.hpp"},
         rootdir = "game/"
     })
+    public_dependency("SkrRenderer", "0.1.0")
+    public_dependency("SkrImGui", "0.1.0")
+    public_dependency("SkrInputSystem", "0.1.0")
+    add_includedirs("game/include", {public=true})
+    add_files("game/src/**.cpp")
     add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    add_includedirs("game/include", {public=true})
-    add_deps("SkrRT", "SkrScene", "SkrRenderer", "SkrImGui", "SkrInputSystem")
-    add_files("game/src/**.cpp")
 
 target("Game")
     set_group("04.examples/application")
     set_kind("binary")
     add_rules("c++.noexception")
-    add_deps("GameRT")
+    public_dependency("GameRT", "0.1.0")
     add_rules("utils.install-resources", {
         extensions = {".gltf", ".bin", ".png"},
         outdir = "/../resources", _png_outdir = "/../resources/textures"})
@@ -31,14 +33,15 @@ target("Game")
 
 target("GameTool")
     set_group("04.examples/application")
-    add_rules("skr.module", {api = "GAMETOOL"}) 
+    add_rules("skr.module", {api = "GAMETOOL", version = engine_version}) 
     add_rules("c++.codegen", {
         files = {"gametool/**.h", "gametool/**.hpp"},
         rootdir = "gametool/"
     })
     add_includedirs("gametool/include", {public=true})
     add_rules("c++.noexception")
-    add_deps("SkrTool", "GameRT")
+    public_dependency("SkrTool", "0.1.0")
+    public_dependency("GameRT", "0.1.0")
     add_files("gametool/src/**.cpp")
     on_config(function (target, opt)
         local dep = target:dep("GameRT");
@@ -55,7 +58,8 @@ target("GameTool")
 target("Example-VMemController")
     set_group("04.examples/application")
     set_kind("binary")
-    add_deps("SkrImGui", "SkrRenderGraph")
+    public_dependency("SkrRenderGraph", engine_version)
+    public_dependency("SkrImGui", engine_version)
     add_rules("c++.noexception")
     add_files("vmem_controller/**.cpp")
     if (is_os("windows")) then 
@@ -69,7 +73,8 @@ end
 target("Example-Live2DViewer")
     set_group("04.examples/application")
     set_kind("binary")
-    add_deps("SkrLive2D", "SkrImGui")
+    public_dependency("SkrLive2D", engine_version)
+    public_dependency("SkrImGui", engine_version)
     add_rules("utils.install-resources", {
         extensions = {".json", ".moc3", ".png"},
         outdir = "/../resources/Live2DViewer", 

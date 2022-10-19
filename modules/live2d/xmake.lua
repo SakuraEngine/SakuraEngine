@@ -1,17 +1,19 @@
 target("SkrLive2D")
     set_group("01.modules")
-    add_rules("skr.module", {api = "SKR_LIVE2D"})
+    add_rules("skr.module", {api = "SKR_LIVE2D", version = engine_version})
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/", disable_meta = true,
         api = "SKR_LIVE2D"
     })
-    add_rules("c++.noexception")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    add_deps("SkrRenderer", "SkrImageCoder")
+    public_dependency("SkrImageCoder", engine_version)
+    public_dependency("SkrRenderer", engine_version)
     add_includedirs("include", "CubismNativeCore/include", {public=true})
     add_includedirs("src/Framework", {public=false})
     add_files("src/**.cpp")
+    add_rules("c++.noexception")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    -- link to cubism core
     if (is_os("windows")) then 
         add_linkdirs("CubismNativeCore/lib/windows/x86_64/142", {public=true})
         if (is_mode("release")) then

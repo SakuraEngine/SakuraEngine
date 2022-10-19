@@ -1,35 +1,41 @@
 target("Example-RenderGraphTriangle")
     set_group("04.examples/render_graph")
+    set_kind("binary")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-triangle",
         dxil_outdir = "/../resources/shaders/rg-triangle"})
     add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    set_kind("binary")
-    add_deps("SkrRT", "SkrRenderGraph")
+    public_dependency("SkrRT", engine_version)
+    public_dependency("SkrRenderGraph", engine_version)
     add_files("rg-triangle/*.cpp")
     add_files("rg-triangle/**.hlsl")
 
 target("Example-RenderGraphDeferred")
     set_group("04.examples/render_graph")
+    set_kind("binary")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-deferred",
         dxil_outdir = "/../resources/shaders/rg-deferred"})
     add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    set_kind("binary")
-    add_deps("SkrRT", "SkrRenderGraph", "SkrImGui")
+    public_dependency("SkrRT", engine_version)
+    public_dependency("SkrRenderGraph", engine_version)
+    public_dependency("SkrImGui", engine_version)
     add_files("rg-deferred/*.cpp")
     add_files("rg-deferred/**.hlsl")
 
 target("Example-RenderGraphCrossProcess")
     set_group("04.examples/render_graph")
+    set_kind("binary")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cross-process",
         dxil_outdir = "/../resources/shaders/cross-process"})
     add_rules("c++.noexception")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    set_kind("binary")
-    add_deps("lmdb", "SkrRT", "SkrRenderGraph", "SkrImGui")
+    public_dependency("SkrRT", engine_version)
+    public_dependency("SkrRenderGraph", engine_version)
+    public_dependency("SkrImGui", engine_version)
     add_files("cross-process/*.cpp")
     add_files("cross-process/**.hlsl")
+    add_deps("lmdb")

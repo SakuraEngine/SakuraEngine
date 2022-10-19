@@ -1,7 +1,7 @@
 target("ecs-test")
     set_group("05.tests")
     set_kind("binary")
-    add_deps("SkrRT")
+    public_dependency("SkrRT", engine_version)
     add_packages("gtest")
     add_files("capi/main.cpp")
     set_languages("c++17")

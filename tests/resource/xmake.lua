@@ -1,6 +1,6 @@
 target("resource-design")
     set_group("05.tests")
     set_kind("binary")
-    add_deps("SkrRT")
+    public_dependency("SkrRT", engine_version)
     add_files("design/main.cpp")
     set_languages("c++17")
