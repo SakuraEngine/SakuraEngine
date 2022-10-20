@@ -2,7 +2,7 @@ shared_module("GameRT", "GAMERT", engine_version)
     set_group("04.examples/application")
     add_rules("c++.codegen", {
         files = {"game/**.h", "game/**.hpp"},
-        rootdir = "game/"
+        rootdir = "game/include"
     })
     public_dependency("SkrRenderer", "0.1.0")
     public_dependency("SkrImGui", "0.1.0")

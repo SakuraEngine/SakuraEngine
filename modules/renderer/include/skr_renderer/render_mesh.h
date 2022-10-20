@@ -3,6 +3,9 @@
 #include "primitive_draw.h"
 #include "cgpu/api.h"
 #include "cgpu/io.h"
+#ifndef __meta__
+    #include "SkrRenderer/skr_renderer/render_mesh.generated.h"
+#endif
 
 #ifdef __cplusplus
 struct skr_render_mesh_t {

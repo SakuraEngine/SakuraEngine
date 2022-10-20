@@ -166,26 +166,6 @@ function _early_mako_compile(target, rootdir, metadir, gendir, unityfile, header
     end
 end
 
-function _weak_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
-    -- generate headers dummy
-    local weak_mako_generators = {
-    }
-    -- calculate if weak makos need to be rebuild
-    local need_mako = target:data("reflection.need_mako")
-    local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
-    local rebuild = need_mako and not disable_meta
-    for _, generator in ipairs(weak_mako_generators) do
-        local dependfile = target:dependfile(generator[1])
-        depend.on_changed(function ()
-            rebuild = true
-        end, {dependfile = dependfile, files = generator});
-    end
-    -- rebuild
-    if (rebuild) then
-        _mako_compile_template(target, weak_mako_generators, false, metadir, gendir, opt)
-    end
-end
-
 function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local strong_mako_generators = {
@@ -351,17 +331,12 @@ function generate_once(targetname)
         if (target:rule("c++.codegen")) then
             scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
                 -- wait self metas
-                scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
-                -- resume weak makos
-                -- scheduler.co_group_begin(target:name()..".cpp-codegen.weak_mako", function ()
-                --     scheduler.co_start(compile_task, _weak_mako_compile, target, opt)
-                -- end)
-                -- wait deps metas
                 for _, dep in pairs(target:deps()) do
                     if dep:rule("c++.codegen") then
                         scheduler.co_group_wait(dep:name()..".cpp-codegen.meta")
                     end
                 end
+                scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
                 scheduler.co_start(compile_task, _strong_mako_compile, target, opt)
             end)
         end

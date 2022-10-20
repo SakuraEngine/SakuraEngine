@@ -67,7 +67,6 @@ class MetaDatabase(object):
         self.name_to_enum = {}
         self.includes = set()
 
-
     def add_include(self, path):
         self.includes.add(os.path.normpath(path).replace(os.sep, "/"))
 
@@ -165,10 +164,15 @@ if __name__ == '__main__':
         generators.append(load_generator(i, x))
 
     db = MetaDatabase()
+    header_dbs = []
     
     metas = glob.glob(os.path.join(args.root, "**", "*.h.meta"), recursive=True)
     for meta in metas:
         db.load_meta_file(meta, True)
+        header_db = MetaDatabase()
+        header_db.load_meta_file(meta, True)
+        header_db.relative_path = os.path.relpath(meta, args.root)
+        header_dbs.append(header_db)
     
     if args.includes:
         for path in args.includes:
@@ -176,16 +180,22 @@ if __name__ == '__main__':
             for meta in metas:
                 db.load_meta_file(meta, False)
     
-    forward_content : str = db.generate_forward(args)
+    # gen headers
+    for header_db in header_dbs:
+        forward_content : str = header_db.generate_forward(args)
+        for generator in generators:
+            if hasattr(generator, "generate_forward"):
+                forward_content = forward_content + generator.generate_forward(header_db, args)
+        generated_header = re.sub(r"(.*?)\.(.*?)\.meta", r"\g<1>.generated.\g<2>", header_db.relative_path)
+        write(os.path.join(args.outdir, generated_header), forward_content)
+
     impl_content : str = db.generate_impl()
     for generator in generators:
-        if hasattr(generator, "generate_forward"):
-            forward_content = forward_content + generator.generate_forward(db, args)
         if hasattr(generator, "generate_impl"):
             impl_content = impl_content + generator.generate_impl(db, args)
 
-    write(os.path.join(args.outdir, "generated.h"), forward_content)
     write(os.path.join(args.outdir, "generated.cpp"), impl_content)
+
 
     
     

@@ -5,7 +5,9 @@
 #include "asset/cooker.hpp"
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
-
+#ifndef __meta__
+    #include "UsdTool/scene_asset.generated.h"
+#endif
 namespace skd sreflect
 {
 namespace asset sreflect

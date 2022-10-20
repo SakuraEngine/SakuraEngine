@@ -759,7 +759,10 @@ RUNTIME_API void dualJ_unbind_storage(dual_storage_t* storage);
 #if defined(__cplusplus)
 template <class C>
 struct dual_id_of {
-    static dual_type_index_t get();
+    static dual_type_index_t get()
+    {
+        static_assert(!sizeof(C), "dual_id_of<C> not implemented for this type, please include the appropriate generated header!");
+    }
 };
 namespace dual
 {
