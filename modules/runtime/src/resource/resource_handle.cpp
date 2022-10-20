@@ -4,8 +4,8 @@
 #include "resource/resource_header.h"
 #include "resource/resource_system.h"
 
-static constexpr uint64_t kResourceHandleRequesterTypeMask = ~(alignof(skr_resource_record_t) - 1);
-static constexpr uint64_t kResourceHandleRecordMask = alignof(skr_resource_record_t) - 1;
+static constexpr uint64_t kResourceHandleRecordMask = ~(alignof(skr_resource_record_t) - 1);
+static constexpr uint64_t kResourceHandleRequesterTypeMask = alignof(skr_resource_record_t) - 1;
 
 skr_resource_handle_t::skr_resource_handle_t()
 {
