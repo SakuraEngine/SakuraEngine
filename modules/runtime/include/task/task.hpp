@@ -204,7 +204,7 @@ namespace skr::task
     void schedule(F&& lambda, event_t* event, const char* name = nullptr)
     {
         //TODO: trace name
-        if(event)
+        if(event && *event)
         {
             marl::schedule([event = *event, lambda = std::forward<F>(lambda)]() mutable
             {

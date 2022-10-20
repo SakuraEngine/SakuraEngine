@@ -159,6 +159,7 @@ struct hash_shared_ptr {
 using DependencySet = skr::flat_hash_set<skr::task::event_t, hash_shared_ptr>;
 void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
+    SKR_ASSERT(job);
     if (readonly)
     {
         for (auto& dp : entry.owned)
@@ -188,7 +189,7 @@ void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool re
 skr::task::event_t dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
 {
-    skr::task::event_t result(nullptr);
+    skr::task::event_t result;
     ZoneScopedN("SchedualECSJob");
 
     SKR_ASSERT(is_main_thread(query->storage));
