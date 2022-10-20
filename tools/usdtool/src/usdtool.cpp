@@ -24,18 +24,3 @@ class SUsdToolModule : public skr::IDynamicModule
     }
 };
 IMPLEMENT_DYNAMIC_MODULE(SUsdToolModule, UsdTool);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "UsdTool",
-    "prettyname" : "UsdTool",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-UsdTool)

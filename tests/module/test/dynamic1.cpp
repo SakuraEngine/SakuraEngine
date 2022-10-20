@@ -18,18 +18,3 @@ class SDynamicModule1 : public skr::IDynamicModule
     }
 };
 IMPLEMENT_DYNAMIC_MODULE(SDynamicModule1, dynamic1);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "dynamic1",
-    "prettyname" : "dynamic1",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [{"name":"static0", "version":"0.0.1"}],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-dynamic1)
