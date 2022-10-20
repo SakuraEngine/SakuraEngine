@@ -4,6 +4,9 @@
 #include <EASTL/string.h>
 #include <EASTL/unique_ptr.h>
 #include "rtti-test-types/module.configure.h"
+#if !defined(__meta__)
+    #include "rtti-test-types/types.generated.h"
+#endif
 
 // TODO: Move To Core 
 struct SRuntimeAttribute

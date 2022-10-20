@@ -1,5 +1,8 @@
 #pragma once
 #include "types.hpp"
+#if !defined(__meta__)
+    #include "rtti-test-types/types2.generated.h"
+#endif
 
 namespace Types sreflect
 {
