@@ -1932,7 +1932,7 @@ inline bool XMVerifyCPUSupport() noexcept
 {
 #if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
     int CPUInfo[4] = { -1 };
-#if defined(__clang__) || defined(__GNUC__)
+#if !defined(_MSC_VER) && (defined(__clang__) || defined(__GNUC__))
     __cpuid(0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
 #else
     __cpuid(CPUInfo, 0);
@@ -1946,7 +1946,7 @@ inline bool XMVerifyCPUSupport() noexcept
         return false;
 #endif
 
-#if defined(__clang__) || defined(__GNUC__)
+#if !defined(_MSC_VER) && (defined(__clang__) || defined(__GNUC__))
     __cpuid(1, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
 #else
     __cpuid(CPUInfo, 1);
@@ -1981,7 +1981,7 @@ inline bool XMVerifyCPUSupport() noexcept
         return false; // No SSE2/SSE support
 
 #if defined(__AVX2__) || defined(_XM_AVX2_INTRINSICS_)
-#if defined(__clang__) || defined(__GNUC__)
+#if !defined(_MSC_VER) && (defined(__clang__) || defined(__GNUC__))
     __cpuid_count(7, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
 #else
     __cpuidex(CPUInfo, 7, 0);
