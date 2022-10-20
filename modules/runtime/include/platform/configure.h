@@ -32,7 +32,8 @@
 #endif
 
 #ifndef STRINGIFY
-    #define STRINGIFY(...) #__VA_ARGS__
+    #define STRINGIFY_IMPL(...) #__VA_ARGS__
+    #define STRINGIFY(...) STRINGIFY_IMPL(__VA_ARGS__)
 #endif
 
 #define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" # index "\" : " #expr
@@ -45,7 +46,7 @@
     #define spush_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
     #define spop_attr() __attribute__((annotate("__pop__")))
 
-    #define sstatic_ctor(expr) __attribute__((annotate(sstatic_ctor_name(__COUNTER__, expr)))) 
+    #define sstatic_ctor(expr) __attribute__((annotate(sstatic_ctor_name(__COUNTER__, expr))))
 #else
     #define sreflect
     #define sfull_reflect
@@ -62,6 +63,9 @@
 #endif
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
+#define simport_struct_impl(idx, name, guid) struct sreflect import_##idx { using type = name; } sattr("import" : guid)
+#define simport_struct(name, guid) simport_struct_impl(__COUNTER__, name, guid)
+
 
 typedef struct $T { uint32_t _; } $T;
 typedef struct $Super { uint32_t _; } $Super;
