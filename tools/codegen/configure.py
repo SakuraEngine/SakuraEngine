@@ -16,9 +16,10 @@ def main():
     root = sys.argv[1]
     outdir = sys.argv[2]
     api = sys.argv[3]
+    module = sys.argv[4]
 
     template = os.path.join(BASE, "configure.h.mako")
-    content = render(template, api=api.upper())
+    content = render(template, api=api.upper(), module=module)
     output = os.path.join(outdir, "module.configure.h")
     write(output, content)
 

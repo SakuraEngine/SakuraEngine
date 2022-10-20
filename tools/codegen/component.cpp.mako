@@ -1,12 +1,9 @@
-//DO NOT MODIFY THIS FILE
+// BEGIN DUAL GENERATED
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
-#include "./dual.generated.hpp"
-%for header in db.headers:
-#include "${header}"
-%endfor
 
-%for type in db.types:
+%for type in db.records:
+%if generator.filter_record(type):
 static struct RegisterComponent${type.id}Helper
 {
     RegisterComponent${type.id}Helper()
@@ -14,29 +11,30 @@ static struct RegisterComponent${type.id}Helper
         dual_type_description_t desc;
         desc.name = "${type.short_name}";
         
-    %if type.buffer:
-        desc.size = sizeof(dual::array_component_T<${type.name}, ${type.buffer}>);
+    %if hasattr(type.attrs.component, "buffer"):
+        desc.size = sizeof(dual::array_component_T<${type.name}, ${type.attrs.component.buffer}>);
     %else:
         desc.size = sizeof(${type.name});
     %endif
+    %if hasattr(type.attrs.component, "entityFields"):
         desc.entityFieldsCount = ${len(type.entityFields)};
-    %if type.entityFields:
         static intptr_t entityFields[] = {${", ".join(type.entityFields)}};
         desc.entityFields = (intptr_t)entityFields;
     %else:
+        desc.entityFieldsCount = 0;
         desc.entityFields = 0;
     %endif
-        desc.guid = {${type.guidConstant}};
-    %if type.managed:
+        desc.guid = {${db.guid_constant(type)}};
+    %if hasattr(type.attrs.component, "managed"):
         desc.callback = GetComponentCallback<${type.name}>();
     %else:
         desc.callback = {};
     %endif
         desc.flags = 0;
-    %if type.pin:
+    %if hasattr(type.attrs.component, "pin"):
         desc.flags |= DTF_PIN;
     %endif
-    %if type.buffer:
+    %if hasattr(type.attrs.component, "buffer"):
         desc.elementSize = sizeof(${type.name});
     %else:
         desc.elementSize = 0;
@@ -53,5 +51,7 @@ dual_type_index_t dual_id_of<::${type.name}>::get()
     SKR_ASSERT(result != DUAL_NULL_TYPE);
     return result;
 }
-
+%endif
 %endfor
+
+//END DUAL GENERATED

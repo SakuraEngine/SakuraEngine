@@ -11,6 +11,8 @@ TestGrandSon : public TestSon
     sstatic_ctor(PrintField($name))
     eastl::string job;
 }
-sstatic_ctor(XXXInformation<$T>());
+sstatic_ctor(XXXInformation<$T>())
+sattr("serialize" : ["json", "bin"])
+sattr("component" : true);
 
 }

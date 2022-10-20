@@ -1,20 +1,16 @@
-//DO NOT MODIFY THIS FILE
-#pragma once
-#include "${config}"
+// BEGIN DUAL GENERATED
 #include "ecs/dual.h"
 
-%for type in db.types:
-%if hasattr(type, "namespace"):
-namespace ${type.namespace} { struct ${type.short_name}; }
-%else:
-struct ${type.short_name};
-%endif
-%endfor
-
-%for type in db.types:
+#ifdef __cplusplus
+%for type in db.records:
+%if generator.filter_record(type):
 template<>
 struct dual_id_of<::${type.name}>
 {
     ${api} static dual_type_index_t get();
 };
+%endif
 %endfor
+#endif
+
+//END DUAL GENERATED

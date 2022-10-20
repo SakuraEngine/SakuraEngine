@@ -67,8 +67,9 @@ function _meta_compile(target, rootdir, metadir, gendir, unityfile, headerfiles,
     end
 end
 
-function _mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt)
+function _mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt, strong)
     local api = target:extraconf("rules", "c++.codegen", "api")
+    local generator = os.projectdir()..vformat("/tools/codegen/codegen.py")
     -- compile jsons to c++
     local depsmeta = {}
     for _, dep in pairs(target:deps()) do
@@ -76,7 +77,41 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
         table.insert(depsmeta, depmetadir)
     end
     -- compile jsons to c++
-    local function template_mako_task(index, depsmeta, opt)
+    local last = os.time()
+    if not opt.quiet then
+        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
+    end
+
+    local command = {
+        generator,
+        "-root", path.absolute(metadir),
+        "-outdir", gendir,
+        "-api", api or target:name(),
+    }
+    if strong then
+        table.insert(command, "-includes")
+        for _, dep in ipairs(depsmeta) do
+            table.insert(command, dep)
+        end
+    end
+    table.insert(command, "-config")
+    table.insert(command, path.join(target:name(), "module.configure.h"))
+    for _, generator in pairs(mako_generators) do
+        table.insert(command, generator[1])
+    end
+    os.iorunv(python.program, command)
+
+    if not opt.quiet then
+        local now = os.time()
+        cprint("${cyan}[%s]: %s${clear} %s cost ${red}%d seconds", target:name(), path.filename(generator), path.relative(metadir), now - last)
+    end
+end
+
+
+function _early_mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt)
+    local api = target:extraconf("rules", "c++.codegen", "api")
+    -- compile jsons to c++
+    local function template_mako_task(index, opt)
         local generator = mako_generators[index][1]
         local last = os.time()
         if not opt.quiet then
@@ -85,11 +120,8 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
 
         local command = {
             generator,
-            path.absolute(metadir), path.absolute(mako_generators[index].gendir or gendir), api or target:name()
+            path.absolute(metadir), path.absolute(mako_generators[index].gendir or gendir), api or target:name(), target:name(),
         }
-        for _, dep in ipairs(depsmeta) do
-            table.insert(command, dep)
-        end
         os.iorunv(python.program, command)
 
         if not opt.quiet then
@@ -98,7 +130,7 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
         end
     end
     for index, generator in pairs(mako_generators) do
-        template_mako_task(index, depsmeta, opt)
+        template_mako_task(index, opt)
     end
 end
 
@@ -129,7 +161,7 @@ function _early_mako_compile(target, rootdir, metadir, gendir, unityfile, header
     end
     -- generate dummy .cpp file
     if(#changedheaders > 0) then
-        _mako_compile_template(target, early_generators, false, metadir, gendir, opt)
+        _early_mako_compile_template(target, early_generators, false, metadir, gendir, opt)
         target:data_set("reflection.changedheaders", changedheaders)
     end
 end
@@ -140,10 +172,6 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, unityfile, headerf
         {
             os.projectdir()..vformat("/tools/codegen/typeid.py"),
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/config_asset.py"),
-            os.projectdir()..vformat("/tools/codegen/config_asset.cpp.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/component.py"),
@@ -158,6 +186,16 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, unityfile, headerf
         {
             os.projectdir()..vformat("/tools/codegen/static_ctor.py"),
             os.projectdir()..vformat("/tools/codegen/static_ctor.cpp.mako"),
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
+            os.projectdir()..vformat("/tools/codegen/json_serialize.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/json_serialize.cpp.mako")
+        },
+        {
+            os.projectdir()..vformat("/tools/codegen/serialize.py"),
+            os.projectdir()..vformat("/tools/codegen/binary_serialize.h.mako"),
+            os.projectdir()..vformat("/tools/codegen/binary_serialize.cpp.mako"),
         },
     }
     -- calculate if weak makos need to be rebuild
@@ -179,16 +217,6 @@ end
 function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local strong_mako_generators = {
-        {
-            os.projectdir()..vformat("/tools/codegen/serialize_json.py"),
-            os.projectdir()..vformat("/tools/codegen/json_serialize.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/json_serialize.cpp.mako")
-        },
-        {
-            os.projectdir()..vformat("/tools/codegen/serialize.py"),
-            os.projectdir()..vformat("/tools/codegen/binary_serialize.h.mako"),
-            os.projectdir()..vformat("/tools/codegen/binary_serialize.cpp.mako"),
-        },
     }
     -- calculate if strong makos need to be rebuild
     local need_mako = target:data("reflection.need_mako")
