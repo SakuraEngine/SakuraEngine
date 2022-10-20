@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrInputSystem/module.configure.h"
-#include "math/vector.hpp"
-#include <stdint.h>
+#include "platform/configure.h"
 
 namespace skr::input
 {

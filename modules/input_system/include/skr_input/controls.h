@@ -1,15 +1,12 @@
 #pragma once
-#include "EASTL/internal/function.h"
 #include "EASTL/internal/move_help.h"
 #include "EASTL/shared_ptr.h"
-#include "EASTL/unique_ptr.h"
 #include "EASTL/vector.h"
+#include "utils/types.h"
 #include "skr_input/Interactions.h"
 #include "skr_input/processor.h"
 #include "SkrInputSystem/module.configure.h"
 #include "gainput/gainput.h"
-#include "math/vector.hpp"
-#include <cstddef>
 
 namespace skr::input
 {
@@ -252,7 +249,7 @@ private:
     gainput::DeviceButtonId _deviceButton;
 };
 
-class SKR_INPUTSYSTEM_API Vector2Control : public ControlsBase<math::Vector2f>
+class SKR_INPUTSYSTEM_API Vector2Control : public ControlsBase<skr_float2_t>
 {
 public:
     Vector2Control(float min_x = -1.f, float max_x = 1.f, float min_y = -1.f, float max_y = 1.f)

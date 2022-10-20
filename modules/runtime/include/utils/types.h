@@ -90,3 +90,14 @@ typedef struct skr_blob_t {
     uint8_t* bytes SKR_IF_CPP( = nullptr);
     uint64_t size SKR_IF_CPP( = 0u);
 } skr_blob_t;
+
+#ifdef __cplusplus
+inline static SKR_CONSTEXPR bool operator==(skr_float2_t l, skr_float2_t r) 
+{
+    return (l.x == r.x) && (l.y == r.y);
+}
+inline static SKR_CONSTEXPR bool operator!=(skr_float2_t l, skr_float2_t r) 
+{
+    return (l.x != r.x) || (l.y != r.y);
+}
+#endif
