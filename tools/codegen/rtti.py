@@ -14,8 +14,12 @@ class Generator(object):
 
     def generate_forward(self, db, args):
         template = os.path.join(BASE, "rtti.hpp.mako")
-        return db.render(template, db=db, generator = self, api=args.api+"_API")
+        if self.filter_rtti(db.records):
+            return db.render(template, db=db, generator = self, api=args.api+"_API")
+        return ""
     
     def generate_impl(self, db, args):
         template = os.path.join(BASE, "rtti.cpp.mako")
-        return db.render(template, db=db, generator = self)
+        if self.filter_rtti(db.records):
+            return db.render(template, db=db, generator = self)
+        return ""

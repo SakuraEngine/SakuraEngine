@@ -18,9 +18,13 @@ class Generator(object):
 
     def generate_forward(self, db, args):
         template = os.path.join(BASE, "binary_serialize.h.mako")
-        return db.render(template, db=db, generator = self, api=args.api+"_API")
+        if self.filter_types(db.records) or self.filter_types(db.enums):
+            return db.render(template, db=db, generator = self, api=args.api+"_API")
+        return ""
     
     def generate_impl(self, db, args):
         template = os.path.join(BASE, "binary_serialize.cpp.mako")
-        return db.render(template, db=db, generator = self)
+        if self.filter_types(db.records) or self.filter_types(db.enums):
+            return db.render(template, db=db, generator = self)
+        return ""
 

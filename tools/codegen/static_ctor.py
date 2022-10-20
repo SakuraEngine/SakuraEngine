@@ -6,13 +6,15 @@ class Generator(object):
         pass
 
     def filter_enum(self, record):
-        self.process_type(record)
+        if not hasattr(record, "target") or not hasattr(record.target, "realized_expr"):
+            self.process_type(record)
         if(record.target.realized_expr):
             return True
         return False
 
     def filter_record(self, record):
-        self.process_record(record)
+        if not hasattr(record, "target") or not hasattr(record.target, "realized_expr"):
+            self.process_record(record)
         if(record.target.realized_expr):
             return True
         return False
@@ -72,5 +74,7 @@ class Generator(object):
     def generate_impl(self, db, args):
         self.db = db
         template = os.path.join(BASE, "static_ctor.cpp.mako")
-        return db.render(template, db=db, generator = self)
+        if self.filter_enums(db.enums) or self.filter_records(db.records):
+            return db.render(template, db=db, generator = self)
+        return ""
 
