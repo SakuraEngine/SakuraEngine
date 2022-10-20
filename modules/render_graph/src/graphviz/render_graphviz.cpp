@@ -160,7 +160,7 @@ private:
 #include <fstream>
 void RenderGraphViz::write_graphviz(RenderGraph& graph, const char* outf) SKR_NOEXCEPT
 {
-    DependencyGraphBase& g = *DependencyGraphBase::as(graph.graph.get());
+    DependencyGraphBase& g = *DependencyGraphBase::as(graph.graph);
     EdgeWriter<DependencyGraphBase> w(g);
     VertWriter<DependencyGraphBase> v(g);
     std::ofstream ofstm(outf);
