@@ -18,18 +18,3 @@ class SGLTFToolModule : public skr::IDynamicModule
     }
 };
 IMPLEMENT_DYNAMIC_MODULE(SGLTFToolModule, GLTFTool);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "GLTFTool",
-    "prettyname" : "GLTFTool",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-GLTFTool)

@@ -10,25 +10,6 @@
 #endif
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "SkrRenderer",
-    "prettyname" : "SakuraRenderer",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [
-        {"name":"SkrScene", "version":"0.1.0"},
-        {"name":"SkrRenderGraph", "version":"0.1.0"},
-        {"name":"SkrImGui", "version":"0.1.0"}
-    ],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-SkrRenderer)
 
 void SkrRendererModule::on_load(int argc, char** argv)
 {

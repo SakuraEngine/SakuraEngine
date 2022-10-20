@@ -1,4 +1,5 @@
 #include "utils/DAG.boost.hpp"
+#include "utils/dependency_graph.hpp"
 #include "module/module_manager.hpp"
 #include "platform/memory.h"
 #include "EASTL/map.h"
@@ -218,8 +219,8 @@ void ModuleManagerImpl::set_module_property(const eastl::string& entry, const Mo
 {
     DAG::set_vertex_property<ModuleProp_t>(
     DAG::vertex(nodeMap.find(entry)->second,
-    moduleDependecyGraph),
-    moduleDependecyGraph, prop);
+        moduleDependecyGraph),
+        moduleDependecyGraph, prop);
 }
 
 bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename, int argc, char** argv)

@@ -18,20 +18,3 @@ class SkrInputSystemModule : public skr::IDynamicModule
     }
 };
 IMPLEMENT_DYNAMIC_MODULE(SkrInputSystemModule, SkrInputSystem);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "SkrInputSystem",
-    "prettyname" : "Sakura input system",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [
-        {"name":"SkrRT", "version":"0.1.0"}
-    ],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-SkrInputSystem)

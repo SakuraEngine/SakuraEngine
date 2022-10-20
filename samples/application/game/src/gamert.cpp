@@ -9,24 +9,6 @@
 #include "runtime_module.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "GameRT",
-    "prettyname" : "GameRuntime",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [
-        {"name":"SkrRenderer", "version":"0.1.0"}, 
-        {"name":"SkrGAInput", "version":"0.1.0"}
-    ],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-GameRT)
 
 void SGameRTModule::on_load(int argc, char** argv)
 {

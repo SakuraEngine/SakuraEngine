@@ -14,11 +14,12 @@ rule("c++.codegen")
         local target_gendir = path.join(gendir, target:name())
 
         if (not os.exists(target_gendir)) then
-            io.open(path.join(target_gendir, "module.configure.h"), "w")
-            io.open(path.join(target_gendir, "binary_serialize.generated.h"), "w")
-            io.open(path.join(target_gendir, "json_serialize.generated.h"), "w")
-            io.open(path.join(target_gendir, "rtti.generated.hpp"), "w")
-            io.open(path.join(target_gendir, "typeid.generated.hpp"), "w")
+            local nullcontent = "#ifndef __meta__\nstatic_assert(0, \"incomplete file included!\");\n#endif"
+            io.writefile(path.join(target_gendir, "module.configure.h"), nullcontent)
+            io.writefile(path.join(target_gendir, "binary_serialize.generated.h"), nullcontent)
+            io.writefile(path.join(target_gendir, "json_serialize.generated.h"), nullcontent)
+            io.writefile(path.join(target_gendir, "rtti.generated.hpp"), nullcontent)
+            io.writefile(path.join(target_gendir, "typeid.generated.hpp"), nullcontent)
         end
 
         target:data_set("meta.codegen.dir", gendir)

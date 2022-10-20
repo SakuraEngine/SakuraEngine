@@ -75,21 +75,3 @@ void SkrLive2DModule::on_unload()
 }
 
 IMPLEMENT_DYNAMIC_MODULE(SkrLive2DModule, SkrLive2D);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "SkrLive2D",
-    "prettyname" : "SakuraLive2D",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [
-        {"name":"SkrRenderer", "version":"0.1.0"},
-        {"name":"SkrImageCoder", "version":"0.1.0"}
-    ],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-SkrLive2D)
