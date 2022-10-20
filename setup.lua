@@ -62,3 +62,7 @@ for _, setup in ipairs(setups) do
     local basename = path.basename(setup)
     import(path.join(dir, basename))
 end
+
+if (os.host() == "windows") then
+    os.exec("xmake project -k vsxmake -m \"debug,release\" -a x64 -y")
+end

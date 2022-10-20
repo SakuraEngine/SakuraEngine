@@ -30,7 +30,7 @@ rule("skr.module")
             target:add("defines", api.."_IMPL")
         end
     end)
-    after_load(function(target)
+    on_config(function(target)
         -- imports
         import("core.base.option")
         import("core.project.project")
@@ -44,10 +44,7 @@ rule("skr.module")
         -- need build this target?
         module_codegen.skr_module_gen_json(target, jsonfile, dep_modules)
         module_codegen.skr_module_gen_cpp(target, embedfile, dep_modules)
-    end)
-    on_config(function (target)
-        local target_gendir = path.join(target:autogendir({root = true}), target:plat())
-        local embedfile = path.join(target_gendir, "module", "module.configure.cpp")
+        target:add("files", embedfile)
     end)
 rule_end()
 

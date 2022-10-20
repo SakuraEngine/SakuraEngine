@@ -33,3 +33,5 @@ stressTest
 scenes
 /vcpkg_installed
 .history
+/vsxmake
+/vsxmake*

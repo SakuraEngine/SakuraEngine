@@ -7,6 +7,19 @@ includes("xmake/options.lua")
 
 set_languages("c11", "cxx17")
 
+if (is_os("windows")) then 
+    add_defines("_WINDOWS")
+    add_defines("UNICODE")
+    add_defines("_UNICODE")
+    add_defines("NOMINMAX")
+    add_defines("_CRT_SECURE_NO_WARNINGS")
+    if (is_mode("release")) then
+        set_runtimes("MD")
+    else
+        set_runtimes("MDd")
+    end
+end
+
 engine_version = "0.1.0"
 default_unity_batch_size = 8
 
@@ -46,19 +59,6 @@ includes("xmake/thirdparty.lua")
 includes("tools/codegen/xmake.lua")
 
 set_warnings("all")
-
-if (is_os("windows")) then 
-    add_defines("_WINDOWS")
-    add_defines("UNICODE")
-    add_defines("_UNICODE")
-    add_defines("NOMINMAX")
-    add_defines("_CRT_SECURE_NO_WARNINGS")
-    if (is_mode("release")) then
-        set_runtimes("MD")
-    else
-        set_runtimes("MDd")
-    end
-end
 
 includes("modules/xmake.lua")
 
