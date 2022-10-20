@@ -263,6 +263,11 @@ void WriteValue(skr_json_writer_t* writer, T value)
 {
     static_assert(!sizeof(T), "WriteValue not implemented for this type");
 }
+template <class T>
+void WriteFields(skr_json_writer_t* writer, T value)
+{
+    static_assert(!sizeof(T), "WriteFields not implemented for this type");
+}
 
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, bool b);

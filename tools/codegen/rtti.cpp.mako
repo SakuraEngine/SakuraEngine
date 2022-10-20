@@ -1,21 +1,20 @@
-//DO NOT MODIFY THIS FILE
-//generated from rtti.cpp.mako
+// BEGIN RTTI GENERATED
 #include "type/type_registry.h"
 #include "platform/debug.h"
 #include "utils/hash.h"
 #include "utils/log.h"
-%for header in db.headers:
-#include "${header}"
-%endfor
 
-%for record in db.records:
+%for record in generator.filter_rtti(db.records):
 namespace skr::type
 {
-%if record.hashable:
+%if hasattr(record.attrs, "hashable"):
     size_t Hash(const ${record.name}& value, size_t base)
     {
-    %for field in record.allFields():
-        base = Hash(value.${field.name}, base);
+    %for base in record.bases:
+        base = Hash(static_cast<const ${base.name}&>(value), base);
+    %endfor
+    %for name, field in vars(record.fields).items():
+        base = Hash(value.${name}, base);
     %endfor
         return base;
     }
@@ -40,72 +39,76 @@ namespace skr::type
                     +[](void* self, struct skr_value_t* param, size_t nparam) { /*TODO*/ }, //ctor
                     GetCopyCtor<${record.name}>(),
                     GetMoveCtor<${record.name}>(),
-        %if record.hashable:
+            %if hasattr(record.attrs, "hashable"):
                     +[](const void* self, size_t base) { return Hash(*(const ${record.name}*)self, base); }, //hash
-        %else:
+            %else:
                     nullptr, //hash
-        %endif
+            %endif
                 };
-            %if record.fields:
+            %if vars(record.fields):
                 static skr_field_t fields[] = {
-                %for field in record.fields:
-                    {"${field.name}", type_of<${field.type}>::get(), ${field.offset}},
+                %for name, field in vars(record.fields).items():
+                    {"${name}", type_of<${field.type}>::get(), ${field.offset}},
                 %endfor
                 };
             %else:
                 static gsl::span<skr_field_t> fields;
             %endif
-            %for method in record.methods.values():
-            %if record.methods:
-                static skr_field_t ${method.short_name}Params[] = {
-                %for field in method.descs[0].fields:
-                    { "${field.name}", type_of<${field.type}>::get(), ${field.offset}},
-                %endfor
-                };
-            %else:
-                static gsl::span<skr_field_t> ${method.short_name}Params;
-            %endif
+            
+            %for i, method in enumerate(record.methods):
+            {
+                %if vars(method.parameters):
+                    static skr_field_t params${i}[] = {
+                    %for name, field in vars(method.parameters).items():
+                        { "${name}", type_of<${field.type}>::get(), ${field.offset}},
+                    %endfor
+                    };
+                %else:
+                    static gsl::span<skr_field_t> Params${i};
+                %endif
+            }
             %endfor
+            
             %if record.methods:
-                static skr_method_t methods[] = {
-                %for method in record.methods.values():
-                    {
-                        "${method.short_name}", 
-                    %if method.descs[0].retType == "void":
-                        nullptr,
-                    %else:
-                        type_of<${method.descs[0].retType}>::get(), 
-                    %endif
-                        ${method.short_name}Params,
-                        +[](void* self, struct skr_value_ref_t* args, size_t nargs)
-                        {   
-                            skr_value_t result = {};
-                            if(nargs < ${len(method.descs[0].fields)})
-                            {
-                                SKR_LOG_ERROR("[${method.name}] not enough arguments provided.");
-                                return result;
-                            }
-                        %for i, field in enumerate(method.descs[0].fields):
-                            if(!args[${i}].type->Convertible(type_of<${field.type}>::get()))
-                            {
-                                SKR_LOG_ERROR("[${method.name}] argument ${field.name} is not compatible.");
-                                return result;
-                            }
-                        %endfor
-                    %if method.descs[0].retType != "void":
-                            result.Emplace<${method.descs[0].retType}>(((${record.name}*)self)->${method.short_name}(${method.descs[0].getCall()}));
-                    %else:
-                            ((${record.name}*)self)->${method.short_name}(${method.descs[0].getCall()});
-                    %endif
+            static skr_method_t methods[] = {
+            %for i, method in enumerate(record.methods):
+                {
+                    "${db.short_name(method.name)}", 
+                %if method.retType == "void":
+                    nullptr,
+                %else:
+                    type_of<${method.retType}>::get(), 
+                %endif
+                    Params${i},
+                    +[](void* self, struct skr_value_ref_t* args, size_t nargs)
+                    {   
+                        skr_value_t result = {};
+                        if(nargs < ${len(vars(method.fields))})
+                        {
+                            SKR_LOG_ERROR("[${method.name}] not enough arguments provided.");
                             return result;
                         }
-                    },
-                %endfor
+                    %for i, name, field in enumerate(vars(method.fields).items()):
+                        if(!args[${i}].type->Convertible(type_of<${field.type}>::get()))
+                        {
+                            SKR_LOG_ERROR("[${method.name}] argument ${field.name} is not compatible.");
+                            return result;
+                        }
+                    %endfor
+                %if method.retType != "void":
+                        result.Emplace<${method.retType}>(((${record.name}*)self)->${db.short_name(method.name)}(${db.call_expr(method)}));
+                %else:
+                        ((${record.name}*)self)->${db.short_name(method.name)}(${db.call_expr(method)});
+                %endif
+                        return result;
+                    }
+                },
+            %endfor
                 };
             %else:
                 static gsl::span<skr_method_t> methods;
             %endif
-                constexpr skr_guid_t guid = {${record.guidConstant}};
+                constexpr skr_guid_t guid = {${db.guid_constant(record)}};
                 static RecordType type(size, align, name, guid, base, nativeMethods, fields, methods);
                 type_of_${record.id} = &type;
             }
@@ -119,14 +122,14 @@ namespace skr::type
         {
             using namespace skr::type;
             auto registry = GetTypeRegistry();
-            constexpr skr_guid_t guid = {${record.guidConstant}};
+            constexpr skr_guid_t guid = {${db.guid_constant(record)}};
             registry->register_type(guid, type_of<${record.name}>::get());
         }
     } _RegisterRTTI${record.id}Helper;
 
 %endfor
 
-%for enum in db.enums: 
+%for enum in generator.filter_rtti(db.enums): 
 
 namespace skr::type
 {
@@ -134,11 +137,11 @@ namespace skr::type
     {
         static EnumType::Enumerator enumerators[] = 
         {
-        %for enumerator in enum.enumerators:
-            {"${enumerator.short_name}", ${enumerator.value}},
+        %for name, enumerator in vars(enum.values).items():
+            {"${db.short_name(name)}", ${enumerator.value}},
         %endfor
         };
-        constexpr skr_guid_t guid = {${enum.guidConstant}};
+        constexpr skr_guid_t guid = {${db.guid_constant(enum)}};
         static EnumType type{
             type_of<std::underlying_type_t<${enum.name}>>::get(),
             "${enum.name}", guid,
@@ -149,8 +152,8 @@ namespace skr::type
                 auto hash = hash_crc32<char>({enumStr.data(), enumStr.size()});
                 switch(hash)
                 {
-                %for enumerator in enum.enumerators:
-                    case hash_crc32<char>("${enumerator.short_name}"): if( enumStr.compare("${enumerator.short_name}") == 0) This = ${enum.name}::${enumerator.short_name}; return;
+                %for name, enumerator in vars(enum.values).items():
+                    case hash_crc32<char>("${db.short_name(name)}"): if( enumStr.compare("${db.short_name(name)}") == 0) This = ${name}; return;
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
@@ -160,8 +163,8 @@ namespace skr::type
                 auto& This = *((const ${enum.name}*)self);
                 switch(This)
                 {
-                %for enumerator in enum.enumerators:
-                    case ${enum.name}::${enumerator.short_name}: return eastl::string("${enumerator.short_name}");
+                %for name, enumerator in vars(enum.values).items():
+                    case ${name}: return eastl::string("${db.short_name(name)}");
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
@@ -178,9 +181,10 @@ namespace skr::type
         {
             using namespace skr::type;
             auto registry = GetTypeRegistry();
-            constexpr skr_guid_t guid = {${enum.guidConstant}};
+            constexpr skr_guid_t guid = {${db.guid_constant(enum)}};
             registry->register_type(guid, type_of<${enum.name}>::get());
         }
     } _RegisterRTTI${enum.id}Helper;
     
 %endfor
+//END RTTI GENERATED

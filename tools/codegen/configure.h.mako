@@ -41,3 +41,7 @@
         #define ${api}_LOCAL
     #endif
 #endif
+
+#if !defined(__meta__)
+    #include "${module}/generated.h"
+#endif

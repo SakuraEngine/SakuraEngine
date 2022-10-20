@@ -4,16 +4,12 @@
 #include <EASTL/string.h>
 #include <EASTL/unique_ptr.h>
 #include "rtti-test-types/module.configure.h"
-#ifndef __meta__
-    #include "rtti-test-types/typeid.generated.hpp"
-    #include "rtti-test-types/rtti.generated.hpp"
-#endif
 
-// TODO: Move To Core
+// TODO: Move To Core 
 struct SRuntimeAttribute
 {
 
-};
+}; 
 
 template<typename T>
 void XXXInformation()
@@ -48,6 +44,7 @@ sstatic_ctor(XXXInformation<$T>());
 
 sreflect_struct("guid" : "25809bab-41e8-48c5-806b-1ae4af3edfef")
 sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"])
 TestParent
 {
     eastl::string buffer;
@@ -56,6 +53,7 @@ sstatic_ctor(CreateBuffers());
 
 sreflect_struct("guid" : "d55175b2-9d7f-47b8-bccd-a06aeac55240")
 sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"])
 TestSon : public TestParent
 {
     eastl::string sex;
