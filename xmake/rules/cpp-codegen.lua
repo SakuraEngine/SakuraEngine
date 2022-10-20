@@ -16,7 +16,6 @@ rule("c++.codegen")
         if (not os.exists(target_gendir)) then
             local nullcontent = "#ifndef __meta__\nstatic_assert(0, \"incomplete file included!\");\n#endif"
             io.writefile(path.join(target_gendir, "module.configure.h"), nullcontent)
-            io.writefile(path.join(target_gendir, "generated.h"), nullcontent)
         end
 
         target:data_set("meta.codegen.dir", gendir)

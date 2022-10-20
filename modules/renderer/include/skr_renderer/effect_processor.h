@@ -3,6 +3,9 @@
 #include "ecs/dual.h"
 #include "ecs/dualX.h"
 #include "skr_renderer/primitive_pass.h"
+#ifndef __meta__
+    #include "SkrRenderer/skr_renderer/effect_processor.generated.h"
+#endif
 
 typedef const char* skr_render_effect_name_t;
 struct sreflect sattr(

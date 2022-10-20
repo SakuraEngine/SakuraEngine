@@ -1,6 +1,9 @@
 #pragma once
 #include "GameRT/module.configure.h"
 #include "resource/config_resource.h"
+#ifndef __meta__
+    #include "GameRT/backend_config.generated.h"
+#endif
 
 sreflect_enum("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")
 sattr("serialize" : ["json", "bin"])

@@ -2,6 +2,10 @@
 #include "SkrScene/module.configure.h"
 #include "utils/types.h"
 #include "ecs/dual.h"
+#ifndef __meta__
+    #include "SkrScene/skr_scene/scene.generated.h"
+#endif
+
 // scene hierarchy
 
 struct sreflect sattr(
