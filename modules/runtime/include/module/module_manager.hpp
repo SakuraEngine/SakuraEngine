@@ -1,12 +1,14 @@
 #pragma once
 #include "module.hpp"
+#include "utils/dependency_graph.hpp"
 
 RUNTIME_EXTERN_C RUNTIME_API 
 skr::ModuleManager* skr_get_module_manager();
 
 namespace skr
 {
-struct ModuleProperty {
+struct ModuleProperty : public DependencyGraphNode 
+{
     bool bActive = false;
     eastl::string name;
 };
@@ -24,8 +26,7 @@ public:
     virtual bool destroy_module_graph(void) = 0;
     virtual void mount(const char8_t* path) = 0;
     virtual eastl::string_view get_root(void) = 0;
-    virtual ModuleProperty get_module_property(const eastl::string& name) = 0;
-    virtual void set_module_property(const eastl::string& name, const ModuleProperty& prop) = 0;
+    virtual ModuleProperty& get_module_property(const eastl::string& name) = 0;
 
     virtual void registerStaticallyLinkedModule(const char* moduleName, module_registerer _register) = 0;
 

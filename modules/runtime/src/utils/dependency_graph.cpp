@@ -41,10 +41,13 @@ public:
     virtual bool link(Node* from, Node* to, Edge* edge) SKR_NOEXCEPT final
     {
         auto&& result = DAG::add_edge(get_descriptor(from), get_descriptor(to), edge, *this);
-        edge->graph = this;
-        edge->from_node = from->get_id();
-        edge->to_node = to->get_id();
-        edge->on_link();
+        if (edge)
+        {
+            edge->graph = this;
+            edge->from_node = from->get_id();
+            edge->to_node = to->get_id();
+            edge->on_link();
+        }
         return result.second;
     }
     virtual Edge* linkage(Node* from, Node* to) SKR_NOEXCEPT final
@@ -276,6 +279,11 @@ uint32_t DependencyGraphNode::foreach_inv_neighbors(eastl::function<void(const D
 
 namespace skr
 {
+void DependencyGraph::Destroy(DependencyGraph* graph) SKR_NOEXCEPT
+{
+    delete graph;
+}
+
 DependencyGraph* DependencyGraph::Create() SKR_NOEXCEPT
 {
     return new DependencyGraphImpl();

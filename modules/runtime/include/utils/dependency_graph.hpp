@@ -57,6 +57,7 @@ public:
     using Node = DependencyGraphNode;
     using Edge = DependencyGraphEdge;
     static DependencyGraph* Create() SKR_NOEXCEPT;
+    static void Destroy(DependencyGraph* graph) SKR_NOEXCEPT;
     virtual ~DependencyGraph() SKR_NOEXCEPT = default;
     virtual dep_graph_handle_t insert(Node* node) SKR_NOEXCEPT = 0;
     virtual Node* access_node(dep_graph_handle_t handle) SKR_NOEXCEPT = 0;

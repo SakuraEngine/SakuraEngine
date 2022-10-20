@@ -192,6 +192,7 @@ TEST(GraphTest, DependencyGraph)
         std::cout << "edge: " << ((TestRDGNode*)from)->name.c_str()
                   << " -> " << ((TestRDGNode*)to)->name.c_str() << std::endl;
     });
+    skr::DependencyGraph::Destroy(rdg);
     delete rdg;
 }
 

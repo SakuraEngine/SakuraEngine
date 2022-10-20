@@ -200,6 +200,7 @@ void RenderGraph::destroy(RenderGraph* g) SKR_NOEXCEPT
 
 void RenderGraphBackend::initialize() SKR_NOEXCEPT
 {
+    RenderGraph::initialize();
     backend = device->adapter->instance->backend;
     for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
     {
@@ -212,6 +213,7 @@ void RenderGraphBackend::initialize() SKR_NOEXCEPT
 
 void RenderGraphBackend::finalize() SKR_NOEXCEPT
 {
+    RenderGraph::finalize();
     for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
     {
         executors[i].finalize();

@@ -287,10 +287,12 @@ uint64_t RenderGraph::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 
 void RenderGraph::initialize() SKR_NOEXCEPT
 {
+    graph = DependencyGraph::Create();
 }
 
 void RenderGraph::finalize() SKR_NOEXCEPT
 {
+    DependencyGraph::Destroy(graph);
 }
 } // namespace render_graph
 } // namespace skr

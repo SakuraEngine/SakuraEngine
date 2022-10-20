@@ -1,5 +1,3 @@
-#include "utils/DAG.boost.hpp"
-#include "utils/dependency_graph.hpp"
 #include "module/module_manager.hpp"
 #include "platform/memory.h"
 #include "EASTL/map.h"
@@ -9,14 +7,6 @@
 
 namespace skr
 {
-using namespace boost;
-struct ModuleProp_t {
-    using kind = vertex_property_tag;
-};
-using ModuleProp = property<ModuleProp_t, ModuleProperty>;
-using ModuleGraphImpl = skr::DAG::Graph<ModuleProp>;
-using ModuleNode = skr::DAG::GraphVertex<ModuleProp>;
-
 class ModuleManagerImpl : public skr::ModuleManager
 {
 public:
@@ -24,8 +14,16 @@ public:
     {
         auto sucess = processSymbolTable.load(nullptr);
         assert(sucess && "Failed to load symbol table");
+        dependency_graph = skr::DependencyGraph::Create();
     }
-    ~ModuleManagerImpl() = default;
+    ~ModuleManagerImpl()
+    {
+        for (auto&& iter : nodeMap)
+        {
+            SkrDelete(iter.second);
+        }
+        skr::DependencyGraph::Destroy(dependency_graph);
+    }
     virtual IModule* get_module(const eastl::string& name) final;
     virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = true) final;
     virtual bool patch_module_graph(const eastl::string& name, bool shared = true, int argc = 0, char** argv = nullptr) final;
@@ -33,8 +31,7 @@ public:
     virtual bool destroy_module_graph(void) final;
     virtual void mount(const char8_t* path) final;
     virtual eastl::string_view get_root(void) final;
-    virtual ModuleProperty get_module_property(const eastl::string& name) final;
-    virtual void set_module_property(const eastl::string& name, const ModuleProperty& prop) final;
+    virtual ModuleProperty& get_module_property(const eastl::string& name) final;
 
     virtual void registerStaticallyLinkedModule(const char* moduleName, module_registerer _register) final;
 
@@ -53,8 +50,9 @@ private:
     eastl::string moduleDir;
     eastl::vector<eastl::string> roots;
     eastl::string mainModuleName;
-    ModuleGraphImpl moduleDependecyGraph;
-    eastl::map<eastl::string, int32_t, eastl::less<>> nodeMap;
+    // ModuleGraphImpl moduleDependecyGraph;
+    skr::DependencyGraph* dependency_graph = nullptr;
+    eastl::map<eastl::string, ModuleProperty*, eastl::less<>> nodeMap;
     eastl::map<eastl::string, module_registerer, eastl::less<>> initializeMap;
     eastl::map<eastl::string, eastl::unique_ptr<IModule>, eastl::less<>> modulesMap;
 
@@ -207,20 +205,9 @@ IModule* ModuleManagerImpl::get_module(const eastl::string& name)
     return modulesMap.find(name)->second.get();
 }
 
-ModuleProperty ModuleManagerImpl::get_module_property(const eastl::string& entry)
+ModuleProperty& ModuleManagerImpl::get_module_property(const eastl::string& entry)
 {
-    if (nodeMap.find(entry) == nodeMap.end())
-        assert(0 && "Module Node not found");
-    auto node = ModuleNode(nodeMap[entry]);
-    return DAG::get_vertex_property<ModuleProp_t>(node, moduleDependecyGraph);
-}
-
-void ModuleManagerImpl::set_module_property(const eastl::string& entry, const ModuleProperty& prop)
-{
-    DAG::set_vertex_property<ModuleProp_t>(
-    DAG::vertex(nodeMap.find(entry)->second,
-        moduleDependecyGraph),
-        moduleDependecyGraph, prop);
+    return *nodeMap.find(entry)->second;
 }
 
 bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename, int argc, char** argv)
@@ -234,11 +221,10 @@ bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename
         if (!__internal_InitModuleGraph(iter.name, argc, argv))
             return false;
     }
-    get_module(nodename)->on_load(argc, argv);
-    ModuleProperty prop;
-    prop.bActive = true;
-    prop.name = nodename;
-    set_module_property(nodename, prop);
+    auto this_module = get_module(nodename);
+    this_module->on_load(argc, argv);
+    nodeMap[nodename]->bActive = true;
+    nodeMap[nodename]->name = nodename;
     return true;
 }
 
@@ -246,21 +232,15 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& noden
 {
     if (!get_module_property(nodename).bActive)
         return true;
-    auto nexts = DAG::inv_adjacent_vertices(
-    ModuleNode(nodeMap.find(nodename)->second), moduleDependecyGraph);
-    for (auto iter = nexts.first; iter != nexts.second; iter++)
-    {
-        auto name = DAG::get_vertex_property<ModuleProp_t>(*iter, moduleDependecyGraph).name;
-        auto n = get_module_property(name);
-        __internal_DestroyModuleGraph(n.name);
-    }
+    dependency_graph->foreach_inv_neighbors(nodeMap.find(nodename)->second, 
+    [this](DependencyGraphNode* node){
+        ModuleProperty* property = static_cast<ModuleProperty*>(node);
+        __internal_DestroyModuleGraph(property->name);
+    });
     get_module(nodename)->on_unload();
     modulesMap[nodename].reset();
-    // DAG::remove_vertex(nodeMap[nodename], moduleDependecyGraph);
-    ModuleProperty prop;
-    prop.bActive = false;
-    prop.name = get_module_property(nodename).name;
-    set_module_property(nodename, prop);
+    nodeMap[nodename]->bActive = false;
+    nodeMap[nodename]->name = nodename;
     return true;
 }
 
@@ -292,11 +272,10 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, b
                   spawnDynamicModule(entry) :
                   spawnStaticModule(entry);
     }
-    nodeMap[entry] = (int32_t)nodeMap.size();
-    ModuleProperty prop;
-    prop.name = entry;
-    prop.bActive = false;
-    DAG::add_vertex(prop, moduleDependecyGraph);
+    auto prop = nodeMap[entry] = SkrNew<ModuleProperty>();
+    prop->name = entry;
+    prop->bActive = false;
+    dependency_graph->insert(prop);
     if (_module->get_module_info()->dependencies.size() == 0)
         roots.push_back(entry);
     for (auto i = 0u; i < _module->get_module_info()->dependencies.size(); i++)
@@ -307,7 +286,8 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, b
             __internal_MakeModuleGraph(iterName, false);
         else
             __internal_MakeModuleGraph(iterName, true);
-        DAG::add_edge(nodeMap[entry], nodeMap[iterName], moduleDependecyGraph);
+
+        dependency_graph->link(nodeMap[entry], nodeMap[iterName]);
     }
 }
 
@@ -315,7 +295,7 @@ const ModuleGraph* ModuleManagerImpl::make_module_graph(const eastl::string& ent
 {
     mainModuleName = entry;
     __internal_MakeModuleGraph(entry, shared);
-    return (struct ModuleGraph*)&moduleDependecyGraph;
+    return (struct ModuleGraph*)dependency_graph;
 }
 
 bool ModuleManagerImpl::patch_module_graph(const eastl::string& entry, bool shared, int argc, char** argv)
