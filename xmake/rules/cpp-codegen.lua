@@ -52,7 +52,7 @@ rule("c++.codegen")
 
             -- add commands
             batchcmds:mkdir(path.directory(sourcefile_cx))
-            batchcmds:compile(sourcefile_cx, objectfile)
+            batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = gendir, languages = "c++17"}})
 
             -- add deps
             batchcmds:add_depfiles(sourcefile_cx)

@@ -6,10 +6,6 @@
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
 
-#if !defined(__meta__) && defined(__cplusplus)
-    #include "UsdTool/json_serialize.generated.h"
-#endif
-
 namespace skd sreflect
 {
 namespace asset sreflect

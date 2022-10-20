@@ -2,9 +2,6 @@
 #include "utils/log.hpp"
 #include "platform/guid.hpp"
 #include "../types/types.hpp"
-#if !defined(__meta__) && defined(__cplusplus)
-#include "rtti-test-types/typeid.generated.hpp"
-#endif
 
 class RTTI : public ::testing::Test
 {
@@ -32,10 +29,6 @@ TEST_F(RTTI, TypeId)
     SKR_LOG_FMT_DEBUG("u8 type id: {}", skr::type::type_id<uint32_t>::get());
     SKR_LOG_FMT_DEBUG("TestEnum type id: {}", skr::type::type_id<Types::TestEnum>::get());
 }
-
-#if !defined(__meta__) && defined(__cplusplus)
-#include "rtti-test-types/rtti.generated.hpp"
-#endif
 
 TEST_F(RTTI, TestEnumType)
 {

@@ -9,7 +9,7 @@ template<class S>
 int __Archive(S* archive, ${record.name}& record)
 {
     int ret = 0;
-    %for name, field in vars(record.fields).items():
+    %for name, field in generator.filter_fields(record.fields):
     ret = Archive(archive, record.${name});
     if(ret != 0)
         return ret;
@@ -31,7 +31,7 @@ template<>
 int WriteValue(skr_binary_writer_t* archive, const ${record.name}& record)
 {
 %for base in record.bases:
-    int ret = WriteValue(archive, (const ${base}&)record);
+    int ret = WriteValue<const ${base}&>(archive, record);
     if(ret != 0)
         return ret;
 %endfor
