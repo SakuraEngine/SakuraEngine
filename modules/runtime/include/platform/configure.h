@@ -63,8 +63,9 @@
 #endif
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
-#define simport_struct_impl(idx, name, guid) struct sreflect import_##idx { using type = name; } sattr("import" : guid)
-#define simport_struct(name, guid) simport_struct_impl(__COUNTER__, name, guid)
+#define simport_struct_impl_impl(idx, name) struct sreflect import_##idx { using type = ::name; } sattr("inject" : #name)
+#define simport_struct_impl(idx, name) simport_struct_impl_impl(idx, name)
+#define simport_struct(name) simport_struct_impl(__COUNTER__, name)
 
 
 typedef struct $T { uint32_t _; } $T;

@@ -169,6 +169,26 @@ end
 function _weak_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
     -- generate headers dummy
     local weak_mako_generators = {
+    }
+    -- calculate if weak makos need to be rebuild
+    local need_mako = target:data("reflection.need_mako")
+    local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
+    local rebuild = need_mako and not disable_meta
+    for _, generator in ipairs(weak_mako_generators) do
+        local dependfile = target:dependfile(generator[1])
+        depend.on_changed(function ()
+            rebuild = true
+        end, {dependfile = dependfile, files = generator});
+    end
+    -- rebuild
+    if (rebuild) then
+        _mako_compile_template(target, weak_mako_generators, false, metadir, gendir, opt)
+    end
+end
+
+function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
+    -- generate headers dummy
+    local strong_mako_generators = {
         {
             os.projectdir()..vformat("/tools/codegen/typeid.py"),
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
@@ -198,26 +218,6 @@ function _weak_mako_compile(target, rootdir, metadir, gendir, unityfile, headerf
             os.projectdir()..vformat("/tools/codegen/binary_serialize.cpp.mako"),
         },
     }
-    -- calculate if weak makos need to be rebuild
-    local need_mako = target:data("reflection.need_mako")
-    local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
-    local rebuild = need_mako and not disable_meta
-    for _, generator in ipairs(weak_mako_generators) do
-        local dependfile = target:dependfile(generator[1])
-        depend.on_changed(function ()
-            rebuild = true
-        end, {dependfile = dependfile, files = generator});
-    end
-    -- rebuild
-    if (rebuild) then
-        _mako_compile_template(target, weak_mako_generators, false, metadir, gendir, opt)
-    end
-end
-
-function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
-    -- generate headers dummy
-    local strong_mako_generators = {
-    }
     -- calculate if strong makos need to be rebuild
     local need_mako = target:data("reflection.need_mako")
     local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
@@ -230,7 +230,7 @@ function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, heade
     end
     -- rebuild
     if (rebuild) then
-        _mako_compile_template(target, strong_mako_generators, true, metadir, gendir, opt)
+        _mako_compile_template(target, strong_mako_generators, true, metadir, gendir, opt, true)
     end
 end
 
@@ -353,9 +353,9 @@ function generate_once(targetname)
                 -- wait self metas
                 scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
                 -- resume weak makos
-                scheduler.co_group_begin(target:name()..".cpp-codegen.weak_mako", function ()
-                    scheduler.co_start(compile_task, _weak_mako_compile, target, opt)
-                end)
+                -- scheduler.co_group_begin(target:name()..".cpp-codegen.weak_mako", function ()
+                --     scheduler.co_start(compile_task, _weak_mako_compile, target, opt)
+                -- end)
                 -- wait deps metas
                 for _, dep in pairs(target:deps()) do
                     if dep:rule("c++.codegen") then

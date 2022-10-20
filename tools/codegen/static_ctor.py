@@ -7,32 +7,36 @@ class Generator(object):
 
     def filter_enum(self, record):
         self.process_type(record)
-        if(record.realized_expr):
+        if(record.target.realized_expr):
             return True
         return False
 
     def filter_record(self, record):
         self.process_record(record)
-        if(record.realized_expr):
+        if(record.target.realized_expr):
             return True
         return False
 
     def process_type(self, record):
-        record.realized_expr = []
+        if hasattr(record.attrs, "inject"):
+            record.target = self.db.name_to_record[record.attrs.inject]
+        else:
+            record.target = record
+        record.target.realized_expr = []
         for name, attr in vars(record.attrs).items():
             if name.startswith("StaticCtor"):
-                record.realized_expr.append(self.realize_record_expr(record, attr))
+                record.target.realized_expr.append(self.realize_record_expr(record.target, attr))
 
     def process_record(self, record):
         self.process_type(record)
-        for fieldname, field in vars(record.fields).items():
+        for fieldname, field in vars(record.target.fields).items():
             for name, attr in vars(field.attrs).items():
                 if name.startswith("StaticCtor"):
-                    record.realized_expr.append(self.realize_field_expr(fieldname, field, record, attr))
-        for method in record.methods:
+                    record.target.realized_expr.append(self.realize_field_expr(fieldname, field, record.target, attr))
+        for method in record.target.methods:
             for name, attr in vars(method.attrs).items():
                 if name.startswith("StaticCtor"):
-                    record.realized_expr.append(self.realize_method_expr(method.name, method, record, attr))
+                    record.target.realized_expr.append(self.realize_method_expr(method.name, record.target, record, attr))
 
     def realize_record_expr(self, record, expr : str): 
         expr = expr.replace("$T", record.name)
@@ -60,10 +64,10 @@ class Generator(object):
         return expr
     
     def filter_records(self, records):
-        return [record for record in records if self.filter_record(record)]
+        return [record.target for record in records if self.filter_record(record)]
 
     def filter_enums(self, enums):
-        return [enum for enum in enums if self.filter_enum(enum)]
+        return [enum.target for enum in enums if self.filter_enum(enum)]
     
     def generate_impl(self, db, args):
         self.db = db

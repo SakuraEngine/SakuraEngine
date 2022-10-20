@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "GameRT/module.configure.h"
 #include "resource/config_resource.h"
 
 sreflect_enum("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")
@@ -19,6 +19,5 @@ config_backend_t
 }
 sattr("serialize" : ["json", "bin"])
 sattr("rtti" : true)
-sattr("config" : true)
 sregister_config(); 
 typedef struct config_backend_t config_backend_t;
