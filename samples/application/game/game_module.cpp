@@ -1,6 +1,7 @@
 #include "../../cgpu/common/utils.h"
 #include <EASTL/shared_ptr.h>
 #include "gamert.h"
+#include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "math/vector.hpp"
 #include "platform/configure.h"
@@ -252,7 +253,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     window = skr_create_window(
-        fmt::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
+        skr::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
         &window_desc);
     // Initialize renderer
     auto swapchain = skr_render_device_register_window(render_device, window);

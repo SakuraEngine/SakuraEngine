@@ -18,6 +18,7 @@ rule("skr.shared")
 rule_end()
 
 rule("skr.module")
+    set_sourcekinds("cxx")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.module", "api")
         local version = target:extraconf("rules", "skr.module", "version")
@@ -44,7 +45,31 @@ rule("skr.module")
         -- need build this target?
         module_codegen.skr_module_gen_json(target, jsonfile, dep_modules)
         module_codegen.skr_module_gen_cpp(target, embedfile, dep_modules)
-        target:add("files", embedfile)
+        target:data_set("module.meta.cpp", embedfile)
+    end)
+    before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
+        -- avoid duplicate linking of object files
+        sourcebatch.objectfiles = {}
+    end)
+    on_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
+        -- add to sourcebatch
+        local file = target:data("module.meta.cpp")
+        local sourcebatches = target:sourcebatches()
+        -- compile generated cpp files
+        local sourcefile_cx = path.absolute(file)
+        -- add objectfile
+        local objectfile = target:objectfile(file)
+        table.insert(target:objectfiles(), objectfile)
+        if not opt.quiet then
+            batchcmds:show_progress(opt.progress, "${color.build.object}[%s]: compiling.module.meta %s", target:name(), file)
+        end
+        -- add commands
+        batchcmds:mkdir(path.directory(sourcefile_cx))
+        batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = gendir, languages = "c++17"}})
+        -- add deps
+        batchcmds:add_depfiles(sourcefile_cx)
+        batchcmds:set_depmtime(os.mtime(objectfile))
+        batchcmds:set_depcache(target:dependfile(objectfile))
     end)
 rule_end()
 
