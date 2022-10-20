@@ -1,7 +1,7 @@
 #pragma once
+#include "SkrInputSystem/module.configure.h"
 #include "EASTL/algorithm.h"
 #include "SkrInputSystem/module.configure.h"
-#include <stdint.h>
 
 namespace skr::input
 {

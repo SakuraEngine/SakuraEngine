@@ -1,40 +1,31 @@
-#include "gamert.h"
-#include "EASTL/shared_ptr.h"
-#include "gainput/GainputInputDevicePad.h"
-#include "platform/configure.h"
-#include "ghc/filesystem.hpp"
-#include "platform/memory.h"
-#include "utils/format.hpp"
-#include "resource/resource_system.h"
-#include "resource/local_resource_registry.h"
-#include "ecs/dual.h"
 #include "../../cgpu/common/utils.h"
-#include "ghc/filesystem.hpp"
+#include <EASTL/shared_ptr.h>
+#include "gamert.h"
+#include "utils/make_zeroed.hpp"
+#include "math/vector.hpp"
+#include "platform/configure.h"
+#include "platform/memory.h"
 #include "platform/time.h"
 #include "platform/window.h"
-#include "resource/local_resource_registry.h"
+#include "ecs/callback.hpp"
+#include "ecs/type_builder.hpp"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/skr_imgui_rg.h"
 #include "imgui/imgui.h"
-#include "resource/resource_system.h"
-#include "skr_input/Interactions.h"
-#include "skr_input/InteractionsType.h"
-#include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
 #include "skr_renderer/skr_renderer.h"
-#include "gainput/gainput.h"
-#include "gainput/GainputInputDeviceKeyboard.h"
-#include "gainput/GainputInputDeviceMouse.h"
-#include "gamert.h"
-#include "ecs/callback.hpp"
-#include "ecs/type_builder.hpp"
-#include "skr_input/inputSystem.h"
 #include "skr_renderer/render_mesh.h"
-#include "math/vector.hpp"
+
+#include "skr_input/inputSystem.h"
+#include "skr_input/Interactions.h"
+#include "skr_input/InteractionsType.h"
+#include "gainput/GainputInputDevicePad.h"
+#include "gainput/GainputInputDeviceKeyboard.h"
 #include "task/task.hpp"
 
 #include "tracy/Tracy.hpp"
+#include "utils/types.h"
 
 SWindowHandle window;
 uint32_t backbuffer_index;
@@ -316,7 +307,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             inputSystem.AddInputAction(action);
         }
         {
-            auto action = eastl::make_shared<InputAction<skr::math::Vector2f>>();
+            auto action = eastl::make_shared<InputAction<skr_float2_t>>();
             auto controls1 = eastl::make_shared<Vector2Control>();
             controls1->Bind(
                 Vector2Control::ButtonDirection{
@@ -332,10 +323,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
                 }
             );
-            auto interactionPress = eastl::make_shared<InteractionPress<skr::math::Vector2f>>(PressBehavior::PressAndRelease, 0.5f);
+            auto interactionPress = eastl::make_shared<InteractionPress<skr_float2_t>>(PressBehavior::PressAndRelease, 0.5f);
             controls1->AddInteraction(interactionPress);
             action->AddControl(controls1);
-            action->ListenEvent([interactionPress](skr::math::Vector2f value, ControlsBase<skr::math::Vector2f>* _c, Interaction* i, Interaction::EvendId eventId)
+            action->ListenEvent([interactionPress](skr_float2_t value, ControlsBase<skr_float2_t>* _c, Interaction* i, Interaction::EvendId eventId)
             {
                 if(interactionPress.get() == i)
                 {

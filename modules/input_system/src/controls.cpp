@@ -229,7 +229,7 @@ void Vector2Control::UpdateRawValue()
     x = eastl::clamp(x, _min_x, _max_x);
     y = eastl::clamp(y, _min_y, _max_y);
 
-    const math::Vector2f newValue{eastl::clamp(x + right - left, _min_x, _max_x), eastl::clamp(y + up - down, _min_y, _max_y)};
+    const skr_float2_t newValue{eastl::clamp(x + right - left, _min_x, _max_x), eastl::clamp(y + up - down, _min_y, _max_y)};
     // SKR_LOG_DEBUG("Vector2Control    newValue(X:%f,Y:%f) OldValue(X:%f,Y:%f)  ", newValue.X, newValue.Y, _rawValue.X, _rawValue.Y);
     SetRawValue(newValue);
 }
