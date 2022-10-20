@@ -2,10 +2,6 @@
 #include "SkrScene/module.configure.h"
 #include "utils/types.h"
 #include "ecs/dual.h"
-#if !defined(__meta__) && defined(__cplusplus)
-    #include "SkrScene/dual.generated.hpp"
-#endif
-
 // scene hierarchy
 
 struct sreflect sattr(

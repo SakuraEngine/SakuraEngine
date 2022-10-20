@@ -26,7 +26,7 @@ class Generator(object):
     def process_record(self, record):
         self.process_type(record)
         for fieldname, field in vars(record.fields).items():
-            for name, attr in vars(record.attrs).items():
+            for name, attr in vars(field.attrs).items():
                 if name.startswith("StaticCtor"):
                     record.realized_expr.append(self.realize_field_expr(fieldname, field, record, attr))
         for method in record.methods:

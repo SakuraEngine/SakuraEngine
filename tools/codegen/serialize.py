@@ -10,6 +10,9 @@ class Generator(object):
             if "bin" in record.attrs.serialize:
                 return True
     
+    def filter_fields(self, fields):
+        return [(f, v) for f, v in vars(fields).items() if not hasattr(v.attrs, "transient")]
+
     def filter_types(self, records):
         return [record for record in records if self.filter_type(record)]
 

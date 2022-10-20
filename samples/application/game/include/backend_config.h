@@ -1,11 +1,6 @@
 #pragma once
 #include "platform/configure.h"
 #include "resource/config_resource.h"
-#if !defined(__meta__) && defined(__cplusplus)
-    #include "GameRT/rtti.generated.hpp"
-    #include "GameRT/json_serialize.generated.h"
-    #include "GameRT/binary_serialize.generated.h"
-#endif
 
 sreflect_enum("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")
 sattr("serialize" : ["json", "bin"])

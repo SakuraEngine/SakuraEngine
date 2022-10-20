@@ -5,9 +5,6 @@
 #include "utils/types.h"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"
-#if !defined(__meta__) && defined(__cplusplus)
-    #include "SkrTool/json_serialize.generated.h"
-#endif
 
 namespace skd sreflect
 {

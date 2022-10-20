@@ -1,9 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "utils/types.h"
-#if !defined (__meta__) && defined (__cplusplus)
-    #include "SkrRenderer/binary_serialize.generated.h"
-#endif
 
 typedef uint64_t skr_vertex_layout_id;
 

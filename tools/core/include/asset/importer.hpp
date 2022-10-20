@@ -8,10 +8,6 @@
 #include "json/reader.h"
 #include "resource/resource_header.h"
 #include "asset/cooker.hpp"
-#if !defined(__meta__) 
-#include "SkrTool/json_serialize.generated.h"
-#endif
-
 namespace skr::io
 {
 class RAMService;

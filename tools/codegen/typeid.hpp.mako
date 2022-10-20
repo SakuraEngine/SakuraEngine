@@ -1,5 +1,4 @@
 //BEGIN TYPEID GENERATED
-#pragma once
 #include "type/type_id.hpp"
 
 namespace skr::type

@@ -53,7 +53,7 @@ error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
         ReadValue(std::move(baseJson), (${base}&)record);
     }
     %endfor
-    %for name, field in vars(record.fields).items():
+    %for name, field in generator.filter_fields(record.fields):
     {
         auto field = json["${name}"];
         if (field.error() == simdjson::NO_SUCH_FIELD)
@@ -82,18 +82,18 @@ template<>
 void WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
 {
     %for base in record.bases:
-    WriteFields(writer, (const ${base}&)record);
+    WriteFields<const ${base}&>(writer, record);
     %endfor
     %for name, field in vars(record.fields).items():
     writer->Key("${name}", ${len(name)});
-    skr::json::Write<TParamType<${field.type}>>(writer, record.${name});
+    skr::json::Write<skr::json::TParamType<${field.type}>>(writer, record.${name});
     %endfor
 } 
 template<>
 void WriteValue(skr_json_writer_t* writer, const ${record.name}& record)
 {
     writer->StartObject();
-    WriteFields(writer, record);
+    WriteFields<const ${record.name}&>(writer, record);
     writer->EndObject();
 } 
 %endif

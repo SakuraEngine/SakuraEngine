@@ -86,7 +86,7 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
         generator,
         "-root", path.absolute(metadir),
         "-outdir", gendir,
-        "-api", api or target:name(),
+        "-api", api and api:upper() or target:name():upper(),
     }
     if strong then
         table.insert(command, "-includes")
