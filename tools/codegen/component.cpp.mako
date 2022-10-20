@@ -2,8 +2,7 @@
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 
-%for type in db.records:
-%if generator.filter_record(type):
+%for type in generator.filter_records(db.records):
 static struct RegisterComponent${type.id}Helper
 {
     RegisterComponent${type.id}Helper()
@@ -51,7 +50,6 @@ dual_type_index_t dual_id_of<::${type.name}>::get()
     SKR_ASSERT(result != DUAL_NULL_TYPE);
     return result;
 }
-%endif
 %endfor
 
 //END DUAL GENERATED
