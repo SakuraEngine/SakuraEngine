@@ -30,8 +30,13 @@ bool is_array_small(dual_array_component_t* ptr)
     return ptr->BeginX < ((char*)(ptr + 1) + alignof(std::max_align_t));
 }
 
-static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data))
+static void construct_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data))
 {
+    if(type.is_chunk())
+    {
+        view.start = 0;
+        view.count = 1;
+    }
     char* dst = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
         forloop (j, 0, view.count)
@@ -62,8 +67,13 @@ static void construct_impl(const dual_chunk_view_t& view, type_index_t type, EIn
         memset(dst, 0, (size_t)size * view.count);
 }
 
-static void destruct_impl(const dual_chunk_view_t& view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data))
+static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data))
 {
+    if(type.is_chunk())
+    {
+        view.start = 0;
+        view.count = 1;
+    }
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
         forloop (j, 0, view.count)
@@ -80,8 +90,14 @@ static void destruct_impl(const dual_chunk_view_t& view, type_index_t type, EInd
             destructor(view.chunk, view.start + j, (size_t)j * size + src);
 }
 
-static void move_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t srcStart, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src))
+static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcStart, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src))
 {
+    if(type.is_chunk())
+    {
+        dstV.start = 0;
+        dstV.count = 1;
+        srcStart = 0;
+    }
     char* dst = dstV.chunk->data() + (size_t)offset + (size_t)size * dstV.start;
     char* src = srcC->data() + (size_t)offset + (size_t)size * srcStart;
     if (move)
@@ -124,8 +140,14 @@ void memdup(void* dst, const void* src, size_t size, size_t count) noexcept
         memcpy((char*)dst + copied * size, dst, (count - copied) * size);
 }
 
-static void duplicate_impl(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t srcIndex, type_index_t type, EIndex offset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
+static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcIndex, type_index_t type, EIndex offset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
 {
+    if(type.is_chunk())
+    {
+        dstV.start = 0;
+        dstV.count = 1;
+        srcIndex = 0;
+    }
     char* dst = dstV.chunk->data() + (size_t)dstOffset + (size_t)size * dstV.start;
     const char* src = srcC->data() + (size_t)offset + (size_t)size * srcIndex;
     if (type == kGuidComponent)
@@ -430,7 +452,10 @@ auto dualV_get_owned(const dual_chunk_view_t* view, dual_type_index_t type)
     auto scheduler = structure->storage->scheduler;
     if (scheduler && scheduler->is_main_thread(structure->storage))
         scheduler->sync_entry(structure, id);
-    return (return_type)(chunk->data() + structure->sizes[id] * view->start + structure->offsets[chunk->pt][id]);
+    EIndex offset = 0;
+    if (!type_index_t(type).is_chunk())
+        offset = structure->sizes[id] * view->start;
+    return (return_type)(chunk->data() + offset + structure->offsets[chunk->pt][id]);
 }
 
 extern "C" {

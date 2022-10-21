@@ -32,6 +32,9 @@ static struct RegisterComponent${type.id}Helper
         desc.flags = 0;
     %if hasattr(type.attrs.component, "pin"):
         desc.flags |= DTF_PIN;
+    %endif 
+    %if hasattr(type.attrs.component, "chunk"):
+        desc.flags |= DTF_CHUNK;
     %endif
     %if hasattr(type.attrs.component, "buffer"):
         desc.elementSize = sizeof(${type.name});

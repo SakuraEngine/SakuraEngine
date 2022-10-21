@@ -721,15 +721,13 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
             __m128i allmask_128 = _mm_set1_epi32(allmask);
             while (c != nullptr)
             {
-                if (match_chunk_changed(c->type->type, c->timestamps(), meta))
+                if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
                 {
                     c = c->next;
                     continue;
-                    ;
                 }
                 auto count = c->count;
                 dual_chunk_view_t view = { c, 0, c->count };
-                // todo: ensure mask component aligned
                 auto masks = (dual_mask_component_t*)dualV_get_owned_ro(&view, kMaskComponent);
                 EIndex i = 0;
                 while (i < count)
@@ -801,11 +799,10 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
             };
             while (c != nullptr)
             {
-                if (match_chunk_changed(c->type->type, c->timestamps(), meta))
+                if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
                 {
                     c = c->next;
                     continue;
-                    ;
                 }
                 auto count = c->count;
                 dual_chunk_view_t view = { c, 0, c->count };
