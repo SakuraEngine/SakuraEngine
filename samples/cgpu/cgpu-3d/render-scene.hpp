@@ -1,7 +1,7 @@
 #pragma once
 #include "render-context.hpp"
 #include "render-resources.hpp"
-#include "math/vectormath.hpp"
+#include "utils/types.h"
 #include <atomic>
 #include <EASTL/vector.h>
 #include <EASTL/string.h>
@@ -10,11 +10,11 @@
 struct RenderNode {
     RenderNode* parent_;
     eastl::vector<RenderNode*> children_;
-    int32_t index_;
-    struct RenderMesh* mesh_ = nullptr;
-    skr::math::Vector3f translation_ = {};
-    skr::math::Vector3f scale_ = { 1.f, 1.f, 1.f };
-    skr::math::Quaternion rotation_ = {};
+    int32_t index_ SKR_IF_CPP(= -1);
+    struct RenderMesh* mesh_ SKR_IF_CPP(= nullptr);
+    skr_float3_t translation_ SKR_IF_CPP(= {});
+    skr_float3_t scale_ SKR_IF_CPP (= { 1.f, 1.f, 1.f });
+    skr_quaternion_t rotation_ SKR_IF_CPP(= {});
 };
 
 struct RenderMaterial {

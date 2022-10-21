@@ -82,6 +82,16 @@ typedef struct SKR_ALIGNAS(16) skr_float4_t {
     };
 } skr_float4_t;
 
+typedef struct SKR_ALIGNAS(16) skr_quaternion_t {
+    struct 
+    {
+        float x SKR_IF_CPP( = 0.f);
+        float y SKR_IF_CPP( = 0.f);
+        float z SKR_IF_CPP( = 0.f);
+        float w SKR_IF_CPP( = 0.f);
+    };
+} skr_quaternion_t;
+
 typedef struct SKR_ALIGNAS(16) skr_float4x4_t {
     float M[4][4];
 } skr_float4x4_t;

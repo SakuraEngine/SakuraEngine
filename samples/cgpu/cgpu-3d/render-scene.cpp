@@ -1,6 +1,7 @@
 #include "render-scene.hpp"
 #include "thirdparty/cgltf.h"
 #include "thirdparty/lodepng.h"
+#include "math/vectormath.hpp"
 
 static FORCEINLINE ECGPUFormat GLTFUtil_ComponentTypeToFormat(cgltf_type type, cgltf_component_type comp_type)
 {
