@@ -1,5 +1,4 @@
 #pragma once
-#include "math/vectormath.hpp"
 #include "../../cgpu/common/utils.h"
 
 const ECGPUFormat gbuffer_formats[] = {

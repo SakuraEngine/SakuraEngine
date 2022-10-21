@@ -1,9 +1,9 @@
 #include "skr_input/controls.h"
+#include <stdlib.h>
 #include "EASTL/algorithm.h"
 #include "EASTL/internal/copy_help.h"
 #include "EASTL/numeric_limits.h"
 #include "gainput/GainputInputDevice.h"
-#include "math/scalarmath.h"
 #include "utils/log.h"
 
 namespace skr::input
@@ -177,9 +177,9 @@ bool Vector2Control::ThresholdReached(float threshold)
     }
     for(const auto& direction : _stickDirections)
     {
-        if(math::abs(direction.x->GetValue()) >= threshold)
+        if(::abs(direction.x->GetValue()) >= threshold)
             return true;
-        if(math::abs(direction.y->GetValue()) >= threshold)
+        if(::abs(direction.y->GetValue()) >= threshold)
             return true;
     }
     return false;
