@@ -1,5 +1,4 @@
 #pragma once
-#include "math/vectormath.hpp"
 #include "../../cgpu/common/utils.h"
 
 CGPURenderPipelineId create_blit_render_pipeline(CGPUDeviceId device, CGPUSamplerId static_sampler, ECGPUFormat output_format)

@@ -186,12 +186,9 @@ int32_t RenderScene::loadNode(struct cgltf_node* src, int32_t parent_idx)
         int32_t child_idx = loadNode(src->children[i], newNode.index_);
         newNode.children_.emplace_back(&nodes_[child_idx]);
     }
-    newNode.translation_ = skr::math::Vector3f(
-    src->translation[0], src->translation[1], src->translation[2]);
-    newNode.rotation_ = skr::math::Quaternion(
-    src->rotation[0], src->rotation[1], src->rotation[2], src->rotation[3]);
-    newNode.scale_ = skr::math::Vector3f(
-    src->scale[0], src->scale[1], src->scale[2]);
+    newNode.translation_ = skr::math::Vector3f(src->translation[0], src->translation[1], src->translation[2]);
+    newNode.rotation_ = skr::math::Quaternion(src->rotation[0], src->rotation[1], src->rotation[2], src->rotation[3]);
+    newNode.scale_ = skr::math::Vector3f(src->scale[0], src->scale[1], src->scale[2]);
     return newNode.index_;
 }
 

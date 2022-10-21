@@ -1,12 +1,9 @@
-#include "float.h"
-#include "math/scalarmath.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
 #include "vulkan_utils.h"
 #ifdef CGPU_THREAD_SAFETY
     #include "platform/thread.h"
 #endif
-#include <string.h>
 
 CGPU_EXTERN_C uint64_t cgpu_export_shared_texture_handle_vulkan_win32(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)
 {
