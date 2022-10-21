@@ -215,6 +215,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         eastl::bitset<32>* atomic;
         eastl::bitset<32>* randomAccess;
         bool hasRandomWrite;
+        bool hasWriteChunkComponent;
         EIndex entityCount;
         dual_system_callback_t callback;
         void* userdata;
@@ -241,6 +242,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     }
     job->groupCount = groupCount;
     job->hasRandomWrite = false;
+    job->hasWriteChunkComponent = false;
     job->entityCount = 0;
     job->callback = callback;
     job->userdata = u;
@@ -256,6 +258,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         job->entityCount += group->size;
         forloop (i, 0, params.length)
         {
+            auto t = type_index_t(params.types[i]);
             auto idx = group->index(params.types[i]);
             job->localTypes[groupIndex * params.length + i] = idx;
             auto& op = params.accesses[i];
@@ -263,6 +266,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             job->randomAccess[groupIndex].set(idx, op.randomAccess == DOS_GLOBAL);
             job->atomic[groupIndex].set(idx, op.atomic);
             job->hasRandomWrite |= op.randomAccess == DOS_GLOBAL;
+            job->hasWriteChunkComponent = t.is_chunk() && !op.readonly && !op.atomic;
         }
         ++groupIndex;
     }
@@ -419,30 +423,53 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 batches.reserve(sharedData->entityCount / batchSize);
                 tasks.reserve(batches.capacity());
                 uint32_t batchRemain = batchSize;
-                EIndex startIndex = 0;
                 batch_t currBatch;
                 currBatch.startTask = currBatch.endTask = 0;
+                bool scheduleSubchunkJobs = true;
+                EIndex startIndex = 0;
+                dual_chunk_t* currentChunk = nullptr;
                 forloop (i, 0, sharedData->groupCount)
                 {
                     auto scheduleView = [&](dual_chunk_view_t* view) {
-                        uint32_t allocated = 0;
-                        while (allocated != view->count)
+                        if(!scheduleSubchunkJobs || sharedData->hasWriteChunkComponent)
                         {
-                            uint32_t subViewCount = std::min(view->count - allocated, batchRemain);
-                            task_t newTask;
-                            newTask.groupIndex = i;
-                            newTask.startIndex = startIndex;
-                            newTask.view = dual_chunk_view_t{ view->chunk, view->start + allocated, subViewCount };
-                            allocated += subViewCount;
-                            startIndex += subViewCount;
-                            batchRemain -= subViewCount;
-                            tasks.push_back(newTask);
-                            if (batchRemain == 0) // batch filled
+                            if (batchRemain == 0 && currentChunk != view->chunk) // batch filled
                             {
                                 currBatch.endTask = tasks.size();
                                 batches.push_back(currBatch);
                                 currBatch.startTask = currBatch.endTask; // new batch
                                 batchRemain = batchSize;
+                            }
+                            currentChunk = view->chunk;
+                            task_t newTask;
+                            newTask.groupIndex = i;
+                            newTask.startIndex = startIndex;
+                            newTask.view = *view;
+                            startIndex += view->count;
+                            batchRemain -= std::min(batchRemain, view->count);
+                            tasks.push_back(newTask);
+                        }
+                        else 
+                        {
+                            uint32_t allocated = 0;
+                            while (allocated != view->count)
+                            {
+                                uint32_t subViewCount = std::min(view->count - allocated, batchRemain);
+                                task_t newTask;
+                                newTask.groupIndex = i;
+                                newTask.startIndex = startIndex;
+                                newTask.view = dual_chunk_view_t{ view->chunk, view->start + allocated, subViewCount };
+                                allocated += subViewCount;
+                                startIndex += subViewCount;
+                                batchRemain -= subViewCount;
+                                tasks.push_back(newTask);
+                                if (batchRemain == 0) // batch filled
+                                {
+                                    currBatch.endTask = tasks.size();
+                                    batches.push_back(currBatch);
+                                    currBatch.startTask = currBatch.endTask; // new batch
+                                    batchRemain = batchSize;
+                                }
                             }
                         }
                     };
@@ -453,7 +480,6 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 {
                     currBatch.endTask = tasks.size();
                     batches.push_back(currBatch);
-                    
                 }
                 
                 skr::task::counter_t counter;

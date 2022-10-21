@@ -42,8 +42,13 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.withMask = false;
     proto.withDirty = false;
     proto.sizeToPatch = 0;
-
-    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.firstChunkComponent = 0;
+    forloop (i, 0, proto.type.length)
+        if(type_index_t(proto.type.data[i]).is_chunk())
+        {
+            proto.firstChunkComponent = i;
+            break;
+        }
     forloop (i, 0, 3)
         proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
@@ -64,15 +69,17 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
             proto.withMask = true;
         if (t == kDirtyComponent)
             proto.withDirty = true;
-        auto& desc = registry.descriptions[type_index_t(t).index()];
+        auto ti = type_index_t(t);
+        auto& desc = registry.descriptions[ti.index()];
         proto.sizes[i] = desc.size;
         proto.elemSizes[i] = desc.elementSize;
         guids[i] = desc.guid;
         proto.aligns[i] = desc.alignment;
         stableOrder[i] = i;
         proto.entitySize += desc.size;
-        padding += desc.alignment;
-        if (desc.entityFieldsCount != 0)
+        if(!ti.is_chunk())
+            padding += desc.alignment;
+        if (!ti.is_chunk() && desc.entityFieldsCount != 0)
             proto.sizeToPatch += desc.size;
     }
     eastl::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
@@ -84,17 +91,34 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     {
         uint32_t* offsets = proto.offsets[i];
         uint32_t& capacity = proto.chunkCapacity[i];
-        capacity = (uint32_t)(caps[i] - sizeof(dual_chunk_t) - versionSize - padding) / proto.entitySize;
         proto.versionOffset[i] = static_cast<uint32_t>(caps[i] - versionSize);
+        uint32_t ccOffset = caps[i] - versionSize;
+        forloop (j, 0, proto.type.length)
+        {
+            SIndex id = stableOrder[j];
+            TIndex t = proto.type.data[id];
+            auto ti = type_index_t(t);
+            if(ti.is_chunk())
+            {
+                ccOffset -= proto.sizes[id] * capacity;
+                ccOffset = (uint32_t)(proto.aligns[id] * (ccOffset / proto.aligns[id]));
+                offsets[id] = ccOffset;
+            }
+        }
+        capacity = (uint32_t)(ccOffset - sizeof(dual_chunk_t) - padding) / proto.entitySize;
         if (capacity == 0)
             continue;
         uint32_t offset = sizeof(dual_entity_t) * capacity;
         forloop (j, 0, proto.type.length)
         {
-            SIndex id = stableOrder[j];
-            offset = (uint32_t)(proto.aligns[id] * ((offset + proto.aligns[id] - 1) / proto.aligns[id]));
-            offsets[id] = offset;
-            offset += proto.sizes[id] * capacity;
+            SIndex id = stableOrder[j];TIndex t = proto.type.data[id];
+            auto ti = type_index_t(t);
+            if(!ti.is_chunk())
+            {
+                offset = (uint32_t)(proto.aligns[id] * ((offset + proto.aligns[id] - 1) / proto.aligns[id]));
+                offsets[id] = offset;
+                offset += proto.sizes[id] * capacity;
+            }
         }
     }
 

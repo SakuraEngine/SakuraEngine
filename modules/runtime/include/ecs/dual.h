@@ -56,6 +56,7 @@ typedef struct dual_callback_v {
 enum type_flags
 {
     DTF_PIN = 0x1,
+    DTF_CHUNK = 0x2,
 };
 
 /**

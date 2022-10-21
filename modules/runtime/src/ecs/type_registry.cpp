@@ -140,6 +140,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     bool managed = false;
     bool pin = false;
     bool buffer = false;
+    bool chunk = false;
     if (desc.size == 0)
         tag = true;
     if (desc.callback.copy != nullptr ||
@@ -149,7 +150,8 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     if (desc.elementSize != 0)
         buffer = true;
     pin = (desc.flags & DTF_PIN) != 0;
-    type_index_t index{ (TIndex)descriptions.size(), pin, buffer, managed, tag };
+    chunk = (desc.flags & DTF_CHUNK) != 0;
+    type_index_t index{ (TIndex)descriptions.size(), pin, buffer, managed, tag, chunk };
     descriptions.push_back(desc);
     guid2type.insert(eastl::make_pair(desc.guid, index));
     name2type.insert(eastl::make_pair(desc.name, index));

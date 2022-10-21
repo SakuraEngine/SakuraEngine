@@ -12,8 +12,13 @@
 namespace dual
 {
 template <class F>
-static void iter_ref_impl(const dual_chunk_view_t& view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, F&& iter)
+static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, F&& iter)
 {
+    if(type.is_chunk())
+    {
+        view.start = 0;
+        view.count = 1;
+    }
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     auto& reg = type_registry_t::get();
     const auto& desc = reg.descriptions[type.index()];
