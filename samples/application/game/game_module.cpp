@@ -591,8 +591,8 @@ void SGameModule::on_unload()
     SKR_LOG_INFO("game unloaded!");
     if (bUseJob)
     {
+        dualJ_unbind_storage(game_world);
         scheduler.unbind();
     }
-    dualJ_unbind_storage(game_world);
     dualS_release(game_world);
 }
