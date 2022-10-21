@@ -1,4 +1,5 @@
 #include "scene_asset.hpp"
+#include "UsdCore/prim.hpp"
 #include "ecs/SmallVector.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
@@ -12,6 +13,7 @@
 #include "utils/make_zeroed.hpp"
 #include "skr_scene/scene.h"
 #include "ecs/type_builder.hpp"
+#include "utils/types.h"
 
 #if defined(_DEBUG) && !defined(NDEBUG)	// Use !defined(NDEBUG) to check to see if we actually are linking with Debug third party libraries (bDebugBuildsActuallyUseDebugCRT)
 	#ifndef TBB_USE_DEBUG
@@ -38,18 +40,17 @@ struct TranverseContext
 };
 
 using children_t = llvm_vecsmall::SmallVector<dual_entity_t, 10>;
-void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, children_t* children)
+void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* children)
 {
-    auto usdChildren = prim.GetChildren();
-    if(prim.IsA<pxr::UsdGeomXformable>())
+    auto usdChildren = prim->GetChildren();
+    double transform[16];
+    bool resetsXformStack = false;
+    bool validTransform = prim->GetLocalTransformation(transform, &resetsXformStack);
+    if(validTransform)
     {
         children_t ecsChildren;
         for(auto child : usdChildren)
             ImportTraversal(child, ctx, &ecsChildren);
-        pxr::UsdGeomXformable xform(prim);
-        pxr::GfMatrix4d transform;
-        bool resetsXformStack;
-        bool validTransform = xform.GetLocalTransformation(&transform, &resetsXformStack);
         dual::type_builder_t builder;
         dual_type_index_t transformType;
         if(!children)
@@ -67,7 +68,7 @@ void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, children_t* child
         auto Init = [&](dual_chunk_view_t* view)
         {
             auto self = *dualV_get_entities(view);
-            auto ctransform = (skr::math::float4x4*)dualV_get_owned_ro(view, transformType);
+            auto ctransform = (skr_float4x4_t*)dualV_get_owned_ro(view, transformType);
             auto cname = (skr_name_t*)dualV_get_owned_ro(view, dual_id_of<skr_name_t>::get());
             if(!ecsChildren.empty())
             {
@@ -82,16 +83,19 @@ void ImportTraversal(pxr::UsdPrim prim, TranverseContext& ctx, children_t* child
                     cparent->entity = self;
                 }
             }
-            if(children)
-                children->push_back(self);
+            if(children) children->push_back(self);
             if(validTransform)
-                forloop(i, 0, 16)
-                    ctransform->M16[i] = (float)transform.data()[i];
+            {
+
+                forloop(i, 0, 4)
+                    forloop(j, 0, 4)
+                        ctransform->M[i][j] = (float)transform[4 * i + j];
+            }
             else
-                *ctransform = skr::math::float4x4();
-            auto name = prim.GetName();
+                *ctransform = skr_float4x4_t();
+            auto name = prim->GetName();
             auto len = std::min(name.size(), 31ull);
-            memcpy(cname->str, name.GetText(), len);
+            memcpy(cname->str, name.c_str(), len);
             cname->str[len] = 0;
         };
         dualS_allocate_type(ctx.world, &type, 1, DUAL_LAMBDA(Init));
@@ -109,14 +113,13 @@ void* SSceneImporter::Import(skr::io::RAMService*, const SAssetRecord* record)
     if (bool suppoted = skd::USDCoreSupportFile(u8Path.c_str()))
     {
         world = dualS_create();
-        {
-            auto _stage = skd::USDCoreOpenStage(u8Path.c_str()); (void)_stage;
-        }
-        pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
         TranverseContext ctx;
         ctx.world = world;
-        auto root = stage->GetPseudoRoot();
-        ImportTraversal(root, ctx, nullptr);
+        auto _stage = skd::USDCoreOpenStage(u8Path.c_str()); (void)_stage;
+        auto _root = _stage->GetPseudoRoot();
+        // pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
+        // auto root = stage->GetPseudoRoot();
+        ImportTraversal(_root, ctx, nullptr);
     }
     return world;
 }
