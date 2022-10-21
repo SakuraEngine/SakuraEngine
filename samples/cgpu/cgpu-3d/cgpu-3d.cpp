@@ -156,11 +156,12 @@ int main(int argc, char* argv[])
     auto render_scene = CreateAndInitialize<RenderScene>("./../resources/scene.gltf");
     renderer->PrepareRenderResourceMemory(render_scene.get());
     // wvp
+    auto rotation_ = render_scene->nodes_[render_scene->root_node_index_].rotation_;
     auto world = smath::make_transform(
-    { 0.f, 0.f, 0.f },                                             // translation
-    skr::math::Vector3f::vector_one(),                             // scale
-    render_scene->nodes_[render_scene->root_node_index_].rotation_ // quat
-    );
+        { 0.f, 0.f, 0.f },                                             // translation
+        skr::math::Vector3f::vector_one(),                             // scale
+        skr::math::Quaternion(rotation_.x, rotation_.y, rotation_.z, rotation_.w) // quat
+        );
     // camera
     auto view = smath::look_at_matrix({ 0.f, 55.f, 137.5f } /*eye*/, { 0.f, 50.f, 0.f } /*at*/);
     auto proj = smath::perspective_fov(

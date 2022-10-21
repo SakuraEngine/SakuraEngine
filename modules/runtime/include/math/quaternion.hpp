@@ -18,7 +18,10 @@ public:
     {
     }
     static constexpr Quaternion identity() noexcept;
-
+    operator skr_quaternion_t() const noexcept
+    {
+        return skr_quaternion_t{ x, y, z, w };
+    }
 public:
     Rotator rotator() const;
     Quaternion conjugate(void) const;
