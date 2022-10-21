@@ -1,5 +1,3 @@
-set_project("SakuraTool")
-
 includes("core/xmake.lua")
 
 if(has_config("build_usdtool")) then

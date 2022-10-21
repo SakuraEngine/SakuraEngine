@@ -1,5 +1,3 @@
-set_project("Sakura.Samples")
-
 includes("cgpu/xmake.lua")
 includes("render_graph/xmake.lua")
 includes("application/xmake.lua")
