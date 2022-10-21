@@ -186,6 +186,7 @@ int main(int argc, char** argv)
     }
     SKR_LOG_INFO("Project asset import finished.");
     //----- wait
+    scheduler.unbind();
     system.WaitForAll();
     system.Shutdown();
     moduleManager->destroy_module_graph();
