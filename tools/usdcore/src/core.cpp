@@ -1,4 +1,3 @@
-#include "helpers.hpp"
 #include "UsdCore/core.hpp"
 #include "platform/configure.h"
 

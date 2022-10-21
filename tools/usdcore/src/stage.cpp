@@ -1,24 +1,28 @@
-#include "containers/detail/sptr.hpp"
-#include "helpers.hpp"
-#include "UsdCore/stage.hpp"
-#include "pxr/usd/usd/common.h"
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/stage.h"
-#include "pxr/usd/usdGeom/xform.h"
+#include "detail/stage_impl.hpp"
+#include "detail/prim_impl.hpp"
 
 namespace skd
 {
-struct SUSDStageImpl : public USDWrapperWithRC<SUSDStage>
+SUSDStageImpl::SUSDStageImpl(pxr::UsdStageRefPtr stage) 
+    : stage(stage) 
 {
-    SUSDStageImpl(pxr::UsdStageRefPtr stage) : stage(stage) {}
-    ~SUSDStageImpl()
-    {
-        stage.Reset();
-    }
 
-protected:
-    pxr::UsdStageRefPtr stage;
-};
+}
+
+SUSDStageImpl::~SUSDStageImpl()
+{
+    stage.Reset();
+}
+
+SUSDPrimId SUSDStageImpl::GetPseudoRoot()
+{
+    return skr::SPtr<SUSDPrimImpl>::Create(stage->GetPseudoRoot());
+}
+
+SUSDPrimId SUSDStageImpl::GetDefaultPrim()
+{
+    return skr::SPtr<SUSDPrimImpl>::Create(stage->GetDefaultPrim());
+}
 
 SUSDStageId USDCoreOpenStage(const char *path)
 {
