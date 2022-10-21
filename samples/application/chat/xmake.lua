@@ -1,4 +1,3 @@
-set_project("chat")
 add_requires("gamenetworkingsockets", {configs={shared=true, webrtc=true, vs_runtime="MT"}})
 
 target("chat")
