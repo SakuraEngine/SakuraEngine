@@ -1,6 +1,7 @@
 target("ISPCTextureCompressor")
     set_group("02.tools")
     set_kind("static")
+    set_policy("build.across_targets_in_parallel", false)
     add_rules("utils.ispc")
     add_files("src/**.ispc")
 
