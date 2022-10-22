@@ -6,8 +6,6 @@
 #include "utils/make_zeroed.hpp"
 #include "cgltf/cgltf.h"
 #include "platform/thread.h"
-#include <EASTL/vector_map.h>
-#include <EASTL/unordered_map.h>
 #include <EASTL/hash_set.h>
 #include <ghc/filesystem.hpp>
 

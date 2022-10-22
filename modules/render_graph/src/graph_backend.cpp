@@ -1,8 +1,9 @@
 ﻿#include "render_graph/backend/graph_backend.hpp"
-#include "tracy/Tracy.hpp"
 #include "utils/hash.h"
 #include "fmt/format.h"
 #include <EASTL/set.h>
+
+#include "tracy/Tracy.hpp"
 
 namespace skr
 {
