@@ -69,7 +69,7 @@ struct SUSDPrimImpl : public USDWrapperWithRC<SUSDPrim>
         eastl::vector<SharedId> children;
 		for ( const pxr::UsdPrim& child : primChildren )
 		{
-			children.emplace_back( skr::SPtr<SUSDPrimImpl>::Create(child) );
+			children.emplace_back( skr::SObjectPtr<SUSDPrimImpl>::Create(child) );
 		}
         return children;
     }

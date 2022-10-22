@@ -10,7 +10,7 @@ namespace skd
         virtual SUSDPrimId GetDefaultPrim() = 0;
         // virtual SUSDPrimId GetPrimAtPath() = 0;
     };
-    using SUSDStageId = skr::SPtr<SUSDStage>;
+    using SUSDStageId = skr::SObjectPtr<SUSDStage>;
 
     [[nodiscard("Perf: Opened USD stage must not be discard!")]]
     USDCORE_API SUSDStageId USDCoreOpenStage(const char* path);
