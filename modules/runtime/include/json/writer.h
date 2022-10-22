@@ -282,6 +282,8 @@ RUNTIME_API void WriteValue(skr_json_writer_t* writer, uint64_t b);
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, double b);
 template <>
+RUNTIME_API void WriteValue(skr_json_writer_t* writer, const eastl::string_view& str);
+template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, const eastl::string& str);
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid);
