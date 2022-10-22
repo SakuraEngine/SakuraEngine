@@ -16,19 +16,19 @@ SUSDStageImpl::~SUSDStageImpl()
 
 SUSDPrimId SUSDStageImpl::GetPseudoRoot()
 {
-    return skr::SPtr<SUSDPrimImpl>::Create(stage->GetPseudoRoot());
+    return skr::SObjectPtr<SUSDPrimImpl>::Create(stage->GetPseudoRoot());
 }
 
 SUSDPrimId SUSDStageImpl::GetDefaultPrim()
 {
-    return skr::SPtr<SUSDPrimImpl>::Create(stage->GetDefaultPrim());
+    return skr::SObjectPtr<SUSDPrimImpl>::Create(stage->GetDefaultPrim());
 }
 
 SUSDStageId USDCoreOpenStage(const char *path)
 {
     pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(path);
     auto root = stage->GetPseudoRoot();
-    return skr::SPtr<SUSDStageImpl>::Create(stage);
+    return skr::SObjectPtr<SUSDStageImpl>::Create(stage);
 }
 
 bool USDCoreSupportFile(const char* path)

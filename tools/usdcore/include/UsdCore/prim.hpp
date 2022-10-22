@@ -10,7 +10,7 @@ namespace skd
 {
     struct SUSDPrim : public skr::SInterface
     {
-        using SharedId = skr::SPtr<SUSDPrim, false>;
+        using SharedId = skr::SObjectPtr<SUSDPrim>;
         virtual ~SUSDPrim() = default; 
 
         // returns false when the prim is not an xformable
