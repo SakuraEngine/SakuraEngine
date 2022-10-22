@@ -1,13 +1,13 @@
 if (os.host() =="macosx") then 
     import("lib.detect.find_tool")
-    local brew = find_tool("brew")
+   -- local brew = find_tool("brew")
     if(brew == nil) then
-        os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
+        --os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
     end
-    os.exec("brew install ispc")
-    os.exec("brew install python")
-    os.exec("brew install sdl2")
-    os.exec("brew install googletest")
+    --os.exec("brew install ispc")
+    --os.exec("brew install python")
+    --os.exec("brew install sdl2")
+    --os.exec("brew install googletest")
 end
 
 import("find_sdk")
@@ -64,5 +64,5 @@ for _, setup in ipairs(setups) do
 end
 
 if (os.host() == "windows") then
-    os.exec("xmake project -k vsxmake -m \"debug,release;releasedbg\" -a x64 -y")
+    os.exec("xmake project -k vsxmake -m \"debug,release\" -a x64 -y")
 end
