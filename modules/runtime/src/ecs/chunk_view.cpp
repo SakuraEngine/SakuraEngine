@@ -32,11 +32,6 @@ bool is_array_small(dual_array_component_t* ptr)
 
 static void construct_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data))
 {
-    if(type.is_chunk())
-    {
-        view.start = 0;
-        view.count = 1;
-    }
     char* dst = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
         forloop (j, 0, view.count)
@@ -69,11 +64,6 @@ static void construct_impl(dual_chunk_view_t view, type_index_t type, EIndex off
 
 static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data))
 {
-    if(type.is_chunk())
-    {
-        view.start = 0;
-        view.count = 1;
-    }
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
         forloop (j, 0, view.count)
@@ -92,12 +82,7 @@ static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
 
 static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcStart, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src))
 {
-    if(type.is_chunk())
-    {
-        dstV.start = 0;
-        dstV.count = 1;
-        srcStart = 0;
-    }
+    SKR_ASSERT(!type.is_chunk());
     char* dst = dstV.chunk->data() + (size_t)offset + (size_t)size * dstV.start;
     char* src = srcC->data() + (size_t)offset + (size_t)size * srcStart;
     if (move)
@@ -142,12 +127,7 @@ void memdup(void* dst, const void* src, size_t size, size_t count) noexcept
 
 static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcIndex, type_index_t type, EIndex offset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
 {
-    if(type.is_chunk())
-    {
-        dstV.start = 0;
-        dstV.count = 1;
-        srcIndex = 0;
-    }
+    SKR_ASSERT(!type.is_chunk());
     char* dst = dstV.chunk->data() + (size_t)dstOffset + (size_t)size * dstV.start;
     const char* src = srcC->data() + (size_t)offset + (size_t)size * srcIndex;
     if (type == kGuidComponent)
@@ -215,7 +195,7 @@ void construct_view(const dual_chunk_view_t& view) noexcept
     uint32_t* aligns = type->aligns;
     uint32_t* elemSizes = type->elemSizes;
     auto maskValue = uint32_t(1 << type->type.length) - 1;
-    for (SIndex i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->firstChunkComponent; ++i)
         construct_impl(view, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, type->callbacks[i].constructor);
 }
 
@@ -225,8 +205,30 @@ void destruct_view(const dual_chunk_view_t& view) noexcept
     EIndex* offsets = type->offsets[(int)view.chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
-    for (SIndex i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->firstChunkComponent; ++i)
         destruct_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->callbacks[i].destructor);
+}
+
+void construct_chunk(dual_chunk_t* chunk) noexcept
+{
+    archetype_t* type = chunk->type;
+    EIndex* offsets = type->offsets[(int)chunk->pt];
+    uint32_t* sizes = type->sizes;
+    uint32_t* aligns = type->aligns;
+    uint32_t* elemSizes = type->elemSizes;
+    auto maskValue = uint32_t(1 << type->type.length) - 1;
+    for (SIndex i = type->firstChunkComponent; i < type->type.length; ++i)
+        construct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, type->callbacks[i].constructor);
+}
+
+void destruct_chunk(dual_chunk_t* chunk) noexcept
+{
+    archetype_t* type = chunk->type;
+    EIndex* offsets = type->offsets[(int)chunk->pt];
+    uint32_t* sizes = type->sizes;
+    uint32_t* elemSizes = type->elemSizes;
+    for (SIndex i = type->firstChunkComponent; i < type->type.length; ++i)
+        destruct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->callbacks[i].destructor);
 }
 
 void move_view(const dual_chunk_view_t& view, EIndex srcStart) noexcept
@@ -241,7 +243,7 @@ void move_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
     uint32_t* elemSizes = type->elemSizes;
-    for (SIndex i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->firstChunkComponent; ++i)
         move_impl(dstV, srcC, srcStart, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], type->callbacks[i].move);
 }
 
@@ -283,7 +285,7 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
 
     SIndex srcI = 0, dstI = 0;
 
-    while (srcI < srcTypes.length && dstI < dstTypes.length)
+    while (srcI < srcType->firstChunkComponent && dstI < dstType->firstChunkComponent)
     {
         type_index_t srcT = srcTypes.data[srcI];
         type_index_t dstT = dstTypes.data[dstI];
@@ -322,7 +324,7 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
             }
             if (dstDirtys)
             {
-                if (srcMasks)
+                if (srcDirtys)
                     forloop (i, 0, dstV.count)
                         dstDirtys[i]
                         .set(dstI, srcDirtys[i].test(srcI));
@@ -374,7 +376,7 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
 
     SIndex srcI = 0, dstI = 0;
 
-    while (srcI < srcTypes.length && dstI < dstTypes.length)
+    while (srcI < srcType->firstChunkComponent && dstI < dstType->firstChunkComponent)
     {
         type_index_t srcT = srcTypes.data[srcI];
         type_index_t dstT = dstTypes.data[dstI];
@@ -385,18 +387,35 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
         else if (srcT > dstT) // construct
         {
             construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, dstType->callbacks[dstI].constructor);
+            if (dstMasks)
+                forloop (i, 0, dstV.count)
+                    dstMasks[i]
+                    .set(dstI);
+            if (dstDirtys)
+                forloop (i, 0, dstV.count)
+                    dstDirtys[i]
+                    .set(dstI);
             ++dstI;
         }
         else
         {
             if (srcT != kMaskComponent)
                 duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], srcType->callbacks[srcI].copy);
-            if (dstMasks && srcMasks)
+            if (dstMasks)
             {
-                forloop (i, 0, dstV.count)
-                    dstMasks[i]
-                    .set(dstI, srcMasks[i].test(srcI));
+                if (srcMasks)
+                    forloop (i, 0, dstV.count)
+                        dstMasks[i]
+                        .set(dstI, srcMasks[i].test(srcI));
+                else
+                    forloop (i, 0, dstV.count)
+                        dstMasks[i]
+                        .set(dstI);
             }
+            if (dstDirtys)
+                forloop (i, 0, dstV.count)
+                    dstDirtys[i]
+                    .set(dstI);
             ++srcI;
             ++dstI;
         }

@@ -107,6 +107,7 @@ void dual_storage_t::destroy(const dual_chunk_view_t& view)
     else
     {
         entities.free_entities(view);
+        destruct_view(view);
         free(view);
     }
 }
@@ -116,7 +117,6 @@ void dual_storage_t::free(const dual_chunk_view_t& view)
     using namespace dual;
     auto group = view.chunk->group;
     structural_change(group, view.chunk);
-    group->size -= view.count;
     uint32_t toMove = std::min(view.count, view.chunk->count - view.start - view.count);
     if (toMove > 0)
     {
@@ -124,6 +124,7 @@ void dual_storage_t::free(const dual_chunk_view_t& view)
         entities.move_entities(moveView, view.chunk->count - toMove);
         move_view(moveView, view.chunk->count - toMove);
     }
+    group->resize_chunk(view.chunk, view.chunk->count - view.count);
 }
 
 void dual_storage_t::structural_change(dual_group_t* group, dual_chunk_t* chunk)
@@ -416,6 +417,7 @@ void dual_storage_t::defragment()
                 chunk->count += moveCount;
                 if (source->count == 0)
                 {
+                    destruct_chunk(source);
                     dual_chunk_t::destroy(source);
                     --j;
                 }
@@ -486,7 +488,10 @@ void dual_storage_t::pack_entities()
     for (auto g : gs)
     {
         for (dual_chunk_t* c = g->firstChunk; c; c = c->next)
+        {
+            iterator_ref_chunk( c, m );
             iterator_ref_view({ c, 0, c->count }, m);
+        }
         auto meta = g->type.meta;
         forloop (i, 0, meta.length)
             m.map(((dual_entity_t*)meta.data)[i]);
@@ -681,6 +686,7 @@ void dual_storage_t::merge(dual_storage_t& src)
                 auto ents = (dual_entity_t*)c->get_entities();
                 forloop (j, 0, c->count)
                     payload.m->map(ents[j]);
+                iterator_ref_chunk( c, *payload.m );
                 iterator_ref_view({ c, 0, c->count }, *payload.m);
             }
             counter.decrement();

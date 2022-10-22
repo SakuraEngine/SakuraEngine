@@ -20,6 +20,11 @@ namespace dual
 
 thread_local fixed_stack_t localStack(4096 * 8);
 
+bool archetype_t::with_chunk_component() const noexcept
+{
+    return firstChunkComponent != type.length;
+}
+
 SIndex archetype_t::index(dual_type_index_t inType) const noexcept
 {
     auto end = type.data + type.length;
@@ -251,6 +256,7 @@ dual_chunk_t* dual_group_t::new_chunk(uint32_t hint)
         pt = PT_default;
     dual_chunk_t* chunk = dual_chunk_t::create(pt);
     add_chunk(chunk);
+    construct_chunk(chunk);
     return chunk;
 }
 
@@ -285,6 +291,7 @@ void dual_group_t::resize_chunk(dual_chunk_t* chunk, EIndex newSize)
     chunk->count = newSize;
     if (newSize == 0)
     {
+        destruct_chunk(chunk);
         remove_chunk(chunk);
         dual_chunk_t::destroy(chunk);
     }
@@ -357,6 +364,7 @@ void dual_group_t::clear()
     {
         auto next = chunk->next;
         destruct_view({ chunk, 0, chunk->count });
+        destruct_chunk(chunk);
         dual_chunk_t::destroy(chunk);
         chunk = next;
     }
