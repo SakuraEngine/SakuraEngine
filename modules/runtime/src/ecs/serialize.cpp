@@ -127,7 +127,7 @@ void dual_storage_t::serialize_view(dual_group_t* group, dual_chunk_view_t& view
         else
             ArchiveBuffer(ds, view.chunk->get_entities() + view.start, view.count);
     }
-    for (SIndex i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->firstChunkComponent; ++i)
         serialize_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], s, ds, type->callbacks[i].serialize, type->callbacks[i].deserialize);
 }
 
@@ -196,7 +196,7 @@ dual_entity_t dual_storage_t::deserialize_single(skr_binary_reader_t* s)
     if(scheduler)
         scheduler->sync_archetype(group->archetype);   
     dual_chunk_view_t view;
-    serialize_view(view.chunk->group, view, nullptr, s, false);
+    serialize_view(group, view, nullptr, s, false);
     entities.fill_entities(view);
     return view.chunk->get_entities()[view.start];
 }

@@ -25,7 +25,7 @@ struct archetype_t {
         uint32_t sizes[firstTag];
         dual_callback_v callbacks[firstTag - firstManaged];
     */
-
+    bool with_chunk_component() const noexcept;
     SIndex index(dual_type_index_t type) const noexcept;
 };
 } // namespace dual

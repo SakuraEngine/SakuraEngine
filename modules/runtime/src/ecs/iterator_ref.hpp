@@ -14,11 +14,6 @@ namespace dual
 template <class F>
 static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, F&& iter)
 {
-    if(type.is_chunk())
-    {
-        view.start = 0;
-        view.count = 1;
-    }
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     auto& reg = type_registry_t::get();
     const auto& desc = reg.descriptions[type.index()];
@@ -81,7 +76,17 @@ void iterator_ref_view(const dual_chunk_view_t& view, F&& iter) noexcept
     EIndex* offsets = type->offsets[(int)view.chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
-    forloop (i, 0, type->type.length)
+    forloop (i, 0, type->firstChunkComponent)
         iter_ref_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
+}
+template<class F>
+void iterator_ref_chunk(dual_chunk_t* chunk, F&& iter) noexcept
+{
+    archetype_t* type = chunk->type;
+    EIndex* offsets = type->offsets[(int)chunk->pt];
+    uint32_t* sizes = type->sizes;
+    uint32_t* elemSizes = type->elemSizes;
+    forloop (i, type->firstChunkComponent, type->type.length)
+        iter_ref_impl({ chunk, 0, 1 }, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
 }
 } // namespace dual
