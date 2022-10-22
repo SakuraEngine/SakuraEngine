@@ -137,21 +137,18 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
             entityFields.push_back(efs[i]);
     }
     bool tag = false;
-    bool managed = false;
     bool pin = false;
     bool buffer = false;
     bool chunk = false;
     if (desc.size == 0)
         tag = true;
-    if (desc.callback.copy != nullptr ||
-        desc.callback.move != nullptr ||
-        desc.callback.destructor != nullptr)
-        managed = true;
     if (desc.elementSize != 0)
         buffer = true;
     pin = (desc.flags & DTF_PIN) != 0;
     chunk = (desc.flags & DTF_CHUNK) != 0;
-    type_index_t index{ (TIndex)descriptions.size(), pin, buffer, managed, tag, chunk };
+    SKR_ASSERT(!(chunk && pin));
+    SKR_ASSERT(!(chunk && tag));
+    type_index_t index{ (TIndex)descriptions.size(), pin, buffer, tag, chunk };
     descriptions.push_back(desc);
     guid2type.insert(eastl::make_pair(desc.guid, index));
     name2type.insert(eastl::make_pair(desc.name, index));
