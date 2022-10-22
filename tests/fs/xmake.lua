@@ -1,4 +1,4 @@
-target("fs-test")
+target("VFSTest")
     set_group("05.tests")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)

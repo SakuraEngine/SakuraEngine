@@ -48,7 +48,7 @@ public:
 
     explicit operator bool() const SKR_NOEXCEPT;
 
-    template <typename U> friend struct SPtrHelper;
+    template <typename U, bool B> friend struct SPtrHelper;
     template <typename U> friend struct SWeakPtr;
 };  
 }

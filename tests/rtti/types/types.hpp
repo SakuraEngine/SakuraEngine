@@ -3,9 +3,9 @@
 #include "utils/log.hpp"
 #include <EASTL/string.h>
 #include <EASTL/unique_ptr.h>
-#include "rtti-test-types/module.configure.h"
+#include "RTTITestTypes/module.configure.h"
 #if !defined(__meta__)
-    #include "rtti-test-types/types.generated.h"
+    #include "RTTITestTypes/types.generated.h"
 #endif
 
 // TODO: Move To Core 

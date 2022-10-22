@@ -1,4 +1,4 @@
-target("cgpu-swapchain-test")
+target("CGPUSwapchainTest")
     set_kind("binary")
     set_group("05.tests/cgpu")
     public_dependency("SkrRT", engine_version)
@@ -6,7 +6,7 @@ target("cgpu-swapchain-test")
     add_files("SwapChainCreation/SwapChainCreation.cpp")
     set_languages("c++17")
 
-target("cgpu-resource-test")
+target("CGPUResourceTest")
     set_kind("binary")
     set_group("05.tests/cgpu")
     public_dependency("SkrRT", engine_version)
@@ -14,7 +14,7 @@ target("cgpu-resource-test")
     add_files("ResourceCreation/ResourceCreation.cpp")
     set_languages("c++17")
 
-target("cgpu-rspool-test")
+target("CGPURSPoolTest")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-rspool-test",
         dxil_outdir = "/../resources/shaders/cgpu-rspool-test"})
