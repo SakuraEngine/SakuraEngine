@@ -21,14 +21,6 @@
 	#endif
 #endif
 
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/stage.h"
-#include "pxr/usd/usd/primRange.h"
-#include "pxr/usd/usdGeom/modelAPI.h"
-#include "pxr/usd/usdGeom/xform.h"
-#include "pxr/usd/usdGeom/sphere.h"
-#include "pxr/usd/usdGeom/mesh.h"
-
 #include "UsdCore/stage.hpp"
 
 namespace skd::asset
@@ -172,16 +164,15 @@ bool SSceneCooker::Cook(SCookContext* ctx)
 void SSceneImporterFactory::CreateImporter(const SAssetRecord *record)
 {
     auto u8Path = record->path.u8string();
-    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
-    SSceneImporter sceneImporter;
-    for(auto prim : stage->Traverse())
-    {
-        if(prim.IsA<pxr::UsdGeomMesh>())
-        {
-            SUSDMeshImporter meshImporter;
-        }
-    }
+    //pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
+    //SSceneImporter sceneImporter;
+    //for(auto prim : stage->Traverse())
+    //{
+    //    if(prim.IsA<pxr::UsdGeomMesh>())
+    //    {
+    //        SUSDMeshImporter meshImporter;
+    //    }
+    //}
 }
-
 
 } // namespace game::asset

@@ -49,6 +49,16 @@ rule("skr.module")
         target:data_set("module.meta.includedir", target_gendir)
     end)
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
+        -- profile compile time
+        --for _, sourcefile in ipairs(sourcebatch.sourcefiles) do
+        --    local sourcefile_cx = path.absolute(sourcefile)
+        --    local objectfile = target:objectfile(sourcefile)
+        --    batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = gendir, languages = "c++17"}})
+            -- add deps
+        --    batchcmds:set_depmtime(os.mtime(objectfile))
+        --    batchcmds:set_depcache(target:dependfile(objectfile))
+        --end
+
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}
         -- add to sourcebatch
