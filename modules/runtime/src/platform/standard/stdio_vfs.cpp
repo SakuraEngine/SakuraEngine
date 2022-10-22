@@ -55,7 +55,7 @@ size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
     if (file)
     {
         auto vfile = (skr_vfile_stdio_t*)file;
-        fseek(vfile->fh, offset, SEEK_SET); // seek to offset of file
+        fseek(vfile->fh, (long)offset, SEEK_SET); // seek to offset of file
         auto bytesRead = fread(out_buffer, byte_count, 1, vfile->fh);
         if (bytesRead != byte_count)
         {
@@ -75,7 +75,7 @@ size_t skr_llfio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset
     if (file)
     {
         auto vfile = (skr_vfile_stdio_t*)file;
-        fseek(vfile->fh, offset, SEEK_SET); // seek to offset of file
+        fseek(vfile->fh, (long)offset, SEEK_SET); // seek to offset of file
         auto result = fwrite(out_buffer, byte_count, 1, vfile->fh);
         fseek(vfile->fh, 0, SEEK_SET); // seek back to beginning of file
         return result;

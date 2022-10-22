@@ -1,3 +1,5 @@
+#include "imgui/skr_imgui.config.h"
+#define IMGUI_IMPORT SKR_IMGUI_API
 #include "utils/log.h"
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"

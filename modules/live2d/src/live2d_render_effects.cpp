@@ -214,7 +214,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                 drawcall.push_const = (const uint8_t*)(push_constants[render_model].data() + drawable);
                                 drawcall.index_buffer = *cmd.ibv;
                                 drawcall.vertex_buffers = cmd.vbvs.data();
-                                drawcall.vertex_buffer_count = cmd.vbvs.size();
+                                drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                 {
                                     auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
                                     drawcall.descriptor_set_count = 1;
@@ -325,7 +325,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         drawcall.push_const = (const uint8_t*)(&push_const);
                                         drawcall.index_buffer = *cmd.ibv;
                                         drawcall.vertex_buffers = cmd.vbvs.data();
-                                        drawcall.vertex_buffer_count = cmd.vbvs.size();
+                                        drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                         {
                                             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
                                             drawcall.descriptor_set_count = 1;
@@ -349,7 +349,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         {
             produce_mask_drawcall(pass, storage);
             mask_draw_list.drawcalls = mask_drawcalls.data();
-            mask_draw_list.count = mask_drawcalls.size();
+            mask_draw_list.count = (uint32_t)mask_drawcalls.size();
             packet.count = 1;
             packet.lists = &mask_draw_list;
         }
@@ -357,7 +357,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         {
             produce_model_drawcall(pass, storage);
             model_draw_list.drawcalls = model_drawcalls.data();
-            model_draw_list.count = model_drawcalls.size();
+            model_draw_list.count = (uint32_t)model_drawcalls.size();
             packet.count = 1;
             packet.lists = &model_draw_list;
         }

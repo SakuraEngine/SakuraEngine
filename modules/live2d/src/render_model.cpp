@@ -165,8 +165,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         if (request->file_dstorage_queue_override)
         {
             std::string p = texture_path;
-            int p1 = p.find(".");
-            int p2 = p.find("/");
+            auto p1 = p.find(".");
+            auto p2 = p.find("/");
             std::string number = p.substr(p1 + 1, p2 - p1 - 1);
             auto resolution = std::stoi(number);
             vram_texture_io.device = device;
@@ -260,7 +260,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     const auto drawable_count = csmModel->GetDrawableCount();
     uint32_t total_index_count = 0;
     uint32_t total_vertex_count = 0;
-    for(uint32_t i = 0; i < drawable_count; i++)
+    for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
     {
         const int32_t vcount = csmModel->GetDrawableVertexCount(i);
         total_vertex_count += vcount;
@@ -306,7 +306,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         render_model->vertex_buffer_views.resize(2 * drawable_count);
         uint32_t pos_buffer_cursor = 0;
         uint32_t uv_buffer_cursor = 0;
-        for(uint32_t i = 0; i < drawable_count; i++)
+        for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
         {
             const int32_t vcount = csmModel->GetDrawableVertexCount(i);
             if (vcount != 0)
@@ -331,7 +331,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         render_model->primitive_commands.resize(drawable_count);
         render_model->index_buffer_views.resize(drawable_count);
         uint32_t index_buffer_cursor = 0;
-        for(uint32_t i = 0; i < drawable_count; i++)
+        for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
         {
             const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
             if (icount != 0)
@@ -353,7 +353,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         render_model->buffer_io_requests.resize(drawable_count);
         render_model->buffer_destinations.resize(drawable_count);
         uint32_t index_buffer_cursor = 0;
-        for(uint32_t i = 0; i < drawable_count; i++)
+        for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
         {
             const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
             if (icount != 0)

@@ -162,7 +162,7 @@ namespace skr::task
         size_t hash() const { return internal.hash(); }
         explicit operator bool() const { return (bool)internal; }
         void wait(bool pin) { internal.wait(); }
-        void add(const unsigned int x) { internal.add(x); }
+        void add(const uint32_t x) { internal.add(x); }
         void decrement() { internal.done(); }
     private:
         internal_t internal;

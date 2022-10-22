@@ -92,7 +92,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         uint32_t* offsets = proto.offsets[i];
         uint32_t& capacity = proto.chunkCapacity[i];
         proto.versionOffset[i] = static_cast<uint32_t>(caps[i] - versionSize);
-        uint32_t ccOffset = caps[i] - versionSize;
+        uint32_t ccOffset = (uint32_t)(caps[i] - versionSize);
         forloop (j, 0, proto.type.length)
         {
             SIndex id = stableOrder[j];
@@ -215,7 +215,7 @@ dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
     using namespace dual;
     bool withTracked = false;
     bool dead = false;
-    for(int i=0; i<type.type.length; ++i)
+    for(SIndex i=0; i < type.type.length; ++i)
     {
         type_index_t t = type.type.data[i];
         if(t.is_tracked())

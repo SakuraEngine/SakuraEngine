@@ -34,7 +34,7 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
     auto filter_types = localStack.allocate<dual_type_index_t>(key_set->length + 1);
     {
         dual_type_index_t cursor = hashed_set_type;
-        for (auto i = 0, idx = 0; idx < key_set->length + 1; idx++)
+        for (SIndex i = 0, idx = 0; idx < key_set->length + 1; idx++)
         {
             if (key_set->data[i] <= cursor)
                 filter_types[idx] = key_set->data[i++];
@@ -50,7 +50,7 @@ dual_entity_type_t* alloc_type, dual_view_callback_t callback, void* u)
     auto types = localStack.allocate<dual_type_index_t>(alloc_type->type.length + 1);
     {
         dual_type_index_t cursor = hashed_set_type;
-        for (auto i = 0, idx = 0; idx < alloc_type->type.length + 1; idx++)
+        for (SIndex i = 0, idx = 0; idx < alloc_type->type.length + 1; idx++)
         {
             if (alloc_type->type.data[i] <= cursor)
                 types[idx] = alloc_type->type.data[i++];
