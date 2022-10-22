@@ -31,9 +31,8 @@ struct sreflect sattr(
 )
 TOOL_API SImporter
 {
-    skr_guid_t assetGuid;
     virtual ~SImporter() {}
-    virtual void* Import(skr::io::RAMService*, const SAssetRecord* record) = 0;
+    virtual void* Import(skr::io::RAMService*, SCookContext* context) = 0;
 };
 
 struct SImporterRegistry {

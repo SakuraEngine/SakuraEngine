@@ -15,7 +15,7 @@ USDTOOL_API SUSDMeshImporter final : public SImporter
 {
     // the SDF path of Mesh asset
     eastl::string path;
-    void* Import(skr::io::RAMService*, const SAssetRecord* record) override { return nullptr; }
+    void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
 }
 sregister_importer();
 } // namespace sreflect
