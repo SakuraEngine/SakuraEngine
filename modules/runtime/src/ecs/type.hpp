@@ -12,10 +12,9 @@ class type_index_t
         TIndex value;
         struct
         {
-            TIndex id : 27;
+            TIndex id : 28;
             TIndex pin : 1;
             TIndex buffer : 1;
-            TIndex managed : 1;
             TIndex chunk: 1;
             TIndex tag : 1;
         };
@@ -26,7 +25,6 @@ public:
     constexpr bool is_pod() const noexcept { return value == id; }
     constexpr bool is_buffer() const noexcept { return buffer; }
     constexpr bool is_tag() const noexcept { return tag; }
-    constexpr bool is_managed() const noexcept { return managed; }
     constexpr bool is_tracked() const noexcept { return pin; }
     constexpr bool is_chunk() const noexcept { return chunk; }
 
@@ -38,13 +36,12 @@ public:
         : value(value)
     {
     }
-    constexpr type_index_t(TIndex a, bool pin, bool buffer, bool managed, bool tag, bool chunk) noexcept
+    constexpr type_index_t(TIndex a, bool pin, bool buffer, bool tag, bool chunk) noexcept
         : id(a)
         , pin(pin)
         , buffer(buffer)
-        , managed(managed)
-        , tag(tag)
         , chunk(chunk)
+        , tag(tag)
     {
     }
 
