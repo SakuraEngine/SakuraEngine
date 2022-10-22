@@ -18,6 +18,12 @@ if (is_os("windows")) then
     else
         set_runtimes("MDd")
     end
+else
+    add_requires("ispc")
+    add_requires("python")
+    add_requires("sdl2")
+    add_requires("googletest")
+
 end
 
 engine_version = "0.1.0"
