@@ -129,11 +129,11 @@ TEST(SPTR, Ctors)
 
     // STL
     std::shared_ptr<A> pTT4 = std::shared_ptr<A>(nullptr);
-    EXPECT_TRUE(!pTT4.unique());
+    EXPECT_NE(pTT4.use_count(), 1);
     EXPECT_EQ(pTT4.use_count(), 0);
 
     pTT4 = std::shared_ptr<A>((A*)nullptr);
-    EXPECT_TRUE(pTT4.unique()); // 1.1
+    EXPECT_EQ(pTT4.use_count(), 1); // 1.1
     EXPECT_EQ(pTT4.use_count(), 1); // 1.2
 
     // SPtr

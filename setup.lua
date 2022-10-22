@@ -64,5 +64,5 @@ for _, setup in ipairs(setups) do
 end
 
 if (os.host() == "windows") then
-    os.exec("xmake project -k vsxmake -m \"debug,release\" -a x64 -y")
+    os.exec("xmake project -k vsxmake -m \"debug,release;releasedbg\" -a x64 -y")
 end
