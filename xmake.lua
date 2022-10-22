@@ -21,9 +21,8 @@ if (is_os("windows")) then
 else
     add_requires("ispc")
     add_requires("python")
-    add_requires("sdl2")
-    add_requires("googletest")
-
+    add_requires("libsdl")
+    add_requires("gtest")
 end
 
 engine_version = "0.1.0"

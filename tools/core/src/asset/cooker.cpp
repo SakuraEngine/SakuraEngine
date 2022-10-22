@@ -233,7 +233,8 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             eastl::string pathStr;
             skr::json::Read(std::move(file).value_unsafe(), pathStr);
             ghc::filesystem::path path(pathStr.c_str());
-            if(!ghc::filesystem::exists(path))
+            std::error_code ec = {};
+            if(!ghc::filesystem::exists(path, ec))
             {
                 SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] file not exist! resource guid: {}", guid);
                 return false;

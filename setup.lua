@@ -1,3 +1,4 @@
+--[[
 if (os.host() =="macosx") then 
     import("lib.detect.find_tool")
    -- local brew = find_tool("brew")
@@ -9,6 +10,7 @@ if (os.host() =="macosx") then
     --os.exec("brew install sdl2")
     --os.exec("brew install googletest")
 end
+]]--
 
 import("find_sdk")
 
