@@ -54,6 +54,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
     proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
