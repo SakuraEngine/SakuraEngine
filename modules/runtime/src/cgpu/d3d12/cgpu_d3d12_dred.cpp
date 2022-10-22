@@ -216,7 +216,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
                         ContextStr.clear();
                     }
 
-                    const TCHAR* OpName = (BreadcrumbOp < D3D12_OpNamesCount) ? D3D12_OpNames[BreadcrumbOp] : TEXT("Unknown Op");
+                    const TCHAR* OpName = ((uint32_t)BreadcrumbOp < D3D12_OpNamesCount) ? D3D12_OpNames[BreadcrumbOp] : TEXT("Unknown Op");
                     cgpu_error("\tOp: %d, %ls%ls%ls", Op, OpName, ContextStr.c_str(), (Op + 1 == LastCompletedOp) ? TEXT(" - LAST COMPLETED") : TEXT(""));
                 }
             }

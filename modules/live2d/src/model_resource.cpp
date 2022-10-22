@@ -431,7 +431,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     motionRequests.resize(cbData->motion_count);
     motionDestinations.resize(cbData->motion_count);
     uint32_t slot = 0;
-    for (uint32_t i = 0; i < settings->GetMotionGroupCount(); i++)
+    for (uint32_t i = 0; i < (uint32_t)settings->GetMotionGroupCount(); i++)
     {
         ZoneScopedN("Setup Motion Request");
 
@@ -439,7 +439,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         auto count = settings->GetMotionCount(group);
         csmMap<csmString, csmVector<ACubismMotion*>>& map = *this;
         map[group].Resize(count);
-        for (uint32_t j = 0; j < settings->GetMotionCount(group); j++)
+        for (uint32_t j = 0; j < (uint32_t)settings->GetMotionCount(group); j++)
         {
             auto& request = motionRequests[slot];
             auto&& [pRequest, path] = motionPaths.at(slot);
@@ -498,7 +498,7 @@ void csmMotionMap::on_finished() SKR_NOEXCEPT
     for (csmInt32 i = 0; i < settings->GetMotionGroupCount(); i++)
     {
         const csmChar* group = settings->GetMotionGroupName(i);
-        for (uint32_t j = 0; j < settings->GetMotionCount(group); j++)
+        for (uint32_t j = 0; j < (uint32_t)settings->GetMotionCount(group); j++)
         {
             SKR_LOG_TRACE("Setup Live2D Motion %s at %d", group, j);
             csmMap<csmString, csmVector<ACubismMotion*>>& map = *this;
@@ -552,7 +552,7 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
             cbData->usr_data_count = 1;
         }
         cbData->expression_count = model_setting->GetExpressionCount();
-        for (uint32_t i = 0; i < model_setting->GetMotionGroupCount(); i++)
+        for (uint32_t i = 0; i < (uint32_t)model_setting->GetMotionGroupCount(); i++)
         {
             auto group = model_setting->GetMotionGroupName(i);
             cbData->motion_count += model_setting->GetMotionCount(group);

@@ -255,7 +255,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         elapsed_frame += 1;
         if (elapsed_us > (1000 * 1000))
         {
-            fps = elapsed_frame;
+            fps = (uint32_t)elapsed_frame;
             elapsed_frame = 0;
             elapsed_us = 0;
         }

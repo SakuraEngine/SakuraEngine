@@ -834,7 +834,7 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
 {
     HRESULT result = S_OK;
     ID3D12Resource* imported = CGPU_NULLPTR;
-    HANDLE namedResourceHandle = (HANDLE)LongToHandle(desc->shared_handle);
+    HANDLE namedResourceHandle = (HANDLE)LongToHandle((long)desc->shared_handle);
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
 
     eastl::wstring name = shared_texture_name_format;

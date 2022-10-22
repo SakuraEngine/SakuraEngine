@@ -139,7 +139,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     auto threadIndex = taskScheduler->GetCurrentThreadIndex();
     ThreadLocalStorage* tls = &taskScheduler->m_tls[threadIndex];
 
-    if (threadIndex == 0 && dispatch_depth == 0) TracyFiberEnter("MainThreadAsFiber");
+    if (threadIndex == 0 && dispatch_depth == 0) 
+    {
+        TracyFiberEnter("MainThreadAsFiber")
+    }
     dispatch_depth++;
 
     if (taskScheduler->m_callbacks.OnFiberAttached != nullptr)
@@ -219,7 +222,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
             // Switch
             {
                 if (threadIndex == 0 && waitingFiber == &taskScheduler->m_mainFiber) dispatch_depth = 0;
-                if (threadIndex == 0 && dispatch_depth == 0) TracyFiberLeave;
+                if (threadIndex == 0 && dispatch_depth == 0) 
+                {
+                    TracyFiberLeave
+                }
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
             }
 
@@ -330,7 +336,10 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
     // Switch to the quit fibers
     dispatch_depth--;
-    if (threadIndex == 0 && dispatch_depth == 0) TracyFiberLeave;
+    if (threadIndex == 0 && dispatch_depth == 0) 
+    {
+        TracyFiberLeave
+    }
 
     if (taskScheduler->m_callbacks.OnFiberDetached != nullptr)
     {

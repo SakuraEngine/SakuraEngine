@@ -41,7 +41,7 @@ void skr_live2d_render_view_set_screen(live2d_render_view_id view, uint32_t widt
         float screen_w = fabsf(top - bottom);
         view->device_to_screen.ScaleRelative(screen_w / height, -screen_w / height);
     }
-    view->device_to_screen.TranslateRelative(-width * 0.5f, -height * 0.5f);
+    view->device_to_screen.TranslateRelative(width * -0.5f, height * -0.5f);
 
     // 表示範囲の設定
     view->view_matrix.SetMaxScale(kLive2DViewMaxScale); // 限界拡大率

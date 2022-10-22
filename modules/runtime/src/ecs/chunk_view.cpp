@@ -215,7 +215,7 @@ void construct_view(const dual_chunk_view_t& view) noexcept
     uint32_t* aligns = type->aligns;
     uint32_t* elemSizes = type->elemSizes;
     auto maskValue = uint32_t(1 << type->type.length) - 1;
-    for (auto i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->type.length; ++i)
         construct_impl(view, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, type->callbacks[i].constructor);
 }
 
@@ -225,7 +225,7 @@ void destruct_view(const dual_chunk_view_t& view) noexcept
     EIndex* offsets = type->offsets[(int)view.chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
-    for (auto i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->type.length; ++i)
         destruct_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->callbacks[i].destructor);
 }
 
@@ -241,7 +241,7 @@ void move_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
     uint32_t* elemSizes = type->elemSizes;
-    for (auto i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->type.length; ++i)
         move_impl(dstV, srcC, srcStart, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], type->callbacks[i].move);
 }
 

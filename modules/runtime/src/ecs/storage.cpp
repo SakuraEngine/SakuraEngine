@@ -670,7 +670,7 @@ void dual_storage_t::merge(dual_storage_t& src)
         payloads.push_back(payload);
     }
     skr::task::counter_t counter;
-    counter.add(payloads.size());
+    counter.add((uint32_t)payloads.size());
     for(auto payload : payloads)
     {
         skr::task::schedule([payload, counter]() mutable

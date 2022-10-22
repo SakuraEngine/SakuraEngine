@@ -127,7 +127,7 @@ void dual_storage_t::serialize_view(dual_group_t* group, dual_chunk_view_t& view
         else
             ArchiveBuffer(ds, view.chunk->get_entities() + view.start, view.count);
     }
-    for (int i = 0; i < type->type.length; ++i)
+    for (SIndex i = 0; i < type->type.length; ++i)
         serialize_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], s, ds, type->callbacks[i].serialize, type->callbacks[i].deserialize);
 }
 
@@ -154,7 +154,7 @@ dual_entity_type_t dual_storage_t::deserialize_type(dual::fixed_stack_t& stack, 
     namespace bin = skr::binary;
     // deserialize type, and get/create group from it
     // todo: assert(!s.is_serialize());
-    dual_entity_type_t type;
+    dual_entity_type_t type = {};
     bin::Archive(s, type.type.length);
     auto guids = stack.allocate<guid_t>(type.type.length);
     ArchiveBuffer(s, guids, type.type.length);

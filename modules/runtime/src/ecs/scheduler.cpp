@@ -483,7 +483,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 }
                 
                 skr::task::counter_t counter;
-                counter.add(batches.size());
+                counter.add((uint32_t)batches.size());
                 for(auto batch : batches)
                 {
                     skr::task::schedule([batch, sharedData, counter]() mutable

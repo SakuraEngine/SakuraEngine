@@ -693,11 +693,11 @@ void CubismPhysics::Evaluate(CubismModel* model, csmFloat32 deltaTimeSeconds)
     parameterMinimumValue = Core::csmGetParameterMinimumValues(model->GetModel());
     parameterDefaultValue = Core::csmGetParameterDefaultValues(model->GetModel());
 
-    if (_parameterCache.GetSize() < model->GetParameterCount())
+    if (_parameterCache.GetSize() < (uint32_t)model->GetParameterCount())
     {
         _parameterCache.Resize(model->GetParameterCount());
     }
-    if (_parameterInputCache.GetSize() < model->GetParameterCount())
+    if (_parameterInputCache.GetSize() < (uint32_t)model->GetParameterCount())
     {
         _parameterInputCache.Resize(model->GetParameterCount());
         for (int j = 0; j < model->GetParameterCount(); ++j) {

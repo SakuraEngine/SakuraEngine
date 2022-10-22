@@ -205,10 +205,10 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
     // reallocate raw data
     uint64_t size = bytes_per_row * height;
     uint8_t* data = (uint8_t*)sakura_malloc(size); 
-    move_raw(data, size, width, height, in_format, bit_depth, bytes_per_row);
+    move_raw(data, size, width, height, in_format, bit_depth, (uint32_t)bytes_per_row);
     // read png data
     png_set_read_fn(png_ptr, this, PNGImageCoderHelper::user_read_compressed);
-    for (auto i = 0; i < height; i++)
+    for (uint32_t i = 0; i < height; i++)
     {
         row_pointers[i]= &raw_view[i * bytes_per_row];
     }

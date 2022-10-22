@@ -54,7 +54,7 @@ bool JPEGImageCoder::load_jpeg_header() SKR_NOEXCEPT
 	int SubSampling = 0;
 	int ColorSpace = 0;
 	if (tjDecompressHeader3(Decompressor, 
-        reinterpret_cast<const uint8_t*>(encoded_view.data()), encoded_view.size(),
+        reinterpret_cast<const uint8_t*>(encoded_view.data()), (unsigned long)encoded_view.size(),
         &ImageWidth, &ImageHeight, &SubSampling, &ColorSpace) != 0)
 	{
 		return false;
@@ -120,10 +120,10 @@ bool JPEGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_de
 
 	int result = 0;
 	if (result = tjDecompress2(Decompressor, 
-        encoded_view.data(), encoded_view.size(), 
+        encoded_view.data(), (unsigned long)encoded_view.size(), 
         newMemory, width, 0, height, PixelFormat, Flags); result == 0)
 	{
-		return move_raw(newMemory, decoded_size, width, height, in_format, in_bit_depth, bytes_per_pixel);
+		return move_raw(newMemory, decoded_size, width, height, in_format, in_bit_depth, (uint32_t)bytes_per_pixel);
 	}
 
 	SKR_LOG_FATAL("TurboJPEG Error %d: %s", result, tjGetErrorStr2(Decompressor));
