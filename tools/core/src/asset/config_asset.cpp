@@ -27,17 +27,18 @@ namespace skd
 {
 namespace asset
 {
-void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRecord* record)
+void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
 {
     auto registry = GetConfigRegistry();
     auto iter = registry->typeInfos.find(configType);
+    auto path = context->AddFileDependency(assetPath.c_str());
     if (iter == registry->typeInfos.end())
     {
-        SKR_LOG_ERROR("import resource %s failed, type is not registered as config", record->path.u8string().c_str());
+        SKR_LOG_ERROR("import resource %s failed, type is not registered as config", context->record->path.u8string().c_str());
         return nullptr;
     }
 
-    auto u8Path = record->path.u8string();
+    auto u8Path = path.u8string();
 #if 1
     skr::task::event_t counter;
     skr_ram_io_t ramIO = {};
@@ -50,7 +51,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, const SAssetRe
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_io_request_t ioRequest = {};
     skr_async_ram_destination_t ioDestination = {};
-    ioService->request(record->project->vfs, &ramIO, &ioRequest, &ioDestination);
+    ioService->request(context->record->project->vfs, &ramIO, &ioRequest, &ioDestination);
     counter.wait(false);
     auto jsonString = simdjson::padded_string((char8_t*)ioDestination.bytes, ioDestination.size);
     sakura_free(ioDestination.bytes);

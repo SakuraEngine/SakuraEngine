@@ -98,10 +98,10 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
     }
 }
 
-void* SSceneImporter::Import(skr::io::RAMService*, const SAssetRecord* record)
+void* SSceneImporter::Import(skr::io::RAMService*, SCookContext* context)
 {
     dual_storage_t* world = nullptr;
-    auto u8Path = record->path.u8string();
+    auto u8Path = context->AddFileDependency(assetPath.c_str()).u8string();
     if (bool suppoted = skd::USDCoreSupportFile(u8Path.c_str()))
     {
         world = dualS_create();

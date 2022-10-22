@@ -8,15 +8,17 @@
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 
-void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, const skd::asset::SAssetRecord* record) 
+void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
 {
-    auto ext = record->path.extension();
+    ghc::filesystem::path relPath = assetPath.c_str();
+    auto ext = relPath.extension();
     if (ext != ".gltf")
     {
         return nullptr;
     }
+    auto path = context->AddFileDependency(relPath);
     // prepare callback
-    auto u8Path = record->path.u8string();
+    auto u8Path = path.u8string();
     skr::task::event_t counter;
     struct CallbackData
     {
@@ -58,7 +60,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, cons
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
     skr_async_io_request_t ioRequest = {};
-    ioService->request(record->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
+    ioService->request(context->record->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
     counter.wait(false);
     // parse
     if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)

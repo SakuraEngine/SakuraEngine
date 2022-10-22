@@ -124,8 +124,16 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
             writer.StartObject();
             writer.Key("files");
             writer.StartArray();
+            for (auto& dep : jobContext->fileDependencies)
+            {
+                auto str = dep.u8string();
+                skr::json::WriteValue<const eastl::string_view&>(&writer, {str.data(), str.size()});
+            }
+            writer.EndArray();
+            writer.Key("dependencies");
+            writer.StartArray();
             for (auto& dep : jobContext->staticDependencies)
-                skr::json::Write<const skr_guid_t&>(&writer, dep);
+                skr::json::WriteValue<const skr_guid_t&>(&writer, dep);
             writer.EndArray();
             writer.EndObject();
             auto file = fopen(dependencyPath.u8string().c_str(), "w");
@@ -196,12 +204,6 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
             return false;
         }
-        auto deps = doc["files"].get_array();
-        if (deps.error() != simdjson::SUCCESS)
-        {
-            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
-            return false;
-        }
         {
             auto iter = cookers.find(metaAsset->type);
             SKR_ASSERT(iter != cookers.end());
@@ -220,7 +222,34 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
                 return false;
             }
         }
-
+        auto files = doc["files"].get_array();
+        if (files.error() != simdjson::SUCCESS)
+        {
+            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
+            return false;
+        }
+        for (auto file : files.value_unsafe())
+        {
+            eastl::string pathStr;
+            skr::json::Read(std::move(file).value_unsafe(), pathStr);
+            ghc::filesystem::path path(pathStr.c_str());
+            if(!ghc::filesystem::exists(path))
+            {
+                SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] file not exist! resource guid: {}", guid);
+                return false;
+            }
+            if (ghc::filesystem::last_write_time(path, ec) > timestamp)
+            {
+                SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] file modified! resource guid: {}", guid);
+                return false;
+            }
+        }
+        auto deps = doc["dependencies"].get_array();
+        if (deps.error() != simdjson::SUCCESS)
+        {
+            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
+            return false;
+        }
         for (auto depFile : deps.value_unsafe())
         {
             skr_guid_t depGuid;
@@ -270,35 +299,46 @@ void* SCookContext::_Import()
     if (importerJson.error() == simdjson::SUCCESS)
     {
         auto importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe());
-        //-----import raw data
-        auto asset = GetCookSystem()->GetAssetRecord(importer->assetGuid);
-        if(!asset)
+        if(!importer)
         {
-            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] asset not exist! asset guid: {} referenced by meta: {}", importer->assetGuid, record->guid);
+            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
             return nullptr;
         }
-        staticDependencies.push_back(asset->guid);
-        auto rawData = importer->Import(ioService, asset);
-        SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset imported for resource {}! path: {}", record->guid, asset->path.u8string());
+        SKR_DEFER({ SkrDelete(importer); });
+        //-----import raw data
+        auto rawData = importer->Import(ioService, this);
+        SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset imported for resource {}! path: {}", record->guid, record->path.u8string());
         return rawData;
     }
-    auto parentJson = doc["parent"]; // derived from resource
-    if (parentJson.error() == simdjson::SUCCESS)
-    {
-        skr_guid_t parentGuid;
-        skr::json::Read(std::move(parentJson).value_unsafe(), parentGuid);
-        return AddStaticDependency(parentGuid);
-    }
+    // auto parentJson = doc["parent"]; // derived from resource
+    // if (parentJson.error() == simdjson::SUCCESS)
+    // {
+    //     skr_guid_t parentGuid;
+    //     skr::json::Read(std::move(parentJson).value_unsafe(), parentGuid);
+    //     return AddStaticDependency(parentGuid);
+    // }
     return nullptr;
+}
+ghc::filesystem::path SCookContext::AddFileDependency(const ghc::filesystem::path &inPath)
+{
+    auto path = record->path.parent_path().append(inPath);
+    auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == path; });
+    if (iter == fileDependencies.end())
+        fileDependencies.push_back(path);
+    return path;
 }
 void SCookContext::AddRuntimeDependency(skr_guid_t resource)
 {
-    runtimeDependencies.push_back(resource);
+    auto iter = std::find_if(runtimeDependencies.begin(), runtimeDependencies.end(), [&](const auto &dep) { return dep == resource; });
+    if (iter == runtimeDependencies.end())
+        runtimeDependencies.push_back(resource);
     GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
 }
 void* SCookContext::AddStaticDependency(skr_guid_t resource)
 {
-    staticDependencies.push_back(resource);
+    auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto &dep) { return dep == resource; });
+    if (iter == staticDependencies.end())
+        staticDependencies.push_back(resource);
     return GetCookSystem()->CookOrLoad(resource);
 }
 
@@ -307,17 +347,9 @@ SAssetRecord* SCookSystem::ImportAsset(SProject* project, ghc::filesystem::path 
     std::error_code ec = {};
     if (path.is_relative())
         path = project->assetPath / path;
-    auto metaPath = path;
-    if(metaPath.extension() != ".meta")
-        metaPath = path.string() + ".asset";
-    if (!ghc::filesystem::exists(metaPath, ec))
-    {
-        SKR_LOG_ERROR("[SAssetRegistry::ImportAsset] meta file %s not exist", path.u8string().c_str());
-        return nullptr;
-    }
     auto record = SkrNew<SAssetRecord>();
     // TODO: replace file load with skr api
-    record->meta = simdjson::padded_string::load(metaPath.u8string()).value_unsafe();
+    record->meta = simdjson::padded_string::load(path.u8string()).value_unsafe();
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
     skr::json::Read(doc["guid"].value_unsafe(), record->guid);
@@ -330,8 +362,6 @@ SAssetRecord* SCookSystem::ImportAsset(SProject* project, ghc::filesystem::path 
     record->project = project;
     SMutexLock lock(assetMutex);
     assets.insert(std::make_pair(record->guid, record));
-    if(metaPath.extension() == ".meta")
-        metaAssets.push_back(record);
     return record;
 }
 SAssetRecord* SCookSystem::GetAssetRecord(const skr_guid_t& guid)

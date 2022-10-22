@@ -22,8 +22,9 @@ TOOL_API struct SConfigRegistry* GetConfigRegistry();
 sreflect_struct("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6")
 TOOL_API SJsonConfigImporter final : public SImporter
 {
+    eastl::string assetPath;
     skr_guid_t configType;
-    void* Import(skr::io::RAMService*, const SAssetRecord* record) override;
+    void* Import(skr::io::RAMService*, SCookContext* context) override;
 }
 sattr("serialize" : "json")
 sregister_importer();

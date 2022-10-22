@@ -51,8 +51,10 @@ struct TOOL_API SCookContext { // context per job
     class skr::io::RAMService* ioService;
     skr::task::event_t counter;
     ghc::filesystem::path output;
+    eastl::vector<ghc::filesystem::path> fileDependencies;
     eastl::vector<skr_guid_t> staticDependencies;
     eastl::vector<skr_guid_t> runtimeDependencies;
+    ghc::filesystem::path AddFileDependency(const ghc::filesystem::path& path);
     void AddRuntimeDependency(skr_guid_t resource);
     void* AddStaticDependency(skr_guid_t resource);
     void* _Import();
@@ -96,7 +98,6 @@ struct TOOL_API SCookSystem {
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(SProject* project, ghc::filesystem::path path);
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
-    eastl::vector<SAssetRecord*> metaAssets;
     SMutex assetMutex;
 
     template <class F, class Iter>
