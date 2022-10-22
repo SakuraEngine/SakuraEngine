@@ -1,4 +1,4 @@
-target("ecs-test")
+target("ECSTest")
     set_group("05.tests")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)

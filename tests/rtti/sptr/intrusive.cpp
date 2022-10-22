@@ -60,9 +60,9 @@ TEST(SPTR, CopyIntrusive2)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     {
-        auto mTestObject = skr::SPtr<TestObject, true>::Create(status);
+        auto mTestObject = skr::SPtr<TestObject>::Create(status);
         EXPECT_EQ(mTestObject->rc, 1);
-        skr::SPtr<TestObject, true> mCopy(mTestObject);
+        skr::SPtr<TestObject> mCopy(mTestObject);
         EXPECT_EQ(mTestObject->rc, 2);
         auto mCopy1 = mTestObject;
         EXPECT_EQ(mTestObject->rc, 3);
@@ -87,9 +87,9 @@ TEST(SPTR, SwapIntrusive2)
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
-    auto mOneObject = skr::SPtr<TestObject, true>::Create(one_status);
+    auto mOneObject = skr::SPtr<TestObject>::Create(one_status);
     {
-        auto mAnotherObject = skr::SPtr<TestObject, true>::Create(another_status);
+        auto mAnotherObject = skr::SPtr<TestObject>::Create(another_status);
         mOneObject = mAnotherObject;     
         EXPECT_EQ(one_status, TestObject::Status::Destroyed);
     }
@@ -115,8 +115,8 @@ TEST(SPTR, MoveIntrusive2)
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
-    skr::SPtr<TestObject, true> rT1(SkrNew<TestObject>(one_status));
-    skr::SPtr<TestSon, true> rT2(SkrNew<TestSon>(another_status));  // default ctor uses 0
+    skr::SPtr<TestObject> rT1(SkrNew<TestObject>(one_status));
+    skr::SPtr<TestSon> rT2(SkrNew<TestSon>(another_status));  // default ctor uses 0
 
     EXPECT_EQ(one_status, TestObject::Status::Hosted);
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
@@ -144,15 +144,15 @@ TEST(SPTR, CastIntrusive)
 TEST(SPTR, CastIntrusive2)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
-    skr::SPtr<TestSon, true> pC(SkrNew<TestSon>(status));
-    skr::SPtr<TestObject, true> pP(pC);
-    skr::SPtr<TestSon, true> pCC(skr::static_pointer_cast<TestSon>(pP));
+    skr::SPtr<TestSon> pC(SkrNew<TestSon>(status));
+    skr::SPtr<TestObject> pP(pC);
+    skr::SPtr<TestSon> pCC(skr::static_pointer_cast<TestSon>(pP));
     EXPECT_EQ(pCC->use_count(), 3);
 
-    skr::SPtr<TestObject, true> pCC2 = (skr::SPtr<TestSon, true>)pCC; 
+    skr::SPtr<TestObject> pCC2 = (skr::SPtr<TestSon>)pCC; 
     EXPECT_EQ(pCC->use_count(), 4);
     
-    skr::SPtr<TestObject, true> pCC3 = std::move(pCC); 
+    skr::SPtr<TestObject> pCC3 = std::move(pCC); 
     EXPECT_EQ(pCC3->use_count(), 4);
 }
 
@@ -177,9 +177,9 @@ TEST(SPTR, WeakIntrusive)
 TEST(SPTR, WeakIntrusive2)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
-    skr::SPtr<TestSon, true> pC(SkrNew<TestSon>(status));
-    skr::SWeakPtr<TestSon, true> wpC(pC);
-    skr::SWeakPtr<TestSon, true> wpC2 = {};
+    skr::SPtr<TestSon> pC(SkrNew<TestSon>(status));
+    skr::SWeakPtr<TestSon> wpC(pC);
+    skr::SWeakPtr<TestSon> wpC2 = {};
     EXPECT_EQ(wpC2, nullptr);
     wpC2 = pC;
 

@@ -1,4 +1,4 @@
-#include "rtti-test-types/module.configure.h"
+#include "RTTITestTypes/module.configure.h"
 #include "types.hpp"
 #include "types2.hpp"
 
