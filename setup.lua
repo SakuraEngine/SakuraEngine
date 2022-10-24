@@ -1,16 +1,14 @@
---[[
 if (os.host() =="macosx") then 
     import("lib.detect.find_tool")
-   -- local brew = find_tool("brew")
+    local brew = find_tool("brew")
     if(brew == nil) then
-        --os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
+        os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
     end
-    --os.exec("brew install ispc")
+    os.exec("brew install ispc")
     --os.exec("brew install python")
     --os.exec("brew install sdl2")
     --os.exec("brew install googletest")
 end
-]]--
 
 import("find_sdk")
 
@@ -37,6 +35,7 @@ if (os.host() == "windows") then
     find_sdk.sdk_from_github("ispc-windows-x64.zip")
     find_sdk.sdk_from_github("reflector-windows-x64.zip")
     find_sdk.sdk_from_github("SDL2-windows-x64.zip")
+    find_sdk.sdk_from_github("tracy-gui-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient-windows-x64.zip")
     find_sdk.sdk_from_github("tracyclient_d-windows-x64.zip")
     --
@@ -47,6 +46,7 @@ if (os.host() == "macosx") then
     if (os.arch() == "x86_64") then
         find_sdk.sdk_from_github("dxc-macosx-x86_64.zip")
         find_sdk.sdk_from_github("reflector-macosx-x86_64.zip")
+        find_sdk.sdk_from_github("tracy-gui-macosx-x86_64.zip")
         find_sdk.sdk_from_github("tracyclient-macosx-x86_64.zip")
     else
         -- find_sdk.sdk_from_github("ispc-macosx-arm64.zip")
@@ -57,6 +57,7 @@ end
 find_sdk.install_tool("dxc")
 find_sdk.install_tool("reflector")
 find_sdk.install_tool("ispc")
+find_sdk.install_tool("tracy-gui")
 
 local setups = os.files("**/setup.lua")
 for _, setup in ipairs(setups) do
