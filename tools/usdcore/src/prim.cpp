@@ -33,7 +33,7 @@ SUSDPrimImpl::~SUSDPrimImpl()
 
 }
 
-bool SUSDPrimImpl::GetLocalTransformation(skr::span<double, 16> result, bool* resetsXformStack = nullptr) const
+bool SUSDPrimImpl::GetLocalTransformation(skr::span<double, 16> result, bool* resetsXformStack) const
 {
     pxr::GfMatrix4d USDMatrix(1);
     pxr::UsdGeomXformable XForm(prim);
