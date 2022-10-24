@@ -17,7 +17,14 @@ SImporter* SImporterRegistry::LoadImporter(const SAssetRecord* record, simdjson:
     skr::json::Read(object["importerType"].value_unsafe(), type);
     auto iter = loaders.find(type);
     if (iter != loaders.end())
-        return iter->second(record, std::move(object));
+        return iter->second.Load(record, std::move(object));
     return nullptr;
+}
+uint32_t SImporterRegistry::GetImporterVersion(skr_guid_t type)
+{
+    auto iter = loaders.find(type);
+    if (iter != loaders.end())
+        return iter->second.Version();
+    return UINT32_MAX;
 }
 } // namespace skd::asset

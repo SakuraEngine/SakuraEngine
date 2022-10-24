@@ -47,8 +47,11 @@ struct TOOL_API SCooker {
     SCookSystem* system;
 };
 struct TOOL_API SCookContext { // context per job
-    SAssetRecord* record;
-    class skr::io::RAMService* ioService;
+    SAssetRecord* record = nullptr;
+    class skr::io::RAMService* ioService = nullptr;
+    skr_guid_t importerType;
+    size_t importerVersion = 0;
+    size_t cookerVersion = 0;
     skr::task::event_t counter;
     ghc::filesystem::path output;
     eastl::vector<ghc::filesystem::path> fileDependencies;

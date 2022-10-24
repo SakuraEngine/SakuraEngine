@@ -113,6 +113,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
         {
             return;
         }
+        jobContext->cookerVersion = iter->second->Version();
         // SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
         SKR_LOG_FMT_INFO("[CookTask] resource {} cook started!", metaAsset->guid);
         if (iter->second->Cook(jobContext))
@@ -122,6 +123,10 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
             auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
             skr_json_writer_t writer(2);
             writer.StartObject();
+            writer.Key("ImporterVersion");
+            writer.UInt64(jobContext->importerVersion);
+            writer.Key("CookerVersion");
+            writer.UInt64(jobContext->cookerVersion);
             writer.Key("files");
             writer.StartArray();
             for (auto& dep : jobContext->fileDependencies)
@@ -204,6 +209,31 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
             return false;
         }
+        auto importerType = doc["importerType"];
+        skr_guid_t importerTypeGuid;
+        if(skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
+        {
+            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
+            return false;
+        }
+        auto importerVersion = doc["importerVersion"].get_uint64();
+
+        if (importerVersion.error() != simdjson::SUCCESS)
+        {
+            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
+            return false;
+        }
+        auto currentCookerVersion = GetImporterRegistry()->GetImporterVersion(importerTypeGuid);
+        if(importerVersion.value_unsafe() != currentCookerVersion)
+        {
+            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] importer version changed! resource guid: {}", guid);
+            return false;
+        }
+        if(currentCookerVersion == UINT32_MAX)
+        {
+            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dev importer version (UINT32_MAX)! resource guid: {}", guid);
+            return false;
+        }
         {
             auto iter = cookers.find(metaAsset->type);
             SKR_ASSERT(iter != cookers.end());
@@ -233,6 +263,7 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             eastl::string pathStr;
             skr::json::Read(std::move(file).value_unsafe(), pathStr);
             ghc::filesystem::path path(pathStr.c_str());
+            path = metaAsset->path.parent_path().append(path);
             std::error_code ec = {};
             if(!ghc::filesystem::exists(path, ec))
             {
@@ -306,6 +337,7 @@ void* SCookContext::_Import()
             return nullptr;
         }
         SKR_DEFER({ SkrDelete(importer); });
+        importerVersion = importer->Version();
         //-----import raw data
         auto rawData = importer->Import(ioService, this);
         SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset imported for resource {}! path: {}", record->guid, record->path.u8string());
@@ -322,11 +354,10 @@ void* SCookContext::_Import()
 }
 ghc::filesystem::path SCookContext::AddFileDependency(const ghc::filesystem::path &inPath)
 {
-    auto path = record->path.parent_path().append(inPath);
-    auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == path; });
+    auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == inPath; });
     if (iter == fileDependencies.end())
-        fileDependencies.push_back(path);
-    return path;
+        fileDependencies.push_back(inPath);
+    return record->path.parent_path().append(inPath);
 }
 void SCookContext::AddRuntimeDependency(skr_guid_t resource)
 {
