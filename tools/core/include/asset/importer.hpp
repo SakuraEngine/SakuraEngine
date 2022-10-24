@@ -33,11 +33,16 @@ TOOL_API SImporter
 {
     virtual ~SImporter() {}
     virtual void* Import(skr::io::RAMService*, SCookContext* context) = 0;
+    static uint32_t Version() { return UINT32_MAX; }
 };
-
+struct TOOL_API SImporterTypeInfo {
+    SImporter* (*Load)(const SAssetRecord* record, simdjson::ondemand::value&& object);
+    uint32_t (*Version)();
+};
 struct SImporterRegistry {
     SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object);
-    skr::flat_hash_map<skr_guid_t, SImporter* (*)(const SAssetRecord* record, simdjson::ondemand::value&& object), skr::guid::hash> loaders;
+    uint32_t GetImporterVersion(skr_guid_t type);
+    skr::flat_hash_map<skr_guid_t, SImporterTypeInfo, skr::guid::hash> loaders;
 };
 TOOL_API SImporterRegistry* GetImporterRegistry();
 struct SImporterFactory {
@@ -57,7 +62,8 @@ void RegisterImporter(skr_guid_t guid)
             skr::json::Read(std::move(object), *importer);
             return importer;
         };
-    registry->loaders.insert(std::make_pair(guid, loader));
+    SImporterTypeInfo info { loader, T::Version };
+    registry->loaders.insert(std::make_pair(guid, info));
 }
 } // namespace sreflect
 } // namespace sreflect
