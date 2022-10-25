@@ -4,4 +4,5 @@ if (os.host() == "windows") then
         public_dependency("SkrRT", engine_version)
         add_includedirs("include", {public=true})
         add_files("src/build.*.c", "src/build.*.cpp")
+        add_rules("utils.install-libs", { libnames = { "m3" } })
 end

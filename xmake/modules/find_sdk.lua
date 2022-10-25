@@ -8,7 +8,9 @@ function binarydir()
     return vformat("$(buildir)/$(os)/$(arch)/$(mode)")
 end
 
-function sdk_from_github(zip)
+-- use_lib_cache = true
+
+function zip_from_github(zip)
     import("net.http")
     import("lib.detect.find_file")
     local sdkdir = sdkdir or os.projectdir().."/SDKs"
@@ -19,6 +21,8 @@ function sdk_from_github(zip)
         http.download(url..zip, os.projectdir().."/SDKs/"..zip, {continue = false})
     end
 end
+
+-- tool
 
 function find_tool_zip(tool_name)
     import("lib.detect.find_file")
@@ -42,7 +46,14 @@ function install_tool(tool_name)
     end
 end
 
-function install_lib(lib_name)
+function tool_from_github(name, zip)
+    zip_from_github(zip)
+    install_tool(name)
+end
+
+-- lib
+
+function install_lib_to(lib_name, where)
     import("utils.archive")
     import("lib.detect.find_file")
     import("core.project.config")
@@ -59,11 +70,22 @@ function install_lib(lib_name)
         zip_dir = find_file(zip_file, {sdkdir})
     end
     if(zip_dir ~= nil) then
-        archive.extract(zip_dir, binarydir())
+        archive.extract(zip_dir, where)
     else
         print("failed to install "..lib_name..", file "..zip_file.." not found!")
     end
 end
+
+function install_lib(lib_name)
+    install_lib_to(lib_name, binarydir())
+end
+
+
+function lib_from_github(name, zip)
+    zip_from_github(zip)
+end
+
+-- program
 
 function Split(s, delimiter)
     local result = {};

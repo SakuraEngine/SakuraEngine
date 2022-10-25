@@ -134,6 +134,7 @@ protected:
     eastl::unique_ptr<AsyncTransferThread> async_transfer_thread;
 };
 
+
 int main(int argc, char* argv[])
 {
     ECGPUBackend cmdBackend;
