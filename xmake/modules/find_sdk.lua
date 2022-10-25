@@ -10,7 +10,7 @@ end
 
 -- use_lib_cache = true
 
-function zip_from_github(zip)
+function file_from_github(zip)
     import("net.http")
     import("lib.detect.find_file")
     local sdkdir = sdkdir or os.projectdir().."/SDKs"
@@ -47,7 +47,7 @@ function install_tool(tool_name)
 end
 
 function tool_from_github(name, zip)
-    zip_from_github(zip)
+    file_from_github(zip)
     install_tool(name)
 end
 
@@ -82,7 +82,7 @@ end
 
 
 function lib_from_github(name, zip)
-    zip_from_github(zip)
+    file_from_github(zip)
 end
 
 -- program
