@@ -13,7 +13,7 @@ end
 import("find_sdk")
 
 -- python
-find_sdk.lib_from_github("SourceSansPro-Regular.ttf")
+find_sdk.file_from_github("SourceSansPro-Regular.ttf")
 if (os.host() == "windows") then
     find_sdk.tool_from_github("python-embed", "python-embed-windows-x64.zip")
 else
