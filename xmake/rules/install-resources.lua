@@ -23,3 +23,12 @@ rule("utils.install-resources")
         batchcmds:set_depmtime(os.mtime(abs_out))
         batchcmds:set_depcache(target:dependfile(abs_out))
     end)
+
+rule("utils.install-libs")
+    before_build(function (target)
+        import("find_sdk")
+        local libnames = target:extraconf("rules", "utils.install-libs", "libnames")
+        for _, libname in pairs(libnames) do
+            find_sdk.install_lib(libname)
+        end
+    end)

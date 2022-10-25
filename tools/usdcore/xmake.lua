@@ -25,10 +25,7 @@ target("UsdCore")
     end
 
     -- unzip sdk
-    before_build(function(target)
-        import("core.project.task")
-        task.run("unzip-usd")
-    end)
+    add_rules("utils.install-libs", { libnames = { "usd" } })
 
     -- TODO: make these private
     if is_plat("windows") then

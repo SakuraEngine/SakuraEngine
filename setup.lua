@@ -13,51 +13,46 @@ end
 import("find_sdk")
 
 -- python
-find_sdk.sdk_from_github("SourceSansPro-Regular.ttf")
+find_sdk.lib_from_github("SourceSansPro-Regular.ttf")
 if (os.host() == "windows") then
-    find_sdk.sdk_from_github("python-embed-windows-x64.zip")
-    find_sdk.install_tool("python-embed")
+    find_sdk.tool_from_github("python-embed", "python-embed-windows-x64.zip")
 else
     pip = find_sdk.find_program("pip3") or find_sdk.find_program("pip") or {program = "pip"}
     os.runv(pip.program, {"install", "mako"})
 end
 
 if (os.host() == "windows") then
-    find_sdk.sdk_from_github("wasm-clang-windows-x64.zip")
     -- gfx
-    find_sdk.sdk_from_github("WinPixEventRuntime-windows-x64.zip")
-    find_sdk.sdk_from_github("amdags-windows-x64.zip")
-    find_sdk.sdk_from_github("dxc-windows-x64.zip")
-    find_sdk.sdk_from_github("nvapi-windows-x64.zip")
-    find_sdk.sdk_from_github("nsight-windows-x64.zip")
-    find_sdk.sdk_from_github("dstorage-windows-x64.zip")
+    find_sdk.lib_from_github("WinPixEventRuntime", "WinPixEventRuntime-windows-x64.zip")
+    find_sdk.lib_from_github("amdags", "amdags-windows-x64.zip")
+    find_sdk.lib_from_github("nvapi", "nvapi-windows-x64.zip")
+    find_sdk.lib_from_github("nsight", "nsight-windows-x64.zip")
+    find_sdk.lib_from_github("dstorage", "dstorage-windows-x64.zip")
+    find_sdk.lib_from_github("SDL2", "SDL2-windows-x64.zip")
+    find_sdk.lib_from_github("tracyclient", "tracyclient-windows-x64.zip")
+    find_sdk.lib_from_github("tracyclient_d", "tracyclient_d-windows-x64.zip")
     --
-    find_sdk.sdk_from_github("ispc-windows-x64.zip")
-    find_sdk.sdk_from_github("reflector-windows-x64.zip")
-    find_sdk.sdk_from_github("SDL2-windows-x64.zip")
-    find_sdk.sdk_from_github("tracy-gui-windows-x64.zip")
-    find_sdk.sdk_from_github("tracyclient-windows-x64.zip")
-    find_sdk.sdk_from_github("tracyclient_d-windows-x64.zip")
+    find_sdk.lib_from_github("usd", "usd-windows-x64.zip")
     --
-    find_sdk.sdk_from_github("usd-windows-x64.zip")
+    find_sdk.tool_from_github("dxc", "dxc-windows-x64.zip")
+    find_sdk.tool_from_github("wasm-clang", "wasm-clang-windows-x64.zip")
+    find_sdk.tool_from_github("ispc", "ispc-windows-x64.zip")
+    find_sdk.tool_from_github("reflector", "reflector-windows-x64.zip")
+    find_sdk.tool_from_github("tracy-gui", "tracy-gui-windows-x64.zip")
 end
 
 if (os.host() == "macosx") then
     if (os.arch() == "x86_64") then
-        find_sdk.sdk_from_github("dxc-macosx-x86_64.zip")
-        find_sdk.sdk_from_github("reflector-macosx-x86_64.zip")
-        find_sdk.sdk_from_github("tracy-gui-macosx-x86_64.zip")
-        find_sdk.sdk_from_github("tracyclient-macosx-x86_64.zip")
+        -- 
+        find_sdk.lib_from_github("tracyclient", "tracyclient-macosx-x86_64.zip")
+        --
+        find_sdk.tool_from_github("dxc", "dxc-macosx-x86_64.zip")
+        find_sdk.tool_from_github("reflector", "reflector-macosx-x86_64.zip")
+        find_sdk.tool_from_github("tracy-gui", "tracy-gui-macosx-x86_64.zip")
     else
-        -- find_sdk.sdk_from_github("ispc-macosx-arm64.zip")
-        find_sdk.sdk_from_github("dxc-macosx-arm64.zip")
+        find_sdk.tool_from_github("dxc", "dxc-macosx-arm64.zip")
     end
 end
-
-find_sdk.install_tool("dxc")
-find_sdk.install_tool("reflector")
-find_sdk.install_tool("ispc")
-find_sdk.install_tool("tracy-gui")
 
 local setups = os.files("**/setup.lua")
 for _, setup in ipairs(setups) do
