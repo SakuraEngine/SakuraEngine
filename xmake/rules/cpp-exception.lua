@@ -1,27 +1,23 @@
 rule("c++.exception")
     on_config(function (target)
-        --[[
-        if(has_config("is_msvc")) then
-            target:add("cxflags", "/EHsc")
-            target:add("cxxflags", "/EHsc")
-            target:add("defines", "_HAS_EXCEPTIONS=1")
-        elseif(has_config("is_clang")) then
-            target:add("cxflags", "-fexceptions")
-            target:add("cxflags", "-fcxx-exceptions")
+        if (target:has_tool("cxx", "cl")) then
+            target:add("cxflags", "/EHsc", {force = true})
+            target:add("cxxflags", "/EHsc", {force = true})
+            target:add("defines", "_HAS_EXCEPTIONS=1", {force = true})
+        elseif(target:has_tool("cxx", "cl") or target:has_tool("cxx", "clang-cl")) then
+            target:add("cxflags", "-fexceptions", {force = true})
+            target:add("cxflags", "-fcxx-exceptions", {force = true})
         end
-        ]]--
     end)
 
 rule("c++.noexception")
     on_config(function (target)
-        --[[
-        if(has_config("is_msvc")) then
-            target:add("cxflags", "/EHs-c-")
-            target:add("cxflags", "/D_HAS_EXCEPTIONS=0")
-            target:add("defines", "_HAS_EXCEPTIONS=0")
-        elseif(has_config("is_clang")) then
-            target:add("cxflags", "-fno-exceptions")
-            target:add("cxflags", "-fno-cxx-exceptions")
+        if (target:has_tool("cxx", "cl")) then
+            target:add("cxflags", "/EHs-c-", {force = true})
+            target:add("cxflags", "/D_HAS_EXCEPTIONS=0", {force = true})
+            target:add("defines", "_HAS_EXCEPTIONS=0", {force = true})
+        elseif(target:has_tool("cxx", "cl") or target:has_tool("cxx", "clang-cl")) then
+            target:add("cxflags", "-fno-exceptions", {force = true})
+            target:add("cxflags", "-fno-cxx-exceptions", {force = true})
         end
-        ]]--
     end)
