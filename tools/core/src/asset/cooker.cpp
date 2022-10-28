@@ -165,6 +165,13 @@ void SCookSystem::UnregisterCooker(skr_guid_t guid)
     cookers.erase(guid);
 }
 
+#define SKR_CHECK_RESULT(result, name) \
+    if (result.error() != simdjson::SUCCESS) \
+    { \
+        SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] " name " file parse failed! resource guid: {}, field: {}", guid); \
+        return false; \
+    }
+
 skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
 {
     {
@@ -209,27 +216,28 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
             return false;
         }
-        // auto importerType = doc["importerType"];
-        // skr_guid_t importerTypeGuid;
-        // if(skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
-        // {
-        //     SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
-        //     return false;
-        // }
-        auto importerVersion = doc["importerVersion"].get_uint64();
-
-        if (importerVersion.error() != simdjson::SUCCESS)
+        simdjson::ondemand::parser metaParser;
+        auto metaDoc = metaParser.iterate(metaAsset->meta);
+        SKR_CHECK_RESULT(metaDoc, "meta")
+        auto importer = metaDoc["importer"];
+        SKR_CHECK_RESULT(importer, "meta")
+        auto importerType = importer["importerType"];
+        SKR_CHECK_RESULT(importerType, "meta")
+        skr_guid_t importerTypeGuid;
+        if(skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
         {
-            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
+            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] meta file parse failed! resource guid: {}", guid);
             return false;
         }
-        auto currentCookerVersion = GetImporterRegistry()->GetImporterVersion(importerTypeGuid);
-        if(importerVersion.value_unsafe() != currentCookerVersion)
+        auto importerVersion = doc["importerVersion"].get_uint64();
+        SKR_CHECK_RESULT(importerVersion, "dependency")
+        auto currentImporterVersion = GetImporterRegistry()->GetImporterVersion(importerTypeGuid);
+        if(importerVersion.value_unsafe() != currentImporterVersion)
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] importer version changed! resource guid: {}", guid);
             return false;
         }
-        if(currentCookerVersion == UINT32_MAX)
+        if(currentImporterVersion == UINT32_MAX)
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dev importer version (UINT32_MAX)! resource guid: {}", guid);
             return false;
