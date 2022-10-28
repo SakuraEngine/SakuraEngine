@@ -96,6 +96,7 @@ constexpr int parse_hex_digit(const char c)
         SKR_LOG_ERROR("Invalid character in GUID. Expected hex digit, got %c", c);
     return -1;
 }
+
 template <class T>
 bool parse_hex(const char* ptr, T& value)
 {
@@ -110,6 +111,7 @@ bool parse_hex(const char* ptr, T& value)
     }
     return true;
 }
+
 bool make_guid_helper(const char* begin, skr_guid_t& value)
 {
     uint32_t Data1 = 0;
@@ -163,10 +165,10 @@ bool make_guid(const eastl::string_view& str, skr_guid_t& value)
 
     return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0), value);
 }
+
 template <>
 error_code ReadValue(simdjson::ondemand::value&& json, skr_guid_t& guid)
 {
-
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
     {
@@ -178,6 +180,7 @@ error_code ReadValue(simdjson::ondemand::value&& json, skr_guid_t& guid)
     }
     return (error_code)result.error();
 }
+
 template <>
 error_code ReadValue(simdjson::ondemand::value&& json, skr_resource_handle_t& handle)
 {

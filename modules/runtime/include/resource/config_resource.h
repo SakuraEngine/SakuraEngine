@@ -38,6 +38,8 @@ RUNTIME_API SConfigRegistry* GetConfigRegistry();
 struct RUNTIME_API SConfigFactory : public SResourceFactory {
     skr_type_id_t GetResourceType() override;
     static struct skr_config_resource_t* NewConfig(skr_type_id_t& id);
+    static void DestroyConfig(struct skr_config_resource_t* config);
+
     bool AsyncIO() override { return false; }
     ESkrLoadStatus Load(skr_resource_record_t* record) override;
     bool Deserialize(skr_resource_record_t* record, skr_binary_reader_t& archive);

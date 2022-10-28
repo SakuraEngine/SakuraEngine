@@ -209,13 +209,13 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
             return false;
         }
-        auto importerType = doc["importerType"];
-        skr_guid_t importerTypeGuid;
-        if(skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
-        {
-            SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
-            return false;
-        }
+        // auto importerType = doc["importerType"];
+        // skr_guid_t importerTypeGuid;
+        // if(skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
+        // {
+        //     SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! resource guid: {}", guid);
+        //     return false;
+        // }
         auto importerVersion = doc["importerVersion"].get_uint64();
 
         if (importerVersion.error() != simdjson::SUCCESS)
@@ -322,6 +322,19 @@ void* SCookSystem::CookOrLoad(skr_guid_t resource)
     return nullptr;
 }
 
+void SCookContext::_Destroy(void* resource)
+{
+    if(!importer)
+    {
+        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
+    }
+    SKR_DEFER({ SkrDelete(importer); });
+    importerVersion = importer->Version();
+    //-----import raw data
+    importer->Destroy(resource);
+    SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset freed for resource {}! path: {}", record->guid, record->path.u8string());
+}
+
 void* SCookContext::_Import()
 {
     //-----load importer
@@ -330,13 +343,12 @@ void* SCookContext::_Import()
     auto importerJson = doc["importer"]; // import from asset
     if (importerJson.error() == simdjson::SUCCESS)
     {
-        auto importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe());
+        importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe());
         if(!importer)
         {
             SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
             return nullptr;
         }
-        SKR_DEFER({ SkrDelete(importer); });
         importerVersion = importer->Version();
         //-----import raw data
         auto rawData = importer->Import(ioService, this);

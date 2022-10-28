@@ -25,6 +25,7 @@ TOOL_API SJsonConfigImporter final : public SImporter
     eastl::string assetPath;
     skr_guid_t configType;
     void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void Destroy(void* resource) override;
 }
 sattr("serialize" : "json")
 sregister_importer();

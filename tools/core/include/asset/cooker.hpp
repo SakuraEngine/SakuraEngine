@@ -19,6 +19,7 @@ class RAMService;
 }
 namespace skd::asset sreflect
 {
+struct SImporter;
 struct SCookSystem;
 struct SCooker;
 struct SCookContext;
@@ -51,20 +52,31 @@ struct TOOL_API SCookContext { // context per job
     class skr::io::RAMService* ioService = nullptr;
     skr_guid_t importerType;
     size_t importerVersion = 0;
+    SImporter* importer = nullptr;
     size_t cookerVersion = 0;
     skr::task::event_t counter;
     ghc::filesystem::path output;
     eastl::vector<ghc::filesystem::path> fileDependencies;
     eastl::vector<skr_guid_t> staticDependencies;
     eastl::vector<skr_guid_t> runtimeDependencies;
+
     ghc::filesystem::path AddFileDependency(const ghc::filesystem::path& path);
     void AddRuntimeDependency(skr_guid_t resource);
     void* AddStaticDependency(skr_guid_t resource);
     void* _Import();
+    void _Destroy(void*);
     template <class T>
     T* Import()
     {
         return (T*)_Import();
+    }
+    template <class T>
+    void Destroy(T* ptr)
+    {
+        if (ptr) 
+        {
+            _Destroy(ptr);
+        }
     }
     template <class S>
     void WriteHeader(S& s, SCooker* cooker)
