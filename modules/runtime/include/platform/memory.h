@@ -36,6 +36,24 @@ template <typename T>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
 
+template <typename T, typename... TArgs>
+[[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size, TArgs&&... params)
+{
+    SKR_ASSERT(size >= sizeof(T));
+    void* pMemory = sakura_new_aligned(size, alignof(T));
+    SKR_ASSERT(pMemory != nullptr);
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+}
+
+template <typename T>
+[[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size)
+{
+    SKR_ASSERT(size >= sizeof(T));
+    void* pMemory = sakura_new_aligned(size, alignof(T));
+    SKR_ASSERT(pMemory != nullptr);
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
+}
+
 template <typename F>
 [[nodiscard]] FORCEINLINE F* SkrNewLambda(F&& lambda)
 {
