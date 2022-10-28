@@ -23,6 +23,7 @@ USDTOOL_API SSceneImporter final : public SImporter
     // by default importer will resolve the path to find resource if redirector is not exist
     skr::flat_hash_map<eastl::string, skr_guid_t, eastl::string_hash<eastl::string>> redirectors;
     void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void Destroy(void* resource) override;
 }
 sregister_importer();
 struct sreflect

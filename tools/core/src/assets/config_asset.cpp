@@ -1,4 +1,4 @@
-#include "asset/config_asset.hpp"
+#include "assets/config_asset.hpp"
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
@@ -89,7 +89,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     // no cook config for config, skipping
     //-----import resource object
     auto resource = ctx->Import<skr_config_resource_t>();
-    SKR_DEFER({ SkrDelete(resource); });
+    SKR_DEFER({ ctx->Destroy(resource); });
     //-----emit dependencies
     // no static dependencies
     //-----cook resource
