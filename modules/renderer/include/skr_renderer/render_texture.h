@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "utils/io.h"
+#include "utils/types.h"
 #include "cgpu/io.h"
 
 typedef struct skr_render_texture_io_t {
@@ -15,6 +16,17 @@ typedef struct skr_render_texture_request_t {
     skr_async_io_request_t ram_request;
     skr_async_io_request_t vtexture_request;
 } skr_render_texture_request_t;
+
+// (GPU) texture resource
+struct sreflect sattr(
+    "guid" : "b9f81b6f-b544-46e1-8a80-b3269a1c2386"
+)
+skr_render_texture_t
+{
+    skr_blob_t raw;
+    ECGPUFormat format;
+};
+typedef struct skr_render_texture_t skr_render_texture_t;
 
 #ifndef SKR_SERIALIZE_GURAD
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
