@@ -25,7 +25,7 @@ namespace skr::binary
         if (ret != 0)
                 return ret;
         header.dependencies.resize(size);
-        for(auto dep : header.dependencies)
+        for(auto& dep : header.dependencies)
         {
             ret = bin::Archive(reader, dep);
             if (ret != 0)
@@ -51,7 +51,7 @@ namespace skr::binary
         if (ret != 0)
             return ret;
         ret = bin::Archive(writer, (uint32_t)header.dependencies.size());
-        for(auto dep : header.dependencies)
+        for(auto& dep : header.dependencies)
         {
             ret = bin::Archive(writer, dep);
             if (ret != 0)
