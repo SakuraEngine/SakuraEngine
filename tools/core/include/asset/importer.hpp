@@ -33,6 +33,7 @@ TOOL_API SImporter
 {
     virtual ~SImporter() {}
     virtual void* Import(skr::io::RAMService*, SCookContext* context) = 0;
+    virtual void Destroy(void*) = 0;
     static uint32_t Version() { return UINT32_MAX; }
 };
 struct TOOL_API SImporterTypeInfo {

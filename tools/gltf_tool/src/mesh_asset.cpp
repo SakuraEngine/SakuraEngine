@@ -66,7 +66,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
     if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
     {
         cgltf_data* data = (cgltf_data*)callbackData.destination.bytes;
-        auto mesh = new skr_mesh_resource_t();
+        auto mesh = SkrNew<skr_mesh_resource_t>();
         mesh->name = data->meshes[0].name;
         if (mesh->name.empty())
         {
@@ -78,14 +78,20 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
     return nullptr;
 }
 
-bool skd::asset::SMeshCooker::Cook(SCookContext * ctx)
+void skd::asset::SGltfMeshImporter::Destroy(void* resource)
+{
+    auto mesh = (skr_mesh_resource_t*)resource;
+    SkrDelete(mesh);
+}
+
+bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
 { 
     auto resource = ctx->Import<skr_mesh_resource_t>();
     if(!resource)
     {
         return false;
     }
-    SKR_DEFER({ SkrDelete(resource); });
+    SKR_DEFER({ ctx->Destroy(resource); });
     //-----write resource header
     eastl::vector<uint8_t> buffer;
     //TODO: 公共化 VectorWriter

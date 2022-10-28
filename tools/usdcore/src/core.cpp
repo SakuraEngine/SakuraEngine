@@ -21,6 +21,6 @@ int USDCoreInitialize()
     curdir(buff, FILENAME_MAX);
     std::string pluginPath = std::string(buff) + std::string("/usd_plugins/");
     auto plugins = pxr::PlugRegistry::GetInstance().RegisterPlugins(pluginPath);
-    return (plugins.size() != 0);
+    return (plugins.size() == 0);
 }
 }

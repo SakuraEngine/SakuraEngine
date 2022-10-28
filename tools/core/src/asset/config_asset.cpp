@@ -71,10 +71,18 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* 
     iter->second.Import(doc.get_value().value_unsafe(), resource->configData);
     return resource; //导入具体数据
 }
+
+void SJsonConfigImporter::Destroy(void* resource)
+{
+    skr::resource::SConfigFactory::DestroyConfig((skr_config_resource_t*)resource);
+    return;
+}
+
 uint32_t SConfigCooker::Version()
 {
     return 0;
 }
+
 bool SConfigCooker::Cook(SCookContext* ctx)
 {
     //-----load config
@@ -131,10 +139,12 @@ bool SJsonConfigImporterFactory::CanImport(const SAssetRecord* record)
         return true;
     return false;
 }
+
 skr_guid_t SJsonConfigImporterFactory::GetResourceType()
 {
     return get_type_id_skr_config_resource_t();
 }
+
 void SJsonConfigImporterFactory::CreateImporter(const SAssetRecord* record)
 {
     // TODO: invoke user interface?
