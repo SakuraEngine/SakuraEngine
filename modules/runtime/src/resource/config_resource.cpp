@@ -32,10 +32,9 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
     auto baseSize = sizeof(skr_config_resource_t);
     auto offset = ((baseSize + align - 1) / align) * align;
     auto size = offset + type->Size();
-    auto mem = sakura_malloc(size);
-    auto res = new (mem) skr_config_resource_t;
+    auto res = SkrNewSized<skr_config_resource_t>(size);
     res->configType = id;
-    res->configData = (char*)mem + offset;
+    res->configData = (char*)res + offset;
     return res;
 }
 
