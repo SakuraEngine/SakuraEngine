@@ -15,6 +15,7 @@
 #include "module/module_manager.hpp"
 #include "platform/vfs.h"
 #include "utils/log.h"
+#include "utils/log.hpp"
 
 /*
 #include "google/protobuf/empty.pb.h"
@@ -122,6 +123,7 @@ int main(int argc, char** argv)
     #ifdef WITH_USDTOOL
     moduleManager->patch_module_graph("UsdTool", true);
     #endif
+    moduleManager->patch_module_graph("SkrTextureCompiler", true);
     skr::task::scheduler_t scheduler;
     scheduler.initialize(skr::task::scheudler_config_t());
     scheduler.bind();
@@ -147,7 +149,10 @@ int main(int argc, char** argv)
     while (iter != end(iter))
     {
         if (iter->is_regular_file(ec) && IsAsset(iter->path()))
+        {
             paths.push_back(*iter);
+            SKR_LOG_FMT_DEBUG("{}", iter->path().u8string());
+        }
         iter.increment(ec);
     }
     SKR_LOG_INFO("Project dir scan finished.");

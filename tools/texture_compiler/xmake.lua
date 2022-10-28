@@ -8,6 +8,12 @@ target("ISPCTextureCompressor")
 shared_module("SkrTextureCompiler", "TEXTURE_COMPILER", engine_version)
     set_group("02.tools")
     add_includedirs("include", {public=true})
+    public_dependency("SkrRenderer", engine_version)
     public_dependency("SkrTool", engine_version)
     add_deps("ISPCTextureCompressor")
     add_files("src/**.cpp")
+    add_rules("c++.codegen", {
+        files = {"include/**.h", "include/**.hpp"},
+        rootdir = "include/SkrTextureCompiler",
+        api = "SKR_TEXTURE_COMPILER"
+    })
