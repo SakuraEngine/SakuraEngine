@@ -18,12 +18,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     const char* provider_arguments[] = { "provider", "--d3d12"};
     auto provider1 = 
-		skr_run_process("cross-process.exe", provider_arguments, 2, "provider-d3d.log");
+		skr_run_process("Example-RenderGraphCrossProcess.exe", provider_arguments, 2, "provider-d3d.log");
     auto provider_id1 = skr_get_process_id(provider1);
 
     const char* provider_arguments2[] = { "provider", "--vulkan"};
     auto provider2 = 
-		skr_run_process("cross-process.exe", provider_arguments2, 2, "provider-vk.log");
+		skr_run_process("Example-RenderGraphCrossProcess.exe", provider_arguments2, 2, "provider-vk.log");
     auto provider_id2 = skr_get_process_id(provider2);
 
 	skq::SQViewport* vport_d3d = new skq::SQViewport(nullptr, provider_id1);
