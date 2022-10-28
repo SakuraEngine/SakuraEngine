@@ -116,6 +116,12 @@ void* SSceneImporter::Import(skr::io::RAMService*, SCookContext* context)
     return world;
 }
 
+void SSceneImporter::Destroy(void* resource)
+{
+    auto world = (dual_storage_t*)resource;
+    dualS_release(world);
+}
+
 uint32_t SSceneCooker::Version()
 {
     return 0;
@@ -127,7 +133,7 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     // no cook config for config, skipping
     //-----import resource object
     auto world = ctx->Import<dual_storage_t>();
-    SKR_DEFER({ dualS_release(world); });
+    SKR_DEFER({ ctx->Destroy(world); });
     //-----emit dependencies
     // TODO: static dependencies
     //-----cook resource

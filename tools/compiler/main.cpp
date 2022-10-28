@@ -6,7 +6,7 @@
 #include "resource/config_resource.h"
 #include "resource/resource_header.h"
 #include <mutex>
-#include "asset/config_asset.hpp"
+#include "assets/config_asset.hpp"
 #include "tracy/Tracy.hpp"
 #include "type/type_registry.h"
 #include "utils/defer.hpp"

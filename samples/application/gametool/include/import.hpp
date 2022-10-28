@@ -2,7 +2,7 @@
 #include "platform/configure.h"
 #include "GameTool/module.configure.h"
 #include "backend_config.h"
-#include "asset/config_asset.hpp"
+#include "assets/config_asset.hpp"
 
 namespace gametool sreflect
 {
