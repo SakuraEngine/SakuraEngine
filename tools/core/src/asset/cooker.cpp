@@ -123,9 +123,9 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
             auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
             skr_json_writer_t writer(2);
             writer.StartObject();
-            writer.Key("ImporterVersion");
+            writer.Key("importerVersion");
             writer.UInt64(jobContext->importerVersion);
-            writer.Key("CookerVersion");
+            writer.Key("cookerVersion");
             writer.UInt64(jobContext->cookerVersion);
             writer.Key("files");
             writer.StartArray();
