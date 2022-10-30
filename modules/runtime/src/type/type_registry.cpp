@@ -1014,7 +1014,7 @@ void skr_type_t::Destruct(void* address) const
             auto& ptr = (const ReferenceType&)(*this);
             if (ptr.ownership == ReferenceType::Shared)
             {
-                ((skr::SPtr<void>*)address)->~shared_ptr();
+                ((skr::SPtr<void>*)address)->~SPtrHelper();
             }
         }
         default:

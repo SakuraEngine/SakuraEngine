@@ -155,3 +155,18 @@ TEST(SPTR, CastIntrusive2)
     skr::SObjectPtr<TestObject> pCC3 = std::move(pCC); 
     EXPECT_EQ(pCC3->use_count(), 4);
 }
+
+TEST(SPTR, VoidPtrCastIntrusive)
+{
+    TestObject::Status status = TestObject::Status::Uninitialized;
+    {
+        skr::SObjectPtr<void> pVC;
+        {
+            skr::SObjectPtr<TestSon> pC(SkrNew<TestSon>(status));
+            pVC = pC;
+            EXPECT_EQ(pC->use_count(), 2);
+        }
+        EXPECT_EQ(status, TestObject::Status::Hosted);
+    }
+    EXPECT_EQ(status, TestObject::Status::Destroyed);
+}

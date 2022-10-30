@@ -2,9 +2,6 @@
 #include "containers/detail/shared_rc.hpp"
 #include "platform/memory.h"
 
-skr::SRCBlock* skr::SRCBlock::Create() SKR_NOEXCEPT { return SkrNew<SRCBlock>(); }
-void skr::SRCBlock::Destroy(SRCBlock* b) SKR_NOEXCEPT { SkrDelete(b); }
-
 void skr::SRCBlock::add_refcount() SKR_NOEXCEPT
 {
     skr_atomic32_add_relaxed(&refcount, 1);
@@ -56,8 +53,3 @@ skr::SRCBlock* skr::SRCBlock::lock() SKR_NOEXCEPT
     }
     return nullptr;
 }
-
-void skr::SRCInst<true>::allocate_block()
-{
-    block = SRCBlock::Create();
-} 
