@@ -2,6 +2,7 @@
 #include "type_id.hpp"
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
+#include "containers/sptr.hpp"
 
 typedef struct skr_type_t skr_type_t;
 typedef struct skr_value_t skr_value_t;
@@ -410,7 +411,7 @@ struct EnumType : skr_type_t {
     {
     }
 };
-// T*, T&, std::unique_ptr<T>, std::shared_ptr<T>
+// T*, T&, skr::SPtr<T>
 struct ReferenceType : skr_type_t {
     enum Ownership
     {
@@ -495,7 +496,7 @@ struct type_of<T&> {
 };
 // shared_ptr wrapper
 template <class T>
-struct type_of<std::shared_ptr<T>> {
+struct type_of<skr::SPtr<T>> {
     static const skr_type_t* get()
     {
         static ReferenceType type{
@@ -578,17 +579,17 @@ struct Serializer
     eastl::string EndSerialize();
     void BeginDeserialize(eastl::string_view str);
     void EndDeserialize();
-    void Raw(eastl::string_view);
-    void Bool(bool&);
-    void Int32(int32_t&);
+    void Value(bool&);
+    void Value(int32_t&);
     ....
     bool Defined(const RecordType*);
+    void Enum(void* data, const EnumType*);
     void Object(void* data, const RecordType*);
     void BeginObject(const RecordType* type);
     void EndObject();
-    void BeginField(const skr_field_t* field);
+    bool BeginField(const skr_field_t* field);
     void EndField();
-    void BeginArray(); void EndArray();
+    void BeginArray(size_t size); void EndArray();
 };
 */
 template <class Serializer>
@@ -607,7 +608,7 @@ struct TValueSerializePolicy : ValueSerializePolicy {
             auto& s = ((TValueSerializePolicy*)self)->s;
             s.BeginDeserialize(str);
             serializeImpl(&s, data, type);
-            s.EndSerialize();
+            s.EndDeserialize();
         };
     }
 
@@ -617,31 +618,37 @@ struct TValueSerializePolicy : ValueSerializePolicy {
         switch (type->type)
         {
             case SKR_TYPE_CATEGORY_BOOL:
-                ctx.Bool(*(bool*)data);
+                ctx.Value(*(bool*)data);
                 break;
             case SKR_TYPE_CATEGORY_I32:
-                ctx.Int32(*(int32_t*)data);
+                ctx.Value(*(int32_t*)data);
                 break;
             case SKR_TYPE_CATEGORY_I64:
-                ctx.Int64(*(int64_t*)data);
+                ctx.Value(*(int64_t*)data);
                 break;
             case SKR_TYPE_CATEGORY_U32:
-                ctx.UInt32(*(uint32_t*)data);
+                ctx.Value(*(uint32_t*)data);
                 break;
             case SKR_TYPE_CATEGORY_U64:
-                ctx.UInt64(*(uint64_t*)data);
+                ctx.Value(*(uint64_t*)data);
                 break;
             case SKR_TYPE_CATEGORY_F32:
-                ctx.Float32(*(float*)data);
+                ctx.Value(*(float*)data);
                 break;
             case SKR_TYPE_CATEGORY_F64:
-                ctx.Float64(*(double*)data);
+                ctx.Value(*(double*)data);
                 break;
             case SKR_TYPE_CATEGORY_STR:
-                ctx.String(*(eastl::string*)data);
+                ctx.Value(*(eastl::string*)data);
                 break;
             case SKR_TYPE_CATEGORY_STRV:
-                ctx.StringView(*(eastl::string_view*)data);
+                ctx.Value(*(eastl::string_view*)data);
+                break;
+            case SKR_TYPE_CATEGORY_GUID:
+                ctx.Value(*(skr_guid_t*)data);
+                break;
+            case SKR_TYPE_CATEGORY_HANDLE:
+                ctx.Value(((skr_resource_handle_t*)data)->get_serialized());
                 break;
             case SKR_TYPE_CATEGORY_ARR: {
                 ctx.BeginArray();
@@ -650,32 +657,32 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                 auto d = (char*)data;
                 auto size = element->Size();
                 for (int i = 0; i < arr.num; ++i)
-                    formatImpl(&ctx, d + i * size, element);
+                    serializeImpl(&ctx, d + i * size, element);
                 ctx.EndArray();
                 break;
             }
             case SKR_TYPE_CATEGORY_DYNARR: {
-                ctx.BeginArray();
                 auto& arr = (const DynArrayType&)(*type);
                 auto element = arr.elementType;
                 auto d = (char*)arr.operations.data(data);
                 auto n = arr.operations.size(data);
                 auto size = element->Size();
+                ctx.BeginArray(n);
                 for (int i = 0; i < n; ++i)
-                    formatImpl(&ctx, d + i * size, element);
+                    serializeImpl(&ctx, d + i * size, element);
                 ctx.EndArray();
                 break;
             }
             case SKR_TYPE_CATEGORY_ARRV: {
-                ctx.BeginArray();
                 auto& arr = (const ArrayViewType&)(*type);
                 auto& element = arr.elementType;
                 auto size = element->Size();
                 auto v = *(gsl::span<char>*)data;
                 auto n = v.size();
                 auto d = v.data();
+                ctx.BeginArray(n);
                 for (int i = 0; i < n; ++i)
-                    formatImpl(&ctx, d + i * size, element);
+                    serializeImpl(&ctx, d + i * size, element);
                 ctx.EndArray();
                 break;
             }
@@ -691,32 +698,36 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                     auto d = (char*)data;
                     for (const auto& field : obj->fields)
                     {
-                        ctx.BeginField(field);
-                        formatImpl(&ctx, d + field.offset, field.type);
-                        ctx.EndField();
+                        if(ctx.BeginField(field))
+                        {
+                            serializeImpl(&ctx, d + field.offset, field.type);
+                            ctx.EndField();
+                        }
                     }
                     ctx.EndObject();
                 }
             }
             case SKR_TYPE_CATEGORY_ENUM: {
                 auto enm = (const EnumType*)type;
-                ctx.Raw(enm->ToString(data));
+                ctx.Enum(data, enm);
             }
             case SKR_TYPE_CATEGORY_REF: {
                 void* address;
-                switch (((const ReferenceType*)type)->ownership)
+                auto ref = ((const ReferenceType*)type);
+                switch (ref->ownership)
                 {
                     case ReferenceType::Observed:
                         address = *(void**)data;
                         break;
                     case ReferenceType::Shared:
-                        address = (*(std::shared_ptr<void>*)data).get();
+                        address = (*(skr::SPtr<void>*)data).get();
                         break;
                 }
-                // TODO: 可选是否递归序列化
-                ctx.Reference(address);
+                serializeImpl(&ctx, address, ref->pointee);
                 break;
             }
+            default:
+                SKR_UNREACHABLE_CODE();
         }
     }
 };

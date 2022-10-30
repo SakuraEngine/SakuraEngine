@@ -83,7 +83,7 @@ size_t skr_type_t::Size() const
                 case ReferenceType::Observed:
                     return sizeof(void*);
                 case ReferenceType::Shared:
-                    return sizeof(std::shared_ptr<void>);
+                    return sizeof(skr::SPtr<void>);
             }
         }
     }
@@ -133,7 +133,7 @@ size_t skr_type_t::Align() const
                 case ReferenceType::Observed:
                     return alignof(void*);
                 case ReferenceType::Shared:
-                    return alignof(std::shared_ptr<void>);
+                    return alignof(skr::SPtr<void>);
             }
         }
     }
@@ -187,7 +187,7 @@ eastl::string skr_type_t::Name() const
             switch (ref.ownership)
             {
                 case ReferenceType::Shared:
-                    return skr::format("std::shared_ptr<{}>", ref.pointee ? ref.pointee->Name() : "void");
+                    return skr::format("skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : "void");
                 case ReferenceType::Observed:
                     return ref.pointee ? (ref.pointee->Name() + " *") : "void*";
             }
@@ -520,7 +520,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                             break;
                         }
                         case ReferenceType::Shared: {
-                            auto& srcV = *(std::shared_ptr<void>*)src;
+                            auto& srcV = *(skr::SPtr<void>*)src;
                             dstV = (bool)srcV;
                             break;
                         }
@@ -814,7 +814,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                 }
                 else
                 {
-                    auto& srcV = *(std::shared_ptr<void>*)src;
+                    auto& srcV = *(skr::SPtr<void>*)src;
                     if (ptr.ownership == ReferenceType::Observed)
                     {
                         auto& dstV = *(void**)dst;
@@ -822,7 +822,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     }
                     else if (ptr.ownership == ReferenceType::Shared)
                     {
-                        auto& dstV = *(std::shared_ptr<void>*)dst;
+                        auto& dstV = *(skr::SPtr<void>*)dst;
                         dstV = srcV;
                     }
                 }
@@ -973,7 +973,7 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
                     return HashImpl<void*>(*(void**)dst, base);
                     break;
                 case ReferenceType::Shared:
-                    return HashImpl<void*>((*(std::shared_ptr<void>*)dst).get(), base);
+                    return HashImpl<void*>((*(skr::SPtr<void>*)dst).get(), base);
                     break;
             }
         }
@@ -1014,7 +1014,7 @@ void skr_type_t::Destruct(void* address) const
             auto& ptr = (const ReferenceType&)(*this);
             if (ptr.ownership == ReferenceType::Shared)
             {
-                ((std::shared_ptr<void>*)address)->~shared_ptr();
+                ((skr::SPtr<void>*)address)->~shared_ptr();
             }
         }
         default:
@@ -1116,7 +1116,7 @@ void skr_type_t::Copy(void* dst, const void* src) const
                     CopyImpl<void*>(dst, src);
                     break;
                 case ReferenceType::Shared:
-                    CopyImpl<std::shared_ptr<void>>(dst, src);
+                    CopyImpl<skr::SPtr<void>>(dst, src);
                     break;
             }
             break;
@@ -1219,7 +1219,7 @@ void skr_type_t::Move(void* dst, void* src) const
                     MoveImpl<void*>(dst, src);
                     break;
                 case ReferenceType::Shared:
-                    MoveImpl<std::shared_ptr<void>>(dst, src);
+                    MoveImpl<skr::SPtr<void>>(dst, src);
                     break;
             }
             break;
