@@ -10,10 +10,14 @@ namespace skr
 template <typename T, bool EmbedRC = !std::is_base_of_v<SInterface, T>>
 struct SPtrBase : public SRCInst<EmbedRC>
 {
+    template<typename U> struct reference_type_helper { using type = U&;};
+    template<> struct reference_type_helper<void> { using type = void;};
+
     using this_type = SPtrBase<T, EmbedRC>;
+    using reference_type = typename reference_type_helper<T>::type;
     // operators to T*
 
-    T& operator*() const SKR_NOEXCEPT;
+    reference_type operator*() const SKR_NOEXCEPT;
     T* operator->() const SKR_NOEXCEPT;
     bool operator!() const SKR_NOEXCEPT;
     inline T* get() const SKR_NOEXCEPT { return this->p; }
@@ -37,6 +41,7 @@ struct SPtrBase : public SRCInst<EmbedRC>
 
 protected:
     void ActualDelete(T*) SKR_NOEXCEPT;
+    virtual ~SPtrBase() = default;
     SPtrBase() SKR_NOEXCEPT;
     SPtrBase(T* lp) SKR_NOEXCEPT;
     // copy constructor
@@ -58,7 +63,7 @@ protected:
 // implement SPtrBase
 
 template <typename T, bool EmbedRC>
-T& skr::SPtrBase<T, EmbedRC>::operator*() const SKR_NOEXCEPT
+typename skr::SPtrBase<T, EmbedRC>::reference_type skr::SPtrBase<T, EmbedRC>::operator*() const SKR_NOEXCEPT
 {
     SKR_ASSERT(p != NULL);
     return *p;
@@ -80,8 +85,10 @@ bool skr::SPtrBase<T, EmbedRC>::operator!() const SKR_NOEXCEPT
 // protected SPtrBase
 
 template <typename T, bool EmbedRC>
-void skr::SPtrBase<T, EmbedRC>::ActualDelete(T* obj) SKR_NOEXCEPT
+void skr::SPtrBase<T, EmbedRC>::ActualDelete(T* ptr) SKR_NOEXCEPT
 {
+    static_assert(!EmbedRC, "Non-Intrusive ptrs should not call this method");
+    auto obj = sobject_cast<SInterface*>(ptr);
     if (obj) SkrDelete(obj);
 }
 
@@ -101,10 +108,9 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp) SKR_NOEXCEPT
     {
         if SKR_CONSTEXPR (EmbedRC) 
         {
-            this->allocate_block();
+            this->template allocate_block<T>(lp);
         }
-
-        if SKR_CONSTEXPR (std::is_base_of_v<SInterface, T>) 
+        else
         {
             p->add_refcount();
         }
@@ -122,8 +128,7 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(const this_type& lp) SKR_NOEXCEPT
         this->CopyRCBlockFrom(lp);
         if (this->block) this->block->add_refcount();
     }
-
-    if SKR_CONSTEXPR (std::is_base_of_v<SInterface, T>) 
+    else
     {
         p->add_refcount();
     }
@@ -141,8 +146,7 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(const SPtrBase<U, EmbedRC>& lp, T* pValue) S
         this->CopyRCBlockFrom(lp);
         if (this->block) this->block->add_refcount();
     }
-
-    if SKR_CONSTEXPR (std::is_base_of_v<SInterface, T>) 
+    else
     {
         p->add_refcount();
     }
@@ -160,10 +164,10 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(const SPtrBase<U, EmbedRC>& lp, typename std
         this->CopyRCBlockFrom(lp);
         if (this->block) this->block->add_refcount();
     }
-
-    if SKR_CONSTEXPR (std::is_base_of_v<SInterface, T>) 
+    else
     {
-        p->add_refcount();
+        auto object = sobject_cast<SInterface*>(p);
+        object->add_refcount();
     }
 }
 

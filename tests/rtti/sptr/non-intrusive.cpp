@@ -101,3 +101,18 @@ TEST(SPTR, WeakNonIntrusive)
     }
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
+
+TEST(SPTR, VoidPtrCastNonIntrusive)
+{
+    TestStruct::Status status = TestStruct::Status::Uninitialized;
+    {
+        skr::SPtr<void> pVC;
+        {
+            skr::SPtr<TestStruct> pC(SkrNew<TestStruct>(status));
+            pVC = pC;
+            EXPECT_EQ(pC.use_count(), 2);
+        }
+        EXPECT_EQ(pVC.use_count(), 1);
+    }
+    EXPECT_EQ(status, TestStruct::Status::Destroyed);
+}

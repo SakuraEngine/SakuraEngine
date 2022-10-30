@@ -131,22 +131,19 @@ void skr::SPtrHelper<T, EmbedRC>::release() SKR_NOEXCEPT
                 this->block->release(&rc);
                 if (rc <= 0)
                 {
-                    this->ActualDelete(pTemp);
                     pTemp = NULL;
                     return;
                 }
             }
             else
             {
-                this->ActualDelete(pTemp);
-                pTemp = NULL;
                 SKR_UNREACHABLE_CODE();
             }
         }
-
-        if SKR_CONSTEXPR (std::is_base_of_v<SInterface, T>) 
+        else
         {
-            auto rc = pTemp->release();
+            auto object = sobject_cast<SInterface*>(pTemp);
+            auto rc = object->release();
             if (rc <= 0)
             {
                 this->ActualDelete(pTemp);

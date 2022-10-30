@@ -489,6 +489,8 @@ struct SInterface
     virtual uint32_t release() = 0;
 };
 }
+#define sobject_cast static_cast
+
 
 typedef struct Dummy {
     int dummy;
