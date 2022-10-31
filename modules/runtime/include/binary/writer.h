@@ -28,7 +28,7 @@ using TParamType = std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v
 
 
 template <class T>
-int WriteValue(skr_binary_writer_t* writer, T value)
+std::enable_if_t<!std::is_enum_v<T>, int> WriteValue(skr_binary_writer_t* writer, T value)
 {
     static_assert(!sizeof(T), "WriteValue not implemented for this type");
     return -1;
@@ -62,6 +62,11 @@ template <>
 RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 template <>
 RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_blob_t& blob);
+template<class T>
+std::enable_if_t<std::is_enum_v<T>, int> WriteValue(skr_binary_writer_t* writer, T value)
+{
+    return WriteValue(writer, static_cast<std::underlying_type_t<T>>(value));
+}
 
 template <class T>
 int Write(skr_binary_writer_t* writer, T value);

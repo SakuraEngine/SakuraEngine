@@ -24,7 +24,7 @@ namespace skr::binary
 {
 
 template <class T>
-int ReadValue(skr_binary_reader_t* reader, T& value)
+std::enable_if_t<!std::is_enum_v<T>, int> ReadValue(skr_binary_reader_t* reader, T& value)
 {
     static_assert(!sizeof(T), "ReadValue not implemented for this type");
     return -1;
@@ -73,6 +73,11 @@ template <>
 RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
 template <>
 RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_blob_t& blob);
+template<class T>
+std::enable_if_t<std::is_enum_v<T>, int> ReadValue(skr_binary_reader_t* writer, T& value)
+{
+    return ReadValue(writer, (std::underlying_type_t<T>&)(value));
+}
 
 template <class T>
 int Read(skr_binary_reader_t* reader, T& value);
