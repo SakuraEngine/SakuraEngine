@@ -1,7 +1,7 @@
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "ecs/dual.h"
-#include "ghc/filesystem.hpp"
+#include "platform/filesystem.hpp"
 #include "platform/thread.h"
 #include "resource/config_resource.h"
 #include "resource/resource_header.h"
@@ -103,7 +103,7 @@ void Run(bool server)
 }
 */
 
-bool IsAsset(ghc::filesystem::path path)
+bool IsAsset(skr::filesystem::path path)
 {
     if (path.extension() == ".meta")
         return true;
@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     FrameMark;
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
-    auto root = ghc::filesystem::current_path(ec);
+    auto root = skr::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("GameTool", true);
     moduleManager->init_module_graph(argc, argv);
@@ -143,9 +143,9 @@ int main(int argc, char** argv)
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
 
-    ghc::filesystem::recursive_directory_iterator iter(project->assetPath, ec);
+    skr::filesystem::recursive_directory_iterator iter(project->assetPath, ec);
     //----- scan project directory
-    eastl::vector<ghc::filesystem::path> paths;
+    eastl::vector<skr::filesystem::path> paths;
     while (iter != end(iter))
     {
         if (iter->is_regular_file(ec) && IsAsset(iter->path()))
@@ -167,8 +167,8 @@ int main(int argc, char** argv)
         });
     }
     SKR_LOG_INFO("Project asset import finished.");
-    ghc::filesystem::create_directories(project->outputPath, ec);
-    ghc::filesystem::create_directories(project->dependencyPath, ec);
+    skr::filesystem::create_directories(project->outputPath, ec);
+    skr::filesystem::create_directories(project->dependencyPath, ec);
     //----- schedule cook tasks (checking dependencies)
     {
         using iter_t = typename decltype(system.assets)::iterator;

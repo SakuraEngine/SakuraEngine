@@ -43,7 +43,7 @@ public:
     skr::io::RAMService* ram_service = nullptr;
 
 };
-#include "ghc/filesystem.hpp"
+#include "platform/filesystem.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SLive2DViewerModule, Live2DViewer);
 SKR_MODULE_METADATA(u8R"(
@@ -77,7 +77,7 @@ void SLive2DViewerModule::on_load(int argc, char** argv)
     SKR_LOG_INFO("live2d viewer loaded!");
 
     std::error_code ec = {};
-    auto resourceRoot = (ghc::filesystem::current_path(ec) / "../resources").u8string();
+    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources").u8string();
     skr_vfs_desc_t vfs_desc = {};
     vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
     vfs_desc.override_mount_dir = resourceRoot.c_str();

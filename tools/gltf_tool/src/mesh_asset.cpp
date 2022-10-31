@@ -10,7 +10,7 @@
 
 void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
 {
-    ghc::filesystem::path relPath = assetPath.c_str();
+    skr::filesystem::path relPath = assetPath.c_str();
     auto ext = relPath.extension();
     if (ext != ".gltf")
     {

@@ -11,7 +11,9 @@
 #include "skr_live2d/render_model.h"
 #include "live2d_clipping.hpp"
 #include "live2d_helpers.hpp"
-#include <ghc/filesystem.hpp>
+
+#include <string> // TODO: replace this (std::stoi)
+#include <platform/filesystem.hpp>
 
 #include "skr_image_coder/skr_image_coder.h"
 #ifdef _WIN32
@@ -159,7 +161,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         auto& texture_io_request = render_model->texture_io_requests[i];
         auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
         auto texture_path = resource->model_setting->GetTextureFileName(i);
-        auto pngPath = ghc::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
+        auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
         auto pngPathStr = pngPath.u8string();
 #ifdef _WIN32
         if (request->file_dstorage_queue_override)

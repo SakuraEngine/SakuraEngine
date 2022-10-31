@@ -3,7 +3,7 @@
 #include "EASTL/map.h"
 #include "utils/log.h"
 #include "json/reader.h"
-#include "ghc/filesystem.hpp"
+#include "platform/filesystem.hpp"
 
 namespace skr
 {
@@ -132,7 +132,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
             filename.append(name);
             filename.append(".dll");
     #endif
-        auto finalPath = (ghc::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
+        auto finalPath = (skr::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
         if (!sharedLib->load(finalPath.c_str()))
         {
             SKR_LOG_ERROR("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());

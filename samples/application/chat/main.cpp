@@ -105,7 +105,7 @@ int CreateRenderer(SWindowHandle window)
 int CreateVFS()
 {
     std::error_code ec = {};
-    auto resourceRoot = (ghc::filesystem::current_path(ec) / "../resources").u8string();
+    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources").u8string();
     skr_vfs_desc_t vfs_desc = {};
     vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
     vfs_desc.override_mount_dir = resourceRoot.c_str();
@@ -269,7 +269,7 @@ int initialize(int argc, const char** argv)
 {
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
-    auto root = ghc::filesystem::current_path(ec);
+    auto root = skr::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
     moduleManager->make_module_graph("SkrRenderer", true);
     moduleManager->init_module_graph(argc, argv);

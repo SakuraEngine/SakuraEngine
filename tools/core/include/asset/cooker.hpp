@@ -9,7 +9,7 @@
 #include "utils/parallel_for.hpp"
 #include "resource/resource_header.h"
 #include "task/task.hpp"
-#include "ghc/filesystem.hpp"
+#include "platform/filesystem.hpp"
 #include "simdjson.h"
 
 struct skr_vfs_t;
@@ -25,9 +25,9 @@ struct SCooker;
 struct SCookContext;
 
 struct TOOL_API SProject {
-    ghc::filesystem::path assetPath;
-    ghc::filesystem::path outputPath;
-    ghc::filesystem::path dependencyPath;
+    skr::filesystem::path assetPath;
+    skr::filesystem::path outputPath;
+    skr::filesystem::path dependencyPath;
     skr_vfs_t* vfs = nullptr;
     ~SProject() noexcept;
 };
@@ -35,7 +35,7 @@ struct TOOL_API SProject {
 struct SAssetRecord {
     skr_guid_t guid;
     skr_guid_t type;
-    ghc::filesystem::path path;
+    skr::filesystem::path path;
     SProject* project;
     simdjson::padded_string meta;
 };
@@ -55,12 +55,12 @@ struct TOOL_API SCookContext { // context per job
     SImporter* importer = nullptr;
     size_t cookerVersion = 0;
     skr::task::event_t counter;
-    ghc::filesystem::path output;
-    eastl::vector<ghc::filesystem::path> fileDependencies;
+    skr::filesystem::path output;
+    eastl::vector<skr::filesystem::path> fileDependencies;
     eastl::vector<skr_guid_t> staticDependencies;
     eastl::vector<skr_guid_t> runtimeDependencies;
 
-    ghc::filesystem::path AddFileDependency(const ghc::filesystem::path& path);
+    skr::filesystem::path AddFileDependency(const skr::filesystem::path& path);
     void AddRuntimeDependency(skr_guid_t resource);
     void* AddStaticDependency(skr_guid_t resource);
     void* _Import();
@@ -111,7 +111,7 @@ struct TOOL_API SCookSystem {
     skr::task::counter_t mainCounter;
 
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
-    SAssetRecord* ImportAsset(SProject* project, ghc::filesystem::path path);
+    SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path);
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
     SMutex assetMutex;
 

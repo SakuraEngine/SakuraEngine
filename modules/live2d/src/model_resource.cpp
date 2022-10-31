@@ -1,4 +1,4 @@
-#include <ghc/filesystem.hpp>
+#include <platform/filesystem.hpp>
 
 #include "platform/debug.h"
 #include "platform/memory.h"
@@ -574,7 +574,7 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
     std::string l2dHomePathStr;
     {
         ZoneScopedN("ioRAM Live2D Path Calc");
-        auto l2dPath = ghc::filesystem::path(path);
+        auto l2dPath = skr::filesystem::path(path);
         l2dHomePathStr = l2dPath.parent_path().u8string();
         callbackData->u8HomePath = l2dHomePathStr.c_str();
     }
