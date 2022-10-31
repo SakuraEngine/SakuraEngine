@@ -7,8 +7,7 @@
 
 namespace skr::type
 {
-struct STypeRegistryImpl final : public STypeRegistry
-{
+struct STypeRegistryImpl final : public STypeRegistry {
     const skr_type_t* get_type(skr_guid_t guid) final
     {
         auto it = types.find(guid);
@@ -37,7 +36,6 @@ RUNTIME_API STypeRegistry* GetTypeRegistry()
 skr_type_t::skr_type_t(skr_type_category_t type)
     : type(type)
 {
-
 }
 
 size_t skr_type_t::Size() const
@@ -83,7 +81,10 @@ size_t skr_type_t::Size() const
                 case ReferenceType::Observed:
                     return sizeof(void*);
                 case ReferenceType::Shared:
-                    return sizeof(skr::SPtr<void>);
+                    if (((ReferenceType*)this)->object)
+                        return sizeof(skr::SObjectPtr<skr::SInterface>);
+                    else
+                        return sizeof(skr::SPtr<void>);
             }
         }
     }
@@ -133,7 +134,10 @@ size_t skr_type_t::Align() const
                 case ReferenceType::Observed:
                     return alignof(void*);
                 case ReferenceType::Shared:
-                    return alignof(skr::SPtr<void>);
+                    if (((ReferenceType*)this)->object)
+                        return alignof(skr::SObjectPtr<skr::SInterface>);
+                    else
+                        return alignof(skr::SPtr<void>);
             }
         }
     }
@@ -187,7 +191,10 @@ eastl::string skr_type_t::Name() const
             switch (ref.ownership)
             {
                 case ReferenceType::Shared:
-                    return skr::format("skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : "void");
+                    if (ref.object)
+                        return skr::format("skr::SObjectPtr<{}>", ref.pointee ? ref.pointee->Name() : "skr::SInterface");
+                    else
+                        return skr::format("skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : "void");
                 case ReferenceType::Observed:
                     return ref.pointee ? (ref.pointee->Name() + " *") : "void*";
             }
@@ -223,7 +230,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
             return ((ArrayViewType*)this)->elementType->Same(((ArrayViewType*)srcType)->elementType);
         case SKR_TYPE_CATEGORY_OBJ:
         case SKR_TYPE_CATEGORY_ENUM:
-            return this == srcType; //对象类型直接比较地址
+            return this == srcType; // 对象类型直接比较地址
         case SKR_TYPE_CATEGORY_REF: {
             {
                 auto ptr = ((ReferenceType*)this);
@@ -293,11 +300,11 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
             }
             break;
         case SKR_TYPE_CATEGORY_HANDLE: {
-            if(stype == SKR_TYPE_CATEGORY_REF)
+            if (stype == SKR_TYPE_CATEGORY_REF)
             {
                 auto sptr = (const ReferenceType*)srcType;
-                //TODO: check if this is asset?
-                if(sptr->pointee->type == SKR_TYPE_CATEGORY_OBJ)
+                // TODO: check if this is asset?
+                if (sptr->pointee->type == SKR_TYPE_CATEGORY_OBJ)
                     return true;
             }
         }
@@ -391,6 +398,8 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                     return false;
                 if (sptr.ownership != ptr.ownership && ptr.ownership != ReferenceType::Observed)
                     return false;
+                if (sptr.object != ptr.object && ptr.ownership != ReferenceType::Observed)
+                    return false;
                 if (ptr.pointee == nullptr || sptr.pointee == nullptr)
                     return true;
                 if (ptr.pointee->Same(sptr.pointee))
@@ -413,16 +422,19 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 else
                     return false;
             }
-            if(ptr.ownership == ReferenceType::Observed && stype == SKR_TYPE_CATEGORY_HANDLE) //TODO: handle's ownership?
+            if (stype == SKR_TYPE_CATEGORY_HANDLE) // TODO: handle's ownership?
             {
+                bool obs = ptr.ownership == ReferenceType::Observed;
                 auto& sptr = (const HandleType&)(*srcType);
-                if (ptr.pointee == nullptr || sptr.pointee == nullptr)
+                if (obs && (ptr.pointee == nullptr || sptr.pointee == nullptr))
                     return true;
                 if (ptr.pointee->type == SKR_TYPE_CATEGORY_OBJ)
                 {
                     if (ptr.pointee->Same(sptr.pointee))
                         return true;
                     auto& sobj = (const RecordType&)(*sptr.pointee);
+                    if (!(!obs && ptr.object && sobj.object))
+                        return false;
                     auto& obj = (const RecordType&)(*ptr.pointee);
                     if (obj.IsBaseOf(sobj))
                         return true;
@@ -519,11 +531,18 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                             dstV = (bool)srcV;
                             break;
                         }
-                        case ReferenceType::Shared: {
-                            auto& srcV = *(skr::SPtr<void>*)src;
-                            dstV = (bool)srcV;
+                        case ReferenceType::Shared:
+                            if (ref.object)
+                            {
+                                auto& srcV = *(skr::SObjectPtr<skr::SInterface>*)src;
+                                dstV = (bool)srcV;
+                            }
+                            else
+                            {
+                                auto& srcV = *(skr::SPtr<void>*)src;
+                                dstV = (bool)srcV;
+                            }
                             break;
-                        }
                     }
                 }
                 default:
@@ -814,23 +833,45 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                 }
                 else
                 {
-                    auto& srcV = *(skr::SPtr<void>*)src;
-                    if (ptr.ownership == ReferenceType::Observed)
+                    if (sptr.object)
                     {
-                        auto& dstV = *(void**)dst;
-                        dstV = srcV.get();
+                        auto& srcV = *(skr::SObjectPtr<skr::SInterface>*)src;
+                        if (ptr.ownership == ReferenceType::Observed)
+                        {
+                            auto& dstV = *(void**)dst;
+                            dstV = srcV.get();
+                        }
+                        else if (ptr.ownership == ReferenceType::Shared)
+                        {
+                            SKR_ASSERT(ptr.object);
+                            auto& dstV = *(skr::SObjectPtr<skr::SInterface>*)dst;
+                            dstV = srcV;
+                        }
                     }
-                    else if (ptr.ownership == ReferenceType::Shared)
+                    else
                     {
-                        auto& dstV = *(skr::SPtr<void>*)dst;
-                        dstV = srcV;
+                        auto& srcV = *(skr::SPtr<void>*)src;
+                        if (ptr.ownership == ReferenceType::Observed)
+                        {
+                            auto& dstV = *(void**)dst;
+                            dstV = srcV.get();
+                        }
+                        else if (ptr.ownership == ReferenceType::Shared)
+                        {
+                            SKR_ASSERT(!ptr.object);
+                            auto& dstV = *(skr::SPtr<void>*)dst;
+                            dstV = srcV;
+                        }
                     }
                 }
             }
             else if (srcType->type == SKR_TYPE_CATEGORY_HANDLE)
             {
                 auto& handle = *(skr_resource_handle_t*)src;
-                *(void**)dst = handle.get_resolved();
+                if (ptr.object)
+                    ((skr::SObjectPtr<skr::SInterface>*)dst)->reset((skr::SInterface*)handle.get_resolved());
+                else
+                    *(void**)dst = handle.get_resolved();
             }
             else if (ptr.ownership == ReferenceType::Observed)
             {
@@ -973,7 +1014,10 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
                     return HashImpl<void*>(*(void**)dst, base);
                     break;
                 case ReferenceType::Shared:
-                    return HashImpl<void*>((*(skr::SPtr<void>*)dst).get(), base);
+                    if (((ReferenceType*)this)->object)
+                        return HashImpl<void*>((*(skr::SObjectPtr<skr::SInterface>*)dst).get(), base);
+                    else
+                        return HashImpl<void*>((*(skr::SPtr<void>*)dst).get(), base);
                     break;
             }
         }
@@ -1014,7 +1058,10 @@ void skr_type_t::Destruct(void* address) const
             auto& ptr = (const ReferenceType&)(*this);
             if (ptr.ownership == ReferenceType::Shared)
             {
-                ((skr::SPtr<void>*)address)->~SPtrHelper();
+                if (ptr.object)
+                    ((skr::SObjectPtr<skr::SInterface>*)address)->~SPtrHelper();
+                else
+                    ((skr::SPtr<void>*)address)->~SPtrHelper();
             }
         }
         default:
@@ -1116,7 +1163,10 @@ void skr_type_t::Copy(void* dst, const void* src) const
                     CopyImpl<void*>(dst, src);
                     break;
                 case ReferenceType::Shared:
-                    CopyImpl<skr::SPtr<void>>(dst, src);
+                    if (((ReferenceType*)this)->object)
+                        CopyImpl<skr::SObjectPtr<skr::SInterface>>(dst, src);
+                    else
+                        CopyImpl<skr::SPtr<void>>(dst, src);
                     break;
             }
             break;
@@ -1219,7 +1269,10 @@ void skr_type_t::Move(void* dst, void* src) const
                     MoveImpl<void*>(dst, src);
                     break;
                 case ReferenceType::Shared:
-                    MoveImpl<skr::SPtr<void>>(dst, src);
+                    if (((ReferenceType*)this)->object)
+                        MoveImpl<skr::SObjectPtr<skr::SInterface>>(dst, src);
+                    else
+                        MoveImpl<skr::SPtr<void>>(dst, src);
                     break;
             }
             break;

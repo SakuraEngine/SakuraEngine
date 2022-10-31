@@ -109,7 +109,7 @@ namespace skr::type
                 static gsl::span<skr_method_t> methods;
             %endif
                 constexpr skr_guid_t guid = {${db.guid_constant(record)}};
-                static RecordType type(size, align, name, guid, base, nativeMethods, fields, methods);
+                static RecordType type(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
                 type_of_${record.id} = &type;
             }
         } once;
