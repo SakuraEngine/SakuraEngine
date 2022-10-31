@@ -18,13 +18,20 @@ typedef struct skr_render_texture_request_t {
 } skr_render_texture_request_t;
 
 // (GPU) texture resource
-struct sreflect sattr(
-    "guid" : "b9f81b6f-b544-46e1-8a80-b3269a1c2386"
-)
+sreflect_struct("guid" : "f8821efb-f027-4367-a244-9cc3efb3a3bf")
+skr_render_texture_header_t
+{
+    uint32_t format; // TODO: TEnum<ECGPUFormat>
+    uint32_t mips_count;
+    uint64_t data_size;
+};
+typedef struct skr_render_texture_header_t skr_render_texture_header_t;
+
+sreflect_struct("guid" : "b9f81b6f-b544-46e1-8a80-b3269a1c2386")
 skr_render_texture_t
 {
-    skr_blob_t raw;
-    ECGPUFormat format;
+    skr_render_texture_header_t header;
+    skr_blob_t data;
 };
 typedef struct skr_render_texture_t skr_render_texture_t;
 
