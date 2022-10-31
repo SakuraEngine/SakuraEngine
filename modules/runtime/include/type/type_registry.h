@@ -11,11 +11,13 @@ typedef struct skr_field_t skr_field_t;
 typedef struct skr_method_t skr_method_t;
 typedef skr_guid_t skr_type_id_t;
 struct skr_resource_handle_t;
-namespace skr {
-namespace type {
-    struct ValueSerializePolicy;
-    using Value = skr_value_t;
-    using ValueRef = skr_value_ref_t;
+namespace skr
+{
+namespace type
+{
+struct ValueSerializePolicy;
+using Value = skr_value_t;
+using ValueRef = skr_value_ref_t;
 } // namespace type
 } // namespace skr
 
@@ -101,11 +103,15 @@ struct SKR_ALIGNAS(16) skr_value_t {
     std::enable_if_t<std::is_reference_v<T>, void>
     Emplace(const V& v);
 
-    template <class T> bool Is() const;
-    template <class T> T& As();
+    template <class T>
+    bool Is() const;
+    template <class T>
+    T& As();
 
-    template <class T> bool Convertible() const;
-    template <class T> T Convert();
+    template <class T>
+    bool Convertible() const;
+    template <class T>
+    T Convert();
 
     void* Ptr();
     const void* Ptr() const;
@@ -114,6 +120,7 @@ struct SKR_ALIGNAS(16) skr_value_t {
     eastl::string ToString() const;
 
     void Reset();
+
 private:
     void* _Alloc();
     void _Copy(const skr_value_t& other);
@@ -142,10 +149,14 @@ struct skr_value_ref_t {
     bool operator!=(const skr_value_ref_t& other);
     operator bool() const;
     bool HasValue() const;
-    template <class T> bool Is() const;
-    template <class T> T& As();
-    template <class T> bool Convertible() const;
-    template <class T> T Convert();
+    template <class T>
+    bool Is() const;
+    template <class T>
+    T& As();
+    template <class T>
+    bool Convertible() const;
+    template <class T>
+    T Convert();
 
     size_t Hash() const;
     eastl::string ToString() const;
@@ -160,24 +171,21 @@ struct skr_method_t {
     skr_value_t (*execute)(void* self, skr_value_ref_t* args, size_t nargs) SKR_IF_CPP(= nullptr);
 };
 
+RUNTIME_EXTERN_C RUNTIME_API const struct skr_type_t* skr_get_type(const skr_type_id_t* id);
+RUNTIME_EXTERN_C RUNTIME_API void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
+RUNTIME_EXTERN_C RUNTIME_API void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
 RUNTIME_EXTERN_C RUNTIME_API
-const struct skr_type_t* skr_get_type(const skr_type_id_t* id);
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
-RUNTIME_EXTERN_C RUNTIME_API 
-uint32_t skr_get_type_size(const struct skr_type_t* type);
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
-RUNTIME_EXTERN_C RUNTIME_API 
-skr_field_t* skr_get_field(const struct skr_type_t* type, const char* name);
-RUNTIME_EXTERN_C RUNTIME_API 
-skr_method_t* skr_get_method(const struct skr_type_t* type, const char* name);
-RUNTIME_EXTERN_C RUNTIME_API 
-struct skr_type_t* skr_get_field_type(const skr_field_t* field);
-RUNTIME_EXTERN_C RUNTIME_API 
-const char* skr_get_field_name(const skr_field_t* field);
+uint32_t
+skr_get_type_size(const struct skr_type_t* type);
+RUNTIME_EXTERN_C RUNTIME_API void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
+RUNTIME_EXTERN_C RUNTIME_API
+skr_field_t*
+skr_get_field(const struct skr_type_t* type, const char* name);
+RUNTIME_EXTERN_C RUNTIME_API
+skr_method_t*
+skr_get_method(const struct skr_type_t* type, const char* name);
+RUNTIME_EXTERN_C RUNTIME_API struct skr_type_t* skr_get_field_type(const skr_field_t* field);
+RUNTIME_EXTERN_C RUNTIME_API const char* skr_get_field_name(const skr_field_t* field);
 
 extern const skr_type_t* $type;
 extern const skr_field_t* $field;
@@ -190,27 +198,28 @@ namespace skr
 {
 namespace type
 {
-    struct STypeRegistry 
-    {
-        virtual const skr_type_t* get_type(skr_guid_t guid) = 0;
-        virtual const void register_type(skr_guid_t tid, const skr_type_t* type) = 0;
-    };
-    RUNTIME_API STypeRegistry* GetTypeRegistry();
+struct STypeRegistry {
+    virtual const skr_type_t* get_type(skr_guid_t guid) = 0;
+    virtual const void register_type(skr_guid_t tid, const skr_type_t* type) = 0;
+};
+RUNTIME_API STypeRegistry* GetTypeRegistry();
 
-    RUNTIME_API size_t Hash(bool value, size_t base);
-    RUNTIME_API size_t Hash(int32_t value, size_t base);
-    RUNTIME_API size_t Hash(int64_t value, size_t base);
-    RUNTIME_API size_t Hash(uint32_t value, size_t base);
-    RUNTIME_API size_t Hash(uint64_t value, size_t base);
-    RUNTIME_API size_t Hash(float value, size_t base);
-    RUNTIME_API size_t Hash(double value, size_t base);
-    RUNTIME_API size_t Hash(const skr_guid_t& value, size_t base);
-    RUNTIME_API size_t Hash(const skr_resource_handle_t& value, size_t base);
-    RUNTIME_API size_t Hash(const eastl::string& value, size_t base);
-    RUNTIME_API size_t Hash(const eastl::string_view& value, size_t base);
+RUNTIME_API size_t Hash(bool value, size_t base);
+RUNTIME_API size_t Hash(int32_t value, size_t base);
+RUNTIME_API size_t Hash(int64_t value, size_t base);
+RUNTIME_API size_t Hash(uint32_t value, size_t base);
+RUNTIME_API size_t Hash(uint64_t value, size_t base);
+RUNTIME_API size_t Hash(float value, size_t base);
+RUNTIME_API size_t Hash(double value, size_t base);
+RUNTIME_API size_t Hash(const skr_guid_t& value, size_t base);
+RUNTIME_API size_t Hash(const skr_resource_handle_t& value, size_t base);
+RUNTIME_API size_t Hash(const eastl::string& value, size_t base);
+RUNTIME_API size_t Hash(const eastl::string_view& value, size_t base);
 
-    template <class T> auto GetCopyCtor();
-    template <class T> auto GetMoveCtor();
+template <class T>
+auto GetCopyCtor();
+template <class T>
+auto GetMoveCtor();
 } // namespace type
 } // namespace skr
 
@@ -223,6 +232,9 @@ namespace type
 
 namespace skr
 {
+
+template <class T>
+bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
 namespace type
 {
 // bool
@@ -362,6 +374,7 @@ struct RecordType : skr_type_t {
     size_t size;
     size_t align;
     skr_guid_t guid;
+    bool object;
     const eastl::string_view name;
     const RecordType* base;
     ObjectMethodTable nativeMethods;
@@ -370,12 +383,13 @@ struct RecordType : skr_type_t {
     bool IsBaseOf(const RecordType& other) const;
     static const RecordType* FromName(eastl::string_view name);
     static void Register(const RecordType* type);
-    RecordType(size_t size, size_t align, eastl::string_view name, skr_guid_t guid, const RecordType* base, ObjectMethodTable nativeMethods,
+    RecordType(size_t size, size_t align, eastl::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
     const gsl::span<struct skr_field_t> fields, const gsl::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
         , size(size)
         , align(align)
         , guid(guid)
+        , object(object)
         , name(name)
         , base(base)
         , nativeMethods(nativeMethods)
@@ -399,8 +413,8 @@ struct EnumType : skr_type_t {
     static const EnumType* FromName(eastl::string_view name);
     static void Register(const EnumType* type);
     EnumType(const skr_type_t* underlyingType, const eastl::string_view name,
-        skr_guid_t guid, void (*FromString)(void* self, eastl::string_view str),
-        eastl::string (*ToString)(const void* self), const gsl::span<Enumerator> enumerators)
+    skr_guid_t guid, void (*FromString)(void* self, eastl::string_view str),
+    eastl::string (*ToString)(const void* self), const gsl::span<Enumerator> enumerators)
         : skr_type_t{ SKR_TYPE_CATEGORY_ENUM }
         , underlyingType(underlyingType)
         , name(name)
@@ -419,11 +433,13 @@ struct ReferenceType : skr_type_t {
         Shared
     } ownership;
     bool nullable;
+    bool object;
     const struct skr_type_t* pointee;
-    ReferenceType(Ownership ownership, bool nullable, const skr_type_t* pointee)
+    ReferenceType(Ownership ownership, bool nullable, bool object, const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_REF }
         , ownership(ownership)
         , nullable(nullable)
+        , object(object)
         , pointee(pointee)
     {
     }
@@ -436,6 +452,7 @@ struct type_of<void*> {
         static ReferenceType type{
             ReferenceType::Observed,
             true,
+            false,
             nullptr
         };
         return &type;
@@ -476,6 +493,7 @@ struct type_of<T*> {
         static ReferenceType type{
             ReferenceType::Observed,
             true,
+            false,
             type_of<T>::get()
         };
         return &type;
@@ -489,18 +507,35 @@ struct type_of<T&> {
         static ReferenceType type{
             ReferenceType::Observed,
             false,
+            false,
             type_of<T>::get()
         };
         return &type;
     }
 };
-// shared_ptr wrapper
+// SPtr wrapper
 template <class T>
 struct type_of<skr::SPtr<T>> {
     static const skr_type_t* get()
     {
         static ReferenceType type{
             ReferenceType::Shared,
+            true,
+            false,
+            type_of<T>::get()
+        };
+        return &type;
+    }
+};
+
+// SObjectPtr wrapper
+template <class T>
+struct type_of<skr::SObjectPtr<T>> {
+    static const skr_type_t* get()
+    {
+        static ReferenceType type{
+            ReferenceType::Shared,
+            true,
             true,
             type_of<T>::get()
         };
@@ -515,17 +550,17 @@ struct type_of_vector {
         static DynArrayType type{
             type_of<T>::get(),
             DynArrayMethodTable{
-                +[](void* self) { ((V*)(self))->~vector(); },                                                                              // dtor
-                +[](void* self) { new (self) V(); },                                                                                       // ctor
-                +[](void* self, const void* other) { new (self) V(*((const V*)(other))); },                                                // copy
-                +[](void* self, void* other) { new (self) V(std::move(*(V*)(other))); },                                                   // move
-                +[](void* self, const void* data) { ((V*)(self))->push_back(*(const T*)data); },                                           // push
-                +[](void* self, const void* data, size_t index) { ((V*)(self))->insert(((V*)(self))->begin() + index, *(const T*)data); }, // insert
-                +[](void* self, size_t index) { ((V*)(self))->erase(((V*)(self))->begin() + index); },                                     // erase
-                +[](void* self, size_t size) { ((V*)(self))->resize(size); },                                                              // resize
-                +[](const void* self) { return ((V*)(self))->size(); },                                                                    // size
-                +[](const void* self, size_t index) { return (void*)&((V*)(self))[index]; },                                               // get
-                +[](const void* self) { return (void*)((V*)(self))->data(); },                                                             // data
+            +[](void* self) { ((V*)(self))->~vector(); },                                                                              // dtor
+            +[](void* self) { new (self) V(); },                                                                                       // ctor
+            +[](void* self, const void* other) { new (self) V(*((const V*)(other))); },                                                // copy
+            +[](void* self, void* other) { new (self) V(std::move(*(V*)(other))); },                                                   // move
+            +[](void* self, const void* data) { ((V*)(self))->push_back(*(const T*)data); },                                           // push
+            +[](void* self, const void* data, size_t index) { ((V*)(self))->insert(((V*)(self))->begin() + index, *(const T*)data); }, // insert
+            +[](void* self, size_t index) { ((V*)(self))->erase(((V*)(self))->begin() + index); },                                     // erase
+            +[](void* self, size_t size) { ((V*)(self))->resize(size); },                                                              // resize
+            +[](const void* self) { return ((V*)(self))->size(); },                                                                    // size
+            +[](const void* self, size_t index) { return (void*)&((V*)(self))[index]; },                                               // get
+            +[](const void* self) { return (void*)((V*)(self))->data(); },                                                             // data
             }
         };
         return &type;
@@ -698,7 +733,7 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                     auto d = (char*)data;
                     for (const auto& field : obj->fields)
                     {
-                        if(ctx.BeginField(field))
+                        if (ctx.BeginField(field))
                         {
                             serializeImpl(&ctx, d + field.offset, field.type);
                             ctx.EndField();
