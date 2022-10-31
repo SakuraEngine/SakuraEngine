@@ -44,7 +44,7 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_FINISHED,
 } ESkrLoadingPhase;
 #if defined(__cplusplus)
-    #include <ghc/filesystem.hpp>
+    #include <platform/filesystem.hpp>
 namespace skr
 {
 namespace resource
@@ -58,7 +58,7 @@ struct SResourceRequest {
     skr_async_ram_destination_t destination;
     SResourceFactory* factory;
     skr_vfs_t* vfs;
-    ghc::filesystem::path path;
+    skr::filesystem::path path;
     std::string u8path;
     uint8_t* data;
     uint64_t size;

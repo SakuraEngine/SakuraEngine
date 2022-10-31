@@ -1,5 +1,5 @@
 #pragma once
-#include "ghc/filesystem.hpp"
+#include "platform/filesystem.hpp"
 #include "utils/types.h"
 #include "resource_system.h"
 #include "utils/hash.h"

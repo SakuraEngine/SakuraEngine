@@ -1,7 +1,7 @@
 #include "platform/vfs.h"
 #include "platform/memory.h"
 #include "utils/log.h"
-#include "ghc/filesystem.hpp"
+#include "platform/filesystem.hpp"
 
 #if !defined(XBOX)
     #include "shlobj.h"
@@ -69,7 +69,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
         GetModuleFileNameW(0, utf16Path, WIN_FS_MAX_PATH);
         char8_t applicationFilePath[WIN_FS_MAX_PATH] = {};
         WideCharToMultiByte(CP_UTF8, 0, utf16Path, -1, applicationFilePath, WIN_FS_MAX_PATH, NULL, NULL);
-        const ghc::filesystem::path p(applicationFilePath);
+        const skr::filesystem::path p(applicationFilePath);
         const auto parentPath = p.parent_path().u8string();
         fs->mount_dir = duplicate_string(parentPath.c_str());
     }

@@ -6,7 +6,7 @@
         #define WIN32_MEAN_AND_LEAN
     #endif
     #include <windows.h>
-    #include <ghc/filesystem.hpp>
+    #include <platform/filesystem.hpp>
 #endif
 
 
@@ -138,7 +138,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
         }
         else
         {
-            auto wpath = ghc::filesystem::path(path);
+            auto wpath = skr::filesystem::path(path);
             _handle = LoadLibrary(wpath.c_str());
         }
         if (!_handle)

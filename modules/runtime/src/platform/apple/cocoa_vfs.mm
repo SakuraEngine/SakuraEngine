@@ -1,7 +1,7 @@
 #include "platform/vfs.h"
 #include "platform/memory.h"
 #include "utils/log.h"
-#include "ghc/filesystem.hpp"
+#include "platform/filesystem.hpp"
 #import <Foundation/Foundation.h>
 
 inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
@@ -75,14 +75,14 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
         }
 #else
         const char8_t* path = [[[NSBundle mainBundle] bundlePath] UTF8String];
-        const ghc::filesystem::path p(path);
+        const skr::filesystem::path p(path);
         fs->mount_dir = duplicate_string(p.parent_path().c_str());
 #endif
     }
     else if (desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE)
     {
         const char8_t* path = [[[NSBundle mainBundle] bundlePath] UTF8String];
-        const ghc::filesystem::path p(path);
+        const skr::filesystem::path p(path);
         fs->mount_dir = duplicate_string(p.c_str());
     }
 

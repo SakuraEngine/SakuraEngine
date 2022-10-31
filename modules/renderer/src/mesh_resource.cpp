@@ -7,7 +7,7 @@
 #include "cgltf/cgltf.h"
 #include "platform/thread.h"
 #include <EASTL/hash_set.h>
-#include <ghc/filesystem.hpp>
+#include <platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 
@@ -305,7 +305,7 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
     std::string gltfPath;
     {
         ZoneScopedN("ioRAM Mesh Path Calc");
-        gltfPath = (ghc::filesystem::path(gltfRequest->vfs_override->mount_dir) / path).u8string();
+        gltfPath = (skr::filesystem::path(gltfRequest->vfs_override->mount_dir) / path).u8string();
         callbackData->u8Path = gltfPath.c_str();
     }
     callbackData->gltfRequest = gltfRequest;

@@ -2,7 +2,10 @@
 #include "platform/process.h"
 #include "platform/time.h"
 #include "mdb_utils.h"
-#include <ghc/filesystem.hpp>
+
+#include <string> // TODO: replace this (std::stoi)
+#include <platform/filesystem.hpp>
+
 #include "../../cgpu/common/utils.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"

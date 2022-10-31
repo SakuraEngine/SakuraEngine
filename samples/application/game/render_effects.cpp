@@ -16,7 +16,7 @@
 #include "skr_renderer/mesh_resource.h"
 #include "gamert.h"
 #include "cube.hpp"
-#include <ghc/filesystem.hpp>
+#include <platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 

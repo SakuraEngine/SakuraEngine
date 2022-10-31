@@ -2,7 +2,7 @@
 #include "platform/vfs.h"
 #include <string>
 #include <iostream>
-#include <ghc/filesystem.hpp>
+#include <platform/filesystem.hpp>
 #include "utils/io.hpp"
 #include "utils/log.h"
 
@@ -17,7 +17,7 @@ public:
         abs_fs = skr_create_vfs(&abs_fs_desc);
         EXPECT_NE(abs_fs, nullptr);
         std::error_code ec = {};
-        const auto current_path = ghc::filesystem::current_path(ec).u8string();
+        const auto current_path = skr::filesystem::current_path(ec).u8string();
         EXPECT_EQ(std::string(abs_fs->mount_dir), current_path);
     }
     void TearDown() override

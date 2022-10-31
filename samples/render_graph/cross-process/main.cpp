@@ -1,7 +1,7 @@
 #include "platform/process.h"
 #include "utils/log.h"
 #include "lmdb/lmdb.h"
-#include <ghc/filesystem.hpp>
+#include <platform/filesystem.hpp>
 #include <EASTL/string.h>
 
 #include "tracy/Tracy.hpp"
@@ -39,10 +39,10 @@ int main(int argc, char* argv[])
         auto is_receiver = (strcmp(argv[1], "receiver") == 0);
 
         std::error_code ec = {};
-        if (!ghc::filesystem::exists("./cross-proc", ec))
+        if (!skr::filesystem::exists("./cross-proc", ec))
         {
             SKR_LOG_INFO("subdir cross-proc not existed, create it");
-            ghc::filesystem::create_directories(ghc::filesystem::path("./cross-proc"), ec);
+            skr::filesystem::create_directories(skr::filesystem::path("./cross-proc"), ec);
         }
 
         if (is_receiver) 

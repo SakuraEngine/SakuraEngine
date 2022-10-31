@@ -6,7 +6,7 @@
 #include "utils/make_zeroed.hpp"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_mesh.h"
-#include <ghc/filesystem.hpp>
+#include <platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 
@@ -114,7 +114,7 @@ void skr_render_mesh_create_from_gltf(SRenderDeviceId render_device, skr_io_ram_
             mesh_buffer_io.device = device;
             mesh_buffer_io.transfer_queue = request->queue_override ? request->queue_override : cbData->render_device->get_cpy_queue();
             // dstorage
-            auto gltfPath = (ghc::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
+            auto gltfPath = (skr::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
             mesh_buffer_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
             mesh_buffer_io.dstorage.path = gltfPath.c_str();
             mesh_buffer_io.dstorage.queue = request->queue_override ? nullptr : cbData->dstorage_queue;

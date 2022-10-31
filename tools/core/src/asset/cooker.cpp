@@ -1,5 +1,5 @@
 #include <EASTL/shared_ptr.h>
-#include <ghc/filesystem.hpp>
+#include <platform/filesystem.hpp>
 #include "simdjson.h"
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
@@ -104,7 +104,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
         auto metaAsset = jobContext->record;
         auto outputPath = metaAsset->project->outputPath;
         std::error_code ec = {};
-        ghc::filesystem::create_directories(outputPath, ec);
+        skr::filesystem::create_directories(outputPath, ec);
         // TODO: platform dependent directory
         jobContext->output = outputPath / fmt::format("{}.bin", metaAsset->guid);
         auto system = GetCookSystem();
@@ -192,18 +192,18 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
     auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
     auto checkUpToDate = [&]() -> bool {
         std::error_code ec = {};
-        if (!ghc::filesystem::is_regular_file(resourcePath, ec))
+        if (!skr::filesystem::is_regular_file(resourcePath, ec))
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] resource not exist! resource guid: {}", guid);
             return false;
         }
-        if (!ghc::filesystem::is_regular_file(dependencyPath, ec))
+        if (!skr::filesystem::is_regular_file(dependencyPath, ec))
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file not exist! resource guid: {}", guid);
             return false;
         }
-        auto timestamp = ghc::filesystem::last_write_time(resourcePath, ec);
-        if (ghc::filesystem::last_write_time(metaAsset->path, ec) > timestamp)
+        auto timestamp = skr::filesystem::last_write_time(resourcePath, ec);
+        if (skr::filesystem::last_write_time(metaAsset->path, ec) > timestamp)
         {
             SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] meta file modified! resource guid: {}", guid);
             return false;
@@ -270,15 +270,15 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
         {
             eastl::string pathStr;
             skr::json::Read(std::move(file).value_unsafe(), pathStr);
-            ghc::filesystem::path path(pathStr.c_str());
-            path = metaAsset->path.parent_path().append(path);
+            skr::filesystem::path path(pathStr.c_str());
+            path = metaAsset->path.parent_path() / (path);
             std::error_code ec = {};
-            if(!ghc::filesystem::exists(path, ec))
+            if(!skr::filesystem::exists(path, ec))
             {
                 SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] file not exist! resource guid: {}", guid);
                 return false;
             }
-            if (ghc::filesystem::last_write_time(path, ec) > timestamp)
+            if (skr::filesystem::last_write_time(path, ec) > timestamp)
             {
                 SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] file modified! resource guid: {}", guid);
                 return false;
@@ -302,7 +302,7 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             }
             if (record->type == skr_guid_t{})
             {
-                if (ghc::filesystem::last_write_time(record->path, ec) > timestamp)
+                if (skr::filesystem::last_write_time(record->path, ec) > timestamp)
                 {
                     SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dependency file {} modified! resource guid: {}", record->path.u8string(), guid);
                     return false;
@@ -372,12 +372,12 @@ void* SCookContext::_Import()
     // }
     return nullptr;
 }
-ghc::filesystem::path SCookContext::AddFileDependency(const ghc::filesystem::path &inPath)
+skr::filesystem::path SCookContext::AddFileDependency(const skr::filesystem::path &inPath)
 {
     auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == inPath; });
     if (iter == fileDependencies.end())
         fileDependencies.push_back(inPath);
-    return record->path.parent_path().append(inPath);
+    return record->path.parent_path() / inPath;
 }
 void SCookContext::AddRuntimeDependency(skr_guid_t resource)
 {
@@ -394,7 +394,7 @@ void* SCookContext::AddStaticDependency(skr_guid_t resource)
     return GetCookSystem()->CookOrLoad(resource);
 }
 
-SAssetRecord* SCookSystem::ImportAsset(SProject* project, ghc::filesystem::path path)
+SAssetRecord* SCookSystem::ImportAsset(SProject* project, skr::filesystem::path path)
 {
     std::error_code ec = {};
     if (path.is_relative())
