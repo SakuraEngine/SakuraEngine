@@ -4,14 +4,13 @@
 #include "utils/log.hpp"
 #include "skr_image_coder/skr_image_coder.h"
 #include "utils/io.hpp"
-
 #define TEX_COMPRESS_ALIGN(x, a) (((x) + ((a)-1)) & ~((a)-1))
 
 namespace skd
 {
 namespace asset
 {
-struct skr_uncompressed_render_texture_t : public skr_render_texture_t
+struct skr_uncompressed_render_texture_t
 {
     skr_uncompressed_render_texture_t(skr_image_coder_id coder)
         : image_coder(coder)
@@ -25,7 +24,7 @@ struct skr_uncompressed_render_texture_t : public skr_render_texture_t
     skr_image_coder_id image_coder = nullptr;
 };
 
-void* STextureImporter::Import(skr::io::RAMService* ioService, SCookContext *context)
+void* STextureImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
 {
     auto path = context->AddFileDependency(assetPath.c_str());
     auto u8Path = path.u8string();
@@ -95,6 +94,31 @@ inline SKR_CONSTEXPR uint64_t Util_DXBCCompressedSize(uint32_t width, uint32_t h
         return 0;
     }
 }
+inline eastl::string Util_CompressedTypeString(ECGPUFormat format)
+{
+    switch (format)
+    {
+    case CGPU_FORMAT_DXBC1_RGB_UNORM:
+    case CGPU_FORMAT_DXBC1_RGB_SRGB:
+    case CGPU_FORMAT_DXBC1_RGBA_UNORM:
+    case CGPU_FORMAT_DXBC1_RGBA_SRGB:
+        return "bc1";
+    case CGPU_FORMAT_DXBC3_UNORM:
+    case CGPU_FORMAT_DXBC3_SRGB:
+        return "bc3";
+    case CGPU_FORMAT_DXBC4_UNORM:
+    case CGPU_FORMAT_DXBC4_SNORM:
+        return "bc4";
+    case CGPU_FORMAT_DXBC6H_UFLOAT:
+    case CGPU_FORMAT_DXBC6H_SFLOAT:
+        return "bc6";
+    case CGPU_FORMAT_DXBC7_UNORM:
+    case CGPU_FORMAT_DXBC7_SRGB:
+        return "bc7";
+    default:
+        return {};
+    }
+}
 
 bool STextureCooker::Cook(SCookContext *ctx)
 {
@@ -145,12 +169,12 @@ bool STextureCooker::Cook(SCookContext *ctx)
         }
     } writer{&header};
     skr_binary_writer_t archive(writer);
+    skr_render_texture_t header_t;
+    header_t.format = compressed_format;
+    header_t.mips_count = 1;
+    header_t.data_size = image_height;
     // format
-    skr::binary::WriteValue(&archive, (uint32_t)compressed_format);
-    // mips count
-    skr::binary::WriteValue(&archive, (uint32_t)1);
-    // data size
-    skr::binary::WriteValue(&archive, (uint64_t)compressed_size);
+    skr::binary::Write(&archive, header_t);
     // write to file
     auto file = fopen(ctx->output.u8string().c_str(), "wb");
     if (!file)
@@ -160,7 +184,14 @@ bool STextureCooker::Cook(SCookContext *ctx)
     }
     SKR_DEFER({ fclose(file); });
     fwrite(header.data(), header.size(), 1, file);
-    fwrite(compressed_data.data(), compressed_data.size(), 1, file);
+    // write compressed files
+    {
+        auto extension = Util_CompressedTypeString(compressed_format);
+        auto compressed_path = ctx->output.replace_extension(extension.c_str());
+        auto compressed_file = fopen(compressed_path.u8string().c_str(), "wb");
+        SKR_DEFER({ fclose(compressed_file); });
+        fwrite(compressed_data.data(), compressed_data.size(), 1, compressed_file);
+    }
     return true;
 }
 
