@@ -3,6 +3,9 @@
 #include "utils/io.h"
 #include "utils/types.h"
 #include "cgpu/io.h"
+#ifndef __meta__
+#include "SkrRenderer/skr_renderer/render_texture.generated.h"
+#endif
 
 typedef struct skr_render_texture_io_t {
     skr_io_ram_service_t* ram_service;
@@ -19,19 +22,12 @@ typedef struct skr_render_texture_request_t {
 
 // (GPU) texture resource
 sreflect_struct("guid" : "f8821efb-f027-4367-a244-9cc3efb3a3bf")
-skr_render_texture_header_t
+sattr("serialize" : "bin")
+skr_render_texture_t
 {
     uint32_t format; // TODO: TEnum<ECGPUFormat>
     uint32_t mips_count;
     uint64_t data_size;
-};
-typedef struct skr_render_texture_header_t skr_render_texture_header_t;
-
-sreflect_struct("guid" : "b9f81b6f-b544-46e1-8a80-b3269a1c2386")
-skr_render_texture_t
-{
-    skr_render_texture_header_t header;
-    skr_blob_t data;
 };
 typedef struct skr_render_texture_t skr_render_texture_t;
 
