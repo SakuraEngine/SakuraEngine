@@ -47,7 +47,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.withMask = false;
     proto.withDirty = false;
     proto.sizeToPatch = 0;
-    proto.firstChunkComponent = 0;
+    proto.firstChunkComponent = proto.type.length;
     forloop (i, 0, proto.type.length)
         if(type_index_t(proto.type.data[i]).is_chunk())
         {
