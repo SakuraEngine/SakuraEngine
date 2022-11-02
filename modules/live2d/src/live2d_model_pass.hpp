@@ -2,7 +2,6 @@
 #include "render_graph/api.h"
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
-#include "skr_renderer/mesh_resource.h"
 #include "live2d_helpers.hpp"
 
 #include "tracy/Tracy.hpp"

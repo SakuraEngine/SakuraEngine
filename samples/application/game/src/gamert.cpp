@@ -7,6 +7,8 @@
 #include "resource/local_resource_registry.h"
 #include "ecs/dual.h"
 #include "runtime_module.h"
+#include "platform/guid.hpp"
+#include "skr_renderer/resources/texture_resource.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 
@@ -30,6 +32,23 @@ void SGameRTModule::on_load(int argc, char** argv)
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry);
+    // 
+    using namespace skr::guid::literals;
+    auto resource_system = skr::resource::GetResourceSystem();
+    skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
+    resource_system->LoadResource(textureHdl);
+    while (textureHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && 
+        textureHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+    {
+        resource_system->Update();
+    }
+    if (textureHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+    {
+        auto texture = (skr_texture_resource_t*)textureHdl.get_ptr();
+        SKR_LOG_DEBUG("Texture Loaded: format - %d, mips - %d, data size - %d", 
+            texture->format, texture->mips_count, texture->data_size); 
+        resource_system->UnloadResource(textureHdl);
+    }
 }
 
 void SGameRTModule::on_unload()

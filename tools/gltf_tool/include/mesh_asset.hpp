@@ -8,10 +8,8 @@ namespace skd sreflect
 {
 namespace asset sreflect
 {
-struct sreflect sattr(
-    "guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922",
-    "serialize" : "json"
-)
+sreflect_struct("guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922")
+sattr("serialize" : "json")
 GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
     eastl::string assetPath;
@@ -21,7 +19,7 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter
 }
 sregister_importer();
 
-struct sreflect
+sreflect_struct("guid" : "5a378356-7bfa-461a-9f96-4bbbd2e95368")
 GLTFTOOL_API SMeshCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;

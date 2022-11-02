@@ -1,6 +1,6 @@
 #include "SkrTextureCompiler/texture_compiler.hpp"
 #include "ispc/ispc_texcomp.h"
-#include "skr_renderer/render_texture.h"
+#include "skr_renderer/resources/texture_resource.h"
 #include "utils/log.hpp"
 #include "skr_image_coder/skr_image_coder.h"
 #include "utils/io.hpp"
@@ -172,12 +172,12 @@ bool STextureCooker::Cook(SCookContext *ctx)
         }
     } writer{&header};
     skr_binary_writer_t archive(writer);
-    skr_render_texture_t header_t;
-    header_t.format = compressed_format;
-    header_t.mips_count = 1;
-    header_t.data_size = image_height;
+    skr_texture_resource_t resource;
+    resource.format = compressed_format;
+    resource.mips_count = 1;
+    resource.data_size = image_height;
     // format
-    skr::binary::Write(&archive, header_t);
+    skr::binary::Write(&archive, resource);
     // write to file
     auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)

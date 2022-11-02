@@ -42,6 +42,7 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST,
 
     SKR_LOADING_PHASE_FINISHED,
+    SKR_LOADING_PHASE_FAILED,
 } ESkrLoadingPhase;
 #if defined(__cplusplus)
     #include <platform/filesystem.hpp>
@@ -75,6 +76,7 @@ struct SResourceRequest {
     void UpdateUnload();
     void Update();
     bool Yielded();
+    bool Failed();
     void OnRequestFileFinished();
     void OnRequestLoadFinished();
     void _LoadFinished();
@@ -83,7 +85,7 @@ struct SResourceRequest {
 };
 struct RUNTIME_API SResourceRegistry {
 public:
-    virtual void RequestResourceFile(SResourceRequest* request) = 0;
+    virtual bool RequestResourceFile(SResourceRequest* request) = 0;
     virtual void CancelRequestFile(SResourceRequest* requst) = 0;
 };
 struct RUNTIME_API SResourceSystem {

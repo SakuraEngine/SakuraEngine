@@ -1,7 +1,7 @@
 #include "ecs/dual.h"
 #include "utils/io.hpp"
 #include "mesh_asset.hpp"
-#include "skr_renderer/mesh_resource.h"
+#include "skr_renderer/resources/mesh_resource.h"
 #include "resource/resource_factory.h"
 #include "utils/defer.hpp"
 #include "utils/log.hpp"

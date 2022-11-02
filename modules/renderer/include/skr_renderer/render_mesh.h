@@ -1,10 +1,10 @@
 #pragma once
-#include "mesh_resource.h"
+#include "resources/mesh_resource.h"
 #include "primitive_draw.h"
 #include "cgpu/api.h"
 #include "cgpu/io.h"
 #ifndef __meta__
-    #include "SkrRenderer/skr_renderer/render_mesh.generated.h"
+    #include "SkrRenderer/render_mesh.generated.h"
 #endif
 
 #ifdef __cplusplus

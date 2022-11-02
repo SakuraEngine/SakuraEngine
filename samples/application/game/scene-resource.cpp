@@ -1,4 +1,4 @@
-#include "scene-resource.hpp"
+#include "scene_resource.hpp"
 #include "GameRT/typeid.generated.hpp"
 #include "ecs/dual.h"
 #include "skr_scene/scene.h"

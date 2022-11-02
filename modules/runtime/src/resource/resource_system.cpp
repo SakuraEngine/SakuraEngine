@@ -188,10 +188,10 @@ void SResourceSystem::Update()
     // TODO: time limit
     for (auto request : currentRequests)
     {
-        do
+        while (!request->Yielded() && !request->Failed())
         {
             request->Update();
-        } while (!request->Yielded());
+        }
     }
 }
 
@@ -203,6 +203,9 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
     resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
     switch (currentPhase)
     {
+        case SKR_LOADING_PHASE_FAILED:
+            resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+            break;
         case SKR_LOADING_PHASE_FINISHED:
             currentPhase = SKR_LOADING_PHASE_REQUEST_RESOURCE;
             break;
@@ -372,8 +375,15 @@ void SResourceRequest::Update()
     switch (currentPhase)
     {
         case SKR_LOADING_PHASE_REQUEST_RESOURCE: {
-            system->resourceProvider->RequestResourceFile(this);
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST;
+            auto fopened = system->resourceProvider->RequestResourceFile(this);
+            if (fopened)
+                currentPhase = SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST;
+            else
+            {
+                currentPhase = SKR_LOADING_PHASE_FAILED;
+                // TODO: Do something with this rude code
+                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+            }
         }
         break;
         case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
@@ -555,6 +565,11 @@ void SResourceRequest::Update()
             SKR_UNREACHABLE_CODE();
             break;
     }
+}
+
+bool SResourceRequest::Failed()
+{
+    return (currentPhase == SKR_LOADING_PHASE_FAILED);
 }
 
 bool SResourceRequest::Yielded()
