@@ -2,7 +2,7 @@
 #include "SkrRenderer/module.configure.h"
 #include "utils/types.h"
 #ifndef __meta__
-    #include "SkrRenderer/skr_renderer/mesh_resource.generated.h"
+    #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
 
 typedef uint64_t skr_vertex_layout_id;

@@ -40,8 +40,7 @@ skr_config_resource_t* SConfigFactory::NewConfig(skr_type_id_t& id)
 
 void SConfigFactory::DestroyConfig(struct skr_config_resource_t* config)
 {
-    config->~skr_config_resource_t();
-    sakura_free(config);
+    SkrDelete(config);
 }
 
 ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)

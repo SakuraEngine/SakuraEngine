@@ -11,7 +11,7 @@ namespace skr::resource
 struct RUNTIME_API SLocalResourceRegistry : SResourceRegistry {
     SLocalResourceRegistry(skr_vfs_t* vfs);
     virtual ~SLocalResourceRegistry() = default;
-    void RequestResourceFile(SResourceRequest* request) override;
+    bool RequestResourceFile(SResourceRequest* request) override;
     void CancelRequestFile(SResourceRequest* requst) override;
     skr_vfs_t* vfs;
 };

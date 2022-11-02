@@ -1,4 +1,4 @@
-#include "skr_renderer/render_texture.h"
+#include "skr_renderer/resources/texture_resource.h"
 #include "utils/make_zeroed.hpp"
 #include "platform/debug.h"
 #include "cgpu/io.hpp"
@@ -9,6 +9,7 @@
 
 #include "tracy/Tracy.hpp"
 
+/*
 void skr_render_texture_create_from_png(skr_render_texture_io_t* io, const char* texture_path, 
     skr_render_texture_request_t* texture_io_request, skr_async_vtexture_destination_t* texture_destination)
 {
@@ -44,3 +45,4 @@ void skr_render_texture_create_from_png(skr_render_texture_io_t* io, const char*
     }
 #endif
 }
+*/

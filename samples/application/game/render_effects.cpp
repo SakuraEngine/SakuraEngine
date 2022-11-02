@@ -13,7 +13,6 @@
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_mesh.h"
-#include "skr_renderer/mesh_resource.h"
 #include "gamert.h"
 #include "cube.hpp"
 #include <platform/filesystem.hpp>

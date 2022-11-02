@@ -60,7 +60,7 @@ struct IsPod : std::integral_constant<bool, std::is_standard_layout<T>::value &&
 /// This is all the non-templated stuff common to all SmallVectors.
 struct SmallVectorBase {
 public:
-    void *BeginX, *EndX, *CapacityX;
+    void *BeginX = nullptr, *EndX = nullptr, *CapacityX = nullptr;
 
 public:
     SmallVectorBase(void* FirstEl, size_t Size)

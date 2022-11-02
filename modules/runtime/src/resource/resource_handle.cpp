@@ -14,7 +14,8 @@ skr_resource_handle_t::skr_resource_handle_t()
 
 skr_resource_handle_t::~skr_resource_handle_t()
 {
-    reset();
+    // TODO: is this OK?
+    // reset();
 }
 
 skr_resource_handle_t::skr_resource_handle_t(const skr_guid_t& other)
