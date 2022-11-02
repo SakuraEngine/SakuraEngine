@@ -11,10 +11,11 @@ SImporterRegistry* GetImporterRegistry()
     return &registry;
 }
 
-SImporter* SImporterRegistry::LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object)
+SImporter* SImporterRegistry::LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object, skr_guid_t* pGuid)
 {
     skr_guid_t type;
     skr::json::Read(object["importerType"].value_unsafe(), type);
+    if (pGuid) *pGuid = type;
     auto iter = loaders.find(type);
     if (iter != loaders.end())
         return iter->second.Load(record, std::move(object));

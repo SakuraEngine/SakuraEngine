@@ -28,6 +28,7 @@ void* STextureImporter::Import(skr::io::RAMService* ioService, SCookContext* con
 {
     auto path = context->AddFileDependency(assetPath.c_str());
     auto u8Path = path.u8string();
+    const auto assetRecord = context->GetAssetRecord();
 
     // load file
     skr::task::event_t counter;
@@ -41,7 +42,7 @@ void* STextureImporter::Import(skr::io::RAMService* ioService, SCookContext* con
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_io_request_t ioRequest = {};
     skr_async_ram_destination_t ioDestination = {};
-    ioService->request(context->record->project->vfs, &ramIO, &ioRequest, &ioDestination);
+    ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &ioDestination);
     counter.wait(false);
 
     // try decode texture
@@ -122,6 +123,8 @@ inline eastl::string Util_CompressedTypeString(ECGPUFormat format)
 
 bool STextureCooker::Cook(SCookContext *ctx)
 {
+    const auto outputPath = ctx->GetOutputPath();
+    const auto assetRecord = ctx->GetAssetRecord();
     auto uncompressed = ctx->Import<skr_uncompressed_render_texture_t>();
     const auto image_coder = uncompressed->image_coder;
     SKR_DEFER({ ctx->Destroy(uncompressed); });
@@ -138,7 +141,7 @@ bool STextureCooker::Cook(SCookContext *ctx)
     {
         case IMAGE_CODER_COLOR_FORMAT_RGBA: // TODO: format shuffle
         default:
-            compressed_format = CGPU_FORMAT_DXBC1_RGBA_UNORM;
+            compressed_format = CGPU_FORMAT_DXBC1_RGBA_UNORM; // TODO: determine format
             break;
     }
     const auto compressed_size = Util_DXBCCompressedSize(image_width, image_height, compressed_format);
@@ -176,10 +179,11 @@ bool STextureCooker::Cook(SCookContext *ctx)
     // format
     skr::binary::Write(&archive, header_t);
     // write to file
-    auto file = fopen(ctx->output.u8string().c_str(), "wb");
+    auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", ctx->record->guid, ctx->record->path.u8string());
+        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            assetRecord->guid, assetRecord->path.u8string());
         return false;
     }
     SKR_DEFER({ fclose(file); });
@@ -187,7 +191,8 @@ bool STextureCooker::Cook(SCookContext *ctx)
     // write compressed files
     {
         auto extension = Util_CompressedTypeString(compressed_format);
-        auto compressed_path = ctx->output.replace_extension(extension.c_str());
+        auto compressed_path = outputPath;
+        compressed_path.replace_extension(extension.c_str());
         auto compressed_file = fopen(compressed_path.u8string().c_str(), "wb");
         SKR_DEFER({ fclose(compressed_file); });
         fwrite(compressed_data.data(), compressed_data.size(), 1, compressed_file);

@@ -23,6 +23,7 @@ SCookSystem* GetCookSystem()
     static SCookSystem instance;
     return &instance;
 }
+
 SCookSystem::SCookSystem() noexcept
 {
     skr_init_mutex(&ioMutex);
@@ -41,6 +42,7 @@ SCookSystem::SCookSystem() noexcept
         }
     }
 }
+
 SCookSystem::~SCookSystem() noexcept
 {
     skr_destroy_mutex(&ioMutex);
@@ -58,6 +60,7 @@ SProject::~SProject() noexcept
 {
     if (vfs) skr_free_vfs(vfs);
 }
+
 void SCookSystem::WaitForAll()
 {
     mainCounter.wait(true);
@@ -77,16 +80,14 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
     SCookContext* jobContext;
     {
         skr::task::event_t result{nullptr};
-        cooking.lazy_emplace_l(
-        guid, [&](SCookContext* ctx) { result = ctx->counter; },
+        cooking.lazy_emplace_l(guid,
+         [&](SCookContext* ctx) { result = ctx->counter; },
         [&](const CookingMap::constructor& ctor) {
             jobContext = SkrNew<SCookContext>();
             ctor(guid, jobContext);
         });
-        if(result)
-            return result;
+        if(result) return result;
     }
-
     jobContext->record = GetAssetRecord(guid);
     jobContext->ioService = getIOService();
     skr::task::event_t counter;
@@ -106,7 +107,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
         std::error_code ec = {};
         skr::filesystem::create_directories(outputPath, ec);
         // TODO: platform dependent directory
-        jobContext->output = outputPath / fmt::format("{}.bin", metaAsset->guid);
+        jobContext->outputPath = outputPath / fmt::format("{}.bin", metaAsset->guid);
         auto system = GetCookSystem();
         auto iter = system->cookers.find(metaAsset->type);
         if (iter == system->cookers.end())
@@ -160,6 +161,7 @@ void SCookSystem::RegisterCooker(skr_guid_t guid, SCooker* cooker)
     cooker->system = this;
     cookers.insert(std::make_pair(guid, cooker));
 }
+
 void SCookSystem::UnregisterCooker(skr_guid_t guid)
 {
     cookers.erase(guid);
@@ -320,6 +322,7 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
         return AddCookTask(guid);
     return nullptr;
 }
+
 void* SCookSystem::CookOrLoad(skr_guid_t resource)
 {
     auto counter = EnsureCooked(resource);
@@ -337,7 +340,6 @@ void SCookContext::_Destroy(void* resource)
         SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
     }
     SKR_DEFER({ SkrDelete(importer); });
-    importerVersion = importer->Version();
     //-----import raw data
     importer->Destroy(resource);
     SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset freed for resource {}! path: {}", record->guid, record->path.u8string());
@@ -351,13 +353,15 @@ void* SCookContext::_Import()
     auto importerJson = doc["importer"]; // import from asset
     if (importerJson.error() == simdjson::SUCCESS)
     {
-        importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe());
+        skr_guid_t importerTypeGuid = {};
+        importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe(), &importerTypeGuid);
         if(!importer)
         {
             SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
             return nullptr;
         }
         importerVersion = importer->Version();
+        importerType = importerTypeGuid;
         //-----import raw data
         auto rawData = importer->Import(ioService, this);
         SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset imported for resource {}! path: {}", record->guid, record->path.u8string());
@@ -372,6 +376,32 @@ void* SCookContext::_Import()
     // }
     return nullptr;
 }
+
+skr::filesystem::path SCookContext::GetOutputPath() const
+{
+    return outputPath;
+}
+
+skr_guid_t SCookContext::GetImporterType() const
+{
+    return importerType;
+}
+
+uint32_t SCookContext::GetImporterVersion() const
+{
+    return importerVersion;
+}
+
+uint32_t SCookContext::GetCookerVersion() const
+{
+    return cookerVersion;
+}
+
+const SAssetRecord* SCookContext::GetAssetRecord() const
+{
+    return record;
+}
+
 skr::filesystem::path SCookContext::AddFileDependency(const skr::filesystem::path &inPath)
 {
     auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == inPath; });
@@ -379,6 +409,7 @@ skr::filesystem::path SCookContext::AddFileDependency(const skr::filesystem::pat
         fileDependencies.push_back(inPath);
     return record->path.parent_path() / inPath;
 }
+
 void SCookContext::AddRuntimeDependency(skr_guid_t resource)
 {
     auto iter = std::find_if(runtimeDependencies.begin(), runtimeDependencies.end(), [&](const auto &dep) { return dep == resource; });
@@ -386,6 +417,17 @@ void SCookContext::AddRuntimeDependency(skr_guid_t resource)
         runtimeDependencies.push_back(resource);
     GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
 }
+
+skr::span<const skr_guid_t> SCookContext::GetRuntimeDependencies() const
+{
+    return skr::span<const skr_guid_t>(runtimeDependencies.data(), runtimeDependencies.size());
+}
+
+skr::span<const skr_guid_t> SCookContext::GetStaticDependencies() const
+{
+    return skr::span<const skr_guid_t>(staticDependencies.data(), staticDependencies.size());
+}
+
 void* SCookContext::AddStaticDependency(skr_guid_t resource)
 {
     auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto &dep) { return dep == resource; });

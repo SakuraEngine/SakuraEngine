@@ -30,11 +30,12 @@ namespace asset
 void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
 {
     auto registry = GetConfigRegistry();
+    const auto assetRecord = context->GetAssetRecord();
     auto iter = registry->typeInfos.find(configType);
     auto path = context->AddFileDependency(assetPath.c_str());
     if (iter == registry->typeInfos.end())
     {
-        SKR_LOG_ERROR("import resource %s failed, type is not registered as config", context->record->path.u8string().c_str());
+        SKR_LOG_ERROR("import resource %s failed, type is not registered as config", assetRecord->path.u8string().c_str());
         return nullptr;
     }
 
@@ -51,7 +52,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* 
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_io_request_t ioRequest = {};
     skr_async_ram_destination_t ioDestination = {};
-    ioService->request(context->record->project->vfs, &ramIO, &ioRequest, &ioDestination);
+    ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &ioDestination);
     counter.wait(false);
     auto jsonString = simdjson::padded_string((char8_t*)ioDestination.bytes, ioDestination.size);
     sakura_free(ioDestination.bytes);
@@ -85,6 +86,8 @@ uint32_t SConfigCooker::Version()
 
 bool SConfigCooker::Cook(SCookContext* ctx)
 {
+    const auto outputPath = ctx->GetOutputPath();
+    const auto assetRecord = ctx->GetAssetRecord();
     //-----load config
     // no cook config for config, skipping
     //-----import resource object
@@ -122,10 +125,11 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     //------write resource object
     skr::resource::SConfigFactory::Serialize(*resource, archive);
     //------save resource to disk
-    auto file = fopen(ctx->output.u8string().c_str(), "wb");
+    auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", ctx->record->guid, ctx->record->path.u8string());
+        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            assetRecord->guid, assetRecord->path.u8string());
         return false;
     }
     SKR_DEFER({ fclose(file); });

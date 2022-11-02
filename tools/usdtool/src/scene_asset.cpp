@@ -129,6 +129,8 @@ uint32_t SSceneCooker::Version()
 
 bool SSceneCooker::Cook(SCookContext* ctx)
 {
+    const auto outputPath = ctx->GetOutputPath();
+    const auto assetRecord = ctx->GetAssetRecord();
     //-----load config
     // no cook config for config, skipping
     //-----import resource object
@@ -156,10 +158,11 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     //------write resource object
     dualS_serialize(world, &archive);
     //------save resource to disk
-    auto file = fopen(ctx->output.u8string().c_str(), "wb");
+    auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", ctx->record->guid, ctx->record->path.u8string());
+        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            assetRecord->guid, assetRecord->path.u8string());
         return false;
     }
     SKR_DEFER({ fclose(file); });
