@@ -11,6 +11,7 @@
 void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
 {
     skr::filesystem::path relPath = assetPath.c_str();
+    const auto assetRecord = context->GetAssetRecord();
     auto ext = relPath.extension();
     if (ext != ".gltf")
     {
@@ -60,7 +61,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
     skr_async_io_request_t ioRequest = {};
-    ioService->request(context->record->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
+    ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
     counter.wait(false);
     // parse
     if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
@@ -86,6 +87,8 @@ void skd::asset::SGltfMeshImporter::Destroy(void* resource)
 
 bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
 { 
+    const auto outputPath = ctx->GetOutputPath();
+    const auto assetRecord = ctx->GetAssetRecord();
     auto resource = ctx->Import<skr_mesh_resource_t>();
     if(!resource)
     {
@@ -110,10 +113,11 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     skr::binary::Archive(&archive, resource->name);
     // archive(resource->sections);
     //------save resource to disk
-    auto file = fopen(ctx->output.u8string().c_str(), "wb");
+    auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", ctx->record->guid, ctx->record->path.u8string());
+        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            assetRecord->guid, assetRecord->path.u8string());
         return false;
     }
     SKR_DEFER({ fclose(file); });

@@ -36,16 +36,20 @@ TOOL_API SImporter
     virtual void Destroy(void*) = 0;
     static uint32_t Version() { return UINT32_MAX; }
 };
+
 struct TOOL_API SImporterTypeInfo {
     SImporter* (*Load)(const SAssetRecord* record, simdjson::ondemand::value&& object);
     uint32_t (*Version)();
 };
+
 struct SImporterRegistry {
-    SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object);
+    SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object, skr_guid_t* pGuid = nullptr);
     uint32_t GetImporterVersion(skr_guid_t type);
     skr::flat_hash_map<skr_guid_t, SImporterTypeInfo, skr::guid::hash> loaders;
 };
+
 TOOL_API SImporterRegistry* GetImporterRegistry();
+
 struct SImporterFactory {
     virtual bool CanImport(const SAssetRecord* record) = 0;
     virtual skr_guid_t GetResourceType() = 0;
