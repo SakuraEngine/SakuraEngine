@@ -28,5 +28,5 @@ GLTFTOOL_API SMeshCooker final : public SCooker
     uint32_t Version() override;
 }
 sregister_cooker("3b8ca511-33d1-4db4-b805-00eea6a8d5e1");
-} // namespace sreflect
-} // namespace sreflect
+} // namespace asset
+} // namespace skd

@@ -1,5 +1,5 @@
 #pragma once
-#include "usdtool_configure.h"
+#include "UsdTool/module.configure.h"
 #include "asset/importer.hpp"
 #include "platform/configure.h"
 
@@ -8,8 +8,8 @@ namespace skd sreflect
 namespace asset sreflect
 {
 struct sreflect sattr(
-"guid" : "01A1037A-22A1-46C9-8461-90B443796FDC",
-"serialize" : "json"
+    "guid" : "01A1037A-22A1-46C9-8461-90B443796FDC",
+    "serialize" : "json"
 )
 USDTOOL_API SUSDMeshImporter final : public SImporter
 {
@@ -19,5 +19,5 @@ USDTOOL_API SUSDMeshImporter final : public SImporter
     void Destroy(void *) override { SKR_UNIMPLEMENTED_FUNCTION(); }
 }
 sregister_importer();
-} // namespace sreflect
-} // namespace sreflect
+} // namespace asset
+} // namespace skd

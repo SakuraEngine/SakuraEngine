@@ -1,13 +1,14 @@
 #pragma once
-#include "EASTL/functional.h"
-#include "usdtool_configure.h"
-#include "asset/importer.hpp"
-#include "asset/cooker.hpp"
+#include <EASTL/functional.h>
+#include "UsdTool/module.configure.h"
 #include "platform/configure.h"
 #include "utils/hashmap.hpp"
+#include "asset/importer.hpp"
+#include "asset/cooker.hpp"
 #ifndef __meta__
     #include "UsdTool/scene_asset.generated.h"
 #endif
+
 namespace skd sreflect
 {
 namespace asset sreflect
@@ -40,5 +41,5 @@ struct USDTOOL_API SSceneImporterFactory final : public SImporterFactory {
     skr_guid_t GetResourceType() override { SKR_UNIMPLEMENTED_FUNCTION(); return {}; }
     void CreateImporter(const SAssetRecord* record) override;
 };
-} // namespace sreflect
-} // namespace sreflect
+} // namespace asset
+} // namespace skd
