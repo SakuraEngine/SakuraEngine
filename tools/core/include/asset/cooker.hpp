@@ -1,23 +1,20 @@
 #pragma once
 #include "SkrTool/module.configure.h"
+#include "platform/configure.h"
 #include <EASTL/vector.h>
 #include <EASTL/shared_ptr.h>
 #include "containers/span.hpp"
-#include "platform/memory.h"
 #include "platform/guid.hpp"
-#include "platform/thread.h"
 #include "utils/hashmap.hpp"
 #include "utils/parallel_for.hpp"
 #include "resource/resource_header.h"
-#include "task/task.hpp"
 #include "platform/filesystem.hpp"
+#include "task/task.hpp"
 #include "simdjson.h"
 
 struct skr_vfs_t;
-namespace skr::io
-{
-class RAMService;
-}
+namespace skr::io { class RAMService; }
+
 namespace skd::asset sreflect
 {
 struct SImporter;

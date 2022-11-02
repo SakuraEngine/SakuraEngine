@@ -1,20 +1,13 @@
 #pragma once
 #include "SkrTool/module.configure.h"
-#include <EASTL/vector.h>
-#include "simdjson.h"
-#include "platform/configure.h"
-#include "utils/types.h"
-#include "utils/hashmap.hpp"
 #include "json/reader.h"
 #include "resource/resource_header.h"
 #include "asset/cooker.hpp"
 #ifndef __meta__
     #include "SkrTool/asset/importer.generated.h"
 #endif
-namespace skr::io
-{
-class RAMService;
-}
+
+namespace skr::io { class RAMService; }
 
 namespace skd sreflect
 {
@@ -25,16 +18,19 @@ namespace asset sreflect
 template<class T>
 void RegisterImporter(skr_guid_t guid);
 #define sregister_importer() sstatic_ctor(skd::asset::RegisterImporter<$T>($guid));
+
 struct sreflect sattr(
     "guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
     "serialize" : "json"
 )
 TOOL_API SImporter
 {
-    virtual ~SImporter() {}
+    static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
+
+    virtual ~SImporter() = default;
     virtual void* Import(skr::io::RAMService*, SCookContext* context) = 0;
     virtual void Destroy(void*) = 0;
-    static uint32_t Version() { return UINT32_MAX; }
+    static uint32_t Version() { return kDevelopmentVersion; }
 };
 
 struct TOOL_API SImporterTypeInfo {
@@ -70,5 +66,5 @@ void RegisterImporter(skr_guid_t guid)
     SImporterTypeInfo info { loader, T::Version };
     registry->loaders.insert(std::make_pair(guid, info));
 }
-} // namespace sreflect
-} // namespace sreflect
+} // namespace asset
+} // namespace skd
