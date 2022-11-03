@@ -154,7 +154,6 @@ bool SSceneCooker::Cook(SCookContext* ctx)
         }
     } writer{&buffer};
     skr_binary_writer_t archive(writer);
-    ctx->WriteHeader(archive, this);
     //------write resource object
     dualS_serialize(world, &archive);
     //------save resource to disk

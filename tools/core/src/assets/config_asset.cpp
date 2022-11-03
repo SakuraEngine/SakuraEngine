@@ -121,7 +121,6 @@ bool SConfigCooker::Cook(SCookContext* ctx)
         }
     } writer{&buffer};
     skr_binary_writer_t archive(writer);
-    ctx->WriteHeader(archive, this);
     //------write resource object
     skr::resource::SConfigFactory::Serialize(*resource, archive);
     //------save resource to disk

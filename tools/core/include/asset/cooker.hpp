@@ -48,7 +48,6 @@ struct TOOL_API SCooker {
 
 struct TOOL_API SCookContext { // context per job
     friend struct SCookSystem;
-
 public:
     skr::filesystem::path GetOutputPath() const;
     
@@ -69,6 +68,9 @@ public:
     template <class T>
     void Destroy(T* ptr) { if (ptr) _Destroy(ptr); }
 
+protected:
+    void* _Import();
+    void _Destroy(void*);
     template <class S>
     void WriteHeader(S& s, SCooker* cooker)
     {
@@ -79,10 +81,6 @@ public:
         header.dependencies.insert(header.dependencies.end(), runtimeDependencies.begin(), runtimeDependencies.end());
         skr::binary::Archive(&s, header);
     }
-
-protected:
-    void* _Import();
-    void _Destroy(void*);
 
     // Job system wait counter
     skr::task::event_t counter;
@@ -102,20 +100,21 @@ protected:
 };
 
 struct TOOL_API SCookSystem {
-    SCookSystem() noexcept;
-    ~SCookSystem() noexcept;
+public:
+    SCookSystem() SKR_NOEXCEPT;
+    virtual ~SCookSystem() SKR_NOEXCEPT;
 
     void Initialize() {}
     void Shutdown() {}
+    
     skr::task::event_t AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
     skr::task::event_t EnsureCooked(skr_guid_t resource);
+    void WaitForAll();
+
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
-    void WaitForAll();
-    using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
-    CookingMap cooking;
-    SMutex ioMutex;
+
     class skr::io::RAMService* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 4;
     class skr::io::RAMService* ioServices[ioServicesMaxCount];
@@ -130,8 +129,13 @@ struct TOOL_API SCookSystem {
         skr::parallel_for(std::move(begin), std::move(end), batch, std::move(f));
     }
 
+    // TODO: hide this
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
 protected:
+    using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
+    CookingMap cooking;
+    SMutex ioMutex;
+
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     SMutex assetMutex;
 };

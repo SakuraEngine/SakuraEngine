@@ -53,7 +53,7 @@ struct SResourceRegistry;
 struct SResourceFactory;
 struct SResourceSystem;
 
-struct SResourceRequest {
+struct RUNTIME_API SResourceRequest {
     friend struct SResourceSystem;
     friend struct SResourceRegistry;
 public:
