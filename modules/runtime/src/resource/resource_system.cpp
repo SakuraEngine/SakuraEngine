@@ -129,8 +129,7 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
     auto record = handle.get_record();
     SKR_ASSERT(record->loadingStatus != SKR_LOADING_STATUS_UNLOADED);
     record->references.erase_first_unsorted(skr_resource_record_t::requester_id{ handle.get_requester(), handle.get_requester_type() });
-    auto guid = record->header.guid;
-    handle.set_guid(guid);
+    auto guid = handle.guid = record->header.guid; // force flush handle to guid
 
     if (record->references.empty()) // unload
     {
@@ -219,6 +218,23 @@ void SResourceSystem::Update()
             request->Update();
         }
     }
+}
+
+// resource request implementation
+
+skr_guid_t SResourceRequest::GetGuid() const
+{
+    return resourceRecord->header.guid;
+}
+
+gsl::span<const uint8_t> SResourceRequest::GetData() const
+{
+    return gsl::span<const uint8_t>(data, size); 
+}
+
+gsl::span<const skr_guid_t> SResourceRequest::GetDependencies() const
+{
+    return gsl::span<const skr_guid_t>(dependencies.data(), dependencies.size());
 }
 
 void SResourceRequest::UpdateLoad(bool requestInstall)
@@ -344,7 +360,7 @@ void SResourceRequest::UpdateUnload()
 
 void SResourceRequest::OnRequestFileFinished()
 {
-    if (path.empty() || vfs == nullptr)
+    if (resourceUrl.empty() || vfs == nullptr)
     {
         SKR_LOG_FMT_ERROR("Resource {} failed to load, file not found.", resourceRecord->header.guid);
         currentPhase = SKR_LOADING_PHASE_FINISHED;
@@ -353,7 +369,6 @@ void SResourceRequest::OnRequestFileFinished()
     else
     {
         currentPhase = SKR_LOADING_PHASE_IO;
-        u8path = path.u8string();
         factory = system->FindFactory(resourceRecord->header.type);
         if (factory == nullptr)
         {
@@ -432,13 +447,13 @@ void SResourceRequest::Update()
                 //ramIO.bytes = nullptr;
                 ramIO.offset = 0;
                 //ramIO.size = 0;
-                ramIO.path = u8path.c_str();
-                ioService->request(vfs, &ramIO, &request, &destination);
+                ramIO.path = resourceUrl.c_str();
+                ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
             }
             else 
             {
-                auto file = skr_vfs_fopen(vfs, u8path.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+                auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
                 SKR_DEFER({ skr_vfs_fclose(file); });
                 auto size = skr_vfs_fsize(file);
                 eastl::vector<uint8_t> buffer(size);
@@ -450,10 +465,10 @@ void SResourceRequest::Update()
             }
             break;
         case SKR_LOADING_PHASE_WAITFOR_IO:
-            if(request.is_ready())
+            if(ioRequest.is_ready())
             {
-                data = destination.bytes;
-                size = destination.size;
+                data = ioDestination.bytes;
+                size = ioDestination.size;
                 currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
             }
             break;
@@ -561,9 +576,9 @@ void SResourceRequest::Update()
         break;
         case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO:
         {
-            if(!request.is_ready())
+            if(!ioRequest.is_ready())
             {
-                ioService->defer_cancel(&request);
+                ioService->defer_cancel(&ioRequest);
             }
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;

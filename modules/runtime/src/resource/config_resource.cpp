@@ -48,7 +48,7 @@ ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)
     auto data = record->activeRequest->GetData();
     struct SpanReader
     {
-        gsl::span<uint8_t> data;
+        gsl::span<const uint8_t> data;
         size_t offset = 0;
         int read(void* dst, size_t size)
         {
@@ -58,7 +58,7 @@ ESkrLoadStatus SConfigFactory::Load(skr_resource_record_t* record)
             offset += size;
             return 0;
         }
-    } reader = {data};
+    } reader = { data };
     skr_binary_reader_t archive{reader};
     if (Deserialize(record, archive))
         return SKR_LOAD_STATUS_SUCCEED;

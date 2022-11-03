@@ -45,7 +45,6 @@ void SGameRTModule::on_load(int argc, char** argv)
     while (textureHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && 
         textureHdl.get_status() != SKR_LOADING_STATUS_ERROR)
     {
-        auto status = textureHdl.get_status();
         resource_system->Update();
     }
     auto final_status = textureHdl.get_status();
