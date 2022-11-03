@@ -84,6 +84,7 @@ ESkrLoadStatus STextureFactory::Load(skr_resource_record_t* record)
     } reader = {loadedData};
 
     skr_binary_reader_t archive{reader};
+    skr::binary::Archive(&archive, *newTexture);
 
     record->resource = newTexture;
     return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
