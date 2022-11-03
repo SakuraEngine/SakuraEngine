@@ -16,6 +16,13 @@ IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 void SGameRTModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
+
+    // create game world
+    game_world = dualS_create();
+    
+    game_render_device = skr_get_default_render_device();
+    game_renderer = skr_create_renderer(game_render_device, game_world);
+
     std::error_code ec = {};
     auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
     auto u8ResourceRoot = resourceRoot.u8string();
@@ -47,11 +54,11 @@ void SGameRTModule::on_load(int argc, char** argv)
     tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
 
     skr::resource::STextureFactory::Root factoryRoot = {};
-    factoryRoot.dstorage_root = u8TextureRoot.c_str();
+    factoryRoot.dstorage_root = textureRoot;
     factoryRoot.texture_vfs = tex_resource_vfs;
     factoryRoot.ram_service = ram_service;
-    factoryRoot.vram_service = nullptr;
-    factoryRoot.renderer = nullptr;
+    factoryRoot.vram_service = game_render_device->get_vram_service();
+    factoryRoot.render_device = game_render_device;
     auto testFactory = skr::resource::STextureFactory::Create(factoryRoot);
     resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, testFactory);
     skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
@@ -66,14 +73,25 @@ void SGameRTModule::on_load(int argc, char** argv)
     {
         auto texture = (skr_texture_resource_t*)textureHdl.get_ptr();
         SKR_LOG_DEBUG("Texture Loaded: format - %d, mips - %d, data size - %d", 
-            texture->format, texture->mips_count, texture->data_size); 
+            texture->format, texture->mips_count, texture->data_size);
         resource_system->UnloadResource(textureHdl);
+        resource_system->Update();
+        resource_system->Update();
+        resource_system->Update();
+        resource_system->Update();
+        while (textureHdl.get_status() != SKR_LOADING_STATUS_UNLOADED)
+        {
+            resource_system->Update();
+        }
     }
     skr::resource::STextureFactory::Destroy(testFactory);
 }
 
 void SGameRTModule::on_unload()
 {
+    dualS_release(game_world);
+    skr_free_renderer(game_renderer);
+    
     skr::resource::GetResourceSystem()->Shutdown();
     SkrDelete(registry);
 
@@ -91,13 +109,28 @@ SGameRTModule* SGameRTModule::Get()
     return rm;
 }
 
-RUNTIME_EXTERN_C skr_vfs_t* skr_game_runtime_get_vfs()
+skr_vfs_t* skr_game_runtime_get_vfs()
 {
     return SGameRTModule::Get()->resource_vfs;
 }
 
 
-RUNTIME_EXTERN_C skr_io_ram_service_t* skr_game_runtime_get_ram_service()
+skr_io_ram_service_t* skr_game_runtime_get_ram_service()
 {
      return SGameRTModule::Get()->ram_service;
+}
+
+dual_storage_t* skr_game_runtime_get_world()
+{
+    return SGameRTModule::Get()->game_world;
+}
+
+SRenderDeviceId skr_game_runtime_get_render_device()
+{
+    return SGameRTModule::Get()->game_render_device;
+}
+
+SRendererId skr_game_runtime_get_renderer()
+{
+    return SGameRTModule::Get()->game_renderer;
 }

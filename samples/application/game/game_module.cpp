@@ -47,10 +47,7 @@ class SGameModule : public skr::IDynamicModule
     virtual int main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
 
-    struct dual_storage_t* game_world = nullptr;
-
     skr::task::scheduler_t scheduler;
-    SRendererId game_renderer = nullptr;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SGameModule, Game);
@@ -75,11 +72,7 @@ Game)
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
-
-    game_world = dualS_create();
-
-    auto render_device = skr_get_default_render_device();
-    game_renderer = skr_create_renderer(render_device, game_world);
+    auto game_world = skr_game_runtime_get_world();
 
     if (bUseJob)
     {
@@ -245,7 +238,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
     
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
         return -1;
+        
+    auto game_world = skr_game_runtime_get_world();
     auto render_device = skr_get_default_render_device();
+    auto game_renderer = skr_game_runtime_get_renderer();
     auto cgpu_device = render_device->get_cgpu_device();
     auto gfx_queue = render_device->get_gfx_queue();
     auto window_desc = make_zeroed<SWindowDescroptor>();
@@ -580,7 +576,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
     render_graph::RenderGraph::destroy(renderGraph);
     game_finalize_render_effects(game_renderer, renderGraph);
     render_graph_imgui_finalize();
-    skr_free_renderer(game_renderer);
     skr_free_window(window);
     SDL_Quit();
     return 0;
@@ -589,10 +584,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
 void SGameModule::on_unload()
 {
     SKR_LOG_INFO("game unloaded!");
+    auto game_world = skr_game_runtime_get_world();
     if (bUseJob)
     {
         dualJ_unbind_storage(game_world);
         scheduler.unbind();
     }
-    dualS_release(game_world);
 }
