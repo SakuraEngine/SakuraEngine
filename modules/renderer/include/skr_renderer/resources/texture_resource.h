@@ -29,6 +29,7 @@ skr_texture_resource_t
     uint32_t format; // TODO: TEnum<ECGPUFormat>
     uint32_t mips_count;
     uint64_t data_size;
+    sattr("transient": true)
     CGPUTextureId texture;
 };
 typedef struct skr_texture_resource_t skr_texture_resource_t;
@@ -47,19 +48,10 @@ namespace resource sreflect
 //    - upload with copy queue
 //    - upload with gfx queue
 struct SKR_RENDERER_API STextureFactory : public SResourceFactory {
-    skr_type_id_t GetResourceType() override;
-    bool AsyncIO() override;
-    ESkrLoadStatus Load(skr_resource_record_t* record) override;
-    ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
-    bool Unload(skr_resource_record_t* record) override;
-    ESkrInstallStatus Install(skr_resource_record_t* record) override;
-    bool Uninstall(skr_resource_record_t* record) override;
-    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
-    void DestroyResource(skr_resource_record_t* record) override;
+    virtual ~STextureFactory() = default;
 
-    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mRamRequests;
-    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mVRamRequests;
-    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mDStorageRequests;
+    [[nodiscard]] static STextureFactory* Create();
+    static void Destroy(STextureFactory* factory); 
 };
 } // namespace resource
 } // namespace skr

@@ -52,18 +52,53 @@ namespace skr
 {
 namespace resource
 {
+    
+// - dstorage & bc: dstorage
+// - dstorage & bc & zlib: dstorage with custom decompress queue
+// - bc & zlib: [TODO] ram service & decompress service & upload
+//    - upload with copy queue
+//    - upload with gfx queue
+struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
+{
+    skr_type_id_t GetResourceType() override;
+    bool AsyncIO() override;
+    ESkrLoadStatus Load(skr_resource_record_t* record) override;
+    ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
+    bool Unload(skr_resource_record_t* record) override;
+    ESkrInstallStatus Install(skr_resource_record_t* record) override;
+    bool Uninstall(skr_resource_record_t* record) override;
+    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
+    void DestroyResource(skr_resource_record_t* record) override;
+    
+    ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
+    ESkrInstallStatus InstallWithQueue(skr_resource_record_t* record);
 
-skr_type_id_t STextureFactory::GetResourceType()
+    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mRamRequests;
+    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mVRamRequests;
+    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mDStorageRequests;
+};
+
+STextureFactory* STextureFactory::Create()
+{
+    return SkrNew<STextureFactoryImpl>();
+}
+
+void STextureFactory::Destroy(STextureFactory* factory)
+{
+    SkrDelete(factory);
+}
+
+skr_type_id_t STextureFactoryImpl::GetResourceType()
 {
      return {};
 }
 
-bool STextureFactory::AsyncIO()
+bool STextureFactoryImpl::AsyncIO()
 {
      return true; 
 }
 
-ESkrLoadStatus STextureFactory::Load(skr_resource_record_t* record)
+ESkrLoadStatus STextureFactoryImpl::Load(skr_resource_record_t* record)
 { 
     auto newTexture = SkrNew<skr_texture_resource_t>();    
     auto resourceRequest = record->activeRequest;
@@ -90,34 +125,44 @@ ESkrLoadStatus STextureFactory::Load(skr_resource_record_t* record)
     return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
 }
 
-ESkrLoadStatus STextureFactory::UpdateLoad(skr_resource_record_t* record)
+ESkrLoadStatus STextureFactoryImpl::UpdateLoad(skr_resource_record_t* record)
 {
     return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
 }
 
-bool STextureFactory::Unload(skr_resource_record_t* record)
+bool STextureFactoryImpl::Unload(skr_resource_record_t* record)
 { 
     SkrDelete((skr_texture_resource_t*)record->resource);
     return true; 
 }
 
-ESkrInstallStatus STextureFactory::Install(skr_resource_record_t* record)
+ESkrInstallStatus STextureFactoryImpl::Install(skr_resource_record_t* record)
 {
     
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
 }
 
-bool STextureFactory::Uninstall(skr_resource_record_t* record)
+ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t* record)
+{
+    return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
+}
+
+ESkrInstallStatus STextureFactoryImpl::InstallWithQueue(skr_resource_record_t* record)
+{
+    return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
+}
+
+bool STextureFactoryImpl::Uninstall(skr_resource_record_t* record)
 {
     return true; 
 }
 
-ESkrInstallStatus STextureFactory::UpdateInstall(skr_resource_record_t* record)
+ESkrInstallStatus STextureFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
     return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; 
 }
 
-void STextureFactory::DestroyResource(skr_resource_record_t* record)
+void STextureFactoryImpl::DestroyResource(skr_resource_record_t* record)
 {
     return; 
 }

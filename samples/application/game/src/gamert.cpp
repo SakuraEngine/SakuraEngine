@@ -13,8 +13,6 @@
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 
 
-skr::resource::STextureFactory testFactory = {};
-
 void SGameRTModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
@@ -38,8 +36,8 @@ void SGameRTModule::on_load(int argc, char** argv)
     // 
     using namespace skr::guid::literals;
     auto resource_system = skr::resource::GetResourceSystem();
-    skr::resource::STextureFactory testFactory = {};
-    resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, &testFactory);
+    auto testFactory = skr::resource::STextureFactory::Create();
+    resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, testFactory);
     skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
     resource_system->LoadResource(textureHdl);
     while (textureHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && 
@@ -55,6 +53,7 @@ void SGameRTModule::on_load(int argc, char** argv)
             texture->format, texture->mips_count, texture->data_size); 
         resource_system->UnloadResource(textureHdl);
     }
+    skr::resource::STextureFactory::Destroy(testFactory);
 }
 
 void SGameRTModule::on_unload()
