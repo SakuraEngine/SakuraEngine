@@ -1,5 +1,23 @@
 #include "resource/resource_header.h"
 
+int skr_resource_header_t::ReadWithoutDeps(skr_binary_reader_t *reader)
+{
+    namespace bin = skr::binary;
+    uint32_t function = 1;
+    int ret = bin::Archive(reader, function);
+    if (ret != 0)
+        return ret;
+    ret = bin::Archive(reader, version);
+    if (ret != 0)
+        return ret;
+    ret = bin::Archive(reader, guid);
+    if (ret != 0)
+        return ret;
+    ret = bin::Archive(reader, type);
+    if (ret != 0)
+        return ret;
+    return 0;
+}
 
 namespace skr::binary
 {
@@ -7,19 +25,7 @@ namespace skr::binary
     int ReadValue(skr_binary_reader_t* reader, skr_resource_header_t& header)
     {
         namespace bin = skr::binary;
-        uint32_t function = 1;
-        int ret = bin::Archive(reader, function);
-        if (ret != 0)
-            return ret;
-        ret = bin::Archive(reader, header.version);
-        if (ret != 0)
-            return ret;
-        ret = bin::Archive(reader, header.guid);
-        if (ret != 0)
-            return ret;
-        ret = bin::Archive(reader, header.type);
-        if (ret != 0)
-            return ret;
+        int ret = header.ReadWithoutDeps(reader);
         uint32_t size = 0;
         ret = bin::Archive(reader, size);
         if (ret != 0)

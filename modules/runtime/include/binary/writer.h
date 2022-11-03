@@ -26,7 +26,6 @@ namespace skr::binary
 template <class T>
 using TParamType = std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v<T>, T, const T&>;
 
-
 template <class T>
 std::enable_if_t<!std::is_enum_v<T>, int> WriteValue(skr_binary_writer_t* writer, T value)
 {
@@ -75,7 +74,8 @@ template <class T>
 struct WriteHelper {
     static int Write(skr_binary_writer_t* json, T map)
     {
-        return WriteValue<TParamType<T>>(json, map);
+        using TType = std::remove_const_t<std::remove_reference_t<T>>;
+        return WriteValue<TParamType<TType>>(json, map);
     }
 };
 
@@ -131,8 +131,8 @@ int Write(skr_binary_writer_t* writer, T value)
 }
 
 template <class T>
-int Archive(skr_binary_writer_t* writer, T value)
+int Archive(skr_binary_writer_t* writer, const T& value)
 {
-    return WriteHelper<TParamType<T>>::Write(writer, value);
+    return WriteHelper<const T&>::Write(writer, value);
 }
 } // namespace skr::binary

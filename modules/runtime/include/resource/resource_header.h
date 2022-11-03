@@ -11,6 +11,7 @@ typedef struct skr_resource_header_t {
     uint32_t version;
     skr_guid_t guid;
     skr_type_id_t type;
+    RUNTIME_API int ReadWithoutDeps(skr_binary_reader_t* archive);
     eastl::fixed_vector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
 namespace skr::binary

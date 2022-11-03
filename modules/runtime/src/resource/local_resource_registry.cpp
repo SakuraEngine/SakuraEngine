@@ -38,21 +38,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     } reader = {buffer};
     skr_binary_reader_t archive{reader};
     skr_resource_header_t header;
-    uint32_t function = 1;
-    int ret = bin::Archive(&archive, function);
-    if (ret != 0)
-        return false;
-    //NOTE: this code is derived from resource header serialization
-    SKR_ASSERT(function == 1);
-    ret = bin::Archive(&archive, header.version);
-    if (ret != 0)
-        return false;
-    ret = bin::Archive(&archive, header.guid);
-    if (ret != 0)
-        return false;
-    SKR_ASSERT(header.guid == guid);
-    ret = bin::Archive(&archive, header.type);
-    if (ret != 0)
+    if(header.ReadWithoutDeps(&archive) != 0)
         return false;
     // TODO: 把这些封装起来传过去少暴露一些细节？
     request->resourceRecord->header.type = header.type;
