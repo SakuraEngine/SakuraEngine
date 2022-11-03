@@ -29,6 +29,9 @@ skr_texture_resource_t
     uint32_t format; // TODO: TEnum<ECGPUFormat>
     uint32_t mips_count;
     uint64_t data_size;
+    uint64_t width;
+    uint64_t height;
+    uint64_t depth;
     sattr("transient": true)
     CGPUTextureId texture;
 };
