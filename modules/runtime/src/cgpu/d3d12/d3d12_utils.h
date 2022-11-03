@@ -25,7 +25,9 @@ void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, C
 // Crash Report Helpers
 void D3D12Util_LogDREDPageFault(const D3D12_DRED_PAGE_FAULT_OUTPUT* pageFault);
 void D3D12Util_LogDREDBreadcrumbs(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT* breadcrumbs);
+#ifdef __ID3D12DeviceRemovedExtendedData1_INTERFACE_DEFINED__
 void D3D12Util_LogDREDBreadcrumbs1(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1* breadcrumbs);
+#endif
 void D3D12Util_ReportGPUCrash(ID3D12Device* device);
 
 // API Objects Helpers

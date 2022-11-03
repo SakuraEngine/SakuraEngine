@@ -163,10 +163,12 @@ inline static gsl::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts
 	return {};
 }
 
+#ifdef __ID3D12DeviceRemovedExtendedData1_INTERFACE_DEFINED__
 inline static gsl::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE1* Node)
 {
 	return gsl::span<D3D12_DRED_BREADCRUMB_CONTEXT>(Node->pBreadcrumbContexts, Node->BreadcrumbContextsCount);
 }
+#endif
 
 template<typename T>
 void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
@@ -240,10 +242,12 @@ void D3D12Util_LogDREDBreadcrumbs(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT* brea
     D3D12Util_LogDREDBreadcrumbsImpl(breadcrumbs);
 }
 
+#ifdef __ID3D12DeviceRemovedExtendedData1_INTERFACE_DEFINED__
 void D3D12Util_LogDREDBreadcrumbs1(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1* breadcrumbs)
 {
     D3D12Util_LogDREDBreadcrumbsImpl(breadcrumbs);
 }
+#endif
 
 void D3D12Util_ReportGPUCrash(ID3D12Device* device)
 {
@@ -268,6 +272,7 @@ void D3D12Util_ReportGPUCrash(ID3D12Device* device)
     }
 
 #ifdef __ID3D12DeviceRemovedExtendedData_FWD_DEFINED__
+#ifdef __ID3D12DeviceRemovedExtendedData1_INTERFACE_DEFINED__
     if (ID3D12DeviceRemovedExtendedData1* pDread1; SUCCEEDED(device->QueryInterface(IID_ARGS(&pDread1))))
     {
         auto breadcrumbs = make_zeroed<D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1>();
@@ -282,7 +287,9 @@ void D3D12Util_ReportGPUCrash(ID3D12Device* device)
         }
         pDread1->Release();
     }
-    else if (ID3D12DeviceRemovedExtendedData* pDread; SUCCEEDED(device->QueryInterface(IID_ARGS(&pDread))))
+    else 
+#endif
+    if (ID3D12DeviceRemovedExtendedData* pDread; SUCCEEDED(device->QueryInterface(IID_ARGS(&pDread))))
     {
         auto breadcrumbs = make_zeroed<D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT>();
         if (SUCCEEDED(pDread->GetAutoBreadcrumbsOutput(&breadcrumbs)))
