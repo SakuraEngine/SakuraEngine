@@ -30,7 +30,6 @@ target("UsdCore")
     -- TODO: make these private
     if is_plat("windows") then
         set_runtimes("MD")
-        add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
         add_links("ar", "arch", "gf", "js", "kind", "ndr", "pcp", "plug", "sdf", "sdr", "tf", "trace", {public=true})
         add_links("usd", "usdGeom", "usdHydra", "usdLux", "usdMedia", "usdPhysics", "usdRender", "usdRi", "usdShade", "usdUtils", {public=true})
         add_links("usdVol", "usdSkel", "vt", "work", {public=true})

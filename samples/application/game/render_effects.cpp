@@ -229,7 +229,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 {
                     if (meshes && meshes[i].async_request.is_buffer_ready())
                     {
-                        c += meshes[i].async_request.render_mesh->primitive_commands.size();
+                        c += (uint32_t)meshes[i].async_request.render_mesh->primitive_commands.size();
                     }
                     else
                     {
@@ -343,7 +343,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                         drawcall.push_const = (const uint8_t*)(&push_const);
                                         drawcall.index_buffer = *cmd.ibv;
                                         drawcall.vertex_buffers = cmd.vbvs.data();
-                                        drawcall.vertex_buffer_count = cmd.vbvs.size();
+                                        drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                         dc_idx++;
                                     }
                                 }
@@ -355,7 +355,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             };
             dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
             mesh_draw_list.drawcalls = mesh_drawcalls.data();
-            mesh_draw_list.count = mesh_drawcalls.size();
+            mesh_draw_list.count = (uint32_t)mesh_drawcalls.size();
             mesh_draw_list.user_data = &forward_pass_data;
             packet.count = 1;
             packet.lists = &mesh_draw_list;
