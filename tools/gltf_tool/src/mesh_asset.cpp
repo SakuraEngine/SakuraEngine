@@ -108,7 +108,6 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         }
     } writer{&buffer};
     skr_binary_writer_t archive(writer);
-    ctx->WriteHeader(archive, this);
     //------write resource object
     skr::binary::Archive(&archive, resource->name);
     // archive(resource->sections);

@@ -1,4 +1,5 @@
 #include "skr_renderer/resources/texture_resource.h"
+#include "resource/resource_system.h"
 #include "utils/make_zeroed.hpp"
 #include "platform/debug.h"
 #include "cgpu/io.hpp"
@@ -46,3 +47,78 @@ void skr_render_texture_create_from_png(skr_render_texture_io_t* io, const char*
 #endif
 }
 */
+
+namespace skr
+{
+namespace resource
+{
+
+skr_type_id_t STextureFactory::GetResourceType()
+{
+     return {};
+}
+
+bool STextureFactory::AsyncIO()
+{
+     return true; 
+}
+
+ESkrLoadStatus STextureFactory::Load(skr_resource_record_t* record)
+{ 
+    auto newTexture = SkrNew<skr_texture_resource_t>();    
+    auto resourceRequest = record->activeRequest;
+    auto loadedData = resourceRequest->GetData();
+
+    struct SpanReader
+    {
+        gsl::span<const uint8_t> data;
+        size_t offset = 0;
+        int read(void* dst, size_t size)
+        {
+            if (offset + size > data.size())
+                return -1;
+            memcpy(dst, data.data() + offset, size);
+            offset += size;
+            return 0;
+        }
+    } reader = {loadedData};
+
+    skr_binary_reader_t archive{reader};
+
+    record->resource = newTexture;
+    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
+}
+
+ESkrLoadStatus STextureFactory::UpdateLoad(skr_resource_record_t* record)
+{
+    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
+}
+
+bool STextureFactory::Unload(skr_resource_record_t* record)
+{ 
+    SkrDelete((skr_texture_resource_t*)record->resource);
+    return true; 
+}
+
+ESkrInstallStatus STextureFactory::Install(skr_resource_record_t* record)
+{
+    return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; 
+}
+
+bool STextureFactory::Uninstall(skr_resource_record_t* record)
+{
+    return true; 
+}
+
+ESkrInstallStatus STextureFactory::UpdateInstall(skr_resource_record_t* record)
+{
+    return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; 
+}
+
+void STextureFactory::DestroyResource(skr_resource_record_t* record)
+{
+    return; 
+}
+
+}
+}

@@ -50,24 +50,15 @@ namespace resource sreflect
 //    - upload with copy queue
 //    - upload with gfx queue
 struct SKR_RENDERER_API STextureFactory : public SResourceFactory {
-    skr_type_id_t GetResourceType() override { return {}; }
-
-    bool AsyncIO() override { return true; }
-    ESkrLoadStatus Load(skr_resource_record_t* record) override 
-    { 
-        record->resource = SkrNew<skr_texture_resource_t>();    
-        return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
-    }
-    ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override { return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; }
-    bool Unload(skr_resource_record_t* record) override 
-    { 
-        SkrDelete((skr_texture_resource_t*)record->resource);
-        return true; 
-    }
-    ESkrInstallStatus Install(skr_resource_record_t* record) override { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
-    bool Uninstall(skr_resource_record_t* record) override { return true; }
-    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
-    void DestroyResource(skr_resource_record_t* record) override { return; }
+    skr_type_id_t GetResourceType() override;
+    bool AsyncIO() override;
+    ESkrLoadStatus Load(skr_resource_record_t* record) override;
+    ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
+    bool Unload(skr_resource_record_t* record) override;
+    ESkrInstallStatus Install(skr_resource_record_t* record) override;
+    bool Uninstall(skr_resource_record_t* record) override;
+    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
+    void DestroyResource(skr_resource_record_t* record) override;
 };
 } // namespace resource
 } // namespace skr

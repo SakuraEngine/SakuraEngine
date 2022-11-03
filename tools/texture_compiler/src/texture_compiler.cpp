@@ -95,8 +95,6 @@ bool STextureCooker::Cook(SCookContext *ctx)
         }
     } writer{&resource_data};
     skr_binary_writer_t archive(writer);
-    // write resource header
-    ctx->WriteHeader(archive, this);
     // write texture resource
     skr_texture_resource_t resource;
     resource.format = compressed_format;

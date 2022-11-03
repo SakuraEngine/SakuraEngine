@@ -15,6 +15,7 @@
 
 #include "json/reader.h"
 #include "json/writer.h"
+#include "binary/writer.h"
 
 namespace skd::asset
 {
@@ -119,37 +120,66 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
         SKR_LOG_FMT_INFO("[CookTask] resource {} cook started!", metaAsset->guid);
         if (iter->second->Cook(jobContext))
         {
-            SKR_LOG_FMT_INFO("[CookTask] resource {} cook finished! updating dependencies.", metaAsset->guid);
-            // write dependencies
-            auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
-            skr_json_writer_t writer(2);
-            writer.StartObject();
-            writer.Key("importerVersion");
-            writer.UInt64(jobContext->importerVersion);
-            writer.Key("cookerVersion");
-            writer.UInt64(jobContext->cookerVersion);
-            writer.Key("files");
-            writer.StartArray();
-            for (auto& dep : jobContext->fileDependencies)
+            // write resource header
             {
-                auto str = dep.u8string();
-                skr::json::WriteValue<const eastl::string_view&>(&writer, {str.data(), str.size()});
+                SKR_LOG_FMT_INFO("[CookTask] resource {} cook finished! updating resource metas.", metaAsset->guid);
+                auto headerPath = jobContext->outputPath;
+                headerPath.replace_extension("rh");
+                eastl::vector<uint8_t> buffer;
+                struct VectorWriter
+                {
+                    eastl::vector<uint8_t>* buffer;
+                    int write(const void* data, size_t size)
+                    {
+                        buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
+                        return 0;
+                    }
+                } writer{&buffer};
+                skr_binary_writer_t archive(writer);
+                jobContext->WriteHeader(archive, iter->second);
+                auto file = fopen(headerPath.u8string().c_str(), "wb");
+                if (!file)
+                {
+                    SKR_LOG_FMT_ERROR("[CookTask] failed to write header file for resource {}! path: {}", metaAsset->guid, metaAsset->path.u8string());
+                    return;
+                }
+                SKR_DEFER({ fclose(file); });
+                fwrite(buffer.data(), 1, buffer.size(), file);
             }
-            writer.EndArray();
-            writer.Key("dependencies");
-            writer.StartArray();
-            for (auto& dep : jobContext->staticDependencies)
-                skr::json::WriteValue<const skr_guid_t&>(&writer, dep);
-            writer.EndArray();
-            writer.EndObject();
-            auto file = fopen(dependencyPath.u8string().c_str(), "w");
-            if (!file)
+            // write resource dependencies
             {
-                SKR_LOG_FMT_ERROR("[CookTask] failed to write dependency file for resource {}! path: {}", metaAsset->guid, metaAsset->path.u8string());
-                return;
+                SKR_LOG_FMT_INFO("[CookTask] resource {} cook finished! updating dependencies.", metaAsset->guid);
+                // write dependencies
+                auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
+                skr_json_writer_t writer(2);
+                writer.StartObject();
+                writer.Key("importerVersion");
+                writer.UInt64(jobContext->importerVersion);
+                writer.Key("cookerVersion");
+                writer.UInt64(jobContext->cookerVersion);
+                writer.Key("files");
+                writer.StartArray();
+                for (auto& dep : jobContext->fileDependencies)
+                {
+                    auto str = dep.u8string();
+                    skr::json::WriteValue<const eastl::string_view&>(&writer, {str.data(), str.size()});
+                }
+                writer.EndArray();
+                writer.Key("dependencies");
+                writer.StartArray();
+                for (auto& dep : jobContext->staticDependencies)
+                    skr::json::WriteValue<const skr_guid_t&>(&writer, dep);
+                writer.EndArray();
+                writer.EndObject();
+                auto file = fopen(dependencyPath.u8string().c_str(), "w");
+                if (!file)
+                {
+                    SKR_LOG_FMT_ERROR("[CookTask] failed to write dependency file for resource {}! path: {}", metaAsset->guid, metaAsset->path.u8string());
+                    return;
+                }
+                SKR_DEFER({ fclose(file); });
+                fwrite(writer.buffer.data(), 1, writer.buffer.size(), file);
             }
-            SKR_DEFER({ fclose(file); });
-            fwrite(writer.buffer.data(), 1, writer.buffer.size(), file);
         }
     }, &counter, guidName.c_str());
     return counter;
