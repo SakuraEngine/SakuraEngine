@@ -2,7 +2,7 @@
 #include "EASTL/string.h"
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
-#include "utils/hashmap.hpp"
+#include "containers/hashmap.hpp"
 
 struct skr_binary_reader_t {
     template <class T>

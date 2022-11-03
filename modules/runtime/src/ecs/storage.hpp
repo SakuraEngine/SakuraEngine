@@ -17,7 +17,7 @@
 #include "cache.hpp"
 #include "type.hpp"
 #include "set.hpp"
-#include "utils/hashmap.hpp"
+#include "containers/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
 #include "task/task.hpp"
 #include "utils/lazy.hpp"

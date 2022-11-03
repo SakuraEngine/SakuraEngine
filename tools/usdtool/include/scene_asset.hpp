@@ -2,7 +2,7 @@
 #include <EASTL/functional.h>
 #include "UsdTool/module.configure.h"
 #include "platform/configure.h"
-#include "utils/hashmap.hpp"
+#include "containers/hashmap.hpp"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"
 #ifndef __meta__

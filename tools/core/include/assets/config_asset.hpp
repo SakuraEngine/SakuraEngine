@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrTool/module.configure.h"
 #include "platform/configure.h"
-#include "utils/hashmap.hpp"
+#include "containers/hashmap.hpp"
 #include "utils/types.h"
 #include "asset/importer.hpp"
 #include "asset/cooker.hpp"

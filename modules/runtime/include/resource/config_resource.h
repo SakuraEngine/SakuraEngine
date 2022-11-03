@@ -1,7 +1,7 @@
 #pragma once
 #include "EASTL/vector.h"
 #include "platform/configure.h"
-#include "utils/hashmap.hpp"
+#include "containers/hashmap.hpp"
 #include "platform/guid.hpp"
 #include "resource/resource_factory.h"
 #include "type/type_registry.h"

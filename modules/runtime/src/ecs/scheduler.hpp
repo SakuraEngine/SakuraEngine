@@ -7,7 +7,7 @@
 #include <phmap.h>
 #include "ecs/entities.hpp"
 #include "platform/thread.h"
-#include "utils/hashmap.hpp"
+#include "containers/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
 #include "EASTL/vector.h"
 #include "utils/lazy.hpp"

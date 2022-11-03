@@ -103,7 +103,8 @@ bool STextureFactory::Unload(skr_resource_record_t* record)
 
 ESkrInstallStatus STextureFactory::Install(skr_resource_record_t* record)
 {
-    return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; 
+    
+    return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
 }
 
 bool STextureFactory::Uninstall(skr_resource_record_t* record)
