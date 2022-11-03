@@ -49,46 +49,66 @@ namespace skr
 {
 namespace resource
 {
+struct SResourceRegistry;
 struct SResourceFactory;
 struct SResourceSystem;
 
 struct SResourceRequest {
-    SResourceSystem* system;
-    skr_resource_record_t* resourceRecord;
-    skr_async_io_request_t request;
-    skr_async_ram_destination_t destination;
-    SResourceFactory* factory;
-    skr_vfs_t* vfs;
-    skr::filesystem::path path;
-    std::string u8path;
-    uint8_t* data;
-    uint64_t size;
-
-    gsl::span<uint8_t> GetData() { return {data, data+size}; }
-
-    eastl::fixed_vector<skr_guid_t, 4> dependencies;
-    ESkrLoadingPhase currentPhase;
-    bool isLoading;
-    std::atomic_bool requireLoading;
-    std::atomic_bool requestInstall;
+    friend struct SResourceSystem;
+    friend struct SResourceRegistry;
+public:
+    skr_guid_t GetGuid() const;
+    gsl::span<const uint8_t> GetData() const;
+    gsl::span<const skr_guid_t> GetDependencies() const;
 
     void UpdateLoad(bool requestInstall);
     void UpdateUnload();
     void Update();
+
     bool Okay();
     bool Yielded();
     bool Failed();
+
     void OnRequestFileFinished();
     void OnRequestLoadFinished();
+protected:
     void _LoadFinished();
     void _InstallFinished();
     void _UnloadResource();
+
+    ESkrLoadingPhase currentPhase;
+    std::atomic_bool isLoading;
+    std::atomic_bool requireLoading;
+    std::atomic_bool requestInstall;
+
+    SResourceSystem* system;
+    SResourceFactory* factory;
+    skr_vfs_t* vfs;
+
+    eastl::fixed_vector<skr_guid_t, 4> dependencies;
+    skr_resource_record_t* resourceRecord;
+    skr_async_io_request_t ioRequest;
+    skr_async_ram_destination_t ioDestination;
+    eastl::string resourceUrl;
+    uint8_t* data;
+    uint64_t size;
 };
 
 struct RUNTIME_API SResourceRegistry {
 public:
     virtual bool RequestResourceFile(SResourceRequest* request) = 0;
     virtual void CancelRequestFile(SResourceRequest* requst) = 0;
+
+    void FillRequest(SResourceRequest* request, skr_resource_header_t header, skr_vfs_t* vfs, const char* uri)
+    {
+        if (request)
+        {
+            request->resourceRecord->header.type = header.type;
+            request->resourceRecord->header.version = header.version;
+            request->vfs = vfs;
+            request->resourceUrl = uri;
+        }
+    }
 };
 
 struct RUNTIME_API SResourceSystem {
