@@ -247,18 +247,40 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
         {
             auto iter = cookers.find(metaAsset->type);
             SKR_ASSERT(iter != cookers.end());
-            auto resourceFile = fopen(resourcePath.u8string().c_str(), "rb");
-            SKR_DEFER({ fclose(resourceFile); });
-            uint32_t version[2];
-            fread(&version, 1, sizeof(uint32_t) * 2, resourceFile);
-            if (version[1] != iter->second->Version())
-            {
-                SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] cooker version changed! resource guid: {}", guid);
-                return false;
-            }
+            
             if (iter->second->Version() == UINT32_MAX)
             {
                 SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] dev cooker version (UINT32_MAX)! resource guid: {}", guid);
+                return false;
+            }
+            auto resourceFile = fopen(resourcePath.u8string().c_str(), "rb");
+            SKR_DEFER({ fclose(resourceFile); });
+            char buffer[sizeof(skr_resource_header_t)];
+            fread(buffer, 0, sizeof(skr_resource_header_t), resourceFile);
+            SKR_DEFER({ fclose(resourceFile); });
+            struct SpanReader
+            {
+                gsl::span<char> data;
+                size_t offset = 0;
+                int read(void* dst, size_t size)
+                {
+                    if (offset + size > data.size())
+                        return -1;
+                    memcpy(dst, data.data() + offset, size);
+                    offset += size;
+                    return 0;
+                }
+            } reader = {buffer};
+            skr_binary_reader_t archive{reader};
+            skr_resource_header_t header;
+            if(header.ReadWithoutDeps(&archive) != 0)
+            {
+                SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] resource header read failed! resource guid: {}", guid);
+                return false;
+            }
+            if (header.version != iter->second->Version())
+            {
+                SKR_LOG_FMT_INFO("[SCookSystem::EnsureCooked] cooker version changed! resource guid: {}", guid);
                 return false;
             }
         }

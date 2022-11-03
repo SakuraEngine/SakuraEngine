@@ -162,7 +162,7 @@ int Read(skr_binary_reader_t* reader, T& value)
 }
 
 template <class T>
-int Archive(skr_binary_reader_t* writer, T value)
+int Archive(skr_binary_reader_t* writer, T& value)
 {
     return ReadHelper<T>::Read(writer, value);
 }
