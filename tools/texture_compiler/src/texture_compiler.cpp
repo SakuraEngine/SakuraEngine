@@ -100,6 +100,9 @@ bool STextureCooker::Cook(SCookContext *ctx)
     resource.format = compressed_format;
     resource.mips_count = 1;
     resource.data_size = compressed_data.size();
+    resource.height = skr_image_coder_get_height(image_coder);
+    resource.width = skr_image_coder_get_width(image_coder);
+    resource.depth = 1;
     // format
     skr::binary::Write(&archive, resource);
     // write to file

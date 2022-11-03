@@ -52,7 +52,7 @@ namespace skr
 {
 namespace resource
 {
-    
+
 // - dstorage & bc: dstorage
 // - dstorage & bc & zlib: dstorage with custom decompress queue
 // - bc & zlib: [TODO] ram service & decompress service & upload
@@ -138,6 +138,7 @@ bool STextureFactoryImpl::Unload(skr_resource_record_t* record)
 
 ESkrInstallStatus STextureFactoryImpl::Install(skr_resource_record_t* record)
 {
+    auto guid = record->activeRequest->GetGuid();
     
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
 }
