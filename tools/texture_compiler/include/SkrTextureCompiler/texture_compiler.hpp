@@ -29,7 +29,7 @@ SKR_TEXTURE_COMPILER_API STextureCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker("b9f81b6f-b544-46e1-8a80-b3269a1c2386");
+sregister_cooker("f8821efb-f027-4367-a244-9cc3efb3a3bf");
 
 struct SKR_TEXTURE_COMPILER_API STextureImporterFactory final : public SImporterFactory {
     bool CanImport(const SAssetRecord* record) override;

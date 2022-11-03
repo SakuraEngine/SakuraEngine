@@ -80,7 +80,8 @@ bool skr_resource_handle_t::is_resolved() const
 void* skr_resource_handle_t::get_ptr() const
 {
     SKR_ASSERT(padding == 0);
-    return get_record() != nullptr ? get_record()->resource : nullptr;
+    const auto record = get_record();
+    return record != nullptr ? record->resource : nullptr;
 }
 
 skr_guid_t skr_resource_handle_t::get_guid() const
