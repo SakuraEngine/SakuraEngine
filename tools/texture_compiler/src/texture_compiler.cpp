@@ -1,10 +1,6 @@
-#include "SkrTextureCompiler/texture_compiler.hpp"
-#include "ispc/ispc_texcomp.h"
-#include "skr_renderer/resources/texture_resource.h"
-#include "utils/log.hpp"
-#include "skr_image_coder/skr_image_coder.h"
+#include "dxt_utils.hpp"
 #include "utils/io.hpp"
-#define TEX_COMPRESS_ALIGN(x, a) (((x) + ((a)-1)) & ~((a)-1))
+#include "utils/log.hpp"
 
 namespace skd
 {
@@ -66,76 +62,16 @@ void STextureImporter::Destroy(void *resource)
     SkrDelete((skr_uncompressed_render_texture_t*)resource);
 }
 
-inline SKR_CONSTEXPR uint64_t Util_DXBCCompressedSize(uint32_t width, uint32_t height, ECGPUFormat format, uint32_t block_width = 4, uint32_t block_height = 4)
-{
-    const auto alignedW = TEX_COMPRESS_ALIGN(width, 4);
-    const auto alignedH = TEX_COMPRESS_ALIGN(height, 4);
-    const auto blocksW = alignedW / block_width;
-    const auto blocksH = alignedH / block_height;
-    switch (format)
-    {
-    case CGPU_FORMAT_DXBC1_RGB_UNORM:
-    case CGPU_FORMAT_DXBC1_RGB_SRGB:
-    case CGPU_FORMAT_DXBC1_RGBA_UNORM:
-    case CGPU_FORMAT_DXBC1_RGBA_SRGB:
-        return (blocksW * blocksH) * 8;
-    case CGPU_FORMAT_DXBC3_UNORM:
-    case CGPU_FORMAT_DXBC3_SRGB:
-        return (blocksW * blocksH) * 16;
-    case CGPU_FORMAT_DXBC4_UNORM:
-    case CGPU_FORMAT_DXBC4_SNORM:
-        return (blocksW * blocksH) * 8;
-    case CGPU_FORMAT_DXBC6H_UFLOAT:
-    case CGPU_FORMAT_DXBC6H_SFLOAT:
-        return (blocksW * blocksH) * 16;
-    case CGPU_FORMAT_DXBC7_UNORM:
-    case CGPU_FORMAT_DXBC7_SRGB:
-        return (blocksW * blocksH) * 16;
-    default:
-        return 0;
-    }
-}
-inline eastl::string Util_CompressedTypeString(ECGPUFormat format)
-{
-    switch (format)
-    {
-    case CGPU_FORMAT_DXBC1_RGB_UNORM:
-    case CGPU_FORMAT_DXBC1_RGB_SRGB:
-    case CGPU_FORMAT_DXBC1_RGBA_UNORM:
-    case CGPU_FORMAT_DXBC1_RGBA_SRGB:
-        return "bc1";
-    case CGPU_FORMAT_DXBC3_UNORM:
-    case CGPU_FORMAT_DXBC3_SRGB:
-        return "bc3";
-    case CGPU_FORMAT_DXBC4_UNORM:
-    case CGPU_FORMAT_DXBC4_SNORM:
-        return "bc4";
-    case CGPU_FORMAT_DXBC6H_UFLOAT:
-    case CGPU_FORMAT_DXBC6H_SFLOAT:
-        return "bc6";
-    case CGPU_FORMAT_DXBC7_UNORM:
-    case CGPU_FORMAT_DXBC7_SRGB:
-        return "bc7";
-    default:
-        return {};
-    }
-}
-
 bool STextureCooker::Cook(SCookContext *ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
     const auto assetRecord = ctx->GetAssetRecord();
     auto uncompressed = ctx->Import<skr_uncompressed_render_texture_t>();
-    const auto image_coder = uncompressed->image_coder;
     SKR_DEFER({ ctx->Destroy(uncompressed); });
     
-    // try decode texture
-    const auto image_width = skr_image_coder_get_width(image_coder);
-    const auto image_height = skr_image_coder_get_height(image_coder);
+    // try decode texture & calculate compressed format
+    const auto image_coder = uncompressed->image_coder;
     const auto format = skr_image_coder_get_color_format(image_coder);
-    const auto bit_depth = image_coder->get_bit_depth();
-    const auto encoded_format = image_coder->get_color_format();
-    const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
     ECGPUFormat compressed_format = CGPU_FORMAT_UNDEFINED;
     switch (format)
     {
@@ -144,24 +80,11 @@ bool STextureCooker::Cook(SCookContext *ctx)
             compressed_format = CGPU_FORMAT_DXBC1_RGBA_UNORM; // TODO: determine format
             break;
     }
-    const auto compressed_size = Util_DXBCCompressedSize(image_width, image_height, compressed_format);
-    eastl::vector<uint8_t> compressed_data(compressed_size);
-    rgba_surface rgba_surface = {};
-    uint8_t* rgba_data = nullptr;
-    uint64_t rgba_size = 0;
-    bool sucess = skr_image_coder_get_raw_data_view(image_coder, &rgba_data, &rgba_size, raw_format, bit_depth);
-    if (!sucess)
-    {
-        SKR_UNREACHABLE_CODE()
-        return false;
-    }
-    rgba_surface.ptr = rgba_data;
-    rgba_surface.width = image_width;
-    rgba_surface.height = image_height;
-    rgba_surface.stride = image_width * 4;
-    CompressBlocksBC1(&rgba_surface, compressed_data.data());
-    // archive
-    eastl::vector<uint8_t> header;
+    // DXT
+    const auto compressed_data = Util_DXTCompressWithImageCoder(image_coder, compressed_format);
+    // TODO: ASTC
+    // make archive
+    eastl::vector<uint8_t> resource_data;
     struct VectorWriter
     {
         eastl::vector<uint8_t>* buffer;
@@ -170,12 +93,15 @@ bool STextureCooker::Cook(SCookContext *ctx)
             buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
             return 0;
         }
-    } writer{&header};
+    } writer{&resource_data};
     skr_binary_writer_t archive(writer);
+    // write resource header
+    ctx->WriteHeader(archive, this);
+    // write texture resource
     skr_texture_resource_t resource;
     resource.format = compressed_format;
     resource.mips_count = 1;
-    resource.data_size = image_height;
+    resource.data_size = compressed_data.size();
     // format
     skr::binary::Write(&archive, resource);
     // write to file
@@ -187,7 +113,7 @@ bool STextureCooker::Cook(SCookContext *ctx)
         return false;
     }
     SKR_DEFER({ fclose(file); });
-    fwrite(header.data(), header.size(), 1, file);
+    fwrite(resource_data.data(), resource_data.size(), 1, file);
     // write compressed files
     {
         auto extension = Util_CompressedTypeString(compressed_format);

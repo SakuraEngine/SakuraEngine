@@ -10,10 +10,7 @@
 #include "utils/io.h"
 #include "utils/types.h"
 
-namespace skr::io
-{
-class RAMService;
-}
+namespace skr::io { class RAMService; }
 
 typedef enum ESkrLoadingPhase
 {
@@ -44,14 +41,17 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_FINISHED,
     SKR_LOADING_PHASE_FAILED,
 } ESkrLoadingPhase;
+
 #if defined(__cplusplus)
-    #include <platform/filesystem.hpp>
+#include <platform/filesystem.hpp>
+
 namespace skr
 {
 namespace resource
 {
 struct SResourceFactory;
 struct SResourceSystem;
+
 struct SResourceRequest {
     SResourceSystem* system;
     skr_resource_record_t* resourceRecord;
@@ -75,6 +75,7 @@ struct SResourceRequest {
     void UpdateLoad(bool requestInstall);
     void UpdateUnload();
     void Update();
+    bool Okay();
     bool Yielded();
     bool Failed();
     void OnRequestFileFinished();
@@ -83,31 +84,41 @@ struct SResourceRequest {
     void _InstallFinished();
     void _UnloadResource();
 };
+
 struct RUNTIME_API SResourceRegistry {
 public:
     virtual bool RequestResourceFile(SResourceRequest* request) = 0;
     virtual void CancelRequestFile(SResourceRequest* requst) = 0;
 };
+
 struct RUNTIME_API SResourceSystem {
+    friend struct ::skr_resource_handle_t;
+public:
     SResourceSystem();
     ~SResourceSystem();
-    void Initialize(SResourceRegistry* provider);
+    void Initialize(SResourceRegistry* provider, skr::io::RAMService* ioService);
     bool IsInitialized();
     void Shutdown();
     void Update();
 
-    void LoadResource(skr_resource_handle_t& handle, bool requireInstalled = true, uint32_t requester = 0, ESkrRequesterType = SKR_REQUESTER_UNKNOWN);
+    void LoadResource(skr_resource_handle_t& handle,
+        bool requireInstalled = true, uint32_t requester = 0, ESkrRequesterType = SKR_REQUESTER_UNKNOWN);
     void UnloadResource(skr_resource_handle_t& handle);
 
+    SResourceFactory* FindFactory(skr_type_id_t type) const;
+    void RegisterFactory(skr_type_id_t type, SResourceFactory* factory);
+    void UnregisterFactory(skr_type_id_t type);
+
+    SResourceRegistry* GetRegistry() const;
+    skr::io::RAMService* GetRAMService() const;
+
+protected:
     skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid);
     skr_resource_record_t* _GetRecord(const skr_guid_t& guid);
     skr_resource_record_t* _GetRecord(void* resource);
     void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record);
 
-    void RegisterFactory(skr_type_id_t type, SResourceFactory* factory);
-    void UnregisterFactory(skr_type_id_t type);
-
-    SResourceRegistry* resourceProvider = nullptr;
+    SResourceRegistry* resourceRegistry = nullptr;
     skr::io::RAMService* ioService = nullptr; 
     eastl::vector<SResourceRequest*> requests;
     dual::entity_registry_t resourceIds;
