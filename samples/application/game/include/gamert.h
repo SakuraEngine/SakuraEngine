@@ -23,6 +23,7 @@ public:
 
 public:
     skr_vfs_t* resource_vfs = nullptr;
+    skr_vfs_t* tex_resource_vfs = nullptr;
     skr::io::RAMService* ram_service = nullptr;
     skr::resource::SLocalResourceRegistry* registry;
 };

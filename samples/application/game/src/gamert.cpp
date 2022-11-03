@@ -17,10 +17,11 @@ void SGameRTModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
     std::error_code ec = {};
-    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources").u8string();
+    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
+    auto u8ResourceRoot = resourceRoot.u8string();
     skr_vfs_desc_t vfs_desc = {};
     vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
-    vfs_desc.override_mount_dir = resourceRoot.c_str();
+    vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
     resource_vfs = skr_create_vfs(&vfs_desc);
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
@@ -36,7 +37,22 @@ void SGameRTModule::on_load(int argc, char** argv)
     // 
     using namespace skr::guid::literals;
     auto resource_system = skr::resource::GetResourceSystem();
-    auto testFactory = skr::resource::STextureFactory::Create();
+    
+    auto textureRoot = resourceRoot / "game";
+    auto u8TextureRoot = textureRoot.u8string();
+
+    skr_vfs_desc_t tex_vfs_desc = {};
+    tex_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+    tex_vfs_desc.override_mount_dir = u8TextureRoot.c_str();
+    tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
+
+    skr::resource::STextureFactory::Root factoryRoot = {};
+    factoryRoot.dstorage_root = u8TextureRoot.c_str();
+    factoryRoot.texture_vfs = tex_resource_vfs;
+    factoryRoot.ram_service = ram_service;
+    factoryRoot.vram_service = nullptr;
+    factoryRoot.renderer = nullptr;
+    auto testFactory = skr::resource::STextureFactory::Create(factoryRoot);
     resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, testFactory);
     skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
     resource_system->LoadResource(textureHdl);
@@ -63,6 +79,7 @@ void SGameRTModule::on_unload()
 
     skr::io::RAMService::destroy(ram_service);
     skr_free_vfs(resource_vfs);
+    skr_free_vfs(tex_resource_vfs);
 
     SKR_LOG_INFO("game runtime unloaded!");
 }

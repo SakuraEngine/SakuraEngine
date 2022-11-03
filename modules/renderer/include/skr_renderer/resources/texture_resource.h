@@ -53,7 +53,15 @@ namespace resource sreflect
 struct SKR_RENDERER_API STextureFactory : public SResourceFactory {
     virtual ~STextureFactory() = default;
 
-    [[nodiscard]] static STextureFactory* Create();
+    struct Root {
+        skr_vfs_t* texture_vfs = nullptr;
+        eastl::string dstorage_root;
+        skr_io_ram_service_t* ram_service = nullptr;
+        skr_io_vram_service_t* vram_service = nullptr;
+        struct SRenderer* renderer = nullptr;
+    };
+
+    [[nodiscard]] static STextureFactory* Create(const Root& root);
     static void Destroy(STextureFactory* factory); 
 };
 } // namespace resource
