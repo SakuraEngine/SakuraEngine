@@ -5,7 +5,7 @@
 #include <EASTL/shared_ptr.h>
 #include "containers/span.hpp"
 #include "platform/guid.hpp"
-#include "utils/hashmap.hpp"
+#include "containers/hashmap.hpp"
 #include "utils/parallel_for.hpp"
 #include "resource/resource_header.h"
 #include "platform/filesystem.hpp"
@@ -106,7 +106,7 @@ public:
 
     void Initialize() {}
     void Shutdown() {}
-    
+
     skr::task::event_t AddCookTask(skr_guid_t resource);
     void* CookOrLoad(skr_guid_t resource);
     skr::task::event_t EnsureCooked(skr_guid_t resource);

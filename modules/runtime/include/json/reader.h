@@ -5,7 +5,7 @@
 #if defined(__cplusplus)
     #include "simdjson.h"
     #include "EASTL/string.h"
-    #include "utils/hashmap.hpp"
+    #include "containers/hashmap.hpp"
     #include "EASTL/vector.h"
 
 struct RUNTIME_API skr_json_reader_t {

@@ -1,4 +1,5 @@
 #pragma once
+#include "containers/hashmap.hpp"
 #include "SkrRenderer/module.configure.h"
 #include "utils/io.h"
 #include "utils/types.h"
@@ -7,18 +8,18 @@
 #include "SkrRenderer/resources/texture_resource.generated.h"
 #endif
 
-typedef struct skr_texture_resource_io_t {
+typedef struct ___skr_texture_resource_io_t {
     skr_io_ram_service_t* ram_service;
     skr_io_vram_service_t* vram_service;
     CGPUDeviceId device;
     CGPUQueueId copy_queue;
     CGPUDStorageQueueId file_dstorage_queue;
-} skr_texture_resource_io_t;
+} ___skr_texture_resource_io_t;
 
-typedef struct skr_texture_resource_request_t {
+typedef struct ___skr_texture_resource_request_t {
     skr_async_io_request_t ram_request;
     skr_async_io_request_t vtexture_request;
-} skr_texture_resource_request_t;
+} ___skr_texture_resource_request_t;
 
 // (GPU) texture resource
 sreflect_struct("guid" : "f8821efb-f027-4367-a244-9cc3efb3a3bf")
@@ -28,14 +29,10 @@ skr_texture_resource_t
     uint32_t format; // TODO: TEnum<ECGPUFormat>
     uint32_t mips_count;
     uint64_t data_size;
-    sattr("transient": true)
-    skr_texture_resource_io_t texture_io;
-    sattr("transient": true)
-    skr_async_ram_destination_t ram_dest;
-    sattr("transient": true)
-    skr_async_vtexture_destination_t vram_dest;
+    CGPUTextureId texture;
 };
 typedef struct skr_texture_resource_t skr_texture_resource_t;
+typedef struct skr_texture_resource_t* skr_texture_resource_id;
 
 #ifdef __cplusplus
 #include "resource/resource_factory.h"
@@ -59,6 +56,10 @@ struct SKR_RENDERER_API STextureFactory : public SResourceFactory {
     bool Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
     void DestroyResource(skr_resource_record_t* record) override;
+
+    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mRamRequests;
+    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mVRamRequests;
+    skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mDStorageRequests;
 };
 } // namespace resource
 } // namespace skr

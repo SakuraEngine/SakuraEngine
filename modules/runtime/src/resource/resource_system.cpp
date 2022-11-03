@@ -633,9 +633,6 @@ bool SResourceRequest::Yielded()
     switch (currentPhase)
     {
         case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES:
-        case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE:
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE:
             return true;
         default:
             return false;
