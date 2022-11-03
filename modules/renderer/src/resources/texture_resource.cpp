@@ -60,6 +60,12 @@ namespace resource
 //    - upload with gfx queue
 struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
 {
+    STextureFactoryImpl(const STextureFactory::Root& root)
+        : root(root)
+    {
+
+    }
+    ~STextureFactoryImpl() noexcept = default;
     skr_type_id_t GetResourceType() override;
     bool AsyncIO() override;
     ESkrLoadStatus Load(skr_resource_record_t* record) override;
@@ -73,14 +79,15 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
     ESkrInstallStatus InstallWithQueue(skr_resource_record_t* record);
 
+    Root root;
     skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mRamRequests;
     skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mVRamRequests;
     skr::flat_hash_map<skr_texture_resource_id, skr_async_io_request_t> mDStorageRequests;
 };
 
-STextureFactory* STextureFactory::Create()
+STextureFactory* STextureFactory::Create(const Root& root)
 {
-    return SkrNew<STextureFactoryImpl>();
+    return SkrNew<STextureFactoryImpl>(root);
 }
 
 void STextureFactory::Destroy(STextureFactory* factory)
@@ -139,7 +146,7 @@ bool STextureFactoryImpl::Unload(skr_resource_record_t* record)
 ESkrInstallStatus STextureFactoryImpl::Install(skr_resource_record_t* record)
 {
     auto guid = record->activeRequest->GetGuid();
-    
+
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
 }
 
