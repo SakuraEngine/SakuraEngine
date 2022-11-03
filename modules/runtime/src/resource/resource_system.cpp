@@ -49,7 +49,7 @@ skr_resource_record_t* SResourceSystem::_GetRecord(void* resource)
 
 void SResourceSystem::_DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record)
 {
-    SMutexLock lock(recordMutex);
+    //SMutexLock lock(recordMutex);
     auto request = record->activeRequest;
     if (request)
         request->resourceRecord = nullptr;
@@ -189,27 +189,28 @@ void SResourceSystem::Shutdown()
 
 void SResourceSystem::Update()
 {
-    skr_acquire_mutex(&recordMutex);
-    requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
-        if (request->currentPhase == SKR_LOADING_PHASE_FINISHED)
-        {
-            if (request->resourceRecord)
+    {
+        SMutexLock lock(recordMutex);
+        requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
+            if (request->Okay())
             {
-                request->resourceRecord->activeRequest = nullptr;
-                if (!request->isLoading)
+                if (request->resourceRecord)
                 {
-                    auto guid = request->resourceRecord->header.guid;
-                    _DestroyRecord(guid, request->resourceRecord);
+                    request->resourceRecord->activeRequest = nullptr;
+                    if (!request->isLoading)
+                    {
+                        auto guid = request->resourceRecord->header.guid;
+                        _DestroyRecord(guid, request->resourceRecord);
+                    }
                 }
+                SkrDelete(request);
+                return true;
             }
-            SkrDelete(request);
-            return true;
-        }
-        return false;
-    }),
-    requests.end());
+            return false;
+        }),
+        requests.end());
+    }
     auto currentRequests = requests;
-    skr_release_mutex(&recordMutex);
     // TODO: time limit
     for (auto request : currentRequests)
     {
@@ -620,7 +621,7 @@ void SResourceRequest::Update()
 
 bool SResourceRequest::Okay()
 {
-    return (currentPhase == SKR_LOADING_PHASE_FINISHED);
+    return (currentPhase == SKR_LOADING_PHASE_FINISHED) && (isLoading == requireLoading);
 }
 
 bool SResourceRequest::Failed()
