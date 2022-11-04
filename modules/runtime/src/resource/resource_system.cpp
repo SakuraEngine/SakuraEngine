@@ -214,10 +214,17 @@ void SResourceSystem::Update()
     // TODO: time limit
     for (auto request : currentRequests)
     {
-        while (!request->Yielded() && !request->Failed() && !request->Okay())
+        uint32_t spinCounter = 0;
+        ESkrLoadingPhase LastPhase;
+        while(!request->Failed() && !request->Okay() && spinCounter < 16)
         {
+            LastPhase = request->currentPhase;
             request->Update();
-        }
+            if(LastPhase == request->currentPhase)
+                spinCounter++;
+            else
+                spinCounter = 0;
+        };
     }
 }
 
@@ -634,6 +641,10 @@ bool SResourceRequest::Yielded()
     switch (currentPhase)
     {
         case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
+        case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE:
+        case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES:
+        case SKR_LOADING_PHASE_WAITFOR_IO:
+        case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE:
             return true;
         default:
             return false;
