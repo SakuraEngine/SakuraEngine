@@ -1,14 +1,14 @@
 shared_module("GameRT", "GAMERT", engine_version)
     set_group("04.examples/application")
     add_rules("c++.codegen", {
-        files = {"game/**.h", "game/**.hpp"},
-        rootdir = "game/include"
+        files = {"game/modules/game_runtime/include/**.h", "game/modules/game_runtime/include/**.hpp"},
+        rootdir = "game/modules/game_runtime/include/"
     })
     public_dependency("SkrRenderer", "0.1.0")
     public_dependency("SkrImGui", "0.1.0")
     public_dependency("SkrInputSystem", "0.1.0")
-    add_includedirs("game/include", {public=true})
-    add_files("game/src/**.cpp")
+    add_includedirs("game/modules/game_runtime/include/", {public=true})
+    add_files("game/modules/game_runtime/src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
 target("Game")
@@ -22,9 +22,9 @@ target("Game")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Game",
         dxil_outdir = "/../resources/shaders/Game"})
-    add_files("game/main.cpp", "game/render_resources.cpp", "game/render_effects.cpp",  "game/game_module.cpp")
+    add_files("game/src/main.cpp", "game/src/render_resources.cpp", "game/src/render_effects.cpp",  "game/src/game_module.cpp")
     add_files("game/shaders/**.hlsl")
-    add_files("game/**.bin", "game/**.gltf", "game/**.png")
+    add_files("game/assets/**.bin", "game/assets/**.gltf", "game/assets/**.png")
     if (is_os("windows")) then 
         add_files("/../../resources/windows/sakura.rc")
     end

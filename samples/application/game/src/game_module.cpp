@@ -1,4 +1,4 @@
-#include "../../cgpu/common/utils.h"
+#include "../../../cgpu/common/utils.h"
 #include <EASTL/shared_ptr.h>
 #include "gamert.h"
 #include "utils/format.hpp"
@@ -362,8 +362,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
         while (SDL_PollEvent(&event))
         {
             ZoneScopedN("PollEvent");
-            ImGuiIO& io = ImGui::GetIO();
-
             if (event.type == SDL_WINDOWEVENT)
             {
                 Uint8 window_event = event.window.event;
@@ -442,7 +440,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("ImGUI");
 
-            skr_imgui_new_frame(window, deltaTime);
+            skr_imgui_new_frame(window, (float)deltaTime);
             {
                 ImGui::Begin(u8"Information");
                 ImGui::Text("RenderFPS: %d", (uint32_t)fps);
