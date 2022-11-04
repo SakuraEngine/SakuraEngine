@@ -1,8 +1,12 @@
 #include "skr_renderer/resources/mesh_resource.h"
 #include "platform/memory.h"
 #include "platform/vfs.h"
+#include "platform/guid.hpp"
+#include "containers/sptr.hpp"
 #include "cgpu/cgpux.hpp"
+#include "ecs/dual.h"
 #include "utils/io.hpp"
+#include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "cgltf/cgltf.h"
 #include "platform/thread.h"
@@ -110,29 +114,90 @@ static FORCEINLINE ECGPUFormat GLTFUtil_ComponentTypeToFormat(cgltf_type type, c
 
 static struct SkrMeshResourceUtil
 {
-    template <typename T>
-    using cached_hashset = eastl::hash_set<T, eastl::hash<T>, eastl::equal_to<T>, EASTLAllocatorType, true>;
+    struct RegisteredVertexLayout : public CGPUVertexLayout
+    {
+        RegisteredVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id id, const char* name)
+            : CGPUVertexLayout(layout), id(id), name(name)
+        {
+            hash = eastl::hash<CGPUVertexLayout>()(layout);
+        }
+        skr_vertex_layout_id id;
+        eastl::string name;
+        uint64_t hash;
+    };
 
+    using VertexLayoutIdMap = skr::flat_hash_map<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
+    using VertexLayoutHashMap = skr::flat_hash_map<uint64_t, RegisteredVertexLayout*>;
+    
     SkrMeshResourceUtil()
     {
         skr_init_mutex_recursive(&vertex_layouts_mutex_);
     }
+
     ~SkrMeshResourceUtil()
     {
         skr_destroy_mutex(&vertex_layouts_mutex_);
     }
 
-    static inline skr_vertex_layout_id AddVertexLayout(const CGPUVertexLayout& layout)
+    inline static skr_vertex_layout_id AddVertexLayout(skr_vertex_layout_id id, const char* name, const CGPUVertexLayout& layout)
     {
-        const auto hash = vertex_layouts_.get_hash_code(layout);
-        if (vertex_layouts_.find_by_hash(hash) == vertex_layouts_.end())
+        SMutexLock lock(vertex_layouts_mutex_);
+
+        auto pLayout = skr::SPtr<RegisteredVertexLayout>::Create(layout, id, name);
+        if (id_map.find(id) == id_map.end())
         {
-            vertex_layouts_.insert(layout);
+            id_map.emplace(id, pLayout);
+            hash_map.emplace((uint64_t)pLayout->hash, pLayout.get());
         }
-        return hash;
+        else
+        {
+            // id repeated
+            SKR_UNREACHABLE_CODE();
+        }
+        return id;
     }
 
-    static inline skr_vertex_layout_id AddVertexLayoutFromGLTFPrimitive(const cgltf_primitive* primitive)
+    inline static CGPUVertexLayout* HasVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id* outGuid = nullptr)
+    {
+        SMutexLock lock(vertex_layouts_mutex_);
+
+        auto hash = eastl::hash<CGPUVertexLayout>()(layout);
+        auto iter = hash_map.find(hash);
+        if (iter == hash_map.end())
+        {
+            return nullptr;
+        }
+        if (outGuid) *outGuid = iter->second->id;
+        return iter->second;
+    }
+
+    inline static const char* GetVertexLayoutName(CGPUVertexLayout* pLayout)
+    {
+        SMutexLock lock(vertex_layouts_mutex_);
+
+        auto hash = eastl::hash<CGPUVertexLayout>()(*pLayout);
+        auto iter = hash_map.find(hash);
+        if (iter == hash_map.end())
+        {
+            return nullptr;
+        }
+        return iter->second->name.c_str();
+    }
+
+    inline static skr_vertex_layout_id GetVertexLayoutId(CGPUVertexLayout* pLayout)
+    {
+        SMutexLock lock(vertex_layouts_mutex_);
+
+        auto hash = eastl::hash<CGPUVertexLayout>()(*pLayout);
+        auto iter = hash_map.find(hash);
+        if (iter == hash_map.end())
+        {
+            return {};
+        }
+        return iter->second->id;
+    }
+
+    inline static skr_vertex_layout_id AddOrFindVertexLayoutFromGLTFPrimitive(const cgltf_primitive* primitive)
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
@@ -150,24 +215,32 @@ static struct SkrMeshResourceUtil
             layout.attributes[i].offset = 0;
             layout.attributes[i].elem_stride = FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
         }
-        const auto hash = AddVertexLayout(layout);
-        return hash;
+        skr_vertex_layout_id guid = {};
+        if (auto found = HasVertexLayout(layout, &guid); !found)
+        {
+            skr_guid_t newGuid = {};
+            dual_make_guid(&newGuid);
+            guid = AddVertexLayout(newGuid, skr::format("gltfVertexLayout-{}", newGuid).c_str(), layout);
+        }
+        return guid;
     }
 
-    static inline bool GetVertexLayout(skr_vertex_layout_id id, CGPUVertexLayout* layout)
+    inline static const char* GetVertexLayout(skr_vertex_layout_id id, CGPUVertexLayout* layout = nullptr)
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
-        auto iter = vertex_layouts_.find_by_hash(id);
-        if (iter == vertex_layouts_.end()) return false;
-        *layout = *iter;
-        return true;
+        auto iter = id_map.find(id);
+        if (iter == id_map.end()) return nullptr;
+        if (layout) *layout = *iter->second;
+        return iter->second->name.c_str();
     }
 
-    static cached_hashset<CGPUVertexLayout> vertex_layouts_;
+    static VertexLayoutIdMap id_map;
+    static VertexLayoutHashMap hash_map;
     static SMutex vertex_layouts_mutex_;
 } mesh_resource_util;
-SkrMeshResourceUtil::cached_hashset<CGPUVertexLayout> SkrMeshResourceUtil::vertex_layouts_;
+SkrMeshResourceUtil::VertexLayoutIdMap SkrMeshResourceUtil::id_map;
+SkrMeshResourceUtil::VertexLayoutHashMap SkrMeshResourceUtil::hash_map;
 SMutex SkrMeshResourceUtil::vertex_layouts_mutex_;
 
 #ifndef SKR_SERIALIZE_GURAD
@@ -189,6 +262,15 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
     ramIO.path = path;
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
+        // get shuffle layout data
+        auto shuffle_layout_id = cbData->gltfRequest->shuffle_layout;
+        CGPUVertexLayout shuffle_layout = {};
+        const char* shuffle_layout_name = nullptr;
+        if (!shuffle_layout_id.isZero()) 
+        {
+            shuffle_layout_name = mesh_resource_util.GetVertexLayout(shuffle_layout_id, &shuffle_layout);
+        }
+        // cgltf
         cgltf_options options = {};
         struct cgltf_data* gltf_data_ = nullptr;
         if (cbData->destination.bytes)
@@ -251,12 +333,13 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                                 prim.vertex_buffers.resize(primitive_->attributes_count);
                                 for (uint32_t k = 0, attrib_idx = 0; k < primitive_->attributes_count; k++)
                                 {
-                                    if (cbData->gltfRequest->shuffle_layout)
+                                    // do shuffle
+                                    if (shuffle_layout_name != nullptr)
                                     {
                                         attrib_idx = -1;
                                         for (uint32_t l = 0; l < primitive_->attributes_count; l++)
                                         {
-                                            const auto& shuffle_attrib = cbData->gltfRequest->shuffle_layout->attributes[k];
+                                            const auto& shuffle_attrib = shuffle_layout.attributes[k];
                                             const char* semantic_name = cGLTFAttributeTypeLUT[primitive_->attributes[l].type];
                                             if (::strcmp(shuffle_attrib.semantic_name, semantic_name) == 0)
                                             {
@@ -273,13 +356,13 @@ void skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const c
                                     prim.vertex_buffers[k].stride = (uint32_t)primitive_->attributes[attrib_idx].data->stride;
                                     prim.vertex_buffers[k].offset = (uint32_t)(primitive_->attributes[attrib_idx].data->offset + buf_view->offset);
                                 }
-                                if (cbData->gltfRequest->shuffle_layout)
+                                if (shuffle_layout_name != nullptr)
                                 {
-                                    prim.vertex_layout_id = mesh_resource_util.AddVertexLayout(*cbData->gltfRequest->shuffle_layout);
+                                    prim.vertex_layout_id = shuffle_layout_id;
                                 }
                                 else
                                 {
-                                    prim.vertex_layout_id = mesh_resource_util.AddVertexLayoutFromGLTFPrimitive(primitive_);
+                                    prim.vertex_layout_id = mesh_resource_util.AddOrFindVertexLayoutFromGLTFPrimitive(primitive_);
                                 }
 
                                 // TODO: Material
@@ -320,4 +403,33 @@ void skr_mesh_resource_free(skr_mesh_resource_id mesh_resource)
         cgltf_free((cgltf_data*)mesh_resource->gltf_data);
     }
     SkrDelete(mesh_resource);
+}
+
+void skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char* name, const struct CGPUVertexLayout* in_vertex_layout)
+{
+    if (auto layout = mesh_resource_util.GetVertexLayout(id))
+    {
+        return; // existed
+    }
+    else if (auto layout = mesh_resource_util.HasVertexLayout(*in_vertex_layout))
+    {
+        return; // existed
+    }
+    else // do register
+    {
+        auto result = mesh_resource_util.AddVertexLayout(id, name, *in_vertex_layout);
+        SKR_ASSERT(result == id);
+    }
+}
+
+const char* skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struct CGPUVertexLayout* out_vertex_layout)
+{
+    if (auto name = mesh_resource_util.GetVertexLayout(id, out_vertex_layout))
+    {
+        return name;
+    }
+    else
+    {
+        return nullptr;
+    }
 }

@@ -7,6 +7,7 @@
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "platform/time.h"
+#include "platform/guid.hpp"
 #include "platform/window.h"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
@@ -69,6 +70,12 @@ SKR_MODULE_METADATA(u8R"(
 )",
 Game)
 
+namespace 
+{
+using namespace skr::guid::literals;
+const auto kGLTFVertexLayoutWithTangentId = "1b357a40-83ff-471c-8903-23e99d95b273"_guid;
+}
+
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
@@ -88,6 +95,11 @@ void SGameModule::on_load(int argc, char** argv)
     vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 3;
+
+    {
+        using namespace skr::guid::literals;
+        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithTangentId, "GLTFWithTangent", &vertex_layout);
+    }
 }
 
 void create_test_scene(SRendererId renderer)
@@ -193,7 +205,7 @@ void imgui_button_spawn_girl(SRendererId renderer)
         auto ram_service = skr_game_runtime_get_ram_service();
         auto vram_service = render_device->get_vram_service();
         girl_mesh_request.mesh_name = gltf_file2;
-        girl_mesh_request.mesh_resource_request.shuffle_layout = &vertex_layout;
+        girl_mesh_request.mesh_resource_request.shuffle_layout = ::kGLTFVertexLayoutWithTangentId;
         if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
