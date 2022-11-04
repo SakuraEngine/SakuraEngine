@@ -2,6 +2,7 @@
 #include "cgpu/io.hpp"
 #include "utils/make_zeroed.hpp"
 #include "io_service_util.hpp"
+#include <EASTL/string.h>
 #include <EASTL/variant.h>
 #include <EASTL/vector_map.h>
 

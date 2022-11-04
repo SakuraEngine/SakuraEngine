@@ -10,19 +10,6 @@
 #include "SkrRenderer/resources/texture_resource.generated.h"
 #endif
 
-typedef struct ___skr_texture_resource_io_t {
-    skr_io_ram_service_t* ram_service;
-    skr_io_vram_service_t* vram_service;
-    CGPUDeviceId device;
-    CGPUQueueId copy_queue;
-    CGPUDStorageQueueId file_dstorage_queue;
-} ___skr_texture_resource_io_t;
-
-typedef struct ___skr_texture_resource_request_t {
-    skr_async_io_request_t ram_request;
-    skr_async_io_request_t vtexture_request;
-} ___skr_texture_resource_request_t;
-
 // (GPU) texture resource
 sreflect_struct("guid" : "f8821efb-f027-4367-a244-9cc3efb3a3bf")
 sattr("serialize" : "bin")
@@ -31,9 +18,9 @@ skr_texture_resource_t
     uint32_t format; // TODO: TEnum<ECGPUFormat>
     uint32_t mips_count;
     uint64_t data_size;
-    uint64_t width;
-    uint64_t height;
-    uint64_t depth;
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
     sattr("transient": true)
     CGPUTextureId texture;
 };

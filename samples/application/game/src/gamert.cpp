@@ -76,9 +76,6 @@ void SGameRTModule::on_load(int argc, char** argv)
             texture->format, texture->mips_count, texture->data_size);
         resource_system->UnloadResource(textureHdl);
         resource_system->Update();
-        resource_system->Update();
-        resource_system->Update();
-        resource_system->Update();
         while (textureHdl.get_status() != SKR_LOADING_STATUS_UNLOADED)
         {
             resource_system->Update();
