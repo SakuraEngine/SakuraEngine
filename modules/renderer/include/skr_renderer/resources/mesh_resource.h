@@ -5,7 +5,7 @@
     #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
 
-typedef uint64_t skr_vertex_layout_id;
+typedef skr_guid_t skr_vertex_layout_id;
 
 struct sreflect sattr(
     "guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca"
@@ -86,7 +86,7 @@ typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 typedef void (*skr_async_gltf_io_callback_t)(struct skr_gltf_ram_io_request_t* request, void* data);
 typedef struct skr_gltf_ram_io_request_t {
     struct skr_vfs_t* vfs_override;
-    const struct CGPUVertexLayout* shuffle_layout SKR_IF_CPP( = nullptr);
+    skr_vertex_layout_id shuffle_layout SKR_IF_CPP( = {});
     bool load_bin_to_memory;
     skr_async_io_request_t ioRequest;
     SAtomic32 gltf_status;
@@ -113,8 +113,8 @@ skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
 skr_mesh_resource_free(skr_mesh_resource_id mesh_resource);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API bool 
-skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struct CGPUVertexLayout* out_vertex_layout);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
+skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char* name, const struct CGPUVertexLayout* in_vertex_layout);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API skr_vertex_layout_id 
-skr_mesh_resource_register_vertex_layout(const struct CGPUVertexLayout* in_vertex_layout);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API const char* 
+skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struct CGPUVertexLayout* out_vertex_layout);

@@ -33,6 +33,7 @@ typedef struct skr_guid_t {
     {
 
     }
+    SKR_CONSTEXPR bool isZero() const { return !(Storage0 && Storage1 && Storage2 && Storage3); }
     SKR_CONSTEXPR uint32_t Data1() const { return Storage0; }
     SKR_CONSTEXPR uint16_t Data2() const { return (uint16_t)(Storage1 >> 16); }
     SKR_CONSTEXPR uint16_t Data3() const { return (uint16_t)(Storage1 & UINT16_MAX); }
