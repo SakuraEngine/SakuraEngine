@@ -5,9 +5,6 @@ if (os.host() =="macosx") then
         os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
     end
     os.exec("brew install ispc")
-    --os.exec("brew install python")
-    --os.exec("brew install sdl2")
-    --os.exec("brew install googletest")
 end
 
 import("find_sdk")

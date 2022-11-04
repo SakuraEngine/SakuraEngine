@@ -50,10 +50,8 @@ struct skr_mesh_section_t {
     eastl::vector<uint32_t> primive_indices;
 };
 
-struct sreflect sattr(
-    "guid" : "03104e51-c998-410b-9d3c-d76535933440",
-    "serialize" : "bin"
-)
+sreflect_struct("guid" : "03104e51-c998-410b-9d3c-d76535933440")
+sattr("serialize" : "bin")
 skr_mesh_bin_t
 {
     skr_blob_t bin;
@@ -62,17 +60,16 @@ skr_mesh_bin_t
     eastl::string uri;
 };
 
-struct sreflect sattr(
-    "guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1",
-    "serialize" : "bin"
-)
+sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 
+sattr("serialize" : "bin")
 skr_mesh_resource_t
 {
     eastl::string name;
     sattr("transient": true)
+    eastl::vector<skr_mesh_primitive_t> primitives;
+    sattr("transient": true)
     eastl::vector<skr_mesh_section_t> sections;
     sattr("transient": true)
-    eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_mesh_bin_t> bins;
     sattr("transient": true)
     void* gltf_data;

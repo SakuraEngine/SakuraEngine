@@ -34,7 +34,7 @@ function skr_module_gen_json(target, filename, dep_modules)
     local last = os.time()
     local dependfile = target:dependfile(filename)
     local dependinfo = depend.load(dependfile) or {}
-    if not depend.is_changed(dependinfo, {lastmtime = os.mtime(filename), values = dep_modules, files = filename}) then
+    if not depend.is_changed(dependinfo, {lastmtime = os.mtime(filename), values = dep_modules, files = {filename}}) then
         return
     end
     -- start rebuild json
@@ -79,7 +79,7 @@ function skr_module_gen_cpp(target, filename, dep_modules)
     local last = os.time()
     local dependfile = target:dependfile(filename)
     local dependinfo = depend.load(dependfile) or {}
-    if not depend.is_changed(dependinfo, {lastmtime = os.mtime(filename), values = dep_modules, files = filename}) then
+    if not depend.is_changed(dependinfo, {lastmtime = os.mtime(filename), values = dep_modules, files = {filename}}) then
         return
     end
     -- start rebuild json

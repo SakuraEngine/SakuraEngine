@@ -1407,6 +1407,9 @@ void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, c
     D3D12_QUERY_TYPE type = pQueryPool->mType;
     switch (type)
     {
+        case D3D12_QUERY_TYPE_TIMESTAMP:
+            Cmd->pDxCmdList->EndQuery(pQueryPool->pDxQueryHeap, type, desc->index);
+            break;
         case D3D12_QUERY_TYPE_OCCLUSION:
         case D3D12_QUERY_TYPE_PIPELINE_STATISTICS:
         case D3D12_QUERY_TYPE_BINARY_OCCLUSION:
@@ -1414,9 +1417,7 @@ void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, c
         case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM1:
         case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM2:
         case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM3:
-            break;
-        case D3D12_QUERY_TYPE_TIMESTAMP:
-            Cmd->pDxCmdList->EndQuery(pQueryPool->pDxQueryHeap, type, desc->index);
+        default:
             break;
     }
 }
