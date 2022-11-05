@@ -7,12 +7,12 @@
 
 void SkrImageCoderModule::on_load(int argc, char** argv)
 {
-    SKR_LOG_INFO("image coder module loaded!");
+    SKR_LOG_TRACE("image coder module loaded!");
 }
 
 void SkrImageCoderModule::on_unload()
 {
-    SKR_LOG_INFO("image coder module unloaded!");
+    SKR_LOG_TRACE("image coder module unloaded!");
 }
 
 IMPLEMENT_DYNAMIC_MODULE(SkrImageCoderModule, SkrImageCoder);
@@ -198,12 +198,12 @@ HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_re
 {
     ZoneScopedN("DirectStoragePNGDecompressor");
     EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)request->src_buffer, request->src_size);
-    SKR_LOG_DEBUG("skr_image_coder_win_dstorage_decompressor: format=%d", format);
+    SKR_LOG_TRACE("skr_image_coder_win_dstorage_decompressor: format=%d", format);
     auto coder = skr_image_coder_create_image(format);
     if (skr_image_coder_set_encoded(coder, (const uint8_t*)request->src_buffer, request->src_size))
     {
         SKR_DEFER({ ZoneScopedN("DirectStoragePNGDecompressorFree"); skr_image_coder_free_image(coder); });
-        SKR_LOG_DEBUG("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+        SKR_LOG_TRACE("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
             skr_image_coder_get_width(coder), skr_image_coder_get_height(coder), 
             skr_image_coder_get_encoded_size(coder),
             skr_image_coder_get_raw_size(coder));

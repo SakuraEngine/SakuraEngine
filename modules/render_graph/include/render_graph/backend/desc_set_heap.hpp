@@ -23,7 +23,7 @@ public:
             auto new_set = cgpu_create_descriptor_set(root_sig->device, &desc);
             heap.emplace_back(new_set);
 
-            SKR_LOG_DEBUG("create set %d in heap, address %lld", i + old_count, new_set);
+            SKR_LOG_TRACE("create set %d in heap, address %lld", i + old_count, new_set);
             SKR_ASSERT(new_set->root_signature->device);
         }
     }
@@ -47,7 +47,7 @@ public:
     {
         for (uint32_t i = 0; i < heap.size(); i++)
         {
-            SKR_LOG_DEBUG("destroy set %d in heap with %d sets, address %lld", i, heap.size(), (int64_t)heap[i]);
+            SKR_LOG_TRACE("destroy set %d in heap with %d sets, address %lld", i, heap.size(), (int64_t)heap[i]);
             cgpu_free_descriptor_set(heap[i]);
         }
     }

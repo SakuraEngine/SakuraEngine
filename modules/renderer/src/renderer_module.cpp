@@ -13,7 +13,7 @@ IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
 
 void SkrRendererModule::on_load(int argc, char** argv)
 {
-    SKR_LOG_INFO("skr renderer loaded!");
+    SKR_LOG_TRACE("skr renderer loaded!");
 #ifdef _WIN32
     cgpu_d3d12_enable_DRED();
 #endif
@@ -48,7 +48,7 @@ void SkrRendererModule::on_load(int argc, char** argv)
 
 void SkrRendererModule::on_unload()
 {
-    SKR_LOG_INFO("skr renderer unloaded!");
+    SKR_LOG_TRACE("skr renderer unloaded!");
 
     render_device.finalize();
 }

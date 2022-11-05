@@ -13,7 +13,7 @@ void SkrRuntimeModule::on_load(int argc, char** argv)
 {
     dualX_register_types();
 
-    SKR_LOG_INFO("SkrRuntime module loaded!");
+    SKR_LOG_TRACE("SkrRuntime module loaded!");
 
 #ifdef SKR_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -22,7 +22,7 @@ void SkrRuntimeModule::on_load(int argc, char** argv)
 }
 void SkrRuntimeModule::on_unload()
 {
-    SKR_LOG_INFO("SkrRuntime module unloaded!");
+    SKR_LOG_TRACE("SkrRuntime module unloaded!");
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()

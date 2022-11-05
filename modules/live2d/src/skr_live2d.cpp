@@ -7,7 +7,7 @@
 /**	Log out func register to cubism */
 static void Cubism_Log(const char* message)
 {
-	SKR_LOG_INFO("[Live2D] %s", message);
+	SKR_LOG_TRACE("[Live2D] %s", message);
 }
 
 class CubismFrameWorkAllocator : public Csm::ICubismAllocator
@@ -63,7 +63,7 @@ void SkrLive2DModule::on_load(int argc, char** argv)
         }
     }
 
-    SKR_LOG_INFO("live2d module loaded!");
+    SKR_LOG_TRACE("live2d module loaded!");
 }
 
 void SkrLive2DModule::on_unload()
@@ -71,7 +71,7 @@ void SkrLive2DModule::on_unload()
     Csm::CubismFramework::Dispose();
     Csm::CubismFramework::CleanUp();
 
-    SKR_LOG_INFO("live2d module unloaded!");
+    SKR_LOG_TRACE("live2d module unloaded!");
 }
 
 IMPLEMENT_DYNAMIC_MODULE(SkrLive2DModule, SkrLive2D);

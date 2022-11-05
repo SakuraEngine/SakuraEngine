@@ -8,10 +8,10 @@ IMPLEMENT_DYNAMIC_MODULE(SkrImGuiModule, SkrImGui);
 
 void SkrImGuiModule::on_load(int argc, char** argv)
 {
-    SKR_LOG_INFO("skr imgui loaded!");
+    SKR_LOG_TRACE("skr imgui loaded!");
 }
 
 void SkrImGuiModule::on_unload()
 {
-    SKR_LOG_INFO("skr imgui unloaded!");
+    SKR_LOG_TRACE("skr imgui unloaded!");
 }

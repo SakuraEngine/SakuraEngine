@@ -205,7 +205,7 @@ CubismMotionQueueEntryHandle csmUserModel::startMotion(csmMotionMap* motion_map,
     {
         if (_debugMode)
         {
-            SKR_LOG_DEBUG("[csmUserModel]can't start motion.");
+            SKR_LOG_TRACE("[csmUserModel]can't start motion.");
         }
         return InvalidMotionQueueEntryHandleValue;
     }
@@ -230,7 +230,7 @@ CubismMotionQueueEntryHandle csmUserModel::startMotion(csmMotionMap* motion_map,
     */
     if (_debugMode)
     {
-        SKR_LOG_DEBUG("[APP]start motion: [%s_%d]", group, no);
+        SKR_LOG_TRACE("[APP]start motion: [%s_%d]", group, no);
     }
     return  _motionManager->StartMotionPriority(motion, autoDelete, priority);
 }

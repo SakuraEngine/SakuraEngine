@@ -62,13 +62,13 @@ struct CGPUDStorageSingleton
                 _this->dstorage_library.load("dstorage.dll");
                 if (!_this->dstorage_core.isLoaded() || !_this->dstorage_library.isLoaded())
                 {
-                    if (!_this->dstorage_core.isLoaded()) SKR_LOG_INFO("dstoragecore.dll not found, direct storage is disabled");
-                    if (!_this->dstorage_library.isLoaded()) SKR_LOG_INFO("dstorage.dll not found, direct storage is disabled");
+                    if (!_this->dstorage_core.isLoaded()) SKR_LOG_TRACE("dstoragecore.dll not found, direct storage is disabled");
+                    if (!_this->dstorage_library.isLoaded()) SKR_LOG_TRACE("dstorage.dll not found, direct storage is disabled");
                     _this->dstorage_dll_dont_exist = true;
                 }
                 else
                 {
-                    SKR_LOG_INFO("dstorage.dll loaded");
+                    SKR_LOG_TRACE("dstorage.dll loaded");
 
                     auto pfn_get_factory = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageGetFactory);
                     if (!pfn_get_factory) return nullptr;
@@ -561,7 +561,7 @@ skr_win_dstorage_decompress_service_id cgpu_win_create_decompress_service(CGPUIn
         return nullptr;
     }
     auto service = SkrNew<skr_win_dstorage_decompress_service_t>(pCompressionQueue);
-    SKR_LOG_DEBUG("Created decompress service");
+    SKR_LOG_TRACE("Created decompress service");
     return service;
 }
 
@@ -581,5 +581,5 @@ void cgpu_win_free_decompress_service(skr_win_dstorage_decompress_service_id ser
     SKR_ASSERT(service && "Invalid service");
     service->decompress_queue->Release();
     SkrDelete(service);
-    SKR_LOG_DEBUG("Deleted decompress service");
+    SKR_LOG_TRACE("Deleted decompress service");
 }

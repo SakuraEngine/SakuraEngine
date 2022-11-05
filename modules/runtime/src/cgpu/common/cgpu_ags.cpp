@@ -24,12 +24,12 @@ struct CGPUAMDAGSSingleton
                 _this->ags_library.load(dllname);
                 if (!_this->ags_library.isLoaded())
                 {
-                    SKR_LOG_INFO("%s not found, amd ags is disabled", dllname);
+                    SKR_LOG_TRACE("%s not found, amd ags is disabled", dllname);
                     _this->dll_dont_exist = true;
                 }
                 else
                 {
-                    SKR_LOG_INFO("%s loaded", dllname);
+                    SKR_LOG_TRACE("%s loaded", dllname);
                     // Load PFNs
                     _this->_agsInitialize = SKR_SHARED_LIB_LOAD_API(_this->ags_library, agsInitialize);
                     _this->_agsDeInitialize = SKR_SHARED_LIB_LOAD_API(_this->ags_library, agsDeInitialize);

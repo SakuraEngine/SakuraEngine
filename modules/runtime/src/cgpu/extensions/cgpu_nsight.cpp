@@ -124,7 +124,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         }
         // Destroy the GPU crash dump decoder object.
         AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_DestroyDecoder(decoder));
-        SKR_LOG_INFO("NSIGHT GPU Crash Dump File Saved");
+        SKR_LOG_TRACE("NSIGHT GPU Crash Dump File Saved");
     }
 
     // GPU crash dump callback.
@@ -134,7 +134,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         void* pUserData)
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
-        SKR_LOG_INFO("NSIGHT GPU Crash Dump Callback");
+        SKR_LOG_TRACE("NSIGHT GPU Crash Dump Callback");
         eastl::set<struct ID3D12Device*> devices; 
         for (auto tracker : _this->all_trackers)
         {
@@ -152,7 +152,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         void* pUserData)
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
-        SKR_LOG_INFO("NSIGHT Shader Debug Info Callback");
+        SKR_LOG_TRACE("NSIGHT Shader Debug Info Callback");
         for (auto tracker : _this->all_trackers)
         {
             auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);
@@ -167,7 +167,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         void* pUserData)
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
-        SKR_LOG_INFO("NSIGHT Dump Description Callback");
+        SKR_LOG_TRACE("NSIGHT Dump Description Callback");
         for (auto tracker : _this->all_trackers)
         {
             auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);
@@ -185,7 +185,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         uint32_t* markerSize
     )
     {
-        SKR_LOG_INFO("NSIGHT Resolve Marker Callback");
+        SKR_LOG_TRACE("NSIGHT Resolve Marker Callback");
     }
 
     skr::SharedLibrary nsight_library;
@@ -205,7 +205,7 @@ CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
     bool nsight = nsight_library.load("GFSDK_Aftermath_Lib.dll") && llvm;
     if (nsight)
     {
-        SKR_LOG_INFO("NSIGHT loaded");
+        SKR_LOG_TRACE("NSIGHT loaded");
         aftermath_EnableGpuCrashDumps = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_EnableGpuCrashDumps);
         aftermath_DisableGpuCrashDumps = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_DisableGpuCrashDumps);
         aftermath_GpuCrashDump_CreateDecoder = SKR_SHARED_LIB_LOAD_API(nsight_library, GFSDK_Aftermath_GpuCrashDump_CreateDecoder);
@@ -216,7 +216,7 @@ CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
     }
     else
     {
-        SKR_LOG_INFO("NSIGHT dll not found");
+        SKR_LOG_TRACE("NSIGHT dll not found");
     }
     if (aftermath_EnableGpuCrashDumps)
     {
