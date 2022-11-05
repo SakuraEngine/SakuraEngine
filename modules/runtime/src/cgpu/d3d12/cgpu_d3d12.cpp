@@ -1638,7 +1638,7 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
         D3D12_RENDER_PASS_FLAG_NONE);
     return (CGPURenderPassEncoderId)&Cmd->super;
 #endif
-    cgpu_info("ID3D12GraphicsCommandList4 is not defined!");
+    cgpu_warn("ID3D12GraphicsCommandList4 is not defined!");
     return (CGPURenderPassEncoderId)&Cmd->super;
 }
 #else
@@ -1767,7 +1767,7 @@ void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncod
     CmdList4->EndRenderPass();
     return;
 #endif
-    cgpu_info("ID3D12GraphicsCommandList4 is not defined!");
+    cgpu_warn("ID3D12GraphicsCommandList4 is not defined!");
 }
 
 // SwapChain APIs

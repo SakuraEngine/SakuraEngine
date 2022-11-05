@@ -217,7 +217,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 render_model->coders.emplace_back(coder);
                 if (skr_image_coder_set_encoded(coder, (const uint8_t*)png_destination.bytes, png_destination.size))
                 {
-                    SKR_LOG_DEBUG("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+                    SKR_LOG_TRACE("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
                         skr_image_coder_get_width(coder), skr_image_coder_get_height(coder), 
                         skr_image_coder_get_encoded_size(coder),
                         skr_image_coder_get_raw_size(coder));

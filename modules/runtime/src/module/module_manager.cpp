@@ -88,16 +88,16 @@ public:
     SDefaultDynamicModule(const char* name) : name(name) {}
     virtual void on_load(int argc, char** argv) override
     {
-        SKR_LOG_DEBUG("[default implementation] dynamic module %s loaded!", name.c_str());
+        SKR_LOG_TRACE("[default implementation] dynamic module %s loaded!", name.c_str());
     }
     virtual int main_module_exec(int argc, char** argv) override
     {
-        SKR_LOG_DEBUG("[default implementation] dynamic module %s executed!", name.c_str());
+        SKR_LOG_TRACE("[default implementation] dynamic module %s executed!", name.c_str());
         return 0;
     }
     virtual void on_unload() override
     {
-        SKR_LOG_DEBUG("[default implementation] dynamic module %s unloaded!", name.c_str());
+        SKR_LOG_TRACE("[default implementation] dynamic module %s unloaded!", name.c_str());
     }
 
     eastl::string name = "";
@@ -154,7 +154,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
     }
     else
     {
-        SKR_LOG_DEBUG("no user defined symbol: %s", initName.c_str());
+        SKR_LOG_TRACE("no user defined symbol: %s", initName.c_str());
         modulesMap[name] = eastl::make_unique<SDefaultDynamicModule>(name.c_str());
     }
     IDynamicModule* module = (IDynamicModule*)modulesMap[name].get();
@@ -233,10 +233,10 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& noden
     if (!get_module_property(nodename).bActive)
         return true;
     dependency_graph->foreach_inv_neighbors(nodeMap.find(nodename)->second, 
-    [this](DependencyGraphNode* node){
-        ModuleProperty* property = static_cast<ModuleProperty*>(node);
-        __internal_DestroyModuleGraph(property->name);
-    });
+        [this](DependencyGraphNode* node){
+            ModuleProperty* property = static_cast<ModuleProperty*>(node);
+            __internal_DestroyModuleGraph(property->name);
+        });
     get_module(nodename)->on_unload();
     modulesMap[nodename].reset();
     nodeMap[nodename]->bActive = false;

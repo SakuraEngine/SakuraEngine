@@ -12,7 +12,7 @@ inline static void env_create(MDB_env** penv)
     }
     else
     {
-        SKR_LOG_INFO("env_create succeed: %d", rc);
+        SKR_LOG_TRACE("env_create succeed: %d", rc);
     }
     mdb_env_set_maxdbs(*penv, 50);
     mdb_env_set_mapsize(*penv, (size_t)1048576 * (size_t)16); // 1MB * 16
@@ -23,7 +23,7 @@ inline static void env_create(MDB_env** penv)
     }
     else
     {
-        SKR_LOG_INFO("mdb_env_open succeed: %d", rc);
+        SKR_LOG_TRACE("mdb_env_open succeed: %d", rc);
     }
 }
 
@@ -37,7 +37,7 @@ inline static void dbi_create(MDB_env* env, MDB_dbi* pdb, bool readonly)
     }
     else
     {
-        SKR_LOG_INFO("mdb_txn_begin succeed: %d", rc);
+        SKR_LOG_TRACE("mdb_txn_begin succeed: %d", rc);
     }
     // Txn body: open db
     {

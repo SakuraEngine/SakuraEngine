@@ -263,13 +263,13 @@ void skr::imgui::imgui_set_window_title(ImGuiViewport* viewport, const char* tit
 
 void skr::imgui::imgui_set_window_alpha(ImGuiViewport* viewport, float alpha)
 {
-    SKR_LOG_INFO("imgui_set_window_alpha");
+    SKR_LOG_WARN("imgui_set_window_alpha not implemented");
 
 }
 
 void skr::imgui::imgui_set_window_focus(ImGuiViewport* viewport)
 {
-    SKR_LOG_INFO("imgui_set_window_focus");
+    SKR_LOG_TRACE("imgui_set_window_focus not implemented");
     
 }
 

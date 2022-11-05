@@ -6,10 +6,10 @@ IMPLEMENT_DYNAMIC_MODULE(SkrSceneModule, SkrScene);
 
 void SkrSceneModule::on_load(int argc, char** argv)
 {
-    SKR_LOG_INFO("skr scene loaded!");
+    SKR_LOG_TRACE("skr scene loaded!");
 }
 
 void SkrSceneModule::on_unload()
 {
-    SKR_LOG_INFO("skr scene unloaded!");
+    SKR_LOG_TRACE("skr scene unloaded!");
 }

@@ -543,7 +543,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
             
             if (!upload_batch->tasks.empty())
             {
-                SKR_LOG_DEBUG("Created Upload Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
+                SKR_LOG_TRACE("Created Upload Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
                 SKR_ASSERT(service->upload_batch_queue.find(upload_batch->id) == service->upload_batch_queue.end());
                 service->upload_batch_queue[upload_batch->id] = upload_batch;
             }
@@ -552,7 +552,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 
             if (!dstorage_batch->tasks.empty())
             {
-                SKR_LOG_DEBUG("Created DirectStorage Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
+                SKR_LOG_TRACE("Created DirectStorage Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
                 SKR_ASSERT(service->dstorage_batch_queue.find(dstorage_batch->id) == service->dstorage_batch_queue.end());
                 service->dstorage_batch_queue[dstorage_batch->id] = dstorage_batch;
             }
@@ -600,7 +600,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 
                 if (batch->submitted)
                 {
-                    SKR_LOG_DEBUG("Submit Upload Batch %d with %d Tasks", batch->id, batch->tasks.size());
+                    SKR_LOG_TRACE("Submit Upload Batch %d with %d Tasks", batch->id, batch->tasks.size());
                 }
             }
         }
@@ -632,7 +632,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
 
                 if (batch->submitted)
                 {
-                    SKR_LOG_DEBUG("Submit DirectStorage Batch %d with %d Tasks", batch->id, batch->tasks.size());
+                    SKR_LOG_TRACE("Submit DirectStorage Batch %d with %d Tasks", batch->id, batch->tasks.size());
                 }
             }
         }
@@ -659,7 +659,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                     foreach_task(task);
                     SKR_ASSERT(task.step == kStepFinished);
                 }
-                SKR_LOG_DEBUG("Delete DirectStorage Batch %d with %d Tasks", batch.second->id, batch.second->tasks.size());
+                SKR_LOG_TRACE("Delete DirectStorage Batch %d with %d Tasks", batch.second->id, batch.second->tasks.size());
                 SkrDelete(batch.second);
                 batch.second = nullptr;
             }
@@ -668,14 +668,14 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         eastl::remove_if(service->upload_batch_queue.begin(), service->upload_batch_queue.end(),
             [](auto& batch){
                 if (batch.second == nullptr)
-                    SKR_LOG_DEBUG("Remove Upload Batch %d", batch.first);
+                    SKR_LOG_TRACE("Remove Upload Batch %d", batch.first);
                 return batch.second == nullptr;
             }), service->upload_batch_queue.end());
         service->dstorage_batch_queue.erase(
         eastl::remove_if(service->dstorage_batch_queue.begin(), service->dstorage_batch_queue.end(),
             [](auto& batch){
                 if (batch.second == nullptr)
-                    SKR_LOG_DEBUG("Remove DirectStorage Batch %d", batch.first);
+                    SKR_LOG_TRACE("Remove DirectStorage Batch %d", batch.first);
                 return batch.second == nullptr;
             }), service->dstorage_batch_queue.end());
         // 2.2 sweep upload tasks
