@@ -10,54 +10,6 @@
 
 #include "tracy/Tracy.hpp"
 
-void setup_render_mesh(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource)
-{
-    uint32_t ibv_c = 0;
-    uint32_t vbv_c = 0;
-    for (uint32_t i = 0; i < mesh_resource->sections.size(); i++)
-    {
-        const auto& section = mesh_resource->sections[i];
-        for (auto prim_idx : section.primive_indices)
-        {
-            auto& prim = mesh_resource->primitives[prim_idx];
-            vbv_c += (uint32_t)prim.vertex_buffers.size();
-            ibv_c++;
-        }
-    }
-    render_mesh->index_buffer_views.reserve(ibv_c);
-    render_mesh->vertex_buffer_views.reserve(vbv_c);
-    for (uint32_t i = 0; i < mesh_resource->sections.size(); i++)
-    {
-        const auto& section = mesh_resource->sections[i];
-        for (auto prim_idx : section.primive_indices)
-        {
-            SKR_ASSERT(render_mesh->index_buffer_views.capacity() >= render_mesh->index_buffer_views.size());
-            SKR_ASSERT(render_mesh->vertex_buffer_views.capacity() >= render_mesh->vertex_buffer_views.size());
-            auto& draw_cmd = render_mesh->primitive_commands.emplace_back();
-            auto& prim = mesh_resource->primitives[prim_idx];
-            auto& mesh_ibv = render_mesh->index_buffer_views.emplace_back();
-            auto vbv_start = render_mesh->vertex_buffer_views.size();
-            for (uint32_t j = 0; j < prim.vertex_buffers.size(); j++)
-            {
-                auto& mesh_vbv = render_mesh->vertex_buffer_views.emplace_back();
-                const auto buffer_index = prim.vertex_buffers[j].buffer_index;
-                mesh_vbv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
-                mesh_vbv.offset = prim.vertex_buffers[j].offset;
-                mesh_vbv.stride = prim.vertex_buffers[j].stride;
-            }
-            const auto buffer_index = prim.index_buffer.buffer_index;
-            mesh_ibv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
-            mesh_ibv.offset = prim.index_buffer.index_offset;
-            mesh_ibv.stride = prim.index_buffer.stride;
-            mesh_ibv.index_count = prim.index_buffer.index_count;
-            mesh_ibv.first_index = prim.index_buffer.first_index;
-
-            draw_cmd.ibv = &mesh_ibv;
-            draw_cmd.vbvs = skr::span(render_mesh->vertex_buffer_views.data() + vbv_start, prim.vertex_buffers.size());
-        }
-    }
-}
-
 void skr_render_mesh_create_from_gltf(SRenderDeviceId render_device, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, const char* path, skr_render_mesh_request_t* request)
 {
     ZoneScopedN("ioRAM & VRAM Mesh Request");
@@ -115,7 +67,6 @@ void skr_render_mesh_create_from_gltf(SRenderDeviceId render_device, skr_io_ram_
             mesh_buffer_io.transfer_queue = request->queue_override ? request->queue_override : cbData->render_device->get_cpy_queue();
             // dstorage
             auto gltfPath = (skr::filesystem::path(gltf_request->vfs_override->mount_dir) / mesh_resource->bins[i].uri.c_str()).u8string();
-            mesh_buffer_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
             mesh_buffer_io.dstorage.path = gltfPath.c_str();
             mesh_buffer_io.dstorage.queue = request->queue_override ? nullptr : cbData->dstorage_queue;
             mesh_buffer_io.dstorage.source_type = request->dstorage_source;
@@ -143,7 +94,7 @@ void skr_render_mesh_create_from_gltf(SRenderDeviceId render_device, skr_io_ram_
 
                 if (skr_atomic32_load_acquire(&cbData->finished_buffers) == cbData->buffers_count)
                 {
-                    setup_render_mesh(request->render_mesh, request->render_mesh->mesh_resource_id);
+                    skr_render_mesh_initialize(request->render_mesh, request->render_mesh->mesh_resource_id);
                     skr_atomic32_store_release(&request->buffers_io_status, SKR_ASYNC_IO_STATUS_OK);
                 }
                 if (cbData->allReady())
@@ -168,12 +119,57 @@ void skr_render_mesh_create_from_gltf(SRenderDeviceId render_device, skr_io_ram_
     skr_mesh_resource_create_from_gltf(ram_service, path, &request->mesh_resource_request);
 }
 
+void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource)
+{
+    uint32_t ibv_c = 0;
+    uint32_t vbv_c = 0;
+    for (uint32_t i = 0; i < mesh_resource->sections.size(); i++)
+    {
+        const auto& section = mesh_resource->sections[i];
+        for (auto prim_idx : section.primive_indices)
+        {
+            auto& prim = mesh_resource->primitives[prim_idx];
+            vbv_c += (uint32_t)prim.vertex_buffers.size();
+            ibv_c++;
+        }
+    }
+    render_mesh->mesh_resource_id = mesh_resource;
+    render_mesh->index_buffer_views.reserve(ibv_c);
+    render_mesh->vertex_buffer_views.reserve(vbv_c);
+    for (uint32_t i = 0; i < mesh_resource->sections.size(); i++)
+    {
+        const auto& section = mesh_resource->sections[i];
+        for (auto prim_idx : section.primive_indices)
+        {
+            SKR_ASSERT(render_mesh->index_buffer_views.capacity() >= render_mesh->index_buffer_views.size());
+            SKR_ASSERT(render_mesh->vertex_buffer_views.capacity() >= render_mesh->vertex_buffer_views.size());
+            auto& draw_cmd = render_mesh->primitive_commands.emplace_back();
+            auto& prim = mesh_resource->primitives[prim_idx];
+            auto& mesh_ibv = render_mesh->index_buffer_views.emplace_back();
+            auto vbv_start = render_mesh->vertex_buffer_views.size();
+            for (uint32_t j = 0; j < prim.vertex_buffers.size(); j++)
+            {
+                auto& mesh_vbv = render_mesh->vertex_buffer_views.emplace_back();
+                const auto buffer_index = prim.vertex_buffers[j].buffer_index;
+                mesh_vbv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
+                mesh_vbv.offset = prim.vertex_buffers[j].offset;
+                mesh_vbv.stride = prim.vertex_buffers[j].stride;
+            }
+            const auto buffer_index = prim.index_buffer.buffer_index;
+            mesh_ibv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
+            mesh_ibv.offset = prim.index_buffer.index_offset;
+            mesh_ibv.stride = prim.index_buffer.stride;
+            mesh_ibv.index_count = prim.index_buffer.index_count;
+            mesh_ibv.first_index = prim.index_buffer.first_index;
+
+            draw_cmd.ibv = &mesh_ibv;
+            draw_cmd.vbvs = skr::span(render_mesh->vertex_buffer_views.data() + vbv_start, prim.vertex_buffers.size());
+        }
+    }
+}
+
 void skr_render_mesh_free(skr_render_mesh_id render_mesh)
 {
-    if (render_mesh->mesh_resource_id)
-    {
-        skr_mesh_resource_free(render_mesh->mesh_resource_id);
-    }
     for (auto&& destination : render_mesh->buffer_destinations)
     {
         cgpu_free_buffer(destination.buffer);

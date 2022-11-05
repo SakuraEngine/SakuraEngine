@@ -62,6 +62,7 @@ skr_mesh_buffer_t
     uint64_t byte_length;
     bool used_with_index;
     bool used_with_vertex;
+    // TODO: keep this?
     sattr("transient": true)
     skr_blob_t bin;
     // TODO: keep this?
@@ -77,7 +78,9 @@ skr_mesh_resource_t
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_mesh_buffer_t> bins;
     sattr("transient": true)
-    void* gltf_data;
+    void* gltf_data SKR_IF_CPP(= nullptr);
+    sattr("transient": true)
+    struct skr_render_mesh_t* render_mesh SKR_IF_CPP(= nullptr);
 };
 #endif
 typedef struct skr_mesh_buffer_t skr_mesh_buffer_t;
@@ -87,22 +90,25 @@ typedef struct skr_mesh_resource_t skr_mesh_resource_t;
 typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
 #ifdef __cplusplus
+#include "skr_renderer/fwd_types.h"
+#include "platform/filesystem.hpp"
 #include "resource/resource_factory.h"
+#include "utils/io.h"
 
+namespace skr { namespace io { class VRAMService; } }
 namespace skr sreflect
 {
 namespace resource sreflect
 {
-// - dstorage & bc: dstorage
-// - dstorage & bc & zlib: dstorage with custom decompress queue
-// - bc & zlib: [TODO] ram service & decompress service & upload
-//    - upload with copy queue
-//    - upload with gfx queue
 struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
     virtual ~SMeshFactory() = default;
 
     struct Root {
-        uint32_t __nothing__;
+        skr_vfs_t* texture_vfs = nullptr;
+        skr::filesystem::path dstorage_root;
+        skr_io_ram_service_t* ram_service = nullptr;
+        skr::io::VRAMService* vram_service = nullptr;
+        SRenderDeviceId render_device = nullptr;
     };
 
     [[nodiscard]] static SMeshFactory* Create(const Root& root);
@@ -112,9 +118,6 @@ struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
 } // namespace skr
 #endif
 
-#include "utils/io.h"
-
-
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
 skr_mesh_resource_free(skr_mesh_resource_id mesh_resource);
 
@@ -123,7 +126,6 @@ skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char* na
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API const char* 
 skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struct CGPUVertexLayout* out_vertex_layout);
-
 
 // : RAW GLTF METHODS :
 
