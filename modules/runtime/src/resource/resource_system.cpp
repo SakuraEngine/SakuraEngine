@@ -163,7 +163,7 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
             }
             else
                 SKR_UNREACHABLE_CODE();
-            request->factory = nullptr;
+            request->factory = this->FindFactory(record->header.type);
             record->activeRequest = request;
             requests.push_back(request);
         }
