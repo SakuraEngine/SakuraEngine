@@ -147,10 +147,19 @@ void skr_resource_handle_t::reset()
     std::memset(this, 0, sizeof(skr_resource_handle_t));
 }
 
-ESkrLoadingStatus skr_resource_handle_t::get_status() const
+ESkrLoadingStatus skr_resource_handle_t::get_status(bool resolve) const
 {
-    if (padding != 0 || is_null())
+    if (is_null())
         return SKR_LOADING_STATUS_UNLOADED;
+    if (padding != 0)
+    {
+        if(resolve)
+        {
+            auto system = skr::resource::GetResourceSystem();
+            return system->GetResourceStatus(get_guid());
+        }
+        return SKR_LOADING_STATUS_UNLOADED;
+    }
     auto record = get_record();
     return record->loadingStatus;
 }

@@ -124,6 +124,7 @@ public:
     void LoadResource(skr_resource_handle_t& handle,
         bool requireInstalled = true, uint32_t requester = 0, ESkrRequesterType = SKR_REQUESTER_UNKNOWN);
     void UnloadResource(skr_resource_handle_t& handle);
+    ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle);
 
     SResourceFactory* FindFactory(skr_type_id_t type) const;
     void RegisterFactory(skr_type_id_t type, SResourceFactory* factory);

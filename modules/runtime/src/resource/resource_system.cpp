@@ -170,6 +170,15 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
     }
 }
 
+
+ESkrLoadingStatus SResourceSystem::GetResourceStatus(const skr_guid_t& handle)
+{
+    SMutexLock lock(recordMutex);
+    auto record = _GetRecord(handle);
+    if (!record) return SKR_LOADING_STATUS_UNLOADED;
+    return record->loadingStatus;
+}
+
 void SResourceSystem::Initialize(SResourceRegistry* provider, skr::io::RAMService* service)
 {
     SKR_ASSERT(provider);
