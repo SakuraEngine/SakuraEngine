@@ -52,14 +52,11 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
     ESkrInstallStatus InstallWithUpload(skr_resource_record_t* record);
 
-    ESkrInstallStatus LoadToRAM(skr_resource_record_t* record);
-    ESkrInstallStatus UploadToVRAM(skr_resource_record_t* record);
-
     enum class EInstallMethod : uint32_t
     {
         DSTORAGE,
         UPLOAD,
-        Count
+        COUNT
     };
 
     enum class ECompressMethod : uint32_t
@@ -67,7 +64,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         BC_OR_ASTC,
         ZLIB,
         IMAGE_CODER,
-        Count
+        COUNT
     };
 
     struct InstallType
@@ -80,7 +77,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     {
         ~DStorageRequest()
         {
-            SKR_LOG_TRACE("DStorage for resource %s finished!", absPath.c_str());
+            SKR_LOG_TRACE("DStorage for texture resource %s finished!", absPath.c_str());
         }
         std::string absPath;
         skr_async_io_request_t vtexture_request;
@@ -97,7 +94,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         }
         ~UploadRequest()
         {
-            SKR_LOG_TRACE("Upload for resource %s finished!", resource_uri.c_str());
+            SKR_LOG_TRACE("Upload for texture resource %s finished!", resource_uri.c_str());
         }
         STextureFactoryImpl* factory = nullptr;
         std::string resource_uri;
@@ -203,7 +200,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
         {
             if (gpuCompressOnly)
             {
-                auto compressedBin = skr::format("{}.bc1", guid);
+                auto compressedBin = skr::format("{}.bc1", guid); //TODO: choose compression format
                 auto compressedPath = root.dstorage_root / compressedBin.c_str();
                 auto dRequest = SPtr<DStorageRequest>::Create();
                 InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::BC_OR_ASTC};

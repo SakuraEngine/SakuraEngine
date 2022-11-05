@@ -70,6 +70,11 @@ void SGameRTModule::on_load(int argc, char** argv)
     skr::resource::SMeshFactory* meshFactory = nullptr;
     {
         skr::resource::SMeshFactory::Root factoryRoot = {};
+        factoryRoot.dstorage_root = textureRoot;
+        factoryRoot.texture_vfs = tex_resource_vfs;
+        factoryRoot.ram_service = ram_service;
+        factoryRoot.vram_service = game_render_device->get_vram_service();
+        factoryRoot.render_device = game_render_device;
         meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
         resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, meshFactory);
     }
@@ -147,7 +152,6 @@ skr_vfs_t* skr_game_runtime_get_vfs()
 {
     return SGameRTModule::Get()->resource_vfs;
 }
-
 
 skr_io_ram_service_t* skr_game_runtime_get_ram_service()
 {
