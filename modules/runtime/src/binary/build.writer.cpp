@@ -38,6 +38,66 @@ int WriteValue(skr_binary_writer_t* writer, double value)
     return WriteValue(writer, &value, sizeof(value));
 }
 template <>
+int WriteValue(skr_binary_writer_t* writer, skr_float2_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, skr_float3_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, skr_float4_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, skr_rotator_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, skr_quaternion_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, skr_float4x4_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, const skr_float2_t& value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, const skr_float3_t& value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, const skr_float4_t& value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, const skr_rotator_t& value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, const skr_quaternion_t& value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
+int WriteValue(skr_binary_writer_t* writer, const skr_float4x4_t& value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+template <>
 int WriteValue(skr_binary_writer_t* writer, const eastl::string& str)
 {
     int ret = WriteValue(writer, (uint32_t)str.size());

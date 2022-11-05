@@ -66,6 +66,36 @@ inline int ReadValue(skr_binary_reader_t* reader, double& value)
     return ReadValue(reader, &value, sizeof(value));
 }
 template <>
+inline int ReadValue(skr_binary_reader_t* reader, skr_float2_t& value)
+{
+    return ReadValue(reader, &value, sizeof(value));
+}
+template <>
+inline int ReadValue(skr_binary_reader_t* reader, skr_float3_t& value)
+{
+    return ReadValue(reader, &value, sizeof(value));
+}
+template <>
+inline int ReadValue(skr_binary_reader_t* reader, skr_rotator_t& value)
+{
+    return ReadValue(reader, &value, sizeof(value));
+}
+template <>
+inline int ReadValue(skr_binary_reader_t* reader, skr_float4_t& value)
+{
+    return ReadValue(reader, &value, sizeof(value));
+}
+template <>
+inline int ReadValue(skr_binary_reader_t* reader, skr_quaternion_t& value)
+{
+    return ReadValue(reader, &value, sizeof(value));
+}
+template <>
+inline int ReadValue(skr_binary_reader_t* reader, skr_float4x4_t& value)
+{
+    return ReadValue(reader, &value, sizeof(value));
+}
+template <>
 RUNTIME_API int ReadValue(skr_binary_reader_t* reader, eastl::string& str);
 template <>
 RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_guid_t& guid);
