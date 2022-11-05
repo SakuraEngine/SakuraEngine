@@ -46,7 +46,8 @@ typedef struct skr_resource_handle_t {
     RUNTIME_API void reset();
     RUNTIME_API uint32_t get_requester() const;
     RUNTIME_API ESkrRequesterType get_requester_type() const;
-    RUNTIME_API ESkrLoadingStatus get_status() const;
+    //if resolve is false, then unresolve handle will always return SKR_LOADING_STATUS_UNLOADED
+    RUNTIME_API ESkrLoadingStatus get_status(bool resolve = false) const;
     RUNTIME_API skr_resource_record_t* get_record() const;
     RUNTIME_API void set_record(skr_resource_record_t* record);
     RUNTIME_API void set_resolved(skr_resource_record_t* record, uint32_t requester, ESkrRequesterType requesterType);
