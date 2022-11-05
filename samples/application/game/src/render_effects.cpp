@@ -184,7 +184,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             {
                 if (meshes[i].async_request.render_mesh && meshes[i].async_request.is_buffer_ready())
                 {
-                    skr_render_mesh_free(meshes[i].async_request.render_mesh);
+                    auto render_mesh = meshes[i].async_request.render_mesh;
+                    skr_render_mesh_free(render_mesh);
+                    skr_mesh_resource_free(render_mesh->mesh_resource_id);
                     meshes[i].async_request.render_mesh = nullptr;
                 }
             }
