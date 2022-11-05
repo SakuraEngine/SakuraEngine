@@ -105,6 +105,7 @@ void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireIn
     if (request)
     {
         request->requireLoading = true;
+        request->requestInstall = requireInstalled;
     }
     else
     {
@@ -591,6 +592,13 @@ void SResourceRequest::Update()
             }
         }
         break;
+        case SKR_LOADING_PHASE_FINISHED:
+        {
+            //special case when we are installing a resource that is already loaded
+            SKR_ASSERT(isLoading && requestInstall > !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED));
+            _LoadFinished();
+        }
+        break;
         case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO:
         {
             if(!ioRequest.is_ready())
@@ -637,7 +645,8 @@ void SResourceRequest::Update()
 
 bool SResourceRequest::Okay()
 {
-    return (currentPhase == SKR_LOADING_PHASE_FINISHED) && (isLoading == requireLoading);
+    bool installed = !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED);
+    return (currentPhase == SKR_LOADING_PHASE_FINISHED) && (isLoading == requireLoading) && (requestInstall <= installed);
 }
 
 bool SResourceRequest::Failed()
