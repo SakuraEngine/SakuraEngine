@@ -10,11 +10,14 @@
 #ifdef __cplusplus
 struct skr_render_mesh_t {
     skr_mesh_resource_id mesh_resource_id;
-    eastl::vector<skr_async_io_request_t> vio_requests;
-    eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
+
     eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
     eastl::vector<skr_render_primitive_command_t> primitive_commands;
+    
+    // I/O
+    eastl::vector<skr_async_io_request_t> vio_requests;
+    eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
 };
 #endif
 
@@ -58,3 +61,6 @@ skr_render_mesh_create_from_gltf(SRenderDevice*, skr_io_ram_service_t*, skr_io_v
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
 skr_render_mesh_free(skr_render_mesh_id render_mesh);
+
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API
+void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource);

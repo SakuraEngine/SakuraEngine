@@ -76,11 +76,15 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
         mesh->bins.resize(gltf_data->buffers_count);
         for (uint32_t i = 0; i < gltf_data->buffers_count; i++)
         {
-            mesh->bins[i].bin.bytes = (uint8_t*)gltf_data->buffers[i].data;
-            mesh->bins[i].bin.size = gltf_data->buffers[i].size;
+            mesh->bins[i].index = i;
+            mesh->bins[i].byte_length = gltf_data->buffers[i].size;
             mesh->bins[i].uri = gltf_data->buffers[i].uri;
             mesh->bins[i].used_with_index = false;
             mesh->bins[i].used_with_vertex = false;
+
+            // transient
+            mesh->bins[i].bin.bytes = (uint8_t*)gltf_data->buffers[i].data;
+            mesh->bins[i].bin.size = gltf_data->buffers[i].size;
         }
         // record primitvies
         for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
