@@ -9,6 +9,7 @@
 #include "runtime_module.h"
 #include "platform/guid.hpp"
 #include "skr_renderer/resources/texture_resource.h"
+#include "skr_renderer/resources/mesh_resource.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 
@@ -53,35 +54,71 @@ void SGameRTModule::on_load(int argc, char** argv)
     tex_vfs_desc.override_mount_dir = u8TextureRoot.c_str();
     tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
 
-    skr::resource::STextureFactory::Root factoryRoot = {};
-    factoryRoot.dstorage_root = textureRoot;
-    factoryRoot.texture_vfs = tex_resource_vfs;
-    factoryRoot.ram_service = ram_service;
-    factoryRoot.vram_service = game_render_device->get_vram_service();
-    factoryRoot.render_device = game_render_device;
-    auto testFactory = skr::resource::STextureFactory::Create(factoryRoot);
-    resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, testFactory);
-    skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
-    resource_system->LoadResource(textureHdl);
-    while (textureHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && 
-        textureHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+    // texture factory
+    skr::resource::STextureFactory* textureFactory = nullptr;
     {
-        resource_system->Update();
+        skr::resource::STextureFactory::Root factoryRoot = {};
+        factoryRoot.dstorage_root = textureRoot;
+        factoryRoot.texture_vfs = tex_resource_vfs;
+        factoryRoot.ram_service = ram_service;
+        factoryRoot.vram_service = game_render_device->get_vram_service();
+        factoryRoot.render_device = game_render_device;
+        textureFactory = skr::resource::STextureFactory::Create(factoryRoot);
+        resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, textureFactory);
     }
-    auto final_status = textureHdl.get_status();
-    if (final_status != SKR_LOADING_STATUS_ERROR)
+    // mesh factory
+    skr::resource::SMeshFactory* meshFactory = nullptr;
     {
-        auto texture = (skr_texture_resource_t*)textureHdl.get_ptr();
-        SKR_LOG_DEBUG("Texture Loaded: format - %d, mips - %d, data size - %d", 
-            texture->format, texture->mips_count, texture->data_size);
-        resource_system->UnloadResource(textureHdl);
-        resource_system->Update();
-        while (textureHdl.get_status() != SKR_LOADING_STATUS_UNLOADED)
+        skr::resource::SMeshFactory::Root factoryRoot = {};
+        meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
+        resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, meshFactory);
+    }
+    // load resources
+    skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
+    skr_resource_handle_t gltfHdl("79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid);
+    resource_system->LoadResource(textureHdl);
+    resource_system->LoadResource(gltfHdl);
+    // texture
+    {
+        while (textureHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && textureHdl.get_status() != SKR_LOADING_STATUS_ERROR)
         {
             resource_system->Update();
         }
+        auto final_status = textureHdl.get_status();
+        if (final_status != SKR_LOADING_STATUS_ERROR)
+        {
+            auto texture = (skr_texture_resource_t*)textureHdl.get_ptr();
+            SKR_LOG_DEBUG("Texture Loaded: format - %d, mips - %d, data size - %d", 
+                texture->format, texture->mips_count, texture->data_size);
+            resource_system->UnloadResource(textureHdl);
+            resource_system->Update();
+            while (textureHdl.get_status() != SKR_LOADING_STATUS_UNLOADED)
+            {
+                resource_system->Update();
+            }
+        }
     }
-    skr::resource::STextureFactory::Destroy(testFactory);
+    // mesh
+    {
+        while (gltfHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && gltfHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+        {
+            resource_system->Update();
+        }
+        auto final_status = gltfHdl.get_status();
+        if (final_status != SKR_LOADING_STATUS_ERROR)
+        {
+            auto mesh = (skr_mesh_resource_id)gltfHdl.get_ptr();
+            SKR_LOG_DEBUG("Mesh Loaded: name - %s, bin0 - %s", mesh->name.c_str(), mesh->bins[0].uri.c_str());
+            resource_system->UnloadResource(gltfHdl);
+            resource_system->Update();
+            while (gltfHdl.get_status() != SKR_LOADING_STATUS_UNLOADED)
+            {
+                resource_system->Update();
+            }
+        }
+    }
+    skr::resource::STextureFactory::Destroy(textureFactory);
+    skr::resource::SMeshFactory::Destroy(meshFactory);
 }
 
 void SGameRTModule::on_unload()
