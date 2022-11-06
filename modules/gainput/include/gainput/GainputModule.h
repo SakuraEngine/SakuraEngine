@@ -1,5 +1,5 @@
 #pragma once
-#include "module/module_manager.hpp"
+#include "module/module.hpp"
 #include "gainput/gainput.h"
 
 class GAINPUT_LIBEXPORT SkrGAInputModule : public skr::IDynamicModule

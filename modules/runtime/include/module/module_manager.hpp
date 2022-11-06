@@ -46,13 +46,4 @@ struct SStaticallyLinkedModuleRegistrant {
         skr_get_module_manager()->registerStaticallyLinkedModule(InModuleName, func);
     }
 };
-
-#define IMPLEMENT_STATIC_MODULE(ModuleImplClass, ModuleName) \
-    inline static const skr::SStaticallyLinkedModuleRegistrant<ModuleImplClass> ModuleRegistrant##ModuleName(#ModuleName);
-
-#define IMPLEMENT_DYNAMIC_MODULE(ModuleImplClass, ModuleName)                \
-    extern "C" RUNTIME_EXPORT skr::IModule* __initializeModule##ModuleName() \
-    {                                                                        \
-        return new ModuleImplClass();                                        \
-    }
 } // namespace skr

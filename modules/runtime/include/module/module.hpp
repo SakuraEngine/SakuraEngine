@@ -106,3 +106,11 @@ struct IStaticModule : public IModule {
 } // namespace skr
 
 #define SKR_MODULE_METADATA(stringdec, ModuleName) RUNTIME_EXTERN_C RUNTIME_EXPORT const char* __skr_module_meta__##ModuleName = stringdec;
+#define IMPLEMENT_STATIC_MODULE(ModuleImplClass, ModuleName) \
+    inline static const skr::SStaticallyLinkedModuleRegistrant<ModuleImplClass> ModuleRegistrant##ModuleName(#ModuleName);
+
+#define IMPLEMENT_DYNAMIC_MODULE(ModuleImplClass, ModuleName)                \
+    extern "C" RUNTIME_EXPORT skr::IModule* __initializeModule##ModuleName() \
+    {                                                                        \
+        return new ModuleImplClass();                                        \
+    }

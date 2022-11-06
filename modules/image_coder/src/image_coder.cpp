@@ -6,18 +6,6 @@
 #include "image_coder_png.hpp"
 #include "image_coder_jpeg.hpp"
 
-void SkrImageCoderModule::on_load(int argc, char** argv)
-{
-    SKR_LOG_TRACE("image coder module loaded!");
-}
-
-void SkrImageCoderModule::on_unload()
-{
-    SKR_LOG_TRACE("image coder module unloaded!");
-}
-
-IMPLEMENT_DYNAMIC_MODULE(SkrImageCoderModule, SkrImageCoder);
-
 skr_image_coder_id skr_image_coder_create_image(EImageCoderFormat format)
 {
     switch (format)

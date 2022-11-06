@@ -1,6 +1,9 @@
-#include "imgui/skr_imgui.config.h"
 #define IMGUI_IMPORT SKR_IMGUI_API
+#include "imgui/skr_imgui.config.h"
+#include <EASTL/vector.h>
+#include <EASTL/string.h>
 #include "utils/log.h"
+#include "platform/input.h"
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui.h"
 #ifdef _WIN32
