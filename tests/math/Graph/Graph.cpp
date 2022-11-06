@@ -193,7 +193,6 @@ TEST(GraphTest, DependencyGraph)
                   << " -> " << ((TestRDGNode*)to)->name.c_str() << std::endl;
     });
     skr::DependencyGraph::Destroy(rdg);
-    delete rdg;
 }
 
 #include "render_graph/frontend/render_graph.hpp"
@@ -205,8 +204,8 @@ TEST(GraphTest, RenderGraphFrontEnd)
     [](render_graph::RenderGraphBuilder& builder) {
         builder.frontend_only();
     });
-    TextureId to_import = (TextureId)1;
-    TextureViewId to_import_view = (TextureViewId)1;
+    CGPUTextureId to_import = (CGPUTextureId)1;
+    CGPUTextureViewId to_import_view = (CGPUTextureViewId)1;
     auto back_buffer = graph->create_texture(
     [=](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
         builder.set_name("backbuffer");
@@ -215,13 +214,13 @@ TEST(GraphTest, RenderGraphFrontEnd)
     [](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
         builder.set_name("gbuffer0")
         .allow_render_target()
-        .format(PF_B8G8R8A8_UNORM);
+        .format(CGPU_FORMAT_B8G8R8A8_UNORM);
     });
     auto gbuffer1 = graph->create_texture(
     [](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
         builder.set_name("gbuffer1")
         .allow_render_target()
-        .format(PF_B8G8R8A8_UNORM);
+        .format(CGPU_FORMAT_B8G8R8A8_UNORM);
     });
     graph->add_render_pass(
     [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
@@ -240,6 +239,13 @@ TEST(GraphTest, RenderGraphFrontEnd)
     render_graph::RenderPassExecuteFunction());
     render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph.gv");
     render_graph::RenderGraph::destroy(graph);
+}
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return result;
 }
 
 #if defined(__clang__)
