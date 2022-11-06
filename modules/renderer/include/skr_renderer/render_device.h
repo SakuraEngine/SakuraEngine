@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "primitive_pass.h"
-#include "effect_processor.h"
+#include "fwd_types.h"
 #include "cgpu/io.h"
 
 #ifdef __cplusplus

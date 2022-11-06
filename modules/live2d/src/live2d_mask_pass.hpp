@@ -1,7 +1,6 @@
 #pragma once
 #include "render_graph/api.h"
-#include "skr_renderer/primitive_draw.h"
-#include "skr_renderer/skr_renderer.h"
+#include "skr_renderer/primitive_pass.h"
 #include "live2d_helpers.hpp"
 
 #include "tracy/Tracy.hpp"

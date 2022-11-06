@@ -2,7 +2,6 @@
 
 #include "utils/io.hpp"
 #include "utils/log.h"
-#include "utils/defer.hpp"
 #include "cgpu/io.hpp"
 
 #include "utils/make_zeroed.hpp"

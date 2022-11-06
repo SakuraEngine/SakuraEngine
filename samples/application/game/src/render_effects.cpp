@@ -10,9 +10,9 @@
 #include "imgui/imgui.h"
 #include "imgui/skr_imgui_rg.h"
 #include "skr_scene/scene.h"
-#include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_mesh.h"
+#include "skr_renderer/render_effect.h"
 #include "gamert.h"
 #include "cube.hpp"
 #include <platform/filesystem.hpp>

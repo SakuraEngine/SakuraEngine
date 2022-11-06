@@ -9,7 +9,6 @@
 #include "platform/vfs.h"
 #include "platform/thread.h"
 #include "utils/defer.hpp"
-#include "utils/format.hpp"
 #include "utils/log.hpp"
 #include "utils/io.hpp"
 

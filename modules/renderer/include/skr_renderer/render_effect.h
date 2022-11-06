@@ -1,10 +1,9 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "ecs/dual.h"
-#include "ecs/dualX.h"
 #include "skr_renderer/primitive_pass.h"
 #ifndef __meta__
-    #include "SkrRenderer/effect_processor.generated.h"
+    #include "SkrRenderer/render_effect.generated.h"
 #endif
 
 typedef const char* skr_render_effect_name_t;
