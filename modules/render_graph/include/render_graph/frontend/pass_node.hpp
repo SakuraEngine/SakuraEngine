@@ -1,6 +1,6 @@
 #pragma once
 #include <EASTL/vector.h>
-#include <gsl/span>
+#include "containers/span.hpp"
 #include "render_graph/frontend/base_types.hpp"
 #include "render_graph/frontend/resource_node.hpp"
 #include "render_graph/frontend/resource_edge.hpp"
@@ -12,8 +12,8 @@ namespace render_graph
 
 struct SKR_RENDER_GRAPH_API PassContext {
     CGPUCommandBufferId cmd;
-    gsl::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
-    gsl::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
+    skr::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
+    skr::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
 
     inline CGPUBufferId resolve(BufferHandle buffer_handle) const
     {
@@ -42,18 +42,18 @@ public:
     SKR_RENDER_GRAPH_API const bool after(const PassNode* other) const;
     SKR_RENDER_GRAPH_API const PassHandle get_handle() const;
 
-    SKR_RENDER_GRAPH_API gsl::span<TextureReadEdge*> tex_read_edges();
-    SKR_RENDER_GRAPH_API gsl::span<TextureRenderEdge*> tex_write_edges();
-    SKR_RENDER_GRAPH_API gsl::span<TextureReadWriteEdge*> tex_readwrite_edges();
+    SKR_RENDER_GRAPH_API skr::span<TextureReadEdge*> tex_read_edges();
+    SKR_RENDER_GRAPH_API skr::span<TextureRenderEdge*> tex_write_edges();
+    SKR_RENDER_GRAPH_API skr::span<TextureReadWriteEdge*> tex_readwrite_edges();
     SKR_RENDER_GRAPH_API void foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)>);
     inline uint32_t textures_count() const
     {
         return (uint32_t)(in_texture_edges.size() + out_texture_edges.size() + inout_texture_edges.size());
     }
 
-    SKR_RENDER_GRAPH_API gsl::span<BufferReadEdge*> buf_read_edges();
-    SKR_RENDER_GRAPH_API gsl::span<BufferReadWriteEdge*> buf_readwrite_edges();
-    SKR_RENDER_GRAPH_API gsl::span<PipelineBufferEdge*> buf_ppl_edges();
+    SKR_RENDER_GRAPH_API skr::span<BufferReadEdge*> buf_read_edges();
+    SKR_RENDER_GRAPH_API skr::span<BufferReadWriteEdge*> buf_readwrite_edges();
+    SKR_RENDER_GRAPH_API skr::span<PipelineBufferEdge*> buf_ppl_edges();
     SKR_RENDER_GRAPH_API void foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)>);
     inline uint32_t buffers_count() const
     {
@@ -76,7 +76,7 @@ protected:
 
 struct RenderPassContext : public PassContext {
     CGPURenderPassEncoderId encoder;
-    gsl::span<CGPUDescriptorSetId> desc_sets;
+    skr::span<CGPUDescriptorSetId> desc_sets;
 };
 using RenderPassExecuteFunction = eastl::function<void(class RenderGraph&, RenderPassContext&)>;
 class RenderPassNode : public PassNode
@@ -103,7 +103,7 @@ protected:
 
 struct SKR_RENDER_GRAPH_API ComputePassContext : public PassContext {
     CGPUComputePassEncoderId encoder;
-    gsl::span<CGPUDescriptorSetId> desc_sets;
+    skr::span<CGPUDescriptorSetId> desc_sets;
 };
 using ComputePassExecuteFunction = eastl::function<void(class RenderGraph&, ComputePassContext&)>;
 class ComputePassNode : public PassNode
@@ -179,17 +179,17 @@ inline const bool PassNode::after(const PassNode* other) const
     const bool _ = order > other->order;
     return _;
 }
-inline gsl::span<TextureReadEdge*> PassNode::tex_read_edges()
+inline skr::span<TextureReadEdge*> PassNode::tex_read_edges()
 {
-    return gsl::span<TextureReadEdge*>(in_texture_edges.data(), in_texture_edges.size());
+    return skr::span<TextureReadEdge*>(in_texture_edges.data(), in_texture_edges.size());
 }
-inline gsl::span<TextureRenderEdge*> PassNode::tex_write_edges()
+inline skr::span<TextureRenderEdge*> PassNode::tex_write_edges()
 {
-    return gsl::span<TextureRenderEdge*>(out_texture_edges.data(), out_texture_edges.size());
+    return skr::span<TextureRenderEdge*>(out_texture_edges.data(), out_texture_edges.size());
 }
-inline gsl::span<TextureReadWriteEdge*> PassNode::tex_readwrite_edges()
+inline skr::span<TextureReadWriteEdge*> PassNode::tex_readwrite_edges()
 {
-    return gsl::span<TextureReadWriteEdge*>(inout_texture_edges.data(), inout_texture_edges.size());
+    return skr::span<TextureReadWriteEdge*>(inout_texture_edges.data(), inout_texture_edges.size());
 }
 inline void PassNode::foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)> f)
 {
@@ -200,17 +200,17 @@ inline void PassNode::foreach_textures(eastl::function<void(TextureNode*, Textur
     for (auto&& e : tex_readwrite_edges())
         f(e->get_texture_node(), e);
 }
-inline gsl::span<BufferReadEdge*> PassNode::buf_read_edges()
+inline skr::span<BufferReadEdge*> PassNode::buf_read_edges()
 {
-    return gsl::span<BufferReadEdge*>(in_buffer_edges.data(), in_buffer_edges.size());
+    return skr::span<BufferReadEdge*>(in_buffer_edges.data(), in_buffer_edges.size());
 }
-inline gsl::span<BufferReadWriteEdge*> PassNode::buf_readwrite_edges()
+inline skr::span<BufferReadWriteEdge*> PassNode::buf_readwrite_edges()
 {
-    return gsl::span<BufferReadWriteEdge*>(out_buffer_edges.data(), out_buffer_edges.size());
+    return skr::span<BufferReadWriteEdge*>(out_buffer_edges.data(), out_buffer_edges.size());
 }
-inline gsl::span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
+inline skr::span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
 {
-    return gsl::span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
+    return skr::span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
 }
 inline void PassNode::foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)> f)
 {

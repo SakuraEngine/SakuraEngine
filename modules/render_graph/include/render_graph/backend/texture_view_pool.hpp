@@ -1,7 +1,5 @@
 #pragma once
 #include <EASTL/unordered_map.h>
-#include "utils/hash.h"
-#include "platform/debug.h"
 #include "cgpu/api.h"
 
 namespace skr

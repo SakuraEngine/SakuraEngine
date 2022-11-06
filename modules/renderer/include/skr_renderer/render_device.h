@@ -5,7 +5,7 @@
 
 #ifdef __cplusplus
 #include "platform/window.h"
-#include "EASTL/vector_map.h"
+#include <EASTL/vector_map.h>
 #ifdef _WIN32
     #include "cgpu/extensions/dstorage_windows.h"
 #endif
