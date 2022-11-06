@@ -8,6 +8,7 @@
     RUNTIME_EXTERN_C RUNTIME_API void* mi_calloc(size_t count, size_t size) SKR_NOEXCEPT;
     RUNTIME_EXTERN_C RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment) SKR_NOEXCEPT;
     RUNTIME_EXTERN_C RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT;
+    RUNTIME_EXTERN_C RUNTIME_API void* mi_new_n(size_t count, size_t size);
     RUNTIME_EXTERN_C RUNTIME_API void* mi_new_aligned(size_t size, size_t alignment);
     RUNTIME_EXTERN_C RUNTIME_API void mi_free(void* p) SKR_NOEXCEPT;
     RUNTIME_EXTERN_C RUNTIME_API void mi_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT;
@@ -34,6 +35,10 @@
     inline static void mi_free(void* ptr)
     {
         free(ptr);
+    }
+    inline static void* mi_new_n(size_t count, size_t size)
+    {
+        return mi_malloc(count * size);
     }
     #define mi_malloc_aligned _aligned_malloc
     #define mi_new_aligned _aligned_malloc
@@ -69,6 +74,13 @@ RUNTIME_API void* sakura_malloc_aligned(size_t size, size_t alignment) SKR_NOEXC
 {
     void* p = mi_malloc_aligned(size, alignment);
     TracyCAlloc(p, size);
+    return p;
+}
+
+RUNTIME_EXTERN_C RUNTIME_API void* sakura_new_n(size_t count, size_t size)
+{
+    void* p = mi_new_n(count, size);
+    TracyCAlloc(p, size * count);
     return p;
 }
 

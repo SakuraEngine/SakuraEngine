@@ -87,7 +87,7 @@ namespace eastl
 
 		EA_DISABLE_VC_WARNING(4647)
 		template <typename T> // We check for has_trivial_constructor only because the VC++ is_pod does. Is it due to some compiler bug?
-		struct is_pod : public eastl::integral_constant<bool, (__has_trivial_constructor(T) && __is_pod(T) && !eastl::is_hat_type<T>::value) || eastl::is_void<T>::value || eastl::is_scalar<T>::value>{};
+		struct is_pod : public eastl::integral_constant<bool, (__is_trivially_constructible(T) && __is_pod(T) && !eastl::is_hat_type<T>::value) || eastl::is_void<T>::value || eastl::is_scalar<T>::value>{};
 		EA_RESTORE_VC_WARNING()
 	
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(EA_COMPILER_GNUC) || (defined(EA_COMPILER_CLANG) && EA_COMPILER_HAS_FEATURE(is_pod)))
@@ -186,12 +186,12 @@ namespace eastl
 		#define EASTL_TYPE_TRAIT_has_trivial_constructor_CONFORMANCE 1    // has_trivial_constructor is conforming.
 
 		template <typename T> 
-		struct has_trivial_constructor : public eastl::integral_constant<bool, (__has_trivial_constructor(T) || eastl::is_pod<T>::value) && !eastl::is_hat_type<T>::value>{};
+		struct has_trivial_constructor : public eastl::integral_constant<bool, (__is_trivially_constructible(T) || eastl::is_pod<T>::value) && !eastl::is_hat_type<T>::value>{};
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(_MSC_VER) || defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_CLANG))
 		#define EASTL_TYPE_TRAIT_has_trivial_constructor_CONFORMANCE 1    // has_trivial_constructor is conforming.
 
 		template <typename T> 
-		struct has_trivial_constructor : public eastl::integral_constant<bool, __has_trivial_constructor(T) || eastl::is_pod<T>::value>{};
+		struct has_trivial_constructor : public eastl::integral_constant<bool, __is_trivially_constructible(T) || eastl::is_pod<T>::value>{};
 	#else
 		#define EASTL_TYPE_TRAIT_has_trivial_constructor_CONFORMANCE 0    // has_trivial_constructor is not fully conforming. Can return false negatives.
 

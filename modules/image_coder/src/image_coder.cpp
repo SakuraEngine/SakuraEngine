@@ -1,6 +1,7 @@
 #include "utils/log.h"
 #include "utils/defer.hpp"
 #include "platform/memory.h"
+#include "platform/debug.h"
 #include "skr_image_coder/skr_image_coder.h"
 #include "image_coder_png.hpp"
 #include "image_coder_jpeg.hpp"

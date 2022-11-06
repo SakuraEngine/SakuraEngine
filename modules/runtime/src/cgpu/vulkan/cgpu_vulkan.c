@@ -1,3 +1,4 @@
+#include "platform/debug.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/flags.h"
 #include "utils/log.h"

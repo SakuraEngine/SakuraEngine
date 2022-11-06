@@ -1,5 +1,4 @@
 #include "../../cgpu/common/utils.h"
-#include "platform/vfs.h"
 #include "platform/thread.h"
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
@@ -159,7 +158,7 @@ void SVMemCCModule::imgui_ui()
 
         // Demonstrate using clipper for large vertical lists
         ImGuiListClipper clipper;
-        clipper.Begin(buffers.size());
+        clipper.Begin((int)buffers.size());
         while (clipper.Step())
             for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
             {
