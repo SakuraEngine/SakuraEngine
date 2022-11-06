@@ -1,8 +1,6 @@
 #pragma once
 #include <EASTL/unordered_map.h>
 #include <EASTL/deque.h>
-#include "utils/hash.h"
-#include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
 
 namespace skr
@@ -56,70 +54,5 @@ protected:
     CGPUDeviceId device;
     eastl::unordered_map<Key, eastl::deque<PooledTexture>> textures;
 };
-
-FORCEINLINE TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
-    : device(device)
-    , flags(desc.flags)
-    , width(desc.width)
-    , height(desc.height)
-    , depth(desc.depth ? desc.depth : 1)
-    , array_size(desc.array_size ? desc.array_size : 1)
-    , format(desc.format)
-    , mip_levels(desc.mip_levels ? desc.mip_levels : 1)
-    , sample_count(desc.sample_count ? desc.sample_count : CGPU_SAMPLE_COUNT_1)
-    , sample_quality(desc.sample_quality)
-    , descriptors(desc.descriptors)
-    , is_dedicated(desc.is_dedicated)
-{
-}
-
-FORCEINLINE TexturePool::Key::operator size_t() const
-{
-    return skr_hash(this, sizeof(*this), (size_t)device);
-}
-
-FORCEINLINE void TexturePool::initialize(CGPUDeviceId device_)
-{
-    device = device_;
-}
-
-inline void TexturePool::finalize()
-{
-    for (auto&& queue : textures)
-    {
-        while (!queue.second.empty())
-        {
-            cgpu_free_texture(queue.second.front().texture);
-            queue.second.pop_front();
-        }
-    }
-}
-
-inline eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, AllocationMark mark)
-{
-    eastl::pair<CGPUTextureId, ECGPUResourceState> allocated = {
-        nullptr, CGPU_RESOURCE_STATE_UNDEFINED
-    };
-    auto key = make_zeroed<TexturePool::Key>(device, desc);
-    if (textures[key].empty())
-    {
-        auto new_tex = cgpu_create_texture(device, &desc);
-        textures[key].emplace_back(new_tex, desc.start_state, mark);
-    }
-    textures[key].front().mark = mark;
-    allocated = { textures[key].front().texture, textures[key].front().state };
-    textures[key].pop_front();
-    return allocated;
-}
-
-FORCEINLINE void TexturePool::deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, AllocationMark mark)
-{
-    auto key = make_zeroed<TexturePool::Key>(device, desc);
-    for (auto&& iter : textures[key])
-    {
-        if (iter.texture == texture) return;
-    }
-    textures[key].emplace_back(texture, final_state, mark);
-}
 } // namespace render_graph
 } // namespace skr

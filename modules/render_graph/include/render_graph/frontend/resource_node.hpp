@@ -1,5 +1,4 @@
 #pragma once
-#include <atomic>
 #include "render_graph/frontend/base_types.hpp"
 
 enum

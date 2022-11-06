@@ -1,10 +1,8 @@
 #pragma once
-#include "containers/hashmap.hpp"
 #include "SkrRenderer/module.configure.h"
 #include "skr_renderer/fwd_types.h"
 #include "platform/filesystem.hpp"
 #include "utils/io.h"
-#include "utils/types.h"
 #include "cgpu/io.h"
 #ifndef __meta__
 #include "SkrRenderer/resources/texture_resource.generated.h"

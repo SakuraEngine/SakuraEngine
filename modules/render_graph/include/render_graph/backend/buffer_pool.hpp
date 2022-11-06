@@ -1,9 +1,7 @@
 #pragma once
+#include "platform/configure.h"
 #include <EASTL/unordered_map.h>
 #include <EASTL/deque.h>
-#include "platform/configure.h"
-#include "utils/hash.h"
-#include "utils/make_zeroed.hpp"
 #include "cgpu/api.h"
 
 namespace skr
@@ -19,8 +17,8 @@ public:
     };
     struct PooledBuffer
     {
-        PooledBuffer() = delete;
-        PooledBuffer(CGPUBufferId buffer, ECGPUResourceState state, AllocationMark mark)
+        RUNTIME_FORCEINLINE PooledBuffer() = delete;
+        RUNTIME_FORCEINLINE PooledBuffer(CGPUBufferId buffer, ECGPUResourceState state, AllocationMark mark)
             : buffer(buffer), state(state), mark(mark)
         {
 
@@ -55,8 +53,5 @@ protected:
     CGPUDeviceId device;
     eastl::unordered_map<Key, eastl::deque<PooledBuffer>> buffers;
 };
-
-
-
 } // namespace render_graph
 } // namespace skr

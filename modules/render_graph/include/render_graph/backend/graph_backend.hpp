@@ -17,94 +17,15 @@ public:
     friend class RenderGraphBackend;
 
     RenderGraphFrameExecutor() = default;
-    void initialize(CGPUQueueId gfx_queue, CGPUDeviceId device)
-    {
-        CGPUCommandPoolDescriptor pool_desc = {};
-        gfx_cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
-        CGPUCommandBufferDescriptor cmd_desc = {};
-        cmd_desc.is_secondary = false;
-        gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
-        exec_fence = cgpu_create_fence(device);
+    void initialize(CGPUQueueId gfx_queue, CGPUDeviceId device);
+    void finalize();
 
-        CGPUMarkerBufferDescriptor marker_desc = {};
-        marker_desc.marker_count = 1000;
-        marker_buffer = cgpu_create_marker_buffer(device, &marker_desc);
-    }
+    void commit(CGPUQueueId gfx_queue, uint64_t frame_index);
+    void reset_begin(TextureViewPool& texture_view_pool);
 
-    void commit(CGPUQueueId gfx_queue, uint64_t frame_index)
-    {
-        CGPUQueueSubmitDescriptor submit_desc = {};
-        submit_desc.cmds = &gfx_cmd_buf;
-        submit_desc.cmds_count = 1;
-        submit_desc.signal_fence = exec_fence;
-        cgpu_submit_queue(gfx_queue, &submit_desc);
-        exec_frame = frame_index;
-    }
+    void write_marker(const char* message);
+    void print_error_trace(uint64_t frame_index);
 
-    void reset_begin(TextureViewPool& texture_view_pool)
-    {
-        for (auto desc_heap : desc_set_pool)
-        {
-            desc_heap.second->reset();
-        }
-        for (auto aliasing_texture : aliasing_textures)
-        {
-            texture_view_pool.erase(aliasing_texture);
-            cgpu_free_texture(aliasing_texture);
-        }
-        aliasing_textures.clear();
-
-        marker_idx = 0;
-        marker_messages.clear();
-        valid_marker_val++;
-
-        cgpu_reset_command_pool(gfx_cmd_pool);
-        cgpu_cmd_begin(gfx_cmd_buf);
-        write_marker("Frame Begin");
-    }
-
-    void write_marker(const char* message)
-    {
-        cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, valid_marker_val);
-        marker_messages.push_back(message);
-    }
-
-    void print_error_trace(uint64_t frame_index)
-    {
-        auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->cpu_mapped_address;
-        if (fill_data[0] == 0) return;// begin cmd is unlikely to fail on gpu
-        SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
-        for (uint32_t i = 0; i < marker_messages.size(); i++)
-        {
-            if (fill_data[i] != valid_marker_val)
-            {
-                SKR_LOG_ERROR("\tFailed Command %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
-            }
-            else
-            {
-                SKR_LOG_INFO("\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
-            }
-        }
-    }
-
-    void finalize()
-    {
-        if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
-        if (gfx_cmd_pool) cgpu_free_command_pool(gfx_cmd_pool);
-        if (exec_fence) cgpu_free_fence(exec_fence);
-        gfx_cmd_buf = nullptr;
-        gfx_cmd_pool = nullptr;
-        exec_fence = nullptr;
-        for (auto desc_set_heap : desc_set_pool)
-        {
-            desc_set_heap.second->destroy();
-        }
-        for (auto aliasing_tex : aliasing_textures)
-        {
-            cgpu_free_texture(aliasing_tex);
-        }
-        if (marker_buffer) cgpu_free_marker_buffer(marker_buffer);
-    }
     CGPUCommandPoolId gfx_cmd_pool = nullptr;
     CGPUCommandBufferId gfx_cmd_buf = nullptr;
     CGPUFenceId exec_fence = nullptr;

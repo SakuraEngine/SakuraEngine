@@ -1,6 +1,8 @@
 ﻿#include "render_graph/backend/graph_backend.hpp"
+#include "platform/debug.h"
 #include "utils/hash.h"
-#include "fmt/format.h"
+#include "utils/log.h"
+#include "utils/format.hpp"
 #include <EASTL/set.h>
 
 #include "tracy/Tracy.hpp"
@@ -9,167 +11,99 @@ namespace skr
 {
 namespace render_graph
 {
+// Render Graph Executor
 
-TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc)
-    : device(device)
-    , texture(desc.texture)
-    , format(desc.format)
-    , usages(desc.usages)
-    , aspects(desc.aspects)
-    , dims(desc.dims)
-    , base_array_layer(desc.base_array_layer)
-    , array_layer_count(desc.array_layer_count)
-    , base_mip_level(desc.base_mip_level)
-    , mip_level_count(desc.mip_level_count)
-    , tex_width(desc.texture->width)
-    , tex_height(desc.texture->height)
-    , unique_id(desc.texture->unique_id)
-
+void RenderGraphFrameExecutor::initialize(CGPUQueueId gfx_queue, CGPUDeviceId device)
 {
+    CGPUCommandPoolDescriptor pool_desc = {};
+    gfx_cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
+    CGPUCommandBufferDescriptor cmd_desc = {};
+    cmd_desc.is_secondary = false;
+    gfx_cmd_buf = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
+    exec_fence = cgpu_create_fence(device);
 
+    CGPUMarkerBufferDescriptor marker_desc = {};
+    marker_desc.marker_count = 1000;
+    marker_buffer = cgpu_create_marker_buffer(device, &marker_desc);
 }
 
-uint32_t TextureViewPool::erase(CGPUTextureId texture)
+void RenderGraphFrameExecutor::commit(CGPUQueueId gfx_queue, uint64_t frame_index)
 {
-    auto prev_size = (uint32_t)views.size();
-    for (auto it = views.begin(); it != views.end();)
+    CGPUQueueSubmitDescriptor submit_desc = {};
+    submit_desc.cmds = &gfx_cmd_buf;
+    submit_desc.cmds_count = 1;
+    submit_desc.signal_fence = exec_fence;
+    cgpu_submit_queue(gfx_queue, &submit_desc);
+    exec_frame = frame_index;
+}
+
+void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
+{
+    for (auto desc_heap : desc_set_pool)
     {
-        if (it->first.texture == texture)
+        desc_heap.second->reset();
+    }
+    for (auto aliasing_texture : aliasing_textures)
+    {
+        texture_view_pool.erase(aliasing_texture);
+        cgpu_free_texture(aliasing_texture);
+    }
+    aliasing_textures.clear();
+
+    marker_idx = 0;
+    marker_messages.clear();
+    valid_marker_val++;
+
+    cgpu_reset_command_pool(gfx_cmd_pool);
+    cgpu_cmd_begin(gfx_cmd_buf);
+    write_marker("Frame Begin");
+}
+
+void RenderGraphFrameExecutor::write_marker(const char* message)
+{
+    cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, valid_marker_val);
+    marker_messages.push_back(message);
+}
+
+void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
+{
+    auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->cpu_mapped_address;
+    if (fill_data[0] == 0) return;// begin cmd is unlikely to fail on gpu
+    SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
+    for (uint32_t i = 0; i < marker_messages.size(); i++)
+    {
+        if (fill_data[i] != valid_marker_val)
         {
-            cgpu_free_texture_view(it->second.texture_view);
-            it = views.erase(it);
+            SKR_LOG_ERROR("\tFailed Command %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
         }
         else
-            ++it;
-    }
-    return prev_size - (uint32_t)views.size();
-}
-
-TextureViewPool::Key::operator size_t() const
-{
-    return skr_hash(this, sizeof(*this), (size_t)device);
-}
-
-void TextureViewPool::initialize(CGPUDeviceId device_)
-{
-    device = device_;
-}
-
-void TextureViewPool::finalize()
-{
-    for (auto&& view : views)
-    {
-        cgpu_free_texture_view(view.second.texture_view);
-    }
-    views.clear();
-}
-
-CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index)
-{
-    const auto key = make_zeroed<TextureViewPool::Key>(device, desc);
-    auto found = views.find(key);
-    if (found != views.end())
-    {
-        // SKR_LOG_TRACE("Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
-        //    key.texture->unique_id, found->second.texture_view->info.texture->unique_id);
-        found->second.mark.frame_index = frame_index;
-        SKR_ASSERT(found->first.texture);
-        return found->second.texture_view;
-    }
-    else
-    {
-        // SKR_LOG_TRACE("Creating texture view for texture %p (tex %p)", desc.texture, key.texture);
-        CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
-        AllocationMark mark = {frame_index, 0};
-        views[key] = PooledTextureView(new_view, mark);
-        return new_view;
-    }
-}
-
-BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
-    : device(device)
-    , descriptors(desc.descriptors)
-    , memory_usage(desc.memory_usage)
-    , format(desc.format)
-    , flags(desc.flags)
-    , first_element(desc.first_element)
-    , elemet_count(desc.elemet_count)
-    , element_stride(desc.element_stride)
-{
-}
-
-BufferPool::Key::operator size_t() const
-{
-    return skr_hash(this, sizeof(*this), (size_t)device);
-}
-
-void BufferPool::initialize(CGPUDeviceId device_)
-{
-    device = device_;
-}
-
-void BufferPool::finalize()
-{
-    for (auto&& [key, queue] : buffers)
-    {
-        while (!queue.empty())
         {
-            cgpu_free_buffer(queue.front().buffer);
-            queue.pop_front();
+            SKR_LOG_INFO("\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
         }
     }
 }
 
-eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
+void RenderGraphFrameExecutor::finalize()
 {
-    eastl::pair<CGPUBufferId, ECGPUResourceState> allocated = {
-        nullptr, CGPU_RESOURCE_STATE_UNDEFINED
-    };
-    auto key = make_zeroed<BufferPool::Key>(device, desc);
-    int32_t found_index = -1;
-    for (uint32_t i = 0; i < buffers[key].size(); ++i)
+    if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
+    if (gfx_cmd_pool) cgpu_free_command_pool(gfx_cmd_pool);
+    if (exec_fence) cgpu_free_fence(exec_fence);
+    gfx_cmd_buf = nullptr;
+    gfx_cmd_pool = nullptr;
+    exec_fence = nullptr;
+    for (auto desc_set_heap : desc_set_pool)
     {
-        auto&& pooled = buffers[key][i];
-        if (pooled.mark.frame_index < min_frame_index && pooled.buffer->size >= desc.size)
-        {
-            found_index = i;
-            break;
-        }
+        desc_set_heap.second->destroy();
     }
-    if ( found_index > 0 )
+    for (auto aliasing_tex : aliasing_textures)
     {
-        PooledBuffer found = buffers[key][found_index];
-        buffers[key].erase(buffers[key].begin() + found_index);
-        buffers[key].emplace_front(found.buffer, found.state, mark);
+        cgpu_free_texture(aliasing_tex);
     }
-    if ( found_index < 0 )
-    {
-        auto new_buffer = cgpu_create_buffer(device, &desc);
-        buffers[key].emplace_front(new_buffer, desc.start_state , mark);
-    }
-    allocated = { buffers[key].front().buffer, buffers[key].front().state };
-    buffers[key].pop_front();
-    return allocated;
+    if (marker_buffer) cgpu_free_marker_buffer(marker_buffer);
 }
 
-void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffer, ECGPUResourceState final_state, AllocationMark mark)
-{
-    auto key = make_zeroed<BufferPool::Key>(device, desc);
-    for (auto&& iter : buffers[key])
-    {
-        if (iter.buffer == buffer) 
-            return;
-    }
-    buffers[key].emplace_back(buffer, final_state, mark);
-}
+// Render Graph Backend
 
-}
-}
-
-namespace skr
-{
-namespace render_graph
-{
 RenderGraphBackend::RenderGraphBackend(const RenderGraphBuilder& builder)
     : RenderGraph(builder)
     , gfx_queue(builder.gfx_queue)
@@ -607,7 +541,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     CGPUEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
-    executor.write_marker(fmt::format("Pass-{}-BeginBarrier", pass->get_name()).c_str());
+    executor.write_marker(skr::format("Pass-{}-BeginBarrier", pass->get_name()).c_str());
     // color attachments
     // TODO: MSAA
     eastl::vector<CGPUColorAttachment> color_attachments = {};
@@ -669,21 +603,21 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = &ds_attachment;
     stack.cmd = executor.gfx_cmd_buf;
-    executor.write_marker(fmt::format("Pass-{}-BeginPass", pass->get_name()).c_str());
+    executor.write_marker(skr::format("Pass-{}-BeginPass", pass->get_name()).c_str());
     stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
     if (pass->pipeline) cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
         if (!desc_set->updated) continue;
         cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
-        // executor.write_marker(fmt::format("Pass-{}-BindDescriptors", pass->get_name()).c_str());
+        // executor.write_marker(skr::format("Pass-{}-BindDescriptors", pass->get_name()).c_str());
     }
     {
         ZoneScopedN("PassExecutor");
         pass->executor(*this, stack);
     }
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
-    executor.write_marker(fmt::format("Pass-{}-EndRenderPass", pass->get_name()).c_str());
+    executor.write_marker(skr::format("Pass-{}-EndRenderPass", pass->get_name()).c_str());
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
     deallocate_resources(pass);
