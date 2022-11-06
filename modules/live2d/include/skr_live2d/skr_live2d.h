@@ -2,7 +2,7 @@
 #include "SkrLive2D/module.configure.h"
 
 #ifdef __cplusplus
-    #include "module/module_manager.hpp"
+#include "module/module.hpp"
 
 class SKR_LIVE2D_API SkrLive2DModule : public skr::IDynamicModule
 {

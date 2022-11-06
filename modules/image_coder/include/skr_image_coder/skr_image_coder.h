@@ -1,18 +1,6 @@
 #pragma once
+#include "platform/configure.h"
 #include "SkrImageCoder/module.configure.h"
-
-#ifdef __cplusplus
-    #include "module/module_manager.hpp"
-    #include <containers/span.hpp>
-
-class SKR_IMAGE_CODER_API SkrImageCoderModule : public skr::IDynamicModule
-{
-public:
-    virtual void on_load(int argc, char** argv) override;
-    virtual void on_unload() override;
-};
-
-#endif
 
 typedef enum EImageCoderFormat {
     IMAGE_CODER_FORMAT_INVALID = -1,
@@ -51,6 +39,8 @@ typedef enum EImageCoderCompression {
 typedef uint32_t ImageCoderCompression;
 
 #ifdef __cplusplus
+#include <containers/span.hpp>
+
 struct SKR_IMAGE_CODER_API skr_image_coder_t {
     virtual ~skr_image_coder_t() = default;
     virtual bool set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;

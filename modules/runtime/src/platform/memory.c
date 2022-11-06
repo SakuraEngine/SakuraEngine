@@ -142,6 +142,12 @@ RUNTIME_API void* sakura_calloc(size_t count, size_t size) SKR_NOEXCEPT
     return calloc(count, size);
 }
 
+RUNTIME_EXTERN_C RUNTIME_API void* sakura_new_n(size_t count, size_t size)
+{
+    void* p = malloc(count * size);
+    return p;
+}
+
 RUNTIME_API void* sakura_calloc_aligned(size_t count, size_t size, size_t alignment) SKR_NOEXCEPT
 {
     return calloc_aligned(count, size, alignment);

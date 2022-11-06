@@ -2,6 +2,7 @@
 #include "platform/thread.h"
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
+#include "module/module.hpp"
 #include "render_graph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/skr_imgui_rg.h"
