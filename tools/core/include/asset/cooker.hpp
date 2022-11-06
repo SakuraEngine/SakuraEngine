@@ -87,7 +87,7 @@ protected:
 
     skr_guid_t importerType;
     uint32_t importerVersion = 0;
-    size_t cookerVersion = 0;
+    uint32_t cookerVersion = 0;
 
     SAssetRecord* record = nullptr;
     SImporter* importer = nullptr;

@@ -11,236 +11,65 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
-    #include <EASTL/string.h>
-    #include <EASTL/vector.h>
-    #include "resource/resource_handle.h"
-    #include "fmt/format.h"
-    #include "containers/hashmap.hpp"
-    #include "platform/debug.h"
+#include <EASTL/string.h>
+#include <EASTL/vector.h>
+#include "fmt/format.h"
+#include "containers/hashmap.hpp"
+
+// forward declaration for resources
+struct skr_resource_handle_t;
+namespace skr::resource { template <class T> struct TResourceHandle; }
+// end forward declaration for resources
 
 struct RUNTIME_API skr_json_writer_t {
 public:
     using TChar = char;
     using TSize = size_t;
-    fmt::memory_buffer buffer;
-    bool _hasRoot = false;
 
+    skr_json_writer_t(size_t levelDepth);
+    inline bool IsComplete() { return _hasRoot && _levelStack.empty(); }
+    eastl::string Str() const;
+    bool Bool(bool b);
+    bool Int(int32_t i);
+    bool UInt(uint32_t i);
+    bool Int64(int64_t i);
+    bool UInt64(uint64_t i);
+    bool Double(double d);
+    bool RawNumber(const TChar* str, TSize length);
+    bool RawNumber(std::basic_string_view<TChar> view);
+    bool String(const TChar* str, TSize length);
+    bool String(std::basic_string_view<TChar> view);
+    bool StartObject();
+    bool Key(const TChar* str, TSize length) { return String(str, length); }
+    bool Key(std::basic_string_view<TChar> view) { return String(view.data(), view.size()); }
+    bool EndObject();
+    bool StartArray();
+    bool EndArray();
+    bool RawValue(const TChar* str, TSize length, ESkrJsonType type);
+    bool RawValue(std::basic_string_view<TChar> view, ESkrJsonType type);
+
+    fmt::memory_buffer buffer;
+protected:
     struct Level {
         bool isArray = false;
         uint32_t valueCount = 0;
     };
+    bool _WriteBool(bool b);
+    bool _WriteInt(int32_t i);
+    bool _WriteUInt(uint32_t i);
+    bool _WriteInt64(int64_t i);
+    bool _WriteUInt64(uint64_t i);
+    bool _WriteDouble(double d);
+    bool _WriteString(const TChar* str, TSize length);
+    bool _WriteStartObject();
+    bool _WriteEndObject();
+    bool _WriteStartArray();
+    bool _WriteEndArray();
+    bool _WriteRawValue(const TChar* str, TSize length);
+    bool _Prefix(ESkrJsonType type);
 
+    bool _hasRoot = false;
     eastl::vector<Level> _levelStack;
-
-    skr_json_writer_t(size_t levelDepth)
-    {
-        _levelStack.reserve(levelDepth);
-    }
-
-    eastl::string Str() const
-    {
-        SKR_ASSERT(_levelStack.size() == 0);
-        return { buffer.data(), buffer.size() };
-    }
-
-    bool IsComplete() { return _hasRoot && _levelStack.empty(); }
-
-    bool Bool(bool b)
-    {
-        _Prefix(SKR_JSONTYPE_BOOL);
-        return _WriteBool(b);
-    }
-    bool Int(int32_t i)
-    {
-        _Prefix(SKR_JSONTYPE_NUMBER);
-        return _WriteInt(i);
-    }
-    bool UInt(uint32_t i)
-    {
-        _Prefix(SKR_JSONTYPE_NUMBER);
-        return _WriteUInt(i);
-    }
-    bool Int64(int64_t i)
-    {
-        _Prefix(SKR_JSONTYPE_NUMBER);
-        return _WriteInt64(i);
-    }
-    bool UInt64(uint64_t i)
-    {
-        _Prefix(SKR_JSONTYPE_NUMBER);
-        return _WriteUInt64(i);
-    }
-    bool Double(double d)
-    {
-        _Prefix(SKR_JSONTYPE_NUMBER);
-        return _WriteDouble(d);
-    }
-    bool RawNumber(const TChar* str, TSize length)
-    {
-        _Prefix(SKR_JSONTYPE_NUMBER);
-        return _WriteRawValue(str, length);
-    }
-    bool RawNumber(std::basic_string_view<TChar> view) { return RawNumber(view.data(), view.size()); }
-    bool String(const TChar* str, TSize length)
-    {
-        _Prefix(SKR_JSONTYPE_STRING);
-        return _WriteString(str, length);
-    }
-    bool String(std::basic_string_view<TChar> view) { return String(view.data(), view.size()); }
-    bool StartObject()
-    {
-        _Prefix(SKR_JSONTYPE_OBJECT);
-        _levelStack.emplace_back();
-        return _WriteStartObject();
-    }
-    bool Key(const TChar* str, TSize length) { return String(str, length); }
-    bool Key(std::basic_string_view<TChar> view) { return String(view.data(), view.size()); }
-    bool EndObject()
-    {
-        SKR_ASSERT(_levelStack.size() > 0);                 // not inside an Object
-        SKR_ASSERT(!_levelStack.back().isArray);            // currently inside an Array, not Object
-        SKR_ASSERT(0 == _levelStack.back().valueCount % 2); // Object has a Key without a Value
-        _levelStack.pop_back();
-        return _WriteEndObject();
-    }
-    bool StartArray()
-    {
-        _Prefix(SKR_JSONTYPE_ARRAY);
-        _levelStack.push_back({ true, 0 });
-        return _WriteStartArray();
-    }
-    bool EndArray()
-    {
-        SKR_ASSERT(_levelStack.size() > 0);     // not inside an Object
-        SKR_ASSERT(_levelStack.back().isArray); // currently inside an Array, not Object
-        _levelStack.pop_back();
-        return _WriteEndArray();
-    }
-    bool RawValue(const TChar* str, TSize length, ESkrJsonType type)
-    {
-        _Prefix(type);
-        return _WriteRawValue(str, length);
-    }
-    bool RawValue(std::basic_string_view<TChar> view, ESkrJsonType type) { return RawValue(view.data(), view.size(), type); }
-
-    bool _WriteBool(bool b)
-    {
-        if (b)
-            buffer.append(std::string_view("true"));
-        else
-            buffer.append(std::string_view("false"));
-        return true;
-    }
-    bool _WriteInt(int32_t i)
-    {
-        fmt::format_to(std::back_inserter(buffer), "{}", i);
-        return true;
-    }
-    bool _WriteUInt(uint32_t i)
-    {
-        fmt::format_to(std::back_inserter(buffer), "{}", i);
-        return true;
-    }
-    bool _WriteInt64(int64_t i)
-    {
-        fmt::format_to(std::back_inserter(buffer), "{}", i);
-        return true;
-    }
-    bool _WriteUInt64(uint64_t i)
-    {
-        fmt::format_to(std::back_inserter(buffer), "{}", i);
-        return true;
-    }
-    bool _WriteDouble(double d)
-    {
-        fmt::format_to(std::back_inserter(buffer), "{}", d);
-        return true;
-    }
-    bool _WriteString(const TChar* str, TSize length)
-    {
-        static const char hexDigits[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-        static const char escape[256] = {
-    #define Z16 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            // 0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
-            'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'b', 't', 'n', 'u', 'f', 'r', 'u', 'u', // 00
-            'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', // 10
-            0, 0, '"', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,                               // 20
-            Z16, Z16,                                                                       // 30~4F
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\\', 0, 0, 0,                              // 50
-            Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16                                // 60~FF
-    #undef Z16
-        };
-        buffer.reserve(buffer.size() + 2 + length * 6);
-        buffer.push_back('\"');
-        for (TSize i = 0; i < length; ++i)
-        {
-            const char c = str[i];
-            if (escape[static_cast<unsigned char>(c)])
-            {
-                buffer.push_back('\\');
-                buffer.push_back(escape[static_cast<unsigned char>(c)]);
-                if (escape[static_cast<unsigned char>(c)] == 'u')
-                {
-                    buffer.push_back('0');
-                    buffer.push_back('0');
-                    buffer.push_back(hexDigits[static_cast<unsigned char>(c) >> 4]);
-                    buffer.push_back(hexDigits[static_cast<unsigned char>(c) & 0xF]);
-                }
-            }
-            else
-                buffer.push_back(c);
-        }
-        buffer.push_back('\"');
-        return true;
-    }
-    bool _WriteStartObject()
-    {
-        buffer.push_back('{');
-        return true;
-    }
-    bool _WriteEndObject()
-    {
-        buffer.push_back('}');
-        return true;
-    }
-    bool _WriteStartArray()
-    {
-        buffer.push_back('[');
-        return true;
-    }
-    bool _WriteEndArray()
-    {
-        buffer.push_back(']');
-        return true;
-    }
-    bool _WriteRawValue(const TChar* str, TSize length)
-    {
-        buffer.append(str, str + length);
-        return true;
-    }
-    bool _Prefix(ESkrJsonType type)
-    {
-        if (_levelStack.size() != 0)
-        { // this value is not at root
-            Level& level = _levelStack.back();
-            if (level.valueCount > 0)
-            {
-                if (level.isArray)
-                    buffer.push_back(','); // add comma if it is not the first element in array
-                else                       // in object
-                    buffer.push_back((level.valueCount % 2 == 0) ? ',' : ':');
-            }
-            if (!level.isArray && level.valueCount % 2 == 0)
-                SKR_ASSERT(type == SKR_JSONTYPE_STRING); // if it's in object, then even number should be a name
-            level.valueCount++;
-        }
-        else
-        {
-            SKR_ASSERT(!_hasRoot); // Should only has one and only one root.
-            _hasRoot = true;
-        }
-        return true;
-    }
 };
 #else
 typedef struct skr_json_writer_t skr_json_writer_t;

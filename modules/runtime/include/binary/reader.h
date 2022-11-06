@@ -1,5 +1,6 @@
 #pragma once
-#include "EASTL/string.h"
+#include <EASTL/vector.h>
+#include <EASTL/string.h>
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
 #include "containers/hashmap.hpp"

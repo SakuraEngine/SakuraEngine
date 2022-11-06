@@ -5,7 +5,7 @@
 #include "utils/log.h"
 #include "render_graph/frontend/render_graph.hpp"
 #include "platform/vfs.h"
-#include "skr_renderer/effect_processor.h"
+#include "skr_renderer/render_effect.h"
 #include "skr_renderer/skr_renderer.h"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"

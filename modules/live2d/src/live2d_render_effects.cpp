@@ -20,6 +20,7 @@
 
 #include "skr_renderer/primitive_draw.h"
 #include "skr_renderer/skr_renderer.h"
+#include "skr_renderer/render_effect.h"
 
 #include "live2d_model_pass.hpp"
 #include "live2d_mask_pass.hpp"

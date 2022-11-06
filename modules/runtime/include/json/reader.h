@@ -1,12 +1,16 @@
 #pragma once
 #include "platform/configure.h"
-#include "resource/resource_handle.h"
 
 #if defined(__cplusplus)
-    #include "simdjson.h"
-    #include "EASTL/string.h"
-    #include "containers/hashmap.hpp"
-    #include "EASTL/vector.h"
+#include <EASTL/string.h>
+#include <EASTL/vector.h>
+#include "simdjson.h"
+#include "containers/hashmap.hpp"
+
+// forward declaration for resources
+struct skr_resource_handle_t;
+namespace skr::resource { template <class T> struct TResourceHandle; }
+// end forward declaration for resources
 
 struct RUNTIME_API skr_json_reader_t {
     simdjson::ondemand::value* json;

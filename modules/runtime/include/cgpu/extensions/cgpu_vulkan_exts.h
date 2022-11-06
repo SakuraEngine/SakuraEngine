@@ -1,9 +1,13 @@
 #pragma once
-#include "cgpu/backend/vulkan/cgpu_vulkan.h"
+#include "cgpu/api.h"
+#include "platform/configure.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// forward declaration for vulkan_core.h
+struct VkDebugUtilsMessengerCreateInfoEXT;
+struct VkDebugReportCallbackCreateInfoEXT;
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
+typedef struct VkBuffer_T* VkBuffer;
+// end forward declaration for vulkan_core.h
 
 typedef struct CGPUVulkanInstanceDescriptor {
     CGPU_CHAINED_DESCRIPTOR_HEADER
@@ -19,14 +23,12 @@ typedef struct CGPUVulkanInstanceDescriptor {
     const char** ppDeviceExtensions;
     // Count of Addition Physical Device Extensions
     uint32_t mDeviceExtensionCount;
-    const VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessenger;
-    const VkDebugReportCallbackCreateInfoEXT* pDebugReportMessenger;
+    const struct VkDebugUtilsMessengerCreateInfoEXT* pDebugUtilsMessenger;
+    const struct VkDebugReportCallbackCreateInfoEXT* pDebugReportMessenger;
 } CGPUVulkanInstanceDescriptor;
 
+RUNTIME_EXTERN_C RUNTIME_API 
+VkCommandBuffer cgpu_vulkan_get_command_buffer(CGPUCommandBufferId cmd);
 
-RUNTIME_API VkCommandBuffer cgpu_vulkan_get_command_buffer(CGPUCommandBufferId cmd);
-RUNTIME_API VkBuffer cgpu_vulkan_get_buffer(CGPUBufferId buffer);
-
-#ifdef __cplusplus
-} // end extern "C"
-#endif
+RUNTIME_EXTERN_C RUNTIME_API 
+VkBuffer cgpu_vulkan_get_buffer(CGPUBufferId buffer);

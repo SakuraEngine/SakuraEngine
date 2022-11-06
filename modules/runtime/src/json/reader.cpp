@@ -1,6 +1,6 @@
+#include "resource/resource_handle.h"
 #include "json/reader.h"
 #include "EASTL/string.h"
-#include "platform/guid.hpp"
 #include "utils/log.h"
 
 namespace skr::json
