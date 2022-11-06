@@ -13,8 +13,8 @@
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_mesh.h"
 #include "skr_renderer/render_effect.h"
-#include "gamert.h"
 #include "cube.hpp"
+#include "platform/vfs.h"
 #include <platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
@@ -141,16 +141,19 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         return forward_pass_name;
     }
 };
-RenderPassForward* forward_pass = new RenderPassForward();
+RenderPassForward* forward_pass = nullptr;
 
 typedef struct forward_effect_identity_t {
     dual_entity_t game_entity;
 } forward_effect_identity_t;
 skr_render_effect_name_t forward_effect_name = "ForwardEffect";
 struct RenderEffectForward : public IRenderEffectProcessor {
+    RenderEffectForward(skr_vfs_t* resource_vfs)
+        :resource_vfs(resource_vfs) {}
     ~RenderEffectForward() = default;
     dual::type_builder_t type_builder;
     dual_type_set_t typeset;
+    skr_vfs_t* resource_vfs;
 
     void on_register(SRendererId renderer, dual_storage_t* storage) override
     {
@@ -389,7 +392,7 @@ protected:
     eastl::vector<PushConstants> push_constants;
     RenderPassForward::DrawCallListData forward_pass_data;
 };
-RenderEffectForward* forward_effect = new RenderEffectForward();
+RenderEffectForward* forward_effect = nullptr;
 
 void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
 {
@@ -497,15 +500,13 @@ void RenderEffectForward::free_geometry_resources(SRendererId renderer)
 void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 {
     const auto render_device = renderer->get_render_device();
-    auto moduleManager = skr_get_module_manager();
     const auto device = render_device->get_cgpu_device();
     const auto backend = device->adapter->instance->backend;
 
     // read shaders
     eastl::string vsname = u8"shaders/Game/gbuffer_vs";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
-    auto vsfile = skr_vfs_fopen(gamert->resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto vsfile = skr_vfs_fopen(resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _vs_length = (uint32_t)skr_vfs_fsize(vsfile);
     uint32_t* _vs_bytes = (uint32_t*)sakura_malloc(_vs_length);
     skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
@@ -513,7 +514,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 
     eastl::string fsname = u8"shaders/Game/gbuffer_fs";
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto fsfile = skr_vfs_fopen(gamert->resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto fsfile = skr_vfs_fopen(resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _fs_length = (uint32_t)skr_vfs_fsize(fsfile);
     uint32_t* _fs_bytes = (uint32_t*)sakura_malloc(_fs_length);
     skr_vfs_fread(fsfile, _fs_bytes, 0, _fs_length);
@@ -597,8 +598,10 @@ void RenderEffectForward::free_pipeline(SRendererId renderer)
     cgpu_free_root_signature(sig_to_free);
 }
 
-void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph)
+void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* resource_vfs)
 {
+    forward_effect = new RenderEffectForward(resource_vfs);
+    forward_pass = new RenderPassForward();
     skr_renderer_register_render_pass(renderer, forward_pass_name, forward_pass);
     skr_renderer_register_render_effect(renderer, forward_effect_name, forward_effect);
 }
@@ -607,4 +610,6 @@ void game_finalize_render_effects(SRendererId renderer, skr::render_graph::Rende
 {
     skr_renderer_remove_render_pass(renderer, forward_pass_name);
     skr_renderer_remove_render_effect(renderer, forward_effect_name);
+    delete forward_effect;
+    delete forward_pass;
 }

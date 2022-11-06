@@ -35,7 +35,7 @@
 SWindowHandle window;
 uint32_t backbuffer_index;
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
-extern void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
+extern void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* resource_vfs);
 extern void game_finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
@@ -245,6 +245,7 @@ void imgui_button_spawn_girl(SRendererId renderer)
 
 int SGameModule::main_module_exec(int argc, char** argv)
 {
+    auto moduleManager = skr_get_module_manager();
     SKR_LOG_INFO("game executed as main module!");
     
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
@@ -272,7 +273,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
             .with_gfx_queue(gfx_queue)
             .enable_memory_aliasing();
     });
-    game_initialize_render_effects(game_renderer, renderGraph);
+    auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
+    game_initialize_render_effects(game_renderer, renderGraph, gamert->resource_vfs);
     create_test_scene(game_renderer);
     create_imgui_resources(render_device, renderGraph);
     // Initialize Input
