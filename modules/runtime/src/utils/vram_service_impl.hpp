@@ -142,18 +142,28 @@ public:
         CGPUFenceId get_fence(CGPUDStorageQueueId queue) SKR_NOEXCEPT
         {
             auto it = ds_fences.find(queue);
-            if (it != ds_fences.end()) return it->second;
-            auto fence = cgpu_create_fence(queue->device);
-            ds_fences[queue] = fence;
-            return fence;
+            if (it != ds_fences.end()) 
+                return it->second;
+            else
+            {
+                ZoneScopedN("CreateFence(DStorage)");
+                auto fence = cgpu_create_fence(queue->device);
+                ds_fences[queue] = fence;
+                return fence;
+            }
         }
         CGPUFenceId get_fence(CGPUQueueId queue) SKR_NOEXCEPT
         {
             auto it = fences.find(queue);
-            if (it != fences.end()) return it->second;
-            auto fence = cgpu_create_fence(queue->device);
-            fences[queue] = fence;
-            return fence;
+            if (it != fences.end()) 
+                return it->second;
+            else
+            {
+                ZoneScopedN("CreateFence(QueueUpload)");
+                auto fence = cgpu_create_fence(queue->device);
+                fences[queue] = fence;
+                return fence;
+            }
         }
         CGPUCommandPoolId get_cmd_pool(CGPUQueueId queue) SKR_NOEXCEPT
         {

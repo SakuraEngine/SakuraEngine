@@ -253,25 +253,12 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                     }
                 }
             };
-            if (true)
-            {
-                auto filter = make_zeroed<dual_filter_t>();
-                auto meta = make_zeroed<dual_meta_filter_t>();
-                filter.all.data = &identity_type;
-                filter.all.length = 1;
-                dualS_query(storage, &filter, &meta, DUAL_LAMBDA(counterF));
-            }
-            else
-            {
-                dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
-            }
+            dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
             push_constants.clear();
             mesh_drawcalls.clear();
             push_constants.reserve(c);
             mesh_drawcalls.reserve(c);
-        }
-        if (strcmp(pass->identity(), forward_pass_name) == 0)
-        {
+
             auto view = skr::math::look_at_matrix(
                 { 0.f, -135.f, 55.f } /*eye*/, 
                 { 0.f, 0.f, 50.f } /*at*/,
