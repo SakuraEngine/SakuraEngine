@@ -10,8 +10,8 @@
 #include "ecs/callback.hpp"
 
 #include "skr_live2d/skr_live2d.h"
-#include "skr_live2d/render_effect.h"
-#include "skr_live2d/render_model.h"
+#include "skr_live2d/l2d_render_effect.h"
+#include "skr_live2d/l2d_render_model.h"
 
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"

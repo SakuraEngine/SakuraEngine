@@ -118,17 +118,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 这个 demo 展示了如何使用 RenderGraph 进行三角形渲染。
 
 
-### [全异步glTF渲染器](samples/cgpu-3d)
-这个 demo 的所有 I/O 操作完全异步。从 Disk I/O 到 Memory，再从 Memory 流送到 VideoMemory，全部都是异步完成的。在有 AsyncCompute 支持的情况下，demo 会使用 CopyQueue 并处理好 Release/Acquire Barriers。在单一 Queue的情况下，demo 会使用单个的 Graphics Queue，通过多个分离的 TransferSubmit 完成异步的上传操作。
-
-<div align=center> 
-
-！此 demo 较为过时，当前引擎版本更推荐使用 VRAM I/O Service 实现异步流送 ！
-
-![cgpu-glTF](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/AsyncGLTF.gif)
-
-</div>
-
 ### [纹理](samples/cgpu-texture)
 这个 demo 演示了如何在 CGPU 中使用纹理采样，demo 也演示了怎么在 CGPU 中启用 Static/Immutable Samplers。
 

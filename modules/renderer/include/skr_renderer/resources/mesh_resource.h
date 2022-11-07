@@ -126,32 +126,3 @@ skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char* na
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API const char* 
 skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struct CGPUVertexLayout* out_vertex_layout);
-
-// : RAW GLTF METHODS :
-
-typedef void (*skr_async_gltf_io_callback_t)(struct skr_gltf_ram_io_request_t* request, void* data);
-typedef struct skr_gltf_ram_io_request_t {
-    struct skr_vfs_t* vfs_override;
-    skr_vertex_layout_id shuffle_layout SKR_IF_CPP( = {});
-    bool load_bin_to_memory;
-    skr_async_io_request_t ioRequest;
-    SAtomic32 gltf_status;
-    skr_mesh_resource_id mesh_resource;
-    skr_async_gltf_io_callback_t callback;
-    void* callback_data;
-#ifdef __cplusplus
-    bool is_ready() const SKR_NOEXCEPT
-    {
-        return get_status() == SKR_ASYNC_IO_STATUS_OK;
-    }
-    SkrAsyncIOStatus get_status() const SKR_NOEXCEPT
-    {
-        return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&gltf_status);
-    }
-#endif
-} skr_gltf_ram_io_request_t;
-
-#ifndef SKR_SERIALIZE_GURAD
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
-skr_mesh_resource_create_from_gltf(skr_io_ram_service_t* ioService, const char* path, skr_gltf_ram_io_request_t* request);
-#endif

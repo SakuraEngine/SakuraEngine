@@ -200,14 +200,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                         resource_system->Update();
                     }
                 }
-                else if (meshes[i].async_request.render_mesh && meshes[i].async_request.is_buffer_ready())
-                {
-                    auto render_mesh = meshes[i].async_request.render_mesh;
-                    auto mesh_resource = render_mesh->mesh_resource_id;
-                    skr_render_mesh_free(render_mesh);
-                    skr_mesh_resource_free(mesh_resource);
-                    meshes[i].async_request.render_mesh = nullptr;
-                }
             }
         };
         dualQ_get_views(effect_query, DUAL_LAMBDA(sweepFunction));
@@ -254,10 +246,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                         auto resourcePtr = (skr_mesh_resource_t*)meshes[i].mesh_resource.get_ptr();
                         auto renderMesh = resourcePtr->render_mesh;
                         c += (uint32_t)renderMesh->primitive_commands.size();
-                    }
-                    else if (meshes && meshes[i].async_request.is_buffer_ready())
-                    {
-                        c += (uint32_t)meshes[i].async_request.render_mesh->primitive_commands.size();
                     }
                     else
                     {
@@ -313,7 +301,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             };
             dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
 
-
             auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
                 uint32_t r_idx = 0;
                 uint32_t dc_idx = 0;
@@ -337,51 +324,27 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 quaternion);
                             // drawcall
                             auto status = meshes[r_idx].mesh_resource.get_status();
-                            if (meshes[r_idx].async_request.is_buffer_ready() || status == SKR_LOADING_STATUS_INSTALLED)
+                            if (status == SKR_LOADING_STATUS_INSTALLED)
                             {
-                                const auto& async_request = meshes[r_idx].async_request;
-                                if (status == SKR_LOADING_STATUS_INSTALLED)
+                                auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
+                                auto renderMesh = resourcePtr->render_mesh;
+                    
+                                const auto& cmds = renderMesh->primitive_commands;
+                                for (auto&& cmd : cmds)
                                 {
-                                    auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
-                                    auto renderMesh = resourcePtr->render_mesh;
-                        
-                                    const auto& cmds = renderMesh->primitive_commands;
-                                    for (auto&& cmd : cmds)
-                                    {
-                                        // resources may be ready after produce_drawcall, so we need to check it here
-                                        if (push_constants.capacity() <= dc_idx) return;
+                                    // resources may be ready after produce_drawcall, so we need to check it here
+                                    if (push_constants.capacity() <= dc_idx) return;
 
-                                        auto& push_const = push_constants.emplace_back();
-                                        push_const.world = world;
-                                        auto& drawcall = mesh_drawcalls.emplace_back();
-                                        drawcall.pipeline = pipeline;
-                                        drawcall.push_const_name = push_constants_name;
-                                        drawcall.push_const = (const uint8_t*)(&push_const);
-                                        drawcall.index_buffer = *cmd.ibv;
-                                        drawcall.vertex_buffers = cmd.vbvs.data();
-                                        drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
-                                        dc_idx++;
-                                    }
-                                }
-                                else if (async_request.is_buffer_ready())
-                                {
-                                    const auto& cmds = async_request.render_mesh->primitive_commands;
-                                    for (auto&& cmd : cmds)
-                                    {
-                                        // resources may be ready after produce_drawcall, so we need to check it here
-                                        if (push_constants.capacity() <= dc_idx) return;
-
-                                        auto& push_const = push_constants.emplace_back();
-                                        push_const.world = world;
-                                        auto& drawcall = mesh_drawcalls.emplace_back();
-                                        drawcall.pipeline = pipeline;
-                                        drawcall.push_const_name = push_constants_name;
-                                        drawcall.push_const = (const uint8_t*)(&push_const);
-                                        drawcall.index_buffer = *cmd.ibv;
-                                        drawcall.vertex_buffers = cmd.vbvs.data();
-                                        drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
-                                        dc_idx++;
-                                    }
+                                    auto& push_const = push_constants.emplace_back();
+                                    push_const.world = world;
+                                    auto& drawcall = mesh_drawcalls.emplace_back();
+                                    drawcall.pipeline = pipeline;
+                                    drawcall.push_const_name = push_constants_name;
+                                    drawcall.push_const = (const uint8_t*)(&push_const);
+                                    drawcall.index_buffer = *cmd.ibv;
+                                    drawcall.vertex_buffers = cmd.vbvs.data();
+                                    drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
+                                    dc_idx++;
                                 }
                             }
                             else
