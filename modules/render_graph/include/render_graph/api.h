@@ -9,5 +9,7 @@
     public:
         virtual void on_load(int argc, char** argv) override;
         virtual void on_unload() override;
+
+        static constexpr uint32_t kMaxFramesInFlight = RG_MAX_FRAME_IN_FLIGHT;
     };
 #endif

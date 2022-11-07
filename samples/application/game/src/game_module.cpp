@@ -110,9 +110,7 @@ void create_test_scene(SRendererId renderer)
         {
             if (movements)
             {
-                translations[i].value = {
-                    (float)(init_idx % 10) * 1.5f, ((float)init_idx / 10) * 1.5f + 50.f, 0.f
-                };
+                translations[i].value = { 0.f, 0.f, 0.f };
                 rotations[i].euler = { 0.f, 0.f, 0.f };
                 scales[i].value = { 8.f, 8.f, 8.f };
                 init_idx++;
@@ -120,7 +118,7 @@ void create_test_scene(SRendererId renderer)
             else
             {
                 translations[i].value = { 0.f, 0.f, 0.f };
-                rotations[i].euler = { 3.1415926f / 2.f, 0.f, 0.f };
+                rotations[i].euler = { 0.f, 0.f, 0.f };
                 scales[i].value = { 1.f, 1.f, 1.f };
             }
         }
@@ -129,7 +127,7 @@ void create_test_scene(SRendererId renderer)
         if(feature_arrs)
             skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
-    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 250, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 0!");
 
@@ -425,22 +423,24 @@ int SGameModule::main_module_exec(int argc, char** argv)
         if (bUseJob)
         {
             ZoneScopedN("MoveSystem");
-            auto timer = clock();
+            auto timer = 1000;//clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
+            uint32_t actual_idx = 0;
             
-            auto moveJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto moveJob = SkrNewLambda([=, &actual_idx]
+                (dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("MoveJob");
                 
                 float lerps[] = { 12.5, 20 };
                 auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
                 auto scales = (skr_scale_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 (void)scales;
-                for (uint32_t i = 0; i < view->count; i++)
+                for (uint32_t i = 0; i < view->count; i++, actual_idx++)
                 {
                     auto lscale = (float)abs(sin(total_sec * 0.5));
                     lscale = (float)lerp(lerps[0], lerps[1], lscale);
-                    const auto col = (i % 10);
-                    const auto row = (i / 10);
+                    const auto col = (actual_idx % 10);
+                    const auto row = (actual_idx / 10);
                     translations[i].value = {
                         ((float)col - 4.5f) * lscale,
                         ((float)row - 4.5f) * lscale + 50.f, 

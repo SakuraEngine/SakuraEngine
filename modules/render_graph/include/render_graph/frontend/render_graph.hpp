@@ -51,6 +51,7 @@ public:
     using RenderGraphSetupFunction = eastl::function<void(class RenderGraph::RenderGraphBuilder&)>;
     static RenderGraph* create(const RenderGraphSetupFunction& setup) SKR_NOEXCEPT;
     static void destroy(RenderGraph* g) SKR_NOEXCEPT;
+    
     class SKR_RENDER_GRAPH_API RenderPassBuilder
     {
     public:
