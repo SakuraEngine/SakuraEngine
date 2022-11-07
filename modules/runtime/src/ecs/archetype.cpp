@@ -96,7 +96,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     eastl::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
-    size_t caps[] = { kSmallBinSize, kFastBinSize, kLargeBinSize };
+    size_t caps[] = { kSmallBinSize - sizeof(dual_chunk_t), kFastBinSize - sizeof(dual_chunk_t), kLargeBinSize - sizeof(dual_chunk_t) };
     const uint32_t versionSize = sizeof(uint32_t) * proto.type.length;
     forloop (i, 0, 3)
     {
@@ -116,7 +116,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
                 offsets[id] = ccOffset;
             }
         }
-        capacity = (uint32_t)(ccOffset - sizeof(dual_chunk_t) - padding) / proto.entitySize;
+        capacity = (uint32_t)(ccOffset - padding) / proto.entitySize;
         if (capacity == 0)
             continue;
         uint32_t offset = sizeof(dual_entity_t) * capacity;

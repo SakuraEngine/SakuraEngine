@@ -577,6 +577,8 @@ dual_group_t* dual_storage_t::cast(dual_group_t* srcGroup, const dual_delta_type
 
 void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_callback_t callback, void* u)
 {
+    if(count == 0)
+        return;
     EIndex current = 0;
     auto view = entity_view(ents[current++]);
     while (current < count)
