@@ -13,6 +13,8 @@ struct dual_storage_t;
 namespace skr::resource
 {
 struct SLocalResourceRegistry;
+struct STextureFactory;
+struct SMeshFactory;
 }
 class GAMERT_API SGameRTModule : public skr::IDynamicModule
 {
@@ -23,6 +25,9 @@ public:
     static SGameRTModule* Get();
 
 public:
+    skr::resource::STextureFactory* textureFactory = nullptr;
+    skr::resource::SMeshFactory* meshFactory = nullptr;
+
     skr_vfs_t* resource_vfs = nullptr;
     skr_vfs_t* tex_resource_vfs = nullptr;
     skr::io::RAMService* ram_service = nullptr;

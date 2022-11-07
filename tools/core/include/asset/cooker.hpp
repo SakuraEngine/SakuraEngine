@@ -51,6 +51,7 @@ struct TOOL_API SCookContext { // context per job
 public:
     skr::filesystem::path GetOutputPath() const;
     
+    SImporter* GetImporter() const;
     skr_guid_t GetImporterType() const;
     uint32_t GetImporterVersion() const;
     uint32_t GetCookerVersion() const;

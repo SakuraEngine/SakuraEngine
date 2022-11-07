@@ -1,15 +1,24 @@
 #include "skr_renderer/skr_renderer.h"
+#include "skr_renderer/render_mesh.h"
 #include "cgpu/api.h"
 #include "module/module_manager.hpp"
 #include "utils/log.h"
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
+#include "platform/guid.hpp"
 #include <string.h>
 #ifdef _WIN32
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
 #endif
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
+
+namespace 
+{
+using namespace skr::guid::literals;
+const auto kGLTFVertexLayoutWithoutTangentId = "1b357a40-83ff-471c-8903-23e99d95b273"_guid;
+const auto kGLTFVertexLayoutWithTangentId = "1b11e007-7cc2-4941-bc91-82d992c4b489"_guid;
+}
 
 void SkrRendererModule::on_load(int argc, char** argv)
 {
@@ -18,6 +27,7 @@ void SkrRendererModule::on_load(int argc, char** argv)
     cgpu_d3d12_enable_DRED();
 #endif
 
+    // initailize render device
     bool enable_debug_layer = false;
     bool enable_gpu_based_validation = false;
     bool enable_set_name = true;
@@ -44,6 +54,23 @@ void SkrRendererModule::on_load(int argc, char** argv)
         enable_set_name |= (0 == ::strcmp(argv[i], "--gpu_obj_name"));
     }
     render_device.initialize(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
+
+    // register vertex layout
+    CGPUVertexLayout vertex_layout = {};
+    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attribute_count = 3;
+    {
+        using namespace skr::guid::literals;
+        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithoutTangentId, "StaticMeshWithoutTangent", &vertex_layout);
+    }
+    vertex_layout.attribute_count = 4;
+    {
+        using namespace skr::guid::literals;
+        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithTangentId, "StaticMeshWithTangent", &vertex_layout);
+    }
 }
 
 void SkrRendererModule::on_unload()

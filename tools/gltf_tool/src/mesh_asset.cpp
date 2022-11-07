@@ -1,3 +1,4 @@
+#include "cgpu/api.h"
 #include "ecs/dual.h"
 #include "utils/io.hpp"
 #include "mesh_asset.hpp"
@@ -10,8 +11,23 @@
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 
+namespace 
+{
+static const char* cGLTFAttributeTypeLUT[8] = {
+    "NONE",
+    "POSITION",
+    "NORMAL",
+    "TANGENT",
+    "TEXCOORD",
+    "COLOR",
+    "JOINTS",
+    "WEIGHTS"
+};
+}
+
 void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
 {
+    auto importer = static_cast<SGltfMeshImporter*>(context->GetImporter());
     skr::filesystem::path relPath = assetPath.c_str();
     const auto assetRecord = context->GetAssetRecord();
     auto ext = relPath.extension();
@@ -68,6 +84,14 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
     // parse
     if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
     {
+        skr_guid_t shuffle_layout_id = importer->vertexType;
+        CGPUVertexLayout shuffle_layout = {};
+        const char* shuffle_layout_name = nullptr;
+        if (!shuffle_layout_id.isZero()) 
+        {
+            shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
+        }
+
         cgltf_data* gltf_data = (cgltf_data*)callbackData.destination.bytes;
         auto mesh = SkrNew<skr_mesh_resource_t>();
         mesh->name = gltf_data->meshes[0].name;
@@ -117,7 +141,6 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
                     for (uint32_t k = 0, attrib_idx = 0; k < primitive_->attributes_count; k++)
                     {
                         // do shuffle
-                        /*
                         if (shuffle_layout_name != nullptr)
                         {
                             attrib_idx = -1;
@@ -132,7 +155,6 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
                             }
                         }
                         else
-                        */
                         {
                             attrib_idx = k;
                         }
@@ -141,16 +163,14 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
                         prim.vertex_buffers[k].stride = (uint32_t)primitive_->attributes[attrib_idx].data->stride;
                         prim.vertex_buffers[k].offset = (uint32_t)(primitive_->attributes[attrib_idx].data->offset + buf_view->offset);
                     }
-                    /*
                     if (shuffle_layout_name != nullptr)
                     {
                         prim.vertex_layout_id = shuffle_layout_id;
                     }
                     else
                     {
-                        prim.vertex_layout_id = mesh_resource_util.AddOrFindVertexLayoutFromGLTFPrimitive(primitive_);
+                        SKR_UNREACHABLE_CODE();
                     }
-                    */
 
                     // TODO: VertexLayout & Material assignment
                     prim.vertex_layout_id = make_zeroed<skr_guid_t>();

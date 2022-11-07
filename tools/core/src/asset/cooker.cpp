@@ -433,6 +433,11 @@ skr::filesystem::path SCookContext::GetOutputPath() const
     return outputPath;
 }
 
+SImporter* SCookContext::GetImporter() const
+{
+    return importer;
+}
+
 skr_guid_t SCookContext::GetImporterType() const
 {
     return importerType;

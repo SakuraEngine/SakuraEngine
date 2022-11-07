@@ -13,7 +13,7 @@ sattr("serialize" : "json")
 GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
     eastl::string assetPath;
-    skr_guid_t placeHolder;
+    skr_guid_t vertexType;
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }

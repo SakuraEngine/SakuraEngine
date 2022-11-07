@@ -43,7 +43,6 @@ struct TOOL_API SJsonConfigImporterFactory final : public SImporterFactory {
     void CreateImporter(const SAssetRecord* record) override;
 };
 
-
 template<class T>
 inline static void RegisterConfig(skr_guid_t guid)
 {

@@ -49,7 +49,7 @@ struct sreflect sattr(
     "guid" : "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c",
     "component" : true
 ) skr_render_mesh_comp_t {
-    skr_guid_t resource_guid;
+    skr_resource_handle_t mesh_resource;
     skr_render_mesh_request_t async_request;
 };
 typedef struct skr_render_mesh_comp_t skr_render_mesh_comp_t;
