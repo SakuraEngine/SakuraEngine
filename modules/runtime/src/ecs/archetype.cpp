@@ -58,7 +58,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
-    proto.resourceFields = archetypeArena.allocate<dual::archetype_t::resource_field_t>(proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
     proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
