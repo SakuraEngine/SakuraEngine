@@ -422,7 +422,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             // quit |= skg::GameLoop(ctx);
         }
         // move
-        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, !skr_camera_t
+        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_component_t, !skr_camera_t
         if (bUseJob)
         {
             ZoneScopedN("MoveSystem");
