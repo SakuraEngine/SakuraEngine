@@ -54,6 +54,16 @@ skr_name_t
 };
 typedef struct skr_name_t skr_name_t;
 
+struct sreflect sattr(
+    "guid" : "b08ec011-9b94-47f7-9926-c66d41d735e9",
+    "component" : true
+)
+skr_index_component_t
+{
+    uint32_t value;
+};
+typedef struct skr_index_component_t skr_index_component_t;
+
 // transforms
 
 struct sreflect sattr(
@@ -119,8 +129,6 @@ skr_camera_t
     uint32_t viewport_width;
     uint32_t viewport_height;
 };
-
-
 
 struct skr_transform_system {
     dual_query_t* localToWorld;
