@@ -1,4 +1,4 @@
-#include "module/module_manager.hpp"
+#include "module/module.hpp"
 #include "utils/log.h"
 
 class SkrInputSystemModule : public skr::IDynamicModule

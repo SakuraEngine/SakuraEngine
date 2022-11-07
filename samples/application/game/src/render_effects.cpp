@@ -1,3 +1,4 @@
+#include "utils/log.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/log.hpp"
 #include "cgpu/api.h"
@@ -258,7 +259,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             mesh_drawcalls.clear();
             push_constants.reserve(c);
             mesh_drawcalls.reserve(c);
-
             auto view = skr::math::look_at_matrix(
                 { 0.f, -135.f, 55.f } /*eye*/, 
                 { 0.f, 0.f, 50.f } /*at*/,
@@ -298,6 +298,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 if (unbatched_g_ents)
                 {
                     auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
+                        //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
                         auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
                         auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
                         auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
@@ -309,6 +310,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 translations[g_idx].value,
                                 scales[g_idx].value,
                                 quaternion);
+                            //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, translations[g_idx].value.x, translations[g_idx].value.y, translations[g_idx].value.z);
+                            //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, quaternion.x, quaternion.y, quaternion.z);
+                            //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, scales[g_idx].value.x, scales[g_idx].value.y, scales[g_idx].value.z);
                             // drawcall
                             auto status = meshes[r_idx].mesh_resource.get_status();
                             if (status == SKR_LOADING_STATUS_INSTALLED)
