@@ -50,20 +50,3 @@ if (os.host() == "windows" and false) then
         add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
         add_files("hot-triangle/**.hlsl")
 end
-
-target("Example-CGPU3D")
-    set_group("04.examples/cgpu")
-    add_rules("c++.noexception")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    add_rules("utils.install-resources", {
-        extensions = {".gltf", ".bin", ".png"},
-        outdir = "/../resources", _png_outdir = "/../resources/textures"})
-    add_rules("utils.dxc", {
-        spv_outdir = "/../resources/shaders/cgpu-3d",
-        dxil_outdir = "/../resources/shaders/cgpu-3d"})
-    set_kind("binary")
-    public_dependency("SkrRT", engine_version)
-    add_files("cgpu-3d/**.cpp")
-    add_files("cgpu-3d/**.hlsl")
-    add_files("cgpu-3d/**.bin", "cgpu-3d/**.gltf", "cgpu-3d/**.png")
-    add_deps("cgltf")
