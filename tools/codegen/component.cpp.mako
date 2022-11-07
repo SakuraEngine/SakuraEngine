@@ -16,7 +16,7 @@ static struct RegisterComponent${type.id}Helper
         desc.size = sizeof(${type.name});
     %endif
     <%
-        entityFields = ["(intptr_t)&{}::{}".format(type.name, name) for name, field in vars(type.fields).items() if field.rawType == "dual_entity_t"]
+        entityFields = [str(field.offset) for name, field in vars(type.fields).items() if field.rawType == "dual_entity_t"]
     %>
     %if entityFields:
         desc.entityFieldsCount = ${len(entityFields)};
@@ -27,7 +27,7 @@ static struct RegisterComponent${type.id}Helper
         desc.entityFields = 0;
     %endif
     <%
-        resourceFields = ["(intptr_t)&{}::{}".format(type.name, name) for name, field in vars(type.fields).items() if field.rawType == "skr_resource_handle_t" or field.rawType.startswith("TResourceHandle")]
+        resourceFields = [str(field.offset) for name, field in vars(type.fields).items() if field.rawType == "skr_resource_handle_t" or field.rawType.startswith("TResourceHandle")]
     %>
     %if resourceFields:
         desc.resourceFieldsCount = ${len(resourceFields)};
