@@ -479,9 +479,12 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithDStorage(skr_resource_record_t* r
                     vram_buffer_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
                     vram_buffer_io.dstorage.uncompressed_size = thisBin.byte_length;
 
-                    // TODO: handle index or vertex buffer type more correctly
-                    vram_buffer_io.vbuffer.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_VERTEX_BUFFER; 
+                    CGPUResourceTypes flags = CGPU_RESOURCE_TYPE_NONE;
+                    flags |= thisBin.used_with_index ? CGPU_RESOURCE_TYPE_INDEX_BUFFER : 0;
+                    flags |= thisBin.used_with_vertex ? CGPU_RESOURCE_TYPE_VERTEX_BUFFER : 0;
+                    vram_buffer_io.vbuffer.resource_types = flags;
                     vram_buffer_io.vbuffer.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+                    vram_buffer_io.vbuffer.flags = CGPU_BCF_NO_DESCRIPTOR_VIEW_CREATION;
                     vram_buffer_io.vbuffer.buffer_size = thisBin.byte_length;
                     vram_buffer_io.vbuffer.buffer_name = nullptr; // TODO: set name
 

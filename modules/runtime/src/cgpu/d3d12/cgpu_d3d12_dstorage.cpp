@@ -193,6 +193,8 @@ void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageQueueId queue, CGPUDStorage
 
 void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc)
 {
+    ZoneScopedN("D3D12EnqueueDStorage(Buffer)");
+
     DSTORAGE_REQUEST request = {};
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
     CGPUBuffer_D3D12* pBuffer = (CGPUBuffer_D3D12*)desc->buffer;
@@ -232,6 +234,8 @@ void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const
 
 void cgpu_dstorage_enqueue_texture_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc)
 {
+    ZoneScopedN("D3D12EnqueueDStorage(Texture)");
+
     DSTORAGE_REQUEST request = {};
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
     CGPUTexture_D3D12* pTexture = (CGPUTexture_D3D12*)desc->texture;

@@ -100,6 +100,7 @@ void create_test_scene(SRendererId renderer)
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
+    uint32_t init_idx = 0;
     auto primSetup = [&](dual_chunk_view_t* view) {
         auto translations = (skr_translation_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_t>::get());
         auto rotations = (skr_rotation_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_t>::get());
@@ -110,10 +111,11 @@ void create_test_scene(SRendererId renderer)
             if (movements)
             {
                 translations[i].value = {
-                    (float)(i % 10) * 1.5f, ((float)i / 10) * 1.5f + 50.f, 0.f
+                    (float)(init_idx % 10) * 1.5f, ((float)init_idx / 10) * 1.5f + 50.f, 0.f
                 };
                 rotations[i].euler = { 0.f, 0.f, 0.f };
                 scales[i].value = { 8.f, 8.f, 8.f };
+                init_idx++;
             }
             else
             {
@@ -127,7 +129,7 @@ void create_test_scene(SRendererId renderer)
         if(feature_arrs)
             skr_render_effect_attach(renderer, view, "ForwardEffect");
     };
-    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
+    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 250, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 0!");
 

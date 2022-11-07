@@ -135,16 +135,15 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
         auto finalPath = (skr::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
         if (!sharedLib->load(finalPath.c_str()))
         {
-            SKR_LOG_ERROR("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
-            return nullptr;
+            SKR_LOG_DEBUG("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
         }
-    #ifdef SPA_OUTPUT_LOG
-            else
-                std::cout << filename << ": Load dll success!" << std::endl;
-    #endif
-        if (sharedLib->hasSymbol(initName.c_str()))
+        else
         {
-            func = sharedLib->get<IModule*()>(initName.c_str());
+            SKR_LOG_TRACE("Load dll success: %s", filename.c_str());
+            if (sharedLib->hasSymbol(initName.c_str()))
+            {
+                func = sharedLib->get<IModule*()>(initName.c_str());
+            }
         }
     }
 #endif

@@ -25,6 +25,7 @@ rule("skr.module")
         target:add("values", "skr.module.version", version)
         if(has_config("module_as_objects")) then
             target:set("kind", "object")
+            target:add("defines","MODULE_AS_OBJECTS")
         else
             target:set("kind", "shared")
             target:add("defines", api.."_SHARED", {public=true})

@@ -583,7 +583,9 @@ void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_ca
     {
         dual_chunk_view_t v = entity_view(ents[current]);
         if (v.chunk == view.chunk && v.start == view.start + view.count)
+        {
             view.count++;
+        }
         else
         {
             callback(u, &view);

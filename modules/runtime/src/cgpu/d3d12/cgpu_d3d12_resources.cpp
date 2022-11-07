@@ -7,6 +7,8 @@
 #include <EASTL/string.h>
 #include <dxcapi.h>
 
+#include "tracy/Tracy.hpp"
+
 // Inline Utils
 D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* desc);
 D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGPUBufferDescriptor* desc);
@@ -79,16 +81,25 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         }
         else
         {
-            CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, res_states, 
-            NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
-            SKR_LOG_TRACE("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
-                desc->name ? desc->name : "", allocationSize, desc->format);
+            {
+                ZoneScopedN("Allocation(Buffer)");
+                CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, res_states, 
+                    NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
+            }            
+
+            {
+                ZoneScopedN("Log(Allocation)");
+                SKR_LOG_TRACE("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+                    desc->name ? desc->name : "", allocationSize, desc->format);
+            }
         }
     }
 
     // MemMaps
     if (desc->flags & CGPU_BCF_PERSISTENT_MAP_BIT)
     {
+        ZoneScopedN("Map(Buffer)");
+
         auto mapResult = B->pDxResource->Map(0, NULL, &B->super.cpu_mapped_address);
         if (!SUCCEEDED(mapResult))
         {
@@ -137,7 +148,9 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             if (CGPU_RESOURCE_TYPE_BUFFER_RAW == (desc->descriptors & CGPU_RESOURCE_TYPE_BUFFER_RAW))
             {
                 if (desc->format != CGPU_FORMAT_UNDEFINED)
+                {
                     cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
+                }
                 srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 srvDesc.Buffer.Flags |= D3D12_BUFFER_SRV_FLAG_RAW;
             }
@@ -164,7 +177,9 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             if (CGPU_RESOURCE_TYPE_RW_BUFFER_RAW == (desc->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER_RAW))
             {
                 if (desc->format != CGPU_FORMAT_UNDEFINED)
+                {
                     cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
+                }
                 uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 uavDesc.Buffer.Flags |= D3D12_BUFFER_UAV_FLAG_RAW;
             }
