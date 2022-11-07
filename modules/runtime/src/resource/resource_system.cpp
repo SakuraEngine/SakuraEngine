@@ -98,7 +98,7 @@ void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireIn
     auto record = _GetOrCreateRecord(handle.get_guid());
     handle.set_resolved(record, requester, requesterType);
     record->references.push_back({ requester, requesterType });
-    if ((!requireInstalled && record->loadingStatus == SKR_LOADING_STATUS_LOADED) ||
+    if ((!requireInstalled && record->loadingStatus >= SKR_LOADING_STATUS_LOADED && record->loadingStatus < SKR_LOADING_STATUS_UNLOADING) ||
         (requireInstalled && record->loadingStatus == SKR_LOADING_STATUS_INSTALLED)) // already loaded
         return;
     auto request = record->activeRequest;

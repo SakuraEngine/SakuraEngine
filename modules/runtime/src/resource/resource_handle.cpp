@@ -15,7 +15,7 @@ skr_resource_handle_t::skr_resource_handle_t()
 skr_resource_handle_t::~skr_resource_handle_t()
 {
     // TODO: is this OK?
-    // reset();
+    reset();
 }
 
 skr_resource_handle_t::skr_resource_handle_t(const skr_guid_t& other)
@@ -124,6 +124,20 @@ void skr_resource_handle_t::resolve(bool requireInstalled, uint32_t inRequester,
         auto system = skr::resource::GetResourceSystem();
         system->LoadResource(*this, requireInstalled, inRequester, requesterType);
     }
+}
+
+skr_resource_handle_t skr_resource_handle_t::clone(uint32_t requester, ESkrRequesterType requesterType)
+{
+    if (is_null())
+        return skr_resource_handle_t();
+    if (padding != 0)
+        return *this;
+    auto record = get_record();
+    SKR_ASSERT(record);
+    record->references.push_back({ requester, requesterType });
+    skr_resource_handle_t newHandle;
+    newHandle.set_resolved(record, requester, requesterType);
+    return newHandle;
 }
 
 void skr_resource_handle_t::unload()

@@ -14,6 +14,7 @@
 #include "storage.hpp"
 #include "set.hpp"
 #include "scheduler.hpp"
+#include "resource/resource_handle.h"
 
 namespace dual
 {
@@ -62,9 +63,19 @@ static void construct_impl(dual_chunk_view_t view, type_index_t type, EIndex off
         memset(dst, 0, (size_t)size * view.count);
 }
 
-static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data))
+static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, resource_fields_t resourceFields, void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data))
 {
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
+    auto patchResources = [&](char* data)
+    {
+        forloop(k, 0, resourceFields.count)
+        {
+            auto field = ((intptr_t*)resourceFields.offsets)[k];
+            auto* resource = (skr_resource_handle_t*)(data + field);
+            if(resource->is_resolved())
+                resource->reset();
+        }
+    };
     if (type.is_buffer())
         forloop (j, 0, view.count)
         {
@@ -72,12 +83,20 @@ static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
             if (destructor)
                 for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
                     destructor(view.chunk, view.start + j, curr);
+            else if(resourceFields.count > 0)
+                for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
+                    patchResources(curr);
             if (!is_array_small(array))
                 dual_array_component_t::free(array->BeginX);
         }
     else if (destructor)
         forloop (j, 0, view.count)
             destructor(view.chunk, view.start + j, (size_t)j * size + src);
+    else if (resourceFields.count > 0)
+    {
+        forloop (j, 0, view.count)
+            patchResources((size_t)j * size + src);
+    }
 }
 
 static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcStart, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src))
@@ -125,7 +144,7 @@ void memdup(void* dst, const void* src, size_t size, size_t count) noexcept
         memcpy((char*)dst + copied * size, dst, (count - copied) * size);
 }
 
-static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcIndex, type_index_t type, EIndex offset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
+static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcIndex, type_index_t type, EIndex offset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, resource_fields_t resourceFields, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
 {
     SKR_ASSERT(!type.is_chunk());
     char* dst = dstV.chunk->data() + (size_t)dstOffset + (size_t)size * dstV.start;
@@ -138,6 +157,18 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
             guidDst[j] = registry.make_guid();
         return;
     }
+    auto patchResources = [&](char* data)
+    {
+        forloop(k, 0, resourceFields.count)
+        {
+            auto field = ((intptr_t*)resourceFields.offsets)[k];
+            auto* resource = (skr_resource_handle_t*)(data + field);
+            if(resource->is_resolved())
+            {
+                new (resource) skr_resource_handle_t(resource->clone(*(dstV.chunk->get_entities() + dstV.start), SKR_REQUESTER_ENTITY));
+            }
+        }
+    };
     if (copy)
     {
         if (type.is_buffer())
@@ -169,6 +200,7 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
     else
     {
         memdup(dst, src, (size_t)size, (size_t)dstV.count);
+        
         if (type.is_buffer())
         {
             forloop (j, 0, dstV.count)
@@ -182,7 +214,18 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
                     arrayDst->EndX = arrayDst->CapacityX = (char*)arrayDst->BeginX + cap;
                     memcpy(arrayDst->BeginX, arraySrc->BeginX, cap);
                 }
+                if(resourceFields.count > 0)
+                {
+                    auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
+                    for (char* curr = (char*)arrayDst->BeginX; curr != arrayDst->EndX; curr += elemSize)
+                        patchResources(curr);
+                }
             }
+        }
+        else if(resourceFields.count > 0)
+        {
+            forloop (j, 0, dstV.count)
+                patchResources((size_t)j * size + dst);
         }
     }
 }
@@ -206,7 +249,7 @@ void destruct_view(const dual_chunk_view_t& view) noexcept
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
-        destruct_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->callbacks[i].destructor);
+        destruct_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], type->callbacks[i].destructor);
 }
 
 void construct_chunk(dual_chunk_t* chunk) noexcept
@@ -228,7 +271,7 @@ void destruct_chunk(dual_chunk_t* chunk) noexcept
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
     for (SIndex i = type->firstChunkComponent; i < type->type.length; ++i)
-        destruct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->callbacks[i].destructor);
+        destruct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], type->callbacks[i].destructor);
 }
 
 void move_view(const dual_chunk_view_t& view, EIndex srcStart) noexcept
@@ -291,7 +334,7 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
         type_index_t dstT = dstTypes.data[dstI];
         if (srcT < dstT) // destruct
         {
-            destruct_impl({ srcC, srcStart, dstV.count }, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->callbacks[srcI].destructor);
+            destruct_impl({ srcC, srcStart, dstV.count }, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], srcType->callbacks[srcI].destructor);
             ++srcI;
         }
         else if (srcT > dstT) // construct
@@ -400,7 +443,7 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
         else
         {
             if (srcT != kMaskComponent)
-                duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], srcType->callbacks[srcI].copy);
+                duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], srcType->callbacks[srcI].copy);
             if (dstMasks)
             {
                 if (srcMasks)
