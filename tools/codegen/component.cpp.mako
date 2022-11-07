@@ -15,13 +15,27 @@ static struct RegisterComponent${type.id}Helper
     %else:
         desc.size = sizeof(${type.name});
     %endif
-    %if hasattr(type.attrs.component, "entityFields"):
-        desc.entityFieldsCount = ${len(type.entityFields)};
-        static intptr_t entityFields[] = {${", ".join(type.entityFields)}};
+    <%
+        entityFields = ["(intptr_t)&{}::{}".format(type.name, name) for name, field in vars(type.fields).items() if field.rawType == "dual_entity_t"]
+    %>
+    %if entityFields:
+        desc.entityFieldsCount = ${len(entityFields)};
+        static intptr_t entityFields[] = {${", ".join(entityFields)}};
         desc.entityFields = (intptr_t)entityFields;
     %else:
         desc.entityFieldsCount = 0;
         desc.entityFields = 0;
+    %endif
+    <%
+        resourceFields = ["(intptr_t)&{}::{}".format(type.name, name) for name, field in vars(type.fields).items() if field.rawType == "skr_resource_handle_t" or field.rawType.startswith("TResourceHandle")]
+    %>
+    %if resourceFields:
+        desc.resourceFieldsCount = ${len(resourceFields)};
+        static intptr_t resourceFields[] = {${", ".join(resourceFields)}};
+        desc.resourceFields = (intptr_t)resourceFields;
+    %else:
+        desc.resourceFieldsCount = 0;
+        desc.resourceFields = 0;
     %endif
         desc.guid = {${db.guid_constant(type)}};
     %if hasattr(type.attrs.component, "managed"):

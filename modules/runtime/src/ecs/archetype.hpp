@@ -3,6 +3,12 @@
 
 namespace dual
 {
+struct resource_fields_t
+{
+    intptr_t offsets;
+    uint32_t count;
+};
+
 // chunk data layout descriptor
 struct archetype_t {
     struct dual_storage_t* storage;
@@ -14,6 +20,7 @@ struct archetype_t {
 
     uint32_t versionOffset[3];
     dual_callback_v* callbacks;
+    resource_fields_t* resourceFields;
     uint32_t chunkCapacity[3];
     uint32_t entitySize;
     uint32_t sizeToPatch;

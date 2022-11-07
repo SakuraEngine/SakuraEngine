@@ -86,6 +86,9 @@ typedef struct dual_type_description_t {
     // entity field is used to guarantee references between entities are keeping valid after operations like instantiate, merge world, deserialize etc.
     intptr_t entityFields;
     uint32_t entityFieldsCount;
+    // resource field is used to track resource lifetime
+    intptr_t resourceFields;
+    uint32_t resourceFieldsCount;
     // lifetime callbacks of this component
     dual_callback_v callback;
 } dual_type_description_t;

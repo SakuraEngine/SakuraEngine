@@ -38,6 +38,7 @@ typedef struct skr_resource_handle_t {
     RUNTIME_API void* get_resolved(bool requireInstalled = true) const;
     RUNTIME_API skr_guid_t get_serialized() const;
     RUNTIME_API void resolve(bool requireInstalled = true, uint32_t requester = 0, ESkrRequesterType requesterType = SKR_REQUESTER_UNKNOWN);
+    RUNTIME_API skr_resource_handle_t clone(uint32_t requester = 0, ESkrRequesterType requesterType = SKR_REQUESTER_UNKNOWN);
     RUNTIME_API void unload();
     RUNTIME_API skr_guid_t get_guid() const;
     RUNTIME_API void* get_ptr() const;

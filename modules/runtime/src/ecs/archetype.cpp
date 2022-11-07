@@ -58,12 +58,17 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<dual::archetype_t::resource_field_t>(proto.type.length);
     proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
-        proto.callbacks[i] = registry.descriptions[type_index_t(proto.type.data[i]).index()].callback;
+    {
+        const auto& desc = registry.descriptions[type_index_t(proto.type.data[i]).index()];
+        proto.callbacks[i] = desc.callback;
+        proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
+    }
     auto guids = localStack.allocate<guid_t>(proto.type.length);
     auto stableOrder = localStack.allocate<SIndex>(proto.type.length);
     proto.entitySize = sizeof(dual_entity_t);
