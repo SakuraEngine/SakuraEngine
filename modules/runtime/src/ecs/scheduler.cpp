@@ -138,6 +138,14 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
 void dual::scheduler_t::sync_all()
 {
     allCounter.then([](skr::task::counter_t& e) { e.wait(true); });
+    for(auto& pair : dependencyEntries)
+    {
+        for(auto& entry : pair.second)
+        {
+            entry.owned.clear();
+            entry.shared.clear();
+        }
+    }
 }
 
 void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
@@ -146,6 +154,17 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
         return;
     if(storage->counter)
         storage->counter->wait(true);
+    for(auto& pair : dependencyEntries)
+    {
+        if(pair.first->storage == storage)
+        {
+            for(auto& entry : pair.second)
+            {
+                entry.owned.clear();
+                entry.shared.clear();
+            }
+        }
+    }
 }
 
 namespace dual
@@ -399,12 +418,12 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         if (sharedData->hasRandomWrite || batchSize == 0)
         {
             uint32_t startIndex = 0;
-            auto processView = [&](dual_chunk_view_t* view) {
-                sharedData->callback(sharedData->userdata, query->storage, view, sharedData->localTypes, startIndex);
-                startIndex += view->count;
-            };
             forloop (i, 0, sharedData->groupCount)
             {
+                auto processView = [&](dual_chunk_view_t* view) {
+                    sharedData->callback(sharedData->userdata, query->storage, view, sharedData->localTypes + i * query->parameters.length, startIndex);
+                    startIndex += view->count;
+                };
                 auto group = sharedData->groups[i];
                 query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(processView));
             }
@@ -493,8 +512,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                         });
                         forloop (i, batch.startTask, batch.endTask)
                         {
-                            auto task = &sharedData->tasks[i];
-                            sharedData->callback(sharedData->userdata, sharedData->query->storage, &task->view, sharedData->localTypes + task->groupIndex * sharedData->query->parameters.length, task->startIndex);
+                            auto task = sharedData->tasks[i];
+                            sharedData->callback(sharedData->userdata, sharedData->query->storage, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->parameters.length, task.startIndex);
                         }
                     }, nullptr);
                 }
