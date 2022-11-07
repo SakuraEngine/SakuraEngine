@@ -118,12 +118,11 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                 eastl::string name = "imgui_copy-";
                 name.append(eastl::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
-                        .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
-                        .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
+                    .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
+                    .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
                 },
-                [upload_buffer_handle](rg::RenderGraph& g, rg::CopyPassContext& context){
+                [upload_buffer_handle, draw_data](rg::RenderGraph& g, rg::CopyPassContext& context){
                     auto upload_buffer = context.resolve(upload_buffer_handle);
-                    ImDrawData* draw_data = ImGui::GetDrawData();
                     ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
                     ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
                     for (int n = 0; n < draw_data->CmdListsCount; n++)
@@ -149,15 +148,15 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             });
         // add pass
         render_graph->add_render_pass([=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
-                eastl::string name = "imgui_render-";
-                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
-                builder.set_name(name.c_str())
-                    .set_pipeline(render_pipeline)
-                    .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
-                    .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
-                    .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
-                    .read("texture0", font_handle)
-                    .write(0, target, load_action);
+            eastl::string name = "imgui_render-";
+            name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+            builder.set_name(name.c_str())
+                .set_pipeline(render_pipeline)
+                .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
+                .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+                .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
+                .read("texture0", font_handle)
+                .write(0, target, load_action);
         },
         [target, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle]
         (rg::RenderGraph& g, rg::RenderPassContext& context) {
@@ -191,6 +190,22 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             // (Because we merged all buffers into a single one, we maintain our own offset into them)
             int global_vtx_offset = 0;
             int global_idx_offset = 0;
+            auto resolved_ib = context.resolve(index_buffer_handle);
+            auto resolved_vb = context.resolve(vertex_buffer_handle);
+            if (useCVV)
+            {
+                // upload
+                ImDrawVert* vtx_dst = (ImDrawVert*)resolved_vb->cpu_mapped_address;
+                ImDrawIdx* idx_dst = (ImDrawIdx*)resolved_ib->cpu_mapped_address;
+                for (int n = 0; n < draw_data->CmdListsCount; n++)
+                {
+                    const ImDrawList* cmd_list = draw_data->CmdLists[n];
+                    memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+                    memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+                    vtx_dst += cmd_list->VtxBuffer.Size;
+                    idx_dst += cmd_list->IdxBuffer.Size;
+                }
+            }
             for (int n = 0; n < draw_data->CmdListsCount; n++)
             {
                 const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -215,27 +230,11 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                             (uint32_t)(clip_rect.z - clip_rect.x),
                             (uint32_t)(clip_rect.w - clip_rect.y));
 
-                        auto resolved_ib = context.resolve(index_buffer_handle);
-                        auto resolved_vb = context.resolve(vertex_buffer_handle);
-                        if (useCVV)
-                        {
-                            // upload
-                            ImDrawVert* vtx_dst = (ImDrawVert*)resolved_vb->cpu_mapped_address;
-                            ImDrawIdx* idx_dst = (ImDrawIdx*)resolved_ib->cpu_mapped_address;
-                            for (int n = 0; n < draw_data->CmdListsCount; n++)
-                            {
-                                const ImDrawList* cmd_list = draw_data->CmdLists[n];
-                                memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
-                                memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
-                                vtx_dst += cmd_list->VtxBuffer.Size;
-                                idx_dst += cmd_list->IdxBuffer.Size;
-                            }
-                        }
                         cgpu_render_encoder_bind_index_buffer(context.encoder,
                             resolved_ib, sizeof(uint16_t), 0);
-                            const uint32_t stride = sizeof(ImDrawVert);
+                        const uint32_t vert_stride = sizeof(ImDrawVert);
                         cgpu_render_encoder_bind_vertex_buffers(context.encoder,
-                            1, &resolved_vb, &stride, NULL);
+                            1, &resolved_vb, &vert_stride, NULL);
                         cgpu_render_encoder_draw_indexed(context.encoder,
                             pcmd->ElemCount,
                             pcmd->IdxOffset + global_idx_offset,
