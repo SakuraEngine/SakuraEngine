@@ -17,6 +17,8 @@
 #include "imgui/skr_imgui_rg.h"
 #include "imgui/imgui.h"
 
+#include "resource/resource_system.h"
+
 #include "skr_scene/scene.h"
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_mesh.h"
@@ -73,12 +75,6 @@ SKR_MODULE_METADATA(u8R"(
 )",
 Game)
 
-namespace 
-{
-using namespace skr::guid::literals;
-const auto kGLTFVertexLayoutWithTangentId = "1b357a40-83ff-471c-8903-23e99d95b273"_guid;
-}
-
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
@@ -91,17 +87,6 @@ void SGameModule::on_load(int argc, char** argv)
         scheduler.initialize(options);
         scheduler.bind();
         dualJ_bind_storage(game_world);
-    }
-    // TODO: Refactor this
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attribute_count = 3;
-
-    {
-        using namespace skr::guid::literals;
-        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithTangentId, "GLTFWithTangent", &vertex_layout);
     }
 }
 
@@ -193,6 +178,31 @@ void attach_mesh_on_static_ents(SRendererId renderer, skr_io_ram_service_t* ram_
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
+void attach_mesh_on_static_ents2(SRendererId renderer)
+{
+    auto filter = make_zeroed<dual_filter_t>();
+    auto meta = make_zeroed<dual_meta_filter_t>();
+    auto renderable_type = make_zeroed<dual::type_builder_t>();
+    renderable_type.with<skr_render_effect_t, skr_translation_t>();
+    auto static_type = make_zeroed<dual::type_builder_t>();
+    static_type.with<skr_movement_t>();
+    filter.all = renderable_type.build();
+    filter.none = static_type.build();
+    auto attchFunc = [=](dual_chunk_view_t* view) {
+        auto ents = (dual_entity_t*)dualV_get_entities(view);
+        auto requestSetup = [=](dual_chunk_view_t* view) {
+            using namespace skr::guid::literals;
+
+            auto mesh_comps = (skr_render_mesh_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_mesh_comp_t>::get());
+            auto resource_system = skr::resource::GetResourceSystem();
+            mesh_comps->mesh_resource = "79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid;
+            resource_system->LoadResource(mesh_comps->mesh_resource);
+        };
+        skr_render_effect_access(renderer, ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
+    };
+    dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
+}
+
 const char* gltf_file = "scene.gltf";
 const char* gltf_file2 = "scene.gltf";
 void imgui_button_spawn_girl(SRendererId renderer)
@@ -200,6 +210,8 @@ void imgui_button_spawn_girl(SRendererId renderer)
     static bool onceGuard  = true;
     if (onceGuard)
     {
+        using namespace skr::guid::literals;
+
         auto render_device = skr_get_default_render_device();
         auto girl_mesh_request = make_zeroed<skr_render_mesh_request_t>();
         ImGui::Begin(u8"AsyncMesh");
@@ -208,7 +220,8 @@ void imgui_button_spawn_girl(SRendererId renderer)
         auto ram_service = skr_game_runtime_get_ram_service();
         auto vram_service = render_device->get_vram_service();
         girl_mesh_request.mesh_name = gltf_file2;
-        girl_mesh_request.mesh_resource_request.shuffle_layout = ::kGLTFVertexLayoutWithTangentId;
+        // TODO: refactor this
+        girl_mesh_request.mesh_resource_request.shuffle_layout = "1b357a40-83ff-471c-8903-23e99d95b273"_guid;
         if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
         {
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
@@ -237,6 +250,11 @@ void imgui_button_spawn_girl(SRendererId renderer)
             girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
             girl_mesh_request.queue_override = render_device->get_cpy_queue();
             attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
+            onceGuard = false;
+        }
+        else if (ImGui::Button(u8"LoadMesh(AsResource)"))
+        {
+            attach_mesh_on_static_ents2(renderer);
             onceGuard = false;
         }
         ImGui::End();  
@@ -433,6 +451,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
             elapsed_frame = 0;
             elapsed_us = 0;
         }
+        // Update resources
+        auto resource_system = skr::resource::GetResourceSystem();
+        resource_system->Update();
         // Update camera
         auto cameraUpdate = [=](dual_chunk_view_t* view){
             auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());

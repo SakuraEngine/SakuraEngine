@@ -55,7 +55,6 @@ void SGameRTModule::on_load(int argc, char** argv)
     tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
 
     // texture factory
-    skr::resource::STextureFactory* textureFactory = nullptr;
     {
         skr::resource::STextureFactory::Root factoryRoot = {};
         factoryRoot.dstorage_root = textureRoot;
@@ -67,7 +66,6 @@ void SGameRTModule::on_load(int argc, char** argv)
         resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, textureFactory);
     }
     // mesh factory
-    skr::resource::SMeshFactory* meshFactory = nullptr;
     {
         skr::resource::SMeshFactory::Root factoryRoot = {};
         factoryRoot.dstorage_root = textureRoot;
@@ -122,12 +120,13 @@ void SGameRTModule::on_load(int argc, char** argv)
             }
         }
     }
-    skr::resource::STextureFactory::Destroy(textureFactory);
-    skr::resource::SMeshFactory::Destroy(meshFactory);
 }
 
 void SGameRTModule::on_unload()
 {
+    skr::resource::STextureFactory::Destroy(textureFactory);
+    skr::resource::SMeshFactory::Destroy(meshFactory);
+
     dualS_release(game_world);
     skr_free_renderer(game_renderer);
     

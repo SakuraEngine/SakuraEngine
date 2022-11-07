@@ -17,6 +17,8 @@
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
 
+#include "resource/resource_system.h"
+
 #include "tracy/Tracy.hpp"
 
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
@@ -182,10 +184,23 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     void on_unregister(SRendererId renderer, dual_storage_t* storage) override
     {
         auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
+            auto resource_system = skr::resource::GetResourceSystem();
             auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                if (meshes[i].async_request.render_mesh && meshes[i].async_request.is_buffer_ready())
+                auto status = meshes[i].mesh_resource.get_status();
+                if (status == ESkrLoadingStatus::SKR_LOADING_STATUS_INSTALLED)
+                {
+                    auto mesh_resource = (skr_mesh_resource_id)meshes[i].mesh_resource.get_ptr();
+                    SKR_LOG_TRACE("Mesh Loaded: name - %s, bin0 - %s", mesh_resource->name.c_str(), mesh_resource->bins[0].uri.c_str());
+                    resource_system->UnloadResource(meshes[i].mesh_resource);
+                    resource_system->Update();
+                    while (meshes[i].mesh_resource.get_status() != SKR_LOADING_STATUS_UNLOADED)
+                    {
+                        resource_system->Update();
+                    }
+                }
+                else if (meshes[i].async_request.render_mesh && meshes[i].async_request.is_buffer_ready())
                 {
                     auto render_mesh = meshes[i].async_request.render_mesh;
                     auto mesh_resource = render_mesh->mesh_resource_id;
@@ -233,7 +248,14 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
-                    if (meshes && meshes[i].async_request.is_buffer_ready())
+                    auto status = meshes[i].mesh_resource.get_status();
+                    if (status == SKR_LOADING_STATUS_INSTALLED)
+                    {
+                        auto resourcePtr = (skr_mesh_resource_t*)meshes[i].mesh_resource.get_ptr();
+                        auto renderMesh = resourcePtr->render_mesh;
+                        c += (uint32_t)renderMesh->primitive_commands.size();
+                    }
+                    else if (meshes && meshes[i].async_request.is_buffer_ready())
                     {
                         c += (uint32_t)meshes[i].async_request.render_mesh->primitive_commands.size();
                     }
@@ -314,26 +336,34 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 scales[g_idx].value,
                                 quaternion);
                             // drawcall
-                            if (!meshes[r_idx].async_request.is_buffer_ready())
-                            {
-                                // resources may be ready after produce_drawcall, so we need to check it here
-                                if (push_constants.capacity() <= dc_idx) return;
-
-                                auto& push_const = push_constants.emplace_back();
-                                push_const.world = world;
-                                auto& drawcall = mesh_drawcalls.emplace_back();
-                                drawcall.pipeline = pipeline;
-                                drawcall.push_const_name = push_constants_name;
-                                drawcall.push_const = (const uint8_t*)(&push_const);
-                                drawcall.index_buffer = ibv;
-                                drawcall.vertex_buffers = vbvs;
-                                drawcall.vertex_buffer_count = 4;
-                                dc_idx++;
-                            }
-                            else
+                            auto status = meshes[r_idx].mesh_resource.get_status();
+                            if (meshes[r_idx].async_request.is_buffer_ready() || status == SKR_LOADING_STATUS_INSTALLED)
                             {
                                 const auto& async_request = meshes[r_idx].async_request;
-                                if (async_request.is_buffer_ready())
+                                if (status == SKR_LOADING_STATUS_INSTALLED)
+                                {
+                                    auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
+                                    auto renderMesh = resourcePtr->render_mesh;
+                        
+                                    const auto& cmds = renderMesh->primitive_commands;
+                                    for (auto&& cmd : cmds)
+                                    {
+                                        // resources may be ready after produce_drawcall, so we need to check it here
+                                        if (push_constants.capacity() <= dc_idx) return;
+
+                                        auto& push_const = push_constants.emplace_back();
+                                        push_const.world = world;
+                                        auto& drawcall = mesh_drawcalls.emplace_back();
+                                        drawcall.pipeline = pipeline;
+                                        drawcall.push_const_name = push_constants_name;
+                                        drawcall.push_const = (const uint8_t*)(&push_const);
+                                        drawcall.index_buffer = *cmd.ibv;
+                                        drawcall.vertex_buffers = cmd.vbvs.data();
+                                        drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
+                                        dc_idx++;
+                                    }
+                                }
+                                else if (async_request.is_buffer_ready())
                                 {
                                     const auto& cmds = async_request.render_mesh->primitive_commands;
                                     for (auto&& cmd : cmds)
@@ -353,6 +383,22 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                         dc_idx++;
                                     }
                                 }
+                            }
+                            else
+                            {
+                                // resources may be ready after produce_drawcall, so we need to check it here
+                                if (push_constants.capacity() <= dc_idx) return;
+
+                                auto& push_const = push_constants.emplace_back();
+                                push_const.world = world;
+                                auto& drawcall = mesh_drawcalls.emplace_back();
+                                drawcall.pipeline = pipeline;
+                                drawcall.push_const_name = push_constants_name;
+                                drawcall.push_const = (const uint8_t*)(&push_const);
+                                drawcall.index_buffer = ibv;
+                                drawcall.vertex_buffers = vbvs;
+                                drawcall.vertex_buffer_count = 4;
+                                dc_idx++;
                             }
                         }
                     };
