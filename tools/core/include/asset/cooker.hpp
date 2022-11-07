@@ -10,7 +10,7 @@
 #include "resource/resource_header.h"
 #include "platform/filesystem.hpp"
 #include "task/task.hpp"
-#include "simdjson.h"
+#include "json/reader.h"
 
 struct skr_vfs_t;
 namespace skr::io { class RAMService; }

@@ -1,6 +1,6 @@
 #include <EASTL/shared_ptr.h>
 #include <platform/filesystem.hpp>
-#include "simdjson.h"
+#include "json/reader.h"
 #include "asset/cooker.hpp"
 #include "asset/importer.hpp"
 #include "platform/memory.h"

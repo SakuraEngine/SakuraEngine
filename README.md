@@ -173,7 +173,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - sole 1.0.1 (zlib License)
 - parallel-hashmap 1.3.4 (Apache-2.0)
 - folly (Apache-2.0)
-- simdjson v2.2.2 (Apache-2.0)
+- simdjson v3.0.0 (Apache-2.0)
 - fast_float v3.4.0
 - zlib v1.2.8
 - cgltf v1.13 (MIT)

@@ -8,7 +8,7 @@
 #include "json/reader.h"
 #include <mutex>
 #include "platform/debug.h"
-#include "simdjson.h"
+#include "json/reader.h"
 #include "type/type_registry.h"
 #include "utils/log.hpp"
 #include "utils/defer.hpp"
