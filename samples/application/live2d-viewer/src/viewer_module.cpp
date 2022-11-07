@@ -19,9 +19,9 @@
 #include "skr_renderer/skr_renderer.h"
 #include "skr_renderer/render_effect.h"
 
-#include "skr_live2d/model_resource.h"
-#include "skr_live2d/render_model.h"
-#include "skr_live2d/render_effect.h"
+#include "skr_live2d/l2d_model_resource.h"
+#include "skr_live2d/l2d_render_model.h"
+#include "skr_live2d/l2d_render_effect.h"
 
 #include "tracy/Tracy.hpp"
 

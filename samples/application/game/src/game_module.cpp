@@ -154,31 +154,7 @@ void create_test_scene(SRendererId renderer)
     SKR_LOG_DEBUG("Create Scene 2!");
 }
 
-void attach_mesh_on_static_ents(SRendererId renderer, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
-    const char* path, skr_render_mesh_request_t* request)
-{
-    auto filter = make_zeroed<dual_filter_t>();
-    auto meta = make_zeroed<dual_meta_filter_t>();
-    auto renderable_type = make_zeroed<dual::type_builder_t>();
-    renderable_type.with<skr_render_effect_t, skr_translation_t>();
-    auto static_type = make_zeroed<dual::type_builder_t>();
-    static_type.with<skr_movement_t>();
-    filter.all = renderable_type.build();
-    filter.none = static_type.build();
-    auto attchFunc = [=](dual_chunk_view_t* view) {
-        auto ents = (dual_entity_t*)dualV_get_entities(view);
-        auto requestSetup = [=](dual_chunk_view_t* view) {
-            auto mesh_comps = (skr_render_mesh_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_mesh_comp_t>::get());
-            mesh_comps->async_request = *request;
-            auto render_device = renderer->get_render_device();
-            skr_render_mesh_create_from_gltf(render_device, ram_service, vram_service, path, &mesh_comps->async_request);
-        };
-        skr_render_effect_access(renderer, ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
-    };
-    dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
-}
-
-void attach_mesh_on_static_ents2(SRendererId renderer)
+void async_attach_render_mesh(SRendererId renderer)
 {
     auto filter = make_zeroed<dual_filter_t>();
     auto meta = make_zeroed<dual_meta_filter_t>();
@@ -210,51 +186,10 @@ void imgui_button_spawn_girl(SRendererId renderer)
     static bool onceGuard  = true;
     if (onceGuard)
     {
-        using namespace skr::guid::literals;
-
-        auto render_device = skr_get_default_render_device();
-        auto girl_mesh_request = make_zeroed<skr_render_mesh_request_t>();
         ImGui::Begin(u8"AsyncMesh");
-        auto dstroage_queue = render_device->get_file_dstorage_queue();
-        auto resource_vfs = skr_game_runtime_get_vfs();
-        auto ram_service = skr_game_runtime_get_ram_service();
-        auto vram_service = render_device->get_vram_service();
-        girl_mesh_request.mesh_name = gltf_file2;
-        // TODO: refactor this
-        girl_mesh_request.mesh_resource_request.shuffle_layout = "1b357a40-83ff-471c-8903-23e99d95b273"_guid;
-        if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Disk])"))
+        if (ImGui::Button(u8"LoadMesh(AsResource)"))
         {
-            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-            girl_mesh_request.dstorage_queue_override = dstroage_queue;
-            girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_FILE;
-            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
-            onceGuard = false;
-        }
-        else if (dstroage_queue && ImGui::Button(u8"LoadMesh(DirectStorage[Memory])"))
-        {
-            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-            girl_mesh_request.dstorage_queue_override = dstroage_queue;
-            girl_mesh_request.dstorage_source = CGPU_DSTORAGE_SOURCE_MEMORY;
-            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
-            onceGuard = false;
-        }
-        else if (ImGui::Button(u8"LoadMesh(CopyQueue)"))
-        {
-            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-            girl_mesh_request.queue_override = render_device->get_cpy_queue();
-            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
-            onceGuard = false;
-        }
-        else if (ImGui::Button(u8"LoadMesh(GraphicsQueue)"))
-        {
-            girl_mesh_request.mesh_resource_request.vfs_override = resource_vfs;
-            girl_mesh_request.queue_override = render_device->get_cpy_queue();
-            attach_mesh_on_static_ents(renderer, ram_service, vram_service, gltf_file2, &girl_mesh_request);
-            onceGuard = false;
-        }
-        else if (ImGui::Button(u8"LoadMesh(AsResource)"))
-        {
-            attach_mesh_on_static_ents2(renderer);
+            async_attach_render_mesh(renderer);
             onceGuard = false;
         }
         ImGui::End();  
