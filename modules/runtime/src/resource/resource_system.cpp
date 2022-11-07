@@ -645,7 +645,7 @@ void SResourceRequest::Update()
 
 bool SResourceRequest::Okay()
 {
-    bool installed = !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED);
+    bool installed = resourceRecord && !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED);
     return (currentPhase == SKR_LOADING_PHASE_FINISHED) && (isLoading == requireLoading) && (requestInstall <= installed);
 }
 
