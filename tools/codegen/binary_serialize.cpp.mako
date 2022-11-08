@@ -10,9 +10,18 @@ int __Archive(S* archive, ${record.name}& record)
 {
     int ret = 0;
     %for name, field in generator.filter_fields(record.fields):
+    %if field.arraySize > 0:
+    for(int i = 0; i < ${field.arraySize}; ++i)
+    {
+        ret = Archive(archive, record.${name}[i]);
+        if(ret != 0)
+            return ret;
+    }
+    %else:
     ret = Archive(archive, record.${name});
     if(ret != 0)
         return ret;
+    %endif
     %endfor
     return ret;
 }

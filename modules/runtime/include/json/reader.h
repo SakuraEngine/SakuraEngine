@@ -56,7 +56,7 @@ enum error_code
     NUM_JSON_ERROR_CODES,
     ENUMERATOR_ERROR,
     GUID_ERROR,
-    NUM_ERROR_CODES
+    NUM_ERROR_CODES,
 };
 struct error_code_info {
     error_code code;
@@ -66,7 +66,7 @@ RUNTIME_API const char* error_message(error_code err) noexcept;
 RUNTIME_API void set_error_message(error_code err) noexcept;
 
 template <class T>
-error_code ReadValue(simdjson::ondemand::value&& json, T& value)
+std::enable_if_t<!std::is_enum_v<T>, error_code> ReadValue(simdjson::ondemand::value&& json, T& value)
 {
     static_assert(!sizeof(T), "ReadValue not implemented for this type, please include the appropriate generated header!");
     return error_code::SUCCESS;
@@ -90,6 +90,12 @@ template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, struct skr_guid_t& guid);
 template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, skr_resource_handle_t& handle);
+
+template <class T>
+std::enable_if_t<std::is_enum_v<T>, error_code> ReadValue(simdjson::ondemand::value&& json, T& value)
+{
+    return ReadValue(std::move(json), reinterpret_cast<std::underlying_type_t<T>&>(value));
+}
 
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value);
