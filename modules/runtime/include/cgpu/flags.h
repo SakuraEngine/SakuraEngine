@@ -461,6 +461,15 @@ typedef enum ECGPUTextureDimension
     CGPU_TEX_DIMENSION_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGPUTextureDimension;
 
+typedef enum ECGPUShaderBytecodeType
+{
+    CGPU_SHADER_BYTECODE_TYPE_SPIRV,
+    CGPU_SHADER_BYTECODE_TYPE_DXIL,
+    CGPU_SHADER_BYTECODE_TYPE_MTL,
+    CGPU_SHADER_BYTECODE_TYPE_COUNT,
+    CGPU_SHADER_BYTECODE_TYPE_MAX_ENUM_BIT = 0x7FFFFFFF
+} ECGPUShaderBytecodeType;
+
 // Same Value As Vulkan Enumeration Bits.
 typedef enum ECGPUShaderStage
 {
