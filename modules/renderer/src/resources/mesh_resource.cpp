@@ -351,18 +351,22 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     struct UploadRequest
     {
         UploadRequest() = default;
-        UploadRequest(SMeshFactoryImpl* factory, const char* resource_uri, skr_mesh_resource_id mesh_resource)
-            : factory(factory), resource_uri(resource_uri), mesh_resource(mesh_resource)
+        UploadRequest(SMeshFactoryImpl* factory,skr_mesh_resource_id mesh_resource)
+            : factory(factory), mesh_resource(mesh_resource)
         {
 
         }
         ~UploadRequest()
         {
-            SKR_LOG_TRACE("Upload for mesh resource %s finished!", resource_uri.c_str());
+            
         }
         SMeshFactoryImpl* factory = nullptr;
-        std::string resource_uri;
         skr_mesh_resource_id mesh_resource = nullptr;
+        eastl::vector<std::string> resource_uris;
+        eastl::vector<skr_async_io_request_t> ram_requests;
+        eastl::vector<skr_async_ram_destination_t> ram_destinations;
+        eastl::vector<skr_async_io_request_t> vram_requests;
+        eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
     };
 
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
@@ -504,6 +508,77 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithDStorage(skr_resource_record_t* r
 
 ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* record)
 {
+    const auto noCompression = true;
+    auto mesh_resource = (skr_mesh_resource_t*)record->resource;
+    auto guid = record->activeRequest->GetGuid();
+    if (auto render_device = root.render_device)
+    {
+        if (noCompression)
+        {
+            auto uRequest = SPtr<UploadRequest>::Create(this, mesh_resource);
+            uRequest->resource_uris.resize(mesh_resource->bins.size());
+            uRequest->ram_requests.resize(mesh_resource->bins.size());
+            uRequest->ram_destinations.resize(mesh_resource->bins.size());
+            uRequest->vram_requests.resize(mesh_resource->bins.size());
+            uRequest->buffer_destinations.resize(mesh_resource->bins.size());
+            InstallType installType = {EInstallMethod::UPLOAD, ECompressMethod::NONE};
+            auto found = mUploadRequests.find(mesh_resource);
+            SKR_ASSERT(found == mUploadRequests.end());
+
+            for (auto i = 0u; i < mesh_resource->bins.size(); i++)
+            {
+                auto binPath = skr::format("{}.buffer{}", guid, i);
+                auto fullBinPath = root.dstorage_root / binPath.c_str();
+                auto&& ramRequest = uRequest->ram_requests[i];
+                auto&& ramDestination = uRequest->ram_destinations[i];
+                auto&& ramPath = uRequest->resource_uris[i];
+
+                ramPath = fullBinPath.u8string();
+
+                // emit ram requests
+                auto ram_mesh_io = make_zeroed<skr_ram_io_t>();
+                ram_mesh_io.path = binPath.c_str();
+                ram_mesh_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
+                    ZoneScopedN("Upload Mesh");
+                    // upload
+                    auto uRequest = (UploadRequest*)data;
+                    const auto i = request - uRequest->ram_requests.data();
+                    auto factory = uRequest->factory;
+                    auto render_device = factory->root.render_device;
+                    auto mesh_resource = uRequest->mesh_resource;
+
+                    auto vram_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
+                    vram_buffer_io.device = render_device->get_cgpu_device();
+                    vram_buffer_io.transfer_queue = render_device->get_cpy_queue();
+
+                    const auto& thisBin = mesh_resource->bins[i];
+                    CGPUResourceTypes flags = CGPU_RESOURCE_TYPE_NONE;
+                    flags |= thisBin.used_with_index ? CGPU_RESOURCE_TYPE_INDEX_BUFFER : 0;
+                    flags |= thisBin.used_with_vertex ? CGPU_RESOURCE_TYPE_VERTEX_BUFFER : 0;
+                    vram_buffer_io.vbuffer.resource_types = flags;
+                    vram_buffer_io.vbuffer.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+                    vram_buffer_io.vbuffer.flags = CGPU_BCF_NO_DESCRIPTOR_VIEW_CREATION;
+                    vram_buffer_io.vbuffer.buffer_size = thisBin.byte_length;
+                    vram_buffer_io.vbuffer.buffer_name = nullptr; // TODO: set name
+
+                    vram_buffer_io.src_memory.size = thisBin.byte_length;
+                    vram_buffer_io.src_memory.bytes = uRequest->ram_destinations[i].bytes;
+                    vram_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data){};
+                    vram_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = nullptr;
+
+                    factory->root.vram_service->request(&vram_buffer_io, &uRequest->vram_requests[i], &uRequest->buffer_destinations[i]);
+                };
+                ram_mesh_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)uRequest.get();
+                root.ram_service->request(root.texture_vfs, &ram_mesh_io, &ramRequest, &ramDestination);
+            }
+            mUploadRequests.emplace(mesh_resource, uRequest);
+            mInstallTypes.emplace(mesh_resource, installType);
+        }
+        else
+        {
+            SKR_UNIMPLEMENTED_FUNCTION();
+        }
+    }
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
 }
 
@@ -521,15 +596,17 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
             {
                 okay &= dRequest.is_ready();
             }
-
             auto status = okay ? ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED : ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
             if (okay)
             {
-                mesh_resource->render_mesh = SkrNew<skr_render_mesh_t>();
+                auto render_mesh = mesh_resource->render_mesh = SkrNew<skr_render_mesh_t>();
                 // TODO: remove these requests
-                mesh_resource->render_mesh->buffer_destinations = dRequest->second->dDestinations;
-                mesh_resource->render_mesh->vio_requests = dRequest->second->dRequests;
-                skr_render_mesh_initialize(mesh_resource->render_mesh, mesh_resource);
+                render_mesh->buffers.resize(dRequest->second->dDestinations.size());
+                for (auto i = 0u; i < dRequest->second->dDestinations.size(); i++)
+                {
+                    render_mesh->buffers[i] = dRequest->second->dDestinations[i].buffer;
+                }
+                skr_render_mesh_initialize(render_mesh, mesh_resource);
 
                 mDStorageRequests.erase(mesh_resource);
                 mInstallTypes.erase(mesh_resource);
@@ -543,7 +620,39 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
     }
     else if (installType.install_method == EInstallMethod::UPLOAD)
     {
-        SKR_UNREACHABLE_CODE();
+        auto uRequest = mUploadRequests.find(mesh_resource);
+        if (uRequest != mUploadRequests.end())
+        {
+            bool okay = true;
+            for (auto&& rRequest : uRequest->second->ram_requests)
+            {
+                okay &= rRequest.is_ready();
+            }
+            for (auto&& vRequest : uRequest->second->vram_requests)
+            {
+                okay &= vRequest.is_ready();
+            }
+            auto status = okay ? ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED : ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
+            if (okay)
+            {
+                auto render_mesh = mesh_resource->render_mesh = SkrNew<skr_render_mesh_t>();
+                // TODO: remove these requests
+                render_mesh->buffers.resize(uRequest->second->buffer_destinations.size());
+                for (auto i = 0u; i < uRequest->second->buffer_destinations.size(); i++)
+                {
+                    render_mesh->buffers[i] = uRequest->second->buffer_destinations[i].buffer;
+                }
+                skr_render_mesh_initialize(render_mesh, mesh_resource);
+
+                mDStorageRequests.erase(mesh_resource);
+                mInstallTypes.erase(mesh_resource);
+            }
+            return status;
+        }
+        else
+        {
+            SKR_UNREACHABLE_CODE();
+        }
     }
 
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
