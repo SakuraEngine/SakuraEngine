@@ -119,15 +119,15 @@ void create_test_scene(SRendererId renderer)
             }
             else
             {
-                translations[i].value = { 0.f, 0.f, 0.f };
+                translations[i].value = { 0.f, 30.f, -10.f };
                 rotations[i].euler = { 0.f, 0.f, 0.f };
-                scales[i].value = { 1.f, 1.f, 1.f };
+                scales[i].value = { .25f, .25f, .25f };
             }
         }
-
-        auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get());
-        if(feature_arrs)
+        if(auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get()))
+        {
             skr_render_effect_attach(renderer, view, "ForwardEffect");
+        }
     };
     dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
 

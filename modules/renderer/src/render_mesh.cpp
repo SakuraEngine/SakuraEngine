@@ -42,12 +42,12 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
             {
                 auto& mesh_vbv = render_mesh->vertex_buffer_views.emplace_back();
                 const auto buffer_index = prim.vertex_buffers[j].buffer_index;
-                mesh_vbv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
+                mesh_vbv.buffer = render_mesh->buffers[buffer_index];
                 mesh_vbv.offset = prim.vertex_buffers[j].offset;
                 mesh_vbv.stride = prim.vertex_buffers[j].stride;
             }
             const auto buffer_index = prim.index_buffer.buffer_index;
-            mesh_ibv.buffer = render_mesh->buffer_destinations[buffer_index].buffer;
+            mesh_ibv.buffer = render_mesh->buffers[buffer_index];
             mesh_ibv.offset = prim.index_buffer.index_offset;
             mesh_ibv.stride = prim.index_buffer.stride;
             mesh_ibv.index_count = prim.index_buffer.index_count;
@@ -61,9 +61,9 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
 
 void skr_render_mesh_free(skr_render_mesh_id render_mesh)
 {
-    for (auto&& destination : render_mesh->buffer_destinations)
+    for (auto&& buffer : render_mesh->buffers)
     {
-        cgpu_free_buffer(destination.buffer);
+        cgpu_free_buffer(buffer);
     }
     SkrDelete(render_mesh);
 }
