@@ -13,7 +13,7 @@ sattr("serialize" : ["json", "bin"])
 skr_shader_hash_t 
 {
     uint32_t flags;
-    skr_guid_t encoded_digits;
+    uint32_t encoded_digits[4];
 };
 typedef struct skr_shader_hash_t skr_shader_hash_t;
 
@@ -21,7 +21,7 @@ sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
 sattr("serialize" : ["json", "bin"])
 skr_platform_shader_identifier_t 
 {
-    uint32_t bytecode_type; // ECGPUShaderBytecodeType
+    ECGPUShaderBytecodeType bytecode_type; // ECGPUShaderBytecodeType
     skr_shader_hash_t hash;
     eastl::string entry;
 };

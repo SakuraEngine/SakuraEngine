@@ -41,9 +41,6 @@ void WriteValue(skr_json_writer_t* writer, ${enum.name} e)
 template<>
 error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
 {
-    <%
-        print(record.name)
-    %>
     %for base in record.bases:
     {
         auto baseJson = json;
@@ -64,12 +61,48 @@ error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
         }
         else
         {
+            %if field.arraySize > 0:
+            {
+                auto array = field.get_array();
+                if (array.error() != simdjson::SUCCESS)
+                {
+                    SKR_LOG_ERROR("Failed to read array ${name} in record ${record.name} %s", error_message((error_code)array.error()));
+                    return (error_code)array.error();
+                }
+                size_t i = 0;
+                for (auto element : array.value_unsafe())
+                {
+                    if(i > ${field.arraySize})
+                    {
+                        SKR_LOG_WARN("Array ${name} in record ${record.name} has too many elements");
+                        break;
+                    }
+                    if (element.error() != simdjson::SUCCESS)
+                    {
+                        SKR_LOG_ERROR("Failed to read field ${name} array element %lld in record ${record.name}", i);
+                        return (error_code)element.error();
+                    }
+                    error_code result = skr::json::Read(std::move(element), record.${name}[i]);
+                    if(result != error_code::SUCCESS)
+                    {
+                        SKR_LOG_ERROR("Failed to read field ${name} array element %lld in record ${record.name}", i);
+                        return result;
+                    }
+                    ++i;
+                }
+                if(i < ${field.arraySize})
+                {
+                    SKR_LOG_WARN("Array ${name} in record ${record.name} has too few elements");
+                }
+            }
+            %else:
             error_code result = skr::json::Read(std::move(field).value_unsafe(), (${field.type}&)record.${name});
             if(result != error_code::SUCCESS)
             {
                 SKR_LOG_ERROR("Failed to read field ${name} of record ${record.name} %s", error_message(result));
                 return result;
             }
+            %endif
         }
     }
     %endfor
@@ -83,7 +116,12 @@ void WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
     %endfor
     %for name, field in vars(record.fields).items():
     writer->Key("${name}", ${len(name)});
+    %if field.arraySize > 0:
+    for(int i = 0; i < ${field.arraySize}; ++i)
+        skr::json::Write<skr::json::TParamType<${field.type}>>(writer, record.${name}[i]);
+    %else:
     skr::json::Write<skr::json::TParamType<${field.type}>>(writer, record.${name});
+    %endif
     %endfor
 } 
 template<>
