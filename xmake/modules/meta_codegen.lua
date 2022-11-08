@@ -223,7 +223,8 @@ function collect_headers_batch(target)
             table.insert(headerfiles, filepath)
         end
     end
-    local batchsize = extraconf and extraconf.batchsize or 10
+    -- local batchsize = extraconf and extraconf.batchsize or 10
+    local batchsize = 999
     local extraconf = target:extraconf("rules", "c++.codegen")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
