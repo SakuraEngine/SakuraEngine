@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
+#include "utils/types.h"
 
 #ifdef __cplusplus
 namespace skr { struct RendererDevice; }
@@ -10,3 +11,5 @@ class SkrRendererModule;
 typedef struct SRenderDevice SRenderDevice;
 #endif
 typedef SRenderDevice* SRenderDeviceId;
+
+typedef skr_guid_t skr_vertex_layout_id;

@@ -1,11 +1,9 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "utils/types.h"
+#include "skr_renderer/fwd_types.h"
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
-
-typedef skr_guid_t skr_vertex_layout_id;
 
 sreflect_struct("guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca")
 sattr("serialize" : "bin")

@@ -174,7 +174,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             type_builder.with<skr_render_mesh_comp_t>();
             typeset = type_builder.build();
         }
-
+        // initialize queries
         effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
         camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
         // prepare render resources
