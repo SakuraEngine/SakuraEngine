@@ -15,7 +15,9 @@
 struct skr_vfs_t;
 namespace skr::io { class RAMService; }
 
-namespace skd::asset sreflect
+namespace skd sreflect
+{
+namespace asset sreflect
 {
 struct SImporter;
 struct SCookSystem;
@@ -149,4 +151,5 @@ void RegisterCooker(skr_guid_t guid)
     static T instance;
     GetCookSystem()->RegisterCooker(guid, &instance);
 }
-} // namespace skd::assetsreflect
+} // namespace asset
+} // namespace skd
