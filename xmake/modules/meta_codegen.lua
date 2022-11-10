@@ -34,7 +34,7 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
     end
 
-    os.runv(meta.vexec, argv)
+    os.runv(meta.program, argv)
 
     if not opt.quiet then
         local now = os.time()
