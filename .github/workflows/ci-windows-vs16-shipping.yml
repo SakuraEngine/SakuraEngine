@@ -5,42 +5,50 @@ env:
   VulkanSDKVersion: 1.2.162.1
 
 jobs:
- build-windows:
-  runs-on: windows-2019
-  steps:
-   - uses: actions/checkout@v2
-     with:
-      lfs: 'true'
-   - uses: xmake-io/github-action-setup-xmake@v1
-     with:
-      xmake-version: latest
-   - name: Set env
-     id: env
-     run: |
-        echo "::set-output name=VULKAN_SDK::C:\VulkanSDK\${{env.VulkanSDKVersion}}"
-        xmake g -c
-        xmake l setup.lua
-   - name: Cache
-     id: cache
-     uses: actions/cache@v1.1.2
-     with:
-      path: ${{steps.env.outputs.VULKAN_SDK}}
-      key: VulkanSdk${{env.VulkanSDKVersion}}WindowsExtracted2
-   - name: Download & Install Vulkan SDK
-     if: steps.cache.outputs.cache-hit != 'true'
-     run: |
-        Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/${{env.VulkanSDKVersion}}/windows/VulkanSDK-${{env.VulkanSDKVersion}}-Installer.exe?u= -OutFile ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe
-        $installer = Start-Process -FilePath ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe -Wait -PassThru -ArgumentList @("/S");
-        $installer.WaitForExit();
-   - name: Shipping
-     shell: cmd
-     run: |
-        xmake f -m release --cc=clang-cl --cxx=clang-cl -c -y -v --build_tests=n --build_editors=n --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
-        xmake -y -v
-     env:
-        VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
-   - name: UploadShipping
-     uses: actions/upload-artifact@v3
-     with:
-        name: artifacts
-        path: build/windows
+  build-windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: "true"
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+      - name: Set env
+        id: env
+        run: |
+          echo "::set-output name=VULKAN_SDK::C:\VulkanSDK\${{env.VulkanSDKVersion}}"
+          xmake g -c
+          xmake l setup.lua
+      - name: Cache
+        id: cache
+        uses: actions/cache@v1.1.2
+        with:
+          path: ${{steps.env.outputs.VULKAN_SDK}}
+          key: VulkanSdk${{env.VulkanSDKVersion}}WindowsExtracted2
+      - name: Download & Install Vulkan SDK
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/${{env.VulkanSDKVersion}}/windows/VulkanSDK-${{env.VulkanSDKVersion}}-Installer.exe?u= -OutFile ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe
+          $installer = Start-Process -FilePath ../vulkan-sdk-${{env.VulkanSDKVersion}}.exe -Wait -PassThru -ArgumentList @("/S");
+          $installer.WaitForExit();
+      - name: Shipping
+        if: success() || failure()
+        shell: cmd
+        run: |
+          xmake f -m release --cc=clang-cl --cxx=clang-cl -c -y -v --build_tests=n --build_editors=n --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
+          xmake -y -v
+        env:
+          VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
+      - name: UploadGeneratedFiles
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact-files
+          path: build/.gens
+      - name: UploadShipping
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: build/windows
