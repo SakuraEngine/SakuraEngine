@@ -294,6 +294,11 @@ function generate_once(targetname)
         targets = all_targets
     end
 
+    -- permission
+    if (os.host() == "macosx") then
+        os.exec("chmod -R 777 "..meta.program)
+    end
+    
     -- parameters
     local opt = {}
     if has_config("is_msvc") then
