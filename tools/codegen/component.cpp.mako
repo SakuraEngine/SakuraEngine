@@ -1,3 +1,13 @@
+<%
+    def filter_fileds(fields, pred, base=0):
+        result = []
+        for name, field in vars(fields).items():
+            if pred(name, field):
+                result.append(str(field.offset + base))
+            elif field.type in db.name_to_record:
+                result = result + filter_fileds(db.name_to_record[field.type].fields, pred, field.offset)
+        return result
+%>
 // BEGIN DUAL GENERATED
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
@@ -16,7 +26,7 @@ static struct RegisterComponent${type.id}Helper
         desc.size = sizeof(${type.name});
     %endif
     <%
-        entityFields = [str(field.offset) for name, field in vars(type.fields).items() if field.rawType == "dual_entity_t"]
+        entityFields = filter_fileds(type.fields, lambda name, field: field.rawType == "dual_entity_t")
     %>
     %if entityFields:
         desc.entityFieldsCount = ${len(entityFields)};
@@ -27,7 +37,7 @@ static struct RegisterComponent${type.id}Helper
         desc.entityFields = 0;
     %endif
     <%
-        resourceFields = [str(field.offset) for name, field in vars(type.fields).items() if field.rawType == "skr_resource_handle_t" or field.rawType.startswith("TResourceHandle")]
+        resourceFields = filter_fileds(type.fields, lambda name, field: field.rawType == "skr_resource_handle_t" or field.rawType.startswith("TResourceHandle"))
     %>
     %if resourceFields:
         desc.resourceFieldsCount = ${len(resourceFields)};
