@@ -37,20 +37,20 @@ typedef skr_guid_t dual_guid_t;
  */
 typedef void (*guid_func_t)(dual_guid_t* guid);
 typedef struct dual_mapper_t {
-    void (*map)(void* user, dual_entity_t* ent);
-    void* user;
+    void (*map)(void* user, dual_entity_t* ent) SKR_IF_CPP(=nullptr);
+    void* user SKR_IF_CPP(=nullptr);
 } dual_mapper_t;
 
 typedef struct skr_binary_writer_t skr_binary_writer_t;
 typedef struct skr_binary_reader_t skr_binary_reader_t;
 typedef struct dual_callback_v {
-    void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data);
-    void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src);
-    void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data);
-    void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src);
-    void (*serialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer);
-    void (*deserialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader);
-    void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* v);
+    void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data) SKR_IF_CPP(=nullptr);
+    void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) SKR_IF_CPP(=nullptr);
+    void (*destructor)(dual_chunk_t* chunk, EIndex index, char* data) SKR_IF_CPP(=nullptr);
+    void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) SKR_IF_CPP(=nullptr);
+    void (*serialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) SKR_IF_CPP(=nullptr);
+    void (*deserialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) SKR_IF_CPP(=nullptr);
+    void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* v) SKR_IF_CPP(=nullptr);
 } dual_callback_v;
 
 enum type_flags
