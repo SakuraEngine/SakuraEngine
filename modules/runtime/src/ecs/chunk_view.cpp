@@ -157,6 +157,7 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
             guidDst[j] = registry.make_guid();
         return;
     }
+    auto storage = dstV.chunk->type->storage;
     auto patchResources = [&](char* data)
     {
         forloop(k, 0, resourceFields.count)
@@ -165,7 +166,7 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
             auto* resource = (skr_resource_handle_t*)(data + field);
             if(resource->is_resolved())
             {
-                new (resource) skr_resource_handle_t(resource->clone(*(dstV.chunk->get_entities() + dstV.start), SKR_REQUESTER_ENTITY));
+                new (resource) skr_resource_handle_t(*resource, (uint64_t)storage, SKR_REQUESTER_ENTITY);
             }
         }
     };
