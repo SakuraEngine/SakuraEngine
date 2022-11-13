@@ -91,13 +91,13 @@ void SResourceSystem::UnregisterFactory(skr_type_id_t type)
     resourceFactories.erase(iter);
 }
 
-void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint32_t requester, ESkrRequesterType requesterType)
+void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType)
 {
     SMutexLock lock(recordMutex);
     SKR_ASSERT(!handle.is_resolved());
     auto record = _GetOrCreateRecord(handle.get_guid());
-    handle.set_resolved(record, requester, requesterType);
-    record->references.push_back({ requester, requesterType });
+    auto requesterId = record->AddReference(requester, requesterType);
+    handle.set_resolved(record, requesterId, requesterType);
     if ((!requireInstalled && record->loadingStatus >= SKR_LOADING_STATUS_LOADED && record->loadingStatus < SKR_LOADING_STATUS_UNLOADING) ||
         (requireInstalled && record->loadingStatus == SKR_LOADING_STATUS_INSTALLED)) // already loaded
         return;
@@ -129,10 +129,10 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
     SKR_ASSERT(handle.is_resolved() && !handle.is_null());
     auto record = handle.get_record();
     SKR_ASSERT(record->loadingStatus != SKR_LOADING_STATUS_UNLOADED);
-    record->references.erase_first_unsorted(skr_resource_record_t::requester_id{ handle.get_requester(), handle.get_requester_type() });
+    record->RemoveReference(handle.get_requester_id(), handle.get_requester_type());
     auto guid = handle.guid = record->header.guid; // force flush handle to guid
 
-    if (record->references.empty()) // unload
+    if (!record->IsReferenced()) // unload
     {
         if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
         {

@@ -173,9 +173,8 @@ void async_attach_render_mesh(SRendererId renderer)
             using namespace skr::guid::literals;
 
             auto mesh_comps = (skr_render_mesh_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_mesh_comp_t>::get());
-            auto resource_system = skr::resource::GetResourceSystem();
             mesh_comps->mesh_resource = "79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid;
-            resource_system->LoadResource(mesh_comps->mesh_resource);
+            mesh_comps->mesh_resource.resolve(true, renderer->get_dual_storage());
         };
         skr_render_effect_access(renderer, ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
     };

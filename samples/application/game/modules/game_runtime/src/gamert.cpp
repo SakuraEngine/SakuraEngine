@@ -79,8 +79,8 @@ void SGameRTModule::on_load(int argc, char** argv)
     // load resources
     skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
     skr_resource_handle_t gltfHdl("79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid);
-    resource_system->LoadResource(textureHdl);
-    resource_system->LoadResource(gltfHdl);
+    textureHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
+    gltfHdl.resolve(true, 1, SKR_REQUESTER_SYSTEM);
     // texture
     {
         while (textureHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && textureHdl.get_status() != SKR_LOADING_STATUS_ERROR)
@@ -95,7 +95,7 @@ void SGameRTModule::on_load(int argc, char** argv)
                 texture->format, texture->mips_count, texture->data_size);
             resource_system->UnloadResource(textureHdl);
             resource_system->Update();
-            while (textureHdl.get_status() != SKR_LOADING_STATUS_UNLOADED)
+            while (textureHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
             {
                 resource_system->Update();
             }
@@ -114,7 +114,7 @@ void SGameRTModule::on_load(int argc, char** argv)
             SKR_LOG_TRACE("Mesh Loaded: name - %s, bin0 - %s", mesh->name.c_str(), mesh->bins[0].uri.c_str());
             resource_system->UnloadResource(gltfHdl);
             resource_system->Update();
-            while (gltfHdl.get_status() != SKR_LOADING_STATUS_UNLOADED)
+            while (gltfHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
             {
                 resource_system->Update();
             }

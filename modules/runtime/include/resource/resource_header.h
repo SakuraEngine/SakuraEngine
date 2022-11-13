@@ -42,18 +42,32 @@ namespace skr::resource
 {
 struct SResourceRequest;
 }
-struct skr_resource_record_t {
-    void* resource;
-    void (*destructor)(void*);
-    ESkrLoadingStatus loadingStatus;
-    struct requester_id {
+struct RUNTIME_API skr_resource_record_t {
+    void* resource = nullptr;
+    void (*destructor)(void*) = nullptr;
+    ESkrLoadingStatus loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+    struct object_requester {
         uint32_t id;
+        void* requester = nullptr;
         ESkrRequesterType type;
-        bool operator==(const requester_id& other) const { return id == other.id && type == other.type; };
+        bool operator==(const object_requester& other) const { return id == other.id && type == other.type; };
     };
-    uint32_t id;
-    eastl::vector<requester_id> references;
+    struct entity_requester {
+        uint32_t id;
+        struct dual_storage_t* storage = nullptr;
+        uint32_t entityRefCount = 0;
+        bool operator==(const entity_requester& other) const { return id == other.id; };
+    };
+    uint32_t id = 0;
+    uint32_t requesterCounter = 0;
+    eastl::vector<object_requester> objectReferences;
+    eastl::vector<entity_requester> entityReferences;
+    uint32_t entityRefCount = 0;
     skr_resource_header_t header;
     skr::resource::SResourceRequest* activeRequest;
+
+    uint32_t AddReference(uint64_t requester, ESkrRequesterType requesterType);
+    void RemoveReference(uint32_t id, ESkrRequesterType requesterType);
+    bool IsReferenced() const;
 };
 #endif

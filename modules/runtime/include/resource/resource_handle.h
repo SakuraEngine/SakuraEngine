@@ -17,7 +17,7 @@ typedef struct skr_resource_handle_t {
         struct
         {
             uint32_t padding;   // zero, flag for resolved or not
-            uint32_t requester; // requester id
+            uint32_t requesterId; // requester id
             // since resource record is allocated with alignment 8, the lower 3 bits should always be zero
             // so we put requester type into it
             uint64_t pointer; // resource record ptr & requester type
@@ -28,6 +28,7 @@ typedef struct skr_resource_handle_t {
     RUNTIME_API ~skr_resource_handle_t();
     RUNTIME_API skr_resource_handle_t(const skr_guid_t& other);
     RUNTIME_API skr_resource_handle_t(const skr_resource_handle_t& other);
+    RUNTIME_API skr_resource_handle_t(const skr_resource_handle_t& other, uint64_t requester, ESkrRequesterType requesterType);
     RUNTIME_API skr_resource_handle_t(skr_resource_handle_t&& other);
     RUNTIME_API skr_resource_handle_t& operator=(const skr_resource_handle_t& other);
     RUNTIME_API skr_resource_handle_t& operator=(const skr_guid_t& other);
@@ -37,20 +38,23 @@ typedef struct skr_resource_handle_t {
     RUNTIME_API bool is_resolved() const;
     RUNTIME_API void* get_resolved(bool requireInstalled = true) const;
     RUNTIME_API skr_guid_t get_serialized() const;
-    RUNTIME_API void resolve(bool requireInstalled = true, uint32_t requester = 0, ESkrRequesterType requesterType = SKR_REQUESTER_UNKNOWN);
-    RUNTIME_API skr_resource_handle_t clone(uint32_t requester = 0, ESkrRequesterType requesterType = SKR_REQUESTER_UNKNOWN);
+    RUNTIME_API void resolve(bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType);
+    void resolve(bool requireInstalled, struct dual_storage_t* requester)
+    {
+        resolve(requireInstalled, (uint64_t)requester, SKR_REQUESTER_ENTITY);
+    }
     RUNTIME_API void unload();
     RUNTIME_API skr_guid_t get_guid() const;
     RUNTIME_API void* get_ptr() const;
     RUNTIME_API bool is_null() const;
     RUNTIME_API void reset();
-    RUNTIME_API uint32_t get_requester() const;
+    RUNTIME_API uint32_t get_requester_id() const;
     RUNTIME_API ESkrRequesterType get_requester_type() const;
     //if resolve is false, then unresolve handle will always return SKR_LOADING_STATUS_UNLOADED
     RUNTIME_API ESkrLoadingStatus get_status(bool resolve = false) const;
     RUNTIME_API skr_resource_record_t* get_record() const;
     RUNTIME_API void set_record(skr_resource_record_t* record);
-    RUNTIME_API void set_resolved(skr_resource_record_t* record, uint32_t requester, ESkrRequesterType requesterType);
+    RUNTIME_API void set_resolved(skr_resource_record_t* record, uint32_t requesterId, ESkrRequesterType requesterType);
 #endif
 } skr_resource_handle_t;
 

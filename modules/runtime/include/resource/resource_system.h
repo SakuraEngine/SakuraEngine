@@ -122,7 +122,7 @@ public:
     void Update();
 
     void LoadResource(skr_resource_handle_t& handle,
-        bool requireInstalled = true, uint32_t requester = 0, ESkrRequesterType = SKR_REQUESTER_UNKNOWN);
+        bool requireInstalled, uint64_t requester, ESkrRequesterType);
     void UnloadResource(skr_resource_handle_t& handle);
     ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle);
 
