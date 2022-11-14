@@ -14,7 +14,7 @@ shared_module("GameRT", "GAMERT", engine_version)
 target("Game")
     set_group("04.examples/application")
     set_kind("binary")
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     public_dependency("GameRT", "0.1.0")
     add_rules("utils.install-resources", {
         extensions = {".gltf", ".bin", ".png"},
@@ -56,7 +56,7 @@ target("Example-VMemController")
     set_kind("binary")
     public_dependency("SkrRenderGraph", engine_version)
     public_dependency("SkrImGui", engine_version)
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_files("vmem_controller/**.cpp")
     if (is_os("windows")) then 
         add_files("/../../resources/windows/sakura.rc")
@@ -78,7 +78,7 @@ target("Example-Live2DViewer")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Live2DViewer",
         dxil_outdir = "/../resources/shaders/Live2DViewer"})
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("live2d-viewer/include", {public=true})
     add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")

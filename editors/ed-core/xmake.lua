@@ -4,7 +4,7 @@ target("SkrEditorCore")
     if is_plat("windows") then
         add_cxflags("/Zc:__cplusplus", "/permissive-", {public = true})
     end
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     -- set_kind("shared")
     public_dependency("SkrLightningStorage", "0.1.0")

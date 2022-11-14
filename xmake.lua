@@ -1,3 +1,4 @@
+set_xmakever("2.7.3")
 set_project("SakuraEngine")
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
