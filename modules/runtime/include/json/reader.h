@@ -140,7 +140,7 @@ struct ReadHelper<eastl::vector<V, Allocator>> {
         auto array = json.get_array();
         if (array.error() != simdjson::SUCCESS)
             return (error_code)array.error();
-        vec.reserve(array.value_unsafe().count_elements());
+        vec.reserve(array.value_unsafe().count_elements().value_unsafe());
         for (auto value : array.value_unsafe())
         {
             if (value.error() != simdjson::SUCCESS)

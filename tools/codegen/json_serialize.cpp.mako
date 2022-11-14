@@ -82,7 +82,7 @@ error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
                         SKR_LOG_ERROR("Failed to read field ${name} array element %lld in record ${record.name}", i);
                         return (error_code)element.error();
                     }
-                    error_code result = skr::json::Read(std::move(element), record.${name}[i]);
+                    error_code result = skr::json::Read(std::move(element).value_unsafe(), record.${name}[i]);
                     if(result != error_code::SUCCESS)
                     {
                         SKR_LOG_ERROR("Failed to read field ${name} array element %lld in record ${record.name}", i);
