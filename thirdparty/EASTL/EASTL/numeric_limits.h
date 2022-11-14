@@ -1420,16 +1420,16 @@ namespace eastl
 
 		#elif defined(_MSC_VER)
 			static value_type min()
-				{ return LDBL_MIN; }
+				{ return FLT_MIN; }
 
 			static value_type max()
-				{ return LDBL_MAX; }
+				{ return FLT_MAX; }
 
 			static value_type lowest() 
-				{ return -LDBL_MAX; }
+				{ return -FLT_MAX; }
 
 			static value_type epsilon() 
-				{ return LDBL_EPSILON; }
+				{ return FLT_EPSILON; }
 
 			static value_type round_error() 
 				{ return 0.5f; }
@@ -1444,7 +1444,7 @@ namespace eastl
 				{ return  __builtin_nansf("1"); } 
 
 			static value_type denorm_min() 
-				{ return DBL_TRUE_MIN; }
+				{ return FLT_TRUE_MIN; }
 
 		#elif defined(_CPPLIB_VER) // If using the Dinkumware Standard library...
 			static value_type min()
