@@ -81,7 +81,7 @@ namespace skr::type
                 %else:
                     type_of<${method.retType}>::get(), 
                 %endif
-                    params${i},
+                    params${i}.data(),
                     +[](void* self, struct skr_value_ref_t* args, size_t nargs)
                     {   
                         skr_value_t result = {};
