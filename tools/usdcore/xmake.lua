@@ -16,13 +16,8 @@ target("UsdCore")
         rootdir = os.curdir().."/usd_plugins"})
     add_files("usd_plugins/**.json", "usd_plugins/**.usda", "usd_plugins/**.glslfx")
 
-    -- enable exceptions
-    if(has_config("is_msvc")) then
-        add_cxflags("/EHsc")
-        add_defines("_HAS_EXCEPTIONS=1")
-    elseif(has_config("is_clang")) then
-        add_cxflags("-fexceptions", "-fcxx-exceptions")
-    end
+    -- enable exception
+    set_exceptions("cxx")
 
     -- unzip sdk
     add_rules("utils.install-libs", { libnames = { "usd" } })
