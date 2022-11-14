@@ -4,7 +4,7 @@ fmt_source_dir = "$(projectdir)/thirdparty/fmt/src"
 target("fmt")
     set_group("00.thirdparty")
     set_kind("static")
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_defines("_HAS_EXCEPTIONS=0")
     add_defines("FMT_EXCEPTIONS=0", {public = true})
     add_files(fmt_source_dir.."/format.cc", fmt_source_dir.."/os.cc")

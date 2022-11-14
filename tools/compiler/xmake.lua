@@ -21,5 +21,5 @@ target("SkrCompiler")
         files = {"**.h", "/**.hpp"},
         rootdir = "./"
     })
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})

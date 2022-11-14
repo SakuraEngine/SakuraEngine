@@ -8,7 +8,7 @@ target("QtAdvancedDocking")
     if is_plat("windows") then
         add_cxflags("/Zc:__cplusplus", "/permissive-")
     end
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = 5})
     add_defines("ADS_SHARED_EXPORT")
     add_frameworks("QtGui", "QtCore", "QtWidgets", {public = true})

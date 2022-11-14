@@ -4,7 +4,7 @@ target("Example-RenderGraphTriangle")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-triangle",
         dxil_outdir = "/../resources/shaders/rg-triangle"})
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     public_dependency("SkrRT", engine_version)
     public_dependency("SkrRenderGraph", engine_version)
@@ -17,7 +17,7 @@ target("Example-RenderGraphDeferred")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/rg-deferred",
         dxil_outdir = "/../resources/shaders/rg-deferred"})
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     public_dependency("SkrRT", engine_version)
     public_dependency("SkrRenderGraph", engine_version)
@@ -31,7 +31,7 @@ target("Example-RenderGraphCrossProcess")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cross-process",
         dxil_outdir = "/../resources/shaders/cross-process"})
-    add_rules("c++.noexception")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     public_dependency("SkrRT", engine_version)
     public_dependency("SkrRenderGraph", engine_version)

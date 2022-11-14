@@ -107,8 +107,8 @@ function shared_module(name, api, version, opt)
     add_rules("skr.module", { api = api, version = engine_version }) 
     opt = opt or {}
     if opt.exception and not opt.noexception then
-        add_rules("c++.exception")
+        set_exceptions("cxx")
     else
-        add_rules("c++.noexception")
+        set_exceptions("no-cxx")
     end
 end
