@@ -37,6 +37,9 @@ public:
     SharedLibrary(const SharedLibrary& rhs) = delete;
     const SharedLibrary& operator=(const SharedLibrary& rhs) = delete;
 
+    static const char* GetPlatformFilePrefixName();
+    static const char* GetPlatformFileExtensionName();
+
     /**
      * @description: Load a shared lib. Unload old lib if called
      * on a obj with loaded lib.
@@ -96,7 +99,6 @@ public:
      * @author: SaeruHikari
      */
     NativeLibHandle handle() const;
-
 private:
     eastl::string _lastError;
     NativeLibHandle _handle = nullptr;
