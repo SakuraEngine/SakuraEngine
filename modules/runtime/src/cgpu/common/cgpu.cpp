@@ -1,5 +1,5 @@
 #include "EASTL/unordered_map.h"
-#include "platform/shared_library.h"
+#include "platform/shared_library.hpp"
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/backend/vulkan/cgpu_vulkan.h"

@@ -26,7 +26,7 @@
  */
 #pragma once
 #include "platform/configure.h"
-#include "platform/shared_library.h"
+#include "platform/shared_library.hpp"
 #include <EASTL/string.h>
 #include <EASTL/vector.h>
 #include <EASTL/unique_ptr.h>

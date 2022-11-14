@@ -2,7 +2,7 @@
 #include "d3d12_utils.h"
 #include "../common/common_utils.h"
 
-#include "platform/shared_library.h"
+#include "platform/shared_library.hpp"
 #include "dstorage.h"
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
