@@ -10,9 +10,4 @@ shared_module("UsdTool", "USDTOOL", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")
     -- enable exception
-    if(has_config("is_msvc")) then
-        add_cxflags("/EHsc")
-        add_defines("_HAS_EXCEPTIONS=1")
-    elseif(has_config("is_clang")) then
-        add_cxflags("-fexceptions", "-fcxx-exceptions")
-    end
+    set_exceptions("cxx")

@@ -3,7 +3,7 @@
 #include <EASTL/set.h>
 #include <EASTL/string.h>
 #include "../common/common_utils.h"
-#include "platform/shared_library.h"
+#include "platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "cgpu_nsight_tracker.hpp"
 #include "cgpu/drivers/nsight/GFSDK_Aftermath.h"

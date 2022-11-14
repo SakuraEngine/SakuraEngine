@@ -1,4 +1,4 @@
-#include "platform/shared_library.h"
+#include "platform/shared_library.hpp"
 #if defined(SKR_OS_UNIX)
     #include <dlfcn.h>
 #elif defined(SKR_OS_WINDOWS)
