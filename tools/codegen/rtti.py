@@ -9,9 +9,6 @@ class Generator(object):
     def filter_rtti(self, records):
         return [record for record in records if hasattr(record.attrs, "rtti")]
 
-    def filter_no_rtti(self, records):
-        return [record for record in records if not hasattr(record.attrs, "no-rtti")]
-
     def generate_forward(self, db, args):
         template = os.path.join(BASE, "rtti.hpp.mako")
         if self.filter_rtti(db.records):

@@ -45,9 +45,13 @@ namespace skr::type
                     nullptr, //hash
             %endif
                 };
-            %if vars(record.fields):
+            <%
+                fields = [(name, field) for name, field in vars(record.fields).items() if not hasattr(field.attrs, "no-rtti")]
+                methods = [method for method in record.methods if not hasattr(method.attrs, "no-rtti")]
+            %>
+            %if fields:
                 static skr_field_t fields[] = {
-                %for name, field in vars(record.fields).items():
+                %for name, field in fields:
                     {"${name}", type_of<${field.type}>::get(), ${field.offset}},
                 %endfor
                 };
@@ -55,7 +59,7 @@ namespace skr::type
                 static gsl::span<skr_field_t> fields;
             %endif
             
-            %for i, method in enumerate(record.methods):
+            %for i, method in enumerate(methods):
                 %if vars(method.parameters):
                     static skr_field_t params${i}[] = {
                     %for name, field in vars(method.parameters).items():
@@ -67,9 +71,9 @@ namespace skr::type
                 %endif
             %endfor
             
-            %if record.methods:
+            %if methods:
             static skr_method_t methods[] = {
-            %for i, method in enumerate(record.methods):
+            %for i, method in enumerate(methods):
                 {
                     "${db.short_name(method.name)}", 
                 %if method.retType == "void":
