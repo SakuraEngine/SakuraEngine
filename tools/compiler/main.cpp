@@ -124,6 +124,7 @@ int main(int argc, char** argv)
     moduleManager->patch_module_graph("UsdTool", true);
     #endif
     moduleManager->patch_module_graph("SkrTextureCompiler", true);
+    moduleManager->patch_module_graph("SkrShaderCompiler", true);
     skr::task::scheduler_t scheduler;
     scheduler.initialize(skr::task::scheudler_config_t());
     scheduler.bind();
