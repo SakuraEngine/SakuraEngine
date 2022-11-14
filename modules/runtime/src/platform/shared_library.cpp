@@ -9,6 +9,35 @@
     #include <platform/filesystem.hpp>
 #endif
 
+#if defined(SKR_OS_MACOSX)
+    static const char* ___dl_prefix_name___ = "lib";
+#elif defined(SKR_OS_PROSPERO)
+    static const char* ___dl_prefix_name___ = "";
+#elif defined(SKR_OS_UNIX)
+    const char* ___dl_prefix_name___ = "lib";
+#elif defined(SKR_OS_WINDOWS)
+    static const char* ___dl_prefix_name___ = "";
+#endif    
+
+const char* skr::SharedLibrary::GetPlatformFilePrefixName()
+{
+    return ___dl_prefix_name___;
+}
+
+#if defined(SKR_OS_MACOSX)
+    static const char* ___dl_ext_name___ = ".dylib";
+#elif defined(SKR_OS_PROSPERO)
+    static const char* ___dl_ext_name___ = ".elf";
+#elif defined(SKR_OS_UNIX)
+    static const char* ___dl_ext_name___ = ".so";
+#elif defined(SKR_OS_WINDOWS)
+    static const char* ___dl_ext_name___ = ".dll";
+#endif    
+
+const char* skr::SharedLibrary::GetPlatformFileExtensionName()
+{
+    return ___dl_ext_name___;
+}
 
 bool skr::SharedLibrary::load(const char* path)
 {

@@ -1,6 +1,7 @@
 #include "module/module_manager.hpp"
 #include "platform/memory.h"
 #include "EASTL/map.h"
+#include "platform/shared_library.hpp"
 #include "utils/log.h"
 #include "json/reader.h"
 #include "platform/filesystem.hpp"
@@ -122,16 +123,9 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
     {
         // try load dll
         eastl::string filename;
-    #if defined(SKR_OS_MACOSX)
-            filename.append("lib").append(name);
-            filename.append(".dylib");
-    #elif defined(SKR_OS_UNIX)
-            filename.append("lib").append(name);
-            filename.append(".so");
-    #elif defined(SKR_OS_WINDOWS)
-            filename.append(name);
-            filename.append(".dll");
-    #endif
+        filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
+                .append(name)
+                .append(skr::SharedLibrary::GetPlatformFileExtensionName());
         auto finalPath = (skr::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
         if (!sharedLib->load(finalPath.c_str()))
         {
