@@ -1418,6 +1418,34 @@ namespace eastl
 			static EA_CONSTEXPR value_type denorm_min() 
 				{ return __FLT_DENORM_MIN__; }
 
+		#elif defined(_MSC_VER)
+			static value_type min()
+				{ return LDBL_MIN; }
+
+			static value_type max()
+				{ return LDBL_MAX; }
+
+			static value_type lowest() 
+				{ return -LDBL_MAX; }
+
+			static value_type epsilon() 
+				{ return LDBL_EPSILON; }
+
+			static value_type round_error() 
+				{ return 0.5f; }
+
+			static value_type infinity() 
+				{ return __builtin_huge_valf(); }
+
+			static value_type quiet_NaN() 
+				{ return __builtin_nanf("0"); }
+
+			static value_type signaling_NaN()
+				{ return  __builtin_nansf("1"); } 
+
+			static value_type denorm_min() 
+				{ return DBL_TRUE_MIN; }
+
 		#elif defined(_CPPLIB_VER) // If using the Dinkumware Standard library...
 			static value_type min()
 				{ return FLT_MIN; }
@@ -1535,7 +1563,33 @@ namespace eastl
 
 			static EA_CONSTEXPR value_type denorm_min() 
 				{ return __DBL_DENORM_MIN__; }
+		#elif defined(_MSC_VER)
+			static value_type min()
+				{ return LDBL_MIN; }
 
+			static value_type max()
+				{ return LDBL_MAX; }
+
+			static value_type lowest() 
+				{ return -LDBL_MAX; }
+
+			static value_type epsilon() 
+				{ return LDBL_EPSILON; }
+
+			static value_type round_error() 
+				{ return 0.5f; }
+
+			static value_type infinity() 
+				{ return __builtin_huge_val(); }
+
+			static value_type quiet_NaN() 
+				{ return __builtin_nan("0"); }
+
+			static value_type signaling_NaN()
+				{ return  __builtin_nans("1"); } 
+
+			static value_type denorm_min() 
+				{ return DBL_TRUE_MIN; }
 		#elif defined(_CPPLIB_VER) // If using the Dinkumware Standard library...
 			static value_type min()
 				{ return DBL_MIN; }
@@ -1653,6 +1707,34 @@ namespace eastl
 
 			static EA_CONSTEXPR value_type denorm_min() 
 				{ return __LDBL_DENORM_MIN__; }
+
+		#elif defined(_MSC_VER)
+			static value_type min()
+				{ return LDBL_MIN; }
+
+			static value_type max()
+				{ return LDBL_MAX; }
+
+			static value_type lowest() 
+				{ return -LDBL_MAX; }
+
+			static value_type epsilon() 
+				{ return LDBL_EPSILON; }
+
+			static value_type round_error() 
+				{ return 0.5f; }
+
+			static value_type infinity() 
+				{ return __builtin_huge_val(); }
+
+			static value_type quiet_NaN() 
+				{ return __builtin_nan("0"); }
+
+			static value_type signaling_NaN()
+				{ return  __builtin_nans("1"); } 
+
+			static value_type denorm_min() 
+				{ return DBL_TRUE_MIN; }
 
 		#elif defined(_CPPLIB_VER) // If using the Dinkumware Standard library...
 			static value_type min()
