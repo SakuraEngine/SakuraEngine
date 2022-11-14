@@ -73,6 +73,7 @@ class WaitGroup {
   MARL_NO_EXPORT inline bool operator==(const WaitGroup& other) const { return data == other.data; }
   MARL_NO_EXPORT inline size_t hash() const { return std::hash<void*>{}(data.get()); }
  private:
+  friend class WeakWaitGroup;
   struct Data {
     MARL_NO_EXPORT inline Data(Allocator* allocator);
 
@@ -80,7 +81,26 @@ class WaitGroup {
     ConditionVariable cv;
     marl::mutex mutex;
   };
+  MARL_NO_EXPORT inline WaitGroup(marl::shared_ptr<Data>&& data)
+    :data(std::move(data)) {}
   marl::shared_ptr<Data> data;
+};
+
+class WeakWaitGroup
+{
+  public:
+    MARL_NO_EXPORT inline WeakWaitGroup() = default;
+    MARL_NO_EXPORT inline WeakWaitGroup(const WaitGroup& wg) : data(wg.data) {}
+    MARL_NO_EXPORT inline WeakWaitGroup(const WeakWaitGroup& wg) : data(wg.data) {}
+    MARL_NO_EXPORT inline WeakWaitGroup(WeakWaitGroup&& wg) : data(std::move(wg.data)) {}
+    MARL_NO_EXPORT inline WeakWaitGroup& operator=(const WeakWaitGroup& wg) { data = wg.data; return *this; }
+    MARL_NO_EXPORT inline WeakWaitGroup& operator=(WeakWaitGroup&& wg) { data = std::move(wg.data); return *this; }
+    MARL_NO_EXPORT inline bool expired() const { return data.expired(); }
+    MARL_NO_EXPORT inline bool operator==(const WeakWaitGroup& other) const { return data.lock() == other.data.lock(); }
+    MARL_NO_EXPORT inline size_t hash() const { return std::hash<void*>{}(data.lock().get()); }
+    WaitGroup lock() const { return WaitGroup(data.lock()); }
+  private:
+    marl::weak_ptr<WaitGroup::Data> data;
 };
 
 WaitGroup::Data::Data(Allocator* allocator) : cv(allocator) {}
