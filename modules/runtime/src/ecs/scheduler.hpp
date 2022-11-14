@@ -15,8 +15,8 @@
 namespace dual
 {
 struct job_dependency_entry_t {
-    eastl::vector<skr::task::event_t> owned;
-    eastl::vector<skr::task::event_t> shared;
+    eastl::vector<skr::task::weak_event_t> owned;
+    eastl::vector<skr::task::weak_event_t> shared;
 };
 
 struct scheduler_t {
@@ -42,6 +42,7 @@ struct scheduler_t {
     void sync_archetype(dual::archetype_t* type);
     void sync_entry(dual::archetype_t* type, dual_type_index_t entry);
     void sync_all();
+    void gc_entries();
     void sync_storage(const dual_storage_t* storage);
     skr::task::event_t schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
     eastl::vector<skr::task::event_t> schedule_custom_job(const dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources);

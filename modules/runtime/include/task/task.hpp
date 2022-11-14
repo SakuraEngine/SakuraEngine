@@ -9,6 +9,8 @@ namespace skr::task
 {
     class counter_t;
     class event_t;
+    class weak_counter_t;
+    class weak_event_t;
     class scheduler_t;
     struct RUNTIME_API scheudler_config_t
     {
@@ -55,6 +57,27 @@ namespace skr::task
         size_t hash() const { return std::hash<void*>{}(internal.get()); }
         explicit operator bool() const { return (bool)internal; }
     private:
+        friend class weak_counter_t;
+        counter_t(internal_t&& internal) : internal(std::move(internal)) {}
+        internal_t internal;
+        friend scheduler_t;
+    };
+
+    class RUNTIME_API weak_counter_t
+    {
+    public:
+        using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
+        weak_counter_t() = default;
+        weak_counter_t(const counter_t& counter) { internal = counter.internal; }
+        weak_counter_t(const weak_counter_t& other) { internal = other.internal; }
+        weak_counter_t(weak_counter_t&& other) { internal = std::move(other.internal); }
+        weak_counter_t& operator=(const weak_counter_t& other) { internal = other.internal; return *this; }
+        weak_counter_t& operator=(weak_counter_t&& other) { internal = std::move(other.internal); return *this; }
+        bool operator==(const weak_counter_t& other) const { return internal.lock() == other.internal.lock(); }
+        size_t hash() const { if (auto ptr = internal.lock()) return std::hash<void*>{}(ptr.get()); else return 0; }
+        counter_t lock() const { return counter_t(internal.lock()); }
+        bool expired() const { return internal.expired(); }
+    private:
         internal_t internal;
         friend scheduler_t;
     };
@@ -73,6 +96,27 @@ namespace skr::task
         size_t hash() const { return std::hash<void*>{}(internal.get()); }
         explicit operator bool() const { return (bool)internal; }
         
+    private:
+        friend class weak_event_t;
+        event_t(internal_t&& internal) : internal(std::move(internal)) {}
+        internal_t internal;
+        friend scheduler_t;
+    };
+
+    class RUNTIME_API weak_event_t
+    {
+    public:
+        using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
+        weak_event_t() = default;
+        weak_event_t(const event_t& event) { internal = event.internal; }
+        weak_event_t(const weak_event_t& other) { internal = other.internal; }
+        weak_event_t(weak_event_t&& other) { internal = std::move(other.internal); }
+        weak_event_t& operator=(const weak_event_t& other) { internal = other.internal; return *this; }
+        weak_event_t& operator=(weak_event_t&& other) { internal = std::move(other.internal); return *this; }
+        bool operator==(const weak_event_t& other) const { return internal.lock() == other.internal.lock(); }
+        size_t hash() const { if (auto ptr = internal.lock()) return std::hash<void*>{}(ptr.get()); else return 0; }
+        event_t lock() const { return event_t(internal.lock()); }
+        bool expired() const { return internal.expired(); }
     private:
         internal_t internal;
         friend scheduler_t;
@@ -97,7 +141,7 @@ namespace skr::task
                 f->operator()(); 
             };
             ftl::Task task{t, f};
-            internal->AddTask(task, ftl::TaskPriority::Normal, event ? event->internal : nullptr, name);
+            internal->AddTask(task, ftl::TaskPriority::Normal, event ? event->internal : nullptr FTL_TASK_NAME(, name));
         }
         void* current_fiber(); 
         ~scheduler_t();
@@ -165,6 +209,25 @@ namespace skr::task
         void add(const uint32_t x) { internal.add(x); }
         void decrement() { internal.done(); }
     private:
+        friend class weak_counter_t;
+        counter_t(internal_t&& other) : internal(std::move(other)) {}
+        internal_t internal;
+    };
+
+    class RUNTIME_API weak_counter_t
+    {
+    public:
+        using internal_t = marl::WeakWaitGroup;
+        weak_counter_t() = default;
+        weak_counter_t(std::nullptr_t) : internal(nullptr) {}
+        weak_counter_t(const counter_t& counter) : internal(counter.internal) {}
+        weak_counter_t(const weak_counter_t& other) : internal(other.internal) {}
+        bool operator==(const weak_counter_t& other) const { return internal == other.internal; }
+        size_t hash() const { return internal.hash(); }
+        counter_t lock() const { return internal.lock(); }
+        bool expired() const { return internal.expired(); }
+        
+    private:
         internal_t internal;
     };
 
@@ -182,6 +245,24 @@ namespace skr::task
         bool test() const { return internal.test(); }
         size_t hash() const { return internal.hash(); }
         explicit operator bool() const { return (bool)internal; }
+    private:
+        friend class weak_event_t;
+        event_t(internal_t&& other) : internal(std::move(other)) {}
+        internal_t internal;
+    };
+
+    class RUNTIME_API weak_event_t
+    {
+    public:
+        using internal_t = marl::WeakEvent;
+        weak_event_t() = default;
+        weak_event_t(std::nullptr_t) : internal(nullptr) {}
+        weak_event_t(const event_t& event) : internal(event.internal) {}
+        weak_event_t(const weak_event_t& other) : internal(other.internal) {}
+        bool operator==(const weak_event_t& other) const { return internal == other.internal; }
+        size_t hash() const { return internal.hash(); }
+        event_t lock() const { return internal.lock(); }
+        bool expired() const { return internal.expired(); }
     private:
         internal_t internal;
     };

@@ -741,6 +741,11 @@ RUNTIME_API void dualJ_release_counter(dual_counter_t* counter);
  */
 RUNTIME_API void dualJ_wait_all();
 /**
+ * @brief clear all expired entry handles
+ * 
+ */
+RUNTIME_API void dualJ_gc();
+/**
  * @brief wait for all ecs jobs are done
  *
  */

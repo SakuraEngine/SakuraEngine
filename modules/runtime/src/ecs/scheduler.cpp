@@ -97,9 +97,11 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
             if (type_index_t(type->type.data[i]).is_tag())
                 break;
             for (auto dep : entries[i].owned)
-                deps.push_back(dep);
+                if(auto ptr = dep.lock())
+                    deps.push_back(ptr);
             for (auto p : entries[i].shared)
-                deps.push_back(p);
+                if(auto ptr = p.lock())
+                    deps.push_back(ptr);
             entries[i].shared.clear();
             entries[i].owned.clear();
         }
@@ -124,9 +126,11 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
         };
         auto entries = pair->second.data();
         for (auto dep : entries[i].owned)
-            deps.push_back(dep);
+            if(auto ptr = dep.lock())
+                deps.push_back(ptr);
         for (auto p : entries[i].shared)
-            deps.push_back(p);
+            if(auto ptr = p.lock())
+                deps.push_back(ptr);
         entries[i].shared.clear();
         entries[i].owned.clear();
     }
@@ -144,6 +148,18 @@ void dual::scheduler_t::sync_all()
         {
             entry.owned.clear();
             entry.shared.clear();
+        }
+    }
+}
+
+void dual::scheduler_t::gc_entries()
+{
+    for(auto& pair : dependencyEntries)
+    {
+        for(auto& entry : pair.second)
+        {
+            entry.owned.erase(std::remove_if(entry.owned.begin(), entry.owned.end(), [](skr::task::weak_event_t& e) { return e.expired(); }), entry.owned.end());
+            entry.shared.erase(std::remove_if(entry.shared.begin(), entry.shared.end(), [](skr::task::weak_event_t& e) { return e.expired(); }), entry.shared.end());
         }
     }
 }
@@ -170,12 +186,12 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 namespace dual
 {
 struct hash_shared_ptr {
-    size_t operator()(const skr::task::event_t& value) const
+    size_t operator()(const skr::task::weak_event_t& value) const
     {
         return value.hash();
     }
 };
-using DependencySet = skr::flat_hash_set<skr::task::event_t, hash_shared_ptr>;
+using DependencySet = skr::flat_hash_set<skr::task::weak_event_t, hash_shared_ptr>;
 void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     SKR_ASSERT(job);
@@ -373,7 +389,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         }
     }
     
-    eastl::vector<skr::task::event_t> dependencies;
+    eastl::vector<skr::task::weak_event_t> dependencies;
     {
         ZoneScopedN("AllocateDependencyData");
         dependencies.resize(dependencySet.size());
@@ -392,7 +408,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         {
             ZoneScopedN("JobWaitDependencies");
             for(auto& dependency : dependencies)
-                dependency.wait(false);
+                if(auto ptr = dependency.lock())
+                    ptr.wait(false);
         }
         {
             ZoneScopedN("JobInitialize");
@@ -617,7 +634,8 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
 
     eastl::vector<skr::task::event_t> result;
     for(auto& counter : dependencies)
-        result.push_back(std::move(counter));
+        if(auto ptr = counter.lock())
+            result.push_back(ptr);
     return result;
 }
 
@@ -639,7 +657,8 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::t
     result.resize(dependencies.size());
     uint32_t dependencyIndex = 0;
     for (auto dependency : dependencies)
-        result[dependencyIndex++] = dependency;
+        if(auto ptr = dependency.lock())
+            result[dependencyIndex++] = ptr;
 
     return result;
 }
@@ -694,6 +713,11 @@ void dualJ_release_counter(dual_counter_t* counter)
 void dualJ_wait_all()
 {
     dual::scheduler_t::get().sync_all();
+}
+
+void dualJ_gc()
+{
+    dual::scheduler_t::get().gc_entries();
 }
 
 void dualJ_wait_storage(dual_storage_t* storage)

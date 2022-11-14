@@ -378,6 +378,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 break;
             }
         }
+        {
+            ZoneScopedN("dualJ GC")
+            dualJ_gc();
+        }
         int64_t us = skr_hires_timer_get_usec(&tick_timer, true);
         double deltaTime = (double)us / 1000 / 1000;
         elapsed_us += us;
@@ -473,8 +477,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     auto sdown = skr_key_down(EKeyCode::KEY_CODE_S);
                     auto adown = skr_key_down(EKeyCode::KEY_CODE_A);
                     auto ddown = skr_key_down(EKeyCode::KEY_CODE_D);
-                    if (qdown) translations[i].value.z += (float)deltaTime * kSpeed;
-                    if (edown) translations[i].value.z -= (float)deltaTime * kSpeed;
+                    if (edown) translations[i].value.z += (float)deltaTime * kSpeed;
+                    if (qdown) translations[i].value.z -= (float)deltaTime * kSpeed;
                     if (wdown) translations[i].value = forward * (float)deltaTime * kSpeed + translations[i].value;
                     if (sdown) translations[i].value = -1.f * forward * (float)deltaTime * kSpeed + translations[i].value;
                     if (adown) translations[i].value = -1.f * right * (float)deltaTime * kSpeed + translations[i].value;

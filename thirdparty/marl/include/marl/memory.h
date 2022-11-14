@@ -30,7 +30,7 @@ namespace marl { using eastl::pair; using eastl::make_pair; }
 namespace marl { using eastl::array; using eastl::swap; }
 namespace marl { using eastl::unique_ptr; }
 namespace marl { using eastl::numeric_limits; }
-namespace marl { using eastl::make_shared; using eastl::shared_ptr; }
+namespace marl { using eastl::make_shared; using eastl::shared_ptr; using eastl::weak_ptr; }
 namespace marl { using eastl::forward; using eastl::move; }
 namespace marl { using stdmutex = eastl::Internal::mutex; }
 #else
