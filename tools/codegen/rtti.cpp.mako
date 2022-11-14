@@ -56,7 +56,6 @@ namespace skr::type
             %endif
             
             %for i, method in enumerate(record.methods):
-            {
                 %if vars(method.parameters):
                     static skr_field_t params${i}[] = {
                     %for name, field in vars(method.parameters).items():
@@ -64,9 +63,8 @@ namespace skr::type
                     %endfor
                     };
                 %else:
-                    static gsl::span<skr_field_t> Params${i};
+                    static gsl::span<skr_field_t> params${i};
                 %endif
-            }
             %endfor
             
             %if record.methods:
@@ -79,19 +77,19 @@ namespace skr::type
                 %else:
                     type_of<${method.retType}>::get(), 
                 %endif
-                    Params${i},
+                    params${i},
                     +[](void* self, struct skr_value_ref_t* args, size_t nargs)
                     {   
                         skr_value_t result = {};
-                        if(nargs < ${len(vars(method.fields))})
+                        if(nargs < ${len(vars(method.parameters))})
                         {
                             SKR_LOG_ERROR("[${method.name}] not enough arguments provided.");
                             return result;
                         }
-                    %for i, name, field in enumerate(vars(method.fields).items()):
-                        if(!args[${i}].type->Convertible(type_of<${field.type}>::get()))
+                    %for j, (name, parameter) in enumerate(vars(method.parameters).items()):
+                        if(!args[${j}].type->Convertible(type_of<${parameter.type}>::get()))
                         {
-                            SKR_LOG_ERROR("[${method.name}] argument ${field.name} is not compatible.");
+                            SKR_LOG_ERROR("[${method.name}] argument ${name} is not compatible.");
                             return result;
                         }
                     %endfor

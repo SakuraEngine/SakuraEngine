@@ -125,7 +125,7 @@ class MetaDatabase(object):
     def short_name(self, name):
         return str.rsplit(name, "::", 1)[-1]
     def call_expr(self, desc):
-        return ", ".join(["args["+str(i)+"].Convert<"+field.type+">()" for i, name, field in enumerate(vars(desc.fields).items())])
+        return ", ".join(["args["+str(i)+"].Convert<"+field.type+">()" for i, (name, field) in enumerate(vars(desc.parameters).items())])
     def signature(self, record, desc):
         return self.retType + "(" + (record.name + "::" if record else "") + "*)(" + str.join(", ",  [x.type for name, x in vars(desc.fields).items()]) + ")" + ("const" if desc.isConst else "")
 

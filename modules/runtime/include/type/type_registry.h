@@ -68,13 +68,13 @@ struct RUNTIME_API skr_type_t {
 #endif
 };
 
-struct skr_field_t {
+struct RUNTIME_API skr_field_t {
     const char* name SKR_IF_CPP(= nullptr);
     const skr_type_t* type SKR_IF_CPP(= nullptr);
     size_t offset SKR_IF_CPP(= 0);
 };
 
-struct SKR_ALIGNAS(16) skr_value_t {
+struct SKR_ALIGNAS(16) RUNTIME_API skr_value_t {
     const skr_type_t* type SKR_IF_CPP(= nullptr);
     union
     {
@@ -128,7 +128,7 @@ private:
 #endif
 };
 
-struct skr_value_ref_t {
+struct RUNTIME_API skr_value_ref_t {
     void* ptr = nullptr;
     const skr_type_t* type = nullptr;
 #ifdef __cplusplus
@@ -164,7 +164,7 @@ struct skr_value_ref_t {
 #endif
 };
 
-struct skr_method_t {
+struct RUNTIME_API skr_method_t {
     const char* name SKR_IF_CPP(= nullptr);
     const skr_type_t* retType SKR_IF_CPP(= nullptr);
     const skr_field_t* parameters SKR_IF_CPP(= nullptr);
