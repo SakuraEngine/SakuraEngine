@@ -9,6 +9,10 @@ static struct StaticConstructor${record.id}Helper
 {
     StaticConstructor${record.id}Helper()
     {
+        %if hasattr(record, "namespace"):
+        using namespace ${record.namespace};
+        %endif
+
         %for realized_expr in record.realized_expr:
         ${realized_expr};
         %endfor
