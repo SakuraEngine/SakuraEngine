@@ -11,3 +11,7 @@ shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
         rootdir = "include/SkrShaderCompiler",
         api = "SKR_SHADER_COMPILER"
     })
+    -- dxc compiler uses ms-extensions
+    if (os.host() == "macosx") then
+        add_cxflags("-fms-extensions")
+    end
