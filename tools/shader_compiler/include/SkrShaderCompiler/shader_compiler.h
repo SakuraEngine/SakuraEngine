@@ -1,6 +1,8 @@
 #pragma once
 #include "SkrShaderCompiler/module.configure.h"
 #include "platform/configure.h"
+#include "cgpu/flags.h"
+#include "containers/span.hpp"
 #include <EASTL/functional.h>
 #ifndef __meta__
 #include "SkrShaderCompiler/shader_compiler.generated.h"
@@ -10,29 +12,53 @@ namespace skd sreflect
 {
 namespace asset sreflect
 {
-sreflect_enum("guid" : "71c26ffc-9f4d-4ca5-9db6-b6479b7ff001")
+struct SShaderImporter;
+
+sreflect_enum_class("guid" : "71c26ffc-9f4d-4ca5-9db6-b6479b7ff001")
 EShaderSourceType : uint32_t
 {
-    SHADER_SOURCE_TYPE_INVALID,
-    SHADER_SOURCE_TYPE_HLSL,
-    SHADER_SOURCE_TYPE_SKSL,
-    SHADER_SOURCE_TYPE_COUNT
+    INVALID,
+    HLSL,
+    SKSL,
+    COUNT
 };
-} // namespace asset
+
+struct ShaderSourceCode
+{
+    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, EShaderSourceType type) SKR_NOEXCEPT
+        : bytes(bytes), size(size), source_type(type) {}
+    ~ShaderSourceCode() SKR_NOEXCEPT = default;
+
+    uint8_t* bytes = nullptr;
+    uint64_t size = 0;
+    const EShaderSourceType source_type = EShaderSourceType::INVALID;
+};
+
+struct SKR_SHADER_COMPILER_API ICompiledShader
+{
+    virtual ~ICompiledShader() = default;
+
+    virtual skr::span<const uint8_t> GetBytecode() const SKR_NOEXCEPT = 0;
+    virtual bool GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT = 0;
+};
 
 struct SKR_SHADER_COMPILER_API IShaderCompiler
 {
     virtual ~IShaderCompiler() = default;
 
-
+    virtual EShaderSourceType GetSourceType() const SKR_NOEXCEPT = 0;
+    virtual bool IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const SKR_NOEXCEPT = 0;
+    virtual ICompiledShader* Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT = 0;
+    virtual void FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT = 0;
 };
 
-IShaderCompiler* SkrShaderCompiler_CreateByType(asset::EShaderSourceType type) SKR_NOEXCEPT;
-void Util_ShaderCompilerRegister(asset::EShaderSourceType type, IShaderCompiler*(*ctor)()) SKR_NOEXCEPT;
+IShaderCompiler* SkrShaderCompiler_CreateByType(EShaderSourceType type) SKR_NOEXCEPT;
+void SkrShaderCompiler_Destroy(IShaderCompiler* compiler) SKR_NOEXCEPT;
+void Util_ShaderCompilerRegister(EShaderSourceType type, IShaderCompiler*(*ctor)(), void(*dtor)(IShaderCompiler*)) SKR_NOEXCEPT;
 void Util_ShaderCompilerEventOnLoad(const char*, const eastl::function<void()>& event) SKR_NOEXCEPT;
 void Util_ShaderCompilerEventOnLoad(const char* name, void (*function)()) SKR_NOEXCEPT;
 void Util_ShaderCompilerEventOnUnload(const char*, const eastl::function<void()>& event) SKR_NOEXCEPT;
 void Util_ShaderCompilerEventOnUnload(const char* name, void (*function)()) SKR_NOEXCEPT;
-asset::EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT;
-
+EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT;
+} // namespace asset
 } // namespace skd

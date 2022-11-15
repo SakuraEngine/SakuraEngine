@@ -3,6 +3,8 @@
 #include "skr_renderer/resources/shader_resource.hpp"
 #include "utils/io.hpp"
 #include "utils/log.hpp"
+#include "utils/make_zeroed.hpp"
+#include <EASTL/array.h>
 
 namespace skd
 {
@@ -29,26 +31,80 @@ void* SShaderImporter::Import(skr::io::RAMService* ioService, SCookContext* cont
     ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &ioDestination);
     counter.wait(false);
 
-    // create compiler
+    // create source code wrapper
     const auto extention = path.extension().u8string();
     const auto sourceType = Util_GetShaderSourceTypeWithExtensionString(extention.c_str());
-    auto compiler = SkrShaderCompiler_CreateByType(sourceType);
-    return compiler;
+    return SkrNew<ShaderSourceCode>(ioDestination.bytes, ioDestination.size, sourceType);
 }
 
 void SShaderImporter::Destroy(void *resource)
 {
-    auto compiler = (IShaderCompiler*)resource;
-    SkrDelete(compiler);
+    auto source = (ShaderSourceCode*)resource;
+    SkrDelete(source);
 }
 
 bool SShaderCooker::Cook(SCookContext *ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
     const auto assetRecord = ctx->GetAssetRecord();
-    auto uncompressed = ctx->Import<IShaderCompiler>();
-    SKR_DEFER({ ctx->Destroy(uncompressed); });
-    // compile & write bytecode to disk
+    auto source_code = ctx->Import<ShaderSourceCode>();
+    SKR_DEFER({ ctx->Destroy(source_code); });
+    // Enumerate destination bytecode format
+    // TODO: REFACTOR THIS
+    eastl::vector<ECGPUShaderBytecodeType> byteCodeFormats = {
+        ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_DXIL,
+        ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_SPIRV
+    };
+    eastl::vector<skr_platform_shader_identifier_t> outIdentifiers;
+    outIdentifiers.resize(byteCodeFormats.size());
+    auto system = skd::asset::GetCookSystem();
+    system->ParallelFor(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
+        [source_code, ctx, &byteCodeFormats, &outIdentifiers, outputPath]
+        (const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* _) -> void
+        {
+            const ECGPUShaderBytecodeType format = *pFormat;
+            const auto index = pFormat - byteCodeFormats.begin();
+            auto compiler = SkrShaderCompiler_CreateByType(source_code->source_type);
+            if (compiler->IsSupportedTargetFormat(format))
+            {
+                auto& identifier = outIdentifiers[index];
+                // compile & write bytecode to disk
+                const auto* shaderImporter = static_cast<SShaderImporter*>(ctx->GetImporter());
+                auto compiled = compiler->Compile(format, *source_code, *shaderImporter);
+                auto bytes = compiled->GetBytecode();
+                auto hashed = compiled->GetHashCode(&identifier.hash.flags, identifier.hash.encoded_digits);
+                if (hashed && !bytes.empty())
+                {
+                    // wirte bytecode to disk
+                    const auto subdir = CGPUShaderBytecodeTypeNames[format];
+                    auto basePath = outputPath.parent_path() / subdir;
+                    const auto fname = skr::format("{}#{}-{}-{}-{}.bytes", 
+                        identifier.hash.flags, identifier.hash.encoded_digits[0],
+                        identifier.hash.encoded_digits[1], identifier.hash.encoded_digits[2], identifier.hash.encoded_digits[3]);
+                    auto bytesPath = basePath / fname.c_str();
+                    // create dir
+                    std::error_code ec = {};
+                    skr::filesystem::create_directories(basePath, ec);
+                    // write to file
+                    auto file = fopen(bytesPath.u8string().c_str(), "wb");
+                    if (!file)
+                    {
+                        SKR_UNREACHABLE_CODE();
+                    }
+                    SKR_DEFER({ fclose(file); });
+                    fwrite(bytes.data(), bytes.size(), 1, file);
+                }
+                else
+                {
+                    SKR_UNREACHABLE_CODE();
+                }
+                compiler->FreeCompileResult(compiled);
+                // fill platform identifier
+                identifier.bytecode_type = format;
+                identifier.entry = shaderImporter->entry;
+            }
+            SkrShaderCompiler_Destroy(compiler);
+        });
 
     // make archive
     eastl::vector<uint8_t> resource_data;
@@ -63,17 +119,8 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     } writer{&resource_data};
     skr_binary_writer_t archive(writer);
     // write texture resource
-    skr_platform_shader_resource_t resource;
-    // TODO: REFACTOR THIS
-    skr_platform_shader_identifier_t dxil_identifier = {};
-    dxil_identifier.bytecode_type = CGPU_SHADER_BYTECODE_TYPE_DXIL;
-    dxil_identifier.hash.flags = ~0;
-    dxil_identifier.hash.encoded_digits[0] = ~0;
-    dxil_identifier.hash.encoded_digits[1] = ~0;
-    dxil_identifier.hash.encoded_digits[2] = ~0;
-    dxil_identifier.hash.encoded_digits[3] = ~0;
-    dxil_identifier.entry = "main";
-    resource.identifilers.emplace_back(dxil_identifier);
+    auto resource = make_zeroed<skr_platform_shader_resource_t>();
+    resource.identifilers = outIdentifiers;
     // format
     skr::binary::Write(&archive, resource);
     // write to file
@@ -86,10 +133,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     }
     SKR_DEFER({ fclose(file); });
     fwrite(resource_data.data(), resource_data.size(), 1, file);
-    // write bytecode files
-    {
 
-    }
     return true;
 }
 
