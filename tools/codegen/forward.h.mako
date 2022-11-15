@@ -14,7 +14,7 @@ namespace ${record.namespace} { struct ${record.short_name}; }
 %if hasattr(enum, "namespace"):
 namespace ${enum.namespace} {
 %endif
-${prefix} enum ${enum.short_name} : ${enum.underlying_type};
+enum ${prefix} ${enum.short_name} : ${enum.underlying_type};
 %if hasattr(enum, "namespace"):
 }
 %endif
