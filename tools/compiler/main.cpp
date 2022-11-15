@@ -112,6 +112,8 @@ bool IsAsset(skr::filesystem::path path)
 
 int main(int argc, char** argv)
 {
+    log_set_level(SKR_LOG_LEVEL_INFO);
+    
     FrameMark;
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};

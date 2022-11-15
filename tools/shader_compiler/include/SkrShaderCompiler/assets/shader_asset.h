@@ -12,6 +12,9 @@ sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter
 {
     eastl::string assetPath;
+    eastl::string entry = "main";
+    eastl::string target;
+
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
