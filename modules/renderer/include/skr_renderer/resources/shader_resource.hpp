@@ -29,12 +29,19 @@ typedef struct skr_platform_shader_identifier_t skr_platform_shader_identifier_t
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : ["json", "bin"])
+skr_platform_shader_resource_t
+{
+    eastl::vector<skr_platform_shader_identifier_t> identifilers;
+};
+typedef struct skr_platform_shader_resource_t skr_platform_shader_resource_t;
+
+sreflect_struct("guid" : "42b32962-e049-4beb-9209-9673502c901a")
+sattr("serialize" : ["json", "bin"])
 skr_shader_pipeline_resource_t
 {
-    eastl::vector<skr_platform_shader_identifier_t> shader_blobs;
+    eastl::vector<skr_platform_shader_resource_t> shader_blobs;
 };
 typedef struct skr_shader_pipeline_resource_t skr_shader_pipeline_resource_t;
-
 
 #ifdef __cplusplus
 #include "platform/filesystem.hpp"
