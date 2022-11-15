@@ -10,10 +10,13 @@ namespace ${record.namespace} { struct ${record.short_name}; }
 %endif
 %endfor
 %for enum in db.enums:
+<% prefix = "class" if enum.isScoped else ""  %>
 %if hasattr(enum, "namespace"):
-namespace ${enum.namespace} { enum ${enum.short_name} : ${enum.underlying_type}; }
-%else:
-enum ${enum.short_name} : ${enum.underlying_type};
+namespace ${enum.namespace} {
+%endif
+${prefix} enum ${enum.short_name} : ${enum.underlying_type};
+%if hasattr(enum, "namespace"):
+}
 %endif
 %endfor
 #endif
