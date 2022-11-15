@@ -1,6 +1,8 @@
 #include "SkrShaderCompiler/module.configure.h"
 #include "module/module.hpp"
+#include "containers/hashmap.hpp"
 #include "utils/log.h"
+#include "SkrShaderCompiler/shader_compiler.h"
 
 struct SKR_SHADER_COMPILER_API SShaderCompilerModule : public skr::IDynamicModule
 {
@@ -21,23 +23,61 @@ struct SKR_SHADER_COMPILER_API SShaderCompilerModule : public skr::IDynamicModul
             unload_event();
         }
     }
+    
+    static skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<skd::IShaderCompiler*()>> ctors;
     static eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> on_load_events;
     static eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> on_unload_events;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SShaderCompilerModule, SkrShaderCompiler);
+skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<skd::IShaderCompiler*()>> SShaderCompilerModule::ctors = {};
 eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> SShaderCompilerModule::on_load_events = {};
 eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> SShaderCompilerModule::on_unload_events = {};
 
 namespace skd
 {
-void Util_ShaderCompilerEventOnLoad(const char* name, const eastl::function<void()>& event)
+IShaderCompiler* SkrShaderCompiler_CreateByType(asset::EShaderSourceType type) SKR_NOEXCEPT
+{
+    auto iter = SShaderCompilerModule::ctors.find(type);
+    if (iter != SShaderCompilerModule::ctors.end())
+    {
+        return iter->second();
+    }
+    return nullptr;
+}
+
+void Util_ShaderCompilerRegister(asset::EShaderSourceType type, IShaderCompiler*(*ctor)()) SKR_NOEXCEPT
+{
+    SShaderCompilerModule::ctors.emplace(type, ctor);
+}
+
+void Util_ShaderCompilerEventOnLoad(const char* name, const eastl::function<void()>& event) SKR_NOEXCEPT
 {
     SShaderCompilerModule::on_load_events.emplace_back(name, event);
 }
 
-void Util_ShaderCompilerEventOnUnload(const char* name, const eastl::function<void()>& event)
+void Util_ShaderCompilerEventOnLoad(const char* name, void (*function)()) SKR_NOEXCEPT
+{
+    SShaderCompilerModule::on_load_events.emplace_back(name, function);
+}
+
+void Util_ShaderCompilerEventOnUnload(const char* name, const eastl::function<void()>& event) SKR_NOEXCEPT
 {
     SShaderCompilerModule::on_unload_events.emplace_back(name, event);
+}
+
+void Util_ShaderCompilerEventOnUnload(const char* name, void (*function)()) SKR_NOEXCEPT
+{
+    SShaderCompilerModule::on_unload_events.emplace_back(name, function);
+}
+
+asset::EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT
+{
+    if ((strcmp(ext, "hlsl") == 0) || (strcmp(ext, ".hlsl") == 0))
+        return asset::EShaderSourceType::SHADER_SOURCE_TYPE_HLSL;
+    else if ((strcmp(ext, "sksl") == 0) || (strcmp(ext, ".sksl") == 0))
+        return asset::EShaderSourceType::SHADER_SOURCE_TYPE_SKSL;
+    else
+        return asset::EShaderSourceType::SHADER_SOURCE_TYPE_INVALID;
 }
 } // end namespace skd

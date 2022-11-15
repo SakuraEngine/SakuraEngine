@@ -1,0 +1,11 @@
+{
+    "guid": "0c11a646-93ec-4cd8-8bc4-72c1aca8ec57",
+    "type": "1c7d845a-fde8-4487-b1c9-e9c48d6a9867",
+    "importer": {
+        "importerType": "a897c990-abea-4f48-8880-e1ae9a93d777",
+        "assetPath": "unlit_ps.hlsl"
+    },
+    "cooker": {
+        "binarization": true
+    }
+}

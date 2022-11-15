@@ -1,10 +1,12 @@
 #include "SkrShaderCompiler/dxc_compiler.h"
-#include "platform/configure.h"
 #include "platform/memory.h"
+#include "utils/log.h"
 #include <EASTL/unique_ptr.h>
 
-#include <atlbase.h> 
-#include <dxcapi.h>
+#ifdef _WIN32
+#include <atlbase.h>
+#endif
+#include "dxc/dxcapi.h"
 
 // helper
 namespace skd
@@ -31,6 +33,12 @@ skd::SDXCCompiler::~SDXCCompiler() SKR_NOEXCEPT
     utils->Release();
     compiler->Release();
     if (includeHandler) includeHandler->Release();
+}
+
+skd::IShaderCompiler* skd::SDXCCompiler::Create() SKR_NOEXCEPT
+{
+    auto dxcInstance = SDXCLibrary::Get();
+    return dxcInstance->CreateCompiler();
 }
 
 void skd::SDXCCompiler::SetIncludeHandler(IDxcIncludeHandler* handler) SKR_NOEXCEPT
@@ -66,63 +74,57 @@ skd::SDXCLibrary* skd::SDXCLibrary::Get() SKR_NOEXCEPT
     return _this.get();
 }
 
-eastl::function<void()> skd::SDXCLibrary::DXCLoader() SKR_NOEXCEPT
+void skd::SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
 {
-    return []() -> void {
-        eastl::string filename;
-        auto dxcInstance = SDXCLibrary::Get();
-        auto& dxc_library = dxcInstance->dxc_library;
-        filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
-                .append("dxcompiler")
-                .append(skr::SharedLibrary::GetPlatformFileExtensionName());
-        if (auto result = dxc_library.load(filename.c_str()));
-        else
-        {
-            SKR_LOG_ERROR("failed to load dxc library!");
-        }
-        auto pDxcCreateInstance = SKR_SHARED_LIB_LOAD_API(dxc_library, DxcCreateInstance);
-        dxcInstance->pDxcCreateInstance = (void*)pDxcCreateInstance;
-        SKR_ASSERT(dxcInstance->pDxcCreateInstance && "Fatal: PFN DxcCreateInstance is not found!");
+    eastl::string filename;
+    auto dxcInstance = SDXCLibrary::Get();
+    auto& dxc_library = dxcInstance->dxc_library;
+    filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
+            .append("dxcompiler")
+            .append(skr::SharedLibrary::GetPlatformFileExtensionName());
+    if (auto result = dxc_library.load(filename.c_str()));
+    else
+    {
+        SKR_LOG_ERROR("failed to load dxc library!");
+    }
+    auto pDxcCreateInstance = SKR_SHARED_LIB_LOAD_API(dxc_library, DxcCreateInstance);
+    dxcInstance->pDxcCreateInstance = (void*)pDxcCreateInstance;
+    SKR_ASSERT(dxcInstance->pDxcCreateInstance && "Fatal: PFN DxcCreateInstance is not found!");
 
-        // Do API tests
+    // Do API tests
 
-        IDxcUtils* pTestUtils = nullptr;
-        IDxcCompiler3* pTestCompiler = nullptr;
-        DxcCreateInstanceT::Get()(CLSID_DxcUtils, IID_PPV_ARGS(&pTestUtils));
-        DxcCreateInstanceT::Get()(CLSID_DxcCompiler, IID_PPV_ARGS(&pTestCompiler));
-        
-        IDxcIncludeHandler* pIncludeHandler = nullptr;
-        pTestUtils->CreateDefaultIncludeHandler(&pIncludeHandler);
-        SKR_ASSERT(pTestUtils && "Fatal: Failed to create default include handler for dxc!");
+    IDxcUtils* pTestUtils = nullptr;
+    IDxcCompiler3* pTestCompiler = nullptr;
+    DxcCreateInstanceT::Get()(CLSID_DxcUtils, IID_PPV_ARGS(&pTestUtils));
+    DxcCreateInstanceT::Get()(CLSID_DxcCompiler, IID_PPV_ARGS(&pTestCompiler));
+    
+    IDxcIncludeHandler* pIncludeHandler = nullptr;
+    pTestUtils->CreateDefaultIncludeHandler(&pIncludeHandler);
+    SKR_ASSERT(pTestUtils && "Fatal: Failed to create default include handler for dxc!");
 
-        pIncludeHandler->Release();
-        pTestUtils->Release();
-        pTestCompiler->Release();
-    };
+    pIncludeHandler->Release();
+    pTestUtils->Release();
+    pTestCompiler->Release();
 }
 
-eastl::function<void()> skd::SDXCLibrary::DXILLoader() SKR_NOEXCEPT
+void skd::SDXCLibrary::LoadDXILLibrary() SKR_NOEXCEPT
 {
-    return []() -> void {
-        eastl::string filename;
-        auto dxcInstance = SDXCLibrary::Get();
-        filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
-                .append("dxil")
-                .append(skr::SharedLibrary::GetPlatformFileExtensionName());
-        if (auto result = dxcInstance->dxil_library.load(filename.c_str()));
-        else
-        {
-            SKR_LOG_ERROR("failed to load dxil library!"
-            "no correct signature will be assigned to the dxil files that shaders will be rejected by runtime driver!");
-        }
-    };
+    eastl::string filename;
+    auto dxcInstance = SDXCLibrary::Get();
+    filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
+            .append("dxil")
+            .append(skr::SharedLibrary::GetPlatformFileExtensionName());
+    if (auto result = dxcInstance->dxil_library.load(filename.c_str()));
+    else
+    {
+        SKR_LOG_ERROR("failed to load dxil library!"
+        "no correct signature will be assigned to the dxil files that shaders will be rejected by runtime driver!");
+    }
 }
 
-eastl::function<void()> skd::SDXCLibrary::LibrariesUnloader() SKR_NOEXCEPT
+void skd::SDXCLibrary::UnloadLibraries() SKR_NOEXCEPT
 {
-    return []() -> void {
-        auto dxcInstance = SDXCLibrary::Get();
-        dxcInstance->dxil_library.unload();
-        dxcInstance->dxc_library.unload();
-    };
+    auto dxcInstance = SDXCLibrary::Get();
+    dxcInstance->dxil_library.unload();
+    dxcInstance->dxc_library.unload();
 }
