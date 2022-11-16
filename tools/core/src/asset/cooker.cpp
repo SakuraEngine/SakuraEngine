@@ -16,6 +16,8 @@
 #include "json/writer.h"
 #include "binary/writer.h"
 
+#include "tracy/Tracy.hpp"
+
 namespace skd::asset
 {
 SCookSystem* GetCookSystem()
@@ -96,24 +98,42 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
     mainCounter.add(1);
     skr::task::schedule([jobContext]()
     {
+        auto system = GetCookSystem();
+        const auto metaAsset = jobContext->record;
+        auto iter = system->cookers.find(metaAsset->type);
+        // Trace
+        ZoneScoped;
+        const auto type = type::GetTypeRegistry()->get_type(metaAsset->type);
+        const auto cookerTypeName = type ? type->Name() : "UnknownResource";
+        const auto guidString = skr::format("Guid: {}", metaAsset->guid);
+        const auto assetTypeGuidString = skr::format("TypeGuid: {}", metaAsset->type);
+        const auto scopeName = skr::format("Cooker[{}].Cook", cookerTypeName.c_str());
+        const auto assetString = skr::format("Asset: {}", metaAsset->path.u8string().c_str());
+        ZoneName(scopeName.c_str(), scopeName.size());
+        TracyMessage(guidString.c_str(), guidString.size());
+        TracyMessage(assetTypeGuidString.c_str(), assetTypeGuidString.size());
+        TracyMessage(assetString.c_str(), assetString.size());
+
         SKR_DEFER({
             auto system = GetCookSystem();
             auto guid = jobContext->record->guid;
             system->cooking.erase_if(guid, [](SCookContext* context) { SkrDelete(context); return true; });
             system->mainCounter.decrement();
         });
-        auto metaAsset = jobContext->record;
+
+        // Create output dir
         auto outputPath = metaAsset->project->outputPath;
         std::error_code ec = {};
         skr::filesystem::create_directories(outputPath, ec);
+
         // TODO: platform dependent directory
         jobContext->outputPath = outputPath / fmt::format("{}.bin", metaAsset->guid);
-        auto system = GetCookSystem();
-        auto iter = system->cookers.find(metaAsset->type);
         if (iter == system->cookers.end())
         {
             return;
         }
+
+        // Cook
         jobContext->cookerVersion = iter->second->Version();
         // SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
         SKR_LOG_FMT_INFO("[CookTask] resource {} cook started!", metaAsset->guid);
@@ -145,6 +165,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
                 SKR_DEFER({ fclose(file); });
                 fwrite(buffer.data(), 1, buffer.size(), file);
             }
+
             // write resource dependencies
             {
                 SKR_LOG_FMT_INFO("[CookTask] resource {} cook finished! updating dependencies.", metaAsset->guid);
