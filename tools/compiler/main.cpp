@@ -175,7 +175,7 @@ int main(int argc, char** argv)
     //----- schedule cook tasks (checking dependencies)
     {
         using iter_t = typename decltype(system.assets)::iterator;
-        system.ParallelFor(system.assets.begin(), system.assets.end(), 10,
+        system.ParallelFor(system.assets.begin(), system.assets.end(), 1,
         [](iter_t begin, iter_t end) {
             ZoneScopedN("EnsureCooked");
             auto& system = *skd::asset::GetCookSystem();
