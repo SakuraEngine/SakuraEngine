@@ -23,8 +23,9 @@ struct SKR_SHADER_COMPILER_API SDXCCompiledShader : public ICompiledShader
 {
     friend struct SDXCCompiler;
 public:
-    SDXCCompiledShader(ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT;
     ~SDXCCompiledShader() SKR_NOEXCEPT;
+
+    static SDXCCompiledShader* Create(ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT;
 
     skr::span<const uint8_t> GetBytecode() const SKR_NOEXCEPT override;
     skr::span<const uint8_t> GetPDB() const SKR_NOEXCEPT override;
