@@ -56,25 +56,6 @@ class SGameModule : public skr::IDynamicModule
     skr::task::scheduler_t scheduler;
 };
 
-IMPLEMENT_DYNAMIC_MODULE(SGameModule, Game);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "Game",
-    "prettyname" : "Game",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [
-        {"name":"GameRT", "version":"0.1.0"}
-    ],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-Game)
-
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
