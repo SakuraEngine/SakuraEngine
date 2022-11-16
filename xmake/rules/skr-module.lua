@@ -24,10 +24,8 @@ rule("skr.module")
         local version = target:extraconf("rules", "skr.module", "version")
         target:add("values", "skr.module.version", version)
         if(has_config("module_as_objects")) then
-            target:set("kind", "object")
             target:add("defines","MODULE_AS_OBJECTS")
         else
-            target:set("kind", "shared")
             target:add("defines", api.."_SHARED", {public=true})
             target:add("defines", api.."_IMPL")
         end
@@ -104,6 +102,25 @@ end
 
 function shared_module(name, api, version, opt)
     target(name)
+    on_load(function (target, opt)
+        if(has_config("module_as_objects")) then
+            target:set("kind", "object")
+        else
+            target:set("kind", "shared")
+        end
+    end)
+    add_rules("skr.module", { api = api, version = engine_version }) 
+    opt = opt or {}
+    if opt.exception and not opt.noexception then
+        set_exceptions("cxx")
+    else
+        set_exceptions("no-cxx")
+    end
+end
+
+function executable_module(name, api, version, opt)
+    target(name)
+    set_kind("binary")
     add_rules("skr.module", { api = api, version = engine_version }) 
     opt = opt or {}
     if opt.exception and not opt.noexception then

@@ -1,7 +1,6 @@
-target("SkrCompiler")
+executable_module("SkrCompiler", "SKR_COMPILER", engine_version)
     set_group("02.tools")
     -- add_rules("grpc.cpp")
-    set_kind("binary")
     public_dependency("SkrTool", engine_version)
     public_dependency("SkrTextureCompiler", engine_version)
     public_dependency("SkrShaderCompiler", engine_version)

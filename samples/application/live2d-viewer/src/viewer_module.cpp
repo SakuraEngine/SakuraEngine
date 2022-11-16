@@ -50,24 +50,6 @@ public:
 #include "platform/filesystem.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SLive2DViewerModule, Live2DViewer);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "Live2DViewer",
-    "prettyname" : "Live2DViewer",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [
-        {"name":"SkrLive2D", "version":"0.1.0"},
-        {"name":"SkrImGui", "version":"0.1.0"}
-    ],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-Live2DViewer)
 
 SLive2DViewerModule* SLive2DViewerModule::Get()
 {
