@@ -27,9 +27,19 @@ struct DxcCreateInstanceT
 
 #define SAFE_RELEASE(ptr) if (ptr) { ptr->Release(); ptr = nullptr; }
 
-SDXCCompiledShader::SDXCCompiledShader(ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT
-    : code_type(type), source(source), result(result)
+SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT
 {
+    const bool is_spv = (type == CGPU_SHADER_BYTECODE_TYPE_SPIRV);
+    IDxcBlobUtf8* errors = nullptr;
+    IDxcBlobWide* outputName = nullptr;
+    IDxcBlob* bytecode = nullptr;
+    IDxcBlobWide* pdbName = nullptr;
+    IDxcBlob* pdb = nullptr;
+    IDxcBlob* hash = nullptr;
+    IDxcBlob* reflectionData   = nullptr;
+    uint32_t spv_hash[4];
+    bool fail = false;
+    
     result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
     result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&bytecode), &outputName);
     if (bytecode == nullptr)
@@ -38,32 +48,63 @@ SDXCCompiledShader::SDXCCompiledShader(ECGPUShaderBytecodeType type, IDxcBlobEnc
         if (errors != nullptr && errors->GetStringLength() != 0)
         {
             SKR_LOG_ERROR("[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
+            fail = true;
         }
-        return;
     }
     result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pdb), &pdbName);
     if (auto hres = result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&hash), nullptr);!SUCCEEDED(hres))
     {
-        if (type == CGPU_SHADER_BYTECODE_TYPE_SPIRV)
+        if (is_spv)
         {
             auto bytes = bytecode->GetBufferPointer();
-            auto byte_size = bytecode->GetBufferSize();
-            const size_t seeds[4] = { 114u, 514u, 1919u, 810u };
+            auto byte_size = (uint32_t)bytecode->GetBufferSize();
+            const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
             for (auto i = 0u; i < 4u; i++)
-                spv_hash[i] = skr_hash(bytes, byte_size, seeds[i]);
+                spv_hash[i] = skr_hash32(bytes, byte_size, seeds[i]);
         }
         else
         {
             SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get hash data! HRESULT: %u, Target IL: %d", hres, type);
-            return;
+            fail = true;
         }
     }
     // TODO: Demonstrate getting the hash from the PDB blob using the IDxcUtils::GetPDBContents API
     //if (SUCCEEDED(utils->GetPDBContents(pdb, &hashDigestBlob, &debugDxilContainer)));
-    if (auto hres = result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(&reflectionData), nullptr);!SUCCEEDED(hres))
+    if (auto hres = result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(&reflectionData), nullptr);!is_spv && !SUCCEEDED(hres))
     {
         SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get reflection data! HRESULT: %u", hres);
-        return;
+    }
+    if (!fail)
+    {
+        auto compiled = SkrNew<SDXCCompiledShader>();
+        compiled->code_type = type;
+        compiled->source = source;
+        compiled->errors = errors;
+        compiled->result = result;
+        compiled->outputName = outputName;
+        compiled->bytecode = bytecode;
+        compiled->pdbName = pdbName;
+        compiled->pdb = pdb;
+        compiled->hash = hash;
+        compiled->reflectionData = reflectionData;
+        compiled->spv_hash[0] = spv_hash[0];
+        compiled->spv_hash[1] = spv_hash[1];
+        compiled->spv_hash[2] = spv_hash[2];
+        compiled->spv_hash[3] = spv_hash[3];
+        return compiled;
+    }
+    else
+    {
+        SAFE_RELEASE(source);
+        SAFE_RELEASE(result);
+        SAFE_RELEASE(errors);
+        SAFE_RELEASE(outputName);
+        SAFE_RELEASE(bytecode);
+        SAFE_RELEASE(pdbName);
+        SAFE_RELEASE(pdb);
+        SAFE_RELEASE(hash);
+        SAFE_RELEASE(reflectionData);
+        return nullptr;
     }
 }
 
@@ -92,6 +133,7 @@ skr::span<const uint8_t> SDXCCompiledShader::GetBytecode() const SKR_NOEXCEPT
 
 skr::span<const uint8_t> SDXCCompiledShader::GetPDB() const SKR_NOEXCEPT
 {
+    if (!pdb) return {};
     return skr::span<const uint8_t>((const uint8_t*)pdb->GetBufferPointer(), pdb->GetBufferSize());
 }
 
@@ -204,6 +246,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
         {
             switch (hres)
             {
+            case 1:
             default:
                 SKR_UNREACHABLE_CODE();
             }
@@ -241,6 +284,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
         {
             switch (hres)
             {
+            case 1:
             default:
                 SKR_LOG_ERROR("[DXCCompiler]Compile Error: Failed to compile! HRESULT: %u", hres);
                 SKR_UNREACHABLE_CODE();
@@ -252,7 +296,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     {
         SKR_UNREACHABLE_CODE();
     }
-    return SkrNew<SDXCCompiledShader>(format, pSourceBlob, pDxcResult);
+    return SDXCCompiledShader::Create(format, pSourceBlob, pDxcResult);
 }
 
 void SDXCCompiler::FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT { SkrDelete(compiled); } 

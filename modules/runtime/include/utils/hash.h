@@ -21,6 +21,16 @@ FORCEINLINE static size_t skr_hash(const void* buffer, size_t size, size_t seed)
 #endif
 }
 
+FORCEINLINE static uint64_t skr_hash64(const void* buffer, uint64_t size, uint64_t seed)
+{
+    return XXH64(buffer, size, seed);
+}
+
+FORCEINLINE static uint32_t skr_hash32(const void* buffer, uint32_t size, uint32_t seed)
+{
+    return XXH32(buffer, size, seed);
+}
+
 #ifdef __cplusplus
 }
 #endif
