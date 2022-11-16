@@ -68,6 +68,11 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* 
 #endif
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
+    if(doc.error())
+    {
+        SKR_LOG_FMT_ERROR("Import config asset {} from {} failed, json parse error {}", assetRecord->guid, assetPath, simdjson::error_message(doc.error()));
+        return nullptr;
+    }
     skr_config_resource_t* resource = skr::resource::SConfigFactory::NewConfig(configType);
     iter->second.Import(doc.get_value().value_unsafe(), resource->configData);
     return resource; //导入具体数据
@@ -92,6 +97,8 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     // no cook config for config, skipping
     //-----import resource object
     auto resource = ctx->Import<skr_config_resource_t>();
+    if(!resource)
+        return false;
     SKR_DEFER({ ctx->Destroy(resource); });
     //-----emit dependencies
     // no static dependencies
