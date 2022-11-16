@@ -303,7 +303,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
     while (!quit)
     {
-        FrameMark
+        FrameMark;
         ZoneScopedN("LoopBody");
         static auto main_thread_id = skr_current_thread_id();
         auto current_thread_id = skr_current_thread_id();
@@ -362,7 +362,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
         }
         {
-            ZoneScopedN("dualJ GC")
+            ZoneScopedN("dualJ GC");
             dualJ_gc();
         }
         int64_t us = skr_hires_timer_get_usec(&tick_timer, true);

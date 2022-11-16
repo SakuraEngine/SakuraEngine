@@ -2,6 +2,7 @@
 #define __TRACYCALLSTACK_HPP__
 
 #include "../common/TracyApi.h"
+#include "../common/TracyForceInline.hpp"
 #include "TracyCallstack.h"
 
 #if TRACY_HAS_CALLSTACK == 2 || TRACY_HAS_CALLSTACK == 5
@@ -11,13 +12,23 @@
 #endif
 
 
-#ifdef TRACY_HAS_CALLSTACK
+#ifndef TRACY_HAS_CALLSTACK
+
+namespace tracy
+{
+static tracy_force_inline void* Callstack( int depth ) { return nullptr; }
+}
+
+#else
+
+#ifdef TRACY_DEBUGINFOD
+#  include <elfutils/debuginfod.h>
+#endif
 
 #include <assert.h>
 #include <stdint.h>
 
 #include "../common/TracyAlloc.hpp"
-#include "../common/TracyForceInline.hpp"
 
 namespace tracy
 {
@@ -47,11 +58,17 @@ struct CallstackEntryData
 };
 
 CallstackSymbolData DecodeSymbolAddress( uint64_t ptr );
-CallstackSymbolData DecodeCodeAddress( uint64_t ptr );
 const char* DecodeCallstackPtrFast( uint64_t ptr );
 CallstackEntryData DecodeCallstackPtr( uint64_t ptr );
 void InitCallstack();
+void InitCallstackCritical();
+void EndCallstack();
 const char* GetKernelModulePath( uint64_t addr );
+
+#ifdef TRACY_DEBUGINFOD
+const uint8_t* GetBuildIdForImage( const char* image, size_t& size );
+debuginfod_client* GetDebuginfodClient();
+#endif
 
 #if TRACY_HAS_CALLSTACK == 1
 
