@@ -95,9 +95,9 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
 #ifdef TRACY_ENABLE
     {
         eastl::string thread_id = "worker";thread_id += eastl::to_string(index);
-        TracyFiberEnter(thread_id.c_str())
+        TracyFiberEnter(thread_id.c_str());
         taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
-        TracyFiberLeave
+        TracyFiberLeave;
     }
 #endif
 
@@ -141,7 +141,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
     if (threadIndex == 0 && dispatch_depth == 0) 
     {
-        TracyFiberEnter("MainThreadAsFiber")
+        TracyFiberEnter("MainThreadAsFiber");
     }
     dispatch_depth++;
 
@@ -224,7 +224,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 if (threadIndex == 0 && waitingFiber == &taskScheduler->m_mainFiber) dispatch_depth = 0;
                 if (threadIndex == 0 && dispatch_depth == 0) 
                 {
-                    TracyFiberLeave
+                    TracyFiberLeave;
                 }
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
             }
@@ -338,7 +338,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     dispatch_depth--;
     if (threadIndex == 0 && dispatch_depth == 0) 
     {
-        TracyFiberLeave
+        TracyFiberLeave;
     }
 
     if (taskScheduler->m_callbacks.OnFiberDetached != nullptr)

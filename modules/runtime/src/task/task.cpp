@@ -13,15 +13,18 @@ counter_t::counter_t()
 {
     internal = eastl::make_shared<ftl::TaskCounter>(details::get_scheduler()->internal);
 }
+
 event_t::event_t()
 {
     internal = eastl::make_shared<ftl::TaskCounter>(details::get_scheduler()->internal);
 }
+
 thread_local scheduler_t* scheduler = nullptr;
 void scheduler_t::initialize(const scheudler_config_t& config)
 {
     options.ThreadPoolSize = config.numThreads;
 }
+
 void scheduler_t::bind()
 {
     SKR_ASSERT(scheduler == nullptr);
