@@ -117,7 +117,7 @@ struct dual_storage_t {
     eastl::unique_ptr<uint32_t[]> typeTimestamps;
     mutable dual::scheduler_t* scheduler;
     mutable void* currentFiber;
-    mutable skr::lazy_t<skr::task::counter_t> counter;
+    skr::task::counter_t counter;
 
     dual_storage_t();
     ~dual_storage_t();

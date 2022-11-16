@@ -44,23 +44,9 @@ bool dual::scheduler_t::is_main_thread(const dual_storage_t* storage)
 void dual::scheduler_t::set_main_thread(const dual_storage_t* storage)
 {
     SKR_ASSERT(storage->scheduler == this);
-    if(storage->counter)
-        storage->counter->wait(true);
+    storage->counter.wait(true);
     storage->currentFiber = skr::task::current_fiber();
 }
-
-void dual::scheduler_t::on_fiber_dettached(void* fiber)
-{
-    SMutexLock lock(storageMutex.mMutex);
-    for(auto& storage : storages)
-    {
-        if(storage->currentFiber == fiber)
-        {
-            storage->currentFiber = nullptr;
-        }
-    }
-}
-
 
 void dual::scheduler_t::add_storage(dual_storage_t* storage)
 {
@@ -141,7 +127,7 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
 
 void dual::scheduler_t::sync_all()
 {
-    allCounter.then([](skr::task::counter_t& e) { e.wait(true); });
+    allCounter.wait(true);
     for(auto& pair : dependencyEntries)
     {
         for(auto& entry : pair.second)
@@ -168,8 +154,7 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 {
     if (!storage->scheduler)
         return;
-    if(storage->counter)
-        storage->counter->wait(true);
+    storage->counter.wait(true);
     for(auto& pair : dependencyEntries)
     {
         if(pair.first->storage == storage)
@@ -400,8 +385,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     
     {
         ZoneScopedN("AllocateCounter");
-        allCounter->add(1);
-        query->storage->counter->add(1);
+        allCounter.add(1);
+        query->storage->counter.add(1);
     }
     skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
     {
@@ -417,8 +402,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 init(sharedData->userdata, sharedData->entityCount);
         }
         SKR_DEFER({ 
-            allCounter->decrement();
-            query->storage->counter->decrement();
+            allCounter.decrement();
+            query->storage->counter.decrement();
         });
         fixed_stack_scope_t _(localStack);
         dual_meta_filter_t validatedMeta;

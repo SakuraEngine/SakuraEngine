@@ -122,7 +122,7 @@ public:
     class skr::io::RAMService* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 4;
     class skr::io::RAMService* ioServices[ioServicesMaxCount];
-    skr::lazy_t<skr::task::counter_t> mainCounter;
+    skr::task::counter_t mainCounter;
 
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path);

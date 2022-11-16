@@ -11,12 +11,12 @@ scheudler_config_t::scheudler_config_t()
 
 counter_t::counter_t()
 {
-    internal = eastl::make_shared<ftl::TaskCounter>(details::get_scheduler()->internal);
+    internal = eastl::make_shared<ftl::TaskCounter>(nullptr);
 }
 
 event_t::event_t()
 {
-    internal = eastl::make_shared<ftl::TaskCounter>(details::get_scheduler()->internal);
+    internal = eastl::make_shared<ftl::TaskCounter>(nullptr);
 }
 
 thread_local scheduler_t* scheduler = nullptr;
@@ -34,22 +34,16 @@ void scheduler_t::bind()
     options.Callbacks.OnWorkerThreadStarted = [](void* context, unsigned threadIndex)
     {
         scheduler = (scheduler_t*)context;
+        ftl::BindScheduler(scheduler->internal);
     };
     options.Callbacks.OnWorkerThreadEnded = [](void* context, unsigned threadIndex)
     {
         scheduler = nullptr;
-    };
-    options.Callbacks.OnFiberDetached = [](void* context, ftl::Fiber* fiberIndex, bool isMidTask)
-    {
-        auto s = (scheduler_t*)context;
-        for(auto& f : s->onFiberDettached)
-        {
-            if(!isMidTask)
-                f.on_fiber_dettached(fiberIndex);
-        }
+        ftl::UnbindScheduler();
     };
     internal->Init(options);
     scheduler = this;
+    ftl::BindScheduler(internal);
 }
 void scheduler_t::unbind()
 {
@@ -58,6 +52,7 @@ void scheduler_t::unbind()
     scheduler = nullptr;
     delete internal;
     internal = nullptr;
+    ftl::UnbindScheduler();
 }
 scheduler_t* details::get_scheduler()
 {

@@ -21,7 +21,7 @@ struct job_dependency_entry_t {
 
 struct scheduler_t {
     dual::entity_registry_t registry;
-    skr::lazy_t<skr::task::counter_t> allCounter;
+    skr::task::counter_t allCounter;
     eastl::vector<dual::job_dependency_entry_t> allResources;
     skr::flat_hash_map<dual::archetype_t*, eastl::vector<job_dependency_entry_t>> dependencyEntries;
     SMutexObject entryMutex;
@@ -34,7 +34,6 @@ struct scheduler_t {
     static scheduler_t& get();
     bool is_main_thread(const dual_storage_t* storage);
     void set_main_thread(const dual_storage_t* storage);
-    void on_fiber_dettached(void* fiber);
     void add_storage(dual_storage_t* storage);
     void remove_storage(const dual_storage_t* storage);
     dual_entity_t add_resource();
