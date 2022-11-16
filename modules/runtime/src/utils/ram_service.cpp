@@ -50,8 +50,7 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
     // 2.load file
     if (task.has_value())
     {
-        TracyCZoneC(readZone, tracy::Color::LightYellow, 1);
-        TracyCZoneName(readZone, "ioServiceReadFile", strlen("ioServiceReadFile"));
+        ZoneScopedN("ioServiceReadFile");
         task->setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
         skr_vfile_t* vf = nullptr;
         {
@@ -80,7 +79,6 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
             task->setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
         }
         skr_vfs_fclose(vf);
-        TracyCZoneEnd(readZone);
     }
 }
 

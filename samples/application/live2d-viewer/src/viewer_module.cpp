@@ -197,7 +197,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     bool quit = false;
     while (!quit)
     {
-        FrameMark
+        FrameMark;
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {

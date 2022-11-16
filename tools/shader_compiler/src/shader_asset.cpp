@@ -62,6 +62,8 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         [source_code, ctx, &byteCodeFormats, &outIdentifiers, outputPath]
         (const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* _) -> void
         {
+            ZoneScopedN("DXC Compile Task");
+
             const ECGPUShaderBytecodeType format = *pFormat;
             const auto index = pFormat - byteCodeFormats.begin();
             auto compiler = SkrShaderCompiler_CreateByType(source_code->source_type);
