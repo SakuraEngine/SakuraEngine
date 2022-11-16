@@ -27,10 +27,12 @@ public:
     ~SDXCCompiledShader() SKR_NOEXCEPT;
 
     skr::span<const uint8_t> GetBytecode() const SKR_NOEXCEPT override;
+    skr::span<const uint8_t> GetPDB() const SKR_NOEXCEPT override;
     bool GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT override;
 
 protected:
     ECGPUShaderBytecodeType code_type;
+    uint32_t spv_hash[4];
     
     IDxcBlobEncoding* source = nullptr;// CreateBlobFromPinned
     IDxcResult* result = nullptr;

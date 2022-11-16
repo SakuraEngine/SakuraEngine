@@ -3,6 +3,7 @@
 #include "platform/configure.h"
 #include "cgpu/flags.h"
 #include "containers/span.hpp"
+#include <EASTL/string.h>
 #include <EASTL/functional.h>
 #ifndef __meta__
 #include "SkrShaderCompiler/shader_compiler.generated.h"
@@ -25,12 +26,13 @@ EShaderSourceType : uint32_t
 
 struct ShaderSourceCode
 {
-    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, EShaderSourceType type) SKR_NOEXCEPT
-        : bytes(bytes), size(size), source_type(type) {}
+    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char* name, EShaderSourceType type) SKR_NOEXCEPT
+        : bytes(bytes), size(size), source_name(name), source_type(type) {}
     ~ShaderSourceCode() SKR_NOEXCEPT = default;
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
+    eastl::string source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
 };
 
@@ -39,6 +41,7 @@ struct SKR_SHADER_COMPILER_API ICompiledShader
     virtual ~ICompiledShader() = default;
 
     virtual skr::span<const uint8_t> GetBytecode() const SKR_NOEXCEPT = 0;
+    virtual skr::span<const uint8_t> GetPDB() const SKR_NOEXCEPT = 0;
     virtual bool GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT = 0;
 };
 
