@@ -230,6 +230,10 @@ Scheduler::Config Scheduler::Config::allCores() {
 Scheduler::Fiber::Fiber(Allocator::unique_ptr<OSFiber>&& impl, uint32_t id)
     : id(id), impl(std::move(impl)), worker(Worker::getCurrent()) {
   MARL_ASSERT(worker != nullptr, "No Scheduler::Worker bound");
+#ifdef TRACY_ENABLE
+  name = "fiber" + eastl::to_string((int64_t)this->impl.get());
+  TracyFiberEnter(name.c_str());
+#endif
 }
 
 Scheduler::Fiber* Scheduler::Fiber::current() {
@@ -253,6 +257,10 @@ void Scheduler::Fiber::switchTo(Fiber* to) {
               "Scheduler::Fiber::switchTo() must only be called on the "
               "currently executing fiber");
   if (to != this) {
+#ifdef TRACY_ENABLE
+    TracyFiberLeave;
+    TracyFiberEnter(to->name.c_str());
+#endif
     impl->switchTo(to->impl.get());
   }
 }

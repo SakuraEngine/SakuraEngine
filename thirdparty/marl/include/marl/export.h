@@ -45,4 +45,9 @@
 #define MARL_NO_EXPORT
 #endif
 
+#include "platform/configure.h"
+#ifdef TRACY_ENABLE
+#include "tracy/Tracy.hpp"
+#endif
+
 #endif  // marl_export_h
