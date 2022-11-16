@@ -6,6 +6,8 @@
 #include "utils/make_zeroed.hpp"
 #include <EASTL/array.h>
 
+#include "tracy/Tracy.hpp"
+
 namespace skd
 {
 namespace asset
