@@ -11,9 +11,8 @@ shared_module("GameRT", "GAMERT", engine_version)
     add_files("game/modules/game_runtime/src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
-target("Game")
+executable_module("Game", "GAME", engine_version)
     set_group("04.examples/application")
-    set_kind("binary")
     set_exceptions("no-cxx")
     public_dependency("GameRT", "0.1.0")
     add_rules("utils.install-resources", {
@@ -51,9 +50,8 @@ shared_module("GameTool", "GAMETOOL", engine_version)
         end
     end)
 
-target("Example-VMemController")
+executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
     set_group("04.examples/application")
-    set_kind("binary")
     public_dependency("SkrRenderGraph", engine_version)
     public_dependency("SkrImGui", engine_version)
     set_exceptions("no-cxx")
@@ -66,9 +64,8 @@ if (os.host() == "windows" and has_config("build_chat")) then
     includes("chat/xmake.lua")
 end
 
-target("Example-Live2DViewer")
+executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
     set_group("04.examples/application")
-    set_kind("binary")
     public_dependency("SkrLive2D", engine_version)
     public_dependency("SkrImGui", engine_version)
     add_rules("utils.install-resources", {

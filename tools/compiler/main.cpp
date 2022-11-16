@@ -7,7 +7,6 @@
 #include "resource/resource_header.h"
 #include <mutex>
 #include "assets/config_asset.hpp"
-#include "tracy/Tracy.hpp"
 #include "type/type_registry.h"
 #include "utils/defer.hpp"
 #include "resource/resource_header.h"
@@ -16,6 +15,9 @@
 #include "platform/vfs.h"
 #include "utils/log.h"
 #include "utils/log.hpp"
+
+
+#include "tracy/Tracy.hpp"
 
 /*
 #include "google/protobuf/empty.pb.h"
@@ -114,20 +116,16 @@ int main(int argc, char** argv)
 {
     log_set_level(SKR_LOG_LEVEL_INFO);
 
-    ZoneScopedN("CookAll");
-
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
-    moduleManager->make_module_graph("GameTool", true);
+    moduleManager->make_module_graph("SkrCompiler", true);
     moduleManager->init_module_graph(argc, argv);
-    moduleManager->patch_module_graph("GLTFTool", true);
-    #ifdef WITH_USDTOOL
-    moduleManager->patch_module_graph("UsdTool", true);
-    #endif
-    moduleManager->patch_module_graph("SkrTextureCompiler", true);
-    moduleManager->patch_module_graph("SkrShaderCompiler", true);
+
+    FrameMark;
+    ZoneScopedN("CookAll");
+
     skr::task::scheduler_t scheduler;
     scheduler.initialize(skr::task::scheudler_config_t());
     scheduler.bind();
@@ -190,6 +188,12 @@ int main(int argc, char** argv)
     system.WaitForAll();
     scheduler.unbind();
     system.Shutdown();
-    moduleManager->destroy_module_graph();
+    {
+        ZoneScopedN("ThreadExit");
+        moduleManager->destroy_module_graph();
+    }
+#ifdef TRACY_ENABLE
+    skr_thread_sleep(300);
+#endif
     return 0;
 }

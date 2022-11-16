@@ -49,24 +49,6 @@ class SVMemCCModule : public skr::IDynamicModule
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SVMemCCModule, VMemController);
-SKR_MODULE_METADATA(u8R"(
-{
-    "api" : "0.1.0",
-    "name" : "VMemController",
-    "prettyname" : "VMemController",
-    "version" : "0.0.1",
-    "linking" : "shared",
-    "dependencies" : [
-        {"name":"SkrImGui", "version":"0.1.0"},
-        {"name":"SkrRenderGraph", "version":"0.1.0"}
-    ],
-    "author" : "",
-    "url" : "",
-    "license" : "",
-    "copyright" : ""
-}
-)",
-VMemController)
 
 void SVMemCCModule::on_load(int argc, char** argv)
 {

@@ -385,7 +385,7 @@ void Scheduler::Worker::start() {
 
         Scheduler::setBound(scheduler);
         Worker::current = this;
-        mainFiber = Fiber::createFromCurrentThread(scheduler->cfg.allocator, 0);
+        mainFiber = Fiber::createFromCurrentThread(scheduler->cfg.allocator, 1);
         currentFiber = mainFiber.get();
         {
           marl::lock lock(work.mutex);
@@ -410,7 +410,12 @@ void Scheduler::Worker::start() {
 void Scheduler::Worker::stop() {
   switch (mode) {
     case Mode::MultiThreaded: {
-      enqueue(Task([this] { shutdown = true; }, Task::Flags::SameThread));
+      enqueue(Task([this] { 
+        shutdown = true; 
+#ifdef TRACY_ENABLE
+        TracyFiberLeave;
+#endif
+      }, Task::Flags::SameThread));
       thread.join();
       break;
     }
@@ -418,6 +423,9 @@ void Scheduler::Worker::stop() {
       marl::lock lock(work.mutex);
       shutdown = true;
       runUntilShutdown();
+#ifdef TRACY_ENABLE
+        TracyFiberLeave;
+#endif
       Worker::current = nullptr;
       break;
     }

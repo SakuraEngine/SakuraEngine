@@ -58,6 +58,7 @@ SCookSystem::~SCookSystem() noexcept
     for (auto& pair : assets)
         SkrDelete(pair.second);
 }
+
 SProject::~SProject() noexcept
 {
     if (vfs) skr_free_vfs(vfs);
