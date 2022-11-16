@@ -65,7 +65,7 @@ SProject::~SProject() noexcept
 
 void SCookSystem::WaitForAll()
 {
-    mainCounter.wait(true);
+    mainCounter.then([](skr::task::counter_t& counter) {counter.wait(true);});
 }
 
 #include <atomic>
@@ -95,7 +95,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
     skr::task::event_t counter;
     jobContext->counter = counter;
     auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
-    mainCounter.add(1);
+    mainCounter->add(1);
     skr::task::schedule([jobContext]()
     {
         auto system = GetCookSystem();
@@ -118,7 +118,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
             auto system = GetCookSystem();
             auto guid = jobContext->record->guid;
             system->cooking.erase_if(guid, [](SCookContext* context) { SkrDelete(context); return true; });
-            system->mainCounter.decrement();
+            system->mainCounter->decrement();
         });
 
         // Create output dir

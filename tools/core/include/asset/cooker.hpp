@@ -11,6 +11,7 @@
 #include "platform/filesystem.hpp"
 #include "task/task.hpp"
 #include "json/reader.h"
+#include "utils/lazy.hpp"
 
 struct skr_vfs_t;
 namespace skr::io { class RAMService; }
@@ -121,7 +122,7 @@ public:
     class skr::io::RAMService* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 4;
     class skr::io::RAMService* ioServices[ioServicesMaxCount];
-    skr::task::counter_t mainCounter;
+    skr::lazy_t<skr::task::counter_t> mainCounter;
 
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
     SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path);
