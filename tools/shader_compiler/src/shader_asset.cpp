@@ -35,8 +35,9 @@ void* SShaderImporter::Import(skr::io::RAMService* ioService, SCookContext* cont
 
     // create source code wrapper
     const auto extention = path.extension().u8string();
+    const auto source_name = path.filename().replace_extension();
     const auto sourceType = Util_GetShaderSourceTypeWithExtensionString(extention.c_str());
-    return SkrNew<ShaderSourceCode>(ioDestination.bytes, ioDestination.size, sourceType);
+    return SkrNew<ShaderSourceCode>(ioDestination.bytes, ioDestination.size, source_name.u8string().c_str(), sourceType);
 }
 
 void SShaderImporter::Destroy(void *resource)
@@ -82,21 +83,29 @@ bool SShaderCooker::Cook(SCookContext *ctx)
                     // wirte bytecode to disk
                     const auto subdir = CGPUShaderBytecodeTypeNames[format];
                     auto basePath = outputPath.parent_path() / subdir;
-                    const auto fname = skr::format("{}#{}-{}-{}-{}.bytes", 
+                    const auto fname = skr::format("{}#{}-{}-{}-{}", 
                         identifier.hash.flags, identifier.hash.encoded_digits[0],
                         identifier.hash.encoded_digits[1], identifier.hash.encoded_digits[2], identifier.hash.encoded_digits[3]);
-                    auto bytesPath = basePath / fname.c_str();
                     // create dir
                     std::error_code ec = {};
                     skr::filesystem::create_directories(basePath, ec);
-                    // write to file
-                    auto file = fopen(bytesPath.u8string().c_str(), "wb");
-                    if (!file)
+                    // write bytes to file
                     {
-                        SKR_UNREACHABLE_CODE();
+                        auto bytesPath = basePath / (fname + ".bytes").c_str();
+                        auto file = fopen(bytesPath.u8string().c_str(), "wb");
+                        SKR_DEFER({ fclose(file); });
+                        if (!file) SKR_UNREACHABLE_CODE();
+                        fwrite(bytes.data(), bytes.size(), 1, file);
                     }
-                    SKR_DEFER({ fclose(file); });
-                    fwrite(bytes.data(), bytes.size(), 1, file);
+                    // write pdb to file
+                    if (auto pdb = compiled->GetPDB();!pdb.empty())
+                    {
+                        auto pdbPath = basePath / (fname + ".pdb").c_str();
+                        auto pdb_file = fopen(pdbPath.u8string().c_str(), "wb");
+                        SKR_DEFER({ fclose(pdb_file); });
+                        if (!pdb_file) SKR_UNREACHABLE_CODE();
+                        fwrite(pdb.data(), pdb.size(), 1, pdb_file);
+                    }
                 }
                 else
                 {
