@@ -32,6 +32,9 @@ namespace ftl
 {
 
 class TaskScheduler;
+void BindScheduler(TaskScheduler* scheduler);
+void UnbindScheduler();
+TaskScheduler* GetScheduler();
 
 /**
  * This value defines how many fibers can simultaneously wait on a counter
@@ -74,7 +77,10 @@ public:
     BaseCounter& operator=(BaseCounter&&) noexcept = delete;
     ~BaseCounter();
 
-    TaskScheduler* GetScheduler() { return  m_taskScheduler; }
+    TaskScheduler* GetScheduler() { 
+        if(m_taskScheduler) return  m_taskScheduler;
+        else return m_taskScheduler = ftl::GetScheduler();
+    }
 protected:
     /* The TaskScheduler this counter is associated with */
     TaskScheduler* m_taskScheduler;

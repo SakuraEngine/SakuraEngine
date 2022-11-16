@@ -31,6 +31,20 @@
 
 namespace ftl {
 
+thread_local TaskScheduler* scheduler = nullptr;
+void BindScheduler(TaskScheduler* inScheduler)
+{
+	scheduler = inScheduler;
+}
+void UnbindScheduler()
+{
+	scheduler = nullptr;
+}
+TaskScheduler* GetScheduler()
+{
+	return scheduler;
+}
+
 BaseCounter::BaseCounter(TaskScheduler *const taskScheduler, unsigned initialValue, unsigned fiberSlots)
         : m_taskScheduler(taskScheduler), m_value(initialValue), m_lock(0),
           m_freeSlots(m_freeSlotsStorage), m_freeSlotsStorage(),
@@ -146,7 +160,7 @@ void BaseCounter::CheckWaitingFibers(unsigned const value) {
 				continue;
 			}
 
-			m_taskScheduler->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, reinterpret_cast<TaskScheduler::ReadyFiberBundle *>(m_waitingFibers[i].FiberBundle));
+			GetScheduler()->AddReadyFiber(m_waitingFibers[i].PinnedThreadIndex, reinterpret_cast<TaskScheduler::ReadyFiberBundle *>(m_waitingFibers[i].FiberBundle));
 			// Signal that the slot is free
 			// Leave InUse == true
 			m_freeSlots[i].store(true, std::memory_order_release);
