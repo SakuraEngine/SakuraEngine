@@ -10,6 +10,7 @@
 
 sreflect_struct("guid" : "0291f512-747e-4b64-ba5c-5fdc412220a3")
 sattr("serialize" : ["json", "bin"])
+sattr("rtti" : true)
 skr_shader_hash_t 
 {
     uint32_t flags;
@@ -19,9 +20,10 @@ typedef struct skr_shader_hash_t skr_shader_hash_t;
 
 sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
 sattr("serialize" : ["json", "bin"])
+sattr("rtti" : true)
 skr_platform_shader_identifier_t 
 {
-    ECGPUShaderBytecodeType bytecode_type; // ECGPUShaderBytecodeType
+    uint32_t bytecode_type; // ECGPUShaderBytecodeType
     skr_shader_hash_t hash;
     eastl::string entry;
 };
@@ -29,6 +31,7 @@ typedef struct skr_platform_shader_identifier_t skr_platform_shader_identifier_t
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : ["json", "bin"])
+sattr("rtti" : true)
 skr_platform_shader_resource_t
 {
     eastl::vector<skr_platform_shader_identifier_t> identifilers;
