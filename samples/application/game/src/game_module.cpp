@@ -56,6 +56,8 @@ class SGameModule : public skr::IDynamicModule
     skr::task::scheduler_t scheduler;
 };
 
+IMPLEMENT_DYNAMIC_MODULE(SGameModule, Game);
+
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
