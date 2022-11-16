@@ -34,7 +34,7 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
     {
         using namespace skr::guid::literals;
 
-        dual_type_description_t desc;
+        dual_type_description_t desc = make_zeroed<dual_type_description_t>();
         desc.name = "skr_live2d_render_model_comp_t";
         
         desc.size = sizeof(skr_live2d_render_model_comp_t);
