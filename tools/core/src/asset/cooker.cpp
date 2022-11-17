@@ -511,6 +511,11 @@ void SCookContext::AddRuntimeDependency(skr_guid_t resource)
     GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
 }
 
+void SCookContext::AddSoftRuntimeDependency(skr_guid_t resource)
+{
+    GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
+}
+
 skr::span<const skr_guid_t> SCookContext::GetRuntimeDependencies() const
 {
     return skr::span<const skr_guid_t>(runtimeDependencies.data(), runtimeDependencies.size());

@@ -63,6 +63,7 @@ public:
 
     skr::filesystem::path AddFileDependency(const skr::filesystem::path& path);
     void AddRuntimeDependency(skr_guid_t resource);
+    void AddSoftRuntimeDependency(skr_guid_t resource);
     void* AddStaticDependency(skr_guid_t resource);
     skr::span<const skr_guid_t> GetRuntimeDependencies() const;
     skr::span<const skr_guid_t> GetStaticDependencies() const;
