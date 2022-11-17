@@ -11,6 +11,8 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
 {
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
+        if (buffer_task->destination->buffer) return;
+
         SKR_ASSERT( (buffer_task->buffer_io.src_memory.size) && "buffer_io.size must be set");
         const auto& buffer_io = buffer_task->buffer_io;
         const auto& destination = buffer_task->destination;
@@ -44,6 +46,8 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     }
     if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
     {
+        if (ds_buffer_task->destination->buffer) return;
+
         const auto& buffer_io = ds_buffer_task->buffer_io;
         const auto& destination = ds_buffer_task->destination;
         if (ds_buffer_task->buffer_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
@@ -108,15 +112,17 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
 
 void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl::Task &task) SKR_NOEXCEPT
 {
-    if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::TextureTask>(&task.resource_task))
+    if (auto texture_task = eastl::get_if<skr::io::VRAMServiceImpl::TextureTask>(&task.resource_task))
     {
-        SKR_ASSERT( (buffer_task->texture_io.src_memory.size) && "texture_io.size must be set");
-        if (buffer_task->texture_io.src_memory.size)
+        if (texture_task->destination->texture) return;
+        
+        SKR_ASSERT( (texture_task->texture_io.src_memory.size) && "texture_io.size must be set");
+        if (texture_task->texture_io.src_memory.size)
         {
             ZoneScopedN("CreateTextureResource");
 
             auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
-            const auto& texture_io = buffer_task->texture_io;
+            const auto& texture_io = texture_task->texture_io;
             texture_desc.name = texture_io.vtexture.texture_name;
             texture_desc.width = texture_io.vtexture.width;
             texture_desc.height = texture_io.vtexture.height;
@@ -124,9 +130,9 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
             texture_desc.descriptors = texture_io.vtexture.resource_types;
             texture_desc.flags = texture_io.vtexture.flags;
             texture_desc.format = texture_io.vtexture.format;
-            auto texture = cgpu_create_texture(buffer_task->texture_io.device, &texture_desc);
+            auto texture = cgpu_create_texture(texture_task->texture_io.device, &texture_desc);
             // return resource object
-            buffer_task->destination->texture = texture;
+            texture_task->destination->texture = texture;
         }
         else // if (buffer_task->texture_io.path)
         {
@@ -135,6 +141,8 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
     }
     if (auto ds_texture_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
     {
+        if (ds_texture_task->destination->texture) return;
+
         if (ds_texture_task->texture_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
             ZoneScopedN("CreateTextureResource");
@@ -823,11 +831,13 @@ void skr::io::VRAMService::destroy(VRAMService* s) SKR_NOEXCEPT
 
 bool skr::io::VRAMServiceImpl::try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
 {
+    // TODO: Cancel on DStorage Queue
     return tasks.try_cancel_(request);
 }
 
 void skr::io::VRAMServiceImpl::defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
 {
+    // TODO: Cancel on DStorage Queue
     tasks.defer_cancel_(request);
 }
 
