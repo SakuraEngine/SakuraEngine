@@ -105,7 +105,7 @@ protected:
 };
 
 struct TOOL_API SCookSystem {
-    friend struct SkrToolModule;
+    friend struct ::SkrToolModule;
 public:
     SCookSystem() SKR_NOEXCEPT;
     virtual ~SCookSystem() SKR_NOEXCEPT;
@@ -138,6 +138,7 @@ public:
     // TODO: hide this
     skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
 protected:
+
     using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
     CookingMap cooking;
     SMutex ioMutex;
