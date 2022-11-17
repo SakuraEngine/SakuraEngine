@@ -15,6 +15,7 @@ namespace skr::resource
 struct SLocalResourceRegistry;
 struct STextureFactory;
 struct SMeshFactory;
+struct SShaderResourceFactory;
 }
 class GAMERT_API SGameRTModule : public skr::IDynamicModule
 {
@@ -27,6 +28,7 @@ public:
 public:
     skr::resource::STextureFactory* textureFactory = nullptr;
     skr::resource::SMeshFactory* meshFactory = nullptr;
+    skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
 
     skr_vfs_t* resource_vfs = nullptr;
     skr_vfs_t* tex_resource_vfs = nullptr;

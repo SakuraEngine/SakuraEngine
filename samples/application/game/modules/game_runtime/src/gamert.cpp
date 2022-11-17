@@ -10,6 +10,7 @@
 #include "platform/guid.hpp"
 #include "skr_renderer/resources/texture_resource.h"
 #include "skr_renderer/resources/mesh_resource.h"
+#include "skr_renderer/resources/shader_resource.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 
@@ -76,12 +77,43 @@ void SGameRTModule::on_load(int argc, char** argv)
         meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
         resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, meshFactory);
     }
+    // shader factory
+    {
+        skr::resource::SShaderResourceFactory::Root factoryRoot = {};
+        factoryRoot.ram_service = ram_service;
+        factoryRoot.render_device = game_render_device;
+        shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
+        resource_system->RegisterFactory("1c7d845a-fde8-4487-b1c9-e9c48d6a9867"_guid, shaderFactory);
+    }
+
+    skr_resource_handle_t shaderHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
+    shaderHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
+    // texture
+    {
+        while (shaderHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && shaderHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+        {
+            resource_system->Update();
+        }
+        auto final_status = shaderHdl.get_status();
+        if (final_status != SKR_LOADING_STATUS_ERROR)
+        {
+            auto shader = (skr_platform_shader_resource_t*)shaderHdl.get_ptr();
+            SKR_LOG_TRACE("Shader Loaded: entries - %d", shader->shader->entrys_count);
+            resource_system->UnloadResource(shaderHdl);
+            resource_system->Update();
+            while (shaderHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
+            {
+                resource_system->Update();
+            }
+        }
+    }
 }
 
 void SGameRTModule::on_unload()
 {
     skr::resource::STextureFactory::Destroy(textureFactory);
     skr::resource::SMeshFactory::Destroy(meshFactory);
+    skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
 
     dualS_release(game_world);
     skr_free_renderer(game_renderer);

@@ -18,45 +18,60 @@
 
 #include "tracy/Tracy.hpp"
 
+struct TOOL_API SkrToolModule : public skr::IDynamicModule
+{
+    virtual void on_load(int argc, char** argv) override
+    {
+        skr_init_mutex(&cook_system.ioMutex);
+        skr_init_mutex(&cook_system.assetMutex);
+        for (auto& ioService : cook_system.ioServices)
+        {
+            // all used up
+            if (ioService == nullptr)
+            {
+                skr_ram_io_service_desc_t desc = {};
+                desc.sleep_time = 1;
+                desc.lockless = true;
+                desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_NEVER;
+                desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
+                ioService = skr::io::RAMService::create(&desc);
+            }
+        }
+    }
+
+    virtual void on_unload() override
+    {
+        skr_destroy_mutex(&cook_system.ioMutex);
+        for (auto ioService : cook_system.ioServices)
+        {
+            if (ioService)
+                skr::io::RAMService::destroy(ioService);
+        }
+
+        skr_destroy_mutex(&cook_system.assetMutex);
+        for (auto& pair : cook_system.assets)
+            SkrDelete(pair.second);
+    }
+    static skd::asset::SCookSystem cook_system;
+};
+IMPLEMENT_DYNAMIC_MODULE(SkrToolModule, SkrTool);
+skd::asset::SCookSystem SkrToolModule::cook_system;
+
 namespace skd::asset
 {
 SCookSystem* GetCookSystem()
 {
-    static SCookSystem instance;
-    return &instance;
+    return &SkrToolModule::cook_system;
 }
 
 SCookSystem::SCookSystem() noexcept
 {
-    skr_init_mutex(&ioMutex);
-    skr_init_mutex(&assetMutex);
-    for (auto& ioService : ioServices)
-    {
-        // all used up
-        if (ioService == nullptr)
-        {
-            skr_ram_io_service_desc_t desc = {};
-            desc.sleep_time = 1;
-            desc.lockless = true;
-            desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_NEVER;
-            desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
-            ioService = skr::io::RAMService::create(&desc);
-        }
-    }
+    
 }
 
 SCookSystem::~SCookSystem() noexcept
 {
-    skr_destroy_mutex(&ioMutex);
-    for (auto ioService : ioServices)
-    {
-        if (ioService)
-            skr::io::RAMService::destroy(ioService);
-    }
 
-    skr_destroy_mutex(&assetMutex);
-    for (auto& pair : assets)
-        SkrDelete(pair.second);
 }
 
 SProject::~SProject() noexcept
