@@ -60,10 +60,8 @@ struct SKR_RENDERER_API SShaderPipelineFactory : public SResourceFactory {
     virtual ~SShaderPipelineFactory() = default;
 
     struct Root {
-        skr_vfs_t* texture_vfs = nullptr;
-        skr::filesystem::path dstorage_root;
+        skr_vfs_t* bytecode_vfs = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
-        skr::io::VRAMService* vram_service = nullptr;
         SRenderDeviceId render_device = nullptr;
     };
 

@@ -746,7 +746,7 @@ void __ioThreadTask_VRAM(void* arg)
     }
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, skr_async_io_request_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, skr_async_request_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -777,7 +777,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, 
     threaded_service.request_();
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info, skr_async_io_request_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info, skr_async_request_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -829,13 +829,13 @@ void skr::io::VRAMService::destroy(VRAMService* s) SKR_NOEXCEPT
     SkrDelete(service);
 }
 
-bool skr::io::VRAMServiceImpl::try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
+bool skr::io::VRAMServiceImpl::try_cancel(skr_async_request_t* request) SKR_NOEXCEPT
 {
     // TODO: Cancel on DStorage Queue
     return tasks.try_cancel_(request);
 }
 
-void skr::io::VRAMServiceImpl::defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::defer_cancel(skr_async_request_t* request) SKR_NOEXCEPT
 {
     // TODO: Cancel on DStorage Queue
     tasks.defer_cancel_(request);

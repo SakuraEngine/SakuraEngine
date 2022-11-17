@@ -51,7 +51,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
     skr_ram_io_t ramIO = {};
     ramIO.offset = 0;
     ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
         cgltf_options options = {};
         struct cgltf_data* gltf_data_ = nullptr;
@@ -78,7 +78,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
         cbData->pCounter->signal();
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
-    skr_async_io_request_t ioRequest = {};
+    skr_async_request_t ioRequest = {};
     ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
     counter.wait(false);
     // parse

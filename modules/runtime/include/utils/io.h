@@ -13,13 +13,13 @@ typedef enum SkrAsyncIOServiceStatus
     SKR_IO_SERVICE_STATUS_MAX_ENUM = UINT32_MAX
 } SkrAsyncIOServiceStatus;
 
-typedef enum SkrAsyncIOServiceSleepMode
+typedef enum SkrAsyncServiceSleepMode
 {
     SKR_IO_SERVICE_SLEEP_MODE_COND_VAR = 0,
     SKR_IO_SERVICE_SLEEP_MODE_SLEEP = 1,
     SKR_IO_SERVICE_SLEEP_MODE_COUNT,
     SKR_IO_SERVICE_SLEEP_MAX_ENUM = UINT32_MAX
-} SkrAsyncIOServiceSleepMode;
+} SkrAsyncServiceSleepMode;
 
 typedef enum SkrAsyncIOStatus
 {
@@ -43,16 +43,16 @@ typedef enum SkrIOServicePriority
     SKR_IO_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
 } SkrIOServicePriority;
 
-typedef enum SkrIOServiceSortMethod
+typedef enum SkrServiceTaskSortMethod
 {
     SKR_IO_SERVICE_SORT_METHOD_NEVER = 0,
     SKR_IO_SERVICE_SORT_METHOD_STABLE = 1,
     SKR_IO_SERVICE_SORT_METHOD_PARTIAL = 2,
     SKR_IO_SERVICE_SORT_METHOD_COUNT,
     SKR_IO_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
-} SkrIOServiceSortMethod;
+} SkrServiceTaskSortMethod;
 
-typedef struct skr_async_io_request_t {
+typedef struct skr_async_request_t {
     SAtomic32 status;
     SAtomic32 request_cancel;
 #ifdef __cplusplus
@@ -63,7 +63,7 @@ typedef struct skr_async_io_request_t {
     RUNTIME_API bool is_vram_loading() const SKR_NOEXCEPT;
     RUNTIME_API SkrAsyncIOStatus get_status() const SKR_NOEXCEPT;
 #endif
-} skr_async_io_request_t;
+} skr_async_request_t;
 
 typedef struct skr_async_ram_destination_t {
     uint8_t* bytes SKR_IF_CPP(= nullptr);
@@ -74,17 +74,17 @@ typedef struct skr_ram_io_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
     uint32_t sleep_time SKR_IF_CPP(= SKR_IO_SERVICE_SLEEP_TIME_MAX);
     bool lockless SKR_IF_CPP(= true);
-    SkrIOServiceSortMethod sort_method SKR_IF_CPP(= SKR_IO_SERVICE_SORT_METHOD_NEVER);
-    SkrAsyncIOServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_IO_SERVICE_SLEEP_MODE_COND_VAR);
+    SkrServiceTaskSortMethod sort_method SKR_IF_CPP(= SKR_IO_SERVICE_SORT_METHOD_NEVER);
+    SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_IO_SERVICE_SLEEP_MODE_COND_VAR);
 } skr_ram_io_service_desc_t;
 
-typedef void (*skr_async_io_callback_t)(skr_async_io_request_t* request, void* data);
+typedef void (*skr_async_callback_t)(skr_async_request_t* request, void* data);
 typedef struct skr_ram_io_t {
     const char8_t* path SKR_IF_CPP(= nullptr);
     uint64_t offset SKR_IF_CPP(= 0);
     SkrIOServicePriority priority SKR_IF_CPP(= SKR_IO_SERVICE_PRIORITY_NORMAL);
     float sub_priority SKR_IF_CPP(= 0.f); /*0.f ~ 1.f*/
-    skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
 } skr_ram_io_t;
 

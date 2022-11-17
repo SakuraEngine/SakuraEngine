@@ -23,9 +23,9 @@ public:
 
     {
     }
-    void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_io_request_t* async_request, skr_async_ram_destination_t* dst) SKR_NOEXCEPT final;
-    bool try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
-    void defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT final;
+    void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_request_t* async_request, skr_async_ram_destination_t* dst) SKR_NOEXCEPT final;
+    bool try_cancel(skr_async_request_t* request) SKR_NOEXCEPT final;
+    void defer_cancel(skr_async_request_t* request) SKR_NOEXCEPT final;
     void drain() SKR_NOEXCEPT final;
     void set_sleep_time(uint32_t time) SKR_NOEXCEPT final;
     void stop(bool wait_drain = false) SKR_NOEXCEPT final;
@@ -51,28 +51,35 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
     if (task.has_value())
     {
         ZoneScopedN("ioServiceReadFile");
-        task->setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
         skr_vfile_t* vf = nullptr;
+        if (task->vfs)
         {
-            ZoneScopedNC("FOpen", tracy::Color::LightBlue);
-            vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
-                ESkrFileMode::SKR_FM_READ_BINARY, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+            task->setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
+            {
+                ZoneScopedNC("FOpen", tracy::Color::LightBlue);
+                vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
+                    ESkrFileMode::SKR_FM_READ_BINARY, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+            }
+            if (task->destination->bytes == nullptr)
+            {
+                ZoneScopedNC("Allocate", tracy::Color::LightBlue);
+                // allocate
+                auto fsize = skr_vfs_fsize(vf);
+                task->destination->size = fsize;
+                task->destination->bytes = (uint8_t*)sakura_malloc(fsize);
+            }
+            {
+                ZoneScopedN("BeforeLoadingCallback");
+                task->setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
+            }
+            {
+                ZoneScopedNC("FRead", tracy::Color::LightBlue);
+                skr_vfs_fread(vf, task->destination->bytes, task->offset, task->destination->size);
+            }
         }
-        if (task->destination->bytes == nullptr)
+        else
         {
-            ZoneScopedNC("Allocate", tracy::Color::LightBlue);
-            // allocate
-            auto fsize = skr_vfs_fsize(vf);
-            task->destination->size = fsize;
-            task->destination->bytes = (uint8_t*)sakura_malloc(fsize);
-        }
-        {
-            ZoneScopedN("BeforeLoadingCallback");
-            task->setTaskStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
-        }
-        {
-            ZoneScopedNC("FRead", tracy::Color::LightBlue);
-            skr_vfs_fread(vf, task->destination->bytes, task->offset, task->destination->size);
+            SKR_UNREACHABLE_CODE();
         }
         {
             ZoneScopedN("LoadingOKCallback");
@@ -106,7 +113,7 @@ void __ioThreadTask_RAM(void* arg)
 }
 
 void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info, 
-    skr_async_io_request_t* async_request, skr_async_ram_destination_t* dst) SKR_NOEXCEPT
+    skr_async_request_t* async_request, skr_async_ram_destination_t* dst) SKR_NOEXCEPT
 {
     ZoneScopedN("ioRAMRequest");
 
@@ -148,12 +155,12 @@ void RAMService::destroy(RAMService* s) SKR_NOEXCEPT
     SkrDelete(service);
 }
 
-bool skr::io::RAMServiceImpl::try_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
+bool skr::io::RAMServiceImpl::try_cancel(skr_async_request_t* request) SKR_NOEXCEPT
 {
     return tasks.try_cancel_(request);
 }
 
-void skr::io::RAMServiceImpl::defer_cancel(skr_async_io_request_t* request) SKR_NOEXCEPT
+void skr::io::RAMServiceImpl::defer_cancel(skr_async_request_t* request) SKR_NOEXCEPT
 {
     tasks.defer_cancel_(request);
 }
