@@ -173,8 +173,9 @@ int main(int argc, char** argv)
     skr::filesystem::create_directories(project->dependencyPath, ec);
     //----- schedule cook tasks (checking dependencies)
     {
-        using iter_t = typename decltype(system.assets)::iterator;
-        system.ParallelFor(system.assets.begin(), system.assets.end(), 1,
+        const auto& assetMap = system.GetAssetMap();
+        using iter_t = typename std::decay_t<decltype(assetMap)>::const_iterator;
+        system.ParallelFor(assetMap.begin(), assetMap.end(), 1,
         [](iter_t begin, iter_t end) {
             ZoneScopedN("EnsureCooked");
             auto& system = *skd::asset::GetCookSystem();
