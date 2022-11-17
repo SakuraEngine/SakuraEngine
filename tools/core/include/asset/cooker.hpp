@@ -107,6 +107,9 @@ protected:
 struct TOOL_API SCookSystem {
     friend struct ::SkrToolModule;
 public:
+    using AssetMap = skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash>;
+    using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
+
     SCookSystem() SKR_NOEXCEPT;
     virtual ~SCookSystem() SKR_NOEXCEPT;
 
@@ -135,11 +138,10 @@ public:
         skr::parallel_for(std::move(begin), std::move(end), batch, std::move(f));
     }
 
-    // TODO: hide this
-    skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash> assets;
+    const AssetMap& GetAssetMap() const { return assets; }
+    const CookingMap& GetCookingMap() const { return cooking; }
 protected:
-
-    using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
+    AssetMap assets;
     CookingMap cooking;
     SMutex ioMutex;
 
