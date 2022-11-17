@@ -32,7 +32,7 @@ public:
         : _sleepTime(sleep_time)
 
     {
-        skr_init_mutex(&sleepMutex);
+        skr_init_mutex_recursive(&sleepMutex);
         skr_init_condition_var(&sleepCv);
     }
 
@@ -42,11 +42,11 @@ public:
     }
 
     // running status
-    void setRunningStatus(SkrAsyncServiceStatus status)
+    void setServiceStatus(SkrAsyncServiceStatus status)
     {
         skr_atomic32_store_relaxed(&_running_status, status);
     }
-    SkrAsyncServiceStatus getRunningStatus() const
+    SkrAsyncServiceStatus getServiceStatus() const
     {
         return (SkrAsyncServiceStatus)skr_atomic32_load_acquire(&_running_status);
     }
@@ -56,7 +56,7 @@ public:
     virtual void create_(SkrAsyncServiceSleepMode sleep_mode) SKR_NOEXCEPT
     {
         auto service = this;
-        service->setRunningStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
+        service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         sleep_mode = sleepMode;
     }
 
@@ -88,7 +88,7 @@ public:
     virtual void drain_() SKR_NOEXCEPT
     {
         // wait for sleep
-        for (; getRunningStatus() != SKR_ASYNC_SERVICE_STATUS_SLEEPING;)
+        for (; getServiceStatus() != SKR_ASYNC_SERVICE_STATUS_SLEEPING;)
         {
             //...
         }
@@ -149,7 +149,7 @@ struct TaskContainer
     TaskContainer(bool is_lockless) SKR_NOEXCEPT
         : isLockless(is_lockless)
     {
-        skr_init_mutex(&taskMutex);
+        skr_init_mutex_recursive(&taskMutex);
     }
 
     ~TaskContainer()
@@ -213,7 +213,7 @@ struct TaskContainer
             {
                 TracyCZone(sortZone, 1);
                 TracyCZoneName(sortZone, "ioServiceSort", strlen("ioServiceSort"));
-                service->setRunningStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
+                service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
                 switch (service->sortMethod)
                 {
                     case SKR_ASYNC_SERVICE_SORT_METHOD_STABLE:
@@ -351,7 +351,7 @@ public:
         AsyncServiceBase::sleep_();
         const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
         {
-            service->setRunningStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
+            service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
             if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP && sleepTimeVal != 0)
             {
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
@@ -366,13 +366,22 @@ public:
                 // use condition variable to sleep
                 TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
                 TracyCZoneName(sleepZone, "ioServiceSleep(Cond)", strlen("ioServiceSleep(Cond)"));
-                SMutexLock sleepLock(service->sleepMutex);
-                skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);
+                {
+                    SMutexLock sleepLock(service->sleepMutex);
+                    skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);
+                    skr_init_condition_var(&service->sleepCv);
+                }
                 TracyCZoneEnd(sleepZone);
             }
             else
             {
                 SKR_UNREACHABLE_CODE();
+            }
+            auto serviceQuiting = getServiceStatus();
+            if (serviceQuiting == SKR_ASYNC_SERVICE_STATUS_QUITING)
+            {
+                service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
+                return;
             }
         }
     }
@@ -384,7 +393,7 @@ public:
         if (sleepTimeVal == SKR_ASYNC_SERVICE_SLEEP_TIME_MAX && sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
         {
             SMutexLock sleepLock(sleepMutex);
-            skr_wake_condition_var(&sleepCv);
+            skr_wake_all_condition_vars(&sleepCv);
         }
     }
 
@@ -392,11 +401,14 @@ public:
     {
         auto service = this;
         AsyncServiceBase::destroy_();
-        service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
+        service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
         if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
         {
-            SMutexLock sleepLock(service->sleepMutex);
-            skr_wake_condition_var(&service->sleepCv);
+            while (service->getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT)
+            {
+                SMutexLock sleepLock(service->sleepMutex);
+                skr_wake_all_condition_vars(&service->sleepCv);
+            }
         }
         skr_join_thread(service->serviceThread);
         skr_destroy_thread(service->serviceThread);

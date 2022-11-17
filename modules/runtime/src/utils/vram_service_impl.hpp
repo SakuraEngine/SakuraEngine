@@ -89,7 +89,7 @@ public:
 
     SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT final
     {
-        return threaded_service.getRunningStatus();
+        return threaded_service.getServiceStatus();
     }
 
     // create resource

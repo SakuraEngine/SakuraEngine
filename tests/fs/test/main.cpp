@@ -102,10 +102,13 @@ TEST_F(FSTest, asyncread)
     skr_async_request_t request = {};
     skr_async_ram_destination_t destination = {};
     ioService->request(abs_fs, &ramIO, &request, &destination);
-    while (!request.is_ready()) {}
+    while (!request.is_ready()) 
+    {
+    }
     // ioService->drain();
     std::cout << (const char*)destination.bytes << std::endl;
     skr::io::RAMService::destroy(ioService);
+    std::cout << "..." << std::endl;
 }
 
 TEST_F(FSTest, cancel)

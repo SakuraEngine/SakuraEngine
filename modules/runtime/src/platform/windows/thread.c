@@ -1,4 +1,5 @@
 #include "platform/thread.h"
+#include "platform/debug.h"
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #include "synchapi.h"
@@ -187,21 +188,20 @@ void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint3
     }
     else
     {
-        SleepConditionVariableCS((PCONDITION_VARIABLE)cv->cvStorage_, *(CRITICAL_SECTION**)pMutex->muStorage_, ms);
+        PCRITICAL_SECTION* ppCS = (PCRITICAL_SECTION*)(pMutex->muStorage_);
+        SleepConditionVariableCS((PCONDITION_VARIABLE)cv_, *ppCS, ms);
     }
 }
 
 void skr_wake_condition_var(SConditionVariable* cv)
 {
     CONDITION_VARIABLE* cv_ = (CONDITION_VARIABLE*)(cv->cvStorage_);
-
     WakeConditionVariable((PCONDITION_VARIABLE)cv_);
 }
 
 void skr_wake_all_condition_vars(SConditionVariable* cv)
 {
     CONDITION_VARIABLE* cv_ = (CONDITION_VARIABLE*)(cv->cvStorage_);
-
     WakeAllConditionVariable((PCONDITION_VARIABLE)cv_);
 }
 
