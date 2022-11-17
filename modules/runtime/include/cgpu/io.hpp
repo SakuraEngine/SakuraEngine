@@ -39,7 +39,7 @@ public:
     virtual void set_sleep_time(uint32_t time) SKR_NOEXCEPT = 0;
 
     // get service status (sleeping or running)
-    virtual SkrAsyncIOServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
+    virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
 
     virtual ~VRAMService() SKR_NOEXCEPT = default;
     VRAMService() SKR_NOEXCEPT = default;

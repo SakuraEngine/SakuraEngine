@@ -42,13 +42,13 @@ public:
     }
 
     // running status
-    void setRunningStatus(SkrAsyncIOServiceStatus status)
+    void setRunningStatus(SkrAsyncServiceStatus status)
     {
         skr_atomic32_store_relaxed(&_running_status, status);
     }
-    SkrAsyncIOServiceStatus getRunningStatus() const
+    SkrAsyncServiceStatus getRunningStatus() const
     {
-        return (SkrAsyncIOServiceStatus)skr_atomic32_load_acquire(&_running_status);
+        return (SkrAsyncServiceStatus)skr_atomic32_load_acquire(&_running_status);
     }
 
     // util methods
@@ -56,7 +56,7 @@ public:
     virtual void create_(SkrAsyncServiceSleepMode sleep_mode) SKR_NOEXCEPT
     {
         auto service = this;
-        service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
+        service->setRunningStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         sleep_mode = sleepMode;
     }
 
@@ -88,7 +88,7 @@ public:
     virtual void drain_() SKR_NOEXCEPT
     {
         // wait for sleep
-        for (; getRunningStatus() != SKR_IO_SERVICE_STATUS_SLEEPING;)
+        for (; getRunningStatus() != SKR_ASYNC_SERVICE_STATUS_SLEEPING;)
         {
             //...
         }
@@ -107,15 +107,15 @@ public:
     SConditionVariable sleepCv;
     SAtomic32 _sleepTime = 30 /*ms*/;
     // service settings & states
-    SAtomic32 _running_status /*SkrAsyncIOServiceStatus*/;
+    SAtomic32 _running_status /*SkrAsyncServiceStatus*/;
     // can be simply exchanged by atomic vars to support runtime mode modify
-    SkrServiceTaskSortMethod sortMethod = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
-    SkrAsyncServiceSleepMode sleepMode = SKR_IO_SERVICE_SLEEP_MODE_COND_VAR;
+    SkrAsyncServiceSortMethod sortMethod = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
+    SkrAsyncServiceSleepMode sleepMode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
 };
 
 struct TaskBase
 {
-    SkrIOServicePriority priority;
+    SkrAsyncServicePriority priority;
     float sub_priority;
     skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
@@ -213,18 +213,18 @@ struct TaskContainer
             {
                 TracyCZone(sortZone, 1);
                 TracyCZoneName(sortZone, "ioServiceSort", strlen("ioServiceSort"));
-                service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
+                service->setRunningStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
                 switch (service->sortMethod)
                 {
-                    case SKR_IO_SERVICE_SORT_METHOD_STABLE:
+                    case SKR_ASYNC_SERVICE_SORT_METHOD_STABLE:
                         eastl::stable_sort(tasks.begin(), tasks.end());
                         break;
-                    case SKR_IO_SERVICE_SORT_METHOD_PARTIAL:
+                    case SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL:
                         eastl::partial_sort(tasks.begin(),
                         tasks.begin() + tasks.size() / 2,
                         tasks.end());
                         break;
-                    case SKR_IO_SERVICE_SORT_METHOD_NEVER:
+                    case SKR_ASYNC_SERVICE_SORT_METHOD_NEVER:
                     default:
                         break;
                 }
@@ -351,8 +351,8 @@ public:
         AsyncServiceBase::sleep_();
         const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
         {
-            service->setRunningStatus(SKR_IO_SERVICE_STATUS_SLEEPING);
-            if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_SLEEP && sleepTimeVal != 0)
+            service->setRunningStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
+            if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP && sleepTimeVal != 0)
             {
                 auto sleepTime = eastl::min(sleepTimeVal, 100u);
                 sleepTime = eastl::max(sleepTimeVal, 1u);
@@ -361,7 +361,7 @@ public:
                 skr_thread_sleep(sleepTime);
                 TracyCZoneEnd(sleepZone);
             }
-            else if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
+            else if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
             {
                 // use condition variable to sleep
                 TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
@@ -381,7 +381,7 @@ public:
     {
         // unlock cv
         const auto sleepTimeVal = skr_atomic32_load_acquire(&_sleepTime);
-        if (sleepTimeVal == SKR_IO_SERVICE_SLEEP_TIME_MAX && sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
+        if (sleepTimeVal == SKR_ASYNC_SERVICE_SLEEP_TIME_MAX && sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
         {
             SMutexLock sleepLock(sleepMutex);
             skr_wake_condition_var(&sleepCv);
@@ -393,7 +393,7 @@ public:
         auto service = this;
         AsyncServiceBase::destroy_();
         service->setThreadStatus(_SKR_IO_THREAD_STATUS_QUIT);
-        if (service->sleepMode == SKR_IO_SERVICE_SLEEP_MODE_COND_VAR)
+        if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
         {
             SMutexLock sleepLock(service->sleepMutex);
             skr_wake_condition_var(&service->sleepCv);

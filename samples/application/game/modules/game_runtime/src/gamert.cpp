@@ -34,10 +34,10 @@ void SGameRTModule::on_load(int argc, char** argv)
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
     ioServiceDesc.name = "GameRuntimeRAMIOService";
-    ioServiceDesc.sleep_mode = SKR_IO_SERVICE_SLEEP_MODE_SLEEP;
+    ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
-    ioServiceDesc.sort_method = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
+    ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     ram_service = skr::io::RAMService::create(&ioServiceDesc);
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);

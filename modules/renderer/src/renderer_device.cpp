@@ -16,9 +16,9 @@ void skr::RendererDevice::initialize(bool enable_debug_layer, bool enable_gpu_ba
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
     vram_service_desc.lockless = true;
     vram_service_desc.name = "vram_service";
-    vram_service_desc.sleep_mode = SKR_IO_SERVICE_SLEEP_MODE_SLEEP;
+    vram_service_desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     vram_service_desc.sleep_time = 1000 / 60;
-    vram_service_desc.sort_method = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
+    vram_service_desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     vram_service = skr::io::VRAMService::create(&vram_service_desc);
 }
 
