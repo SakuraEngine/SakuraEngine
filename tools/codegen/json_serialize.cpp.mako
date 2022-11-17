@@ -114,7 +114,7 @@ void WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
     %for base in record.bases:
     WriteFields<const ${base}&>(writer, record);
     %endfor
-    %for name, field in vars(record.fields).items():
+    %for name, field in generator.filter_fields(record.fields):
     writer->Key("${name}", ${len(name)});
     %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
