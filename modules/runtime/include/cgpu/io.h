@@ -39,7 +39,7 @@ typedef struct skr_vram_buffer_io_t {
         uint8_t* bytes;
         uint64_t size;
     } src_memory;
-    SkrIOServicePriority priority;
+    SkrAsyncServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
     skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
@@ -79,7 +79,7 @@ typedef struct skr_vram_texture_io_t {
         const uint8_t* bytes;
         uint64_t size;
     } src_memory;
-    SkrIOServicePriority priority;
+    SkrAsyncServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
     skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
@@ -93,7 +93,7 @@ typedef struct skr_vram_io_service_desc_t {
     const char8_t* name;
     uint32_t sleep_time;
     bool lockless;
-    SkrServiceTaskSortMethod sort_method;
+    SkrAsyncServiceSortMethod sort_method;
     SkrAsyncServiceSleepMode sleep_mode;
 } skr_vram_io_service_desc_t;
 

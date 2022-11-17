@@ -2,7 +2,7 @@
 #include "io.h"
 
 typedef struct skr_service_task_t {
-    SkrIOServicePriority priority SKR_IF_CPP(= SKR_IO_SERVICE_PRIORITY_NORMAL);
+    SkrAsyncServicePriority priority SKR_IF_CPP(= SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
     float sub_priority SKR_IF_CPP(= 0.f); /*0.f ~ 1.f*/
     skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
@@ -10,10 +10,10 @@ typedef struct skr_service_task_t {
 
 typedef struct skr_threaded_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
-    uint32_t sleep_time SKR_IF_CPP(= SKR_IO_SERVICE_SLEEP_TIME_MAX);
+    uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
     bool lockless SKR_IF_CPP(= true);
-    SkrServiceTaskSortMethod sort_method SKR_IF_CPP(= SKR_IO_SERVICE_SORT_METHOD_NEVER);
-    SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_IO_SERVICE_SLEEP_MODE_COND_VAR);
+    SkrAsyncServiceSortMethod sort_method SKR_IF_CPP(= SKR_ASYNC_SERVICE_SORT_METHOD_NEVER);
+    SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
 } skr_threaded_service_desc_t;
 
 namespace skr
@@ -49,7 +49,7 @@ public:
     virtual void set_sleep_time(uint32_t time) SKR_NOEXCEPT = 0;
 
     // get service status (sleeping or running)
-    virtual SkrAsyncIOServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
+    virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
 
     virtual ~ThreadedService() SKR_NOEXCEPT = default;
     ThreadedService() SKR_NOEXCEPT = default;

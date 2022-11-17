@@ -87,7 +87,7 @@ public:
     void stop(bool wait_drain = false) SKR_NOEXCEPT final;
     void run() SKR_NOEXCEPT final;
 
-    SkrAsyncIOServiceStatus get_service_status() const SKR_NOEXCEPT final
+    SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT final
     {
         return threaded_service.getRunningStatus();
     }

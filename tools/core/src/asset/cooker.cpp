@@ -38,8 +38,8 @@ SCookSystem::SCookSystem() noexcept
             skr_ram_io_service_desc_t desc = {};
             desc.sleep_time = 1;
             desc.lockless = true;
-            desc.sort_method = SKR_IO_SERVICE_SORT_METHOD_NEVER;
-            desc.sleep_mode = SKR_IO_SERVICE_SLEEP_MODE_SLEEP;
+            desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_NEVER;
+            desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
             ioService = skr::io::RAMService::create(&desc);
         }
     }

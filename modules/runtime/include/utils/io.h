@@ -3,22 +3,22 @@
 #include "platform/atomic.h"
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
-#define SKR_IO_SERVICE_SLEEP_TIME_MAX UINT32_MAX
+#define SKR_ASYNC_SERVICE_SLEEP_TIME_MAX UINT32_MAX
 
-typedef enum SkrAsyncIOServiceStatus
+typedef enum SkrAsyncServiceStatus
 {
-    SKR_IO_SERVICE_STATUS_SLEEPING = 0,
-    SKR_IO_SERVICE_STATUS_RUNNING = 1,
-    SKR_IO_SERVICE_STATUS_COUNT,
-    SKR_IO_SERVICE_STATUS_MAX_ENUM = UINT32_MAX
-} SkrAsyncIOServiceStatus;
+    SKR_ASYNC_SERVICE_STATUS_SLEEPING = 0,
+    SKR_ASYNC_SERVICE_STATUS_RUNNING = 1,
+    SKR_ASYNC_SERVICE_STATUS_COUNT,
+    SKR_ASYNC_SERVICE_STATUS_MAX_ENUM = UINT32_MAX
+} SkrAsyncServiceStatus;
 
 typedef enum SkrAsyncServiceSleepMode
 {
-    SKR_IO_SERVICE_SLEEP_MODE_COND_VAR = 0,
-    SKR_IO_SERVICE_SLEEP_MODE_SLEEP = 1,
-    SKR_IO_SERVICE_SLEEP_MODE_COUNT,
-    SKR_IO_SERVICE_SLEEP_MAX_ENUM = UINT32_MAX
+    SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR = 0,
+    SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP = 1,
+    SKR_ASYNC_SERVICE_SLEEP_MODE_COUNT,
+    SKR_ASYNC_SERVICE_SLEEP_MAX_ENUM = UINT32_MAX
 } SkrAsyncServiceSleepMode;
 
 typedef enum SkrAsyncIOStatus
@@ -34,23 +34,23 @@ typedef enum SkrAsyncIOStatus
     SKR_ASYNC_IO_STATUS_MAX_ENUM = UINT32_MAX
 } SkrAsyncIOStatus;
 
-typedef enum SkrIOServicePriority
+typedef enum SkrAsyncServicePriority
 {
-    SKR_IO_SERVICE_PRIORITY_LOW = -1,
-    SKR_IO_SERVICE_PRIORITY_NORMAL = 0,
-    SKR_IO_SERVICE_PRIORITY_URGENT = 1,
-    SKR_IO_SERVICE_PRIORITY_COUNT = 3,
-    SKR_IO_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
-} SkrIOServicePriority;
+    SKR_ASYNC_SERVICE_PRIORITY_LOW = -1,
+    SKR_ASYNC_SERVICE_PRIORITY_NORMAL = 0,
+    SKR_ASYNC_SERVICE_PRIORITY_URGENT = 1,
+    SKR_ASYNC_SERVICE_PRIORITY_COUNT = 3,
+    SKR_ASYNC_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
+} SkrAsyncServicePriority;
 
-typedef enum SkrServiceTaskSortMethod
+typedef enum SkrAsyncServiceSortMethod
 {
-    SKR_IO_SERVICE_SORT_METHOD_NEVER = 0,
-    SKR_IO_SERVICE_SORT_METHOD_STABLE = 1,
-    SKR_IO_SERVICE_SORT_METHOD_PARTIAL = 2,
-    SKR_IO_SERVICE_SORT_METHOD_COUNT,
-    SKR_IO_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
-} SkrServiceTaskSortMethod;
+    SKR_ASYNC_SERVICE_SORT_METHOD_NEVER = 0,
+    SKR_ASYNC_SERVICE_SORT_METHOD_STABLE = 1,
+    SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL = 2,
+    SKR_ASYNC_SERVICE_SORT_METHOD_COUNT,
+    SKR_ASYNC_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
+} SkrAsyncServiceSortMethod;
 
 typedef struct skr_async_request_t {
     SAtomic32 status;
@@ -72,17 +72,17 @@ typedef struct skr_async_ram_destination_t {
 
 typedef struct skr_ram_io_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
-    uint32_t sleep_time SKR_IF_CPP(= SKR_IO_SERVICE_SLEEP_TIME_MAX);
+    uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
     bool lockless SKR_IF_CPP(= true);
-    SkrServiceTaskSortMethod sort_method SKR_IF_CPP(= SKR_IO_SERVICE_SORT_METHOD_NEVER);
-    SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_IO_SERVICE_SLEEP_MODE_COND_VAR);
+    SkrAsyncServiceSortMethod sort_method SKR_IF_CPP(= SKR_ASYNC_SERVICE_SORT_METHOD_NEVER);
+    SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
 } skr_ram_io_service_desc_t;
 
 typedef void (*skr_async_callback_t)(skr_async_request_t* request, void* data);
 typedef struct skr_ram_io_t {
     const char8_t* path SKR_IF_CPP(= nullptr);
     uint64_t offset SKR_IF_CPP(= 0);
-    SkrIOServicePriority priority SKR_IF_CPP(= SKR_IO_SERVICE_PRIORITY_NORMAL);
+    SkrAsyncServicePriority priority SKR_IF_CPP(= SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
     float sub_priority SKR_IF_CPP(= 0.f); /*0.f ~ 1.f*/
     skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];

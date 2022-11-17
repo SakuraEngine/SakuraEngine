@@ -115,7 +115,7 @@ TEST_F(FSTest, cancel)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = "Test";
-        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX /*ms*/;
         ioServiceDesc.lockless = false;
         auto ioService = skr::io::RAMService::create(&ioServiceDesc);
         skr_ram_io_t ramIO = {};
@@ -163,7 +163,7 @@ TEST_F(FSTest, defer_cancel)
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = "Test";
         ioServiceDesc.lockless = true;
-        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX /*ms*/;
         auto ioService = skr::io::RAMService::create(&ioServiceDesc);
         skr_ram_io_t ramIO = {};
         ramIO.offset = 0;
@@ -203,17 +203,17 @@ TEST_F(FSTest, sort)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = "Test";
-        ioServiceDesc.sleep_time = SKR_IO_SERVICE_SLEEP_TIME_MAX /*ms*/;
-        ioServiceDesc.sort_method = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr::io::RAMService::create(&ioServiceDesc);
         ioService->stop(true);
         skr_ram_io_t ramIO = {};
         ramIO.offset = 0;
-        ramIO.priority = ::SKR_IO_SERVICE_PRIORITY_NORMAL;
+        ramIO.priority = ::SKR_ASYNC_SERVICE_PRIORITY_NORMAL;
         ramIO.path = "testfile2";
         skr_ram_io_t anotherRamIO = {};
         anotherRamIO.offset = 0;
-        anotherRamIO.priority = ::SKR_IO_SERVICE_PRIORITY_URGENT;
+        anotherRamIO.priority = ::SKR_ASYNC_SERVICE_PRIORITY_URGENT;
         anotherRamIO.path = "testfile";
         skr_async_request_t request;
         skr_async_ram_destination_t destination = {};
