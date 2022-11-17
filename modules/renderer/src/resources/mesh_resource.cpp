@@ -344,7 +344,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
             }
         }
         eastl::vector<std::string> absPaths;
-        eastl::vector<skr_async_io_request_t> dRequests;
+        eastl::vector<skr_async_request_t> dRequests;
         eastl::vector<skr_async_vbuffer_destination_t> dDestinations;
     };
 
@@ -363,9 +363,9 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
         SMeshFactoryImpl* factory = nullptr;
         skr_mesh_resource_id mesh_resource = nullptr;
         eastl::vector<std::string> resource_uris;
-        eastl::vector<skr_async_io_request_t> ram_requests;
+        eastl::vector<skr_async_request_t> ram_requests;
         eastl::vector<skr_async_ram_destination_t> ram_destinations;
-        eastl::vector<skr_async_io_request_t> vram_requests;
+        eastl::vector<skr_async_request_t> vram_requests;
         eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
     };
 
@@ -538,7 +538,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                 // emit ram requests
                 auto ram_mesh_io = make_zeroed<skr_ram_io_t>();
                 ram_mesh_io.path = binPath.c_str();
-                ram_mesh_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data) noexcept {
+                ram_mesh_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
                     ZoneScopedN("Upload Mesh");
                     // upload
                     auto uRequest = (UploadRequest*)data;
@@ -563,7 +563,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
 
                     vram_buffer_io.src_memory.size = thisBin.byte_length;
                     vram_buffer_io.src_memory.bytes = uRequest->ram_destinations[i].bytes;
-                    vram_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* data){};
+                    vram_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data){};
                     vram_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = nullptr;
 
                     factory->root.vram_service->request(&vram_buffer_io, &uRequest->vram_requests[i], &uRequest->buffer_destinations[i]);

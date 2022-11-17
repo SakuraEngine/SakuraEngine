@@ -53,7 +53,7 @@ public:
 
     // util methods
 
-    virtual void create_(SkrAsyncIOServiceSleepMode sleep_mode) SKR_NOEXCEPT
+    virtual void create_(SkrAsyncServiceSleepMode sleep_mode) SKR_NOEXCEPT
     {
         auto service = this;
         service->setRunningStatus(SKR_IO_SERVICE_STATUS_RUNNING);
@@ -109,17 +109,17 @@ public:
     // service settings & states
     SAtomic32 _running_status /*SkrAsyncIOServiceStatus*/;
     // can be simply exchanged by atomic vars to support runtime mode modify
-    SkrIOServiceSortMethod sortMethod = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
-    SkrAsyncIOServiceSleepMode sleepMode = SKR_IO_SERVICE_SLEEP_MODE_COND_VAR;
+    SkrServiceTaskSortMethod sortMethod = SKR_IO_SERVICE_SORT_METHOD_PARTIAL;
+    SkrAsyncServiceSleepMode sleepMode = SKR_IO_SERVICE_SLEEP_MODE_COND_VAR;
 };
 
 struct TaskBase
 {
     SkrIOServicePriority priority;
     float sub_priority;
-    skr_async_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
-    skr_async_io_request_t* request;
+    skr_async_request_t* request;
 
     bool operator<(const TaskBase& rhs) const
     {
@@ -295,7 +295,7 @@ struct TaskContainer
         }
     }
 
-    bool try_cancel_(skr_async_io_request_t* request) SKR_NOEXCEPT
+    bool try_cancel_(skr_async_request_t* request) SKR_NOEXCEPT
     {
         if (request->is_enqueued() && !isLockless)
         {
@@ -317,7 +317,7 @@ struct TaskContainer
         return false;
     }
 
-    void defer_cancel_(skr_async_io_request_t* request) 
+    void defer_cancel_(skr_async_request_t* request) 
     {
         skr_atomic32_store_release(&request->request_cancel, 1);
     }
@@ -338,7 +338,7 @@ public:
 
     }
 
-    void create_(SkrAsyncIOServiceSleepMode sleep_mode) SKR_NOEXCEPT override
+    void create_(SkrAsyncServiceSleepMode sleep_mode) SKR_NOEXCEPT override
     {
         auto service = this;
         AsyncServiceBase::create_(sleep_mode);

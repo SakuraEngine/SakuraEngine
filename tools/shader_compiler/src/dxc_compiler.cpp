@@ -29,6 +29,7 @@ struct DxcCreateInstanceT
 
 SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT
 {
+    auto compiled = SkrNew<SDXCCompiledShader>();
     const bool is_spv = (type == CGPU_SHADER_BYTECODE_TYPE_SPIRV);
     IDxcBlobUtf8* errors = nullptr;
     IDxcBlobWide* outputName = nullptr;
@@ -38,7 +39,6 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDx
     IDxcBlob* hash = nullptr;
     IDxcBlob* reflectionData   = nullptr;
     uint32_t spv_hash[4];
-    bool fail = false;
     
     result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
     result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&bytecode), &outputName);
@@ -48,7 +48,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDx
         if (errors != nullptr && errors->GetStringLength() != 0)
         {
             SKR_LOG_ERROR("[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
-            fail = true;
+            goto FAIL;
         }
     }
     result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pdb), &pdbName);
@@ -65,7 +65,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDx
         else
         {
             SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get hash data! HRESULT: %u, Target IL: %d", hres, type);
-            fail = true;
+            goto FAIL;
         }
     }
     // TODO: Demonstrate getting the hash from the PDB blob using the IDxcUtils::GetPDBContents API
@@ -74,38 +74,33 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDx
     {
         SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get reflection data! HRESULT: %u", hres);
     }
-    if (!fail)
-    {
-        auto compiled = SkrNew<SDXCCompiledShader>();
-        compiled->code_type = type;
-        compiled->source = source;
-        compiled->errors = errors;
-        compiled->result = result;
-        compiled->outputName = outputName;
-        compiled->bytecode = bytecode;
-        compiled->pdbName = pdbName;
-        compiled->pdb = pdb;
-        compiled->hash = hash;
-        compiled->reflectionData = reflectionData;
-        compiled->spv_hash[0] = spv_hash[0];
-        compiled->spv_hash[1] = spv_hash[1];
-        compiled->spv_hash[2] = spv_hash[2];
-        compiled->spv_hash[3] = spv_hash[3];
-        return compiled;
-    }
-    else
-    {
-        SAFE_RELEASE(source);
-        SAFE_RELEASE(result);
-        SAFE_RELEASE(errors);
-        SAFE_RELEASE(outputName);
-        SAFE_RELEASE(bytecode);
-        SAFE_RELEASE(pdbName);
-        SAFE_RELEASE(pdb);
-        SAFE_RELEASE(hash);
-        SAFE_RELEASE(reflectionData);
-        return nullptr;
-    }
+    compiled->code_type = type;
+    compiled->source = source;
+    compiled->errors = errors;
+    compiled->result = result;
+    compiled->outputName = outputName;
+    compiled->bytecode = bytecode;
+    compiled->pdbName = pdbName;
+    compiled->pdb = pdb;
+    compiled->hash = hash;
+    compiled->reflectionData = reflectionData;
+    compiled->spv_hash[0] = spv_hash[0];
+    compiled->spv_hash[1] = spv_hash[1];
+    compiled->spv_hash[2] = spv_hash[2];
+    compiled->spv_hash[3] = spv_hash[3];
+    return compiled;
+FAIL:
+    SAFE_RELEASE(source);
+    SAFE_RELEASE(result);
+    SAFE_RELEASE(errors);
+    SAFE_RELEASE(outputName);
+    SAFE_RELEASE(bytecode);
+    SAFE_RELEASE(pdbName);
+    SAFE_RELEASE(pdb);
+    SAFE_RELEASE(hash);
+    SAFE_RELEASE(reflectionData);
+    SkrDelete(compiled);
+    return nullptr;
 }
 
 SDXCCompiledShader::~SDXCCompiledShader() SKR_NOEXCEPT

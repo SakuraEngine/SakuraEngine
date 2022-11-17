@@ -94,12 +94,12 @@ TEST_F(FSTest, asyncread)
     ramIO.offset = 0;
     const char* testfile = "testfile";
     ramIO.path = testfile;
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_io_request_t* request, void* arg){
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* arg){
         skr_ram_io_t* pRamIO = (skr_ram_io_t*)arg;
         SKR_LOG_INFO("async read of file %s ok", pRamIO->path);
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = &ramIO;
-    skr_async_io_request_t request = {};
+    skr_async_request_t request = {};
     skr_async_ram_destination_t destination = {};
     ioService->request(abs_fs, &ramIO, &request, &destination);
     while (!request.is_ready()) {}
@@ -124,10 +124,10 @@ TEST_F(FSTest, cancel)
         skr_ram_io_t anotherRamIO = {};
         anotherRamIO.offset = 0;
         anotherRamIO.path = "testfile";
-        skr_async_io_request_t request;
+        skr_async_request_t request;
         skr_async_ram_destination_t destination = {};
         ioService->request(abs_fs, &ramIO, &request, &destination);
-        skr_async_io_request_t anotherRequest;
+        skr_async_request_t anotherRequest;
         skr_async_ram_destination_t anotherDestination = {};
         ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         // try cancel io of testfile
@@ -171,10 +171,10 @@ TEST_F(FSTest, defer_cancel)
         skr_ram_io_t anotherRamIO = {};
         anotherRamIO.offset = 0;
         anotherRamIO.path = "testfile";
-        skr_async_io_request_t request;
+        skr_async_request_t request;
         skr_async_ram_destination_t destination = {};
         ioService->request(abs_fs, &ramIO, &request, &destination);
-        skr_async_io_request_t anotherRequest;
+        skr_async_request_t anotherRequest;
         skr_async_ram_destination_t anotherDestination = {};
         ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         // try cancel io of testfile
@@ -215,10 +215,10 @@ TEST_F(FSTest, sort)
         anotherRamIO.offset = 0;
         anotherRamIO.priority = ::SKR_IO_SERVICE_PRIORITY_URGENT;
         anotherRamIO.path = "testfile";
-        skr_async_io_request_t request;
+        skr_async_request_t request;
         skr_async_ram_destination_t destination = {};
         ioService->request(abs_fs, &ramIO, &request, &destination);
-        skr_async_io_request_t anotherRequest;
+        skr_async_request_t anotherRequest;
         skr_async_ram_destination_t anotherDestination;
         ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         ioService->run();

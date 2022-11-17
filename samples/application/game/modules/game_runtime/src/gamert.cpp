@@ -76,50 +76,6 @@ void SGameRTModule::on_load(int argc, char** argv)
         meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
         resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, meshFactory);
     }
-    // load resources
-    skr_resource_handle_t textureHdl("cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"_guid);
-    skr_resource_handle_t gltfHdl("79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid);
-    textureHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
-    gltfHdl.resolve(true, 1, SKR_REQUESTER_SYSTEM);
-    // texture
-    {
-        while (textureHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && textureHdl.get_status() != SKR_LOADING_STATUS_ERROR)
-        {
-            resource_system->Update();
-        }
-        auto final_status = textureHdl.get_status();
-        if (final_status != SKR_LOADING_STATUS_ERROR)
-        {
-            auto texture = (skr_texture_resource_t*)textureHdl.get_ptr();
-            SKR_LOG_TRACE("Texture Loaded: format - %d, mips - %d, data size - %d", 
-                texture->format, texture->mips_count, texture->data_size);
-            resource_system->UnloadResource(textureHdl);
-            resource_system->Update();
-            while (textureHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
-            {
-                resource_system->Update();
-            }
-        }
-    }
-    // mesh
-    {
-        while (gltfHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && gltfHdl.get_status() != SKR_LOADING_STATUS_ERROR)
-        {
-            resource_system->Update();
-        }
-        auto final_status = gltfHdl.get_status();
-        if (final_status != SKR_LOADING_STATUS_ERROR)
-        {
-            auto mesh = (skr_mesh_resource_id)gltfHdl.get_ptr();
-            SKR_LOG_TRACE("Mesh Loaded: name - %s, bin0 - %s", mesh->name.c_str(), mesh->bins[0].uri.c_str());
-            resource_system->UnloadResource(gltfHdl);
-            resource_system->Update();
-            while (gltfHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
-            {
-                resource_system->Update();
-            }
-        }
-    }
 }
 
 void SGameRTModule::on_unload()
