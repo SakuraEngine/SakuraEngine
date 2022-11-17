@@ -17,6 +17,9 @@ namespace skr::task
         scheudler_config_t();
         uint32_t numThreads = 0;
     };
+
+    template<class F>
+    void wait(bool pin, F&& pred);
 }
 #define SKR_TASK_MARL
 #if !defined(SKR_TASK_MARL)
@@ -124,6 +127,12 @@ namespace skr::task
             ftl::Task task{t, f};
             internal->AddTask(task, ftl::TaskPriority::Normal, event ? event->internal : nullptr FTL_TASK_NAME(, name));
         }
+        
+        template<class F>
+        void wait(bool pin, F&& lambda)
+        {
+            internal->WaitForPredicate(std::forward<F>(lambda), pin);
+        }
         void* current_fiber(); 
         ~scheduler_t();
     private:
@@ -146,6 +155,8 @@ namespace skr::task
         friend class event_t;
         template<class F>
         friend void schedule(F&& lambda, event_t* event, const char* name);
+        template<class F>
+        friend void wait(bool pin, F&& lambda);
         friend void* current_fiber();
     };
 
@@ -155,6 +166,14 @@ namespace skr::task
         scheduler_t* scheduler = details::get_scheduler();
         SKR_ASSERT(scheduler);
         scheduler->schedule(std::forward<F>(lambda), event, name);
+    }
+
+    template<class F>
+    void wait(bool pin, F&& lambda)
+    {
+        scheduler_t* scheduler = details::get_scheduler();
+        SKR_ASSERT(scheduler);
+        scheduler->wait(pin, std::forward<F>(lambda));
     }
 }
 #else
@@ -269,6 +288,16 @@ namespace skr::task
                 lambda();
             });
         }
+    }
+
+    template<class F>
+    void wait(bool pin, F&& lambda)
+    {
+        auto fiber = marl::Scheduler::Fiber::current();
+        SKR_ASSERT(fiber);
+        marl::mutex mutex;
+        marl::lock lock(mutex);
+        fiber->wait(lock, lambda);
     }
 }
 

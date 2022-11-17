@@ -112,6 +112,7 @@ private:
         Fiber* Fiber;
         // A flag used to signal if the fiber has been successfully switched out of and "cleaned up". See @CleanUpOldFiber()
         std::atomic<bool> FiberIsSwitched;
+        std::atomic<int32_t> SpinCount;
     };
 
     struct alignas(kCacheLineSize) ThreadLocalStorage {
@@ -161,8 +162,6 @@ private:
         unsigned LoPriLastSuccessfulSteal{ 1 };
 
         unsigned FailedQueuePopAttempts{ 0 };
-
-        unsigned SpinAttempts { 0 };
     };
 
 private:
@@ -271,6 +270,15 @@ public:
      * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
      */
     void WaitForCounter(FullAtomicCounter* counter, unsigned value, bool pinToCurrentThread = false);
+
+    /**
+     * Yields execution to another task until pred() == true
+     *
+     * @param pred             The pred to check
+     * @param value               The value to wait for
+     * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
+     */
+    void WaitForPredicate(const eastl::function<bool()>& pred, bool pinToCurrentThread = false);
 
     /**
      * Gets the 0-based index of the current thread
