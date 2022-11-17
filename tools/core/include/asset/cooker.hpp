@@ -14,6 +14,7 @@
 #include "utils/lazy.hpp"
 
 struct skr_vfs_t;
+struct SkrToolModule;
 namespace skr::io { class RAMService; }
 
 namespace skd sreflect
@@ -104,6 +105,7 @@ protected:
 };
 
 struct TOOL_API SCookSystem {
+    friend struct SkrToolModule;
 public:
     SCookSystem() SKR_NOEXCEPT;
     virtual ~SCookSystem() SKR_NOEXCEPT;

@@ -1,7 +1,10 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "skr_renderer/fwd_types.h"
-#include "cgpu/flags.h"
+#include "platform/filesystem.hpp"
+#include "cgpu/api.h"
+#include "resource/resource_factory.h"
+#include "utils/io.h"
 #include <EASTL/vector.h>
 #include <EASTL/string.h>
 #ifndef __meta__
@@ -30,44 +33,33 @@ skr_platform_shader_identifier_t
 typedef struct skr_platform_shader_identifier_t skr_platform_shader_identifier_t;
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
-sattr("serialize" : ["json", "bin"])
+sattr("serialize" : "bin")
 sattr("rtti" : true)
 skr_platform_shader_resource_t
 {
     eastl::vector<skr_platform_shader_identifier_t> identifilers;
+    
+    sattr("transient": true, "no-rtti" : true)
+    CGPUShaderLibraryId shader;
 };
 typedef struct skr_platform_shader_resource_t skr_platform_shader_resource_t;
 
-sreflect_struct("guid" : "42b32962-e049-4beb-9209-9673502c901a")
-sattr("serialize" : ["json", "bin"])
-skr_shader_pipeline_resource_t
-{
-    eastl::vector<skr_platform_shader_resource_t> shader_blobs;
-};
-typedef struct skr_shader_pipeline_resource_t skr_shader_pipeline_resource_t;
-
-#ifdef __cplusplus
-#include "platform/filesystem.hpp"
-#include "resource/resource_factory.h"
-#include "utils/io.h"
-
-namespace skr { namespace io { class VRAMService; } }
 namespace skr sreflect
 {
 namespace resource sreflect
 {
-struct SKR_RENDERER_API SShaderPipelineFactory : public SResourceFactory {
-    virtual ~SShaderPipelineFactory() = default;
+struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
+    virtual ~SShaderResourceFactory() = default;
 
     struct Root {
         skr_vfs_t* bytecode_vfs = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
         SRenderDeviceId render_device = nullptr;
+        skr::ThreadedService* create_shader_service = nullptr;
     };
 
-    [[nodiscard]] static SShaderPipelineFactory* Create(const Root& root);
-    static void Destroy(SShaderPipelineFactory* factory); 
+    [[nodiscard]] static SShaderResourceFactory* Create(const Root& root);
+    static void Destroy(SShaderResourceFactory* factory); 
 };
 } // namespace resource
 } // namespace skr
-#endif
