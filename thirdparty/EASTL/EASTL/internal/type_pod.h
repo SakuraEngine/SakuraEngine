@@ -246,12 +246,12 @@ namespace eastl
 		#define EASTL_TYPE_TRAIT_has_trivial_copy_CONFORMANCE 1    // has_trivial_copy is conforming.
 
 		template <typename T> 
-		struct has_trivial_copy : public eastl::integral_constant<bool, (__has_trivial_copy(T) || eastl::is_pod<T>::value) && !eastl::is_volatile<T>::value && !eastl::is_hat_type<T>::value>{};
+		struct has_trivial_copy : public eastl::integral_constant<bool, (__is_trivially_copyable(T) || eastl::is_pod<T>::value) && !eastl::is_volatile<T>::value && !eastl::is_hat_type<T>::value>{};
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_CLANG))
 		#define EASTL_TYPE_TRAIT_has_trivial_copy_CONFORMANCE 1    // has_trivial_copy is conforming.
 
 		template <typename T> 
-		struct has_trivial_copy : public eastl::integral_constant<bool, (__has_trivial_copy(T) || eastl::is_pod<T>::value) && (!eastl::is_volatile<T>::value && !eastl::is_reference<T>::value)>{};
+		struct has_trivial_copy : public eastl::integral_constant<bool, (__is_trivially_copyable(T) || eastl::is_pod<T>::value) && (!eastl::is_volatile<T>::value && !eastl::is_reference<T>::value)>{};
 	#else
 		#define EASTL_TYPE_TRAIT_has_trivial_copy_CONFORMANCE 0   // has_trivial_copy is not fully conforming. Can return false negatives.
 
@@ -456,15 +456,15 @@ namespace eastl
 		#define EASTL_TYPE_TRAIT_has_nothrow_copy_CONFORMANCE 1
 
 		template <typename T> 
-		struct has_nothrow_copy : public eastl::integral_constant<bool, __has_nothrow_copy(T)>{};
+		struct has_nothrow_copy : public eastl::integral_constant<bool, __is_nothrow_constructible(T)>{};
 
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && defined(_MSC_VER)
-		// Microsoft's implementation of __has_nothrow_copy is crippled and returns true only if T is a class that has a copy constructor.
+		// Microsoft's implementation of __is_nothrow_constructible is crippled and returns true only if T is a class that has a copy constructor.
 		// "Returns true if the copy constructor has an empty exception specification."
 		#define EASTL_TYPE_TRAIT_has_nothrow_copy_CONFORMANCE 0
 
 		template <typename T> 
-		struct has_nothrow_copy : public eastl::integral_constant<bool, __has_nothrow_copy(T) || eastl::is_scalar<typename eastl::remove_all_extents<T>::type>::value || eastl::is_reference<T>::value>{};
+		struct has_nothrow_copy : public eastl::integral_constant<bool, __is_nothrow_constructible(T) || eastl::is_scalar<typename eastl::remove_all_extents<T>::type>::value || eastl::is_reference<T>::value>{};
 
 	#else
 		#define EASTL_TYPE_TRAIT_has_nothrow_copy_CONFORMANCE 0  // has_nothrow_copy is not fully conforming. Can return false negatives.
@@ -698,9 +698,9 @@ namespace eastl
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(EA_COMPILER_MSVC) || defined(EA_COMPILER_GNUC))
 		#define EASTL_TYPE_TRAIT_is_trivially_copyable_CONFORMANCE 1
 
-		// Micrsoft (prior to VS2012) and GCC have __has_trivial_copy, but it may not be identical with the goals of this type trait.
+		// Micrsoft (prior to VS2012) and GCC have __is_trivially_copyable, but it may not be identical with the goals of this type trait.
 		template <typename T> 
-		struct is_trivially_copyable : public integral_constant<bool, (__has_trivial_copy(T) || eastl::is_pod<typename eastl::remove_all_extents<T>::type>::value) && (!eastl::is_void<T>::value && !eastl::is_volatile<T>::value && !eastl::is_reference<T>::value)>{};
+		struct is_trivially_copyable : public integral_constant<bool, (__is_trivially_copyable(T) || eastl::is_pod<typename eastl::remove_all_extents<T>::type>::value) && (!eastl::is_void<T>::value && !eastl::is_volatile<T>::value && !eastl::is_reference<T>::value)>{};
 	#else
 		#define EASTL_TYPE_TRAIT_is_trivially_copyable_CONFORMANCE 0  // Generates false negatives.
 

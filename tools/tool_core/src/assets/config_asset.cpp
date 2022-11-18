@@ -11,7 +11,7 @@
 #include "utils/defer.hpp"
 #include "utils/io.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"
-#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 

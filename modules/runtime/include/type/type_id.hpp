@@ -1,6 +1,6 @@
 #pragma once
 #include "utils/types.h"
-#include "EASTL/string.h"
+#include <EASTL/string.h>
 
 struct skr_type_t;
 struct skr_resource_handle_t;

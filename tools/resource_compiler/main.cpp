@@ -1,5 +1,5 @@
 #include "SkrToolCore/project/project.hpp"
-#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "ecs/dual.h"
 #include "platform/filesystem.hpp"

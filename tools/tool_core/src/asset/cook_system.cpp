@@ -1,7 +1,7 @@
 #include <EASTL/shared_ptr.h>
 #include <platform/filesystem.hpp>
 #include "json/reader.h"
-#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "platform/memory.h"
@@ -64,17 +64,6 @@ SCookSystem* GetCookSystem()
 {
     return &SkrToolCoreModule::cook_system;
 }
-
-SCookSystem::SCookSystem() noexcept
-{
-    
-}
-
-SCookSystem::~SCookSystem() noexcept
-{
-
-}
-
 
 void SCookSystem::WaitForAll()
 {

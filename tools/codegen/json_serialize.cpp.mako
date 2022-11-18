@@ -2,6 +2,8 @@
 #include "utils/hash.h"
 #include "platform/debug.h"
 #include "utils/log.h"
+#include "json/reader.h"
+#include "json/writer.h"
 
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):

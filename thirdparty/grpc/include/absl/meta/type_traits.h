@@ -298,7 +298,7 @@ struct is_function
 // https://gcc.gnu.org/onlinedocs/gcc/Type-Traits.html#Type-Traits.
 template <typename T>
 struct is_trivially_destructible
-    : std::integral_constant<bool, __has_trivial_destructor(T) &&
+    : std::integral_constant<bool, __is_trivially_destructible(T) &&
                                    std::is_destructible<T>::value> {
 #ifdef ABSL_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE
  private:
@@ -347,7 +347,7 @@ struct is_trivially_destructible
 // Nontrivially destructible types will cause the expression to be nontrivial.
 template <typename T>
 struct is_trivially_default_constructible
-    : std::integral_constant<bool, __has_trivial_constructor(T) &&
+    : std::integral_constant<bool, __is_trivially_constructible(T) &&
                                    std::is_default_constructible<T>::value &&
                                    is_trivially_destructible<T>::value> {
 #if defined(ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE) && \
@@ -556,7 +556,7 @@ class is_trivially_copyable_impl {
 
  public:
   static constexpr bool kValue =
-      (__has_trivial_copy(ExtentsRemoved) || !kIsCopyOrMoveConstructible) &&
+      (__is_trivially_copyable(ExtentsRemoved) || !kIsCopyOrMoveConstructible) &&
       (__has_trivial_assign(ExtentsRemoved) || !kIsCopyOrMoveAssignable) &&
       (kIsCopyOrMoveConstructible || kIsCopyOrMoveAssignable) &&
       is_trivially_destructible<ExtentsRemoved>::value &&

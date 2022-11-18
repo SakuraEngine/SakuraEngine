@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrGLTFTool/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "platform/configure.h"
 #include "cgltf/cgltf.h"
 

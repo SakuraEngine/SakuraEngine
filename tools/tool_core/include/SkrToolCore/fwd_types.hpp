@@ -12,6 +12,7 @@ struct SProject;
 namespace asset sreflect
 {
 struct SImporter;
+struct SAssetRecord;
 struct SCookSystem;
 struct SCooker;
 struct SCookContext;

@@ -155,7 +155,7 @@ namespace phmap {
 
         public:
             static constexpr bool kValue =
-                (__has_trivial_copy(ExtentsRemoved) || !kIsCopyOrMoveConstructible) &&
+                (__is_trivially_copyable(ExtentsRemoved) || !kIsCopyOrMoveConstructible) &&
                 (__has_trivial_assign(ExtentsRemoved) || !kIsCopyOrMoveAssignable) &&
                 (kIsCopyOrMoveConstructible || kIsCopyOrMoveAssignable) &&
                 is_trivially_destructible<ExtentsRemoved>::value &&

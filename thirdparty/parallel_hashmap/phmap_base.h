@@ -238,18 +238,18 @@ struct negation : std::integral_constant<bool, !T::value> {};
 
 template <typename T>
 struct is_trivially_destructible
-    : std::integral_constant<bool, __has_trivial_destructor(T) &&
+    : std::integral_constant<bool, __is_trivially_destructible(T) &&
       std::is_destructible<T>::value> {};
 
 template <typename T>
 struct is_trivially_default_constructible
-    : std::integral_constant<bool, __has_trivial_constructor(T) &&
+    : std::integral_constant<bool, __is_trivially_constructible(T) &&
                                    std::is_default_constructible<T>::value &&
       is_trivially_destructible<T>::value> {};
 
 template <typename T>
 struct is_trivially_copy_constructible
-    : std::integral_constant<bool, __has_trivial_copy(T) &&
+    : std::integral_constant<bool, __is_trivially_copyable(T) &&
                                    std::is_copy_constructible<T>::value &&
       is_trivially_destructible<T>::value> {};
 
