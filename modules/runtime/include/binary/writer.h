@@ -3,7 +3,6 @@
 #include <EASTL/string.h>
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
-#include "containers/hashmap.hpp"
 
 struct skr_binary_writer_t {
     template <class T>
@@ -101,26 +100,6 @@ struct WriteHelper {
     {
         using TType = std::remove_const_t<std::remove_reference_t<T>>;
         return WriteValue<TParamType<TType>>(json, map);
-    }
-};
-
-template <class K, class V, class Hash, class Eq>
-struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
-    static int Write(skr_binary_writer_t* json, const skr::flat_hash_map<K, V, Hash, Eq>& map)
-    {
-        int ret = WriteValue(json, (uint32_t)map.size());
-        if (ret != 0)
-            return ret;
-        for (auto& pair : map)
-        {
-            ret = skr::binary::Write<TParamType<K>>(json, pair.first);
-            if (ret != 0)
-                return ret;
-            ret = skr::binary::Write<TParamType<V>>(json, pair.second);
-            if (ret != 0)
-                return ret;
-        }
-        return ret;
     }
 };
 
