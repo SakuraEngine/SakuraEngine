@@ -1,6 +1,5 @@
 #pragma once
-#include "SkrToolCore/module.configure.h"
-#include "platform/configure.h"
+#include "SkrToolCore/fwd_types.hpp"
 #include <EASTL/vector.h>
 #include <EASTL/shared_ptr.h>
 #include "containers/span.hpp"
@@ -8,32 +7,15 @@
 #include "containers/hashmap.hpp"
 #include "utils/parallel_for.hpp"
 #include "resource/resource_header.h"
-#include "platform/filesystem.hpp"
 #include "task/task.hpp"
 #include "json/reader.h"
 #include "utils/lazy.hpp"
-
-struct skr_vfs_t;
-struct SkrToolCoreModule;
-namespace skr::io { class RAMService; }
+#include "platform/filesystem.hpp"
 
 namespace skd sreflect
 {
 namespace asset sreflect
 {
-struct SImporter;
-struct SCookSystem;
-struct SCooker;
-struct SCookContext;
-
-struct TOOL_CORE_API SProject {
-    skr::filesystem::path assetPath;
-    skr::filesystem::path outputPath;
-    skr::filesystem::path dependencyPath;
-    skr_vfs_t* vfs = nullptr;
-    ~SProject() noexcept;
-};
-
 struct SAssetRecord {
     SProject* project;
     skr_guid_t guid;

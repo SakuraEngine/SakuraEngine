@@ -1,5 +1,5 @@
-#include "asset/cooker.hpp"
-#include "asset/importer.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/importer.hpp"
 #include "utils/types.h"
 #include "json/reader.h"
 

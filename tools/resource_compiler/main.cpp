@@ -1,12 +1,13 @@
-#include "asset/cooker.hpp"
-#include "asset/importer.hpp"
+#include "SkrToolCore/project/project.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/importer.hpp"
 #include "ecs/dual.h"
 #include "platform/filesystem.hpp"
 #include "platform/thread.h"
 #include "resource/config_resource.h"
 #include "resource/resource_header.h"
 #include <mutex>
-#include "assets/config_asset.hpp"
+#include "SkrToolCore/assets/config_asset.hpp"
 #include "type/type_registry.h"
 #include "utils/defer.hpp"
 #include "resource/resource_header.h"
@@ -133,7 +134,7 @@ int main(int argc, char** argv)
     system.Initialize();
     //----- register project
     // TODO: project discover?
-    auto project = SkrNew<skd::asset::SProject>();
+    auto project = SkrNew<skd::SProject>();
     SKR_DEFER({ SkrDelete(project); });
     auto parentPath = root.parent_path().u8string();
     skr_vfs_desc_t vfs_desc = {};

@@ -1,6 +1,6 @@
 #pragma once
 #include "GLTFTool/module.configure.h"
-#include "asset/importer.hpp"
+#include "SkrToolCore/asset/importer.hpp"
 #include "platform/configure.h"
 #include "cgltf/cgltf.h"
 

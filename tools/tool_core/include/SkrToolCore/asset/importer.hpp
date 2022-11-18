@@ -2,7 +2,7 @@
 #include "SkrToolCore/module.configure.h"
 #include "json/reader.h"
 #include "resource/resource_header.h"
-#include "asset/cooker.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
 #ifndef __meta__
     #include "SkrToolCore/asset/importer.generated.h"
 #endif
