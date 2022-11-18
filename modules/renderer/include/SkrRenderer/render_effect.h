@@ -7,13 +7,11 @@
 #endif
 
 typedef const char* skr_render_effect_name_t;
-struct sreflect sattr(
-    "guid" : "0a91d7fa-87f3-4dbb-a41a-45abd333e6ee",
-    "component" : 
-    {
-        "buffer" : 4
-    }
-) skr_render_effect_t
+sreflect_struct(
+    "guid" : "0a91d7fa-87f3-4dbb-a41a-45abd333e6ee", 
+    "component" : { "buffer" : 4 } 
+)
+skr_render_effect_t
 {
     skr_render_effect_name_t name;
     dual_entity_t effect_entity;

@@ -18,10 +18,7 @@ template<class T>
 void RegisterImporter(skr_guid_t guid);
 #define sregister_importer() sstatic_ctor(skd::asset::RegisterImporter<$T>($guid));
 
-struct sreflect sattr(
-    "guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
-    "serialize" : "json"
-)
+sreflect_struct("guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", "serialize" : "json")
 TOOL_CORE_API SImporter
 {
     static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
