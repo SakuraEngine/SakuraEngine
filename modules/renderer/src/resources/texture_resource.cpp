@@ -2,6 +2,7 @@
 #include "cgpu/api.h"
 #include "cgpu/flags.h"
 #include "containers/detail/sptr.hpp"
+#include "containers/hashmap.hpp"
 #include "platform/configure.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
