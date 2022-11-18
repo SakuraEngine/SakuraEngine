@@ -4,7 +4,7 @@
 #include "containers/hashmap.hpp"
 #include "utils/types.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
 
 namespace skd sreflect
 {

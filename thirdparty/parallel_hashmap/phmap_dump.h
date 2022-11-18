@@ -29,7 +29,7 @@ namespace phmap
 namespace type_traits_internal {
 
 #if defined(__GLIBCXX__) && __GLIBCXX__ < 20150801
-    template<typename T> struct IsTriviallyCopyable : public std::integral_constant<bool, __has_trivial_copy(T)> {};
+    template<typename T> struct IsTriviallyCopyable : public std::integral_constant<bool, __is_trivially_copyable(T)> {};
 #else
     template<typename T> struct IsTriviallyCopyable : public std::is_trivially_copyable<T> {};
 #endif

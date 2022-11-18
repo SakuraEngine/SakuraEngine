@@ -89,14 +89,14 @@
 #if (defined(BOOST_MSVC) && defined(BOOST_MSVC_FULL_VER) && (BOOST_MSVC_FULL_VER >=140050215))\
          || (defined(BOOST_INTEL) && defined(_MSC_VER) && (_MSC_VER >= 1500))
 #   define BOOST_MOVE_IS_UNION(T) __is_union(T)
-#   define BOOST_MOVE_IS_POD(T)                    (__is_pod(T) && __has_trivial_constructor(T))
+#   define BOOST_MOVE_IS_POD(T)                    (__is_pod(T) && __is_trivially_constructible(T))
 #   define BOOST_MOVE_IS_EMPTY(T)                  __is_empty(T)
-#   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T)   __has_trivial_constructor(T)
-#   define BOOST_MOVE_HAS_TRIVIAL_COPY(T)          (__has_trivial_copy(T)|| ::boost::move_detail::is_pod<T>::value)
+#   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T)   __is_trivially_constructible(T)
+#   define BOOST_MOVE_HAS_TRIVIAL_COPY(T)          (__is_trivially_copyable(T)|| ::boost::move_detail::is_pod<T>::value)
 #   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T)        (__has_trivial_assign(T) || ::boost::move_detail::is_pod<T>::value)
-#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T)    (__has_trivial_destructor(T) || ::boost::move_detail::is_pod<T>::value)
+#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T)    (__is_trivially_destructible(T) || ::boost::move_detail::is_pod<T>::value)
 #   define BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR(T)   (__has_nothrow_constructor(T) || ::boost::move_detail::is_trivially_default_constructible<T>::value)
-#   define BOOST_MOVE_HAS_NOTHROW_COPY(T)          (__has_nothrow_copy(T) || ::boost::move_detail::is_trivially_copy_constructible<T>::value)
+#   define BOOST_MOVE_HAS_NOTHROW_COPY(T)          (__is_nothrow_constructible(T) || ::boost::move_detail::is_trivially_copy_constructible<T>::value)
 #   define BOOST_MOVE_HAS_NOTHROW_ASSIGN(T)        (__has_nothrow_assign(T) || ::boost::move_detail::is_trivially_copy_assignable<T>::value)
 
 #   define BOOST_MOVE_IS_ENUM(T) __is_enum(T)
@@ -144,14 +144,14 @@
 #   if BOOST_MOVE_HAS_TRAIT(is_constructible) && BOOST_MOVE_HAS_TRAIT(is_trivially_constructible)
 #     define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) __is_trivially_constructible(T)
 #   elif BOOST_MOVE_HAS_TRAIT(has_trivial_constructor)
-#     define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
+#     define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) __is_trivially_constructible(T)
 #   endif
 
 //    BOOST_MOVE_HAS_TRIVIAL_COPY
 #   if BOOST_MOVE_HAS_TRAIT(is_constructible) && BOOST_MOVE_HAS_TRAIT(is_trivially_constructible)
 #     define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__is_constructible(T, const T &) && __is_trivially_constructible(T, const T &))
 #   elif BOOST_MOVE_HAS_TRAIT(has_trivial_copy)
-#     define BOOST_MOVE_HAS_TRIVIAL_COPY(T) __has_trivial_copy(T)
+#     define BOOST_MOVE_HAS_TRIVIAL_COPY(T) __is_trivially_copyable(T)
 #   endif
 
 //    BOOST_MOVE_HAS_TRIVIAL_ASSIGN
@@ -165,7 +165,7 @@
 #   if BOOST_MOVE_HAS_TRAIT(is_trivially_destructible)
 #     define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) __is_trivially_destructible(T)
 #   elif BOOST_MOVE_HAS_TRAIT(has_trivial_destructor)
-#     define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
+#     define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) __is_trivially_destructible(T)
 #   endif
 
 //    BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR
@@ -179,7 +179,7 @@
 #   if BOOST_MOVE_HAS_TRAIT(is_constructible) && BOOST_MOVE_HAS_TRAIT(is_nothrow_constructible)
 #     define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__is_constructible(T, const T &) && __is_nothrow_constructible(T, const T &))
 #   elif BOOST_MOVE_HAS_TRAIT(has_nothrow_copy)
-#     define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__has_nothrow_copy(T))
+#     define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible(T))
 #   endif
 
 //    BOOST_MOVE_HAS_NOTHROW_ASSIGN
@@ -233,19 +233,19 @@
 #   define BOOST_MOVE_IS_UNION(T) __is_union(T)
 #   define BOOST_MOVE_IS_POD(T) __is_pod(T)
 #   define BOOST_MOVE_IS_EMPTY(T) __is_empty(T)
-#   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) ((__has_trivial_constructor(T) BOOST_MOVE_INTEL_TT_OPTS))
+#   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) ((__is_trivially_constructible(T) BOOST_MOVE_INTEL_TT_OPTS))
 
 #   if defined(BOOST_GCC) && (BOOST_GCC > 50000)
 #     define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__is_trivially_constructible(T, const T &))
 #     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, const T &))
 #   else
-#     define BOOST_MOVE_HAS_TRIVIAL_COPY(T) ((__has_trivial_copy(T) BOOST_MOVE_INTEL_TT_OPTS))
+#     define BOOST_MOVE_HAS_TRIVIAL_COPY(T) ((__is_trivially_copyable(T) BOOST_MOVE_INTEL_TT_OPTS))
 #     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) ((__has_trivial_assign(T) BOOST_MOVE_INTEL_TT_OPTS) )
 #   endif
 
-#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) (__has_trivial_destructor(T) BOOST_MOVE_INTEL_TT_OPTS)
+#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T) BOOST_MOVE_INTEL_TT_OPTS)
 #   define BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) BOOST_MOVE_INTEL_TT_OPTS)
-#   define BOOST_MOVE_HAS_NOTHROW_COPY(T) ((__has_nothrow_copy(T) BOOST_MOVE_INTEL_TT_OPTS))
+#   define BOOST_MOVE_HAS_NOTHROW_COPY(T) ((__is_nothrow_constructible(T) BOOST_MOVE_INTEL_TT_OPTS))
 #   define BOOST_MOVE_HAS_NOTHROW_ASSIGN(T) ((__has_nothrow_assign(T) BOOST_MOVE_INTEL_TT_OPTS))
 
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_SFINAE_EXPR)
@@ -347,12 +347,12 @@
 #   define BOOST_MOVE_IS_UNION(T) __is_union(T)
 #   define BOOST_MOVE_IS_POD(T) __is_pod(T)
 #   define BOOST_MOVE_IS_EMPTY(T) __is_empty(T)
-#   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
-#   define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__has_trivial_copy(T))
+#   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) __is_trivially_constructible(T)
+#   define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__is_trivially_copyable(T))
 #   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T))
-#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
+#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) __is_trivially_destructible(T)
 #   define BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR(T) __has_nothrow_constructor(T)
-#   define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__has_nothrow_copy(T))
+#   define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible(T))
 #   define BOOST_MOVE_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T))
 
 #   define BOOST_MOVE_IS_ENUM(T) __is_enum(T)
@@ -364,11 +364,11 @@
 #   define BOOST_MOVE_IS_POD(T) __is_pod(T)
 #   define BOOST_MOVE_IS_EMPTY(T) __is_empty(T)
 #   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) (__has_trivial_default_constructor(T))
-#   define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__has_trivial_copy_constructor(T))
+#   define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__is_trivially_copyable_constructor(T))
 #   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T))
-#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) (__has_trivial_destructor(T))
+#   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T))
 #   define BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_default_constructor(T))
-#   define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__has_nothrow_copy_constructor(T))
+#   define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible_constructor(T))
 #   define BOOST_MOVE_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T))
 
 #   define BOOST_MOVE_IS_ENUM(T) __is_enum(T)
