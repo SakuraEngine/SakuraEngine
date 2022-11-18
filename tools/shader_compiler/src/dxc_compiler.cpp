@@ -1,9 +1,8 @@
-#include "SkrShaderCompiler/dxc_compiler.h"
-#include "SkrShaderCompiler/assets/shader_asset.h"
+#include <EASTL/unique_ptr.h>
 #include "platform/memory.h"
 #include "utils/log.h"
-#include <EASTL/unique_ptr.h>
-
+#include "SkrShaderCompiler/dxc_compiler.h"
+#include "SkrShaderCompiler/assets/shader_asset.h"
 #ifdef _WIN32
 #include <atlbase.h>
 #endif
