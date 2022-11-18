@@ -1,9 +1,9 @@
-#include "skr_live2d/skr_live2d.h"
+#include "SkrLive2D/skr_live2d.h"
 #include "platform/memory.h"
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"
 #include "live2d_helpers.hpp"
-#include "skr_live2d/l2d_render_effect.h"
+#include "SkrLive2D/l2d_render_effect.h"
 
 live2d_render_view_id skr_live2d_create_render_view()
 {

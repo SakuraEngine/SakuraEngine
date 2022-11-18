@@ -23,9 +23,9 @@
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
-#include "skr_input/inputSystem.h"
-#include "skr_input/Interactions.h"
-#include "skr_input/InteractionsType.h"
+#include "SkrInputSystem/inputSystem.h"
+#include "SkrInputSystem/Interactions.h"
+#include "SkrInputSystem/InteractionsType.h"
 #include "gainput/GainputInputDevicePad.h"
 #include "gainput/GainputInputDeviceKeyboard.h"
 #include "task/task.hpp"

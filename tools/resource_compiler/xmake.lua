@@ -4,7 +4,7 @@ executable_module("SkrResourceCompiler", "SKR_RESOURCE_COMPILER", engine_version
     public_dependency("SkrToolCore", engine_version)
     public_dependency("SkrTextureCompiler", engine_version)
     public_dependency("SkrShaderCompiler", engine_version)
-    public_dependency("GLTFTool", engine_version)
+    public_dependency("SkrGLTFTool", engine_version)
     public_dependency("GameTool", engine_version)
     -- add_files("**.proto")
     add_files("**.cpp")

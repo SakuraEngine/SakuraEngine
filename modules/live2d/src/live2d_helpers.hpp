@@ -1,5 +1,5 @@
 #pragma once
-#include "skr_live2d/l2d_model_resource.h"
+#include "SkrLive2D/l2d_model_resource.h"
 #include "Framework/CubismFramework.hpp"
 #include "Framework/Type/csmMap.hpp"
 #include "Framework/Effect/CubismBreath.hpp"

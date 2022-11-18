@@ -1,5 +1,5 @@
 #pragma once
-#include "skr_live2d/l2d_render_model.h"
+#include "SkrLive2D/l2d_render_model.h"
 
 #include "Rendering/CubismRenderer.hpp"
 #include "Type/csmRectF.hpp"

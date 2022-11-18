@@ -7,7 +7,7 @@
 #include "utils/make_zeroed.hpp"
 #include "platform/memory.h"
 #include "platform/debug.h"
-#include "skr_live2d/l2d_render_model.h"
+#include "SkrLive2D/l2d_render_model.h"
 #include "live2d_clipping.hpp"
 #include "live2d_helpers.hpp"
 
