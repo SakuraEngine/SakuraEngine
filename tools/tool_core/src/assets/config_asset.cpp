@@ -1,6 +1,7 @@
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "platform/vfs.h"
+#include "containers/hashmap.hpp"
 #include "resource/config_resource.h"
 #include "json/reader.h"
 #include <mutex>
@@ -17,9 +18,28 @@
 
 namespace skd::asset
 {
+struct SConfigRegistryImpl : public SConfigRegistry
+{
+    void RegisterConfigType(skr_guid_t type, const SConfigTypeInfo& info) override
+    {
+        typeInfos.insert({type, info});
+    }
+    const SConfigTypeInfo* FindConfigType(skr_guid_t type) override
+    {
+        auto it = typeInfos.find(type);
+        if (it != typeInfos.end())
+        {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
+    skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
+};
+
 TOOL_CORE_API SConfigRegistry* GetConfigRegistry()
 {
-    static SConfigRegistry registry;
+    static SConfigRegistryImpl registry;
     return &registry;
 }
 } // namespace skd::asset
@@ -32,9 +52,9 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* 
 {
     auto registry = GetConfigRegistry();
     const auto assetRecord = context->GetAssetRecord();
-    auto iter = registry->typeInfos.find(configType);
+    const auto typeInfo = registry->FindConfigType(configType);
     auto path = context->AddFileDependency(assetPath.c_str());
-    if (iter == registry->typeInfos.end())
+    if (typeInfo == nullptr)
     {
         SKR_LOG_ERROR("import resource %s failed, type is not registered as config", assetRecord->path.u8string().c_str());
         return nullptr;
@@ -75,7 +95,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* 
         return nullptr;
     }
     skr_config_resource_t* resource = skr::resource::SConfigFactory::NewConfig(configType);
-    iter->second.Import(doc.get_value().value_unsafe(), resource->configData);
+    typeInfo->Import(doc.get_value().value_unsafe(), resource->configData);
     return resource; //导入具体数据
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrToolCore/module.configure.h"
 #include "platform/configure.h"
-#include "containers/hashmap.hpp"
 #include "utils/types.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
@@ -15,7 +14,9 @@ struct TOOL_CORE_API SConfigTypeInfo {
 };
 
 struct TOOL_CORE_API SConfigRegistry {
-    skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
+    virtual ~SConfigRegistry() SKR_NOEXCEPT = default;
+    virtual void RegisterConfigType(skr_guid_t type, const SConfigTypeInfo& info) = 0;
+    virtual const SConfigTypeInfo* FindConfigType(skr_guid_t type) = 0;
 };
 TOOL_CORE_API struct SConfigRegistry* GetConfigRegistry();
 
@@ -52,7 +53,7 @@ inline static void RegisterConfig(skr_guid_t guid)
             skr::json::Read(std::move(json), *static_cast<T*>(address));
         }
     };
-    GetConfigRegistry()->typeInfos.insert(std::make_pair(guid, typeInfo));
+    GetConfigRegistry()->RegisterConfigType(guid, typeInfo);
 }
 #define sregister_config_asset() sstatic_ctor(skd::asset::RegisterConfig<$T>($guid));
 } // namespace asset
