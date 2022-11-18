@@ -72,6 +72,7 @@
 typedef struct $T { uint32_t _; } $T;
 typedef struct $Super { uint32_t _; } $Super;
 typedef struct $Owner { uint32_t _; } $Owner;
+typedef struct $Module { uint32_t _; } $Module;
 extern const char* $name;
 
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))

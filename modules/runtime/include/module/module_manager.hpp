@@ -28,8 +28,9 @@ public:
     virtual eastl::string_view get_root(void) = 0;
     virtual ModuleProperty& get_module_property(const eastl::string& name) = 0;
 
-    virtual void registerStaticallyLinkedModule(const char* moduleName, module_registerer _register) = 0;
+    virtual void register_subsystem(const char* moduleName, const char* id, ModuleSubsystemBase::CreatePFN pCreate) = 0;
 
+    virtual void registerStaticallyLinkedModule(const char* moduleName, module_registerer _register) = 0;
 protected:
     virtual IModule* spawnStaticModule(const eastl::string& moduleName) = 0;
     virtual IModule* spawnDynamicModule(const eastl::string& moduleName) = 0;

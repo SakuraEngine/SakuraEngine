@@ -1,6 +1,6 @@
 #include "module/module_manager.hpp"
 #include "platform/memory.h"
-#include "EASTL/map.h"
+#include "containers/hashmap.hpp"
 #include "platform/shared_library.hpp"
 #include "utils/log.h"
 #include "json/reader.h"
@@ -34,6 +34,8 @@ public:
     virtual eastl::string_view get_root(void) final;
     virtual ModuleProperty& get_module_property(const eastl::string& name) final;
 
+    virtual void register_subsystem(const char* moduleName, const char* id, ModuleSubsystemBase::CreatePFN pCreate) final;
+
     virtual void registerStaticallyLinkedModule(const char* moduleName, module_registerer _register) final;
 
 protected:
@@ -53,12 +55,28 @@ private:
     eastl::string mainModuleName;
     // ModuleGraphImpl moduleDependecyGraph;
     skr::DependencyGraph* dependency_graph = nullptr;
-    eastl::map<eastl::string, ModuleProperty*, eastl::less<>> nodeMap;
-    eastl::map<eastl::string, module_registerer, eastl::less<>> initializeMap;
-    eastl::map<eastl::string, eastl::unique_ptr<IModule>, eastl::less<>> modulesMap;
+    skr::flat_hash_map<eastl::string, ModuleProperty*, eastl::hash<eastl::string>> nodeMap;
+    skr::flat_hash_map<eastl::string, module_registerer, eastl::hash<eastl::string>> initializeMap;
+    skr::flat_hash_map<eastl::string, eastl::unique_ptr<IModule>, eastl::hash<eastl::string>> modulesMap;
+    skr::flat_hash_map<eastl::string, eastl::vector<eastl::string>, eastl::hash<eastl::string>> subsystemIdMap;
+    skr::flat_hash_map<eastl::string, eastl::vector<ModuleSubsystemBase::CreatePFN>, eastl::hash<eastl::string>> subsystemCreateMap;
 
     SharedLibrary processSymbolTable;
 };
+
+void ModuleManagerImpl::register_subsystem(const char* moduleName, const char* id, ModuleSubsystemBase::CreatePFN pCreate)
+{
+    for (auto pfn : subsystemCreateMap[moduleName])
+    {
+        if (pfn == pCreate) return;
+    }
+    for (auto ID : subsystemIdMap[moduleName])
+    {
+        if (ID == id) return;
+    }
+    subsystemCreateMap[moduleName].emplace_back(pCreate);
+    subsystemIdMap[moduleName].emplace_back(id);
+}
 
 void ModuleManagerImpl::registerStaticallyLinkedModule(const char* moduleName, module_registerer _register)
 {
@@ -216,6 +234,17 @@ bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename
     }
     auto this_module = get_module(nodename);
     this_module->on_load(argc, argv);
+    // subsystems
+    auto&& create_funcs = subsystemCreateMap[nodename];
+    for (auto&& func : create_funcs)
+    {
+        auto subsystem = func();
+        this_module->subsystems.emplace_back(subsystem);
+    }
+    for (auto&& subsystem : this_module->subsystems)
+    {
+        subsystem->Initialize();
+    }
     nodeMap[nodename]->bActive = true;
     nodeMap[nodename]->name = nodename;
     return true;
@@ -230,7 +259,17 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& noden
             ModuleProperty* property = static_cast<ModuleProperty*>(node);
             __internal_DestroyModuleGraph(property->name);
         });
-    get_module(nodename)->on_unload();
+    auto this_module = get_module(nodename);
+    // subsystems
+    for (auto&& subsystem : this_module->subsystems)
+    {
+        subsystem->Finalize();
+    }
+    for (auto&& subsystem : this_module->subsystems)
+    {
+        SkrDelete(subsystem);
+    }
+    this_module->on_unload();
     modulesMap[nodename].reset();
     nodeMap[nodename]->bActive = false;
     nodeMap[nodename]->name = nodename;

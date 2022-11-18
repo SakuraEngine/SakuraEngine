@@ -12,13 +12,14 @@
 
 namespace skr::resource
 {
-struct SConfigRegistryImpl : public SConfigRegistry
+struct RUNTIME_API SConfigRegistryImpl : public SConfigRegistry
 {
-    void RegisterConfigType(const skr_guid_t& guid, const SConfigTypeInfo& info) override
+    virtual void RegisterConfigType(const skr_guid_t& guid, const SConfigTypeInfo& info) override
     {
         typeInfos.insert(std::make_pair(guid, info));
     }
-    const SConfigTypeInfo* FindConfigType(const skr_guid_t& guid) override
+    
+    virtual const SConfigTypeInfo* FindConfigType(const skr_guid_t& guid) override
     {
         auto it = typeInfos.find(guid);
         if (it != typeInfos.end())
