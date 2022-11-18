@@ -1,6 +1,3 @@
-#include "assets/config_asset.hpp"
-#include "asset/cooker.hpp"
-#include "asset/importer.hpp"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "platform/vfs.h"
@@ -13,6 +10,10 @@
 #include "utils/log.hpp"
 #include "utils/defer.hpp"
 #include "utils/io.hpp"
+#include "SkrToolCore/assets/config_asset.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/project/project.hpp"
 
 namespace skd::asset
 {

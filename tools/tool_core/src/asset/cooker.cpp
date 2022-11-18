@@ -1,8 +1,9 @@
 #include <EASTL/shared_ptr.h>
 #include <platform/filesystem.hpp>
 #include "json/reader.h"
-#include "asset/cooker.hpp"
-#include "asset/importer.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
+#include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/project/project.hpp"
 #include "platform/memory.h"
 #include "platform/debug.h"
 #include "platform/guid.hpp"
@@ -74,10 +75,6 @@ SCookSystem::~SCookSystem() noexcept
 
 }
 
-SProject::~SProject() noexcept
-{
-    if (vfs) skr_free_vfs(vfs);
-}
 
 void SCookSystem::WaitForAll()
 {

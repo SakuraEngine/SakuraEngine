@@ -1,7 +1,7 @@
 #pragma once
 #include "platform/configure.h"
 #include "SkrTextureCompiler/module.configure.h"
-#include "asset/importer.hpp"
+#include "SkrToolCore/asset/importer.hpp"
 #ifndef __meta__
     #include "SkrTextureCompiler/texture_compiler.generated.h"
 #endif

@@ -1,3 +1,4 @@
+#include "SkrToolCore/project/project.hpp"
 #include "dxt_utils.hpp"
 #include "utils/io.hpp"
 #include "utils/log.hpp"

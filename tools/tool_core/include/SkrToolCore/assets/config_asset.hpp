@@ -3,8 +3,8 @@
 #include "platform/configure.h"
 #include "containers/hashmap.hpp"
 #include "utils/types.h"
-#include "asset/importer.hpp"
-#include "asset/cooker.hpp"
+#include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
 
 namespace skd sreflect
 {

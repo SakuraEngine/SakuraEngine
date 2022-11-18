@@ -8,6 +8,7 @@
 #include "utils/defer.hpp"
 #include "utils/log.hpp"
 #include "platform/guid.hpp"
+#include "SkrToolCore/project/project.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 
