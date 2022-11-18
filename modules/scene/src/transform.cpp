@@ -8,7 +8,7 @@
 #include "utils/parallel_for.hpp"
 #include "math/vector.hpp"
 #include "math/vectormath.hpp"
-#include "skr_scene/scene.h"
+#include "SkrScene/scene.h"
 
 static_assert(alignof(decltype(skr_l2r_t::matrix)) == 16, "Alignment of matrix must be 16");
 static_assert(sizeof(skr_l2w_t::matrix) == sizeof(skr_float4x4_t), "Size of matrix must equal to skr_float4x4_t");

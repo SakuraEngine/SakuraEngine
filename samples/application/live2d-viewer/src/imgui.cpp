@@ -7,9 +7,8 @@
 #include "platform/vfs.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"
-#include "imgui/skr_imgui.h"
-#include "imgui/imgui.h"
-#include "imgui/skr_imgui_rg.h"
+#include "SkrImGui/skr_imgui.h"
+#include "SkrImGui/skr_imgui_rg.h"
 
 SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
 

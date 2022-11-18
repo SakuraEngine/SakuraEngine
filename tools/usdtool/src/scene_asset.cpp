@@ -1,19 +1,19 @@
-#include "UsdTool/scene_asset.hpp"
-#include "UsdCore/prim.hpp"
 #include "ecs/SmallVector.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
 #include "math/matrix.hpp"
-#include "UsdTool/mesh_asset.hpp"
 #include "platform/debug.h"
 #include "ecs/dual.h"
 #include "resource/resource_factory.h"
 #include "utils/defer.hpp"
 #include "utils/log.hpp"
 #include "utils/make_zeroed.hpp"
-#include "skr_scene/scene.h"
 #include "ecs/type_builder.hpp"
 #include "utils/types.h"
+#include "SkrScene/scene.h"
+#include "UsdCore/prim.hpp"
+#include "UsdTool/mesh_asset.hpp"
+#include "UsdTool/scene_asset.hpp"
 
 #if defined(_DEBUG) && !defined(NDEBUG)	// Use !defined(NDEBUG) to check to see if we actually are linking with Debug third party libraries (bDebugBuildsActuallyUseDebugCRT)
 	#ifndef TBB_USE_DEBUG

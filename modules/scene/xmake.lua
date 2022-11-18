@@ -2,7 +2,7 @@ shared_module("SkrScene", "SKR_SCENE", engine_version)
     set_group("01.modules")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/",
+        rootdir = "include/SkrScene",
         api = "SKR_SCENE"
     })
     public_dependency("SkrRT", engine_version)
