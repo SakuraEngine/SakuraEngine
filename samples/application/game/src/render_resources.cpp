@@ -8,7 +8,7 @@
 #include "ecs/callback.hpp"
 #include "ecs/array.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "skr_scene/scene.h"
+#include "SkrScene/scene.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrImGui/skr_imgui.h"

@@ -9,7 +9,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-#include "skr_scene/scene.h"
+#include "SkrScene/scene.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"

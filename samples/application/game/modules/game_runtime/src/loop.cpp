@@ -2,7 +2,7 @@
 #include "ecs/dual.h"
 #include "gamert.h"
 #include "SkrImGui/skr_imgui.h"
-#include "skr_scene/scene.h"
+#include "SkrScene/scene.h"
 
 namespace skg
 {

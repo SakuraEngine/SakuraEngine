@@ -18,7 +18,7 @@
 
 #include "resource/resource_system.h"
 
-#include "skr_scene/scene.h"
+#include "SkrScene/scene.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
