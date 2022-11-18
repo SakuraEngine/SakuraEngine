@@ -144,6 +144,7 @@ function mako_compile_cmd(target, mako_generators, use_deps_data, metadir, gendi
         "-root", path.absolute(metadir),
         "-outdir", gendir,
         "-api", api and api:upper() or target:name():upper(),
+        "-module", target:name(),
     }
     -- strong order
     table.insert(command, "-includes")

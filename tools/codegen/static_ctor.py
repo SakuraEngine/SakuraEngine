@@ -40,7 +40,12 @@ class Generator(object):
                 if name.startswith("StaticCtor"):
                     record.target.realized_expr.append(self.realize_method_expr(method.name, record.target, record, attr))
 
+    def realize_common(self, expr : str):
+        expr = expr.replace("$module", self.arg.module)
+        return expr
+
     def realize_record_expr(self, record, expr : str): 
+        expr = self.realize_common(expr)
         expr = expr.replace("$T", record.name)
         if hasattr(record, "bases") and record.bases:
             expr = expr.replace("$Super", record.bases[0])
@@ -50,6 +55,7 @@ class Generator(object):
         return expr
 
     def realize_field_expr(self, fieldname, field, record, expr):
+        expr = self.realize_common(expr)
         expr = expr.replace("$T", field.type)
         expr = expr.replace("$name", "\"%s\""%fieldname)
         expr = expr.replace("$field_ptr", "&{}::{}".format(record.name, fieldname))
@@ -58,6 +64,7 @@ class Generator(object):
         return expr
 
     def realize_method_expr(self, methodname, desc, record, expr):
+        expr = self.realize_common(expr)
         expr = expr.replace("$name", "\"%s\""%methodname)
         expr = expr.replace("$method_ptr", "({})&{}::{}".format(self.db.signature(desc), record.name, methodname))
         expr = expr.replace("$Owner", record.name)
@@ -71,8 +78,9 @@ class Generator(object):
     def filter_enums(self, enums):
         return [enum.target for enum in enums if self.filter_enum(enum)]
     
-    def generate_impl(self, db, args):
+    def generate_impl(self, db, arg):
         self.db = db
+        self.arg = arg
         template = os.path.join(BASE, "static_ctor.cpp.mako")
         if self.filter_enums(db.enums) or self.filter_records(db.records):
             return db.render(template, db=db, generator = self)
