@@ -1,4 +1,5 @@
 #include "module/module_manager.hpp"
+#include "module/subsystem.hpp"
 #include "platform/memory.h"
 #include "containers/hashmap.hpp"
 #include "platform/shared_library.hpp"
