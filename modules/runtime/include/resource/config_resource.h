@@ -30,6 +30,7 @@ struct SConfigTypeInfo {
     void (*Deserialize)(void* address, skr_binary_reader_t& archive) = nullptr;
 };
 struct SConfigRegistry {
+    virtual ~SConfigRegistry() {}
     virtual void RegisterConfigType(const skr_guid_t& guid, const SConfigTypeInfo& info) = 0;
     virtual const SConfigTypeInfo* FindConfigType(const skr_guid_t& guid) = 0;
 };
