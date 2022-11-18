@@ -58,10 +58,6 @@ struct SKR_SHADER_COMPILER_API IShaderCompiler
 IShaderCompiler* SkrShaderCompiler_CreateByType(EShaderSourceType type) SKR_NOEXCEPT;
 void SkrShaderCompiler_Destroy(IShaderCompiler* compiler) SKR_NOEXCEPT;
 void Util_ShaderCompilerRegister(EShaderSourceType type, IShaderCompiler*(*ctor)(), void(*dtor)(IShaderCompiler*)) SKR_NOEXCEPT;
-void Util_ShaderCompilerEventOnLoad(const char*, const eastl::function<void()>& event) SKR_NOEXCEPT;
-void Util_ShaderCompilerEventOnLoad(const char* name, void (*function)()) SKR_NOEXCEPT;
-void Util_ShaderCompilerEventOnUnload(const char*, const eastl::function<void()>& event) SKR_NOEXCEPT;
-void Util_ShaderCompilerEventOnUnload(const char* name, void (*function)()) SKR_NOEXCEPT;
 EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT;
 } // namespace asset
 } // namespace skd

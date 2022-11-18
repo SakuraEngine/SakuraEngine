@@ -67,26 +67,6 @@ void Util_ShaderCompilerRegister(asset::EShaderSourceType type, IShaderCompiler*
     SShaderCompilerModule::dtors.emplace(type, dtor);
 }
 
-void Util_ShaderCompilerEventOnLoad(const char* name, const eastl::function<void()>& event) SKR_NOEXCEPT
-{
-    SShaderCompilerModule::on_load_events.emplace_back(name, event);
-}
-
-void Util_ShaderCompilerEventOnLoad(const char* name, void (*function)()) SKR_NOEXCEPT
-{
-    SShaderCompilerModule::on_load_events.emplace_back(name, function);
-}
-
-void Util_ShaderCompilerEventOnUnload(const char* name, const eastl::function<void()>& event) SKR_NOEXCEPT
-{
-    SShaderCompilerModule::on_unload_events.emplace_back(name, event);
-}
-
-void Util_ShaderCompilerEventOnUnload(const char* name, void (*function)()) SKR_NOEXCEPT
-{
-    SShaderCompilerModule::on_unload_events.emplace_back(name, function);
-}
-
 asset::EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT
 {
     if ((strcmp(ext, "hlsl") == 0) || (strcmp(ext, ".hlsl") == 0))

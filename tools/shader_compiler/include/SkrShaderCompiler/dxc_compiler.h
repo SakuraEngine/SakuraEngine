@@ -71,8 +71,7 @@ protected:
     IDxcUtils* utils = nullptr;
     IDxcCompiler3* compiler = nullptr;
     IDxcIncludeHandler* includeHandler = nullptr;
-}
-sstatic_ctor(Util_ShaderCompilerRegister(EShaderSourceType::HLSL, &SDXCCompiler::Create, &SDXCCompiler::Free));
+};
 
 sreflect_struct("guid" : "ae28a9e5-39cf-4eab-aa27-6103f42cbf2d")
 SKR_SHADER_COMPILER_API SDXCLibrary : public skr::ModuleSubsystem

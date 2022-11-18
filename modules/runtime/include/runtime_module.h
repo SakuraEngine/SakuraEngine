@@ -1,5 +1,6 @@
 #pragma once
 #include "module/module_manager.hpp"
+#include "platform/thread.h"
 #include "utils/log.h"
 
 class RUNTIME_API SkrRuntimeModule : public skr::IDynamicModule
@@ -10,6 +11,7 @@ public:
 
     static SkrRuntimeModule* Get();
 
+    SMutex log_mutex;
     bool DPIAware = false;
 };
 
