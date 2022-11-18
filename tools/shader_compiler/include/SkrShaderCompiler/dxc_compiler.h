@@ -1,5 +1,6 @@
 #pragma once
 #include "shader_compiler.h"
+#include "module/subsystem.hpp"
 #ifdef __cplusplus
 #include "platform/shared_library.hpp"
 #ifndef __meta__
@@ -74,24 +75,24 @@ protected:
 sstatic_ctor(Util_ShaderCompilerRegister(EShaderSourceType::HLSL, &SDXCCompiler::Create, &SDXCCompiler::Free));
 
 sreflect_struct("guid" : "ae28a9e5-39cf-4eab-aa27-6103f42cbf2d")
-SKR_SHADER_COMPILER_API SDXCLibrary
+SKR_SHADER_COMPILER_API SDXCLibrary : public skr::ModuleSubsystem
 {
     friend struct DxcCreateInstanceT;
+    
 public:
     static SDXCLibrary* Get() SKR_NOEXCEPT;    
     static void LoadDXCLibrary() SKR_NOEXCEPT;
     static void LoadDXILLibrary() SKR_NOEXCEPT;
     static void UnloadLibraries() SKR_NOEXCEPT;
 
+    virtual void Initialize() override;
+    virtual void Finalize() override;
+
 protected:
     skr::SharedLibrary dxc_library;
     skr::SharedLibrary dxil_library;
     void* pDxcCreateInstance = nullptr; 
-}
-// load dxc dll
-sstatic_ctor(Util_ShaderCompilerEventOnLoad("LoadDXC", &SDXCLibrary::LoadDXCLibrary))
-sstatic_ctor(Util_ShaderCompilerEventOnLoad("LoadDXIL", &SDXCLibrary::LoadDXILLibrary))
-sstatic_ctor(Util_ShaderCompilerEventOnUnload("LoadDXIL", &SDXCLibrary::UnloadLibraries));
+};
 } // namespace asset
 } // namespace skd
 #endif

@@ -25,6 +25,7 @@
  * @LastEditTime: 2020-04-15 18:17:34
  */
 #pragma once
+#include "utils/types.h"
 #include "platform/configure.h"
 #ifdef __cplusplus
 #include "platform/shared_library.hpp"
@@ -66,6 +67,15 @@ struct ModuleInfo {
     // Dependencies array
     eastl::vector<ModuleDependency> dependencies;
 };
+
+struct ModuleSubsystemBase
+{
+    using CreatePFN = ModuleSubsystemBase*(*)();
+    virtual ~ModuleSubsystemBase() = default;
+    virtual void Initialize() = 0;
+    virtual void Finalize() = 0;
+};
+
 /**
  * @description: Base of all plugins
  * @author: SaeruHikari
@@ -89,6 +99,7 @@ public:
 
 protected:
     ModuleInfo information;
+    eastl::vector<ModuleSubsystemBase*> subsystems;
 };
 
 struct RUNTIME_API IDynamicModule : public IModule {

@@ -29,11 +29,13 @@ struct SConfigTypeInfo {
     void (*Serialize)(void* address, skr_binary_writer_t& archive) = nullptr;
     void (*Deserialize)(void* address, skr_binary_reader_t& archive) = nullptr;
 };
-struct SConfigRegistry {
-    virtual ~SConfigRegistry() {}
+
+struct RUNTIME_API SConfigRegistry {
+    virtual ~SConfigRegistry() = default;
     virtual void RegisterConfigType(const skr_guid_t& guid, const SConfigTypeInfo& info) = 0;
     virtual const SConfigTypeInfo* FindConfigType(const skr_guid_t& guid) = 0;
 };
+
 RUNTIME_API SConfigRegistry* GetConfigRegistry();
 
 struct RUNTIME_API SConfigFactory : public SResourceFactory {

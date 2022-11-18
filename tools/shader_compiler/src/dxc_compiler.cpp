@@ -364,5 +364,17 @@ void SDXCLibrary::UnloadLibraries() SKR_NOEXCEPT
     dxcInstance->dxc_library.unload();
 }
 
+void SDXCLibrary::Initialize()
+{
+    SDXCLibrary::LoadDXCLibrary();
+    SDXCLibrary::LoadDXILLibrary();
+}
+
+void SDXCLibrary::Finalize()
+{
+    SDXCLibrary::UnloadLibraries();
 }
 }
+}
+
+SKR_MODULE_SUBSYSTEM(skd::asset::SDXCLibrary, SkrShaderCompiler);
