@@ -6,6 +6,9 @@ namespace skr
 {
 struct RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
 {
+    ModuleSubsystem() = default;
+    virtual ~ModuleSubsystem() = default;
+    
     template<typename this_type>
     struct Registerer
     {

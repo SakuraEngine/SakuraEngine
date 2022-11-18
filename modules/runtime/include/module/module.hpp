@@ -68,7 +68,7 @@ struct ModuleInfo {
     eastl::vector<ModuleDependency> dependencies;
 };
 
-struct ModuleSubsystemBase
+struct RUNTIME_API ModuleSubsystemBase
 {
     using CreatePFN = ModuleSubsystemBase*(*)();
     virtual ~ModuleSubsystemBase() = default;
