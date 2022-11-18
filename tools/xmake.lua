@@ -8,4 +8,4 @@ end
 includes("gltf_tool/xmake.lua")
 includes("shader_compiler/xmake.lua")
 includes("texture_compiler/xmake.lua")
-includes("compiler/xmake.lua")
+includes("resource_compiler/xmake.lua")
