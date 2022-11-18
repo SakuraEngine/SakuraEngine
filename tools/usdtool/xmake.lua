@@ -5,7 +5,7 @@ shared_module("UsdTool", "USDTOOL", engine_version)
     add_deps("UsdCore")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/"
+        rootdir = "include/UsdTool"
     })
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")

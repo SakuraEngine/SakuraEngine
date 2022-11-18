@@ -1,6 +1,6 @@
 #pragma once
 #include "UsdTool/module.configure.h"
-#include "asset/importer.hpp"
+#include "SkrToolCore/asset/importer.hpp"
 #include "platform/configure.h"
 
 namespace skd sreflect
