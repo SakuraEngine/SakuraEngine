@@ -1,7 +1,6 @@
 #pragma once
 #include "EASTL/vector.h"
 #include "platform/configure.h"
-#include "containers/hashmap.hpp"
 #include "platform/guid.hpp"
 #include "resource/resource_factory.h"
 #include "type/type_registry.h"
@@ -31,7 +30,8 @@ struct SConfigTypeInfo {
     void (*Deserialize)(void* address, skr_binary_reader_t& archive) = nullptr;
 };
 struct SConfigRegistry {
-    skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
+    virtual void RegisterConfigType(const skr_guid_t& guid, const SConfigTypeInfo& info) = 0;
+    virtual const SConfigTypeInfo* FindConfigType(const skr_guid_t& guid) = 0;
 };
 RUNTIME_API SConfigRegistry* GetConfigRegistry();
 
@@ -61,7 +61,7 @@ inline static void RegisterConfig(skr_guid_t guid)
             skr::binary::ReadValue<T>(&archive, *(T*)address);
         }
     };
-    GetConfigRegistry()->typeInfos.insert(std::make_pair(guid, typeInfo));
+    GetConfigRegistry()->RegisterConfigType(guid, typeInfo);
 }
 #define sregister_config() sstatic_ctor(skr::resource::RegisterConfig<$T>($guid));
 } // namespace resource
