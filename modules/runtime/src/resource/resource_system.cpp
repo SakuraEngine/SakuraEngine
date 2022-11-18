@@ -203,7 +203,7 @@ void SResourceSystem::Update()
     {
         SMutexLock lock(recordMutex);
         requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
-            if (request->Okay())
+            if (request->Okay() || !request->resourceRecord)
             {
                 if (request->resourceRecord)
                 {
@@ -264,9 +264,6 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
     resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
     switch (currentPhase)
     {
-        case SKR_LOADING_PHASE_FAILED:
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            break;
         case SKR_LOADING_PHASE_FINISHED:
             currentPhase = SKR_LOADING_PHASE_REQUEST_RESOURCE;
             break;
@@ -450,7 +447,7 @@ void SResourceRequest::Update()
                 currentPhase = SKR_LOADING_PHASE_IO;
             else
             {
-                currentPhase = SKR_LOADING_PHASE_FAILED;
+                currentPhase = SKR_LOADING_PHASE_FINISHED;
                 // TODO: Do something with this rude code
                 resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
             }
@@ -652,7 +649,7 @@ bool SResourceRequest::Okay()
 
 bool SResourceRequest::Failed()
 {
-    return (currentPhase == SKR_LOADING_PHASE_FAILED);
+    return !resourceRecord || (resourceRecord->loadingStatus == SKR_LOADING_STATUS_ERROR);
 }
 
 bool SResourceRequest::Yielded()
