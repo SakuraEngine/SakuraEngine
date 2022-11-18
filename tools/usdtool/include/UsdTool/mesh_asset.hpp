@@ -7,10 +7,7 @@ namespace skd sreflect
 {
 namespace asset sreflect
 {
-struct sreflect sattr(
-    "guid" : "01A1037A-22A1-46C9-8461-90B443796FDC",
-    "serialize" : "json"
-)
+sreflect_struct("guid" : "01A1037A-22A1-46C9-8461-90B443796FDC", "serialize" : "json")
 USDTOOL_API SUSDMeshImporter final : public SImporter
 {
     // the SDF path of Mesh asset
