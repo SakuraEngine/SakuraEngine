@@ -3,7 +3,6 @@
 #include <EASTL/string.h>
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
-#include "containers/hashmap.hpp"
 
 struct skr_binary_reader_t {
     template <class T>
@@ -21,9 +20,10 @@ struct skr_binary_reader_t {
         return vread(user_data, data, size);
     }
 };
-namespace skr::binary
+namespace skr
 {
-
+namespace binary
+{
 template <class T>
 std::enable_if_t<!std::is_enum_v<T>, int> ReadValue(skr_binary_reader_t* reader, T& value)
 {
@@ -121,33 +121,6 @@ struct ReadHelper {
     }
 };
 
-template <class K, class V, class Hash, class Eq>
-struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
-    static int Read(skr_binary_reader_t* reader, skr::flat_hash_map<K, V, Hash, Eq>& map)
-    {
-        skr::flat_hash_map<K, V, Hash, Eq> temp;
-        uint32_t size;
-        int ret = ReadValue(reader, size);
-        if (ret != 0)
-            return ret;
-
-        temp.reserve(size);
-        for (int i = 0; i < size; ++i)
-        {
-            K key;
-            ret = skr::binary::Read(reader, key);
-            if (ret != 0)
-                return ret;
-            V value;
-            ret = skr::binary::Read(reader, value);
-            if (ret != 0)
-                return ret;
-            temp.insert({ std::move(key), std::move(value) });
-        }
-        map = std::move(temp);
-        return ret;
-    }
-};
 
 template <class T>
 struct ReadHelper<skr::resource::TResourceHandle<T>&> {
@@ -197,4 +170,5 @@ int Archive(skr_binary_reader_t* writer, T& value)
 {
     return ReadHelper<T>::Read(writer, value);
 }
-} // namespace skr::binary
+} // namespace binary
+} // namespace skr
