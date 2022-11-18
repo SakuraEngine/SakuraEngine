@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrTool/module.configure.h"
+#include "SkrToolCore/module.configure.h"
 #include "platform/configure.h"
 #include <EASTL/vector.h>
 #include <EASTL/shared_ptr.h>
@@ -14,7 +14,7 @@
 #include "utils/lazy.hpp"
 
 struct skr_vfs_t;
-struct SkrToolModule;
+struct SkrToolCoreModule;
 namespace skr::io { class RAMService; }
 
 namespace skd sreflect
@@ -26,7 +26,7 @@ struct SCookSystem;
 struct SCooker;
 struct SCookContext;
 
-struct TOOL_API SProject {
+struct TOOL_CORE_API SProject {
     skr::filesystem::path assetPath;
     skr::filesystem::path outputPath;
     skr::filesystem::path dependencyPath;
@@ -42,7 +42,7 @@ struct SAssetRecord {
     simdjson::padded_string meta;
 };
 
-struct TOOL_API SCooker {
+struct TOOL_CORE_API SCooker {
     static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
     virtual ~SCooker() {}
     virtual uint32_t Version() = 0;
@@ -50,7 +50,7 @@ struct TOOL_API SCooker {
     SCookSystem* system;
 };
 
-struct TOOL_API SCookContext { // context per job
+struct TOOL_CORE_API SCookContext { // context per job
     friend struct SCookSystem;
 public:
     skr::filesystem::path GetOutputPath() const;
@@ -105,8 +105,8 @@ protected:
     eastl::vector<skr::filesystem::path> fileDependencies;
 };
 
-struct TOOL_API SCookSystem {
-    friend struct ::SkrToolModule;
+struct TOOL_CORE_API SCookSystem {
+    friend struct ::SkrToolCoreModule;
 public:
     using AssetMap = skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash>;
     using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
@@ -149,7 +149,7 @@ protected:
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     SMutex assetMutex;
 };
-TOOL_API SCookSystem* GetCookSystem();
+TOOL_CORE_API SCookSystem* GetCookSystem();
 #define sregister_cooker(literal) sstatic_ctor(skd::asset::RegisterCooker<$T>(skr::guid::make_guid_unsafe(literal)))
 
 template<class T>

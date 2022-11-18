@@ -1,4 +1,4 @@
-includes("core/xmake.lua")
+includes("tool_core/xmake.lua")
 
 if(has_config("build_usdtool")) then
     includes("usdcore/xmake.lua")

@@ -18,7 +18,7 @@
 
 #include "tracy/Tracy.hpp"
 
-struct TOOL_API SkrToolModule : public skr::IDynamicModule
+struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override
     {
@@ -54,14 +54,14 @@ struct TOOL_API SkrToolModule : public skr::IDynamicModule
     }
     static skd::asset::SCookSystem cook_system;
 };
-IMPLEMENT_DYNAMIC_MODULE(SkrToolModule, SkrTool);
-skd::asset::SCookSystem SkrToolModule::cook_system;
+IMPLEMENT_DYNAMIC_MODULE(SkrToolCoreModule, SkrToolCore);
+skd::asset::SCookSystem SkrToolCoreModule::cook_system;
 
 namespace skd::asset
 {
 SCookSystem* GetCookSystem()
 {
-    return &SkrToolModule::cook_system;
+    return &SkrToolCoreModule::cook_system;
 }
 
 SCookSystem::SCookSystem() noexcept

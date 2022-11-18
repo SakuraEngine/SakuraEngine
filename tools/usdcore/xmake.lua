@@ -5,7 +5,7 @@ target("UsdCore")
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/", disable_meta = true
     })
-    public_dependency("SkrTool", engine_version)
+    public_dependency("SkrToolCore", engine_version)
     add_includedirs("include",{public=true})
     add_files("src/**.cpp")
 

@@ -1,7 +1,7 @@
 executable_module("SkrCompiler", "SKR_COMPILER", engine_version)
     set_group("02.tools")
     -- add_rules("grpc.cpp")
-    public_dependency("SkrTool", engine_version)
+    public_dependency("SkrToolCore", engine_version)
     public_dependency("SkrTextureCompiler", engine_version)
     public_dependency("SkrShaderCompiler", engine_version)
     public_dependency("GLTFTool", engine_version)

@@ -16,7 +16,7 @@
 
 namespace skd::asset
 {
-TOOL_API SConfigRegistry* GetConfigRegistry()
+TOOL_CORE_API SConfigRegistry* GetConfigRegistry()
 {
     static SConfigRegistry registry;
     return &registry;
