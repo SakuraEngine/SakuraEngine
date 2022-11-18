@@ -71,7 +71,7 @@ struct ModuleInfo {
 struct RUNTIME_API ModuleSubsystemBase
 {
     using CreatePFN = ModuleSubsystemBase*(*)();
-    virtual ~ModuleSubsystemBase() = default;
+    virtual ~ModuleSubsystemBase() SKR_NOEXCEPT = default;
     virtual void Initialize() = 0;
     virtual void Finalize() = 0;
 };
