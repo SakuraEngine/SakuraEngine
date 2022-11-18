@@ -1,11 +1,12 @@
+#include <EASTL/array.h>
+#include "utils/io.hpp"
+#include "utils/log.hpp"
+#include "utils/make_zeroed.hpp"
+
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.h"
 #include "SkrShaderCompiler/shader_compiler.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
-#include "utils/io.hpp"
-#include "utils/log.hpp"
-#include "utils/make_zeroed.hpp"
-#include <EASTL/array.h>
 
 #include "tracy/Tracy.hpp"
 

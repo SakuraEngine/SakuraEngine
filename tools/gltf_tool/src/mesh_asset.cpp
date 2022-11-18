@@ -1,14 +1,14 @@
-#include "cgpu/api.h"
-#include "ecs/dual.h"
+#include "platform/guid.hpp"
 #include "utils/io.hpp"
-#include "SkrGLTFTool/mesh_asset.hpp"
-#include "SkrRenderer/resources/mesh_resource.h"
-#include "resource/resource_factory.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/defer.hpp"
 #include "utils/log.hpp"
-#include "platform/guid.hpp"
+#include "cgpu/api.h"
+#include "ecs/dual.h"
+#include "resource/resource_factory.h"
+#include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrToolCore/project/project.hpp"
+#include "SkrGLTFTool/mesh_asset.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 

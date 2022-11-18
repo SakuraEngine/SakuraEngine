@@ -11,33 +11,25 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
 {
     if (auto buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
-        if (buffer_task->destination->buffer) return;
-
         SKR_ASSERT( (buffer_task->buffer_io.src_memory.size) && "buffer_io.size must be set");
         const auto& buffer_io = buffer_task->buffer_io;
-        const auto& destination = buffer_task->destination;
+        if (buffer_task->destination->buffer) return;
+
         if (buffer_task->buffer_io.src_memory.size)
         {
-            if (destination->buffer) 
-            {
-                buffer_task->destination->buffer = destination->buffer;
-            }
-            else
-            {
-                ZoneScopedN("CreateBufferResource");
+            ZoneScopedN("CreateBufferResource");
 
-                auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
-                buffer_desc.size = buffer_io.vbuffer.buffer_size;
-                buffer_desc.name = buffer_io.vbuffer.buffer_name;
-                buffer_desc.descriptors = buffer_io.vbuffer.resource_types;
-                buffer_desc.memory_usage = buffer_io.vbuffer.memory_usage;
-                buffer_desc.flags = buffer_io.vbuffer.flags;
-                buffer_desc.prefer_on_device = buffer_io.vbuffer.prefer_on_device;
-                buffer_desc.prefer_on_host = buffer_io.vbuffer.prefer_on_host;
-                auto buffer = cgpu_create_buffer(buffer_task->buffer_io.device, &buffer_desc);
-                // return resource object
-                buffer_task->destination->buffer = buffer;
-            }
+            auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
+            buffer_desc.size = buffer_io.vbuffer.buffer_size;
+            buffer_desc.name = buffer_io.vbuffer.buffer_name;
+            buffer_desc.descriptors = buffer_io.vbuffer.resource_types;
+            buffer_desc.memory_usage = buffer_io.vbuffer.memory_usage;
+            buffer_desc.flags = buffer_io.vbuffer.flags;
+            buffer_desc.prefer_on_device = buffer_io.vbuffer.prefer_on_device;
+            buffer_desc.prefer_on_host = buffer_io.vbuffer.prefer_on_host;
+            auto buffer = cgpu_create_buffer(buffer_task->buffer_io.device, &buffer_desc);
+            // return resource object
+            buffer_task->destination->buffer = buffer;
         }
         else //if (buffer_task->buffer_io.path)
         {
@@ -46,8 +38,6 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     }
     if (auto ds_buffer_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
     {
-        if (ds_buffer_task->destination->buffer) return;
-
         const auto& buffer_io = ds_buffer_task->buffer_io;
         const auto& destination = ds_buffer_task->destination;
         if (ds_buffer_task->buffer_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
@@ -141,27 +131,33 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
     }
     if (auto ds_texture_task = eastl::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
     {
-        if (ds_texture_task->destination->texture) return;
-
         if (ds_texture_task->texture_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
         {
             ZoneScopedN("CreateTextureResource");
 
             SKR_ASSERT( (ds_texture_task->texture_io.dstorage.path) && "texture_io.path must be set");
             const auto& texture_io = ds_texture_task->texture_io;
+            const auto& destination = ds_texture_task->destination;
             auto ds_file = cgpu_dstorage_open_file(texture_io.dstorage.queue, task.path.c_str());
             ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage.queue, ds_file);
-            auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
-            texture_desc.width = texture_io.vtexture.width;
-            texture_desc.height = texture_io.vtexture.height;
-            texture_desc.depth = texture_io.vtexture.depth;
-            texture_desc.name = texture_io.vtexture.texture_name;
-            texture_desc.descriptors = texture_io.vtexture.resource_types;
-            texture_desc.flags = texture_io.vtexture.flags;
-            texture_desc.format = texture_io.vtexture.format;
-            auto texture = cgpu_create_texture(ds_texture_task->texture_io.device, &texture_desc);
-            // return resource object
-            ds_texture_task->destination->texture = texture;
+            if (destination->texture) 
+            {
+                ds_texture_task->destination->texture = destination->texture;
+            }
+            else
+            {
+                auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
+                texture_desc.width = texture_io.vtexture.width;
+                texture_desc.height = texture_io.vtexture.height;
+                texture_desc.depth = texture_io.vtexture.depth;
+                texture_desc.name = texture_io.vtexture.texture_name;
+                texture_desc.descriptors = texture_io.vtexture.resource_types;
+                texture_desc.flags = texture_io.vtexture.flags;
+                texture_desc.format = texture_io.vtexture.format;
+                auto texture = cgpu_create_texture(ds_texture_task->texture_io.device, &texture_desc);
+                // return resource object
+                ds_texture_task->destination->texture = texture;
+            }
         }
         else 
         {
@@ -172,18 +168,26 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
             SKR_ASSERT( (ds_texture_task->texture_io.src_memory.size) && "buffer_io.size must be set");
 
             const auto& texture_io = ds_texture_task->texture_io;
+            const auto& destination = ds_texture_task->destination;
             ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage.queue, nullptr);
-            auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
-            texture_desc.width = texture_io.vtexture.width;
-            texture_desc.height = texture_io.vtexture.height;
-            texture_desc.depth = texture_io.vtexture.depth;
-            texture_desc.name = texture_io.vtexture.texture_name;
-            texture_desc.descriptors = texture_io.vtexture.resource_types;
-            texture_desc.flags = texture_io.vtexture.flags;
-            texture_desc.format = texture_io.vtexture.format;
-            auto texture = cgpu_create_texture(ds_texture_task->texture_io.device, &texture_desc);
-            // return resource object
-            ds_texture_task->destination->texture = texture;
+            if (destination->texture) 
+            {
+                ds_texture_task->destination->texture = destination->texture;
+            }
+            else
+            {
+                auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
+                texture_desc.width = texture_io.vtexture.width;
+                texture_desc.height = texture_io.vtexture.height;
+                texture_desc.depth = texture_io.vtexture.depth;
+                texture_desc.name = texture_io.vtexture.texture_name;
+                texture_desc.descriptors = texture_io.vtexture.resource_types;
+                texture_desc.flags = texture_io.vtexture.flags;
+                texture_desc.format = texture_io.vtexture.format;
+                auto texture = cgpu_create_texture(ds_texture_task->texture_io.device, &texture_desc);
+                // return resource object
+                ds_texture_task->destination->texture = texture;
+            }
         }
     }
 }

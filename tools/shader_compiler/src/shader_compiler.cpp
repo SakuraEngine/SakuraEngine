@@ -1,7 +1,8 @@
-#include "SkrShaderCompiler/module.configure.h"
-#include "module/module.hpp"
-#include "containers/hashmap.hpp"
 #include "utils/log.h"
+#include "containers/hashmap.hpp"
+#include "module/module.hpp"
+
+#include "SkrShaderCompiler/module.configure.h"
 #include "SkrShaderCompiler/shader_compiler.h"
 
 namespace skd
