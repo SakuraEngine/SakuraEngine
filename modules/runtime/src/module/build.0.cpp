@@ -9,8 +9,23 @@ extern "C" void dualX_register_types();
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
+
+auto log_locker = +[](bool isLocked, void* pMutex){
+    if (isLocked)
+    {
+        skr_acquire_mutex((SMutex*)pMutex);
+    }
+    else
+    {
+        skr_release_mutex((SMutex*)pMutex);
+    }
+};
 void SkrRuntimeModule::on_load(int argc, char** argv)
 {
+    // set lock for log
+    skr_init_mutex_recursive(&log_mutex);
+    log_set_lock(log_locker, &log_mutex);
+
     dualX_register_types();
 
     SKR_LOG_TRACE("SkrRuntime module loaded!");
@@ -23,6 +38,8 @@ void SkrRuntimeModule::on_load(int argc, char** argv)
 void SkrRuntimeModule::on_unload()
 {
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
+
+    skr_destroy_mutex(&log_mutex);
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()

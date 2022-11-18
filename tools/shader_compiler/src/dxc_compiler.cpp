@@ -367,6 +367,8 @@ void SDXCLibrary::Initialize()
 {
     SDXCLibrary::LoadDXCLibrary();
     SDXCLibrary::LoadDXILLibrary();
+
+    Util_ShaderCompilerRegister(EShaderSourceType::HLSL, &SDXCCompiler::Create, &SDXCCompiler::Free);
 }
 
 void SDXCLibrary::Finalize()
