@@ -228,7 +228,6 @@ auto GetMoveCtor();
 #if defined(__cplusplus)
     #include <gsl/span>
     #include <EASTL/vector.h>
-    #include "containers/hashmap.hpp"
 
 namespace skr
 {

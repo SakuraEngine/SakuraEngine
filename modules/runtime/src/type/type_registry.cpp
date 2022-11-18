@@ -4,6 +4,7 @@
 #include "platform/guid.hpp"
 #include "resource/resource_handle.h"
 #include "type/type_registry.h"
+#include "containers/hashmap.hpp"
 
 namespace skr::type
 {

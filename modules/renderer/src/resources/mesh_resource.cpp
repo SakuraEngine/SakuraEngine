@@ -12,6 +12,7 @@
 #include "platform/thread.h"
 #include <EASTL/hash_set.h>
 #include <platform/filesystem.hpp>
+#include "containers/hashmap.hpp"
 
 #include "tracy/Tracy.hpp"
 
