@@ -1,10 +1,10 @@
 #pragma once
 #include <EASTL/functional.h>
-#include "UsdTool/module.configure.h"
 #include "platform/configure.h"
 #include "containers/hashmap.hpp"
-#include "asset/importer.hpp"
-#include "asset/cooker.hpp"
+#include "UsdTool/module.configure.h"
+#include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
 #ifndef __meta__
     #include "UsdTool/scene_asset.generated.h"
 #endif
