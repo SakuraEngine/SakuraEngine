@@ -155,6 +155,7 @@ if __name__ == '__main__':
     parser.add_argument('-root', help="root directory of meta files.", required=True, type=str)
     parser.add_argument('-outdir', help="output directory.", required=True, type=str)
     parser.add_argument("-api", help="api name.", required=True, type=str)
+    parser.add_argument("-module", help="module name.", required=True, type=str)
     parser.add_argument("-config", help="config file name.", required=True)
     parser.add_argument("-includes", help="include directory list.", nargs="+")
     args = parser.parse_args()
