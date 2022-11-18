@@ -26,7 +26,7 @@
 #include "imgui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "runtime_module.h"
-#include "skr_renderer/skr_renderer.h"
+#include "SkrRenderer/skr_renderer.h"
 #include "imgui/skr_imgui_rg.h"
 #include "tracy/Tracy.hpp"
 #include "utils/make_zeroed.hpp"

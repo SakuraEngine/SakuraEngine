@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "skr_renderer/fwd_types.h"
+#include "SkrRenderer/fwd_types.h"
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
@@ -88,7 +88,7 @@ typedef struct skr_mesh_resource_t skr_mesh_resource_t;
 typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
 #ifdef __cplusplus
-#include "skr_renderer/fwd_types.h"
+#include "SkrRenderer/fwd_types.h"
 #include "platform/filesystem.hpp"
 #include "resource/resource_factory.h"
 #include "utils/io.h"

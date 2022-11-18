@@ -3,7 +3,7 @@
 #include "gbuffer_pipeline.h"
 #include "lighting_pipeline.h"
 #include "blit_pipeline.h"
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "imgui/skr_imgui.h"
 #include "imgui/skr_imgui_rg.h"
 #include "imgui/imgui.h"

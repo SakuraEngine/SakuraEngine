@@ -1,4 +1,4 @@
-#include "render_graph/api.h"
+#include "SkrRenderGraph/api.h"
 #include "utils/log.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRenderGraphModule, SkrRenderGraph);

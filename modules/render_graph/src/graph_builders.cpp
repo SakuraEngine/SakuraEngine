@@ -1,5 +1,5 @@
 #include "platform/debug.h"
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "utils/log.h"
 
 namespace skr

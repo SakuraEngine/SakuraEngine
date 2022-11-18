@@ -1,9 +1,9 @@
 #pragma once
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>
-#include "render_graph/frontend/blackboard.hpp"
-#include "render_graph/frontend/resource_node.hpp"
-#include "render_graph/frontend/pass_node.hpp"
+#include "SkrRenderGraph/frontend/blackboard.hpp"
+#include "SkrRenderGraph/frontend/resource_node.hpp"
+#include "SkrRenderGraph/frontend/pass_node.hpp"
 
 #ifndef RG_MAX_FRAME_IN_FLIGHT
 #define RG_MAX_FRAME_IN_FLIGHT 3

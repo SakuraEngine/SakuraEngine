@@ -1,6 +1,6 @@
 #pragma once
-#include "render_graph/frontend/render_graph.hpp"
-#include "skr_renderer/primitive_pass.h"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
+#include "SkrRenderer/primitive_pass.h"
 #include "live2d_helpers.hpp"
 
 #include "tracy/Tracy.hpp"

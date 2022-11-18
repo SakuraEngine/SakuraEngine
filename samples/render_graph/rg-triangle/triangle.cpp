@@ -1,5 +1,5 @@
 #include "../../cgpu/common/utils.h"
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 
 thread_local SDL_Window* sdl_window;
 thread_local SDL_SysWMinfo wmInfo;

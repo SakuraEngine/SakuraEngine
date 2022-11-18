@@ -195,7 +195,7 @@ TEST(GraphTest, DependencyGraph)
     skr::DependencyGraph::Destroy(rdg);
 }
 
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 
 TEST(GraphTest, RenderGraphFrontEnd)
 {

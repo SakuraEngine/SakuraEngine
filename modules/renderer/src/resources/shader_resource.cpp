@@ -1,4 +1,4 @@
-#include "skr_renderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/shader_resource.hpp"
 #include "platform/memory.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "ecs/dual.h"
-#include "skr_renderer/primitive_pass.h"
+#include "SkrRenderer/primitive_pass.h"
 #ifndef __meta__
     #include "SkrRenderer/render_effect.generated.h"
 #endif

@@ -1,6 +1,6 @@
-﻿#include "render_graph/frontend/render_graph.hpp"
+﻿#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include <EASTL/vector_map.h>
-#include "render_graph/backend/texture_view_pool.hpp"
+#include "SkrRenderGraph/backend/texture_view_pool.hpp"
 
 #include "tracy/Tracy.hpp"
 

@@ -11,7 +11,7 @@
 #include "platform/window.h"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 
 #include "imgui/skr_imgui.h"
 #include "imgui/skr_imgui_rg.h"
@@ -20,9 +20,9 @@
 #include "resource/resource_system.h"
 
 #include "skr_scene/scene.h"
-#include "skr_renderer/skr_renderer.h"
-#include "skr_renderer/render_mesh.h"
-#include "skr_renderer/render_effect.h"
+#include "SkrRenderer/skr_renderer.h"
+#include "SkrRenderer/render_mesh.h"
+#include "SkrRenderer/render_effect.h"
 
 #include "skr_input/inputSystem.h"
 #include "skr_input/Interactions.h"

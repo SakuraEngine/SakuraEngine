@@ -2,7 +2,7 @@
 #include "ecs/dual.h"
 #include "utils/io.hpp"
 #include "SkrGLTFTool/mesh_asset.hpp"
-#include "skr_renderer/resources/mesh_resource.h"
+#include "SkrRenderer/resources/mesh_resource.h"
 #include "resource/resource_factory.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/defer.hpp"

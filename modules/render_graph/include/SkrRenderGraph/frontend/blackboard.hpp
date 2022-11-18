@@ -1,6 +1,6 @@
 #pragma once
 #include <EASTL/string_map.h>
-#include "render_graph/frontend/base_types.hpp"
+#include "SkrRenderGraph/frontend/base_types.hpp"
 
 namespace skr
 {

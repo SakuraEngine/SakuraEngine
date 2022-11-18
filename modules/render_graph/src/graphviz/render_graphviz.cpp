@@ -7,7 +7,7 @@
 
 #include "utils/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 
 namespace skr
 {

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "skr_renderer/fwd_types.h"
+#include "SkrRenderer/fwd_types.h"
 #include "resource/resource_handle.h"
 #ifndef __meta__
     #include "SkrRenderer/resources/material_resource.generated.h"

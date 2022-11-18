@@ -7,7 +7,7 @@
 #include <platform/filesystem.hpp>
 
 #include "../../cgpu/common/utils.h"
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 
 struct ReceiverRenderer
