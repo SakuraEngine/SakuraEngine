@@ -5,7 +5,6 @@
 #include "platform/guid.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_handle.h"
-#include "containers/hashmap.hpp"
 #include "resource/resource_header.h"
 #include "utils/io.h"
 #include "utils/types.h"
@@ -51,10 +50,12 @@ namespace resource
 struct SResourceRegistry;
 struct SResourceFactory;
 struct SResourceSystem;
+struct SResourceSystemImpl;
 
 struct RUNTIME_API SResourceRequest {
     friend struct SResourceSystem;
     friend struct SResourceRegistry;
+    friend struct SResourceSystemImpl;
 public:
     skr_guid_t GetGuid() const;
     gsl::span<const uint8_t> GetData() const;
@@ -113,39 +114,28 @@ public:
 struct RUNTIME_API SResourceSystem {
     friend struct ::skr_resource_handle_t;
 public:
-    SResourceSystem();
-    ~SResourceSystem();
-    void Initialize(SResourceRegistry* provider, skr::io::RAMService* ioService);
-    bool IsInitialized();
-    void Shutdown();
-    void Update();
+    virtual ~SResourceSystem() = default;
+    virtual void Initialize(SResourceRegistry* provider, skr::io::RAMService* ioService) = 0;
+    virtual bool IsInitialized() = 0;
+    virtual void Shutdown() = 0;
+    virtual void Update() = 0;
 
-    void LoadResource(skr_resource_handle_t& handle,
-        bool requireInstalled, uint64_t requester, ESkrRequesterType);
-    void UnloadResource(skr_resource_handle_t& handle);
-    ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle);
+    virtual void LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) = 0;
+    virtual void UnloadResource(skr_resource_handle_t& handle) = 0;
+    virtual ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) = 0;
 
-    SResourceFactory* FindFactory(skr_type_id_t type) const;
-    void RegisterFactory(skr_type_id_t type, SResourceFactory* factory);
-    void UnregisterFactory(skr_type_id_t type);
+    virtual SResourceFactory* FindFactory(skr_type_id_t type) const = 0;
+    virtual void RegisterFactory(skr_type_id_t type, SResourceFactory* factory) = 0;
+    virtual void UnregisterFactory(skr_type_id_t type) = 0;
 
-    SResourceRegistry* GetRegistry() const;
-    skr::io::RAMService* GetRAMService() const;
+    virtual SResourceRegistry* GetRegistry() const = 0;
+    virtual skr::io::RAMService* GetRAMService() const = 0;
 
 protected:
-    skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid);
-    skr_resource_record_t* _GetRecord(const skr_guid_t& guid);
-    skr_resource_record_t* _GetRecord(void* resource);
-    void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record);
-
-    SResourceRegistry* resourceRegistry = nullptr;
-    skr::io::RAMService* ioService = nullptr; 
-    eastl::vector<SResourceRequest*> requests;
-    dual::entity_registry_t resourceIds;
-    SMutex recordMutex;
-    skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
-    skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
-    skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+    virtual skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid) = 0;
+    virtual skr_resource_record_t* _GetRecord(const skr_guid_t& guid) = 0;
+    virtual skr_resource_record_t* _GetRecord(void* resource) = 0;
+    virtual void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record) = 0;
 };
 RUNTIME_API SResourceSystem* GetResourceSystem();
 } // namespace resource

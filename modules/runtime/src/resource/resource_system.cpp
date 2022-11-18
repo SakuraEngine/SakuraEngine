@@ -11,17 +11,55 @@
 
 namespace skr::resource
 {
-SResourceSystem::SResourceSystem()
+struct RUNTIME_API SResourceSystemImpl : public SResourceSystem
+{
+    friend struct ::skr_resource_handle_t;
+public:
+    SResourceSystemImpl();
+    ~SResourceSystemImpl();
+    void Initialize(SResourceRegistry* provider, skr::io::RAMService* ioService) final override;
+    bool IsInitialized() final override;
+    void Shutdown() final override;
+    void Update() final override;
+
+    void LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) final override;
+    void UnloadResource(skr_resource_handle_t& handle) final override;
+    ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) final override;
+
+    SResourceFactory* FindFactory(skr_type_id_t type) const final override;
+    void RegisterFactory(skr_type_id_t type, SResourceFactory* factory) final override;
+    void UnregisterFactory(skr_type_id_t type) final override;
+
+    SResourceRegistry* GetRegistry() const final override;
+    skr::io::RAMService* GetRAMService() const final override;
+
+protected:
+    skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid) final override;
+    skr_resource_record_t* _GetRecord(const skr_guid_t& guid) final override;
+    skr_resource_record_t* _GetRecord(void* resource) final override;
+    void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record) final override;
+
+    SResourceRegistry* resourceRegistry = nullptr;
+    skr::io::RAMService* ioService = nullptr; 
+    eastl::vector<SResourceRequest*> requests;
+    dual::entity_registry_t resourceIds;
+    SMutex recordMutex;
+    skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
+    skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
+    skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+};
+
+SResourceSystemImpl::SResourceSystemImpl()
 {
     skr_init_mutex(&recordMutex);
 }
 
-SResourceSystem::~SResourceSystem()
+SResourceSystemImpl::~SResourceSystemImpl()
 {
     skr_destroy_mutex(&recordMutex);
 }
 
-skr_resource_record_t* SResourceSystem::_GetOrCreateRecord(const skr_guid_t& guid)
+skr_resource_record_t* SResourceSystemImpl::_GetOrCreateRecord(const skr_guid_t& guid)
 {
     auto record = _GetRecord(guid);
     if (!record)
@@ -35,19 +73,19 @@ skr_resource_record_t* SResourceSystem::_GetOrCreateRecord(const skr_guid_t& gui
     return record;
 }
 
-skr_resource_record_t* SResourceSystem::_GetRecord(const skr_guid_t& guid)
+skr_resource_record_t* SResourceSystemImpl::_GetRecord(const skr_guid_t& guid)
 {
     auto iter = resourceRecords.find(guid);
     return iter == resourceRecords.end() ? nullptr : iter->second;
 }
 
-skr_resource_record_t* SResourceSystem::_GetRecord(void* resource)
+skr_resource_record_t* SResourceSystemImpl::_GetRecord(void* resource)
 {
     auto iter = resourceToRecord.find(resource);
     return iter == resourceToRecord.end() ? nullptr : iter->second;
 }
 
-void SResourceSystem::_DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record)
+void SResourceSystemImpl::_DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record)
 {
     //SMutexLock lock(recordMutex);
     auto request = record->activeRequest;
@@ -60,38 +98,38 @@ void SResourceSystem::_DestroyRecord(const skr_guid_t& guid, skr_resource_record
     SkrDelete(record);
 }
 
-SResourceFactory* SResourceSystem::FindFactory(skr_type_id_t type) const
+SResourceFactory* SResourceSystemImpl::FindFactory(skr_type_id_t type) const
 {
     auto iter = resourceFactories.find(type);
     if (iter != resourceFactories.end()) return iter->second;
     return nullptr;
 }
 
-void SResourceSystem::RegisterFactory(skr_type_id_t type, SResourceFactory* factory)
+void SResourceSystemImpl::RegisterFactory(skr_type_id_t type, SResourceFactory* factory)
 {
     auto iter = resourceFactories.find(type);
     SKR_ASSERT(iter == resourceFactories.end());
     resourceFactories.insert(std::make_pair(type, factory));
 }
 
-SResourceRegistry* SResourceSystem::GetRegistry() const
+SResourceRegistry* SResourceSystemImpl::GetRegistry() const
 {
     return resourceRegistry;
 }
 
-skr::io::RAMService* SResourceSystem::GetRAMService() const
+skr::io::RAMService* SResourceSystemImpl::GetRAMService() const
 {
     return ioService;
 }
 
-void SResourceSystem::UnregisterFactory(skr_type_id_t type)
+void SResourceSystemImpl::UnregisterFactory(skr_type_id_t type)
 {
     auto iter = resourceFactories.find(type);
     SKR_ASSERT(iter != resourceFactories.end());
     resourceFactories.erase(iter);
 }
 
-void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType)
+void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType)
 {
     SMutexLock lock(recordMutex);
     SKR_ASSERT(!handle.is_resolved());
@@ -124,7 +162,7 @@ void SResourceSystem::LoadResource(skr_resource_handle_t& handle, bool requireIn
     }
 }
 
-void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
+void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
 {
     SMutexLock lock(recordMutex);
     SKR_ASSERT(handle.is_resolved() && !handle.is_null());
@@ -173,7 +211,7 @@ void SResourceSystem::UnloadResource(skr_resource_handle_t& handle)
 }
 
 
-ESkrLoadingStatus SResourceSystem::GetResourceStatus(const skr_guid_t& handle)
+ESkrLoadingStatus SResourceSystemImpl::GetResourceStatus(const skr_guid_t& handle)
 {
     SMutexLock lock(recordMutex);
     auto record = _GetRecord(handle);
@@ -181,24 +219,24 @@ ESkrLoadingStatus SResourceSystem::GetResourceStatus(const skr_guid_t& handle)
     return record->loadingStatus;
 }
 
-void SResourceSystem::Initialize(SResourceRegistry* provider, skr::io::RAMService* service)
+void SResourceSystemImpl::Initialize(SResourceRegistry* provider, skr::io::RAMService* service)
 {
     SKR_ASSERT(provider);
     resourceRegistry = provider;
     ioService = service;
 }
 
-bool SResourceSystem::IsInitialized()
+bool SResourceSystemImpl::IsInitialized()
 {
     return resourceRegistry != nullptr;
 }
 
-void SResourceSystem::Shutdown()
+void SResourceSystemImpl::Shutdown()
 {
     resourceRegistry = nullptr;
 }
 
-void SResourceSystem::Update()
+void SResourceSystemImpl::Update()
 {
     {
         SMutexLock lock(recordMutex);
@@ -239,437 +277,9 @@ void SResourceSystem::Update()
     }
 }
 
-// resource request implementation
-
-skr_guid_t SResourceRequest::GetGuid() const
-{
-    return resourceRecord->header.guid;
-}
-
-gsl::span<const uint8_t> SResourceRequest::GetData() const
-{
-    return gsl::span<const uint8_t>(data, size); 
-}
-
-gsl::span<const skr_guid_t> SResourceRequest::GetDependencies() const
-{
-    return gsl::span<const skr_guid_t>(dependencies.data(), dependencies.size());
-}
-
-void SResourceRequest::UpdateLoad(bool requestInstall)
-{
-    if (isLoading)
-        return;
-    isLoading = true;
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
-    switch (currentPhase)
-    {
-        case SKR_LOADING_PHASE_FINISHED:
-            currentPhase = SKR_LOADING_PHASE_REQUEST_RESOURCE;
-            break;
-        case SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST:
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST;
-            break;
-        case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLED;
-        }
-        break;
-
-        case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
-        }
-        case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE: {
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
-        }
-        break;
-        case SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE: {
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLING;
-        }
-        break;
-        case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES: {
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES;
-        }
-        break;
-
-        case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
-            if (!requestInstall)
-            {
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
-            }
-            else
-                currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
-        }
-        break;
-
-        default:
-            SKR_HALT();
-            break;
-    }
-}
-
-void SResourceRequest::UpdateUnload()
-{
-    if (!isLoading)
-        return;
-    isLoading = false;
-
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
-
-    switch (currentPhase)
-    {
-        case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST: {
-            currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES;
-        }
-        break;
-        case SKR_LOADING_PHASE_IO:
-        case SKR_LOADING_PHASE_LOAD_RESOURCE: {
-            if(data)
-                sakura_free(data);
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
-        }
-        break;
-        case SKR_LOADING_PHASE_WAITFOR_IO:
-        {
-            currentPhase = SKR_LOADING_PHASE_CANCLE_WAITFOR_IO;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
-        }
-        break;
-
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-            currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
-        }
-        break;
-
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES: {
-            currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES;
-        }
-        break;
-
-        case SKR_LOADING_PHASE_INSTALL_RESOURCE: {
-            currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
-        }
-        break;
-
-        case SKR_LOADING_PHASE_FINISHED: {
-            currentPhase = SKR_LOADING_PHASE_UNINSTALL_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
-        }
-        break;
-
-        case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE: {
-            currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
-        }
-
-        default:
-            SKR_HALT();
-            break;
-    }
-}
-
-void SResourceRequest::OnRequestFileFinished()
-{
-    if (resourceUrl.empty() || vfs == nullptr)
-    {
-        SKR_LOG_FMT_ERROR("Resource {} failed to load, file not found.", resourceRecord->header.guid);
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-        resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-    }
-    else
-    {
-        currentPhase = SKR_LOADING_PHASE_IO;
-        factory = system->FindFactory(resourceRecord->header.type);
-        if (factory == nullptr)
-        {
-            SKR_LOG_FMT_ERROR("Resource {} failed to load, factory of type {} not found.", 
-                resourceRecord->header.guid, resourceRecord->header.type);
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-        }
-    }
-}
-
-void SResourceRequest::_LoadFinished()
-{
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
-    if(data)
-        sakura_free(data);
-    data = nullptr;
-    if (!requestInstall) // only require data, we are done
-    {
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-        return;
-    }
-    // schedule loading for all runtime dependencies
-    const auto& dependencies = resourceRecord->header.dependencies;
-    if (!dependencies.empty())
-    {
-        for (auto& dep : resourceRecord->header.dependencies)
-            system->LoadResource(dep, requestInstall, resourceRecord->id, SKR_REQUESTER_DEPENDENCY);
-        currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES;
-    }
-    else
-    {
-        currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
-    }
-}
-
-void SResourceRequest::_InstallFinished()
-{
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLED;
-    currentPhase = SKR_LOADING_PHASE_FINISHED;
-    return;
-}
-
-void SResourceRequest::Update()
-{
-    if (requireLoading != isLoading)
-    {
-        if (requireLoading)
-            UpdateLoad(requestInstall);
-        else
-            UpdateUnload();
-    }
-    auto resourceRegistry = system->GetRegistry();
-    auto ioService = system->GetRAMService();
-    switch (currentPhase)
-    {
-        case SKR_LOADING_PHASE_REQUEST_RESOURCE: {
-            auto fopened = resourceRegistry->RequestResourceFile(this);
-            if (fopened)
-                currentPhase = SKR_LOADING_PHASE_IO;
-            else
-            {
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                // TODO: Do something with this rude code
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-        }
-        break;
-        case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
-            break;
-        case SKR_LOADING_PHASE_IO:
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
-            if(factory->AsyncIO())
-            {
-                skr_ram_io_t ramIO = {};
-                //ramIO.bytes = nullptr;
-                ramIO.offset = 0;
-                //ramIO.size = 0;
-                ramIO.path = resourceUrl.c_str();
-                ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
-                currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
-            }
-            else 
-            {
-                auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
-                SKR_DEFER({ skr_vfs_fclose(file); });
-                auto size = skr_vfs_fsize(file);
-                eastl::vector<uint8_t> buffer(size);
-                skr_vfs_fread(file, buffer.data(), 0, size);
-                data = buffer.data();
-                size = buffer.size();
-                buffer.reset_lose_memory();
-                currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
-            }
-            break;
-        case SKR_LOADING_PHASE_WAITFOR_IO:
-            if(ioRequest.is_ready())
-            {
-                data = ioDestination.bytes;
-                size = ioDestination.size;
-                currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
-            }
-            break;
-        case SKR_LOADING_PHASE_LOAD_RESOURCE: {
-            auto status = factory->Load(resourceRecord);
-            if (status == SKR_LOAD_STATUS_FAILED)
-            {
-                SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-            else if (status == SKR_LOAD_STATUS_INPROGRESS)
-            {
-                currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE;
-            }
-            else if (status == SKR_LOAD_STATUS_SUCCEED)
-            {
-                _LoadFinished();
-            }
-        }
-        break;
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-            auto status = factory->UpdateLoad(resourceRecord);
-            if (status == SKR_LOAD_STATUS_FAILED)
-            {
-                SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-            else if (status == SKR_LOAD_STATUS_SUCCEED)
-            {
-                _LoadFinished();
-            }
-        }
-        break;
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES: {
-            // pass 1 - check for error
-            bool failed = false;
-            for (auto& dep : resourceRecord->header.dependencies)
-            {
-                if (dep.get_status() == ESkrLoadingStatus::SKR_LOADING_STATUS_ERROR)
-                {
-                    SKR_LOG_FMT_ERROR("Resource {} failed to load dependency resource {}.", resourceRecord->header.guid, dep.get_serialized());
-                    failed = true;
-                    break;
-                }
-            }
-            if (failed)
-            {
-                for (auto& dep : resourceRecord->header.dependencies)
-                    system->UnloadResource(dep);
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-                factory->Unload(resourceRecord);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                break;
-            }
-            // pass 2 - check for loading
-            bool completed = true;
-            for (auto& dep : resourceRecord->header.dependencies)
-            {
-                if (dep.get_status() != ESkrLoadingStatus::SKR_LOADING_STATUS_INSTALLED)
-                {
-                    completed = false;
-                    break;
-                }
-            }
-            if (completed)
-            {
-                currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
-            }
-        }
-        break;
-        case SKR_LOADING_PHASE_INSTALL_RESOURCE: {
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLING;
-            auto status = factory->Install(resourceRecord);
-            if (status == SKR_INSTALL_STATUS_FAILED)
-            {
-                SKR_LOG_FMT_ERROR("Resource {} failed to install.", resourceRecord->header.guid);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-            else if (status == SKR_INSTALL_STATUS_INPROGRESS)
-            {
-                currentPhase = SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE;
-            }
-            else if (status == SKR_INSTALL_STATUS_SUCCEED)
-            {
-                _InstallFinished();
-            }
-        }
-        break;
-        case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE: {
-            auto status = factory->UpdateInstall(resourceRecord);
-            if (status == SKR_INSTALL_STATUS_FAILED)
-            {
-                SKR_LOG_FMT_ERROR("Resource {} failed to install.", resourceRecord->header.guid);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-            else if (status == SKR_INSTALL_STATUS_SUCCEED)
-            {
-                _InstallFinished();
-            }
-        }
-        break;
-        case SKR_LOADING_PHASE_FINISHED:
-        {
-            //special case when we are installing a resource that is already loaded
-            SKR_ASSERT(isLoading && requestInstall > !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED));
-            _LoadFinished();
-        }
-        break;
-        case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO:
-        {
-            if(!ioRequest.is_ready())
-            {
-                ioService->defer_cancel(&ioRequest);
-            }
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
-        }
-        break;
-        case SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE:
-        case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
-            factory->Uninstall(resourceRecord);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
-            currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
-        }
-        break;
-        case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE:
-        case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES:
-        case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
-            if(data)
-                sakura_free(data);
-            for (auto& dep : resourceRecord->header.dependencies)
-                system->UnloadResource(dep);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
-            factory->Unload(resourceRecord);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-        }
-        break;
-        case SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST: {
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
-            resourceRegistry->CancelRequestFile(this);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-        }
-        break;
-        default:
-            SKR_UNREACHABLE_CODE();
-            break;
-    }
-}
-
-bool SResourceRequest::Okay()
-{
-    bool installed = resourceRecord && !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED);
-    return (currentPhase == SKR_LOADING_PHASE_FINISHED) && (isLoading == requireLoading) && (requestInstall <= installed);
-}
-
-bool SResourceRequest::Failed()
-{
-    return !resourceRecord || (resourceRecord->loadingStatus == SKR_LOADING_STATUS_ERROR);
-}
-
-bool SResourceRequest::Yielded()
-{
-    switch (currentPhase)
-    {
-        case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE:
-        case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES:
-        case SKR_LOADING_PHASE_WAITFOR_IO:
-        case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE:
-            return true;
-        default:
-            return false;
-    }
-}
-
 SResourceSystem* GetResourceSystem()
 {
-    static SResourceSystem system;
+    static SResourceSystemImpl system;
     return &system;
 }
 } // namespace skr::resource
