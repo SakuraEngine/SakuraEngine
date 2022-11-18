@@ -12,9 +12,27 @@
 
 namespace skr::resource
 {
+struct SConfigRegistryImpl : public SConfigRegistry
+{
+    void RegisterConfigType(const skr_guid_t& guid, const SConfigTypeInfo& info) override
+    {
+        typeInfos.insert(std::make_pair(guid, info));
+    }
+    const SConfigTypeInfo* FindConfigType(const skr_guid_t& guid) override
+    {
+        auto it = typeInfos.find(guid);
+        if (it != typeInfos.end())
+        {
+            return &it->second;
+        }
+        return nullptr;
+    }
+    skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
+};
+
 RUNTIME_API SConfigRegistry* GetConfigRegistry()
 {
-    static SConfigRegistry registry;
+    static SConfigRegistryImpl registry;
     return &registry;
 }
 } // namespace skr::resource
@@ -95,17 +113,17 @@ void SConfigFactory::Serialize(const skr_config_resource_t& config, skr_binary_w
 void SConfigFactory::DeserializeConfig(const skr_type_id_t& id, void* address, skr_binary_reader_t& archive)
 {
     auto registry = GetConfigRegistry();
-    auto iter = registry->typeInfos.find(id);
-    SKR_ASSERT(registry->typeInfos.end() != iter);
-    iter->second.Deserialize(address, archive);
+    auto typeInfo = registry->FindConfigType(id);
+    SKR_ASSERT(typeInfo);
+    typeInfo->Deserialize(address, archive);
 }
 
 void SConfigFactory::SerializeConfig(const skr_type_id_t& id, void* address, skr_binary_writer_t& archive)
 {
     auto registry = GetConfigRegistry();
-    auto iter = registry->typeInfos.find(id);
-    SKR_ASSERT(registry->typeInfos.end() != iter);
-    iter->second.Serialize(address, archive);
+    auto typeInfo = registry->FindConfigType(id);
+    SKR_ASSERT(typeInfo);
+    typeInfo->Serialize(address, archive);
 }
 } // namespace resource
 } // namespace skr
