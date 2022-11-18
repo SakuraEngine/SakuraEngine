@@ -39,7 +39,6 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST,
 
     SKR_LOADING_PHASE_FINISHED,
-    SKR_LOADING_PHASE_FAILED,
 } ESkrLoadingPhase;
 
 #if defined(__cplusplus)
