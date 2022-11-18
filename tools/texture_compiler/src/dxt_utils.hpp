@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrTextureCompiler/texture_compiler.hpp"
-#include "skr_image_coder/skr_image_coder.h"
+#include "SkrImageCoder/skr_image_coder.h"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "ispc/ispc_texcomp.h"
 

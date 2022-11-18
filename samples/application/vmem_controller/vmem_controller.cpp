@@ -4,9 +4,8 @@
 #include "utils/make_zeroed.hpp"
 #include "module/module.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "imgui/skr_imgui.h"
-#include "imgui/skr_imgui_rg.h"
-#include "imgui/imgui.h"
+#include "SkrImGui/skr_imgui.h"
+#include "SkrImGui/skr_imgui_rg.h"
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif

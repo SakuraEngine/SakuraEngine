@@ -1,5 +1,5 @@
 #include "platform/configure.h"
-#include "imgui/skr_imgui.config.h"
+#include "SkrImGui/skr_imgui.config.h"
 #include "utils/log.h"
 #include "imgui_skr_system.cpp"
 #include "skr_imgui_rg.cpp"

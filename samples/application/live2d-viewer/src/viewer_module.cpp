@@ -2,9 +2,8 @@
 
 #include "../../../cgpu/common/utils.h"
 
-#include "imgui/skr_imgui.h"
-#include "imgui/skr_imgui_rg.h"
-#include "imgui/imgui.h"
+#include "SkrImGui/skr_imgui.h"
+#include "SkrImGui/skr_imgui_rg.h"
 
 #include "platform/vfs.h"
 #include "platform/thread.h"
@@ -26,7 +25,7 @@
 #include "tracy/Tracy.hpp"
 
 #ifdef _WIN32
-#include "skr_image_coder/extensions/win_dstorage_decompressor.h"
+#include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
 #endif
 
 class SLive2DViewerModule : public skr::IDynamicModule

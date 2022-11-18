@@ -13,9 +13,8 @@
 #include "ecs/type_builder.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-#include "imgui/skr_imgui.h"
-#include "imgui/skr_imgui_rg.h"
-#include "imgui/imgui.h"
+#include "SkrImGui/skr_imgui.h"
+#include "SkrImGui/skr_imgui_rg.h"
 
 #include "resource/resource_system.h"
 

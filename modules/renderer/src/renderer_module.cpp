@@ -3,8 +3,7 @@
 #include "cgpu/api.h"
 #include "module/module_manager.hpp"
 #include "utils/log.h"
-#include "imgui/skr_imgui.h"
-#include "imgui/imgui.h"
+#include "SkrImGui/skr_imgui.h"
 #include "platform/guid.hpp"
 #include <string.h>
 #ifdef _WIN32

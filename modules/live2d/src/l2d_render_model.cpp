@@ -14,9 +14,9 @@
 #include <string> // TODO: replace this (std::stoi)
 #include <platform/filesystem.hpp>
 
-#include "skr_image_coder/skr_image_coder.h"
+#include "SkrImageCoder/skr_image_coder.h"
 #ifdef _WIN32
-#include "skr_image_coder/extensions/win_dstorage_decompressor.h"
+#include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
 #endif
 
 #include "tracy/Tracy.hpp"
