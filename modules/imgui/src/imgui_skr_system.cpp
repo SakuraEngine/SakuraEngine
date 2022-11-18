@@ -1,11 +1,10 @@
 #define IMGUI_IMPORT SKR_IMGUI_API
-#include "imgui/skr_imgui.config.h"
+#include "SkrImGui/skr_imgui.config.h"
 #include <EASTL/vector.h>
 #include <EASTL/string.h>
 #include "utils/log.h"
 #include "platform/input.h"
-#include "imgui/imgui.h"
-#include "imgui/skr_imgui.h"
+#include "SkrImGui/skr_imgui.h"
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

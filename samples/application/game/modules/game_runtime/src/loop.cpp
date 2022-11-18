@@ -1,8 +1,7 @@
 #include "ecs/callback.hpp"
 #include "ecs/dual.h"
 #include "gamert.h"
-#include "imgui/skr_imgui.h"
-#include "imgui/imgui.h"
+#include "SkrImGui/skr_imgui.h"
 #include "skr_scene/scene.h"
 
 namespace skg

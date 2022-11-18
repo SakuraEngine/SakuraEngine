@@ -2,9 +2,8 @@
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "utils/log.h"
-#include "imgui/imgui.h"
-#include "imgui/skr_imgui.h"
-#include "imgui/skr_imgui_rg.h"
+#include "SkrImGui/skr_imgui.h"
+#include "SkrImGui/skr_imgui_rg.h"
 
 namespace skr::imgui
 {

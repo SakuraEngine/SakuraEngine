@@ -2,7 +2,7 @@
 #include "utils/defer.hpp"
 #include "platform/memory.h"
 #include "platform/debug.h"
-#include "skr_image_coder/skr_image_coder.h"
+#include "SkrImageCoder/skr_image_coder.h"
 #include "image_coder_png.hpp"
 #include "image_coder_jpeg.hpp"
 
@@ -180,7 +180,7 @@ EImageCoderFormat skr_image_coder_detect_format(const uint8_t* encoded_data, uin
 }
 
 #ifdef _WIN32
-#include "skr_image_coder/extensions/win_dstorage_decompressor.h"
+#include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
 #include "tracy/Tracy.hpp"
 
 HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_request_t* request, void* user_data)
