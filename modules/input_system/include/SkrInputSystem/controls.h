@@ -3,8 +3,8 @@
 #include "EASTL/shared_ptr.h"
 #include "EASTL/vector.h"
 #include "utils/types.h"
-#include "skr_input/Interactions.h"
-#include "skr_input/processor.h"
+#include "SkrInputSystem/Interactions.h"
+#include "SkrInputSystem/processor.h"
 #include "SkrInputSystem/module.configure.h"
 #include "gainput/gainput.h"
 

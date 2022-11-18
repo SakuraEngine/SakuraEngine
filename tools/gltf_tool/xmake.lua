@@ -1,8 +1,9 @@
-shared_module("GLTFTool", "GLTFTool", engine_version)
+shared_module("SkrGLTFTool", "GLTFTOOL", engine_version)
     set_group("02.tools")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/"
+        rootdir = "include/SkrGLTFTool",
+        api = "GLTFTOOL"
     })
     public_dependency("SkrToolCore", engine_version)
     public_dependency("GameRT", engine_version)

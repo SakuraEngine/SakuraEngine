@@ -2,7 +2,7 @@ shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
     set_group("01.modules")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/", disable_meta = true,
+        rootdir = "include/SkrLive2D", disable_meta = true,
         api = "SKR_LIVE2D"
     })
     public_dependency("SkrImageCoder", engine_version)

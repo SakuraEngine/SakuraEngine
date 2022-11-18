@@ -1,6 +1,6 @@
 #include "utils/log.h"
 #include "platform/memory.h"
-#include "skr_live2d/skr_live2d.h"
+#include "SkrLive2D/skr_live2d.h"
 #include "CubismFramework.hpp"
 
 /**	Log out func register to cubism */
