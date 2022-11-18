@@ -1,4 +1,4 @@
-#include "skr_renderer/resources/mesh_resource.h"
+#include "SkrRenderer/resources/mesh_resource.h"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/guid.hpp"
@@ -283,8 +283,8 @@ const char* skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struc
 
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
-#include "skr_renderer/render_mesh.h"
-#include "skr_renderer/render_device.h"
+#include "SkrRenderer/render_mesh.h"
+#include "SkrRenderer/render_device.h"
 #include "utils/log.h"
 #include "cgpu/io.hpp"
 

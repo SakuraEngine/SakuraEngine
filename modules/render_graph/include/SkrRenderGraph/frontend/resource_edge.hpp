@@ -1,5 +1,5 @@
 #pragma once
-#include "render_graph/frontend/resource_node.hpp"
+#include "SkrRenderGraph/frontend/resource_node.hpp"
 
 namespace skr
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrTextureCompiler/texture_compiler.hpp"
 #include "skr_image_coder/skr_image_coder.h"
-#include "skr_renderer/resources/texture_resource.h"
+#include "SkrRenderer/resources/texture_resource.h"
 #include "ispc/ispc_texcomp.h"
 
 #define TEX_COMPRESS_ALIGN(x, a) (((x) + ((a)-1)) & ~((a)-1))

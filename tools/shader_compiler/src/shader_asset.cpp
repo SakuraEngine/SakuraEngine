@@ -1,7 +1,7 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.h"
 #include "SkrShaderCompiler/shader_compiler.h"
-#include "skr_renderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/shader_resource.hpp"
 #include "utils/io.hpp"
 #include "utils/log.hpp"
 #include "utils/make_zeroed.hpp"

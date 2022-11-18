@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "skr_renderer/fwd_types.h"
+#include "SkrRenderer/fwd_types.h"
 #include "platform/filesystem.hpp"
 #include "utils/io.h"
 #include "cgpu/io.h"

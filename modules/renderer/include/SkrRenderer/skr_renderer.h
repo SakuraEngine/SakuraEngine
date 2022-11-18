@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "skr_renderer/primitive_pass.h"
-#include "skr_renderer/fwd_types.h"
+#include "SkrRenderer/primitive_pass.h"
+#include "SkrRenderer/fwd_types.h"
 
 struct dual_storage_t;
 

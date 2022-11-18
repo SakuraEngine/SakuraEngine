@@ -4,10 +4,10 @@
 #include "utils/make_zeroed.hpp"
 #include <EASTL/set.h>
 
-#include "render_graph/backend/desc_set_heap.hpp"
-#include "render_graph/backend/buffer_pool.hpp"
-#include "render_graph/backend/texture_pool.hpp"
-#include "render_graph/backend/texture_view_pool.hpp"
+#include "SkrRenderGraph/backend/desc_set_heap.hpp"
+#include "SkrRenderGraph/backend/buffer_pool.hpp"
+#include "SkrRenderGraph/backend/texture_pool.hpp"
+#include "SkrRenderGraph/backend/texture_view_pool.hpp"
 
 #include "tracy/Tracy.hpp"
 

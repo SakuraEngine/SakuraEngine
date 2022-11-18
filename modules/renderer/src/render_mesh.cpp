@@ -4,8 +4,8 @@
 #include "cgpu/io.hpp"
 #include "platform/vfs.h"
 #include "utils/make_zeroed.hpp"
-#include "skr_renderer/skr_renderer.h"
-#include "skr_renderer/render_mesh.h"
+#include "SkrRenderer/skr_renderer.h"
+#include "SkrRenderer/render_mesh.h"
 #include <platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-#include "render_graph/rg_config.h"
+#include "SkrRenderGraph/rg_config.h"
 #include "utils/dependency_graph.hpp"
 #include <EASTL/string.h>
 

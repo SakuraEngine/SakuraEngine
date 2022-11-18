@@ -3,9 +3,9 @@
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 #include "ecs/callback.hpp"
-#include "render_graph/frontend/render_graph.hpp"
-#include "skr_renderer/render_effect.h"
-#include "skr_renderer/skr_renderer.h"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
+#include "SkrRenderer/render_effect.h"
+#include "SkrRenderer/skr_renderer.h"
 #include "EASTL/unordered_map.h"
 #include "EASTL/vector.h"
 

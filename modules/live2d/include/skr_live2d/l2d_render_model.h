@@ -2,7 +2,7 @@
 #include "utils/types.h"
 #include "cgpu/api.h"
 #include "cgpu/io.h"
-#include "skr_renderer/primitive_draw.h"
+#include "SkrRenderer/primitive_draw.h"
 #include "l2d_model_resource.h"
 
 typedef struct skr_live2d_clipping_manager_t skr_live2d_clipping_manager_t;

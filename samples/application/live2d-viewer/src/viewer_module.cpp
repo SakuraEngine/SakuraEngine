@@ -16,8 +16,8 @@
 
 #include "cgpu/io.hpp"
 
-#include "skr_renderer/skr_renderer.h"
-#include "skr_renderer/render_effect.h"
+#include "SkrRenderer/skr_renderer.h"
+#include "SkrRenderer/render_effect.h"
 
 #include "skr_live2d/l2d_model_resource.h"
 #include "skr_live2d/l2d_render_model.h"

@@ -2,10 +2,10 @@
 #include "GameRT/module.configure.h"
 #include "platform/vfs.h"
 #include "utils/log.h"
-#include "skr_renderer/skr_renderer.h"
+#include "SkrRenderer/skr_renderer.h"
 #ifdef __cplusplus
     #include "module/module_manager.hpp"
-    #include "render_graph/frontend/render_graph.hpp"
+    #include "SkrRenderGraph/frontend/render_graph.hpp"
     #include "utils/io.hpp"
     #include "cgpu/io.hpp"
 

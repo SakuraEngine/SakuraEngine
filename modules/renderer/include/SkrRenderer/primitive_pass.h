@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "skr_renderer/primitive_draw.h"
+#include "SkrRenderer/primitive_draw.h"
 
 namespace skr
 {

@@ -1,9 +1,9 @@
 #pragma once
 #include <EASTL/vector.h>
 #include "containers/span.hpp"
-#include "render_graph/frontend/base_types.hpp"
-#include "render_graph/frontend/resource_node.hpp"
-#include "render_graph/frontend/resource_edge.hpp"
+#include "SkrRenderGraph/frontend/base_types.hpp"
+#include "SkrRenderGraph/frontend/resource_node.hpp"
+#include "SkrRenderGraph/frontend/resource_edge.hpp"
 
 namespace skr
 {

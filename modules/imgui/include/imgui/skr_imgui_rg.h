@@ -2,7 +2,7 @@
 #include "platform/window.h"
 #include "platform/input.h"
 #include "skr_imgui.config.h"
-#include "render_graph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 
 typedef struct RenderGraphImGuiDescriptor {
     skr::render_graph::RenderGraph* render_graph;

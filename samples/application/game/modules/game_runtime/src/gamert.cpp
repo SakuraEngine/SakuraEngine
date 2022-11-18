@@ -8,9 +8,9 @@
 #include "ecs/dual.h"
 #include "runtime_module.h"
 #include "platform/guid.hpp"
-#include "skr_renderer/resources/texture_resource.h"
-#include "skr_renderer/resources/mesh_resource.h"
-#include "skr_renderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/texture_resource.h"
+#include "SkrRenderer/resources/mesh_resource.h"
+#include "SkrRenderer/resources/shader_resource.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 
