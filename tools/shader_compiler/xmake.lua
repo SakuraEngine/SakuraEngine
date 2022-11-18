@@ -4,7 +4,7 @@ shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
     add_includedirs("include", {public=true})
     add_includedirs("src", {public=false})
     public_dependency("SkrRenderer", engine_version)
-    public_dependency("SkrTool", engine_version)
+    public_dependency("SkrToolCore", engine_version)
     add_files("src/**.cpp")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},

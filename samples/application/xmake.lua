@@ -30,7 +30,7 @@ executable_module("Game", "GAME", engine_version)
 
 shared_module("GameTool", "GAMETOOL", engine_version)
     set_group("04.examples/application")
-    public_dependency("SkrTool", "0.1.0")
+    public_dependency("SkrToolCore", "0.1.0")
     public_dependency("GameRT", "0.1.0")
     add_rules("c++.codegen", {
         files = {"gametool/**.h", "gametool/**.hpp"},

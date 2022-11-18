@@ -4,7 +4,7 @@ shared_module("GLTFTool", "GLTFTool", engine_version)
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/"
     })
-    public_dependency("SkrTool", engine_version)
+    public_dependency("SkrToolCore", engine_version)
     public_dependency("GameRT", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")

@@ -1,10 +1,10 @@
 #pragma once
-#include "SkrTool/module.configure.h"
+#include "SkrToolCore/module.configure.h"
 #include "json/reader.h"
 #include "resource/resource_header.h"
 #include "asset/cooker.hpp"
 #ifndef __meta__
-    #include "SkrTool/asset/importer.generated.h"
+    #include "SkrToolCore/asset/importer.generated.h"
 #endif
 
 namespace skr::io { class RAMService; }
@@ -23,7 +23,7 @@ struct sreflect sattr(
     "guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", 
     "serialize" : "json"
 )
-TOOL_API SImporter
+TOOL_CORE_API SImporter
 {
     static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
 
@@ -33,7 +33,7 @@ TOOL_API SImporter
     static uint32_t Version() { return kDevelopmentVersion; }
 };
 
-struct TOOL_API SImporterTypeInfo {
+struct TOOL_CORE_API SImporterTypeInfo {
     SImporter* (*Load)(const SAssetRecord* record, simdjson::ondemand::value&& object);
     uint32_t (*Version)();
 };
@@ -44,7 +44,7 @@ struct SImporterRegistry {
     skr::flat_hash_map<skr_guid_t, SImporterTypeInfo, skr::guid::hash> loaders;
 };
 
-TOOL_API SImporterRegistry* GetImporterRegistry();
+TOOL_CORE_API SImporterRegistry* GetImporterRegistry();
 
 struct SImporterFactory {
     virtual bool CanImport(const SAssetRecord* record) = 0;
