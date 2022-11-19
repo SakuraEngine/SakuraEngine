@@ -1,4 +1,4 @@
-import("find_sdk")
+import("find_sdk", {rootdir = module_root})
 
 if (os.host() == "windows") then
     find_sdk.lib_from_github("m3", "m3-windows-x64.zip")

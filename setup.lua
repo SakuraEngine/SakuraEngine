@@ -1,4 +1,5 @@
-import("find_sdk", {rootdir = "xmake/modules"})
+module_root = path.absolute("xmake/modules")
+import("find_sdk", {rootdir = module_root})
 
 if (os.host() =="macosx") then 
     import("lib.detect.find_tool")
