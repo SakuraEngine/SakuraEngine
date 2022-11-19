@@ -12,6 +12,7 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: latest
+          actions-cache-folder: ".xmake-cache"
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
