@@ -1,3 +1,5 @@
+import("find_sdk", {rootdir = "xmake/modules"})
+
 if (os.host() =="macosx") then 
     import("lib.detect.find_tool")
     local brew = find_tool("brew")
@@ -6,8 +8,6 @@ if (os.host() =="macosx") then
     end
     os.exec("brew install ispc")
 end
-
-import("find_sdk")
 
 -- python
 find_sdk.file_from_github("SourceSansPro-Regular.ttf")
