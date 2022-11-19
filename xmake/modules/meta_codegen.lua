@@ -1,5 +1,4 @@
 import("core.base.option")
-import("core.base.object")
 import("core.base.scheduler")
 import("core.project.depend")
 import("core.project.project")
@@ -23,6 +22,7 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
     if opt.cl then
         table.insert(argv, "--driver-mode=cl")
+        --table.insert(argv, "/Tp")
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
     local argv2 = {sourcefile, "--output="..path.absolute(outdir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
@@ -40,11 +40,9 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         local now = os.time()
         cprint("${green}[%s]: finish.meta ${clear}%s cost ${red}%d seconds", target:name(), path.relative(outdir), now - last)
     end
-
-    return argv
 end
 
-function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
+function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
     local changedheaders = target:data("reflection.changedheaders")
     -- generate dummy .cpp file
@@ -75,7 +73,7 @@ function collect_headers_batch(target)
         end
     end
     -- local batchsize = extraconf and extraconf.batchsize or 10
-    local batchsize = 999
+    local batchsize = 999  -- batch size optimization is disabled now
     local extraconf = target:extraconf("rules", "c++.codegen")
     local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
     local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
@@ -126,10 +124,10 @@ function collect_headers_batch(target)
     end
 end
 
-function _mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt)
+function mako_compile_cmd(target, mako_generators, use_deps_data, metadir, gendir, opt)
     local api = target:extraconf("rules", "c++.codegen", "api")
     local generator = os.projectdir()..vformat("/tools/codegen/codegen.py")
-    -- compile jsons to c++
+    -- collect deps data
     local depsmeta = {}
     for _, dep in pairs(target:deps()) do
         local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
@@ -140,7 +138,7 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
     if not opt.quiet then
         cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
     end
-
+    
     local command = {
         generator,
         "-root", path.absolute(metadir),
@@ -166,7 +164,7 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
     end
 end
 
-function _mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
+function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
     local mako_generators = {
         {
@@ -209,25 +207,19 @@ function _mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles
     end
     -- rebuild
     if (rebuild) then
-        _mako_compile_template(target, mako_generators, true, metadir, gendir, opt)
+        mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
     end
 end
 
 function compile_task(compile_func, target, opt)
-    local refl_batch = target:data("meta.headers.batch")
+    local refl_batch = target:data("meta.headers.batch") or {}
     local rootdir = target:extraconf("rules", "c++.codegen", "rootdir")
     rootdir = path.absolute(path.join(target:scriptdir(), rootdir))
-    if refl_batch then
-        for _, sourceinfo in ipairs(refl_batch) do
-            if sourceinfo then
-                local headerfiles = sourceinfo.headerfiles
-                local sourcefile = sourceinfo.sourcefile
-                local metadir = sourceinfo.metadir
-                local gendir = sourceinfo.gendir
-                if headerfiles then
-                    compile_func(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
-                end
-            end
+    for _, sourceinfo in ipairs(refl_batch) do
+        sourceinfo = sourceinfo or {}
+        local headerfiles = sourceinfo.headerfiles
+        if headerfiles then
+            compile_func(target, rootdir, sourceinfo.metadir, sourceinfo.gendir, sourceinfo.sourcefile, headerfiles, opt)
         end
     end
 end
@@ -256,7 +248,7 @@ function generate_once(targetname)
     end
     
     -- parameters
-    local opt = {}
+    local opt = opt or {}
     if has_config("is_msvc") then
         opt.cl = true
     end
@@ -271,7 +263,7 @@ function generate_once(targetname)
         if (target:rule("c++.codegen")) then
             -- resume meta compile
             scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
-                scheduler.co_start(compile_task, _meta_compile, target, opt)
+                scheduler.co_start(compile_task, meta_compile, target, opt)
             end)
         end
     end
@@ -287,7 +279,7 @@ function generate_once(targetname)
                     end
                 end
                 scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
-                scheduler.co_start(compile_task, _mako_compile, target, opt)
+                scheduler.co_start(compile_task, mako_compile, target, opt)
             end)
         end
     end
