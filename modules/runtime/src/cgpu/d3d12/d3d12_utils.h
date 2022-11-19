@@ -22,6 +22,12 @@ void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstan
 // Device Helpers
 void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D);
 
+#if !defined(XBOX) && defined(_WIN32)
+#include "dxc/dxcapi.h"
+
+DxcCreateInstanceProc D3D12Util_GetDxcCreateInstanceProc();
+#endif
+
 // Crash Report Helpers
 void D3D12Util_LogDREDPageFault(const D3D12_DRED_PAGE_FAULT_OUTPUT* pageFault);
 void D3D12Util_LogDREDBreadcrumbs(const D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT* breadcrumbs);
