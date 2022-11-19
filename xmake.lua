@@ -20,7 +20,7 @@ if (is_os("windows")) then
         set_runtimes("MDd")
     end
 else
-    add_requires("python")
+    -- add_requires("python")
     add_requires("libsdl")
     add_requires("gtest")
 end

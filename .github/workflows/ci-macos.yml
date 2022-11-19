@@ -1,8 +1,6 @@
 name: macos-build
 
 on: [push, pull_request]
-env:
-  VulkanSDKVersion: 1.2.162.1
 
 jobs:
   build-macos:
@@ -14,44 +12,26 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: latest
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip' # caching pip dependencies
+      - run: pip install mako
       - name: Set env
         id: env
         run: |
           xmake g -c
           xmake l setup.lua
-          VULKAN_SDK=$GITHUB_WORKSPACE/../vulkansdk-macos-${{env.VulkanSDKVersion}}/macOS
-          echo ::set-output name=VULKAN_SDK::$VULKAN_SDK
-          echo "VK_LAYER_PATH=$VULKAN_SDK/etc/vulkan/explicit_layer.d" >> $GITHUB_ENV
-          echo "VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json" >> $GITHUB_ENV
-      - name: Cache
-        id: cache
-        uses: actions/cache@v1.1.2
-        with:
-          path: ${{steps.env.outputs.VULKAN_SDK}}
-          key: VulkanSdk${{env.VulkanSDKVersion}}ExtractedMacos
-      - name: Download & Extract Vulkan SDK
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          wget --no-cookies -O ../vulkansdk-macos-${{env.VulkanSDKVersion}}.dmg https://sdk.lunarg.com/sdk/download/${{env.VulkanSDKVersion}}/mac/vulkansdk-macos-${{env.VulkanSDKVersion}}.dmg?u=
-          hdiutil attach ../vulkansdk-macos-${{env.VulkanSDKVersion}}.dmg
-          cp -r /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}} $GITHUB_WORKSPACE/..
-          hdiutil detach /Volumes/vulkansdk-macos-${{env.VulkanSDKVersion}}
       - name: ConfigureDebug
         run: xmake f -m debug -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
-        env:
-          VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
       - name: Debug
         if: success() || failure()
         run: xmake -y -v
-        env:
-          VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
       - name: Release
         if: success() || failure()
         run: |
           xmake f -m release -y --build_tests=n --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
           xmake -y -v
-        env:
-          VULKAN_SDK: ${{steps.env.outputs.VULKAN_SDK}}
       - name: UploadGeneratedFiles
         if: success() || failure()
         uses: actions/upload-artifact@v3
