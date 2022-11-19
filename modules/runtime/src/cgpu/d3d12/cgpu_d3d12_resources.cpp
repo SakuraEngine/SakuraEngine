@@ -1265,7 +1265,9 @@ CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc)
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
     CGPUShaderLibrary_D3D12* S = cgpu_new<CGPUShaderLibrary_D3D12>();
     IDxcLibrary* pUtils;
-    DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&pUtils));
+    auto procDxcCreateInstnace = D3D12Util_GetDxcCreateInstanceProc();
+    SKR_ASSERT(procDxcCreateInstnace && "Failed to get dxc proc!");
+    procDxcCreateInstnace(CLSID_DxcLibrary, IID_PPV_ARGS(&pUtils));
     // if (!try_invoke_pinned_api(pUtils, desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob))
     {
         pUtils->CreateBlobWithEncodingOnHeapCopy(desc->code, (uint32_t)desc->code_size, DXC_CP_ACP, &S->pShaderBlob);

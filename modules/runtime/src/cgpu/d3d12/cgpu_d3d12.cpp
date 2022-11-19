@@ -2,14 +2,12 @@
 #include "d3d12_utils.h"
 #include "../common/common_utils.h"
 
-#include <dxcapi.h>
 #include <EASTL/string_hash_map.h>
 
 #if !defined(XBOX)
     #pragma comment(lib, "d3d12.lib")
     #pragma comment(lib, "dxgi.lib")
     #pragma comment(lib, "dxguid.lib")
-    #pragma comment(lib, "dxcompiler.lib")
 #endif
 
 #include <comdef.h>

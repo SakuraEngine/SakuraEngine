@@ -1,6 +1,5 @@
 shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
     set_group("02.tools")
-    add_rules("utils.install-libs", { libnames = {"dxc"} })
     add_includedirs("include", {public=true})
     add_includedirs("src", {public=false})
     public_dependency("SkrRenderer", engine_version)
@@ -14,4 +13,8 @@ shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
     -- dxc compiler uses ms-extensions
     if (os.host() == "macosx") then
         add_cxflags("-fms-extensions", {public=false})
+    end
+    -- install dxc on non-windows platform
+    if (not is_os("windows")) then 
+        add_rules("utils.install-libs", { libnames = {"dxc"} })
     end

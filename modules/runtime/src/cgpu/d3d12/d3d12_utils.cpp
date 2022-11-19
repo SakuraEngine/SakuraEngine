@@ -10,8 +10,41 @@
 #include <comutil.h>
 
 #define USE_PIX
+#ifdef USE_PIX
 #include "cgpu/drivers/WinPixEventRuntime/pix3.h"
 #pragma comment(lib, "WinPixEventRuntime.lib")
+#endif
+
+#if !defined(XBOX) && defined(_WIN32)
+
+struct CGPUUtil_DXCLoader
+{
+    CGPUUtil_DXCLoader()
+    {
+        dxcLibrary= LoadLibrary(L"dxcompiler.dll");
+        pDxcCreateInstance = (void*)::GetProcAddress((HMODULE)dxcLibrary, "DxcCreateInstance");
+    }
+    ~CGPUUtil_DXCLoader()
+    {
+        pDxcCreateInstance = nullptr;
+        ::FreeLibrary(dxcLibrary);
+    }
+    static DxcCreateInstanceProc Get()
+    {
+        return (DxcCreateInstanceProc)pDxcCreateInstance;
+    }
+    static HMODULE dxcLibrary;
+    static void* pDxcCreateInstance;
+}; 
+void* CGPUUtil_DXCLoader::pDxcCreateInstance = nullptr;
+HMODULE CGPUUtil_DXCLoader::dxcLibrary = nullptr;
+static CGPUUtil_DXCLoader __loader = {};
+
+DxcCreateInstanceProc D3D12Util_GetDxcCreateInstanceProc()
+{
+    return CGPUUtil_DXCLoader::Get();
+}
+#endif
 
 UINT64 encode_color_for_pix(const float* color)
 {
@@ -438,7 +471,9 @@ void D3D12Util_InitializeShaderReflection(CGPUDevice_D3D12* D, CGPUShaderLibrary
 
     IDxcContainerReflection* pReflection;
     UINT32 shaderIdx;
-    DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(&pReflection));
+    auto procDxcCreateInstnace = D3D12Util_GetDxcCreateInstanceProc();
+    SKR_ASSERT(procDxcCreateInstnace && "Failed to get dxc proc!");
+    procDxcCreateInstnace(CLSID_DxcContainerReflection, IID_PPV_ARGS(&pReflection));
     pReflection->Load(S->pShaderBlob);
     (pReflection->FindFirstPartKind(DXIL_FOURCC('D', 'X', 'I', 'L'), &shaderIdx));
 

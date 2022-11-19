@@ -124,3 +124,8 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
     add_includedirs("$(projectdir)/thirdparty/marl/include", {public = true})
     add_includedirs("$(projectdir)/thirdparty/marl/include/marl", {public = true})
+
+    -- install dxc on windows platform
+    if (is_os("windows")) then 
+        add_rules("utils.install-libs", { libnames = {"dxc"} })
+    end
