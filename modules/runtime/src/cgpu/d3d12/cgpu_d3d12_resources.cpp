@@ -1259,8 +1259,7 @@ inline bool is_dxil_signed(const void* buffer)
     return has_digest;
 }
 
-CGPUShaderLibraryId cgpu_create_shader_library_d3d12(
-CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc)
+CGPUShaderLibraryId cgpu_create_shader_library_d3d12(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc)
 {
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
     CGPUShaderLibrary_D3D12* S = cgpu_new<CGPUShaderLibrary_D3D12>();
@@ -1292,8 +1291,7 @@ void cgpu_free_shader_library_d3d12(CGPUShaderLibraryId shader_library)
 }
 
 // Util Implementations
-inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(
-CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* desc)
+inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* desc)
 {
     DECLARE_ZERO(D3D12_RESOURCE_DESC, bufDesc);
     uint64_t allocationSize = desc->size;

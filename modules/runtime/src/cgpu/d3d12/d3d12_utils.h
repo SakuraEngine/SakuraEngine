@@ -25,6 +25,8 @@ void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, C
 #if !defined(XBOX) && defined(_WIN32)
 #include "dxc/dxcapi.h"
 
+void D3D12Util_LoadDxcDLL();
+void D3D12Util_UnloadDxcDLL();
 DxcCreateInstanceProc D3D12Util_GetDxcCreateInstanceProc();
 #endif
 

@@ -19,12 +19,12 @@
 
 struct CGPUUtil_DXCLoader
 {
-    CGPUUtil_DXCLoader()
+    static void Load()
     {
         dxcLibrary= LoadLibrary(L"dxcompiler.dll");
         pDxcCreateInstance = (void*)::GetProcAddress((HMODULE)dxcLibrary, "DxcCreateInstance");
     }
-    ~CGPUUtil_DXCLoader()
+    static void Unload()
     {
         pDxcCreateInstance = nullptr;
         ::FreeLibrary(dxcLibrary);
@@ -38,7 +38,16 @@ struct CGPUUtil_DXCLoader
 }; 
 void* CGPUUtil_DXCLoader::pDxcCreateInstance = nullptr;
 HMODULE CGPUUtil_DXCLoader::dxcLibrary = nullptr;
-static CGPUUtil_DXCLoader __loader = {};
+
+void D3D12Util_LoadDxcDLL()
+{
+    CGPUUtil_DXCLoader::Load();
+}
+
+void D3D12Util_UnloadDxcDLL()
+{
+    CGPUUtil_DXCLoader::Unload();
+}
 
 DxcCreateInstanceProc D3D12Util_GetDxcCreateInstanceProc()
 {

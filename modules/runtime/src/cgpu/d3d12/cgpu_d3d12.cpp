@@ -16,6 +16,10 @@
 
 CGPUInstanceId cgpu_create_instance_d3d12(CGPUInstanceDescriptor const* descriptor)
 {
+#if !defined(XBOX) && defined(_WIN32)
+    D3D12Util_LoadDxcDLL();
+#endif
+
     CGPUInstance_D3D12* result = cgpu_new<CGPUInstance_D3D12>();
 
     D3D12Util_InitializeEnvironment(&result->super);
@@ -81,6 +85,10 @@ void cgpu_free_instance_d3d12(CGPUInstanceId instance)
         }
         SAFE_RELEASE(dxgiDebug);
     }
+#endif
+
+#if !defined(XBOX) && defined(_WIN32)
+    D3D12Util_UnloadDxcDLL();
 #endif
 }
 
