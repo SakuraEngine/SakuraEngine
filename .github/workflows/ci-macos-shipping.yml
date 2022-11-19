@@ -13,11 +13,6 @@ jobs:
         with:
           xmake-version: latest
           actions-cache-folder: ".xmake-cache"
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          cache: 'pip' # caching pip dependencies
-      - run: pip install mako
       - name: Set env
         id: env
         run: |
