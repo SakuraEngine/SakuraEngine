@@ -50,20 +50,18 @@ function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles
     -- generate dummy .cpp file
     if(changedheaders ~= nil and #changedheaders > 0) then
         -- compile jsons to c++
-        if (not disable_meta) then
-            local unity_cpp = io.open(sourcefile, "w")
-            for _, headerfile in ipairs(changedheaders) do
-                headerfile = path.absolute(headerfile)
-                sourcefile = path.absolute(sourcefile)
-                local relative_include = path.relative(headerfile, path.directory(sourcefile))
-                unity_cpp:print("#include \"%s\"", relative_include)
-                cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
-            end
-            unity_cpp:close()
-            -- build generated cpp to json
-            meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
-            target:data_set("reflection.need_mako", true)
+        local unity_cpp = io.open(sourcefile, "w")
+        for _, headerfile in ipairs(changedheaders) do
+            headerfile = path.absolute(headerfile)
+            sourcefile = path.absolute(sourcefile)
+            local relative_include = path.relative(headerfile, path.directory(sourcefile))
+            unity_cpp:print("#include \"%s\"", relative_include)
+            cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
         end
+        unity_cpp:close()
+        -- build generated cpp to json
+        meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
+        target:data_set("reflection.need_mako", true)
     end
 end
 
@@ -202,8 +200,7 @@ function _mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles
     }
     -- calculate if strong makos need to be rebuild
     local need_mako = target:data("reflection.need_mako")
-    local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
-    local rebuild = need_mako and not disable_meta
+    local rebuild = need_mako
     for _, generator in ipairs(mako_generators) do
         local dependfile = target:dependfile(generator[1])
         depend.on_changed(function ()
