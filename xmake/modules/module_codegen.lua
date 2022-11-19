@@ -121,3 +121,73 @@ function skr_module_gen_cpp(target, filename, dep_modules)
         cprint("${green}[%s]: skr.module.exportcpp ${clear}%s cost ${red}%d seconds", target:name(), path.relative(filename), now - last)
     end
 end
+
+function skr_module_gen_header(target, filename, api)
+    -- need build this target?
+    local last = os.time()
+    local dependfile = target:dependfile(filename)
+    local dependinfo = depend.load(dependfile) or {}
+    if not depend.is_changed(dependinfo, {lastmtime = os.mtime(filename), values = {}, files = {filename}}) then
+        return
+    end
+    -- start rebuild json
+    -- print("generate target metadata: "..target:name())
+    local self_version = target:values("skr.module.version")
+    local pub_deps = target:values("skr.module.public_dependencies")
+    assert(self_version, "module version not found: "..target:name())
+    local cpp_content = "//DO NOT MODIFY THIS FILE\n"
+    cpp_content = cpp_content..[[
+#pragma once
+#ifdef __cplusplus
+    #define ]]..api..[[_EXTERN_C extern "C"
+#else
+    #define ]]..api..[[_EXTERN_C
+#endif
+
+#ifndef ]]..api..[[_EXPORT
+    #if defined(_MSC_VER)
+        #define ]]..api..[[_EXPORT __declspec(dllexport)
+    #else
+        #define ]]..api..[[_EXPORT __attribute__((visibility("default")))
+    #endif
+#endif
+
+#ifdef ]]..api..[[_IMPL
+    #ifndef ]]..api..[[_API
+        #define ]]..api..[[_API ]]..api..[[_EXPORT
+    #endif
+#endif
+
+#ifndef ]]..api..[[_API // If the build file hasn't already defined this to be dllexport...
+    #ifdef ]]..api..[[_SHARED
+        #if defined(_MSC_VER)
+            #define ]]..api..[[_API __declspec(dllimport)
+            #define ]]..api..[[_LOCAL
+        #elif defined(__CYGWIN__)
+            #define ]]..api..[[_API __attribute__((dllimport))
+            #define ]]..api..[[_LOCAL
+        #elif (defined(__GNUC__) && (__GNUC__ >= 4))
+            #define ]]..api..[[_API __attribute__((visibility("default")))
+            #define ]]..api..[[_LOCAL __attribute__((visibility("hidden")))
+        #else
+            #define ]]..api..[[_API
+            #define ]]..api..[[_LOCAL
+        #endif
+    #else
+        #define ]]..api..[[_API
+        #define ]]..api..[[_LOCAL
+    #endif
+#endif
+]]
+    -- end dep body
+    -- write json & update files and values to the dependent file
+    io.writefile(filename, cpp_content)
+    dependinfo.files = { filename }
+    dependinfo.values = {}
+    depend.save(dependinfo, dependfile)
+    -- output time
+    if not option.get("quiet") then
+        local now = os.time()
+        cprint("${green}[%s]: skr.module.export_header ${clear}%s cost ${red}%d seconds", target:name(), path.relative(filename), now - last)
+    end
+end

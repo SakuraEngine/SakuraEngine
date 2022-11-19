@@ -44,30 +44,91 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     return argv
 end
 
-function _meta_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
+function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
     local changedheaders = target:data("reflection.changedheaders")
     -- generate dummy .cpp file
     if(changedheaders ~= nil and #changedheaders > 0) then
         -- compile jsons to c++
         if (not disable_meta) then
-            local unity_cpp = io.open(unityfile, "w")
+            local unity_cpp = io.open(sourcefile, "w")
             for _, headerfile in ipairs(changedheaders) do
                 headerfile = path.absolute(headerfile)
-                unityfile = path.absolute(unityfile)
-                local relative_include = path.relative(headerfile, path.directory(unityfile))
+                sourcefile = path.absolute(sourcefile)
+                local relative_include = path.relative(headerfile, path.directory(sourcefile))
                 unity_cpp:print("#include \"%s\"", relative_include)
                 cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
             end
             unity_cpp:close()
             -- build generated cpp to json
-            meta_cmd_compile(unityfile, rootdir, metadir, target, opt)
+            meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
             target:data_set("reflection.need_mako", true)
         end
     end
 end
 
-function _mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt, strong)
+function collect_headers_batch(target)
+    local headerfiles = {}
+    local files = target:extraconf("rules", "c++.codegen", "files")
+    for _, file in ipairs(files) do
+        local p = path.join(target:scriptdir(), file)
+        for __, filepath in ipairs(os.files(p)) do
+            table.insert(headerfiles, filepath)
+        end
+    end
+    -- local batchsize = extraconf and extraconf.batchsize or 10
+    local batchsize = 999
+    local extraconf = target:extraconf("rules", "c++.codegen")
+    local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
+    local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
+    local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen", target:name())
+    local meta_batch = {}
+    local id = 1
+    local count = 0
+    for idx, headerfile in pairs(headerfiles) do
+        local sourcefile
+        if batchsize and count >= batchsize then
+            id = id + 1
+            count = 0
+        end
+        sourcefile = path.join(sourcedir, "reflection_" .. tostring(id) .. ".cpp")
+        count = count + 1
+        -- batch
+        if sourcefile then
+            local sourceinfo = meta_batch[id]
+            if not sourceinfo then
+                sourceinfo = {}
+                sourceinfo.sourcefile = sourcefile
+                sourceinfo.metadir = metadir
+                sourceinfo.gendir = gendir
+                meta_batch[id] = sourceinfo
+            end
+            sourceinfo.headerfiles = sourceinfo.headerfiles or {}
+            table.insert(sourceinfo.headerfiles, headerfile)
+        end
+    end
+    -- save unit batch
+    target:data_set("meta.headers.batch", meta_batch)
+
+    -- generate headers dummy
+    local changedheaders = {}
+    local rebuild = false
+    for _, headerfile in ipairs(headerfiles) do
+        local dependfile = target:dependfile(headerfile.."meta")
+        depend.on_changed(function ()
+            table.insert(changedheaders, headerfile);
+        end, {dependfile = dependfile, files = {headerfile}})
+    end
+    if rebuild then
+        changedheaders = headerfiles
+    end
+    -- generate dummy .cpp file
+    if(#changedheaders > 0) then
+        target:data_set("reflection.changedheaders", changedheaders)
+    end
+end
+
+function _mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt)
     local api = target:extraconf("rules", "c++.codegen", "api")
     local generator = os.projectdir()..vformat("/tools/codegen/codegen.py")
     -- compile jsons to c++
@@ -88,12 +149,12 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
         "-outdir", gendir,
         "-api", api and api:upper() or target:name():upper(),
     }
-    if strong then
-        table.insert(command, "-includes")
-        for _, dep in ipairs(depsmeta) do
-            table.insert(command, dep)
-        end
+    -- strong order
+    table.insert(command, "-includes")
+    for _, dep in ipairs(depsmeta) do
+        table.insert(command, dep)
     end
+    -- config
     table.insert(command, "-config")
     table.insert(command, path.join(target:name(), "module.configure.h"))
     for _, generator in pairs(mako_generators) do
@@ -107,68 +168,9 @@ function _mako_compile_template(target, mako_generators, use_deps_data, metadir,
     end
 end
 
-
-function _early_mako_compile_template(target, mako_generators, use_deps_data, metadir, gendir, opt)
-    local api = target:extraconf("rules", "c++.codegen", "api")
-    -- compile jsons to c++
-    local function template_mako_task(index, opt)
-        local generator = mako_generators[index][1]
-        local last = os.time()
-        if not opt.quiet then
-            cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
-        end
-
-        local command = {
-            generator,
-            path.absolute(metadir), path.absolute(mako_generators[index].gendir or gendir), api or target:name(), target:name(),
-        }
-        os.iorunv(python.program, command)
-
-        if not opt.quiet then
-            local now = os.time()
-            cprint("${cyan}[%s]: %s${clear} %s cost ${red}%d seconds", target:name(), path.filename(generator), path.relative(metadir), now - last)
-        end
-    end
-    for index, generator in pairs(mako_generators) do
-        template_mako_task(index, opt)
-    end
-end
-
-function _early_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
+function _mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
-    local changedheaders = {}
-    local early_generators = {
-        {
-            os.projectdir()..vformat("/tools/codegen/configure.py"),
-            os.projectdir()..vformat("/tools/codegen/configure.h.mako"),
-        },
-    }
-    local rebuild = false
-    for _, generator in ipairs(early_generators) do
-        local dependfile = target:dependfile(generator[1])
-        depend.on_changed(function ()
-            rebuild = true
-        end, {dependfile = dependfile, files = generator});
-    end
-    for _, headerfile in ipairs(headerfiles) do
-        local dependfile = target:dependfile(headerfile.."meta")
-        depend.on_changed(function ()
-            table.insert(changedheaders, headerfile);
-        end, {dependfile = dependfile, files = {headerfile}})
-    end
-    if rebuild then
-        changedheaders = headerfiles
-    end
-    -- generate dummy .cpp file
-    if(#changedheaders > 0) then
-        _early_mako_compile_template(target, early_generators, false, metadir, gendir, opt)
-        target:data_set("reflection.changedheaders", changedheaders)
-    end
-end
-
-function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
-    -- generate headers dummy
-    local strong_mako_generators = {
+    local mako_generators = {
         {
             os.projectdir()..vformat("/tools/codegen/typeid.py"),
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
@@ -202,7 +204,7 @@ function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, heade
     local need_mako = target:data("reflection.need_mako")
     local disable_meta = target:extraconf("rules", "c++.codegen", "disable_meta")
     local rebuild = need_mako and not disable_meta
-    for _, generator in ipairs(strong_mako_generators) do
+    for _, generator in ipairs(mako_generators) do
         local dependfile = target:dependfile(generator[1])
         depend.on_changed(function ()
             rebuild = true
@@ -210,52 +212,8 @@ function _strong_mako_compile(target, rootdir, metadir, gendir, unityfile, heade
     end
     -- rebuild
     if (rebuild) then
-        _mako_compile_template(target, strong_mako_generators, true, metadir, gendir, opt, true)
+        _mako_compile_template(target, mako_generators, true, metadir, gendir, opt)
     end
-end
-
-function collect_headers_batch(target)
-    local headerfiles = {}
-    local files = target:extraconf("rules", "c++.codegen", "files")
-    for _, file in ipairs(files) do
-        local p = path.join(target:scriptdir(), file)
-        for __, filepath in ipairs(os.files(p)) do
-            table.insert(headerfiles, filepath)
-        end
-    end
-    -- local batchsize = extraconf and extraconf.batchsize or 10
-    local batchsize = 999
-    local extraconf = target:extraconf("rules", "c++.codegen")
-    local sourcedir = path.join(target:autogendir({root = true}), target:plat(), "reflection/src")
-    local metadir = path.join(target:autogendir({root = true}), target:plat(), "reflection/meta")
-    local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen", target:name())
-    local meta_batch = {}
-    local id = 1
-    local count = 0
-    for idx, headerfile in pairs(headerfiles) do
-        local unityfile
-        if batchsize and count >= batchsize then
-            id = id + 1
-            count = 0
-        end
-        unityfile = path.join(sourcedir, "reflection_" .. tostring(id) .. ".cpp")
-        count = count + 1
-        -- batch
-        if unityfile then
-            local sourceinfo = meta_batch[id]
-            if not sourceinfo then
-                sourceinfo = {}
-                sourceinfo.sourcefile = unityfile
-                sourceinfo.metadir = metadir
-                sourceinfo.gendir = gendir
-                meta_batch[id] = sourceinfo
-            end
-            sourceinfo.headerfiles = sourceinfo.headerfiles or {}
-            table.insert(sourceinfo.headerfiles, headerfile)
-        end
-    end
-    -- save unit batch
-    target:data_set("meta.headers.batch", meta_batch)
 end
 
 function compile_task(compile_func, target, opt)
@@ -266,16 +224,17 @@ function compile_task(compile_func, target, opt)
         for _, sourceinfo in ipairs(refl_batch) do
             if sourceinfo then
                 local headerfiles = sourceinfo.headerfiles
-                local unityfile = sourceinfo.sourcefile
+                local sourcefile = sourceinfo.sourcefile
                 local metadir = sourceinfo.metadir
                 local gendir = sourceinfo.gendir
                 if headerfiles then
-                    compile_func(target, rootdir, metadir, gendir, unityfile, headerfiles, opt)
+                    compile_func(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
                 end
             end
         end
     end
 end
+
 function generate_once(targetname)
     local all_targets = project.ordertargets()
     local targets = {}
@@ -305,26 +264,14 @@ function generate_once(targetname)
         opt.cl = true
     end
 
-    -- compile early mako files
+    -- collect header batch
     for _, target in ipairs(targets) do
         collect_headers_batch(target)
-        if (target:rule("c++.codegen")) then
-            scheduler.co_group_begin(target:name()..".cpp-codegen.early_mako", function ()
-                scheduler.co_start(compile_task, _early_mako_compile, target, opt)
-            end)
-        end
     end
 
     -- compile meta files
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
-            -- wait early makos
-            for _, dep in pairs(target:deps()) do
-                if dep:rule("c++.codegen") then
-                    scheduler.co_group_wait(dep:name()..".cpp-codegen.early_mako")
-                end
-            end
-            scheduler.co_group_wait(target:name()..".cpp-codegen.early_mako")
             -- resume meta compile
             scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
                 scheduler.co_start(compile_task, _meta_compile, target, opt)
@@ -343,7 +290,7 @@ function generate_once(targetname)
                     end
                 end
                 scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
-                scheduler.co_start(compile_task, _strong_mako_compile, target, opt)
+                scheduler.co_start(compile_task, _mako_compile, target, opt)
             end)
         end
     end
