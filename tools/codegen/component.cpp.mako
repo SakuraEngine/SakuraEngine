@@ -48,11 +48,6 @@ static struct RegisterComponent${type.id}Helper
         desc.resourceFields = 0;
     %endif
         desc.guid = {${db.guid_constant(type)}};
-    %if hasattr(type.attrs.component, "managed"):
-        desc.callback = GetComponentCallback<${type.name}>();
-    %else:
-        desc.callback = {};
-    %endif
         desc.flags = 0;
     %if hasattr(type.attrs.component, "pin"):
         desc.flags |= DTF_PIN;
@@ -66,6 +61,10 @@ static struct RegisterComponent${type.id}Helper
         desc.elementSize = 0;
     %endif
         desc.alignment = alignof(${type.name});
+    
+    %if hasattr(type.attrs.component, "custom"):
+        ${type.attrs.component.custom}(desc);
+    %endif
         type = dualT_register_type(&desc);
     }
     dual_type_index_t type = DUAL_NULL_TYPE;

@@ -238,9 +238,15 @@ void construct_view(const dual_chunk_view_t& view) noexcept
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
     uint32_t* elemSizes = type->elemSizes;
+    uint32_t* callbackFlags = type->callbackFlags;
     auto maskValue = uint32_t(1 << type->type.length) - 1;
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
-        construct_impl(view, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, type->callbacks[i].constructor);
+    {
+        decltype(type->callbacks[i].constructor) callback = nullptr;
+        if((callbackFlags[i] & DCF_CTOR) != 0) DUAL_UNLIKELY
+            callback = type->callbacks[i].constructor;
+        construct_impl(view, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue,  callback);
+    }
 }
 
 void destruct_view(const dual_chunk_view_t& view) noexcept
@@ -249,8 +255,14 @@ void destruct_view(const dual_chunk_view_t& view) noexcept
     EIndex* offsets = type->offsets[(int)view.chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
+    uint32_t* callbackFlags = type->callbackFlags;
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
-        destruct_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], type->callbacks[i].destructor);
+    {
+        decltype(type->callbacks[i].destructor) callback = nullptr;
+        if((callbackFlags[i] & DCF_CTOR) != 0) DUAL_UNLIKELY
+            callback = type->callbacks[i].destructor;
+        destruct_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], callback);
+    }
 }
 
 void construct_chunk(dual_chunk_t* chunk) noexcept
@@ -260,9 +272,16 @@ void construct_chunk(dual_chunk_t* chunk) noexcept
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
     uint32_t* elemSizes = type->elemSizes;
+    uint32_t* callbackFlags = type->callbackFlags;
     auto maskValue = uint32_t(1 << type->type.length) - 1;
+
     for (SIndex i = type->firstChunkComponent; i < type->type.length; ++i)
-        construct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, type->callbacks[i].constructor);
+    {
+        decltype(type->callbacks[i].constructor) callback = nullptr;
+        if((callbackFlags[i] & DCF_CTOR) != 0) DUAL_UNLIKELY
+            callback = type->callbacks[i].constructor;
+        construct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, callback);
+    }
 }
 
 void destruct_chunk(dual_chunk_t* chunk) noexcept
@@ -271,8 +290,14 @@ void destruct_chunk(dual_chunk_t* chunk) noexcept
     EIndex* offsets = type->offsets[(int)chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
+    uint32_t* callbackFlags = type->callbackFlags;
     for (SIndex i = type->firstChunkComponent; i < type->type.length; ++i)
-        destruct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], type->callbacks[i].destructor);
+    {
+        decltype(type->callbacks[i].destructor) callback = nullptr;
+        if((callbackFlags[i] & DCF_CTOR) != 0) DUAL_UNLIKELY
+            callback = type->callbacks[i].destructor;
+        destruct_impl(dual_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], callback);
+    }
 }
 
 void move_view(const dual_chunk_view_t& view, EIndex srcStart) noexcept
@@ -287,8 +312,14 @@ void move_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
     uint32_t* elemSizes = type->elemSizes;
+    uint32_t* callbackFlags = type->callbackFlags;
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
-        move_impl(dstV, srcC, srcStart, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], type->callbacks[i].move);
+    {
+        decltype(type->callbacks[i].move) callback = nullptr;
+        if((callbackFlags[i] & DCF_MOVE) != 0) DUAL_UNLIKELY
+            callback = type->callbacks[i].move;
+        move_impl(dstV, srcC, srcStart, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], callback);
+    }
 }
 
 void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStart) noexcept
@@ -305,6 +336,8 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
     uint32_t* dstElemSizes = dstType->elemSizes;
     dual_type_set_t srcTypes = srcType->type;
     dual_type_set_t dstTypes = dstType->type;
+    uint32_t* srcCallbackFlags = srcType->callbackFlags;
+    uint32_t* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
     eastl::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
@@ -335,12 +368,18 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
         type_index_t dstT = dstTypes.data[dstI];
         if (srcT < dstT) // destruct
         {
-            destruct_impl({ srcC, srcStart, dstV.count }, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], srcType->callbacks[srcI].destructor);
+            decltype(srcType->callbacks[srcI].destructor) callback = nullptr;
+            if((srcCallbackFlags[srcI] & DCF_CTOR) != 0) DUAL_UNLIKELY
+                callback = srcType->callbacks[srcI].destructor;
+            destruct_impl({ srcC, srcStart, dstV.count }, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], callback);
             ++srcI;
         }
         else if (srcT > dstT) // construct
         {
-            construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, dstType->callbacks[dstI].constructor);
+            decltype(dstType->callbacks[dstI].constructor) callback = nullptr;
+            if((dstCallbackFlags[dstI] & DCF_CTOR) != 0) DUAL_UNLIKELY
+                callback = dstType->callbacks[dstI].constructor;
+            construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
             if (dstMasks)
                 forloop (i, 0, dstV.count)
                     dstMasks[i]
@@ -351,10 +390,15 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
                     .set(dstI);
             ++dstI;
         }
-        else
+        else // move
         {
             if (srcT != kMaskComponent)
-                move_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], srcType->callbacks[srcI].move);
+            {
+                decltype(srcType->callbacks[srcI].move) callback = nullptr;
+                if((srcCallbackFlags[srcI] & DCF_MOVE) != 0) DUAL_UNLIKELY
+                    callback = srcType->callbacks[srcI].move;
+                move_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], callback);
+            }
             if (dstMasks)
             {
                 if (srcMasks)
@@ -398,6 +442,8 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
     uint32_t* dstElemSizes = dstType->elemSizes;
     dual_type_set_t srcTypes = srcType->type;
     dual_type_set_t dstTypes = dstType->type;
+    uint32_t* srcCallbackFlags = srcType->callbackFlags;
+    uint32_t* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
     eastl::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
@@ -430,7 +476,10 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
         }
         else if (srcT > dstT) // construct
         {
-            construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, dstType->callbacks[dstI].constructor);
+            decltype(dstType->callbacks[dstI].constructor) callback = nullptr;
+            if((dstCallbackFlags[dstI] & DCF_CTOR) != 0) DUAL_UNLIKELY
+                callback = dstType->callbacks[dstI].constructor;
+            construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
             if (dstMasks)
                 forloop (i, 0, dstV.count)
                     dstMasks[i]
@@ -444,7 +493,12 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
         else
         {
             if (srcT != kMaskComponent)
-                duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], srcType->callbacks[srcI].copy);
+            {
+                decltype(srcType->callbacks[srcI].copy) callback = nullptr;
+                if((srcCallbackFlags[srcI] & DCF_COPY) != 0) DUAL_UNLIKELY
+                    callback = srcType->callbacks[srcI].copy;
+                duplicate_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], callback);
+            }
             if (dstMasks)
             {
                 if (srcMasks)

@@ -57,15 +57,28 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     forloop (i, 0, 3)
         proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
-    proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
+    proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
+    proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
     {
         const auto& desc = registry.descriptions[type_index_t(proto.type.data[i]).index()];
+        uint32_t callbackFlag = 0;
+        if (desc.callback.constructor)
+            callbackFlag |= DCF_CTOR;
+        if (desc.callback.destructor)
+            callbackFlag |= DCF_DTOR;
+        if (desc.callback.copy)
+            callbackFlag |= DCF_COPY;
+        if (desc.callback.move)
+            callbackFlag |= DCF_MOVE;
+        if (desc.callback.serialize || desc.callback.deserialize)
+            callbackFlag |= DCF_SERDE;
+        proto.callbackFlags[i] = callbackFlag;
         proto.callbacks[i] = desc.callback;
         proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
     }

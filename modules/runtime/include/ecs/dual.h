@@ -53,10 +53,20 @@ typedef struct dual_callback_v {
     void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* v) SKR_IF_CPP(=nullptr);
 } dual_callback_v;
 
-enum type_flags
+enum dual_type_flags SKR_IF_CPP(: uint32_t)
 {
     DTF_PIN = 0x1,
     DTF_CHUNK = 0x2,
+};
+
+enum dual_callback_flags SKR_IF_CPP(: uint32_t)
+{
+    DCF_CTOR = 0x1,
+    DCF_DTOR = 0x2,
+    DCF_COPY = 0x4,
+    DCF_MOVE = 0x8,
+    DCF_SERDE = 0x10,
+    DCF_ALL = DCF_CTOR | DCF_DTOR | DCF_COPY | DCF_MOVE | DCF_SERDE,
 };
 
 /**
@@ -70,7 +80,7 @@ typedef struct dual_type_description_t {
      * a pinned component will not removed when destroying or copy when instantiating, and user should remove them manually
      * destroyed entity with pinned component will be marked by a dead component and will be erased when all pinned component is removed
      */
-    int flags;
+    uint32_t flags;
     /**
      * the storage size in chunk of this component, generally it is sizeof(T)
      * when this is a array component, it could be sizeof(T) * I + sizeof(dual_array_component_t) where I means the inline element count of the array
@@ -773,6 +783,8 @@ struct dual_id_of {
         static_assert(!sizeof(C), "dual_id_of<C> not implemented for this type, please include the appropriate generated header!");
     }
 };
+#include "binary/reader.h"
+#include "binary/writer.h"
 namespace dual
 {
     struct dualJ_storage_scope_t
@@ -788,5 +800,39 @@ namespace dual
             dualJ_unbind_storage(storage);
         }
     };
+    
+    template<class C, uint32_t flags = DCF_ALL>
+    void InitCallbacksCpp(dual_type_description_t& desc)
+    {
+        if constexpr ((flags & DCF_CTOR) != 0) {
+            desc.callback.constructor = +[](dual_chunk_t* chunk, EIndex index, char* data) {
+                new (data) C();
+            };
+        }
+        if constexpr ((flags & DCF_DTOR) != 0) {
+            desc.callback.destructor = +[](dual_chunk_t* chunk, EIndex index, char* data) {
+                ((C*)data)->~C();
+            };
+        }
+        if constexpr ((flags & DCF_COPY) != 0) {
+            desc.callback.copy = +[](dual_chunk_t* chunk, EIndex src, EIndex dst, char* srcData, char* dstData) {
+                new (dstData) C(*(C*)srcData);
+            };
+        }
+        if constexpr ((flags & DCF_MOVE) != 0) {
+            desc.callback.move = +[](dual_chunk_t* chunk, EIndex src, EIndex dst, char* srcData, char* dstData) {
+                new (dstData) C(std::move(*(C*)srcData));
+            };
+        }
+        if constexpr ((flags & DCF_SERDE) != 0) {
+            desc.callback.serialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
+                skr::binary::WriteValue<const C&>(writer, *(C*)data);
+            };
+            desc.callback.deserialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
+                skr::binary::ReadValue(reader, *(C*)data);
+            };
+        }
+    }
 }
+
 #endif
