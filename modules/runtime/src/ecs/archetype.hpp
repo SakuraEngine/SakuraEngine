@@ -19,6 +19,7 @@ struct archetype_t {
     uint32_t* aligns;
 
     uint32_t versionOffset[3];
+    uint32_t* callbackFlags;
     dual_callback_v* callbacks;
     resource_fields_t* resourceFields;
     uint32_t chunkCapacity[3];
