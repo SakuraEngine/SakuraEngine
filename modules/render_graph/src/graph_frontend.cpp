@@ -1,7 +1,140 @@
 ﻿#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
-#include <containers/btree.hpp>
+#include "platform/memory.h"
+
 #include "tracy/Tracy.hpp"
+
+#include <containers/hashmap.hpp>
+#include <containers/btree.hpp>
+
+namespace skr
+{
+namespace render_graph
+{
+struct BlackboardImpl final : public Blackboard
+{
+public:
+    void clear() SKR_NOEXCEPT override
+    {
+        named_passes.clear();
+        named_textures.clear();
+        named_buffers.clear();
+    }
+
+    PassNode* pass(const char* name) SKR_NOEXCEPT final override
+    {
+        auto it = named_passes.find(name);
+        if (it != named_passes.end())
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    TextureNode* texture(const char* name) SKR_NOEXCEPT final override
+    {
+        auto it = named_textures.find(name);
+        if (it != named_textures.end())
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    BufferNode* buffer(const char* name) SKR_NOEXCEPT final override
+    {
+        auto it = named_buffers.find(name);
+        if (it != named_buffers.end())
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    bool add_pass(const char* name, class PassNode* pass) SKR_NOEXCEPT final override
+    {
+        auto it = named_passes.find(name);
+        if (it != named_passes.end())
+        {
+            return false;
+        }
+        named_passes.emplace(name, pass);
+        return true;
+    }
+
+    bool add_texture(const char* name, class TextureNode* texture) SKR_NOEXCEPT final override
+    {
+        auto it = named_textures.find(name);
+        if (it != named_textures.end())
+        {
+            return false;
+        }
+        named_textures.emplace(name, texture);
+        return true;
+    }
+
+    bool add_buffer(const char* name, class BufferNode* buffer) SKR_NOEXCEPT final override
+    {
+        auto it = named_buffers.find(name);
+        if (it != named_buffers.end())
+        {
+            return false;
+        }
+        named_buffers.emplace(name, buffer);
+        return true;
+    }
+
+    void override_pass(const char* name, class PassNode* pass) SKR_NOEXCEPT final override
+    {
+        auto it = named_passes.find(name);
+        if (it != named_passes.end())
+        {
+            named_passes[name] = pass;
+        }
+        named_passes.emplace(name, pass);
+    }
+
+    void override_texture(const char* name, class TextureNode* texture) SKR_NOEXCEPT final override
+    {
+        auto it = named_textures.find(name);
+        if (it != named_textures.end())
+        {
+            named_textures[name] = texture;
+        }
+        named_textures.emplace(name, texture);
+    }
+    
+    void override_buffer(const char* name, class BufferNode* buffer) SKR_NOEXCEPT final override
+    {
+        auto it = named_buffers.find(name);
+        if (it != named_buffers.end())
+        {
+            named_buffers[name] = buffer;
+        }
+        named_buffers.emplace(name, buffer);
+    }
+
+protected:
+    template<typename T>
+    using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;
+
+    FlatStringMap<class PassNode*> named_passes;
+    FlatStringMap<class TextureNode*> named_textures;
+    FlatStringMap<class BufferNode*> named_buffers;
+};
+
+Blackboard* Blackboard::Create() SKR_NOEXCEPT
+{
+    return SkrNew<BlackboardImpl>();
+}
+
+void Blackboard::Destroy(Blackboard* blackboard) SKR_NOEXCEPT
+{
+    SkrDelete(blackboard);
+}
+
+} // namespace render_graph
+} // namespace skr
 
 namespace skr
 {
@@ -41,13 +174,14 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const SKR_NOEXCEPT
     return frame_lifespan;
 }
 
-inline bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing) SKR_NOEXCEPT
+inline static bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing) SKR_NOEXCEPT
 {
     return !aliased->is_imported() &&
-           !aliased->get_desc().is_dedicated &&
-           aliased->get_size() >= aliasing->get_size() &&
-           aliased->get_sample_count() == aliasing->get_sample_count();
+        !aliased->get_desc().is_dedicated &&
+        aliased->get_size() >= aliasing->get_size() &&
+        aliased->get_sample_count() == aliasing->get_sample_count();
 }
+
 bool RenderGraph::compile() SKR_NOEXCEPT
 {
     ZoneScopedN("RenderGraphCompile");
@@ -287,11 +421,13 @@ uint64_t RenderGraph::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 void RenderGraph::initialize() SKR_NOEXCEPT
 {
     graph = DependencyGraph::Create();
+    blackboard = Blackboard::Create();
 }
 
 void RenderGraph::finalize() SKR_NOEXCEPT
 {
     DependencyGraph::Destroy(graph);
+    Blackboard::Destroy(blackboard);
 }
 } // namespace render_graph
 } // namespace skr

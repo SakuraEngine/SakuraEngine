@@ -60,7 +60,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const c
 {
     if (name)
     {
-        graph.blackboard.named_passes[name] = &node;
+        graph.blackboard->add_pass(name, &node);
         node.set_name(name);
     }
     return *this;
@@ -161,7 +161,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const
 {
     if (name)
     {
-        graph.blackboard.named_passes[name] = &node;
+        graph.blackboard->add_pass(name, &node);
         node.set_name(name);
     }
     return *this;
@@ -251,7 +251,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char*
 {
     if (name)
     {
-        graph.blackboard.named_passes[name] = &node;
+        graph.blackboard->add_pass(name, &node);
         node.set_name(name);
     }
     return *this;
@@ -300,7 +300,7 @@ RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::set_name(const
 {
     if (name)
     {
-        graph.blackboard.named_passes[name] = &node;
+        graph.blackboard->add_pass(name, &node);
         node.set_name(name);
     }
     return *this;
@@ -345,7 +345,7 @@ RenderGraph::BufferBuilder::BufferBuilder(RenderGraph& graph, BufferNode& node) 
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* name) SKR_NOEXCEPT
 {
     // blackboard
-    graph.blackboard.named_buffers[name] = &node;
+    graph.blackboard->add_buffer(name, &node);
     node.set_name(name);
     node.descriptor.name = node.get_name();
     return *this;
@@ -468,8 +468,10 @@ BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup) SKR_NO
 
 BufferHandle RenderGraph::get_buffer(const char* name) SKR_NOEXCEPT
 {
-    if (blackboard.named_buffers.find(name) != blackboard.named_buffers.end())
-        return blackboard.named_buffers[name]->get_handle();
+    if (auto buffer = blackboard->buffer(name))
+    {
+        return buffer->get_handle();
+    }
     return UINT64_MAX;
 }
 
@@ -485,7 +487,7 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name) SKR_NOEXCEPT
 {
     // blackboard
-    graph.blackboard.named_textures.emplace(name, &node);
+    graph.blackboard->add_texture(name, &node);
     node.set_name(name);
     node.descriptor.name = node.get_name();
     return *this;
@@ -589,9 +591,11 @@ TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR
 }
 
 TextureHandle RenderGraph::get_texture(const char* name) SKR_NOEXCEPT
-{
-    if (blackboard.named_textures.find(name) != blackboard.named_textures.end())
-        return blackboard.named_textures[name]->get_handle();
+{    
+    if (auto texture = blackboard->texture(name))
+    {
+        return texture->get_handle();
+    }
     return UINT64_MAX;
 }
 } // namespace render_graph

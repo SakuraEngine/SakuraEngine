@@ -249,7 +249,7 @@ protected:
 
     bool aliasing_enabled;
     uint64_t frame_index = 0;
-    Blackboard blackboard;
+    Blackboard* blackboard;
     DependencyGraph* graph = nullptr;
     eastl::vector<PassNode*> passes;
     eastl::vector<ResourceNode*> resources;
