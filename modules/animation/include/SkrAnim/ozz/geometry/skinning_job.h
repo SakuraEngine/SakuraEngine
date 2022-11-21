@@ -30,7 +30,7 @@
 
 #include "SkrAnim/ozz/base/platform.h"
 #include "SkrAnim/ozz/base/span.h"
-#include "SkrAnim/ozz/geometry/runtime/export.h"
+#include "SkrAnim/ozz/geometry/export.h"
 
 namespace ozz {
 namespace math {

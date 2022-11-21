@@ -27,18 +27,8 @@
 
 #ifndef OZZ_OZZ_ANIMATION_OFFLINE_EXPORT_H_
 #define OZZ_OZZ_ANIMATION_OFFLINE_EXPORT_H_
+#include "SkrAnimTool/module.configure.h"
 
-#if defined(_MSC_VER) && defined(OZZ_USE_DYNAMIC_LINKING)
-
-#ifdef OZZ_BUILD_ANIMOFFLINE_LIB
-// Import/Export for dynamic linking while building ozz
-#define OZZ_ANIMOFFLINE_DLL __declspec(dllexport)
-#else
-#define OZZ_ANIMOFFLINE_DLL __declspec(dllimport)
-#endif
-#else  // defined(_MSC_VER) && defined(OZZ_USE_DYNAMIC_LINKING)
-// Static or non msvc linking
-#define OZZ_ANIMOFFLINE_DLL
-#endif  // defined(_MSC_VER) && defined(OZZ_USE_DYNAMIC_LINKING)
+#define OZZ_ANIMOFFLINE_DLL SKR_ANIMTOOL_API
 
 #endif  // OZZ_OZZ_ANIMATION_OFFLINE_EXPORT_H_
