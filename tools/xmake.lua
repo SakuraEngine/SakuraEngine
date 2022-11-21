@@ -6,6 +6,7 @@ if(has_config("build_usdtool")) then
 end 
 
 includes("gltf_tool/xmake.lua")
+includes("animation_tool/xmake.lua")
 includes("shader_compiler/xmake.lua")
 includes("texture_compiler/xmake.lua")
 includes("resource_compiler/xmake.lua")
