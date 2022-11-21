@@ -144,10 +144,10 @@ struct ObjectHandle<EObjectType::Texture> {
         const handle_t _this;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
-    protected:
         ShaderReadHandle(const handle_t _this,
-        const uint32_t mip_base = 0, const uint32_t mip_count = 1,
-        const uint32_t array_base = 0, const uint32_t array_count = 1);
+            const uint32_t mip_base = 0, const uint32_t mip_count = 1,
+            const uint32_t array_base = 0, const uint32_t array_count = 1);
+    protected:
         uint32_t mip_base = 0;
         uint32_t mip_count = 1;
         uint32_t array_base = 0;
@@ -163,8 +163,8 @@ struct ObjectHandle<EObjectType::Texture> {
         ShaderWriteHandle write_array(uint32_t base, uint32_t count);
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
+        ShaderWriteHandle(const handle_t _this);            
     protected:
-        ShaderWriteHandle(const handle_t _this);
         uint32_t mip_level = 0;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
@@ -187,7 +187,6 @@ struct ObjectHandle<EObjectType::Texture> {
         const handle_t _this;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
-    protected:
         ShaderReadWriteHandle(const handle_t _this);
     };
     struct SubresourceHandle {
@@ -198,12 +197,12 @@ struct ObjectHandle<EObjectType::Texture> {
         const handle_t _this;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
+        SubresourceHandle(const handle_t _this);
     protected:
         uint32_t mip_level = 0;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
         CGPUTextureViewAspects aspects = CGPU_TVA_COLOR;
-        SubresourceHandle(const handle_t _this);
     };
     inline operator handle_t() const { return handle; }
     // read

@@ -32,6 +32,7 @@ struct SKR_RENDER_GRAPH_API PassContext {
         return nullptr;
     }
 };
+
 class PassNode : public RenderGraphNode
 {
 public:
@@ -85,11 +86,11 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-protected:
     RenderPassNode(uint32_t order)
         : PassNode(EPassType::Render, order)
     {
     }
+protected:
     RenderPassExecuteFunction executor;
     CGPURenderPipelineId pipeline = nullptr;
     CGPURootSignatureId root_signature = nullptr;
@@ -112,11 +113,11 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-protected:
     ComputePassNode(uint32_t order)
         : PassNode(EPassType::Compute, order)
     {
     }
+protected:
     ComputePassExecuteFunction executor;
     CGPUComputePipelineId pipeline;
     CGPURootSignatureId root_signature;
@@ -132,11 +133,11 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-protected:
     CopyPassNode(uint32_t order)
         : PassNode(EPassType::Copy, order)
     {
     }
+protected:
     CopyPassExecuteFunction executor;
     eastl::vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>> t2ts;
     eastl::vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>> b2bs;
@@ -148,11 +149,11 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-protected:
     PresentPassNode(uint32_t order)
         : PassNode(EPassType::Present, order)
     {
     }
+protected:
     CGPUQueuePresentDescriptor descriptor;
 };
 

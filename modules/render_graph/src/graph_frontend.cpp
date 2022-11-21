@@ -1,6 +1,9 @@
 ﻿#include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "SkrRenderGraph/backend/texture_view_pool.hpp"
+#include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "platform/memory.h"
+
+// use backend pool for aliasing calculation
+#include "SkrRenderGraph/backend/texture_view_pool.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -273,7 +276,7 @@ uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f) SK
 }
 
 uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
-eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_incoming_edges(
     texture,
@@ -286,7 +289,7 @@ eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NO
 }
 
 uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
-eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_outgoing_edges(
     texture,
@@ -299,7 +302,7 @@ eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NO
 }
 
 uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
-eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_incoming_edges(
     buffer,
@@ -312,7 +315,7 @@ eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOE
 }
 
 uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
-eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_outgoing_edges(
     buffer,
@@ -421,13 +424,15 @@ uint64_t RenderGraph::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 void RenderGraph::initialize() SKR_NOEXCEPT
 {
     graph = DependencyGraph::Create();
+    object_factory = NodeAndEdgeFactory::Create();
     blackboard = Blackboard::Create();
 }
 
 void RenderGraph::finalize() SKR_NOEXCEPT
 {
-    DependencyGraph::Destroy(graph);
     Blackboard::Destroy(blackboard);
+    NodeAndEdgeFactory::Destroy(object_factory);
+    DependencyGraph::Destroy(graph);
 }
 } // namespace render_graph
 } // namespace skr
