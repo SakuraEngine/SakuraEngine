@@ -1217,9 +1217,9 @@ OZZ_INLINE SimdFloat4 HalfToFloat(_SimdInt4 _h);
 }  // namespace ozz
 
 #if defined(OZZ_SIMD_SSEx)
-#include "SkrAnim/ozz/base/maths/internal/simd_math_sse-inl.h"
+#include "SkrAnim/ozz/base/maths/internal/simd_math_sse.inl"
 #elif defined(OZZ_SIMD_REF)
-#include "SkrAnim/ozz/base/maths/internal/simd_math_ref-inl.h"
+#include "SkrAnim/ozz/base/maths/internal/simd_math_ref.inl"
 #else
 #error No simd_math implementation detected
 #endif
