@@ -121,6 +121,9 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                 pass->post_update(this, render_graph);
             }
         }
+
+        passes.clear();
+        passes_map.clear();
     }
     template<typename T>
     using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;

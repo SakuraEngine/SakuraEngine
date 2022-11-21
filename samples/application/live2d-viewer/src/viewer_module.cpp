@@ -270,6 +270,11 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             ImGui::End();
         }
         {
+            ZoneScopedN("RegisterPasses");
+
+            skr_live2d_register_render_effects(l2d_renderer, renderGraph);
+        }
+        {
             ZoneScopedN("AcquireFrame");
 
             // acquire frame
