@@ -1,10 +1,5 @@
 shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
     set_group("01.modules")
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrLive2D",
-        api = "SKR_LIVE2D"
-    })
     public_dependency("SkrImageCoder", engine_version)
     public_dependency("SkrRenderer", engine_version)
     add_includedirs("include", "CubismNativeCore/include", {public=true})

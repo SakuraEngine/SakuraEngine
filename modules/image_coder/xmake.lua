@@ -1,10 +1,5 @@
 shared_module("SkrImageCoder", "SKR_IMAGE_CODER", engine_version)
     set_group("01.modules")
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/",
-        api = "SKR_IMAGE_CODER"
-    })
     public_dependency("SkrRT", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")

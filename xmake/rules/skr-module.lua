@@ -29,6 +29,9 @@ rule("skr.module")
             target:add("defines", api.."_SHARED", {public=true})
             target:add("defines", api.."_IMPL")
         end
+        -- add codegen headers to include dir
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+        target:add("includedirs", gendir, {public = true})
     end)
     on_config(function(target)
         -- imports
