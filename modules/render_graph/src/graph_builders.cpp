@@ -1,5 +1,6 @@
 #include "platform/debug.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "utils/log.h"
 
@@ -46,7 +47,8 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::frontend_only(
 
 PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor) SKR_NOEXCEPT
 {
-    auto newPass = new RenderPassNode((uint32_t)passes.size());
+    const uint32_t passes_size = static_cast<uint32_t>(passes.size());
+    auto newPass = object_factory->Allocate<RenderPassNode>(passes_size);
     passes.emplace_back(newPass);
     graph->insert(newPass);
     // build up
@@ -241,7 +243,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_root_signa
 
 PassHandle RenderGraph::add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor) SKR_NOEXCEPT
 {
-    const uint32_t passes_size = passes.size();
+    const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = object_factory->Allocate<ComputePassNode>(passes_size);
     passes.emplace_back(newPass);
     graph->insert(newPass);
@@ -271,9 +273,10 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char*
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst) SKR_NOEXCEPT
 {
-    auto allocated = graph.object_factory->Allocate<BufferReadEdge>("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
-    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated);
-    auto&& out_edge = node.out_buffer_edges.emplace_back(new BufferReadWriteEdge(dst, CGPU_RESOURCE_STATE_COPY_DEST));
+    auto allocated_in = graph.object_factory->Allocate<BufferReadEdge>("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
+    auto allocated_out = graph.object_factory->Allocate<BufferReadWriteEdge>(dst, CGPU_RESOURCE_STATE_COPY_DEST);
+    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
+    auto&& out_edge = node.out_buffer_edges.emplace_back(allocated_out);
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
     node.b2bs.emplace_back(src, dst);
@@ -294,7 +297,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
 
 PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup, const CopyPassExecuteFunction& executor) SKR_NOEXCEPT
 {
-    const uint32_t passes_size = passes.size();
+    const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = object_factory->Allocate<CopyPassNode>(passes_size);
     passes.emplace_back(newPass);
     graph->insert(newPass);
@@ -340,7 +343,7 @@ RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(Textur
 
 PassHandle RenderGraph::add_present_pass(const PresentPassSetupFunction& setup) SKR_NOEXCEPT
 {
-    const uint32_t passes_size = passes.size();
+    const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = object_factory->Allocate<PresentPassNode>(passes_size);
     passes.emplace_back(newPass);
     graph->insert(newPass);

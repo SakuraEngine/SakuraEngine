@@ -160,7 +160,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         [target, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle]
         (rg::RenderGraph& g, rg::RenderPassContext& context) {
             auto target_node = g.resolve(target);
-            const auto& target_desc = target_node->get_desc();
+            const auto target_desc = g.resolve_descriptor(target);
+            SKR_ASSERT(target_desc && "ImGui render target not found!");
             {
                 float L = draw_data->DisplayPos.x;
                 float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
@@ -178,8 +179,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             }
             cgpu_render_encoder_set_viewport(context.encoder,
                 0.0f, 0.0f,
-                (float)target_desc.width,
-                (float)target_desc.height,
+                (float)target_desc->width,
+                (float)target_desc->height,
                 0.f, 1.f);
             // drawcalls
             // Will project scissor/clipping rectangles into framebuffer space
