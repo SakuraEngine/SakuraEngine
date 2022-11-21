@@ -8,17 +8,7 @@
 const skr_render_pass_name_t live2d_mask_pass_name = "Live2DMaskPass";
 
 struct MaskPassLive2D : public IPrimitiveRenderPass {
-    void on_register(SRendererId renderer) override
-    {
-
-    }
-
-    void on_unregister(SRendererId renderer) override
-    {
-
-    }
-
-    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
+    void on_register(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
     {
         auto mask = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
@@ -36,6 +26,15 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                 .owns_memory()
                 .allow_depth_stencil();
         });(void)depth;
+    }
+
+    void on_unregister(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
+    {
+
+    }
+
+    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
+    {
         if (drawcalls.count)
         {
             renderGraph->add_render_pass(
