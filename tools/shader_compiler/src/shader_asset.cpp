@@ -135,7 +135,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     skr_binary_writer_t archive(writer);
     // write texture resource
     auto resource = make_zeroed<skr_platform_shader_resource_t>();
-    resource.identifilers = outIdentifiers;
+    resource.identifiers = outIdentifiers;
     // format
     skr::binary::Write(&archive, resource);
     // write to file
