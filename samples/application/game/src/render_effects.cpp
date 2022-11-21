@@ -601,8 +601,12 @@ void game_initialize_render_effects(SRendererId renderer, skr::render_graph::Ren
 {
     forward_effect = new RenderEffectForward(resource_vfs);
     forward_pass = new RenderPassForward();
-    skr_renderer_register_render_pass(renderer, forward_pass_name, forward_pass);
     skr_renderer_register_render_effect(renderer, forward_effect_name, forward_effect);
+}
+
+void game_register_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph)
+{
+    skr_renderer_register_render_pass(renderer, forward_pass_name, forward_pass);
 }
 
 void game_finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph)

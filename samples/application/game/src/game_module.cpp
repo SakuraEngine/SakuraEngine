@@ -37,6 +37,7 @@ SWindowHandle window;
 uint32_t backbuffer_index;
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
 extern void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* resource_vfs);
+extern void game_register_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
 extern void game_finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
@@ -472,6 +473,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ZoneScopedN("DualJSync");
                 dualJ_wait_all();
             }
+        }
+        {
+            ZoneScopedN("RegisterPasses");
+            game_register_render_effects(game_renderer, renderGraph);
         }
         {
             ZoneScopedN("AcquireFrame");

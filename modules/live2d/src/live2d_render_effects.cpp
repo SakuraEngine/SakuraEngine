@@ -61,8 +61,6 @@ typedef struct live2d_effect_identity_t {
 } live2d_effect_identity_t;
 skr_render_effect_name_t live2d_effect_name = "Live2DEffect";
 struct RenderEffectLive2D : public IRenderEffectProcessor {
-    ~RenderEffectLive2D() = default;
-
     skr_vfs_t* resource_vfs = nullptr;
     const char* push_constants_name = "push_constants";
     // this is a view object, later we will expose it to the world
@@ -72,7 +70,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     dual::type_builder_t type_builder;
     dual_type_index_t identity_type = {};
 
-    void on_register(SRendererId renderer, dual_storage_t* storage) override
+    void initialize(SRendererId renderer, dual_storage_t* storage)
     {
         // make identity component type
         {
@@ -97,7 +95,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         skr_live2d_render_view_reset(&view_);
     }
 
-    void on_unregister(SRendererId renderer, dual_storage_t* storage) override
+    void finalize(SRendererId renderer)
     {
         auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
         auto meshes = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
@@ -118,6 +116,16 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         dualQ_get_views(effect_query, DUAL_LAMBDA(sweepFunction));
         free_pipeline(renderer);
         free_mask_pipeline(renderer);
+    }
+
+    void on_register(SRendererId, dual_storage_t*) override
+    {
+
+    }
+
+    void on_unregister(SRendererId, dual_storage_t*) override
+    {
+
     }
 
     void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
@@ -687,16 +695,20 @@ void RenderEffectLive2D::free_mask_pipeline(SRendererId renderer)
 void skr_live2d_initialize_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs)
 {
     live2d_effect->resource_vfs = resource_vfs;
+    auto storage = renderer->get_dual_storage();
+    live2d_effect->initialize(renderer, storage);
+    skr_renderer_register_render_effect(renderer, live2d_effect_name, live2d_effect);
+}
+
+void skr_live2d_register_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph)
+{
     skr_renderer_register_render_pass(renderer, live2d_mask_pass_name, live2d_mask_pass);
     skr_renderer_register_render_pass(renderer, live2d_pass_name, live2d_pass);
-    skr_renderer_register_render_effect(renderer, live2d_effect_name, live2d_effect);
 }
 
 void skr_live2d_finalize_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs)
 {
-    skr_renderer_remove_render_pass(renderer, live2d_pass_name);
-    skr_renderer_remove_render_pass(renderer, live2d_mask_pass_name);
-    skr_renderer_remove_render_effect(renderer, live2d_effect_name);
+    live2d_effect->finalize(renderer);
     SkrDelete(live2d_effect);
     SkrDelete(live2d_pass);
     SkrDelete(live2d_mask_pass);
