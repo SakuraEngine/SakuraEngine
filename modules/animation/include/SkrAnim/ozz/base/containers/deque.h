@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_DEQUE_H_
 #define OZZ_OZZ_BASE_CONTAINERS_DEQUE_H_
 
-#include <deque>
+#include "EASTL/deque.h"
 
 #include "SkrAnim/ozz/base/containers/std_allocator.h"
 
@@ -36,6 +36,6 @@ namespace ozz {
 // Redirects std::deque to ozz::deque in order to replace std default allocator
 // by ozz::StdAllocator.
 template <class _Ty, class _Allocator = ozz::StdAllocator<_Ty>>
-using deque = std::deque<_Ty, _Allocator>;
+using deque = eastl::deque<_Ty, _Allocator>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_DEQUE_H_
