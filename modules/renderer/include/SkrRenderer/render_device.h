@@ -2,96 +2,47 @@
 #include "SkrRenderer/module.configure.h"
 #include "fwd_types.h"
 #include "cgpu/io.h"
+#ifdef _WIN32
+#include "cgpu/extensions/dstorage_windows.h"
+#endif
 
 #ifdef __cplusplus
 #include "platform/window.h"
-#include <EASTL/vector_map.h>
-#ifdef _WIN32
-    #include "cgpu/extensions/dstorage_windows.h"
-#endif
-#include "cgpu/extensions/cgpu_nsight.h"
 
 namespace skr
 {
 struct SKR_RENDERER_API RendererDevice
 {
-    friend class ::SkrRendererModule;
-    void initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name);
-    void finalize();
-
-    CGPUSwapChainId register_window(SWindowHandle window);
-    CGPUSwapChainId recreate_window_swapchain(SWindowHandle window);
-    void create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name);
-
-    CGPUDeviceId get_cgpu_device() const
+    struct Builder
     {
-        return device;
-    }
+        ECGPUBackend backend;
+        bool enable_debug_layer;
+        bool enable_gpu_based_validation;
+        bool enable_set_name;
+    };
+    static RendererDevice* Create() SKR_NOEXCEPT;
+    static void Free(RendererDevice* device) SKR_NOEXCEPT;
+    
+    virtual void initialize(const Builder& builder) = 0;
+    virtual void finalize() = 0;
 
-    CGPUQueueId get_gfx_queue() const
-    {
-        return gfx_queue;
-    }
+    virtual CGPUSwapChainId register_window(SWindowHandle window) = 0;
+    virtual CGPUSwapChainId recreate_window_swapchain(SWindowHandle window) = 0;
+    virtual void create_api_objects(const Builder& builder) = 0;
 
-    CGPUQueueId get_cpy_queue(uint32_t idx = 0) const
-    {
-        if (idx < cpy_queues.size())
-            return cpy_queues[idx];
-        return cpy_queues[0];
-    }
-
-    CGPUDStorageQueueId get_file_dstorage_queue() const
-    {
-        return file_dstorage_queue;
-    }
-
-    CGPUDStorageQueueId get_memory_dstorage_queue() const
-    {
-        return memory_dstorage_queue;
-    }
-
-    ECGPUFormat get_swapchain_format() const
-    {
-        if (swapchains.size())
-            return (ECGPUFormat)swapchains.at(0).second->back_buffers[0]->format;
-        return CGPU_FORMAT_B8G8R8A8_UNORM;
-    }
-
-    CGPUSamplerId get_linear_sampler() const
-    {
-        return linear_sampler;
-    }
-
-    CGPURootSignaturePoolId get_root_signature_pool() const
-    {
-        return root_signature_pool;
-    }
-
-    skr_io_vram_service_t* get_vram_service() const
-    {
-        return vram_service;
-    }
-
-protected:
-    // Device objects
-    uint32_t backbuffer_index = 0;
-    eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
-    eastl::vector_map<SWindowHandle, CGPUSwapChainId> swapchains;
-    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
-    CGPUInstanceId instance = nullptr;
-    CGPUAdapterId adapter = nullptr;
-    CGPUDeviceId device = nullptr;
-    CGPUQueueId gfx_queue = nullptr;
-    eastl::vector<CGPUQueueId> cpy_queues;
-    CGPUSamplerId linear_sampler = nullptr;
-    skr_io_vram_service_t* vram_service = nullptr;
-    CGPUDStorageQueueId file_dstorage_queue = nullptr;
-    CGPUDStorageQueueId memory_dstorage_queue = nullptr;
-    CGPURootSignaturePoolId root_signature_pool = nullptr;
+    virtual CGPUDeviceId get_cgpu_device() const = 0;
+    virtual ECGPUBackend get_backend() const = 0;
+    virtual CGPUQueueId get_gfx_queue() const = 0;
+    virtual CGPUQueueId get_cpy_queue(uint32_t idx = 0) const = 0;
+    virtual CGPUDStorageQueueId get_file_dstorage_queue() const = 0;
+    virtual CGPUDStorageQueueId get_memory_dstorage_queue() const = 0;
+    virtual ECGPUFormat get_swapchain_format() const = 0;
+    virtual CGPUSamplerId get_linear_sampler() const = 0;
+    virtual CGPURootSignaturePoolId get_root_signature_pool() const = 0;
+    virtual skr_io_vram_service_t* get_vram_service() const = 0;
 #ifdef _WIN32
-    skr_win_dstorage_decompress_service_id decompress_service = nullptr;
+    virtual skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const = 0;
 #endif
-    CGPUNSightTrackerId nsight_tracker = nullptr;
 };
 } // namespace skr
 #endif
@@ -131,3 +82,8 @@ CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
 skr_io_vram_service_t* skr_render_device_get_vram_service(SRenderDeviceId device);
+
+#ifdef _WIN32
+RUNTIME_EXTERN_C SKR_RENDERER_API
+skr_win_dstorage_decompress_service_id skr_render_device_get_win_dstorage_decompress_service(SRenderDeviceId device);
+#endif

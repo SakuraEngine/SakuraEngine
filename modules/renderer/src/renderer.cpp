@@ -6,8 +6,8 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"
-#include "EASTL/unordered_map.h"
-#include "EASTL/vector.h"
+#include <containers/hashmap.hpp>
+#include <EASTL/vector.h>
 
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
     RenderEffectProcessorVtblProxy(VtblRenderEffectProcessor vtbl)
@@ -119,12 +119,14 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
             }
         }
     }
+    template<typename T>
+    using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;
 
-    eastl::vector_map<eastl::string, IPrimitiveRenderPass*> passes;
-    eastl::vector_map<eastl::string, IRenderEffectProcessor*> processors;
+    FlatStringMap<IPrimitiveRenderPass*> passes;
+    FlatStringMap<IRenderEffectProcessor*> processors;
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 protected:
-    eastl::vector_map<eastl::string, eastl::vector<skr_primitive_draw_packet_t>> draw_packets;
+    FlatStringMap<eastl::vector<skr_primitive_draw_packet_t>> draw_packets;
 
     SRenderDevice* render_device = nullptr;
     dual_storage_t* storage = nullptr;

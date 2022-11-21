@@ -26,12 +26,10 @@ public:
     virtual void on_unload() override;
 
     SRenderDeviceId get_render_device();
-#ifdef _WIN32
-    skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const;
-#endif
+
     static SkrRendererModule* Get();
 protected:
-    skr::RendererDevice render_device;
+    skr::RendererDevice* render_device;
 };
 #endif
 
@@ -46,8 +44,3 @@ SRenderDeviceId skr_get_default_render_device();
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
 void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGraph* render_graph);
-
-#ifdef _WIN32
-RUNTIME_EXTERN_C SKR_RENDERER_API
-skr_win_dstorage_decompress_service_id skr_renderer_get_win_dstorage_decompress_service();
-#endif
