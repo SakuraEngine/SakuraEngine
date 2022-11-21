@@ -805,7 +805,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         }
         resources.clear();
         graph->clear();
-        blackboard.clear();
+        blackboard->clear();
     }
     return frame_index++;
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRenderGraph/frontend/base_types.hpp"
-#include <containers/hashmap.hpp>
 
 namespace skr
 {
@@ -8,22 +7,21 @@ namespace render_graph
 {
 struct Blackboard
 {
-public:
-    friend class RenderGraph;
-    inline void clear()
-    {
-        named_passes.clear();
-        named_buffers.clear();
-        named_textures.clear();
-    }
+    static Blackboard* Create() SKR_NOEXCEPT;
+    static void Destroy(Blackboard* blackboard) SKR_NOEXCEPT;
 
-protected:
-    template<typename T>
-    using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;
+    virtual void clear() SKR_NOEXCEPT = 0;
+    virtual class PassNode* pass(const char* name) SKR_NOEXCEPT = 0;
+    virtual class TextureNode* texture(const char* name) SKR_NOEXCEPT = 0;
+    virtual class BufferNode* buffer(const char* name) SKR_NOEXCEPT = 0;
 
-    FlatStringMap<class PassNode*> named_passes;
-    FlatStringMap<class TextureNode*> named_textures;
-    FlatStringMap<class BufferNode*> named_buffers;
+    virtual bool add_pass(const char* name, class PassNode* pass) SKR_NOEXCEPT = 0;
+    virtual bool add_texture(const char* name, class TextureNode* texture) SKR_NOEXCEPT = 0;
+    virtual bool add_buffer(const char* name, class BufferNode* buffer) SKR_NOEXCEPT = 0;
+
+    virtual void override_pass(const char* name, class PassNode* pass) SKR_NOEXCEPT = 0;
+    virtual void override_texture(const char* name, class TextureNode* texture) SKR_NOEXCEPT = 0;
+    virtual void override_buffer(const char* name, class BufferNode* buffer) SKR_NOEXCEPT = 0;
 };
 } // namespace render_graph
 } // namespace skr
