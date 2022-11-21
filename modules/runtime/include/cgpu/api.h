@@ -4,7 +4,7 @@
 #include "flags.h"
 
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
-#define CGPU_MAX_MRT_COUNT 8
+#define CGPU_MAX_MRT_COUNT 8u
 #define CGPU_MAX_VERTEX_ATTRIBS 15
 #define CGPU_MAX_VERTEX_BINDINGS 15
 #define CGPU_COLOR_MASK_RED 0x1

@@ -1,6 +1,4 @@
 #pragma once
-#include <EASTL/unique_ptr.h>
-#include <EASTL/vector.h>
 #include "SkrRenderGraph/frontend/blackboard.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
@@ -230,6 +228,8 @@ public:
         return aliasing_enabled;
     }
 
+    RenderGraph(const RenderGraphBuilder& builder) SKR_NOEXCEPT;
+    virtual ~RenderGraph() SKR_NOEXCEPT = default;
 protected:
     uint32_t foreach_textures(eastl::function<void(TextureNode*)> texture) SKR_NOEXCEPT;
     uint32_t foreach_writer_passes(TextureHandle texture,
@@ -244,13 +244,13 @@ protected:
     virtual void initialize() SKR_NOEXCEPT;
     virtual void finalize() SKR_NOEXCEPT;
 
-    RenderGraph(const RenderGraphBuilder& builder) SKR_NOEXCEPT;
-    virtual ~RenderGraph() SKR_NOEXCEPT = default;
-
     bool aliasing_enabled;
     uint64_t frame_index = 0;
-    Blackboard* blackboard;
+
+    struct NodeAndEdgeFactory* object_factory = nullptr;
+    Blackboard* blackboard = nullptr;
     DependencyGraph* graph = nullptr;
+
     eastl::vector<PassNode*> passes;
     eastl::vector<ResourceNode*> resources;
     eastl::vector<PassNode*> culled_passes;

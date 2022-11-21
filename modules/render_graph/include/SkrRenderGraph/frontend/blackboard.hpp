@@ -5,10 +5,11 @@ namespace skr
 {
 namespace render_graph
 {
-struct Blackboard
+struct SKR_RENDER_GRAPH_API Blackboard
 {
     static Blackboard* Create() SKR_NOEXCEPT;
     static void Destroy(Blackboard* blackboard) SKR_NOEXCEPT;
+    virtual ~Blackboard() = default;
 
     virtual void clear() SKR_NOEXCEPT = 0;
     virtual class PassNode* pass(const char* name) SKR_NOEXCEPT = 0;

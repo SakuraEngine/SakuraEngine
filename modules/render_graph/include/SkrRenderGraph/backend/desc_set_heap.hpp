@@ -19,11 +19,11 @@ public:
     void reset();
     void destroy();
 
-protected:
     DescSetHeap(CGPURootSignatureId root_sig)
         : root_sig(root_sig)
     {
     }
+protected:
     std::atomic_uint32_t cursor = 0;
     const CGPURootSignatureId root_sig;
     eastl::vector<CGPUDescriptorSetId> heap;

@@ -31,7 +31,7 @@ public:
     CGPUFenceId exec_fence = nullptr;
     uint64_t exec_frame = 0;
     eastl::vector<CGPUTextureId> aliasing_textures;
-    eastl::unordered_map<CGPURootSignatureId, DescSetHeap*> desc_set_pool;
+    eastl::unordered_map<CGPURootSignatureId, DescSetHeap*> desc_set_pools;
 
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
@@ -58,8 +58,9 @@ public:
 
     friend class RenderGraph;
 
-protected:
     RenderGraphBackend(const RenderGraphBuilder& builder);
+    ~RenderGraphBackend() = default;
+protected:
     virtual void initialize() SKR_NOEXCEPT final;
     virtual void finalize() SKR_NOEXCEPT final;
 

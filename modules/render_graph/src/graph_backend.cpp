@@ -1,5 +1,7 @@
 ﻿#include "SkrRenderGraph/backend/graph_backend.hpp"
+#include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "platform/debug.h"
+#include "platform/memory.h"
 #include "utils/hash.h"
 #include "utils/log.h"
 #include "utils/format.hpp"
@@ -39,7 +41,7 @@ void RenderGraphFrameExecutor::commit(CGPUQueueId gfx_queue, uint64_t frame_inde
 
 void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
 {
-    for (auto desc_heap : desc_set_pool)
+    for (auto desc_heap : desc_set_pools)
     {
         desc_heap.second->reset();
     }
@@ -91,9 +93,10 @@ void RenderGraphFrameExecutor::finalize()
     gfx_cmd_buf = nullptr;
     gfx_cmd_pool = nullptr;
     exec_fence = nullptr;
-    for (auto desc_set_heap : desc_set_pool)
+    for (auto [rs, pool] : desc_set_pools)
     {
-        desc_set_heap.second->destroy();
+        pool->destroy();
+        SkrDelete(pool);
     }
     for (auto aliasing_tex : aliasing_textures)
     {
@@ -117,11 +120,11 @@ RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup) SKR_NOEX
     RenderGraph* graph = nullptr;
     setup(builder);
     if (builder.no_backend)
-        graph = new RenderGraph(builder);
+        graph = SkrNew<RenderGraph>(builder);
     else
     {
         if (!builder.gfx_queue) assert(0 && "not supported!");
-        graph = new RenderGraphBackend(builder);
+        graph = SkrNew<RenderGraphBackend>(builder);
     }
     graph->initialize();
     return graph;
@@ -130,7 +133,7 @@ RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup) SKR_NOEX
 void RenderGraph::destroy(RenderGraph* g) SKR_NOEXCEPT
 {
     g->finalize();
-    delete g;
+    SkrDelete(g);
 }
 
 void RenderGraphBackend::initialize() SKR_NOEXCEPT
@@ -307,10 +310,10 @@ gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
         root_sig = ((ComputePassNode*)pass)->root_signature;
     if (!root_sig) return {};
     // Allocate or get descriptor set heap
-    auto&& desc_set_heap = executor.desc_set_pool.find(root_sig);
-    if (desc_set_heap == executor.desc_set_pool.end())
-        executor.desc_set_pool.insert({ root_sig, new DescSetHeap(root_sig) });
-    auto desc_sets = executor.desc_set_pool[root_sig]->pop();
+    auto&& desc_set_heap = executor.desc_set_pools.find(root_sig);
+    if (desc_set_heap == executor.desc_set_pools.end())
+        executor.desc_set_pools.emplace(root_sig, SkrNew<DescSetHeap>(root_sig));
+    auto desc_sets = executor.desc_set_pools[root_sig]->pop();
     // Bind resources
     for (uint32_t set_idx = 0; set_idx < desc_sets.size(); set_idx++)
     {
@@ -778,32 +781,39 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
     }
     {
         ZoneScopedN("GraphCleanup");
+        // 1.dealloc culled resources
         for (auto culled_resource : culled_resources)
         {
-            delete culled_resource;
+            object_factory->Dealloc(culled_resource);
         }
         culled_resources.clear();
+        // 2.dealloc culled passes 
         for (auto culled_pass : culled_passes)
         {
-            delete culled_pass;
+            object_factory->Dealloc(culled_pass);
         }
         culled_passes.clear();
+        // 3.dealloc passes & connected edges 
         for (auto pass : passes)
         {
-            pass->foreach_textures(+[](TextureNode* t, TextureEdge* e) {
-                delete e;
+            pass->foreach_textures(
+            [this](TextureNode* t, TextureEdge* e) {
+                object_factory->Dealloc(e);
             });
-            pass->foreach_buffers(+[](BufferNode* t, BufferEdge* e) {
-                delete e;
+            pass->foreach_buffers(
+            [this](BufferNode* t, BufferEdge* e) {
+                object_factory->Dealloc(e);
             });
-            delete pass;
+            object_factory->Dealloc(pass);
         }
         passes.clear();
+        // 4.dealloc resource nodes
         for (auto resource : resources)
         {
-            delete resource;
+            object_factory->Dealloc(resource);
         }
         resources.clear();
+
         graph->clear();
         blackboard->clear();
     }
