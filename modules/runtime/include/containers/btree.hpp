@@ -4,11 +4,17 @@
 
 namespace skr
 {
-template <class K, class V, class Eq = phmap::Less<K>>
-using btree_map = phmap::btree_map<K, V, Eq, skr_stl_allocator<phmap::priv::Pair<const K, V>>>;
+template <class K, class V, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<phmap::priv::Pair<const K, V>>>
+using btree_map = phmap::btree_map<K, V, Eq, Allocator>;
 
-template <class K, class Eq = phmap::Less<K>>
-using btree_set = phmap::btree_set<K, Eq, skr_stl_allocator<K>>;
+template <class K, class V, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<phmap::priv::Pair<const K, V>>>
+using btree_multimap = phmap::btree_multimap<K, V, Eq, Allocator>;
+
+template <class K, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<K>>
+using btree_set = phmap::btree_set<K, Eq, Allocator>;
+
+template <class K, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<K>>
+using btree_multiset = phmap::btree_multiset<K, Eq, Allocator>;
 } // namespace skr
 
 #include "binary/reader.h"

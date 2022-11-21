@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_SET_H_
 #define OZZ_OZZ_BASE_CONTAINERS_SET_H_
 
-#include <set>
+#include "containers/btree.hpp"
 
 #include "SkrAnim/ozz/base/containers/std_allocator.h"
 
@@ -37,12 +37,12 @@ namespace ozz {
 // ozz::StdAllocator.
 template <class _Key, class _Pred = std::less<_Key>,
           class _Allocator = ozz::StdAllocator<_Key>>
-using set = std::set<_Key, _Pred, _Allocator>;
+using set = skr::btree_set<_Key, _Pred, _Allocator>;
 
 // Redirects std::multiset to ozz::multiset in order to replace std default
 // allocator by ozz::StdAllocator.
 template <class _Key, class _Pred = std::less<_Key>,
           class _Allocator = ozz::StdAllocator<_Key>>
-using multiset = std::multiset<_Key, _Pred, _Allocator>;
+using multiset = skr::btree_multiset<_Key, _Pred, _Allocator>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_SET_H_

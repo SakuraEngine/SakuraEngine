@@ -33,7 +33,7 @@
 #pragma warning(disable : 4702)  // warning C4702: unreachable code
 #endif                           // _MSC_VER
 
-#include <unordered_map>
+#include "containers/hashmap.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -47,16 +47,16 @@ namespace ozz {
 // default allocator by ozz::StdAllocator.
 template <class _Key, class _Ty, class _Hash = std::hash<_Key>,
           class _KeyEqual = std::equal_to<_Key>,
-          class _Allocator = ozz::StdAllocator<std::pair<const _Key, _Ty>>>
+          class _Allocator = ozz::StdAllocator<phmap::priv::Pair<const _Key, _Ty>>>
 using unordered_map =
-    std::unordered_map<_Key, _Ty, _Hash, _KeyEqual, _Allocator>;
+    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual, _Allocator>;
 
 // Redirects std::unordered_multimap to ozz::UnorderedMultiMap in order to
 // replace std default allocator by ozz::StdAllocator.
 template <class _Key, class _Ty, class _Hash = std::hash<_Key>,
           class _KeyEqual = std::equal_to<_Key>,
-          class _Allocator = ozz::StdAllocator<std::pair<const _Key, _Ty>>>
+          class _Allocator = ozz::StdAllocator<phmap::priv::Pair<const _Key, _Ty>>>
 using unordered_multimap =
-    std::unordered_multimap<_Key, _Ty, _Hash, _KeyEqual, _Allocator>;
+    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual, _Allocator>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_UNORDERED_MAP_H_

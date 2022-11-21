@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_VECTOR_H_
 #define OZZ_OZZ_BASE_CONTAINERS_VECTOR_H_
 
-#include <vector>
+#include "EASTL/vector.h"
 
 #include "SkrAnim/ozz/base/containers/std_allocator.h"
 
@@ -36,7 +36,7 @@ namespace ozz {
 // Redirects std::vector to ozz::vector in order to replace std default
 // allocator by ozz::StdAllocator.
 template <class _Ty, class _Allocator = ozz::StdAllocator<_Ty>>
-using vector = std::vector<_Ty, _Allocator>;
+using vector = eastl::vector<_Ty, _Allocator>;
 
 // Extends std::vector with two functions that gives access to the begin and the
 // end of its array of elements.
@@ -44,14 +44,14 @@ using vector = std::vector<_Ty, _Allocator>;
 // Returns the mutable begin of the array of elements, or nullptr if
 // vector's empty.
 template <class _Ty, class _Allocator>
-inline _Ty* array_begin(std::vector<_Ty, _Allocator>& _vector) {
+inline _Ty* array_begin(eastl::vector<_Ty, _Allocator>& _vector) {
   return _vector.data();
 }
 
 // Returns the non-mutable begin of the array of elements, or nullptr if
 // vector's empty.
 template <class _Ty, class _Allocator>
-inline const _Ty* array_begin(const std::vector<_Ty, _Allocator>& _vector) {
+inline const _Ty* array_begin(const eastl::vector<_Ty, _Allocator>& _vector) {
   return _vector.data();
 }
 
@@ -59,7 +59,7 @@ inline const _Ty* array_begin(const std::vector<_Ty, _Allocator>& _vector) {
 // vector's empty. Array end is one element past the last element of the
 // array, it cannot be dereferenced.
 template <class _Ty, class _Allocator>
-inline _Ty* array_end(std::vector<_Ty, _Allocator>& _vector) {
+inline _Ty* array_end(eastl::vector<_Ty, _Allocator>& _vector) {
   return _vector.data() + _vector.size();
 }
 
@@ -67,7 +67,7 @@ inline _Ty* array_end(std::vector<_Ty, _Allocator>& _vector) {
 // vector's empty. Array end is one element past the last element of the
 // array, it cannot be dereferenced.
 template <class _Ty, class _Allocator>
-inline const _Ty* array_end(const std::vector<_Ty, _Allocator>& _vector) {
+inline const _Ty* array_end(const eastl::vector<_Ty, _Allocator>& _vector) {
   return _vector.data() + _vector.size();
 }
 }  // namespace ozz

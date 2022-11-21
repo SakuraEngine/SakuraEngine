@@ -34,7 +34,7 @@
 #endif                           // _MSC_VER
 
 #include <cstring>
-#include <map>
+#include "containers/btree.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -46,8 +46,8 @@ namespace ozz {
 // Redirects std::map to ozz::map in order to replace std default allocator by
 // ozz::StdAllocator.
 template <class _Key, class _Ty, class _Pred = std::less<_Key>,
-          class _Allocator = ozz::StdAllocator<std::pair<const _Key, _Ty>>>
-using map = std::map<_Key, _Ty, _Pred, _Allocator>;
+          class _Allocator = ozz::StdAllocator<phmap::priv::Pair<const _Key, _Ty>>>
+using map = skr::btree_map<_Key, _Ty, _Pred, _Allocator>;
 
 // Implements a string comparator that can be used by std algorithm like maps.
 struct str_less {
@@ -58,13 +58,13 @@ struct str_less {
 
 // Specializes std::map to use c-string as a key.
 template <class _Ty, class _Allocator =
-                         ozz::StdAllocator<std::pair<const char* const, _Ty>>>
-using cstring_map = std::map<const char*, _Ty, str_less, _Allocator>;
+                         ozz::StdAllocator<phmap::priv::Pair<const char* const, _Ty>>>
+using cstring_map = skr::btree_map<const char*, _Ty, str_less, _Allocator>;
 
 // Redirects std::multimap to ozz::MultiMap in order to replace std default
 // allocator by ozz::StdAllocator.
 template <class _Key, class _Ty, class _Pred = std::less<_Key>,
-          class _Allocator = ozz::StdAllocator<std::pair<const _Key, _Ty>>>
-using multimap = std::multimap<_Key, _Ty, _Pred, _Allocator>;
+          class _Allocator = ozz::StdAllocator<phmap::priv::Pair<const _Key, _Ty>>>
+using multimap = skr::btree_multimap<_Key, _Ty, _Pred, _Allocator>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_MAP_H_
