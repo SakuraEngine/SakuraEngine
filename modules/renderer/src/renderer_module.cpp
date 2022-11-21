@@ -32,6 +32,7 @@ void SkrRendererModule::on_load(int argc, char** argv)
     builder.enable_debug_layer = false;
     builder.enable_gpu_based_validation = false;
     builder.enable_set_name = true;
+    builder.aux_thread_count = 1;
     for (auto i = 0; i < argc; i++)
     {
         if (::strcmp(argv[i], "--vulkan") == 0)

@@ -1,4 +1,4 @@
-#include "utils/threaded_service.hpp"
+#include "utils/threaded_service.h"
 #include <EASTL/string.h>
 #include "platform/vfs.h"
 #include "io_service_util.hpp"
@@ -6,15 +6,14 @@
 // RAM Service
 namespace skr
 {
-class ThreadedServiceImpl final : public ThreadedService
+class ThreadedServiceImpl final : public skr_threaded_service_t
 {
 public:
     struct Task : public io::TaskBase {
     };
     ~ThreadedServiceImpl() SKR_NOEXCEPT = default;
-    ThreadedServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
-        : tasks(lockless), threaded_service(sleep_time, lockless)
-
+    ThreadedServiceImpl(uint32_t sleep_time, bool lockless, const char* name) SKR_NOEXCEPT
+        : tasks(lockless), threaded_service(sleep_time, lockless), name(name)
     {
     }
     void request(const skr_service_task_t* task, skr_async_request_t* async_request) SKR_NOEXCEPT final;
@@ -30,13 +29,13 @@ public:
         return threaded_service.getServiceStatus();
     }
 
-    const eastl::string name;
     // task containers
     io::TaskContainer<Task> tasks;
     io::AsyncThreadedService threaded_service;
+    const eastl::string name;
 };
 
-void __ioThreadTask_RAM_execute(ThreadedServiceImpl* service)
+void __ioThreadTask_SERIVE_execute(ThreadedServiceImpl* service)
 {
     // 1.peek task
     service->tasks.update_(&service->threaded_service);
@@ -49,15 +48,19 @@ void __ioThreadTask_RAM_execute(ThreadedServiceImpl* service)
     }
 }
 
-void __ioThreadTask_RAM(void* arg)
+void __ioThreadTask_SERIVE(void* arg)
 {
-#ifdef TRACY_ENABLE
-    static uint32_t taskIndex = 0;
-    eastl::string name = "ServiceThread-";
-    name.append(eastl::to_string(taskIndex++));
-    tracy::SetThreadName(name.c_str());
-#endif
     auto service = reinterpret_cast<ThreadedServiceImpl*>(arg);
+#ifdef TRACY_ENABLE
+    eastl::string name;
+    static uint32_t taskIndex = 0;
+    if (service->name.empty())
+    {
+        name = "ServiceThread-" + eastl::to_string(taskIndex);
+    }
+    taskIndex++;
+    tracy::SetThreadName(service->name.empty() ? name.c_str() : service->name.c_str());
+#endif
     for (; service->threaded_service.getThreadStatus() != io::_SKR_IO_THREAD_STATUS_QUIT;)
     {
         if (service->threaded_service.getThreadStatus() == io::_SKR_IO_THREAD_STATUS_SUSPEND)
@@ -67,7 +70,7 @@ void __ioThreadTask_RAM(void* arg)
             {
             }
         }
-        __ioThreadTask_RAM_execute(service);
+        __ioThreadTask_SERIVE_execute(service);
     }
     return;
 }
@@ -86,26 +89,6 @@ void ThreadedServiceImpl::request(const skr_service_task_t* task, skr_async_requ
     }
     tasks.enqueue_(back, threaded_service.criticalTaskCount, name.c_str());
     threaded_service.request_();
-}
-
-ThreadedService* ThreadedService::create(const skr_threaded_service_desc_t* desc) SKR_NOEXCEPT
-{
-    auto service = SkrNew<ThreadedServiceImpl>(desc->sleep_time, desc->lockless);
-    service->threaded_service.create_(desc->sleep_mode);
-    service->threaded_service.sortMethod = desc->sort_method;
-    service->threaded_service.threadItem.pData = service;
-    service->threaded_service.threadItem.pFunc = &__ioThreadTask_RAM;
-    skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
-    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
-    return service;
-}
-
-void ThreadedService::destroy(ThreadedService* s) SKR_NOEXCEPT
-{
-    auto service = static_cast<ThreadedServiceImpl*>(s);
-    s->drain();
-    service->threaded_service.destroy_();
-    SkrDelete(service);
 }
 
 bool ThreadedServiceImpl::try_cancel(skr_async_request_t* request) SKR_NOEXCEPT
@@ -139,3 +122,25 @@ void ThreadedServiceImpl::run() SKR_NOEXCEPT
 }
 
 } // namespace skr
+
+skr_threaded_service_t* skr_threaded_service_t::create(const skr_threaded_service_desc_t* desc) SKR_NOEXCEPT
+{
+    using namespace skr;
+    auto service = SkrNew<ThreadedServiceImpl>(desc->sleep_time, desc->lockless, desc->name);
+    service->threaded_service.create_(desc->sleep_mode);
+    service->threaded_service.sortMethod = desc->sort_method;
+    service->threaded_service.threadItem.pData = service;
+    service->threaded_service.threadItem.pFunc = &__ioThreadTask_SERIVE;
+    skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
+    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    return service;
+}
+
+void skr_threaded_service_t::destroy(skr_threaded_service_t* s) SKR_NOEXCEPT
+{
+    using namespace skr;
+    auto service = static_cast<ThreadedServiceImpl*>(s);
+    s->drain();
+    service->threaded_service.destroy_();
+    SkrDelete(service);
+}

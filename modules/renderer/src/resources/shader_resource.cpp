@@ -1,8 +1,13 @@
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/render_device.h"
+#include "utils/format.hpp"
+#include "utils/make_zeroed.hpp"
 #include "platform/memory.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
+#include "utils/io.hpp"
+
+#include "tracy/Tracy.hpp"
 
 namespace skr
 {
@@ -28,7 +33,23 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
     void DestroyResource(skr_resource_record_t* record) override;
 
+    struct ShaderRequest
+    {
+        ShaderRequest(SShaderResourceFactoryImpl* factory, const char* uri, skr_platform_shader_resource_t* platform_shader)
+            : factory(factory), bytes_uri(uri), platform_shader(platform_shader)
+        {
+
+        }
+        SShaderResourceFactoryImpl* factory = nullptr;
+        eastl::string bytes_uri;
+        skr_platform_shader_resource_t* platform_shader = nullptr;
+        skr_async_request_t bytes_request;
+        skr_async_ram_destination_t bytes_destination;
+        SAtomic32 shader_created = 0;
+    };
+
     Root root;
+    skr::flat_hash_map<skr_platform_shader_resource_t*, SPtr<ShaderRequest>> mShaderRequests;
 };
 
 SShaderResourceFactory* SShaderResourceFactory::Create(const Root& root)
@@ -91,12 +112,52 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
 {
     const auto rdevice = root.render_device;
     const auto backend = rdevice->get_backend();
+    auto bytes_vfs = root.bytecode_vfs;
     auto platform_shader = static_cast<skr_platform_shader_resource_t*>(record->resource);
-    for (auto identifier : platform_shader->identifiers)
+    bool launch_success = false;
+    for (uint32_t i = 0u; i < platform_shader->identifiers.size(); i++)
     {
-        
+        const auto& identifier = platform_shader->identifiers[i];
+        if (identifier.bytecode_type == backend)
+        {
+            const auto hash = identifier.hash;
+            const auto uri = skr::format("{}#{}-{}-{}-{}.bytes", hash.flags, 
+                hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
+            auto sRequest = SPtr<ShaderRequest>::Create(this, uri.c_str(), platform_shader);
+            auto found = mShaderRequests.find(platform_shader);
+            SKR_ASSERT(found == mShaderRequests.end());
+            mShaderRequests.emplace(platform_shader, sRequest);
+            
+            auto ram_texture_io = make_zeroed<skr_ram_io_t>();
+            ram_texture_io.path = sRequest->bytes_uri.c_str();
+            ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
+                ZoneScopedN("LoadShaderBytes");
+                // upload
+                auto sRequest = (ShaderRequest*)data;
+                auto factory = sRequest->factory;
+                auto render_device = factory->root.render_device;
+                auto platform_shader = sRequest->platform_shader;
+
+                auto& shader_destination = sRequest->bytes_destination;
+                // create shaders inplace
+                auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
+                desc.code = (const uint32_t*)shader_destination.bytes;
+                desc.code_size = (uint32_t)shader_destination.size;
+                desc.name = sRequest->bytes_uri.c_str();
+                desc.stage = (ECGPUShaderStage)platform_shader->identifiers[platform_shader->active_slot].shader_stage;
+                platform_shader->shader = cgpu_create_shader_library(render_device->get_cgpu_device(), &desc);
+                skr_atomic32_add_relaxed(&sRequest->shader_created, 1);
+                // TODO: create shaders on aux thread
+            };
+            ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)sRequest.get();
+            root.ram_service->request(bytes_vfs, &ram_texture_io, &sRequest->bytes_request, &sRequest->bytes_destination);
+
+            launch_success = true;
+            platform_shader->active_slot = i;
+            break;
+        }
     }
-    return ESkrInstallStatus::SKR_INSTALL_STATUS_FAILED;
+    return launch_success ? SKR_INSTALL_STATUS_INPROGRESS : SKR_INSTALL_STATUS_FAILED;
 }
 
 bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
@@ -106,6 +167,22 @@ bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
 
 ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
+    auto platform_shader = static_cast<skr_platform_shader_resource_t*>(record->resource);
+    auto sRequest = mShaderRequests.find(platform_shader);
+    if (sRequest != mShaderRequests.end())
+    {
+        auto okay = skr_atomic32_load_acquire(&sRequest->second->shader_created);
+        auto status = okay ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
+        if (okay)
+        {
+            mShaderRequests.erase(platform_shader);
+        }
+        return status;
+    }
+    else
+    {
+        SKR_UNREACHABLE_CODE();
+    }
     return ESkrInstallStatus::SKR_INSTALL_STATUS_FAILED;
 }
 
