@@ -25,7 +25,7 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "SkrAnim/ozz/geometry/runtime/skinning_job.h"
+#include "SkrAnim/ozz/geometry/skinning_job.h"
 
 #include <cassert>
 

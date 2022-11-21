@@ -27,18 +27,8 @@
 
 #ifndef OZZ_OZZ_OPTIONS_EXPORT_H_
 #define OZZ_OZZ_OPTIONS_EXPORT_H_
+#include "SkrAnim/module.configure.h"
 
-#if defined(_MSC_VER) && defined(OZZ_USE_DYNAMIC_LINKING)
-
-#ifdef OZZ_BUILD_OPTIONS_LIB
-// Import/Export for dynamic linking while building ozz
-#define OZZ_OPTIONS_DLL __declspec(dllexport)
-#else
-#define OZZ_OPTIONS_DLL __declspec(dllimport)
-#endif
-#else  // defined(_MSC_VER) && defined(OZZ_USE_DYNAMIC_LINKING)
-// Static or non msvc linking
-#define OZZ_OPTIONS_DLL
-#endif  // defined(_MSC_VER) && defined(OZZ_USE_DYNAMIC_LINKING)
+#define OZZ_OPTIONS_DLL SKR_ANIM_API
 
 #endif  // OZZ_OZZ_OPTIONS_EXPORT_H_
