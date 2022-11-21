@@ -25,12 +25,12 @@ const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
-    void on_register(SRendererId renderer) override
+    void on_register(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
     {
 
     }
 
-    void on_unregister(SRendererId renderer) override
+    void on_unregister(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
     {
 
     }

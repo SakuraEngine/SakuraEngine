@@ -485,7 +485,7 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name) SKR_NOEXCEPT
 {
     // blackboard
-    graph.blackboard.named_textures[name] = &node;
+    graph.blackboard.named_textures.emplace(name, &node);
     node.set_name(name);
     node.descriptor.name = node.get_name();
     return *this;

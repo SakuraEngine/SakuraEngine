@@ -8,6 +8,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
+#include <EASTL/vector_map.h>
 
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
     RenderEffectProcessorVtblProxy(VtblRenderEffectProcessor vtbl)
@@ -71,10 +72,8 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     {
         for (auto proxy : processor_vtbl_proxies)
         {
-            if (proxy) delete proxy;
+            if (proxy) SkrDelete(proxy);
         }
-        processor_vtbl_proxies.clear();
-        processors.clear();
     }
 
     SRenderDeviceId get_render_device() const override
@@ -92,38 +91,46 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         // produce draw calls
         for (auto& pass : passes)
         {
-            draw_packets[pass.second->identity()].clear();
+            draw_packets[pass->identity()].clear();
             // used out
             for (auto& processor : processors)
             {
-                if (pass.second && processor.second)
+                if (pass && processor)
                 {
-                    auto packet = processor.second->produce_draw_packets(pass.second, storage);
-                    draw_packets[pass.second->identity()].emplace_back(packet);
+                    auto packet = processor->produce_draw_packets(pass, storage);
+                    draw_packets[pass->identity()].emplace_back(packet);
                 }
             }
         }
         // execute draw calls
         for (auto& pass : passes)
         {
-            if (pass.second)
+            if (pass)
             {
-                auto& pass_draw_packets = draw_packets[pass.second->identity()];
+                pass->on_register(this, render_graph);
+
+                auto& pass_draw_packets = draw_packets[pass->identity()];
                 for (auto pass_draw_packet : pass_draw_packets)
                 {
                     for (uint32_t i = 0; i < pass_draw_packet.count; i++)
                     {
-                        pass.second->execute(render_graph, pass_draw_packet.lists[i]);
+                        pass->execute(render_graph, pass_draw_packet.lists[i]);
                     }
                 }
+
+                pass->on_unregister(this, render_graph);
             }
         }
     }
     template<typename T>
     using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;
 
-    FlatStringMap<IPrimitiveRenderPass*> passes;
-    FlatStringMap<IRenderEffectProcessor*> processors;
+    eastl::vector<IPrimitiveRenderPass*> passes;
+    FlatStringMap<IPrimitiveRenderPass*> passes_map;
+
+    eastl::vector<IRenderEffectProcessor*> processors;
+    FlatStringMap<IRenderEffectProcessor*> processors_map;
+
     eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 protected:
     FlatStringMap<eastl::vector<skr_primitive_draw_packet_t>> draw_packets;
@@ -150,22 +157,22 @@ void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGr
 void skr_renderer_register_render_pass(SRendererId r, skr_render_effect_name_t name, IPrimitiveRenderPass* pass)
 {
     auto renderer = (SkrRendererImpl*)r;
-    if (auto&& _ = renderer->passes.find(name); _ != renderer->passes.end())
+    if (auto&& _ = renderer->passes_map.find(name); _ != renderer->passes_map.end())
     {
         SKR_ASSERT(false && "Render pass already registered");
         return;
     }
-    renderer->passes[name] = pass;
-    pass->on_register(r);
+    renderer->passes_map.emplace(name, pass);
+    renderer->passes.emplace_back(pass);
 }
 
 void skr_renderer_remove_render_pass(SRendererId r, skr_render_pass_name_t name)
 {
     auto renderer = (SkrRendererImpl*)r;
-    if (auto&& pass = renderer->passes.find(name); pass != renderer->passes.end())
+    if (auto&& pass = renderer->passes_map.find(name); pass != renderer->passes_map.end())
     {
-        pass->second->on_unregister(r);
-        renderer->passes.erase(pass);
+        renderer->passes_map.erase(pass);
+        eastl::remove_if(renderer->passes.begin(), renderer->passes.end(), [pass](auto&& p) { return p == pass->second; });
     }
 }
 
@@ -173,36 +180,43 @@ void skr_renderer_register_render_effect(SRendererId r, skr_render_effect_name_t
 {
     auto renderer = (SkrRendererImpl*)r;
     auto storage = renderer->get_dual_storage();
-    if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
+    if (auto&& _ = renderer->processors_map.find(name); _ != renderer->processors_map.end())
     {
         SKR_ASSERT(false && "Render effect processor already registered");
         return;
     }
-    renderer->processors[name] = processor;
+    renderer->processors_map.emplace(name, processor);
+    renderer->processors.emplace_back(processor);
+
     processor->on_register(r, storage);
 }
 
 void skr_renderer_register_render_effect_vtbl(SRendererId r, skr_render_effect_name_t name, VtblRenderEffectProcessor* processor)
 {
     auto renderer = (SkrRendererImpl*)r;
-    if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
+    auto storage = renderer->get_dual_storage();
+    if (auto&& _ = renderer->processors_map.find(name); _ != renderer->processors_map.end())
     {
         SKR_ASSERT(false && "Render effect processor already registered");
         return;
     }
-    auto proxy = new RenderEffectProcessorVtblProxy(*processor);
-    renderer->processor_vtbl_proxies.push_back(proxy);
-    renderer->processors[name] = proxy;
+    auto proxy = SkrNew<RenderEffectProcessorVtblProxy>(*processor);
+    renderer->processors_map.emplace(name, proxy);
+    renderer->processor_vtbl_proxies.emplace_back(proxy);
+    renderer->processors.emplace_back(static_cast<IRenderEffectProcessor*>(proxy));
+
+    processor->on_register(r, storage);
 }
 
 void skr_renderer_remove_render_effect(SRendererId r, skr_render_effect_name_t name)
 {
     auto renderer = (SkrRendererImpl*)r;
     auto storage = renderer->get_dual_storage();
-    if (auto&& _ = renderer->processors.find(name); _ != renderer->processors.end())
+    if (auto&& _ = renderer->processors_map.find(name); _ != renderer->processors_map.end())
     {
         _->second->on_unregister(r, storage);
-        renderer->processors.erase(_);
+        renderer->processors_map.erase(_);
+        eastl::remove_if(renderer->processors.begin(), renderer->processors.end(), [_](auto&& p) { return p == _->second; });
     }
 }
 
@@ -216,9 +230,9 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
     if (feature_arrs)
     {
         auto world = renderer->get_dual_storage();
-        auto&& i_processor = renderer->processors.find(effect_name);
+        auto&& i_processor = renderer->processors_map.find(effect_name);
 
-        if (i_processor == renderer->processors.end())
+        if (i_processor == renderer->processors_map.end())
         {
             SKR_ASSERT(false && "No render effect processor registered");
             return;
@@ -248,7 +262,7 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
                         SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
                     }
 #endif
-                    features.push_back({ nullptr, DUAL_NULL_ENTITY });
+                    features.emplace_back( skr_render_effect_t{ nullptr, DUAL_NULL_ENTITY } );
                     auto& feature = features.back();
                     feature.name = effect_name;
                     feature.effect_entity = entities[i];
@@ -289,8 +303,8 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
 }
 
 void skr_render_effect_add_delta(SRendererId r, const SGameEntity* entities, uint32_t count,
-skr_render_effect_name_t effect_name, dual_delta_type_t delta,
-dual_cast_callback_t callback, void* user_data)
+    skr_render_effect_name_t effect_name, dual_delta_type_t delta,
+    dual_cast_callback_t callback, void* user_data)
 {
     if (count)
     {

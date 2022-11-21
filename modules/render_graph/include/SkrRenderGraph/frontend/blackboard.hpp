@@ -1,6 +1,6 @@
 #pragma once
-#include <EASTL/string_map.h>
 #include "SkrRenderGraph/frontend/base_types.hpp"
+#include <containers/hashmap.hpp>
 
 namespace skr
 {
@@ -18,9 +18,12 @@ public:
     }
 
 protected:
-    eastl::string_map<class PassNode*> named_passes;
-    eastl::string_map<class TextureNode*> named_textures;
-    eastl::string_map<class BufferNode*> named_buffers;
+    template<typename T>
+    using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;
+
+    FlatStringMap<class PassNode*> named_passes;
+    FlatStringMap<class TextureNode*> named_textures;
+    FlatStringMap<class BufferNode*> named_buffers;
 };
 } // namespace render_graph
 } // namespace skr
