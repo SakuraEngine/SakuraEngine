@@ -1,14 +1,6 @@
 #pragma once
 #include "SkrRenderGraph/frontend/base_types.hpp"
 
-enum
-{
-    kRenderGraphInvalidResourceTag = 0x00,
-    kRenderGraphDefaultResourceTag = 0x01,
-    // see D3D11 DynamicBuffer, some sync problems are dealed under render graph implementation with D3D12/Vulkan
-    kRenderGraphDynamicResourceTag = 0x02
-};
-
 namespace skr
 {
 namespace render_graph
@@ -17,11 +9,7 @@ class ResourceNode : public RenderGraphNode
 {
 public:
     friend class RenderGraph;
-    inline ResourceNode(EObjectType type) SKR_NOEXCEPT
-        : RenderGraphNode(type),
-          imported(false)
-    {
-    }
+    ResourceNode(EObjectType type) SKR_NOEXCEPT;
     virtual ~ResourceNode() SKR_NOEXCEPT = default;
     struct LifeSpan {
         uint32_t from;
@@ -30,10 +18,9 @@ public:
     inline const bool is_imported() const SKR_NOEXCEPT { return imported; }
     inline const bool allow_lone() const SKR_NOEXCEPT { return canbe_lone; }
     SKR_RENDER_GRAPH_API const LifeSpan lifespan() const SKR_NOEXCEPT;
-
 protected:
-    bool imported : 1;
-    bool canbe_lone : 1;
+    bool imported = false;
+    bool canbe_lone = false;
     uint32_t tags = kRenderGraphInvalidResourceTag;
     mutable LifeSpan frame_lifespan = { UINT32_MAX, UINT32_MAX };
 };
@@ -44,10 +31,7 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    TextureNode() SKR_NOEXCEPT
-        : ResourceNode(EObjectType::Texture)
-    {
-    }
+    TextureNode() SKR_NOEXCEPT;
     inline const TextureHandle get_handle() const SKR_NOEXCEPT { return TextureHandle(get_id()); }
     inline const CGPUTextureDescriptor& get_desc() const SKR_NOEXCEPT { return descriptor; }
     inline const uint32_t get_size() const SKR_NOEXCEPT
@@ -77,10 +61,8 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    BufferNode() SKR_NOEXCEPT
-        : ResourceNode(EObjectType::Buffer)
-    {
-    }
+    BufferNode() SKR_NOEXCEPT;
+
     inline const BufferHandle get_handle() const SKR_NOEXCEPT { return BufferHandle(get_id()); }
     inline const CGPUBufferDescriptor& get_desc() const SKR_NOEXCEPT { return descriptor; }
 

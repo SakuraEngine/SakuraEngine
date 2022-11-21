@@ -479,9 +479,9 @@ protected:
     CGPURenderPipelineId pipeline = nullptr;
     CGPURenderPipelineId mask_pipeline = nullptr;
 };
-MaskPassLive2D* live2d_mask_pass = new MaskPassLive2D();
-RenderPassLive2D* live2d_pass = new RenderPassLive2D();
-RenderEffectLive2D* live2d_effect = new RenderEffectLive2D();
+MaskPassLive2D* live2d_mask_pass = SkrNew<MaskPassLive2D>();
+RenderPassLive2D* live2d_pass = SkrNew<RenderPassLive2D>();
+RenderEffectLive2D* live2d_effect = SkrNew<RenderEffectLive2D>();
 
 uint32_t* RenderEffectLive2D::read_shader_bytes(SRendererId renderer, const char* name, uint32_t* out_length)
 {
@@ -697,7 +697,7 @@ void skr_live2d_finalize_render_effects(live2d_renderer_t* renderer, live2d_rend
     skr_renderer_remove_render_pass(renderer, live2d_pass_name);
     skr_renderer_remove_render_pass(renderer, live2d_mask_pass_name);
     skr_renderer_remove_render_effect(renderer, live2d_effect_name);
-    delete live2d_effect;
-    delete live2d_pass;
-    delete live2d_mask_pass;
+    SkrDelete(live2d_effect);
+    SkrDelete(live2d_pass);
+    SkrDelete(live2d_mask_pass);
 }

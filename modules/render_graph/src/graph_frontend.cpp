@@ -1,4 +1,6 @@
 ﻿#include "SkrRenderGraph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/resource_node.hpp"
+#include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "platform/memory.h"
 
@@ -175,6 +177,27 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const SKR_NOEXCEPT
     });
     frame_lifespan = { from, to };
     return frame_lifespan;
+}
+
+BufferNode* RenderGraph::resolve(BufferHandle hdl) SKR_NOEXCEPT { return static_cast<BufferNode*>(graph->node_at(hdl)); }
+TextureNode* RenderGraph::resolve(TextureHandle hdl) SKR_NOEXCEPT { return static_cast<TextureNode*>(graph->node_at(hdl)); }
+PassNode* RenderGraph::resolve(PassHandle hdl) SKR_NOEXCEPT { return static_cast<PassNode*>(graph->node_at(hdl)); }
+const CGPUBufferDescriptor* RenderGraph::resolve_descriptor(BufferHandle hdl) SKR_NOEXCEPT 
+{
+    if (const auto node = resolve(hdl))
+    {
+        return &node->descriptor;
+    } 
+    return nullptr;
+}
+
+const CGPUTextureDescriptor* RenderGraph::resolve_descriptor(TextureHandle hdl) SKR_NOEXCEPT 
+{
+    if (const auto node = resolve(hdl))
+    {
+        return &node->descriptor;
+    } 
+    return nullptr;
 }
 
 inline static bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing) SKR_NOEXCEPT

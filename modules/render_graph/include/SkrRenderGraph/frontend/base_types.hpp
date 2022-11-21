@@ -1,12 +1,41 @@
 #pragma once
 #include "SkrRenderGraph/rg_config.h"
 #include "utils/dependency_graph.hpp"
+#include "containers/span.hpp"
 #include <EASTL/string.h>
+
+enum
+{
+    kRenderGraphInvalidResourceTag = 0x00,
+    kRenderGraphDefaultResourceTag = 0x01,
+    // see D3D11 DynamicBuffer, some sync problems are dealed under render graph implementation with D3D12/Vulkan
+    kRenderGraphDynamicResourceTag = 0x02
+};
 
 namespace skr
 {
 namespace render_graph
 {
+// fwd declartions
+class ResourceNode;
+class TextureNode;
+class BufferNode;
+
+struct PassContext;
+struct ComputePassContext;
+struct RenderPassContext;
+struct CopyPassContext;
+
+class PassNode;
+class RenderPassNode;
+class ComputePassNode;
+class CopyPassNode;
+class PresentPassNode;
+
+using CopyPassExecuteFunction = eastl::function<void(class RenderGraph&, CopyPassContext&)>;
+using ComputePassExecuteFunction = eastl::function<void(class RenderGraph&, ComputePassContext&)>;
+using RenderPassExecuteFunction = eastl::function<void(class RenderGraph&, RenderPassContext&)>;
+
 typedef uint64_t handle_t;
 enum class EObjectType : uint8_t
 {
@@ -38,7 +67,7 @@ enum class EPassType : uint8_t
 };
 
 template <EObjectType type>
-struct ObjectHandle {
+struct SKR_RENDER_GRAPH_API ObjectHandle {
     ObjectHandle(handle_t hdl)
         : handle(hdl)
     {
@@ -50,7 +79,7 @@ private:
 };
 
 template <>
-struct ObjectHandle<EObjectType::Buffer> {
+struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Buffer> {
     inline operator handle_t() const { return handle; }
     struct ShaderReadHandle {
         friend struct ObjectHandle<EObjectType::Buffer>;
@@ -62,7 +91,8 @@ struct ObjectHandle<EObjectType::Buffer> {
     protected:
         ShaderReadHandle(const handle_t _this);
     };
-    struct ShaderReadWriteHandle {
+    
+    struct SKR_RENDER_GRAPH_API ShaderReadWriteHandle {
         friend struct ObjectHandle<EObjectType::Buffer>;
         friend class RenderGraph;
         friend class BufferReadWriteEdge;
@@ -72,7 +102,8 @@ struct ObjectHandle<EObjectType::Buffer> {
     protected:
         ShaderReadWriteHandle(const handle_t _this);
     };
-    struct RangeHandle {
+
+    struct SKR_RENDER_GRAPH_API RangeHandle {
         friend struct ObjectHandle<EObjectType::Buffer>;
         friend class RenderGraph;
         friend class BufferReadEdge;
@@ -89,7 +120,8 @@ struct ObjectHandle<EObjectType::Buffer> {
         {
         }
     };
-    struct PipelineReferenceHandle {
+
+    struct SKR_RENDER_GRAPH_API PipelineReferenceHandle {
         friend struct ObjectHandle<EObjectType::Buffer>;
         friend class RenderGraph;
         friend class PipelineBufferEdge;
@@ -133,8 +165,8 @@ using BufferRangeHandle = BufferHandle::RangeHandle;
 using PipelineBufferHandle = BufferHandle::PipelineReferenceHandle;
 
 template <>
-struct ObjectHandle<EObjectType::Texture> {
-    struct ShaderReadHandle {
+struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
+    struct SKR_RENDER_GRAPH_API ShaderReadHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureReadEdge;
@@ -154,7 +186,8 @@ struct ObjectHandle<EObjectType::Texture> {
         uint32_t array_count = 1;
         ECGPUTextureDimension dim = CGPU_TEX_DIMENSION_2D;
     };
-    struct ShaderWriteHandle {
+
+    struct SKR_RENDER_GRAPH_API ShaderWriteHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureRenderEdge;
@@ -169,7 +202,8 @@ struct ObjectHandle<EObjectType::Texture> {
         uint32_t array_base = 0;
         uint32_t array_count = 1;
     };
-    struct DepthStencilHandle : public ShaderWriteHandle {
+
+    struct SKR_RENDER_GRAPH_API DepthStencilHandle : public ShaderWriteHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureRenderEdge;
@@ -180,7 +214,8 @@ struct ObjectHandle<EObjectType::Texture> {
         {
         }
     };
-    struct ShaderReadWriteHandle {
+
+    struct SKR_RENDER_GRAPH_API ShaderReadWriteHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureReadWriteEdge;
@@ -189,7 +224,8 @@ struct ObjectHandle<EObjectType::Texture> {
 
         ShaderReadWriteHandle(const handle_t _this);
     };
-    struct SubresourceHandle {
+
+    struct SKR_RENDER_GRAPH_API SubresourceHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class RenderGraphBackend;
@@ -204,6 +240,7 @@ struct ObjectHandle<EObjectType::Texture> {
         uint32_t array_count = 1;
         CGPUTextureViewAspects aspects = CGPU_TVA_COLOR;
     };
+
     inline operator handle_t() const { return handle; }
     // read
     inline operator ShaderReadHandle() const { return ShaderReadHandle(handle); }
@@ -248,124 +285,54 @@ using TextureUAVHandle = TextureHandle::ShaderReadWriteHandle;
 using TextureSubresourceHandle = TextureHandle::SubresourceHandle;
 
 struct RenderGraphNode : public DependencyGraphNode {
-    RenderGraphNode(EObjectType type)
-        : type(type)
-    {
-    }
-    inline void set_name(const char* n)
-    {
-        name = n;
-    }
-    inline const char* get_name() const
-    {
-        return name.c_str();
-    }
+    RenderGraphNode(EObjectType type);
+    inline void set_name(const char* n);
+    inline const char* get_name() const;
     const EObjectType type;
-
 protected:
     eastl::string name;
 };
 
 struct RenderGraphEdge : public DependencyGraphEdge {
-    RenderGraphEdge(ERelationshipType type)
-        : type(type)
-    {
-    }
+    RenderGraphEdge(ERelationshipType type);
     const ERelationshipType type;
 };
 
-inline TextureSRVHandle TextureSRVHandle::read_mip(uint32_t base, uint32_t count) const
-{
-    ShaderReadHandle _ = *this;
-    _.mip_base = base;
-    _.mip_count = count;
-    return _;
-}
+struct SKR_RENDER_GRAPH_API PassContext {
+    CGPUCommandBufferId cmd;
+    skr::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
+    skr::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
 
-inline TextureSRVHandle TextureSRVHandle::read_array(uint32_t base, uint32_t count) const
-{
-    ShaderReadHandle _ = *this;
-    _.array_base = base;
-    _.array_count = count;
-    return _;
-}
+    inline CGPUBufferId resolve(BufferHandle buffer_handle) const
+    {
+        for (auto iter : resolved_buffers)
+        {
+            if (iter.first == buffer_handle) return iter.second;
+        }
+        return nullptr;
+    }
+    inline CGPUTextureId resolve(TextureHandle tex_handle) const
+    {
+        for (auto iter : resolved_textures)
+        {
+            if (iter.first == tex_handle) return iter.second;
+        }
+        return nullptr;
+    }
+};
 
-inline TextureSRVHandle TextureSRVHandle::dimension(ECGPUTextureDimension dim) const
-{
-    ShaderReadHandle _ = *this;
-    _.dim = dim;
-    return _;
-}
+struct RenderPassContext : public PassContext {
+    CGPURenderPassEncoderId encoder;
+    skr::span<CGPUDescriptorSetId> desc_sets;
+};
 
-inline TextureSRVHandle::ShaderReadHandle(const handle_t _this,
-const uint32_t mip_base,
-const uint32_t mip_count,
-const uint32_t array_base,
-const uint32_t array_count)
-    : _this(_this)
-    , mip_base(mip_base)
-    , mip_count(mip_count)
-    , array_base(array_base)
-    , array_count(array_count)
-{
-}
+struct SKR_RENDER_GRAPH_API ComputePassContext : public PassContext {
+    CGPUComputePassEncoderId encoder;
+    skr::span<CGPUDescriptorSetId> desc_sets;
+};
 
-inline TextureSRVHandle TextureHandle::read_mip(uint32_t base, uint32_t count) const
-{
-    ShaderReadHandle _ = *this;
-    _.mip_base = base;
-    _.mip_count = count;
-    return _;
-}
-
-inline TextureSRVHandle TextureHandle::read_array(uint32_t base, uint32_t count) const
-{
-    ShaderReadHandle _ = *this;
-    _.array_base = base;
-    _.array_count = count;
-    return _;
-}
-
-inline TextureRTVHandle::ShaderWriteHandle(const handle_t _this)
-    : _this(_this)
-{
-}
-
-inline TextureRTVHandle TextureRTVHandle::write_mip(uint32_t mip)
-{
-    TextureRTVHandle _ = *this;
-    _.mip_level = mip;
-    return _;
-}
-
-// UAV
-inline TextureUAVHandle::ShaderReadWriteHandle(const handle_t _this)
-    : _this(_this)
-{
-}
-
-// Subresource
-inline TextureSubresourceHandle::SubresourceHandle(const handle_t _this)
-    : _this(_this)
-{
-}
-
-// CBV
-inline BufferCBVHandle::ShaderReadHandle(const handle_t _this)
-    : _this(_this)
-{
-}
-
-// UAV
-inline BufferUAVHandle::ShaderReadWriteHandle(const handle_t _this)
-    : _this(_this)
-{
-}
-
-// VB/IB
-inline PipelineBufferHandle::PipelineReferenceHandle(const handle_t _this)
-    : _this(_this)
-{
-}
+struct CopyPassContext : public PassContext {
+    CGPUCommandBufferId cmd;
+};
 } // namespace render_graph
 } // namespace skr

@@ -1,7 +1,7 @@
 #pragma once
+#include <EASTL/vector.h>
+#include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/blackboard.hpp"
-#include "SkrRenderGraph/frontend/resource_node.hpp"
-#include "SkrRenderGraph/frontend/pass_node.hpp"
 
 #ifndef RG_MAX_FRAME_IN_FLIGHT
 #define RG_MAX_FRAME_IN_FLIGHT 3
@@ -201,7 +201,13 @@ public:
     TextureHandle get_texture(const char* name) SKR_NOEXCEPT;
     const ECGPUResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT;
 
-    bool compile() SKR_NOEXCEPT;
+    bool compile() SKR_NOEXCEPT;    
+    BufferNode* resolve(BufferHandle hdl) SKR_NOEXCEPT; 
+    TextureNode* resolve(TextureHandle hdl) SKR_NOEXCEPT;
+    PassNode* resolve(PassHandle hdl) SKR_NOEXCEPT;
+    const CGPUBufferDescriptor* resolve_descriptor(BufferHandle hdl) SKR_NOEXCEPT;
+    const CGPUTextureDescriptor* resolve_descriptor(TextureHandle hdl) SKR_NOEXCEPT;
+    
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT;
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT { return nullptr; }
     virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT { return nullptr; }
@@ -217,9 +223,7 @@ public:
     virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
         uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
 
-    inline BufferNode* resolve(BufferHandle hdl) SKR_NOEXCEPT { return static_cast<BufferNode*>(graph->node_at(hdl)); }
-    inline TextureNode* resolve(TextureHandle hdl) SKR_NOEXCEPT { return static_cast<TextureNode*>(graph->node_at(hdl)); }
-    inline PassNode* resolve(PassHandle hdl) SKR_NOEXCEPT { return static_cast<PassNode*>(graph->node_at(hdl)); }
+
     inline uint64_t get_frame_index() const SKR_NOEXCEPT { return frame_index; }
 
     inline bool enable_memory_aliasing(bool enabled) SKR_NOEXCEPT
@@ -233,13 +237,13 @@ public:
 protected:
     uint32_t foreach_textures(eastl::function<void(TextureNode*)> texture) SKR_NOEXCEPT;
     uint32_t foreach_writer_passes(TextureHandle texture,
-    eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
     uint32_t foreach_reader_passes(TextureHandle texture,
-    eastl::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        eastl::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
     uint32_t foreach_writer_passes(BufferHandle buffer,
-    eastl::function<void(PassNode* writer, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        eastl::function<void(PassNode* writer, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
     uint32_t foreach_reader_passes(BufferHandle buffer,
-    eastl::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        eastl::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
 
     virtual void initialize() SKR_NOEXCEPT;
     virtual void finalize() SKR_NOEXCEPT;

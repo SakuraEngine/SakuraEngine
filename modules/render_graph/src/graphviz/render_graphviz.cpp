@@ -8,6 +8,7 @@
 #include "utils/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
 #include "SkrRenderGraph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/frontend/pass_node.hpp"
 
 namespace skr
 {

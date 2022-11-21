@@ -1292,8 +1292,8 @@ typedef struct CGPUTextureDescriptor {
     /// Descriptor creation
     CGPUResourceTypes descriptors;
     /// Memory Aliasing
-    uint32_t is_dedicated : 1;
-    uint32_t is_aliasing : 1;
+    uint32_t is_dedicated;
+    uint32_t is_aliasing;
 } CGPUTextureDescriptor;
 
 typedef struct CGPUExportTextureDescriptor {
