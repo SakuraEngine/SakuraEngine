@@ -3,6 +3,7 @@
 #include "cgpu/api.h"
 #include "module/module_manager.hpp"
 #include "utils/log.h"
+#include "utils/make_zeroed.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "platform/guid.hpp"
 #include <string.h>
@@ -25,34 +26,35 @@ void SkrRendererModule::on_load(int argc, char** argv)
 #ifdef _WIN32
     cgpu_d3d12_enable_DRED();
 #endif
-
+    render_device = skr::RendererDevice::Create();
     // initailize render device
-    bool enable_debug_layer = false;
-    bool enable_gpu_based_validation = false;
-    bool enable_set_name = true;
+    auto builder = make_zeroed<skr::RendererDevice::Builder>();
+    builder.enable_debug_layer = false;
+    builder.enable_gpu_based_validation = false;
+    builder.enable_set_name = true;
     for (auto i = 0; i < argc; i++)
     {
         if (::strcmp(argv[i], "--vulkan") == 0)
         {
-            render_device.backend = CGPU_BACKEND_VULKAN;
+            builder.backend = CGPU_BACKEND_VULKAN;
         }
         else if (::strcmp(argv[i], "--d3d12") == 0)
         {
-            render_device.backend = CGPU_BACKEND_D3D12;
+            builder.backend = CGPU_BACKEND_D3D12;
         }
         else
         {
 #ifdef _WIN32
-            render_device.backend = CGPU_BACKEND_D3D12;
+            builder.backend = CGPU_BACKEND_D3D12;
 #else
-            render_device.backend = CGPU_BACKEND_VULKAN;
+            builder.backend = CGPU_BACKEND_VULKAN;
 #endif
         }
-        enable_debug_layer |= (0 == ::strcmp(argv[i], "--debug_layer"));
-        enable_gpu_based_validation |= (0 == ::strcmp(argv[i], "--gpu_based_validation"));
-        enable_set_name |= (0 == ::strcmp(argv[i], "--gpu_obj_name"));
+        builder.enable_debug_layer |= (0 == ::strcmp(argv[i], "--debug_layer"));
+        builder.enable_gpu_based_validation |= (0 == ::strcmp(argv[i], "--gpu_based_validation"));
+        builder.enable_set_name |= (0 == ::strcmp(argv[i], "--gpu_obj_name"));
     }
-    render_device.initialize(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
+    render_device->initialize(builder);
 
     // register vertex layout
     CGPUVertexLayout vertex_layout = {};
@@ -76,7 +78,8 @@ void SkrRendererModule::on_unload()
 {
     SKR_LOG_TRACE("skr renderer unloaded!");
 
-    render_device.finalize();
+    render_device->finalize();
+    skr::RendererDevice::Free(render_device);
 }
 
 SkrRendererModule* SkrRendererModule::Get()
@@ -88,7 +91,7 @@ SkrRendererModule* SkrRendererModule::Get()
 
 SRenderDeviceId SkrRendererModule::get_render_device()
 {
-    return &render_device;
+    return render_device;
 }
 
 SRenderDeviceId skr_get_default_render_device()
@@ -156,13 +159,8 @@ CGPUDStorageQueueId skr_render_device_get_memory_dstorage_queue(SRenderDeviceId 
 }
 
 #ifdef _WIN32
-skr_win_dstorage_decompress_service_id SkrRendererModule::get_win_dstorage_decompress_service() const
+skr_win_dstorage_decompress_service_id skr_render_device_get_win_dstorage_decompress_service(SRenderDeviceId device)
 {
-    return render_device.decompress_service;
-}
-
-skr_win_dstorage_decompress_service_id skr_renderer_get_win_dstorage_decompress_service()
-{
-    return SkrRendererModule::Get()->get_win_dstorage_decompress_service();
+    return device->get_win_dstorage_decompress_service();
 }
 #endif

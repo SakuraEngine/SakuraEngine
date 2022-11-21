@@ -1,4 +1,5 @@
 #include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/render_device.h"
 #include "platform/memory.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
@@ -88,7 +89,8 @@ bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
 
 ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* record)
 {
-    // TODO: load & create shader
+    const auto rdevice = root.render_device;
+    const auto backend = rdevice->get_backend();
     auto platform_shader = static_cast<skr_platform_shader_resource_t*>(record->resource);
     for (auto identifier : platform_shader->identifiers)
     {

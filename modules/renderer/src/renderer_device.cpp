@@ -1,17 +1,119 @@
 #include "SkrRenderer/render_device.h"
 #include "utils/make_zeroed.hpp"
-#include "cgpu/api.h"
+#include "platform/memory.h"
 #include "cgpu/io.hpp"
+#include <EASTL/vector_map.h>
 #ifdef _WIN32
 #include "cgpu/extensions/dstorage_windows.h"
 #endif
+#include "cgpu/extensions/cgpu_nsight.h"
 
-#define BACK_BUFFER_HEIGHT 900
-#define BACK_BUFFER_WIDTH 900
-
-void skr::RendererDevice::initialize(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
+namespace skr
 {
-    create_api_objects(enable_debug_layer, enable_gpu_based_validation, enable_set_name);
+struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
+{
+    friend class ::SkrRendererModule;
+    void initialize(const Builder& builder) override;
+    void finalize() override;
+
+    CGPUSwapChainId register_window(SWindowHandle window) override;
+    CGPUSwapChainId recreate_window_swapchain(SWindowHandle window) override;
+    void create_api_objects(const Builder& builder) override;
+
+    CGPUDeviceId get_cgpu_device() const override
+    {
+        return device;
+    }
+
+    ECGPUBackend get_backend() const override
+    {
+        return device->adapter->instance->backend;
+    }
+
+    CGPUQueueId get_gfx_queue() const override
+    {
+        return gfx_queue;
+    }
+
+    CGPUQueueId get_cpy_queue(uint32_t idx = 0) const override
+    {
+        if (idx < cpy_queues.size())
+            return cpy_queues[idx];
+        return cpy_queues[0];
+    }
+
+    CGPUDStorageQueueId get_file_dstorage_queue() const override
+    {
+        return file_dstorage_queue;
+    }
+
+    CGPUDStorageQueueId get_memory_dstorage_queue() const override
+    {
+        return memory_dstorage_queue;
+    }
+
+    ECGPUFormat get_swapchain_format() const override
+    {
+        if (swapchains.size())
+            return (ECGPUFormat)swapchains.at(0).second->back_buffers[0]->format;
+        return CGPU_FORMAT_B8G8R8A8_UNORM;
+    }
+
+    CGPUSamplerId get_linear_sampler() const override
+    {
+        return linear_sampler;
+    }
+
+    CGPURootSignaturePoolId get_root_signature_pool() const override
+    {
+        return root_signature_pool;
+    }
+
+    skr_io_vram_service_t* get_vram_service() const override
+    {
+        return vram_service;
+    }
+
+#ifdef _WIN32
+    skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const override
+    {
+        return decompress_service;
+    }
+#endif
+protected:
+    // Device objects
+    uint32_t backbuffer_index = 0;
+    eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
+    eastl::vector_map<SWindowHandle, CGPUSwapChainId> swapchains;
+    CGPUInstanceId instance = nullptr;
+    CGPUAdapterId adapter = nullptr;
+    CGPUDeviceId device = nullptr;
+    CGPUQueueId gfx_queue = nullptr;
+    eastl::vector<CGPUQueueId> cpy_queues;
+    CGPUSamplerId linear_sampler = nullptr;
+    skr_io_vram_service_t* vram_service = nullptr;
+    CGPUDStorageQueueId file_dstorage_queue = nullptr;
+    CGPUDStorageQueueId memory_dstorage_queue = nullptr;
+    CGPURootSignaturePoolId root_signature_pool = nullptr;
+#ifdef _WIN32
+    skr_win_dstorage_decompress_service_id decompress_service = nullptr;
+#endif
+    CGPUNSightTrackerId nsight_tracker = nullptr;
+};
+
+RendererDevice* RendererDevice::Create() SKR_NOEXCEPT
+{
+    return SkrNew<RendererDeviceImpl>();
+}
+
+void RendererDevice::Free(RendererDevice* device) SKR_NOEXCEPT
+{
+    SkrDelete(device);
+}
+
+void RendererDeviceImpl::initialize(const Builder& builder)
+{
+    create_api_objects(builder);
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
     vram_service_desc.lockless = true;
@@ -22,7 +124,7 @@ void skr::RendererDevice::initialize(bool enable_debug_layer, bool enable_gpu_ba
     vram_service = skr::io::VRAMService::create(&vram_service_desc);
 }
 
-void skr::RendererDevice::finalize()
+void RendererDeviceImpl::finalize()
 {
     skr::io::VRAMService::destroy(vram_service);
 
@@ -57,14 +159,14 @@ void skr::RendererDevice::finalize()
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
-void skr::RendererDevice::create_api_objects(bool enable_debug_layer, bool enable_gpu_based_validation, bool enable_set_name)
+void RendererDeviceImpl::create_api_objects(const Builder& builder)
 {
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
-    instance_desc.backend = backend;
-    instance_desc.enable_debug_layer = enable_debug_layer;
-    instance_desc.enable_gpu_based_validation = enable_gpu_based_validation;
-    instance_desc.enable_set_name = enable_set_name;
+    instance_desc.backend = builder.backend;
+    instance_desc.enable_debug_layer = builder.enable_debug_layer;
+    instance_desc.enable_gpu_based_validation = builder.enable_gpu_based_validation;
+    instance_desc.enable_set_name = builder.enable_set_name;
     instance = cgpu_create_instance(&instance_desc);
 
     // Filter adapters
@@ -152,7 +254,7 @@ void skr::RendererDevice::create_api_objects(bool enable_debug_layer, bool enabl
 #endif
 }
 
-CGPUSwapChainId skr::RendererDevice::register_window(SWindowHandle window)
+CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
 {
     // find registered
     {
@@ -188,7 +290,7 @@ CGPUSwapChainId skr::RendererDevice::register_window(SWindowHandle window)
     return swapchain;
 }
 
-CGPUSwapChainId skr::RendererDevice::recreate_window_swapchain(SWindowHandle window)
+CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle window)
 {
     // find registered
     CGPUSwapChainId old = nullptr;
@@ -226,4 +328,5 @@ CGPUSwapChainId skr::RendererDevice::recreate_window_swapchain(SWindowHandle win
     auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
     swapchains[window] = swapchain;
     return swapchain;
+}
 }
