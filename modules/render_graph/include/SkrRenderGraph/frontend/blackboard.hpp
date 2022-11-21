@@ -6,7 +6,7 @@ namespace skr
 {
 namespace render_graph
 {
-class Blackboard
+struct Blackboard
 {
 public:
     friend class RenderGraph;

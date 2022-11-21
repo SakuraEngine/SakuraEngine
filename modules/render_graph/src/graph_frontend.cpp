@@ -1,7 +1,6 @@
 ﻿#include "SkrRenderGraph/frontend/render_graph.hpp"
-#include <EASTL/vector_map.h>
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
-
+#include <containers/btree.hpp>
 #include "tracy/Tracy.hpp"
 
 namespace skr
@@ -86,7 +85,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
         // 2.calc aliasing
         // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
         // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
-        eastl::vector_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
+        skr::btree_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
         foreach_textures([&](TextureNode* texture) SKR_NOEXCEPT {
             if (texture->imported) return;
             for (auto&& [aliased, aliaed_span] : alliasing_lifespans)
