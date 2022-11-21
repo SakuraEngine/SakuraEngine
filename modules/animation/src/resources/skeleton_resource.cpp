@@ -1,0 +1,1 @@
+#include "SkrAnim/resources/skeleton_resource.h"
