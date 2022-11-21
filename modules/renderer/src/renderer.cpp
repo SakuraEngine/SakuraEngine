@@ -107,7 +107,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         {
             if (pass)
             {
-                pass->on_register(this, render_graph);
+                pass->on_update(this, render_graph);
 
                 auto& pass_draw_packets = draw_packets[pass->identity()];
                 for (auto pass_draw_packet : pass_draw_packets)
@@ -118,7 +118,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                     }
                 }
 
-                pass->on_unregister(this, render_graph);
+                pass->post_update(this, render_graph);
             }
         }
     }
