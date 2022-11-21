@@ -16,13 +16,12 @@ typedef struct skr_threaded_service_desc_t {
     SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
 } skr_threaded_service_desc_t;
 
-namespace skr
-{
-class RUNTIME_API ThreadedService
+#ifdef __cplusplus
+struct RUNTIME_API skr_threaded_service_t
 {
 public:
-    [[nodiscard]] static ThreadedService* create(const skr_threaded_service_desc_t* desc) SKR_NOEXCEPT;
-    static void destroy(ThreadedService* service) SKR_NOEXCEPT;
+    [[nodiscard]] static skr_threaded_service_t* create(const skr_threaded_service_desc_t* desc) SKR_NOEXCEPT;
+    static void destroy(skr_threaded_service_t* service) SKR_NOEXCEPT;
 
     // enqueue a request
     virtual void request(const skr_service_task_t* task, skr_async_request_t* async_request) SKR_NOEXCEPT = 0;
@@ -51,7 +50,9 @@ public:
     // get service status (sleeping or running)
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
 
-    virtual ~ThreadedService() SKR_NOEXCEPT = default;
-    ThreadedService() SKR_NOEXCEPT = default;
+    virtual ~skr_threaded_service_t() SKR_NOEXCEPT = default;
+    skr_threaded_service_t() SKR_NOEXCEPT = default;
 };
-} // namespace skr
+#else
+typedef struct skr_threaded_service_t skr_threaded_service_t;
+#endif

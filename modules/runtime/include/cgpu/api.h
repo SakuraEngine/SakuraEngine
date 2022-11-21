@@ -1220,11 +1220,9 @@ typedef struct CGPURenderPipeline {
 // Resources
 typedef struct CGPUShaderLibraryDescriptor {
     const char8_t* name;
-    uint32_t name_size;
     const uint32_t* code;
     uint32_t code_size;
     ECGPUShaderStage stage;
-    ECGPUTextureDimension dimension;
 } CGPUShaderLibraryDescriptor;
 
 typedef struct CGPUBufferDescriptor {

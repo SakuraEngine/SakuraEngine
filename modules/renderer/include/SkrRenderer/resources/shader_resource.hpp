@@ -27,6 +27,7 @@ sattr("rtti" : true)
 skr_platform_shader_identifier_t 
 {
     uint32_t bytecode_type; // ECGPUShaderBytecodeType
+    uint32_t shader_stage;//ECGPUShaderStage
     skr_shader_hash_t hash;
     eastl::string entry;
 };
@@ -41,6 +42,8 @@ skr_platform_shader_resource_t
     
     sattr("transient": true, "no-rtti" : true)
     CGPUShaderLibraryId shader;
+    sattr("transient": true, "no-rtti" : true)
+    uint32_t active_slot;
 };
 typedef struct skr_platform_shader_resource_t skr_platform_shader_resource_t;
 

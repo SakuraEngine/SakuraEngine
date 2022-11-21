@@ -1,8 +1,10 @@
 #include "SkrRenderer/render_device.h"
 #include "utils/make_zeroed.hpp"
+#include "utils/threaded_service.h"
 #include "platform/memory.h"
 #include "cgpu/io.hpp"
 #include <EASTL/vector_map.h>
+#include <EASTL/string.h>
 #ifdef _WIN32
 #include "cgpu/extensions/dstorage_windows.h"
 #endif
@@ -74,6 +76,17 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
         return vram_service;
     }
 
+    uint32_t get_aux_service_count() const override
+    {
+        return (uint32_t)aux_services.size();
+    }
+
+    skr_threaded_service_t* get_aux_service(uint32_t index) const override
+    {
+        SKR_ASSERT(aux_services.size() > index);
+        return aux_services[index];
+    }
+
 #ifdef _WIN32
     skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const override
     {
@@ -99,6 +112,7 @@ protected:
     skr_win_dstorage_decompress_service_id decompress_service = nullptr;
 #endif
     CGPUNSightTrackerId nsight_tracker = nullptr;
+    eastl::vector<skr_threaded_service_t*> aux_services;
 };
 
 RendererDevice* RendererDevice::Create() SKR_NOEXCEPT
@@ -122,6 +136,17 @@ void RendererDeviceImpl::initialize(const Builder& builder)
     vram_service_desc.sleep_time = 1000 / 60;
     vram_service_desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     vram_service = skr::io::VRAMService::create(&vram_service_desc);
+
+    aux_services.resize(builder.aux_thread_count);
+    for (uint32_t i = 0; i < aux_services.size(); i++)
+    {
+        auto name = "RenderAuxService-" + eastl::to_string(i);
+        auto desc = make_zeroed<skr_threaded_service_desc_t>();
+        desc.lockless = true;
+        desc.name = name.c_str();
+        desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
+        aux_services[i] = skr_threaded_service_t::create(&desc);
+    }
 }
 
 void RendererDeviceImpl::finalize()
@@ -156,6 +181,12 @@ void RendererDeviceImpl::finalize()
     cgpu_free_device(device);
     if (nsight_tracker) cgpu_free_nsight_tracker(nsight_tracker);
     cgpu_free_instance(instance);
+
+    for (auto& aux_service : aux_services)
+    {
+        aux_service->drain();
+        skr_threaded_service_t::destroy(aux_service);
+    }
 }
 
 #define MAX_CPY_QUEUE_COUNT 2

@@ -47,18 +47,17 @@ void SGameRTModule::on_load(int argc, char** argv)
     using namespace skr::guid::literals;
     auto resource_system = skr::resource::GetResourceSystem();
     
-    auto textureRoot = resourceRoot / "game";
-    auto u8TextureRoot = textureRoot.u8string();
-
-    skr_vfs_desc_t tex_vfs_desc = {};
-    tex_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
-    tex_vfs_desc.override_mount_dir = u8TextureRoot.c_str();
-    tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
-
+    auto gameResourceRoot = resourceRoot / "game";
+    auto u8TextureRoot = gameResourceRoot.u8string();
     // texture factory
     {
+        skr_vfs_desc_t tex_vfs_desc = {};
+        tex_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+        tex_vfs_desc.override_mount_dir = u8TextureRoot.c_str();
+        tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
+
         skr::resource::STextureFactory::Root factoryRoot = {};
-        factoryRoot.dstorage_root = textureRoot;
+        factoryRoot.dstorage_root = gameResourceRoot;
         factoryRoot.texture_vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
@@ -69,7 +68,7 @@ void SGameRTModule::on_load(int argc, char** argv)
     // mesh factory
     {
         skr::resource::SMeshFactory::Root factoryRoot = {};
-        factoryRoot.dstorage_root = textureRoot;
+        factoryRoot.dstorage_root = gameResourceRoot;
         factoryRoot.texture_vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
@@ -79,7 +78,20 @@ void SGameRTModule::on_load(int argc, char** argv)
     }
     // shader factory
     {
+        const auto backend = game_renderer->get_render_device()->get_backend();
+        std::string shaderType = "invalid";
+        if (backend == CGPU_BACKEND_D3D12) shaderType = "dxil";
+        if (backend == CGPU_BACKEND_VULKAN) shaderType = "spirv";
+        auto shaderResourceRoot = gameResourceRoot / shaderType;
+        auto u8ShaderResourceRoot = shaderResourceRoot.u8string();
+
+        skr_vfs_desc_t shader_vfs_desc = {};
+        shader_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+        shader_vfs_desc.override_mount_dir = u8ShaderResourceRoot.c_str();
+        shader_bytes_vfs = skr_create_vfs(&shader_vfs_desc);
+
         skr::resource::SShaderResourceFactory::Root factoryRoot = {};
+        factoryRoot.bytecode_vfs = shader_bytes_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.render_device = game_render_device;
         shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
@@ -124,6 +136,7 @@ void SGameRTModule::on_unload()
     skr::io::RAMService::destroy(ram_service);
     skr_free_vfs(resource_vfs);
     skr_free_vfs(tex_resource_vfs);
+    skr_free_vfs(shader_bytes_vfs);
 
     SKR_LOG_INFO("game runtime unloaded!");
 }
