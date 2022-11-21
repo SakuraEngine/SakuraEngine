@@ -37,7 +37,7 @@ sattr("serialize" : "bin")
 sattr("rtti" : true)
 skr_platform_shader_resource_t
 {
-    eastl::vector<skr_platform_shader_identifier_t> identifilers;
+    eastl::vector<skr_platform_shader_identifier_t> identifiers;
     
     sattr("transient": true, "no-rtti" : true)
     CGPUShaderLibraryId shader;
