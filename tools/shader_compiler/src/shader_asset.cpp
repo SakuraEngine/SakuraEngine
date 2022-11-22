@@ -61,10 +61,12 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_SPIRV
     };
     eastl::vector<skr_platform_shader_identifier_t> outIdentifiers;
+    eastl::vector<ECGPUShaderStage> outStages;
     outIdentifiers.resize(byteCodeFormats.size());
+    outStages.resize(byteCodeFormats.size());
     auto system = skd::asset::GetCookSystem();
     system->ParallelFor(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
-        [source_code, ctx, &byteCodeFormats, &outIdentifiers, outputPath]
+        [source_code, ctx, &byteCodeFormats, &outIdentifiers, &outStages, outputPath]
         (const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* _) -> void
         {
             ZoneScopedN("DXC Compile Task");
@@ -75,9 +77,11 @@ bool SShaderCooker::Cook(SCookContext *ctx)
             if (compiler->IsSupportedTargetFormat(format))
             {
                 auto& identifier = outIdentifiers[index];
+                auto& stage = outStages[index];
                 // compile & write bytecode to disk
                 const auto* shaderImporter = static_cast<SShaderImporter*>(ctx->GetImporter());
                 auto compiled = compiler->Compile(format, *source_code, *shaderImporter);
+                stage = compiled->GetShaderStage();
                 auto bytes = compiled->GetBytecode();
                 auto hashed = compiled->GetHashCode(&identifier.hash.flags, identifier.hash.encoded_digits);
                 if (hashed && !bytes.empty())
@@ -120,7 +124,12 @@ bool SShaderCooker::Cook(SCookContext *ctx)
             }
             SkrShaderCompiler_Destroy(compiler);
         });
-
+    // validate out shader stages
+    auto stage0 = outStages[0];
+    for (auto stage : outStages)
+    {
+        SKR_ASSERT(stage == stage0 && "platform shader stages are not the same!");
+    }
     // make archive
     eastl::vector<uint8_t> resource_data;
     struct VectorWriter
@@ -136,6 +145,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     // write texture resource
     auto resource = make_zeroed<skr_platform_shader_resource_t>();
     resource.identifiers = outIdentifiers;
+    resource.shader_stage = outStages[0];
     // format
     skr::binary::Write(&archive, resource);
     // write to file

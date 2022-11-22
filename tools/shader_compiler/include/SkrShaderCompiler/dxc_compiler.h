@@ -26,13 +26,15 @@ struct SKR_SHADER_COMPILER_API SDXCCompiledShader : public ICompiledShader
 public:
     ~SDXCCompiledShader() SKR_NOEXCEPT;
 
-    static SDXCCompiledShader* Create(ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT;
+    static SDXCCompiledShader* Create(ECGPUShaderStage shader_stage, ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT;
 
+    ECGPUShaderStage GetShaderStage() const SKR_NOEXCEPT override;
     skr::span<const uint8_t> GetBytecode() const SKR_NOEXCEPT override;
     skr::span<const uint8_t> GetPDB() const SKR_NOEXCEPT override;
     bool GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT override;
 
 protected:
+    ECGPUShaderStage shader_stage;
     ECGPUShaderBytecodeType code_type;
     uint32_t spv_hash[4];
     

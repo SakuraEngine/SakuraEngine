@@ -34,6 +34,18 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
     void DestroyResource(skr_resource_record_t* record) override;
 
+    ECGPUShaderBytecodeType GetRuntimeBytecodeType() const
+    {
+        const auto backend = root.render_device->get_backend();
+        switch (backend)
+        {
+        case CGPU_BACKEND_D3D12: return CGPU_SHADER_BYTECODE_TYPE_DXIL;
+        case CGPU_BACKEND_VULKAN: return CGPU_SHADER_BYTECODE_TYPE_SPIRV;
+        case CGPU_BACKEND_METAL: return CGPU_SHADER_BYTECODE_TYPE_MTL;
+        default: return CGPU_SHADER_BYTECODE_TYPE_COUNT;
+        }
+    }
+
     struct ShaderRequest
     {
         ShaderRequest(SShaderResourceFactoryImpl* factory, const char* uri, skr_platform_shader_resource_t* platform_shader)
@@ -51,10 +63,9 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
             desc.code = (const uint32_t*)shader_destination.bytes;
             desc.code_size = (uint32_t)shader_destination.size;
             desc.name = bytes_uri.c_str();
-            desc.stage = (ECGPUShaderStage)platform_shader->identifiers[platform_shader->active_slot].shader_stage;
+            desc.stage = (ECGPUShaderStage)platform_shader->shader_stage;
             platform_shader->shader = cgpu_create_shader_library(render_device->get_cgpu_device(), &desc);
             skr_atomic32_add_relaxed(&shader_created, 1);
-
             return true;
         }
 
@@ -129,15 +140,14 @@ bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
 
 ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* record)
 {
-    const auto rdevice = root.render_device;
-    const auto backend = rdevice->get_backend();
     auto bytes_vfs = root.bytecode_vfs;
     auto platform_shader = static_cast<skr_platform_shader_resource_t*>(record->resource);
     bool launch_success = false;
     for (uint32_t i = 0u; i < platform_shader->identifiers.size(); i++)
     {
         const auto& identifier = platform_shader->identifiers[i];
-        if (identifier.bytecode_type == backend)
+        const auto runtime_bytecode_type = GetRuntimeBytecodeType();
+        if (identifier.bytecode_type == runtime_bytecode_type)
         {
             const auto hash = identifier.hash;
             const auto uri = skr::format("{}#{}-{}-{}-{}.bytes", hash.flags, 
