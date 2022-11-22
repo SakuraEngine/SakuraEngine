@@ -39,7 +39,9 @@ sattr("rtti" : true)
 skr_platform_shader_resource_t
 {
     eastl::vector<skr_platform_shader_identifier_t> identifiers;
-    
+    sattr("no-rtti" : true)
+    ECGPUShaderStage shader_stage;
+
     sattr("transient": true, "no-rtti" : true)
     CGPUShaderLibraryId shader;
     sattr("transient": true, "no-rtti" : true)

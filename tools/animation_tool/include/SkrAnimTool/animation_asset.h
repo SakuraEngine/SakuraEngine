@@ -5,7 +5,9 @@
 #include "SkrAnimTool/animation_asset.genereated.h"
 #endif
 #include "SkrToolCore/asset/importer.hpp"
-namespace skd::asset
+namespace skd sreflect
+{
+namespace asset sreflect
 {
     class SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter
     {
@@ -14,4 +16,5 @@ namespace skd::asset
         virtual void Destroy(void*) override;
         static uint32_t Version() { return kDevelopmentVersion; }
     };
+}
 }
