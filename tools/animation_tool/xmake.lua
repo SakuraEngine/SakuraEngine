@@ -1,5 +1,6 @@
 shared_module("SkrAnimTool", "SKR_ANIMTOOL", engine_version)
     set_group("02.tools")
+    set_exceptions("cxx")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/SkrAnimTool",
