@@ -5,9 +5,6 @@
 
 int main(int argc, char** argv)
 {
-    //skr::task::scheduler_t scheduler;
-    //scheduler.initialize(skr::task::scheudler_config_t{});
-    //scheduler.bind();
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
