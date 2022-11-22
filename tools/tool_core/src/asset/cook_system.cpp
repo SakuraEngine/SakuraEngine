@@ -109,7 +109,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
         const auto cookerTypeName = type ? type->Name() : "UnknownResource";
         const auto guidString = skr::format("Guid: {}", metaAsset->guid);
         const auto assetTypeGuidString = skr::format("TypeGuid: {}", metaAsset->type);
-        const auto scopeName = skr::format("Cooker[{}].Cook", cookerTypeName.c_str());
+        const auto scopeName = skr::format("Cooker[{}].Cook", cookerTypeName);
         const auto assetString = skr::format("Asset: {}", metaAsset->path.u8string().c_str());
         ZoneName(scopeName.c_str(), scopeName.size());
         TracyMessage(guidString.c_str(), guidString.size());
