@@ -58,7 +58,7 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
         skr_vfs_t* bytecode_vfs = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
         SRenderDeviceId render_device = nullptr;
-        skr::ThreadedService* create_shader_service = nullptr;
+        skr_threaded_service_t* aux_service = nullptr;
     };
 
     [[nodiscard]] static SShaderResourceFactory* Create(const Root& root);

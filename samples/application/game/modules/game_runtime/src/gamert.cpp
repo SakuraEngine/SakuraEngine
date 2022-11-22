@@ -78,7 +78,7 @@ void SGameRTModule::on_load(int argc, char** argv)
     }
     // shader factory
     {
-        const auto backend = game_renderer->get_render_device()->get_backend();
+        const auto backend = game_render_device->get_backend();
         std::string shaderType = "invalid";
         if (backend == CGPU_BACKEND_D3D12) shaderType = "dxil";
         if (backend == CGPU_BACKEND_VULKAN) shaderType = "spirv";
@@ -94,6 +94,7 @@ void SGameRTModule::on_load(int argc, char** argv)
         factoryRoot.bytecode_vfs = shader_bytes_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.render_device = game_render_device;
+        factoryRoot.aux_service = game_render_device->get_aux_service(0);
         shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
         resource_system->RegisterFactory("1c7d845a-fde8-4487-b1c9-e9c48d6a9867"_guid, shaderFactory);
     }

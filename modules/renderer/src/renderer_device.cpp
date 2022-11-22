@@ -83,8 +83,7 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
 
     skr_threaded_service_t* get_aux_service(uint32_t index) const override
     {
-        SKR_ASSERT(aux_services.size() > index);
-        return aux_services[index];
+        return aux_services.size() ? aux_services[index] : nullptr;
     }
 
 #ifdef _WIN32

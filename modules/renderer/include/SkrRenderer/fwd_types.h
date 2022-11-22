@@ -4,7 +4,7 @@
 
 #ifdef __cplusplus
 namespace skr { struct RendererDevice; }
-namespace skr { struct ThreadedService; }
+struct skr_threaded_service_t;
 namespace skr { namespace io { class VRAMService; } }
 typedef struct skr::RendererDevice SRenderDevice;
 
