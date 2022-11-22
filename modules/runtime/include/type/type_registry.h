@@ -4,6 +4,9 @@
 #include "resource/resource_handle.h"
 #include "containers/sptr.hpp"
 
+
+RUNTIME_API const char* skr_get_type_name(const skr_guid_t* type);
+RUNTIME_API void skr_register_type_name(const skr_guid_t* type, const char* name);
 typedef struct skr_type_t skr_type_t;
 typedef struct skr_value_t skr_value_t;
 typedef struct skr_value_ref_t skr_value_ref_t;
@@ -50,7 +53,7 @@ struct RUNTIME_API skr_type_t {
     skr_type_t(skr_type_category_t type);
     size_t Size() const;
     size_t Align() const;
-    eastl::string Name() const;
+    const char* Name() const;
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
     void Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy = nullptr) const;
@@ -320,6 +323,7 @@ struct ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     size_t num;
     size_t size;
+    eastl::string name;
     ArrayType(const struct skr_type_t* elementType, size_t num, size_t size)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARR }
         , elementType(elementType)
@@ -352,6 +356,7 @@ struct ObjectMethodTable {
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     DynArrayMethodTable operations;
+    eastl::string name;
     DynArrayType(const skr_type_t* elementType, DynArrayMethodTable operations)
         : skr_type_t{ SKR_TYPE_CATEGORY_DYNARR }
         , elementType(elementType)
@@ -362,6 +367,7 @@ struct DynArrayType : skr_type_t {
 // gsl::span<T>
 struct ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
+    eastl::string name;
     ArrayViewType(const skr_type_t* elementType)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARRV }
         , elementType(elementType)
@@ -434,6 +440,7 @@ struct ReferenceType : skr_type_t {
     bool nullable;
     bool object;
     const struct skr_type_t* pointee;
+    eastl::string name;
     ReferenceType(Ownership ownership, bool nullable, bool object, const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_REF }
         , ownership(ownership)

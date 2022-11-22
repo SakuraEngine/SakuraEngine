@@ -6,6 +6,34 @@
 #include "type/type_registry.h"
 #include "containers/hashmap.hpp"
 
+static auto& skr_get_type_name_map()
+{
+    static skr::flat_hash_map<skr_guid_t, const char*, skr::guid::hash> type_name_map;
+    return type_name_map;
+}
+
+const char* skr_get_type_name(const skr_guid_t* typeId)
+{
+    auto& type_name_map = skr_get_type_name_map();
+    auto it = type_name_map.find(*typeId);
+    if (it != type_name_map.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        if(auto type = skr_get_type(typeId))
+            return type->Name();
+    }
+    return nullptr;
+}
+
+void skr_register_type_name(const skr_guid_t* type, const char* name)
+{
+    auto& type_name_map = skr_get_type_name_map();
+    type_name_map[*type] = name;
+}
+
 namespace skr::type
 {
 struct STypeRegistryImpl final : public STypeRegistry {
@@ -144,7 +172,7 @@ size_t skr_type_t::Align() const
     }
     return 0;
 }
-eastl::string skr_type_t::Name() const
+const char* skr_type_t::Name() const
 {
     using namespace skr::type;
     switch (type)
@@ -173,32 +201,43 @@ eastl::string skr_type_t::Name() const
             return "eastl::string_view";
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (ArrayType&)(*this);
-            return skr::format("{}[{}]", arr.elementType->Name(), (int)arr.num);
+            if(arr.name.empty())
+                arr.name = eastl::string(arr.elementType->Name()) + "[" + eastl::to_string(arr.size) + "]";
+            return arr.name.c_str();
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
             auto& arr = (DynArrayType&)(*this);
-            return skr::format("eastl::vector<{}>", arr.elementType->Name());
+            if(arr.name.empty())
+                arr.name = skr::format("eastl::vector<{}>", arr.elementType->Name());
+            return arr.name.c_str();
         }
         case SKR_TYPE_CATEGORY_ARRV: {
             auto& arr = (ArrayViewType&)(*this);
-            return skr::format("gsl::span<{}>", arr.elementType->Name());
+            if(arr.name.empty())
+                arr.name = skr::format("gsl::span<{}>", arr.elementType->Name());
+            return arr.name.c_str();
         }
         case SKR_TYPE_CATEGORY_OBJ:
-            return eastl::string(((RecordType*)this)->name);
+            return ((RecordType*)this)->name.data();
         case SKR_TYPE_CATEGORY_ENUM:
-            return eastl::string(((EnumType*)this)->name);
+            return ((EnumType*)this)->name.data();
         case SKR_TYPE_CATEGORY_REF: {
             auto& ref = (ReferenceType&)(*this);
+            if(!ref.name.empty())
+                return ref.name.c_str();
             switch (ref.ownership)
             {
                 case ReferenceType::Shared:
                     if (ref.object)
-                        return skr::format("skr::SObjectPtr<{}>", ref.pointee ? ref.pointee->Name() : "skr::SInterface");
+                        ref.name = skr::format("skr::SObjectPtr<{}>", ref.pointee ? ref.pointee->Name() : "skr::SInterface");
                     else
-                        return skr::format("skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : "void");
+                        ref.name = skr::format("skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : "void");
+                    break;
                 case ReferenceType::Observed:
-                    return ref.pointee ? (ref.pointee->Name() + " *") : "void*";
+                    ref.name = ref.pointee ? (eastl::string(ref.pointee->Name()) + " *") : "void*";
+                    break;
             }
+            return ref.name.c_str();
         }
     }
     return "";

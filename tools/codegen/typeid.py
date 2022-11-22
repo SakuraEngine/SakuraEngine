@@ -13,5 +13,15 @@ class Generator(object):
 
     def generate_forward(self, db, args):
         template = os.path.join(BASE, "typeid.hpp.mako")
-        return db.render(template, db=db, generator = self)
+        if self.filter_types(db.enums) or self.filter_types(db.records):
+            return db.render(template, db=db, generator = self)
+        else:
+            return ""
+
+    def generate_impl(self, db, args):
+        template = os.path.join(BASE, "typeid.cpp.mako")
+        if self.filter_types(db.enums) or self.filter_types(db.records):
+            return db.render(template, db=db, generator = self)
+        else:
+            return ""
 
