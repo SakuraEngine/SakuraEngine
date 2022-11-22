@@ -45,6 +45,8 @@ class StdAllocator {
   typedef size_t size_type;                   // Quantities of elements.
   typedef ptrdiff_t difference_type;  // Difference between two pointers.
 
+
+  StdAllocator(const char*) noexcept {}
   StdAllocator() noexcept {}
   StdAllocator(const StdAllocator&) noexcept {}
 
