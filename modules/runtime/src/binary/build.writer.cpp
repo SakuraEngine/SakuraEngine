@@ -124,6 +124,11 @@ int WriteValue(skr_binary_writer_t* writer, const skr_resource_handle_t& handle)
     return WriteValue<const skr_guid_t&>(writer, handle.get_serialized());
 }
 template <>
+int WriteValue(skr_binary_writer_t* writer, skr_resource_handle_t handle)
+{
+    return WriteValue<const skr_guid_t&>(writer, handle.get_serialized());
+}
+template <>
 int WriteValue(skr_binary_writer_t* writer, const skr_blob_t& blob)
 {
     int ret = WriteValue(writer, (uint32_t)blob.size);

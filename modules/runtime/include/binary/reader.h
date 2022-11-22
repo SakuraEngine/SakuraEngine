@@ -123,7 +123,7 @@ struct ReadHelper {
 
 
 template <class T>
-struct ReadHelper<skr::resource::TResourceHandle<T>&> {
+struct ReadHelper<skr::resource::TResourceHandle<T>> {
     static int Read(skr_binary_reader_t* reader, skr::resource::TResourceHandle<T>& handle)
     {
         skr_guid_t guid;
@@ -162,13 +162,13 @@ struct ReadHelper<eastl::vector<V, Allocator>> {
 template <class T>
 int Read(skr_binary_reader_t* reader, T& value)
 {
-    return ReadHelper<T>::Read(reader, value);
+    return ReadHelper<std::decay_t<T>>::Read(reader, value);
 }
 
 template <class T>
 int Archive(skr_binary_reader_t* writer, T& value)
 {
-    return ReadHelper<T>::Read(writer, value);
+    return ReadHelper<std::decay_t<T>>::Read(writer, value);
 }
 } // namespace binary
 } // namespace skr

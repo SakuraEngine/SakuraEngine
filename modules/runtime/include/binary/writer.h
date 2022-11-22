@@ -84,6 +84,8 @@ RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_guid_t& guid);
 template <>
 RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 template <>
+RUNTIME_API int WriteValue(skr_binary_writer_t* writer, skr_resource_handle_t handle);
+template <>
 RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_blob_t& blob);
 template<class T>
 std::enable_if_t<std::is_enum_v<T>, int> WriteValue(skr_binary_writer_t* writer, T value)
@@ -96,31 +98,32 @@ int Write(skr_binary_writer_t* writer, T value);
 
 template <class T>
 struct WriteHelper {
-    static int Write(skr_binary_writer_t* json, T map)
+    static int Write(skr_binary_writer_t* binary, T map)
     {
         using TType = std::remove_const_t<std::remove_reference_t<T>>;
-        return WriteValue<TParamType<TType>>(json, map);
+        return WriteValue<TParamType<TType>>(binary, map);
     }
 };
 
 template <class T>
 struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
-    static int Write(skr_binary_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
+    static int Write(skr_binary_writer_t* binary, const skr::resource::TResourceHandle<T>& handle)
     {
-        return WriteValue(json, (const skr_resource_handle_t&)handle);
+        const auto& hdl = static_cast<const skr_resource_handle_t&>(handle);
+        return WriteValue(binary, hdl);
     }
 };
 
 template <class V, class Allocator>
 struct WriteHelper<const eastl::vector<V, Allocator>&> {
-    static int Write(skr_binary_writer_t* json, const eastl::vector<V, Allocator>& vec)
+    static int Write(skr_binary_writer_t* binary, const eastl::vector<V, Allocator>& vec)
     {
-        int ret = WriteValue(json, (uint32_t)vec.size());
+        int ret = WriteValue(binary, (uint32_t)vec.size());
         if (ret != 0)
             return ret;
         for (auto& value : vec)
         {
-            ret = skr::binary::Write<TParamType<V>>(json, value);
+            ret = skr::binary::Write<TParamType<V>>(binary, value);
             if (ret != 0)
                 return ret;
         }

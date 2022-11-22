@@ -42,6 +42,22 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
 
         }
 
+        bool createShader()
+        {
+            auto render_device = factory->root.render_device;
+            const auto& shader_destination = bytes_destination;
+    
+            auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
+            desc.code = (const uint32_t*)shader_destination.bytes;
+            desc.code_size = (uint32_t)shader_destination.size;
+            desc.name = bytes_uri.c_str();
+            desc.stage = (ECGPUShaderStage)platform_shader->identifiers[platform_shader->active_slot].shader_stage;
+            platform_shader->shader = cgpu_create_shader_library(render_device->get_cgpu_device(), &desc);
+            skr_atomic32_add_relaxed(&shader_created, 1);
+
+            return true;
+        }
+
         SShaderResourceFactoryImpl* factory = nullptr;
         eastl::string bytes_uri;
         skr_platform_shader_resource_t* platform_shader = nullptr;
@@ -135,7 +151,6 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
             ram_texture_io.path = sRequest->bytes_uri.c_str();
             ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
                 ZoneScopedN("LoadShaderBytes");
-                // upload
                 auto sRequest = (ShaderRequest*)data;
                 auto factory = sRequest->factory;
                 if (auto aux_service = factory->root.aux_service) // create shaders on aux thread
@@ -143,36 +158,14 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
                     auto aux_task = make_zeroed<skr_service_task_t>();
                     aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
                         auto sRequest = (ShaderRequest*)usrdata;
-                        auto factory = sRequest->factory;
-
-                        auto render_device = factory->root.render_device;
-                        const auto platform_shader = sRequest->platform_shader;
-                        const auto& shader_destination = sRequest->bytes_destination;
-                
-                        auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
-                        desc.code = (const uint32_t*)shader_destination.bytes;
-                        desc.code_size = (uint32_t)shader_destination.size;
-                        desc.name = sRequest->bytes_uri.c_str();
-                        desc.stage = (ECGPUShaderStage)platform_shader->identifiers[platform_shader->active_slot].shader_stage;
-                        platform_shader->shader = cgpu_create_shader_library(render_device->get_cgpu_device(), &desc);
-                        skr_atomic32_add_relaxed(&sRequest->shader_created, 1);
+                        sRequest->createShader();
                     };
                     aux_task.callback_datas[SKR_ASYNC_IO_STATUS_OK] = sRequest;
                     aux_service->request(&aux_task, &sRequest->aux_request);
                 }
                 else // create shaders inplace
                 {
-                    auto render_device = factory->root.render_device;
-                    const auto platform_shader = sRequest->platform_shader;
-                    const auto& shader_destination = sRequest->bytes_destination;
-
-                    auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
-                    desc.code = (const uint32_t*)shader_destination.bytes;
-                    desc.code_size = (uint32_t)shader_destination.size;
-                    desc.name = sRequest->bytes_uri.c_str();
-                    desc.stage = (ECGPUShaderStage)platform_shader->identifiers[platform_shader->active_slot].shader_stage;
-                    platform_shader->shader = cgpu_create_shader_library(render_device->get_cgpu_device(), &desc);
-                    skr_atomic32_add_relaxed(&sRequest->shader_created, 1);
+                    sRequest->createShader();
                 }
             };
             ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)sRequest.get();
