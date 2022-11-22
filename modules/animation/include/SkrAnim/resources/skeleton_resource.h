@@ -21,20 +21,21 @@ namespace skr sreflect
 {
 namespace resource sreflect
 {
-    class SSkelFactory : public SResourceFactory
-    {
-    public:
-        ~SSkelFactory() noexcept = default;
-        skr_type_id_t GetResourceType() override;
-        bool AsyncIO() override { return true; }
-        ESkrLoadStatus Load(skr_resource_record_t* record) override;
-        ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
-        bool Unload(skr_resource_record_t* record) override;
-        ESkrInstallStatus Install(skr_resource_record_t* record) override;
-        bool Uninstall(skr_resource_record_t* record) override;
-        ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
-        void DestroyResource(skr_resource_record_t* record) override;
-    };
+sreflect_struct("guid" : "03212f68-3db3-4080-a074-b855cd21e32f")
+SSkelFactory : public SResourceFactory
+{
+public:
+    ~SSkelFactory() noexcept = default;
+    skr_type_id_t GetResourceType() override;
+    bool AsyncIO() override { return true; }
+    ESkrLoadStatus Load(skr_resource_record_t* record) override;
+    ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
+    bool Unload(skr_resource_record_t* record) override;
+    ESkrInstallStatus Install(skr_resource_record_t* record) override;
+    bool Uninstall(skr_resource_record_t* record) override;
+    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
+    void DestroyResource(skr_resource_record_t* record) override;
+};
 } // namespace resource
 } // namespace skr
 #endif
