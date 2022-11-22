@@ -161,12 +161,15 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
             ram_texture_io.path = sRequest->bytes_uri.c_str();
             ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
                 ZoneScopedN("LoadShaderBytes");
+                
                 auto sRequest = (ShaderRequest*)data;
                 auto factory = sRequest->factory;
                 if (auto aux_service = factory->root.aux_service) // create shaders on aux thread
                 {
                     auto aux_task = make_zeroed<skr_service_task_t>();
                     aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
+                        ZoneScopedN("CreateShader(AuxService)");
+
                         auto sRequest = (ShaderRequest*)usrdata;
                         sRequest->createShader();
                     };
@@ -175,6 +178,8 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
                 }
                 else // create shaders inplace
                 {
+                    ZoneScopedN("CreateShader(InPlace)");
+
                     sRequest->createShader();
                 }
             };

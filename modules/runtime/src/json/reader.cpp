@@ -63,6 +63,14 @@ error_code ReadValue(simdjson::ondemand::value&& json, uint64_t& b)
     return (error_code)result.error();
 }
 template <>
+error_code ReadValue(simdjson::ondemand::value&& json, float& f)
+{
+    auto result = json.get_double();
+    if (result.error() == simdjson::SUCCESS)
+        f = static_cast<float>(result.value_unsafe());
+    return (error_code)result.error();
+}
+template <>
 error_code ReadValue(simdjson::ondemand::value&& json, double& b)
 {
     auto result = json.get_double();

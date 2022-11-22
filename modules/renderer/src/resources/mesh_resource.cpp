@@ -337,13 +337,9 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
 
     struct DStorageRequest
     {
-        ~DStorageRequest()
-        {
-            for (const auto& iter : absPaths)
-            {
-                SKR_LOG_TRACE("DStorage for mesh resource %s finished!", iter.c_str());
-            }
-        }
+        DStorageRequest() SKR_NOEXCEPT = default;
+        ~DStorageRequest() SKR_NOEXCEPT = default;
+
         eastl::vector<std::string> absPaths;
         eastl::vector<skr_async_request_t> dRequests;
         eastl::vector<skr_async_vbuffer_destination_t> dDestinations;
@@ -351,16 +347,14 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
 
     struct UploadRequest
     {
-        UploadRequest() = default;
-        UploadRequest(SMeshFactoryImpl* factory,skr_mesh_resource_id mesh_resource)
+        UploadRequest() SKR_NOEXCEPT = default;
+        UploadRequest(SMeshFactoryImpl* factory,skr_mesh_resource_id mesh_resource) SKR_NOEXCEPT
             : factory(factory), mesh_resource(mesh_resource)
         {
 
         }
-        ~UploadRequest()
-        {
-            
-        }
+        ~UploadRequest() SKR_NOEXCEPT = default;
+        
         SMeshFactoryImpl* factory = nullptr;
         skr_mesh_resource_id mesh_resource = nullptr;
         eastl::vector<std::string> resource_uris;
