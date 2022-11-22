@@ -26,7 +26,7 @@ struct DxcCreateInstanceT
 
 #define SAFE_RELEASE(ptr) if (ptr) { ptr->Release(); ptr = nullptr; }
 
-SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT
+SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT
 {
     auto compiled = SkrNew<SDXCCompiledShader>();
     const bool is_spv = (type == CGPU_SHADER_BYTECODE_TYPE_SPIRV);
@@ -36,7 +36,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDx
     IDxcBlobWide* pdbName = nullptr;
     IDxcBlob* pdb = nullptr;
     IDxcBlob* hash = nullptr;
-    IDxcBlob* reflectionData   = nullptr;
+    IDxcBlob* reflectionData = nullptr;
     uint32_t spv_hash[4];
     
     result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
@@ -73,6 +73,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderBytecodeType type, IDx
     {
         SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get reflection data! HRESULT: %u", hres);
     }
+    compiled->shader_stage = shader_stage;
     compiled->code_type = type;
     compiled->source = source;
     compiled->errors = errors;
@@ -118,6 +119,11 @@ SDXCCompiledShader::~SDXCCompiledShader() SKR_NOEXCEPT
 
     SAFE_RELEASE(hashDigestBlob);
     SAFE_RELEASE(debugDxilContainer);
+}
+
+ECGPUShaderStage SDXCCompiledShader::GetShaderStage() const SKR_NOEXCEPT
+{
+    return shader_stage;
 }
 
 skr::span<const uint8_t> SDXCCompiledShader::GetBytecode() const SKR_NOEXCEPT
@@ -193,6 +199,19 @@ bool SDXCCompiler::IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const
     return (format == CGPU_SHADER_BYTECODE_TYPE_DXIL) || (format == CGPU_SHADER_BYTECODE_TYPE_SPIRV);
 }
 
+inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target)
+{
+    eastl::string_view sv = target;
+    if (sv.starts_with("vs")) return CGPU_SHADER_STAGE_VERT;
+    if (sv.starts_with("gs")) return CGPU_SHADER_STAGE_GEOM;
+    if (sv.starts_with("ds")) return CGPU_SHADER_STAGE_DOMAIN;
+    if (sv.starts_with("hs")) return CGPU_SHADER_STAGE_HULL;
+    if (sv.starts_with("ps")) return CGPU_SHADER_STAGE_FRAG;
+    if (sv.starts_with("cs")) return CGPU_SHADER_STAGE_COMPUTE;
+    if (sv.starts_with("lib")) return CGPU_SHADER_STAGE_RAYTRACING;
+    return CGPU_SHADER_STAGE_NONE;
+}
+
 ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT
 {
     IDxcBlobEncoding* pSourceBlob = nullptr;
@@ -210,7 +229,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     const auto wTargetString = utf8_to_utf16(importer.target.c_str());
     const auto wEntryString = utf8_to_utf16(importer.entry.c_str());
     const auto wNameString = utf8_to_utf16(source.source_name.c_str());
-
+    const auto shader_stage = getShaderStageFromTargetString(importer.target.c_str());
     if (format == CGPU_SHADER_BYTECODE_TYPE_DXIL) // compile dxil
     {
         LPCWSTR pszArgs[]
@@ -290,7 +309,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     {
         SKR_UNREACHABLE_CODE();
     }
-    return SDXCCompiledShader::Create(format, pSourceBlob, pDxcResult);
+    return SDXCCompiledShader::Create(shader_stage, format, pSourceBlob, pDxcResult);
 }
 
 void SDXCCompiler::FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT { SkrDelete(compiled); } 

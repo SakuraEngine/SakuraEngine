@@ -40,6 +40,7 @@ struct SKR_SHADER_COMPILER_API ICompiledShader
 {
     virtual ~ICompiledShader() = default;
 
+    virtual ECGPUShaderStage GetShaderStage() const SKR_NOEXCEPT = 0;
     virtual skr::span<const uint8_t> GetBytecode() const SKR_NOEXCEPT = 0;
     virtual skr::span<const uint8_t> GetPDB() const SKR_NOEXCEPT = 0;
     virtual bool GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT = 0;
