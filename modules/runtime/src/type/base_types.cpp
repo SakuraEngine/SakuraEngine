@@ -119,6 +119,5 @@ size_t Hash(const eastl::string_view& value, size_t base)
 {
     return skr_hash(value.data(), value.size(), base);
 }
-
 } // namespace type
 } // namespace skr

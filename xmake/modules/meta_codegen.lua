@@ -171,6 +171,7 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
         {
             os.projectdir()..vformat("/tools/codegen/typeid.py"),
             os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/typeid.cpp.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/component.py"),
