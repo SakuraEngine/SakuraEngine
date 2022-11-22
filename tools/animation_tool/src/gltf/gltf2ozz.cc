@@ -42,25 +42,6 @@
 #include "SkrAnim/ozz/base/maths/math_ex.h"
 #include "SkrAnim/ozz/base/maths/simd_math.h"
 
-#define TINYGLTF_IMPLEMENTATION
-
-// No support for image loading or writing
-#define TINYGLTF_NO_STB_IMAGE
-#define TINYGLTF_NO_STB_IMAGE_WRITE
-#define TINYGLTF_NO_EXTERNAL_IMAGE
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4702)  // unreachable code
-#pragma warning(disable : 4267)  // conversion from 'size_t' to 'type'
-#endif                           // _MSC_VER
-
-#include "extern/tiny_gltf.h"
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif  // _MSC_VER
-
 namespace {
 
 template <typename _VectorType>

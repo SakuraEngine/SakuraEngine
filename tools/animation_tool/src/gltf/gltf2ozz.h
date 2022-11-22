@@ -1,6 +1,7 @@
+#pragma once
 #include "SkrAnimTool/ozz/raw_animation_utils.h"
 #include "SkrAnimTool/ozz/tools/import2ozz.h"
-#include "extern/tiny_gltf.h"
+#include "tiny_gltf.h"
 
 class GltfImporter : public ozz::animation::offline::OzzImporter {
  public:
