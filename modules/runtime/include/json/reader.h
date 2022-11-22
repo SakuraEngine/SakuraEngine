@@ -83,6 +83,8 @@ RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, int64_t& b);
 template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, uint64_t& b);
 template <>
+RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, float& f);
+template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, double& b);
 template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, eastl::string& guid);

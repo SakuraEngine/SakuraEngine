@@ -50,6 +50,12 @@ bool skr_json_writer_t::Double(double d)
     return _WriteDouble(d);
 }
 
+bool skr_json_writer_t::Float(float f)
+{
+    _Prefix(SKR_JSONTYPE_NUMBER);
+    return _WriteFloat(f);
+}
+
 bool skr_json_writer_t::RawNumber(const TChar* str, TSize length)
 {
     _Prefix(SKR_JSONTYPE_NUMBER);
@@ -138,6 +144,12 @@ bool skr_json_writer_t::_WriteInt64(int64_t i)
 bool skr_json_writer_t::_WriteUInt64(uint64_t i)
 {
     fmt::format_to(std::back_inserter(buffer), "{}", i);
+    return true;
+}
+
+bool skr_json_writer_t::_WriteFloat(float f)
+{
+    fmt::format_to(std::back_inserter(buffer), "{}", static_cast<double>(f));
     return true;
 }
 
@@ -251,6 +263,8 @@ template <>
 void WriteValue(skr_json_writer_t* writer, int64_t b) { writer->Int64(b); }
 template <>
 void WriteValue(skr_json_writer_t* writer, uint64_t b) { writer->UInt64(b); }
+template <>
+void WriteValue(skr_json_writer_t* writer, float b) { writer->Float(b); }
 template <>
 void WriteValue(skr_json_writer_t* writer, double b) { writer->Double(b); }
 template <>

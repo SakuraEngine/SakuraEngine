@@ -34,6 +34,7 @@ public:
     bool UInt(uint32_t i);
     bool Int64(int64_t i);
     bool UInt64(uint64_t i);
+    bool Float(float f);
     bool Double(double d);
     bool RawNumber(const TChar* str, TSize length);
     bool RawNumber(std::basic_string_view<TChar> view);
@@ -59,6 +60,7 @@ protected:
     bool _WriteUInt(uint32_t i);
     bool _WriteInt64(int64_t i);
     bool _WriteUInt64(uint64_t i);
+    bool _WriteFloat(float f);
     bool _WriteDouble(double d);
     bool _WriteString(const TChar* str, TSize length);
     bool _WriteStartObject();
@@ -108,6 +110,8 @@ template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, int64_t b);
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, uint64_t b);
+template <>
+RUNTIME_API void WriteValue(skr_json_writer_t* writer, float b);
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, double b);
 template <>
