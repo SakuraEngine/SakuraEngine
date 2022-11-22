@@ -79,8 +79,9 @@ typedef struct skr_json_writer_t skr_json_writer_t;
 
 #if defined(__cplusplus)
     #include "EASTL/string.h"
+    #include "type/type_id.hpp"
+    #include "platform/guid.hpp"
 // utils for codegen
-typedef struct skr_guid_t skr_guid_t;
 namespace skr
 {
 namespace json
@@ -129,13 +130,14 @@ std::enable_if_t<std::is_enum_v<T>, void> WriteValue(skr_json_writer_t* writer, 
     WriteValue(writer, static_cast<std::underlying_type_t<T>>(value));
 }
 template <class T>
-void Write(skr_json_writer_t* writer, T value);
+void Write(skr_json_writer_t* writer, const T& value);
 
 template <class T>
 struct WriteHelper {
     static void Write(skr_json_writer_t* json, T map)
     {
-        WriteValue<TParamType<T>>(json, map);
+        using TType = std::remove_const_t<std::remove_reference_t<T>>;
+        WriteValue<TParamType<TType>>(json, map);
     }
 };
 
@@ -174,10 +176,23 @@ struct WriteHelper<const eastl::vector<V, Allocator>&> {
     }
 };
 
-template <class T>
-void Write(skr_json_writer_t* writer, T value)
+template<class ...Ts>
+struct WriteHelper<const skr::variant<Ts...>&>
 {
-    WriteHelper<T>::Write(writer, value);
+    static void Write(skr_json_writer_t* json, const skr::variant<Ts...>& v)
+    {
+        std::visit([&](auto&& value) {
+            using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
+            skr::json::WriteValue<const skr_guid_t&>(json, skr::type::type_id<raw>::get());
+            skr::json::Write<decltype(value)>(json, value);
+        }, v);
+    }
+};
+
+template <class T>
+void Write(skr_json_writer_t* writer, const T& value)
+{
+    WriteHelper<const T&>::Write(writer, value);
 }
 } // namespace json
 } // namespace skr

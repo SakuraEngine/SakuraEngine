@@ -3,6 +3,7 @@
 #include <EASTL/string.h>
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
+#include "containers/variant.hpp"
 
 struct skr_binary_writer_t {
     template <class T>
@@ -94,7 +95,7 @@ std::enable_if_t<std::is_enum_v<T>, int> WriteValue(skr_binary_writer_t* writer,
 }
 
 template <class T>
-int Write(skr_binary_writer_t* writer, T value);
+int Write(skr_binary_writer_t* writer, const T& value);
 
 template <class T>
 struct WriteHelper {
@@ -131,10 +132,25 @@ struct WriteHelper<const eastl::vector<V, Allocator>&> {
     }
 };
 
-template <class T>
-int Write(skr_binary_writer_t* writer, T value)
+template<class ...Ts>
+struct WriteHelper<const skr::variant<Ts...>&>
 {
-    return WriteHelper<T>::Write(writer, value);
+    static int Write(skr_binary_writer_t* binary, const skr::variant<Ts...>& variant)
+    {
+        int ret = WriteValue(binary, (uint32_t)variant.index());
+        if (ret != 0)
+            return ret;
+        std::visit([&](auto&& value) {
+            ret = skr::binary::Write<decltype(value)>(binary, value);
+        }, variant);
+        return ret;
+    }
+};
+
+template <class T>
+int Write(skr_binary_writer_t* writer, const T& value)
+{
+    return WriteHelper<const T&>::Write(writer, value);
 }
 
 template <class T>

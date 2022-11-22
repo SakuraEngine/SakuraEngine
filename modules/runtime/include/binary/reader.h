@@ -3,6 +3,7 @@
 #include <EASTL/string.h>
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
+#include "containers/variant.hpp"
 
 struct skr_binary_reader_t {
     template <class T>
@@ -156,6 +157,44 @@ struct ReadHelper<eastl::vector<V, Allocator>> {
         }
         vec = std::move(temp);
         return 0;
+    }
+};
+
+template<class ...Ts>
+struct ReadHelper<skr::variant<Ts...>>
+{
+    template<size_t I, class T>
+    static int ReadByIndex(skr_binary_reader_t* reader, skr::variant<Ts...>& value, size_t index)
+    {
+        if (index == I)
+        {
+            T t;
+            int ret = skr::binary::Read(reader, t);
+            if (ret != 0)
+                return ret;
+            value = std::move(t);
+            return 0;
+        }
+        return -1;
+    }
+
+    template<size_t ...Is>
+    static int ReadByIndexHelper(skr_binary_reader_t* reader, skr::variant<Ts...>& value, size_t index, std::index_sequence<Is...>)
+    {
+        int result;
+        (void)(((result = ReadByIndex<Is, Ts>(reader, value, index)) != 0) && ...);
+        return result;
+    }
+
+    static int Read(skr_binary_reader_t* reader, skr::variant<Ts...>& value)
+    {
+        uint32_t index;
+        int ret = ReadValue(reader, index);
+        if (ret != 0)
+            return ret;
+        if (index >= sizeof...(Ts))
+            return -1;
+        ReadByIndexHelper(reader, value, index, std::make_index_sequence<sizeof...(Ts)>());
     }
 };
 
