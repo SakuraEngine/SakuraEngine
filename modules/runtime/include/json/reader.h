@@ -6,6 +6,9 @@
 #include <EASTL/vector.h>
 #include "simdjson.h"
 #include "containers/hashmap.hpp"
+#include "containers/variant.hpp"
+#include "type/type_id.hpp"
+#include "platform/guid.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
@@ -15,7 +18,6 @@ namespace skr::resource { template <class T> struct TResourceHandle; }
 struct RUNTIME_API skr_json_reader_t {
     simdjson::ondemand::value* json;
 };
-typedef struct skr_guid_t skr_guid_t;
 // utils for codegen
 namespace skr
 {
@@ -55,6 +57,7 @@ enum error_code
     OUT_OF_BOUNDS,              ///< Attempted to access location outside of document.
     NUM_JSON_ERROR_CODES,
     ENUMERATOR_ERROR,
+    VARIANT_ERROR,
     GUID_ERROR,
     NUM_ERROR_CODES,
 };
@@ -154,6 +157,41 @@ struct ReadHelper<eastl::vector<V, Allocator>> {
             vec.push_back(std::move(v));
         }
         return SUCCESS;
+    }
+};
+
+template<class ...Ts>
+struct ReadHelper<skr::variant<Ts...>>
+{
+    template<class T>
+    static error_code ReadByIndex(simdjson::ondemand::value&& json, skr::variant<Ts...>& value, skr_guid_t index)
+    {
+        if (index == skr::type::type_id<T>::get())
+        {
+            T t;
+            error_code ret = skr::json::Read(std::move(json), t);
+            if (ret != error_code::SUCCESS)
+                return ret;
+            value = std::move(t);
+            return error_code::SUCCESS;
+        }
+        return error_code::VARIANT_ERROR;
+    }
+
+    static error_code Read(simdjson::ondemand::value&& json, skr::variant<Ts...>& value)
+    {
+        auto object = json.get_object();
+        if (object.error() != simdjson::SUCCESS)
+            return (error_code)object.error();
+        auto type = object.value_unsafe()["type"];
+        if (type.error() != simdjson::SUCCESS)
+            return (error_code)type.error();
+        skr_guid_t index;
+        error_code ret = skr::json::Read<skr_guid_t>(std::move(type).value_unsafe(), index);
+        if (ret != error_code::SUCCESS)
+            return ret;
+        (void)(((ret = ReadByIndex<Ts>(std::move(json), value, index)) != error_code::SUCCESS) && ...);
+        return ret;
     }
 };
 

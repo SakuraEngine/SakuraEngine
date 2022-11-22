@@ -116,6 +116,8 @@ size_t skr_type_t::Size() const
                         return sizeof(skr::SPtr<void>);
             }
         }
+        case SKR_TYPE_CATEGORY_VARIANT:
+            return ((VariantType*)this)->size;
     }
     return 0;
 }
@@ -148,13 +150,13 @@ size_t skr_type_t::Align() const
         case SKR_TYPE_CATEGORY_STRV:
             return alignof(eastl::string_view);
         case SKR_TYPE_CATEGORY_ARR:
-            return ((ArrayType*)this)->size;
+            return ((ArrayType*)this)->elementType->Align();
         case SKR_TYPE_CATEGORY_DYNARR:
             return alignof(eastl::vector<char>);
         case SKR_TYPE_CATEGORY_ARRV:
             return alignof(gsl::span<char>);
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->size;
+            return ((RecordType*)this)->align;
         case SKR_TYPE_CATEGORY_ENUM:
             return ((EnumType*)this)->underlyingType->Align();
         case SKR_TYPE_CATEGORY_REF: {
@@ -169,6 +171,8 @@ size_t skr_type_t::Align() const
                         return alignof(skr::SPtr<void>);
             }
         }
+        case SKR_TYPE_CATEGORY_VARIANT:
+            return ((VariantType*)this)->align;
     }
     return 0;
 }
@@ -239,6 +243,22 @@ const char* skr_type_t::Name() const
             }
             return ref.name.c_str();
         }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            auto& variant = (VariantType&)(*this);
+            if(!variant.name.empty())
+                return variant.name.c_str();
+            variant.name = "skr::variant<";
+            bool first = true;
+            for(auto& type : variant.types)
+            {
+                if(!first)
+                    variant.name += ", ";
+                first = false;
+                variant.name += type->Name();
+            }
+            variant.name += ">";
+            return variant.name.c_str();
+        }
     }
     return "";
 }
@@ -279,6 +299,16 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
                     return false;
                 return ptr->ownership == sptr->ownership && ptr->nullable == sptr->nullable && ptr->pointee->Same(sptr->pointee);
             }
+        }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            auto ptr = ((VariantType*)this);
+            auto sptr = ((VariantType*)srcType);
+            if (ptr->types.size() != sptr->types.size())
+                return false;
+            for (size_t i = 0; i < ptr->types.size(); i++)
+                if (!ptr->types[i]->Same(sptr->types[i]))
+                    return false;
+            return true;
         }
         default:
             return false;
@@ -487,6 +517,20 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 return true;
             else
                 return false;
+        }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            auto& variant = (const VariantType&)(*this);
+            if (stype == SKR_TYPE_CATEGORY_VARIANT)
+                return false;
+            else
+            {
+                for (auto& type : variant.types)
+                {
+                    if (type->Same(srcType))
+                        return true;
+                }
+                return false;
+            }
         }
     };
     if (std::find(acceptIndices.begin(), acceptIndices.end(), stype) != acceptIndices.end())
@@ -919,7 +963,24 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                 dstV = (void*)src;
             }
         }
+        break;
+        case SKR_TYPE_CATEGORY_VARIANT:
+        {
+            auto& variant = (const VariantType&)(*this);
+            uint32_t i = 0;
+            for (auto& type : variant.types)
+            {
+                if (type->Same(srcType))
+                {
+                    variant.setters[i](dst, src);
+                    break;
+                }
+                ++i;
+            }
+        }
+        break;
         default:
+            SKR_ASSERT(false);
             break;
     }
 }
@@ -953,7 +1014,14 @@ eastl::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePol
                 return skr::format("{}", (*(skr_resource_handle_t*)dst).get_serialized());
             case SKR_TYPE_CATEGORY_ENUM:
                 return ((const EnumType*)this)->ToString(dst);
+            case SKR_TYPE_CATEGORY_VARIANT:
+            {
+                auto variant = (const VariantType*)this;
+                auto index = variant->indexer(dst);
+                return variant->types[index]->ToString(variant->getters[index]((void*)dst), policy);
+            }
             default:
+                SKR_UNIMPLEMENTED_FUNCTION();
                 break;
         }
         return "";
@@ -1061,6 +1129,11 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
                     break;
             }
         }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            auto variant = (const VariantType*)this;
+            auto index = variant->indexer(dst);
+            return variant->types[index]->Hash(variant->getters[index]((void*)dst), base);
+        }
     }
     return 0;
 }
@@ -1103,6 +1176,11 @@ void skr_type_t::Destruct(void* address) const
                 else
                     ((skr::SPtr<void>*)address)->~SPtrHelper();
             }
+        }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            auto& variant = (const VariantType&)(*this);
+            variant.dtor(address);
+            break;
         }
         default:
             break;
@@ -1211,6 +1289,11 @@ void skr_type_t::Copy(void* dst, const void* src) const
             }
             break;
         }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            auto& variant = (const VariantType&)(*this);
+            variant.copy(dst, src);
+            break;
+        }
     }
 }
 
@@ -1317,6 +1400,11 @@ void skr_type_t::Move(void* dst, void* src) const
             }
             break;
         }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            auto& variant = (const VariantType&)(*this);
+            variant.move(dst, src);
+            break;
+        }
     }
 }
 
@@ -1359,6 +1447,8 @@ void skr_type_t::Delete()
             SkrDelete((EnumType*)this);
         case SKR_TYPE_CATEGORY_REF:
             SkrDelete((ReferenceType*)this);
+        case SKR_TYPE_CATEGORY_VARIANT:
+            SkrDelete((VariantType*)this);
     }
 }
 

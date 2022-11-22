@@ -36,7 +36,7 @@ namespace skr::type
             %endif
                 ObjectMethodTable nativeMethods {
                     +[](void* self) { ((${record.name}*)self)->~${record.short_name}(); }, //dtor
-                    +[](void* self, struct skr_value_t* param, size_t nparam) { /*TODO*/ }, //ctor
+                    +[](void* self, struct skr_value_t* param, size_t nparam) { /*TODO*/ SKR_UNIMPLEMENTED_FUNCTION(); }, //ctor
                     GetCopyCtor<${record.name}>(),
                     GetMoveCtor<${record.name}>(),
             %if hasattr(record.attrs, "hashable"):

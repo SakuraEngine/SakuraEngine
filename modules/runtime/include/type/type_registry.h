@@ -3,6 +3,7 @@
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
 #include "containers/sptr.hpp"
+#include "containers/variant.hpp"
 
 
 RUNTIME_API const char* skr_get_type_name(const skr_guid_t* type);
@@ -44,6 +45,7 @@ enum skr_type_category_t
     SKR_TYPE_CATEGORY_OBJ,
     SKR_TYPE_CATEGORY_ENUM,
     SKR_TYPE_CATEGORY_REF,
+    SKR_TYPE_CATEGORY_VARIANT
 };
 typedef enum skr_type_category_t skr_type_category_t;
 
@@ -450,6 +452,38 @@ struct ReferenceType : skr_type_t {
     {
     }
 };
+// skr::variant<Ts...>
+struct VariantType : skr_type_t {
+    const gsl::span<const skr_type_t*> types;
+    size_t size;
+    size_t align;
+    eastl::string name;
+    const gsl::span<void* (*)(void*)> getters;
+    const gsl::span<void (*)(void*, const void*)> setters;
+    size_t (*indexer)(const void* self);
+    void (*dtor)(void* self);
+    void (*ctor)(void* self, Value* param, size_t nparam);
+    void (*copy)(void* self, const void* other);
+    void (*move)(void* self, void* other);
+    VariantType(const gsl::span<const skr_type_t*> types, size_t size, size_t align, 
+    const gsl::span<void* (*)(void*)> getters, const gsl::span<void (*)(void*, const void*)> setters,
+    size_t (*indexer)(const void* self), void (*destructor)(void* self), 
+    void (*constructor)(void* self, Value* param, size_t nparam), void (*copy)(void* self, const void* other), 
+    void (*move)(void* self, void* other))
+        : skr_type_t{ SKR_TYPE_CATEGORY_VARIANT }
+        , types(types)
+        , size(size)
+        , align(align)
+        , getters(getters)
+        , setters(setters)
+        , indexer(indexer)
+        , dtor(destructor)
+        , ctor(constructor)
+        , copy(copy)
+        , move(move)
+    {
+    }
+};
 // void*
 template <>
 struct type_of<void*> {
@@ -597,6 +631,97 @@ struct type_of<gsl::span<T, size>> {
         static_assert(size == -1, "only dynamic extent is supported.");
         static ArrayViewType type{
             type_of<T>::get()
+        };
+        return &type;
+    }
+};
+
+template <class... Ts>
+struct type_of<skr::variant<Ts...>> {
+    static const gsl::span<const skr_type_t*> variants()
+    {
+        static const skr_type_t* datas[] = 
+            { type_of<Ts>::get()... };
+        return gsl::span<const skr_type_t*>(datas);
+    }
+    template<size_t I>
+    static auto getter() -> void* (*)(void*)
+    {
+        return +[](void* data)->void*
+        {
+            return &std::get<I>(*(skr::variant<Ts...>*)data);
+        };
+    }
+    template<size_t I>
+    static auto setter() -> void (*)(void*, const void*)
+    {
+        return +[](void* data, const void* value)
+        {
+            using T = std::variant_alternative_t<I, skr::variant<Ts...>>;
+            *(skr::variant<Ts...>*)data = *(const T*)value;
+        };
+    }
+    template<size_t... Is>
+    static auto getters(std::index_sequence<Is...>) -> gsl::span<void* (*)(void*)>
+    {
+        static void* (*getters[])(void*) = { getter<Is>()... };
+        return gsl::span<void* (*)(void*)>(getters);
+    }
+    template<size_t... Is>
+    static auto setters(std::index_sequence<Is...>) -> gsl::span<void (*)(void*, const void*)>
+    {
+        static void (*setters[])(void*, const void*) = { setter<Is>()... };
+        return gsl::span<void (*)(void*, const void*)>(setters);
+    }
+    static auto indexer()
+    {
+        return +[](const void* data)->size_t
+        {
+            return ((const skr::variant<Ts...>*)data)->index();
+        };
+    }
+    static auto destructor()
+    {
+        return +[](void* data)
+        {
+            ((skr::variant<Ts...>*)data)->~variant();
+        };
+    }
+    static auto constructor()
+    {
+        return +[](void* data, Value* param, size_t nparam)
+        {
+            SKR_UNIMPLEMENTED_FUNCTION();
+            new (data) skr::variant<Ts...>();
+        };
+    }
+    static auto copy()
+    {
+        return +[](void* data, const void* other)
+        {
+            new (data) skr::variant<Ts...>(*(const skr::variant<Ts...>*)other);
+        };
+    }
+    static auto move()
+    {
+        return +[](void* data, void* other)
+        {
+            new (data) skr::variant<Ts...>(std::move(*(skr::variant<Ts...>*)other));
+        };
+    }
+    static const skr_type_t* get()
+    {
+        static VariantType type{
+            variants(),
+            sizeof(skr::variant<Ts...>),
+            alignof(skr::variant<Ts...>),
+            getters(std::make_index_sequence<sizeof...(Ts)>()),
+            setters(std::make_index_sequence<sizeof...(Ts)>()),
+            indexer(),
+            destructor(),
+            constructor(),
+            copy(),
+            move()
         };
         return &type;
     }
