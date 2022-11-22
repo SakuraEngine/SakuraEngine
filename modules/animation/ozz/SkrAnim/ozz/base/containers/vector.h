@@ -36,7 +36,7 @@ namespace ozz {
 // Redirects std::vector to ozz::vector in order to replace std default
 // allocator by ozz::StdAllocator.
 template <class _Ty, class _Allocator = ozz::StdAllocator<_Ty>>
-using vector = eastl::vector<_Ty, _Allocator>;
+using vector = eastl::vector<_Ty>;
 
 // Extends std::vector with two functions that gives access to the begin and the
 // end of its array of elements.

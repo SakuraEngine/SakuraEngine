@@ -36,6 +36,6 @@ namespace ozz {
 // Redirects std::deque to ozz::deque in order to replace std default allocator
 // by ozz::StdAllocator.
 template <class _Ty, class _Allocator = ozz::StdAllocator<_Ty>>
-using deque = eastl::deque<_Ty, _Allocator>;
+using deque = eastl::deque<_Ty>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_DEQUE_H_

@@ -1,0 +1,1 @@
+#include "SkrAnimTool/skeleton__asset.h"

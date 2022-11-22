@@ -1,0 +1,1 @@
+#include "SkrAnimTool/animation_asset.h"
