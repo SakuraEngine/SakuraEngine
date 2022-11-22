@@ -17,7 +17,9 @@ skr_anim_resource_t
 };
 
 #include "resource/resource_factory.h"
-namespace skr::resource sreflect
+namespace skr sreflect
+{
+namespace resource sreflect
 {
     class SAnimFactory : public SResourceFactory
     {
@@ -33,5 +35,6 @@ namespace skr::resource sreflect
         ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
         void DestroyResource(skr_resource_record_t* record) override;
     };
+} // namespace resource
 } // namespace skr
 #endif
