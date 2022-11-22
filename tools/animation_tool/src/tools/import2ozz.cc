@@ -33,9 +33,9 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "SkrAnimTool/ozz/tools/import2ozz_anim.h"
-#include "SkrAnimTool/ozz/tools/import2ozz_config.h"
-#include "SkrAnimTool/ozz/tools/import2ozz_skel.h"
+#include "import2ozz_anim.h"
+#include "import2ozz_config.h"
+#include "import2ozz_skel.h"
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/log.h"
 #include "SkrAnim/ozz/options/options.h"
