@@ -2,6 +2,9 @@
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
+#ifndef __meta__
+#include "SkrShaderCompiler/assets/material_asset.generated.h"
+#endif
 
 sreflect_struct("guid": "03c9a4d2-6b3c-4ce5-a911-567cf66e0774")
 skr_material_type_asset_t : public skr_material_type_resource_t
