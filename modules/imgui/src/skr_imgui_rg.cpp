@@ -159,7 +159,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         },
         [target, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle]
         (rg::RenderGraph& g, rg::RenderPassContext& context) {
-            auto target_node = g.resolve(target);
+            // auto target_node = g.resolve(target);
             const auto target_desc = g.resolve_descriptor(target);
             SKR_ASSERT(target_desc && "ImGui render target not found!");
             {

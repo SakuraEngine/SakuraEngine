@@ -3,8 +3,8 @@
 #include "platform/memory.h"
 #include "utils/log.h"
 #include "utils/format.hpp"
-#include "SkrShaderCompiler/dxc_compiler.h"
-#include "SkrShaderCompiler/assets/shader_asset.h"
+#include "SkrShaderCompiler/dxc_compiler.hpp"
+#include "SkrShaderCompiler/assets/shader_asset.hpp"
 #ifdef _WIN32
 #include <atlbase.h>
 #endif

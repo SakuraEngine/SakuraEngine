@@ -4,8 +4,8 @@
 #include "utils/make_zeroed.hpp"
 
 #include "SkrToolCore/project/project.hpp"
-#include "SkrShaderCompiler/assets/shader_asset.h"
-#include "SkrShaderCompiler/shader_compiler.h"
+#include "SkrShaderCompiler/assets/shader_asset.hpp"
+#include "SkrShaderCompiler/shader_compiler.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 
 #include "tracy/Tracy.hpp"
