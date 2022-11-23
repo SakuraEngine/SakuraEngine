@@ -300,7 +300,7 @@ struct GUIDType : skr_type_t {
 // handle
 struct HandleType : skr_type_t {
     const struct skr_type_t* pointee;
-    HandleType(skr_type_t* pointee)
+    HandleType(const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_HANDLE }
         , pointee(pointee)
     {
@@ -503,9 +503,8 @@ template <class T>
 struct type_of<resource::TResourceHandle<T>> {
     static const skr_type_t* get()
     {
-        static HandleType type{
-            type_of<T>::get()
-        };
+        const auto inner_type = type_of<std::decay_t<T>>::get();
+        static const auto type = HandleType(inner_type);
         return &type;
     }
 };

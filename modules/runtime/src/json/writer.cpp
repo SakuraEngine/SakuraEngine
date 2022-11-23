@@ -268,14 +268,14 @@ void WriteValue(skr_json_writer_t* writer, float b) { writer->Float(b); }
 template <>
 void WriteValue(skr_json_writer_t* writer, double b) { writer->Double(b); }
 template <>
-void WriteValue(skr_json_writer_t* writer, const skr::string_view& str) { writer->String(str.data(), (TSize)str.size()); }
+void WriteValue(skr_json_writer_t* writer, const skr::string_view& str) { writer->String(str.data(), (skr_json_writer_size_t)str.size()); }
 template <>
-void WriteValue(skr_json_writer_t* writer, const skr::string& str) { writer->String(str.data(), (TSize)str.size()); }
+void WriteValue(skr_json_writer_t* writer, const skr::string& str) { writer->String(str.data(), (skr_json_writer_size_t)str.size()); }
 template <>
 void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid)
 {
     auto str = skr::format("{}", guid);
-    writer->String(str.data(), (TSize)str.size());
+    writer->String(str.data(), (skr_json_writer_size_t)str.size());
 }
 template <>
 void WriteValue(skr_json_writer_t* writer, const skr_resource_handle_t& handle)

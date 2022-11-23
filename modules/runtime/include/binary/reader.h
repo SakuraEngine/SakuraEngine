@@ -1,6 +1,6 @@
 #pragma once
 #include <EASTL/vector.h>
-#include "platform/configure.h"
+#include "reader_fwd.h"
 #include "resource/resource_handle.h"
 #include "containers/variant.hpp"
 #include "containers/string.hpp"
@@ -25,12 +25,6 @@ namespace skr
 {
 namespace binary
 {
-template <class T>
-std::enable_if_t<!std::is_enum_v<T>, int> ReadValue(skr_binary_reader_t* reader, T& value)
-{
-    static_assert(!sizeof(T), "ReadValue not implemented for this type");
-    return -1;
-}
 inline int ReadValue(skr_binary_reader_t* reader, void* data, size_t size)
 {
     return reader->read(data, size);

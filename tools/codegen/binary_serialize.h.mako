@@ -1,6 +1,6 @@
 //BEGIN BINARY GENERATED
-#include "binary/reader.h"
-#include "binary/writer.h"
+#include "binary/reader_fwd.h"
+#include "binary/writer_fwd.h"
 #if defined(__cplusplus)
 namespace skr::binary
 {
