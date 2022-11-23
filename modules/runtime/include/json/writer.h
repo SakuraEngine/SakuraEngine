@@ -183,8 +183,12 @@ struct WriteHelper<const skr::variant<Ts...>&>
     {
         std::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
+            json->StartObject();
+            json->Key("type");
             skr::json::WriteValue<const skr_guid_t&>(json, skr::type::type_id<raw>::get());
+            json->Key("value");
             skr::json::Write<decltype(value)>(json, value);
+            json->EndObject();
         }, v);
     }
 };
