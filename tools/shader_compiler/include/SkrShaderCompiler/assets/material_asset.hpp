@@ -32,7 +32,7 @@ sreflect_struct("guid" : "b5fc88c3-0770-4332-9eda-9e283e29c7dd")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter
 {
-    using MatTypeAssetRef = skd::asset::TAssetRef<skr_material_type_asset_t>;
+    //using MatTypeAssetRef = skd::asset::TAssetRef<skr_material_type_asset_t>;
 
     uint32_t version;
     skd::asset::AssetRef material_type;
