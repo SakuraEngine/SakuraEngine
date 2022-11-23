@@ -1,11 +1,11 @@
 #pragma once
 #include "resource/resource_handle.h"
 #include "type/type_registry.h"
+#include <EASTL/fixed_vector.h>
+#include <EASTL/vector.h>
 
-#if defined(__cplusplus)
-    #include "binary/reader.h"
-    #include "binary/writer.h"
-    #include "EASTL/fixed_vector.h"
+#include "binary/reader_fwd.h"
+#include "binary/writer_fwd.h"
 
 typedef struct skr_resource_header_t {
     uint32_t version;
@@ -14,6 +14,7 @@ typedef struct skr_resource_header_t {
     RUNTIME_API int ReadWithoutDeps(skr_binary_reader_t* archive);
     eastl::fixed_vector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
+
 namespace skr::binary
 {
     template <>
@@ -21,7 +22,7 @@ namespace skr::binary
     template <>
     RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_resource_header_t& header);
 } // namespace skr::binary
-#endif
+
 typedef enum ESkrLoadingStatus : uint32_t
 {
     SKR_LOADING_STATUS_UNLOADED,
@@ -36,8 +37,6 @@ typedef enum ESkrLoadingStatus : uint32_t
 
 typedef struct skr_resource_record_t skr_resource_record_t;
 
-#if defined(__cplusplus)
-    #include <EASTL/vector.h>
 namespace skr::resource
 {
 struct SResourceRequest;
@@ -70,4 +69,3 @@ struct RUNTIME_API skr_resource_record_t {
     void RemoveReference(uint32_t id, ESkrRequesterType requesterType);
     bool IsReferenced() const;
 };
-#endif

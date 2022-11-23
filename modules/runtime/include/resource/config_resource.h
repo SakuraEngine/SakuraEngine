@@ -4,8 +4,6 @@
 #include "platform/guid.hpp"
 #include "resource/resource_factory.h"
 #include "type/type_registry.h"
-#include "binary/reader.h"
-#include "binary/writer.h"
 
 struct skr_config_resource_t;
 
