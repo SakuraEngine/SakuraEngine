@@ -37,17 +37,17 @@ bool skd::SUSDAttributeImpl::ClearMetadata(const char* key) SKR_NOEXCEPT
     return attribute.ClearMetadata(pxr::TfToken(key));
 }
 
-eastl::string skd::SUSDAttributeImpl::GetName() const SKR_NOEXCEPT
+skr::string skd::SUSDAttributeImpl::GetName() const SKR_NOEXCEPT
 {
     return attribute.GetName().GetString().c_str();
 }
 
-eastl::string skd::SUSDAttributeImpl::GetBaseName() const SKR_NOEXCEPT
+skr::string skd::SUSDAttributeImpl::GetBaseName() const SKR_NOEXCEPT
 {
     return attribute.GetBaseName().GetString().c_str();
 }
 
-eastl::string skd::SUSDAttributeImpl::GetTypeName() const SKR_NOEXCEPT
+skr::string skd::SUSDAttributeImpl::GetTypeName() const SKR_NOEXCEPT
 {
     return attribute.GetTypeName().GetAsToken().GetString().c_str();
 }

@@ -71,16 +71,16 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
         auto font_handle = render_graph->create_texture(
             [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
-                eastl::string name = "imgui_font-";
-                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                skr::string name = "imgui_font-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
                     .import(font_texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
             });
         // vb & ib
         auto vertex_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                eastl::string name = "imgui_vertices-";
-                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                skr::string name = "imgui_vertices-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
                     .size(vertex_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -91,8 +91,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             });
         auto index_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                eastl::string name = "imgui_indices-";
-                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                skr::string name = "imgui_indices-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
                     .size(index_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -105,8 +105,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         {
             auto upload_buffer_handle = render_graph->create_buffer(
                 [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                eastl::string name = "imgui_upload-";
-                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                skr::string name = "imgui_upload-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
                         .size(index_size + vertex_size)
                         .with_tags(kRenderGraphDefaultResourceTag)
@@ -114,8 +114,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                 });
             render_graph->add_copy_pass(
                 [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-                eastl::string name = "imgui_copy-";
-                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                skr::string name = "imgui_copy-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
                     .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
                     .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
@@ -136,8 +136,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         }
         auto constant_buffer = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                eastl::string name = "imgui_cbuffer-";
-                name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+                skr::string name = "imgui_cbuffer-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID));
                 builder.set_name(name.c_str())
                     .size(sizeof(float) * 4 * 4)
                     .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
@@ -147,8 +147,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             });
         // add pass
         render_graph->add_render_pass([=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
-            eastl::string name = "imgui_render-";
-            name.append(eastl::to_string(draw_data->OwnerViewport->ID));
+            skr::string name = "imgui_render-";
+            name.append(skr::to_string(draw_data->OwnerViewport->ID));
             builder.set_name(name.c_str())
                 .set_pipeline(render_pipeline)
                 .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
@@ -459,8 +459,8 @@ void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
 
     auto back_buffer = graph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            eastl::string buf_name = "imgui-window-";
-            buf_name.append(eastl::to_string(viewport->ID));
+            skr::string buf_name = "imgui-window-";
+            buf_name.append(skr::to_string(viewport->ID));
             builder.set_name(buf_name.c_str())
                 .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
@@ -470,8 +470,8 @@ void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
 
     graph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-            eastl::string pass_name = "imgui-present-";
-            pass_name.append(eastl::to_string(viewport->ID));
+            skr::string pass_name = "imgui-present-";
+            pass_name.append(skr::to_string(viewport->ID));
             builder.set_name(pass_name.c_str())
                 .swapchain(rdata->swapchain, backbuffer_index)
                 .texture(back_buffer, true);

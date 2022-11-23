@@ -121,7 +121,7 @@ public:
 
 protected:
     template<typename T>
-    using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;
+    using FlatStringMap = skr::flat_hash_map<skr::string, T, skr::hash<skr::string>>;
 
     FlatStringMap<class PassNode*> named_passes;
     FlatStringMap<class TextureNode*> named_textures;

@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/rg_config.h"
 #include "utils/dependency_graph.hpp"
 #include "containers/span.hpp"
-#include <EASTL/string.h>
+#include "containers/string.hpp"
 
 enum
 {
@@ -290,7 +290,7 @@ struct RenderGraphNode : public DependencyGraphNode {
     SKR_RENDER_GRAPH_API const char* get_name() const;
     const EObjectType type;
 protected:
-    eastl::string name;
+    skr::string name;
 };
 
 struct RenderGraphEdge : public DependencyGraphEdge {

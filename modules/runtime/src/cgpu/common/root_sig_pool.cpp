@@ -2,7 +2,7 @@
 #include <EASTL/unordered_map.h>
 #include <EASTL/unordered_set.h>
 #include <EASTL/vector.h>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include "platform/atomic.h"
 
 struct RSCharacteristic
@@ -174,7 +174,8 @@ public:
         }
     }
 protected:
-    const eastl::string name;
+    const skr::string name;
+    // TODO: replace with skr::hash_map
     eastl::unordered_map<RSCharacteristic, CGPURootSignatureId> characterMap;
     eastl::unordered_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
     eastl::unordered_map<CGPURootSignatureId, uint32_t> counterMap;

@@ -123,7 +123,7 @@ static struct SkrMeshResourceUtil
             hash = eastl::hash<CGPUVertexLayout>()(layout);
         }
         skr_vertex_layout_id id;
-        eastl::string name;
+        skr::string name;
         uint64_t hash;
     };
 

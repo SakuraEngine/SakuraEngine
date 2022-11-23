@@ -2,8 +2,8 @@
 #include "cgpu/io.hpp"
 #include "utils/make_zeroed.hpp"
 #include "io_service_util.hpp"
-#include <EASTL/string.h>
-#include <EASTL/variant.h>
+#include <containers/string.hpp>
+#include <containers/variant.hpp>
 #include <EASTL/vector_map.h>
 
 namespace skr
@@ -63,13 +63,13 @@ public:
     };
 
     struct Task : public TaskBase {
-        eastl::string path;
-        eastl::variant<BufferTask, DStorageBufferTask, TextureTask, DStorageTextureTask> resource_task;
+        skr::string path;
+        skr::variant<BufferTask, DStorageBufferTask, TextureTask, DStorageTextureTask> resource_task;
         EVramTaskStep step;
         TaskBatch* task_batch;
         bool isDStorage() const
         {
-            return eastl::get_if<DStorageBufferTask>(&resource_task) || eastl::get_if<DStorageTextureTask>(&resource_task);
+            return skr::get_if<DStorageBufferTask>(&resource_task) || skr::get_if<DStorageTextureTask>(&resource_task);
         }
     };
     ~VRAMServiceImpl() SKR_NOEXCEPT = default;
@@ -121,7 +121,7 @@ public:
     void freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_NOEXCEPT; 
     // cgpu helpers
 
-    const eastl::string name;
+    const skr::string name;
     // task containers
     TaskContainer<Task> tasks;
     struct TaskBatch

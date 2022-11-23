@@ -13,7 +13,7 @@ sreflect_struct("guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922")
 sattr("serialize" : "json")
 GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
-    eastl::string assetPath;
+    skr::string assetPath;
     skr_guid_t vertexType;
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;

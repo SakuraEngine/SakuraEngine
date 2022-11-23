@@ -25,7 +25,7 @@ public:
 
     const uint32_t set = UINT32_MAX;
     const uint32_t binding = UINT32_MAX;
-    const eastl::string name = "";
+    const skr::string name = "";
 
     TextureNode* get_texture_node() final;
     PassNode* get_pass_node() final;
@@ -50,7 +50,7 @@ public:
 
     const uint32_t set;
     const uint32_t binding;
-    const eastl::string name;
+    const skr::string name;
 
     TextureNode* get_texture_node() final;
     PassNode* get_pass_node() final;
@@ -106,7 +106,7 @@ public:
 
     const uint32_t set;
     const uint32_t binding;
-    const eastl::string name;
+    const skr::string name;
 
     BufferNode* get_buffer_node() final;
     PassNode* get_pass_node() final;

@@ -12,7 +12,7 @@
 #include "CubismDefaultParameterId.hpp"
 #include "Utils/CubismString.hpp"
 
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include <EASTL/vector_map.h>
 
 namespace L2DF = Live2D::Cubism::Framework;
@@ -27,7 +27,7 @@ struct L2DRequestCallbackData
     IAsyncL2DResourceInterface* model_resource;
     IAsyncL2DResourceInterface* motions_resource;
     skr_live2d_ram_io_request_t* live2dRequest;   
-    eastl::string u8HomePath;
+    skr::string u8HomePath;
 
     skr_async_ram_destination_t settingRawData;
 
@@ -70,7 +70,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void update(csmMotionMap* motion_map, float delta_time) SKR_NOEXCEPT;
         const uint32_t* get_sorted_drawlist() const SKR_NOEXCEPT;
 
-        eastl::string homePath;
+        skr::string homePath;
 
     protected:
         Csm::CubismMotionQueueEntryHandle startMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
@@ -89,10 +89,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
 
         // Async Requests
-        eastl::string posePath;
-        eastl::string modelPath;
-        eastl::string pyhsicsPath;
-        eastl::string usrDataPath;
+        skr::string posePath;
+        skr::string modelPath;
+        skr::string pyhsicsPath;
+        skr::string usrDataPath;
         skr_async_request_t poseRequest;
         skr_async_ram_destination_t poseDestination;
         skr_async_request_t modelRequest;
@@ -111,8 +111,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         eastl::vector<skr_async_request_t> expressionRequests;
         eastl::vector<skr_async_ram_destination_t> expressionDestinations;
-        eastl::vector_map<skr_async_request_t*, eastl::string> expressionNames;
-        eastl::vector_map<skr_async_request_t*, eastl::string> expressionPaths;
+        eastl::vector_map<skr_async_request_t*, skr::string> expressionNames;
+        eastl::vector_map<skr_async_request_t*, skr::string> expressionPaths;
         L2DRequestCallbackData* cbData;
     };
     class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
@@ -124,8 +124,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         eastl::vector<skr_async_request_t> motionRequests;
         eastl::vector<skr_async_ram_destination_t> motionDestinations;
-        eastl::vector_map<skr_async_request_t*, eastl::pair<eastl::string, uint32_t>> motionEntries;
-        eastl::vector_map<skr_async_request_t*, eastl::string> motionPaths;
+        eastl::vector_map<skr_async_request_t*, eastl::pair<skr::string, uint32_t>> motionEntries;
+        eastl::vector_map<skr_async_request_t*, skr::string> motionPaths;
         L2DRequestCallbackData* cbData;
     };
 }}}

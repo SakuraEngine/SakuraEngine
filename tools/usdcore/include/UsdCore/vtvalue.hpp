@@ -11,7 +11,7 @@ namespace skd
     {
         virtual ~SUSDVtValue() = default;
         
-        virtual eastl::string GetTypeName() const SKR_NOEXCEPT = 0;
+        virtual skr::string GetTypeName() const SKR_NOEXCEPT = 0;
         virtual bool IsArrayValued() const SKR_NOEXCEPT = 0;
         virtual bool IsEmpty() const SKR_NOEXCEPT = 0;
     protected:

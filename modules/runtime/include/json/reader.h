@@ -2,11 +2,11 @@
 #include "platform/configure.h"
 
 #if defined(__cplusplus)
-#include <EASTL/string.h>
 #include <EASTL/vector.h>
 #include "simdjson.h"
 #include "containers/hashmap.hpp"
 #include "containers/variant.hpp"
+#include "containers/string.hpp"
 #include "type/type_id.hpp"
 #include "platform/guid.hpp"
 
@@ -90,7 +90,7 @@ RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, float& f);
 template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, double& b);
 template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, eastl::string& guid);
+RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, skr::string& guid);
 template <>
 RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, struct skr_guid_t& guid);
 template <>

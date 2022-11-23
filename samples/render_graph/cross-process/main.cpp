@@ -2,7 +2,7 @@
 #include "utils/log.h"
 #include "lmdb/lmdb.h"
 #include <platform/filesystem.hpp>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 
 #include "tracy/Tracy.hpp"
 
@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
             provider_arguments, 2, "provider.log");
         const auto provider_id = skr_get_process_id(provider);
 
-        eastl::string providerIdString = eastl::to_string(provider_id);
+        skr::string providerIdString = skr::to_string(provider_id);
         const char* receiver_arguments[] = { "receiver", providerIdString.c_str() };
         auto receiver = skr_run_process(exec_name, 
             receiver_arguments, 2, "receiver.log");

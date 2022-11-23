@@ -28,7 +28,7 @@ namespace skr::type
             {
                 size_t size = sizeof(${record.name});
                 size_t align = alignof(${record.name});
-                eastl::string_view name = "${record.name}";
+                skr::string_view name = "${record.name}";
             %if record.bases:
                 auto base = (const RecordType*)type_of<${record.bases[0]}>::get();
             %else:
@@ -147,7 +147,7 @@ namespace skr::type
         static EnumType type{
             type_of<std::underlying_type_t<${enum.name}>>::get(),
             "${enum.name}", guid,
-            +[](void* self, eastl::string_view enumStr)
+            +[](void* self, skr::string_view enumStr)
             {
                 auto& This = *((${enum.name}*)self);
 
@@ -166,11 +166,11 @@ namespace skr::type
                 switch(This)
                 {
                 %for name, enumerator in vars(enum.values).items():
-                    case ${name}: return eastl::string("${db.short_name(name)}");
+                    case ${name}: return skr::string("${db.short_name(name)}");
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
-                return eastl::string("${enum.name}::Unknown");
+                return skr::string("${enum.name}::Unknown");
             },
             enumerators
         };

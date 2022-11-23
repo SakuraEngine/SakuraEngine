@@ -1,9 +1,9 @@
 #pragma once
 #include <EASTL/vector.h>
-#include <EASTL/string.h>
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
 #include "containers/variant.hpp"
+#include "containers/string.hpp"
 
 struct skr_binary_writer_t {
     template <class T>
@@ -77,9 +77,9 @@ RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_quaternion_t& 
 template <>
 RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_float4x4_t& value);
 template <>
-RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const eastl::string& str);
+RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr::string& str);
 template <>
-RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const eastl::string_view& str);
+RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr::string_view& str);
 template <>
 RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_guid_t& guid);
 template <>

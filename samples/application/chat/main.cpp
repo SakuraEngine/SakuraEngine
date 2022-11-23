@@ -210,8 +210,8 @@ int InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
         ImGui::GetIO().Fonts->Build();
         sakura_free(font_bytes);
     }
-    eastl::string vsname = u8"shaders/imgui_vertex";
-    eastl::string fsname = u8"shaders/imgui_fragment";
+    skr::string vsname = u8"shaders/imgui_vertex";
+    skr::string fsname = u8"shaders/imgui_fragment";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
 

@@ -44,7 +44,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
     {
         skr_async_ram_destination_t destination;
         skr::task::event_t* pCounter;   
-        eastl::string u8Path;
+        skr::string u8Path;
     } callbackData;
     callbackData.pCounter = &counter;
     callbackData.u8Path = u8Path.c_str();

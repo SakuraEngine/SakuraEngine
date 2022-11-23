@@ -43,9 +43,9 @@ struct ReceiverRenderer
 
 void ReceiverRenderer::create_window()
 {
-    eastl::string title = "Cross-Process Receiver [";
+    skr::string title = "Cross-Process Receiver [";
     title = title + gCGPUBackendNames[backend] + "]";
-    title = title + " PID: " + eastl::to_string(skr_get_current_process_id());
+    title = title + " PID: " + skr::to_string(skr_get_current_process_id());
     sdl_window = SDL_CreateWindow(title.c_str(),
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
@@ -208,7 +208,7 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
     }
 
     //Initialize the key with the key we're looking for
-    eastl::string keyString = eastl::to_string(provider_id);
+    skr::string keyString = skr::to_string(provider_id);
     MDB_val key = { (size_t)keyString.size(), (void*)keyString.data() };
     MDB_val data;
 

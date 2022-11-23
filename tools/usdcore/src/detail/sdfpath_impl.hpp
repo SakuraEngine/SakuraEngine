@@ -14,8 +14,8 @@ namespace skd
         virtual bool IsEmpty() const SKR_NOEXCEPT override;
         virtual bool IsAbsoluteRootOrPrimPath() const SKR_NOEXCEPT override;
 
-        virtual eastl::string GetName() const SKR_NOEXCEPT override;
-        virtual eastl::string GetElementString() const SKR_NOEXCEPT override;
+        virtual skr::string GetName() const SKR_NOEXCEPT override;
+        virtual skr::string GetElementString() const SKR_NOEXCEPT override;
 
         virtual SharedId GetAbsoluteRootOrPrimPath() const SKR_NOEXCEPT override;
         virtual SharedId ReplaceName(const char* newName) SKR_NOEXCEPT override;
@@ -23,7 +23,7 @@ namespace skd
         virtual SharedId AppendChild(const char* childName) SKR_NOEXCEPT override;
         virtual SharedId StripAllVariantSelections() SKR_NOEXCEPT override;
 
-        virtual eastl::string GetString() const SKR_NOEXCEPT override;
+        virtual skr::string GetString() const SKR_NOEXCEPT override;
     protected:
         pxr::SdfPath path;
     };

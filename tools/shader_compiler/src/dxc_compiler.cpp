@@ -1,3 +1,4 @@
+#include <EASTL/string.h> //sv::starts_with
 #include <EASTL/unique_ptr.h>
 #include "platform/memory.h"
 #include "utils/log.h"
@@ -329,7 +330,7 @@ SDXCLibrary* SDXCLibrary::Get() SKR_NOEXCEPT
 
 void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
 {
-    eastl::string filename;
+    skr::string filename;
     auto dxcInstance = SDXCLibrary::Get();
     auto& dxc_library = dxcInstance->dxc_library;
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
@@ -362,7 +363,7 @@ void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
 
 void SDXCLibrary::LoadDXILLibrary() SKR_NOEXCEPT
 {
-    eastl::string filename;
+    skr::string filename;
     auto dxcInstance = SDXCLibrary::Get();
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
             .append("dxil")

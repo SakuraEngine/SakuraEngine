@@ -6,6 +6,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"
+
 #include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
 #include <EASTL/vector_map.h>
@@ -126,7 +127,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         passes_map.clear();
     }
     template<typename T>
-    using FlatStringMap = skr::flat_hash_map<eastl::string, T, eastl::hash<eastl::string>>;
+    using FlatStringMap = skr::flat_hash_map<skr::string, T, skr::hash<skr::string>>;
 
     eastl::vector<IPrimitiveRenderPass*> passes;
     FlatStringMap<IPrimitiveRenderPass*> passes_map;

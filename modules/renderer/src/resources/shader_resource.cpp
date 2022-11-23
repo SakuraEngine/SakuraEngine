@@ -70,7 +70,7 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
         }
 
         SShaderResourceFactoryImpl* factory = nullptr;
-        eastl::string bytes_uri;
+        skr::string bytes_uri;
         skr_platform_shader_resource_t* platform_shader = nullptr;
         skr_async_request_t bytes_request;
         skr_async_ram_destination_t bytes_destination;

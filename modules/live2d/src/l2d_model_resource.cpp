@@ -535,19 +535,19 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
             = SkrNew<L2DF::CubismModelSettingJson>(cbData->settingRawData.bytes, (L2DF::csmSizeInt)cbData->settingRawData.size);
         sakura_free(cbData->settingRawData.bytes);
         // setup models & expressions count
-        if (auto _ = eastl::string(model_setting->GetModelFileName()); !_.empty())
+        if (auto _ = skr::string(model_setting->GetModelFileName()); !_.empty())
         {
             cbData->model_count = 1;
         }
-        if (auto _ = eastl::string(model_setting->GetPhysicsFileName()); !_.empty())
+        if (auto _ = skr::string(model_setting->GetPhysicsFileName()); !_.empty())
         {
             cbData->phys_count = 1;
         }
-        if (auto _ = eastl::string(model_setting->GetPoseFileName()); !_.empty())
+        if (auto _ = skr::string(model_setting->GetPoseFileName()); !_.empty())
         {
             cbData->pose_count = 1;
         }
-        if (auto _ = eastl::string(model_setting->GetUserDataFile()); !_.empty())
+        if (auto _ = skr::string(model_setting->GetUserDataFile()); !_.empty())
         {
             cbData->usr_data_count = 1;
         }

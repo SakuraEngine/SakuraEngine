@@ -1,8 +1,8 @@
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 
-using u8string = eastl::string;
+using u8string = skr::string;
 
 void skr_vfs_get_parent_path(const char8_t* path, char8_t* output)
 {

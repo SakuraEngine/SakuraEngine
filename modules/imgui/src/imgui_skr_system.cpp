@@ -1,7 +1,7 @@
 #define IMGUI_IMPORT SKR_IMGUI_API
 #include "SkrImGui/skr_imgui.config.h"
 #include <EASTL/vector.h>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include "utils/log.h"
 #include "platform/input.h"
 #include "SkrImGui/skr_imgui.h"
@@ -192,8 +192,8 @@ void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
     desc.height = (uint32_t)viewport->Size.y;
     desc.posx = (uint32_t)viewport->Pos.x;
     desc.posy = (uint32_t)viewport->Pos.y;
-    eastl::string title = "imgui-";
-    title += eastl::to_string(viewport->ID);
+    skr::string title = "imgui-";
+    title += skr::to_string(viewport->ID);
     auto new_window = skr_create_window(title.c_str(), &desc);
 
     viewport->PlatformUserData = viewport;

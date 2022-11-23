@@ -8,7 +8,7 @@ skr_json_writer_t::skr_json_writer_t(size_t levelDepth)
     _levelStack.reserve(levelDepth);
 }
 
-eastl::string skr_json_writer_t::Str() const
+skr::string skr_json_writer_t::Str() const
 {
     SKR_ASSERT(_levelStack.size() == 0);
     return { buffer.data(), buffer.size() };
@@ -268,9 +268,9 @@ void WriteValue(skr_json_writer_t* writer, float b) { writer->Float(b); }
 template <>
 void WriteValue(skr_json_writer_t* writer, double b) { writer->Double(b); }
 template <>
-void WriteValue(skr_json_writer_t* writer, const eastl::string_view& str) { writer->String(str.data(), (TSize)str.size()); }
+void WriteValue(skr_json_writer_t* writer, const skr::string_view& str) { writer->String(str.data(), (TSize)str.size()); }
 template <>
-void WriteValue(skr_json_writer_t* writer, const eastl::string& str) { writer->String(str.data(), (TSize)str.size()); }
+void WriteValue(skr_json_writer_t* writer, const skr::string& str) { writer->String(str.data(), (TSize)str.size()); }
 template <>
 void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid)
 {

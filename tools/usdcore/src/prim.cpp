@@ -78,9 +78,9 @@ bool SUSDPrimImpl::IsGroup() const SKR_NOEXCEPT
     return prim.IsGroup();
 }
 
-eastl::vector<eastl::string> SUSDPrimImpl::GetAppliedSchemas() const SKR_NOEXCEPT
+eastl::vector<skr::string> SUSDPrimImpl::GetAppliedSchemas() const SKR_NOEXCEPT
 {
-    eastl::vector<eastl::string> result;
+    eastl::vector<skr::string> result;
     std::vector<pxr::TfToken> appliedSchemas = prim.GetAppliedSchemas();
     result.reserve(appliedSchemas.size());
     for (const auto& schema : appliedSchemas)
@@ -242,12 +242,12 @@ bool SUSDPrimImpl::HasAttribute(const char *name) const SKR_NOEXCEPT
     return prim.HasAttribute(pxr::TfToken(name));
 }
 
-eastl::string SUSDPrimImpl::GetName() const SKR_NOEXCEPT 
+skr::string SUSDPrimImpl::GetName() const SKR_NOEXCEPT 
 {
     return prim.GetName().GetString().c_str();
 }
 
-eastl::string SUSDPrimImpl::GetTypeName() const SKR_NOEXCEPT 
+skr::string SUSDPrimImpl::GetTypeName() const SKR_NOEXCEPT 
 {
     return prim.GetTypeName().GetString().c_str();
 }

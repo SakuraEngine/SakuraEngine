@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
+#include <containers/variant.hpp>
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "resource/resource_handle.h"
 #ifndef __meta__
@@ -25,14 +26,12 @@ typedef enum ESkrMaterialPropertyType ESkrMaterialPropertyType;
 sreflect_struct("guid": "46de11b4-6beb-4ab9-b9f8-f5c07ceeb8a5")
 sattr("rtti" : true)
 sattr("serialize" : ["json", "bin"])
-skr_material_value_t 
+skr_material_value_t
 {
+    using res_handle_t = skr_resource_handle_t;
     ESkrMaterialPropertyType type;
-    eastl::string slot_name;
-    // TODO: replace these with variant
-    skr_resource_handle_t resource;
-    float f;
-    double d;
+    skr::string slot_name;
+    skr::variant<res_handle_t, float, double> value;
 };
 
 sreflect_struct("guid" : "83264b35-3fde-4fff-8ee1-89abce2e445b")

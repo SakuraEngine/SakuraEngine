@@ -31,15 +31,15 @@ struct SKR_SHADER_COMPILER_API SShaderCompilerModule : public skr::IDynamicModul
     
     static skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<IShaderCompiler*()>> ctors;
     static skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<void(IShaderCompiler*)>> dtors;
-    static eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> on_load_events;
-    static eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> on_unload_events;
+    static eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> on_load_events;
+    static eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> on_unload_events;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SShaderCompilerModule, SkrShaderCompiler);
 skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<IShaderCompiler*()>> SShaderCompilerModule::ctors = {};
 skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<void(IShaderCompiler*)>> SShaderCompilerModule::dtors = {};
-eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> SShaderCompilerModule::on_load_events = {};
-eastl::vector<eastl::pair<eastl::string, eastl::function<void()>>> SShaderCompilerModule::on_unload_events = {};
+eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> SShaderCompilerModule::on_load_events = {};
+eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> SShaderCompilerModule::on_unload_events = {};
 
 IShaderCompiler* SkrShaderCompiler_CreateByType(asset::EShaderSourceType type) SKR_NOEXCEPT
 {

@@ -11,9 +11,9 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
-#include <EASTL/string.h>
 #include <EASTL/vector.h>
 #include "fmt/format.h"
+#include "containers/string.hpp"
 #include "containers/hashmap.hpp"
 
 // forward declaration for resources
@@ -28,7 +28,7 @@ public:
 
     skr_json_writer_t(size_t levelDepth);
     inline bool IsComplete() { return _hasRoot && _levelStack.empty(); }
-    eastl::string Str() const;
+    skr::string Str() const;
     bool Bool(bool b);
     bool Int(int32_t i);
     bool UInt(uint32_t i);
@@ -116,9 +116,9 @@ RUNTIME_API void WriteValue(skr_json_writer_t* writer, float b);
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, double b);
 template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, const eastl::string_view& str);
+RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr::string_view& str);
 template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, const eastl::string& str);
+RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr::string& str);
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid);
 template <>
@@ -148,7 +148,7 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
         json->StartObject();
         for (auto& pair : map)
         {
-            skr::json::Write<const eastl::string&>(json, pair.first);
+            skr::json::Write<const skr::string&>(json, pair.first);
             skr::json::Write<TParamType<V>>(json, pair.second);
         }
         json->EndObject();

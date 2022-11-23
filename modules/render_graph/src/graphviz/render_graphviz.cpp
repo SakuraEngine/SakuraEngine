@@ -26,7 +26,7 @@ public:
     void operator()(std::ostream& out, const Edge& e) const
     {
         RenderGraphEdge* rg_edge = (RenderGraphEdge*)prop[e];
-        eastl::string label;
+        skr::string label;
         switch (rg_edge->type)
         {
             case ERelationshipType::TextureRead: {
@@ -34,9 +34,9 @@ public:
                 if (SRV->name.empty())
                 {
                     label = "SRV:s";
-                    label.append(eastl::to_string(SRV->set))
+                    label.append(skr::to_string(SRV->set))
                     .append("b")
-                    .append(eastl::to_string(SRV->binding));
+                    .append(skr::to_string(SRV->binding));
                 }
                 else
                 {
@@ -50,9 +50,9 @@ public:
                 if (UAV->name.empty())
                 {
                     label = "UAV:s";
-                    label.append(eastl::to_string(UAV->set))
+                    label.append(skr::to_string(UAV->set))
                     .append("b")
-                    .append(eastl::to_string(UAV->binding));
+                    .append(skr::to_string(UAV->binding));
                 }
                 else
                 {
@@ -64,7 +64,7 @@ public:
             case ERelationshipType::TextureWrite: {
                 auto RTV = (TextureRenderEdge*)rg_edge;
                 label = "RTV:";
-                label.append(eastl::to_string(RTV->mrt_index));
+                label.append(skr::to_string(RTV->mrt_index));
             }
             break;
             default:
@@ -89,9 +89,9 @@ public:
     void operator()(std::ostream& out, const Vertex& v) const
     {
         RenderGraphNode* rg_node = (RenderGraphNode*)prop[v];
-        eastl::string label;
-        eastl::string color = "lavenderblush";
-        eastl::string shape = "none";
+        skr::string label;
+        skr::string color = "lavenderblush";
+        skr::string shape = "none";
         switch (rg_node->type)
         {
             case EObjectType::Texture: {
@@ -101,7 +101,7 @@ public:
                 label = "texture: ";
                 label.append(rg_node->get_name());
                 label.append("\\nrefs: ")
-                .append(is_imported ? "imported" : eastl::to_string(tex_node->outgoing_edges()));
+                .append(is_imported ? "imported" : skr::to_string(tex_node->outgoing_edges()));
                 if (auto aliasing_parent = tex_node->get_aliasing_parent(); aliasing_parent)
                 {
                     label.append("\\naliasing: ").append(aliasing_parent->get_name());
@@ -116,7 +116,7 @@ public:
                 label = "buffer: ";
                 label.append(rg_node->get_name());
                 label.append("\\nrefs: ")
-                .append(is_imported ? "imported" : eastl::to_string(buf_node->outgoing_edges()));
+                .append(is_imported ? "imported" : skr::to_string(buf_node->outgoing_edges()));
                 shape = "box";
             }
             break;

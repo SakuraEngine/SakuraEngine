@@ -89,7 +89,7 @@ protected:
     skr_resource_record_t* resourceRecord;
     skr_async_request_t ioRequest;
     skr_async_ram_destination_t ioDestination;
-    eastl::string resourceUrl;
+    skr::string resourceUrl;
     uint8_t* data;
     uint64_t size;
 };

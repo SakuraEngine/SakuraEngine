@@ -32,7 +32,7 @@
 #include <functional>
 #include <thread>
 
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 
 namespace marl {
 
@@ -271,7 +271,7 @@ class Scheduler {
     static const char* toString(State state);
 
 #ifdef TRACY_ENABLE
-    eastl::string name;
+    skr::string name;
 #endif
     Allocator::unique_ptr<OSFiber> const impl;
     Worker* const worker;

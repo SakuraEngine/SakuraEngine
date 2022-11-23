@@ -91,9 +91,9 @@ size_t skr_type_t::Size() const
         case SKR_TYPE_CATEGORY_HANDLE:
             return sizeof(skr_resource_handle_t);
         case SKR_TYPE_CATEGORY_STR:
-            return sizeof(eastl::string);
+            return sizeof(skr::string);
         case SKR_TYPE_CATEGORY_STRV:
-            return sizeof(eastl::string_view);
+            return sizeof(skr::string_view);
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->size;
         case SKR_TYPE_CATEGORY_DYNARR:
@@ -146,9 +146,9 @@ size_t skr_type_t::Align() const
         case SKR_TYPE_CATEGORY_HANDLE:
             return alignof(skr_resource_handle_t);
         case SKR_TYPE_CATEGORY_STR:
-            return alignof(eastl::string);
+            return alignof(skr::string);
         case SKR_TYPE_CATEGORY_STRV:
-            return alignof(eastl::string_view);
+            return alignof(skr::string_view);
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->elementType->Align();
         case SKR_TYPE_CATEGORY_DYNARR:
@@ -200,13 +200,13 @@ const char* skr_type_t::Name() const
         case SKR_TYPE_CATEGORY_HANDLE:
             return "handle";
         case SKR_TYPE_CATEGORY_STR:
-            return "eastl::string";
+            return "skr::string";
         case SKR_TYPE_CATEGORY_STRV:
-            return "eastl::string_view";
+            return "skr::string_view";
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (ArrayType&)(*this);
             if(arr.name.empty())
-                arr.name = eastl::string(arr.elementType->Name()) + "[" + eastl::to_string(arr.size) + "]";
+                arr.name = skr::string(arr.elementType->Name()) + "[" + skr::to_string(arr.size) + "]";
             return arr.name.c_str();
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
@@ -238,7 +238,7 @@ const char* skr_type_t::Name() const
                         ref.name = skr::format("skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : "void");
                     break;
                 case ReferenceType::Observed:
-                    ref.name = ref.pointee ? (eastl::string(ref.pointee->Name()) + " *") : "void*";
+                    ref.name = ref.pointee ? (skr::string(ref.pointee->Name()) + " *") : "void*";
                     break;
             }
             return ref.name.c_str();
@@ -580,9 +580,9 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
         break;
 #define STR_CONVERT                                                        \
     case SKR_TYPE_CATEGORY_STR:                                            \
-        FromString(dst, eastl::string_view(*(eastl::string*)src), policy); \
+        FromString(dst, skr::string_view(*(skr::string*)src), policy); \
     case SKR_TYPE_CATEGORY_STRV:                                           \
-        FromString(dst, eastl::string_view(*(eastl::string_view*)src), policy);
+        FromString(dst, skr::string_view(*(skr::string_view*)src), policy);
 #define ENUM_CONVERT                          \
     case SKR_TYPE_CATEGORY_ENUM: {            \
         auto& enm = (const EnumType&)(*this); \
@@ -603,9 +603,9 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             {
                 BASE_CONVERT
                 case SKR_TYPE_CATEGORY_STR:
-                    policy->parse(policy, eastl::string_view(*(eastl::string*)src), dst, this);
+                    policy->parse(policy, skr::string_view(*(skr::string*)src), dst, this);
                 case SKR_TYPE_CATEGORY_STRV:
-                    policy->parse(policy, *(eastl::string_view*)src, dst, this);
+                    policy->parse(policy, *(skr::string_view*)src, dst, this);
                 case SKR_TYPE_CATEGORY_REF: {
                     auto& ref = (const ReferenceType&)(*srcType);
                     switch (ref.ownership)
@@ -737,11 +737,11 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             }
         }
         case SKR_TYPE_CATEGORY_STR: {
-            auto& dstV = *(eastl::string*)dst;
+            auto& dstV = *(skr::string*)dst;
             switch (srcType->type)
             {
                 case SKR_TYPE_CATEGORY_STRV:
-                    dstV = *(eastl::string_view*)src;
+                    dstV = *(skr::string_view*)src;
                     break;
                 default:
                     dstV = srcType->ToString(src);
@@ -750,11 +750,11 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_STRV: {
-            auto& dstV = *(eastl::string_view*)dst;
+            auto& dstV = *(skr::string_view*)dst;
             switch (srcType->type)
             {
                 case SKR_TYPE_CATEGORY_STR:
-                    dstV = *(eastl::string*)src;
+                    dstV = *(skr::string*)src;
                     break;
                 default:
                     break;
@@ -899,9 +899,9 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     break;
             }
             if (srcType->type == SKR_TYPE_CATEGORY_STR)
-                enm.FromString(dst, *(eastl::string*)src);
+                enm.FromString(dst, *(skr::string*)src);
             else if (srcType->type == SKR_TYPE_CATEGORY_STRV)
-                enm.FromString(dst, *(eastl::string_view*)src);
+                enm.FromString(dst, *(skr::string_view*)src);
             break;
         }
         case SKR_TYPE_CATEGORY_REF: {
@@ -985,7 +985,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
     }
 }
 
-eastl::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolicy* policy) const
+skr::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolicy* policy) const
 {
     using namespace skr::type;
     if (policy)
@@ -1058,9 +1058,9 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
         case SKR_TYPE_CATEGORY_HANDLE:
             return HashImpl<skr_resource_handle_t>(dst, base);
         case SKR_TYPE_CATEGORY_STR:
-            return HashImpl<eastl::string>(dst, base);
+            return HashImpl<skr::string>(dst, base);
         case SKR_TYPE_CATEGORY_STRV:
-            return HashImpl<eastl::string_view>(dst, base);
+            return HashImpl<skr::string_view>(dst, base);
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
             switch (enm.underlyingType->type)
@@ -1150,7 +1150,7 @@ void skr_type_t::Destruct(void* address) const
                 obj.nativeMethods.dtor(address);
         }
         case SKR_TYPE_CATEGORY_STR: {
-            ((eastl::string*)address)->~basic_string();
+            ((skr::string*)address)->~basic_string();
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
@@ -1226,10 +1226,10 @@ void skr_type_t::Copy(void* dst, const void* src) const
             CopyImpl<skr_resource_handle_t>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_STR:
-            CopyImpl<eastl::string>(dst, src);
+            CopyImpl<skr::string>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_STRV:
-            CopyImpl<eastl::string_view>(dst, src);
+            CopyImpl<skr::string_view>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (const ArrayType&)(*this);
@@ -1336,10 +1336,10 @@ void skr_type_t::Move(void* dst, void* src) const
             MoveImpl<skr_resource_handle_t>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_STR:
-            MoveImpl<eastl::string>(dst, src);
+            MoveImpl<skr::string>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_STRV:
-            MoveImpl<eastl::string_view>(dst, src);
+            MoveImpl<skr::string_view>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (const ArrayType&)(*this);

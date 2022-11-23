@@ -1,5 +1,6 @@
 #include "binary/reader.h"
 #include "platform/memory.h"
+
 namespace skr::binary
 {
 template <>
@@ -13,13 +14,13 @@ int ReadValue(skr_binary_reader_t* reader, bool& value)
     return ret;
 }
 template <>
-int ReadValue(skr_binary_reader_t* reader, eastl::string& str)
+int ReadValue(skr_binary_reader_t* reader, skr::string& str)
 {
     uint32_t size;
     int ret = ReadValue(reader, size);
     if (ret != 0)
         return ret;
-    eastl::string temp;
+    skr::string temp;
     temp.resize(size);
     ret = ReadValue(reader, (void*)temp.data(), temp.size());
     if (ret != 0)

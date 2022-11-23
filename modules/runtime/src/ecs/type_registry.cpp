@@ -35,7 +35,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.flags = 0;
         descriptions.push_back(desc);
         guid2type.insert(eastl::make_pair(desc.guid, kDisableComponent));
-        name2type.insert(eastl::make_pair(desc.name, kDisableComponent));
+        name2type.emplace(desc.name, kDisableComponent);
     }
     {
         SKR_ASSERT(descriptions.size() == kDeadComponent.index());
@@ -49,7 +49,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.flags = 0;
         descriptions.push_back(desc);
         guid2type.insert(eastl::make_pair(desc.guid, kDeadComponent));
-        name2type.insert(eastl::make_pair(desc.name, kDeadComponent));
+        name2type.emplace(desc.name, kDeadComponent);
     }
     {
         SKR_ASSERT(descriptions.size() == kLinkComponent.index());
@@ -65,7 +65,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.flags = 0;
         descriptions.push_back(desc);
         guid2type.insert(eastl::make_pair(desc.guid, kLinkComponent));
-        name2type.insert(eastl::make_pair(desc.name, kLinkComponent));
+        name2type.emplace(desc.name, kLinkComponent);
     }
     {
         SKR_ASSERT(descriptions.size() == kMaskComponent.index());
@@ -79,7 +79,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.flags = 0;
         descriptions.push_back(desc);
         guid2type.insert(eastl::make_pair(desc.guid, kMaskComponent));
-        name2type.insert(eastl::make_pair(desc.name, kMaskComponent));
+        name2type.emplace(desc.name, kMaskComponent);
     }
     {
         SKR_ASSERT(descriptions.size() == kGuidComponent.index());
@@ -93,7 +93,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.flags = 0;
         descriptions.push_back(desc);
         guid2type.insert(eastl::make_pair(desc.guid, kGuidComponent));
-        name2type.insert(eastl::make_pair(desc.name, kGuidComponent));
+        name2type.emplace(desc.name, kGuidComponent);
     }
     {
         SKR_ASSERT(descriptions.size() == kDirtyComponent.index());
@@ -107,7 +107,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.flags = 0;
         descriptions.push_back(desc);
         guid2type.insert(eastl::make_pair(desc.guid, kDirtyComponent));
-        name2type.insert(eastl::make_pair(desc.name, kDirtyComponent));
+        name2type.emplace(desc.name, kDirtyComponent);
     }
 }
 
@@ -151,7 +151,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     type_index_t index{ (TIndex)descriptions.size(), pin, buffer, tag, chunk };
     descriptions.push_back(desc);
     guid2type.insert(eastl::make_pair(desc.guid, index));
-    name2type.insert(eastl::make_pair(desc.name, index));
+    name2type.emplace(desc.name, index);
     return index;
 }
 
@@ -163,7 +163,7 @@ type_index_t type_registry_t::get_type(const guid_t& guid)
     return kInvalidTypeIndex;
 }
 
-type_index_t type_registry_t::get_type(eastl::string_view name)
+type_index_t type_registry_t::get_type(skr::string_view name)
 {
     auto i = name2type.find(name);
     if (i != name2type.end())

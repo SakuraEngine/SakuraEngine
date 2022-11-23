@@ -29,7 +29,7 @@
 #include "platform/configure.h"
 #ifdef __cplusplus
 #include "platform/shared_library.hpp"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include <EASTL/vector.h>
 #include <EASTL/unique_ptr.h>
 
@@ -47,8 +47,8 @@ namespace skr
  * @author: SaeruHikari
  */
 struct ModuleDependency {
-    eastl::string name;    //!< The name of the dependency
-    eastl::string version; //!< The version of the dependency
+    skr::string name;    //!< The name of the dependency
+    skr::string version; //!< The version of the dependency
 };
 
 /**
@@ -56,14 +56,14 @@ struct ModuleDependency {
  * @author: SaeruHikari
  */
 struct ModuleInfo {
-    eastl::string name;         //!< name of the plugin
-    eastl::string prettyname;   //!< formatted name of the plugin
-    eastl::string core_version; //!< version of the engine
-    eastl::string version;      // !< version of the plugin
-    eastl::string linking;      // !< linking of the plugin
-    eastl::string license;      //!< license of the plugin
-    eastl::string url;          //!< url of the plugin
-    eastl::string copyright;    //!< copyright of the plugin
+    skr::string name;         //!< name of the plugin
+    skr::string prettyname;   //!< formatted name of the plugin
+    skr::string core_version; //!< version of the engine
+    skr::string version;      // !< version of the plugin
+    skr::string linking;      // !< linking of the plugin
+    skr::string license;      //!< license of the plugin
+    skr::string url;          //!< url of the plugin
+    skr::string copyright;    //!< copyright of the plugin
     // Dependencies array
     eastl::vector<ModuleDependency> dependencies;
 };
@@ -106,7 +106,7 @@ struct RUNTIME_API IDynamicModule : public IModule {
     eastl::unique_ptr<SharedLibrary> sharedLib;
     virtual const char* get_meta_data(void) override
     {
-        eastl::string symbolname = "__skr_module_meta__";
+        skr::string symbolname = "__skr_module_meta__";
         symbolname.append(information.name);
         const char* symbol_str = symbolname.c_str();
         return sharedLib->get<const char*>(symbol_str);

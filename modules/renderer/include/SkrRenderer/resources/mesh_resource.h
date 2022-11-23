@@ -29,7 +29,7 @@ typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
 
 #ifdef __cplusplus
 #include <EASTL/vector.h>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 
 sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
 sattr("serialize" : "bin")
@@ -64,14 +64,14 @@ skr_mesh_buffer_t
     sattr("transient": true)
     skr_blob_t bin;
     // TODO: keep this?
-    eastl::string uri; // gltf buffer uri
+    skr::string uri; // gltf buffer uri
 };
 
 sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 
 sattr("serialize" : "bin")
 skr_mesh_resource_t
 {
-    eastl::string name;
+    skr::string name;
     eastl::vector<skr_mesh_section_t> sections;
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_mesh_buffer_t> bins;

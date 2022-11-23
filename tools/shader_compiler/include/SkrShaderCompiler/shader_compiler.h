@@ -3,7 +3,7 @@
 #include "platform/configure.h"
 #include "cgpu/flags.h"
 #include "containers/span.hpp"
-#include <EASTL/string.h>
+#include "containers/string.hpp"
 #include <EASTL/functional.h>
 #ifndef __meta__
 #include "SkrShaderCompiler/shader_compiler.generated.h"
@@ -32,7 +32,7 @@ struct ShaderSourceCode
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
-    eastl::string source_name;
+    skr::string source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
 };
 

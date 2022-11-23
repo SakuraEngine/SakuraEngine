@@ -58,13 +58,13 @@ const skr_type_t* type_of<skr_resource_handle_t>::get()
     return &type;
 }
 
-const skr_type_t* type_of<eastl::string>::get()
+const skr_type_t* type_of<skr::string>::get()
 {
     static StringType type;
     return &type;
 }
 
-const skr_type_t* type_of<eastl::string_view>::get()
+const skr_type_t* type_of<skr::string_view>::get()
 {
     static StringViewType type;
     return &type;
@@ -111,11 +111,11 @@ size_t Hash(void* value, size_t base)
 {
     return skr_hash((void*)&value, sizeof(value), base);
 }
-size_t Hash(const eastl::string& value, size_t base)
+size_t Hash(const skr::string& value, size_t base)
 {
     return skr_hash(value.data(), value.size(), base);
 }
-size_t Hash(const eastl::string_view& value, size_t base)
+size_t Hash(const skr::string_view& value, size_t base)
 {
     return skr_hash(value.data(), value.size(), base);
 }

@@ -12,7 +12,7 @@ sattr("rtti" : true)
 TestGrandSon : public TestSon
 {
     sstatic_ctor(PrintField($name))
-    eastl::string job;
+    skr::string job;
 }
 sstatic_ctor(XXXInformation<$T>())
 sattr("serialize" : ["json", "bin"])

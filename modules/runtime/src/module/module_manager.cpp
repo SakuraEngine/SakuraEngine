@@ -26,41 +26,41 @@ public:
         }
         skr::DependencyGraph::Destroy(dependency_graph);
     }
-    virtual IModule* get_module(const eastl::string& name) final;
-    virtual const struct ModuleGraph* make_module_graph(const eastl::string& entry, bool shared = true) final;
-    virtual bool patch_module_graph(const eastl::string& name, bool shared = true, int argc = 0, char** argv = nullptr) final;
+    virtual IModule* get_module(const skr::string& name) final;
+    virtual const struct ModuleGraph* make_module_graph(const skr::string& entry, bool shared = true) final;
+    virtual bool patch_module_graph(const skr::string& name, bool shared = true, int argc = 0, char** argv = nullptr) final;
     virtual int init_module_graph(int argc, char** argv) final;
     virtual bool destroy_module_graph(void) final;
     virtual void mount(const char8_t* path) final;
-    virtual eastl::string_view get_root(void) final;
-    virtual ModuleProperty& get_module_property(const eastl::string& name) final;
+    virtual skr::string_view get_root(void) final;
+    virtual ModuleProperty& get_module_property(const skr::string& name) final;
 
     virtual void register_subsystem(const char* moduleName, const char* id, ModuleSubsystemBase::CreatePFN pCreate) final;
 
     virtual void registerStaticallyLinkedModule(const char* moduleName, module_registerer _register) final;
 
 protected:
-    virtual IModule* spawnStaticModule(const eastl::string& moduleName) final;
-    virtual IModule* spawnDynamicModule(const eastl::string& moduleName) final;
+    virtual IModule* spawnStaticModule(const skr::string& moduleName) final;
+    virtual IModule* spawnDynamicModule(const skr::string& moduleName) final;
 
 private:
-    bool __internal_DestroyModuleGraph(const eastl::string& nodename);
-    void __internal_MakeModuleGraph(const eastl::string& entry,
+    bool __internal_DestroyModuleGraph(const skr::string& nodename);
+    void __internal_MakeModuleGraph(const skr::string& entry,
     bool shared = false);
-    bool __internal_InitModuleGraph(const eastl::string& nodename, int argc, char** argv);
+    bool __internal_InitModuleGraph(const skr::string& nodename, int argc, char** argv);
     ModuleInfo parseMetaData(const char* metadata);
 
 private:
-    eastl::string moduleDir;
-    eastl::vector<eastl::string> roots;
-    eastl::string mainModuleName;
+    skr::string moduleDir;
+    eastl::vector<skr::string> roots;
+    skr::string mainModuleName;
     // ModuleGraphImpl moduleDependecyGraph;
     skr::DependencyGraph* dependency_graph = nullptr;
-    skr::flat_hash_map<eastl::string, ModuleProperty*, eastl::hash<eastl::string>> nodeMap;
-    skr::flat_hash_map<eastl::string, module_registerer, eastl::hash<eastl::string>> initializeMap;
-    skr::flat_hash_map<eastl::string, eastl::unique_ptr<IModule>, eastl::hash<eastl::string>> modulesMap;
-    skr::flat_hash_map<eastl::string, eastl::vector<eastl::string>, eastl::hash<eastl::string>> subsystemIdMap;
-    skr::flat_hash_map<eastl::string, eastl::vector<ModuleSubsystemBase::CreatePFN>, eastl::hash<eastl::string>> subsystemCreateMap;
+    skr::flat_hash_map<skr::string, ModuleProperty*, skr::hash<skr::string>> nodeMap;
+    skr::flat_hash_map<skr::string, module_registerer, skr::hash<skr::string>> initializeMap;
+    skr::flat_hash_map<skr::string, eastl::unique_ptr<IModule>, skr::hash<skr::string>> modulesMap;
+    skr::flat_hash_map<skr::string, eastl::vector<skr::string>, skr::hash<skr::string>> subsystemIdMap;
+    skr::flat_hash_map<skr::string, eastl::vector<ModuleSubsystemBase::CreatePFN>, skr::hash<skr::string>> subsystemCreateMap;
 
     SharedLibrary processSymbolTable;
 };
@@ -88,7 +88,7 @@ void ModuleManagerImpl::registerStaticallyLinkedModule(const char* moduleName, m
     initializeMap[moduleName] = _register;
 }
 
-IModule* ModuleManagerImpl::spawnStaticModule(const eastl::string& name)
+IModule* ModuleManagerImpl::spawnStaticModule(const skr::string& name)
 {
     if (modulesMap.find(name) != modulesMap.end())
         return modulesMap[name].get();
@@ -120,16 +120,16 @@ public:
         SKR_LOG_TRACE("[default implementation] dynamic module %s unloaded!", name.c_str());
     }
 
-    eastl::string name = "";
+    skr::string name = "";
 };
 
-IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
+IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
 {
     if (modulesMap.find(name) != modulesMap.end())
         return modulesMap[name].get();
     eastl::unique_ptr<SharedLibrary> sharedLib = eastl::make_unique<SharedLibrary>();
-    eastl::string initName("__initializeModule");
-    eastl::string mName(name);
+    skr::string initName("__initializeModule");
+    skr::string mName(name);
     initName.append(mName);
     // try load in program
     IModule* (*func)() = nullptr;
@@ -141,7 +141,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const eastl::string& name)
     if (func == nullptr)
     {
         // try load dll
-        eastl::string filename;
+        skr::string filename;
         filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
                 .append(name)
                 .append(skr::SharedLibrary::GetPlatformFileExtensionName());
@@ -210,19 +210,19 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char* metadata)
     return info;
 }
 
-IModule* ModuleManagerImpl::get_module(const eastl::string& name)
+IModule* ModuleManagerImpl::get_module(const skr::string& name)
 {
     if (modulesMap.find(name) == modulesMap.end())
         return nullptr;
     return modulesMap.find(name)->second.get();
 }
 
-ModuleProperty& ModuleManagerImpl::get_module_property(const eastl::string& entry)
+ModuleProperty& ModuleManagerImpl::get_module_property(const skr::string& entry)
 {
     return *nodeMap.find(entry)->second;
 }
 
-bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename, int argc, char** argv)
+bool ModuleManagerImpl::__internal_InitModuleGraph(const skr::string& nodename, int argc, char** argv)
 {
     if (get_module_property(nodename).bActive)
         return true;
@@ -251,7 +251,7 @@ bool ModuleManagerImpl::__internal_InitModuleGraph(const eastl::string& nodename
     return true;
 }
 
-bool ModuleManagerImpl::__internal_DestroyModuleGraph(const eastl::string& nodename)
+bool ModuleManagerImpl::__internal_DestroyModuleGraph(const skr::string& nodename)
 {
     if (!get_module_property(nodename).bActive)
         return true;
@@ -294,7 +294,7 @@ bool ModuleManagerImpl::destroy_module_graph(void)
     return true;
 }
 
-void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, bool shared)
+void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::string& entry, bool shared)
 {
     if (nodeMap.find(entry) != nodeMap.end())
         return;
@@ -324,14 +324,14 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const eastl::string& entry, b
     }
 }
 
-const ModuleGraph* ModuleManagerImpl::make_module_graph(const eastl::string& entry, bool shared /*=false*/)
+const ModuleGraph* ModuleManagerImpl::make_module_graph(const skr::string& entry, bool shared /*=false*/)
 {
     mainModuleName = entry;
     __internal_MakeModuleGraph(entry, shared);
     return (struct ModuleGraph*)dependency_graph;
 }
 
-bool ModuleManagerImpl::patch_module_graph(const eastl::string& entry, bool shared, int argc, char** argv)
+bool ModuleManagerImpl::patch_module_graph(const skr::string& entry, bool shared, int argc, char** argv)
 {
     __internal_MakeModuleGraph(entry, shared);
     if (!__internal_InitModuleGraph(entry, argc, argv))
@@ -344,9 +344,9 @@ void ModuleManagerImpl::mount(const char8_t* rootdir)
     moduleDir = rootdir;
 }
 
-eastl::string_view ModuleManagerImpl::get_root(void)
+skr::string_view ModuleManagerImpl::get_root(void)
 {
-    return eastl::string_view(moduleDir);
+    return skr::string_view(moduleDir);
 }
 
 } // namespace skr
