@@ -35,7 +35,10 @@ void WriteValue(skr_json_writer_t* writer, ${enum.name} e)
     %for name, value in vars(enum.values).items():
         case ${name}: writer->String("${db.short_name(name)}", ${len(db.short_name(name))}); return;
     %endfor
+        default: writer->String("INVALID_ENUMERATOR", ${len("INVALID_ENUMERATOR")}); 
+        SKR_UNREACHABLE_CODE(); return;
     }
+    SKR_UNREACHABLE_CODE();
 } 
 %endfor
 
