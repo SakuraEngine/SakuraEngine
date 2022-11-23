@@ -38,36 +38,8 @@
 #include "SkrAnimTool/ozz/animation_optimizer.h"
 #include "SkrAnimTool/ozz/tools/import2ozz.h"
 #include "SkrAnimTool/ozz/track_optimizer.h"
-#include "SkrAnim/ozz/base/containers/string.h"
 #include "SkrAnim/ozz/base/log.h"
-#include "SkrAnim/ozz/options/options.h"
-
-bool ValidateExclusiveConfigOption(const ozz::options::Option& _option,
-                                   int _argc);
-OZZ_OPTIONS_DECLARE_STRING_FN(
-    config, "Specifies input configuration string in json format", "", false,
-    &ValidateExclusiveConfigOption)
-OZZ_OPTIONS_DECLARE_STRING_FN(
-    config_file, "Specifies input configuration file in json format", "", false,
-    &ValidateExclusiveConfigOption)
-
-// Validate exclusive config options.
-bool ValidateExclusiveConfigOption(const ozz::options::Option& _option,
-                                   int _argc) {
-  (void)_option;
-  (void)_argc;
-  bool not_exclusive =
-      OPTIONS_config_file.value()[0] != 0 && OPTIONS_config.value()[0] != 0;
-  if (not_exclusive) {
-    ozz::log::Err() << "--config and --config_file are exclusive options."
-                    << std::endl;
-  }
-  return !not_exclusive;
-}
-
-OZZ_OPTIONS_DECLARE_STRING(
-    config_dump_reference,
-    "Dumps reference json configuration to specified file.", "", false)
+#include "SkrAnim/ozz/base/containers/string.h"
 
 namespace ozz {
 namespace animation {
@@ -479,32 +451,13 @@ bool CompareName(const char* _a, const char* _b) {
   return std::strcmp(_a, _b) == 0;
 }
 
-bool ProcessConfiguration(Json::Value* _config) {
+bool ProcessConfiguration(Json::Value* _config, ozz::string _config_string) {
   if (!_config) {
     return false;
   }
 
   // Use {} as a default config, otherwise take the one specified as argument.
-  std::string config_string = "{}";
-  // Takes config from program options.
-  if (OPTIONS_config.value()[0] != 0) {
-    config_string = OPTIONS_config.value();
-  } else if (OPTIONS_config_file.value()[0] != 0) {
-    ozz::log::LogV() << "Opens config file: \"" << OPTIONS_config_file << "\"."
-                     << std::endl;
-
-    std::ifstream file(OPTIONS_config_file.value());
-    if (!file.is_open()) {
-      ozz::log::Err() << "Failed to open config file: \"" << OPTIONS_config_file
-                      << "\"." << std::endl;
-      return false;
-    }
-    config_string.assign(std::istreambuf_iterator<char>(file),
-                         std::istreambuf_iterator<char>());
-  } else {
-    ozz::log::Log() << "No configuration provided, using default configuration."
-                    << std::endl;
-  }
+  std::string config_string = _config_string.c_str();
 
   Json::Reader json_builder;
   if (!json_builder.parse(config_string, *_config, true)) {
@@ -538,9 +491,9 @@ bool ProcessConfiguration(Json::Value* _config) {
   }
 
   // Dumps reference config to file.
-  if (!DumpConfig(OPTIONS_config_dump_reference.value(), ref_config)) {
-    return false;
-  }
+  // if (!DumpConfig(OPTIONS_config_dump_reference.value(), ref_config)) {
+  //   return false;
+  // }
 
   return true;
 }

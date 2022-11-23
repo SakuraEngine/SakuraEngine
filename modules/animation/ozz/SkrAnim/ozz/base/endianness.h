@@ -37,7 +37,7 @@
 namespace ozz {
 
 // Declares supported endianness.
-enum Endianness {
+enum Endianness : uint32_t {
   kBigEndian,
   kLittleEndian,
 };

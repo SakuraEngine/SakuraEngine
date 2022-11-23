@@ -189,7 +189,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
                 writer.Key("dependencies");
                 writer.StartArray();
                 for (auto& dep : jobContext->staticDependencies)
-                    skr::json::WriteValue<const skr_guid_t&>(&writer, dep);
+                    skr::json::WriteValue<const skr_resource_handle_t&>(&writer, dep);
                 writer.EndArray();
                 writer.EndObject();
                 auto file = fopen(dependencyPath.u8string().c_str(), "w");
@@ -396,14 +396,17 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
     return nullptr;
 }
 
-void* SCookSystem::CookOrLoad(skr_guid_t resource)
+skr_resource_handle_t SCookSystem::CookOrLoad(skr_guid_t resource)
 {
     auto counter = EnsureCooked(resource);
     if (counter)
         counter.wait(false);
-    SKR_UNIMPLEMENTED_FUNCTION();
-    // LOAD
-    return nullptr;
+    skr_resource_handle_t handle;
+    skr::task::wait(false, [&]
+    {
+        return handle.get_status() == SKR_LOADING_STATUS_INSTALLED || handle.get_status() == SKR_LOADING_STATUS_ERROR;
+    });
+    return handle;
 }
 
 void SCookContext::_Destroy(void* resource)
@@ -506,17 +509,25 @@ skr::span<const skr_guid_t> SCookContext::GetRuntimeDependencies() const
     return skr::span<const skr_guid_t>(runtimeDependencies.data(), runtimeDependencies.size());
 }
 
-skr::span<const skr_guid_t> SCookContext::GetStaticDependencies() const
+skr::span<const skr_resource_handle_t> SCookContext::GetStaticDependencies() const
 {
-    return skr::span<const skr_guid_t>(staticDependencies.data(), staticDependencies.size());
+    return skr::span<const skr_resource_handle_t>(staticDependencies.data(), staticDependencies.size());
 }
 
-void* SCookContext::AddStaticDependency(skr_guid_t resource)
+const skr_resource_handle_t& SCookContext::GetStaticDependency(uint32_t index) const
 {
-    auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto &dep) { return dep == resource; });
+    return staticDependencies[index];
+}
+
+uint32_t SCookContext::AddStaticDependency(skr_guid_t resource)
+{
+    auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto &dep) { return dep.get_serialized() == resource; });
     if (iter == staticDependencies.end())
-        staticDependencies.push_back(resource);
-    return GetCookSystem()->CookOrLoad(resource);
+    {
+        staticDependencies.push_back(GetCookSystem()->CookOrLoad(resource));
+        return staticDependencies.size() - 1;
+    }
+    return (uint32_t)(staticDependencies.end() - iter);
 }
 
 SAssetRecord* SCookSystem::ImportAsset(SProject* project, skr::filesystem::path path)

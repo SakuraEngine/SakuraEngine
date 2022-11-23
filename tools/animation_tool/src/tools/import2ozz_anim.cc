@@ -48,12 +48,10 @@
 #include "SkrAnim/ozz/base/log.h"
 #include "SkrAnim/ozz/base/maths/soa_transform.h"
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
-#include "SkrAnim/ozz/options/options.h"
 
 namespace ozz {
 namespace animation {
 namespace offline {
-namespace {
 
 void DisplaysOptimizationstatistics(const RawAnimation& _non_optimized,
                                     const RawAnimation& _optimized) {
@@ -333,7 +331,6 @@ bool ProcessAnimation(OzzImporter& _importer, const char* _animation_name,
     return Export(_importer, animation, _skeleton, _config, _endianness);
   }
 }
-}  // namespace
 
 AdditiveReference::EnumNames AdditiveReference::GetNames() {
   static const char* kNames[] = {"animation", "skeleton"};

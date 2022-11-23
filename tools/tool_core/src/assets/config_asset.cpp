@@ -137,7 +137,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
             ctx->AddRuntimeDependency(handle->get_guid());
         }
     }
-    //-----write resource header
+    //------write resource object
     eastl::vector<uint8_t> buffer;
     struct VectorWriter
     {
@@ -149,7 +149,6 @@ bool SConfigCooker::Cook(SCookContext* ctx)
         }
     } writer{&buffer};
     skr_binary_writer_t archive(writer);
-    //------write resource object
     skr::resource::SConfigFactory::Serialize(*resource, archive);
     //------save resource to disk
     auto file = fopen(outputPath.u8string().c_str(), "wb");

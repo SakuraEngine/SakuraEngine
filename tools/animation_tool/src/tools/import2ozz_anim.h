@@ -28,7 +28,7 @@
 #ifndef OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_ANIM_H_
 #define OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_ANIM_H_
 
-#include "SkrAnimTool/ozz/tools/export.h"
+#include "SkrAnimTool/ozz/tools/options.h"
 #include "SkrAnim/ozz/base/endianness.h"
 #include "SkrAnim/ozz/base/platform.h"
 
@@ -44,9 +44,13 @@ namespace animation {
 namespace offline {
 
 class OzzImporter;
-OZZ_ANIMTOOLS_DLL bool ImportAnimations(const Json::Value& _config,
-                                        OzzImporter* _importer,
-                      const ozz::Endianness _endianness);
+OZZ_ANIMTOOLS_DLL bool ImportAnimations(const Options& option,
+                                        OzzImporter* _importer);
+
+OZZ_ANIMTOOLS_DLL void DisplaysOptimizationstatistics(const RawAnimation& _non_optimized,
+                                    const RawAnimation& _optimized);
+
+OZZ_ANIMTOOLS_DLL vector<math::Transform> SkeletonRestPoseSoAToAoS(const Skeleton& _skeleton);
 
 // Additive reference enum to config string conversions.
 struct AdditiveReferenceEnum {

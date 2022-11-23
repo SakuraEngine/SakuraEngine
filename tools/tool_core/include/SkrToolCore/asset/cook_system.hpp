@@ -43,9 +43,10 @@ public:
     skr::filesystem::path AddFileDependency(const skr::filesystem::path& path);
     void AddRuntimeDependency(skr_guid_t resource);
     void AddSoftRuntimeDependency(skr_guid_t resource);
-    void* AddStaticDependency(skr_guid_t resource);
+    uint32_t AddStaticDependency(skr_guid_t resource);
     skr::span<const skr_guid_t> GetRuntimeDependencies() const;
-    skr::span<const skr_guid_t> GetStaticDependencies() const;
+    skr::span<const skr_resource_handle_t> GetStaticDependencies() const;
+    const skr_resource_handle_t& GetStaticDependency(uint32_t index) const;
 
     template <class T>
     T* Import() { return (T*)_Import(); }
@@ -79,7 +80,7 @@ protected:
     class skr::io::RAMService* ioService = nullptr;
 
     skr::filesystem::path outputPath;
-    eastl::vector<skr_guid_t> staticDependencies;
+    eastl::vector<skr_resource_handle_t> staticDependencies;
     eastl::vector<skr_guid_t> runtimeDependencies;
     eastl::vector<skr::filesystem::path> fileDependencies;
 };
@@ -103,7 +104,7 @@ public:
     void Shutdown() {}
 
     skr::task::event_t AddCookTask(skr_guid_t resource);
-    void* CookOrLoad(skr_guid_t resource);
+    skr_resource_handle_t CookOrLoad(skr_guid_t resource);
     skr::task::event_t EnsureCooked(skr_guid_t resource);
     void WaitForAll();
 
