@@ -6,7 +6,7 @@
 #include "utils/log.hpp"
 #include "resource/resource_system.h"
 #include "resource/resource_handle.h"
-#include "resource/resource_header.h"
+#include "resource/resource_header.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
 

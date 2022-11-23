@@ -3,11 +3,10 @@
 #include <EASTL/vector.h>
 #include "containers/span.hpp"
 #include "containers/hashmap.hpp"
-#include "resource/resource_header.h"
+#include "resource/resource_header.hpp"
 #include "utils/parallel_for.hpp"
 #include "utils/lazy.hpp"
 #include "platform/filesystem.hpp"
-#include "platform/guid.hpp"
 #include "json/reader.h"
 
 namespace skd sreflect

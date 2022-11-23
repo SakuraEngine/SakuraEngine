@@ -5,7 +5,7 @@
 #include "platform/guid.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_handle.h"
-#include "resource/resource_header.h"
+#include "resource/resource_header.hpp"
 #include "utils/io.h"
 #include "utils/types.h"
 

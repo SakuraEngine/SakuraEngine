@@ -1,4 +1,4 @@
-#include "resource/resource_header.h"
+#include "resource/resource_header.hpp"
 
 int skr_resource_header_t::ReadWithoutDeps(skr_binary_reader_t* reader)
 {

@@ -5,7 +5,7 @@
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
-#include "resource/resource_header.h"
+#include "resource/resource_header.hpp"
 #include "type/type_registry.h"
 #include "utils/defer.hpp"
 #include "resource/resource_system.h"

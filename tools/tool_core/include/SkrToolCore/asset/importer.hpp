@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
-#include "resource/resource_header.h"
+#include "resource/resource_header.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #ifndef __meta__
     #include "SkrToolCore/asset/importer.generated.h"

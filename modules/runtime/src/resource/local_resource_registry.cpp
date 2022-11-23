@@ -3,7 +3,7 @@
 #include "utils/format.hpp"
 #include "platform/vfs.h"
 #include "resource/local_resource_registry.h"
-#include "resource/resource_header.h"
+#include "resource/resource_header.hpp"
 
 namespace skr::resource
 {
