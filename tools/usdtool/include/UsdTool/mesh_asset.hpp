@@ -11,7 +11,7 @@ sreflect_struct("guid" : "01A1037A-22A1-46C9-8461-90B443796FDC", "serialize" : "
 USDTOOL_API SUSDMeshImporter final : public SImporter
 {
     // the SDF path of Mesh asset
-    eastl::string path;
+    skr::string path;
     void* Import(skr::io::RAMService*, SCookContext* context) override { SKR_UNIMPLEMENTED_FUNCTION(); return nullptr; }
     void Destroy(void *) override { SKR_UNIMPLEMENTED_FUNCTION(); }
 }

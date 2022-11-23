@@ -1,5 +1,5 @@
 #pragma once
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include "utils/types.h"
 #include "utils/hash.h"
 #include "platform/debug.h"
@@ -31,7 +31,7 @@ constexpr const size_t long_guid_form_length = 38;  // {XXXXXXXX-XXXX-XXXX-XXXX-
 //
 constexpr int parse_hex_digit(const char c)
 {
-    using namespace eastl::string_literals;
+    using namespace skr::string_literals;
     if ('0' <= c && c <= '9')
         return c - '0';
     else if ('a' <= c && c <= 'f')
@@ -74,7 +74,7 @@ constexpr skr_guid_t make_guid_helper(const char* begin)
 template <size_t N>
 constexpr skr_guid_t make_guid_unsafe(const char (&str)[N])
 {
-    using namespace eastl::string_literals;
+    using namespace skr::string_literals;
     static_assert(N == (long_guid_form_length + 1) || N == (short_guid_form_length + 1), "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
     if constexpr (N == (long_guid_form_length + 1))
@@ -85,9 +85,11 @@ constexpr skr_guid_t make_guid_unsafe(const char (&str)[N])
 
     return make_guid_helper(str + (N == (long_guid_form_length + 1) ? 1 : 0));
 }
-constexpr skr_guid_t make_guid_unsafe(const eastl::string_view& str)
+
+#if !defined(SKR_USE_STL_STRING)
+constexpr skr_guid_t make_guid_unsafe(const skr::string_view& str)
 {
-    using namespace eastl::string_literals;
+    using namespace skr::string_literals;
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
         SKR_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
@@ -99,9 +101,11 @@ constexpr skr_guid_t make_guid_unsafe(const eastl::string_view& str)
 
     return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0));
 }
+#endif
+
 constexpr skr_guid_t make_guid_unsafe(const std::string_view& str)
 {
-    using namespace eastl::string_literals;
+    using namespace skr::string_literals;
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
         SKR_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
@@ -120,7 +124,7 @@ namespace literals
 {
 constexpr skr_guid_t operator""_guid(const char* str, size_t N)
 {
-    using namespace eastl::string_literals;
+    using namespace skr::string_literals;
     using namespace details;
 
     if (!(N == long_guid_form_length || N == short_guid_form_length))

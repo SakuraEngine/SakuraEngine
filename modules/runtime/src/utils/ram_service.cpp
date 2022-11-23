@@ -1,4 +1,4 @@
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include "platform/vfs.h"
 #include "utils/io.hpp"
 #include "io_service_util.hpp"
@@ -13,7 +13,7 @@ class RAMServiceImpl final : public RAMService
 public:
     struct Task : public TaskBase {
         skr_vfs_t* vfs;
-        eastl::string path;
+        skr::string path;
         uint64_t offset;
         skr_async_ram_destination_t* destination;
     };
@@ -36,7 +36,7 @@ public:
         return threaded_service.getServiceStatus();
     }
 
-    const eastl::string name;
+    const skr::string name;
     // task containers
     TaskContainer<Task> tasks;
     AsyncThreadedService threaded_service;
@@ -93,8 +93,8 @@ void __ioThreadTask_RAM(void* arg)
 {
 #ifdef TRACY_ENABLE
     static uint32_t taskIndex = 0;
-    eastl::string name = "ioRAMServiceThread-";
-    name.append(eastl::to_string(taskIndex++));
+    skr::string name = "ioRAMServiceThread-";
+    name.append(skr::to_string(taskIndex++));
     tracy::SetThreadName(name.c_str());
 #endif
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
@@ -120,7 +120,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info,
     // try push back new request
     Task back = {};
     back.vfs = vfs;
-    back.path = eastl::string(info->path);
+    back.path = skr::string(info->path);
     back.offset = info->offset;
     back.request = async_request;
     back.destination = dst;

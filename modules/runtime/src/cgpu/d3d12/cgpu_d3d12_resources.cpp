@@ -4,7 +4,7 @@
 #include "cgpu/drivers/cgpu_ags.h"
 #include "d3d12_utils.h"
 #include "utils/make_zeroed.hpp"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include <dxcapi.h>
 
 #include "tracy/Tracy.hpp"
@@ -408,7 +408,7 @@ CGPUTexture_D3D12::CGPUTexture_D3D12()
 
 struct CGPUTextureAliasing_D3D12 : public CGPUTexture_D3D12 {
     D3D12_RESOURCE_DESC mDxDesc;
-    eastl::string name;
+    skr::string name;
     CGPUTextureAliasing_D3D12(const D3D12_RESOURCE_DESC& dxDesc, const char* name)
         : CGPUTexture_D3D12()
         , mDxDesc(dxDesc)

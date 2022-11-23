@@ -19,13 +19,13 @@ bool skd::SUSDSdfPathImpl::IsAbsoluteRootOrPrimPath() const SKR_NOEXCEPT
     return path.IsAbsoluteRootOrPrimPath();
 }
 
-eastl::string skd::SUSDSdfPathImpl::GetName() const SKR_NOEXCEPT
+skr::string skd::SUSDSdfPathImpl::GetName() const SKR_NOEXCEPT
 {
     auto usdName = path.GetName();
     return usdName.c_str();
 }
 
-eastl::string skd::SUSDSdfPathImpl::GetElementString() const SKR_NOEXCEPT
+skr::string skd::SUSDSdfPathImpl::GetElementString() const SKR_NOEXCEPT
 {
     auto usdElementString = path.GetElementString();
     return usdElementString.c_str();
@@ -61,7 +61,7 @@ skd::SUSDSdfPathImpl::SharedId skd::SUSDSdfPathImpl::StripAllVariantSelections()
     return skr::SObjectPtr<SUSDSdfPathImpl>::Create(usdPath);
 }
 
-eastl::string skd::SUSDSdfPathImpl::GetString() const SKR_NOEXCEPT
+skr::string skd::SUSDSdfPathImpl::GetString() const SKR_NOEXCEPT
 {
     auto usdString = path.GetString();
     return usdString.c_str();

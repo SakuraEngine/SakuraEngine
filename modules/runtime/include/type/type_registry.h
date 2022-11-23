@@ -2,9 +2,9 @@
 #include "type_id.hpp"
 #include "platform/configure.h"
 #include "resource/resource_handle.h"
+#include "containers/string.hpp"
 #include "containers/sptr.hpp"
 #include "containers/variant.hpp"
-
 
 RUNTIME_API const char* skr_get_type_name(const skr_guid_t* type);
 RUNTIME_API void skr_register_type_name(const skr_guid_t* type, const char* name);
@@ -59,8 +59,8 @@ struct RUNTIME_API skr_type_t {
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
     void Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy = nullptr) const;
-    eastl::string ToString(const void* dst, skr::type::ValueSerializePolicy* policy = nullptr) const;
-    void FromString(void* dst, eastl::string_view str, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    skr::string ToString(const void* dst, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    void FromString(void* dst, skr::string_view str, skr::type::ValueSerializePolicy* policy = nullptr) const;
     size_t Hash(const void* dst, size_t base) const;
     // lifetime operator
     void Destruct(void* dst) const;
@@ -122,7 +122,7 @@ struct SKR_ALIGNAS(16) RUNTIME_API skr_value_t {
     const void* Ptr() const;
 
     size_t Hash() const;
-    eastl::string ToString() const;
+    skr::string ToString() const;
 
     void Reset();
 
@@ -164,7 +164,7 @@ struct RUNTIME_API skr_value_ref_t {
     T Convert();
 
     size_t Hash() const;
-    eastl::string ToString() const;
+    skr::string ToString() const;
     void Reset();
 #endif
 };
@@ -218,8 +218,8 @@ RUNTIME_API size_t Hash(float value, size_t base);
 RUNTIME_API size_t Hash(double value, size_t base);
 RUNTIME_API size_t Hash(const skr_guid_t& value, size_t base);
 RUNTIME_API size_t Hash(const skr_resource_handle_t& value, size_t base);
-RUNTIME_API size_t Hash(const eastl::string& value, size_t base);
-RUNTIME_API size_t Hash(const eastl::string_view& value, size_t base);
+RUNTIME_API size_t Hash(const skr::string& value, size_t base);
+RUNTIME_API size_t Hash(const skr::string_view& value, size_t base);
 
 template <class T>
 auto GetCopyCtor();
@@ -306,14 +306,14 @@ struct HandleType : skr_type_t {
     {
     }
 };
-// eastl::string
+// skr::string
 struct StringType : skr_type_t {
     StringType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STR }
     {
     }
 };
-// eastl::string_view
+// skr::string_view
 struct StringViewType : skr_type_t {
     StringViewType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STRV }
@@ -325,7 +325,7 @@ struct ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     size_t num;
     size_t size;
-    eastl::string name;
+    skr::string name;
     ArrayType(const struct skr_type_t* elementType, size_t num, size_t size)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARR }
         , elementType(elementType)
@@ -358,7 +358,7 @@ struct ObjectMethodTable {
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     DynArrayMethodTable operations;
-    eastl::string name;
+    skr::string name;
     DynArrayType(const skr_type_t* elementType, DynArrayMethodTable operations)
         : skr_type_t{ SKR_TYPE_CATEGORY_DYNARR }
         , elementType(elementType)
@@ -369,7 +369,7 @@ struct DynArrayType : skr_type_t {
 // gsl::span<T>
 struct ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
-    eastl::string name;
+    skr::string name;
     ArrayViewType(const skr_type_t* elementType)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARRV }
         , elementType(elementType)
@@ -382,15 +382,15 @@ struct RecordType : skr_type_t {
     size_t align;
     skr_guid_t guid;
     bool object;
-    const eastl::string_view name;
+    const skr::string_view name;
     const RecordType* base;
     ObjectMethodTable nativeMethods;
     const gsl::span<struct skr_field_t> fields;
     const gsl::span<struct skr_method_t> methods;
     bool IsBaseOf(const RecordType& other) const;
-    static const RecordType* FromName(eastl::string_view name);
+    static const RecordType* FromName(skr::string_view name);
     static void Register(const RecordType* type);
-    RecordType(size_t size, size_t align, eastl::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
+    RecordType(size_t size, size_t align, skr::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
     const gsl::span<struct skr_field_t> fields, const gsl::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
         , size(size)
@@ -408,20 +408,20 @@ struct RecordType : skr_type_t {
 // enum T
 struct EnumType : skr_type_t {
     const skr_type_t* underlyingType;
-    const eastl::string_view name;
+    const skr::string_view name;
     skr_guid_t guid;
-    void (*FromString)(void* self, eastl::string_view str);
-    eastl::string (*ToString)(const void* self);
+    void (*FromString)(void* self, skr::string_view str);
+    skr::string (*ToString)(const void* self);
     struct Enumerator {
-        const eastl::string_view name;
+        const skr::string_view name;
         int64_t value;
     };
     const gsl::span<Enumerator> enumerators;
-    static const EnumType* FromName(eastl::string_view name);
+    static const EnumType* FromName(skr::string_view name);
     static void Register(const EnumType* type);
-    EnumType(const skr_type_t* underlyingType, const eastl::string_view name,
-    skr_guid_t guid, void (*FromString)(void* self, eastl::string_view str),
-    eastl::string (*ToString)(const void* self), const gsl::span<Enumerator> enumerators)
+    EnumType(const skr_type_t* underlyingType, const skr::string_view name,
+    skr_guid_t guid, void (*FromString)(void* self, skr::string_view str),
+    skr::string (*ToString)(const void* self), const gsl::span<Enumerator> enumerators)
         : skr_type_t{ SKR_TYPE_CATEGORY_ENUM }
         , underlyingType(underlyingType)
         , name(name)
@@ -442,7 +442,7 @@ struct ReferenceType : skr_type_t {
     bool nullable;
     bool object;
     const struct skr_type_t* pointee;
-    eastl::string name;
+    skr::string name;
     ReferenceType(Ownership ownership, bool nullable, bool object, const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_REF }
         , ownership(ownership)
@@ -457,7 +457,7 @@ struct VariantType : skr_type_t {
     const gsl::span<const skr_type_t*> types;
     size_t size;
     size_t align;
-    eastl::string name;
+    skr::string name;
     const gsl::span<void* (*)(void*)> getters;
     const gsl::span<void (*)(void*, const void*)> setters;
     size_t (*indexer)(const void* self);
@@ -734,16 +734,16 @@ namespace skr
 namespace type
 {
 struct ValueSerializePolicy {
-    eastl::string (*format)(void* self, const void* data, const struct skr_type_t* type);
-    void (*parse)(void* self, eastl::string_view str, void* data, const struct skr_type_t* type);
+    skr::string (*format)(void* self, const void* data, const struct skr_type_t* type);
+    void (*parse)(void* self, skr::string_view str, void* data, const struct skr_type_t* type);
 };
 
 /*
 struct Serializer
 {
     void BeginSerialize();
-    eastl::string EndSerialize();
-    void BeginDeserialize(eastl::string_view str);
+    skr::string EndSerialize();
+    void BeginDeserialize(skr::string_view str);
     void EndDeserialize();
     void Value(bool&);
     void Value(int32_t&);
@@ -770,7 +770,7 @@ struct TValueSerializePolicy : ValueSerializePolicy {
             serializeImpl(&s, data, type);
             return s.EndSerialize();
         };
-        parse = +[](void* self, eastl::string_view str, void* data, const struct skr_type_t* type) {
+        parse = +[](void* self, skr::string_view str, void* data, const struct skr_type_t* type) {
             auto& s = ((TValueSerializePolicy*)self)->s;
             s.BeginDeserialize(str);
             serializeImpl(&s, data, type);
@@ -805,10 +805,10 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                 ctx.Value(*(double*)data);
                 break;
             case SKR_TYPE_CATEGORY_STR:
-                ctx.Value(*(eastl::string*)data);
+                ctx.Value(*(skr::string*)data);
                 break;
             case SKR_TYPE_CATEGORY_STRV:
-                ctx.Value(*(eastl::string_view*)data);
+                ctx.Value(*(skr::string_view*)data);
                 break;
             case SKR_TYPE_CATEGORY_GUID:
                 ctx.Value(*(skr_guid_t*)data);

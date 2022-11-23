@@ -16,10 +16,10 @@ namespace asset sreflect
 sreflect_struct("guid" : "4F0E4239-A07F-4F48-B54F-FBF406C60DC3", "serialize" : "json")
 USDTOOL_API SSceneImporter final : public SImporter
 {
-    eastl::string assetPath;
+    skr::string assetPath;
     // mapping from asset path to resource
     // by default importer will resolve the path to find resource if redirector is not exist
-    skr::flat_hash_map<eastl::string, skr_guid_t, eastl::string_hash<eastl::string>> redirectors;
+    skr::flat_hash_map<skr::string, skr_guid_t, skr::hash<skr::string>> redirectors;
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }

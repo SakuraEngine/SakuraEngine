@@ -20,9 +20,9 @@ namespace skd
         virtual bool SetMetadata(const char* key, const SUSDVtValueId& value) SKR_NOEXCEPT = 0;
         virtual bool ClearMetadata(const char* key) SKR_NOEXCEPT = 0;
 
-        virtual eastl::string GetName() const SKR_NOEXCEPT = 0;
-        virtual eastl::string GetBaseName() const SKR_NOEXCEPT = 0;
-        virtual eastl::string GetTypeName() const SKR_NOEXCEPT = 0;
+        virtual skr::string GetName() const SKR_NOEXCEPT = 0;
+        virtual skr::string GetBaseName() const SKR_NOEXCEPT = 0;
+        virtual skr::string GetTypeName() const SKR_NOEXCEPT = 0;
 
         virtual bool GetTimeSamples(eastl::vector<double>& times) const SKR_NOEXCEPT = 0;
 

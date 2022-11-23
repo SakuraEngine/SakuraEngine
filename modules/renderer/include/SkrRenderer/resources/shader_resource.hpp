@@ -5,8 +5,8 @@
 #include "cgpu/api.h"
 #include "resource/resource_factory.h"
 #include "utils/io.h"
+#include <containers/string.hpp>
 #include <EASTL/vector.h>
-#include <EASTL/string.h>
 #ifndef __meta__
     #include "SkrRenderer/resources/shader_resource.generated.h"
 #endif
@@ -29,7 +29,7 @@ skr_platform_shader_identifier_t
     sattr("no-rtti" : true)
     ECGPUShaderBytecodeType bytecode_type;
     skr_shader_hash_t hash;
-    eastl::string entry;
+    skr::string entry;
 };
 typedef struct skr_platform_shader_identifier_t skr_platform_shader_identifier_t;
 

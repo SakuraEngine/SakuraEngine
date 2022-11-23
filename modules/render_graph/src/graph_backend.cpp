@@ -732,8 +732,8 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         executor.reset_begin(texture_view_pool);
         if (profiler) profiler->on_cmd_begin(*this, executor);
         {
-            eastl::string frameLabel = "Frame";
-            frameLabel.append(eastl::to_string(frame_index));
+            skr::string frameLabel = "Frame";
+            frameLabel.append(skr::to_string(frame_index));
             CGPUEventInfo event = { frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
             cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
         }

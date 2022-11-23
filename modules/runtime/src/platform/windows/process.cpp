@@ -6,7 +6,7 @@
 #endif
 #include "platform/process.h"
 #include "platform/memory.h"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 
 typedef struct SProcess
 {
@@ -16,9 +16,9 @@ typedef struct SProcess
 
 SProcessHandle skr_run_process(const char* command, const char** arguments, uint32_t arg_count, const char* stdout_file)
 {
-    eastl::string commandLine = "\"" + eastl::string(command) + "\"";
+    skr::string commandLine = "\"" + skr::string(command) + "\"";
 	for (size_t i = 0; i < arg_count; ++i)
-		commandLine += " " + eastl::string(arguments[i]);
+		commandLine += " " + skr::string(arguments[i]);
 
 	HANDLE stdOut = NULL;
 	if (stdout_file)

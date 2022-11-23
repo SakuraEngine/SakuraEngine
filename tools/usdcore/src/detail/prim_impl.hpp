@@ -21,7 +21,7 @@ struct SUSDPrimImpl : public USDWrapperWithRC<SUSDPrim>
     virtual bool IsModel() const SKR_NOEXCEPT override;
     virtual bool IsGroup() const SKR_NOEXCEPT override;
 
-    virtual eastl::vector<eastl::string> GetAppliedSchemas() const SKR_NOEXCEPT override;
+    virtual eastl::vector<skr::string> GetAppliedSchemas() const SKR_NOEXCEPT override;
 
     virtual bool IsA(const char* schemaType) const SKR_NOEXCEPT override;
     virtual bool HasAPI(const char* schemaType, eastl::optional<const char*> instanceName = {}) const SKR_NOEXCEPT override;
@@ -51,8 +51,8 @@ struct SUSDPrimImpl : public USDWrapperWithRC<SUSDPrim>
     virtual SUSDAttributeId GetAttribute(const char* name) const SKR_NOEXCEPT override;
     virtual bool HasAttribute(const char* name) const SKR_NOEXCEPT override;
 
-    virtual eastl::string GetName() const SKR_NOEXCEPT override;
-    virtual eastl::string GetTypeName() const SKR_NOEXCEPT override;
+    virtual skr::string GetName() const SKR_NOEXCEPT override;
+    virtual skr::string GetTypeName() const SKR_NOEXCEPT override;
 
 protected:
     pxr::UsdPrim prim;

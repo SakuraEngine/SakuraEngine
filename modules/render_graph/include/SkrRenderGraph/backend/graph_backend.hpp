@@ -36,7 +36,7 @@ public:
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
     uint32_t valid_marker_val = 1;
-    eastl::vector<eastl::string> marker_messages;
+    eastl::vector<skr::string> marker_messages;
 };
 
 class RenderGraphBackend : public RenderGraph

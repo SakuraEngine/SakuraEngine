@@ -184,7 +184,7 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
                 for (auto& dep : jobContext->fileDependencies)
                 {
                     auto str = dep.u8string();
-                    skr::json::WriteValue<const eastl::string_view&>(&writer, {str.data(), str.size()});
+                    skr::json::WriteValue<const skr::string_view&>(&writer, {str.data(), str.size()});
                 }
                 writer.EndArray();
                 writer.Key("dependencies");
@@ -344,7 +344,7 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
         }
         for (auto file : files.value_unsafe())
         {
-            eastl::string pathStr;
+            skr::string pathStr;
             skr::json::Read(std::move(file).value_unsafe(), pathStr);
             skr::filesystem::path path(pathStr.c_str());
             path = metaAsset->path.parent_path() / (path);

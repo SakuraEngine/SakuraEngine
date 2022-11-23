@@ -98,7 +98,7 @@ int WriteValue(skr_binary_writer_t* writer, const skr_float4x4_t& value)
     return WriteValue(writer, &value, sizeof(value));
 }
 template <>
-int WriteValue(skr_binary_writer_t* writer, const eastl::string& str)
+int WriteValue(skr_binary_writer_t* writer, const skr::string& str)
 {
     int ret = WriteValue(writer, (uint32_t)str.size());
     if(ret != 0)
@@ -106,7 +106,7 @@ int WriteValue(skr_binary_writer_t* writer, const eastl::string& str)
     return WriteValue(writer, str.data(), str.size());
 }
 template <>
-int WriteValue(skr_binary_writer_t* writer, const eastl::string_view& str)
+int WriteValue(skr_binary_writer_t* writer, const skr::string_view& str)
 {
     int ret = WriteValue(writer, (uint32_t)str.size());
     if(ret != 0)

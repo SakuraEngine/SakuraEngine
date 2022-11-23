@@ -65,7 +65,7 @@ size_t skr_value_t::Hash() const
     return type->Hash(Ptr(), 0);
 }
 
-eastl::string skr_value_t::ToString() const
+skr::string skr_value_t::ToString() const
 {
     if (!type)
         return {};
@@ -145,7 +145,7 @@ size_t skr_value_ref_t::Hash() const
     return type->Hash(ptr, 0);
 }
 
-eastl::string skr_value_ref_t::ToString() const
+skr::string skr_value_ref_t::ToString() const
 {
     if (!type)
         return {};

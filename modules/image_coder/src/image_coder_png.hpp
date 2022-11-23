@@ -1,5 +1,5 @@
 #pragma once
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include "image_coder_base.hpp"
 
 namespace skr
@@ -26,6 +26,6 @@ public:
     uint64_t read_offset = 0;
     uint64_t png_color_type = 0;
 
-    eastl::string error;
+    skr::string error;
 };
 }

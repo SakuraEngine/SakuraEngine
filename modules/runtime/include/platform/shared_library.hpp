@@ -9,7 +9,7 @@
  */
 #pragma once
 #include "platform/configure.h"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 
 namespace skr
 {
@@ -93,14 +93,14 @@ public:
      * @description: Get the last error string.
      * @author: SaeruHikari
      */
-    eastl::string errorString() const;
+    skr::string errorString() const;
     /**
      * @description: Get the native handle of lib on the system.
      * @author: SaeruHikari
      */
     NativeLibHandle handle() const;
 private:
-    eastl::string _lastError;
+    skr::string _lastError;
     NativeLibHandle _handle = nullptr;
     // Linux implementation
 #if defined(SKR_OS_UNIX)
@@ -109,7 +109,7 @@ private:
     void* getImpl(const char* symbolName);
 #elif defined(SKR_OS_WINDOWS) // Windows implementation
     // Return a string explaining the last error
-    eastl::string getWindowsError();
+    skr::string getWindowsError();
     bool loadImpl(const char* path);
     bool unloadImpl();
     void* getImpl(const char* symbolName);

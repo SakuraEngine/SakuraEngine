@@ -2,7 +2,7 @@
 #include "cgpu/flags.h"
 #include "platform/configure.h"
 #include "gtest/gtest.h"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include <EASTL/vector.h>
 #include "cgpu/api.h"
 #include "spirv.h"
@@ -226,7 +226,7 @@ TEST_P(ResourceCreation, CreateModules)
     fdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
-    eastl::string cbName = fragment_shader->entry_reflections[0].shader_resources[0].name;
+    skr::string cbName = fragment_shader->entry_reflections[0].shader_resources[0].name;
     EXPECT_EQ(cbName, "perDrawCBuffer");
 
     EXPECT_NE(vertex_shader, CGPU_NULLPTR);

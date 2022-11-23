@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <EASTL/set.h>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include "../common/common_utils.h"
 #include "platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
@@ -10,14 +10,14 @@
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDump.h"
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDumpDecoding.h"
 
-inline eastl::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
+inline skr::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
 {
     switch (result)
     {
     case GFSDK_Aftermath_Result_FAIL_DriverVersionNotSupported:
         return "Unsupported driver version - requires an NVIDIA R495 display driver or newer.";
     default:
-        return eastl::string("Aftermath Error 0x") + eastl::to_string(result - GFSDK_Aftermath_Result_Fail);
+        return skr::string("Aftermath Error 0x") + skr::to_string(result - GFSDK_Aftermath_Result_Fail);
     }
 }
 
@@ -106,16 +106,16 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         // driver release) we may see redundant crash dumps. As a workaround,
         // attach a unique count to each generated file name.
         static int count = 0;
-        const eastl::string baseFileName =
-            applicationNameLength ? eastl::string(applicationName.data()) : eastl::string("CGPUApplication")
+        const skr::string baseFileName =
+            applicationNameLength ? skr::string(applicationName.data()) : skr::string("CGPUApplication")
             + "-"
-            + eastl::to_string(baseInfo.pid)
+            + skr::to_string(baseInfo.pid)
             + "-"
-            + eastl::to_string(++count);
+            + skr::to_string(++count);
 
         // Write the crash dump data to a file using the .nv-gpudmp extension
         // registered with Nsight Graphics.
-        const eastl::string crashDumpFileName = baseFileName + ".nv-gpudmp";
+        const skr::string crashDumpFileName = baseFileName + ".nv-gpudmp";
         std::ofstream dumpFile(crashDumpFileName.c_str(), std::ios::out | std::ios::binary);
         if (dumpFile)
         {

@@ -493,6 +493,10 @@ struct SInterface
 }
 #define sobject_cast static_cast
 
+namespace skr
+{
+    template <typename T> struct hash;
+}
 
 typedef struct Dummy {
     int dummy;

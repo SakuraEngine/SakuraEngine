@@ -231,7 +231,7 @@ Scheduler::Fiber::Fiber(Allocator::unique_ptr<OSFiber>&& impl, uint32_t id)
     : id(id), impl(std::move(impl)), worker(Worker::getCurrent()) {
   MARL_ASSERT(worker != nullptr, "No Scheduler::Worker bound");
 #ifdef TRACY_ENABLE
-  name = "fiber" + eastl::to_string((int64_t)this->impl.get());
+  name = "fiber" + skr::to_string((int64_t)this->impl.get());
   TracyFiberEnter(name.c_str());
 #endif
 }

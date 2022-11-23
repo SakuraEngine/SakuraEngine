@@ -1,9 +1,7 @@
 #pragma once
-
 #include "ecs/dual.h"
 #include "ecs/SmallVector.h"
 #include <EASTL/vector.h>
-#include <EASTL/string.h>
 #include <EASTL/unique_ptr.h>
 
 namespace dual
@@ -17,7 +15,7 @@ struct query_cache_t {
     using iterator = eastl::vector<dual_group_t*>::iterator;
 };
 
-eastl::string& get_error();
+skr::string& get_error();
 } // namespace dual
 
 struct dual_query_t {

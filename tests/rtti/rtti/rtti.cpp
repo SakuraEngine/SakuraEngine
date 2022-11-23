@@ -41,11 +41,11 @@ TEST_F(RTTI, TestEnumType)
     for (auto&& enumerator : enumType->enumerators)
     {
         SKR_LOG_FMT_DEBUG("enumerator: {} -> {}", enumerator.name, enumerator.value);
-        auto fieldName = eastl::string("Value").append(eastl::to_string(enumerator.value));
-        EXPECT_EQ(enumerator.name, eastl::string_view(fieldName));
+        auto fieldName = skr::string("Value").append(skr::to_string(enumerator.value));
+        EXPECT_EQ(enumerator.name, skr::string_view(fieldName));
 
         auto str = enumType->ToString(&enumerator.value);
-        EXPECT_EQ(enumerator.name, eastl::string_view(str));
+        EXPECT_EQ(enumerator.name, skr::string_view(str));
 
         Types::TestEnum value = Types::TestEnum::Value0;
         enumType->FromString(&value, enumerator.name);

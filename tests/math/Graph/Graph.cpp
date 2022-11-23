@@ -8,7 +8,7 @@
 #include "utils/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
 #include "gtest/gtest.h"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include <fstream>
 #include <iostream>
 
@@ -70,7 +70,7 @@ TEST(GraphTest, GraphTest0)
 {
     using vertexProp = boost::property<vertex_prop_map_key_t, std::string>;
     struct edgeProp {
-        eastl::string name;
+        skr::string name;
     };
     using Graph = DAG::Graph<vertexProp, edgeProp>;
     using GraphVertex = DAG::GraphVertex<vertexProp, edgeProp>;
@@ -168,7 +168,7 @@ public:
     {
     }
 
-    eastl::string name;
+    skr::string name;
 };
 
 TEST(GraphTest, DependencyGraph)

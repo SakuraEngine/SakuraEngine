@@ -14,7 +14,7 @@ sreflect_struct("guid" : "a26c2436-9e5f-43c4-b4d7-e5373d353bae")
 sattr("serialize" : "json")
  STextureImporter final : public SImporter
 {
-    eastl::string assetPath;
+    skr::string assetPath;
 
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;

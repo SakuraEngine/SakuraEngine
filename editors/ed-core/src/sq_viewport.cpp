@@ -1,6 +1,6 @@
 #include "editor_core/sq_viewport.h"
 #include <QtGui/qopenglext.h>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 
 #include "utils/log.h"
 
@@ -78,7 +78,7 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
     }
 
     //Initialize the key with the key we're looking for
-    eastl::string keyString = eastl::to_string(provider_id);
+    skr::string keyString = skr::to_string(provider_id);
     MDB_val key = { (size_t)keyString.size(), (void*)keyString.data() };
     MDB_val data;
 

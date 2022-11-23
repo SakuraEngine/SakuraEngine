@@ -1,5 +1,5 @@
 #include "utils/threaded_service.h"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include "platform/vfs.h"
 #include "io_service_util.hpp"
 
@@ -32,7 +32,7 @@ public:
     // task containers
     io::TaskContainer<Task> tasks;
     io::AsyncThreadedService threaded_service;
-    const eastl::string name;
+    const skr::string name;
 };
 
 void __ioThreadTask_SERIVE_execute(ThreadedServiceImpl* service)
@@ -52,11 +52,11 @@ void __ioThreadTask_SERIVE(void* arg)
 {
     auto service = reinterpret_cast<ThreadedServiceImpl*>(arg);
 #ifdef TRACY_ENABLE
-    eastl::string name;
+    skr::string name;
     static uint32_t taskIndex = 0;
     if (service->name.empty())
     {
-        name = "ServiceThread-" + eastl::to_string(taskIndex);
+        name = "ServiceThread-" + skr::to_string(taskIndex);
     }
     taskIndex++;
     tracy::SetThreadName(service->name.empty() ? name.c_str() : service->name.c_str());

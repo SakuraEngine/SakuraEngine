@@ -22,7 +22,7 @@ namespace skd
         virtual bool IsModel() const SKR_NOEXCEPT = 0;
         virtual bool IsGroup() const SKR_NOEXCEPT = 0;
 
-        virtual eastl::vector<eastl::string> GetAppliedSchemas() const = 0;
+        virtual eastl::vector<skr::string> GetAppliedSchemas() const = 0;
 
         virtual bool IsA(const char* schemaType) const SKR_NOEXCEPT = 0;
         virtual bool HasAPI(const char* schemaType, eastl::optional<const char*> instanceName = {}) const SKR_NOEXCEPT = 0;
@@ -52,8 +52,8 @@ namespace skd
         virtual SUSDAttributeId GetAttribute(const char* name) const SKR_NOEXCEPT = 0;
         virtual bool HasAttribute(const char* name) const SKR_NOEXCEPT = 0;
 
-        virtual eastl::string GetName() const SKR_NOEXCEPT = 0;
-        virtual eastl::string GetTypeName() const SKR_NOEXCEPT = 0;
+        virtual skr::string GetName() const SKR_NOEXCEPT = 0;
+        virtual skr::string GetTypeName() const SKR_NOEXCEPT = 0;
     };
     using SUSDPrimId = SUSDPrim::SharedId;
 

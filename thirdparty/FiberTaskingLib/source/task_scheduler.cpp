@@ -48,7 +48,7 @@
 #endif
 
 #ifdef TRACY_ENABLE
-    #include <EASTL/string.h>
+    #include <containers/string.hpp>
 #endif
 
 namespace ftl
@@ -94,8 +94,8 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     // Switch
 #ifdef TRACY_ENABLE
     {
-        eastl::string thread_id = "worker";
-        thread_id += eastl::to_string(index);
+        skr::string thread_id = "worker";
+        thread_id += skr::to_string(index);
         TracyFiberEnter(thread_id.c_str());
         taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
         TracyFiberLeave;

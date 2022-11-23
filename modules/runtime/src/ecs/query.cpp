@@ -24,9 +24,9 @@
 #endif
 #include "internal/utils.hpp"
 
-namespace eastl
+namespace skr
 {
-inline void split(const eastl::string_view& s, vector<eastl::string_view>& tokens, const eastl::string_view& delimiters = " ")
+inline void split(const skr::string_view& s, eastl::vector<skr::string_view>& tokens, const skr::string_view& delimiters = " ")
 {
     string::size_type lastPos = s.find_first_not_of(delimiters, 0);
     string::size_type pos = s.find_first_of(delimiters, lastPos);
@@ -39,13 +39,13 @@ inline void split(const eastl::string_view& s, vector<eastl::string_view>& token
     }
 }
 
-inline bool ends_with(eastl::string_view const& value, eastl::string_view const& ending)
+inline bool ends_with(skr::string_view const& value, skr::string_view const& ending)
 {
     if (ending.size() > value.size()) return false;
     return eastl::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-inline bool starts_with(eastl::string_view const& value, eastl::string_view const& starting)
+inline bool starts_with(skr::string_view const& value, skr::string_view const& starting)
 {
     if (starting.size() > value.size()) return false;
     return eastl::equal(starting.begin(), starting.end(), value.begin());
@@ -198,15 +198,15 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
 dual_query_t* dual_storage_t::make_query(const char* inDesc)
 {
     using namespace dual;
-    eastl::string desc(inDesc);
+    skr::string desc(inDesc);
 #ifdef _WIN32
     desc.erase(eastl::remove_if(desc.begin(), desc.end(), std::isspace), desc.end());
 #else
     desc.erase(eastl::remove_if(desc.begin(), desc.end(), isspace), desc.end());
 #endif
-    eastl::vector<eastl::string_view> parts;
-    eastl::string spliter = ",";
-    eastl::split(desc, parts, spliter);
+    eastl::vector<skr::string_view> parts;
+    skr::string spliter = ",";
+    skr::split(desc, parts, spliter);
     // todo: errorMsg? global error code?
     auto& error = get_error();
     int errorPos = 0;

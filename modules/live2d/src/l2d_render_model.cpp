@@ -273,8 +273,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ZoneScopedN("CreateLive2DVertexBuffer");
 
         auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
-        eastl::string name = resource->model_setting->GetModelFileName();
-        auto pos_name = name + eastl::string("-pos");
+        skr::string name = resource->model_setting->GetModelFileName();
+        auto pos_name = name + skr::string("-pos");
         vb_desc.name = pos_name.c_str();
         vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
         vb_desc.flags = use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE;
@@ -283,7 +283,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         vb_desc.size = total_vertex_count * sizeof(skr_live2d_vertex_pos_t);
         render_model->pos_buffer = cgpu_create_buffer(device, &vb_desc);
 
-        auto uv_name = name + eastl::string("-uv");
+        auto uv_name = name + skr::string("-uv");
         vb_desc.name = uv_name.c_str();
         vb_desc.size = total_vertex_count * sizeof(skr_live2d_vertex_uv_t);
         render_model->uv_buffer = cgpu_create_buffer(device, &vb_desc);
@@ -293,8 +293,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ZoneScopedN("CreateLive2DIndexBuffer");
 
         auto ib_desc = make_zeroed<CGPUBufferDescriptor>();
-        eastl::string name = resource->model_setting->GetModelFileName();
-        auto ind_name = name + eastl::string("-i");
+        skr::string name = resource->model_setting->GetModelFileName();
+        auto ind_name = name + skr::string("-i");
         ib_desc.name = ind_name.c_str();
         ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
         ib_desc.flags = CGPU_BCF_NONE;

@@ -1,7 +1,7 @@
 #include "vulkan_utils.h"
 #include <EASTL/vector.h>
-#include <EASTL/unordered_map.h>
-#include <EASTL/string.h>
+#include <containers/string.hpp>
+#include <containers/hashmap.hpp>
 #include <EASTL/sort.h>
 
 class VkUtil_Blackboard
@@ -79,8 +79,8 @@ struct CGPUCachedFramebuffer {
 
 struct CGPUVkPassTable //
 {
-    eastl::unordered_map<size_t, CGPUCachedRenderPass> cached_renderpasses;
-    eastl::unordered_map<size_t, CGPUCachedFramebuffer> cached_framebuffers;
+    skr::flat_hash_map<size_t, CGPUCachedRenderPass> cached_renderpasses;
+    skr::flat_hash_map<size_t, CGPUCachedFramebuffer> cached_framebuffers;
 };
 
 VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, const VkUtil_FramebufferDesc* desc)
@@ -131,7 +131,7 @@ void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUti
     table->cached_renderpasses[hash] = new_pass;
 }
 
-struct CGPUVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> //
+struct CGPUVkExtensionsTable : public skr::flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -199,7 +199,7 @@ struct CGPUVkExtensionsTable : public eastl::unordered_map<eastl::string, bool> 
     }
 };
 
-struct CGPUVkLayersTable : public eastl::unordered_map<eastl::string, bool> //
+struct CGPUVkLayersTable : public skr::flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {

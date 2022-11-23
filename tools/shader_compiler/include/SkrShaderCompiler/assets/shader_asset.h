@@ -11,9 +11,9 @@ sreflect_struct("guid" : "a897c990-abea-4f48-8880-e1ae9a93d777")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter
 {
-    eastl::string assetPath;
-    eastl::string entry = "main";
-    eastl::string target;
+    skr::string assetPath;
+    skr::string entry = "main";
+    skr::string target;
 
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;

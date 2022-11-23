@@ -67,6 +67,7 @@ struct CGPURuntimeTable {
         }
     }
     eastl::vector<CreatedQueue> created_queues;
+    // TODO: replace with skr::hash_map
     eastl::string_map<void*> custom_data_map;
     eastl::string_map<eastl::function<void()>> custom_sweep_callbacks;
 };

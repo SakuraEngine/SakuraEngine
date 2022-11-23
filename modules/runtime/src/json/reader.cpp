@@ -79,21 +79,21 @@ error_code ReadValue(simdjson::ondemand::value&& json, double& b)
     return (error_code)result.error();
 }
 template <>
-error_code ReadValue(simdjson::ondemand::value&& json, eastl::string& str)
+error_code ReadValue(simdjson::ondemand::value&& json, skr::string& str)
 {
 
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        str = eastl::string(view.data(), view.length());
+        str = skr::string(view.data(), view.length());
     }
     return (error_code)result.error();
 }
 
 constexpr int parse_hex_digit(const char c)
 {
-    using namespace eastl::string_literals;
+    using namespace skr::string_literals;
     if ('0' <= c && c <= '9')
         return c - '0';
     else if ('a' <= c && c <= 'f')
@@ -148,15 +148,15 @@ bool make_guid_helper(const char* begin, skr_guid_t& value)
     return true;
 }
 
-bool make_guid(const eastl::string_view& str, skr_guid_t& value)
+bool make_guid(const skr::string_view& str, skr_guid_t& value)
 {
-    using namespace eastl::string_literals;
+    using namespace skr::string_literals;
     constexpr size_t short_guid_form_length = 36;
     constexpr size_t long_guid_form_length = 38;
 
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
     {
-        eastl::string str2(str.data(), str.size());
+        skr::string str2(str.data(), str.size());
         SKR_LOG_ERROR("String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
@@ -165,7 +165,7 @@ bool make_guid(const eastl::string_view& str, skr_guid_t& value)
     {
         if (str[0] != '{' || str[long_guid_form_length - 1] != '}')
         {
-            eastl::string str2(str.data(), str.size());
+            skr::string str2(str.data(), str.size());
             SKR_LOG_ERROR("Opening or closing brace is expected, got %s", str2.c_str());
             return false;
         }

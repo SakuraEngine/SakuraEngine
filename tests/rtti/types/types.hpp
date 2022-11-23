@@ -1,7 +1,7 @@
 #pragma once
 #include "platform/configure.h"
 #include "utils/log.hpp"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #include <EASTL/unique_ptr.h>
 #include "RTTITestTypes/module.configure.h"
 #if !defined(__meta__)
@@ -50,7 +50,7 @@ sattr("rtti" : true)
 sattr("serialize" : ["json", "bin"])
 TestParent
 {
-    eastl::string buffer;
+    skr::string buffer;
 }
 sstatic_ctor(CreateBuffers());
 
@@ -59,7 +59,7 @@ sattr("rtti" : true)
 sattr("serialize" : ["json", "bin"])
 TestSon : public TestParent
 {
-    eastl::string sex;
+    skr::string sex;
 }
 sstatic_ctor(XXXInformation<$T>());
 

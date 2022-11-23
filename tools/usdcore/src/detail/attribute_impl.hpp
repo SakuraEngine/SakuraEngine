@@ -15,9 +15,9 @@ struct SUSDAttributeImpl : public USDWrapperWithRC<SUSDAttribute>
     virtual bool SetMetadata(const char* key, const SUSDVtValueId& value) SKR_NOEXCEPT override;
     virtual bool ClearMetadata(const char* key) SKR_NOEXCEPT override;
 
-    virtual eastl::string GetName() const SKR_NOEXCEPT override;
-    virtual eastl::string GetBaseName() const SKR_NOEXCEPT override;
-    virtual eastl::string GetTypeName() const SKR_NOEXCEPT override;
+    virtual skr::string GetName() const SKR_NOEXCEPT override;
+    virtual skr::string GetBaseName() const SKR_NOEXCEPT override;
+    virtual skr::string GetTypeName() const SKR_NOEXCEPT override;
 
     virtual bool GetTimeSamples(eastl::vector<double>& times) const SKR_NOEXCEPT override;
 

@@ -36,7 +36,7 @@ inline SKR_CONSTEXPR uint64_t Util_DXBCCompressedSize(uint32_t width, uint32_t h
     }
 }
 
-inline static eastl::string Util_CompressedTypeString(ECGPUFormat format)
+inline static skr::string Util_CompressedTypeString(ECGPUFormat format)
 {
     switch (format)
     {

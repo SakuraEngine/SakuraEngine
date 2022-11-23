@@ -1,13 +1,14 @@
 #pragma once
-#include "EASTL/string.h"
+#include <containers/string.hpp>
 #include "utils/types.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
 
 namespace fmt
 {
+#if !defined(SKR_USE_STL_STRING)
 template <typename Char>
-struct formatter<eastl::basic_string<Char>, Char> : formatter<basic_string_view<Char>, Char> {
+struct formatter<skr::basic_string<Char>, Char> : formatter<basic_string_view<Char>, Char> {
     template <typename FormatContext>
     auto format(eastl::basic_string<Char> const& val, FormatContext& ctx) const
     -> decltype(ctx.out())
@@ -16,7 +17,7 @@ struct formatter<eastl::basic_string<Char>, Char> : formatter<basic_string_view<
     }
 };
 template <typename Char>
-struct formatter<eastl::basic_string_view<Char>, Char> : formatter<basic_string_view<Char>, Char> {
+struct formatter<skr::basic_string_view<Char>, Char> : formatter<basic_string_view<Char>, Char> {
     template <typename FormatContext>
     auto format(eastl::basic_string_view<Char> const& val, FormatContext& ctx) const
     -> decltype(ctx.out())
@@ -24,6 +25,8 @@ struct formatter<eastl::basic_string_view<Char>, Char> : formatter<basic_string_
         return formatter<basic_string_view<Char>, Char>::format(basic_string_view<Char>(val.data(), val.size()), ctx);
     }
 };
+#endif
+
 template <>
 struct formatter<skr_guid_t> {
     constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
@@ -44,10 +47,10 @@ struct formatter<skr_guid_t> {
 namespace skr
 {
 template <typename... T>
-auto format(fmt::string_view fmt, T&&... args) -> eastl::string
+auto format(fmt::string_view fmt, T&&... args) -> skr::string
 {
     auto buffer = fmt::memory_buffer();
     fmt::detail::vformat_to(buffer, fmt, fmt::make_format_args(args...));
-    return eastl::string{ buffer.data(), buffer.size() };
+    return skr::string{ buffer.data(), buffer.size() };
 }
 }

@@ -3,11 +3,9 @@
 #include "type.hpp"
 #include <assert.h>
 #include <EASTL/map.h>
-#include <EASTL/string_view.h>
-#include <EASTL/unordered_map.h>
 #include <EASTL/vector.h>
-#include <EASTL/string.h>
 #include <EASTL/array.h>
+#include <containers/hashmap.hpp>
 
 namespace dual
 {
@@ -35,12 +33,12 @@ struct type_registry_t {
     eastl::vector<type_description_t> descriptions;
     eastl::vector<intptr_t> entityFields;
     block_arena_t nameArena;
-    eastl::unordered_map<eastl::string_view, type_index_t> name2type;
+    skr::flat_hash_map<skr::string_view, type_index_t, skr::hash<skr::string_view>> name2type;
     eastl::map<guid_t, type_index_t, guid_compare_t> guid2type;
     guid_func_t guid_func = nullptr;
     type_index_t register_type(const type_description_t& desc);
     type_index_t get_type(const guid_t& guid);
-    type_index_t get_type(eastl::string_view name);
+    type_index_t get_type(skr::string_view name);
     guid_t make_guid();
     static type_registry_t& get();
 };

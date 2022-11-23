@@ -319,8 +319,8 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
             auto tracer = (CGPUDStorageQueueD3D12::ProfileTracer*)arg;
             auto Q = tracer->Q;
             const auto event_handle = tracer->fence_event;
-            eastl::string name = "DirectStorageQueueSubmit-";
-            name += eastl::to_string(tracer->submit_index);
+            skr::string name = "DirectStorageQueueSubmit-";
+            name += skr::to_string(tracer->submit_index);
             TracyFiberEnter(name.c_str());
             if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
             {
@@ -501,8 +501,8 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
 {
 #ifdef TRACY_ENABLE
     auto thread_id = skr_current_thread_id();
-    const eastl::string name = "DirectStorageDecompressThread(Pooled)-";
-    auto indexed_name = name + eastl::to_string(thread_id);
+    const skr::string name = "DirectStorageDecompressThread(Pooled)-";
+    auto indexed_name = name + skr::to_string(thread_id);
     tracy::SetThreadName(indexed_name.c_str());
 #endif
 
