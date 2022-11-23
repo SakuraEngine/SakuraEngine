@@ -1,7 +1,6 @@
 #pragma once
-#include "shader_compiler.h"
+#include "shader_compiler.hpp"
 #include "module/subsystem.hpp"
-#ifdef __cplusplus
 #include "platform/shared_library.hpp"
 #ifndef __meta__
 #include "SkrShaderCompiler/dxc_compiler.generated.h"
@@ -96,4 +95,3 @@ protected:
 };
 } // namespace asset
 } // namespace skd
-#endif

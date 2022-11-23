@@ -3,7 +3,7 @@
 #include "module/module.hpp"
 
 #include "SkrShaderCompiler/module.configure.h"
-#include "SkrShaderCompiler/shader_compiler.h"
+#include "SkrShaderCompiler/shader_compiler.hpp"
 
 namespace skd
 {

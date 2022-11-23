@@ -4,7 +4,7 @@
 #include "platform/filesystem.hpp"
 #include "platform/memory.h"
 #include "resource/resource_system.h"
-#include "resource/local_resource_registry.h"
+#include "resource/local_resource_registry.hpp"
 #include "ecs/dual.h"
 #include "runtime_module.h"
 #include "platform/guid.hpp"

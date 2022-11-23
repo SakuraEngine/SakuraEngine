@@ -4,8 +4,9 @@
 #include <containers/variant.hpp>
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "resource/resource_handle.h"
+
 #ifndef __meta__
-    #include "SkrRenderer/resources/material_resource.generated.h"
+#include "SkrRenderer/resources/material_resource.generated.h"
 #endif
 
 sreflect_enum_class("guid" : "4003703a-dde4-4f11-93a6-6c460bac6357")
