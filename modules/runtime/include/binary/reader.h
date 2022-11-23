@@ -194,7 +194,7 @@ struct ReadHelper<skr::variant<Ts...>>
             return ret;
         if (index >= sizeof...(Ts))
             return -1;
-        ReadByIndexHelper(reader, value, index, std::make_index_sequence<sizeof...(Ts)>());
+        return ReadByIndexHelper(reader, value, index, std::make_index_sequence<sizeof...(Ts)>());
     }
 };
 
