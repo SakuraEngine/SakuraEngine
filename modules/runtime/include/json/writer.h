@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "writer_fwd.h"
 
 typedef enum ESkrJsonType
 {
@@ -23,8 +23,8 @@ namespace skr::resource { template <class T> struct TResourceHandle; }
 
 struct RUNTIME_API skr_json_writer_t {
 public:
-    using TChar = char;
-    using TSize = size_t;
+    using TChar = skr_json_writer_char_t;
+    using TSize = skr_json_writer_size_t;
 
     skr_json_writer_t(size_t levelDepth);
     inline bool IsComplete() { return _hasRoot && _levelStack.empty(); }
@@ -86,21 +86,6 @@ namespace skr
 {
 namespace json
 {
-using TChar = skr_json_writer_t::TChar;
-using TSize = skr_json_writer_t::TSize;
-template <class T>
-using TParamType = std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v<T>, T, const T&>;
-template <class T>
-std::enable_if_t<!std::is_enum_v<T>, void> WriteValue(skr_json_writer_t* writer, T value)
-{
-    static_assert(!sizeof(T), "WriteValue not implemented for this type");
-}
-template <class T>
-void WriteFields(skr_json_writer_t* writer, T value)
-{
-    static_assert(!sizeof(T), "WriteFields not implemented for this type");
-}
-
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, bool b);
 template <>
@@ -124,11 +109,6 @@ RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid);
 template <>
 RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
 
-template <class T>
-std::enable_if_t<std::is_enum_v<T>, void> WriteValue(skr_json_writer_t* writer, T value)
-{
-    WriteValue(writer, static_cast<std::underlying_type_t<T>>(value));
-}
 template <class T>
 void Write(skr_json_writer_t* writer, const T& value);
 

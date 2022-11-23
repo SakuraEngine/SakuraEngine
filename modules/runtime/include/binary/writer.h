@@ -1,6 +1,6 @@
 #pragma once
 #include <EASTL/vector.h>
-#include "platform/configure.h"
+#include "writer_fwd.h"
 #include "resource/resource_handle.h"
 #include "containers/variant.hpp"
 #include "containers/string.hpp"
@@ -24,16 +24,6 @@ struct skr_binary_writer_t {
 
 namespace skr::binary
 {
-template <class T>
-using TParamType = std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v<T>, T, const T&>;
-
-template <class T>
-std::enable_if_t<!std::is_enum_v<T>, int> WriteValue(skr_binary_writer_t* writer, T value)
-{
-    static_assert(!sizeof(T), "WriteValue not implemented for this type");
-    return -1;
-}
-
 inline int WriteValue(skr_binary_writer_t* writer, const void* data, size_t size)
 {
     return writer->write(data, size);

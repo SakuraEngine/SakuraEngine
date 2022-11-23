@@ -11,6 +11,7 @@
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/material_resource.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRT);
 
@@ -120,6 +121,16 @@ void SGameRTModule::on_load(int argc, char** argv)
             }
         }
     }
+    /*
+    {
+        skr_json_writer_t writer(2);
+        auto mat = make_zeroed<skr_material_value_t>();
+        mat.value = 1.f;
+        skr::json::Write(&writer, mat);
+        auto str = writer.buffer.data();
+        SKR_LOG_DEBUG("JSON:\n %s", str);
+    }
+    */
 }
 
 void SGameRTModule::on_unload()
