@@ -1,48 +1,66 @@
 #pragma once
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/asset/asset_reference.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 
 #ifndef __meta__
 #include "SkrShaderCompiler/assets/material_asset.generated.h"
 #endif
 
-sreflect_struct("guid": "03c9a4d2-6b3c-4ce5-a911-567cf66e0774")
-sattr("rtti": true, "serialize": ["json", "bin"])
-skr_material_type_asset_t
-{
-    uint32_t version;
-    eastl::vector<skr_guid_t> shader_assets;
-    eastl::vector<skr_material_value_t> default_values;
-};
-
-sreflect_struct("guid": "478cedd1-a689-45bb-aea4-079bd845f86e")
-sattr("rtti": true, "serialize": ["json", "bin"])
-skr_material_asset_t
-{
-    uint32_t version;
-
-};
-
 namespace skd sreflect
 {
 namespace asset sreflect
 {
+// Importers
+
 sreflect_struct("guid" : "c0fc5581-f644-4752-bb30-0e7f652533b7")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter
 {
+    uint32_t version;
+    eastl::vector<skd::asset::AssetRef> shader_assets;
+    eastl::vector<skr_material_value_t> default_values;
+
     void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
     void Destroy(void* resource) override { return; }
 }
 sregister_importer();
 
+
+sreflect_struct("guid" : "b5fc88c3-0770-4332-9eda-9e283e29c7dd")
+sattr("serialize" : "json")
+SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter
+{
+    using MatTypeAssetRef = skd::asset::TAssetRef<skr_material_type_asset_t>;
+
+    uint32_t version;
+    skd::asset::AssetRef material_type;
+    // TODO: typed asset reference
+    // MatTypeAssetRef material_type;
+
+    void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
+    void Destroy(void* resource) override { return; }
+}
+sregister_importer();
+
+// Cookers
+
 sreflect_struct("guid" : "816f9dd4-9a49-47e5-a29a-3bdf7241ad35")
 SKR_SHADER_COMPILER_API SMaterialTypeCooker final : public SCooker
+{
+    bool Cook(SCookContext* ctx) override { return false; }
+    uint32_t Version() override { return kDevelopmentVersion; }
+}
+sregister_cooker("83264b35-3fde-4fff-8ee1-89abce2e445b");
+
+sreflect_struct("guid" : "0e3b550f-cdd7-4796-a6d5-0c457e0640bd")
+SKR_SHADER_COMPILER_API SMaterialCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override { return false; }
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_cooker("83264b35-3fde-4fff-8ee1-89abce2e445b");
+sregister_cooker("2efad635-b331-4fc6-8c52-2f8ca954823e");
+
 } // namespace asset
 } // namespace skd
