@@ -20,7 +20,6 @@ namespace skr::type
     }
 %endif
     static skr_type_t* type_of_${record.id};
-    template<>
     const skr_type_t* type_of<${record.name}>::get()
     {
         static struct DoOnce
@@ -136,7 +135,6 @@ namespace skr::type
 
 namespace skr::type
 {
-    template<>
     const skr_type_t* type_of<${enum.name}>::get()
     {
         static EnumType::Enumerator enumerators[] = 
