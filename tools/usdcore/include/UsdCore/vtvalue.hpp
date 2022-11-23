@@ -2,7 +2,7 @@
 #include "UsdCore/module.configure.h"
 #include "platform/configure.h"
 #include "containers/sptr.hpp"
-#include <EASTL/string.h>
+#include "containers/string.hpp"
 
 namespace skd
 {
