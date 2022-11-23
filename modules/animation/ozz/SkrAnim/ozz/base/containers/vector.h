@@ -30,12 +30,12 @@
 
 #include "EASTL/vector.h"
 
-#include "SkrAnim/ozz/base/containers/std_allocator.h"
+
 
 namespace ozz {
 // Redirects std::vector to ozz::vector in order to replace std default
 // allocator by ozz::StdAllocator.
-template <class _Ty, class _Allocator = ozz::StdAllocator<_Ty>>
+template <class _Ty>
 using vector = eastl::vector<_Ty>;
 
 // Extends std::vector with two functions that gives access to the begin and the

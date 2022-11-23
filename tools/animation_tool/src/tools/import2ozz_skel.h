@@ -28,7 +28,7 @@
 #ifndef OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_SKEL_H_
 #define OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_SKEL_H_
 
-#include "SkrAnimTool/ozz/tools/export.h"
+#include "SkrAnimTool/ozz/tools/options.h"
 #include "SkrAnim/ozz/base/endianness.h"
 #include "SkrAnim/ozz/base/platform.h"
 
@@ -41,10 +41,11 @@ namespace animation {
 namespace offline {
 
 class OzzImporter;
+class RawSkeleton;
 
-OZZ_ANIMTOOLS_DLL bool ImportSkeleton(const Json::Value& _config,
-                                      OzzImporter* _importer,
-                                      const ozz::Endianness _endianness);
+OZZ_ANIMTOOLS_DLL bool ImportSkeleton(const Options& _option,
+                                      OzzImporter* _importer);
+OZZ_ANIMTOOLS_DLL bool ValidateJointNamesUniqueness(const RawSkeleton& _skeleton);
 
 }  // namespace offline
 }  // namespace animation

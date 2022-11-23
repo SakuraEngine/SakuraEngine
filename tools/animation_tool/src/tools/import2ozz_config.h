@@ -30,7 +30,7 @@
 
 #include "SkrAnimTool/ozz/tools/export.h"
 #include "SkrAnim/ozz/base/platform.h"
-
+#include "SKrAnim/ozz/base/containers/string.h"
 #include "tools/jsoncpp/dist/json/json-forwards.h"
 
 namespace ozz {
@@ -38,7 +38,7 @@ namespace animation {
 namespace offline {
 
 // Get the sanitized (all members are set, with the right types) configuration.
-OZZ_ANIMTOOLS_DLL bool ProcessConfiguration(Json::Value* _config);
+OZZ_ANIMTOOLS_DLL bool ProcessConfiguration(Json::Value* _config, ozz::string _config_string);
 
 // Internal function used to compare enum names.
 OZZ_ANIMTOOLS_DLL bool CompareName(const char* _a, const char* _b);

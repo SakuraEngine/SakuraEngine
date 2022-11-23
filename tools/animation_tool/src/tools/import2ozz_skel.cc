@@ -55,7 +55,6 @@
 namespace ozz {
 namespace animation {
 namespace offline {
-namespace {
 
 // Uses a set to detect names uniqueness.
 typedef ozz::set<const char*, ozz::str_less> Names;
@@ -106,7 +105,6 @@ void LogHierarchy(const RawSkeleton::Joint::Children& _children,
   }
   ozz::log::LogV() << std::setprecision(static_cast<int>(pres));
 }
-}  // namespace
 
 bool ImportSkeleton(const Json::Value& _config, OzzImporter* _importer,
                     const ozz::Endianness _endianness) {

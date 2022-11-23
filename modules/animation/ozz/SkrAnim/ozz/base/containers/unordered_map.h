@@ -39,24 +39,22 @@
 #pragma warning(pop)
 #endif  // _MSC_VER
 
-#include "SkrAnim/ozz/base/containers/std_allocator.h"
+
 
 namespace ozz {
 
 // Redirects std::unordered_map to ozz::unordered_map in order to replace std
 // default allocator by ozz::StdAllocator.
 template <class _Key, class _Ty, class _Hash = std::hash<_Key>,
-          class _KeyEqual = std::equal_to<_Key>,
-          class _Allocator = ozz::StdAllocator<phmap::priv::Pair<const _Key, _Ty>>>
+          class _KeyEqual = std::equal_to<_Key>>
 using unordered_map =
-    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual, _Allocator>;
+    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual>;
 
 // Redirects std::unordered_multimap to ozz::UnorderedMultiMap in order to
 // replace std default allocator by ozz::StdAllocator.
 template <class _Key, class _Ty, class _Hash = std::hash<_Key>,
-          class _KeyEqual = std::equal_to<_Key>,
-          class _Allocator = ozz::StdAllocator<phmap::priv::Pair<const _Key, _Ty>>>
+          class _KeyEqual = std::equal_to<_Key>>
 using unordered_multimap =
-    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual, _Allocator>;
+    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_UNORDERED_MAP_H_

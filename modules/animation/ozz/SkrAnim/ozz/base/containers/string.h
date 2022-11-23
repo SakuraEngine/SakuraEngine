@@ -30,12 +30,12 @@
 
 #include <string>
 
-#include "SkrAnim/ozz/base/containers/std_allocator.h"
+#include "platform/memory.h"
 
 namespace ozz {
 // Redirects std::basic_string to ozz::string in order to replace std default
 // allocator by ozz::StdAllocator.
 using string =
-    std::basic_string<char, std::char_traits<char>, ozz::StdAllocator<char>>;
+    std::basic_string<char, std::char_traits<char>, skr_stl_allocator<char>>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_STRING_H_

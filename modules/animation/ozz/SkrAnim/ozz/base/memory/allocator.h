@@ -43,10 +43,6 @@ class Allocator;
 // Defines the default allocator accessor.
 OZZ_BASE_DLL Allocator* default_allocator();
 
-// Set the default allocator, used for all dynamic allocation inside ozz.
-// Returns current memory allocator, such that in can be restored if needed.
-OZZ_BASE_DLL Allocator* SetDefaulAllocator(Allocator* _allocator);
-
 // Defines an abstract allocator class.
 // Implements helper methods to allocate/deallocate POD typed objects instead of
 // raw memory.
@@ -55,19 +51,19 @@ OZZ_BASE_DLL Allocator* SetDefaulAllocator(Allocator* _allocator);
 class OZZ_BASE_DLL Allocator {
  public:
   // Default virtual destructor.
-  virtual ~Allocator() {}
+  ~Allocator() {}
 
   // Next functions are the pure virtual functions that must be implemented by
   // allocator concrete classes.
 
   // Allocates _size bytes on the specified _alignment boundaries.
   // Allocate function conforms with standard malloc function specifications.
-  virtual void* Allocate(size_t _size, size_t _alignment) = 0;
+  void* Allocate(size_t _size, size_t _alignment);
 
   // Frees a block that was allocated with Allocate or Reallocate.
   // Argument _block can be nullptr.
   // Deallocate function conforms with standard free function specifications.
-  virtual void Deallocate(void* _block, size_t _alignment) = 0;
+  void Deallocate(void* _block, size_t _alignment);
 };
 }  // namespace memory
 

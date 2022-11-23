@@ -43,7 +43,6 @@
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/log.h"
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
-#include "SkrAnim/ozz/options/options.h"
 
 namespace ozz {
 namespace animation {
