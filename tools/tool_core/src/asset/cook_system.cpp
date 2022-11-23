@@ -396,19 +396,6 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
     return nullptr;
 }
 
-skr_resource_handle_t SCookSystem::CookOrLoad(skr_guid_t resource)
-{
-    auto counter = EnsureCooked(resource);
-    if (counter)
-        counter.wait(false);
-    skr_resource_handle_t handle;
-    skr::task::wait(false, [&]
-    {
-        return handle.get_status() == SKR_LOADING_STATUS_INSTALLED || handle.get_status() == SKR_LOADING_STATUS_ERROR;
-    });
-    return handle;
-}
-
 void SCookContext::_Destroy(void* resource)
 {
     if(!importer)
@@ -524,7 +511,16 @@ uint32_t SCookContext::AddStaticDependency(skr_guid_t resource)
     auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto &dep) { return dep.get_serialized() == resource; });
     if (iter == staticDependencies.end())
     {
-        staticDependencies.push_back(GetCookSystem()->CookOrLoad(resource));
+        auto counter = GetCookSystem()->EnsureCooked(resource);
+        if (counter)
+            counter.wait(false);
+        skr_resource_handle_t handle{resource};
+        handle.resolve(false, (uint64_t)this, SKR_REQUESTER_SYSTEM);
+        skr::task::wait(false, [&]
+        {
+            return handle.get_status() == SKR_LOADING_STATUS_INSTALLED || handle.get_status() == SKR_LOADING_STATUS_ERROR;
+        });
+        staticDependencies.push_back(std::move(handle));
         return staticDependencies.size() - 1;
     }
     return (uint32_t)(staticDependencies.end() - iter);

@@ -104,7 +104,6 @@ public:
     void Shutdown() {}
 
     skr::task::event_t AddCookTask(skr_guid_t resource);
-    skr_resource_handle_t CookOrLoad(skr_guid_t resource);
     skr::task::event_t EnsureCooked(skr_guid_t resource);
     void WaitForAll();
 
