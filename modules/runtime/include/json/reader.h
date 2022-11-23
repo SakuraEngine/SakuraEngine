@@ -190,7 +190,10 @@ struct ReadHelper<skr::variant<Ts...>>
         error_code ret = skr::json::Read<skr_guid_t>(std::move(type).value_unsafe(), index);
         if (ret != error_code::SUCCESS)
             return ret;
-        (void)(((ret = ReadByIndex<Ts>(std::move(json), value, index)) != error_code::SUCCESS) && ...);
+        auto data = object.value_unsafe()["value"];
+        if (data.error() != simdjson::SUCCESS)
+            return (error_code)data.error();
+        (void)(((ret = ReadByIndex<Ts>(std::move(data).value_unsafe(), value, index)) != error_code::SUCCESS) && ...);
         return ret;
     }
 };
