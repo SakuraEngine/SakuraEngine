@@ -19,6 +19,21 @@ skr_config_resource_t::~skr_config_resource_t()
     type->Free(configData);
 }
 
+void skr_config_resource_t::SetType(skr_type_id_t type)
+{
+    if(!(configType == skr_type_id_t{}))
+    {
+        SKR_ASSERT(configData);
+        auto oldType = skr_get_type(&configType);
+        oldType->Destruct(configData);
+        oldType->Free(configData);
+    }
+    configType = type;
+    auto newType = skr_get_type(&configType);
+    configData = newType->Malloc();
+    newType->Construct(configData, nullptr, 0);
+}
+
 namespace skr::binary
 {
     int WriteHelper<const skr_config_resource_t&>::Write(skr_binary_writer_t *archive, const skr_config_resource_t &value)
