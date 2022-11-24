@@ -69,7 +69,7 @@ template <> struct SRCInst<true>
     virtual ~SRCInst() = default;
 
     template<typename T, typename Deleter = DefaultDeleter<T>>
-    void allocate_block(T* ptr);
+    void allocate_block(T* ptr, Deleter deleter);
 
     inline uint32_t use_count() const { return block ? block->refcount : 0; }
     inline bool unique() const { return block ? (block->weak_refcount == 1) : false; }
@@ -97,11 +97,11 @@ protected:
 };
 
 template<typename T, typename Deleter>
-void SRCInst<true>::allocate_block(T* ptr)
+void SRCInst<true>::allocate_block(T* ptr, Deleter deleter)
 {
     if (block == nullptr)
     {
-        block = SRCBlock::Create<T, Deleter>(ptr, {});
+        block = SRCBlock::Create<T, Deleter>(ptr, deleter);
     }
 }
 } // namespace skr

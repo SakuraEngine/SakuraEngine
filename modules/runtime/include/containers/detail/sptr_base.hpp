@@ -45,8 +45,9 @@ protected:
     SPtrBase() SKR_NOEXCEPT;
     SPtrBase(std::nullptr_t) SKR_NOEXCEPT;
 
+    SPtrBase(T* lp) SKR_NOEXCEPT;
     template<typename Deleter>
-    SPtrBase(T* lp, Deleter* = nullptr) SKR_NOEXCEPT;
+    SPtrBase(T* lp, Deleter deleter) SKR_NOEXCEPT;
     // copy constructor
     SPtrBase(const this_type& lp) SKR_NOEXCEPT;
     template <typename U>
@@ -110,8 +111,7 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(std::nullptr_t) SKR_NOEXCEPT
 }
 
 template <typename T, bool EmbedRC>
-template<typename Deleter>
-skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp, Deleter*) SKR_NOEXCEPT
+skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp) SKR_NOEXCEPT
     : SRCInst<EmbedRC>()
 {
     p = lp;
@@ -119,7 +119,27 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp, Deleter*) SKR_NOEXCEPT
     {
         if SKR_CONSTEXPR (EmbedRC) 
         {
-            this->template allocate_block<T, Deleter>(lp);
+            DefaultDeleter<T> deleter = {};
+            this->template allocate_block<T>(lp, deleter);
+        }
+        else
+        {
+            p->add_refcount();
+        }
+    }
+}
+
+template <typename T, bool EmbedRC>
+template<typename Deleter>
+skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp, Deleter deleter) SKR_NOEXCEPT
+    : SRCInst<EmbedRC>()
+{
+    p = lp;
+    if (p != NULL) 
+    {
+        if SKR_CONSTEXPR (EmbedRC) 
+        {
+            this->template allocate_block<T, Deleter>(lp, deleter);
         }
         else
         {
