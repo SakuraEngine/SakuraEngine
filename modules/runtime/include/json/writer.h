@@ -15,6 +15,7 @@ typedef enum ESkrJsonType
     #include "fmt/format.h"
     #include "containers/string.hpp"
     #include "containers/hashmap.hpp"
+    #include "type/type_helper.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
@@ -95,7 +96,7 @@ template <class T>
 void Write(skr_json_writer_t* writer, const T& value);
 
 template <>
-struct WriteHelper<bool> {
+struct WriteHelper<const bool&> {
     static void Write(skr_json_writer_t* writer, bool b)
     {
         writer->Bool(b);
@@ -103,7 +104,7 @@ struct WriteHelper<bool> {
 };
 
 template <>
-struct WriteHelper<int32_t> {
+struct WriteHelper<const int32_t&> {
     static void Write(skr_json_writer_t* writer, int32_t i)
     {
         writer->Int(i);
@@ -111,7 +112,7 @@ struct WriteHelper<int32_t> {
 };
 
 template <>
-struct WriteHelper<uint32_t> {
+struct WriteHelper<const uint32_t&> {
     static void Write(skr_json_writer_t* writer, uint32_t i)
     {
         writer->UInt(i);
@@ -119,7 +120,7 @@ struct WriteHelper<uint32_t> {
 };
 
 template <>
-struct WriteHelper<int64_t> {
+struct WriteHelper<const int64_t&> {
     static void Write(skr_json_writer_t* writer, int64_t i)
     {
         writer->Int64(i);
@@ -127,7 +128,7 @@ struct WriteHelper<int64_t> {
 };
 
 template <>
-struct WriteHelper<uint64_t> {
+struct WriteHelper<const uint64_t&> {
     static void Write(skr_json_writer_t* writer, uint64_t i)
     {
         writer->UInt64(i);
@@ -135,7 +136,7 @@ struct WriteHelper<uint64_t> {
 };
 
 template <>
-struct WriteHelper<float> {
+struct WriteHelper<const float&> {
     static void Write(skr_json_writer_t* writer, float f)
     {
         writer->Float(f);
@@ -143,7 +144,7 @@ struct WriteHelper<float> {
 };
 
 template <>
-struct WriteHelper<double> {
+struct WriteHelper<const double&> {
     static void Write(skr_json_writer_t* writer, double d)
     {
         writer->Double(d);
@@ -184,15 +185,14 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
         for (auto& pair : map)
         {
             skr::json::Write<const skr::string&>(json, pair.first);
-            skr::json::Write<TParamType<V>>(json, pair.second);
+            skr::json::Write<const V&>(json, pair.second);
         }
         json->EndObject();
     }
 };
 
 template <class T>
-struct WriteHelper<const TEnumAsByte<T>&>
-{
+struct WriteHelper<const TEnumAsByte<T>&> {
     static void Write(skr_json_writer_t* writer, const TEnumAsByte<T>& value)
     {
         skr::json::Write(writer, value.as_byte());
@@ -214,7 +214,7 @@ struct WriteHelper<const eastl::vector<V, Allocator>&> {
         json->StartArray();
         for (auto& v : vec)
         {
-            skr::json::Write<TParamType<V>>(json, v);
+            skr::json::Write<const V&>(json, v);
         }
         json->EndArray();
     }
@@ -240,9 +240,24 @@ struct WriteHelper<const skr::variant<Ts...>&> {
 template <class T>
 void Write(skr_json_writer_t* writer, const T& value)
 {
-    using TType = TParamType<std::remove_const_t<std::remove_reference_t<T>>>;
-    WriteHelper<TType>::Write(writer, value);
+    WriteHelper<const T&>::Write(writer, value);
 }
 } // namespace json
+
+template <class K, class V, class Hash, class Eq>
+struct SerdeCompleteChecker<json::WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&>>
+    : std::bool_constant<is_complete_serde_v<json::WriteHelper<K>> && is_complete_serde_v<json::WriteHelper<V>>> {
+};
+
+template <class V, class Allocator>
+struct SerdeCompleteChecker<json::WriteHelper<const eastl::vector<V, Allocator>&>>
+    : std::bool_constant<is_complete_serde_v<json::WriteHelper<V>>> {
+};
+
+template <class... Ts>
+struct SerdeCompleteChecker<json::WriteHelper<const skr::variant<Ts...>&>>
+    : std::bool_constant<(is_complete_serde_v<json::WriteHelper<Ts>> && ...)> {
+};
+
 } // namespace skr
 #endif

@@ -4,6 +4,7 @@
 #include "resource/resource_handle.h"
 #include "containers/variant.hpp"
 #include "containers/string.hpp"
+#include "type/type_helper.hpp"
 
 struct skr_binary_writer_t {
     template <class T>
@@ -33,126 +34,106 @@ template <class T>
 int Write(skr_binary_writer_t* writer, const T& value);
 
 template <class T>
-struct WriteHelper<T, std::enable_if_t<std::is_enum_v<T>>>
-{
+struct WriteHelper<const T&, std::enable_if_t<std::is_enum_v<T>>> {
     static int Write(skr_binary_writer_t* writer, const T& value)
     {
         using UT = std::underlying_type_t<T>;
-        return WriteHelper<UT>::Write(writer, static_cast<UT>(value));
+        return WriteHelper<const UT&>::Write(writer, static_cast<UT>(value));
     }
 };
 
 template <>
-struct RUNTIME_API WriteHelper<bool>
-{
+struct RUNTIME_API WriteHelper<const bool&> {
     static int Write(skr_binary_writer_t* writer, bool value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<uint32_t>
-{
+struct RUNTIME_API WriteHelper<const uint32_t&> {
     static int Write(skr_binary_writer_t* writer, uint32_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<uint64_t>
-{
+struct RUNTIME_API WriteHelper<const uint64_t&> {
     static int Write(skr_binary_writer_t* writer, uint64_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<int32_t>
-{
+struct RUNTIME_API WriteHelper<const int32_t&> {
     static int Write(skr_binary_writer_t* writer, int32_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<int64_t>
-{
+struct RUNTIME_API WriteHelper<const int64_t&> {
     static int Write(skr_binary_writer_t* writer, int64_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<float>
-{
+struct RUNTIME_API WriteHelper<const float&> {
     static int Write(skr_binary_writer_t* writer, float value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<double>
-{
+struct RUNTIME_API WriteHelper<const double&> {
     static int Write(skr_binary_writer_t* writer, double value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float2_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_float2_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float2_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float3_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_float3_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float3_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_rotator_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_rotator_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_rotator_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float4_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_float4_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float4_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_quaternion_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_quaternion_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_quaternion_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float4x4_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_float4x4_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float4x4_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr::string&>
-{
+struct RUNTIME_API WriteHelper<const skr::string&> {
     static int Write(skr_binary_writer_t* writer, const skr::string& str);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr::string_view&>
-{
+struct RUNTIME_API WriteHelper<const skr::string_view&> {
     static int Write(skr_binary_writer_t* writer, const skr::string_view& str);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_guid_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_guid_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_guid_t& guid);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_resource_handle_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_resource_handle_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_blob_t&>
-{
+struct RUNTIME_API WriteHelper<const skr_blob_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_blob_t& blob);
 };
 
 template <class T>
-struct WriteHelper<const TEnumAsByte<T>&>
-{
+struct WriteHelper<const TEnumAsByte<T>&> {
     static int Write(skr_binary_writer_t* writer, const TEnumAsByte<T>& value)
     {
         return skr::binary::Write(writer, value.as_byte());
@@ -185,9 +166,8 @@ struct WriteHelper<const eastl::vector<V, Allocator>&> {
     }
 };
 
-template<class ...Ts>
-struct WriteHelper<const skr::variant<Ts...>&>
-{
+template <class... Ts>
+struct WriteHelper<const skr::variant<Ts...>&> {
     static int Write(skr_binary_writer_t* binary, const skr::variant<Ts...>& variant)
     {
         int ret = skr::binary::Write(binary, (uint32_t)variant.index());
@@ -195,7 +175,8 @@ struct WriteHelper<const skr::variant<Ts...>&>
             return ret;
         std::visit([&](auto&& value) {
             ret = skr::binary::Write(binary, value);
-        }, variant);
+        },
+        variant);
         return ret;
     }
 };
@@ -203,14 +184,26 @@ struct WriteHelper<const skr::variant<Ts...>&>
 template <class T>
 int Write(skr_binary_writer_t* writer, const T& value)
 {
-    using TType = TParamType<std::remove_const_t<std::remove_reference_t<T>>>;
-    return WriteHelper<TType>::Write(writer, value);
+    return WriteHelper<const T&>::Write(writer, value);
 }
 
 template <class T>
 int Archive(skr_binary_writer_t* writer, const T& value)
 {
-    using TType = TParamType<std::remove_const_t<std::remove_reference_t<T>>>;
-    return WriteHelper<TType>::Write(writer, value);
+    return WriteHelper<const T&>::Write(writer, value);
 }
 } // namespace skr::binary
+
+namespace skr
+{
+template <class V, class Allocator>
+struct SerdeCompleteChecker<binary::WriteHelper<const eastl::vector<V, Allocator>&>>
+    : std::bool_constant<is_complete_serde_v<json::WriteHelper<V>>> {
+};
+
+template <class... Ts>
+struct SerdeCompleteChecker<binary::WriteHelper<const skr::variant<Ts...>&>>
+    : std::bool_constant<(is_complete_serde_v<json::WriteHelper<Ts>> && ...)> {
+};
+
+} // namespace skr

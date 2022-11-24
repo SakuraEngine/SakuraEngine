@@ -4,6 +4,7 @@
 #include "resource/resource_handle.h"
 #include "containers/variant.hpp"
 #include "containers/string.hpp"
+#include "type/type_helper.hpp"
 
 struct skr_binary_reader_t {
     template <class T>
@@ -259,4 +260,15 @@ int Archive(skr_binary_reader_t* writer, T& value)
     return ReadHelper<std::decay_t<T>>::Read(writer, value);
 }
 } // namespace binary
+
+template <class V, class Allocator>
+struct SerdeCompleteChecker<binary::ReadHelper<eastl::vector<V, Allocator>>>
+    : std::bool_constant<is_complete_serde_v<json::ReadHelper<V>>> {
+};
+
+template <class ...Ts>
+struct SerdeCompleteChecker<binary::ReadHelper<skr::variant<Ts...>>>
+    : std::bool_constant<(is_complete_serde_v<json::ReadHelper<Ts>> && ...)> {
+};
+
 } // namespace skr

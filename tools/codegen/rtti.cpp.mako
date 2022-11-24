@@ -48,6 +48,8 @@ namespace skr::type
                     GetSerialize<${record.name}>(),
                     GetDeserialize<${record.name}>(),
                     GetDeleter<${record.name}>(),
+                    GetTextSerialize<${record.name}>(),
+                    GetTextDeserialize<${record.name}>(),
                 };
             <%
                 fields = [(name, field) for name, field in vars(record.fields).items() if not hasattr(field.attrs, "no-rtti")]

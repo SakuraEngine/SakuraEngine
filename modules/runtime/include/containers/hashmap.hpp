@@ -67,15 +67,25 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
             return ret;
         for (auto& pair : map)
         {
-            ret = skr::binary::Write<TParamType<K>>(json, pair.first);
+            ret = skr::binary::Write<const K&>(json, pair.first);
             if (ret != 0)
                 return ret;
-            ret = skr::binary::Write<TParamType<V>>(json, pair.second);
+            ret = skr::binary::Write<const V&>(json, pair.second);
             if (ret != 0)
                 return ret;
         }
         return ret;
     }
 };
-}
-}
+} // namespace binary
+template<class K, class V, class Eq>
+struct SerdeCompleteChecker<binary::ReadHelper<skr::flat_hash_map<K, V, Eq>>>
+    : std::bool_constant<is_complete_serde_v<binary::ReadHelper<K>> && is_complete_serde_v<binary::ReadHelper<V>>> {
+};
+
+template<class K, class V, class Eq>
+struct SerdeCompleteChecker<binary::WriteHelper<const skr::flat_hash_map<K, V, Eq>&>>
+    : std::bool_constant<is_complete_serde_v<binary::WriteHelper<const K&>> && is_complete_serde_v<binary::WriteHelper<const V&>>> {
+};
+
+} // namespace skr

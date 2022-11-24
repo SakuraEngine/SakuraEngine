@@ -7,6 +7,8 @@
 #include "containers/hashmap.hpp"
 #include "binary/reader.h"
 #include "binary/writer.h"
+#include "json/reader.h"
+#include "json/writer.h"
 
 static auto& skr_get_type_name_map()
 {
@@ -84,7 +86,10 @@ skr_type_t::skr_type_t(skr_type_category_t type)
     fun(SKR_TYPE_CATEGORY_QUAT, skr_quaternion_t)  \
     fun(SKR_TYPE_CATEGORY_F64, double)             \
     fun(SKR_TYPE_CATEGORY_GUID, skr_guid_t)        \
-    fun(SKR_TYPE_CATEGORY_HANDLE, skr_resource_handle_t)
+    fun(SKR_TYPE_CATEGORY_HANDLE, skr_resource_handle_t) \
+    fun(SKR_TYPE_CATEGORY_STR, skr::string) \
+    fun(SKR_TYPE_CATEGORY_STRV, skr::string_view)
+
 
 size_t skr_type_t::Size() const
 {
@@ -96,10 +101,6 @@ size_t skr_type_t::Size() const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            return sizeof(skr::string);
-        case SKR_TYPE_CATEGORY_STRV:
-            return sizeof(skr::string_view);
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->size;
         case SKR_TYPE_CATEGORY_DYNARR:
@@ -138,10 +139,6 @@ size_t skr_type_t::Align() const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            return alignof(skr::string);
-        case SKR_TYPE_CATEGORY_STRV:
-            return alignof(skr::string_view);
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->elementType->Align();
         case SKR_TYPE_CATEGORY_DYNARR:
@@ -170,6 +167,25 @@ size_t skr_type_t::Align() const
     return 0;
 }
 
+skr_guid_t skr_type_t::Id() const
+{
+    using namespace skr::type;
+#define TRIVAL_TYPE_IMPL(name, type) \
+    case name:                       \
+        return type_id<type>::get();
+    switch (type)
+    {
+        SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
+#undef TRIVAL_TYPE_IMPL
+        case SKR_TYPE_CATEGORY_OBJ:
+            return ((RecordType*)this)->guid;
+        default:
+            SKR_UNREACHABLE_CODE();
+            break;
+    }
+    return {};
+}
+
 const char* skr_type_t::Name() const
 {
     using namespace skr::type;
@@ -180,10 +196,6 @@ const char* skr_type_t::Name() const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            return "skr::string";
-        case SKR_TYPE_CATEGORY_STRV:
-            return "skr::string_view";
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (ArrayType&)(*this);
             if (arr.name.empty())
@@ -255,8 +267,6 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-        case SKR_TYPE_CATEGORY_STRV:
             return true;
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->elementType->Same(((ArrayType*)srcType)->elementType) && ((ArrayType*)this)->num == ((ArrayType*)srcType)->num;
@@ -968,10 +978,6 @@ void (*skr_type_t::Deleter() const)(void*)
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            return DeleterImpl<skr::string>();
-        case SKR_TYPE_CATEGORY_STRV:
-            return DeleterImpl<skr::string_view>();
         case SKR_TYPE_CATEGORY_ENUM:
             return ((const EnumType*)this)->underlyingType->Deleter();
         case SKR_TYPE_CATEGORY_REF:
@@ -1043,10 +1049,6 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            return HashImpl<skr::string>(dst, base);
-        case SKR_TYPE_CATEGORY_STRV:
-            return HashImpl<skr::string_view>(dst, base);
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
             enm.underlyingType->Hash(dst, base);
@@ -1189,12 +1191,6 @@ void skr_type_t::Copy(void* dst, const void* src) const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            CopyImpl<skr::string>(dst, src);
-            break;
-        case SKR_TYPE_CATEGORY_STRV:
-            CopyImpl<skr::string_view>(dst, src);
-            break;
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (const ArrayType&)(*this);
             auto element = arr.elementType;
@@ -1261,12 +1257,6 @@ void skr_type_t::Move(void* dst, void* src) const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            MoveImpl<skr::string>(dst, src);
-            break;
-        case SKR_TYPE_CATEGORY_STRV:
-            MoveImpl<skr::string_view>(dst, src);
-            break;
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (const ArrayType&)(*this);
             auto element = arr.elementType;
@@ -1405,12 +1395,6 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            return SerializeImpl<skr::string>(dst, writer);
-            break;
-        case SKR_TYPE_CATEGORY_STRV:
-            return SerializeImpl<skr::string_view>(dst, writer);
-            break;
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (const ArrayType&)(*this);
             auto element = arr.elementType;
@@ -1455,11 +1439,12 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
             break;
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto& variant = (const VariantType&)(*this);
-            uint32_t index = (uint32_t)variant.operations.indexer(dst);
-            if (auto ret = skr::binary::Write(writer, index); ret != 0)
-                return ret;
-            return variant.types[index]->Serialize(variant.operations.getters[index]((void*)dst), writer);
+            return ((VariantType*)this)->operations.Serialize(dst, writer);
+            // auto& variant = (const VariantType&)(*this);
+            // uint32_t index = (uint32_t)variant.operations.indexer(dst);
+            // if (auto ret = skr::binary::Write(writer, index); ret != 0)
+            //     return ret;
+            // return variant.types[index]->Serialize(variant.operations.getters[index]((void*)dst), writer);
             break;
         }
     }
@@ -1468,9 +1453,94 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
 }
 
 template <class T>
+void SerializeTextImpl(const void* dst, skr_json_writer_t* writer)
+{
+    if constexpr(skr::is_complete_v<skr::json::WriteHelper<T>>)
+        return skr::json::Write(writer, *(T*)dst);
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void skr_type_t::SerializeText(const void *dst, skr_json_writer_t *writer) const
+{
+    using namespace skr::type;
+#define TRIVAL_TYPE_IMPL(name, type) \
+    case name:                       \
+        SerializeTextImpl<type>(dst, writer); \
+        break;
+    switch (type)
+    {
+        SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
+#undef TRIVAL_TYPE_IMPL
+        case SKR_TYPE_CATEGORY_ARR: {
+            auto& arr = (const ArrayType&)(*this);
+            auto element = arr.elementType;
+            auto data = (char*)dst;
+            auto size = element->Size();
+            writer->StartArray();
+            for (int i = 0; i < arr.num; ++i)
+                element->SerializeText(data + i * size, writer);
+            writer->EndArray();
+            break;
+        }
+        case SKR_TYPE_CATEGORY_DYNARR: {
+            auto& arr = (const DynArrayType&)(*this);
+            arr.operations.SerializeText(dst, writer);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_OBJ: {
+            auto& obj = (const RecordType&)(*this);
+            obj.nativeMethods.SerializeText(dst, writer);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_ENUM: {
+            auto& enm = (const EnumType&)(*this);
+            enm.underlyingType->SerializeText(dst, writer);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_REF: {
+            switch (((ReferenceType*)this)->ownership)
+            {
+                case ReferenceType::Observed:
+                    // SerializeImpl<void*>(dst, writer);
+                    break;
+                case ReferenceType::Shared: {
+                    void* ptr = nullptr;
+                    if (((ReferenceType*)this)->object)
+                        ptr = ((skr::SObjectPtr<skr::SInterface>*)dst)->get();
+                    else
+                        ptr = ((skr::SObjectPtr<void>*)dst)->get();
+                    ((ReferenceType*)this)->pointee->SerializeText(ptr, writer);
+                }
+                break;
+            }
+            break;
+        }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            return ((VariantType*)this)->operations.SerializeText(dst, writer);
+            // auto& variant = (const VariantType&)(*this);
+            // uint32_t index = (uint32_t)variant.operations.indexer(dst);
+            // writer->StartObject();
+            // writer->Key("type");
+            // skr::json::Write(writer, variant.types[index]->Id());
+            // writer->Key("value");
+            // variant.types[index]->SerializeText(variant.operations.getters[index]((void*)dst), writer);
+            // writer->EndObject();
+            break;
+        }
+    }
+}
+
+template <class T>
 int DeserializeImpl(void* dst, skr_binary_reader_t* reader)
 {
     return skr::binary::Read(reader, *(T*)dst);
+}
+
+template <>
+int DeserializeImpl<skr::string_view>(void* dst, skr_binary_reader_t* reader)
+{
+    SKR_UNREACHABLE_CODE();
+    return 1;
 }
 
 int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
@@ -1483,9 +1553,6 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-        case SKR_TYPE_CATEGORY_STR:
-            return DeserializeImpl<skr::string>(dst, reader);
-            break;
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (const ArrayType&)(*this);
             auto element = arr.elementType;
@@ -1540,17 +1607,122 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
             }
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto& variant = (const VariantType&)(*this);
-            uint32_t index = 0;
-            if (auto ret = skr::binary::Read(reader, index); ret != 0)
-                return ret;
-            variant.operations.setters[index](dst, nullptr);
-            return variant.types[index]->Deserialize(variant.operations.getters[index](dst), reader);
+            return ((VariantType*)this)->operations.Deserialize(dst, reader);
+            // auto& variant = (const VariantType&)(*this);
+            // uint32_t index = 0;
+            // if (auto ret = skr::binary::Read(reader, index); ret != 0)
+            //     return ret;
+            // variant.operations.setters[index](dst, nullptr);
+            // return variant.types[index]->Deserialize(variant.operations.getters[index](dst), reader);
             break;
         }
     }
     SKR_UNREACHABLE_CODE()
     return 1;
+}
+
+template <class T>
+skr::json::error_code DeserializeTextImpl(void* dst, skr::json::value_t&& reader)
+{
+    if constexpr(skr::is_complete_v<skr::json::ReadHelper<T>>)
+        return skr::json::Read(std::move(reader), *(T*)dst);
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return skr::json::error_code::INCORRECT_TYPE;
+}
+
+template <>
+skr::json::error_code DeserializeTextImpl<skr::string_view>(void* dst, skr::json::value_t&& reader)
+{
+    SKR_UNREACHABLE_CODE();
+    return skr::json::error_code::INCORRECT_TYPE;
+}
+
+skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&& reader) const
+{
+    using namespace skr::type;
+#define TRIVAL_TYPE_IMPL(name, type) \
+    case name:                       \
+        return DeserializeTextImpl<type>(dst, std::move(reader));
+    switch (type)
+    {
+        SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
+#undef TRIVAL_TYPE_IMPL
+        case SKR_TYPE_CATEGORY_ARR: {
+            auto& arr = (const ArrayType&)(*this);
+            auto element = arr.elementType;
+            auto data = (char*)dst;
+            auto size = element->Size();
+            auto array = reader.get_array();
+            auto len = std::min<uint32_t>(array.count_elements(), arr.num);
+            for (int i = 0; i < len; ++i)
+                if (auto ret = element->DeserializeText(data + i * size, array.at(i)); ret != 0)
+                    return ret;
+            break;
+        }
+        case SKR_TYPE_CATEGORY_DYNARR: {
+            auto& arr = (const DynArrayType&)(*this);
+            return arr.operations.DeserializeText(dst, std::move(reader));
+            break;
+        }
+        case SKR_TYPE_CATEGORY_ARRV:
+            // DeserializeTextImpl<gsl::span<char>>(dst, std::move(reader));
+            break;
+        case SKR_TYPE_CATEGORY_OBJ: {
+            auto& obj = (const RecordType&)(*this);
+            return obj.nativeMethods.DeserializeText(dst, std::move(reader));
+            break;
+        }
+        case SKR_TYPE_CATEGORY_ENUM: {
+            auto& enm = (const EnumType&)(*this);
+            return enm.underlyingType->DeserializeText(dst, std::move(reader));
+            break;
+        }
+        case SKR_TYPE_CATEGORY_REF: {
+            auto& ref = (*(ReferenceType*)this);
+            switch (ref.ownership)
+            {
+                case ReferenceType::Observed:
+                    // DeserializeTextImpl<void*>(dst, std::move(reader));
+                    break;
+                case ReferenceType::Shared: {
+                    void* ptr = ref.pointee->Malloc();
+                    ref.pointee->Construct(ptr, nullptr, 0);
+                    if (auto ret = ref.pointee->DeserializeText(ptr, std::move(reader)); ret != skr::json::SUCCESS)
+                    {
+                        ref.pointee->Destruct(ptr);
+                        ref.pointee->Free(ptr);
+                        return ret;
+                    }
+                    if (((ReferenceType*)this)->object)
+                        ((skr::SObjectPtr<skr::SInterface>*)dst)->reset((skr::SInterface*)ptr);
+                    else
+                        ((skr::SPtr<void>*)dst)->reset(ptr, ref.pointee->Deleter());
+                    return skr::json::SUCCESS;
+                }
+                break;
+            }
+        }
+        case SKR_TYPE_CATEGORY_VARIANT: {
+            return ((VariantType*)this)->operations.DeserializeText(dst, std::move(reader));
+            // auto& variant = (const VariantType&)(*this);
+            // skr_guid_t tid;
+            // auto _tid = reader["type"];
+            // if(auto error = _tid.error(); error != simdjson::SUCCESS)
+            //     return (skr::json::error_code)error;
+            // if (auto ret = skr::json::Read(std::move(reader), _tid.value_unsafe()); ret != skr::json::SUCCESS)
+            //     return ret;
+            // auto _value = reader["value"];
+            // if(auto error = _value.error(); error != simdjson::SUCCESS)
+            //     return (skr::json::error_code)error;
+            // uint32_t index;
+            // for(index=0; index<variant.types.size(); ++index)
+            //     if(variant.types[index]->Id() == tid)
+            //         break;
+            // variant.operations.setters[index](dst, nullptr);
+            // return variant.types[index]->DeserializeText(variant.operations.getters[index](dst), std::move(reader));
+            break;
+        }
+    }
 }
 
 bool skr::type::RecordType::IsBaseOf(const RecordType& other) const

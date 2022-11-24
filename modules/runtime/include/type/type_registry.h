@@ -85,6 +85,8 @@ struct RUNTIME_API skr_type_t {
     void Delete();
     int Serialize(const void* dst, skr_binary_writer_t* writer) const;
     int Deserialize(void* dst, skr_binary_reader_t* reader) const;
+    void SerializeText(const void* dst, skr_json_writer_t* writer) const;
+    skr::json::error_code DeserializeText(void* dst, skr::json::value_t&& reader) const;
 #endif
 };
 
@@ -422,6 +424,8 @@ struct DynArrayMethodTable {
     int (*Serialize)(const void* self, skr_binary_writer_t* writer);
     int (*Deserialize)(void* self, skr_binary_reader_t* reader);
     void (*deleter)(void* self);
+    void (*SerializeText)(const void*, skr_json_writer_t* writer);
+    json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
 struct ObjectMethodTable {
     void (*dtor)(void* self);
@@ -432,6 +436,8 @@ struct ObjectMethodTable {
     int (*Serialize)(const void* self, skr_binary_writer_t* writer);
     int (*Deserialize)(void* self, skr_binary_reader_t* reader);
     void (*deleter)(void* self);
+    void (*SerializeText)(const void*, skr_json_writer_t* writer);
+    json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
 
 struct VariantMethodTable {
@@ -443,6 +449,10 @@ struct VariantMethodTable {
     void (*copy)(void* self, const void* other);
     void (*move)(void* self, void* other);
     void (*deleter)(void*);
+    int (*Serialize)(const void* self, skr_binary_writer_t* writer);
+    int (*Deserialize)(void* self, skr_binary_reader_t* reader);
+    void (*SerializeText)(const void*, skr_json_writer_t* writer);
+    json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
@@ -676,7 +686,9 @@ struct type_of_vector {
             +[](const void* self) { return (void*)((V*)(self))->data(); },                                                             // data
             GetSerialize<V>(),                      // serialize
             GetDeserialize<V>(),                     // deserialize
-            GetDeleter<V>()                         // deleter
+            GetDeleter<V>(),                         // deleter
+            GetTextSerialize<V>(),                 // text serializer
+            GetTextDeserialize<V>(),               // text deserializer
             }
         };
         return &type;
@@ -770,7 +782,11 @@ struct type_of<skr::variant<Ts...>> {
             GetDefaultCtor<V>(),
             GetCopyCtor<V>(),
             GetMoveCtor<V>(),
-            GetDeleter<V>()
+            GetDeleter<V>(),
+            GetSerialize<V>(),
+            GetDeserialize<V>(),
+            GetTextSerialize<V>(),
+            GetTextDeserialize<V>(),
         };
         static VariantType type{
             variants(),

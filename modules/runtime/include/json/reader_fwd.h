@@ -22,6 +22,7 @@ namespace skr
 {
 namespace json
 {
+    using value_t = simdjson::SKR_SIMDJSON_PLAT::ondemand::value;
 enum error_code
 {
     SUCCESS = 0,                ///< No error
