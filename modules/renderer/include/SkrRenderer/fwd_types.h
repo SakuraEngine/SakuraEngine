@@ -16,6 +16,7 @@ typedef struct SRenderDevice SRenderDevice;
 typedef SRenderDevice* SRenderDeviceId;
 typedef skr_guid_t skr_vertex_layout_id;
 
+typedef struct skr_platform_shader_collection_resource_t skr_platform_shader_collection_resource_t;
 typedef struct skr_platform_shader_resource_t skr_platform_shader_resource_t;
 typedef struct skr_material_type_resource_t skr_material_type_resource_t;
 typedef struct skr_material_resource_t skr_material_resource_t;
