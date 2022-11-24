@@ -454,6 +454,7 @@ void SResourceRequest::LoadTask()
     {
         SKR_UNIMPLEMENTED_FUNCTION();
     }
+    serdeEvent.signal();
 }
 
 bool SResourceRequest::Okay()
@@ -465,6 +466,11 @@ bool SResourceRequest::Okay()
 bool SResourceRequest::Failed()
 {
     return !resourceRecord || (resourceRecord->loadingStatus == SKR_LOADING_STATUS_ERROR);
+}
+
+bool SResourceRequest::AsyncSerde()
+{
+    return currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !serdeScheduled;
 }
 
 bool SResourceRequest::Yielded()
