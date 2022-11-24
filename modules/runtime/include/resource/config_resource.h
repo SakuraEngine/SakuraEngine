@@ -12,12 +12,13 @@ typedef struct skr_config_resource_t skr_config_resource_t;
 #if defined(__cplusplus)
 sreflect_struct("guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74")
 sattr("rtti" : true)
-skr_config_resource_t 
+RUNTIME_API skr_config_resource_t 
 {
     sattr("no-rtti" : true)
     skr_type_id_t configType;
     sattr("no-rtti" : true)
-    void* configData;
+    void* configData = nullptr;
+    void SetType(skr_type_id_t type);
     ~skr_config_resource_t();
 };
 namespace skr::binary

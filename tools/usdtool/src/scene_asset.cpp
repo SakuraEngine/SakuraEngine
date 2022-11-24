@@ -12,8 +12,8 @@
 #include "utils/types.h"
 #include "SkrScene/scene.h"
 #include "UsdCore/prim.hpp"
-#include "UsdTool/mesh_asset.hpp"
-#include "UsdTool/scene_asset.hpp"
+#include "SkrUsdTool/mesh_asset.hpp"
+#include "SkrUsdTool/scene_asset.hpp"
 
 #if defined(_DEBUG) && !defined(NDEBUG)	// Use !defined(NDEBUG) to check to see if we actually are linking with Debug third party libraries (bDebugBuildsActuallyUseDebugCRT)
 	#ifndef TBB_USE_DEBUG

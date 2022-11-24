@@ -23,4 +23,4 @@ class SUsdToolModule : public skr::IDynamicModule
         SKR_LOG_INFO("game tool unloaded!");
     }
 };
-IMPLEMENT_DYNAMIC_MODULE(SUsdToolModule, UsdTool);
+IMPLEMENT_DYNAMIC_MODULE(SUsdToolModule, SkrUsdTool);

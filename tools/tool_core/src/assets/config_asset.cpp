@@ -94,14 +94,17 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* 
         SKR_LOG_FMT_ERROR("Import config asset {} from {} failed, json parse error {}", assetRecord->guid, assetPath, simdjson::error_message(doc.error()));
         return nullptr;
     }
-    skr_config_resource_t* resource = skr::resource::SConfigFactory::NewConfig(configType);
+    
+    //skr::resource::SConfigFactory::NewConfig(configType);
+    skr_config_resource_t* resource = SkrNew<skr_config_resource_t>();
+    resource->SetType(configType);
     typeInfo->Import(doc.get_value().value_unsafe(), resource->configData);
     return resource; //导入具体数据
 }
 
 void SJsonConfigImporter::Destroy(void* resource)
 {
-    skr::resource::SConfigFactory::DestroyConfig((skr_config_resource_t*)resource);
+    SkrDelete((skr_config_resource_t*)resource);
     return;
 }
 
@@ -149,7 +152,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
         }
     } writer{&buffer};
     skr_binary_writer_t archive(writer);
-    skr::resource::SConfigFactory::Serialize(*resource, archive);
+    skr::binary::Archive(&archive, *resource);
     //------save resource to disk
     auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)
