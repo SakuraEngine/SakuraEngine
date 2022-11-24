@@ -46,6 +46,7 @@ protected:
     eastl::vector<SResourceRequest*> requests;
     dual::entity_registry_t resourceIds;
     SMutex recordMutex;
+    eastl::vector<SResourceRequest*> serdeBatch;
     skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
     skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
     skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
@@ -261,13 +262,12 @@ void SResourceSystemImpl::Update()
         }),
         requests.end());
     }
-    auto currentRequests = requests;
     // TODO: time limit
-    for (auto request : currentRequests)
+    for (auto request : requests)
     {
         uint32_t spinCounter = 0;
         ESkrLoadingPhase LastPhase;
-        while(!request->Failed() && !request->Okay() && spinCounter < 16)
+        while(!request->Failed() && !request->Okay() && !request->AsyncSerde() && spinCounter < 16)
         {
             LastPhase = request->currentPhase;
             request->Update();
@@ -282,17 +282,17 @@ void SResourceSystemImpl::Update()
 
 void SResourceSystemImpl::_UpdateAsyncSerde()
 {
-    auto currentRequests = requests;
-    eastl::vector<SResourceRequest*> serdeBatch;
+    serdeBatch.clear();
     serdeBatch.reserve(100);
     float timeBudget = 100.f;
-    for (auto request : currentRequests)
+    for (auto request : requests)
     {
         if(request->currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !request->serdeScheduled)
         {
             request->serdeScheduled = true;
             auto factor = request->factory->AsyncSerdeLoadFactor();
             timeBudget -= factor;
+            serdeBatch.push_back(request);
             if(timeBudget < 0.f)
             {
                 timeBudget = 0.f;
@@ -300,19 +300,10 @@ void SResourceSystemImpl::_UpdateAsyncSerde()
                     for(auto request : batch)
                     {
                         request->LoadTask();
-                        request->serdeEvent.signal();
                     }
                 }, nullptr);
                 timeBudget = 100.f;
             }
-            else
-            {
-                serdeBatch.push_back(request);
-            }
-        }
-        else
-        {
-            SKR_UNREACHABLE_CODE();
         }
     }
     if(!serdeBatch.empty())
@@ -321,7 +312,6 @@ void SResourceSystemImpl::_UpdateAsyncSerde()
         for(auto request : serdeBatch)
         {
             request->LoadTask();
-            request->serdeEvent.signal();
         }
     }
 }

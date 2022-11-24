@@ -215,9 +215,7 @@ void SGameModule::on_load(int argc, char** argv)
     game_renderer = skr_create_renderer(game_render_device, game_world);
     if (bUseJob)
     {
-        auto options = make_zeroed<skr::task::scheudler_config_t>();
-        options.numThreads = 0;
-        scheduler.initialize(options);
+        scheduler.initialize(skr::task::scheudler_config_t{});
         scheduler.bind();
         dualJ_bind_storage(game_world);
     }

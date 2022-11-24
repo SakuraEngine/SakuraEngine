@@ -69,6 +69,7 @@ public:
     bool Okay();
     bool Yielded();
     bool Failed();
+    bool AsyncSerde();
 
     void OnRequestFileFinished();
     void OnRequestLoadFinished();
