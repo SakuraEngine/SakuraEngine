@@ -116,6 +116,7 @@ struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
         SRenderDeviceId render_device = nullptr;
     };
 
+    float AsyncSerdeLoadFactor() override { return 0.f; }
     [[nodiscard]] static SMeshFactory* Create(const Root& root);
     static void Destroy(SMeshFactory* factory); 
 };

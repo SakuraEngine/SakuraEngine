@@ -423,31 +423,37 @@ void SResourceRequest::Update()
 
 void SResourceRequest::LoadTask()
 {
-    auto type = skr_get_type(&resourceRecord->header.type);
-    auto obj = type->Malloc();
-    type->Construct(obj, nullptr, 0);
-    struct SpanReader
+    if (auto type = skr_get_type(&resourceRecord->header.type))
     {
-        gsl::span<const uint8_t> data;
-        size_t offset = 0;
-        int read(void* dst, size_t size)
+        auto obj = type->Malloc();
+        type->Construct(obj, nullptr, 0);
+        struct SpanReader
         {
-            if (offset + size > data.size())
-                return -1;
-            memcpy(dst, data.data() + offset, size);
-            offset += size;
-            return 0;
+            gsl::span<const uint8_t> data;
+            size_t offset = 0;
+            int read(void* dst, size_t size)
+            {
+                if (offset + size > data.size())
+                    return -1;
+                memcpy(dst, data.data() + offset, size);
+                offset += size;
+                return 0;
+            }
+        } reader = { GetData() };
+        skr_binary_reader_t archive{reader};
+        serdeResult = type->Deserialize(obj, &archive);
+        if(serdeResult != 0)
+        {
+            type->Destruct(obj);
+            type->Free(obj);
+            obj = nullptr;
         }
-    } reader = { GetData() };
-    skr_binary_reader_t archive{reader};
-    serdeResult = type->Deserialize(obj, &archive);
-    if(serdeResult != 0)
-    {
-        type->Destruct(obj);
-        type->Free(obj);
-        obj = nullptr;
+        resourceRecord->resource = obj;
     }
-    resourceRecord->resource = obj;
+    else
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
 }
 
 bool SResourceRequest::Okay()

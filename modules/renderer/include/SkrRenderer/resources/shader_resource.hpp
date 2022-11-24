@@ -50,7 +50,7 @@ skr_platform_shader_identifier_t
 };
 typedef struct skr_platform_shader_identifier_t skr_platform_shader_identifier_t;
 
-sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
+sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
 sattr("serialize" : "bin")
 sattr("rtti" : true)
 skr_platform_shader_resource_t
@@ -68,6 +68,7 @@ typedef struct skr_platform_shader_resource_t skr_platform_shader_resource_t;
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : "bin")
+sattr("rtti" : true)
 skr_platform_shader_collection_resource_t
 {
     using stable_hash = skr_stable_shader_hash_t;
@@ -75,6 +76,7 @@ skr_platform_shader_collection_resource_t
 
     skr_guid_t asset_guid;
     // hash=0 -> root_variant;
+    sattr("no-rtti" : true)
     skr::flat_hash_map<stable_hash, skr_platform_shader_resource_t, stable_hasher> variants;
 };
 typedef struct skr_platform_shader_collection_resource_t skr_platform_shader_collection_resource_t;
@@ -93,6 +95,7 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
         skr_threaded_service_t* aux_service = nullptr;
     };
 
+    float AsyncSerdeLoadFactor() override { return 0.f; }
     [[nodiscard]] static SShaderResourceFactory* Create(const Root& root);
     static void Destroy(SShaderResourceFactory* factory); 
 };

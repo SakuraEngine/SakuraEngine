@@ -4,6 +4,9 @@
 #include "utils/types.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
+#ifndef __meta__
+#include "SkrToolCore/assets/config_asset.generated.h"
+#endif
 
 namespace skd sreflect
 {

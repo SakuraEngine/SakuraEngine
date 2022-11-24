@@ -2,6 +2,9 @@
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "platform/configure.h"
+#ifndef __meta__
+#include "SkrShaderCompiler/assets/shader_asset.generated.h"
+#endif
 
 namespace skd sreflect
 {
