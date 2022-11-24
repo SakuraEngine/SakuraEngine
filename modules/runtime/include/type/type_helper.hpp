@@ -1,7 +1,9 @@
 #pragma once
 #include "platform/memory.h"
-#include "binary/writer.h"
-#include "binary/reader.h"
+#include "binary/writer_fwd.h"
+#include "binary/reader_fwd.h"
+#include "json/reader_fwd.h"
+#include "json/writer_fwd.h"
 
 struct skr_value_t;
 
@@ -49,14 +51,32 @@ namespace skr
         return nullptr;
     }
 
+    
+
+    template<class T>
+    struct SerdeCompleteChecker : std::true_type {};
+
+    template <class T>
+    inline constexpr bool is_complete_serde()
+    {
+    if constexpr (skr::is_complete_v<T>)
+    {
+        return SerdeCompleteChecker<T>::value;
+    }
+    else
+        return false;
+    }
+
+    template <class T>
+    constexpr bool is_complete_serde_v = is_complete_serde<T>();
+
     template<class T>
     auto GetSerialize() -> int(*)(const void*, skr_binary_writer_t* writer)
     {
-        using TType = skr::binary::TParamType<T>;
-        if constexpr(is_complete_v<skr::binary::WriteHelper<TType>>)
+        if constexpr(is_complete_serde_v<skr::binary::WriteHelper<const T&>>)
             return [](const void* address, skr_binary_writer_t* archive) { 
                 T* ptr = (T*)address;
-                return skr::binary::WriteHelper<TType>::Write(archive, *ptr);
+                return skr::binary::WriteHelper<const T&>::Write(archive, *ptr);
             };
         return nullptr;
     }
@@ -64,10 +84,32 @@ namespace skr
     template<class T>
     auto GetDeserialize() -> int(*)(void*, skr_binary_reader_t* reader)
     {
-        if constexpr(is_complete_v<skr::binary::ReadHelper<T>>)
+        if constexpr(is_complete_serde_v<skr::binary::ReadHelper<T>>)
             return [](void* address, skr_binary_reader_t* archive) {
                 T* ptr = (T*)address;
                 return skr::binary::ReadHelper<T>::Read(archive, *ptr);
+            };
+        return nullptr;
+    }
+
+    template<class T>
+    auto GetTextSerialize() -> void(*)(const void*, skr_json_writer_t* writer)
+    {
+        if constexpr(is_complete_serde_v<skr::json::WriteHelper<const T&>>)
+            return [](const void* address, skr_json_writer_t* archive) {
+                T* ptr = (T*)address;
+                return skr::json::WriteHelper<const T&>::Write(archive, *ptr);
+            };
+        return nullptr;
+    }
+
+    template<class T>
+    auto GetTextDeserialize() -> json::error_code(*)(void*, json::value_t&& reader)
+    {
+        if constexpr(is_complete_serde_v<skr::json::ReadHelper<T>>)
+            return [](void* address, json::value_t&& archive) {
+                T* ptr = (T*)address;
+                return skr::json::ReadHelper<T>::Read(std::move(archive), *ptr);
             };
         return nullptr;
     }

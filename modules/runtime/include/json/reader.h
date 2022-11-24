@@ -9,6 +9,7 @@
     #include "containers/string.hpp"
     #include "type/type_id.hpp"
     #include "platform/guid.hpp"
+    #include "type/type_helper.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
@@ -18,10 +19,6 @@ template <class T>
 struct TResourceHandle;
 }
 // end forward declaration for resources
-
-struct RUNTIME_API skr_json_reader_t {
-    simdjson::ondemand::value* json;
-};
 // utils for codegen
 namespace skr
 {
@@ -36,7 +33,6 @@ RUNTIME_API void set_error_message(error_code err) noexcept;
 
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value);
-
 template <>
 struct RUNTIME_API ReadHelper<bool> {
     static error_code Read(simdjson::ondemand::value&& json, bool& value);
@@ -194,6 +190,19 @@ error_code Read(simdjson::ondemand::value&& json, T& value)
     return ReadHelper<T>::Read(std::move(json), value);
 }
 } // namespace json
+
+template <class K, class V, class Hash, class Eq>
+struct SerdeCompleteChecker<json::ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>>> 
+: std::bool_constant<is_complete_serde_v<json::ReadHelper<K>> && is_complete_serde_v<json::ReadHelper<V>>> {};
+
+template <class V, class Allocator>
+struct SerdeCompleteChecker<json::ReadHelper<eastl::vector<V, Allocator>>>
+: std::bool_constant<is_complete_serde_v<json::ReadHelper<V>>> {};
+
+template <class... Ts>
+struct SerdeCompleteChecker<json::ReadHelper<skr::variant<Ts...>>>
+: std::bool_constant<(is_complete_serde_v<json::ReadHelper<Ts>> && ...)> {};
+
 } // namespace skr
 #else
 typedef struct skr_json_reader_t skr_json_reader_t;

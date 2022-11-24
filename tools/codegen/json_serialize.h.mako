@@ -8,7 +8,7 @@ namespace skr::json
     template <>
     struct ${api} ReadHelper<${record.name}>
     {
-        static error_code Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${record.name}& v);
+        static error_code Read(value_t&& json, ${record.name}& v);
     };
 
     template <>
@@ -22,11 +22,11 @@ namespace skr::json
     template <>
     struct ${api} ReadHelper<${enum.name}>
     {
-        static error_code Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${enum.name}& v);
+        static error_code Read(value_t&& json, ${enum.name}& v);
     };
 
     template <>
-    struct ${api} WriteHelper<${enum.name}>
+    struct ${api} WriteHelper<const ${enum.name}&>
     {
         static void Write(skr_json_writer_t* writer, ${enum.name} v);
     };

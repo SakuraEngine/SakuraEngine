@@ -7,7 +7,7 @@
 
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):
-error_code ReadHelper<${enum.name}>::Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${enum.name}& e)
+error_code ReadHelper<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
 {
     auto value = json.get_string();
     if (value.error() != simdjson::SUCCESS)
@@ -26,7 +26,7 @@ error_code ReadHelper<${enum.name}>::Read(simdjson::SKR_SIMDJSON_PLAT::ondemand:
     SKR_UNREACHABLE_CODE();
 } 
 
-void WriteHelper<${enum.name}>::Write(skr_json_writer_t* writer, ${enum.name} e)
+void WriteHelper<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.name} e)
 {
     switch(e)
     {
@@ -41,7 +41,7 @@ void WriteHelper<${enum.name}>::Write(skr_json_writer_t* writer, ${enum.name} e)
 %endfor
 
 %for record in generator.filter_types(db.records):
-error_code ReadHelper<${record.name}>::Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${record.name}& record)
+error_code ReadHelper<${record.name}>::Read(value_t&& json, ${record.name}& record)
 {
     %for base in record.bases:
     {
@@ -119,9 +119,9 @@ void WriteHelper<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, 
     writer->Key("${name}", ${len(name)});
     %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
-        skr::json::Write<skr::json::TParamType<${field.type}>>(writer, record.${name}[i]);
+        skr::json::Write<const ${field.type}&>(writer, record.${name}[i]);
     %else:
-    skr::json::Write<skr::json::TParamType<${field.type}>>(writer, record.${name});
+    skr::json::Write<const ${field.type}&>(writer, record.${name});
     %endif
     %endfor
 } 
