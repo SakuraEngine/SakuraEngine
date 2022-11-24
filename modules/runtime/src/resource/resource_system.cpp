@@ -277,8 +277,7 @@ void SResourceSystemImpl::Update()
                 spinCounter = 0;
         };
     }
-    
-    
+    _UpdateAsyncSerde();
 }
 
 void SResourceSystemImpl::_UpdateAsyncSerde()
@@ -310,6 +309,10 @@ void SResourceSystemImpl::_UpdateAsyncSerde()
             {
                 serdeBatch.push_back(request);
             }
+        }
+        else
+        {
+            SKR_UNREACHABLE_CODE();
         }
     }
     if(!serdeBatch.empty())
