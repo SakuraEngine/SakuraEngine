@@ -4,6 +4,9 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "platform/configure.h"
 #include "cgltf/cgltf.h"
+#ifndef __meta__
+#include "SkrGLTFTool/mesh_asset.generated.h"
+#endif
 
 namespace skd sreflect
 {

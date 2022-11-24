@@ -29,8 +29,6 @@ namespace resource sreflect
         ~SAnimFactory() noexcept = default;
         skr_type_id_t GetResourceType() override;
         bool AsyncIO() override { return true; }
-        ESkrLoadStatus Load(skr_resource_record_t* record) override;
-        ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
         bool Unload(skr_resource_record_t* record) override;
         ESkrInstallStatus Install(skr_resource_record_t* record) override;
         bool Uninstall(skr_resource_record_t* record) override;

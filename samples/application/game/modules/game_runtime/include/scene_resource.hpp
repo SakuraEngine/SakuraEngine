@@ -9,7 +9,6 @@ namespace skg::resource
     {
         skr_type_id_t GetResourceType() override;
 
-        ESkrLoadStatus Load(skr_resource_record_t* record) override;
         ESkrInstallStatus Install(skr_resource_record_t* record) override;
     };  
 }
