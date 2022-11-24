@@ -14,8 +14,9 @@ public:
     SPtrHelper() SKR_NOEXCEPT = default;
     SPtrHelper(std::nullptr_t lp) SKR_NOEXCEPT;
     
-    template<typename Deleter = DefaultDeleter<T>>
     SPtrHelper(T* lp) SKR_NOEXCEPT;
+    template<typename Deleter>
+    SPtrHelper(T* lp, Deleter deleter) SKR_NOEXCEPT;
     
     SPtrHelper(const this_type& lp) SKR_NOEXCEPT;
     template <typename U>
@@ -39,6 +40,11 @@ public:
     template <typename U>
     typename std::enable_if<std::is_convertible<U*, T*>::value, void>::type
     reset(U* pValue) SKR_NOEXCEPT;
+
+    template <typename U, typename Deleter>
+    typename std::enable_if<std::is_convertible<U*, T*>::value, void>::type
+    reset(U* pValue, Deleter deleter) SKR_NOEXCEPT;
+
     void reset() SKR_NOEXCEPT;
 
     // operatpr =
@@ -72,8 +78,14 @@ template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>::SPtrHelper(std::nullptr_t lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
 
 template <typename T, bool EmbedRC>
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
+
+template <typename T, bool EmbedRC>
 template<typename Deleter>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp, (Deleter*)nullptr) { }
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp, Deleter deleter) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp, deleter) 
+{
+    static_assert(EmbedRC, "Intrusive ptr can not use custom deleter!");
+}
 
 template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>::SPtrHelper(const this_type& lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
@@ -170,6 +182,15 @@ typename std::enable_if<std::is_convertible<U*, T*>::value, void>::type
 skr::SPtrHelper<T, EmbedRC>::reset(U* pValue) SKR_NOEXCEPT
 {
     this_type(pValue).Swap(*this);
+}
+
+template <typename T, bool EmbedRC>
+template <typename U, typename Deleter>
+typename std::enable_if<std::is_convertible<U*, T*>::value, void>::type
+skr::SPtrHelper<T, EmbedRC>::reset(U* pValue, Deleter deleter) SKR_NOEXCEPT
+{
+    static_assert(EmbedRC, "Intrusive ptr can not use custom deleter!");
+    this_type(pValue, deleter).Swap(*this);
 }
 
 // operator =

@@ -116,3 +116,32 @@ TEST(SPTR, VoidPtrCastNonIntrusive)
     }
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
+
+TEST(SPTR, VoidPtrCastNonIntrusive2)
+{
+    TestStruct::Status status = TestStruct::Status::Uninitialized;
+    {
+        skr::SPtr<void> pVC;
+        {
+            skr::SPtr<TestStruct> pC(SkrNew<TestStruct>(status));
+            pVC = pC;
+            EXPECT_EQ(pC.use_count(), 2);
+
+            TestStruct::Status status2 = TestStruct::Status::Uninitialized;
+            struct Deleter
+            {
+                void operator()(TestStruct* p) const SKR_NOEXCEPT 
+                {
+
+                }
+            };
+            pC.reset(SkrNew<TestStruct>(status2), Deleter{});
+            auto pRaw = pC.get();
+            pC.reset();
+            EXPECT_NE(status2, TestStruct::Status::Destroyed);
+            SkrDelete(pRaw);
+            EXPECT_EQ(status2, TestStruct::Status::Destroyed);
+        }
+    }
+    EXPECT_EQ(status, TestStruct::Status::Destroyed);
+}
