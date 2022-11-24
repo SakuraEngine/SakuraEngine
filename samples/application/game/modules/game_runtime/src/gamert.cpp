@@ -111,8 +111,12 @@ void SGameRTModule::on_load(int argc, char** argv)
         auto final_status = shaderHdl.get_status();
         if (final_status != SKR_LOADING_STATUS_ERROR)
         {
-            auto shader = (skr_platform_shader_resource_t*)shaderHdl.get_ptr();
-            SKR_LOG_TRACE("Shader Loaded: entries - %d", shader->shader->entrys_count);
+            auto shader_collection = (skr_platform_shader_collection_resource_t*)shaderHdl.get_ptr();
+            auto&& root_variant_iter = shader_collection->variants.find({0});
+            SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
+            auto* root_variant = &root_variant_iter->second;
+            SKR_ASSERT(root_variant->shader->entrys_count && "Root shader variant entry missing!");
+            SKR_LOG_TRACE("Shader Loaded: entry name - %s", root_variant->shader->entry_reflections[0].entry_name);
             resource_system->UnloadResource(shaderHdl);
             resource_system->Update();
             while (shaderHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)

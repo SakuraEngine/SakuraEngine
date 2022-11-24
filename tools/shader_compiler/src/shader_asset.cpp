@@ -143,10 +143,16 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     } writer{&resource_data};
     skr_binary_writer_t archive(writer);
     // write texture resource
-    auto resource = make_zeroed<skr_platform_shader_resource_t>();
-    resource.identifiers = outIdentifiers;
-    resource.shader_stage = outStages[0];
-    // format
+    auto root_variant = make_zeroed<skr_platform_shader_resource_t>();
+    root_variant.identifiers = outIdentifiers;
+    root_variant.shader_stage = outStages[0];
+    auto resource = make_zeroed<skr_platform_shader_collection_resource_t>();
+    resource.asset_guid = assetRecord->guid;
+    const auto root_hash = make_zeroed<skr_stable_shader_hash_t>();
+    resource.variants.emplace(root_hash, root_variant);
+    // TODO: shader variants
+    // ...
+    // deserialize
     skr::binary::Write(&archive, resource);
     // write to file
     auto file = fopen(outputPath.u8string().c_str(), "wb");

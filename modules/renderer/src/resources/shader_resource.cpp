@@ -100,7 +100,7 @@ skr_type_id_t SShaderResourceFactoryImpl::GetResourceType()
 
 ESkrLoadStatus SShaderResourceFactoryImpl::Load(skr_resource_record_t* record)
 { 
-    auto newShader = SkrNew<skr_platform_shader_resource_t>();    
+    auto newShaderCollection = SkrNew<skr_platform_shader_collection_resource_t>();    
     auto resourceRequest = record->activeRequest;
     auto loadedData = resourceRequest->GetData();
 
@@ -119,9 +119,9 @@ ESkrLoadStatus SShaderResourceFactoryImpl::Load(skr_resource_record_t* record)
     } reader = { loadedData };
 
     skr_binary_reader_t archive{reader};
-    skr::binary::Archive(&archive, *newShader);
+    skr::binary::Archive(&archive, *newShaderCollection);
 
-    record->resource = newShader;
+    record->resource = newShaderCollection;
     return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
 }
 
@@ -132,30 +132,36 @@ ESkrLoadStatus SShaderResourceFactoryImpl::UpdateLoad(skr_resource_record_t* rec
 
 bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
 { 
-    auto shader_resource = (skr_platform_shader_resource_t*)record->resource;
-    if (shader_resource->shader) cgpu_free_shader_library(shader_resource->shader);
-    SkrDelete(shader_resource);
+    auto shader_collection = (skr_platform_shader_collection_resource_t*)record->resource;
+    for (auto&& [hash, variant] : shader_collection->variants)
+    {
+        if (variant.shader) cgpu_free_shader_library(variant.shader);
+    }
+    SkrDelete(shader_collection);
     return true; 
 }
 
 ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* record)
 {
     auto bytes_vfs = root.bytecode_vfs;
-    auto platform_shader = static_cast<skr_platform_shader_resource_t*>(record->resource);
+    auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
+    auto&& root_variant_iter = shader_collection->variants.find({0});
+    SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
+    auto* root_variant = &root_variant_iter->second;
     bool launch_success = false;
-    for (uint32_t i = 0u; i < platform_shader->identifiers.size(); i++)
+    for (uint32_t i = 0u; i < root_variant->identifiers.size(); i++)
     {
-        const auto& identifier = platform_shader->identifiers[i];
+        const auto& identifier = root_variant->identifiers[i];
         const auto runtime_bytecode_type = GetRuntimeBytecodeType();
         if (identifier.bytecode_type == runtime_bytecode_type)
         {
             const auto hash = identifier.hash;
             const auto uri = skr::format("{}#{}-{}-{}-{}.bytes", hash.flags, 
                 hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
-            auto sRequest = SPtr<ShaderRequest>::Create(this, uri.c_str(), platform_shader);
-            auto found = mShaderRequests.find(platform_shader);
+            auto sRequest = SPtr<ShaderRequest>::Create(this, uri.c_str(), root_variant);
+            auto found = mShaderRequests.find(root_variant);
             SKR_ASSERT(found == mShaderRequests.end());
-            mShaderRequests.emplace(platform_shader, sRequest);
+            mShaderRequests.emplace(root_variant, sRequest);
             
             auto ram_texture_io = make_zeroed<skr_ram_io_t>();
             ram_texture_io.path = sRequest->bytes_uri.c_str();
@@ -187,7 +193,7 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
             root.ram_service->request(bytes_vfs, &ram_texture_io, &sRequest->bytes_request, &sRequest->bytes_destination);
 
             launch_success = true;
-            platform_shader->active_slot = i;
+            root_variant->active_slot = i;
             break;
         }
     }
@@ -201,15 +207,18 @@ bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
 
 ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
-    auto platform_shader = static_cast<skr_platform_shader_resource_t*>(record->resource);
-    auto sRequest = mShaderRequests.find(platform_shader);
+    auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
+    auto&& root_variant_iter = shader_collection->variants.find({0});
+    SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
+    auto* root_variant = &root_variant_iter->second;
+    auto sRequest = mShaderRequests.find(root_variant);
     if (sRequest != mShaderRequests.end())
     {
         auto okay = skr_atomic32_load_acquire(&sRequest->second->shader_created);
         auto status = okay ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
         if (okay)
         {
-            mShaderRequests.erase(platform_shader);
+            mShaderRequests.erase(root_variant);
         }
         return status;
     }
