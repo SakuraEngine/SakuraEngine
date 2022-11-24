@@ -31,12 +31,20 @@ skr_material_value_t
     skr::variant<res_handle_t, float, double> value;
 };
 
+sreflect_struct("guid": "7cbbb808-20d9-4bff-b72d-3c23d5b00f2b")
+sattr("rtti": true, "serialize": ["json", "bin"])
+skr_material_shader_variant
+{
+    skr_guid_t shader_guid;
+    skr_stable_shader_hash_t variant_hash;
+};
+
 sreflect_struct("guid" : "83264b35-3fde-4fff-8ee1-89abce2e445b")
 sattr("rtti": true, "serialize" : ["json", "bin"])
 skr_material_type_resource_t
 {
     uint32_t version;
-    eastl::vector<skr_shader_resource_handle_t> shader_resources;
+    eastl::vector<skr_material_shader_variant> shader_resources;
     eastl::vector<skr_material_value_t> default_values;
 };
 

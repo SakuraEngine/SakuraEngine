@@ -564,7 +564,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                     factory->root.vram_service->request(&vram_buffer_io, &uRequest->vram_requests[i], &uRequest->buffer_destinations[i]);
                 };
                 ram_mesh_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)uRequest.get();
-                root.ram_service->request(root.texture_vfs, &ram_mesh_io, &ramRequest, &ramDestination);
+                root.ram_service->request(root.vfs, &ram_mesh_io, &ramRequest, &ramDestination);
             }
             mUploadRequests.emplace(mesh_resource, uRequest);
             mInstallTypes.emplace(mesh_resource, installType);
