@@ -13,7 +13,10 @@ struct SPtrHelper : public SPtrBase<T, EmbedRC>
 public:
     SPtrHelper() SKR_NOEXCEPT = default;
     SPtrHelper(std::nullptr_t lp) SKR_NOEXCEPT;
+    
+    template<typename Deleter = DefaultDeleter<T>>
     SPtrHelper(T* lp) SKR_NOEXCEPT;
+    
     SPtrHelper(const this_type& lp) SKR_NOEXCEPT;
     template <typename U>
     SPtrHelper(const SPtrHelper<U, EmbedRC>& lp, T* pValue) SKR_NOEXCEPT;
@@ -33,10 +36,10 @@ public:
     void swap(this_type& lp) SKR_NOEXCEPT;
     void release() SKR_NOEXCEPT;
 
-    void reset() SKR_NOEXCEPT;
     template <typename U>
     typename std::enable_if<std::is_convertible<U*, T*>::value, void>::type
     reset(U* pValue) SKR_NOEXCEPT;
+    void reset() SKR_NOEXCEPT;
 
     // operatpr =
     this_type& operator=(T* lp) SKR_NOEXCEPT;
@@ -69,7 +72,8 @@ template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>::SPtrHelper(std::nullptr_t lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
 
 template <typename T, bool EmbedRC>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
+template<typename Deleter>
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp, (Deleter*)nullptr) { }
 
 template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>::SPtrHelper(const this_type& lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }

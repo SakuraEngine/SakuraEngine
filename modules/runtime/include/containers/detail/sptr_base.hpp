@@ -43,7 +43,10 @@ protected:
     void ActualDelete(T*) SKR_NOEXCEPT;
     virtual ~SPtrBase() = default;
     SPtrBase() SKR_NOEXCEPT;
-    SPtrBase(T* lp) SKR_NOEXCEPT;
+    SPtrBase(std::nullptr_t) SKR_NOEXCEPT;
+
+    template<typename Deleter>
+    SPtrBase(T* lp, Deleter* = nullptr) SKR_NOEXCEPT;
     // copy constructor
     SPtrBase(const this_type& lp) SKR_NOEXCEPT;
     template <typename U>
@@ -100,7 +103,15 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase() SKR_NOEXCEPT
 }
 
 template <typename T, bool EmbedRC>
-skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp) SKR_NOEXCEPT
+skr::SPtrBase<T, EmbedRC>::SPtrBase(std::nullptr_t) SKR_NOEXCEPT
+    : SRCInst<EmbedRC>()
+{
+    p = NULL;
+}
+
+template <typename T, bool EmbedRC>
+template<typename Deleter>
+skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp, Deleter*) SKR_NOEXCEPT
     : SRCInst<EmbedRC>()
 {
     p = lp;
@@ -108,7 +119,7 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp) SKR_NOEXCEPT
     {
         if SKR_CONSTEXPR (EmbedRC) 
         {
-            this->template allocate_block<T>(lp);
+            this->template allocate_block<T, Deleter>(lp);
         }
         else
         {
