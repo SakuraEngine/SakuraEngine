@@ -39,6 +39,7 @@ protected:
     skr_resource_record_t* _GetRecord(const skr_guid_t& guid) final override;
     skr_resource_record_t* _GetRecord(void* resource) final override;
     void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record) final override;
+    void _UpdateAsyncSerde();
 
     SResourceRegistry* resourceRegistry = nullptr;
     skr::io::RAMService* ioService = nullptr; 
@@ -275,6 +276,50 @@ void SResourceSystemImpl::Update()
             else
                 spinCounter = 0;
         };
+    }
+    
+    
+}
+
+void SResourceSystemImpl::_UpdateAsyncSerde()
+{
+    auto currentRequests = requests;
+    eastl::vector<SResourceRequest*> serdeBatch;
+    serdeBatch.reserve(100);
+    float timeBudget = 100.f;
+    for (auto request : currentRequests)
+    {
+        if(request->currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !request->serdeScheduled)
+        {
+            request->serdeScheduled = true;
+            auto factor = request->factory->AsyncSerdeLoadFactor();
+            timeBudget -= factor;
+            if(timeBudget < 0.f)
+            {
+                timeBudget = 0.f;
+                skr::task::schedule([batch = std::move(serdeBatch)](){
+                    for(auto request : batch)
+                    {
+                        request->LoadTask();
+                        request->serdeEvent.signal();
+                    }
+                }, nullptr);
+                timeBudget = 100.f;
+            }
+            else
+            {
+                serdeBatch.push_back(request);
+            }
+        }
+    }
+    if(!serdeBatch.empty())
+    {
+        // run rest requests on main thread
+        for(auto request : serdeBatch)
+        {
+            request->LoadTask();
+            request->serdeEvent.signal();
+        }
     }
 }
 

@@ -5,10 +5,10 @@
 
 namespace skr::json
 {
-error_code_info error_infos[error_code::NUM_ERROR_CODES - error_code::NUM_JSON_ERROR_CODES] = 
-{
-    {ENUMERATOR_ERROR, "Invalid enumerator liternal"},
-    {GUID_ERROR, "Invalid GUID"},
+
+error_code_info error_infos[error_code::NUM_ERROR_CODES - error_code::NUM_JSON_ERROR_CODES] = {
+    { ENUMERATOR_ERROR, "Invalid enumerator liternal" },
+    { GUID_ERROR, "Invalid GUID" },
 };
 const char* error_message(error_code err) noexcept
 {
@@ -20,75 +20,6 @@ const char* error_message(error_code err) noexcept
     {
         return error_infos[err - error_code::NUM_JSON_ERROR_CODES].message;
     }
-}
-
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, bool& b)
-{
-    auto result = json.get_bool();
-    if (result.error() == simdjson::SUCCESS)
-        b = result.value_unsafe();
-    return (error_code)result.error();
-}
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, int32_t& b)
-{
-    auto result = json.get_int64();
-    if (result.error() == simdjson::SUCCESS)
-        b = (int32_t)result.value_unsafe();
-    return (error_code)result.error();
-}
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, uint32_t& b)
-{
-    auto result = json.get_uint64();
-    if (result.error() == simdjson::SUCCESS)
-        b = (uint32_t)result.value_unsafe();
-    return (error_code)result.error();
-}
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, int64_t& b)
-{
-    auto result = json.get_int64();
-    if (result.error() == simdjson::SUCCESS)
-        b = result.value_unsafe();
-    return (error_code)result.error();
-}
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, uint64_t& b)
-{
-    auto result = json.get_uint64();
-    if (result.error() == simdjson::SUCCESS)
-        b = result.value_unsafe();
-    return (error_code)result.error();
-}
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, float& f)
-{
-    auto result = json.get_double();
-    if (result.error() == simdjson::SUCCESS)
-        f = static_cast<float>(result.value_unsafe());
-    return (error_code)result.error();
-}
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, double& b)
-{
-    auto result = json.get_double();
-    if (result.error() == simdjson::SUCCESS)
-        b = result.value_unsafe();
-    return (error_code)result.error();
-}
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, skr::string& str)
-{
-
-    auto result = json.get_string();
-    if (result.error() == simdjson::SUCCESS)
-    {
-        std::string_view view = result.value_unsafe();
-        str = skr::string(view.data(), view.length());
-    }
-    return (error_code)result.error();
 }
 
 constexpr int parse_hex_digit(const char c)
@@ -113,7 +44,7 @@ bool parse_hex(const char* ptr, T& value)
     for (size_t i = 0; i < digits; ++i)
     {
         int result = parse_hex_digit(ptr[i]);
-        if(result < 0)
+        if (result < 0)
             return false;
         value |= result << (4 * (digits - i - 1));
     }
@@ -126,23 +57,23 @@ bool make_guid_helper(const char* begin, skr_guid_t& value)
     uint16_t Data2 = 0;
     uint16_t Data3 = 0;
     uint8_t Data4[8] = {};
-    if(!parse_hex(begin, Data1))
+    if (!parse_hex(begin, Data1))
         return false;
     begin += 8 + 1;
-    if(!parse_hex(begin, Data2))
+    if (!parse_hex(begin, Data2))
         return false;
     begin += 4 + 1;
-    if(!parse_hex(begin, Data3))
+    if (!parse_hex(begin, Data3))
         return false;
     begin += 4 + 1;
-    if(!parse_hex(begin, Data4[0]))
+    if (!parse_hex(begin, Data4[0]))
         return false;
     begin += 2;
-    if(!parse_hex(begin, Data4[1]))
+    if (!parse_hex(begin, Data4[1]))
         return false;
     begin += 2 + 1;
     for (size_t i = 0; i < 6; ++i)
-        if(!parse_hex(begin + i * 2, Data4[i + 2]))
+        if (!parse_hex(begin + i * 2, Data4[i + 2]))
             return false;
     value = skr_guid_t(Data1, Data2, Data3, Data4);
     return true;
@@ -174,14 +105,80 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
     return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0), value);
 }
 
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, skr_guid_t& guid)
+error_code ReadHelper<bool>::Read(simdjson::ondemand::value&& json, bool& value)
+{
+    auto result = json.get_bool();
+    if (result.error() == simdjson::SUCCESS)
+        value = result.value_unsafe();
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<int32_t>::Read(simdjson::ondemand::value&& json, int32_t& value)
+{
+    auto result = json.get_int64();
+    if (result.error() == simdjson::SUCCESS)
+        value = (int32_t)result.value_unsafe();
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<uint32_t>::Read(simdjson::ondemand::value&& json, uint32_t& value)
+{
+    auto result = json.get_uint64();
+    if (result.error() == simdjson::SUCCESS)
+        value = (uint32_t)result.value_unsafe();
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<int64_t>::Read(simdjson::ondemand::value&& json, int64_t& value)
+{
+    auto result = json.get_int64();
+    if (result.error() == simdjson::SUCCESS)
+        value = result.value_unsafe();
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<uint64_t>::Read(simdjson::ondemand::value&& json, uint64_t& value)
+{
+    auto result = json.get_uint64();
+    if (result.error() == simdjson::SUCCESS)
+        value = result.value_unsafe();
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<float>::Read(simdjson::ondemand::value&& json, float& value)
+{
+    auto result = json.get_double();
+    if (result.error() == simdjson::SUCCESS)
+        value = (float)result.value_unsafe();
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<double>::Read(simdjson::ondemand::value&& json, double& value)
+{
+    auto result = json.get_double();
+    if (result.error() == simdjson::SUCCESS)
+        value = result.value_unsafe();
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr::string>::Read(simdjson::ondemand::value&& json, skr::string& value)
 {
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        if(!make_guid({ view.data(), view.length() }, guid))
+        value = skr::string(view.data(), view.length());
+    }
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr_guid_t>::Read(simdjson::ondemand::value&& json, skr_guid_t& value)
+{
+    auto result = json.get_string();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        std::string_view view = result.value_unsafe();
+        if (!make_guid({ view.data(), view.length() }, value))
         {
             return error_code::GUID_ERROR;
         }
@@ -189,15 +186,14 @@ error_code ReadValue(simdjson::ondemand::value&& json, skr_guid_t& guid)
     return (error_code)result.error();
 }
 
-template <>
-error_code ReadValue(simdjson::ondemand::value&& json, skr_resource_handle_t& handle)
+error_code ReadHelper<skr_resource_handle_t>::Read(simdjson::ondemand::value&& json, skr_resource_handle_t& handle)
 {
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
         skr_guid_t guid;
-        if(!make_guid({ view.data(), view.length() }, guid))
+        if (!make_guid({ view.data(), view.length() }, guid))
         {
             return error_code::GUID_ERROR;
         }

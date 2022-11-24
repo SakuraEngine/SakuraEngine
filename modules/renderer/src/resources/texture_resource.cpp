@@ -42,8 +42,6 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     ~STextureFactoryImpl() noexcept = default;
     skr_type_id_t GetResourceType() override;
     bool AsyncIO() override { return true; }
-    ESkrLoadStatus Load(skr_resource_record_t* record) override;
-    ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
     bool Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
     bool Uninstall(skr_resource_record_t* record) override;
@@ -126,38 +124,6 @@ skr_type_id_t STextureFactoryImpl::GetResourceType()
 {
     const auto resource_type = skr::type::type_id<skr_texture_resource_t>::get();
     return resource_type;
-}
-
-ESkrLoadStatus STextureFactoryImpl::Load(skr_resource_record_t* record)
-{ 
-    auto newTexture = SkrNew<skr_texture_resource_t>();    
-    auto resourceRequest = record->activeRequest;
-    auto loadedData = resourceRequest->GetData();
-
-    struct SpanReader
-    {
-        gsl::span<const uint8_t> data;
-        size_t offset = 0;
-        int read(void* dst, size_t size)
-        {
-            if (offset + size > data.size())
-                return -1;
-            memcpy(dst, data.data() + offset, size);
-            offset += size;
-            return 0;
-        }
-    } reader = {loadedData};
-
-    skr_binary_reader_t archive{reader};
-    skr::binary::Archive(&archive, *newTexture);
-
-    record->resource = newTexture;
-    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
-}
-
-ESkrLoadStatus STextureFactoryImpl::UpdateLoad(skr_resource_record_t* record)
-{
-    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
 }
 
 bool STextureFactoryImpl::Unload(skr_resource_record_t* record)

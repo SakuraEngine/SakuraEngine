@@ -21,6 +21,5 @@ config_backend_t
     ECGPUBackEnd backend;
 }
 sattr("serialize" : ["json", "bin"])
-sattr("rtti" : true)
-sregister_config(); 
+sattr("rtti" : true);
 typedef struct config_backend_t config_backend_t;

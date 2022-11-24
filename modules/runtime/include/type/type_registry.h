@@ -5,6 +5,7 @@
 #include "containers/string.hpp"
 #include "containers/sptr.hpp"
 #include "containers/variant.hpp"
+#include "type/type_helper.hpp"
 
 RUNTIME_API const char* skr_get_type_name(const skr_guid_t* type);
 RUNTIME_API void skr_register_type_name(const skr_guid_t* type, const char* name);
@@ -15,6 +16,8 @@ typedef struct skr_field_t skr_field_t;
 typedef struct skr_method_t skr_method_t;
 typedef skr_guid_t skr_type_id_t;
 struct skr_resource_handle_t;
+struct skr_binary_writer_t;
+struct skr_binary_reader_t;
 namespace skr
 {
 namespace type
@@ -35,6 +38,12 @@ enum skr_type_category_t
     SKR_TYPE_CATEGORY_U64,
     SKR_TYPE_CATEGORY_F32,
     SKR_TYPE_CATEGORY_F64,
+    SKR_TYPE_CATEGORY_F32_2,
+    SKR_TYPE_CATEGORY_F32_3,
+    SKR_TYPE_CATEGORY_F32_4,
+    SKR_TYPE_CATEGORY_F32_4x4,
+    SKR_TYPE_CATEGORY_ROT,
+    SKR_TYPE_CATEGORY_QUAT,
     SKR_TYPE_CATEGORY_GUID,
     SKR_TYPE_CATEGORY_HANDLE,
     SKR_TYPE_CATEGORY_STR,
@@ -55,7 +64,9 @@ struct RUNTIME_API skr_type_t {
     skr_type_t(skr_type_category_t type);
     size_t Size() const;
     size_t Align() const;
+    skr_guid_t Id() const;
     const char* Name() const;
+    void(*Deleter() const)(void*);
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
     void Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy = nullptr) const;
@@ -65,11 +76,15 @@ struct RUNTIME_API skr_type_t {
     // lifetime operator
     void Destruct(void* dst) const;
     void Construct(void* dst, skr::type::Value* args, size_t nargs) const;
+    void* Malloc() const;
+    void Free(void*) const;
     // copy construct
     void Copy(void* dst, const void* src) const;
     // move construct
     void Move(void* dst, void* src) const;
     void Delete();
+    int Serialize(const void* dst, skr_binary_writer_t* writer) const;
+    int Deserialize(void* dst, skr_binary_reader_t* reader) const;
 #endif
 };
 
@@ -97,7 +112,7 @@ struct SKR_ALIGNAS(16) RUNTIME_API skr_value_t {
 
     ~skr_value_t() { Reset(); }
 
-    operator bool() const { return HasValue(); }
+    explicit operator bool() const { return HasValue(); }
     bool HasValue() const { return type != nullptr; }
 
     template <class T, class... Args>
@@ -131,6 +146,15 @@ private:
     void _Copy(const skr_value_t& other);
     void _Move(skr_value_t&& other);
 #endif
+};
+
+struct SKR_ALIGNAS(16) RUNTIME_API skr_poly_value_t {
+    const skr_type_t* type SKR_IF_CPP(= nullptr);
+    union
+    {
+        void* _ptr;
+        uint8_t _smallObj[24];
+    };
 };
 
 struct RUNTIME_API skr_value_ref_t {
@@ -215,6 +239,12 @@ RUNTIME_API size_t Hash(int64_t value, size_t base);
 RUNTIME_API size_t Hash(uint32_t value, size_t base);
 RUNTIME_API size_t Hash(uint64_t value, size_t base);
 RUNTIME_API size_t Hash(float value, size_t base);
+RUNTIME_API size_t Hash(const skr_float2_t& value, size_t base);
+RUNTIME_API size_t Hash(const skr_float3_t& value, size_t base);
+RUNTIME_API size_t Hash(const skr_float4_t& value, size_t base);
+RUNTIME_API size_t Hash(const skr_float4x4_t& value, size_t base);
+RUNTIME_API size_t Hash(const skr_quaternion_t& value, size_t base);
+RUNTIME_API size_t Hash(const skr_rotator_t& value, size_t base);
 RUNTIME_API size_t Hash(double value, size_t base);
 RUNTIME_API size_t Hash(const skr_guid_t& value, size_t base);
 RUNTIME_API size_t Hash(const skr_resource_handle_t& value, size_t base);
@@ -283,6 +313,48 @@ struct Float32Type : skr_type_t {
     {
     }
 };
+// float2
+struct Float32x2Type : skr_type_t {
+    Float32x2Type()
+        : skr_type_t{ SKR_TYPE_CATEGORY_F32_2 }
+    {
+    }
+};
+// float3
+struct Float32x3Type : skr_type_t {
+    Float32x3Type()
+        : skr_type_t{ SKR_TYPE_CATEGORY_F32_3 }
+    {
+    }
+};
+// float4
+struct Float32x4Type : skr_type_t {
+    Float32x4Type()
+        : skr_type_t{ SKR_TYPE_CATEGORY_F32_4 }
+    {
+    }
+};
+// float4x4
+struct Float32x4x4Type : skr_type_t {
+    Float32x4x4Type()
+        : skr_type_t{ SKR_TYPE_CATEGORY_F32_4x4 }
+    {
+    }
+};
+// rot
+struct RotType : skr_type_t {
+    RotType()
+        : skr_type_t{ SKR_TYPE_CATEGORY_ROT }
+    {
+    }
+};
+// quaternion
+struct QuaternionType : skr_type_t {
+    QuaternionType()
+        : skr_type_t{ SKR_TYPE_CATEGORY_QUAT }
+    {
+    }
+};
 // double
 struct Float64Type : skr_type_t {
     Float64Type()
@@ -337,7 +409,7 @@ struct ArrayType : skr_type_t {
 // std::vector<T>
 struct DynArrayMethodTable {
     void (*dtor)(void* self);
-    void (*ctor)(void* self);
+    void (*ctor)(void* self, Value* param, size_t nparam);
     void (*copy)(void* self, const void* other);
     void (*move)(void* self, void* other);
     void (*push)(void* self, const void* data);
@@ -347,6 +419,9 @@ struct DynArrayMethodTable {
     size_t (*size)(const void* self);
     void* (*get)(const void* self, size_t index);
     void* (*data)(const void* self);
+    int (*Serialize)(const void* self, skr_binary_writer_t* writer);
+    int (*Deserialize)(void* self, skr_binary_reader_t* reader);
+    void (*deleter)(void* self);
 };
 struct ObjectMethodTable {
     void (*dtor)(void* self);
@@ -354,6 +429,20 @@ struct ObjectMethodTable {
     void (*copy)(void* self, const void* other);
     void (*move)(void* self, void* other);
     size_t (*Hash)(const void* self, size_t base);
+    int (*Serialize)(const void* self, skr_binary_writer_t* writer);
+    int (*Deserialize)(void* self, skr_binary_reader_t* reader);
+    void (*deleter)(void* self);
+};
+
+struct VariantMethodTable {
+    const gsl::span<void* (*)(void*)> getters;
+    const gsl::span<void (*)(void*, const void*)> setters;
+    size_t (*indexer)(const void* self);
+    void (*dtor)(void* self);
+    void (*ctor)(void* self, Value* param, size_t nparam);
+    void (*copy)(void* self, const void* other);
+    void (*move)(void* self, void* other);
+    void (*deleter)(void*);
 };
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
@@ -458,29 +547,14 @@ struct VariantType : skr_type_t {
     size_t size;
     size_t align;
     skr::string name;
-    const gsl::span<void* (*)(void*)> getters;
-    const gsl::span<void (*)(void*, const void*)> setters;
-    size_t (*indexer)(const void* self);
-    void (*dtor)(void* self);
-    void (*ctor)(void* self, Value* param, size_t nparam);
-    void (*copy)(void* self, const void* other);
-    void (*move)(void* self, void* other);
-    VariantType(const gsl::span<const skr_type_t*> types, size_t size, size_t align, 
-    const gsl::span<void* (*)(void*)> getters, const gsl::span<void (*)(void*, const void*)> setters,
-    size_t (*indexer)(const void* self), void (*destructor)(void* self), 
-    void (*constructor)(void* self, Value* param, size_t nparam), void (*copy)(void* self, const void* other), 
-    void (*move)(void* self, void* other))
+    VariantMethodTable operations;
+    VariantType(const gsl::span<const skr_type_t*> types, size_t size, size_t align,
+    VariantMethodTable operations)
         : skr_type_t{ SKR_TYPE_CATEGORY_VARIANT }
         , types(types)
         , size(size)
         , align(align)
-        , getters(getters)
-        , setters(setters)
-        , indexer(indexer)
-        , dtor(destructor)
-        , ctor(constructor)
-        , copy(copy)
-        , move(move)
+        , operations(operations)
     {
     }
 };
@@ -589,8 +663,8 @@ struct type_of_vector {
         static DynArrayType type{
             type_of<T>::get(),
             DynArrayMethodTable{
-            +[](void* self) { ((V*)(self))->~vector(); },                                                                              // dtor
-            +[](void* self) { new (self) V(); },                                                                                       // ctor
+            GetDtor<V>(),                     // dtor
+            GetDefaultCtor<V>(),                                                                           // ctor
             +[](void* self, const void* other) { new (self) V(*((const V*)(other))); },                                                // copy
             +[](void* self, void* other) { new (self) V(std::move(*(V*)(other))); },                                                   // move
             +[](void* self, const void* data) { ((V*)(self))->push_back(*(const T*)data); },                                           // push
@@ -600,6 +674,9 @@ struct type_of_vector {
             +[](const void* self) { return ((V*)(self))->size(); },                                                                    // size
             +[](const void* self, size_t index) { return (void*)&((V*)(self))[index]; },                                               // get
             +[](const void* self) { return (void*)((V*)(self))->data(); },                                                             // data
+            GetSerialize<V>(),                      // serialize
+            GetDeserialize<V>(),                     // deserialize
+            GetDeleter<V>()                         // deleter
             }
         };
         return &type;
@@ -657,7 +734,10 @@ struct type_of<skr::variant<Ts...>> {
         return +[](void* data, const void* value)
         {
             using T = std::variant_alternative_t<I, skr::variant<Ts...>>;
-            *(skr::variant<Ts...>*)data = *(const T*)value;
+            if(value != nullptr)
+                *(skr::variant<Ts...>*)data = *(const T*)value;
+            else
+                *(skr::variant<Ts...>*)data = T();
         };
     }
     template<size_t... Is>
@@ -679,48 +759,24 @@ struct type_of<skr::variant<Ts...>> {
             return ((const skr::variant<Ts...>*)data)->index();
         };
     }
-    static auto destructor()
-    {
-        return +[](void* data)
-        {
-            ((skr::variant<Ts...>*)data)->~variant();
-        };
-    }
-    static auto constructor()
-    {
-        return +[](void* data, Value* param, size_t nparam)
-        {
-            SKR_UNIMPLEMENTED_FUNCTION();
-            new (data) skr::variant<Ts...>();
-        };
-    }
-    static auto copy()
-    {
-        return +[](void* data, const void* other)
-        {
-            new (data) skr::variant<Ts...>(*(const skr::variant<Ts...>*)other);
-        };
-    }
-    static auto move()
-    {
-        return +[](void* data, void* other)
-        {
-            new (data) skr::variant<Ts...>(std::move(*(skr::variant<Ts...>*)other));
-        };
-    }
     static const skr_type_t* get()
     {
+        using V = skr::variant<Ts...>;
+        VariantMethodTable op{
+            getters(std::make_index_sequence<sizeof...(Ts)>()),
+            setters(std::make_index_sequence<sizeof...(Ts)>()),
+            indexer(),
+            GetDtor<V>(),
+            GetDefaultCtor<V>(),
+            GetCopyCtor<V>(),
+            GetMoveCtor<V>(),
+            GetDeleter<V>()
+        };
         static VariantType type{
             variants(),
             sizeof(skr::variant<Ts...>),
             alignof(skr::variant<Ts...>),
-            getters(std::make_index_sequence<sizeof...(Ts)>()),
-            setters(std::make_index_sequence<sizeof...(Ts)>()),
-            indexer(),
-            destructor(),
-            constructor(),
-            copy(),
-            move()
+            op
         };
         return &type;
     }

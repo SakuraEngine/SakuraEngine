@@ -11,8 +11,10 @@ typedef struct skr_skeleton_resource_t skr_skeleton_resource_t;
 #include "SkrAnim/ozz/skeleton.h"
 
 sreflect_struct("guid" : "1876BF35-E4DC-450B-B9D4-09259397F4BA")
+sattr("rtti" : true)
 skr_skeleton_resource_t
 {
+    sattr("no-rtti" : true)
     ozz::animation::Skeleton skeleton;
 };
 

@@ -8,6 +8,7 @@
 #include "resource/resource_header.hpp"
 #include "utils/io.h"
 #include "utils/types.h"
+#include "task/task.hpp"
 
 namespace skr::io { class RAMService; }
 
@@ -71,6 +72,8 @@ public:
 
     void OnRequestFileFinished();
     void OnRequestLoadFinished();
+
+    void LoadTask();
 protected:
     void _LoadFinished();
     void _InstallFinished();
@@ -92,6 +95,9 @@ protected:
     skr::string resourceUrl;
     uint8_t* data;
     uint64_t size;
+    skr::task::event_t serdeEvent;
+    bool serdeScheduled;
+    int serdeResult; 
 };
 
 struct RUNTIME_API SResourceRegistry {

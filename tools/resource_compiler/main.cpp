@@ -16,6 +16,14 @@
 #include "platform/vfs.h"
 #include "utils/log.h"
 #include "utils/log.hpp"
+#include "utils/io.hpp"
+#include "resource/resource_system.h"
+#include "resource/local_resource_registry.hpp"
+#include "SkrRenderer/resources/texture_resource.h"
+#include "SkrRenderer/resources/mesh_resource.h"
+#include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/material_resource.hpp"
+#include "utils/make_zeroed.hpp"
 
 
 #include "tracy/Tracy.hpp"
@@ -113,6 +121,14 @@ bool IsAsset(skr::filesystem::path path)
     return false;
 }
 
+void InitializeResourceSystem(skd::SProject& proj)
+{
+    using namespace skr::guid::literals;
+    auto resource_system = skr::resource::GetResourceSystem();
+    auto registry = SkrNew<skr::resource::SLocalResourceRegistry>(proj.resource_vfs);
+    resource_system->Initialize(registry, proj.ram_service);
+}
+
 int main(int argc, char** argv)
 {
     log_set_level(SKR_LOG_LEVEL_INFO);
@@ -145,6 +161,19 @@ int main(int argc, char** argv)
     project->assetPath = (root.parent_path() / "../../../samples/application/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
+    skr_vfs_desc_t resource_vfs_desc = {};
+    resource_vfs_desc.app_name = "Project";
+    resource_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+    resource_vfs_desc.override_mount_dir = project->outputPath.u8string().c_str();
+    project->resource_vfs = skr_create_vfs(&resource_vfs_desc);
+    auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
+    ioServiceDesc.name = "GameRuntimeRAMIOService";
+    ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
+    ioServiceDesc.sleep_time = 1000 / 60;
+    ioServiceDesc.lockless = true;
+    ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
+    project->ram_service = skr::io::RAMService::create(&ioServiceDesc);
+    InitializeResourceSystem(*project);
 
     skr::filesystem::recursive_directory_iterator iter(project->assetPath, ec);
     //----- scan project directory

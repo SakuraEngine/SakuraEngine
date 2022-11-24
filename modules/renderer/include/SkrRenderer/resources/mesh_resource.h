@@ -6,6 +6,7 @@
 #endif
 
 sreflect_struct("guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca")
+sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_vertex_buffer_entry_t
 {
@@ -16,6 +17,7 @@ skr_vertex_buffer_entry_t
 typedef struct skr_vertex_buffer_entry_t skr_vertex_buffer_entry_t;
 
 sreflect_struct("guid" : "6ac5f946-dd65-4710-8725-ab4273fe13e6")
+sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_index_buffer_entry_t
 {
@@ -32,6 +34,7 @@ typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
 #include <containers/string.hpp>
 
 sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
+sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_mesh_primitive_t 
 {
@@ -42,6 +45,7 @@ skr_mesh_primitive_t
 };
 
 sreflect_struct("guid" : "d3b04ea5-415d-44d5-995a-5c77c64fe1de")
+sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_mesh_section_t 
 {
@@ -53,6 +57,7 @@ skr_mesh_section_t
 };
 
 sreflect_struct("guid" : "03104e51-c998-410b-9d3c-d76535933440")
+sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_mesh_buffer_t
 {
@@ -62,12 +67,14 @@ skr_mesh_buffer_t
     bool used_with_vertex;
     // TODO: keep this?
     sattr("transient": true)
+    sattr("no-rtti" : true)
     skr_blob_t bin;
     // TODO: keep this?
     skr::string uri; // gltf buffer uri
 };
 
 sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 
+sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_mesh_resource_t
 {

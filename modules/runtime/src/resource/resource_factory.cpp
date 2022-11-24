@@ -20,12 +20,6 @@ void SResourceFactory::DestroyResource(skr_resource_record_t* record)
         record->destructor(record->resource);
 }
 
-ESkrLoadStatus SResourceFactory::UpdateLoad(skr_resource_record_t* record)
-{
-    SKR_UNREACHABLE_CODE();
-    return SKR_LOAD_STATUS_SUCCEED;
-}
-
 ESkrInstallStatus SResourceFactory::UpdateInstall(skr_resource_record_t* record)
 {
     SKR_UNREACHABLE_CODE();

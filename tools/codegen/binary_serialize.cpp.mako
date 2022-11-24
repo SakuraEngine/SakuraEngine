@@ -2,6 +2,8 @@
 #include "utils/hash.h"
 #include "platform/debug.h"
 #include "utils/log.h"
+#include "binary/reader.h"
+#include "binary/writer.h"
 
 namespace skr::binary {
 %for record in generator.filter_types(db.records):
@@ -26,21 +28,20 @@ int __Archive(S* archive, ${record.name}& record)
     return ret;
 }
 
-template<>
-int ReadValue(skr_binary_reader_t* archive, ${record.name}& record)
+
+int ReadHelper<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name}& record)
 {
 %for base in record.bases:
-    int ret = ReadValue(archive, (${base}&)record);
+    int ret = skr::binary::Read(archive, (${base}&)record);
     if(ret != 0)
         return ret;
 %endfor
     return __Archive(archive, record);
 } 
-template<>
-int WriteValue(skr_binary_writer_t* archive, const ${record.name}& record)
+int WriteHelper<const ${record.name}&>::Write(skr_binary_writer_t* archive, const ${record.name}& record)
 {
 %for base in record.bases:
-    int ret = WriteValue<const ${base}&>(archive, record);
+    int ret = skr::binary::Write<const ${base}&>(archive, record);
     if(ret != 0)
         return ret;
 %endfor

@@ -6,17 +6,30 @@ namespace skr::json
 {
 %for record in generator.filter_types(db.records):
     template <>
-    ${api} error_code ReadValue(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${record.name}& v);
+    struct ${api} ReadHelper<${record.name}>
+    {
+        static error_code Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${record.name}& v);
+    };
+
     template <>
-    ${api} void WriteValue(skr_json_writer_t* writer, const ${record.name}& v);
-    template <>
-    ${api} void WriteFields(skr_json_writer_t* writer, const ${record.name}& v);
+    struct ${api} WriteHelper<const ${record.name}&>
+    {
+        static void Write(skr_json_writer_t* writer, const ${record.name}& v);
+        static void WriteFields(skr_json_writer_t* writer, const ${record.name}& v);
+    };
 %endfor
 %for enum in generator.filter_types(db.enums):
     template <>
-    ${api} error_code ReadValue(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${enum.name}& v);
+    struct ${api} ReadHelper<${enum.name}>
+    {
+        static error_code Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${enum.name}& v);
+    };
+
     template <>
-    ${api} void WriteValue(skr_json_writer_t* writer, ${enum.name} v);
+    struct ${api} WriteHelper<${enum.name}>
+    {
+        static void Write(skr_json_writer_t* writer, ${enum.name} v);
+    };
 %endfor
 }
 #endif

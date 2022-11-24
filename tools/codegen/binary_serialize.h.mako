@@ -5,10 +5,16 @@
 namespace skr::binary
 {
 %for record in generator.filter_types(db.records):
-    template <>
-    ${api} int ReadValue(skr_binary_reader_t* archive, ${record.name}& v);
-    template <>
-    ${api} int WriteValue(skr_binary_writer_t* archive, const ${record.name}& v);
+    template<>
+    struct ${api} ReadHelper<${record.name}>
+    {
+        static int Read(skr_binary_reader_t* archive, ${record.name}& value);
+    };
+    template<>
+    struct ${api} WriteHelper<const ${record.name}&>
+    {
+        static int Write(skr_binary_writer_t* archive, const ${record.name}& value);
+    };
 %endfor
 }
 #endif

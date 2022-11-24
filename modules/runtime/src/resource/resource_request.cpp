@@ -5,6 +5,7 @@
 #include "utils/log.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
+#include "type/type_registry.h"
 
 namespace skr
 {
@@ -260,34 +261,42 @@ void SResourceRequest::Update()
             }
             break;
         case SKR_LOADING_PHASE_LOAD_RESOURCE: {
-            auto status = factory->Load(resourceRecord);
-            if (status == SKR_LOAD_STATUS_FAILED)
+            bool asyncSerde = factory->AsyncSerdeLoadFactor() != 0.f;
+            
+            if (asyncSerde)
             {
-                SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-            else if (status == SKR_LOAD_STATUS_INPROGRESS)
-            {
+                serdeScheduled = false;
+                serdeEvent.clear();
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE;
             }
-            else if (status == SKR_LOAD_STATUS_SUCCEED)
+            else
             {
-                _LoadFinished();
+                LoadTask();
+                if(serdeResult != 0)
+                {
+                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.", 
+                        resourceRecord->header.guid, serdeResult);
+                    currentPhase = SKR_LOADING_PHASE_FINISHED;
+                    resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                }
+                else
+                    _LoadFinished();
             }
         }
         break;
         case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-            auto status = factory->UpdateLoad(resourceRecord);
-            if (status == SKR_LOAD_STATUS_FAILED)
+            if(serdeEvent.test())
             {
-                SKR_LOG_FMT_ERROR("Resource {} failed to load.", resourceRecord->header.guid);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
-            }
-            else if (status == SKR_LOAD_STATUS_SUCCEED)
-            {
-                _LoadFinished();
+                serdeEvent.clear();
+                if(serdeResult != 0)
+                {
+                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.", 
+                        resourceRecord->header.guid, serdeResult);
+                    currentPhase = SKR_LOADING_PHASE_FINISHED;
+                    resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                }
+                else
+                    _LoadFinished();
             }
         }
         break;
@@ -410,6 +419,35 @@ void SResourceRequest::Update()
             SKR_UNREACHABLE_CODE();
             break;
     }
+}
+
+void SResourceRequest::LoadTask()
+{
+    auto type = skr_get_type(&resourceRecord->header.type);
+    auto obj = type->Malloc();
+    type->Construct(obj, nullptr, 0);
+    struct SpanReader
+    {
+        gsl::span<const uint8_t> data;
+        size_t offset = 0;
+        int read(void* dst, size_t size)
+        {
+            if (offset + size > data.size())
+                return -1;
+            memcpy(dst, data.data() + offset, size);
+            offset += size;
+            return 0;
+        }
+    } reader = { GetData() };
+    skr_binary_reader_t archive{reader};
+    serdeResult = type->Deserialize(obj, &archive);
+    if(serdeResult != 0)
+    {
+        type->Destruct(obj);
+        type->Free(obj);
+        obj = nullptr;
+    }
+    resourceRecord->resource = obj;
 }
 
 bool SResourceRequest::Okay()

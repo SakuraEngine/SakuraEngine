@@ -29,100 +29,155 @@ inline int ReadValue(skr_binary_reader_t* reader, void* data, size_t size)
 {
     return reader->read(data, size);
 }
-template <>
-RUNTIME_API int ReadValue(skr_binary_reader_t* reader, bool& value);
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, uint32_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, uint64_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, int32_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, int64_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, float& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, double& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, skr_float2_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, skr_float3_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, skr_rotator_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, skr_float4_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, skr_quaternion_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-inline int ReadValue(skr_binary_reader_t* reader, skr_float4x4_t& value)
-{
-    return ReadValue(reader, &value, sizeof(value));
-}
-template <>
-RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr::string& str);
-template <>
-RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_guid_t& guid);
-template <>
-RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
-template <>
-RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_blob_t& blob);
-template<class T>
-std::enable_if_t<std::is_enum_v<T>, int> ReadValue(skr_binary_reader_t* writer, T& value)
-{
-    return ReadValue(writer, (std::underlying_type_t<T>&)(value));
-}
 
 template <class T>
 int Read(skr_binary_reader_t* reader, T& value);
 
-template <class T>
-struct ReadHelper {
-    static int Read(skr_binary_reader_t* reader, T& map)
+template <>
+struct RUNTIME_API ReadHelper<bool> {
+    static int Read(skr_binary_reader_t* reader, bool& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<uint32_t> {
+    static int Read(skr_binary_reader_t* reader, uint32_t& value)
     {
-        return ReadValue<T>(reader, map);
+        return reader->read(&value, sizeof(value));
     }
 };
 
+template <>
+struct RUNTIME_API ReadHelper<uint64_t> {
+    static int Read(skr_binary_reader_t* reader, uint64_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<int32_t> {
+    static int Read(skr_binary_reader_t* reader, int32_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<int64_t> {
+    static int Read(skr_binary_reader_t* reader, int64_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<float> {
+    static int Read(skr_binary_reader_t* reader, float& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<double> {
+    static int Read(skr_binary_reader_t* reader, double& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_float2_t> {
+    static int Read(skr_binary_reader_t* reader, skr_float2_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_float3_t> {
+    static int Read(skr_binary_reader_t* reader, skr_float3_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_rotator_t> {
+    static int Read(skr_binary_reader_t* reader, skr_rotator_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_float4_t> {
+    static int Read(skr_binary_reader_t* reader, skr_float4_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_quaternion_t> {
+    static int Read(skr_binary_reader_t* reader, skr_quaternion_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_float4x4_t> {
+    static int Read(skr_binary_reader_t* reader, skr_float4x4_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr::string> {
+    static int Read(skr_binary_reader_t* reader, skr::string& str);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_guid_t> {
+    static int Read(skr_binary_reader_t* reader, skr_guid_t& guid);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
+    static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_blob_t> {
+    static int Read(skr_binary_reader_t* reader, skr_blob_t& blob);
+};
+
+template <class T>
+struct ReadHelper<T, std::enable_if_t<std::is_enum_v<T>>> {
+    static int Read(skr_binary_reader_t* reader, T& value)
+    {
+        using UT = std::underlying_type_t<T>;
+        return ReadHelper<UT>::Read(reader, (UT&)(value));
+    }
+};
+
+template <class T>
+struct ReadHelper<TEnumAsByte<T>>
+{
+    static int Read(skr_binary_reader_t* reader, TEnumAsByte<T>& value)
+    {
+        return skr::binary::Read(reader, value.as_byte());
+    }
+};
 
 template <class T>
 struct ReadHelper<skr::resource::TResourceHandle<T>> {
     static int Read(skr_binary_reader_t* reader, skr::resource::TResourceHandle<T>& handle)
     {
         skr_guid_t guid;
-        int ret = ReadValue(reader, guid);
+        int ret = skr::binary::Read(reader, guid);
         if (ret != 0)
             return ret;
         handle.set_guid(guid);
@@ -136,7 +191,7 @@ struct ReadHelper<eastl::vector<V, Allocator>> {
     {
         eastl::vector<V, Allocator> temp;
         uint32_t size;
-        int ret = ReadValue(json, size);
+        int ret = skr::binary::Read(json, size);
         if (ret != 0)
             return ret;
 
@@ -183,7 +238,7 @@ struct ReadHelper<skr::variant<Ts...>>
     static int Read(skr_binary_reader_t* reader, skr::variant<Ts...>& value)
     {
         uint32_t index;
-        int ret = ReadValue(reader, index);
+        int ret = skr::binary::Read(reader, index);
         if (ret != 0)
             return ret;
         if (index >= sizeof...(Ts))

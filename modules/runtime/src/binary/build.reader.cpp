@@ -3,21 +3,20 @@
 
 namespace skr::binary
 {
-template <>
-int ReadValue(skr_binary_reader_t* reader, bool& value)
+int ReadHelper<bool>::Read(skr_binary_reader_t* reader, bool& value)
 {
     uint32_t v;
-    int ret = ReadValue(reader, v);
-    if(ret != 0)
+    int ret = ReadHelper<uint32_t>::Read(reader, v);
+    if (ret != 0)
         return ret;
     value = v != 0;
     return ret;
 }
-template <>
-int ReadValue(skr_binary_reader_t* reader, skr::string& str)
+
+int ReadHelper<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
 {
     uint32_t size;
-    int ret = ReadValue(reader, size);
+    int ret = ReadHelper<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
     skr::string temp;
@@ -28,28 +27,27 @@ int ReadValue(skr_binary_reader_t* reader, skr::string& str)
     str = std::move(temp);
     return ret;
 }
-template <>
-int ReadValue(skr_binary_reader_t* reader, skr_guid_t& guid)
+
+int ReadHelper<skr_guid_t>::Read(skr_binary_reader_t* reader, skr_guid_t& guid)
 {
     return ReadValue(reader, &guid, sizeof(guid));
 }
-template <>
-int ReadValue(skr_binary_reader_t* reader, skr_resource_handle_t& handle)
+
+int ReadHelper<skr_resource_handle_t>::Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle)
 {
     skr_guid_t guid;
-    int ret = ReadValue(reader, guid);
+    int ret = ReadHelper<skr_guid_t>::Read(reader, guid);
     if (ret != 0)
         return ret;
     handle.set_guid(guid);
     return ret;
 }
 
-template <>
-int ReadValue(skr_binary_reader_t* reader, skr_blob_t& blob)
+int ReadHelper<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
 {
-    //TODO: blob 应该特别处理
+    // TODO: blob 应该特别处理
     skr_blob_t temp;
-    int ret = ReadValue(reader, temp.size);
+    int ret = skr::binary::Read(reader, temp.size);
     if (ret != 0)
         return ret;
     temp.bytes = (uint8_t*)sakura_malloc(temp.size);

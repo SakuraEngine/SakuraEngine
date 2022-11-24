@@ -42,11 +42,17 @@ void SGameRTModule::on_load(int argc, char** argv)
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     ram_service = skr::io::RAMService::create(&ioServiceDesc);
 
-    registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
-    skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
     // 
+}
+
+int SGameRTModule::main_module_exec(int argc, char** argv)
+{
     using namespace skr::guid::literals;
+    std::error_code ec = {};
+    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
     auto resource_system = skr::resource::GetResourceSystem();
+    registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
+    resource_system->Initialize(registry, ram_service);
     
     auto gameResourceRoot = resourceRoot / "game";
     auto u8TextureRoot = gameResourceRoot.u8string();
@@ -125,6 +131,7 @@ void SGameRTModule::on_load(int argc, char** argv)
             }
         }
     }
+    
     /*
     {
         skr_json_writer_t writer(2);
@@ -135,6 +142,7 @@ void SGameRTModule::on_load(int argc, char** argv)
         SKR_LOG_DEBUG("JSON:\n %s", str);
     }
     */
+    return 0;
 }
 
 void SGameRTModule::on_unload()
