@@ -30,7 +30,7 @@ struct ReadHelper<skr::btree_map<K, V, Eq>> {
     {
         skr::btree_map<K, V, Eq> temp;
         uint32_t size;
-        int ret = ReadValue(reader, size);
+        int ret = skr::binary::Read(reader, size);
         if (ret != 0)
             return ret;
 
@@ -55,7 +55,7 @@ template <class K, class V, class Eq>
 struct WriteHelper<const skr::btree_map<K, V, Eq>&> {
     static int Write(skr_binary_writer_t* json, const skr::btree_map<K, V, Eq>& map)
     {
-        int ret = WriteValue(json, (uint32_t)map.size());
+        int ret = skr::binary::Write(json, (uint32_t)map.size());
         if (ret != 0)
             return ret;
         for (auto& pair : map)

@@ -10,6 +10,7 @@
 
 // (GPU) texture resource
 sreflect_struct("guid" : "f8821efb-f027-4367-a244-9cc3efb3a3bf")
+sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_texture_resource_t
 {
@@ -20,6 +21,7 @@ skr_texture_resource_t
     uint32_t height;
     uint32_t depth;
     sattr("transient": true)
+    sattr("no-rtti": true)
     CGPUTextureId texture;
 };
 typedef struct skr_texture_resource_t skr_texture_resource_t;

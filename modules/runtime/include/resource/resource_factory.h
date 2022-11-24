@@ -32,8 +32,13 @@ namespace resource
 struct RUNTIME_API SResourceFactory {
     virtual skr_type_id_t GetResourceType() = 0;
     virtual bool AsyncIO() { return true; }
-    virtual ESkrLoadStatus Load(skr_resource_record_t* record) = 0;
-    virtual ESkrLoadStatus UpdateLoad(skr_resource_record_t* record);
+    /*
+        load factor range : [0, 100]
+        0 means no async deserialize
+        100 means one job per resource
+        in between affect the number of jobs per frame, higher value means more jobs per frame
+    */
+    virtual float AsyncSerdeLoadFactor() { return 1.f; }
     virtual bool Unload(skr_resource_record_t* record);
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
     virtual bool Uninstall(skr_resource_record_t* record) { return true; }

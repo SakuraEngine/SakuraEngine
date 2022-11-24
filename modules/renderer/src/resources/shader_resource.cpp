@@ -6,6 +6,7 @@
 #include "platform/memory.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
+#include "containers/hashmap.hpp"
 #include "utils/io.hpp"
 
 #include "tracy/Tracy.hpp"
@@ -26,8 +27,6 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
     ~SShaderResourceFactoryImpl() noexcept = default;
     skr_type_id_t GetResourceType() override;
     bool AsyncIO() override { return true; }
-    ESkrLoadStatus Load(skr_resource_record_t* record) override;
-    ESkrLoadStatus UpdateLoad(skr_resource_record_t* record) override;
     bool Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
     bool Uninstall(skr_resource_record_t* record) override;
@@ -96,38 +95,6 @@ skr_type_id_t SShaderResourceFactoryImpl::GetResourceType()
 {
     const auto resource_type = skr::type::type_id<skr_platform_shader_resource_t>::get();
     return resource_type;
-}
-
-ESkrLoadStatus SShaderResourceFactoryImpl::Load(skr_resource_record_t* record)
-{ 
-    auto newShaderCollection = SkrNew<skr_platform_shader_collection_resource_t>();    
-    auto resourceRequest = record->activeRequest;
-    auto loadedData = resourceRequest->GetData();
-
-    struct SpanReader
-    {
-        gsl::span<const uint8_t> data;
-        size_t offset = 0;
-        int read(void* dst, size_t size)
-        {
-            if (offset + size > data.size())
-                return -1;
-            memcpy(dst, data.data() + offset, size);
-            offset += size;
-            return 0;
-        }
-    } reader = { loadedData };
-
-    skr_binary_reader_t archive{reader};
-    skr::binary::Archive(&archive, *newShaderCollection);
-
-    record->resource = newShaderCollection;
-    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
-}
-
-ESkrLoadStatus SShaderResourceFactoryImpl::UpdateLoad(skr_resource_record_t* record)
-{
-    return ESkrLoadStatus::SKR_LOAD_STATUS_SUCCEED; 
 }
 
 bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)

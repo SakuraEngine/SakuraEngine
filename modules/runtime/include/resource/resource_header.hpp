@@ -18,9 +18,16 @@ typedef struct skr_resource_header_t {
 namespace skr::binary
 {
     template <>
-    RUNTIME_API int ReadValue(skr_binary_reader_t* reader, skr_resource_header_t& header);
+    struct RUNTIME_API ReadHelper<skr_resource_header_t>
+    {
+        static int Read(skr_binary_reader_t* reader, skr_resource_header_t& header);
+    };
+
     template <>
-    RUNTIME_API int WriteValue(skr_binary_writer_t* writer, const skr_resource_header_t& header);
+    struct RUNTIME_API WriteHelper<const skr_resource_header_t&>
+    {
+        static int Write(skr_binary_writer_t* writer, const skr_resource_header_t& header);
+    };
 } // namespace skr::binary
 
 typedef enum ESkrLoadingStatus : uint32_t

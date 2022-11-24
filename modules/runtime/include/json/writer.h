@@ -11,14 +11,18 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
-#include <EASTL/vector.h>
-#include "fmt/format.h"
-#include "containers/string.hpp"
-#include "containers/hashmap.hpp"
+    #include <EASTL/vector.h>
+    #include "fmt/format.h"
+    #include "containers/string.hpp"
+    #include "containers/hashmap.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
-namespace skr::resource { template <class T> struct TResourceHandle; }
+namespace skr::resource
+{
+template <class T>
+struct TResourceHandle;
+}
 // end forward declaration for resources
 
 struct RUNTIME_API skr_json_writer_t {
@@ -50,6 +54,7 @@ public:
     bool RawValue(std::basic_string_view<TChar> view, ESkrJsonType type);
 
     fmt::memory_buffer buffer;
+
 protected:
     struct Level {
         bool isArray = false;
@@ -86,39 +91,89 @@ namespace skr
 {
 namespace json
 {
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, bool b);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, int32_t b);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, uint32_t b);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, int64_t b);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, uint64_t b);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, float b);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, double b);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr::string_view& str);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr::string& str);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid);
-template <>
-RUNTIME_API void WriteValue(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
-
 template <class T>
 void Write(skr_json_writer_t* writer, const T& value);
 
-template <class T>
-struct WriteHelper {
-    static void Write(skr_json_writer_t* json, T map)
+template <>
+struct WriteHelper<bool> {
+    static void Write(skr_json_writer_t* writer, bool b)
     {
-        using TType = std::remove_const_t<std::remove_reference_t<T>>;
-        WriteValue<TParamType<TType>>(json, map);
+        writer->Bool(b);
     }
+};
+
+template <>
+struct WriteHelper<int32_t> {
+    static void Write(skr_json_writer_t* writer, int32_t i)
+    {
+        writer->Int(i);
+    }
+};
+
+template <>
+struct WriteHelper<uint32_t> {
+    static void Write(skr_json_writer_t* writer, uint32_t i)
+    {
+        writer->UInt(i);
+    }
+};
+
+template <>
+struct WriteHelper<int64_t> {
+    static void Write(skr_json_writer_t* writer, int64_t i)
+    {
+        writer->Int64(i);
+    }
+};
+
+template <>
+struct WriteHelper<uint64_t> {
+    static void Write(skr_json_writer_t* writer, uint64_t i)
+    {
+        writer->UInt64(i);
+    }
+};
+
+template <>
+struct WriteHelper<float> {
+    static void Write(skr_json_writer_t* writer, float f)
+    {
+        writer->Float(f);
+    }
+};
+
+template <>
+struct WriteHelper<double> {
+    static void Write(skr_json_writer_t* writer, double d)
+    {
+        writer->Double(d);
+    }
+};
+
+template <>
+struct WriteHelper<const skr::string_view&> {
+    static void Write(skr_json_writer_t* writer, const skr::string_view& str)
+    {
+        writer->String(str.data(), str.size());
+    }
+};
+
+template <>
+struct WriteHelper<const skr::string&> {
+    static void Write(skr_json_writer_t* writer, const skr::string& str)
+    {
+        writer->String(str.data(), str.size());
+    }
+};
+
+template <>
+struct RUNTIME_API WriteHelper<const skr_guid_t&> {
+    static void Write(skr_json_writer_t* writer, const skr_guid_t& guid);
+};
+
+template <>
+struct RUNTIME_API WriteHelper<const skr_resource_handle_t&> {
+    static void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
 };
 
 template <class K, class V, class Hash, class Eq>
@@ -136,10 +191,19 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
 };
 
 template <class T>
+struct WriteHelper<const TEnumAsByte<T>&>
+{
+    static void Write(skr_json_writer_t* writer, const TEnumAsByte<T>& value)
+    {
+        skr::json::Write(writer, value.as_byte());
+    }
+};
+
+template <class T>
 struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
     static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
     {
-        WriteValue<const skr_resource_handle_t&>(json, (const skr_resource_handle_t&)handle);
+        skr::json::Write<const skr_resource_handle_t&>(json, (const skr_resource_handle_t&)handle);
     }
 };
 
@@ -156,27 +220,28 @@ struct WriteHelper<const eastl::vector<V, Allocator>&> {
     }
 };
 
-template<class ...Ts>
-struct WriteHelper<const skr::variant<Ts...>&>
-{
+template <class... Ts>
+struct WriteHelper<const skr::variant<Ts...>&> {
     static void Write(skr_json_writer_t* json, const skr::variant<Ts...>& v)
     {
         std::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
             json->StartObject();
             json->Key("type");
-            skr::json::WriteValue<const skr_guid_t&>(json, skr::type::type_id<raw>::get());
+            skr::json::Write<const skr_guid_t&>(json, skr::type::type_id<raw>::get());
             json->Key("value");
             skr::json::Write<decltype(value)>(json, value);
             json->EndObject();
-        }, v);
+        },
+        v);
     }
 };
 
 template <class T>
 void Write(skr_json_writer_t* writer, const T& value)
 {
-    WriteHelper<const T&>::Write(writer, value);
+    using TType = TParamType<std::remove_const_t<std::remove_reference_t<T>>>;
+    WriteHelper<TType>::Write(writer, value);
 }
 } // namespace json
 } // namespace skr

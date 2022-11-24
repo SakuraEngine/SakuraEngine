@@ -44,8 +44,7 @@ sattr("serialize" : ["json", "bin"])
 sattr("rtti" : true)
 skr_platform_shader_identifier_t 
 {
-    sattr("no-rtti" : true)
-    ECGPUShaderBytecodeType bytecode_type;
+    skr::TEnumAsByte<ECGPUShaderBytecodeType> bytecode_type;
     skr_platform_shader_hash_t hash;
     skr::string entry;
 };

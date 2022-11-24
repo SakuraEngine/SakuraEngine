@@ -109,9 +109,9 @@ bool skr_json_writer_t::RawValue(const TChar* str, TSize length, ESkrJsonType ty
     return _WriteRawValue(str, length);
 }
 
-bool skr_json_writer_t::RawValue(std::basic_string_view<TChar> view, ESkrJsonType type) 
+bool skr_json_writer_t::RawValue(std::basic_string_view<TChar> view, ESkrJsonType type)
 {
-    return RawValue(view.data(), view.size(), type); 
+    return RawValue(view.data(), view.size(), type);
 }
 
 bool skr_json_writer_t::_WriteBool(bool b)
@@ -253,33 +253,14 @@ bool skr_json_writer_t::_Prefix(ESkrJsonType type)
 
 namespace skr::json
 {
-template <>
-void WriteValue(skr_json_writer_t* writer, bool b) { writer->Bool(b); }
-template <>
-void WriteValue(skr_json_writer_t* writer, int32_t b) { writer->Int(b); }
-template <>
-void WriteValue(skr_json_writer_t* writer, uint32_t b) { writer->UInt(b); }
-template <>
-void WriteValue(skr_json_writer_t* writer, int64_t b) { writer->Int64(b); }
-template <>
-void WriteValue(skr_json_writer_t* writer, uint64_t b) { writer->UInt64(b); }
-template <>
-void WriteValue(skr_json_writer_t* writer, float b) { writer->Float(b); }
-template <>
-void WriteValue(skr_json_writer_t* writer, double b) { writer->Double(b); }
-template <>
-void WriteValue(skr_json_writer_t* writer, const skr::string_view& str) { writer->String(str.data(), (skr_json_writer_size_t)str.size()); }
-template <>
-void WriteValue(skr_json_writer_t* writer, const skr::string& str) { writer->String(str.data(), (skr_json_writer_size_t)str.size()); }
-template <>
-void WriteValue(skr_json_writer_t* writer, const skr_guid_t& guid)
+void WriteHelper<const skr_guid_t&>::Write(skr_json_writer_t* writer, const skr_guid_t& guid)
 {
     auto str = skr::format("{}", guid);
     writer->String(str.data(), (skr_json_writer_size_t)str.size());
 }
-template <>
-void WriteValue(skr_json_writer_t* writer, const skr_resource_handle_t& handle)
+
+void WriteHelper<const skr_resource_handle_t&>::Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle)
 {
-    WriteValue<const skr_guid_t&>(writer, handle.get_serialized());
+    WriteHelper<const skr_guid_t&>::Write(writer, handle.get_serialized());
 }
 } // namespace skr::json

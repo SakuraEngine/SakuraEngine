@@ -7,8 +7,7 @@
 
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):
-template<>
-error_code ReadValue(simdjson::ondemand::value&& json, ${enum.name}& e)
+error_code ReadHelper<${enum.name}>::Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${enum.name}& e)
 {
     auto value = json.get_string();
     if (value.error() != simdjson::SUCCESS)
@@ -27,8 +26,7 @@ error_code ReadValue(simdjson::ondemand::value&& json, ${enum.name}& e)
     SKR_UNREACHABLE_CODE();
 } 
 
-template<>
-void WriteValue(skr_json_writer_t* writer, ${enum.name} e)
+void WriteHelper<${enum.name}>::Write(skr_json_writer_t* writer, ${enum.name} e)
 {
     switch(e)
     {
@@ -43,13 +41,12 @@ void WriteValue(skr_json_writer_t* writer, ${enum.name} e)
 %endfor
 
 %for record in generator.filter_types(db.records):
-template<>
-error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
+error_code ReadHelper<${record.name}>::Read(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, ${record.name}& record)
 {
     %for base in record.bases:
     {
         auto baseJson = json;
-        ReadValue(std::move(baseJson), (${base}&)record);
+        skr::json::Read(std::move(baseJson), (${base}&)record);
     }
     %endfor
     %for name, field in generator.filter_fields(record.fields):
@@ -113,11 +110,10 @@ error_code ReadValue(simdjson::ondemand::value&& json, ${record.name}& record)
     %endfor
     return error_code::SUCCESS;
 } 
-template<>
-void WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
+void WriteHelper<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
 {
     %for base in record.bases:
-    WriteFields<const ${base}&>(writer, record);
+    WriteHelper<const ${base}&>::WriteFields(writer, record);
     %endfor
     %for name, field in generator.filter_fields(record.fields):
     writer->Key("${name}", ${len(name)});
@@ -129,11 +125,10 @@ void WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
     %endif
     %endfor
 } 
-template<>
-void WriteValue(skr_json_writer_t* writer, const ${record.name}& record)
+void WriteHelper<const ${record.name}&>::Write(skr_json_writer_t* writer, const ${record.name}& record)
 {
     writer->StartObject();
-    WriteFields<const ${record.name}&>(writer, record);
+    WriteFields(writer, record);
     writer->EndObject();
 } 
 %endfor

@@ -39,7 +39,36 @@ const skr_type_t* type_of<float>::get()
     static Float32Type type;
     return &type;
 }
-
+const skr_type_t* type_of<skr_float2_t>::get()
+{
+    static Float32x2Type type;
+    return &type;
+}
+const skr_type_t* type_of<skr_float3_t>::get()
+{
+    static Float32x3Type type;
+    return &type;
+}
+const skr_type_t* type_of<skr_float4_t>::get()
+{
+    static Float32x4Type type;
+    return &type;
+}
+const skr_type_t* type_of<skr_rotator_t>::get()
+{
+    static RotType type;
+    return &type;
+}
+const skr_type_t* type_of<skr_quaternion_t>::get()
+{
+    static QuaternionType type;
+    return &type;
+}
+const skr_type_t* type_of<skr_float4x4_t>::get()
+{
+    static Float32x4x4Type type;
+    return &type;
+}
 const skr_type_t* type_of<double>::get()
 {
     static Float64Type type;
@@ -91,6 +120,30 @@ size_t Hash(uint64_t value, size_t base)
     return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(float value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_float2_t& value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_float3_t& value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_float4_t& value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_float4x4_t& value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_quaternion_t& value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_rotator_t& value, size_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }

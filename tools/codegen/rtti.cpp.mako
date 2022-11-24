@@ -3,6 +3,7 @@
 #include "platform/debug.h"
 #include "utils/hash.h"
 #include "utils/log.h"
+#include "type/type_helper.hpp"
 
 %for record in generator.filter_rtti(db.records):
 namespace skr::type
@@ -36,7 +37,7 @@ namespace skr::type
             %endif
                 ObjectMethodTable nativeMethods {
                     +[](void* self) { ((${record.name}*)self)->~${record.short_name}(); }, //dtor
-                    +[](void* self, struct skr_value_t* param, size_t nparam) { /*TODO*/ SKR_UNIMPLEMENTED_FUNCTION(); }, //ctor
+                    GetDefaultCtor<${record.name}>(), //ctor
                     GetCopyCtor<${record.name}>(),
                     GetMoveCtor<${record.name}>(),
             %if hasattr(record.attrs, "hashable"):
@@ -44,6 +45,9 @@ namespace skr::type
             %else:
                     nullptr, //hash
             %endif
+                    GetSerialize<${record.name}>(),
+                    GetDeserialize<${record.name}>(),
+                    GetDeleter<${record.name}>(),
                 };
             <%
                 fields = [(name, field) for name, field in vars(record.fields).items() if not hasattr(field.attrs, "no-rtti")]

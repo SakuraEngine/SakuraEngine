@@ -36,7 +36,7 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
     {
         skr::flat_hash_map<K, V, Hash, Eq> temp;
         uint32_t size;
-        int ret = ReadValue(reader, size);
+        int ret = skr::binary::Read(reader, size);
         if (ret != 0)
             return ret;
 
@@ -62,7 +62,7 @@ template <class K, class V, class Hash, class Eq>
 struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
     static int Write(skr_binary_writer_t* json, const skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
-        int ret = WriteValue(json, (uint32_t)map.size());
+        int ret = skr::binary::Write(json, (uint32_t)map.size());
         if (ret != 0)
             return ret;
         for (auto& pair : map)

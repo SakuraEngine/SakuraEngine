@@ -2,17 +2,21 @@
 #include "json/reader_fwd.h"
 
 #if defined(__cplusplus)
-#include <EASTL/vector.h>
-#include "simdjson.h"
-#include "containers/hashmap.hpp"
-#include "containers/variant.hpp"
-#include "containers/string.hpp"
-#include "type/type_id.hpp"
-#include "platform/guid.hpp"
+    #include <EASTL/vector.h>
+    #include "simdjson.h"
+    #include "containers/hashmap.hpp"
+    #include "containers/variant.hpp"
+    #include "containers/string.hpp"
+    #include "type/type_id.hpp"
+    #include "platform/guid.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
-namespace skr::resource { template <class T> struct TResourceHandle; }
+namespace skr::resource
+{
+template <class T>
+struct TResourceHandle;
+}
 // end forward declaration for resources
 
 struct RUNTIME_API skr_json_reader_t {
@@ -30,37 +34,57 @@ struct error_code_info {
 RUNTIME_API const char* error_message(error_code err) noexcept;
 RUNTIME_API void set_error_message(error_code err) noexcept;
 
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, bool& b);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, int32_t& b);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, uint32_t& b);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, int64_t& b);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, uint64_t& b);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, float& f);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, double& b);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, skr::string& guid);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, struct skr_guid_t& guid);
-template <>
-RUNTIME_API error_code ReadValue(simdjson::ondemand::value&& json, skr_resource_handle_t& handle);
-
-
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value);
 
-template <class T>
-struct ReadHelper {
-    static error_code Read(simdjson::ondemand::value&& json, T& map)
-    {
-        return ReadValue<T>(std::move(json), map);
-    }
+template <>
+struct RUNTIME_API ReadHelper<bool> {
+    static error_code Read(simdjson::ondemand::value&& json, bool& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<uint32_t> {
+    static error_code Read(simdjson::ondemand::value&& json, uint32_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<uint64_t> {
+    static error_code Read(simdjson::ondemand::value&& json, uint64_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<int32_t> {
+    static error_code Read(simdjson::ondemand::value&& json, int32_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<int64_t> {
+    static error_code Read(simdjson::ondemand::value&& json, int64_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<float> {
+    static error_code Read(simdjson::ondemand::value&& json, float& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<double> {
+    static error_code Read(simdjson::ondemand::value&& json, double& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr::string> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::string& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_guid_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_guid_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
 };
 
 template <class K, class V, class Hash, class Eq>
@@ -80,7 +104,7 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
                 return (error_code)value.error();
             V v;
             error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
-            if(error != SUCCESS)
+            if (error != SUCCESS)
                 return error;
             map.insert(std::make_pair(key.value_unsafe().raw(), std::move(v)));
         }
@@ -88,7 +112,7 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
     }
 };
 
-template<class V, class Allocator>
+template <class V, class Allocator>
 struct ReadHelper<eastl::vector<V, Allocator>> {
     static error_code Read(simdjson::ondemand::value&& json, eastl::vector<V, Allocator>& vec)
     {
@@ -110,10 +134,9 @@ struct ReadHelper<eastl::vector<V, Allocator>> {
     }
 };
 
-template<class ...Ts>
-struct ReadHelper<skr::variant<Ts...>>
-{
-    template<class T>
+template <class... Ts>
+struct ReadHelper<skr::variant<Ts...>> {
+    template <class T>
     static error_code ReadByIndex(simdjson::ondemand::value&& json, skr::variant<Ts...>& value, skr_guid_t index)
     {
         if (index == skr::type::type_id<T>::get())
@@ -145,6 +168,15 @@ struct ReadHelper<skr::variant<Ts...>>
             return (error_code)data.error();
         (void)(((ret = ReadByIndex<Ts>(std::move(data).value_unsafe(), value, index)) != error_code::SUCCESS) && ...);
         return ret;
+    }
+};
+
+template <class T>
+struct ReadHelper<TEnumAsByte<T>>
+{
+    static error_code Read(simdjson::ondemand::value&& json, TEnumAsByte<T>& value)
+    {
+        return skr::json::Read<TEnumAsByte<T>::UT>(std::move(json), value.as_byte());
     }
 };
 

@@ -183,13 +183,13 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
                 for (auto& dep : jobContext->fileDependencies)
                 {
                     auto str = dep.u8string();
-                    skr::json::WriteValue<const skr::string_view&>(&writer, {str.data(), str.size()});
+                    skr::json::Write<const skr::string_view&>(&writer, {str.data(), str.size()});
                 }
                 writer.EndArray();
                 writer.Key("dependencies");
                 writer.StartArray();
                 for (auto& dep : jobContext->staticDependencies)
-                    skr::json::WriteValue<const skr_resource_handle_t&>(&writer, dep);
+                    skr::json::Write<const skr_resource_handle_t&>(&writer, dep);
                 writer.EndArray();
                 writer.EndObject();
                 auto file = fopen(dependencyPath.u8string().c_str(), "w");

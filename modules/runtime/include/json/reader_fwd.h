@@ -6,8 +6,17 @@ struct skr_json_reader_t;
 
 #if defined(__cplusplus)
 
-#define SKR_SIMDJSON_PLAT fallback
-namespace simdjson { namespace SKR_SIMDJSON_PLAT { namespace ondemand { class value; } } }
+    #define SKR_SIMDJSON_PLAT fallback
+namespace simdjson
+{
+namespace SKR_SIMDJSON_PLAT
+{
+namespace ondemand
+{
+class value;
+}
+} // namespace SKR_SIMDJSON_PLAT
+} // namespace simdjson
 
 namespace skr
 {
@@ -52,18 +61,8 @@ enum error_code
     NUM_ERROR_CODES,
 };
 
-template <class T>
-std::enable_if_t<!std::is_enum_v<T>, error_code> ReadValue(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, T& value)
-{
-    static_assert(!sizeof(T), "ReadValue not implemented for this type, please include the appropriate generated header!");
-    return error_code::SUCCESS;
-}
-
-template <class T>
-std::enable_if_t<std::is_enum_v<T>, error_code> ReadValue(simdjson::SKR_SIMDJSON_PLAT::ondemand::value&& json, T& value)
-{
-    return ReadValue(std::move(json), reinterpret_cast<std::underlying_type_t<T>&>(value));
-}
+template <class T, class = void>
+struct ReadHelper;
 
 } // namespace json
 } // namespace skr

@@ -9,6 +9,8 @@ struct TOOL_CORE_API SProject {
     skr::filesystem::path outputPath;
     skr::filesystem::path dependencyPath;
     skr_vfs_t* vfs = nullptr;
+    skr_vfs_t* resource_vfs = nullptr;
+    skr::io::RAMService* ram_service = nullptr;
     ~SProject() noexcept;
 };
 }

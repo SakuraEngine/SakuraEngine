@@ -826,10 +826,10 @@ namespace dual
         }
         if constexpr ((flags & DCF_SERDE) != 0) {
             desc.callback.serialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
-                skr::binary::WriteValue<const C&>(writer, *(C*)data);
+                skr::binary::Write<const C&>(writer, *(C*)data);
             };
             desc.callback.deserialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
-                skr::binary::ReadValue(reader, *(C*)data);
+                skr::binary::Read(reader, *(C*)data);
             };
         }
     }

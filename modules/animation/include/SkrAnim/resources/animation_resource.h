@@ -11,8 +11,10 @@ typedef struct skr_anim_resource_t skr_anim_resource_t;
 #include "SkrAnim/ozz/animation.h"
 
 sreflect_struct("guid" : "5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD")
+sattr("rtti" : true)
 skr_anim_resource_t
 {
+    sattr("no-rtti" : true)
     ozz::animation::Animation animation;
 };
 
