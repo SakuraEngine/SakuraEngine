@@ -59,7 +59,7 @@ void SGameRTModule::on_load(int argc, char** argv)
 
         skr::resource::STextureFactory::Root factoryRoot = {};
         factoryRoot.dstorage_root = gameResourceRoot;
-        factoryRoot.texture_vfs = tex_resource_vfs;
+        factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
         factoryRoot.render_device = game_render_device;
@@ -70,7 +70,7 @@ void SGameRTModule::on_load(int argc, char** argv)
     {
         skr::resource::SMeshFactory::Root factoryRoot = {};
         factoryRoot.dstorage_root = gameResourceRoot;
-        factoryRoot.texture_vfs = tex_resource_vfs;
+        factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
         factoryRoot.render_device = game_render_device;

@@ -34,7 +34,6 @@ struct ReadHelper<skr::btree_map<K, V, Eq>> {
         if (ret != 0)
             return ret;
 
-        temp.reserve(size);
         for (int i = 0; i < size; ++i)
         {
             K key;

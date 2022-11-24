@@ -26,6 +26,7 @@ struct SKR_RENDERER_API RendererDevice
     static RendererDevice* Create() SKR_NOEXCEPT;
     static void Free(RendererDevice* device) SKR_NOEXCEPT;
     
+    virtual ~RendererDevice() = default;
     virtual void initialize(const Builder& builder) = 0;
     virtual void finalize() = 0;
 

@@ -102,7 +102,7 @@ struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
     virtual ~SMeshFactory() = default;
 
     struct Root {
-        skr_vfs_t* texture_vfs = nullptr;
+        skr_vfs_t* vfs = nullptr;
         skr::filesystem::path dstorage_root;
         skr_io_ram_service_t* ram_service = nullptr;
         skr::io::VRAMService* vram_service = nullptr;

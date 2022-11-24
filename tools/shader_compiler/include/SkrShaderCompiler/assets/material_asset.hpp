@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrToolCore/asset/asset_reference.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 
 #ifndef __meta__
@@ -19,7 +18,7 @@ sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter
 {
     uint32_t version;
-    eastl::vector<skd::asset::AssetRef> shader_assets;
+    eastl::vector<skr_resource_handle_t> shader_assets;
     eastl::vector<skr_material_value_t> default_values;
 
     void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
@@ -32,12 +31,11 @@ sreflect_struct("guid" : "b5fc88c3-0770-4332-9eda-9e283e29c7dd")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter
 {
-    //using MatTypeAssetRef = skd::asset::TAssetRef<skr_material_type_asset_t>;
-
     uint32_t version;
-    skd::asset::AssetRef material_type;
-    // TODO: typed asset reference
-    // MatTypeAssetRef material_type;
+    skr_resource_handle_t material_type;
+    
+    // stable hash for material paramters, can be used by PSO cache or other places.
+    uint64_t identity[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
     void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
     void Destroy(void* resource) override { return; }

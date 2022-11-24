@@ -291,7 +291,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
                 factory->root.vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
             };
             ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)uRequest.get();
-            root.ram_service->request(root.texture_vfs, &ram_texture_io, &uRequest->ram_request, &uRequest->ram_destination);
+            root.ram_service->request(root.vfs, &ram_texture_io, &uRequest->ram_request, &uRequest->ram_destination);
         }
         else
         {

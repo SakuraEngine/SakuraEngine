@@ -510,7 +510,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
         rootParams[valid_root_tables + i] = RS->mRootConstantParam;
         RS->mRootParamIndex = valid_root_tables + i;
     }
-    // Serialize PSO
+    // Serialize root signature
     ID3DBlob* error = NULL;
     ID3DBlob* rootSignatureString = NULL;
     DECLARE_ZERO(D3D12_VERSIONED_ROOT_SIGNATURE_DESC, sig_desc);
