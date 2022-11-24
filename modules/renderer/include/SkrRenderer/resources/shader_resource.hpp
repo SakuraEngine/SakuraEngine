@@ -95,7 +95,7 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
         skr_threaded_service_t* aux_service = nullptr;
     };
 
-    float AsyncSerdeLoadFactor() override { return 0.f; }
+    float AsyncSerdeLoadFactor() override { return 101.f; }
     [[nodiscard]] static SShaderResourceFactory* Create(const Root& root);
     static void Destroy(SShaderResourceFactory* factory); 
 };

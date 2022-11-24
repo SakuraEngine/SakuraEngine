@@ -30,12 +30,18 @@
 #include "gainput/GainputInputDeviceKeyboard.h"
 #include "task/task.hpp"
 
+#include "resource/local_resource_registry.hpp"
+#include "SkrRenderer/resources/texture_resource.h"
+#include "SkrRenderer/resources/mesh_resource.h"
+#include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/material_resource.hpp"
+
 #include "tracy/Tracy.hpp"
 #include "utils/types.h"
 
 SWindowHandle window;
 uint32_t backbuffer_index;
-extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
+extern void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
 extern void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* resource_vfs);
 extern void game_register_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
 extern void game_finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
@@ -53,16 +59,160 @@ class SGameModule : public skr::IDynamicModule
     virtual int main_module_exec(int argc, char** argv) override;
     virtual void on_unload() override;
 
+    void installResourceFactories();
+    void uninstallResourceFactories();
+
+    skr::resource::STextureFactory* textureFactory = nullptr;
+    skr::resource::SMeshFactory* meshFactory = nullptr;
+    skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
+
+    skr_vfs_t* resource_vfs = nullptr;
+    skr_vfs_t* tex_resource_vfs = nullptr;
+    skr_vfs_t* shader_bytes_vfs = nullptr;
+    skr::io::RAMService* ram_service = nullptr;
+    skr::resource::SLocalResourceRegistry* registry;
+
+    struct dual_storage_t* game_world = nullptr;
+    SRenderDeviceId game_render_device = nullptr;
+    SRendererId game_renderer = nullptr;
+
     skr::task::scheduler_t scheduler;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SGameModule, Game);
 
+void SGameModule::installResourceFactories()
+{
+    std::error_code ec = {};
+    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
+    auto u8ResourceRoot = resourceRoot.u8string();
+    skr_vfs_desc_t vfs_desc = {};
+    vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+    vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
+    resource_vfs = skr_create_vfs(&vfs_desc);
+
+    auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
+    ioServiceDesc.name = "GameRuntimeRAMIOService";
+    ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
+    ioServiceDesc.sleep_time = 1000 / 60;
+    ioServiceDesc.lockless = true;
+    ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
+    ram_service = skr::io::RAMService::create(&ioServiceDesc);
+
+    registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
+    skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
+    // 
+
+    using namespace skr::guid::literals;
+    auto resource_system = skr::resource::GetResourceSystem();
+    
+    auto gameResourceRoot = resourceRoot / "game";
+    auto u8TextureRoot = gameResourceRoot.u8string();
+    // texture factory
+    {
+        skr_vfs_desc_t tex_vfs_desc = {};
+        tex_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+        tex_vfs_desc.override_mount_dir = u8TextureRoot.c_str();
+        tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
+
+        skr::resource::STextureFactory::Root factoryRoot = {};
+        factoryRoot.dstorage_root = gameResourceRoot;
+        factoryRoot.vfs = tex_resource_vfs;
+        factoryRoot.ram_service = ram_service;
+        factoryRoot.vram_service = game_render_device->get_vram_service();
+        factoryRoot.render_device = game_render_device;
+        textureFactory = skr::resource::STextureFactory::Create(factoryRoot);
+        resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, textureFactory);
+    }
+    // mesh factory
+    {
+        skr::resource::SMeshFactory::Root factoryRoot = {};
+        factoryRoot.dstorage_root = gameResourceRoot;
+        factoryRoot.vfs = tex_resource_vfs;
+        factoryRoot.ram_service = ram_service;
+        factoryRoot.vram_service = game_render_device->get_vram_service();
+        factoryRoot.render_device = game_render_device;
+        meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
+        resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, meshFactory);
+    }
+    // shader factory
+    {
+        const auto backend = game_render_device->get_backend();
+        std::string shaderType = "invalid";
+        if (backend == CGPU_BACKEND_D3D12) shaderType = "dxil";
+        if (backend == CGPU_BACKEND_VULKAN) shaderType = "spirv";
+        auto shaderResourceRoot = gameResourceRoot / shaderType;
+        auto u8ShaderResourceRoot = shaderResourceRoot.u8string();
+
+        skr_vfs_desc_t shader_vfs_desc = {};
+        shader_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+        shader_vfs_desc.override_mount_dir = u8ShaderResourceRoot.c_str();
+        shader_bytes_vfs = skr_create_vfs(&shader_vfs_desc);
+
+        skr::resource::SShaderResourceFactory::Root factoryRoot = {};
+        factoryRoot.bytecode_vfs = shader_bytes_vfs;
+        factoryRoot.ram_service = ram_service;
+        factoryRoot.render_device = game_render_device;
+        factoryRoot.aux_service = game_render_device->get_aux_service(0);
+        shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
+        resource_system->RegisterFactory("1c7d845a-fde8-4487-b1c9-e9c48d6a9867"_guid, shaderFactory);
+    }
+
+    skr_resource_handle_t shaderHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
+    shaderHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
+    // texture
+    {
+        while (shaderHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && shaderHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+        {
+            auto status = shaderHdl.get_status();(void)status;
+            resource_system->Update();
+        }
+        auto final_status = shaderHdl.get_status();
+        if (final_status != SKR_LOADING_STATUS_ERROR)
+        {
+            auto shader_collection = (skr_platform_shader_collection_resource_t*)shaderHdl.get_ptr();
+            auto&& root_variant_iter = shader_collection->variants.find({0});
+            SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
+            auto* root_variant = &root_variant_iter->second;
+            SKR_ASSERT(root_variant->shader->entrys_count && "Root shader variant entry missing!");
+            SKR_LOG_TRACE("Shader Loaded: entry name - %s", root_variant->shader->entry_reflections[0].entry_name);
+            resource_system->UnloadResource(shaderHdl);
+            resource_system->Update();
+            while (shaderHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
+            {
+                resource_system->Update();
+            }
+        }
+    }
+}
+
+void SGameModule::uninstallResourceFactories()
+{
+    skr::resource::STextureFactory::Destroy(textureFactory);
+    skr::resource::SMeshFactory::Destroy(meshFactory);
+    skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
+
+    dualS_release(game_world);
+    skr_free_renderer(game_renderer);
+    
+    skr::resource::GetResourceSystem()->Shutdown();
+    SkrDelete(registry);
+
+    skr::io::RAMService::destroy(ram_service);
+    skr_free_vfs(resource_vfs);
+    skr_free_vfs(tex_resource_vfs);
+    skr_free_vfs(shader_bytes_vfs);
+
+    SKR_LOG_INFO("game runtime unloaded!");
+}
+
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
-    auto game_world = skr_game_runtime_get_world();
-
+    
+    game_world = dualS_create();
+    game_render_device = skr_get_default_render_device();
+    game_renderer = skr_create_renderer(game_render_device, game_world);
     if (bUseJob)
     {
         auto options = make_zeroed<skr::task::scheudler_config_t>();
@@ -71,6 +221,7 @@ void SGameModule::on_load(int argc, char** argv)
         scheduler.bind();
         dualJ_bind_storage(game_world);
     }
+    installResourceFactories();
 }
 
 void create_test_scene(SRendererId renderer)
@@ -189,9 +340,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
         return -1;
         
-    auto game_world = skr_game_runtime_get_world();
     auto render_device = skr_get_default_render_device();
-    auto game_renderer = skr_game_runtime_get_renderer();
     auto cgpu_device = render_device->get_cgpu_device();
     auto gfx_queue = render_device->get_gfx_queue();
     auto window_desc = make_zeroed<SWindowDescroptor>();
@@ -211,10 +360,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
             .with_gfx_queue(gfx_queue)
             .enable_memory_aliasing();
     });
-    auto gamert = (SGameRTModule*)moduleManager->get_module("GameRT");
-    game_initialize_render_effects(game_renderer, renderGraph, gamert->resource_vfs);
+    game_initialize_render_effects(game_renderer, renderGraph, resource_vfs);
     create_test_scene(game_renderer);
-    create_imgui_resources(render_device, renderGraph);
+    create_imgui_resources(resource_vfs, render_device, renderGraph);
     // Initialize Input
     skr::input::InputSystem inputSystem;
     if (bUseInputSystem)
@@ -547,10 +695,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
 void SGameModule::on_unload()
 {
     SKR_LOG_INFO("game unloaded!");
-    auto game_world = skr_game_runtime_get_world();
     if (bUseJob)
     {
         dualJ_unbind_storage(game_world);
         scheduler.unbind();
     }
+    uninstallResourceFactories();
 }
