@@ -74,7 +74,7 @@ typedef uint8_t byte;
 #define OZZ_RESTRICT __restrict
 
 // Defines macro to help with DEBUG/NDEBUG syntax.
-#if defined(NDEBUG)
+#if SKR_SHIPPING
 #define OZZ_IF_DEBUG(...)
 #define OZZ_IF_NDEBUG(...) __VA_ARGS__
 #else  // NDEBUG
