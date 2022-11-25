@@ -5,6 +5,7 @@
 #include "cgpu/api.h"
 #include "resource/resource_factory.h"
 #include "utils/io.h"
+#include <containers/span.hpp>
 #include <containers/string.hpp>
 #include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
@@ -88,9 +89,11 @@ skr_shader_options_resource_t
 {
     using shader_options_handle_t = skr::resource::TResourceHandle<skr_shader_options_resource_t>;
 
+    sattr("no-rtti" : true) SKR_RENDERER_API
+    static bool flatten_options(eastl::vector<skr_shader_option_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT;
+
     // TODO: replace this with set when rtti & serde is ready
     eastl::vector<skr_shader_option_t> options;
-    // eastl::vector<shader_options_handle_t> nested;
 };
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
