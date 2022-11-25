@@ -25,10 +25,10 @@ sreflect_struct("guid": "46de11b4-6beb-4ab9-b9f8-f5c07ceeb8a5")
 sattr("rtti": true, "serialize": ["json", "bin"])
 skr_material_value_t
 {
-    using res_handle_t = skr_resource_handle_t;
+    using resource_handle = skr_resource_handle_t;
     ESkrMaterialPropertyType prop_type;
     skr::string slot_name;
-    skr::variant<res_handle_t, float, double> value;
+    skr::variant<resource_handle, float, double> value;
 };
 
 sreflect_struct("guid": "7cbbb808-20d9-4bff-b72d-3c23d5b00f2b")

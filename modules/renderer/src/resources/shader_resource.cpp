@@ -11,6 +11,16 @@
 
 #include "tracy/Tracy.hpp"
 
+skr_stable_shader_hash_t::skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT
+{
+    value = std::stoull(str);
+}
+
+skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
+{
+    return skr::format("{}", value);
+}
+
 namespace skr
 {
 namespace resource

@@ -512,8 +512,7 @@ uint32_t SCookContext::AddStaticDependency(skr_guid_t resource)
     if (iter == staticDependencies.end())
     {
         auto counter = GetCookSystem()->EnsureCooked(resource);
-        if (counter)
-            counter.wait(false);
+        if (counter) counter.wait(false);
         skr_resource_handle_t handle{resource};
         handle.resolve(false, (uint64_t)this, SKR_REQUESTER_SYSTEM);
         skr::task::wait(false, [&]

@@ -20,6 +20,7 @@ SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter
     uint32_t version;
     eastl::vector<skr_resource_handle_t> shader_assets;
     eastl::vector<skr_material_value_t> default_values;
+    eastl::vector<skr_shader_option_instance_t> option_values;
 
     void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
     void Destroy(void* resource) override { return; }

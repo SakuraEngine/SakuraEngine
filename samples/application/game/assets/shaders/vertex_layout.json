@@ -1,0 +1,9 @@
+{
+    "options": [
+        {
+            "key": "VERTEX_HAS_TANGENT",
+            "value_selections": ["on", "off"]
+        }
+    ],
+    "nested": []
+}

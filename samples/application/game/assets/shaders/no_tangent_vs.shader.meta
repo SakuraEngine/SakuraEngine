@@ -3,7 +3,7 @@
     "type": "1c7d845a-fde8-4487-b1c9-e9c48d6a9867",
     "importer": {
         "importerType": "a897c990-abea-4f48-8880-e1ae9a93d777",
-        "assetPath": "no_tangent_vs.hlsl",
+        "sourcePath": "no_tangent_vs.hlsl",
         "entry": "main",
         "target": "vs_6_0"
     },
