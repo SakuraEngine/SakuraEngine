@@ -11,3 +11,11 @@ namespace skr::binary
         return 0;
     }
 }
+
+namespace skr::resource
+{
+    skr_type_id_t SSkelFactory::GetResourceType()
+    {
+        return type::type_id<skr_skeleton_resource_t>::get();
+    }
+}

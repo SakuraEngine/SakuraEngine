@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrAnimTool/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrAnimTool/settings.h"
 #ifndef __meta__
     #include "SkrAnimTool/animation_asset.generated.h"
 #endif
@@ -57,7 +56,7 @@ SAnimOptimizationOverride
 
 sreflect_struct("guid" : "13873706-F7EE-4386-B7F0-B4E313864624")
 sattr("serialize" : "json")
-SAnimCookSettings : SAnimCookCommonSetting
+SAnimCookSettings
 {
     /*
         "additive" : false, //  Creates a delta animation that can be used for additive blending.

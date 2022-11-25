@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrAnimTool/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrAnimTool/settings.h"
 #ifndef __meta__
     #include "SkrAnimTool/skeleton_asset.generated.h"
 #endif

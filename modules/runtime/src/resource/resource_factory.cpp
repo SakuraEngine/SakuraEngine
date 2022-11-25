@@ -31,18 +31,13 @@ int SResourceFactory::Deserialize(skr_resource_record_t* record, skr_binary_read
 bool SResourceFactory::Unload(skr_resource_record_t* record)
 {
     record->header.dependencies.clear();
-    DestroyResource(record);
-    return true;
-}
-
-void SResourceFactory::DestroyResource(skr_resource_record_t* record)
-{
     if (record->destructor)
         record->destructor(record->resource);
 #ifdef SKR_RESOURCE_DEV_MODE
     if (record->artifactsDestructor)
         record->artifactsDestructor(record->artifacts);
 #endif
+    return true;
 }
 
 ESkrInstallStatus SResourceFactory::UpdateInstall(skr_resource_record_t* record)

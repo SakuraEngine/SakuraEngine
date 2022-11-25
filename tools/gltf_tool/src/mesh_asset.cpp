@@ -206,22 +206,8 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     }
     SKR_DEFER({ ctx->Destroy(mesh); });
     //-----write resource header
-    eastl::vector<uint8_t> buffer;
-    skr::binary::VectorWriter writer{&buffer};
-    skr_binary_writer_t archive(writer);
-    //------write resource object
-    skr::binary::Archive(&archive, *mesh);
-    // archive(resource->sections);
-    //------save resource to disk
-    auto file = fopen(outputPath.u8string().c_str(), "wb");
-    SKR_DEFER({ fclose(file); });
-    if (!file)
-    {
-        SKR_LOG_FMT_ERROR("[SMeshCooker::Cook] failed to write cooked file for resource {}! path: {}", 
-            assetRecord->guid, assetRecord->path.u8string());
+    if(!ctx->Save(*mesh))
         return false;
-    }
-    fwrite(buffer.data(), 1, buffer.size(), file);
     // write bins
     for (auto i = 0; i < gltf_data->buffers_count; i++)
     {

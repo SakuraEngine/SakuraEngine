@@ -11,3 +11,11 @@ namespace skr::binary
         return 0;
     }
 }
+
+namespace skr::resource
+{
+    skr_type_id_t SAnimFactory::GetResourceType()
+    {
+        return type::type_id<skr_anim_resource_t>::get();
+    }
+}

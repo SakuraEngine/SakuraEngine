@@ -54,6 +54,37 @@ public:
     template <class T>
     void Destroy(T* ptr) { if (ptr) _Destroy(ptr); }
 
+    template <class T>
+    bool Save(T& resource) 
+    {
+        //------save resource to disk
+        auto file = fopen(outputPath.u8string().c_str(), "wb");
+        if (!file)
+        {
+            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+                record->guid, record->path.u8string());
+            return false;
+        }
+        SKR_DEFER({ fclose(file); });
+        //------write resource object
+        eastl::vector<uint8_t> buffer;
+        skr::binary::VectorWriter writer{&buffer};
+        skr_binary_writer_t archive(writer);
+        if(auto result = skr::binary::Archive(&archive, *resource); result != 0)
+        {
+            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to serialize resource {}! path: {}", 
+                record->guid, record->path.u8string());
+            return false;
+        }
+        if(fwrite(buffer.data(), 1, buffer.size(), file) < buffer.size())
+        {
+            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+                record->guid, record->path.u8string());
+            return false;
+        }
+        return true;
+    }
+
 protected:
     void* _Import();
     void _Destroy(void*);

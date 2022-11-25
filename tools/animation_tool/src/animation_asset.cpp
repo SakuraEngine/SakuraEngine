@@ -12,23 +12,10 @@
 #include "utils/log.hpp"
 #include "simdjson.h"
 #include "SkrAnim/resources/skeleton_resource.h"
+#include "SkrAnim/resources/animation_resource.h"
 
 namespace skd::asset
 {
-ozz::Endianness GetEndianness(const SAnimCookCommonSetting& _setting)
-{
-    switch (_setting.endianness) {
-
-        case SEndianness::Native:
-            return ozz::GetNativeEndianness();
-        case SEndianness::Little:
-            return ozz::Endianness::kLittleEndian;
-        case SEndianness::Big:
-            return ozz::Endianness::kBigEndian;
-    }
-    SKR_UNREACHABLE_CODE()
-}
-
 bool SAnimCooker::Cook(SCookContext *ctx)
 {
     using namespace ozz::animation::offline;
@@ -38,7 +25,6 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     
     SAnimCookSettings settings;
     skr::json::Read(std::move(doc), settings);
-    ozz::Endianness endianness = GetEndianness((SAnimCookCommonSetting&)settings);
     //-----emit static dependencies
     auto idx = ctx->AddStaticDependency(settings.skeletonAsset.get_serialized(), true);
     if(ctx->GetStaticDependency(idx).get_status() == SKR_LOADING_STATUS_ERROR)
@@ -124,25 +110,19 @@ bool SAnimCooker::Cook(SCookContext *ctx)
         // Now use additive animation.
         *rawAnimation = std::move(rawAdditive);
     }
-    ozz::unique_ptr<ozz::animation::Animation> animation;
+    
     AnimationBuilder builder;
-    animation = builder(*rawAnimation);
+    ozz::unique_ptr<ozz::animation::Animation> animation = builder(*rawAnimation);
     if (!animation) {
         SKR_LOG_ERROR("Failed to build animation.");
         return false;
     }
-    //-----fetch runtime dependencies
+    skr_anim_resource_t resource;
+    resource.animation = std::move(*animation);
+    //-----emit runtime dependencies
     // no runtime dependencies
     //------write resource object
-    const auto outputPath = ctx->GetOutputPath();
-    ozz::io::File stream(outputPath.u8string().c_str(), "wb");
-    if(!stream.opened())
-    {
-        SKR_LOG_ERROR("Failed to open file \"%s\" for writing.", outputPath.u8string().c_str());
-        return false;
-    }
-    ozz::io::OArchive ozzArchive(&stream, endianness);
-    ozzArchive << *animation;
+    ctx->Save(resource);
     return true;
 }
 }
