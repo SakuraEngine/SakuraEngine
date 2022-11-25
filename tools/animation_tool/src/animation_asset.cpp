@@ -40,7 +40,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     skr::json::Read(std::move(doc), settings);
     ozz::Endianness endianness = GetEndianness((SAnimCookCommonSetting&)settings);
     //-----emit static dependencies
-    auto idx = ctx->AddStaticDependency(settings.skeletonAsset.get_serialized());
+    auto idx = ctx->AddStaticDependency(settings.skeletonAsset.get_serialized(), true);
     if(ctx->GetStaticDependency(idx).get_status() == SKR_LOADING_STATUS_ERROR)
         return false;
     skr_skeleton_resource_t* skeletonResource = (skr_skeleton_resource_t*)ctx->GetStaticDependency(idx).get_ptr();
