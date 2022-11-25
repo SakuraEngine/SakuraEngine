@@ -72,19 +72,25 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         collections.emplace_back(collection);
     }
     // flat and well sorted
+    // [ x: ["on", "off"], y: ["a", "b", "c"], z: ["1", "2"] ]
     eastl::vector<skr_shader_option_t> flat_options = {};
-    eastl::vector<eastl::vector<eastl::string>> selection_seqs = {};
     skr_shader_options_resource_t::flatten_options(flat_options, { collections.data(), collections.size() });
+
+    // [ ["on", "off"], ["a", "b", "c"], ["1", "2"] ]
+    eastl::vector<eastl::vector<eastl::string>> selection_seqs = {};
     selection_seqs.resize(flat_options.size());
     for (size_t i = 0u; i < flat_options.size(); ++i)
     {
         selection_seqs[i] = flat_options[i].value_selections;
     }
+    // [x: "on", y: "a", z: "1"]
     using unique_option_seq = eastl::vector<skr_shader_option_instance_t>;
+    // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
     using all_option_seqs_t = eastl::vector<unique_option_seq>;
     all_option_seqs_t all_variants = {};
     if (!selection_seqs.empty())
     {
+        // [ ["on", "a", "1"], ["on", "a", "2"] ...]
         skr::cartesian_product<eastl::string> cartesian(selection_seqs);
         while (cartesian.has_next())
         {
