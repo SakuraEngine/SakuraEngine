@@ -165,6 +165,7 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     assert((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);
     char* buffer = (char*)groupPool.allocate();
     dual_group_t& proto = *(dual_group_t*)buffer;
+    proto.firstFree = 0;
     buffer += sizeof(dual_group_t);
     dual_entity_type_t type = clone(inType, buffer);
     proto.type = type;
@@ -194,8 +195,6 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     proto.archetype = archetype;
     proto.size = 0;
     proto.timestamp = 0;
-    proto.chunkCount = 0;
-    proto.firstChunk = proto.lastChunk = proto.firstFree = nullptr;
     proto.dead = nullptr;
     proto.cloned = proto.isDead ? nullptr : &proto;
     groups.insert({ type, &proto });
@@ -262,11 +261,18 @@ void dual_storage_t::destruct_group(dual_group_t* group)
     groupPool.free(group);
 }
 
+dual_chunk_t* dual_group_t::get_first_free_chunk() const noexcept
+{
+    if (firstFree == (uint32_t)chunks.size())
+        return nullptr;
+    return chunks[firstFree];
+}
+
 dual_chunk_t* dual_group_t::new_chunk(uint32_t hint)
 {
     using namespace dual;
     pool_type_t pt;
-    if (chunkCount < kSmallBinThreshold && hint < archetype->chunkCapacity[PT_small])
+    if (chunks.size() < kSmallBinThreshold && hint < archetype->chunkCapacity[PT_small])
         pt = PT_small;
     else if (hint > archetype->chunkCapacity[PT_default] * 8u)
         pt = PT_large;
@@ -284,27 +290,29 @@ void dual_group_t::add_chunk(dual_chunk_t* chunk)
     size += chunk->count;
     chunk->type = archetype;
     chunk->group = this;
-    chunkCount++;
-    if (firstChunk == nullptr)
+    if(chunk->count < chunk->get_capacity())
     {
-        lastChunk = firstChunk = chunk;
-        if (chunk->count < chunk->get_capacity())
-            firstFree = chunk;
-    }
-    else if (chunk->count < chunk->get_capacity())
-    {
-        lastChunk->link(chunk);
-        lastChunk = chunk;
-        if (firstFree == nullptr)
-            firstFree = chunk;
+        chunk->index = (uint32_t)chunks.size();
+        chunks.push_back(chunk);
     }
     else
-        firstChunk->link(chunk);
+    {
+        chunks.resize(chunks.size() + 1);
+        for(uint32_t i = firstFree; i < (uint32_t)chunks.size() - 1; ++i)
+        {
+            chunks[i]->index = i+1;
+            chunks[i + 1] = chunks[i];
+        }
+        chunks[firstFree] = chunk;
+        chunk->index = firstFree;
+        firstFree++;
+    }
 }
 
 void dual_group_t::resize_chunk(dual_chunk_t* chunk, EIndex newSize)
 {
     using namespace dual;
+    bool full = chunk->count == chunk->get_capacity();
     size = size + newSize - chunk->count;
     chunk->count = newSize;
     if (newSize == 0)
@@ -315,80 +323,61 @@ void dual_group_t::resize_chunk(dual_chunk_t* chunk, EIndex newSize)
     }
     else
     {
-        if (chunk->get_capacity() == newSize)
+        if (!full && chunk->get_capacity() == newSize)
             mark_full(chunk);
-        else
+        else if((full && chunk->get_capacity() > newSize))
             mark_free(chunk);
     }
-}
-
-void remove(dual_chunk_t*& h, dual_chunk_t*& t, dual_chunk_t* c)
-{
-    if (c == t)
-        t = t->prev;
-    if (h == c)
-        h = h->next;
-    c->unlink();
 }
 
 void dual_group_t::remove_chunk(dual_chunk_t* chunk)
 {
     using namespace dual;
     size -= chunk->count;
-    --chunkCount;
-    if (chunk == firstFree)
-        firstFree = chunk->next;
-    remove(firstChunk, lastChunk, chunk);
+    if(chunk->index < firstFree)
+        firstFree--;
+    for(uint32_t i = chunk->index; i < (uint32_t)chunks.size(); ++i)
+    {
+        if (i + 1 < (uint32_t)chunks.size())
+        {
+            chunks[i] = chunks[i + 1];
+            chunks[i]->index = i;
+        }
+        else
+            chunks.pop_back();
+    }
     chunk->group = nullptr;
 }
 
 void dual_group_t::mark_free(dual_chunk_t* chunk)
 {
     using namespace dual;
-    remove(firstChunk, lastChunk, chunk);
-    if (lastChunk)
-        lastChunk->link(chunk);
-    lastChunk = chunk;
-    if (firstFree == nullptr)
-        firstFree = chunk;
-    if (firstChunk == nullptr)
-        firstChunk = chunk;
+    SKR_ASSERT(chunk->index < firstFree);
+    firstFree--;
+    eastl::swap(chunks[firstFree]->index, chunks[chunk->index]->index);
+    eastl::swap(chunks[firstFree], chunks[chunk->index]);
 }
 
 void dual_group_t::mark_full(dual_chunk_t* chunk)
 {
     using namespace dual;
-    if (firstFree == chunk)
-    {
-        firstFree = chunk->next;
-        return;
-    }
-    remove(firstChunk, lastChunk, chunk);
-    if (firstChunk)
-    {
-        chunk->next = firstChunk->next;
-        chunk->link(firstChunk);
-    }
-    firstChunk = chunk;
-    if (lastChunk == nullptr)
-        lastChunk = chunk;
+    
+    SKR_ASSERT(chunk->index >= firstFree);
+    eastl::swap(chunks[firstFree]->index, chunks[chunk->index]->index);
+    eastl::swap(chunks[firstFree], chunks[chunk->index]);
+    firstFree++;
 }
 
 void dual_group_t::clear()
 {
     using namespace dual;
-    auto chunk = firstChunk;
-    while (chunk != nullptr)
+    for(auto chunk : chunks)
     {
-        auto next = chunk->next;
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
         dual_chunk_t::destroy(chunk);
-        chunk = next;
     }
-    firstChunk = nullptr;
-    firstFree = nullptr;
-    chunkCount = 0;
+    chunks.clear();
     size = 0;
 }
 

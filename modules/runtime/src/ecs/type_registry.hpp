@@ -30,6 +30,7 @@ static constexpr type_index_t kDirtyComponent = type_index_t(5, false, false, fa
 
 struct type_registry_t {
     type_registry_t(pool_t& pool);
+    type_registry_t(const type_registry_t&) = delete;
     eastl::vector<type_description_t> descriptions;
     eastl::vector<intptr_t> entityFields;
     block_arena_t nameArena;

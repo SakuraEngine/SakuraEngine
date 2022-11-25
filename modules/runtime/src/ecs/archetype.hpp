@@ -40,10 +40,8 @@ struct archetype_t {
 
 // group chunks by archetype and meta
 struct dual_group_t {
-    dual_chunk_t* firstChunk;
-    dual_chunk_t* lastChunk;
-    dual_chunk_t* firstFree;
-    uint32_t chunkCount;
+    eastl::vector<dual_chunk_t*> chunks;
+    uint32_t firstFree;
     uint32_t timestamp;
     uint32_t size;
     dual_entity_type_t type;
@@ -71,6 +69,7 @@ struct dual_group_t {
 
     void clear();
 
+    dual_chunk_t* get_first_free_chunk() const noexcept;
     dual_chunk_t* new_chunk(uint32_t hint);
     void add_chunk(dual_chunk_t* chunk);
     void remove_chunk(dual_chunk_t* chunk);
