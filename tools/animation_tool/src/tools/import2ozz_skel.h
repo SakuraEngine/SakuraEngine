@@ -28,9 +28,9 @@
 #ifndef OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_SKEL_H_
 #define OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_SKEL_H_
 
-#include "SkrAnimTool/ozz/tools/options.h"
 #include "SkrAnim/ozz/base/endianness.h"
 #include "SkrAnim/ozz/base/platform.h"
+#include "SkrAnimTool/ozz/tools/import2ozz.h"
 
 namespace Json {
 class Value;
@@ -43,8 +43,6 @@ namespace offline {
 class OzzImporter;
 struct RawSkeleton;
 
-OZZ_ANIMTOOLS_DLL bool ImportSkeleton(const Options& _option,
-                                      OzzImporter* _importer);
 OZZ_ANIMTOOLS_DLL bool ValidateJointNamesUniqueness(const RawSkeleton& _skeleton);
 
 }  // namespace offline

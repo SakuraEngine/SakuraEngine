@@ -160,7 +160,7 @@ OZZ_INLINE SimdInt4 IsNormalizedEst(const SimdQuaternion& _q) {
 
 OZZ_INLINE SimdQuaternion SimdQuaternion::FromAxisAngle(_SimdFloat4 _axis,
                                                         _SimdFloat4 _angle) {
-  assert(AreAllTrue1(IsNormalizedEst3(_axis)) && "axis is not normalized.");
+  SKR_ASSERT(AreAllTrue1(IsNormalizedEst3(_axis)) && "axis is not normalized.");
   const SimdFloat4 half_angle = _angle * simd_float4::Load1(.5f);
   const SimdFloat4 half_sin = SinX(half_angle);
   const SimdFloat4 half_cos = CosX(half_angle);
@@ -173,8 +173,8 @@ OZZ_INLINE SimdQuaternion SimdQuaternion::FromAxisCosAngle(_SimdFloat4 _axis,
   const SimdFloat4 one = simd_float4::one();
   const SimdFloat4 half = simd_float4::Load1(.5f);
 
-  assert(AreAllTrue1(IsNormalizedEst3(_axis)) && "axis is not normalized.");
-  assert(AreAllTrue1(And(CmpGe(_cos, -one), CmpLe(_cos, one))) &&
+  SKR_ASSERT(AreAllTrue1(IsNormalizedEst3(_axis)) && "axis is not normalized.");
+  SKR_ASSERT(AreAllTrue1(And(CmpGe(_cos, -one), CmpLe(_cos, one))) &&
          "cos is not in [-1,1] range.");
 
   const SimdFloat4 half_cos2 = (one + _cos) * half;
@@ -189,7 +189,7 @@ OZZ_INLINE SimdQuaternion SimdQuaternion::FromAxisCosAngle(_SimdFloat4 _axis,
 // Returns to an axis angle representation of quaternion _q.
 // Assumes quaternion _q is normalized.
 OZZ_INLINE SimdFloat4 ToAxisAngle(const SimdQuaternion& _q) {
-  assert(AreAllTrue1(IsNormalizedEst4(_q.xyzw)) && "_q is not normalized.");
+  SKR_ASSERT(AreAllTrue1(IsNormalizedEst4(_q.xyzw)) && "_q is not normalized.");
   const SimdFloat4 x_axis = simd_float4::x_axis();
   const SimdFloat4 clamped_w = Clamp(-x_axis, SplatW(_q.xyzw), x_axis);
   const SimdFloat4 half_angle = ACosX(clamped_w);
@@ -233,7 +233,7 @@ OZZ_INLINE SimdQuaternion SimdQuaternion::FromVectors(_SimdFloat4 _from,
 OZZ_INLINE SimdQuaternion SimdQuaternion::FromUnitVectors(_SimdFloat4 _from,
                                                           _SimdFloat4 _to) {
   // http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
-  assert(ozz::math::AreAllTrue1(
+  SKR_ASSERT(ozz::math::AreAllTrue1(
              And(IsNormalizedEst3(_from), IsNormalizedEst3(_to))) &&
          "Input vectors must be normalized.");
 

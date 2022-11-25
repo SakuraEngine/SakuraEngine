@@ -73,7 +73,7 @@ struct SoaFloat4x4 {
   // Returns the rotation matrix built from quaternion defined by x, y, z and w
   // components of _v.
   static OZZ_INLINE SoaFloat4x4 FromQuaternion(const SoaQuaternion& _q) {
-    assert(AreAllTrue(IsNormalizedEst(_q)));
+    SKR_ASSERT(AreAllTrue(IsNormalizedEst(_q)));
 
     const SimdFloat4 zero = simd_float4::zero();
     const SimdFloat4 one = simd_float4::one();
@@ -102,7 +102,7 @@ struct SoaFloat4x4 {
   static OZZ_INLINE SoaFloat4x4 FromAffine(const SoaFloat3& _translation,
                                            const SoaQuaternion& _quaternion,
                                            const SoaFloat3& _scale) {
-    assert(AreAllTrue(IsNormalizedEst(_quaternion)));
+    SKR_ASSERT(AreAllTrue(IsNormalizedEst(_quaternion)));
 
     const SimdFloat4 zero = simd_float4::zero();
     const SimdFloat4 one = simd_float4::one();
@@ -190,7 +190,7 @@ OZZ_INLINE SoaFloat4x4 Invert(const SoaFloat4x4& _m,
   const SimdFloat4 det =
       cols[0].x * b0x + cols[0].y * b1x + cols[0].z * b2x + cols[0].w * b3x;
   const SimdInt4 invertible = CmpNe(det, simd_float4::zero());
-  assert((_invertible || AreAllTrue(invertible)) && "Matrix is not invertible");
+  SKR_ASSERT((_invertible || AreAllTrue(invertible)) && "Matrix is not invertible");
   if (_invertible != nullptr) {
     *_invertible = invertible;
   }

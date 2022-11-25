@@ -66,10 +66,10 @@ struct Adapter {
 
   _KeyFrame Lerp(const _KeyFrame& _left, const _KeyFrame& _right,
                  const _KeyFrame& _ref) const {
-    assert(Decimable(_ref));
+    SKR_ASSERT(Decimable(_ref));
     const float alpha =
         (_ref.ratio - _left.ratio) / (_right.ratio - _left.ratio);
-    assert(alpha >= 0.f && alpha <= 1.f);
+    SKR_ASSERT(alpha >= 0.f && alpha <= 1.f);
     const _KeyFrame key = {_ref.interpolation, _ref.ratio,
                            Policy::Lerp(_left.value, _right.value, alpha)};
     return key;

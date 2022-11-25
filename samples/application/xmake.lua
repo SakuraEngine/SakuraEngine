@@ -4,9 +4,10 @@ shared_module("GameRT", "GAMERT", engine_version)
         files = {"game/modules/game_runtime/include/**.h", "game/modules/game_runtime/include/**.hpp"},
         rootdir = "game/modules/game_runtime/include/"
     })
-    public_dependency("SkrRenderer", "0.1.0")
-    public_dependency("SkrImGui", "0.1.0")
-    public_dependency("SkrInputSystem", "0.1.0")
+    public_dependency("SkrRenderer", engine_version)
+    public_dependency("SkrImGui", engine_version)
+    public_dependency("SkrInputSystem", engine_version)
+    public_dependency("SkrAnim", engine_version)
     add_includedirs("game/modules/game_runtime/include/", {public=true})
     add_files("game/modules/game_runtime/src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
@@ -14,7 +15,7 @@ shared_module("GameRT", "GAMERT", engine_version)
 executable_module("Game", "GAME", engine_version)
     set_group("04.examples/application")
     set_exceptions("no-cxx")
-    public_dependency("GameRT", "0.1.0")
+    public_dependency("GameRT", engine_version)
     add_rules("utils.install-resources", {
         extensions = {".gltf", ".bin", ".png"},
         outdir = "/../resources", _png_outdir = "/../resources/textures"})

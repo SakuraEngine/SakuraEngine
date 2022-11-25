@@ -1714,7 +1714,7 @@ template <typename IteratorType> class iteration_proxy_value
     /// return key of the iterator
     const std::string& key() const
     {
-        assert(anchor.m_object != nullptr);
+        SKR_ASSERT(anchor.m_object != nullptr);
 
         switch (anchor.m_object->type())
         {
@@ -2420,13 +2420,13 @@ class wide_string_input_adapter : public input_adapter_protocol
         {
             fill_buffer<sizeof(typename WideStringType::value_type)>();
 
-            assert(utf8_bytes_filled > 0);
-            assert(utf8_bytes_index == 0);
+            SKR_ASSERT(utf8_bytes_filled > 0);
+            SKR_ASSERT(utf8_bytes_index == 0);
         }
 
         // use buffer
-        assert(utf8_bytes_filled > 0);
-        assert(utf8_bytes_index < utf8_bytes_filled);
+        SKR_ASSERT(utf8_bytes_filled > 0);
+        SKR_ASSERT(utf8_bytes_index < utf8_bytes_filled);
         return utf8_bytes[utf8_bytes_index++];
     }
 
@@ -2515,7 +2515,7 @@ class input_adapter
             res.first &= (val == *(std::next(std::addressof(*first), res.second++)));
             return res;
         }).first;
-        assert(is_contiguous);
+        SKR_ASSERT(is_contiguous);
 #endif
 
         // assertion to check that each element is 1 byte long
@@ -2686,7 +2686,7 @@ class lexer
     static char get_decimal_point() noexcept
     {
         const auto loc = localeconv();
-        assert(loc != nullptr);
+        SKR_ASSERT(loc != nullptr);
         return (loc->decimal_point == nullptr) ? '.' : *(loc->decimal_point);
     }
 
@@ -2712,7 +2712,7 @@ class lexer
     int get_codepoint()
     {
         // this function only makes sense after reading `\u`
-        assert(current == 'u');
+        SKR_ASSERT(current == 'u');
         int codepoint = 0;
 
         const auto factors = { 12, 8, 4, 0 };
@@ -2738,7 +2738,7 @@ class lexer
             }
         }
 
-        assert(0x0000 <= codepoint and codepoint <= 0xFFFF);
+        SKR_ASSERT(0x0000 <= codepoint and codepoint <= 0xFFFF);
         return codepoint;
     }
 
@@ -2759,7 +2759,7 @@ class lexer
     */
     bool next_byte_in_range(std::initializer_list<int> ranges)
     {
-        assert(ranges.size() == 2 or ranges.size() == 4 or ranges.size() == 6);
+        SKR_ASSERT(ranges.size() == 2 or ranges.size() == 4 or ranges.size() == 6);
         add(current);
 
         for (auto range = ranges.begin(); range != ranges.end(); ++range)
@@ -2800,7 +2800,7 @@ class lexer
         reset();
 
         // we entered the function by reading an open quote
-        assert(current == '\"');
+        SKR_ASSERT(current == '\"');
 
         while (true)
         {
@@ -2920,7 +2920,7 @@ class lexer
                             }
 
                             // result of the above calculation yields a proper codepoint
-                            assert(0x00 <= codepoint and codepoint <= 0x10FFFF);
+                            SKR_ASSERT(0x00 <= codepoint and codepoint <= 0x10FFFF);
 
                             // translate codepoint into bytes
                             if (codepoint < 0x80)
@@ -3477,7 +3477,7 @@ class lexer
             default:
             {
                 // all other characters are rejected outside scan_number()
-                assert(false);
+                SKR_ASSERT(false);
             }
                 // LCOV_EXCL_STOP
         }
@@ -3726,7 +3726,7 @@ scan_number_done:
             const auto x = std::strtoull(token_buffer.data(), &endptr, 10);
 
             // we checked the number format before
-            assert(endptr == token_buffer.data() + token_buffer.size());
+            SKR_ASSERT(endptr == token_buffer.data() + token_buffer.size());
 
             if (errno == 0)
             {
@@ -3742,7 +3742,7 @@ scan_number_done:
             const auto x = std::strtoll(token_buffer.data(), &endptr, 10);
 
             // we checked the number format before
-            assert(endptr == token_buffer.data() + token_buffer.size());
+            SKR_ASSERT(endptr == token_buffer.data() + token_buffer.size());
 
             if (errno == 0)
             {
@@ -3759,7 +3759,7 @@ scan_number_done:
         strtof(value_float, token_buffer.data(), &endptr);
 
         // we checked the number format before
-        assert(endptr == token_buffer.data() + token_buffer.size());
+        SKR_ASSERT(endptr == token_buffer.data() + token_buffer.size());
 
         return token_type::value_float;
     }
@@ -3772,7 +3772,7 @@ scan_number_done:
     token_type scan_literal(const char* literal_text, const std::size_t length,
                             token_type return_type)
     {
-        assert(current == literal_text[0]);
+        SKR_ASSERT(current == literal_text[0]);
         for (std::size_t i = 1; i < length; ++i)
         {
             if (JSON_UNLIKELY(get() != literal_text[i]))
@@ -3864,7 +3864,7 @@ scan_number_done:
 
         if (JSON_LIKELY(current != std::char_traits<char>::eof()))
         {
-            assert(token_string.size() != 0);
+            SKR_ASSERT(token_string.size() != 0);
             token_string.pop_back();
         }
     }
@@ -4497,7 +4497,7 @@ class json_sax_dom_parser
                 case 5:
                     JSON_THROW(*reinterpret_cast<const detail::other_error*>(&ex));
                 default:
-                    assert(false);
+                    SKR_ASSERT(false);
                     // LCOV_EXCL_STOP
             }
         }
@@ -4525,7 +4525,7 @@ class json_sax_dom_parser
             return &root;
         }
 
-        assert(ref_stack.back()->is_array() or ref_stack.back()->is_object());
+        SKR_ASSERT(ref_stack.back()->is_array() or ref_stack.back()->is_object());
 
         if (ref_stack.back()->is_array())
         {
@@ -4534,7 +4534,7 @@ class json_sax_dom_parser
         }
         else
         {
-            assert(object_element);
+            SKR_ASSERT(object_element);
             *object_element = BasicJsonType(std::forward<Value>(v));
             return object_element;
         }
@@ -4657,8 +4657,8 @@ class json_sax_dom_callback_parser
             }
         }
 
-        assert(not ref_stack.empty());
-        assert(not keep_stack.empty());
+        SKR_ASSERT(not ref_stack.empty());
+        SKR_ASSERT(not keep_stack.empty());
         ref_stack.pop_back();
         keep_stack.pop_back();
 
@@ -4716,8 +4716,8 @@ class json_sax_dom_callback_parser
             }
         }
 
-        assert(not ref_stack.empty());
-        assert(not keep_stack.empty());
+        SKR_ASSERT(not ref_stack.empty());
+        SKR_ASSERT(not keep_stack.empty());
         ref_stack.pop_back();
         keep_stack.pop_back();
 
@@ -4754,7 +4754,7 @@ class json_sax_dom_callback_parser
                 case 5:
                     JSON_THROW(*reinterpret_cast<const detail::other_error*>(&ex));
                 default:
-                    assert(false);
+                    SKR_ASSERT(false);
                     // LCOV_EXCL_STOP
             }
         }
@@ -4785,7 +4785,7 @@ class json_sax_dom_callback_parser
     template<typename Value>
     std::pair<bool, BasicJsonType*> handle_value(Value&& v, const bool skip_callback = false)
     {
-        assert(not keep_stack.empty());
+        SKR_ASSERT(not keep_stack.empty());
 
         // do not handle this value if we know it would be added to a discarded
         // container
@@ -4820,7 +4820,7 @@ class json_sax_dom_callback_parser
         }
 
         // we now only expect arrays and objects
-        assert(ref_stack.back()->is_array() or ref_stack.back()->is_object());
+        SKR_ASSERT(ref_stack.back()->is_array() or ref_stack.back()->is_object());
 
         if (ref_stack.back()->is_array())
         {
@@ -4830,7 +4830,7 @@ class json_sax_dom_callback_parser
         else
         {
             // check if we should store an element for the current key
-            assert(not key_keep_stack.empty());
+            SKR_ASSERT(not key_keep_stack.empty());
             const bool store_element = key_keep_stack.back();
             key_keep_stack.pop_back();
 
@@ -4839,7 +4839,7 @@ class json_sax_dom_callback_parser
                 return {false, nullptr};
             }
 
-            assert(object_element);
+            SKR_ASSERT(object_element);
             *object_element = std::move(value);
             return {true, object_element};
         }
@@ -5306,7 +5306,7 @@ class parser
                         // new value, we need to evaluate the new state first.
                         // By setting skip_to_state_evaluation to false, we
                         // are effectively jumping to the beginning of this if.
-                        assert(not states.empty());
+                        SKR_ASSERT(not states.empty());
                         states.pop_back();
                         skip_to_state_evaluation = true;
                         continue;
@@ -5366,7 +5366,7 @@ class parser
                         // new value, we need to evaluate the new state first.
                         // By setting skip_to_state_evaluation to false, we
                         // are effectively jumping to the beginning of this if.
-                        assert(not states.empty());
+                        SKR_ASSERT(not states.empty());
                         states.pop_back();
                         skip_to_state_evaluation = true;
                         continue;
@@ -5674,7 +5674,7 @@ class iter_impl
     */
     explicit iter_impl(pointer object) noexcept : m_object(object)
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -5735,7 +5735,7 @@ class iter_impl
     */
     void set_begin() noexcept
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -5772,7 +5772,7 @@ class iter_impl
     */
     void set_end() noexcept
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -5803,19 +5803,19 @@ class iter_impl
     */
     reference operator*() const
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
             case value_t::object:
             {
-                assert(m_it.object_iterator != m_object->m_value.object->end());
+                SKR_ASSERT(m_it.object_iterator != m_object->m_value.object->end());
                 return m_it.object_iterator->second;
             }
 
             case value_t::array:
             {
-                assert(m_it.array_iterator != m_object->m_value.array->end());
+                SKR_ASSERT(m_it.array_iterator != m_object->m_value.array->end());
                 return *m_it.array_iterator;
             }
 
@@ -5840,19 +5840,19 @@ class iter_impl
     */
     pointer operator->() const
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
             case value_t::object:
             {
-                assert(m_it.object_iterator != m_object->m_value.object->end());
+                SKR_ASSERT(m_it.object_iterator != m_object->m_value.object->end());
                 return &(m_it.object_iterator->second);
             }
 
             case value_t::array:
             {
-                assert(m_it.array_iterator != m_object->m_value.array->end());
+                SKR_ASSERT(m_it.array_iterator != m_object->m_value.array->end());
                 return &*m_it.array_iterator;
             }
 
@@ -5885,7 +5885,7 @@ class iter_impl
     */
     iter_impl& operator++()
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -5928,7 +5928,7 @@ class iter_impl
     */
     iter_impl& operator--()
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -5966,7 +5966,7 @@ class iter_impl
             JSON_THROW(invalid_iterator::create(212, "cannot compare iterators of different containers"));
         }
 
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -6002,7 +6002,7 @@ class iter_impl
             JSON_THROW(invalid_iterator::create(212, "cannot compare iterators of different containers"));
         }
 
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -6050,7 +6050,7 @@ class iter_impl
     */
     iter_impl& operator+=(difference_type i)
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -6121,7 +6121,7 @@ class iter_impl
     */
     difference_type operator-(const iter_impl& other) const
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -6142,7 +6142,7 @@ class iter_impl
     */
     reference operator[](difference_type n) const
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         switch (m_object->m_type)
         {
@@ -6173,7 +6173,7 @@ class iter_impl
     */
     const typename object_t::key_type& key() const
     {
-        assert(m_object != nullptr);
+        SKR_ASSERT(m_object != nullptr);
 
         if (JSON_LIKELY(m_object->is_object()))
         {
@@ -6502,7 +6502,7 @@ class binary_reader
     explicit binary_reader(input_adapter_t adapter) : ia(std::move(adapter))
     {
         (void)detail::is_sax_static_asserts<SAX, BasicJsonType> {};
-        assert(ia);
+        SKR_ASSERT(ia);
     }
 
     /*!
@@ -6539,7 +6539,7 @@ class binary_reader
 
             // LCOV_EXCL_START
             default:
-                assert(false);
+                SKR_ASSERT(false);
                 // LCOV_EXCL_STOP
         }
 
@@ -7096,8 +7096,8 @@ class binary_reader
                 {
                     const int exp = (half >> 10) & 0x1F;
                     const int mant = half & 0x3FF;
-                    assert(0 <= exp and exp <= 32);
-                    assert(0 <= mant and mant <= 1024);
+                    SKR_ASSERT(0 <= exp and exp <= 32);
+                    SKR_ASSERT(0 <= mant and mant <= 1024);
                     switch (exp)
                     {
                         case 0:
@@ -8410,7 +8410,7 @@ class binary_reader
 
             // LCOV_EXCL_START
             default:
-                assert(false);
+                SKR_ASSERT(false);
                 // LCOV_EXCL_STOP
         }
 
@@ -8474,7 +8474,7 @@ class binary_writer
     */
     explicit binary_writer(output_adapter_t<CharType> adapter) : oa(adapter)
     {
-        assert(oa);
+        SKR_ASSERT(oa);
     }
 
     /*!
@@ -9053,7 +9053,7 @@ class binary_writer
                 bool prefix_required = true;
                 if (use_type and not j.m_value.array->empty())
                 {
-                    assert(use_count);
+                    SKR_ASSERT(use_count);
                     const CharType first_prefix = ubjson_prefix(j.front());
                     const bool same_prefix = std::all_of(j.begin() + 1, j.end(),
                                                          [this, first_prefix](const BasicJsonType & v)
@@ -9098,7 +9098,7 @@ class binary_writer
                 bool prefix_required = true;
                 if (use_type and not j.m_value.object->empty())
                 {
-                    assert(use_count);
+                    SKR_ASSERT(use_count);
                     const CharType first_prefix = ubjson_prefix(j.front());
                     const bool same_prefix = std::all_of(j.begin(), j.end(),
                                                          [this, first_prefix](const BasicJsonType & v)
@@ -9371,7 +9371,7 @@ class binary_writer
 
             // LCOV_EXCL_START
             default:
-                assert(false);
+                SKR_ASSERT(false);
                 return 0ul;
                 // LCOV_EXCL_STOP
         };
@@ -9415,7 +9415,7 @@ class binary_writer
 
             // LCOV_EXCL_START
             default:
-                assert(false);
+                SKR_ASSERT(false);
                 return;
                 // LCOV_EXCL_STOP
         };
@@ -9858,8 +9858,8 @@ struct diyfp // f * 2^e
     */
     static diyfp sub(const diyfp& x, const diyfp& y) noexcept
     {
-        assert(x.e == y.e);
-        assert(x.f >= y.f);
+        SKR_ASSERT(x.e == y.e);
+        SKR_ASSERT(x.f >= y.f);
 
         return {x.f - y.f, x.e};
     }
@@ -9935,7 +9935,7 @@ struct diyfp // f * 2^e
     */
     static diyfp normalize(diyfp x) noexcept
     {
-        assert(x.f != 0);
+        SKR_ASSERT(x.f != 0);
 
         while ((x.f >> 63) == 0)
         {
@@ -9954,8 +9954,8 @@ struct diyfp // f * 2^e
     {
         const int delta = x.e - target_exponent;
 
-        assert(delta >= 0);
-        assert(((x.f << delta) >> delta) == x.f);
+        SKR_ASSERT(delta >= 0);
+        SKR_ASSERT(((x.f << delta) >> delta) == x.f);
 
         return {x.f << delta, target_exponent};
     }
@@ -9977,8 +9977,8 @@ boundaries.
 template <typename FloatType>
 boundaries compute_boundaries(FloatType value)
 {
-    assert(std::isfinite(value));
-    assert(value > 0);
+    SKR_ASSERT(std::isfinite(value));
+    SKR_ASSERT(value > 0);
 
     // Convert the IEEE representation into a diyfp.
     //
@@ -10257,19 +10257,19 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     //      k = ceil((kAlpha - e - 1) * 0.30102999566398114)
     // for |e| <= 1500, but doesn't require floating-point operations.
     // NB: log_10(2) ~= 78913 / 2^18
-    assert(e >= -1500);
-    assert(e <=  1500);
+    SKR_ASSERT(e >= -1500);
+    SKR_ASSERT(e <=  1500);
     const int f = kAlpha - e - 1;
     const int k = (f * 78913) / (1 << 18) + static_cast<int>(f > 0);
 
     const int index = (-kCachedPowersMinDecExp + k + (kCachedPowersDecStep - 1)) / kCachedPowersDecStep;
-    assert(index >= 0);
-    assert(index < kCachedPowersSize);
+    SKR_ASSERT(index >= 0);
+    SKR_ASSERT(index < kCachedPowersSize);
     static_cast<void>(kCachedPowersSize); // Fix warning.
 
     const cached_power cached = kCachedPowers[index];
-    assert(kAlpha <= cached.e + e + 64);
-    assert(kGamma >= cached.e + e + 64);
+    SKR_ASSERT(kAlpha <= cached.e + e + 64);
+    SKR_ASSERT(kGamma >= cached.e + e + 64);
 
     return cached;
 }
@@ -10337,10 +10337,10 @@ inline int find_largest_pow10(const uint32_t n, uint32_t& pow10)
 inline void grisu2_round(char* buf, int len, uint64_t dist, uint64_t delta,
                          uint64_t rest, uint64_t ten_k)
 {
-    assert(len >= 1);
-    assert(dist <= delta);
-    assert(rest <= delta);
-    assert(ten_k > 0);
+    SKR_ASSERT(len >= 1);
+    SKR_ASSERT(dist <= delta);
+    SKR_ASSERT(rest <= delta);
+    SKR_ASSERT(ten_k > 0);
 
     //               <--------------------------- delta ---->
     //                                  <---- dist --------->
@@ -10365,7 +10365,7 @@ inline void grisu2_round(char* buf, int len, uint64_t dist, uint64_t delta,
             and delta - rest >= ten_k
             and (rest + ten_k < dist or dist - rest > rest + ten_k - dist))
     {
-        assert(buf[len - 1] != '0');
+        SKR_ASSERT(buf[len - 1] != '0');
         buf[len - 1]--;
         rest += ten_k;
     }
@@ -10393,8 +10393,8 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
     // Grisu2 generates the digits of M+ from left to right and stops as soon as
     // V is in [M-,M+].
 
-    assert(M_plus.e >= kAlpha);
-    assert(M_plus.e <= kGamma);
+    SKR_ASSERT(M_plus.e >= kAlpha);
+    SKR_ASSERT(M_plus.e <= kGamma);
 
     uint64_t delta = diyfp::sub(M_plus, M_minus).f; // (significand of (M+ - M-), implicit exponent is e)
     uint64_t dist  = diyfp::sub(M_plus, w      ).f; // (significand of (M+ - w ), implicit exponent is e)
@@ -10415,7 +10415,7 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
     //
     // Generate the digits of the integral part p1 = d[n-1]...d[1]d[0]
 
-    assert(p1 > 0);
+    SKR_ASSERT(p1 > 0);
 
     uint32_t pow10;
     const int k = find_largest_pow10(p1, pow10);
@@ -10451,7 +10451,7 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
         //      M+ = buffer * 10^n + (d * 10^(n-1) + r) + p2 * 2^e
         //         = (buffer * 10 + d) * 10^(n-1) + (r + p2 * 2^e)
         //
-        assert(d <= 9);
+        SKR_ASSERT(d <= 9);
         buffer[length++] = static_cast<char>('0' + d); // buffer := buffer * 10 + d
         //
         //      M+ = buffer * 10^(n-1) + (r + p2 * 2^e)
@@ -10538,7 +10538,7 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
     //
     // and stop as soon as 10^-m * r * 2^e <= delta * 2^e
 
-    assert(p2 > delta);
+    SKR_ASSERT(p2 > delta);
 
     int m = 0;
     for (;;)
@@ -10549,7 +10549,7 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
         //         = buffer * 10^-m + 10^-m * (1/10 * (10 * p2)                   ) * 2^e
         //         = buffer * 10^-m + 10^-m * (1/10 * ((10*p2 div 2^-e) * 2^-e + (10*p2 mod 2^-e)) * 2^e
         //
-        assert(p2 <= UINT64_MAX / 10);
+        SKR_ASSERT(p2 <= UINT64_MAX / 10);
         p2 *= 10;
         const uint64_t d = p2 >> -one.e;     // d = (10 * p2) div 2^-e
         const uint64_t r = p2 & (one.f - 1); // r = (10 * p2) mod 2^-e
@@ -10558,7 +10558,7 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
         //         = buffer * 10^-m + 10^-m * (1/10 * (d + r * 2^e))
         //         = (buffer * 10 + d) * 10^(-m-1) + 10^(-m-1) * r * 2^e
         //
-        assert(d <= 9);
+        SKR_ASSERT(d <= 9);
         buffer[length++] = static_cast<char>('0' + d); // buffer := buffer * 10 + d
         //
         //      M+ = buffer * 10^(-m-1) + 10^(-m-1) * r * 2^e
@@ -10618,8 +10618,8 @@ The buffer must be large enough, i.e. >= max_digits10.
 inline void grisu2(char* buf, int& len, int& decimal_exponent,
                    diyfp m_minus, diyfp v, diyfp m_plus)
 {
-    assert(m_plus.e == m_minus.e);
-    assert(m_plus.e == v.e);
+    SKR_ASSERT(m_plus.e == m_minus.e);
+    SKR_ASSERT(m_plus.e == v.e);
 
     //  --------(-----------------------+-----------------------)--------    (A)
     //          m-                      v                       m+
@@ -10679,8 +10679,8 @@ void grisu2(char* buf, int& len, int& decimal_exponent, FloatType value)
     static_assert(diyfp::kPrecision >= std::numeric_limits<FloatType>::digits + 3,
                   "internal error: not enough precision");
 
-    assert(std::isfinite(value));
-    assert(value > 0);
+    SKR_ASSERT(std::isfinite(value));
+    SKR_ASSERT(value > 0);
 
     // If the neighbors (and boundaries) of 'value' are always computed for double-precision
     // numbers, all float's can be recovered using strtod (and strtof). However, the resulting
@@ -10714,8 +10714,8 @@ void grisu2(char* buf, int& len, int& decimal_exponent, FloatType value)
 */
 inline char* append_exponent(char* buf, int e)
 {
-    assert(e > -1000);
-    assert(e <  1000);
+    SKR_ASSERT(e > -1000);
+    SKR_ASSERT(e <  1000);
 
     if (e < 0)
     {
@@ -10765,8 +10765,8 @@ notation. Otherwise it will be printed in exponential notation.
 inline char* format_buffer(char* buf, int len, int decimal_exponent,
                            int min_exp, int max_exp)
 {
-    assert(min_exp < 0);
-    assert(max_exp > 0);
+    SKR_ASSERT(min_exp < 0);
+    SKR_ASSERT(max_exp > 0);
 
     const int k = len;
     const int n = len + decimal_exponent;
@@ -10792,7 +10792,7 @@ inline char* format_buffer(char* buf, int len, int decimal_exponent,
         // dig.its
         // len <= max_digits10 + 1
 
-        assert(k > n);
+        SKR_ASSERT(k > n);
 
         std::memmove(buf + (n + 1), buf + n, static_cast<size_t>(k - n));
         buf[n] = '.';
@@ -10848,7 +10848,7 @@ template <typename FloatType>
 char* to_chars(char* first, const char* last, FloatType value)
 {
     static_cast<void>(last); // maybe unused - fix warning
-    assert(std::isfinite(value));
+    SKR_ASSERT(std::isfinite(value));
 
     // Use signbit(value) instead of (value < 0) since signbit works for -0.
     if (std::signbit(value))
@@ -10866,7 +10866,7 @@ char* to_chars(char* first, const char* last, FloatType value)
         return first;
     }
 
-    assert(last - first >= std::numeric_limits<FloatType>::max_digits10);
+    SKR_ASSERT(last - first >= std::numeric_limits<FloatType>::max_digits10);
 
     // Compute v = buffer * 10^decimal_exponent.
     // The decimal digits are stored in the buffer, which needs to be interpreted
@@ -10876,16 +10876,16 @@ char* to_chars(char* first, const char* last, FloatType value)
     int decimal_exponent = 0;
     dtoa_impl::grisu2(first, len, decimal_exponent, value);
 
-    assert(len <= std::numeric_limits<FloatType>::max_digits10);
+    SKR_ASSERT(len <= std::numeric_limits<FloatType>::max_digits10);
 
     // Format the buffer like printf("%.*g", prec, value)
     constexpr int kMinExp = -4;
     // Use digits10 here to increase compatibility with version 2.
     constexpr int kMaxExp = std::numeric_limits<FloatType>::digits10;
 
-    assert(last - first >= kMaxExp + 2);
-    assert(last - first >= 2 + (-kMinExp - 1) + std::numeric_limits<FloatType>::max_digits10);
-    assert(last - first >= std::numeric_limits<FloatType>::max_digits10 + 6);
+    SKR_ASSERT(last - first >= kMaxExp + 2);
+    SKR_ASSERT(last - first >= 2 + (-kMinExp - 1) + std::numeric_limits<FloatType>::max_digits10);
+    SKR_ASSERT(last - first >= std::numeric_limits<FloatType>::max_digits10 + 6);
 
     return dtoa_impl::format_buffer(first, len, decimal_exponent, kMinExp, kMaxExp);
 }
@@ -11010,8 +11010,8 @@ class serializer
                     }
 
                     // last element
-                    assert(i != val.m_value.object->cend());
-                    assert(std::next(i) == val.m_value.object->cend());
+                    SKR_ASSERT(i != val.m_value.object->cend());
+                    SKR_ASSERT(std::next(i) == val.m_value.object->cend());
                     o->write_characters(indent_string.c_str(), new_indent);
                     o->write_character('\"');
                     dump_escaped(i->first, ensure_ascii);
@@ -11038,8 +11038,8 @@ class serializer
                     }
 
                     // last element
-                    assert(i != val.m_value.object->cend());
-                    assert(std::next(i) == val.m_value.object->cend());
+                    SKR_ASSERT(i != val.m_value.object->cend());
+                    SKR_ASSERT(std::next(i) == val.m_value.object->cend());
                     o->write_character('\"');
                     dump_escaped(i->first, ensure_ascii);
                     o->write_characters("\":", 2);
@@ -11080,7 +11080,7 @@ class serializer
                     }
 
                     // last element
-                    assert(not val.m_value.array->empty());
+                    SKR_ASSERT(not val.m_value.array->empty());
                     o->write_characters(indent_string.c_str(), new_indent);
                     dump(val.m_value.array->back(), true, ensure_ascii, indent_step, new_indent);
 
@@ -11101,7 +11101,7 @@ class serializer
                     }
 
                     // last element
-                    assert(not val.m_value.array->empty());
+                    SKR_ASSERT(not val.m_value.array->empty());
                     dump(val.m_value.array->back(), false, ensure_ascii, indent_step, current_indent);
 
                     o->write_character(']');
@@ -11438,7 +11438,7 @@ class serializer
         while (x != 0)
         {
             // spare 1 byte for '\0'
-            assert(i < number_buffer.size() - 1);
+            SKR_ASSERT(i < number_buffer.size() - 1);
 
             const auto digit = std::labs(static_cast<long>(x % 10));
             number_buffer[i++] = static_cast<char>('0' + digit);
@@ -11448,7 +11448,7 @@ class serializer
         if (is_negative)
         {
             // make sure there is capacity for the '-'
-            assert(i < number_buffer.size() - 2);
+            SKR_ASSERT(i < number_buffer.size() - 2);
             number_buffer[i++] = '-';
         }
 
@@ -11502,9 +11502,9 @@ class serializer
         std::ptrdiff_t len = (std::snprintf)(number_buffer.data(), number_buffer.size(), "%.*g", d, x);
 
         // negative value indicates an error
-        assert(len > 0);
+        SKR_ASSERT(len > 0);
         // check if buffer was large enough
-        assert(static_cast<std::size_t>(len) < number_buffer.size());
+        SKR_ASSERT(static_cast<std::size_t>(len) < number_buffer.size());
 
         // erase thousands separator
         if (thousands_sep != '\0')
@@ -11512,7 +11512,7 @@ class serializer
             const auto end = std::remove(number_buffer.begin(),
                                          number_buffer.begin() + len, thousands_sep);
             std::fill(end, number_buffer.end(), '\0');
-            assert((end - number_buffer.begin()) <= len);
+            SKR_ASSERT((end - number_buffer.begin()) <= len);
             len = (end - number_buffer.begin());
         }
 
@@ -12224,7 +12224,7 @@ class json_pointer
                     pos != std::string::npos;
                     pos = reference_token.find_first_of('~', pos + 1))
             {
-                assert(reference_token[pos] == '~');
+                SKR_ASSERT(reference_token[pos] == '~');
 
                 // ~ must be followed by 0 or 1
                 if (JSON_UNLIKELY(pos == reference_token.size() - 1 or
@@ -12259,7 +12259,7 @@ class json_pointer
     static void replace_substring(std::string& s, const std::string& f,
                                   const std::string& t)
     {
-        assert(not f.empty());
+        SKR_ASSERT(not f.empty());
         for (auto pos = s.find(f);                // find first occurrence of f
                 pos != std::string::npos;         // make sure f was found
                 s.replace(pos, f.size(), t),      // replace with t, and
@@ -13212,7 +13212,7 @@ class basic_json
         };
         std::unique_ptr<T, decltype(deleter)> object(AllocatorTraits::allocate(alloc, 1), deleter);
         AllocatorTraits::construct(alloc, object.get(), std::forward<Args>(args)...);
-        assert(object != nullptr);
+        SKR_ASSERT(object != nullptr);
         return object.release();
     }
 
@@ -13419,9 +13419,9 @@ class basic_json
     */
     void assert_invariant() const noexcept
     {
-        assert(m_type != value_t::object or m_value.object != nullptr);
-        assert(m_type != value_t::array or m_value.array != nullptr);
-        assert(m_type != value_t::string or m_value.string != nullptr);
+        SKR_ASSERT(m_type != value_t::object or m_value.object != nullptr);
+        SKR_ASSERT(m_type != value_t::array or m_value.array != nullptr);
+        SKR_ASSERT(m_type != value_t::string or m_value.string != nullptr);
     }
 
   public:
@@ -14006,8 +14006,8 @@ class basic_json
                  std::is_same<InputIT, typename basic_json_t::const_iterator>::value, int>::type = 0>
     basic_json(InputIT first, InputIT last)
     {
-        assert(first.m_object != nullptr);
-        assert(last.m_object != nullptr);
+        SKR_ASSERT(first.m_object != nullptr);
+        SKR_ASSERT(last.m_object != nullptr);
 
         // make sure iterator fits the current value
         if (JSON_UNLIKELY(first.m_object != last.m_object))
@@ -15618,7 +15618,7 @@ class basic_json
         // const operator[] only works for objects
         if (JSON_LIKELY(is_object()))
         {
-            assert(m_value.object->find(key) != m_value.object->end());
+            SKR_ASSERT(m_value.object->find(key) != m_value.object->end());
             return m_value.object->find(key)->second;
         }
 
@@ -15708,7 +15708,7 @@ class basic_json
         // at only works for objects
         if (JSON_LIKELY(is_object()))
         {
-            assert(m_value.object->find(key) != m_value.object->end());
+            SKR_ASSERT(m_value.object->find(key) != m_value.object->end());
             return m_value.object->find(key)->second;
         }
 
@@ -17368,7 +17368,7 @@ class basic_json
     iterator insert_iterator(const_iterator pos, Args&& ... args)
     {
         iterator result(this);
-        assert(m_value.array != nullptr);
+        SKR_ASSERT(m_value.array != nullptr);
 
         auto insert_pos = std::distance(m_value.array->begin(), pos.m_it.array_iterator);
         m_value.array->insert(pos.m_it.array_iterator, std::forward<Args>(args)...);
@@ -18504,7 +18504,7 @@ class basic_json
                           input_format_t format = input_format_t::json,
                           const bool strict = true)
     {
-        assert(sax);
+        SKR_ASSERT(sax);
         switch (format)
         {
             case input_format_t::json:
@@ -19875,7 +19875,7 @@ class basic_json
                     default:
                     {
                         // if there exists a parent it cannot be primitive
-                        assert(false);
+                        SKR_ASSERT(false);
                     }
                         // LCOV_EXCL_STOP
                 }

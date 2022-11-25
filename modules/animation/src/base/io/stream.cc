@@ -97,14 +97,14 @@ size_t File::Size() const {
   std::FILE* file = reinterpret_cast<std::FILE*>(file_);
 
   const long current = std::ftell(file);
-  assert(current >= 0);
+  SKR_ASSERT(current >= 0);
   int seek = std::fseek(file, 0, SEEK_END);
-  assert(seek == 0);
+  SKR_ASSERT(seek == 0);
   (void)seek;
   const long end = std::ftell(file);
-  assert(end >= 0);
+  SKR_ASSERT(end >= 0);
   seek = std::fseek(file, current, SEEK_SET);
-  assert(seek == 0);
+  SKR_ASSERT(seek == 0);
 
   return static_cast<size_t>(end);
 }

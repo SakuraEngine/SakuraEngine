@@ -46,7 +46,7 @@ OZZ_ANIMATION_DLL ozz::math::Transform GetJointLocalRestPose(
 // "_joint".
 inline bool IsLeaf(const Skeleton& _skeleton, int _joint) {
   const int num_joints = _skeleton.num_joints();
-  assert(_joint >= 0 && _joint < num_joints && "_joint index out of range");
+  SKR_ASSERT(_joint >= 0 && _joint < num_joints && "_joint index out of range");
   const span<const int16_t>& parents = _skeleton.joint_parents();
   const int next = _joint + 1;
   return next == num_joints || parents[next] != _joint;

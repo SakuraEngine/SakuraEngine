@@ -70,7 +70,7 @@ bool FixupNames(_VectorType& _data, const char* _pretty_name,
 
     // Update names index.
     if (!names.insert(name).second) {
-      assert(false && "Algorithm must ensure no duplicated animation names.");
+      SKR_ASSERT(false && "Algorithm must ensure no duplicated animation names.");
     }
 
     if (renamed) {
@@ -197,7 +197,7 @@ bool SampleStepChannel(const tinygltf::Model& _model,
 template <typename T>
 T SampleHermiteSpline(float _alpha, const T& p0, const T& m0, const T& p1,
                       const T& m1) {
-  assert(_alpha >= 0.f && _alpha <= 1.f);
+  SKR_ASSERT(_alpha >= 0.f && _alpha <= 1.f);
 
   const float t1 = _alpha;
   const float t2 = _alpha * _alpha;
@@ -228,7 +228,7 @@ bool SampleCubicSplineChannel(const tinygltf::Model& _model,
                               _KeyframesType* _keyframes) {
   (void)_duration;
 
-  assert(_output.count % 3 == 0);
+  SKR_ASSERT(_output.count % 3 == 0);
   size_t gltf_keys_count = _output.count / 3;
 
   if (gltf_keys_count == 0) {
@@ -263,7 +263,7 @@ bool SampleCubicSplineChannel(const tinygltf::Model& _model,
     while (_timestamps[cubic_key0 + 1] < time) {
       cubic_key0++;
     }
-    assert(_timestamps[cubic_key0] <= time &&
+    SKR_ASSERT(_timestamps[cubic_key0] <= time &&
            time <= _timestamps[cubic_key0 + 1]);
 
     // Interpolate cubic key
@@ -638,7 +638,7 @@ GltfImporter::AnimationNames GltfImporter::GetAnimationNames() {
   AnimationNames animNames;
   for (size_t i = 0; i < m_model.animations.size(); ++i) {
     tinygltf::Animation& animation = m_model.animations[i];
-    assert(animation.name.length() != 0);
+    SKR_ASSERT(animation.name.length() != 0);
     animNames.push_back(animation.name.c_str());
   }
 
@@ -668,7 +668,7 @@ bool GltfImporter::Import(const char* _animation_name,
                     [_animation_name](const tinygltf::Animation& _animation) {
                       return _animation.name == _animation_name;
                     });
-  assert(gltf_animation != end(m_model.animations));
+  SKR_ASSERT(gltf_animation != end(m_model.animations));
 
   _animation->name = gltf_animation->name.c_str();
 
@@ -722,7 +722,7 @@ bool GltfImporter::Import(const char* _animation_name,
     }
 
     const tinygltf::Node* node = FindNodeByName(joint_names[i]);
-    assert(node != nullptr);
+    SKR_ASSERT(node != nullptr);
 
     // Pads the rest pose transform for any joints which do not have an
     // associated channel for this animation
@@ -762,7 +762,7 @@ bool GltfImporter::SampleAnimationChannel(
   }
 
   auto& input = m_model.accessors[_sampler.input];
-  assert(input.maxValues.size() == 1);
+  SKR_ASSERT(input.maxValues.size() == 1);
 
   // The max[0] property of the input accessor is the animation duration
   // this is required to be present by the spec:
@@ -776,9 +776,9 @@ bool GltfImporter::SampleAnimationChannel(
     *_duration = duration;
   }
 
-  assert(input.type == TINYGLTF_TYPE_SCALAR);
+  SKR_ASSERT(input.type == TINYGLTF_TYPE_SCALAR);
   auto& _output = m_model.accessors[_sampler.output];
-  assert(_output.type == TINYGLTF_TYPE_VEC3 ||
+  SKR_ASSERT(_output.type == TINYGLTF_TYPE_VEC3 ||
           _output.type == TINYGLTF_TYPE_VEC4);
 
   const ozz::span<const float> timestamps = BufferView<float>(_model, input);
@@ -807,7 +807,7 @@ bool GltfImporter::SampleAnimationChannel(
         SampleChannel(m_model, _sampler.interpolation, _output, timestamps,
                       _sampling_rate, duration, &_track->scales);
   } else {
-    assert(false && "Invalid target path");
+    SKR_ASSERT(false && "Invalid target path");
   }
 
   return valid;

@@ -78,7 +78,7 @@ void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* 
     auto jsonString = simdjson::padded_string((char8_t*)ioDestination.bytes, ioDestination.size);
     sakura_free(ioDestination.bytes);
 #else
-    auto file = skr_vfs_fopen(record->project->vfs, u8Path.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto file = skr_vfs_fopen(record->project->vfs, u8Path.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     SKR_DEFER({ skr_vfs_fclose(file); });
     auto size = skr_vfs_fsize(file);
     auto buffer = (char*)sakura_malloc(size + 1);

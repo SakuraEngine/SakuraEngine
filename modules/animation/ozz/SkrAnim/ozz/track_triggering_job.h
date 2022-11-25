@@ -120,11 +120,11 @@ class OZZ_ANIMATION_DLL TrackTriggeringJob::Iterator {
 
   // Dereferencing operators.
   const Edge& operator*() const {
-    assert(*this != job_->end() && "Can't dereference end iterator.");
+    SKR_ASSERT(*this != job_->end() && "Can't dereference end iterator.");
     return edge_;
   }
   const Edge* operator->() const {
-    assert(*this != job_->end() && "Can't dereference end iterator.");
+    SKR_ASSERT(*this != job_->end() && "Can't dereference end iterator.");
     return &edge_;
   }
 

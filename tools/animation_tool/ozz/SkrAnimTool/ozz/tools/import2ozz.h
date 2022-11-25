@@ -131,10 +131,6 @@ class OZZ_ANIMTOOLS_DLL OzzImporter {
   virtual bool Import(const char* _animation_name, const char* _node_name,
                       const char* _track_name, NodeProperty::Type _track_type,
                       float _sampling_rate, RawFloat4Track* _track) = 0;
-
-  // Build a filename from a wildcard string.
-  ozz::string BuildFilename(const char* _filename,
-                            const char* _data_name) const;
 };
 }  // namespace offline
 }  // namespace animation

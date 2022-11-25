@@ -56,7 +56,7 @@ struct JointLister {
           break;
         }
       }
-      assert(parent >= 0);
+      SKR_ASSERT(parent >= 0);
     }
     const Joint listed = {&_current, parent};
     linear_joints.push_back(listed);
@@ -91,7 +91,7 @@ unique_ptr<ozz::animation::Skeleton> SkeletonBuilder::operator()(
   // Iteration order defines runtime skeleton joint ordering.
   JointLister lister(num_joints);
   IterateJointsDF<JointLister&>(_raw_skeleton, lister);
-  assert(static_cast<int>(lister.linear_joints.size()) == num_joints);
+  SKR_ASSERT(static_cast<int>(lister.linear_joints.size()) == num_joints);
 
   // Computes name's buffer size.
   size_t chars_size = 0;

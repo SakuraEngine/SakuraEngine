@@ -272,8 +272,8 @@ class Value {
   // Lookup value from an array
   const Value &Get(int idx) const {
     static Value null_value;
-    assert(IsArray());
-    assert(idx >= 0);
+    SKR_ASSERT(IsArray());
+    SKR_ASSERT(idx >= 0);
     return (static_cast<size_t>(idx) < array_value_.size())
                ? array_value_[static_cast<size_t>(idx)]
                : null_value;
@@ -282,7 +282,7 @@ class Value {
   // Lookup value from a key-value pair
   const Value &Get(const std::string &key) const {
     static Value null_value;
-    assert(IsObject());
+    SKR_ASSERT(IsObject());
     Object::const_iterator it = object_value_.find(key);
     return (it != object_value_.end()) ? it->second : null_value;
   }
@@ -1605,7 +1605,7 @@ static bool LoadExternalFile(std::vector<unsigned char> *out, std::string *err,
                              size_t reqBytes, bool checkSize, FsCallbacks *fs) {
   if (fs == nullptr || fs->FileExists == nullptr ||
       fs->ExpandFilePath == nullptr || fs->ReadWholeFile == nullptr) {
-    // This is a developer error, assert() ?
+    // This is a developer error, SKR_ASSERT() ?
     if (err) {
       (*err) += "FS callback[s] not set\n";
     }
@@ -3125,7 +3125,7 @@ static bool ParseAccessor(Accessor *accessor, std::string *err, const json &o) {
 static void DecodeIndexBuffer(draco::Mesh *mesh, size_t componentSize,
                               std::vector<uint8_t> &outBuffer) {
   if (componentSize == 4) {
-    assert(sizeof(mesh->face(draco::FaceIndex(0))[0]) == componentSize);
+    SKR_ASSERT(sizeof(mesh->face(draco::FaceIndex(0))[0]) == componentSize);
     memcpy(outBuffer.data(), &mesh->face(draco::FaceIndex(0))[0],
            outBuffer.size());
   } else {
@@ -4417,7 +4417,7 @@ bool TinyGLTF::LoadASCIIFromFile(Model *model, std::string *err,
   std::stringstream ss;
 
   if (fs.ReadWholeFile == nullptr) {
-    // Programmer error, assert() ?
+    // Programmer error, SKR_ASSERT() ?
     ss << "Failed to read file: " << filename
        << ": one or more FS callback not set" << std::endl;
     if (err) {
@@ -4530,7 +4530,7 @@ bool TinyGLTF::LoadBinaryFromFile(Model *model, std::string *err,
   std::stringstream ss;
 
   if (fs.ReadWholeFile == nullptr) {
-    // Programmer error, assert() ?
+    // Programmer error, SKR_ASSERT() ?
     ss << "Failed to read file: " << filename
        << ": one or more FS callback not set" << std::endl;
     if (err) {

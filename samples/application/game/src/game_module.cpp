@@ -35,6 +35,8 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
+#include "SkrAnim/resources/animation_resource.h"
+#include "SkrAnim/resources/skeleton_resource.h"
 
 #include "tracy/Tracy.hpp"
 #include "utils/types.h"
@@ -65,6 +67,8 @@ class SGameModule : public skr::IDynamicModule
     skr::resource::STextureFactory* textureFactory = nullptr;
     skr::resource::SMeshFactory* meshFactory = nullptr;
     skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
+    skr::resource::SAnimFactory* animFactory = nullptr;
+    skr::resource::SSkelFactory* skeletonFactory = nullptr;
 
     skr_vfs_t* resource_vfs = nullptr;
     skr_vfs_t* tex_resource_vfs = nullptr;
@@ -157,6 +161,16 @@ void SGameModule::installResourceFactories()
         shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderFactory);
     }
+    // anim factory
+    {
+        animFactory = SkrNew<skr::resource::SAnimFactory>();
+        resource_system->RegisterFactory(animFactory);
+    }
+    // skeleton factory
+    {
+        skeletonFactory = SkrNew<skr::resource::SSkelFactory>();
+        resource_system->RegisterFactory(skeletonFactory);
+    }
 
     skr_resource_handle_t shaderHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
     shaderHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
@@ -185,6 +199,30 @@ void SGameModule::installResourceFactories()
             }
         }
     }
+
+    //anim
+    skr_resource_handle_t animHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
+
+    animHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
+    {
+        while (animHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && animHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+        {
+            auto status = animHdl.get_status();(void)status;
+            resource_system->Update();
+        }
+        auto final_status = animHdl.get_status();
+        if (final_status != SKR_LOADING_STATUS_ERROR)
+        {
+            auto anim = (skr_anim_resource_t*)animHdl.get_ptr();
+            SKR_LOG_TRACE("Anim Loaded: anim name - %s", anim->animation.name());
+            resource_system->UnloadResource(animHdl);
+            resource_system->Update();
+            while (animHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
+            {
+                resource_system->Update();
+            }
+        }
+    }
 }
 
 void SGameModule::uninstallResourceFactories()
@@ -192,6 +230,8 @@ void SGameModule::uninstallResourceFactories()
     skr::resource::STextureFactory::Destroy(textureFactory);
     skr::resource::SMeshFactory::Destroy(meshFactory);
     skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
+    SkrDelete(animFactory);
+    SkrDelete(skeletonFactory);
 
     dualS_release(game_world);
     skr_free_renderer(game_renderer);

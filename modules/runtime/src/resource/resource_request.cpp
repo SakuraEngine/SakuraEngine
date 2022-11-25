@@ -159,6 +159,7 @@ void SResourceRequest::OnRequestFileFinished()
         SKR_LOG_FMT_ERROR("Resource {} failed to load, file not found.", resourceRecord->header.guid);
         currentPhase = SKR_LOADING_PHASE_FINISHED;
         resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
+        return;
     }
     else
     {
@@ -170,8 +171,35 @@ void SResourceRequest::OnRequestFileFinished()
             resourceRecord->header.guid, resourceRecord->header.type);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
+            return;
         }
     }
+    // schedule loading for all runtime dependencies
+    if(requestInstall)
+    {
+        _LoadDependencies();
+    }
+}
+
+
+void SResourceRequest::_LoadDependencies()
+{
+    if(dependenciesLoaded)
+        return;
+    dependenciesLoaded = true;
+    auto& dependencies = resourceRecord->header.dependencies;
+    for (auto& dep : dependencies)
+        dep.resolve(true, resourceRecord->id, SKR_REQUESTER_DEPENDENCY);
+}
+
+void SResourceRequest::_UnloadDependencies()
+{
+    if(!dependenciesLoaded)
+        return;
+    dependenciesLoaded = false;
+    auto& dependencies = resourceRecord->header.dependencies;
+    for(auto& dep : dependencies)
+        dep.unload();
 }
 
 void SResourceRequest::_LoadFinished()
@@ -180,23 +208,20 @@ void SResourceRequest::_LoadFinished()
     if (data)
         sakura_free(data);
     data = nullptr;
+    auto& dependencies = resourceRecord->header.dependencies;
     if (!requestInstall) // only require data, we are done
     {
+        _UnloadDependencies();
         currentPhase = SKR_LOADING_PHASE_FINISHED;
         return;
     }
-    // schedule loading for all runtime dependencies
-    const auto& dependencies = resourceRecord->header.dependencies;
     if (!dependencies.empty())
     {
-        for (auto& dep : resourceRecord->header.dependencies)
-            system->LoadResource(dep, requestInstall, resourceRecord->id, SKR_REQUESTER_DEPENDENCY);
+        _LoadDependencies();
         currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES;
     }
     else
-    {
         currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
-    }
 }
 
 void SResourceRequest::_InstallFinished()
@@ -254,7 +279,7 @@ void SResourceRequest::Update()
             else
             {
                 {
-                    auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+                    auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
                     eastl::vector<uint8_t> buffer(fsize);
@@ -266,7 +291,7 @@ void SResourceRequest::Update()
 #ifdef SKR_RESOURCE_DEV_MODE
                 if (!artifactsUrl.empty())
                 {
-                    auto file = skr_vfs_fopen(vfs, artifactsUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+                    auto file = skr_vfs_fopen(vfs, artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
                     eastl::vector<uint8_t> buffer(fsize);
@@ -355,8 +380,7 @@ void SResourceRequest::Update()
             }
             if (failed)
             {
-                for (auto& dep : resourceRecord->header.dependencies)
-                    system->UnloadResource(dep);
+                _UnloadDependencies();
                 resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
                 factory->Unload(resourceRecord);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
@@ -439,8 +463,7 @@ void SResourceRequest::Update()
         case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
             if (data)
                 sakura_free(data);
-            for (auto& dep : resourceRecord->header.dependencies)
-                system->UnloadResource(dep);
+            _UnloadDependencies();
             resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
             factory->Unload(resourceRecord);
             resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
