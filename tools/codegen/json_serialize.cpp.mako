@@ -118,8 +118,10 @@ void WriteHelper<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, 
     %for name, field in generator.filter_fields(record.fields):
     writer->Key("${name}", ${len(name)});
     %if field.arraySize > 0:
+    writer->StartArray();
     for(int i = 0; i < ${field.arraySize}; ++i)
         skr::json::Write<const ${field.type}&>(writer, record.${name}[i]);
+    writer->EndArray();
     %else:
     skr::json::Write<const ${field.type}&>(writer, record.${name});
     %endif
