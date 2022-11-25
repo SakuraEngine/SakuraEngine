@@ -86,15 +86,7 @@ bool STextureCooker::Cook(SCookContext *ctx)
     // TODO: ASTC
     // make archive
     eastl::vector<uint8_t> resource_data;
-    struct VectorWriter
-    {
-        eastl::vector<uint8_t>* buffer;
-        int write(const void* data, size_t size)
-        {
-            buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
-            return 0;
-        }
-    } writer{&resource_data};
+    skr::binary::VectorWriter writer{&resource_data};
     skr_binary_writer_t archive(writer);
     // write texture resource
     skr_texture_resource_t resource;

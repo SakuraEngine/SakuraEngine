@@ -207,16 +207,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     SKR_DEFER({ ctx->Destroy(mesh); });
     //-----write resource header
     eastl::vector<uint8_t> buffer;
-    //TODO: 公共化 VectorWriter
-    struct VectorWriter
-    {
-        eastl::vector<uint8_t>* buffer;
-        int write(const void* data, size_t size)
-        {
-            buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
-            return 0;
-        }
-    } writer{&buffer};
+    skr::binary::VectorWriter writer{&buffer};
     skr_binary_writer_t archive(writer);
     //------write resource object
     skr::binary::Archive(&archive, *mesh);

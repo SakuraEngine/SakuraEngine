@@ -203,6 +203,16 @@ int Archive(skr_binary_writer_t* writer, const T& value)
 {
     return WriteHelper<const T&>::Write(writer, value);
 }
+
+struct VectorWriter
+{
+    eastl::vector<uint8_t>* buffer;
+    int write(const void* data, size_t size)
+    {
+        buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
+        return 0;
+    }
+};
 } // namespace skr::binary
 
 namespace skr
