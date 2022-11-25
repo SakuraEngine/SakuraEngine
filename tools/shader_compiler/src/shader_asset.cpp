@@ -59,6 +59,16 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     const auto assetRecord = ctx->GetAssetRecord();
     auto source_code = ctx->Import<ShaderSourceCode>();
     SKR_DEFER({ ctx->Destroy(source_code); });
+    // Calculate all macro combines (shader variants)
+    eastl::vector<skr_shader_options_resource_t*> collections = {};
+    auto importer = static_cast<SShaderImporter*>(ctx->GetImporter());
+    for (auto option_asset : importer->option_assets)
+    {
+        // const auto guid = option_asset.get_guid();
+        // auto idx = ctx->AddStaticDependency(guid);
+        // auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
+        // collections.emplace_back(collection);
+    }
     // Enumerate destination bytecode format
     // TODO: REFACTOR THIS
     eastl::vector<ECGPUShaderBytecodeType> byteCodeFormats = {
@@ -163,7 +173,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+        SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for resource {}! path: {}", 
             assetRecord->guid, assetRecord->path.u8string());
         return false;
     }

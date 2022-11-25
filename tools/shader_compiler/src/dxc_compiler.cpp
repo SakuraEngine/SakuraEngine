@@ -227,71 +227,51 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     SourceBuffer.Size = pSourceBlob->GetBufferSize();
     SourceBuffer.Encoding = DXC_CP_ACP; // Assume BOM says UTF8 or UTF16 or this is ANSI text.
     
+    // calculate compile arguments
     using utf8_to_utf16 = fmt::detail::utf8_to_utf16;
     const auto wTargetString = utf8_to_utf16(importer.target.c_str());
     const auto wEntryString = utf8_to_utf16(importer.entry.c_str());
     const auto wNameString = utf8_to_utf16(source.source_name.c_str());
     const auto shader_stage = getShaderStageFromTargetString(importer.target.c_str());
-    if (format == CGPU_SHADER_BYTECODE_TYPE_DXIL) // compile dxil
+    eastl::vector<eastl::wstring> allArgs;
+    allArgs.emplace_back(wNameString.c_str());
+    if (format == CGPU_SHADER_BYTECODE_TYPE_DXIL)
     {
-        LPCWSTR pszArgs[]
-        {
-            wNameString.c_str(),
-            L"-Wno-ignored-attributes",       // ignore some vk attribute warns
-            L"-E", wEntryString.c_str(),  // entry function
-            L"-T", wTargetString.c_str(), // target profile
-            // L"-I", inc.c_str(),                // include path
-            DXC_ARG_ALL_RESOURCES_BOUND,
-    #if _DEBUG
-            DXC_ARG_DEBUG,
-            DXC_ARG_SKIP_OPTIMIZATIONS,
-    #else
-            DXC_ARG_OPTIMIZATION_LEVEL3,
-    #endif // _DEBUG
-            L"-Qstrip_debug",
-        };
-        auto hres = compiler->Compile(
-            &SourceBuffer,                // Source buffer.
-            pszArgs,                // Array of pointers to arguments.
-            _countof(pszArgs),      // Number of arguments.
-            includeHandler,        // User-provided interface to handle #include directives (optional).
-            IID_PPV_ARGS(&pDxcResult) // Compiler output status, buffer, and errors.
-        );
-        if (!SUCCEEDED(hres))
-        {
-            switch (hres)
-            {
-            case 1:
-            default:
-                SKR_UNREACHABLE_CODE();
-            }
-            return nullptr;
-        }
+        allArgs.emplace_back(L"-Wno-ignored-attributes");
+        allArgs.emplace_back(DXC_ARG_ALL_RESOURCES_BOUND);
     }
-    else if (format == CGPU_SHADER_BYTECODE_TYPE_SPIRV) // compile spv
+    if (format == CGPU_SHADER_BYTECODE_TYPE_SPIRV)
     {
-        LPCWSTR pszArgs[]
-        {
-            wNameString.c_str(),
-            // spv args
-            L"-spirv",
-            L"-fspv-target-env=vulkan1.1",
+        allArgs.emplace_back(L"-spirv");
+        allArgs.emplace_back(L"-fspv-target-env=vulkan1.1");
+    }
+    // entry point
+    allArgs.emplace_back(L"-E");
+    allArgs.emplace_back(wEntryString.c_str()); 
+    // target profile
+    allArgs.emplace_back(L"-T");
+    allArgs.emplace_back(wTargetString.c_str()); 
+    // optimization
+#if _DEBUG
+    allArgs.emplace_back(DXC_ARG_DEBUG);
+    allArgs.emplace_back(DXC_ARG_SKIP_OPTIMIZATIONS);
+#else
+    allArgs.emplace_back(DXC_ARG_OPTIMIZATION_LEVEL3);
+#endif
+    allArgs.emplace_back(L"-Qstrip_debug"); 
 
-            L"-E", wEntryString.c_str(),  // entry function
-            L"-T", wTargetString.c_str(), // target profile
-            // L"-I", inc.c_str(),                // include path
-    #if _DEBUG
-            DXC_ARG_DEBUG,
-            DXC_ARG_SKIP_OPTIMIZATIONS,
-    #else
-            DXC_ARG_OPTIMIZATION_LEVEL3,
-    #endif // _DEBUG
-            L"-Qstrip_debug",
-        };
+    // do compile
+    {
+        eastl::vector<LPCWSTR> pszArgs;
+        pszArgs.reserve(allArgs.size());
+        for (auto& arg : allArgs)
+        {
+            pszArgs.emplace_back(arg.c_str());
+        }
         auto hres = compiler->Compile(
             &SourceBuffer,                // Source buffer.
-            pszArgs,                // Array of pointers to arguments.
-            _countof(pszArgs),      // Number of arguments.
+            pszArgs.data(),                // Array of pointers to arguments.
+            pszArgs.size(),      // Number of arguments.
             includeHandler,        // User-provided interface to handle #include directives (optional).
             IID_PPV_ARGS(&pDxcResult) // Compiler output status, buffer, and errors.
         );
@@ -301,15 +281,10 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
             {
             case 1:
             default:
-                SKR_LOG_ERROR("[DXCCompiler]Compile Error: Failed to compile! HRESULT: %u", hres);
                 SKR_UNREACHABLE_CODE();
             }
             return nullptr;
         }
-    }
-    else
-    {
-        SKR_UNREACHABLE_CODE();
     }
     return SDXCCompiledShader::Create(shader_stage, format, pSourceBlob, pDxcResult);
 }

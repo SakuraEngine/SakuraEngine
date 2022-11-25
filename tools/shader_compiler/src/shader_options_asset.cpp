@@ -50,7 +50,7 @@ void* SShaderOptionsImporter::Import(skr::io::RAMService* ioService, SCookContex
     auto newType = skr_get_type(&collectionType);
     auto collection = static_cast<skr_shader_options_resource_t*>(newType->Malloc());
     newType->Construct(collection, nullptr, 0);
-    newType->DeserializeText(collection, std::move(doc));
+    newType->DeserializeText(collection, std::move(doc.get_value()));
     return collection;
 }
 
