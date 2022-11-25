@@ -455,6 +455,11 @@ const SAssetRecord* SCookContext::GetAssetRecord() const
     return record;
 }
 
+skr::string SCookContext::GetAssetPath() const
+{
+    return record->path.u8string().c_str();
+}
+
 skr::filesystem::path SCookContext::AddFileDependency(const skr::filesystem::path &inPath)
 {
     auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == inPath; });

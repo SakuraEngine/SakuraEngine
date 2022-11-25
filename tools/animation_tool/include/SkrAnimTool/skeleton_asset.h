@@ -21,14 +21,14 @@ sreflect_struct("guid"
 sattr("serialize" : "json")
 SKR_ANIMTOOL_API SSkelGltfImporter : public skd::asset::SImporter
 {
-    bool skeleton;
-    bool marker;
-    bool camera;
-    bool geometry;
-    bool light;
-    bool null;
-    bool any;
-
+    // bool skeleton;
+    // bool marker;
+    // bool camera;
+    // bool geometry;
+    // bool light;
+    // bool null;
+    // bool any;
+    skr::string assetPath;
     virtual ~SSkelGltfImporter() = default;
     virtual void* Import(skr::io::RAMService*, SCookContext * context) override;
     virtual void Destroy(void*) override;

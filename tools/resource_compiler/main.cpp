@@ -24,7 +24,8 @@
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "utils/make_zeroed.hpp"
-
+#include "SkrAnim/resources/skeleton_resource.h"
+#include "SkrAnim/resources/animation_resource.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -122,6 +123,7 @@ bool IsAsset(skr::filesystem::path path)
 }
 
 skr::resource::SShaderOptionsFactory* shaderOptionsFactory = nullptr;
+skr::resource::SSkelFactory* skelFactory = nullptr;
 skr::resource::SLocalResourceRegistry* registry = nullptr;
 
 void InitializeResourceSystem(skd::SProject& proj)
@@ -135,7 +137,12 @@ void InitializeResourceSystem(skd::SProject& proj)
     {
         skr::resource::SShaderOptionsFactory::Root factoryRoot = {};
         shaderOptionsFactory = skr::resource::SShaderOptionsFactory::Create(factoryRoot);
-        resource_system->RegisterFactory(skr::type::type_id<skr_shader_options_resource_t>::get(), shaderOptionsFactory);
+        resource_system->RegisterFactory(shaderOptionsFactory);
+    }
+
+    {
+        skelFactory = SkrNew<skr::resource::SSkelFactory>();
+        resource_system->RegisterFactory(skelFactory);
     }
 }
 

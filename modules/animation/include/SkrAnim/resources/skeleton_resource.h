@@ -34,12 +34,11 @@ struct SKR_ANIM_API WriteHelper<const skr_skeleton_resource_t&> {
 } // namespace skr::binary
 
     #include "resource/resource_factory.h"
-namespace skr sreflect
+namespace skr
 {
-namespace resource sreflect
+namespace resource
 {
-sreflect_struct("guid" : "03212f68-3db3-4080-a074-b855cd21e32f")
-SSkelFactory : public SResourceFactory
+struct SKR_ANIM_API SSkelFactory : public SResourceFactory
 {
 public:
     ~SSkelFactory() noexcept = default;

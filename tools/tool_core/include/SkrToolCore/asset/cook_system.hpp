@@ -40,6 +40,7 @@ public:
     uint32_t GetImporterVersion() const;
     uint32_t GetCookerVersion() const;
     const SAssetRecord* GetAssetRecord() const;
+    skr::string GetAssetPath() const;
 
     skr::filesystem::path AddFileDependency(const skr::filesystem::path& path);
     void AddRuntimeDependency(skr_guid_t resource);

@@ -122,7 +122,7 @@ void SGameModule::installResourceFactories()
         factoryRoot.vram_service = game_render_device->get_vram_service();
         factoryRoot.render_device = game_render_device;
         textureFactory = skr::resource::STextureFactory::Create(factoryRoot);
-        resource_system->RegisterFactory("f8821efb-f027-4367-a244-9cc3efb3a3bf"_guid, textureFactory);
+        resource_system->RegisterFactory(textureFactory);
     }
     // mesh factory
     {
@@ -133,7 +133,7 @@ void SGameModule::installResourceFactories()
         factoryRoot.vram_service = game_render_device->get_vram_service();
         factoryRoot.render_device = game_render_device;
         meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
-        resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, meshFactory);
+        resource_system->RegisterFactory(meshFactory);
     }
     // shader factory
     {
@@ -155,7 +155,7 @@ void SGameModule::installResourceFactories()
         factoryRoot.render_device = game_render_device;
         factoryRoot.aux_service = game_render_device->get_aux_service(0);
         shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
-        resource_system->RegisterFactory("1c7d845a-fde8-4487-b1c9-e9c48d6a9867"_guid, shaderFactory);
+        resource_system->RegisterFactory(shaderFactory);
     }
 
     skr_resource_handle_t shaderHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);

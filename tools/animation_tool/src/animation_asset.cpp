@@ -26,6 +26,11 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     SAnimCookSettings settings;
     skr::json::Read(std::move(doc), settings);
     //-----emit static dependencies
+    if(settings.skeletonAsset.get_serialized() == skr_guid_t{})
+    {
+        SKR_LOG_ERROR("Failed to cook animation asset %s. No skeleton asset specified.", ctx->GetAssetRecord()->path.c_str());
+        return false;
+    }
     auto idx = ctx->AddStaticDependency(settings.skeletonAsset.get_serialized(), true);
     if(ctx->GetStaticDependency(idx).get_status() == SKR_LOADING_STATUS_ERROR)
         return false;
