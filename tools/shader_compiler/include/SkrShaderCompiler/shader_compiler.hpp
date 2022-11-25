@@ -28,7 +28,7 @@ struct ShaderSourceCode
 {
     inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char* name, EShaderSourceType type) SKR_NOEXCEPT
         : bytes(bytes), size(size), source_name(name), source_type(type) {}
-    ~ShaderSourceCode() SKR_NOEXCEPT = default;
+    ~ShaderSourceCode() SKR_NOEXCEPT;
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;

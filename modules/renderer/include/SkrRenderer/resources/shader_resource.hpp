@@ -13,10 +13,11 @@
 #endif
 
 sreflect_struct("guid" : "5a54720c-34b2-444c-8e3a-5977c94136c3")
-sattr("serialize" : ["json", "bin"])
-sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_stable_shader_hash_t 
 {
+    inline skr_stable_shader_hash_t() = default;
+
     uint64_t value = 0;
     
     sattr("no-rtti" : true)
@@ -26,60 +27,84 @@ skr_stable_shader_hash_t
     {
         inline size_t operator()(const skr_stable_shader_hash_t& hash) const { return hash.value; }
     };
+
+    SKR_RENDERER_API skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT;
+    SKR_RENDERER_API operator skr::string() const SKR_NOEXCEPT;
 };
-typedef struct skr_stable_shader_hash_t skr_stable_shader_hash_t;
 
 sreflect_struct("guid" : "0291f512-747e-4b64-ba5c-5fdc412220a3")
-sattr("serialize" : ["json", "bin"])
-sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_hash_t 
 {
     uint32_t flags;
     uint32_t encoded_digits[4];
 };
-typedef struct skr_platform_shader_hash_t skr_platform_shader_hash_t;
 
 sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
-sattr("serialize" : ["json", "bin"])
-sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_identifier_t 
 {
     skr::TEnumAsByte<ECGPUShaderBytecodeType> bytecode_type;
     skr_platform_shader_hash_t hash;
     skr::string entry;
 };
-typedef struct skr_platform_shader_identifier_t skr_platform_shader_identifier_t;
 
 sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
-sattr("serialize" : "bin")
-sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_resource_t
 {
     eastl::vector<skr_platform_shader_identifier_t> identifiers;
-    sattr("no-rtti" : true)
-    ECGPUShaderStage shader_stage;
+    skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
 
     sattr("transient": true, "no-rtti" : true)
     CGPUShaderLibraryId shader;
     sattr("transient": true, "no-rtti" : true)
     uint32_t active_slot;
 };
-typedef struct skr_platform_shader_resource_t skr_platform_shader_resource_t;
+
+sreflect_struct("guid" : "00d4c2b3-50e7-499b-9cf3-fb6b2ba70e79")
+sattr("serialize" : ["json", "bin"], "rtti" : true)
+skr_shader_option_instance_t
+{
+    eastl::string key;
+    // if value.empty() then it's automatically set to option.value_selections[0] as the default value
+    // if value == "on" then it will behave like "-D${key}", ["SOME_MACRO", ""] -> -DSOME_MACRO
+    // if value == "off" then it will keep undefined during compile time
+    eastl::string value;
+};
+
+sreflect_struct("guid" : "f497b62d-e63e-4ec3-b923-2a01a90f9966")
+sattr("serialize" : ["json", "bin"], "rtti" : true)
+skr_shader_option_t
+{
+    eastl::string key;
+    eastl::vector<eastl::string> value_selections; // { "on", "off" } or { "1", "2", "3" }
+    // TODO: target platforms filter
+};
+
+sreflect_struct("guid" : "fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc")
+sattr("serialize" : ["json", "bin"], "rtti" : true)
+skr_shader_options_resource_t
+{
+    using shader_options_handle_t = skr::resource::TResourceHandle<skr_shader_options_resource_t>;
+
+    // TODO: replace this with set when rtti & serde is ready
+    eastl::vector<skr_shader_option_t> options;
+    // eastl::vector<shader_options_handle_t> nested;
+};
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
-sattr("serialize" : "bin")
-sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_collection_resource_t
 {
     using stable_hash = skr_stable_shader_hash_t;
     using stable_hasher = skr_stable_shader_hash_t::hasher;
 
-    skr_guid_t asset_guid;
+    skr_guid_t root_guid;
     // hash=0 -> root_variant;
     sattr("no-rtti" : true)
     skr::flat_hash_map<stable_hash, skr_platform_shader_resource_t, stable_hasher> variants;
 };
-typedef struct skr_platform_shader_collection_resource_t skr_platform_shader_collection_resource_t;
 
 namespace skr sreflect
 {

@@ -14,9 +14,14 @@ namespace skd
 {
 namespace asset
 {
+ShaderSourceCode::~ShaderSourceCode() SKR_NOEXCEPT
+{
+    sakura_free(bytes);    
+}
+
 void* SShaderImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
 {
-    auto path = context->AddFileDependency(assetPath.c_str());
+    auto path = context->AddFileDependency(sourcePath.c_str());
     auto u8Path = path.u8string();
 
     const auto assetRecord = context->GetAssetRecord();
@@ -147,7 +152,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     root_variant.identifiers = outIdentifiers;
     root_variant.shader_stage = outStages[0];
     auto resource = make_zeroed<skr_platform_shader_collection_resource_t>();
-    resource.asset_guid = assetRecord->guid;
+    resource.root_guid = assetRecord->guid;
     const auto root_hash = make_zeroed<skr_stable_shader_hash_t>();
     resource.variants.emplace(root_hash, root_variant);
     // TODO: shader variants
