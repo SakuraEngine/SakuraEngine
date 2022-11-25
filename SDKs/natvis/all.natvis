@@ -555,7 +555,7 @@
 
   <!-- /Users/saeruhikari/Documents/GitHub/Sakura.Runtime/src/ecs/dual.natvis -->
     <Type Name="skr_guid_t">
-        <DisplayString>{{{Data1,nvoXb}-{Data2,nvoXb}-{Data3,nvoXb}-{Data4[0],nvoXb}{Data4[1],nvoXb}-{Data4[2],nvoXb}{Data4[3],nvoXb}{Data4[4],nvoXb}{Data4[5],nvoXb}{Data4[6],nvoXb}{Data4[7],nvoXb}}}</DisplayString>
+        <DisplayString>{{{Storage0,nvoXb}-{((uint16_t*)&amp;Storage1)[0],nvoXb}-{((uint16_t*)&amp;Storage1)[1],nvoXb}-{((uint8_t*)&amp;Storage2)[0],nvoXb}{((uint8_t*)&amp;Storage2)[1],nvoXb}-{((uint8_t*)&amp;Storage2)[2],nvoXb}{((uint8_t*)&amp;Storage2)[3],nvoXb}{((uint8_t*)&amp;Storage3)[0],nvoXb}{((uint8_t*)&amp;Storage3)[1],nvoXb}{((uint8_t*)&amp;Storage3)[2],nvoXb}{((uint8_t*)&amp;Storage3)[3],nvoXb}}}</DisplayString>
     </Type>
     <Type Name="dual_chunk_view_t">
         <Intrinsic Name="has_value" Expression="count != 0 &amp;&amp; chunk != nullptr"/>
