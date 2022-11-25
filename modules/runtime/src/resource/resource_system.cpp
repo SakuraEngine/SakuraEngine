@@ -241,6 +241,7 @@ void SResourceSystemImpl::Shutdown()
 
 void SResourceSystemImpl::Update()
 {
+    eastl::vector<SResourceRequest*> to_update_requests;
     {
         SMutexLock lock(recordMutex);
         requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
@@ -261,9 +262,10 @@ void SResourceSystemImpl::Update()
             return false;
         }),
         requests.end());
+        to_update_requests = requests;
     }
     // TODO: time limit
-    for (auto request : requests)
+    for (auto request : to_update_requests)
     {
         uint32_t spinCounter = 0;
         ESkrLoadingPhase LastPhase;
