@@ -23,11 +23,7 @@ namespace skr::binary
 {
 template <>
 struct SKR_ANIM_API ReadHelper<skr_anim_resource_t> {
-    static int Read(skr_binary_reader_t* reader, skr_anim_resource_t& value)
-    {
-        SKR_UNIMPLEMENTED_FUNCTION();
-        return -1;
-    }
+    static int Read(skr_binary_reader_t* reader, skr_anim_resource_t& value);
 };
 } // namespace skr::binary
 

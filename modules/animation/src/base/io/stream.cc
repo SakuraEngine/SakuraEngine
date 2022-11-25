@@ -34,6 +34,8 @@
 
 #include "SkrAnim/ozz/base/maths/math_ex.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
+#include "binary/reader.h"
+#include "binary/writer.h"
 
 namespace ozz {
 namespace io {
@@ -215,5 +217,45 @@ bool MemoryStream::Resize(size_t _size) {
   }
   return _size == 0 || buffer_ != nullptr;
 }
+
+// Starts SkrStream implementation.
+SkrStream::SkrStream(skr_binary_reader_t* _reader, skr_binary_writer_t* _writer)
+    : reader_(_reader), writer_(_writer) {}
+
+SkrStream::~SkrStream() {}
+
+bool SkrStream::opened() const { return reader_ != nullptr || writer_ != nullptr; }
+
+size_t SkrStream::Read(void* _buffer, size_t _size) {
+  SKR_ASSERT(reader_);
+  if(auto ret = skr::binary::ReadValue(reader_, _buffer, _size); ret != _size) {
+    return 0;
+  }
+  return _size;
+}
+
+size_t SkrStream::Write(const void* _buffer, size_t _size) {
+  SKR_ASSERT(writer_);
+  if(auto ret = skr::binary::WriteValue(writer_, _buffer, _size); ret != _size) {
+    return 0;
+  }
+  return _size;
+}
+
+int SkrStream::Seek(int _offset, Origin _origin) {
+  SKR_UNIMPLEMENTED_FUNCTION()
+  return 0;
+}
+
+int SkrStream::Tell() const {
+  SKR_UNIMPLEMENTED_FUNCTION()
+  return 0;
+}
+
+size_t SkrStream::Size() const {
+  SKR_UNIMPLEMENTED_FUNCTION()
+  return 0;
+}
+
 }  // namespace io
 }  // namespace ozz

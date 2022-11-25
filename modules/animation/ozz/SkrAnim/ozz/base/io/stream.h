@@ -34,6 +34,8 @@
 #include <cstddef>
 
 #include "SkrAnim/ozz/base/platform.h"
+#include "binary/reader_fwd.h"
+#include "binary/writer_fwd.h"
 
 namespace ozz {
 namespace io {
@@ -183,6 +185,39 @@ class OZZ_BASE_DLL MemoryStream : public Stream {
 
   // The cursor position in the buffer of data.
   int tell_;
+};
+
+// Implements a Stream that adapt skr binary serde
+class OZZ_BASE_DLL SkrStream : public Stream {
+public:
+  // Construct a stream from skr binary reader and writer.
+  SkrStream(skr_binary_reader_t* _reader, skr_binary_writer_t* _writer);
+
+  // Closes the stream and deallocates memory buffer.
+  virtual ~SkrStream();
+
+  // See Stream::opened for details.
+  virtual bool opened() const;
+
+  // See Stream::Read for details.
+  virtual size_t Read(void* _buffer, size_t _size);
+
+  // See Stream::Write for details.
+  virtual size_t Write(const void* _buffer, size_t _size);
+
+  // See Stream::Seek for details.
+  virtual int Seek(int _offset, Origin _origin);
+
+  // See Stream::Tell for details.
+  virtual int Tell() const;
+
+  // See Stream::Tell for details.
+  virtual size_t Size() const;
+private:
+  // The skr binary reader.
+  skr_binary_reader_t* reader_;
+  // The skr binary writer.
+  skr_binary_writer_t* writer_;
 };
 }  // namespace io
 }  // namespace ozz
