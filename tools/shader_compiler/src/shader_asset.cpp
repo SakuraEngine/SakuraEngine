@@ -8,6 +8,8 @@
 #include "SkrShaderCompiler/shader_compiler.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 
+#include "utils/cartesian_product.hpp"
+
 #include "tracy/Tracy.hpp"
 
 namespace skd
@@ -69,7 +71,41 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
         collections.emplace_back(collection);
     }
+    // flat and well sorted
+    eastl::vector<skr_shader_option_t> flat_options = {};
+    eastl::vector<eastl::vector<eastl::string>> selection_seqs = {};
+    skr_shader_options_resource_t::flatten_options(flat_options, { collections.data(), collections.size() });
+    selection_seqs.resize(flat_options.size());
+    for (size_t i = 0u; i < flat_options.size(); ++i)
+    {
+        selection_seqs[i] = flat_options[i].value_selections;
+    }
+    using unique_option_seq = eastl::vector<skr_shader_option_instance_t>;
+    using all_option_seqs_t = eastl::vector<unique_option_seq>;
+    all_option_seqs_t all_variants = {};
+    if (!selection_seqs.empty())
+    {
+        skr::cartesian_product<eastl::string> cartesian(selection_seqs);
+        while (cartesian.has_next())
+        {
+            eastl::vector<skr_shader_option_instance_t> option_seq = {};
+            const auto sequence = cartesian.next();
+            option_seq.resize(sequence.size());
+            SKR_ASSERT(sequence.size() == flat_options.size());
+            for (size_t idx = 0u; idx < option_seq.size(); ++idx)
+            {
+                option_seq[idx].key = flat_options[idx].key;
+                option_seq[idx].value = sequence[idx];
+            }
+            all_variants.emplace_back(option_seq);
+        }
+    }
+    else
+    {
+        all_variants.emplace_back(); // emplace an empty option sequence
+    }
     // Enumerate destination bytecode format
+
     // TODO: REFACTOR THIS
     eastl::vector<ECGPUShaderBytecodeType> byteCodeFormats = {
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_DXIL,

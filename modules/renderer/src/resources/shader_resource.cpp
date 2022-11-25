@@ -7,6 +7,7 @@
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
 #include "containers/hashmap.hpp"
+#include "containers/btree.hpp"
 #include "utils/io.hpp"
 
 #include "tracy/Tracy.hpp"
@@ -19,6 +20,33 @@ skr_stable_shader_hash_t::skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT
 skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
 {
     return skr::format("{}", value);
+}
+
+bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
+{
+    eastl::set<eastl::string> keys;
+    skr::flat_hash_map<eastl::string, eastl::vector<eastl::string>, eastl::hash<eastl::string>> kvs;
+    // collect all keys & ensure unique
+    for (auto& src : srcs)
+    {
+        for (auto& opt : src->options)
+        {
+            auto&& found = keys.find(opt.key);
+            if (found != keys.end())
+            {
+                dst.empty();
+                return false;
+            }
+            keys.insert(opt.key);
+            kvs.insert({opt.key, opt.value_selections});
+        }
+    }
+    dst.reserve(keys.size());
+    for (auto& key : keys)
+    {
+        dst.push_back({key, kvs[key]});
+    }
+    return true;
 }
 
 namespace skr
