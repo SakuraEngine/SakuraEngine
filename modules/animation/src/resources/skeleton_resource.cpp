@@ -10,6 +10,13 @@ namespace skr::binary
         archive >> value.skeleton;
         return 0;
     }
+    int WriteHelper<const skr_skeleton_resource_t &>::Write(skr_binary_writer_t* writer, const skr_skeleton_resource_t &value)
+    {
+        ozz::io::SkrStream stream(nullptr, writer);
+        ozz::io::OArchive archive(&stream);
+        archive << value.skeleton;
+        return 0;
+    }
 }
 
 namespace skr::resource

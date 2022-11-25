@@ -41,7 +41,7 @@ namespace animation {
 namespace offline {
 
 class OzzImporter;
-class RawSkeleton;
+struct RawSkeleton;
 
 OZZ_ANIMTOOLS_DLL bool ImportSkeleton(const Options& _option,
                                       OzzImporter* _importer);

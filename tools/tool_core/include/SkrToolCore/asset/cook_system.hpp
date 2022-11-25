@@ -8,6 +8,7 @@
 #include "utils/lazy.hpp"
 #include "platform/filesystem.hpp"
 #include "json/reader.h"
+#include "utils/log.hpp"
 
 namespace skd sreflect
 {
@@ -70,7 +71,7 @@ public:
         eastl::vector<uint8_t> buffer;
         skr::binary::VectorWriter writer{&buffer};
         skr_binary_writer_t archive(writer);
-        if(auto result = skr::binary::Archive(&archive, *resource); result != 0)
+        if(int result = skr::binary::Archive(&archive, resource); result != 0)
         {
             SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to serialize resource {}! path: {}", 
                 record->guid, record->path.u8string());
