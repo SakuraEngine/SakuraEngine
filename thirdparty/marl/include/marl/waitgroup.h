@@ -64,6 +64,8 @@ class WaitGroup {
   // wait() blocks until the WaitGroup counter reaches zero.
   MARL_NO_EXPORT inline void wait() const;
 
+  MARL_NO_EXPORT inline bool test() const;
+
   MARL_NO_EXPORT inline WaitGroup(std::nullptr_t) {}
 
   MARL_NO_EXPORT inline WaitGroup(const WaitGroup&) = default;
@@ -129,6 +131,10 @@ bool WaitGroup::done() const {
 void WaitGroup::wait() const {
   marl::lock lock(data->mutex);
   data->cv.wait(lock, [this] { return data->count == 0; });
+}
+
+bool WaitGroup::test() const {
+  return data->count == 0;
 }
 
 }  // namespace marl

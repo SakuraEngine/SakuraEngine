@@ -38,6 +38,7 @@ namespace skr::task
         void wait(bool pin) const { internal->GetScheduler()->WaitForCounter(internal.get(), pin); }
         void add(const unsigned int x) { internal->Add(x); }
         void decrement() { internal->Decrement(); }
+        bool test() const { return internal->Done(); }
         size_t hash() const { return std::hash<void*>{}(internal.get()); }
         explicit operator bool() const { return (bool)internal; }
     private:
@@ -195,6 +196,7 @@ namespace skr::task
         explicit operator bool() const { return (bool)internal; }
         void wait(bool pin) const { internal.wait(); }
         void add(const uint32_t x) { internal.add(x); }
+        bool test() const { return internal.test(); }
         void decrement() { internal.done(); }
     private:
         friend class weak_counter_t;
