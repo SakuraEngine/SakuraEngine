@@ -144,15 +144,7 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     //TODO: iterate though all component & find resource handle fields
     //-----write resource header
     eastl::vector<uint8_t> buffer;
-    struct VectorWriter
-    {
-        eastl::vector<uint8_t>* buffer;
-        int write(const void* data, size_t size)
-        {
-            buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
-            return 0;
-        }
-    } writer{&buffer};
+    skr::binary::VectorWriter writer{&buffer};
     skr_binary_writer_t archive(writer);
     //------write resource object
     dualS_serialize(world, &archive);
