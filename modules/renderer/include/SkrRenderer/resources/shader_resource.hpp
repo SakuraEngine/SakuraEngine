@@ -110,6 +110,18 @@ namespace skr sreflect
 {
 namespace resource sreflect
 {
+struct SKR_RENDERER_API SShaderOptionsFactory : public SResourceFactory {
+    virtual ~SShaderOptionsFactory() = default;
+
+    struct Root {
+        int __nothing__;
+    };
+
+    float AsyncSerdeLoadFactor() override { return 0.1f; }
+    [[nodiscard]] static SShaderOptionsFactory* Create(const Root& root);
+    static void Destroy(SShaderOptionsFactory* factory); 
+};
+
 struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
     virtual ~SShaderResourceFactory() = default;
 
@@ -120,7 +132,7 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
         skr_threaded_service_t* aux_service = nullptr;
     };
 
-    float AsyncSerdeLoadFactor() override { return 101.f; }
+    float AsyncSerdeLoadFactor() override { return 1.f; }
     [[nodiscard]] static SShaderResourceFactory* Create(const Root& root);
     static void Destroy(SShaderResourceFactory* factory); 
 };

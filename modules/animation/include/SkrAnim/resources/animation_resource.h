@@ -10,9 +10,9 @@ typedef struct skr_anim_resource_t skr_anim_resource_t;
 #ifdef __cplusplus
     #include "SkrAnim/ozz/animation.h"
     #include "binary/reader_fwd.h"
+    #include "platform/debug.h"
 
-sreflect_struct("guid"
-                : "5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD")
+sreflect_struct("guid": "5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD")
 sattr("rtti" : true)
 skr_anim_resource_t
 {
@@ -23,7 +23,11 @@ namespace skr::binary
 {
 template <>
 struct SKR_ANIM_API ReadHelper<skr_anim_resource_t> {
-    static int Read(skr_binary_reader_t* reader, skr_anim_resource_t& value);
+    static int Read(skr_binary_reader_t* reader, skr_anim_resource_t& value)
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return -1;
+    }
 };
 } // namespace skr::binary
 
