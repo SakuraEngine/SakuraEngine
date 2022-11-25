@@ -120,7 +120,6 @@ struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory
     {
         return true;
     }
-    void DestroyResource(skr_resource_record_t* record) override {}
     
     Root root;
 };
@@ -150,7 +149,6 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
     bool Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
-    void DestroyResource(skr_resource_record_t* record) override;
 
     ECGPUShaderBytecodeType GetRuntimeBytecodeType() const
     {
@@ -315,11 +313,6 @@ ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_
         SKR_UNREACHABLE_CODE();
     }
     return ESkrInstallStatus::SKR_INSTALL_STATUS_FAILED;
-}
-
-void SShaderResourceFactoryImpl::DestroyResource(skr_resource_record_t* record)
-{
-    return;
 }
 
 } // namespace resource

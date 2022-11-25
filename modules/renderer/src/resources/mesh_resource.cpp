@@ -311,7 +311,6 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
     bool Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
-    void DestroyResource(skr_resource_record_t* record) override;
 
     enum class EInstallMethod : uint32_t
     {
@@ -632,11 +631,6 @@ bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
     auto render_mesh_resource = mesh_resource->render_mesh;
     if(render_mesh_resource) skr_render_mesh_free(render_mesh_resource);
     return true; 
-}
-
-void SMeshFactoryImpl::DestroyResource(skr_resource_record_t* record)
-{
-    return; 
 }
 
 } // namespace resource

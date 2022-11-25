@@ -46,7 +46,6 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
     bool Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
-    void DestroyResource(skr_resource_record_t* record) override;
     
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
     ESkrInstallStatus InstallWithUpload(skr_resource_record_t* record);
@@ -318,11 +317,6 @@ ESkrInstallStatus STextureFactoryImpl::UpdateInstall(skr_resource_record_t* reco
     }
 
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
-}
-
-void STextureFactoryImpl::DestroyResource(skr_resource_record_t* record)
-{
-    return; 
 }
 
 }

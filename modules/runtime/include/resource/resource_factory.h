@@ -47,7 +47,6 @@ struct RUNTIME_API SResourceFactory {
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }
     virtual bool Uninstall(skr_resource_record_t* record) { return true; }
     virtual ESkrInstallStatus UpdateInstall(skr_resource_record_t* record);
-    virtual void DestroyResource(skr_resource_record_t* record);
 };
 } // namespace resource
 } // namespace skr

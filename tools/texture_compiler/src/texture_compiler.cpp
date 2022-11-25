@@ -84,10 +84,6 @@ bool STextureCooker::Cook(SCookContext *ctx)
     // DXT
     const auto compressed_data = Util_DXTCompressWithImageCoder(image_coder, compressed_format);
     // TODO: ASTC
-    // make archive
-    eastl::vector<uint8_t> resource_data;
-    skr::binary::VectorWriter writer{&resource_data};
-    skr_binary_writer_t archive(writer);
     // write texture resource
     skr_texture_resource_t resource;
     resource.format = compressed_format;
@@ -96,18 +92,8 @@ bool STextureCooker::Cook(SCookContext *ctx)
     resource.height = skr_image_coder_get_height(image_coder);
     resource.width = skr_image_coder_get_width(image_coder);
     resource.depth = 1;
-    // format
-    skr::binary::Write(&archive, resource);
-    // write to file
-    auto file = fopen(outputPath.u8string().c_str(), "wb");
-    if (!file)
-    {
-        SKR_LOG_FMT_ERROR("[STextureCooker::Cook] failed to write cooked file for resource {}! path: {}", 
-            assetRecord->guid, assetRecord->path.u8string());
+    if(!ctx->Save(resource))
         return false;
-    }
-    SKR_DEFER({ fclose(file); });
-    fwrite(resource_data.data(), resource_data.size(), 1, file);
     // write compressed files
     {
         auto extension = Util_CompressedTypeString(compressed_format);

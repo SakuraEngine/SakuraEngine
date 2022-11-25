@@ -32,17 +32,12 @@ namespace skr sreflect
 {
 namespace resource sreflect
 {
-class SAnimFactory : public SResourceFactory
+class SKR_ANIM_API SAnimFactory : public SResourceFactory
 {
 public:
     ~SAnimFactory() noexcept = default;
     skr_type_id_t GetResourceType() override;
     bool AsyncIO() override { return true; }
-    bool Unload(skr_resource_record_t* record) override;
-    ESkrInstallStatus Install(skr_resource_record_t* record) override;
-    bool Uninstall(skr_resource_record_t* record) override;
-    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
-    void DestroyResource(skr_resource_record_t* record) override;
 };
 } // namespace resource sreflect
 } // namespace skr sreflect
