@@ -9,3 +9,7 @@ namespace skr::binary
 template <class T, class = void>
 struct WriteHelper;
 }
+
+#ifndef SKR_ARCHIVE
+#define SKR_ARCHIVE(...) if(auto ret = skr::binary::Archive(archive, (__VA_ARGS__)); ret != 0) return ret
+#endif

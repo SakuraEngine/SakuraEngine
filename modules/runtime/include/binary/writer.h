@@ -1,5 +1,6 @@
 #pragma once
 #include <EASTL/vector.h>
+#include "containers/span.hpp"
 #include "writer_fwd.h"
 #include "resource/resource_handle.h"
 #include "containers/variant.hpp"
@@ -32,6 +33,8 @@ inline int WriteValue(skr_binary_writer_t* writer, const void* data, size_t size
 
 template <class T>
 int Write(skr_binary_writer_t* writer, const T& value);
+template <class T>
+int Archive(skr_binary_writer_t* writer, const T& value);
 
 template <class T>
 struct WriteHelper<const T&, std::enable_if_t<std::is_enum_v<T>>> {
@@ -141,6 +144,19 @@ struct WriteHelper<const TEnumAsByte<T>&> {
 };
 
 template <class T>
+struct WriteHelper<const skr::span<T>&> {
+    static int Write(skr_binary_writer_t* writer, const skr::span<T>& span)
+    {
+        for (const T& value : span) {
+            if(auto result = skr::binary::Write(writer, value); result != 0) {
+                return result;
+            }
+        }
+        return 0;
+    }
+};
+
+template <class T>
 struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
     static int Write(skr_binary_writer_t* binary, const skr::resource::TResourceHandle<T>& handle)
     {
@@ -151,30 +167,25 @@ struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
 
 template <class V, class Allocator>
 struct WriteHelper<const eastl::vector<V, Allocator>&> {
-    static int Write(skr_binary_writer_t* binary, const eastl::vector<V, Allocator>& vec)
+    static int Write(skr_binary_writer_t* archive, const eastl::vector<V, Allocator>& vec)
     {
-        int ret = skr::binary::Write(binary, (uint32_t)vec.size());
-        if (ret != 0)
-            return ret;
+        SKR_ARCHIVE((uint32_t)vec.size());
         for (auto& value : vec)
         {
-            ret = skr::binary::Write(binary, value);
-            if (ret != 0)
-                return ret;
+            SKR_ARCHIVE(value);
         }
-        return ret;
+        return 0;
     }
 };
 
 template <class... Ts>
 struct WriteHelper<const skr::variant<Ts...>&> {
-    static int Write(skr_binary_writer_t* binary, const skr::variant<Ts...>& variant)
+    static int Write(skr_binary_writer_t* archive, const skr::variant<Ts...>& variant)
     {
-        int ret = skr::binary::Write(binary, (uint32_t)variant.index());
-        if (ret != 0)
-            return ret;
+        SKR_ARCHIVE((uint32_t)variant.index());
+        int ret;
         std::visit([&](auto&& value) {
-            ret = skr::binary::Write(binary, value);
+            ret = skr::binary::Write(archive, value);
         },
         variant);
         return ret;
