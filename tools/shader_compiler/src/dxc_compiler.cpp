@@ -214,6 +214,12 @@ inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target
     return CGPU_SHADER_STAGE_NONE;
 }
 
+void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_instance_t> options_view, const skr_shader_options_md5_t& md5) SKR_NOEXCEPT
+{
+    options = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
+    options_md5 = md5;
+}
+
 ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT
 {
     IDxcBlobEncoding* pSourceBlob = nullptr;
@@ -271,7 +277,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
         auto hres = compiler->Compile(
             &SourceBuffer,                // Source buffer.
             pszArgs.data(),                // Array of pointers to arguments.
-            pszArgs.size(),      // Number of arguments.
+            (UINT32)pszArgs.size(),      // Number of arguments.
             includeHandler,        // User-provided interface to handle #include directives (optional).
             IID_PPV_ARGS(&pDxcResult) // Compiler output status, buffer, and errors.
         );

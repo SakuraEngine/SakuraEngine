@@ -12,6 +12,16 @@
 
 #include "tracy/Tracy.hpp"
 
+skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t v) SKR_NOEXCEPT
+{
+    value = v;
+}
+
+skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint64_t v) SKR_NOEXCEPT
+{
+    value = v;
+}
+
 skr_stable_shader_hash_t::skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT
 {
     value = std::stoull(str);
@@ -47,6 +57,27 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
         dst.push_back({key, kvs[key]});
     }
     return true;
+}
+
+skr_shader_options_md5_t skr_shader_options_md5_t::calculate(skr::span<skr_shader_option_instance_t> ordered_options)
+{
+    // TODO: check ordered here
+    eastl::string sourceString;
+    for (auto&& option : ordered_options)
+    {
+        sourceString += option.key;
+        sourceString += "=";
+        sourceString += option.value;
+        sourceString += ";";
+    }
+    auto result = make_zeroed<skr_shader_options_md5_t>();
+    // TODO: replace MD5 algorithm
+    const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
+    result.a = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[0]);
+    result.b = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[1]);
+    result.c = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[2]);
+    result.d = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[3]);
+    return result;
 }
 
 namespace skr
@@ -200,7 +231,8 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
 {
     auto bytes_vfs = root.bytecode_vfs;
     auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
-    auto&& root_variant_iter = shader_collection->variants.find({0});
+    const auto root_hash = skr_stable_shader_hash_t(0u);
+    auto&& root_variant_iter = shader_collection->variants.find(root_hash);
     SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
     auto* root_variant = &root_variant_iter->second;
     bool launch_success = false;
@@ -263,7 +295,8 @@ bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
 ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
     auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
-    auto&& root_variant_iter = shader_collection->variants.find({0});
+    const auto root_hash = skr_stable_shader_hash_t(0u);
+    auto&& root_variant_iter = shader_collection->variants.find(root_hash);
     SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
     auto* root_variant = &root_variant_iter->second;
     auto sRequest = mShaderRequests.find(root_variant);

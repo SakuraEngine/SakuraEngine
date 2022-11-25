@@ -23,7 +23,7 @@ public:
         tuples.reserve(sequences.size());
         for(auto&& s : sequences) {
             tuples.emplace_back(s.cbegin(), 0ul, s.size());
-            count *= s.size();
+            count *= (int64_t)s.size();
         }
     }
 
@@ -68,7 +68,7 @@ private:
     using I = typename eastl::vector<T>::const_iterator;
     using E = eastl::tuple<I, std::size_t, std::size_t>;
     eastl::vector<E> tuples;
-    int count;
+    int64_t count;
 
     template <typename... Args>
     void append(eastl::vector<T> const& vec, Args&&... args)
