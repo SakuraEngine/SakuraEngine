@@ -64,10 +64,10 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     auto importer = static_cast<SShaderImporter*>(ctx->GetImporter());
     for (auto option_asset : importer->option_assets)
     {
-        // const auto guid = option_asset.get_guid();
-        // auto idx = ctx->AddStaticDependency(guid);
-        // auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
-        // collections.emplace_back(collection);
+        const auto guid = option_asset.get_guid();
+        auto idx = ctx->AddStaticDependency(guid);
+        auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
+        collections.emplace_back(collection);
     }
     // Enumerate destination bytecode format
     // TODO: REFACTOR THIS

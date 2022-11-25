@@ -135,7 +135,7 @@ void InitializeResourceSystem(skd::SProject& proj)
     {
         skr::resource::SShaderOptionsFactory::Root factoryRoot = {};
         shaderOptionsFactory = skr::resource::SShaderOptionsFactory::Create(factoryRoot);
-        resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, shaderOptionsFactory);
+        resource_system->RegisterFactory(skr::type::type_id<skr_shader_options_resource_t>::get(), shaderOptionsFactory);
     }
 }
 
@@ -171,18 +171,26 @@ int main(int argc, char** argv)
     auto project = SkrNew<skd::SProject>();
     SKR_DEFER({ SkrDelete(project); });
     auto parentPath = root.parent_path().u8string();
+
+    project->assetPath = (root.parent_path() / "../../../samples/application/game/assets").lexically_normal();
+    project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
+    project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
+
+    // create VFS
     skr_vfs_desc_t vfs_desc = {};
     vfs_desc.app_name = "Project";
     vfs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
     vfs_desc.override_mount_dir = parentPath.c_str();
     project->vfs = skr_create_vfs(&vfs_desc);
-    project->assetPath = (root.parent_path() / "../../../samples/application/game/assets").lexically_normal();
-    project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
-    project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
+
+    // create resource VFS
+    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
+    auto u8ResourceRoot = resourceRoot.u8string();
     skr_vfs_desc_t resource_vfs_desc = {};
     resource_vfs_desc.app_name = "Project";
     resource_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
-    resource_vfs_desc.override_mount_dir = project->outputPath.u8string().c_str();
+    resource_vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
+
     project->resource_vfs = skr_create_vfs(&resource_vfs_desc);
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
     ioServiceDesc.name = "GameRuntimeRAMIOService";
@@ -233,8 +241,13 @@ int main(int argc, char** argv)
         });
     }
     SKR_LOG_INFO("Project asset import finished.");
+    auto resource_system = skr::resource::GetResourceSystem();
+    resource_system->Update();
     //----- wait
-    system.WaitForAll();
+    while (!system.AllCompleted())
+    {
+        resource_system->Update();
+    }
     scheduler.unbind();
     system.Shutdown();
     DestroyResourceSystem(*project);

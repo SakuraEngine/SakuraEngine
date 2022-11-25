@@ -106,6 +106,7 @@ public:
     skr::task::event_t AddCookTask(skr_guid_t resource);
     skr::task::event_t EnsureCooked(skr_guid_t resource);
     void WaitForAll();
+    bool AllCompleted() const;
 
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
