@@ -172,7 +172,7 @@ struct ReadHelper<TEnumAsByte<T>>
 {
     static error_code Read(simdjson::ondemand::value&& json, TEnumAsByte<T>& value)
     {
-        return skr::json::Read<TEnumAsByte<T>::UT>(std::move(json), value.as_byte());
+        return skr::json::Read<typename TEnumAsByte<T>::UT>(std::move(json), value.as_byte());
     }
 };
 
