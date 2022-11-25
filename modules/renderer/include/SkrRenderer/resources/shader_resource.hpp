@@ -29,6 +29,8 @@ skr_stable_shader_hash_t
         inline size_t operator()(const skr_stable_shader_hash_t& hash) const { return hash.value; }
     };
 
+    SKR_RENDERER_API explicit skr_stable_shader_hash_t(uint32_t v) SKR_NOEXCEPT;
+    SKR_RENDERER_API explicit skr_stable_shader_hash_t(uint64_t v) SKR_NOEXCEPT;
     SKR_RENDERER_API skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT;
     SKR_RENDERER_API operator skr::string() const SKR_NOEXCEPT;
 };
@@ -61,6 +63,19 @@ skr_platform_shader_resource_t
     CGPUShaderLibraryId shader;
     sattr("transient": true, "no-rtti" : true)
     uint32_t active_slot;
+};
+
+sreflect_struct("guid" : "4749cd1b-ae18-4ed0-9d3f-d93198353dfa")
+sattr("serialize" : ["json", "bin"], "rtti" : true)
+skr_shader_options_md5_t 
+{
+    uint32_t a = 0;
+    uint32_t b = 0;
+    uint32_t c = 0;
+    uint32_t d = 0;
+
+    sattr("no-rtti" : true) SKR_RENDERER_API
+    static skr_shader_options_md5_t calculate(skr::span<skr_shader_option_instance_t> ordered_options);
 };
 
 sreflect_struct("guid" : "00d4c2b3-50e7-499b-9cf3-fb6b2ba70e79")

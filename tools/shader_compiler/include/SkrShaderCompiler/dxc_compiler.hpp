@@ -2,6 +2,7 @@
 #include "shader_compiler.hpp"
 #include "module/subsystem.hpp"
 #include "platform/shared_library.hpp"
+#include "SkrRenderer/resources/shader_resource.hpp"
 #ifndef __meta__
 #include "SkrShaderCompiler/dxc_compiler.generated.h"
 #endif 
@@ -63,6 +64,8 @@ public:
 
     EShaderSourceType GetSourceType() const SKR_NOEXCEPT override;
     bool IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const SKR_NOEXCEPT override;
+
+    void SetShaderOptions(skr::span<skr_shader_option_instance_t> options, const skr_shader_options_md5_t& md5) SKR_NOEXCEPT override;
     ICompiledShader* Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT override;
     void FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT override;
 
@@ -72,6 +75,9 @@ protected:
     IDxcUtils* utils = nullptr;
     IDxcCompiler3* compiler = nullptr;
     IDxcIncludeHandler* includeHandler = nullptr;
+
+    eastl::vector<skr_shader_option_instance_t> options;
+    skr_shader_options_md5_t options_md5 = {};
 };
 
 sreflect_struct("guid" : "ae28a9e5-39cf-4eab-aa27-6103f42cbf2d")

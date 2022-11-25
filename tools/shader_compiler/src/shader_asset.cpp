@@ -3,6 +3,8 @@
 #include "utils/log.hpp"
 #include "utils/make_zeroed.hpp"
 
+#include "json/writer.h"
+
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
@@ -87,7 +89,9 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     using unique_option_seq = eastl::vector<skr_shader_option_instance_t>;
     // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
     using all_option_seqs_t = eastl::vector<unique_option_seq>;
+    using all_option_seqs_md5s_t = eastl::vector<skr_shader_options_md5_t>;
     all_option_seqs_t all_variants = {};
+    all_option_seqs_md5s_t all_md5s = {};
     if (!selection_seqs.empty())
     {
         // [ ["on", "a", "1"], ["on", "a", "2"] ...]
@@ -104,32 +108,48 @@ bool SShaderCooker::Cook(SCookContext *ctx)
                 option_seq[idx].value = sequence[idx];
             }
             all_variants.emplace_back(option_seq);
+            const auto md5 = 
+                skr_shader_options_md5_t::calculate({ option_seq.data(), option_seq.size() });
+            all_md5s.emplace_back(md5);
         }
     }
     else
     {
+        all_md5s.push_back({ 0, 0, 0, 0 }); // emplace an zero md5
         all_variants.emplace_back(); // emplace an empty option sequence
     }
-    // Enumerate destination bytecode format
 
+    // Enumerate destination bytecode format
     // TODO: REFACTOR THIS
     eastl::vector<ECGPUShaderBytecodeType> byteCodeFormats = {
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_DXIL,
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_SPIRV
     };
-    eastl::vector<skr_platform_shader_identifier_t> outIdentifiers;
-    eastl::vector<ECGPUShaderStage> outStages;
-    outIdentifiers.resize(byteCodeFormats.size());
-    outStages.resize(byteCodeFormats.size());
+    // begin compile
     auto system = skd::asset::GetCookSystem();
+    eastl::vector<eastl::vector<skr_platform_shader_identifier_t>> allOutIdentifiers(all_variants.size());
+    eastl::vector<eastl::vector<ECGPUShaderStage>> allOutStages(all_variants.size());
+    // foreach variants
+    system->ParallelFor(all_variants.begin(), all_variants.end(), 1,
+        [system, &all_variants, source_code, ctx, outputPath, &byteCodeFormats, &allOutIdentifiers, &allOutStages]
+        (const auto* pVariant, const auto* __) -> void
+        {
+            const uint64_t variant_index = pVariant - all_variants.begin();
+            auto& outIdentifiers = allOutIdentifiers[variant_index];
+            auto& outStages = allOutStages[variant_index];
+            outIdentifiers.resize(byteCodeFormats.size());
+            outStages.resize(byteCodeFormats.size());
+
+    // foreach target profiles
     system->ParallelFor(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
-        [source_code, ctx, &byteCodeFormats, &outIdentifiers, &outStages, outputPath]
+        [&all_variants, source_code, ctx, &byteCodeFormats, &outIdentifiers, &outStages, outputPath]
         (const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* _) -> void
         {
-            ZoneScopedN("DXC Compile Task");
+            ZoneScopedN("Shader Compile Task");
 
             const ECGPUShaderBytecodeType format = *pFormat;
-            const auto index = pFormat - byteCodeFormats.begin();
+            const uint64_t index = pFormat - byteCodeFormats.begin();
+
             auto compiler = SkrShaderCompiler_CreateByType(source_code->source_type);
             if (compiler->IsSupportedTargetFormat(format))
             {
@@ -180,40 +200,73 @@ bool SShaderCooker::Cook(SCookContext *ctx)
                 identifier.entry = shaderImporter->entry;
             }
             SkrShaderCompiler_Destroy(compiler);
-        });
+        }); // end foreach target profile
+        }); // end foreach variant
     // validate out shader stages
-    auto stage0 = outStages[0];
-    for (auto stage : outStages)
+    const auto shader_stage = allOutStages[0][0];
+    for (auto&& stages : allOutStages)
+    for (auto&& stage : stages)
     {
-        SKR_ASSERT(stage == stage0 && "platform shader stages are not the same!");
+        SKR_ASSERT(stage == shader_stage && "platform shader stages are not the same!");
     }
-    // make archive
-    eastl::vector<uint8_t> resource_data;
-    skr::binary::VectorWriter writer{&resource_data};
-    skr_binary_writer_t archive(writer);
-    // write texture resource
-    auto root_variant = make_zeroed<skr_platform_shader_resource_t>();
-    root_variant.identifiers = outIdentifiers;
-    root_variant.shader_stage = outStages[0];
+
+    // make resource to write
     auto resource = make_zeroed<skr_platform_shader_collection_resource_t>();
     resource.root_guid = assetRecord->guid;
-    const auto root_hash = make_zeroed<skr_stable_shader_hash_t>();
-    resource.variants.emplace(root_hash, root_variant);
-    // TODO: shader variants
-    // ...
-    // deserialize
-    skr::binary::Write(&archive, resource);
-    // write to file
-    auto file = fopen(outputPath.u8string().c_str(), "wb");
-    if (!file)
+    // add root variant, root variant has two entries: md5-stable-hash & 0
     {
-        SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for resource {}! path: {}", 
-            assetRecord->guid, assetRecord->path.u8string());
-        return false;
+        auto root_variant = make_zeroed<skr_platform_shader_resource_t>();
+        root_variant.identifiers = allOutIdentifiers[0];
+        root_variant.shader_stage = shader_stage;
+        const auto root_hash = make_zeroed<skr_stable_shader_hash_t>();
+        resource.variants.emplace(root_hash, root_variant);
     }
-    SKR_DEFER({ fclose(file); });
-    fwrite(resource_data.data(), resource_data.size(), 1, file);
-
+    // add shader variants
+    for (size_t variant_index = 0u; variant_index < all_variants.size(); variant_index++)
+    {
+        const auto variant_md5 = all_md5s[variant_index];
+        const auto variant_hash = skr_hash64(&variant_md5, sizeof(variant_md5), 114514u);
+        const auto variant_stable_hash = skr_stable_shader_hash_t(variant_hash);
+        auto this_variant = make_zeroed<skr_platform_shader_resource_t>();
+        this_variant.identifiers = allOutIdentifiers[variant_index];
+        this_variant.shader_stage = shader_stage;
+        resource.variants.emplace(variant_stable_hash, this_variant);
+    }
+    // deserialize
+    {
+        // make archive
+        eastl::vector<uint8_t> resource_data;
+        skr::binary::VectorWriter writer{&resource_data};
+        skr_binary_writer_t archive(writer);
+        skr::binary::Write(&archive, resource);
+        // write to file
+        auto file = fopen(outputPath.u8string().c_str(), "wb");
+        if (!file)
+        {
+            SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+                assetRecord->guid, assetRecord->path.u8string());
+            return false;
+        }
+        SKR_DEFER({ fclose(file); });
+        fwrite(resource_data.data(), resource_data.size(), 1, file);
+    }
+    // deserialize
+    {
+        // make archive
+        skr_json_writer_t writer(2);
+        skr::json::Write(&writer, resource);
+        auto jPath = outputPath / ".json";
+        // write to file
+        auto file = fopen(jPath.u8string().c_str(), "wb");
+        if (!file)
+        {
+            SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+                assetRecord->guid, assetRecord->path.u8string());
+            return false;
+        }
+        SKR_DEFER({ fclose(file); });
+        fwrite(writer.buffer.data(), writer.buffer.size(), 1, file);
+    }
     return true;
 }
 
