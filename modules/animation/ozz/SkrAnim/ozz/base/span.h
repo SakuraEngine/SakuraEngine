@@ -54,7 +54,7 @@ struct span {
   // Constructs a range from its extreme values.
   span(_Ty* _begin, _Ty* _end)
       : data_(_begin), size_(static_cast<size_t>(_end - _begin)) {
-    assert(_begin <= _end && "Invalid range.");
+    SKR_ASSERT(_begin <= _end && "Invalid range.");
   }
 
   // Construct a range from a pointer to a buffer and its size, ie its number of
@@ -88,25 +88,25 @@ struct span {
   // Subspan
 
   span<element_type> first(index_type _count) const {
-    assert(_count <= size_ && "Count out of range");
+    SKR_ASSERT(_count <= size_ && "Count out of range");
     return {data(), _count};
   }
 
   span<element_type> last(index_type _count) const {
-    assert(_count <= size_ && "Count out of range");
+    SKR_ASSERT(_count <= size_ && "Count out of range");
     return {data() + size_ - _count, _count};
   }
 
   span<element_type> subspan(index_type _offset, index_type _count) const {
-    assert(_offset <= size_ && "Offset out of range");
-    assert(_count <= size_ && "Count out of range");
-    assert(_offset <= size_ - _count && "Offset + count out of range");
+    SKR_ASSERT(_offset <= size_ && "Offset out of range");
+    SKR_ASSERT(_count <= size_ && "Count out of range");
+    SKR_ASSERT(_offset <= size_ - _count && "Offset + count out of range");
     return {data_ + _offset, _count};
   }
 
   // Returns a const reference to element _i of range [begin,end[.
   _Ty& operator[](size_t _i) const {
-    assert(_i < size_ && "Index out of range.");
+    SKR_ASSERT(_i < size_ && "Index out of range.");
     return data_[_i];
   }
 
@@ -170,7 +170,7 @@ inline span<byte> as_writable_bytes(const span<_Ty>& _span) {
 // reflect remain size.
 template <typename _Ty>
 inline span<_Ty> fill_span(span<byte>& _src, size_t _count) {
-  assert(ozz::IsAligned(_src.data(), alignof(_Ty)) && "Invalid alignment.");
+  SKR_ASSERT(ozz::IsAligned(_src.data(), alignof(_Ty)) && "Invalid alignment.");
   const span<_Ty> ret = {reinterpret_cast<_Ty*>(_src.data()), _count};
   // Validity assertion is done by span constructor.
   _src = {reinterpret_cast<byte*>(ret.end()), _src.end()};

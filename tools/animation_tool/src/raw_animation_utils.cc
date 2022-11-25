@@ -91,14 +91,14 @@ typename _Track::value_type::Value SampleComponent(const _Track& _track,
     return _track.back().value;
   } else {
     // Needs to interpolate the 2 keyframes before and after _time.
-    assert(_track.size() >= 2);
+    SKR_ASSERT(_track.size() >= 2);
     // First find the 2 keys.
     const typename _Track::value_type cmp = {_time,
                                              _Track::value_type::identity()};
     typename _Track::const_pointer it =
         std::lower_bound(array_begin(_track), array_end(_track), cmp,
                          Less<typename _Track::value_type>);
-    assert(it > array_begin(_track) && it < array_end(_track));
+    SKR_ASSERT(it > array_begin(_track) && it < array_end(_track));
 
     // Then interpolate them at t = _time.
     const typename _Track::const_reference right = it[0];

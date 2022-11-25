@@ -261,19 +261,19 @@ OZZ_INLINE float LengthSqr(const Float2& _v) {
 // Returns the normalized vector _v.
 OZZ_INLINE Float4 Normalize(const Float4& _v) {
   const float len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z + _v.w * _v.w;
-  assert(len2 != 0.f && "_v is not normalizable");
+  SKR_ASSERT(len2 != 0.f && "_v is not normalizable");
   const float len = std::sqrt(len2);
   return Float4(_v.x / len, _v.y / len, _v.z / len, _v.w / len);
 }
 OZZ_INLINE Float3 Normalize(const Float3& _v) {
   const float len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z;
-  assert(len2 != 0.f && "_v is not normalizable");
+  SKR_ASSERT(len2 != 0.f && "_v is not normalizable");
   const float len = std::sqrt(len2);
   return Float3(_v.x / len, _v.y / len, _v.z / len);
 }
 OZZ_INLINE Float2 Normalize(const Float2& _v) {
   const float len2 = _v.x * _v.x + _v.y * _v.y;
-  assert(len2 != 0.f && "_v is not normalizable");
+  SKR_ASSERT(len2 != 0.f && "_v is not normalizable");
   const float len = std::sqrt(len2);
   return Float2(_v.x / len, _v.y / len);
 }
@@ -295,7 +295,7 @@ OZZ_INLINE bool IsNormalized(const Float2& _v) {
 // Returns the normalized vector _v if the norm of _v is not 0.
 // Otherwise returns _safer.
 OZZ_INLINE Float4 NormalizeSafe(const Float4& _v, const Float4& _safer) {
-  assert(IsNormalized(_safer) && "_safer is not normalized");
+  SKR_ASSERT(IsNormalized(_safer) && "_safer is not normalized");
   const float len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z + _v.w * _v.w;
   if (len2 <= 0.f) {
     return _safer;
@@ -304,7 +304,7 @@ OZZ_INLINE Float4 NormalizeSafe(const Float4& _v, const Float4& _safer) {
   return Float4(_v.x / len, _v.y / len, _v.z / len, _v.w / len);
 }
 OZZ_INLINE Float3 NormalizeSafe(const Float3& _v, const Float3& _safer) {
-  assert(IsNormalized(_safer) && "_safer is not normalized");
+  SKR_ASSERT(IsNormalized(_safer) && "_safer is not normalized");
   const float len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z;
   if (len2 <= 0.f) {
     return _safer;
@@ -313,7 +313,7 @@ OZZ_INLINE Float3 NormalizeSafe(const Float3& _v, const Float3& _safer) {
   return Float3(_v.x / len, _v.y / len, _v.z / len);
 }
 OZZ_INLINE Float2 NormalizeSafe(const Float2& _v, const Float2& _safer) {
-  assert(IsNormalized(_safer) && "_safer is not normalized");
+  SKR_ASSERT(IsNormalized(_safer) && "_safer is not normalized");
   const float len2 = _v.x * _v.x + _v.y * _v.y;
   if (len2 <= 0.f) {
     return _safer;

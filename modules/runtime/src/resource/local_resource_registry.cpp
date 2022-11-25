@@ -4,6 +4,7 @@
 #include "platform/vfs.h"
 #include "resource/local_resource_registry.hpp"
 #include "resource/resource_header.hpp"
+#include "utils/log.hpp"
 
 namespace skr::resource
 {
@@ -20,17 +21,22 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     skr::filesystem::path headerPath = fmt::format("game/{}.rh", guid);
     auto headerUri = headerPath.u8string();
     // TODO: 检查文件存在？
-    auto file = skr_vfs_fopen(vfs, headerUri.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto file = skr_vfs_fopen(vfs, headerUri.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    SKR_DEFER({ skr_vfs_fclose(file); });
     if (!file) return false;
     uint8_t buffer[sizeof(skr_resource_header_t)];
-    skr_vfs_fread(file, buffer, 0, sizeof(skr_resource_header_t));
-    SKR_DEFER({ skr_vfs_fclose(file); });
+    uint32_t _fs_length = (uint32_t)skr_vfs_fsize(file);
+    if(skr_vfs_fread(file, buffer, 0, _fs_length) != _fs_length)
+    {
+        SKR_LOG_FMT_ERROR("[SLocalResourceRegistry::RequestResourceFile] failed to read resource header! guid: {}", guid);
+        return false;
+    }
     skr::binary::SpanReader reader = {buffer};
     skr_binary_reader_t archive{reader};
     skr_resource_header_t header;
     if(header.ReadWithoutDeps(&archive) != 0)
         return false;
-
+    SKR_ASSERT(header.guid == guid);
     auto resourcePath = headerPath;
     resourcePath.replace_extension(".bin");
     auto resourceUri = resourcePath.u8string();

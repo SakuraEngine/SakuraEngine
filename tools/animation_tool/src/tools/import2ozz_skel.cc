@@ -31,8 +31,6 @@
 #include <cstring>
 #include <iomanip>
 
-#include "import2ozz_config.h"
-
 #include "SkrAnimTool/ozz/tools/import2ozz.h"
 
 #include "SkrAnimTool/ozz/raw_skeleton.h"
@@ -50,7 +48,7 @@
 
 #include "SkrAnim/ozz/base/log.h"
 
-#include "tools/jsoncpp/dist/json/json.h"
+#include "SkrAnim/ozz/base/containers/set.h"
 
 namespace ozz {
 namespace animation {
@@ -104,92 +102,6 @@ void LogHierarchy(const RawSkeleton::Joint::Children& _children,
     LogHierarchy(joint.children, _depth + 1);
   }
   ozz::log::LogV() << std::setprecision(static_cast<int>(pres));
-}
-
-bool ImportSkeleton(const Json::Value& _config, OzzImporter* _importer,
-                    const ozz::Endianness _endianness) {
-  const Json::Value& skeleton_config = _config["skeleton"];
-  const Json::Value& import_config = skeleton_config["import"];
-
-  // First check that we're actually expecting to import a skeleton.
-  if (!import_config["enable"].asBool()) {
-    ozz::log::Log() << "Skeleton build disabled, import will be skipped."
-                    << std::endl;
-    return true;
-  }
-
-  // Setup node types import properties.
-  const Json::Value& types_config = import_config["types"];
-  OzzImporter::NodeType types = {};
-  types.skeleton = types_config["skeleton"].asBool();
-  types.marker = types_config["marker"].asBool();
-  types.camera = types_config["camera"].asBool();
-  types.geometry = types_config["geometry"].asBool();
-  types.light = types_config["light"].asBool();
-  types.null = types_config["null"].asBool();
-  types.any = types_config["any"].asBool();
-
-  RawSkeleton raw_skeleton;
-  if (!_importer->Import(&raw_skeleton, types)) {
-    ozz::log::Err() << "Failed to import skeleton." << std::endl;
-    return false;
-  }
-
-  // Log skeleton hierarchy
-  if (ozz::log::GetLevel() == ozz::log::kVerbose) {
-    LogHierarchy(raw_skeleton.roots);
-  }
-
-  // Non unique joint names are not supported.
-  if (!(ValidateJointNamesUniqueness(raw_skeleton))) {
-    // Log Err is done by the validation function.
-    return false;
-  }
-
-  // Needs to be done before opening the output file, so that if it fails then
-  // there's no invalid file outputted.
-  unique_ptr<Skeleton> skeleton;
-  if (!import_config["raw"].asBool()) {
-    // Builds runtime skeleton.
-    ozz::log::Log() << "Builds runtime skeleton." << std::endl;
-    SkeletonBuilder builder;
-    skeleton = builder(raw_skeleton);
-    if (!skeleton) {
-      ozz::log::Err() << "Failed to build runtime skeleton." << std::endl;
-      return false;
-    }
-  }
-
-  // Prepares output stream. File is a RAII so it will close automatically at
-  // the end of this scope.
-  // Once the file is opened, nothing should fail as it would leave an invalid
-  // file on the disk.
-  {
-    const char* filename = skeleton_config["filename"].asCString();
-    ozz::log::Log() << "Opens output file: " << filename << std::endl;
-    ozz::io::File file(filename, "wb");
-    if (!file.opened()) {
-      ozz::log::Err() << "Failed to open output file: \"" << filename << "\"."
-                      << std::endl;
-      return false;
-    }
-
-    // Initializes output archive.
-    ozz::io::OArchive archive(&file, _endianness);
-
-    // Fills output archive with the skeleton.
-    if (import_config["raw"].asBool()) {
-      ozz::log::Log() << "Outputs RawSkeleton to binary archive." << std::endl;
-      archive << raw_skeleton;
-    } else {
-      ozz::log::Log() << "Outputs Skeleton to binary archive." << std::endl;
-      archive << *skeleton;
-    }
-    ozz::log::Log() << "Skeleton binary archive successfully outputted."
-                    << std::endl;
-  }
-
-  return true;
 }
 }  // namespace offline
 }  // namespace animation

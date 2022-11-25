@@ -4,7 +4,8 @@
     "importer": {
         "importerType": "37d07586-0901-480a-8dcd-1f1f8220569c",
         "assetPath": "ruby/scene.gltf",
-        "samplingRate" : 0
+        "samplingRate" : 0,
+        "animationName" : "Take 001"
     },
     "skeletonAsset" : "23F44FD5-6F87-4E6D-A232-1A99D015E21A"
 }

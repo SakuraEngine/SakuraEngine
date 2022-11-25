@@ -83,7 +83,7 @@ void Decimate(const _Track& _src, const _Adapter& _adapter, float _tolerance,
     typename _Track::const_reference left = _src[segment.first];
     typename _Track::const_reference right = _src[segment.second];
     for (size_t i = segment.first + 1; i < segment.second; ++i) {
-      assert(!included[i] && "Included points should be processed once only.");
+      SKR_ASSERT(!included[i] && "Included points should be processed once only.");
       typename _Track::const_reference test = _src[i];
       if (!_adapter.Decimable(test)) {
         candidate = i;

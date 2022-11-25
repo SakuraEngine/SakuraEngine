@@ -97,7 +97,7 @@ void CopyRaw(const _SrcTrack& _src, uint16_t _track, float _duration,
     PushBackIdentityKey<SrcKey, _DestTrack>(_track, _duration, _dest);
   } else if (_src.size() == 1) {  // Adds 1 new key.
     const SrcKey& raw_key = _src.front();
-    assert(raw_key.time >= 0 && raw_key.time <= _duration);
+    SKR_ASSERT(raw_key.time >= 0 && raw_key.time <= _duration);
     const DestKey first = {_track, -1.f, {0.f, raw_key.value}};
     _dest->push_back(first);
     const DestKey last = {_track, 0.f, {_duration, raw_key.value}};
@@ -111,7 +111,7 @@ void CopyRaw(const _SrcTrack& _src, uint16_t _track, float _duration,
     }
     for (size_t k = 0; k < _src.size(); ++k) {  // Copies all keys.
       const SrcKey& raw_key = _src[k];
-      assert(raw_key.time >= 0 && raw_key.time <= _duration);
+      SKR_ASSERT(raw_key.time >= 0 && raw_key.time <= _duration);
       const DestKey key = {_track, prev_time, {raw_key.time, raw_key.value}};
       _dest->push_back(key);
       prev_time = raw_key.time;
@@ -121,7 +121,7 @@ void CopyRaw(const _SrcTrack& _src, uint16_t _track, float _duration,
       _dest->push_back(last);
     }
   }
-  assert(_dest->front().key.time == 0.f &&
+  SKR_ASSERT(_dest->front().key.time == 0.f &&
          _dest->back().key.time - _duration == 0.f);
 }
 
@@ -164,7 +164,7 @@ void CompressQuat(const ozz::math::Quaternion& _src,
   // Finds the largest quaternion component.
   const float quat[4] = {_src.x, _src.y, _src.z, _src.w};
   const ptrdiff_t largest = std::max_element(quat, quat + 4, LessAbs) - quat;
-  assert(largest <= 3);
+  SKR_ASSERT(largest <= 3);
   _dest->largest = largest & 0x3;
 
   // Stores the sign of the largest component.
@@ -259,7 +259,7 @@ unique_ptr<Animation> AnimationBuilder::operator()(
   // A _duration == 0 would create some division by 0 during sampling.
   // Also we need at least to keys with different times, which cannot be done
   // if duration is 0.
-  assert(duration > 0.f);  // This case is handled by Validate().
+  SKR_ASSERT(duration > 0.f);  // This case is handled by Validate().
 
   // Sets tracks count. Can be safely casted to uint16_t as number of tracks as
   // already been validated.

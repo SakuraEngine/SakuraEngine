@@ -78,6 +78,8 @@ public:
 
     void LoadTask();
 protected:
+    void _LoadDependencies();
+    void _UnloadDependencies();
     void _LoadFinished();
     void _InstallFinished();
     void _UnloadResource();
@@ -110,6 +112,8 @@ protected:
     skr::task::event_t serdeEvent;
     bool serdeScheduled;
     int serdeResult; 
+
+    bool dependenciesLoaded = false;
 };
 
 struct RUNTIME_API SResourceRegistry {

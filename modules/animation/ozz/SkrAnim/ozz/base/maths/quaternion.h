@@ -142,7 +142,7 @@ OZZ_INLINE bool IsNormalized(const Quaternion& _q) {
 // Returns the normalized quaternion _q.
 OZZ_INLINE Quaternion Normalize(const Quaternion& _q) {
   const float sq_len = _q.x * _q.x + _q.y * _q.y + _q.z * _q.z + _q.w * _q.w;
-  assert(sq_len != 0.f && "_q is not normalizable");
+  SKR_ASSERT(sq_len != 0.f && "_q is not normalizable");
   const float inv_len = 1.f / std::sqrt(sq_len);
   return Quaternion(_q.x * inv_len, _q.y * inv_len, _q.z * inv_len,
                     _q.w * inv_len);
@@ -152,7 +152,7 @@ OZZ_INLINE Quaternion Normalize(const Quaternion& _q) {
 // Otherwise returns _safer.
 OZZ_INLINE Quaternion NormalizeSafe(const Quaternion& _q,
                                     const Quaternion& _safer) {
-  assert(IsNormalized(_safer) && "_safer is not normalized");
+  SKR_ASSERT(IsNormalized(_safer) && "_safer is not normalized");
   const float sq_len = _q.x * _q.x + _q.y * _q.y + _q.z * _q.z + _q.w * _q.w;
   if (sq_len == 0) {
     return _safer;
@@ -164,7 +164,7 @@ OZZ_INLINE Quaternion NormalizeSafe(const Quaternion& _q,
 
 OZZ_INLINE Quaternion Quaternion::FromAxisAngle(const Float3& _axis,
                                                 float _angle) {
-  assert(IsNormalized(_axis) && "axis is not normalized.");
+  SKR_ASSERT(IsNormalized(_axis) && "axis is not normalized.");
   const float half_angle = _angle * .5f;
   const float half_sin = std::sin(half_angle);
   const float half_cos = std::cos(half_angle);
@@ -174,8 +174,8 @@ OZZ_INLINE Quaternion Quaternion::FromAxisAngle(const Float3& _axis,
 
 OZZ_INLINE Quaternion Quaternion::FromAxisCosAngle(const Float3& _axis,
                                                    float _cos) {
-  assert(IsNormalized(_axis) && "axis is not normalized.");
-  assert(_cos >= -1.f && _cos <= 1.f && "cos is not in [-1,1] range.");
+  SKR_ASSERT(IsNormalized(_axis) && "axis is not normalized.");
+  SKR_ASSERT(_cos >= -1.f && _cos <= 1.f && "cos is not in [-1,1] range.");
 
   const float half_cos2 = (1.f + _cos) * 0.5f;
   const float half_sin = std::sqrt(1.f - half_cos2);
@@ -186,7 +186,7 @@ OZZ_INLINE Quaternion Quaternion::FromAxisCosAngle(const Float3& _axis,
 // Returns to an axis angle representation of quaternion _q.
 // Assumes quaternion _q is normalized.
 OZZ_INLINE Float4 ToAxisAngle(const Quaternion& _q) {
-  assert(IsNormalized(_q));
+  SKR_ASSERT(IsNormalized(_q));
   const float clamped_w = Clamp(-1.f, _q.w, 1.f);
   const float angle = 2.f * std::acos(clamped_w);
   const float s = std::sqrt(1.f - clamped_w * clamped_w);
@@ -274,7 +274,7 @@ OZZ_INLINE Quaternion Quaternion::FromVectors(const Float3& _from,
 
 OZZ_INLINE Quaternion Quaternion::FromUnitVectors(const Float3& _from,
                                                   const Float3& _to) {
-  assert(IsNormalized(_from) && IsNormalized(_to) &&
+  SKR_ASSERT(IsNormalized(_from) && IsNormalized(_to) &&
          "Input vectors must be normalized.");
 
   // http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
@@ -322,8 +322,8 @@ OZZ_INLINE Quaternion NLerp(const Quaternion& _a, const Quaternion& _b,
 // coefficient _f.
 OZZ_INLINE Quaternion SLerp(const Quaternion& _a, const Quaternion& _b,
                             float _f) {
-  assert(IsNormalized(_a));
-  assert(IsNormalized(_b));
+  SKR_ASSERT(IsNormalized(_a));
+  SKR_ASSERT(IsNormalized(_b));
   // Calculate angle between them.
   float cos_half_theta = _a.x * _b.x + _a.y * _b.y + _a.z * _b.z + _a.w * _b.w;
 

@@ -79,7 +79,7 @@ class OZZ_ANIMOFFLINE_DLL FixedRateSamplingTime {
   FixedRateSamplingTime(float _duration, float _frequency);
 
   float time(size_t _key) const {
-    assert(_key < num_keys_);
+    SKR_ASSERT(_key < num_keys_);
     return ozz::math::Min(_key * period_, duration_);
   }
 

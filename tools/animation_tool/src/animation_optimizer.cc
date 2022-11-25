@@ -69,7 +69,7 @@ struct HierarchyBuilder {
       : specs(_animation->tracks.size()),
         animation(_animation),
         optimizer(_optimizer) {
-    assert(_animation->num_tracks() == _skeleton->num_joints());
+    SKR_ASSERT(_animation->num_tracks() == _skeleton->num_joints());
 
     // Computes hierarchical scale, iterating skeleton forward (root to
     // leaf).
@@ -173,7 +173,7 @@ class PositionAdapter {
       const RawAnimation::TranslationKey& _right,
       const RawAnimation::TranslationKey& _ref) const {
     const float alpha = (_ref.time - _left.time) / (_right.time - _left.time);
-    assert(alpha >= 0.f && alpha <= 1.f);
+    SKR_ASSERT(alpha >= 0.f && alpha <= 1.f);
     const RawAnimation::TranslationKey key = {
         _ref.time, LerpTranslation(_left.value, _right.value, alpha)};
     return key;
@@ -195,7 +195,7 @@ class RotationAdapter {
                                  const RawAnimation::RotationKey& _right,
                                  const RawAnimation::RotationKey& _ref) const {
     const float alpha = (_ref.time - _left.time) / (_right.time - _left.time);
-    assert(alpha >= 0.f && alpha <= 1.f);
+    SKR_ASSERT(alpha >= 0.f && alpha <= 1.f);
     const RawAnimation::RotationKey key = {
         _ref.time, LerpRotation(_left.value, _right.value, alpha)};
     return key;
@@ -226,7 +226,7 @@ class ScaleAdapter {
                               const RawAnimation::ScaleKey& _right,
                               const RawAnimation::ScaleKey& _ref) const {
     const float alpha = (_ref.time - _left.time) / (_right.time - _left.time);
-    assert(alpha >= 0.f && alpha <= 1.f);
+    SKR_ASSERT(alpha >= 0.f && alpha <= 1.f);
     const RawAnimation::ScaleKey key = {
         _ref.time, LerpScale(_left.value, _right.value, alpha)};
     return key;

@@ -32,7 +32,7 @@
 
 #include <stdint.h>
 
-#include <cassert>
+#include "platform/debug.h"
 
 // Temporarly needed while trigonometric functions aren't implemented.
 #include <cmath>
@@ -198,32 +198,32 @@ OZZ_INLINE SimdFloat4 LoadX(float _x) { return _mm_set_ss(_x); }
 OZZ_INLINE SimdFloat4 Load1(float _x) { return _mm_set_ps1(_x); }
 
 OZZ_INLINE SimdFloat4 LoadPtr(const float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
   return _mm_load_ps(_f);
 }
 
 OZZ_INLINE SimdFloat4 LoadPtrU(const float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   return _mm_loadu_ps(_f);
 }
 
 OZZ_INLINE SimdFloat4 LoadXPtrU(const float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   return _mm_load_ss(_f);
 }
 
 OZZ_INLINE SimdFloat4 Load1PtrU(const float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   return _mm_load_ps1(_f);
 }
 
 OZZ_INLINE SimdFloat4 Load2PtrU(const float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   return _mm_unpacklo_ps(_mm_load_ss(_f + 0), _mm_load_ss(_f + 1));
 }
 
 OZZ_INLINE SimdFloat4 Load3PtrU(const float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   return _mm_movelh_ps(
       _mm_unpacklo_ps(_mm_load_ss(_f + 0), _mm_load_ss(_f + 1)),
       _mm_load_ss(_f + 2));
@@ -266,7 +266,7 @@ OZZ_INLINE SimdFloat4 SetW(_SimdFloat4 _v, _SimdFloat4 _f) {
 }
 
 OZZ_INLINE SimdFloat4 SetI(_SimdFloat4 _v, _SimdFloat4 _f, int _ith) {
-  assert(_ith >= 0 && _ith <= 3 && "Invalid index, out of range.");
+  SKR_ASSERT(_ith >= 0 && _ith <= 3 && "Invalid index, out of range.");
   union {
     SimdFloat4 ret;
     float af[4];
@@ -276,44 +276,44 @@ OZZ_INLINE SimdFloat4 SetI(_SimdFloat4 _v, _SimdFloat4 _f, int _ith) {
 }
 
 OZZ_INLINE void StorePtr(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
   _mm_store_ps(_f, _v);
 }
 
 OZZ_INLINE void Store1Ptr(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
   _mm_store_ss(_f, _v);
 }
 
 OZZ_INLINE void Store2Ptr(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
   _mm_storel_pi(reinterpret_cast<__m64*>(_f), _v);
 }
 
 OZZ_INLINE void Store3Ptr(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0xf) && "Invalid alignment");
   _mm_storel_pi(reinterpret_cast<__m64*>(_f), _v);
   _mm_store_ss(_f + 2, _mm_movehl_ps(_v, _v));
 }
 
 OZZ_INLINE void StorePtrU(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   _mm_storeu_ps(_f, _v);
 }
 
 OZZ_INLINE void Store1PtrU(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   _mm_store_ss(_f, _v);
 }
 
 OZZ_INLINE void Store2PtrU(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   _mm_store_ss(_f + 0, _v);
   _mm_store_ss(_f + 1, OZZ_SSE_SPLAT_F(_v, 1));
 }
 
 OZZ_INLINE void Store3PtrU(_SimdFloat4 _v, float* _f) {
-  assert(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(reinterpret_cast<uintptr_t>(_f) & 0x3) && "Invalid alignment");
   _mm_store_ss(_f + 0, _v);
   _mm_store_ss(_f + 1, OZZ_SSE_SPLAT_F(_v, 1));
   _mm_store_ss(_f + 2, _mm_movehl_ps(_v, _v));
@@ -605,7 +605,7 @@ OZZ_INLINE SimdFloat4 Length4Sqr(_SimdFloat4 _v) {
 OZZ_INLINE SimdFloat4 Normalize2(_SimdFloat4 _v) {
   __m128 sq_len;
   OZZ_SSE_DOT2_F(_v, _v, sq_len);
-  assert(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
+  SKR_ASSERT(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
   const __m128 inv_len = _mm_div_ss(simd_float4::one(), _mm_sqrt_ss(sq_len));
   const __m128 inv_lenxxxx = OZZ_SSE_SPLAT_F(inv_len, 0);
   const __m128 norm = _mm_mul_ps(_v, inv_lenxxxx);
@@ -615,7 +615,7 @@ OZZ_INLINE SimdFloat4 Normalize2(_SimdFloat4 _v) {
 OZZ_INLINE SimdFloat4 Normalize3(_SimdFloat4 _v) {
   __m128 sq_len;
   OZZ_SSE_DOT3_F(_v, _v, sq_len);
-  assert(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
+  SKR_ASSERT(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
   const __m128 inv_len = _mm_div_ss(simd_float4::one(), _mm_sqrt_ss(sq_len));
   const __m128 vwxyz = OZZ_SHUFFLE_PS1(_v, _MM_SHUFFLE(0, 1, 2, 3));
   const __m128 inv_lenxxxx = OZZ_SSE_SPLAT_F(inv_len, 0);
@@ -626,7 +626,7 @@ OZZ_INLINE SimdFloat4 Normalize3(_SimdFloat4 _v) {
 OZZ_INLINE SimdFloat4 Normalize4(_SimdFloat4 _v) {
   __m128 sq_len;
   OZZ_SSE_DOT4_F(_v, _v, sq_len);
-  assert(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
+  SKR_ASSERT(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
   const __m128 inv_len = _mm_div_ss(simd_float4::one(), _mm_sqrt_ss(sq_len));
   const __m128 inv_lenxxxx = OZZ_SSE_SPLAT_F(inv_len, 0);
   return _mm_mul_ps(_v, inv_lenxxxx);
@@ -635,7 +635,7 @@ OZZ_INLINE SimdFloat4 Normalize4(_SimdFloat4 _v) {
 OZZ_INLINE SimdFloat4 NormalizeEst2(_SimdFloat4 _v) {
   __m128 sq_len;
   OZZ_SSE_DOT2_F(_v, _v, sq_len);
-  assert(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
+  SKR_ASSERT(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
   const __m128 inv_len = _mm_rsqrt_ss(sq_len);
   const __m128 inv_lenxxxx = OZZ_SSE_SPLAT_F(inv_len, 0);
   const __m128 norm = _mm_mul_ps(_v, inv_lenxxxx);
@@ -645,7 +645,7 @@ OZZ_INLINE SimdFloat4 NormalizeEst2(_SimdFloat4 _v) {
 OZZ_INLINE SimdFloat4 NormalizeEst3(_SimdFloat4 _v) {
   __m128 sq_len;
   OZZ_SSE_DOT3_F(_v, _v, sq_len);
-  assert(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
+  SKR_ASSERT(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
   const __m128 inv_len = _mm_rsqrt_ss(sq_len);
   const __m128 vwxyz = OZZ_SHUFFLE_PS1(_v, _MM_SHUFFLE(0, 1, 2, 3));
   const __m128 inv_lenxxxx = OZZ_SSE_SPLAT_F(inv_len, 0);
@@ -656,7 +656,7 @@ OZZ_INLINE SimdFloat4 NormalizeEst3(_SimdFloat4 _v) {
 OZZ_INLINE SimdFloat4 NormalizeEst4(_SimdFloat4 _v) {
   __m128 sq_len;
   OZZ_SSE_DOT4_F(_v, _v, sq_len);
-  assert(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
+  SKR_ASSERT(_mm_cvtss_f32(sq_len) != 0.f && "_v is not normalizable");
   const __m128 inv_len = _mm_rsqrt_ss(sq_len);
   const __m128 inv_lenxxxx = OZZ_SSE_SPLAT_F(inv_len, 0);
   return _mm_mul_ps(_v, inv_lenxxxx);
@@ -723,7 +723,7 @@ OZZ_INLINE SimdInt4 IsNormalizedEst4(_SimdFloat4 _v) {
 }
 
 OZZ_INLINE SimdFloat4 NormalizeSafe2(_SimdFloat4 _v, _SimdFloat4 _safe) {
-  // assert(AreAllTrue1(IsNormalized2(_safe)) && "_safe is not normalized");
+  // SKR_ASSERT(AreAllTrue1(IsNormalized2(_safe)) && "_safe is not normalized");
   __m128 sq_len;
   OZZ_SSE_DOT2_F(_v, _v, sq_len);
   const __m128 inv_len = _mm_div_ss(simd_float4::one(), _mm_sqrt_ss(sq_len));
@@ -736,7 +736,7 @@ OZZ_INLINE SimdFloat4 NormalizeSafe2(_SimdFloat4 _v, _SimdFloat4 _safe) {
 }
 
 OZZ_INLINE SimdFloat4 NormalizeSafe3(_SimdFloat4 _v, _SimdFloat4 _safe) {
-  // assert(AreAllTrue1(IsNormalized3(_safe)) && "_safe is not normalized");
+  // SKR_ASSERT(AreAllTrue1(IsNormalized3(_safe)) && "_safe is not normalized");
   __m128 sq_len;
   OZZ_SSE_DOT3_F(_v, _v, sq_len);
   const __m128 inv_len = _mm_div_ss(simd_float4::one(), _mm_sqrt_ss(sq_len));
@@ -750,7 +750,7 @@ OZZ_INLINE SimdFloat4 NormalizeSafe3(_SimdFloat4 _v, _SimdFloat4 _safe) {
 }
 
 OZZ_INLINE SimdFloat4 NormalizeSafe4(_SimdFloat4 _v, _SimdFloat4 _safe) {
-  // assert(AreAllTrue1(IsNormalized4(_safe)) && "_safe is not normalized");
+  // SKR_ASSERT(AreAllTrue1(IsNormalized4(_safe)) && "_safe is not normalized");
   __m128 sq_len;
   OZZ_SSE_DOT4_F(_v, _v, sq_len);
   const __m128 inv_len = _mm_div_ss(simd_float4::one(), _mm_sqrt_ss(sq_len));
@@ -762,7 +762,7 @@ OZZ_INLINE SimdFloat4 NormalizeSafe4(_SimdFloat4 _v, _SimdFloat4 _safe) {
 }
 
 OZZ_INLINE SimdFloat4 NormalizeSafeEst2(_SimdFloat4 _v, _SimdFloat4 _safe) {
-  // assert(AreAllTrue1(IsNormalizedEst2(_safe)) && "_safe is not normalized");
+  // SKR_ASSERT(AreAllTrue1(IsNormalizedEst2(_safe)) && "_safe is not normalized");
   __m128 sq_len;
   OZZ_SSE_DOT2_F(_v, _v, sq_len);
   const __m128 inv_len = _mm_rsqrt_ss(sq_len);
@@ -775,7 +775,7 @@ OZZ_INLINE SimdFloat4 NormalizeSafeEst2(_SimdFloat4 _v, _SimdFloat4 _safe) {
 }
 
 OZZ_INLINE SimdFloat4 NormalizeSafeEst3(_SimdFloat4 _v, _SimdFloat4 _safe) {
-  // assert(AreAllTrue1(IsNormalizedEst3(_safe)) && "_safe is not normalized");
+  // SKR_ASSERT(AreAllTrue1(IsNormalizedEst3(_safe)) && "_safe is not normalized");
   __m128 sq_len;
   OZZ_SSE_DOT3_F(_v, _v, sq_len);
   const __m128 inv_len = _mm_rsqrt_ss(sq_len);
@@ -789,7 +789,7 @@ OZZ_INLINE SimdFloat4 NormalizeSafeEst3(_SimdFloat4 _v, _SimdFloat4 _safe) {
 }
 
 OZZ_INLINE SimdFloat4 NormalizeSafeEst4(_SimdFloat4 _v, _SimdFloat4 _safe) {
-  // assert(AreAllTrue1(IsNormalizedEst4(_safe)) && "_safe is not normalized");
+  // SKR_ASSERT(AreAllTrue1(IsNormalizedEst4(_safe)) && "_safe is not normalized");
   __m128 sq_len;
   OZZ_SSE_DOT4_F(_v, _v, sq_len);
   const __m128 inv_len = _mm_rsqrt_ss(sq_len);
@@ -1045,54 +1045,54 @@ OZZ_INLINE SimdInt4 Load1(bool _x) {
 }
 
 OZZ_INLINE SimdInt4 LoadPtr(const int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   return _mm_load_si128(reinterpret_cast<const __m128i*>(_i));
 }
 
 OZZ_INLINE SimdInt4 LoadXPtr(const int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   return _mm_cvtsi32_si128(*_i);
 }
 
 OZZ_INLINE SimdInt4 Load1Ptr(const int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   return _mm_shuffle_epi32(
       _mm_loadl_epi64(reinterpret_cast<const __m128i*>(_i)),
       _MM_SHUFFLE(0, 0, 0, 0));
 }
 
 OZZ_INLINE SimdInt4 Load2Ptr(const int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   return _mm_loadl_epi64(reinterpret_cast<const __m128i*>(_i));
 }
 
 OZZ_INLINE SimdInt4 Load3Ptr(const int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   return _mm_set_epi32(0, _i[2], _i[1], _i[0]);
 }
 
 OZZ_INLINE SimdInt4 LoadPtrU(const int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   return _mm_loadu_si128(reinterpret_cast<const __m128i*>(_i));
 }
 
 OZZ_INLINE SimdInt4 LoadXPtrU(const int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   return _mm_cvtsi32_si128(*_i);
 }
 
 OZZ_INLINE SimdInt4 Load1PtrU(const int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   return _mm_set1_epi32(*_i);
 }
 
 OZZ_INLINE SimdInt4 Load2PtrU(const int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   return _mm_set_epi32(0, 0, _i[1], _i[0]);
 }
 
 OZZ_INLINE SimdInt4 Load3PtrU(const int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   return _mm_set_epi32(0, _i[2], _i[1], _i[0]);
 }
 
@@ -1145,7 +1145,7 @@ OZZ_INLINE SimdInt4 SetW(_SimdInt4 _v, _SimdInt4 _i) {
 }
 
 OZZ_INLINE SimdInt4 SetI(_SimdInt4 _v, _SimdInt4 _i, int _ith) {
-  assert(_ith >= 0 && _ith <= 3 && "Invalid index, out of range.");
+  SKR_ASSERT(_ith >= 0 && _ith <= 3 && "Invalid index, out of range.");
   union {
     SimdInt4 ret;
     int af[4];
@@ -1155,46 +1155,46 @@ OZZ_INLINE SimdInt4 SetI(_SimdInt4 _v, _SimdInt4 _i, int _ith) {
 }
 
 OZZ_INLINE void StorePtr(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   _mm_store_si128(reinterpret_cast<__m128i*>(_i), _v);
 }
 
 OZZ_INLINE void Store1Ptr(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   *_i = _mm_cvtsi128_si32(_v);
 }
 
 OZZ_INLINE void Store2Ptr(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   _i[0] = _mm_cvtsi128_si32(_v);
   _i[1] = _mm_cvtsi128_si32(OZZ_SSE_SPLAT_I(_v, 1));
 }
 
 OZZ_INLINE void Store3Ptr(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0xf) && "Invalid alignment");
   _i[0] = _mm_cvtsi128_si32(_v);
   _i[1] = _mm_cvtsi128_si32(OZZ_SSE_SPLAT_I(_v, 1));
   _i[2] = _mm_cvtsi128_si32(_mm_unpackhi_epi32(_v, _v));
 }
 
 OZZ_INLINE void StorePtrU(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   _mm_storeu_si128(reinterpret_cast<__m128i*>(_i), _v);
 }
 
 OZZ_INLINE void Store1PtrU(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   *_i = _mm_cvtsi128_si32(_v);
 }
 
 OZZ_INLINE void Store2PtrU(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   _i[0] = _mm_cvtsi128_si32(_v);
   _i[1] = _mm_cvtsi128_si32(OZZ_SSE_SPLAT_I(_v, 1));
 }
 
 OZZ_INLINE void Store3PtrU(_SimdInt4 _v, int* _i) {
-  assert(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
+  SKR_ASSERT(!(uintptr_t(_i) & 0x3) && "Invalid alignment");
   _i[0] = _mm_cvtsi128_si32(_v);
   _i[1] = _mm_cvtsi128_si32(OZZ_SSE_SPLAT_I(_v, 1));
   _i[2] = _mm_cvtsi128_si32(_mm_unpackhi_epi32(_v, _v));
@@ -1493,7 +1493,7 @@ inline Float4x4 Invert(const Float4x4& _m, SimdInt4* _invertible) {
   det = _mm_add_ps(OZZ_SHUFFLE_PS1(det, 0x4E), det);
   det = _mm_add_ss(OZZ_SHUFFLE_PS1(det, 0xB1), det);
   const SimdInt4 invertible = CmpNe(det, simd_float4::zero());
-  assert((_invertible || AreAllTrue1(invertible)) &&
+  SKR_ASSERT((_invertible || AreAllTrue1(invertible)) &&
          "Matrix is not invertible");
   if (_invertible != nullptr) {
     *_invertible = invertible;
@@ -1618,8 +1618,8 @@ OZZ_INLINE SimdInt4 IsOrthogonal(const Float4x4& _m) {
 }
 
 inline SimdFloat4 ToQuaternion(const Float4x4& _m) {
-  assert(AreAllTrue3(IsNormalizedEst(_m)));
-  assert(AreAllTrue1(IsOrthogonal(_m)));
+  SKR_ASSERT(AreAllTrue3(IsNormalizedEst(_m)));
+  SKR_ASSERT(AreAllTrue1(IsOrthogonal(_m)));
 
   // Prepares constants.
   const __m128i zero = _mm_setzero_si128();
@@ -1688,7 +1688,7 @@ inline SimdFloat4 ToQuaternion(const Float4x4& _m) {
   res = OZZ_SSE_SELECT_F(cond1, res2, res);
   res = OZZ_SSE_SELECT_F(cond2, res3, res);
 
-  assert(AreAllTrue1(IsNormalizedEst4(res)));
+  SKR_ASSERT(AreAllTrue1(IsNormalizedEst4(res)));
   return res;
 }
 
@@ -1782,7 +1782,7 @@ inline Float4x4 Float4x4::FromEuler(_SimdFloat4 _v) {
 }
 
 inline Float4x4 Float4x4::FromAxisAngle(_SimdFloat4 _axis, _SimdFloat4 _angle) {
-  assert(AreAllTrue1(IsNormalizedEst3(_axis)));
+  SKR_ASSERT(AreAllTrue1(IsNormalizedEst3(_axis)));
 
   const __m128i zero = _mm_setzero_si128();
   const __m128i ffff = _mm_cmpeq_epi32(zero, zero);
@@ -1819,7 +1819,7 @@ inline Float4x4 Float4x4::FromAxisAngle(_SimdFloat4 _axis, _SimdFloat4 _angle) {
 }
 
 inline Float4x4 Float4x4::FromQuaternion(_SimdFloat4 _quaternion) {
-  assert(AreAllTrue1(IsNormalizedEst4(_quaternion)));
+  SKR_ASSERT(AreAllTrue1(IsNormalizedEst4(_quaternion)));
 
   const __m128i zero = _mm_setzero_si128();
   const __m128i ffff = _mm_cmpeq_epi32(zero, zero);
@@ -1863,7 +1863,7 @@ inline Float4x4 Float4x4::FromQuaternion(_SimdFloat4 _quaternion) {
 inline Float4x4 Float4x4::FromAffine(_SimdFloat4 _translation,
                                      _SimdFloat4 _quaternion,
                                      _SimdFloat4 _scale) {
-  assert(AreAllTrue1(IsNormalizedEst4(_quaternion)));
+  SKR_ASSERT(AreAllTrue1(IsNormalizedEst4(_quaternion)));
 
   const __m128i zero = _mm_setzero_si128();
   const __m128i ffff = _mm_cmpeq_epi32(zero, zero);

@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_MATHS_SOA_FLOAT_H_
 #define OZZ_OZZ_BASE_MATHS_SOA_FLOAT_H_
 
-#include <cassert>
+#include "platform/debug.h"
 
 #include "SkrAnim/ozz/base/maths/math_constant.h"
 #include "SkrAnim/ozz/base/maths/simd_math.h"
@@ -514,7 +514,7 @@ OZZ_INLINE SimdFloat4 LengthSqr(const SoaFloat2& _v) {
 // Returns the normalized vector _v.
 OZZ_INLINE SoaFloat4 Normalize(const SoaFloat4& _v) {
   const SimdFloat4 len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z + _v.w * _v.w;
-  assert(AreAllTrue(CmpNe(len2, simd_float4::zero())) &&
+  SKR_ASSERT(AreAllTrue(CmpNe(len2, simd_float4::zero())) &&
          "_v is not normalizable");
   const SimdFloat4 inv_len = math::simd_float4::one() / Sqrt(len2);
   const SoaFloat4 r = {_v.x * inv_len, _v.y * inv_len, _v.z * inv_len,
@@ -523,7 +523,7 @@ OZZ_INLINE SoaFloat4 Normalize(const SoaFloat4& _v) {
 }
 OZZ_INLINE SoaFloat3 Normalize(const SoaFloat3& _v) {
   const SimdFloat4 len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z;
-  assert(AreAllTrue(CmpNe(len2, simd_float4::zero())) &&
+  SKR_ASSERT(AreAllTrue(CmpNe(len2, simd_float4::zero())) &&
          "_v is not normalizable");
   const SimdFloat4 inv_len = math::simd_float4::one() / Sqrt(len2);
   const SoaFloat3 r = {_v.x * inv_len, _v.y * inv_len, _v.z * inv_len};
@@ -531,7 +531,7 @@ OZZ_INLINE SoaFloat3 Normalize(const SoaFloat3& _v) {
 }
 OZZ_INLINE SoaFloat2 Normalize(const SoaFloat2& _v) {
   const SimdFloat4 len2 = _v.x * _v.x + _v.y * _v.y;
-  assert(AreAllTrue(CmpNe(len2, simd_float4::zero())) &&
+  SKR_ASSERT(AreAllTrue(CmpNe(len2, simd_float4::zero())) &&
          "_v is not normalizable");
   const SimdFloat4 inv_len = math::simd_float4::one() / Sqrt(len2);
   const SoaFloat2 r = {_v.x * inv_len, _v.y * inv_len};
@@ -576,7 +576,7 @@ OZZ_INLINE math::SimdInt4 IsNormalizedEst(const SoaFloat2& _v) {
 // Otherwise returns _safer.
 OZZ_INLINE SoaFloat4 NormalizeSafe(const SoaFloat4& _v,
                                    const SoaFloat4& _safer) {
-  assert(AreAllTrue(IsNormalizedEst(_safer)) && "_safer is not normalized");
+  SKR_ASSERT(AreAllTrue(IsNormalizedEst(_safer)) && "_safer is not normalized");
   const SimdFloat4 len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z + _v.w * _v.w;
   const math::SimdInt4 b = CmpNe(len2, math::simd_float4::zero());
   const SimdFloat4 inv_len = math::simd_float4::one() / Sqrt(len2);
@@ -587,7 +587,7 @@ OZZ_INLINE SoaFloat4 NormalizeSafe(const SoaFloat4& _v,
 }
 OZZ_INLINE SoaFloat3 NormalizeSafe(const SoaFloat3& _v,
                                    const SoaFloat3& _safer) {
-  assert(AreAllTrue(IsNormalizedEst(_safer)) && "_safer is not normalized");
+  SKR_ASSERT(AreAllTrue(IsNormalizedEst(_safer)) && "_safer is not normalized");
   const SimdFloat4 len2 = _v.x * _v.x + _v.y * _v.y + _v.z * _v.z;
   const math::SimdInt4 b = CmpNe(len2, math::simd_float4::zero());
   const SimdFloat4 inv_len = math::simd_float4::one() / Sqrt(len2);
@@ -598,7 +598,7 @@ OZZ_INLINE SoaFloat3 NormalizeSafe(const SoaFloat3& _v,
 }
 OZZ_INLINE SoaFloat2 NormalizeSafe(const SoaFloat2& _v,
                                    const SoaFloat2& _safer) {
-  assert(AreAllTrue(IsNormalizedEst(_safer)) && "_safer is not normalized");
+  SKR_ASSERT(AreAllTrue(IsNormalizedEst(_safer)) && "_safer is not normalized");
   const SimdFloat4 len2 = _v.x * _v.x + _v.y * _v.y;
   const math::SimdInt4 b = CmpNe(len2, math::simd_float4::zero());
   const SimdFloat4 inv_len = math::simd_float4::one() / Sqrt(len2);

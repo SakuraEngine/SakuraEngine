@@ -28,7 +28,6 @@
 #ifndef OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_TRACK_H_
 #define OZZ_ANIMATION_OFFLINE_TOOLS_IMPORT2OZZ_TRACK_H_
 
-#include "import2ozz_config.h"
 #include "SkrAnimTool/ozz/tools/export.h"
 #include "SkrAnimTool/ozz/tools/import2ozz.h"
 #include "SkrAnim/ozz/base/endianness.h"
@@ -43,18 +42,6 @@ namespace animation {
 class Skeleton;
 namespace offline {
 
-class OzzImporter;
-OZZ_ANIMTOOLS_DLL bool ProcessTracks(OzzImporter& _importer,
-                                     const char* _animation_name,
-                                     const Skeleton& _skeleton,
-                                     const Json::Value& _config,
-                                     const ozz::Endianness _endianness);
-
-// Property type enum to config string conversions.
-struct OZZ_ANIMTOOLS_DLL PropertyTypeConfig
-    : JsonEnum<PropertyTypeConfig, OzzImporter::NodeProperty::Type> {
-  static EnumNames GetNames();
-};
 }  // namespace offline
 }  // namespace animation
 }  // namespace ozz

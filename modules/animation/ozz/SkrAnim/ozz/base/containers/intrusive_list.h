@@ -350,7 +350,7 @@ class IntrusiveListIterator {
   // Constructs an iterator pointing _node.
   // _node can be nullptr which creates a default un-dereferencable iterator.
   explicit IntrusiveListIterator(ListNode* _node = nullptr) : node_(_node) {
-    assert((!_node || _node->list_) &&
+    SKR_ASSERT((!_node || _node->list_) &&
            "Cannot build an iterator from a node that's unlinked");
   }
 
@@ -369,7 +369,7 @@ class IntrusiveListIterator {
   // Compares two iterators with different configurations.
   template <typename _OConfig>
   bool operator==(IntrusiveListIterator<_List, _OConfig> const& _it) const {
-    assert(node_ && _it.node_ && node_->list_ == _it.node_->list_ &&
+    SKR_ASSERT(node_ && _it.node_ && node_->list_ == _it.node_->list_ &&
            "List iterators incompatible");
     return node_ == _it.node_;
   }
@@ -377,7 +377,7 @@ class IntrusiveListIterator {
   // Compares two iterators with different configurations.
   template <typename _OConfig>
   bool operator!=(IntrusiveListIterator<_List, _OConfig> const& _it) const {
-    assert(node_ && _it.node_ && node_->list_ == _it.node_->list_ &&
+    SKR_ASSERT(node_ && _it.node_ && node_->list_ == _it.node_->list_ &&
            "List iterators incompatible");
     return node_ != _it.node_;
   }
@@ -385,7 +385,7 @@ class IntrusiveListIterator {
   // Dereferences the object pointed by *this iterator.
   // *this must be a valid iterator: initialized and not end().
   reference operator*() const {
-    assert(node_ && !node_->debug_is_end_node() &&
+    SKR_ASSERT(node_ && !node_->debug_is_end_node() &&
            "List iterator not dereferencable");
     return static_cast<reference>(static_cast<typename _Config::Hook&>(*node_));
   }
@@ -394,7 +394,7 @@ class IntrusiveListIterator {
   // iterator configuration (forward or reverse).
   // *this must be a valid iterator: initialized and not end().
   inline IntrusiveListIterator operator++() {
-    assert(node_ && !node_->debug_is_end_node() &&
+    SKR_ASSERT(node_ && !node_->debug_is_end_node() &&
            "List iterator is already on list boundaries");
     node_ = _Config::kReverse ? node_->prev_ : node_->next_;
     return *this;
@@ -404,7 +404,7 @@ class IntrusiveListIterator {
   // iterator configuration (forward or reverse).
   // *this must be a valid iterator: initialized and not end().
   inline IntrusiveListIterator operator--() {
-    assert(node_ &&
+    SKR_ASSERT(node_ &&
            node_ != (_Config::kReverse ? node_->list_->end_.prev_
                                        : node_->list_->end_.next_) &&
            "List iterator is already on list boundaries");
@@ -440,7 +440,7 @@ class IntrusiveListIterator {
   // Get the node currently pointed by the iterator.
   // *this iterator must be initialized, but can point a list end node.
   Node& node() const {
-    assert(node_ && "Iterator isn't initialized");
+    SKR_ASSERT(node_ && "Iterator isn't initialized");
     return *node_;
   }
 
@@ -465,7 +465,7 @@ class IntrusiveList : public internal::IntrusiveNodeList {
       if (void(0), _Option::kLinkMode == LinkMode::kAuto && is_linked()) {
         unlink();
       }
-      assert((_Option::kLinkMode == LinkMode::kUnsafe || !is_linked()) &&
+      SKR_ASSERT((_Option::kLinkMode == LinkMode::kUnsafe || !is_linked()) &&
              "Node is still linked");
     }
 
@@ -524,7 +524,7 @@ class IntrusiveList : public internal::IntrusiveNodeList {
     if (void(0), _Option::kLinkMode == LinkMode::kAuto) {
       clear();
     }
-    assert(_Option::kLinkMode == LinkMode::kUnsafe || empty());
+    SKR_ASSERT(_Option::kLinkMode == LinkMode::kUnsafe || empty());
   }
 
   // Inserts an unlinked element at the beginning of the list.
@@ -538,7 +538,7 @@ class IntrusiveList : public internal::IntrusiveNodeList {
   // pop_front does not delete the element.
   // This function asserts if list is empty.
   reference pop_front() {
-    assert(!empty() && "Invalid function on an empty list");
+    SKR_ASSERT(!empty() && "Invalid function on an empty list");
     internal::Node& node = begin_node();
     node.unlink();
     return static_cast<reference>(static_cast<Hook&>(node));
@@ -549,7 +549,7 @@ class IntrusiveList : public internal::IntrusiveNodeList {
   // pop_back does not delete the element.
   // This function asserts if list is empty.
   reference pop_back() {
-    assert(!empty() && "Invalid function on an empty list");
+    SKR_ASSERT(!empty() && "Invalid function on an empty list");
     internal::Node& node = last_node();
     node.unlink();
     return static_cast<reference>(static_cast<Hook&>(node));
@@ -558,28 +558,28 @@ class IntrusiveList : public internal::IntrusiveNodeList {
   // Returns the a reference to the first element.
   // This function asserts if list is empty.
   reference front() {
-    assert(!empty() && "Invalid function on an empty list");
+    SKR_ASSERT(!empty() && "Invalid function on an empty list");
     return static_cast<reference>(static_cast<Hook&>(begin_node()));
   }
 
   // Returns the a const reference to the first element.
   // This function asserts if list is empty.
   const_reference front() const {
-    assert(!empty() && "Invalid function on an empty list");
+    SKR_ASSERT(!empty() && "Invalid function on an empty list");
     return static_cast<const_reference>(static_cast<const Hook&>(begin_node()));
   }
 
   // Returns the a reference to the last element.
   // This function asserts if list is empty.
   reference back() {
-    assert(!empty() && "Invalid function on an empty list");
+    SKR_ASSERT(!empty() && "Invalid function on an empty list");
     return static_cast<reference>(static_cast<Hook&>(last_node()));
   }
 
   // Returns the a const reference to the last element.
   // This function asserts if list is empty.
   const_reference back() const {
-    assert(!empty() && "Invalid function on an empty list");
+    SKR_ASSERT(!empty() && "Invalid function on an empty list");
     return static_cast<const_reference>(static_cast<const Hook&>(last_node()));
   }
 
@@ -621,7 +621,7 @@ class IntrusiveList : public internal::IntrusiveNodeList {
   // This functions asserts if _val is not element of the list.
   void remove(reference _val) {
     Hook& hook = static_cast<Hook&>(_val);
-    assert(hook.debug_is_linked_in(*this) && "The node is linked by this list");
+    SKR_ASSERT(hook.debug_is_linked_in(*this) && "The node is linked by this list");
     hook.unlink();
   }
 
@@ -640,7 +640,7 @@ class IntrusiveList : public internal::IntrusiveNodeList {
   // iterator.
   iterator erase(iterator _where) {
     internal::Node& where_node = _where.node();
-    assert(where_node.debug_is_linked_in(*this) &&
+    SKR_ASSERT(where_node.debug_is_linked_in(*this) &&
            "The node is linked by this list");
     ++_where;  // Offset the iterator to return before modifying the list
     where_node.unlink();
@@ -833,8 +833,8 @@ namespace internal {
 
 // Connect the next and previous nodes together, resets internal linked state.
 inline void Node::unlink() {
-  assert(is_linked() && "This node is not linked");
-  assert(!debug_is_end_node() && "The end_ node cannot be unlinked");
+  SKR_ASSERT(is_linked() && "This node is not linked");
+  SKR_ASSERT(!debug_is_end_node() && "The end_ node cannot be unlinked");
 
   next_->prev_ = prev_;  // Reconnect prev and next nodes
   prev_->next_ = next_;
@@ -849,10 +849,10 @@ inline void Node::unlink() {
 }
 
 inline void Node::insert(Node* _where) {
-  assert(!is_linked() && _where->list_ &&  // Cannot test _where->is_linked
+  SKR_ASSERT(!is_linked() && _where->list_ &&  // Cannot test _where->is_linked
                                            // as end_ would return false.
          "*this node must be unlinked and _node must be linked");
-  assert(!debug_is_end_node() && "The end_ node cannot be linked");
+  SKR_ASSERT(!debug_is_end_node() && "The end_ node cannot be linked");
 
   prev_ = _where->prev_;  // Connect the previous of *this node
   _where->prev_->next_ = this;
@@ -875,7 +875,7 @@ inline void IntrusiveNodeList::clear() {
 // Iterates through all elements in range [_begin, _end[ to unlink them from
 // the list.
 inline void IntrusiveNodeList::_erase(Node* _begin, Node* _end) {
-  assert(debug_is_range_valid(*_begin, *_end) && "Invalid iterator range");
+  SKR_ASSERT(debug_is_range_valid(*_begin, *_end) && "Invalid iterator range");
   while (_begin != _end) {
     internal::Node* next_node = _begin->next_;
     _begin->unlink();
@@ -944,10 +944,10 @@ inline void IntrusiveNodeList::swap(IntrusiveNodeList& _list) {
 // In debug build though, every node between _first and _end must be traversed
 // to reset their list_ member.
 inline void IntrusiveNodeList::_splice(Node* _where, Node* _first, Node* _end) {
-  assert(_where->list_ == this && "_where is not a member of *this list");
-  assert(_first->list_ && _first->list_->debug_is_range_valid(*_first, *_end) &&
+  SKR_ASSERT(_where->list_ == this && "_where is not a member of *this list");
+  SKR_ASSERT(_first->list_ && _first->list_->debug_is_range_valid(*_first, *_end) &&
          "Invalid iterator range");
-  assert(_first != _end);
+  SKR_ASSERT(_first != _end);
 
   // Keep a pointer to the last node as _end->prev_ is modified early
   Node* last = _end->prev_;
@@ -1012,11 +1012,11 @@ inline bool IntrusiveNodeList::_is_less(IntrusiveNodeList const& _list,
 // allow splicing of n consecutive nodes in O(1) complexity.
 template <typename _Pred>
 inline void IntrusiveNodeList::_merge(IntrusiveNodeList* _list, _Pred _pred) {
-  assert(_is_ordered(_pred) && "This list must be ordered");
+  SKR_ASSERT(_is_ordered(_pred) && "This list must be ordered");
   if (this == _list) {
     return;
   }
-  assert(_list->_is_ordered(_pred) && "The list in argument must be ordered");
+  SKR_ASSERT(_list->_is_ordered(_pred) && "The list in argument must be ordered");
 
   internal::Node* node = end_.next_;
   internal::Node* to__insertbegin = _list->end_.next_;

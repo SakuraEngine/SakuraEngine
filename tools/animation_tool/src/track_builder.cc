@@ -130,7 +130,7 @@ unique_ptr<_Track> TrackBuilder::Build(const _RawTrack& _input) const {
   track->Allocate(keyframes.size(), _input.name.size());
 
   // Copy all keys to output.
-  assert(keyframes.size() == track->ratios_.size() &&
+  SKR_ASSERT(keyframes.size() == track->ratios_.size() &&
          keyframes.size() == track->values_.size() &&
          keyframes.size() <= track->steps_.size() * 8);
   memset(track->steps_.data(), 0, track->steps_.size_bytes());
@@ -173,7 +173,7 @@ namespace {
 template <>
 void Fixup<RawQuaternionTrack::Keyframes>(
     RawQuaternionTrack::Keyframes* _keyframes) {
-  assert(_keyframes->size() >= 2);
+  SKR_ASSERT(_keyframes->size() >= 2);
 
   const math::Quaternion identity = math::Quaternion::identity();
   for (size_t i = 0; i < _keyframes->size(); ++i) {
