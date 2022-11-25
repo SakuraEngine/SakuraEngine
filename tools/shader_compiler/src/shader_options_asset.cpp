@@ -47,11 +47,8 @@ void* SShaderOptionsImporter::Import(skr::io::RAMService* ioService, SCookContex
     auto&& json_value = doc.get_value().value_unsafe();
 
     // create source code wrapper
-    auto collectionType = skr::type::type_id<skr_shader_options_resource_t>::get();
-    auto newType = skr_get_type(&collectionType);
-    auto collection = static_cast<skr_shader_options_resource_t*>(newType->Malloc());
-    newType->Construct(collection, nullptr, 0);
-    newType->DeserializeText(collection, std::move(json_value));
+    auto collection = SkrNew<skr_shader_options_resource_t>();
+    skr::json::Read(std::move(json_value), *collection);
     return collection;
 }
 
