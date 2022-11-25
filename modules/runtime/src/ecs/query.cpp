@@ -696,20 +696,17 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
     using namespace dual;
     if (!group->archetype->withMask)
     {
-        dual_chunk_t* c = group->firstChunk;
-        while (c != nullptr)
+        for(auto c : group->chunks)
         {
             if (match_chunk_changed(c->type->type, c->timestamps(), meta))
             {
                 dual_chunk_view_t view{ c, (EIndex)0, c->count };
                 callback(u, &view);
             }
-            c = c->next;
         }
     }
     else
     {
-        dual_chunk_t* c = group->firstChunk;
 
         auto allmask = group->get_mask(filter.all);
         auto nonemask = group->get_mask(filter.none);
@@ -719,11 +716,10 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
         if (nonemask == 0 && anymask == 0) // fastpath
         {
             __m128i allmask_128 = _mm_set1_epi32(allmask);
-            while (c != nullptr)
+            for(auto c : group->chunks)
             {
                 if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
                 {
-                    c = c->next;
                     continue;
                 }
                 auto count = c->count;
@@ -788,7 +784,6 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                     if (view.count > 0)
                         callback(u, &view);
                 }
-                c = c->next;
             }
         }
         else
@@ -797,11 +792,10 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
             auto match = [&](dual_mask_component_t mask) {
                 return (mask & allmask) == allmask && (mask & nonemask) == 0 && (anymask == 0 || (mask & anymask) != 0);
             };
-            while (c != nullptr)
+            for(auto c : group->chunks)
             {
                 if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
                 {
-                    c = c->next;
                     continue;
                 }
                 auto count = c->count;
@@ -819,7 +813,6 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                     if (view.count > 0)
                         callback(u, &view);
                 }
-                c = c->next;
             }
         }
     }

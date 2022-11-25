@@ -68,7 +68,7 @@ void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callb
 
 dual_chunk_view_t dual_storage_t::allocate_view(dual_group_t* group, EIndex count)
 {
-    dual_chunk_t* freeChunk = group->firstFree;
+    dual_chunk_t* freeChunk = group->get_first_free_chunk();
     if (freeChunk == nullptr)
         freeChunk = group->new_chunk(count);
     EIndex start = freeChunk->count;
@@ -80,9 +80,16 @@ dual_chunk_view_t dual_storage_t::allocate_view(dual_group_t* group, EIndex coun
 
 dual_chunk_view_t dual_storage_t::allocate_view_strict(dual_group_t* group, EIndex count)
 {
-    dual_chunk_t* freeChunk = group->firstFree;
-    while (freeChunk != nullptr && freeChunk->count + count > freeChunk->get_capacity())
-        freeChunk = freeChunk->next;
+    dual_chunk_t* freeChunk = nullptr;
+    for (auto i = group->firstFree; i < (uint32_t)group->chunks.size(); ++i)
+    {
+        auto chunk = group->chunks[i];
+        if (chunk->count + count <= chunk->get_capacity())
+        {
+            freeChunk = chunk;
+            break;
+        }
+    }
     if (freeChunk == nullptr)
         freeChunk = group->new_chunk(count);
     EIndex start = freeChunk->count;
@@ -356,7 +363,7 @@ void dual_storage_t::defragment()
     for (auto& pair : groups)
     {
         auto g = pair.second;
-        if (g->chunkCount < 2)
+        if (g->chunks.size() < 2)
             continue;
 
         // step 1 : calculate best layout for group
@@ -387,12 +394,7 @@ void dual_storage_t::defragment()
             normalCount++;
 
         // step 2 : grab and sort existing chunk for reuse
-        eastl::vector<dual_chunk_t*> chunks;
-        for (dual_chunk_t* c = g->firstChunk; c; c = c->next)
-            chunks.push_back(c);
-
-        g->firstChunk = g->lastChunk = nullptr;
-        g->chunkCount = 0;
+        eastl::vector<dual_chunk_t*> chunks = std::move(g->chunks);
         std::sort(chunks.begin(), chunks.end(), [](dual_chunk_t* lhs, dual_chunk_t* rhs) {
             return lhs->pt > rhs->pt || lhs->count > rhs->count;
         });
@@ -441,7 +443,6 @@ void dual_storage_t::defragment()
         fillType(smallCount, PT_small);
 
         // step 4 : rebuild group chunk data
-        g->chunkCount = (uint16_t)newChunks.size();
         for (auto chunk : newChunks)
             g->add_chunk(chunk);
     }
@@ -487,7 +488,7 @@ void dual_storage_t::pack_entities()
     groups.clear();
     for (auto g : gs)
     {
-        for (dual_chunk_t* c = g->firstChunk; c; c = c->next)
+        for(auto c : g->chunks)
         {
             iterator_ref_chunk( c, m );
             iterator_ref_view({ c, 0, c->count }, m);
@@ -655,11 +656,8 @@ void dual_storage_t::merge(dual_storage_t& src)
     for (auto& i : src.groups)
     {
         dual_group_t* g = i.second;
-        dual_chunk_t* c = g->firstChunk;
-        while (c)
+        for(auto c : g->chunks)
         {
-            dual_chunk_t* next = c->next;
-            (void)next;
             chunks.push_back(c);
             auto sizeToPatch = c->count * c->type->sizeToPatch;
             if (sizeRemain < sizeToPatch)
@@ -704,12 +702,9 @@ void dual_storage_t::merge(dual_storage_t& src)
         forloop (j, 0, type.meta.length)
             m.map((dual_entity_t&)type.meta.data[j]);
         dual_group_t* dstG = get_group(type);
-        dual_chunk_t* c = g->firstChunk;
-        while (c)
+        for(auto c : g->chunks)
         {
-            dual_chunk_t* next = c->next;
             dstG->add_chunk(c);
-            c = next;
         }
         src.destruct_group(g);
     }
@@ -949,12 +944,10 @@ void dualS_all(dual_storage_t *storage, bool includeDisabled, bool includeDead, 
             continue;
         if(group->disabled && !includeDisabled)
             continue;
-        auto c = pair.second->firstChunk;
-        while(c)
+        for(auto c : group->chunks)
         {
             dual_chunk_view_t view {c, 0, c->count};
             callback(u, &view);
-            c = c->next;
         }
     }
 }

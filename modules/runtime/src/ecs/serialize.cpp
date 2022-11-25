@@ -138,7 +138,7 @@ void dual_storage_t::serialize_type(const dual_entity_type_t& type, skr_binary_w
     // group is define by entity_type, so we just serialize it's type
     // todo: assert(s.is_serialize());
     bin::Archive(s, type.type.length);
-    auto reg = type_registry_t::get();
+    auto& reg = type_registry_t::get();
     for (auto t : type.type)
         bin::Archive(s, reg.descriptions[type_index_t(t).index()].guid);
     if(keepMeta)
@@ -159,7 +159,7 @@ dual_entity_type_t dual_storage_t::deserialize_type(dual::fixed_stack_t& stack, 
     auto guids = stack.allocate<guid_t>(type.type.length);
     ArchiveBuffer(s, guids, type.type.length);
     type.type.data = stack.allocate<dual_type_index_t>(type.type.length);
-    auto reg = type_registry_t::get();
+    auto& reg = type_registry_t::get();
     forloop (i, 0, type.type.length) // todo: check type existence
         ((dual_type_index_t*)type.type.data)[i] = reg.guid2type[guids[i]];
     std::sort((dual_type_index_t*)type.type.data, (dual_type_index_t*)type.type.data + type.type.length);
@@ -275,8 +275,8 @@ void dual_storage_t::serialize(skr_binary_writer_t* s)
     {
         auto group = pair.second;
         serialize_type(group->type, s, true);
-        bin::Archive(s, group->chunkCount);
-        for (dual_chunk_t* c = group->firstChunk; c; c = c->next)
+        bin::Archive(s, (uint32_t)group->chunks.size());
+        for(auto c : group->chunks)
         {
             dual_chunk_view_t view = { c, 0, c->count };
             serialize_view(group, view, s, nullptr, true);

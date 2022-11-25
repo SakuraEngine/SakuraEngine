@@ -35,27 +35,6 @@ void dual_chunk_t::destroy(dual_chunk_t* chunk)
     };
 }
 
-void dual_chunk_t::link(dual_chunk_t* chunk) noexcept
-{
-    if (chunk != nullptr)
-    {
-        chunk->next = next;
-        chunk->prev = this;
-    }
-    if (next != nullptr)
-        next->prev = chunk;
-    next = chunk;
-}
-
-void dual_chunk_t::unlink() noexcept
-{
-    if (prev != nullptr)
-        prev->next = next;
-    if (next != nullptr)
-        next->prev = prev;
-    prev = next = nullptr;
-}
-
 const dual_entity_t* dual_chunk_t::get_entities() const
 {
     return (const dual_entity_t*)data();

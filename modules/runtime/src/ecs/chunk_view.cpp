@@ -152,7 +152,7 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
     if (type == kGuidComponent)
     {
         auto guidDst = (guid_t*)dst;
-        auto registry = type_registry_t::get();
+        auto& registry = type_registry_t::get();
         forloop (j, 0, dstV.count)
             guidDst[j] = registry.make_guid();
         return;
