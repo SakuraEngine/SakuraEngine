@@ -184,7 +184,14 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
         json->StartObject();
         for (auto& pair : map)
         {
-            skr::json::Write<const skr::string&>(json, pair.first);
+            if constexpr (std::is_same_v<std::decay_t<decltype(pair.first)>, skr::string>)
+            {
+                skr::json::Write<const skr::string&>(json, pair.first);
+            }
+            else
+            {
+                skr::json::Write<const skr::string&>(json, skr::string(pair.first));
+            }
             skr::json::Write<const V&>(json, pair.second);
         }
         json->EndObject();

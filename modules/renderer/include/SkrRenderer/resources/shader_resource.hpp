@@ -32,7 +32,7 @@ skr_stable_shader_hash_t
     SKR_RENDERER_API explicit skr_stable_shader_hash_t(uint32_t v) SKR_NOEXCEPT;
     SKR_RENDERER_API explicit skr_stable_shader_hash_t(uint64_t v) SKR_NOEXCEPT;
     SKR_RENDERER_API skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT;
-    SKR_RENDERER_API operator skr::string() const SKR_NOEXCEPT;
+    SKR_RENDERER_API explicit operator skr::string() const SKR_NOEXCEPT;
 };
 
 sreflect_struct("guid" : "0291f512-747e-4b64-ba5c-5fdc412220a3")
