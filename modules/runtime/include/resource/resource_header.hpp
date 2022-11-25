@@ -3,6 +3,7 @@
 #include "type/type_registry.h"
 #include <EASTL/fixed_vector.h>
 #include <EASTL/vector.h>
+#include "platform/thread.h"
 
 #include "binary/reader_fwd.h"
 #include "binary/writer_fwd.h"
@@ -40,6 +41,7 @@ typedef enum ESkrLoadingStatus : uint32_t
     SKR_LOADING_STATUS_UNINSTALLING,
     SKR_LOADING_STATUS_UNLOADING,
     SKR_LOADING_STATUS_ERROR,
+    SKR_LOADING_STATUS_COUNT
 } ESkrLoadingStatus;
 
 typedef struct skr_resource_record_t skr_resource_record_t;
@@ -55,6 +57,9 @@ struct RUNTIME_API skr_resource_record_t {
     void* artifacts = nullptr;
     void (*artifactsDestructor)(void*) = nullptr;
 #endif
+    void* userData[SKR_LOADING_STATUS_COUNT];
+    void (*callbacks[SKR_LOADING_STATUS_COUNT])(void*);
+    SMutexObject mutex;
     ESkrLoadingStatus loadingStatus = SKR_LOADING_STATUS_UNLOADED;
     struct object_requester {
         uint32_t id;
@@ -76,6 +81,15 @@ struct RUNTIME_API skr_resource_record_t {
     skr_resource_header_t header;
     skr::resource::SResourceRequest* activeRequest;
 
+    void SetStatus(ESkrLoadingStatus);
+    void SetCallback(ESkrLoadingStatus, void (*callback)(void*), void* userData);
+    void ResetCallback(ESkrLoadingStatus);
+    template<class F>
+    void SetCallback(ESkrLoadingStatus status, const F& callback)
+    {
+        SetCallback(status, [](void* data) { (*static_cast<F*>(data))(); }, (void*)&callback);
+    }
+    void SetResource(void* resource, void (*destructor)(void*));
     uint32_t AddReference(uint64_t requester, ESkrRequesterType requesterType);
     void RemoveReference(uint32_t id, ESkrRequesterType requesterType);
     bool IsReferenced() const;

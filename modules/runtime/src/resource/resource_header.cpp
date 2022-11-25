@@ -1,4 +1,6 @@
 #include "resource/resource_header.hpp"
+#include "binary/writer.h"
+#include "binary/reader.h"
 
 int skr_resource_header_t::ReadWithoutDeps(skr_binary_reader_t* reader)
 {
@@ -107,4 +109,26 @@ void skr_resource_record_t::RemoveReference(uint32_t id, ESkrRequesterType reque
 bool skr_resource_record_t::IsReferenced() const
 {
     return entityRefCount > 0 || objectReferences.size() > 0;
+}
+void skr_resource_record_t::SetStatus(ESkrLoadingStatus newStatus)
+{
+    if(newStatus != loadingStatus)
+    {
+        SMutexLock lock(mutex.mMutex);
+        loadingStatus = newStatus;
+        if(callbacks[newStatus])
+            callbacks[newStatus](userData[newStatus]);
+    }
+}
+void skr_resource_record_t::SetCallback(ESkrLoadingStatus status, void (*callback)(void *), void *userData)
+{
+    SMutexLock lock(mutex.mMutex);
+    callbacks[status] = callback;
+    this->userData[status] = userData;
+}
+void skr_resource_record_t::ResetCallback(ESkrLoadingStatus status)
+{
+    SMutexLock lock(mutex.mMutex);
+    callbacks[status] = nullptr;
+    userData[status] = nullptr;
 }

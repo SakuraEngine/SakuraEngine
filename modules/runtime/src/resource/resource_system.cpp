@@ -25,6 +25,7 @@ public:
 
     void LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) final override;
     void UnloadResource(skr_resource_handle_t& handle) final override;
+    void FlushResource(skr_resource_handle_t& handle) final override;
     ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) final override;
 
     SResourceFactory* FindFactory(skr_type_id_t type) const final override;
@@ -213,6 +214,11 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
     }
 }
 
+thread_local eastl::vector<SResourceRequest*> flushRequests;
+void SResourceSystemImpl::FlushResource(skr_resource_handle_t& handle)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
 
 ESkrLoadingStatus SResourceSystemImpl::GetResourceStatus(const skr_guid_t& handle)
 {

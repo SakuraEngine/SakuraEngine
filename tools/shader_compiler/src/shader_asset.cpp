@@ -67,7 +67,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     for (auto option_asset : importer->option_assets)
     {
         const auto guid = option_asset.get_guid();
-        auto idx = ctx->AddStaticDependency(guid);
+        auto idx = ctx->AddStaticDependency(guid, true);
         auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
         collections.emplace_back(collection);
     }
