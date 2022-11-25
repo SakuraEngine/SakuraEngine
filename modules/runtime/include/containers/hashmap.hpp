@@ -32,49 +32,36 @@ namespace binary
 {
 template <class K, class V, class Hash, class Eq>
 struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
-    static int Read(skr_binary_reader_t* reader, skr::flat_hash_map<K, V, Hash, Eq>& map)
+    static int Read(skr_binary_reader_t* archive, skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
         skr::flat_hash_map<K, V, Hash, Eq> temp;
         uint32_t size;
-        int ret = skr::binary::Read(reader, size);
-        if (ret != 0)
-            return ret;
+        SKR_ARCHIVE(size);
 
-        temp.reserve(size);
         for (int i = 0; i < size; ++i)
         {
             K key;
-            ret = skr::binary::Read(reader, key);
-            if (ret != 0)
-                return ret;
+            SKR_ARCHIVE(key);
             V value;
-            ret = skr::binary::Read(reader, value);
-            if (ret != 0)
-                return ret;
+            SKR_ARCHIVE(value);
             temp.insert({ std::move(key), std::move(value) });
         }
         map = std::move(temp);
-        return ret;
+        return 0;
     }
 };
 
 template <class K, class V, class Hash, class Eq>
 struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
-    static int Write(skr_binary_writer_t* json, const skr::flat_hash_map<K, V, Hash, Eq>& map)
+    static int Write(skr_binary_writer_t* archive, const skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
-        int ret = skr::binary::Write(json, (uint32_t)map.size());
-        if (ret != 0)
-            return ret;
+        SKR_ARCHIVE((uint32_t)map.size());
         for (auto& pair : map)
         {
-            ret = skr::binary::Write<const K&>(json, pair.first);
-            if (ret != 0)
-                return ret;
-            ret = skr::binary::Write<const V&>(json, pair.second);
-            if (ret != 0)
-                return ret;
+            SKR_ARCHIVE(pair.first);
+            SKR_ARCHIVE(pair.second);
         }
-        return ret;
+        return 0;
     }
 };
 } // namespace binary

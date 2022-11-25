@@ -1,5 +1,6 @@
 #pragma once
 #include <EASTL/vector.h>
+#include "containers/span.hpp"
 #include "reader_fwd.h"
 #include "resource/resource_handle.h"
 #include "containers/variant.hpp"
@@ -33,6 +34,8 @@ inline int ReadValue(skr_binary_reader_t* reader, void* data, size_t size)
 
 template <class T>
 int Read(skr_binary_reader_t* reader, T& value);
+template <class T>
+int Archive(skr_binary_reader_t* reader, T& value);
 
 template <>
 struct RUNTIME_API ReadHelper<bool> {
@@ -175,34 +178,40 @@ struct ReadHelper<TEnumAsByte<T>>
 
 template <class T>
 struct ReadHelper<skr::resource::TResourceHandle<T>> {
-    static int Read(skr_binary_reader_t* reader, skr::resource::TResourceHandle<T>& handle)
+    static int Read(skr_binary_reader_t* archive, skr::resource::TResourceHandle<T>& handle)
     {
         skr_guid_t guid;
-        int ret = skr::binary::Read(reader, guid);
-        if (ret != 0)
-            return ret;
+        SKR_ARCHIVE(guid);
         handle.set_guid(guid);
-        return ret;
+        return 0;
+    }
+};
+
+template<class T>
+struct ReadHelper<skr::span<T>> {
+    static int Read(skr_binary_reader_t* archive, skr::span<T> span)
+    {
+        for(auto& v : span)
+        {
+            SKR_ARCHIVE(v);
+        }
+        return 0;
     }
 };
 
 template <class V, class Allocator>
 struct ReadHelper<eastl::vector<V, Allocator>> {
-    static int Read(skr_binary_reader_t* json, eastl::vector<V, Allocator>& vec)
+    static int Read(skr_binary_reader_t* archive, eastl::vector<V, Allocator>& vec)
     {
         eastl::vector<V, Allocator> temp;
         uint32_t size;
-        int ret = skr::binary::Read(json, size);
-        if (ret != 0)
-            return ret;
+        SKR_ARCHIVE(size);
 
         temp.reserve(size);
         for (uint32_t i = 0; i < size; ++i)
         {
             V value;
-            ret = skr::binary::Read(json, value);
-            if (ret != 0)
-                return ret;
+            SKR_ARCHIVE(value);
             temp.push_back(std::move(value));
         }
         vec = std::move(temp);
@@ -214,14 +223,12 @@ template<class ...Ts>
 struct ReadHelper<skr::variant<Ts...>>
 {
     template<size_t I, class T>
-    static int ReadByIndex(skr_binary_reader_t* reader, skr::variant<Ts...>& value, size_t index)
+    static int ReadByIndex(skr_binary_reader_t* archive, skr::variant<Ts...>& value, size_t index)
     {
         if (index == I)
         {
             T t;
-            int ret = skr::binary::Read(reader, t);
-            if (ret != 0)
-                return ret;
+            SKR_ARCHIVE(t);
             value = std::move(t);
             return 0;
         }
@@ -229,33 +236,31 @@ struct ReadHelper<skr::variant<Ts...>>
     }
 
     template<size_t ...Is>
-    static int ReadByIndexHelper(skr_binary_reader_t* reader, skr::variant<Ts...>& value, size_t index, std::index_sequence<Is...>)
+    static int ReadByIndexHelper(skr_binary_reader_t* archive, skr::variant<Ts...>& value, size_t index, std::index_sequence<Is...>)
     {
         int result;
-        (void)(((result = ReadByIndex<Is, Ts>(reader, value, index)) != 0) && ...);
+        (void)(((result = ReadByIndex<Is, Ts>(archive, value, index)) != 0) && ...);
         return result;
     }
 
-    static int Read(skr_binary_reader_t* reader, skr::variant<Ts...>& value)
+    static int Read(skr_binary_reader_t* archive, skr::variant<Ts...>& value)
     {
         uint32_t index;
-        int ret = skr::binary::Read(reader, index);
-        if (ret != 0)
-            return ret;
+        SKR_ARCHIVE(index);
         if (index >= sizeof...(Ts))
             return -1;
-        return ReadByIndexHelper(reader, value, index, std::make_index_sequence<sizeof...(Ts)>());
+        return ReadByIndexHelper(archive, value, index, std::make_index_sequence<sizeof...(Ts)>());
     }
 };
 
 template <class T>
-int Read(skr_binary_reader_t* reader, T& value)
+int Read(skr_binary_reader_t* reader, T&& value)
 {
     return ReadHelper<std::decay_t<T>>::Read(reader, value);
 }
 
 template <class T>
-int Archive(skr_binary_reader_t* writer, T& value)
+int Archive(skr_binary_reader_t* writer, T&& value)
 {
     return ReadHelper<std::decay_t<T>>::Read(writer, value);
 }

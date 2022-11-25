@@ -12,3 +12,7 @@ template <class T, class = void>
 struct ReadHelper;
 }
 }
+
+#ifndef SKR_ARCHIVE
+#define SKR_ARCHIVE(...) if(auto ret = skr::binary::Archive(archive, (__VA_ARGS__)); ret != 0) return ret
+#endif
