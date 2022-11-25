@@ -131,7 +131,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     eastl::vector<eastl::vector<ECGPUShaderStage>> allOutStages(all_variants.size());
     // foreach variants
     system->ParallelFor(all_variants.begin(), all_variants.end(), 1,
-        [system, &all_variants, source_code, ctx, outputPath, &byteCodeFormats, &allOutIdentifiers, &allOutStages]
+        [system, &all_variants, &all_md5s, source_code, ctx, outputPath, &byteCodeFormats, &allOutIdentifiers, &allOutStages]
         (const auto* pVariant, const auto* __) -> void
         {
             const uint64_t variant_index = pVariant - all_variants.begin();
@@ -142,7 +142,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
 
     // foreach target profiles
     system->ParallelFor(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
-        [&all_variants, source_code, ctx, &byteCodeFormats, &outIdentifiers, &outStages, outputPath]
+        [&all_variants, &all_md5s, variant_index, source_code, ctx, &byteCodeFormats, &outIdentifiers, &outStages, outputPath]
         (const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* _) -> void
         {
             ZoneScopedN("Shader Compile Task");
@@ -157,6 +157,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
                 auto& stage = outStages[index];
                 // compile & write bytecode to disk
                 const auto* shaderImporter = static_cast<SShaderImporter*>(ctx->GetImporter());
+                compiler->SetShaderOptions(all_variants[variant_index], all_md5s[variant_index]);
                 auto compiled = compiler->Compile(format, *source_code, *shaderImporter);
                 stage = compiled->GetShaderStage();
                 auto bytes = compiled->GetBytecode();
@@ -255,9 +256,9 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         // make archive
         skr_json_writer_t writer(2);
         skr::json::Write(&writer, resource);
-        auto jPath = outputPath / ".json";
+        auto jPath = outputPath.u8string() + ".json";
         // write to file
-        auto file = fopen(jPath.u8string().c_str(), "wb");
+        auto file = fopen(jPath.c_str(), "wb");
         if (!file)
         {
             SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for resource {}! path: {}", 

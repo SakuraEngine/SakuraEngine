@@ -266,6 +266,19 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
 #endif
     allArgs.emplace_back(L"-Qstrip_debug"); 
 
+    for (auto&& option : options)
+    {
+        auto prefix = eastl::wstring(L"-D") + utf8_to_utf16(option.key.c_str()).c_str();
+        if (option.value == "on") allArgs.emplace_back(prefix);
+        else if (option.value == "off") continue;//allArgs.emplace_back(prefix);
+        else
+        {
+            auto wvalue =  eastl::wstring(utf8_to_utf16(option.value.c_str()).c_str());
+            auto defination = prefix + L"=" + wvalue; 
+            allArgs.emplace_back(prefix);  
+        }
+    }
+
     // do compile
     {
         eastl::vector<LPCWSTR> pszArgs;
