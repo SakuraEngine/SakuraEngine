@@ -121,12 +121,30 @@ bool IsAsset(skr::filesystem::path path)
     return false;
 }
 
+skr::resource::SShaderOptionsFactory* shaderOptionsFactory = nullptr;
+skr::resource::SLocalResourceRegistry* registry = nullptr;
+
 void InitializeResourceSystem(skd::SProject& proj)
 {
     using namespace skr::guid::literals;
     auto resource_system = skr::resource::GetResourceSystem();
-    auto registry = SkrNew<skr::resource::SLocalResourceRegistry>(proj.resource_vfs);
+    registry = SkrNew<skr::resource::SLocalResourceRegistry>(proj.resource_vfs);
     resource_system->Initialize(registry, proj.ram_service);
+
+    // shader options factory
+    {
+        skr::resource::SShaderOptionsFactory::Root factoryRoot = {};
+        shaderOptionsFactory = skr::resource::SShaderOptionsFactory::Create(factoryRoot);
+        resource_system->RegisterFactory("3b8ca511-33d1-4db4-b805-00eea6a8d5e1"_guid, shaderOptionsFactory);
+    }
+}
+
+void DestroyResourceSystem(skd::SProject& proj)
+{
+    skr::resource::SShaderOptionsFactory::Destroy(shaderOptionsFactory);
+
+    skr::resource::GetResourceSystem()->Shutdown();
+    SkrDelete(registry);
 }
 
 int main(int argc, char** argv)
@@ -219,6 +237,7 @@ int main(int argc, char** argv)
     system.WaitForAll();
     scheduler.unbind();
     system.Shutdown();
+    DestroyResourceSystem(*project);
     {
         ZoneScopedN("ThreadExit");
         moduleManager->destroy_module_graph();

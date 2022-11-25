@@ -25,6 +25,56 @@ namespace skr
 {
 namespace resource
 {
+struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory
+{
+    SShaderOptionsFactoryImpl(const SShaderOptionsFactoryImpl::Root& root)
+        : root(root)
+    {
+
+    }
+
+    ~SShaderOptionsFactoryImpl() noexcept = default;
+
+    bool AsyncIO() override { return false; }
+    skr_type_id_t GetResourceType() override
+    {
+        const auto collection_type = skr::type::type_id<skr_shader_options_resource_t>::get();
+        return collection_type;
+    }
+
+    ESkrInstallStatus Install(skr_resource_record_t* record) override
+    {
+        return ::SKR_INSTALL_STATUS_SUCCEED; // no need to install
+    }
+    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override
+    {
+        return ::SKR_INSTALL_STATUS_SUCCEED; // no need to install
+    }
+
+    bool Unload(skr_resource_record_t* record) override
+    {
+        auto options = (skr_shader_options_resource_t*)record->resource;
+        SkrDelete(options);
+        return true; 
+    }
+    bool Uninstall(skr_resource_record_t* record) override
+    {
+        return true;
+    }
+    void DestroyResource(skr_resource_record_t* record) override {}
+    
+    Root root;
+};
+
+SShaderOptionsFactory* SShaderOptionsFactory::Create(const Root& root)
+{
+    return SkrNew<SShaderOptionsFactoryImpl>(root);
+}
+
+void SShaderOptionsFactory::Destroy(SShaderOptionsFactory *factory)
+{
+    return SkrDelete(factory);
+}
 
 struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFactory
 {

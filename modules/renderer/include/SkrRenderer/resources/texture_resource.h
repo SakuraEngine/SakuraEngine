@@ -50,7 +50,7 @@ struct SKR_RENDERER_API STextureFactory : public SResourceFactory {
         SRenderDeviceId render_device = nullptr;
     };
 
-    float AsyncSerdeLoadFactor() override { return 101.f; }
+    float AsyncSerdeLoadFactor() override { return 2.5f; }
     [[nodiscard]] static STextureFactory* Create(const Root& root);
     static void Destroy(STextureFactory* factory); 
 };

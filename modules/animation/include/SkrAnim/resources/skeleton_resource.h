@@ -10,9 +10,9 @@ typedef struct skr_skeleton_resource_t skr_skeleton_resource_t;
 #ifdef __cplusplus
     #include "SkrAnim/ozz/skeleton.h"
     #include "binary/reader_fwd.h"
-
-sreflect_struct("guid"
-                : "1876BF35-E4DC-450B-B9D4-09259397F4BA")
+    #include "platform/debug.h"
+    
+sreflect_struct("guid": "1876BF35-E4DC-450B-B9D4-09259397F4BA")
 sattr("rtti" : true)
 skr_skeleton_resource_t
 {
@@ -24,7 +24,11 @@ namespace skr::binary
 {
 template <>
 struct SKR_ANIM_API ReadHelper<skr_skeleton_resource_t> {
-    static int Read(skr_binary_reader_t* reader, skr_skeleton_resource_t& value);
+    static int Read(skr_binary_reader_t* reader, skr_skeleton_resource_t& value)
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return -1;
+    }
 };
 } // namespace skr::binary
 
