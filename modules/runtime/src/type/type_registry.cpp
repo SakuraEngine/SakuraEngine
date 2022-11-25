@@ -71,25 +71,24 @@ skr_type_t::skr_type_t(skr_type_category_t type)
 {
 }
 
-#define SKR_TYPE_TRIVAL(fun)                       \
-    fun(SKR_TYPE_CATEGORY_BOOL, bool)              \
-    fun(SKR_TYPE_CATEGORY_I32, int32_t)            \
-    fun(SKR_TYPE_CATEGORY_I64, int64_t)            \
-    fun(SKR_TYPE_CATEGORY_U32, uint32_t)           \
-    fun(SKR_TYPE_CATEGORY_U64, uint64_t)           \
-    fun(SKR_TYPE_CATEGORY_F32, float)              \
-    fun(SKR_TYPE_CATEGORY_F32_2, skr_float2_t)     \
-    fun(SKR_TYPE_CATEGORY_F32_3, skr_float3_t)     \
-    fun(SKR_TYPE_CATEGORY_F32_4, skr_float4_t)     \
-    fun(SKR_TYPE_CATEGORY_F32_4x4, skr_float4x4_t) \
-    fun(SKR_TYPE_CATEGORY_ROT, skr_rotator_t)      \
-    fun(SKR_TYPE_CATEGORY_QUAT, skr_quaternion_t)  \
-    fun(SKR_TYPE_CATEGORY_F64, double)             \
-    fun(SKR_TYPE_CATEGORY_GUID, skr_guid_t)        \
+#define SKR_TYPE_TRIVAL(fun)                             \
+    fun(SKR_TYPE_CATEGORY_BOOL, bool)                    \
+    fun(SKR_TYPE_CATEGORY_I32, int32_t)                  \
+    fun(SKR_TYPE_CATEGORY_I64, int64_t)                  \
+    fun(SKR_TYPE_CATEGORY_U32, uint32_t)                 \
+    fun(SKR_TYPE_CATEGORY_U64, uint64_t)                 \
+    fun(SKR_TYPE_CATEGORY_F32, float)                    \
+    fun(SKR_TYPE_CATEGORY_F32_2, skr_float2_t)           \
+    fun(SKR_TYPE_CATEGORY_F32_3, skr_float3_t)           \
+    fun(SKR_TYPE_CATEGORY_F32_4, skr_float4_t)           \
+    fun(SKR_TYPE_CATEGORY_F32_4x4, skr_float4x4_t)       \
+    fun(SKR_TYPE_CATEGORY_ROT, skr_rotator_t)            \
+    fun(SKR_TYPE_CATEGORY_QUAT, skr_quaternion_t)        \
+    fun(SKR_TYPE_CATEGORY_F64, double)                   \
+    fun(SKR_TYPE_CATEGORY_GUID, skr_guid_t)              \
     fun(SKR_TYPE_CATEGORY_HANDLE, skr_resource_handle_t) \
-    fun(SKR_TYPE_CATEGORY_STR, skr::string) \
+    fun(SKR_TYPE_CATEGORY_STR, skr::string)              \
     fun(SKR_TYPE_CATEGORY_STRV, skr::string_view)
-
 
 size_t skr_type_t::Size() const
 {
@@ -267,7 +266,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
-            return true;
+        return true;
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->elementType->Same(((ArrayType*)srcType)->elementType) && ((ArrayType*)this)->num == ((ArrayType*)srcType)->num;
         case SKR_TYPE_CATEGORY_DYNARR:
@@ -940,25 +939,25 @@ skr::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolic
     {
         SKR_UNIMPLEMENTED_FUNCTION();
         return "";
-// #define TRIVAL_TYPE_IMPL(name, type) \
+        // #define TRIVAL_TYPE_IMPL(name, type) \
 //     case name:                       \
 //         return ToStringImpl<type>(dst);
-//         switch (type)
-//         {
-//             SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
-// #undef TRIVAL_TYPE_IMPL
-//             case SKR_TYPE_CATEGORY_ENUM:
-//                 return ((const EnumType*)this)->ToString(dst);
-//             case SKR_TYPE_CATEGORY_VARIANT: {
-//                 auto variant = (const VariantType*)this;
-//                 auto index = variant->operations.indexer(dst);
-//                 return variant->types[index]->ToString(variant->operations.getters[index]((void*)dst), policy);
-//             }
-//             default:
-//                 SKR_UNIMPLEMENTED_FUNCTION();
-//                 break;
-//         }
-//         return "";
+        //         switch (type)
+        //         {
+        //             SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
+        // #undef TRIVAL_TYPE_IMPL
+        //             case SKR_TYPE_CATEGORY_ENUM:
+        //                 return ((const EnumType*)this)->ToString(dst);
+        //             case SKR_TYPE_CATEGORY_VARIANT: {
+        //                 auto variant = (const VariantType*)this;
+        //                 auto index = variant->operations.indexer(dst);
+        //                 return variant->types[index]->ToString(variant->operations.getters[index]((void*)dst), policy);
+        //             }
+        //             default:
+        //                 SKR_UNIMPLEMENTED_FUNCTION();
+        //                 break;
+        //         }
+        //         return "";
     }
 }
 
@@ -1455,16 +1454,16 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
 template <class T>
 void SerializeTextImpl(const void* dst, skr_json_writer_t* writer)
 {
-    if constexpr(skr::is_complete_v<skr::json::WriteHelper<T>>)
+    if constexpr (skr::is_complete_v<skr::json::WriteHelper<T>>)
         return skr::json::Write(writer, *(T*)dst);
     SKR_UNIMPLEMENTED_FUNCTION();
 }
 
-void skr_type_t::SerializeText(const void *dst, skr_json_writer_t *writer) const
+void skr_type_t::SerializeText(const void* dst, skr_json_writer_t* writer) const
 {
     using namespace skr::type;
-#define TRIVAL_TYPE_IMPL(name, type) \
-    case name:                       \
+#define TRIVAL_TYPE_IMPL(name, type)          \
+    case name:                                \
         SerializeTextImpl<type>(dst, writer); \
         break;
     switch (type)
@@ -1624,7 +1623,7 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
 template <class T>
 skr::json::error_code DeserializeTextImpl(void* dst, skr::json::value_t&& reader)
 {
-    if constexpr(skr::is_complete_v<skr::json::ReadHelper<T>>)
+    if constexpr (skr::is_complete_v<skr::json::ReadHelper<T>>)
         return skr::json::Read(std::move(reader), *(T*)dst);
     SKR_UNIMPLEMENTED_FUNCTION();
     return skr::json::error_code::INCORRECT_TYPE;

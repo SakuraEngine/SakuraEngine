@@ -20,7 +20,7 @@ skr_guid_t SResourceRequest::GetGuid() const
 
 gsl::span<const uint8_t> SResourceRequest::GetData() const
 {
-    return gsl::span<const uint8_t>(data, size); 
+    return gsl::span<const uint8_t>(data, size);
 }
 
 #ifdef SKR_RESOURCE_DEV_MODE
@@ -107,14 +107,13 @@ void SResourceRequest::UpdateUnload()
         break;
         case SKR_LOADING_PHASE_IO:
         case SKR_LOADING_PHASE_DESER_RESOURCE: {
-            if(data)
+            if (data)
                 sakura_free(data);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
         }
         break;
-        case SKR_LOADING_PHASE_WAITFOR_IO:
-        {
+        case SKR_LOADING_PHASE_WAITFOR_IO: {
             currentPhase = SKR_LOADING_PHASE_CANCLE_WAITFOR_IO;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
         }
@@ -167,8 +166,8 @@ void SResourceRequest::OnRequestFileFinished()
         factory = system->FindFactory(resourceRecord->header.type);
         if (factory == nullptr)
         {
-            SKR_LOG_FMT_ERROR("Resource {} failed to load, factory of type {} not found.", 
-                resourceRecord->header.guid, resourceRecord->header.type);
+            SKR_LOG_FMT_ERROR("Resource {} failed to load, factory of type {} not found.",
+            resourceRecord->header.guid, resourceRecord->header.type);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
         }
@@ -178,7 +177,7 @@ void SResourceRequest::OnRequestFileFinished()
 void SResourceRequest::_LoadFinished()
 {
     resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
-    if(data)
+    if (data)
         sakura_free(data);
     data = nullptr;
     if (!requestInstall) // only require data, we are done
@@ -236,14 +235,14 @@ void SResourceRequest::Update()
             break;
         case SKR_LOADING_PHASE_IO:
             resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
-            if(factory->AsyncIO())
+            if (factory->AsyncIO())
             {
                 skr_ram_io_t ramIO = {};
                 ramIO.offset = 0;
                 ramIO.path = resourceUrl.c_str();
                 ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
 #ifdef SKR_RESOURCE_DEV_MODE
-                if(!artifactsUrl.empty())
+                if (!artifactsUrl.empty())
                 {
                     ramIO.offset = 0;
                     ramIO.path = artifactsUrl.c_str();
@@ -252,7 +251,7 @@ void SResourceRequest::Update()
 #endif
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
             }
-            else 
+            else
             {
                 {
                     auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
@@ -265,7 +264,7 @@ void SResourceRequest::Update()
                     buffer.reset_lose_memory();
                 }
 #ifdef SKR_RESOURCE_DEV_MODE
-                if(!artifactsUrl.empty())
+                if (!artifactsUrl.empty())
                 {
                     auto file = skr_vfs_fopen(vfs, artifactsUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
@@ -281,30 +280,30 @@ void SResourceRequest::Update()
             }
             break;
         case SKR_LOADING_PHASE_WAITFOR_IO:
-            if(ioRequest.is_ready())
+            if (ioRequest.is_ready())
             {
                 data = ioDestination.bytes;
                 size = ioDestination.size;
             }
 #ifdef SKR_RESOURCE_DEV_MODE
-            if(!artifactsUrl.empty())
+            if (!artifactsUrl.empty())
             {
-                if(artifactsIoRequest.is_ready())
+                if (artifactsIoRequest.is_ready())
                 {
                     artifactsData = artifactsIoDestination.bytes;
                     artifactsSize = artifactsIoDestination.size;
                 }
             }
-            if(data && (artifactsUrl.empty() || artifactsData))
+            if (data && (artifactsUrl.empty() || artifactsData))
                 currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
 #else
-            if(data)
+            if (data)
                 currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
 #endif
             break;
         case SKR_LOADING_PHASE_DESER_RESOURCE: {
             bool asyncSerde = factory->AsyncSerdeLoadFactor() != 0.f;
-            
+
             if (asyncSerde)
             {
                 serdeScheduled = false;
@@ -314,10 +313,10 @@ void SResourceRequest::Update()
             else
             {
                 LoadTask();
-                if(serdeResult != 0)
+                if (serdeResult != 0)
                 {
-                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.", 
-                        resourceRecord->header.guid, serdeResult);
+                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.",
+                    resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
                     resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
                 }
@@ -327,13 +326,13 @@ void SResourceRequest::Update()
         }
         break;
         case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-            if(serdeEvent.test())
+            if (serdeEvent.test())
             {
                 serdeEvent.clear();
-                if(serdeResult != 0)
+                if (serdeResult != 0)
                 {
-                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.", 
-                        resourceRecord->header.guid, serdeResult);
+                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.",
+                    resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
                     resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
                 }
@@ -412,16 +411,14 @@ void SResourceRequest::Update()
             }
         }
         break;
-        case SKR_LOADING_PHASE_FINISHED:
-        {
-            //special case when we are installing a resource that is already loaded
+        case SKR_LOADING_PHASE_FINISHED: {
+            // special case when we are installing a resource that is already loaded
             SKR_ASSERT(isLoading && requestInstall > !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED));
             _LoadFinished();
         }
         break;
-        case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO:
-        {
-            if(!ioRequest.is_ready())
+        case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
+            if (!ioRequest.is_ready())
             {
                 ioService->defer_cancel(&ioRequest);
             }
@@ -440,7 +437,7 @@ void SResourceRequest::Update()
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE:
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES:
         case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
-            if(data)
+            if (data)
                 sakura_free(data);
             for (auto& dep : resourceRecord->header.dependencies)
                 system->UnloadResource(dep);
@@ -465,8 +462,7 @@ void SResourceRequest::Update()
 
 void SResourceRequest::LoadTask()
 {
-    struct SpanReader
-    {
+    struct SpanReader {
         gsl::span<const uint8_t> data;
         size_t offset = 0;
         int read(void* dst, size_t size)
@@ -478,16 +474,16 @@ void SResourceRequest::LoadTask()
             return 0;
         }
     } reader = { GetData() };
-    skr_binary_reader_t archive{reader};
+    skr_binary_reader_t archive{ reader };
 #ifdef SKR_RESOURCE_DEV_MODE
     SpanReader artifacstReader = { GetArtifactsData() };
-    skr_binary_reader_t artifactsArchive{artifacstReader};
+    skr_binary_reader_t artifactsArchive{ artifacstReader };
 #endif
-    if(factory->CustomDeserialize())
+    if (factory->CustomDeserialize())
     {
         serdeResult = factory->Deserialize(resourceRecord, &archive);
 #ifdef SKR_RESOURCE_DEV_MODE
-        if(serdeResult == 0)
+        if (serdeResult == 0)
             factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
 #endif
     }
@@ -496,7 +492,7 @@ void SResourceRequest::LoadTask()
         auto obj = type->Malloc();
         type->Construct(obj, nullptr, 0);
         serdeResult = type->Deserialize(obj, &archive);
-        if(serdeResult != 0)
+        if (serdeResult != 0)
         {
             type->Destruct(obj);
             type->Free(obj);
@@ -504,11 +500,11 @@ void SResourceRequest::LoadTask()
         }
         resourceRecord->resource = obj;
 #ifdef SKR_RESOURCE_DEV_MODE
-        if(serdeResult == 0)
+        if (serdeResult == 0)
             factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
 #endif
     }
-    else 
+    else
     {
         SKR_UNREACHABLE_CODE();
     }
@@ -545,5 +541,5 @@ bool SResourceRequest::Yielded()
             return false;
     }
 }
-}
-}
+} // namespace resource
+} // namespace skr
