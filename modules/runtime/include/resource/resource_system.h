@@ -21,7 +21,7 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST,
     SKR_LOADING_PHASE_IO,
     SKR_LOADING_PHASE_WAITFOR_IO,
-    SKR_LOADING_PHASE_LOAD_RESOURCE,
+    SKR_LOADING_PHASE_DESER_RESOURCE,
     SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE,
     SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES,
     SKR_LOADING_PHASE_INSTALL_RESOURCE,
@@ -40,7 +40,6 @@ typedef enum ESkrLoadingPhase
 
     SKR_LOADING_PHASE_FINISHED,
 } ESkrLoadingPhase;
-
 #if defined(__cplusplus)
 #include <platform/filesystem.hpp>
 
@@ -60,6 +59,9 @@ struct RUNTIME_API SResourceRequest {
 public:
     skr_guid_t GetGuid() const;
     gsl::span<const uint8_t> GetData() const;
+#ifdef SKR_RESOURCE_DEV_MODE
+    gsl::span<const uint8_t> GetArtifactsData() const;
+#endif
     gsl::span<const skr_guid_t> GetDependencies() const;
 
     void UpdateLoad(bool requestInstall);
@@ -94,8 +96,17 @@ protected:
     skr_async_request_t ioRequest;
     skr_async_ram_destination_t ioDestination;
     skr::string resourceUrl;
+#ifdef SKR_RESOURCE_DEV_MODE
+    skr_async_request_t artifactsIoRequest;
+    skr_async_ram_destination_t artifactsIoDestination;
+    skr::string artifactsUrl;
+#endif
     uint8_t* data;
     uint64_t size;
+#ifdef SKR_RESOURCE_DEV_MODE
+    uint8_t* artifactsData;
+    uint64_t artifactsSize;
+#endif
     skr::task::event_t serdeEvent;
     bool serdeScheduled;
     int serdeResult; 

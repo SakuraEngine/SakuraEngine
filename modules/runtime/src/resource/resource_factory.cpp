@@ -18,6 +18,10 @@ void SResourceFactory::DestroyResource(skr_resource_record_t* record)
 {
     if (record->destructor)
         record->destructor(record->resource);
+#ifdef SKR_RESOURCE_DEV_MODE
+    if (record->artifactsDestructor)
+        record->artifactsDestructor(record->artifacts);
+#endif
 }
 
 ESkrInstallStatus SResourceFactory::UpdateInstall(skr_resource_record_t* record)

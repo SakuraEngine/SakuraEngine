@@ -464,6 +464,9 @@ typedef int64_t host_ptr_t;
 // TODO: move this anywhere else
 #define USE_DXMATH
 
+// TODO: 
+#define SKR_RESOURCE_DEV_MODE
+
 #if !defined(TRACY_ENABLE) && !defined(TRACY_OVERRIDE_DISABLE) && !defined(TRACY_OVERRIDE_ENABLE)
     #ifdef _DEBUG
         #define TRACY_ENABLE

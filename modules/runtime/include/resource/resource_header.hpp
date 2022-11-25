@@ -51,6 +51,10 @@ struct SResourceRequest;
 struct RUNTIME_API skr_resource_record_t {
     void* resource = nullptr;
     void (*destructor)(void*) = nullptr;
+#ifdef SKR_RESOURCE_DEV_MODE
+    void* artifacts = nullptr;
+    void (*artifactsDestructor)(void*) = nullptr;
+#endif
     ESkrLoadingStatus loadingStatus = SKR_LOADING_STATUS_UNLOADED;
     struct object_requester {
         uint32_t id;
