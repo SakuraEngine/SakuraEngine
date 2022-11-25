@@ -63,6 +63,14 @@ namespace skr::resource
 {
 template <class T>
 struct TResourceHandle : skr_resource_handle_t {
+    T* get_resolved(bool requireInstalled = true) const
+    {
+        return skr_resource_handle_t::get_resolved(requireInstalled);
+    }
+    T* get_ptr() const
+    {
+        return skr_resource_handle_t::get_ptr();
+    }
 };
 } // namespace skr::resource
 #endif

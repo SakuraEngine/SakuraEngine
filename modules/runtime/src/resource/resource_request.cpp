@@ -23,6 +23,13 @@ gsl::span<const uint8_t> SResourceRequest::GetData() const
     return gsl::span<const uint8_t>(data, size); 
 }
 
+#ifdef SKR_RESOURCE_DEV_MODE
+gsl::span<const uint8_t> SResourceRequest::GetArtifactsData() const
+{
+    return gsl::span<const uint8_t>(artifactsData, artifactsSize);
+}
+#endif
+
 gsl::span<const skr_guid_t> SResourceRequest::GetDependencies() const
 {
     return gsl::span<const skr_guid_t>(dependencies.data(), dependencies.size());
@@ -99,7 +106,7 @@ void SResourceRequest::UpdateUnload()
         }
         break;
         case SKR_LOADING_PHASE_IO:
-        case SKR_LOADING_PHASE_LOAD_RESOURCE: {
+        case SKR_LOADING_PHASE_DESER_RESOURCE: {
             if(data)
                 sakura_free(data);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
@@ -232,24 +239,45 @@ void SResourceRequest::Update()
             if(factory->AsyncIO())
             {
                 skr_ram_io_t ramIO = {};
-                //ramIO.bytes = nullptr;
                 ramIO.offset = 0;
-                //ramIO.size = 0;
                 ramIO.path = resourceUrl.c_str();
                 ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
+#ifdef SKR_RESOURCE_DEV_MODE
+                if(!artifactsUrl.empty())
+                {
+                    ramIO.offset = 0;
+                    ramIO.path = artifactsUrl.c_str();
+                    ioService->request(vfs, &ramIO, &artifactsIoRequest, &artifactsIoDestination);
+                }
+#endif
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
             }
             else 
             {
-                auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
-                SKR_DEFER({ skr_vfs_fclose(file); });
-                auto size = skr_vfs_fsize(file);
-                eastl::vector<uint8_t> buffer(size);
-                skr_vfs_fread(file, buffer.data(), 0, size);
-                data = buffer.data();
-                size = buffer.size();
-                buffer.reset_lose_memory();
-                currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
+                {
+                    auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+                    SKR_DEFER({ skr_vfs_fclose(file); });
+                    auto size = skr_vfs_fsize(file);
+                    eastl::vector<uint8_t> buffer(size);
+                    skr_vfs_fread(file, buffer.data(), 0, size);
+                    data = buffer.data();
+                    size = buffer.size();
+                    buffer.reset_lose_memory();
+                }
+#ifdef SKR_RESOURCE_DEV_MODE
+                if(!artifactsUrl.empty())
+                {
+                    auto file = skr_vfs_fopen(vfs, artifactsUrl.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
+                    SKR_DEFER({ skr_vfs_fclose(file); });
+                    auto size = skr_vfs_fsize(file);
+                    eastl::vector<uint8_t> buffer(size);
+                    skr_vfs_fread(file, buffer.data(), 0, size);
+                    artifactsData = buffer.data();
+                    size = buffer.size();
+                    buffer.reset_lose_memory();
+                }
+#endif
+                currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
             }
             break;
         case SKR_LOADING_PHASE_WAITFOR_IO:
@@ -257,10 +285,24 @@ void SResourceRequest::Update()
             {
                 data = ioDestination.bytes;
                 size = ioDestination.size;
-                currentPhase = SKR_LOADING_PHASE_LOAD_RESOURCE;
             }
+#ifdef SKR_RESOURCE_DEV_MODE
+            if(!artifactsUrl.empty())
+            {
+                if(artifactsIoRequest.is_ready())
+                {
+                    artifactsData = artifactsIoDestination.bytes;
+                    artifactsSize = artifactsIoDestination.size;
+                }
+            }
+            if(data && (artifactsUrl.empty() || artifactsData))
+                currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
+#else
+            if(data)
+                currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
+#endif
             break;
-        case SKR_LOADING_PHASE_LOAD_RESOURCE: {
+        case SKR_LOADING_PHASE_DESER_RESOURCE: {
             bool asyncSerde = factory->AsyncSerdeLoadFactor() != 0.f;
             
             if (asyncSerde)
@@ -423,24 +465,36 @@ void SResourceRequest::Update()
 
 void SResourceRequest::LoadTask()
 {
-    if (auto type = skr_get_type(&resourceRecord->header.type))
+    struct SpanReader
+    {
+        gsl::span<const uint8_t> data;
+        size_t offset = 0;
+        int read(void* dst, size_t size)
+        {
+            if (offset + size > data.size())
+                return -1;
+            memcpy(dst, data.data() + offset, size);
+            offset += size;
+            return 0;
+        }
+    } reader = { GetData() };
+    skr_binary_reader_t archive{reader};
+#ifdef SKR_RESOURCE_DEV_MODE
+    SpanReader artifacstReader = { GetArtifactsData() };
+    skr_binary_reader_t artifactsArchive{artifacstReader};
+#endif
+    if(factory->CustomDeserialize())
+    {
+        serdeResult = factory->Deserialize(resourceRecord, &archive);
+#ifdef SKR_RESOURCE_DEV_MODE
+        if(serdeResult == 0)
+            factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
+#endif
+    }
+    else if (auto type = skr_get_type(&resourceRecord->header.type))
     {
         auto obj = type->Malloc();
         type->Construct(obj, nullptr, 0);
-        struct SpanReader
-        {
-            gsl::span<const uint8_t> data;
-            size_t offset = 0;
-            int read(void* dst, size_t size)
-            {
-                if (offset + size > data.size())
-                    return -1;
-                memcpy(dst, data.data() + offset, size);
-                offset += size;
-                return 0;
-            }
-        } reader = { GetData() };
-        skr_binary_reader_t archive{reader};
         serdeResult = type->Deserialize(obj, &archive);
         if(serdeResult != 0)
         {
@@ -449,10 +503,14 @@ void SResourceRequest::LoadTask()
             obj = nullptr;
         }
         resourceRecord->resource = obj;
+#ifdef SKR_RESOURCE_DEV_MODE
+        if(serdeResult == 0)
+            factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
+#endif
     }
-    else
+    else 
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        SKR_UNREACHABLE_CODE();
     }
     serdeEvent.signal();
 }
