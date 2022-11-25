@@ -69,6 +69,11 @@ void SCookSystem::WaitForAll()
     mainCounter.wait(true);
 }
 
+bool SCookSystem::AllCompleted() const
+{
+    return mainCounter.test();
+}
+
 #include <atomic>
 skr::io::RAMService* SCookSystem::getIOService()
 {
