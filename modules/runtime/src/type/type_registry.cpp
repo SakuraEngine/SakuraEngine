@@ -1651,18 +1651,21 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             auto& arr = (const ArrayType&)(*this);
             auto element = arr.elementType;
             auto data = (char*)dst;
-            auto size = element->Size();
-            auto array = reader.get_array();
-            auto len = std::min<uint32_t>(array.count_elements(), arr.num);
-            for (int i = 0; i < len; ++i)
-                if (auto ret = element->DeserializeText(data + i * size, array.at(i)); ret != 0)
+            const auto size = element->Size();
+            auto jarray = reader.get_array();
+            const auto jarray_size = static_cast<uint32_t>(jarray.count_elements());
+            auto len = std::min<uint32_t>(jarray_size, arr.num);
+            for (uint32_t i = 0u; i < len; i++)
+            {
+                if (auto ret = element->DeserializeText(data + i * size, jarray.at(i)); ret != 0)
+                {
                     return ret;
-            break;
+                }
+            }
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
             auto& arr = (const DynArrayType&)(*this);
             return arr.operations.DeserializeText(dst, std::move(reader));
-            break;
         }
         case SKR_TYPE_CATEGORY_ARRV:
             // DeserializeTextImpl<gsl::span<char>>(dst, std::move(reader));
@@ -1670,12 +1673,10 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
             return obj.nativeMethods.DeserializeText(dst, std::move(reader));
-            break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
             return enm.underlyingType->DeserializeText(dst, std::move(reader));
-            break;
         }
         case SKR_TYPE_CATEGORY_REF: {
             auto& ref = (*(ReferenceType*)this);
@@ -1699,7 +1700,6 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
                         ((skr::SPtr<void>*)dst)->reset(ptr, ref.pointee->Deleter());
                     return skr::json::SUCCESS;
                 }
-                break;
             }
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
@@ -1720,9 +1720,15 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             //         break;
             // variant.operations.setters[index](dst, nullptr);
             // return variant.types[index]->DeserializeText(variant.operations.getters[index](dst), std::move(reader));
-            break;
         }
+        case SKR_TYPE_CATEGORY_INVALID:
+            SKR_UNREACHABLE_CODE();
+            break;
+        default:
+            SKR_UNIMPLEMENTED_FUNCTION();
+            break;
     }
+    return skr::json::error_code::INCORRECT_TYPE;
 }
 
 bool skr::type::RecordType::IsBaseOf(const RecordType& other) const
