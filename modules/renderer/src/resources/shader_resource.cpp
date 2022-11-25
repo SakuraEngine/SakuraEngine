@@ -59,7 +59,7 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
     return true;
 }
 
-skr_shader_options_md5_t skr_shader_options_md5_t::calculate(skr::span<skr_shader_option_instance_t> ordered_options)
+skr_md5_t skr_shader_option_instance_t::calculate_md5(skr::span<skr_shader_option_instance_t> ordered_options)
 {
     // TODO: check ordered here
     eastl::string sourceString;
@@ -70,7 +70,7 @@ skr_shader_options_md5_t skr_shader_options_md5_t::calculate(skr::span<skr_shade
         sourceString += option.value;
         sourceString += ";";
     }
-    auto result = make_zeroed<skr_shader_options_md5_t>();
+    auto result = make_zeroed<skr_md5_t>();
     // TODO: replace MD5 algorithm
     const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
     result.a = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[0]);

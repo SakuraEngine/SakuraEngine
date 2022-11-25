@@ -28,6 +28,11 @@ int ReadHelper<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     return ret;
 }
 
+int ReadHelper<skr_md5_t>::Read(skr_binary_reader_t* reader, skr_md5_t& md5)
+{
+    return ReadValue(reader, &md5, sizeof(md5));
+}
+
 int ReadHelper<skr_guid_t>::Read(skr_binary_reader_t* reader, skr_guid_t& guid)
 {
     return ReadValue(reader, &guid, sizeof(guid));
