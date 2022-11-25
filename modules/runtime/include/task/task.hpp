@@ -4,6 +4,7 @@
 #include "runtime_module.h"
 #include "EASTL/functional.h"
 #include "platform/thread.h"
+#include <chrono>
 
 namespace skr::task
 {
@@ -295,11 +296,15 @@ namespace skr::task
     template<class F>
     void wait(bool pin, F&& lambda)
     {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        using namespace std::chrono_literals;
         auto fiber = marl::Scheduler::Fiber::current();
         SKR_ASSERT(fiber);
         marl::mutex mutex;
         marl::lock lock(mutex);
-        fiber->wait(lock, lambda);
+        const std::chrono::time_point<std::chrono::system_clock> now =
+        std::chrono::system_clock::now();
+        fiber->wait(lock, now + 0.01ms, lambda);
     }
 }
 

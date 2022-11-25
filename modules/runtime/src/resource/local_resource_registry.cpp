@@ -22,22 +22,10 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     // TODO: 检查文件存在？
     auto file = skr_vfs_fopen(vfs, headerUri.c_str(), SKR_FM_READ, SKR_FILE_CREATION_OPEN_EXISTING);
     if (!file) return false;
-    char buffer[sizeof(skr_resource_header_t)];
+    uint8_t buffer[sizeof(skr_resource_header_t)];
     skr_vfs_fread(file, buffer, 0, sizeof(skr_resource_header_t));
     SKR_DEFER({ skr_vfs_fclose(file); });
-    struct SpanReader
-    {
-        gsl::span<char> data;
-        size_t offset = 0;
-        int read(void* dst, size_t size)
-        {
-            if (offset + size > data.size())
-                return -1;
-            memcpy(dst, data.data() + offset, size);
-            offset += size;
-            return 0;
-        }
-    } reader = {buffer};
+    skr::binary::SpanReader reader = {buffer};
     skr_binary_reader_t archive{reader};
     skr_resource_header_t header;
     if(header.ReadWithoutDeps(&archive) != 0)

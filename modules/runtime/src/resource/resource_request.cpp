@@ -40,7 +40,7 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
     if (isLoading)
         return;
     isLoading = true;
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
+    resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
     switch (currentPhase)
     {
         case SKR_LOADING_PHASE_FINISHED:
@@ -51,22 +51,22 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
             break;
         case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
             currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLED;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLED);
         }
         break;
 
         case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
             currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
         }
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE: {
             currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
         }
         break;
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE: {
             currentPhase = SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLING);
         }
         break;
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES: {
@@ -78,7 +78,7 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
             if (!requestInstall)
             {
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
+                resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
             }
             else
                 currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
@@ -97,7 +97,7 @@ void SResourceRequest::UpdateUnload()
         return;
     isLoading = false;
 
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
+    resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
 
     switch (currentPhase)
     {
@@ -110,18 +110,18 @@ void SResourceRequest::UpdateUnload()
             if (data)
                 sakura_free(data);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
         }
         break;
         case SKR_LOADING_PHASE_WAITFOR_IO: {
             currentPhase = SKR_LOADING_PHASE_CANCLE_WAITFOR_IO;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
         }
         break;
 
         case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
             currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
         }
         break;
 
@@ -137,13 +137,13 @@ void SResourceRequest::UpdateUnload()
 
         case SKR_LOADING_PHASE_FINISHED: {
             currentPhase = SKR_LOADING_PHASE_UNINSTALL_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNINSTALLING);
         }
         break;
 
         case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE: {
             currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNINSTALLING);
         }
 
         default:
@@ -158,7 +158,7 @@ void SResourceRequest::OnRequestFileFinished()
     {
         SKR_LOG_FMT_ERROR("Resource {} failed to load, file not found.", resourceRecord->header.guid);
         currentPhase = SKR_LOADING_PHASE_FINISHED;
-        resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+        resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
     }
     else
     {
@@ -169,14 +169,14 @@ void SResourceRequest::OnRequestFileFinished()
             SKR_LOG_FMT_ERROR("Resource {} failed to load, factory of type {} not found.",
             resourceRecord->header.guid, resourceRecord->header.type);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
         }
     }
 }
 
 void SResourceRequest::_LoadFinished()
 {
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
+    resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
     if (data)
         sakura_free(data);
     data = nullptr;
@@ -201,7 +201,7 @@ void SResourceRequest::_LoadFinished()
 
 void SResourceRequest::_InstallFinished()
 {
-    resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLED;
+    resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLED);
     currentPhase = SKR_LOADING_PHASE_FINISHED;
     return;
 }
@@ -227,14 +227,14 @@ void SResourceRequest::Update()
             {
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
                 // TODO: Do something with this rude code
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             }
         }
         break;
         case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
             break;
         case SKR_LOADING_PHASE_IO:
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
             if (factory->AsyncIO())
             {
                 skr_ram_io_t ramIO = {};
@@ -318,7 +318,7 @@ void SResourceRequest::Update()
                     SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.",
                     resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
-                    resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                    resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
                 }
                 else
                     _LoadFinished();
@@ -334,7 +334,7 @@ void SResourceRequest::Update()
                     SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.",
                     resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
-                    resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                    resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
                 }
                 else
                     _LoadFinished();
@@ -357,7 +357,7 @@ void SResourceRequest::Update()
             {
                 for (auto& dep : resourceRecord->header.dependencies)
                     system->UnloadResource(dep);
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
                 factory->Unload(resourceRecord);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
                 break;
@@ -379,13 +379,13 @@ void SResourceRequest::Update()
         }
         break;
         case SKR_LOADING_PHASE_INSTALL_RESOURCE: {
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_INSTALLING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLING);
             auto status = factory->Install(resourceRecord);
             if (status == SKR_INSTALL_STATUS_FAILED)
             {
                 SKR_LOG_FMT_ERROR("Resource {} failed to install.", resourceRecord->header.guid);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             }
             else if (status == SKR_INSTALL_STATUS_INPROGRESS)
             {
@@ -403,7 +403,7 @@ void SResourceRequest::Update()
             {
                 SKR_LOG_FMT_ERROR("Resource {} failed to install.", resourceRecord->header.guid);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->loadingStatus = SKR_LOADING_STATUS_ERROR;
+                resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             }
             else if (status == SKR_INSTALL_STATUS_SUCCEED)
             {
@@ -423,14 +423,14 @@ void SResourceRequest::Update()
                 ioService->defer_cancel(&ioRequest);
             }
             currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
         }
         break;
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE:
         case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNINSTALLING);
             factory->Uninstall(resourceRecord);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_LOADED;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
             currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
         }
         break;
@@ -441,16 +441,16 @@ void SResourceRequest::Update()
                 sakura_free(data);
             for (auto& dep : resourceRecord->header.dependencies)
                 system->UnloadResource(dep);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
             factory->Unload(resourceRecord);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
         }
         break;
         case SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST: {
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
             resourceRegistry->CancelRequestFile(this);
-            resourceRecord->loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+            resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
         }
         break;
@@ -462,52 +462,15 @@ void SResourceRequest::Update()
 
 void SResourceRequest::LoadTask()
 {
-    struct SpanReader {
-        gsl::span<const uint8_t> data;
-        size_t offset = 0;
-        int read(void* dst, size_t size)
-        {
-            if (offset + size > data.size())
-                return -1;
-            memcpy(dst, data.data() + offset, size);
-            offset += size;
-            return 0;
-        }
-    } reader = { GetData() };
+    skr::binary::SpanReader reader{ GetData() };
     skr_binary_reader_t archive{ reader };
 #ifdef SKR_RESOURCE_DEV_MODE
-    SpanReader artifacstReader = { GetArtifactsData() };
+    skr::binary::SpanReader artifacstReader = { GetArtifactsData() };
     skr_binary_reader_t artifactsArchive{ artifacstReader };
 #endif
-    if (factory->CustomDeserialize())
-    {
-        serdeResult = factory->Deserialize(resourceRecord, &archive);
-#ifdef SKR_RESOURCE_DEV_MODE
-        if (serdeResult == 0)
-            factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
-#endif
-    }
-    else if (auto type = skr_get_type(&resourceRecord->header.type))
-    {
-        auto obj = type->Malloc();
-        type->Construct(obj, nullptr, 0);
-        serdeResult = type->Deserialize(obj, &archive);
-        if (serdeResult != 0)
-        {
-            type->Destruct(obj);
-            type->Free(obj);
-            obj = nullptr;
-        }
-        resourceRecord->resource = obj;
-#ifdef SKR_RESOURCE_DEV_MODE
-        if (serdeResult == 0)
-            factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
-#endif
-    }
-    else
-    {
-        SKR_UNREACHABLE_CODE();
-    }
+    serdeResult = factory->Deserialize(resourceRecord, &archive);
+    if (serdeResult == 0)
+        factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
     serdeEvent.signal();
 }
 
@@ -541,5 +504,6 @@ bool SResourceRequest::Yielded()
             return false;
     }
 }
+
 } // namespace resource
 } // namespace skr

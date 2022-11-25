@@ -311,22 +311,10 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             }
             auto resourceFile = fopen(resourcePath.u8string().c_str(), "rb");
             SKR_DEFER({ fclose(resourceFile); });
-            char buffer[sizeof(skr_resource_header_t)];
+            uint8_t buffer[sizeof(skr_resource_header_t)];
             fread(buffer, 0, sizeof(skr_resource_header_t), resourceFile);
             SKR_DEFER({ fclose(resourceFile); });
-            struct SpanReader
-            {
-                gsl::span<char> data;
-                size_t offset = 0;
-                int read(void* dst, size_t size)
-                {
-                    if (offset + size > data.size())
-                        return -1;
-                    memcpy(dst, data.data() + offset, size);
-                    offset += size;
-                    return 0;
-                }
-            } reader = {buffer};
+            skr::binary::SpanReader reader = {buffer};
             skr_binary_reader_t archive{reader};
             skr_resource_header_t header;
             if(header.ReadWithoutDeps(&archive) != 0)
@@ -511,7 +499,7 @@ const skr_resource_handle_t& SCookContext::GetStaticDependency(uint32_t index) c
     return staticDependencies[index];
 }
 
-uint32_t SCookContext::AddStaticDependency(skr_guid_t resource)
+uint32_t SCookContext::AddStaticDependency(skr_guid_t resource, bool install)
 {
     auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto &dep) { return dep.get_serialized() == resource; });
     if (iter == staticDependencies.end())
@@ -519,16 +507,26 @@ uint32_t SCookContext::AddStaticDependency(skr_guid_t resource)
         auto counter = GetCookSystem()->EnsureCooked(resource);
         if (counter) counter.wait(false);
         skr_resource_handle_t handle{resource};
-        handle.resolve(false, (uint64_t)this, SKR_REQUESTER_SYSTEM);
-
-        skr::task::wait(false, [&]
+        handle.resolve(install, (uint64_t)this, SKR_REQUESTER_SYSTEM);
+        if(!handle.get_resolved())
         {
-            auto status = handle.get_status();
-            return status == SKR_LOADING_STATUS_INSTALLED || status == SKR_LOADING_STATUS_ERROR;
-        });
-
+            auto record = handle.get_record();
+            task::event_t event;
+            auto callback = [&]() { event.signal(); };
+            record->SetCallback(SKR_LOADING_STATUS_ERROR, callback);
+            record->SetCallback(install ? SKR_LOADING_STATUS_INSTALLED : SKR_LOADING_STATUS_LOADED, callback);
+            SKR_DEFER(
+                {
+                    record->ResetCallback(SKR_LOADING_STATUS_ERROR);
+                    record->ResetCallback(install ? SKR_LOADING_STATUS_INSTALLED : SKR_LOADING_STATUS_LOADED);
+                });
+            if(!handle.get_resolved())
+            {
+                event.wait(false);
+            }
+        }
         staticDependencies.push_back(std::move(handle));
-        return staticDependencies.size() - 1;
+        return (uint32_t)(staticDependencies.size() - 1);
     }
     return (uint32_t)(staticDependencies.end() - iter);
 }

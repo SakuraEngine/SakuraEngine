@@ -140,6 +140,7 @@ public:
 
     virtual void LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) = 0;
     virtual void UnloadResource(skr_resource_handle_t& handle) = 0;
+    virtual void FlushResource(skr_resource_handle_t& handle) = 0;
     virtual ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) = 0;
 
     virtual SResourceFactory* FindFactory(skr_type_id_t type) const = 0;

@@ -33,9 +33,9 @@ inline int ReadValue(skr_binary_reader_t* reader, void* data, size_t size)
 }
 
 template <class T>
-int Read(skr_binary_reader_t* reader, T& value);
+int Read(skr_binary_reader_t* reader, T&& value);
 template <class T>
-int Archive(skr_binary_reader_t* reader, T& value);
+int Archive(skr_binary_reader_t* reader, T&& value);
 
 template <>
 struct RUNTIME_API ReadHelper<bool> {
@@ -264,6 +264,19 @@ int Archive(skr_binary_reader_t* writer, T&& value)
 {
     return ReadHelper<std::decay_t<T>>::Read(writer, value);
 }
+
+struct SpanReader {
+    gsl::span<const uint8_t> data;
+    size_t offset = 0;
+    int read(void* dst, size_t size)
+    {
+        if (offset + size > data.size())
+            return -1;
+        memcpy(dst, data.data() + offset, size);
+        offset += size;
+        return 0;
+    }
+};
 } // namespace binary
 
 template <class V, class Allocator>
