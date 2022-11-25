@@ -13,14 +13,13 @@ void* SSkelGltfImporter::Import(skr::io::RAMService*, SCookContext* context)
     using namespace ozz::animation::offline;
     GltfImporter impl;
     ozz::animation::offline::OzzImporter& impoter = impl;
-    OzzImporter::NodeType types = {}; // TODO: Fill options
-    types.any = any;
-    types.camera = camera;
-    types.geometry = geometry;
-    types.light = light;
-    types.marker = marker;
-    types.null = null;
-    types.skeleton = skeleton;
+    OzzImporter::NodeType types = {};
+    types.skeleton = true;
+    if(!impoter.Load(context->AddFileDependency(assetPath.c_str()).u8string().c_str()))
+    {
+        SKR_LOG_FMT_ERROR("Failed to load gltf file %s for asset %s.", assetPath.c_str(), context->GetAssetPath());
+        return nullptr;
+    }
     RawSkeleton* rawSkeleton = SkrNew<RawSkeleton>();
     impoter.Import(rawSkeleton, types);
     return rawSkeleton;

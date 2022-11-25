@@ -29,7 +29,7 @@ public:
     ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) final override;
 
     SResourceFactory* FindFactory(skr_type_id_t type) const final override;
-    void RegisterFactory(skr_type_id_t type, SResourceFactory* factory) final override;
+    void RegisterFactory(SResourceFactory* factory) final override;
     void UnregisterFactory(skr_type_id_t type) final override;
 
     SResourceRegistry* GetRegistry() const final override;
@@ -109,8 +109,9 @@ SResourceFactory* SResourceSystemImpl::FindFactory(skr_type_id_t type) const
     return nullptr;
 }
 
-void SResourceSystemImpl::RegisterFactory(skr_type_id_t type, SResourceFactory* factory)
+void SResourceSystemImpl::RegisterFactory(SResourceFactory* factory)
 {
+    auto type = factory->GetResourceType();
     auto iter = resourceFactories.find(type);
     SKR_ASSERT(iter == resourceFactories.end());
     resourceFactories.insert(std::make_pair(type, factory));
