@@ -4,7 +4,7 @@
 #include "SkrAnimTool/ozz/animation_optimizer.h"
 #include "SkrAnimTool/ozz/additive_animation_builder.h"
 #include "SkrAnimTool/ozz/animation_builder.h"
-#include "tools/import2ozz_anim.h"
+#include "tools/import2ozz_utils.h"
 #include "SkrAnim/ozz/base/containers/vector.h"
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
 #include "SkrAnim/ozz/base/io/stream.h"

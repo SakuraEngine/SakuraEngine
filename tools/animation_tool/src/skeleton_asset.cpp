@@ -2,7 +2,7 @@
 #include "SkrAnim/ozz/skeleton.h"
 #include "SkrAnimTool/ozz/raw_skeleton.h"
 #include "SkrAnimTool/ozz/skeleton_builder.h"
-#include "tools/import2ozz_skel.h"
+#include "tools/import2ozz_utils.h"
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"

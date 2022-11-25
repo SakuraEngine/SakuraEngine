@@ -1,0 +1,1 @@
+#include "SkrAnim/resources/skin_resource.h"

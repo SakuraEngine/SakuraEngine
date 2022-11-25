@@ -201,7 +201,7 @@ void SGameModule::installResourceFactories()
     }
 
     //anim
-    skr_resource_handle_t animHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
+    skr_resource_handle_t animHdl("FBF4CC70-8B1D-4C30-B788-245C5CCE7EE6"_guid);
 
     animHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
     {
