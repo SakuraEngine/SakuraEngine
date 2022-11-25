@@ -149,6 +149,11 @@ struct RUNTIME_API ReadHelper<skr_guid_t> {
 };
 
 template <>
+struct RUNTIME_API ReadHelper<skr_md5_t> {
+    static int Read(skr_binary_reader_t* reader, skr_md5_t& md5);
+};
+
+template <>
 struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
     static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
 };

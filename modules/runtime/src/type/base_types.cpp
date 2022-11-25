@@ -81,6 +81,12 @@ const skr_type_t* type_of<skr_guid_t>::get()
     return &type;
 }
 
+const skr_type_t* type_of<skr_md5_t>::get()
+{
+    static MD5Type type;
+    return &type;
+}
+
 const skr_type_t* type_of<skr_resource_handle_t>::get()
 {
     static HandleType type{nullptr};
@@ -152,6 +158,10 @@ size_t Hash(double value, size_t base)
     return skr_hash(&value, sizeof(value), base);
 }
 size_t Hash(const skr_guid_t& value, size_t base)
+{
+    return skr_hash(&value, sizeof(value), base);
+}
+size_t Hash(const skr_md5_t& value, size_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }

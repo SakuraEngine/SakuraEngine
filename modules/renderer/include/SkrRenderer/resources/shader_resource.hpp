@@ -65,19 +65,6 @@ skr_platform_shader_resource_t
     uint32_t active_slot;
 };
 
-sreflect_struct("guid" : "4749cd1b-ae18-4ed0-9d3f-d93198353dfa")
-sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_shader_options_md5_t 
-{
-    uint32_t a = 0;
-    uint32_t b = 0;
-    uint32_t c = 0;
-    uint32_t d = 0;
-
-    sattr("no-rtti" : true) SKR_RENDERER_API
-    static skr_shader_options_md5_t calculate(skr::span<skr_shader_option_instance_t> ordered_options);
-};
-
 sreflect_struct("guid" : "00d4c2b3-50e7-499b-9cf3-fb6b2ba70e79")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_shader_option_instance_t
@@ -87,6 +74,9 @@ skr_shader_option_instance_t
     // if value == "on" then it will behave like "-D${key}", ["SOME_MACRO", ""] -> -DSOME_MACRO
     // if value == "off" then it will keep undefined during compile time
     eastl::string value;
+
+    sattr("no-rtti" : true) SKR_RENDERER_API
+    static skr_md5_t calculate_md5(skr::span<skr_shader_option_instance_t> ordered_options);
 };
 
 sreflect_struct("guid" : "f497b62d-e63e-4ec3-b923-2a01a90f9966")

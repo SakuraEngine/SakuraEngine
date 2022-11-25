@@ -45,6 +45,15 @@ typedef struct skr_guid_t {
     uint32_t Storage3 SKR_IF_CPP( = 0);
 } skr_guid_t;
 
+typedef struct skr_md5_t {
+    uint32_t a SKR_IF_CPP( = 0);
+    uint32_t b SKR_IF_CPP( = 0);
+    uint32_t c SKR_IF_CPP( = 0);
+    uint32_t d SKR_IF_CPP( = 0);
+} skr_md5_t;
+
+RUNTIME_EXTERN_C RUNTIME_API bool skr_make_md5(const char* str32, skr_md5_t* out_md5);
+
 extern const skr_guid_t $guid;
 
 typedef struct skr_float2_t {
@@ -110,5 +119,14 @@ inline static SKR_CONSTEXPR bool operator==(skr_float2_t l, skr_float2_t r)
 inline static SKR_CONSTEXPR bool operator!=(skr_float2_t l, skr_float2_t r) 
 {
     return (l.x != r.x) || (l.y != r.y);
+}
+inline SKR_CONSTEXPR bool operator==(skr_md5_t a, skr_md5_t b)
+{
+    int result = true;
+    result &= (a.a == b.a);
+    result &= (a.b == b.b);
+    result &= (a.c == b.c);
+    result &= (a.d == b.d);
+    return result;
 }
 #endif

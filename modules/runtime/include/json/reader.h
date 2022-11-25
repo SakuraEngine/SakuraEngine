@@ -79,6 +79,11 @@ struct RUNTIME_API ReadHelper<skr_guid_t> {
 };
 
 template <>
+struct RUNTIME_API ReadHelper<skr_md5_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_md5_t& md5);
+};
+
+template <>
 struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
 };

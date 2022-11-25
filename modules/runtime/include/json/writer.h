@@ -173,6 +173,11 @@ struct RUNTIME_API WriteHelper<const skr_guid_t&> {
 };
 
 template <>
+struct RUNTIME_API WriteHelper<const skr_md5_t&> {
+    static void Write(skr_json_writer_t* writer, const skr_md5_t& md5);
+};
+
+template <>
 struct RUNTIME_API WriteHelper<const skr_resource_handle_t&> {
     static void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
 };

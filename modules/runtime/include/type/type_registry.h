@@ -45,6 +45,7 @@ enum skr_type_category_t
     SKR_TYPE_CATEGORY_ROT,
     SKR_TYPE_CATEGORY_QUAT,
     SKR_TYPE_CATEGORY_GUID,
+    SKR_TYPE_CATEGORY_MD5,
     SKR_TYPE_CATEGORY_HANDLE,
     SKR_TYPE_CATEGORY_STR,
     SKR_TYPE_CATEGORY_STRV,
@@ -249,6 +250,7 @@ RUNTIME_API size_t Hash(const skr_quaternion_t& value, size_t base);
 RUNTIME_API size_t Hash(const skr_rotator_t& value, size_t base);
 RUNTIME_API size_t Hash(double value, size_t base);
 RUNTIME_API size_t Hash(const skr_guid_t& value, size_t base);
+RUNTIME_API size_t Hash(const skr_md5_t& value, size_t base);
 RUNTIME_API size_t Hash(const skr_resource_handle_t& value, size_t base);
 RUNTIME_API size_t Hash(const skr::string& value, size_t base);
 RUNTIME_API size_t Hash(const skr::string_view& value, size_t base);
@@ -368,6 +370,13 @@ struct Float64Type : skr_type_t {
 struct GUIDType : skr_type_t {
     GUIDType()
         : skr_type_t{ SKR_TYPE_CATEGORY_GUID }
+    {
+    }
+};
+// md5
+struct MD5Type : skr_type_t {
+    MD5Type()
+        : skr_type_t{ SKR_TYPE_CATEGORY_MD5 }
     {
     }
 };
@@ -883,6 +892,9 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                 break;
             case SKR_TYPE_CATEGORY_GUID:
                 ctx.Value(*(skr_guid_t*)data);
+                break;
+            case SKR_TYPE_CATEGORY_MD5:
+                ctx.Value(*(skr_md5_t*)data);
                 break;
             case SKR_TYPE_CATEGORY_HANDLE:
                 ctx.Value(((skr_resource_handle_t*)data)->get_serialized());

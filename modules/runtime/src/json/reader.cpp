@@ -105,6 +105,8 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
     return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0), value);
 }
 
+
+
 error_code ReadHelper<bool>::Read(simdjson::ondemand::value&& json, bool& value)
 {
     auto result = json.get_bool();
@@ -168,6 +170,20 @@ error_code ReadHelper<skr::string>::Read(simdjson::ondemand::value&& json, skr::
     {
         std::string_view view = result.value_unsafe();
         value = skr::string(view.data(), view.length());
+    }
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr_md5_t>::Read(simdjson::ondemand::value&& json, skr_md5_t& value)
+{
+    auto result = json.get_string();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        std::string_view view = result.value_unsafe();
+        if (!skr_make_md5(view.data(), &value))
+        {
+            return error_code::MD5_ERROR;
+        }
     }
     return (error_code)result.error();
 }

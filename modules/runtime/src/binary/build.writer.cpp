@@ -88,6 +88,11 @@ int WriteHelper<const skr_guid_t&>::Write(skr_binary_writer_t* writer, const skr
     return WriteValue(writer, &guid, sizeof(guid));
 }
 
+int WriteHelper<const skr_md5_t&>::Write(skr_binary_writer_t* writer, const skr_md5_t& md5)
+{
+    return WriteValue(writer, &md5, sizeof(md5));
+}
+
 int WriteHelper<const skr_resource_handle_t&>::Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle)
 {
     return WriteHelper<const skr_guid_t&>::Write(writer, handle.get_serialized());

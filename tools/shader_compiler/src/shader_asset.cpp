@@ -89,7 +89,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     using unique_option_seq = eastl::vector<skr_shader_option_instance_t>;
     // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
     using all_option_seqs_t = eastl::vector<unique_option_seq>;
-    using all_option_seqs_md5s_t = eastl::vector<skr_shader_options_md5_t>;
+    using all_option_seqs_md5s_t = eastl::vector<skr_md5_t>;
     all_option_seqs_t all_variants = {};
     all_option_seqs_md5s_t all_md5s = {};
     if (!selection_seqs.empty())
@@ -109,7 +109,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
             }
             all_variants.emplace_back(option_seq);
             const auto md5 = 
-                skr_shader_options_md5_t::calculate({ option_seq.data(), option_seq.size() });
+                skr_shader_option_instance_t::calculate_md5({ option_seq.data(), option_seq.size() });
             all_md5s.emplace_back(md5);
         }
     }

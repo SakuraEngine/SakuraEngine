@@ -42,6 +42,19 @@ struct formatter<skr_guid_t> {
         , g.Data4(0), g.Data4(1), g.Data4(2), g.Data4(3), g.Data4(4), g.Data4(5), g.Data4(6), g.Data4(7));
     }
 };
+template <>
+struct formatter<skr_md5_t> {
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
+    {
+        return ctx.begin();
+    }
+    template <typename FormatContext>
+    auto format(skr_md5_t const& md5, FormatContext& ctx) const
+    -> decltype(ctx.out())
+    {
+        return format_to(ctx.out(), "{:08X}{:08X}{:08X}{:08X}", md5.a, md5.b, md5.c, md5.d);
+    }
+};
 } // namespace fmt
 
 namespace skr

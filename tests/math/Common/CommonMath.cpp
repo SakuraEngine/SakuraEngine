@@ -2,6 +2,7 @@
 #include "math/scalarmath.h"
 #include "math/vectormath.hpp"
 #include "utils/types.h"
+#include "utils/format.hpp"
 
 class CommonMath : public ::testing::Test
 {
@@ -39,6 +40,15 @@ TEST(CommonMath, Cast)
     skr_float4_t f4_1 = skr::math::Vector4f::vector_one();
     EXPECT_TRUE(f4_1 == skr::math::Vector4f::vector_one());
     EXPECT_FALSE(f4_1 != skr::math::Vector4f::vector_one());
+}
+
+TEST(CommonMath, MD5)
+{
+    skr_md5_t MD5 = { 114, 514, 1919, 810 };
+    skr_md5_t MD5_2 = {};
+    auto formatted = skr::format("{}", MD5);
+    skr_make_md5(formatted.c_str(), &MD5_2);
+    EXPECT_EQ(MD5, MD5_2);
 }
 
 int main(int argc, char** argv)

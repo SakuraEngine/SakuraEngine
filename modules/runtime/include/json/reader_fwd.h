@@ -59,6 +59,7 @@ enum error_code
     ENUMERATOR_ERROR,
     VARIANT_ERROR,
     GUID_ERROR,
+    MD5_ERROR,
     NUM_ERROR_CODES,
 };
 

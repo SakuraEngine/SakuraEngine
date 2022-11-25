@@ -42,6 +42,13 @@ void skr_type_t::FromString(void* dst, skr::string_view str, skr::type::ValueSer
                     *(skr_guid_t*)dst = skr::guid::make_guid_unsafe(guid_sv);
                 }
                 break;
+            case SKR_TYPE_CATEGORY_MD5:
+                {
+                    const auto md5_sv = skr::string_view(str.data(), str.size());
+                    const auto success = skr_make_md5(md5_sv.data(), (skr_md5_t*)dst);
+                    (void)success;
+                }
+                break;
             case SKR_TYPE_CATEGORY_HANDLE:
                 {
                     const auto guid_sv = skr::string_view(str.data(), str.size());

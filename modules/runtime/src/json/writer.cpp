@@ -259,6 +259,12 @@ void WriteHelper<const skr_guid_t&>::Write(skr_json_writer_t* writer, const skr_
     writer->String(str.data(), (skr_json_writer_size_t)str.size());
 }
 
+void WriteHelper<const skr_md5_t&>::Write(skr_json_writer_t* writer, const skr_md5_t& md5)
+{
+    auto str = skr::format("{}{}{}{}", md5.a, md5.b, md5.c, md5.d);
+    writer->String(str.data(), (skr_json_writer_size_t)str.size());
+}
+
 void WriteHelper<const skr_resource_handle_t&>::Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle)
 {
     WriteHelper<const skr_guid_t&>::Write(writer, handle.get_serialized());

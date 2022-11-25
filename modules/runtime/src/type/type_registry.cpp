@@ -86,6 +86,7 @@ skr_type_t::skr_type_t(skr_type_category_t type)
     fun(SKR_TYPE_CATEGORY_QUAT, skr_quaternion_t)        \
     fun(SKR_TYPE_CATEGORY_F64, double)                   \
     fun(SKR_TYPE_CATEGORY_GUID, skr_guid_t)              \
+    fun(SKR_TYPE_CATEGORY_MD5, skr_md5_t)              \
     fun(SKR_TYPE_CATEGORY_HANDLE, skr_resource_handle_t) \
     fun(SKR_TYPE_CATEGORY_STR, skr::string)              \
     fun(SKR_TYPE_CATEGORY_STRV, skr::string_view)
@@ -367,6 +368,16 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
             if (format)
             {
                 static size_t accept[] = { SKR_TYPE_CATEGORY_GUID, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+                acceptIndices = accept;
+                break;
+            }
+            else
+                return false;
+        }
+        case SKR_TYPE_CATEGORY_MD5: {
+            if (format)
+            {
+                static size_t accept[] = { SKR_TYPE_CATEGORY_MD5, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
                 acceptIndices = accept;
                 break;
             }
@@ -697,6 +708,15 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                 case SKR_TYPE_CATEGORY_HANDLE:
                     *(skr_guid_t*)dst = (*(skr_resource_handle_t*)src).get_serialized();
                     break;
+                default:
+                    break;
+            }
+            break;
+        }
+        case SKR_TYPE_CATEGORY_MD5: {
+            switch (srcType->type)
+            {
+                STR_CONVERT
                 default:
                     break;
             }
@@ -1369,6 +1389,7 @@ void skr_type_t::Delete()
         case SKR_TYPE_CATEGORY_F32:
         case SKR_TYPE_CATEGORY_F64:
         case SKR_TYPE_CATEGORY_GUID:
+        case SKR_TYPE_CATEGORY_MD5:
         case SKR_TYPE_CATEGORY_HANDLE:
             SkrDelete((skr_type_t*)this);
             break;
