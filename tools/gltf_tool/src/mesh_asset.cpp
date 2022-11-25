@@ -226,7 +226,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     SKR_DEFER({ fclose(file); });
     if (!file)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+        SKR_LOG_FMT_ERROR("[SMeshCooker::Cook] failed to write cooked file for resource {}! path: {}", 
             assetRecord->guid, assetRecord->path.u8string());
         return false;
     }
@@ -240,7 +240,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         SKR_DEFER({ fclose(buffer_file); });
         if (!buffer_file)
         {
-            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            SKR_LOG_FMT_ERROR("[SMeshCooker::Cook] failed to write cooked file for resource {}! path: {}", 
                 assetRecord->guid, assetRecord->path.u8string());
             return false;
         }

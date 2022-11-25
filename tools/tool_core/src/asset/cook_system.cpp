@@ -400,12 +400,12 @@ void SCookContext::_Destroy(void* resource)
 {
     if(!importer)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
+        SKR_LOG_FMT_ERROR("[SCookContext::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
     }
     SKR_DEFER({ SkrDelete(importer); });
     //-----import raw data
     importer->Destroy(resource);
-    SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset freed for resource {}! path: {}", record->guid, record->path.u8string());
+    SKR_LOG_FMT_INFO("[SCookContext::Cook] asset freed for resource {}! path: {}", record->guid, record->path.u8string());
 }
 
 void* SCookContext::_Import()
@@ -420,14 +420,14 @@ void* SCookContext::_Import()
         importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe(), &importerTypeGuid);
         if(!importer)
         {
-            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
+            SKR_LOG_FMT_ERROR("[SCookContext::Cook] importer failed to load, resource {}! path: {}", record->guid, record->path.u8string());
             return nullptr;
         }
         importerVersion = importer->Version();
         importerType = importerTypeGuid;
         //-----import raw data
         auto rawData = importer->Import(ioService, this);
-        SKR_LOG_FMT_INFO("[SConfigCooker::Cook] asset imported for resource {}! path: {}", record->guid, record->path.u8string());
+        SKR_LOG_FMT_INFO("[SCookContext::Cook] asset imported for resource {}! path: {}", record->guid, record->path.u8string());
         return rawData;
     }
     // auto parentJson = doc["parent"]; // derived from resource
@@ -515,10 +515,13 @@ uint32_t SCookContext::AddStaticDependency(skr_guid_t resource)
         if (counter) counter.wait(false);
         skr_resource_handle_t handle{resource};
         handle.resolve(false, (uint64_t)this, SKR_REQUESTER_SYSTEM);
+
         skr::task::wait(false, [&]
         {
-            return handle.get_status() == SKR_LOADING_STATUS_INSTALLED || handle.get_status() == SKR_LOADING_STATUS_ERROR;
+            auto status = handle.get_status();
+            return status == SKR_LOADING_STATUS_INSTALLED || status == SKR_LOADING_STATUS_ERROR;
         });
+
         staticDependencies.push_back(std::move(handle));
         return staticDependencies.size() - 1;
     }

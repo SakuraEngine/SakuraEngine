@@ -39,7 +39,7 @@ SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter
     skr::string sourcePath;
     skr::string entry = "main";
     skr::string target;
-    eastl::vector<shader_options_handle_t> options_collection;
+    eastl::vector<shader_options_handle_t> option_assets;
 
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;

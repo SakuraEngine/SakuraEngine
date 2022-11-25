@@ -110,7 +110,7 @@ bool STextureCooker::Cook(SCookContext *ctx)
     auto file = fopen(outputPath.u8string().c_str(), "wb");
     if (!file)
     {
-        SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+        SKR_LOG_FMT_ERROR("[STextureCooker::Cook] failed to write cooked file for resource {}! path: {}", 
             assetRecord->guid, assetRecord->path.u8string());
         return false;
     }
