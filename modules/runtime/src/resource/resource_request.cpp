@@ -258,7 +258,7 @@ void SResourceRequest::Update()
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
                     eastl::vector<uint8_t> buffer(fsize);
-                    skr_vfs_fread(file, buffer.data(), 0, size);
+                    skr_vfs_fread(file, buffer.data(), 0, fsize);
                     data = buffer.data();
                     size = buffer.size();
                     buffer.reset_lose_memory();
@@ -270,7 +270,7 @@ void SResourceRequest::Update()
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
                     eastl::vector<uint8_t> buffer(fsize);
-                    skr_vfs_fread(file, buffer.data(), 0, size);
+                    skr_vfs_fread(file, buffer.data(), 0, fsize);
                     artifactsData = buffer.data();
                     size = buffer.size();
                     buffer.reset_lose_memory();
