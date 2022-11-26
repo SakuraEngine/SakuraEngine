@@ -785,6 +785,7 @@ struct dual_id_of {
 };
 #include "binary/reader.h"
 #include "binary/writer.h"
+#include "type/type_helper.hpp"
 namespace dual
 {
     struct dualJ_storage_scope_t
@@ -801,36 +802,42 @@ namespace dual
         }
     };
     
-    template<class C, uint32_t flags = DCF_ALL>
-    void InitCallbacksCpp(dual_type_description_t& desc)
+    template<uint32_t flags = DCF_ALL, class C>
+    void managed_component(dual_type_description_t& desc, skr::type_t<C>)
     {
         if constexpr ((flags & DCF_CTOR) != 0) {
-            desc.callback.constructor = +[](dual_chunk_t* chunk, EIndex index, char* data) {
-                new (data) C();
-            };
+            if constexpr (std::is_default_constructible_v<C>)
+                desc.callback.constructor = +[](dual_chunk_t* chunk, EIndex index, char* data) {
+                    new (data) C();
+                };
         }
         if constexpr ((flags & DCF_DTOR) != 0) {
-            desc.callback.destructor = +[](dual_chunk_t* chunk, EIndex index, char* data) {
-                ((C*)data)->~C();
-            };
+            if constexpr (std::is_destructible_v<C>)
+                desc.callback.destructor = +[](dual_chunk_t* chunk, EIndex index, char* data) {
+                    ((C*)data)->~C();
+                };
         }
         if constexpr ((flags & DCF_COPY) != 0) {
-            desc.callback.copy = +[](dual_chunk_t* chunk, EIndex src, EIndex dst, char* srcData, char* dstData) {
-                new (dstData) C(*(C*)srcData);
-            };
+            if constexpr (std::is_copy_constructible_v<C>)
+                desc.callback.copy = +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) {
+                    new (dst) C(*(const C*)src);
+                };
         }
         if constexpr ((flags & DCF_MOVE) != 0) {
-            desc.callback.move = +[](dual_chunk_t* chunk, EIndex src, EIndex dst, char* srcData, char* dstData) {
-                new (dstData) C(std::move(*(C*)srcData));
-            };
+            if constexpr (std::is_move_constructible_v<C>)
+                desc.callback.move = +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) {
+                    new (dst) C(std::move(*(C*)src));
+                };
         }
         if constexpr ((flags & DCF_SERDE) != 0) {
-            desc.callback.serialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
-                skr::binary::Write<const C&>(writer, *(C*)data);
-            };
-            desc.callback.deserialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
-                skr::binary::Read(reader, *(C*)data);
-            };
+            if constexpr(skr::is_complete_serde_v<skr::binary::WriteHelper<C>>)
+                desc.callback.serialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
+                    skr::binary::Write<const C&>(writer, *(C*)data);
+                };
+            if constexpr(skr::is_complete_serde_v<skr::binary::ReadHelper<C>>)
+                desc.callback.deserialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
+                    skr::binary::Read(reader, *(C*)data);
+                };
         }
     }
 }

@@ -36,6 +36,8 @@ template <class T>
 int Read(skr_binary_reader_t* reader, T&& value);
 template <class T>
 int Archive(skr_binary_reader_t* reader, T&& value);
+template <class T>
+int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value);
 
 template <>
 struct RUNTIME_API ReadHelper<bool> {
@@ -144,6 +146,11 @@ struct RUNTIME_API ReadHelper<skr::string> {
 };
 
 template <>
+struct RUNTIME_API ReadHelper<skr::string_view> {
+    static int Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::string_view& str);
+};
+
+template <>
 struct RUNTIME_API ReadHelper<skr_guid_t> {
     static int Read(skr_binary_reader_t* reader, skr_guid_t& guid);
 };
@@ -161,6 +168,11 @@ struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
 template <>
 struct RUNTIME_API ReadHelper<skr_blob_t> {
     static int Read(skr_binary_reader_t* reader, skr_blob_t& blob);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_blob_arena_t> {
+    static int Read(skr_binary_reader_t* reader, skr_blob_arena_t& blob);
 };
 
 template <class T>
@@ -199,6 +211,29 @@ struct ReadHelper<skr::span<T>> {
         for(auto& v : span)
         {
             SKR_ARCHIVE(v);
+        }
+        return 0;
+    }
+
+    static int Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, skr::span<T>& span)
+    {
+        //static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
+        uint32_t offset = 0;
+        SKR_ARCHIVE(offset);
+        uint32_t count = 0;
+        SKR_ARCHIVE(count);
+        span = skr::span<T>((T*)arena.get_buffer() + offset, count);
+        int ret;
+        if constexpr(is_complete_v<BlobHelper<T>>)
+        {
+            for(uint32_t i = 0; i < count; ++i)
+            {
+                ret = ReadHelper<T>::Read(archive, arena, span[i]);
+                if(ret != 0)
+                {
+                    return ret;
+                }
+            }
         }
         return 0;
     }
@@ -268,6 +303,12 @@ template <class T>
 int Archive(skr_binary_reader_t* writer, T&& value)
 {
     return ReadHelper<std::decay_t<T>>::Read(writer, value);
+}
+
+template <class T>
+int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value)
+{
+    return ReadHelper<std::decay_t<T>>::Read(reader, arena, value);
 }
 
 struct SpanReader {

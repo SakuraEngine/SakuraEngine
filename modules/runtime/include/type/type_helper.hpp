@@ -9,6 +9,9 @@ struct skr_value_t;
 
 namespace skr
 {
+    template<class T>
+    struct type_t{};
+
     template<class T, class = void>
     struct is_complete : std::false_type {};
 
@@ -19,16 +22,18 @@ namespace skr
     constexpr bool is_complete_v = is_complete<T>::value;
 
     template<class T>
-    auto GetDefaultCtor() -> void(*)(void*, skr_value_t*, size_t)
+    constexpr auto GetDefaultCtor() -> void(*)(void*, skr_value_t*, size_t)
     {
-        return [](void* self, skr_value_t* param, size_t nparam) 
-        { 
-            new (self) T();
-        };
+        if constexpr (std::is_default_constructible_v<T>)
+            return [](void* self, skr_value_t* param, size_t nparam) 
+            { 
+                new (self) T();
+            };
+        return nullptr;
     }
 
     template<class T>
-    auto GetDtor() -> void(*)(void*)
+    constexpr auto GetDtor() -> void(*)(void*)
     {
         if constexpr (std::is_destructible_v<T>)
             return [](void* address) { ((T*)address)->~T(); };
@@ -36,7 +41,7 @@ namespace skr
     }
 
     template<class T>
-    auto GetCopyCtor() -> void(*)(void*, const void*)
+    constexpr auto GetCopyCtor() -> void(*)(void*, const void*)
     {
         if constexpr (std::is_copy_constructible_v<T>)
             return [](void* address, const void* src) { new (address) T(*(T*)src); };
@@ -44,7 +49,7 @@ namespace skr
     }
 
     template<class T>
-    auto GetMoveCtor() -> void(*)(void*, void*)
+    constexpr auto GetMoveCtor() -> void(*)(void*, void*)
     {
         if constexpr (std::is_move_constructible_v<T>)
             return [](void* address, void* src) { new (address) T(std::move(*(T*)src)); };
@@ -71,7 +76,7 @@ namespace skr
     constexpr bool is_complete_serde_v = is_complete_serde<T>();
 
     template<class T>
-    auto GetSerialize() -> int(*)(const void*, skr_binary_writer_t* writer)
+    constexpr auto GetSerialize() -> int(*)(const void*, skr_binary_writer_t* writer)
     {
         if constexpr(is_complete_serde_v<skr::binary::WriteHelper<const T&>>)
             return [](const void* address, skr_binary_writer_t* archive) { 
@@ -82,7 +87,7 @@ namespace skr
     }
 
     template<class T>
-    auto GetDeserialize() -> int(*)(void*, skr_binary_reader_t* reader)
+    constexpr auto GetDeserialize() -> int(*)(void*, skr_binary_reader_t* reader)
     {
         if constexpr(is_complete_serde_v<skr::binary::ReadHelper<T>>)
             return [](void* address, skr_binary_reader_t* archive) {
@@ -93,7 +98,7 @@ namespace skr
     }
 
     template<class T>
-    auto GetTextSerialize() -> void(*)(const void*, skr_json_writer_t* writer)
+    constexpr auto GetTextSerialize() -> void(*)(const void*, skr_json_writer_t* writer)
     {
         if constexpr(is_complete_serde_v<skr::json::WriteHelper<const T&>>)
             return [](const void* address, skr_json_writer_t* archive) {
@@ -104,7 +109,7 @@ namespace skr
     }
 
     template<class T>
-    auto GetTextDeserialize() -> json::error_code(*)(void*, json::value_t&& reader)
+    constexpr auto GetTextDeserialize() -> json::error_code(*)(void*, json::value_t&& reader)
     {
         if constexpr(is_complete_serde_v<skr::json::ReadHelper<T>>)
             return [](void* address, json::value_t&& archive) {
@@ -115,7 +120,7 @@ namespace skr
     }
 
     template<class T>
-    auto GetDeleter() -> void(*)(void*)
+    constexpr auto GetDeleter() -> void(*)(void*)
     {
         if constexpr (std::is_destructible_v<T>)
             return [](void* address) { SkrDelete((T*)address); };
