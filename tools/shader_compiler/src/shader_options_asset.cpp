@@ -6,7 +6,7 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
-#include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/shader_meta_resource.hpp"
 
 #include "tracy/Tracy.hpp"
 
