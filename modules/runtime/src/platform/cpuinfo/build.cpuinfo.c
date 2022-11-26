@@ -14,6 +14,7 @@
     #if defined(_WIN32) || defined(_WIN64)
     #include "impl_x86_windows.c"
     #elif defined(TARGET_MACOS)
+    #define HAVE_SYSCTLBYNAME
     #include "impl_x86_macos.c"
     #elif defined(__linux__)
     #include "impl_x86_linux_or_android.c"
