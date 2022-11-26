@@ -116,7 +116,7 @@ uint32_t SConfigCooker::Version()
 bool SConfigCooker::Cook(SCookContext* ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
-    const auto assetRecord = ctx->GetAssetRecord();
+    // const auto assetRecord = ctx->GetAssetRecord();
     //-----load config
     // no cook config for config, skipping
     //-----import resource object

@@ -12,24 +12,28 @@
 
 #include "tracy/Tracy.hpp"
 
-skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t v) SKR_NOEXCEPT
+skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT
+    : valuea(a), valueb(b), valuec(c), valued(d)
 {
-    value = v;
+
 }
 
-skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint64_t v) SKR_NOEXCEPT
+size_t skr_stable_shader_hash_t::hasher::operator()(const skr_stable_shader_hash_t &hash) const
 {
-    value = v;
+    return skr_hash(&hash, sizeof(hash), 114514u);
 }
 
 skr_stable_shader_hash_t::skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT
 {
-    value = std::stoull(str);
+    valuea = std::stoull(str);
+    valueb = std::stoull(str + 8);
+    valuec = std::stoull(str + 16);
+    valued = std::stoull(str + 24);
 }
 
 skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
 {
-    return skr::format("{}", value);
+    return skr::format("{}{}{}{}", valuea, valueb, valuec, valued);
 }
 
 bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
@@ -59,7 +63,7 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
     return true;
 }
 
-skr_md5_t skr_shader_option_instance_t::calculate_md5(skr::span<skr_shader_option_instance_t> ordered_options)
+skr_stable_shader_hash_t skr_shader_option_instance_t::calculate_stable_hash(skr::span<skr_shader_option_instance_t> ordered_options)
 {
     // TODO: check ordered here
     eastl::string sourceString;
@@ -70,13 +74,12 @@ skr_md5_t skr_shader_option_instance_t::calculate_md5(skr::span<skr_shader_optio
         sourceString += option.value;
         sourceString += ";";
     }
-    auto result = make_zeroed<skr_md5_t>();
-    // TODO: replace MD5 algorithm
+    auto result = make_zeroed<skr_stable_shader_hash_t>();
     const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
-    result.a = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[0]);
-    result.b = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[1]);
-    result.c = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[2]);
-    result.d = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[3]);
+    result.valuea = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[0]);
+    result.valueb = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[1]);
+    result.valuec = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[2]);
+    result.valued = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[3]);
     return result;
 }
 

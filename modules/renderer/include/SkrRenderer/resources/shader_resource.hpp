@@ -19,18 +19,23 @@ skr_stable_shader_hash_t
 {
     inline skr_stable_shader_hash_t() = default;
 
-    uint64_t value = 0;
+    uint32_t valuea = 0;
+    uint32_t valueb = 0;
+    uint32_t valuec = 0;
+    uint32_t valued = 0;
     
     sattr("no-rtti" : true)
-    inline bool operator==(const skr_stable_shader_hash_t& other) const { return value == other.value; }
+    inline bool operator==(const skr_stable_shader_hash_t& other) const
+    {
+        return valuea == other.valuea && valueb == other.valueb && valuec == other.valuec && valued == other.valued;
+    }
 
     struct hasher
     {
-        inline size_t operator()(const skr_stable_shader_hash_t& hash) const { return hash.value; }
+        SKR_RENDERER_API size_t operator()(const skr_stable_shader_hash_t& hash) const;
     };
 
-    SKR_RENDERER_API explicit skr_stable_shader_hash_t(uint32_t v) SKR_NOEXCEPT;
-    SKR_RENDERER_API explicit skr_stable_shader_hash_t(uint64_t v) SKR_NOEXCEPT;
+    SKR_RENDERER_API explicit skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT;
     SKR_RENDERER_API skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT;
     SKR_RENDERER_API explicit operator skr::string() const SKR_NOEXCEPT;
 };
@@ -76,7 +81,7 @@ skr_shader_option_instance_t
     eastl::string value;
 
     sattr("no-rtti" : true) SKR_RENDERER_API
-    static skr_md5_t calculate_md5(skr::span<skr_shader_option_instance_t> ordered_options);
+    static skr_stable_shader_hash_t calculate_stable_hash(skr::span<skr_shader_option_instance_t> ordered_options);
 };
 
 sreflect_struct("guid" : "f497b62d-e63e-4ec3-b923-2a01a90f9966")

@@ -10,7 +10,7 @@
 #endif
 
 struct skr_shader_option_instance_t;
-struct skr_md5_t;
+struct skr_stable_shader_hash_t;
 
 namespace skd sreflect
 {
@@ -55,7 +55,7 @@ struct SKR_SHADER_COMPILER_API IShaderCompiler
 
     virtual EShaderSourceType GetSourceType() const SKR_NOEXCEPT = 0;
     virtual bool IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const SKR_NOEXCEPT = 0;
-    virtual void SetShaderOptions(skr::span<skr_shader_option_instance_t> options, const skr_md5_t& md5) SKR_NOEXCEPT= 0;
+    virtual void SetShaderOptions(skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& md5) SKR_NOEXCEPT= 0;
     virtual ICompiledShader* Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT = 0;
     virtual void FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT = 0;
 };
