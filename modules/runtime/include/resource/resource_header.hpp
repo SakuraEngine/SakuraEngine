@@ -57,8 +57,13 @@ struct RUNTIME_API skr_resource_record_t {
     void* artifacts = nullptr;
     void (*artifactsDestructor)(void*) = nullptr;
 #endif
-    void* userData[SKR_LOADING_STATUS_COUNT];
-    void (*callbacks[SKR_LOADING_STATUS_COUNT])(void*);
+    struct callback_t 
+    {
+        void* data;
+        void (*callback)(void*);
+        void operator()(void) const { callback(data); }
+    };
+    eastl::vector<callback_t> callbacks[SKR_LOADING_STATUS_COUNT];
     SMutexObject mutex;
     ESkrLoadingStatus loadingStatus = SKR_LOADING_STATUS_UNLOADED;
     struct object_requester {
@@ -82,12 +87,11 @@ struct RUNTIME_API skr_resource_record_t {
     skr::resource::SResourceRequest* activeRequest;
 
     void SetStatus(ESkrLoadingStatus);
-    void SetCallback(ESkrLoadingStatus, void (*callback)(void*), void* userData);
-    void ResetCallback(ESkrLoadingStatus);
+    void AddCallback(ESkrLoadingStatus, void (*callback)(void*), void* userData);
     template<class F>
-    void SetCallback(ESkrLoadingStatus status, const F& callback)
+    void AddCallback(ESkrLoadingStatus status, const F& callback)
     {
-        SetCallback(status, [](void* data) { (*static_cast<F*>(data))(); }, (void*)&callback);
+        AddCallback(status, [](void* data) { (*static_cast<F*>(data))(); }, (void*)&callback);
     }
     void SetResource(void* resource, void (*destructor)(void*));
     uint32_t AddReference(uint64_t requester, ESkrRequesterType requesterType);

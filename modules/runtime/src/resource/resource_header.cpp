@@ -116,19 +116,16 @@ void skr_resource_record_t::SetStatus(ESkrLoadingStatus newStatus)
     {
         SMutexLock lock(mutex.mMutex);
         loadingStatus = newStatus;
-        if(callbacks[newStatus])
-            callbacks[newStatus](userData[newStatus]);
+        if(!callbacks[newStatus].empty())
+        {
+            for(auto& callback : callbacks[newStatus])
+                callback();
+            callbacks[newStatus].clear();
+        }
     }
 }
-void skr_resource_record_t::SetCallback(ESkrLoadingStatus status, void (*callback)(void *), void *userData)
+void skr_resource_record_t::AddCallback(ESkrLoadingStatus status, void (*callback)(void *), void *userData)
 {
     SMutexLock lock(mutex.mMutex);
-    callbacks[status] = callback;
-    this->userData[status] = userData;
-}
-void skr_resource_record_t::ResetCallback(ESkrLoadingStatus status)
-{
-    SMutexLock lock(mutex.mMutex);
-    callbacks[status] = nullptr;
-    userData[status] = nullptr;
+    callbacks[status].push_back({ userData, callback });
 }
