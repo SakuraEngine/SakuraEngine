@@ -84,6 +84,36 @@ struct RUNTIME_API ReadHelper<skr_md5_t> {
 };
 
 template <>
+struct RUNTIME_API ReadHelper<skr_float2_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_float2_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_float3_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_float3_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_float4_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_float4_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_float4x4_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_float4x4_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_rotator_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_rotator_t& value);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr_quaternion_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_quaternion_t& value);
+};
+
+template <>
 struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
 };

@@ -269,4 +269,72 @@ void WriteHelper<const skr_resource_handle_t&>::Write(skr_json_writer_t* writer,
 {
     WriteHelper<const skr_guid_t&>::Write(writer, handle.get_serialized());
 }
+
+void WriteHelper<const skr_float2_t&>::Write(skr_json_writer_t* writer, const skr_float2_t& v)
+{
+    writer->StartArray();
+    writer->Float(v.x);
+    writer->Float(v.y);
+    writer->EndArray();
+};
+
+void WriteHelper<const skr_float3_t&>::Write(skr_json_writer_t* writer, const skr_float3_t& v)
+{
+    writer->StartArray();
+    writer->Float(v.x);
+    writer->Float(v.y);
+    writer->Float(v.z);
+    writer->EndArray();
+};
+
+void WriteHelper<const skr_float4_t&>::Write(skr_json_writer_t* writer, const skr_float4_t& v)
+{
+    writer->StartArray();
+    writer->Float(v.x);
+    writer->Float(v.y);
+    writer->Float(v.z);
+    writer->Float(v.w);
+    writer->EndArray();
+};
+
+void WriteHelper<const skr_rotator_t&>::Write(skr_json_writer_t *writer, const skr_rotator_t &v)
+{
+    writer->StartArray();
+    writer->Float(v.pitch);
+    writer->Float(v.yaw);
+    writer->Float(v.roll);
+    writer->EndArray();
+};
+
+void WriteHelper<const skr_quaternion_t&>::Write(skr_json_writer_t* writer, const skr_quaternion_t& v)
+{
+    writer->StartArray();
+    writer->Float(v.x);
+    writer->Float(v.y);
+    writer->Float(v.z);
+    writer->Float(v.w);
+    writer->EndArray();
+};
+
+void WriteHelper<const skr_float4x4_t&>::Write(skr_json_writer_t* writer, const skr_float4x4_t& v)
+{
+    writer->StartArray();
+    writer->Float(v.M[0][0]);
+    writer->Float(v.M[0][1]);
+    writer->Float(v.M[0][2]);
+    writer->Float(v.M[0][3]);
+    writer->Float(v.M[1][0]);
+    writer->Float(v.M[1][1]);
+    writer->Float(v.M[1][2]);
+    writer->Float(v.M[1][3]);
+    writer->Float(v.M[2][0]);
+    writer->Float(v.M[2][1]);
+    writer->Float(v.M[2][2]);
+    writer->Float(v.M[2][3]);
+    writer->Float(v.M[3][0]);
+    writer->Float(v.M[3][1]);
+    writer->Float(v.M[3][2]);
+    writer->Float(v.M[3][3]);
+    writer->EndArray();
+};
 } // namespace skr::json

@@ -188,6 +188,200 @@ error_code ReadHelper<skr_md5_t>::Read(simdjson::ondemand::value&& json, skr_md5
     return (error_code)result.error();
 }
 
+error_code ReadHelper<skr_float2_t>::Read(simdjson::ondemand::value&& json, skr_float2_t& value)
+{
+    auto result = json.get_array();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        auto array = result.value_unsafe();
+        if (array.count_elements() < 2)
+            return error_code::CAPACITY;
+        auto element = array.at(0);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.x = (float)result.value_unsafe();
+        }
+        element = array.at(1);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.y = (float)result.value_unsafe();
+        }
+    }
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr_float3_t>::Read(simdjson::ondemand::value&& json, skr_float3_t& value)
+{
+    auto result = json.get_array();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        auto array = result.value_unsafe();
+        if (array.count_elements() < 3)
+            return error_code::CAPACITY;
+        auto element = array.at(0);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.x = (float)result.value_unsafe();
+        }
+        element = array.at(1);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.y = (float)result.value_unsafe();
+        }
+        element = array.at(2);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.z = (float)result.value_unsafe();
+        }
+    }
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr_float4_t>::Read(simdjson::ondemand::value&& json, skr_float4_t& value)
+{
+    auto result = json.get_array();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        auto array = result.value_unsafe();
+        if (array.count_elements() < 4)
+            return error_code::CAPACITY;
+        auto element = array.at(0);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.x = (float)result.value_unsafe();
+        }
+        element = array.at(1);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.y = (float)result.value_unsafe();
+        }
+        element = array.at(2);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.z = (float)result.value_unsafe();
+        }
+        element = array.at(3);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.w = (float)result.value_unsafe();
+        }
+    }
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr_rotator_t>::Read(simdjson::ondemand::value &&json, skr_rotator_t &value)
+{
+    auto result = json.get_array();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        auto array = result.value_unsafe();
+        if (array.count_elements() < 3)
+            return error_code::CAPACITY;
+        auto element = array.at(0);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.pitch = (float)result.value_unsafe();
+        }
+        element = array.at(1);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.yaw = (float)result.value_unsafe();
+        }
+        element = array.at(2);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.roll = (float)result.value_unsafe();
+        }
+    }
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr_quaternion_t>::Read(simdjson::ondemand::value &&json, skr_quaternion_t &value)
+{
+    auto result = json.get_array();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        auto array = result.value_unsafe();
+        if (array.count_elements() < 4)
+            return error_code::CAPACITY;
+        auto element = array.at(0);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.x = (float)result.value_unsafe();
+        }
+        element = array.at(1);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.y = (float)result.value_unsafe();
+        }
+        element = array.at(2);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.z = (float)result.value_unsafe();
+        }
+        element = array.at(3);
+        if (element.error() == simdjson::SUCCESS)
+        {
+            auto result = element.value_unsafe().get_double();
+            if (result.error() == simdjson::SUCCESS)
+                value.w = (float)result.value_unsafe();
+        }
+    }
+    return (error_code)result.error();
+}
+
+error_code ReadHelper<skr_float4x4_t>::Read(simdjson::ondemand::value &&json, skr_float4x4_t &value)
+{
+    auto result = json.get_array();
+    if (result.error() == simdjson::SUCCESS)
+    {
+        auto array = result.value_unsafe();
+        if (array.count_elements() < 16)
+            return error_code::CAPACITY;
+        for(int i = 0; i < 16; i++)
+        {
+            auto element = array.at(i);
+            if (element.error() == simdjson::SUCCESS)
+            {
+                auto result = element.value_unsafe().get_double();
+                if (result.error() == simdjson::SUCCESS)
+                    value.M[i/4][i%4] = (float)result.value_unsafe();
+            }
+        }
+    }
+    return (error_code)result.error();
+}
+
 error_code ReadHelper<skr_guid_t>::Read(simdjson::ondemand::value&& json, skr_guid_t& value)
 {
     auto result = json.get_string();
