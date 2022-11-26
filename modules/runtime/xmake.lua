@@ -129,3 +129,6 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     if (is_os("windows")) then 
         add_rules("utils.install-libs", { libnames = {"dxc"} })
     end
+
+    -- cpu info private include dir
+    add_includedirs("include/platform/cpu", {public = false})

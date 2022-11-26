@@ -89,9 +89,9 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     using unique_option_seq = eastl::vector<skr_shader_option_instance_t>;
     // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
     using all_option_seqs_t = eastl::vector<unique_option_seq>;
-    using all_option_seqs_md5s_t = eastl::vector<skr_md5_t>;
+    using all_option_seqs_stable_hashes_t = eastl::vector<skr_stable_shader_hash_t>;
     all_option_seqs_t all_variants = {};
-    all_option_seqs_md5s_t all_md5s = {};
+    all_option_seqs_stable_hashes_t all_stable_hashes = {};
     if (!selection_seqs.empty())
     {
         // [ ["on", "a", "1"], ["on", "a", "2"] ...]
@@ -108,14 +108,14 @@ bool SShaderCooker::Cook(SCookContext *ctx)
                 option_seq[idx].value = sequence[idx];
             }
             all_variants.emplace_back(option_seq);
-            const auto md5 = 
-                skr_shader_option_instance_t::calculate_md5({ option_seq.data(), option_seq.size() });
-            all_md5s.emplace_back(md5);
+            const auto stable_hash = 
+                skr_shader_option_instance_t::calculate_stable_hash({ option_seq.data(), option_seq.size() });
+            all_stable_hashes.emplace_back(stable_hash);
         }
     }
     else
     {
-        all_md5s.push_back({ 0, 0, 0, 0 }); // emplace an zero md5
+        all_stable_hashes.emplace_back(0u, 0u, 0u, 0u); // emplace an zero hash
         all_variants.emplace_back(); // emplace an empty option sequence
     }
 
@@ -131,7 +131,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     eastl::vector<eastl::vector<ECGPUShaderStage>> allOutStages(all_variants.size());
     // foreach variants
     system->ParallelFor(all_variants.begin(), all_variants.end(), 1,
-        [system, &all_variants, &all_md5s, source_code, ctx, outputPath, &byteCodeFormats, &allOutIdentifiers, &allOutStages]
+        [system, &all_variants, &all_stable_hashes, source_code, ctx, outputPath, &byteCodeFormats, &allOutIdentifiers, &allOutStages]
         (const auto* pVariant, const auto* __) -> void
         {
             const uint64_t variant_index = pVariant - all_variants.begin();
@@ -142,7 +142,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
 
     // foreach target profiles
     system->ParallelFor(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
-        [&all_variants, &all_md5s, variant_index, source_code, ctx, &byteCodeFormats, &outIdentifiers, &outStages, outputPath]
+        [&all_variants, &all_stable_hashes, variant_index, source_code, ctx, &byteCodeFormats, &outIdentifiers, &outStages, outputPath]
         (const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* _) -> void
         {
             ZoneScopedN("Shader Compile Task");
@@ -157,7 +157,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
                 auto& stage = outStages[index];
                 // compile & write bytecode to disk
                 const auto* shaderImporter = static_cast<SShaderImporter*>(ctx->GetImporter());
-                compiler->SetShaderOptions(all_variants[variant_index], all_md5s[variant_index]);
+                compiler->SetShaderOptions(all_variants[variant_index], all_stable_hashes[variant_index]);
                 auto compiled = compiler->Compile(format, *source_code, *shaderImporter);
                 stage = compiled->GetShaderStage();
                 auto bytes = compiled->GetBytecode();
@@ -225,9 +225,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     // add shader variants
     for (size_t variant_index = 0u; variant_index < all_variants.size(); variant_index++)
     {
-        const auto variant_md5 = all_md5s[variant_index];
-        const auto variant_hash = skr_hash64(&variant_md5, sizeof(variant_md5), 114514u);
-        const auto variant_stable_hash = skr_stable_shader_hash_t(variant_hash);
+        const auto variant_stable_hash = all_stable_hashes[variant_index];
         auto this_variant = make_zeroed<skr_platform_shader_resource_t>();
         this_variant.identifiers = allOutIdentifiers[variant_index];
         this_variant.shader_stage = shader_stage;

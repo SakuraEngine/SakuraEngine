@@ -53,6 +53,7 @@ typedef struct skr_md5_t {
 } skr_md5_t;
 
 RUNTIME_EXTERN_C RUNTIME_API bool skr_parse_md5(const char* str32, skr_md5_t* out_md5);
+RUNTIME_EXTERN_C RUNTIME_API void skr_make_md5(const char* str, uint32_t str_size, skr_md5_t* out_md5);
 
 extern const skr_guid_t $guid;
 

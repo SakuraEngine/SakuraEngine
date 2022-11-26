@@ -57,11 +57,14 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
     {
         if (is_spv)
         {
+            auto md5 = skr_md5_t{};
             auto bytes = bytecode->GetBufferPointer();
             auto byte_size = (uint32_t)bytecode->GetBufferSize();
-            const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
-            for (auto i = 0u; i < 4u; i++)
-                spv_hash[i] = skr_hash32(bytes, byte_size, seeds[i]);
+            skr_make_md5((const char*)bytes, byte_size, &md5);
+            spv_hash[0] = md5.a;
+            spv_hash[1] = md5.b;
+            spv_hash[2] = md5.c;
+            spv_hash[3] = md5.d;
         }
         else
         {
@@ -214,10 +217,10 @@ inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target
     return CGPU_SHADER_STAGE_NONE;
 }
 
-void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_instance_t> options_view, const skr_md5_t& md5) SKR_NOEXCEPT
+void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
     options = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
-    options_md5 = md5;
+    options_hash = option_hash;
 }
 
 ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT
