@@ -20,11 +20,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
 {
     using namespace ozz::animation::offline;
     //-----load config
-    simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(ctx->GetAssetRecord()->meta);
-    
-    SAnimCookSettings settings;
-    skr::json::Read(std::move(doc), settings);
+    auto settings = ctx->Config<SAnimCookSettings>();
     //-----emit static dependencies
     if(settings.skeletonAsset.get_serialized() == skr_guid_t{})
     {
