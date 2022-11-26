@@ -34,6 +34,8 @@ inline int WriteValue(skr_binary_writer_t* writer, const void* data, size_t size
 template <class T>
 int Write(skr_binary_writer_t* writer, const T& value);
 template <class T>
+int Archive(skr_binary_writer_t* writer, const T& value);
+template <class T>
 int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value);
 
 template <class T>
