@@ -22,6 +22,7 @@
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "utils/make_zeroed.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"

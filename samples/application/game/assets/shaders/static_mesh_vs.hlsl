@@ -38,8 +38,12 @@ VSOut main(const VSIn input)
     output.position = posH;
     output.uv = input.uv * push_constants.model[0][0];
     output.normal = float4(input.normal, 0.f);
-#ifdef VERTEX_HAS_TANGENT
+#ifdef VERTEX_HAS_TANGENT // if (VERTEX_HAS_TANGENT.on)
     output.tangent = input.tangent;
+#endif
+
+#ifdef SHADER_MODEL_6_5 // if (SHADER_MODEL_6_5.on)
+
 #endif
     return output;
 }

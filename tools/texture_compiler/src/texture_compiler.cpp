@@ -66,7 +66,6 @@ void STextureImporter::Destroy(void *resource)
 bool STextureCooker::Cook(SCookContext *ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
-    const auto assetRecord = ctx->GetAssetRecord();
     auto uncompressed = ctx->Import<skr_uncompressed_render_texture_t>();
     SKR_DEFER({ ctx->Destroy(uncompressed); });
     
