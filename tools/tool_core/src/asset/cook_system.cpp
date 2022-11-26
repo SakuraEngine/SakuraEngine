@@ -510,13 +510,8 @@ uint32_t SCookContext::AddStaticDependency(skr_guid_t resource, bool install)
             auto record = handle.get_record();
             task::event_t event;
             auto callback = [&]() { event.signal(); };
-            record->SetCallback(SKR_LOADING_STATUS_ERROR, callback);
-            record->SetCallback(install ? SKR_LOADING_STATUS_INSTALLED : SKR_LOADING_STATUS_LOADED, callback);
-            SKR_DEFER(
-                {
-                    record->ResetCallback(SKR_LOADING_STATUS_ERROR);
-                    record->ResetCallback(install ? SKR_LOADING_STATUS_INSTALLED : SKR_LOADING_STATUS_LOADED);
-                });
+            record->AddCallback(SKR_LOADING_STATUS_ERROR, callback);
+            record->AddCallback(install ? SKR_LOADING_STATUS_INSTALLED : SKR_LOADING_STATUS_LOADED, callback);
             if(!handle.get_resolved())
             {
                 event.wait(false);
