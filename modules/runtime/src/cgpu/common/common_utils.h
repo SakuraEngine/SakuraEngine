@@ -7,12 +7,14 @@ extern "C" {
 #endif
 
 struct CGPURuntimeTable* cgpu_create_runtime_table();
+void cgpu_early_free_runtime_table(struct CGPURuntimeTable* table);
 void cgpu_free_runtime_table(struct CGPURuntimeTable* table);
 void cgpu_runtime_table_add_queue(CGPUQueueId queue, ECGPUQueueType type, uint32_t index);
 CGPUQueueId cgpu_runtime_table_try_get_queue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
 
 void cgpu_runtime_table_add_custom_data(struct CGPURuntimeTable* table, const char* key, void* data);
 void cgpu_runtime_table_add_sweep_callback(struct CGPURuntimeTable* table, const char* key, void(pfn)(void*), void* usrdata);
+void cgpu_runtime_table_add_early_sweep_callback(struct CGPURuntimeTable* table, const char* key, void(pfn)(void*), void* usrdata);
 void* cgpu_runtime_table_try_get_custom_data(struct CGPURuntimeTable* table, const char* key);
 bool cgpu_runtime_table_remove_custom_data(struct CGPURuntimeTable* table, const char* key);
 
