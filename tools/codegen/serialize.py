@@ -5,7 +5,13 @@ class Generator(object):
     def __init__(self):
         pass
 
+    def filter_blob_type(self, record):
+        if hasattr(record.attrs, "blob"):
+            return True
+    
     def filter_type(self, record):
+        if hasattr(record.attrs, "blob"):
+            return True
         if hasattr(record.attrs, "serialize"):
             if "bin" in record.attrs.serialize:
                 return True

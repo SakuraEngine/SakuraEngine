@@ -3,6 +3,7 @@
 #include <type_traits>
 
 struct skr_json_reader_t;
+struct skr_arena_t;
 
 #if defined(__cplusplus)
 

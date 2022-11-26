@@ -63,7 +63,7 @@ static struct RegisterComponent${type.id}Helper
         desc.alignment = alignof(${type.name});
     
     %if hasattr(type.attrs.component, "custom"):
-        ${type.attrs.component.custom}(desc);
+        ${type.attrs.component.custom}(desc, skr::type_t<${type.name}>{});
     %endif
         type = dualT_register_type(&desc);
     }

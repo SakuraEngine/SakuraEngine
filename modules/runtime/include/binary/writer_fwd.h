@@ -1,6 +1,7 @@
 #pragma once
 #include <type_traits>
 #include "platform/configure.h"
+#include "binary/blob_fwd.h"
 
 struct skr_binary_writer_t;
 

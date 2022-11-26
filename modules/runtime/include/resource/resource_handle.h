@@ -65,14 +65,22 @@ template <class T>
 struct TResourceHandle : skr_resource_handle_t {
     T* get_resolved(bool requireInstalled = true) const
     {
-        return skr_resource_handle_t::get_resolved(requireInstalled);
+        return (T*)skr_resource_handle_t::get_resolved(requireInstalled);
     }
     T* get_ptr() const
     {
-        return skr_resource_handle_t::get_ptr();
+        return (T*)skr_resource_handle_t::get_ptr();
     }
 };
 } // namespace skr::resource
+#endif
+
+#ifdef __cplusplus
+#define SKR_RESOURCE_HANDLE(type) skr::resource::TResourceHandle<type>
+#define SKR_RESOURCE_FIELD(type, name) skr::resource::TResourceHandle<type> name
+#else
+#define SKR_RESOURCE_HANDLE(type) skr_resource_handle_t
+#define SKR_RESOURCE_FIELD(type, name) skr_resource_handle_t name
 #endif
 
 RUNTIME_API int skr_is_resource_resolved(skr_resource_handle_t* handle);

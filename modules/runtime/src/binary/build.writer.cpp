@@ -1,4 +1,5 @@
 #include "binary/writer.h"
+#include "binary/blob.h"
 
 namespace skr::binary
 {
@@ -83,6 +84,20 @@ int WriteHelper<const skr::string_view&>::Write(skr_binary_writer_t* writer, con
     return WriteValue(writer, str.data(), str.size());
 }
 
+int WriteHelper<const skr::string_view&>::Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::string_view& str)
+{
+    auto ptr = (char*)str.data();
+    auto buffer = (char*)arena.get_buffer();
+    SKR_ASSERT(ptr > buffer);
+    auto offset = ptr - buffer;
+    SKR_ASSERT(offset < arena.get_size());
+    int ret = skr::binary::Write(writer, offset);
+    if (ret != 0) {
+        return ret;
+    }
+    return skr::binary::Write(writer, str.length());
+}
+
 int WriteHelper<const skr_guid_t&>::Write(skr_binary_writer_t* writer, const skr_guid_t& guid)
 {
     return WriteValue(writer, &guid, sizeof(guid));
@@ -104,5 +119,24 @@ int WriteHelper<const skr_blob_t&>::Write(skr_binary_writer_t* writer, const skr
     if (ret != 0)
         return ret;
     return WriteValue(writer, blob.bytes, (uint32_t)blob.size);
+}
+
+int WriteHelper<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob)
+{
+    int ret = WriteHelper<const uint32_t&>::Write(writer, (uint32_t)blob.get_size());
+    if (ret != 0)
+        return ret;
+    ret = WriteValue(writer, nullptr, (uint32_t)blob.get_align());
+    if (ret != 0)
+        return ret;
+    return WriteValue(writer, blob.get_buffer(), (uint32_t)blob.get_size());
+}
+
+void BlobHelper<skr::string_view>::BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src)
+{
+    auto buffer = arena.allocate(src.size(), alignof(skr::string::value_type));
+    memcpy(buffer, src.data(), (src.size() + 1) * sizeof(skr::string::value_type));
+    memset((char*)buffer + src.size(), 0, sizeof(skr::string::value_type)); //tailing zero
+    dst = skr::string_view((const skr::string::value_type*)buffer, src.size());
 }
 } // namespace skr::binary

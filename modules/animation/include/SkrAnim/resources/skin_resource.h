@@ -6,16 +6,25 @@
     #include "SkrAnim/resources/skin_resource.generated.h"
 #endif
 
-sreflect_struct("guid"
-                : "332C6133-7222-4B88-9B2F-E4336A46DF2C")
+sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941") 
+sattr("blob" : true)
+skr_skin_bin_t
+{
+    gsl::span<eastl::string_view> joint_remaps;
+    gsl::span<skr_float4x4_t> inverse_bind_poses;
+};
+
+sreflect_struct("guid" : "332C6133-7222-4B88-9B2F-E4336A46DF2C")
 sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_skin_resource_t
 {
-    skr_mesh_resource_t mesh;
     skr::resource::TResourceHandle<skr_skeleton_resource_t> skeleton;
-    eastl::vector<uint16_t> joint_remaps;
-    eastl::vector<skr_float4x4_t> inverse_bind_poses;
+    sattr("no-rtti" : true)
+    skr_blob_arena_t arena;
+    sattr("arena" : "arena")
+    sattr("no-rtti" : true)
+    skr_skin_bin_t bin;
 };
 
 namespace skr::resource

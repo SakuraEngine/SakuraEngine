@@ -34,7 +34,7 @@ inline int WriteValue(skr_binary_writer_t* writer, const void* data, size_t size
 template <class T>
 int Write(skr_binary_writer_t* writer, const T& value);
 template <class T>
-int Archive(skr_binary_writer_t* writer, const T& value);
+int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value);
 
 template <class T>
 struct WriteHelper<const T&, std::enable_if_t<std::is_enum_v<T>>> {
@@ -118,6 +118,7 @@ struct RUNTIME_API WriteHelper<const skr::string&> {
 template <>
 struct RUNTIME_API WriteHelper<const skr::string_view&> {
     static int Write(skr_binary_writer_t* writer, const skr::string_view& str);
+    static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::string_view& str);
 };
 
 template <>
@@ -140,6 +141,11 @@ struct RUNTIME_API WriteHelper<const skr_blob_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_blob_t& blob);
 };
 
+template <>
+struct RUNTIME_API WriteHelper<const skr_blob_arena_t&> {
+    static int Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob);
+};
+
 template <class T>
 struct WriteHelper<const TEnumAsByte<T>&> {
     static int Write(skr_binary_writer_t* writer, const TEnumAsByte<T>& value)
@@ -155,6 +161,33 @@ struct WriteHelper<const skr::span<T>&> {
         for (const T& value : span) {
             if(auto result = skr::binary::Write(writer, value); result != 0) {
                 return result;
+            }
+        }
+        return 0;
+    }
+    static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::span<T>& span)
+    {
+        auto ptr = (char*)span.data();
+        auto buffer = (char*)arena.get_buffer();
+        SKR_ASSERT(ptr > buffer);
+        uint32_t offset = (uint32_t)(ptr - buffer);
+        SKR_ASSERT(offset < arena.get_size());
+        int ret = skr::binary::Write(writer, offset);
+        if (ret != 0) {
+            return ret;
+        }
+        ret = skr::binary::Write(writer, (uint32_t)span.size());
+        if (ret != 0) {
+            return ret;
+        }
+        if constexpr(is_complete_v<BlobHelper<T>>)
+        {
+            for(int i = 0; i < span.size(); ++i)
+            {
+                ret = WriteHelper<const T&>::Write(writer, arena, span[i]);
+                if (ret != 0) {
+                    return ret;
+                }
             }
         }
         return 0;
@@ -207,6 +240,12 @@ template <class T>
 int Archive(skr_binary_writer_t* writer, const T& value)
 {
     return WriteHelper<const T&>::Write(writer, value);
+}
+
+template <class T>
+int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value)
+{
+    return WriteHelper<const T&>::Write(writer, arena, value);
 }
 
 struct VectorWriter
