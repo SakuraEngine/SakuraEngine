@@ -61,9 +61,10 @@ public:
     {
         simdjson::ondemand::parser parser;
         auto doc = parser.iterate(GetAssetRecord()->meta);
+        auto&& doc_value = doc.get_value().value_unsafe();
         
         T settings;
-        skr::json::Read(std::move(doc), settings);
+        skr::json::Read(std::move(doc_value), settings);
         return settings;
     }
 
