@@ -40,7 +40,7 @@ namespace resource sreflect
 class SKR_ANIM_API SAnimFactory : public SResourceFactory
 {
 public:
-    ~SAnimFactory() noexcept = default;
+    virtual ~SAnimFactory() noexcept = default;
     skr_type_id_t GetResourceType() override;
     bool AsyncIO() override { return true; }
 };
