@@ -47,7 +47,7 @@ TEST(CommonMath, MD5)
     skr_md5_t MD5 = { 114, 514, 1919, 810 };
     skr_md5_t MD5_2 = {};
     auto formatted = skr::format("{}", MD5);
-    skr_make_md5(formatted.c_str(), &MD5_2);
+    skr_parse_md5(formatted.c_str(), &MD5_2);
     EXPECT_EQ(MD5, MD5_2);
 }
 

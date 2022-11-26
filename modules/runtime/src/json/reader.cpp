@@ -180,7 +180,7 @@ error_code ReadHelper<skr_md5_t>::Read(simdjson::ondemand::value&& json, skr_md5
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        if (!skr_make_md5(view.data(), &value))
+        if (!skr_parse_md5(view.data(), &value))
         {
             return error_code::MD5_ERROR;
         }

@@ -45,7 +45,7 @@ void skr_type_t::FromString(void* dst, skr::string_view str, skr::type::ValueSer
             case SKR_TYPE_CATEGORY_MD5:
                 {
                     const auto md5_sv = skr::string_view(str.data(), str.size());
-                    const auto success = skr_make_md5(md5_sv.data(), (skr_md5_t*)dst);
+                    const auto success = skr_parse_md5(md5_sv.data(), (skr_md5_t*)dst);
                     (void)success;
                 }
                 break;
