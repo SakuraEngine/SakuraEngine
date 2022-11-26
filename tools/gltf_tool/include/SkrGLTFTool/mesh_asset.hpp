@@ -18,11 +18,18 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
     sattr("no-default" : true)
     skr::string assetPath;
-    skr_guid_t vertexType;
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
 sregister_importer();
+
+sreflect_struct("guid" : "9A2C9CBF-517D-4197-BDE3-E40D85D88320")
+sattr("serialize" : "json")
+GLTFTOOL_API SMeshCookConfig
+{
+    sattr("no-default" : true)
+    skr_guid_t vertexType;
+};
 
 sreflect_struct("guid" : "5a378356-7bfa-461a-9f96-4bbbd2e95368")
 GLTFTOOL_API SMeshCooker final : public SCooker

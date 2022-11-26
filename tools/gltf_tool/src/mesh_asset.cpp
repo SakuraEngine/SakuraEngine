@@ -28,7 +28,6 @@ static const char* cGLTFAttributeTypeLUT[8] = {
 
 void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
 {
-    auto importer = static_cast<SGltfMeshImporter*>(context->GetImporter());
     skr::filesystem::path relPath = assetPath.c_str();
     const auto assetRecord = context->GetAssetRecord();
     auto ext = relPath.extension();
@@ -85,7 +84,36 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
     // parse
     if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
     {
-        skr_guid_t shuffle_layout_id = importer->vertexType;
+        cgltf_data* gltf_data = (cgltf_data*)callbackData.destination.bytes;
+        return gltf_data;
+    }
+    return nullptr;
+}
+
+void skd::asset::SGltfMeshImporter::Destroy(void* resource)
+{
+    cgltf_free((cgltf_data*)resource);
+}
+
+bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
+{ 
+    const auto outputPath = ctx->GetOutputPath();
+    const auto assetRecord = ctx->GetAssetRecord();
+    auto cfg = ctx->Config<SMeshCookConfig>();
+    if(cfg.vertexType == skr_guid_t{})
+    {
+        SKR_LOG_ERROR("MeshCooker: VertexType is not specified for asset %s!", ctx->GetAssetPath().c_str());
+        return false;
+    }
+    auto gltf_data = ctx->Import<cgltf_data>();
+    if(!gltf_data)
+    {
+        return false;
+    }
+    SKR_DEFER({ ctx->Destroy(gltf_data); });
+    skr_mesh_resource_t mesh;
+    {
+        skr_guid_t shuffle_layout_id = cfg.vertexType;
         CGPUVertexLayout shuffle_layout = {};
         const char* shuffle_layout_name = nullptr;
         if (!shuffle_layout_id.isZero()) 
@@ -93,29 +121,27 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
             shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
         }
 
-        cgltf_data* gltf_data = (cgltf_data*)callbackData.destination.bytes;
-        auto mesh = SkrNew<skr_mesh_resource_t>();
-        mesh->name = gltf_data->meshes[0].name;
-        if (mesh->name.empty()) mesh->name = "gltfMesh";
+        mesh.name = gltf_data->meshes[0].name;
+        if (mesh.name.empty()) mesh.name = "gltfMesh";
         // record buffer bins
-        mesh->bins.resize(gltf_data->buffers_count);
+        mesh.bins.resize(gltf_data->buffers_count);
         for (uint32_t i = 0; i < gltf_data->buffers_count; i++)
         {
-            mesh->bins[i].index = i;
-            mesh->bins[i].byte_length = gltf_data->buffers[i].size;
-            mesh->bins[i].uri = gltf_data->buffers[i].uri;
-            mesh->bins[i].used_with_index = false;
-            mesh->bins[i].used_with_vertex = false;
+            mesh.bins[i].index = i;
+            mesh.bins[i].byte_length = gltf_data->buffers[i].size;
+            mesh.bins[i].uri = gltf_data->buffers[i].uri;
+            mesh.bins[i].used_with_index = false;
+            mesh.bins[i].used_with_vertex = false;
 
             // transient
-            mesh->bins[i].bin.bytes = (uint8_t*)gltf_data->buffers[i].data;
-            mesh->bins[i].bin.size = gltf_data->buffers[i].size;
+            mesh.bins[i].bin.bytes = (uint8_t*)gltf_data->buffers[i].data;
+            mesh.bins[i].bin.size = gltf_data->buffers[i].size;
         }
         // record primitvies
         for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
         {
             const auto node_ = gltf_data->nodes + i;
-            auto& mesh_section = mesh->sections.emplace_back();
+            auto& mesh_section = mesh.sections.emplace_back();
             mesh_section.parent_index = node_->parent ? (int32_t)(node_->parent - gltf_data->nodes) : -1;
             if (node_->has_translation)
                 mesh_section.translation = { node_->translation[0], node_->translation[1], node_->translation[2] };
@@ -128,7 +154,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
                 // per primitive
                 for (uint32_t j = 0, index_cursor = 0; j < node_->mesh->primitives_count; j++)
                 {
-                    auto& prim = mesh->primitives.emplace_back();
+                    auto& prim = mesh.primitives.emplace_back();
                     const auto primitive_ = node_->mesh->primitives + j;
                     // ib
                     prim.index_buffer.buffer_index = (uint32_t)(primitive_->indices->buffer_view->buffer - gltf_data->buffers);
@@ -177,36 +203,13 @@ void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCoo
                     prim.vertex_layout_id = make_zeroed<skr_guid_t>();
                     prim.material_inst = make_zeroed<skr_guid_t>();
 
-                    mesh_section.primive_indices.emplace_back(mesh->primitives.size() - 1);
+                    mesh_section.primive_indices.emplace_back(mesh.primitives.size() - 1);
                 }
             }
         }
-        mesh->gltf_data = gltf_data;
-        return mesh;
     }
-    return nullptr;
-}
-
-void skd::asset::SGltfMeshImporter::Destroy(void* resource)
-{
-    auto mesh = (skr_mesh_resource_t*)resource;
-    if (mesh->gltf_data) cgltf_free((cgltf_data*)mesh->gltf_data);
-    SkrDelete(mesh);
-}
-
-bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
-{ 
-    const auto outputPath = ctx->GetOutputPath();
-    const auto assetRecord = ctx->GetAssetRecord();
-    auto mesh = ctx->Import<skr_mesh_resource_t>();
-    auto gltf_data = (cgltf_data*)mesh->gltf_data;
-    if(!mesh)
-    {
-        return false;
-    }
-    SKR_DEFER({ ctx->Destroy(mesh); });
-    //-----write resource header
-    if(!ctx->Save(*mesh))
+    //----- write resource object
+    if(!ctx->Save(mesh))
         return false;
     // write bins
     for (auto i = 0; i < gltf_data->buffers_count; i++)

@@ -57,6 +57,17 @@ public:
     void Destroy(T* ptr) { if (ptr) _Destroy(ptr); }
 
     template <class T>
+    T Config()
+    {
+        simdjson::ondemand::parser parser;
+        auto doc = parser.iterate(GetAssetRecord()->meta);
+        
+        T settings;
+        skr::json::Read(std::move(doc), settings);
+        return settings;
+    }
+
+    template <class T>
     bool Save(T& resource) 
     {
         //------save resource to disk
