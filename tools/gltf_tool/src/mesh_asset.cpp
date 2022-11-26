@@ -1,93 +1,20 @@
 #include "platform/guid.hpp"
-#include "utils/io.hpp"
 #include "utils/make_zeroed.hpp"
 #include "utils/defer.hpp"
 #include "utils/log.hpp"
 #include "cgpu/api.h"
-#include "ecs/dual.h"
-#include "resource/resource_factory.h"
 #include "SkrRenderer/resources/mesh_resource.h"
-#include "SkrToolCore/project/project.hpp"
 #include "SkrGLTFTool/mesh_asset.hpp"
-
-#define MAGIC_SIZE_GLTF_PARSE_READY ~0
+#include "SkrGLTFTool/gltf_utils.hpp"
 
 namespace 
 {
-static const char* cGLTFAttributeTypeLUT[8] = {
-    "NONE",
-    "POSITION",
-    "NORMAL",
-    "TANGENT",
-    "TEXCOORD",
-    "COLOR",
-    "JOINTS",
-    "WEIGHTS"
-};
+
 }
 
 void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
 {
-    skr::filesystem::path relPath = assetPath.c_str();
-    const auto assetRecord = context->GetAssetRecord();
-    auto ext = relPath.extension();
-    if (ext != ".gltf")
-    {
-        return nullptr;
-    }
-    auto path = context->AddFileDependency(relPath);
-    // prepare callback
-    auto u8Path = path.u8string();
-    skr::task::event_t counter;
-    struct CallbackData
-    {
-        skr_async_ram_destination_t destination;
-        skr::task::event_t* pCounter;   
-        skr::string u8Path;
-    } callbackData;
-    callbackData.pCounter = &counter;
-    callbackData.u8Path = u8Path.c_str();
-    // prepare io
-    skr_ram_io_t ramIO = {};
-    ramIO.offset = 0;
-    ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
-        auto cbData = (CallbackData*)data;
-        cgltf_options options = {};
-        struct cgltf_data* gltf_data_ = nullptr;
-        if (cbData->destination.bytes)
-        {
-            cgltf_result result = cgltf_parse(&options, cbData->destination.bytes, cbData->destination.size, &gltf_data_);
-            if (result != cgltf_result_success)
-            {
-                gltf_data_ = nullptr;
-            }
-            else
-            {
-                result = cgltf_load_buffers(&options, gltf_data_, cbData->u8Path.c_str());
-                result = cgltf_validate(gltf_data_);
-                if (result != cgltf_result_success)
-                {
-                    gltf_data_ = nullptr;
-                }
-            }
-        }
-        sakura_free(cbData->destination.bytes);
-        cbData->destination.bytes = (uint8_t*)gltf_data_;
-        cbData->destination.size = MAGIC_SIZE_GLTF_PARSE_READY;
-        cbData->pCounter->signal();
-    };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
-    skr_async_request_t ioRequest = {};
-    ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &callbackData.destination);
-    counter.wait(false);
-    // parse
-    if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
-    {
-        cgltf_data* gltf_data = (cgltf_data*)callbackData.destination.bytes;
-        return gltf_data;
-    }
-    return nullptr;
+    return ImportGLTFWithData(assetPath, ioService, context);
 }
 
 void skd::asset::SGltfMeshImporter::Destroy(void* resource)
@@ -170,16 +97,17 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
                         // do shuffle
                         if (shuffle_layout_name != nullptr)
                         {
-                            attrib_idx = -1;
+                            attrib_idx = UINT32_MAX;
                             for (uint32_t l = 0; l < primitive_->attributes_count; l++)
                             {
                                 const auto& shuffle_attrib = shuffle_layout.attributes[k];
-                                const char* semantic_name = cGLTFAttributeTypeLUT[primitive_->attributes[l].type];
+                                const char* semantic_name = kGLTFAttributeTypeLUT[primitive_->attributes[l].type];
                                 if (::strcmp(shuffle_attrib.semantic_name, semantic_name) == 0)
                                 {
                                     attrib_idx = l;
                                 }
                             }
+                            if (attrib_idx == UINT32_MAX) continue; // skip unknwon attribute
                         }
                         else
                         {

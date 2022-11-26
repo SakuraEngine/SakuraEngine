@@ -83,8 +83,6 @@ skr_mesh_resource_t
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_mesh_buffer_t> bins;
     sattr("transient": true)
-    void* gltf_data SKR_IF_CPP(= nullptr);
-    sattr("transient": true)
     struct skr_render_mesh_t* render_mesh SKR_IF_CPP(= nullptr);
 };
 #endif

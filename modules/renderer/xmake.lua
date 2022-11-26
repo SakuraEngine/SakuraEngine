@@ -11,5 +11,3 @@ shared_module("SkrRenderer", "SKR_RENDERER", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    -- link to gltf
-    add_deps("cgltf")

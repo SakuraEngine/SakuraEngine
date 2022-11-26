@@ -2,13 +2,10 @@
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/guid.hpp"
-#include "containers/sptr.hpp"
 #include "cgpu/cgpux.hpp"
-#include "ecs/dual.h"
 #include "utils/io.hpp"
 #include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
-#include "cgltf/cgltf.h"
 #include "platform/thread.h"
 #include <EASTL/hash_set.h>
 #include <platform/filesystem.hpp>
@@ -16,102 +13,6 @@
 
 #include "tracy/Tracy.hpp"
 
-static const char* cGLTFAttributeTypeLUT[8] = {
-    "NONE",
-    "POSITION",
-    "NORMAL",
-    "TANGENT",
-    "TEXCOORD",
-    "COLOR",
-    "JOINTS",
-    "WEIGHTS"
-};
-
-static FORCEINLINE ECGPUFormat GLTFUtil_ComponentTypeToFormat(cgltf_type type, cgltf_component_type comp_type)
-{
-    switch (type)
-    {
-        case cgltf_type_scalar: {
-            switch (comp_type)
-            {
-                case cgltf_component_type_r_8:
-                    return CGPU_FORMAT_R8_SNORM;
-                case cgltf_component_type_r_8u:
-                    return CGPU_FORMAT_R8_UNORM;
-                case cgltf_component_type_r_16:
-                    return CGPU_FORMAT_R16_SINT;
-                case cgltf_component_type_r_16u:
-                    return CGPU_FORMAT_R16_UINT;
-                case cgltf_component_type_r_32u:
-                    return CGPU_FORMAT_R32_UINT;
-                case cgltf_component_type_r_32f:
-                    return CGPU_FORMAT_R32_SFLOAT;
-                default:
-                    return CGPU_FORMAT_R8_SNORM;
-            }
-        }
-        case cgltf_type_vec2: {
-            switch (comp_type)
-            {
-                case cgltf_component_type_r_8:
-                    return CGPU_FORMAT_R8G8_SNORM;
-                case cgltf_component_type_r_8u:
-                    return CGPU_FORMAT_R8G8_UNORM;
-                case cgltf_component_type_r_16:
-                    return CGPU_FORMAT_R16G16_SINT;
-                case cgltf_component_type_r_16u:
-                    return CGPU_FORMAT_R16G16_UINT;
-                case cgltf_component_type_r_32u:
-                    return CGPU_FORMAT_R32G32_UINT;
-                case cgltf_component_type_r_32f:
-                    return CGPU_FORMAT_R32G32_SFLOAT;
-                default:
-                    return CGPU_FORMAT_R8_SNORM;
-            }
-        }
-        case cgltf_type_vec3: {
-            switch (comp_type)
-            {
-                case cgltf_component_type_r_8:
-                    return CGPU_FORMAT_R8G8B8_SNORM;
-                case cgltf_component_type_r_8u:
-                    return CGPU_FORMAT_R8G8B8_UNORM;
-                case cgltf_component_type_r_16:
-                    return CGPU_FORMAT_R16G16B16_SINT;
-                case cgltf_component_type_r_16u:
-                    return CGPU_FORMAT_R16G16B16_UINT;
-                case cgltf_component_type_r_32u:
-                    return CGPU_FORMAT_R32G32B32_UINT;
-                case cgltf_component_type_r_32f:
-                    return CGPU_FORMAT_R32G32B32_SFLOAT;
-                default:
-                    return CGPU_FORMAT_R8_SNORM;
-            }
-        }
-        case cgltf_type_vec4: {
-            switch (comp_type)
-            {
-                case cgltf_component_type_r_8:
-                    return CGPU_FORMAT_R8G8B8A8_SNORM;
-                case cgltf_component_type_r_8u:
-                    return CGPU_FORMAT_R8G8B8A8_UNORM;
-                case cgltf_component_type_r_16:
-                    return CGPU_FORMAT_R16G16B16A16_SINT;
-                case cgltf_component_type_r_16u:
-                    return CGPU_FORMAT_R16G16B16A16_UINT;
-                case cgltf_component_type_r_32u:
-                    return CGPU_FORMAT_R32G32B32A32_UINT;
-                case cgltf_component_type_r_32f:
-                    return CGPU_FORMAT_R32G32B32A32_SFLOAT;
-                default:
-                    return CGPU_FORMAT_R8_SNORM;
-            }
-        }
-        default:
-            return CGPU_FORMAT_R8_SNORM;
-    }
-    return CGPU_FORMAT_R8_SNORM;
-}
 
 static struct SkrMeshResourceUtil
 {
@@ -198,34 +99,6 @@ static struct SkrMeshResourceUtil
         return iter->second->id;
     }
 
-    inline static skr_vertex_layout_id AddOrFindVertexLayoutFromGLTFPrimitive(const cgltf_primitive* primitive)
-    {
-        SMutexLock lock(vertex_layouts_mutex_);
-
-        auto layout = make_zeroed<CGPUVertexLayout>();
-        layout.attribute_count = (uint32_t)primitive->attributes_count;
-        for (uint32_t i = 0; i < primitive->attributes_count; i++)
-        {
-            const auto gltf_attrib = primitive->attributes + i;
-            const char* attr_name = cGLTFAttributeTypeLUT[gltf_attrib->type];
-            strcpy(layout.attributes[i].semantic_name, attr_name);
-            layout.attributes[i].rate = CGPU_INPUT_RATE_VERTEX;
-            layout.attributes[i].array_size = 1;
-            layout.attributes[i].format = GLTFUtil_ComponentTypeToFormat(gltf_attrib->data->type, gltf_attrib->data->component_type);
-            layout.attributes[i].binding = i;
-            layout.attributes[i].offset = 0;
-            layout.attributes[i].elem_stride = FormatUtil_BitSizeOfBlock(layout.attributes[i].format) / 8;
-        }
-        skr_vertex_layout_id guid = {};
-        if (auto found = HasVertexLayout(layout, &guid); !found)
-        {
-            skr_guid_t newGuid = {};
-            dual_make_guid(&newGuid);
-            guid = AddVertexLayout(newGuid, skr::format("gltfVertexLayout-{}", newGuid).c_str(), layout);
-        }
-        return guid;
-    }
-
     inline static const char* GetVertexLayout(skr_vertex_layout_id id, CGPUVertexLayout* layout = nullptr)
     {
         SMutexLock lock(vertex_layouts_mutex_);
@@ -246,10 +119,6 @@ SMutex SkrMeshResourceUtil::vertex_layouts_mutex_;
 
 void skr_mesh_resource_free(skr_mesh_resource_id mesh_resource)
 {
-    if (mesh_resource->gltf_data)
-    {
-        cgltf_free((cgltf_data*)mesh_resource->gltf_data);
-    }
     SkrDelete(mesh_resource);
 }
 
