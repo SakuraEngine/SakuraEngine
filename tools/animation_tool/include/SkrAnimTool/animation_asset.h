@@ -22,7 +22,9 @@ sreflect_struct("guid"
 sattr("serialize" : "json")
 SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter
 {
+    sattr("no-default" : true)
     skr::string assetPath;
+    sattr("no-default" : true)
     eastl::string animationName;
     float samplingRate = 30.f;
     virtual ~SAnimGltfImporter() = default;

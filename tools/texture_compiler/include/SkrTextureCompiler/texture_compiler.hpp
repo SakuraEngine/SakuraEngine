@@ -14,6 +14,7 @@ sreflect_struct("guid" : "a26c2436-9e5f-43c4-b4d7-e5373d353bae")
 sattr("serialize" : "json")
 SKR_TEXTURE_COMPILER_API STextureImporter final : public SImporter
 {
+    sattr("no-default" : true)
     skr::string assetPath;
 
     void* Import(skr::io::RAMService*, SCookContext* context) override;

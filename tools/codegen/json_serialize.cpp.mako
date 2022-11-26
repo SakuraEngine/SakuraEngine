@@ -54,7 +54,7 @@ error_code ReadHelper<${record.name}>::Read(value_t&& json, ${record.name}& reco
         auto field = json["${name}"];
         if (field.error() == simdjson::NO_SUCH_FIELD)
         {
-        %if hasattr(field.attr, "no-default"):
+        %if hasattr(field.attrs, "no-default"):
             SKR_LOG_ERROR("Field ${name} in record ${record.name} not found while reading.");
             return (error_code)simdjson::NO_SUCH_FIELD;
         %else:
