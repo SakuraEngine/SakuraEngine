@@ -107,7 +107,16 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
             error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
             if (error != SUCCESS)
                 return error;
-            map.insert(std::make_pair(key.value_unsafe().raw(), std::move(v)));
+
+            const char* key_str = key.value_unsafe().raw();
+            if constexpr (std::is_same_v<std::decay_t<K>, skr::string>)
+            {
+                map.insert(key_str, std::move(v));
+            }
+            else
+            {
+                map.insert(std::make_pair(K::from_string(key_str), std::move(v)));
+            }
         }
         return SUCCESS;
     }

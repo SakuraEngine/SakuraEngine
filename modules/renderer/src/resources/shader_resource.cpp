@@ -22,12 +22,14 @@ size_t skr_stable_shader_hash_t::hasher::operator()(const skr_stable_shader_hash
     return skr_hash(&hash, sizeof(hash), 114514u);
 }
 
-skr_stable_shader_hash_t::skr_stable_shader_hash_t(const char* str) SKR_NOEXCEPT
+skr_stable_shader_hash_t skr_stable_shader_hash_t::from_string(const char* str) SKR_NOEXCEPT
 {
-    valuea = std::stoull(str);
-    valueb = std::stoull(str + 8);
-    valuec = std::stoull(str + 16);
-    valued = std::stoull(str + 24);
+    skr_stable_shader_hash_t result;
+    result.valuea = std::stoull(str);
+    result.valueb = std::stoull(str + 8);
+    result.valuec = std::stoull(str + 16);
+    result.valued = std::stoull(str + 24);
+    return result;
 }
 
 skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
@@ -115,7 +117,7 @@ void SShaderResourceFactory::Destroy(SShaderResourceFactory *factory)
 
 skr_type_id_t SShaderResourceFactoryImpl::GetResourceType()
 {
-    const auto resource_type = skr::type::type_id<skr_platform_shader_resource_t>::get();
+    const auto resource_type = skr::type::type_id<skr_platform_shader_collection_resource_t>::get();
     return resource_type;
 }
 
@@ -134,8 +136,7 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
 {
     auto bytes_vfs = root.bytecode_vfs;
     auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
-    const auto root_hash = skr_stable_shader_hash_t(0u);
-    auto&& root_variant_iter = shader_collection->variants.find(root_hash);
+    auto&& root_variant_iter = shader_collection->variants.find(kZeroStableShaderHash);
     SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
     auto* root_variant = &root_variant_iter->second;
     bool launch_success = false;
@@ -198,8 +199,7 @@ bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
 ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
     auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
-    const auto root_hash = skr_stable_shader_hash_t(0u);
-    auto&& root_variant_iter = shader_collection->variants.find(root_hash);
+    auto&& root_variant_iter = shader_collection->variants.find(kZeroStableShaderHash);
     SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
     auto* root_variant = &root_variant_iter->second;
     auto sRequest = mShaderRequests.find(root_variant);

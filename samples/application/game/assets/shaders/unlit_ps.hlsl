@@ -5,7 +5,9 @@ struct VSOut
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
     centroid float4 normal : NORMAL;
+#ifdef VERTEX_HAS_TANGENT
     float4 tangent : TANGENT;
+#endif
 };
 
 void main(VSOut psIn,     

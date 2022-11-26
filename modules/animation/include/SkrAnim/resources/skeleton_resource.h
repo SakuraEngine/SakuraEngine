@@ -41,7 +41,7 @@ namespace resource
 struct SKR_ANIM_API SSkelFactory : public SResourceFactory
 {
 public:
-    ~SSkelFactory() noexcept = default;
+    virtual ~SSkelFactory() noexcept = default;
     skr_type_id_t GetResourceType() override;
     bool AsyncIO() override { return true; }
 };

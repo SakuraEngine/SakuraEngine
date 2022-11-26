@@ -6,7 +6,7 @@
         "sourcePath": "unlit_ps.hlsl",
         "entry": "main",
         "target": "ps_6_0",
-        "option_assets": [ ]
+        "option_assets": [ "a2bf8869-6805-4f3e-a9a3-d5eeda48fcbd" ]
     },
     "cooker": {
         "binarization": true
