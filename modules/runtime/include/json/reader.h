@@ -141,7 +141,7 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
             const char* key_str = key.value_unsafe().raw();
             if constexpr (std::is_same_v<std::decay_t<K>, skr::string>)
             {
-                map.insert(key_str, std::move(v));
+                map.insert(std::make_pair(K{key_str}, std::move(v)));
             }
             else
             {
