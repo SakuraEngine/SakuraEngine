@@ -89,13 +89,13 @@ int WriteHelper<const skr::string_view&>::Write(skr_binary_writer_t* writer, skr
     auto ptr = (char*)str.data();
     auto buffer = (char*)arena.get_buffer();
     SKR_ASSERT(ptr > buffer);
-    auto offset = ptr - buffer;
+    auto offset = (uint32_t)(ptr - buffer);
     SKR_ASSERT(offset < arena.get_size());
     int ret = skr::binary::Write(writer, offset);
     if (ret != 0) {
         return ret;
     }
-    return skr::binary::Write(writer, str.length());
+    return skr::binary::Write(writer, (uint32_t)str.length());
 }
 
 int WriteHelper<const skr_guid_t&>::Write(skr_binary_writer_t* writer, const skr_guid_t& guid)
