@@ -56,6 +56,16 @@ struct CGPURuntimeTable {
         new_queue.queue = queue;
         created_queues.push_back(new_queue);
     }
+    void early_sweep()
+    {
+        for (auto [name, callback] : custom_early_sweep_callbacks)
+        {
+            if (custom_data_map.find(name) != custom_data_map.end())
+            {
+                callback();
+            }
+        }
+    }
     ~CGPURuntimeTable()
     {
         for (auto [name, callback] : custom_sweep_callbacks)
@@ -70,16 +80,22 @@ struct CGPURuntimeTable {
     // TODO: replace with skr::hash_map
     eastl::string_map<void*> custom_data_map;
     eastl::string_map<eastl::function<void()>> custom_sweep_callbacks;
+    eastl::string_map<eastl::function<void()>> custom_early_sweep_callbacks;
 };
 
 struct CGPURuntimeTable* cgpu_create_runtime_table()
 {
-    return new CGPURuntimeTable();
+    return SkrNew<CGPURuntimeTable>();
+}
+
+void cgpu_early_free_runtime_table(struct CGPURuntimeTable* table)
+{
+    table->early_sweep();
 }
 
 void cgpu_free_runtime_table(struct CGPURuntimeTable* table)
 {
-    delete table;
+    SkrDelete(table);
 }
 
 void cgpu_runtime_table_add_queue(CGPUQueueId queue, ECGPUQueueType type, uint32_t index)
@@ -100,6 +116,13 @@ void cgpu_runtime_table_add_custom_data(struct CGPURuntimeTable* table, const ch
 void cgpu_runtime_table_add_sweep_callback(struct CGPURuntimeTable* table, const char* key, void(pfn)(void*), void* usrdata)
 {
     table->custom_sweep_callbacks[key] = [=](){
+        pfn(usrdata);
+    };
+}
+
+void cgpu_runtime_table_add_early_sweep_callback(struct CGPURuntimeTable* table, const char* key, void(pfn)(void*), void* usrdata)
+{
+    table->custom_early_sweep_callbacks[key] = [=](){
         pfn(usrdata);
     };
 }
