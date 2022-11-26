@@ -66,11 +66,8 @@ skr_mesh_buffer_t
     bool used_with_index;
     bool used_with_vertex;
     // TODO: keep this?
-    sattr("transient": true)
-    sattr("no-rtti" : true)
+    sattr("transient": true, "no-rtti" : true)
     skr_blob_t bin;
-    // TODO: keep this?
-    skr::string uri; // gltf buffer uri
 };
 
 sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 

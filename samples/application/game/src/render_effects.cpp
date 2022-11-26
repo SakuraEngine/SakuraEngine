@@ -192,7 +192,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 if (status == ESkrLoadingStatus::SKR_LOADING_STATUS_INSTALLED)
                 {
                     auto mesh_resource = (skr_mesh_resource_id)meshes[i].mesh_resource.get_ptr();
-                    SKR_LOG_TRACE("Mesh Loaded: name - %s, bin0 - %s", mesh_resource->name.c_str(), mesh_resource->bins[0].uri.c_str());
+                    SKR_LOG_TRACE("Mesh Loaded: name - %s", mesh_resource->name.c_str());
                     resource_system->UnloadResource(meshes[i].mesh_resource);
                     resource_system->Update();
                     while (meshes[i].mesh_resource.get_status() != SKR_LOADING_STATUS_UNLOADED)
