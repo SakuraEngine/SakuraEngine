@@ -194,7 +194,10 @@ error_code ReadHelper<skr_float2_t>::Read(simdjson::ondemand::value&& json, skr_
     if (result.error() == simdjson::SUCCESS)
     {
         auto array = result.value_unsafe();
-        if (array.count_elements() < 2)
+        auto count = array.count_elements();
+        if(count.error() != simdjson::SUCCESS)
+            return (error_code)count.error();
+        if (count.value_unsafe() < 2)
             return error_code::CAPACITY;
         auto element = array.at(0);
         if (element.error() == simdjson::SUCCESS)
@@ -220,7 +223,10 @@ error_code ReadHelper<skr_float3_t>::Read(simdjson::ondemand::value&& json, skr_
     if (result.error() == simdjson::SUCCESS)
     {
         auto array = result.value_unsafe();
-        if (array.count_elements() < 3)
+        auto count = array.count_elements();
+        if(count.error() != simdjson::SUCCESS)
+            return (error_code)count.error();
+        if (count.value_unsafe() < 3)
             return error_code::CAPACITY;
         auto element = array.at(0);
         if (element.error() == simdjson::SUCCESS)
@@ -253,7 +259,10 @@ error_code ReadHelper<skr_float4_t>::Read(simdjson::ondemand::value&& json, skr_
     if (result.error() == simdjson::SUCCESS)
     {
         auto array = result.value_unsafe();
-        if (array.count_elements() < 4)
+        auto count = array.count_elements();
+        if(count.error() != simdjson::SUCCESS)
+            return (error_code)count.error();
+        if (count.value_unsafe() < 4)
             return error_code::CAPACITY;
         auto element = array.at(0);
         if (element.error() == simdjson::SUCCESS)
@@ -293,7 +302,10 @@ error_code ReadHelper<skr_rotator_t>::Read(simdjson::ondemand::value &&json, skr
     if (result.error() == simdjson::SUCCESS)
     {
         auto array = result.value_unsafe();
-        if (array.count_elements() < 3)
+        auto count = array.count_elements();
+        if(count.error() != simdjson::SUCCESS)
+            return (error_code)count.error();
+        if (count.value_unsafe() < 3)
             return error_code::CAPACITY;
         auto element = array.at(0);
         if (element.error() == simdjson::SUCCESS)
@@ -326,7 +338,10 @@ error_code ReadHelper<skr_quaternion_t>::Read(simdjson::ondemand::value &&json, 
     if (result.error() == simdjson::SUCCESS)
     {
         auto array = result.value_unsafe();
-        if (array.count_elements() < 4)
+        auto count = array.count_elements();
+        if(count.error() != simdjson::SUCCESS)
+            return (error_code)count.error();
+        if (count.value_unsafe() < 4)
             return error_code::CAPACITY;
         auto element = array.at(0);
         if (element.error() == simdjson::SUCCESS)
@@ -366,7 +381,10 @@ error_code ReadHelper<skr_float4x4_t>::Read(simdjson::ondemand::value &&json, sk
     if (result.error() == simdjson::SUCCESS)
     {
         auto array = result.value_unsafe();
-        if (array.count_elements() < 16)
+        auto count = array.count_elements();
+        if(count.error() != simdjson::SUCCESS)
+            return (error_code)count.error();
+        if (count.value_unsafe() < 16)
             return error_code::CAPACITY;
         for(int i = 0; i < 16; i++)
         {
