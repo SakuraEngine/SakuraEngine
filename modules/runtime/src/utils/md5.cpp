@@ -55,7 +55,7 @@ bool make_md5(const skr::string_view& str, skr_md5_t& value)
     return true;
 }
 
-bool skr_make_md5(const char* str32, skr_md5_t* out_md5)
+bool skr_parse_md5(const char* str32, skr_md5_t* out_md5)
 {
     skr::string_view sv(str32, 32);
     if (!out_md5) return false;
