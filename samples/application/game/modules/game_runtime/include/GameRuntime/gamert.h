@@ -1,5 +1,5 @@
 #pragma once
-#include "GameRT/module.configure.h"
+#include "GameRuntime/module.configure.h"
 #include "platform/vfs.h"
 #include "utils/log.h"
 #include "SkrRenderer/skr_renderer.h"
@@ -17,7 +17,7 @@ struct STextureFactory;
 struct SMeshFactory;
 struct SShaderResourceFactory;
 }
-class GAMERT_API SGameRTModule : public skr::IDynamicModule
+class GAME_RUNTIME_API SGameRTModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
     virtual int main_module_exec(int argc, char** argv) override;
@@ -31,6 +31,6 @@ namespace skg
 {
 struct GameContext {
 };
-GAMERT_API bool GameLoop(GameContext& ctx);
+GAME_RUNTIME_API bool GameLoop(GameContext& ctx);
 } // namespace skg
 #endif

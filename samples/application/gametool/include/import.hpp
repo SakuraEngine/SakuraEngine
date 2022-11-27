@@ -1,7 +1,7 @@
 #pragma once
 #include "platform/configure.h"
 #include "GameTool/module.configure.h"
-#include "backend_config.h"
+#include "GameRuntime/backend_config.h"
 #include "SkrToolCore/assets/config_asset.hpp"
 
 namespace gametool sreflect
