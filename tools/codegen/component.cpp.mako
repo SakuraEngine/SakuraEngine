@@ -18,7 +18,7 @@ static struct RegisterComponent${type.id}Helper
     RegisterComponent${type.id}Helper()
     {
         dual_type_description_t desc;
-        desc.name = "${type.short_name}";
+        desc.name = "${type.name}";
         
     %if hasattr(type.attrs.component, "buffer"):
         desc.size = sizeof(dual::array_component_T<${type.name}, ${type.attrs.component.buffer}>);

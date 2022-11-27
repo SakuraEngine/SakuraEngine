@@ -10,7 +10,7 @@ sattr("serialize" : ["json", "bin"])
 sattr("rtti" : true)
 ECGPUBackEnd SKRENUM(uint32_t){
     Vulkan,
-    DX12,
+    DX12, 
     Metal
 };
 typedef enum ECGPUBackEnd ECGPUBackEnd;
