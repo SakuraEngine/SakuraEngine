@@ -13,7 +13,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-#include "gamert.h"
+#include "GameRuntime/gamert.h"
 
 SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
 

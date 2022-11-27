@@ -1,4 +1,8 @@
+#pragma once
 #include "SkrAnim/resources/animation_resource.h"
+#ifndef __meta__
+#include "GameRuntime/game_animation.generated.h"
+#endif
 
 namespace game sreflect
 {  
