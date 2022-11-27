@@ -6,7 +6,7 @@
 bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
     eastl::set<eastl::string> keys;
-    skr::flat_hash_map<eastl::string, eastl::vector<eastl::string>, eastl::hash<eastl::string>> kvs;
+    skr::flat_hash_map<eastl::string, skr_shader_option_t, eastl::hash<eastl::string>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
     {
@@ -19,13 +19,13 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
                 return false;
             }
             keys.insert(opt.key);
-            kvs.insert({opt.key, opt.value_selections});
+            kvs.insert({opt.key, opt});
         }
     }
     dst.reserve(keys.size());
     for (auto& key : keys)
     {
-        dst.push_back({key, kvs[key]});
+        dst.push_back(kvs[key]);
     }
     return true;
 }
@@ -100,62 +100,6 @@ SShaderOptionsFactory* SShaderOptionsFactory::Create(const Root& root)
 }
 
 void SShaderOptionsFactory::Destroy(SShaderOptionsFactory *factory)
-{
-    return SkrDelete(factory);
-}
-} // namespace resource
-} // namespace skr
-
-namespace skr
-{
-namespace resource
-{
-struct SKR_RENDERER_API SShaderFeaturesFactoryImpl : public SShaderFeaturesFactory
-{
-    SShaderFeaturesFactoryImpl(const SShaderFeaturesFactoryImpl::Root& root)
-        : root(root)
-    {
-
-    }
-
-    ~SShaderFeaturesFactoryImpl() noexcept = default;
-
-    bool AsyncIO() override { return false; }
-    skr_type_id_t GetResourceType() override
-    {
-        const auto collection_type = skr::type::type_id<skr_shader_features_resource_t>::get();
-        return collection_type;
-    }
-
-    ESkrInstallStatus Install(skr_resource_record_t* record) override
-    {
-        return ::SKR_INSTALL_STATUS_SUCCEED; // no need to install
-    }
-    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override
-    {
-        return ::SKR_INSTALL_STATUS_SUCCEED; // no need to install
-    }
-
-    bool Unload(skr_resource_record_t* record) override
-    {
-        auto options = (skr_shader_features_resource_t*)record->resource;
-        SkrDelete(options);
-        return true; 
-    }
-    bool Uninstall(skr_resource_record_t* record) override
-    {
-        return true;
-    }
-    
-    Root root;
-};
-
-SShaderFeaturesFactory* SShaderFeaturesFactory::Create(const Root& root)
-{
-    return SkrNew<SShaderFeaturesFactoryImpl>(root);
-}
-
-void SShaderFeaturesFactory::Destroy(SShaderFeaturesFactory *factory)
 {
     return SkrDelete(factory);
 }
