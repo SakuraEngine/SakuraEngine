@@ -124,6 +124,7 @@ bool IsAsset(skr::filesystem::path path)
 }
 
 skr::resource::SShaderOptionsFactory* shaderOptionsFactory = nullptr;
+skr::resource::SShaderFeaturesFactory* shaderFeaturesFactory = nullptr;
 skr::resource::SSkelFactory* skelFactory = nullptr;
 skr::resource::SLocalResourceRegistry* registry = nullptr;
 
@@ -140,6 +141,12 @@ void InitializeResourceSystem(skd::SProject& proj)
         shaderOptionsFactory = skr::resource::SShaderOptionsFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderOptionsFactory);
     }
+    // shader features factory
+    {
+        skr::resource::SShaderFeaturesFactory::Root factoryRoot = {};
+        shaderFeaturesFactory = skr::resource::SShaderFeaturesFactory::Create(factoryRoot);
+        resource_system->RegisterFactory(shaderFeaturesFactory);
+    }
 
     {
         skelFactory = SkrNew<skr::resource::SSkelFactory>();
@@ -150,6 +157,7 @@ void InitializeResourceSystem(skd::SProject& proj)
 void DestroyResourceSystem(skd::SProject& proj)
 {
     skr::resource::SShaderOptionsFactory::Destroy(shaderOptionsFactory);
+    skr::resource::SShaderFeaturesFactory::Destroy(shaderFeaturesFactory);
 
     skr::resource::GetResourceSystem()->Shutdown();
     SkrDelete(registry);

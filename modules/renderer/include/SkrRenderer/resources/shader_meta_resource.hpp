@@ -40,6 +40,25 @@ skr_shader_options_resource_t
     eastl::vector<skr_shader_option_t> options;
 };
 
+sreflect_enum_class("guid": "c289eaaf-ace9-4a86-8072-b173377f7d19")
+sattr("serialize" : ["json", "bin"], "rtti" : true)
+ESkrShaderFeatureOptionType : uint32_t
+{
+    LEVEL = 0,  // [ "SM_5_0", "SM_6_3", "SM_6_6"]
+    COMBINE = 1,// [ "ATOMIC_BOOL", "ATOMIC_I32", "ATOMIC_FLOAT"]
+    SELECT = 2, // [ "BRAND_NVIDIA", "BRAND_INTEL", "BRAND_AMD"]
+    COUNT
+};
+
+sreflect_struct("guid" : "d83f86f4-4e59-4027-95fa-262e0f73d3fb")
+sattr("serialize" : ["json", "bin"], "rtti" : true)
+skr_shader_features_resource_t
+{
+    ESkrShaderFeatureOptionType type;
+    eastl::string feature;
+    eastl::vector<eastl::string> values;
+};
+
 namespace skr sreflect
 {
 namespace resource sreflect
@@ -54,6 +73,18 @@ struct SKR_RENDERER_API SShaderOptionsFactory : public SResourceFactory {
     float AsyncSerdeLoadFactor() override { return 0.1f; }
     [[nodiscard]] static SShaderOptionsFactory* Create(const Root& root);
     static void Destroy(SShaderOptionsFactory* factory); 
+};
+
+struct SKR_RENDERER_API SShaderFeaturesFactory : public SResourceFactory {
+    virtual ~SShaderFeaturesFactory() = default;
+
+    struct Root {
+        int __nothing__;
+    };
+
+    float AsyncSerdeLoadFactor() override { return 0.1f; }
+    [[nodiscard]] static SShaderFeaturesFactory* Create(const Root& root);
+    static void Destroy(SShaderFeaturesFactory* factory); 
 };
 }
 }
