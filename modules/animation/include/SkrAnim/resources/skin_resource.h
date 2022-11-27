@@ -8,13 +8,13 @@
 
 sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941") 
 sattr("blob" : true)
-skr_skin_bin_t
+skr_skin_blob_view_t
 {
     gsl::span<eastl::string_view> joint_remaps;
     gsl::span<skr_float4x4_t> inverse_bind_poses;
 };
     
-GENERATED_BLOB_BUILDER(skr_skin_bin_t)
+GENERATED_BLOB_BUILDER(skr_skin_blob_view_t)
 
 sreflect_struct("guid" : "332C6133-7222-4B88-9B2F-E4336A46DF2C")
 sattr("rtti" : true)
@@ -25,7 +25,7 @@ skr_skin_resource_t
     spush_attr("no-rtti" : true)
     skr_blob_arena_t arena;
     spush_attr("arena" : "arena")
-    skr_skin_bin_t bin;
+    skr_skin_blob_view_t blob;
 };
 
 namespace skr::resource
