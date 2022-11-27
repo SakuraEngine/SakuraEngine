@@ -1,5 +1,4 @@
 #include "SkrGLTFTool/gltf_utils.hpp"
-#include "resource/resource_factory.h"
 #include "utils/make_zeroed.hpp"
 #include "SkrGLTFTool/mesh_asset.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
