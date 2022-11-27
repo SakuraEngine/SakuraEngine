@@ -463,6 +463,7 @@ protected:
     CGPUBufferId vertex_buffer;
     CGPUBufferId index_buffer;
     CGPURenderPipelineId pipeline;
+    CGPURenderPipelineId skin_pipeline;
     // effect processor data
     const char* push_constants_name = "push_constants";
     dual_query_t* mesh_query = nullptr;
@@ -596,6 +597,15 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
     skr_vfs_fclose(vsfile);
 
+    
+    skr::string skin_vsname = u8"shaders/Game/gbuffer_vs";
+    skin_vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    auto skin_vsfile = skr_vfs_fopen(resource_vfs, skin_vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    uint32_t _skin_vs_length = (uint32_t)skr_vfs_fsize(skin_vsfile);
+    uint32_t* _skin_vs_bytes = (uint32_t*)sakura_malloc(_skin_vs_length);
+    skr_vfs_fread(skin_vsfile, _skin_vs_bytes, 0, _skin_vs_length);
+    skr_vfs_fclose(skin_vsfile);
+
     skr::string fsname = u8"shaders/Game/gbuffer_fs";
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     auto fsfile = skr_vfs_fopen(resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
@@ -610,22 +620,33 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = _vs_bytes;
     vs_desc.code_size = _vs_length;
+    CGPUShaderLibraryDescriptor skin_vs_desc = {};
+    skin_vs_desc.name = "gbuffer_skin_vertex_shader";
+    skin_vs_desc.stage = CGPU_SHADER_STAGE_VERT;
+    skin_vs_desc.code = _skin_vs_bytes;
+    skin_vs_desc.code_size = _skin_vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
     fs_desc.name = "gbuffer_pixel_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = _fs_bytes;
     fs_desc.code_size = _fs_length;
     CGPUShaderLibraryId _vs = cgpu_create_shader_library(device, &vs_desc);
+    CGPUShaderLibraryId _skin_vs = cgpu_create_shader_library(device, &skin_vs_desc);
     CGPUShaderLibraryId _fs = cgpu_create_shader_library(device, &fs_desc);
     sakura_free(_vs_bytes);
+    sakura_free(_skin_vs_bytes);
     sakura_free(_fs_bytes);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUPipelineShaderDescriptor ppl_shaders[3];
     CGPUPipelineShaderDescriptor& vs = ppl_shaders[0];
     vs.library = _vs;
     vs.stage = CGPU_SHADER_STAGE_VERT;
     vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ps = ppl_shaders[1];
+    CGPUPipelineShaderDescriptor& skin_vs = ppl_shaders[1];
+    skin_vs.library = _skin_vs;
+    skin_vs.stage = CGPU_SHADER_STAGE_VERT;
+    skin_vs.entry = "main";
+    CGPUPipelineShaderDescriptor& ps = ppl_shaders[2];
     ps.library = _fs;
     ps.stage = CGPU_SHADER_STAGE_FRAG;
     ps.entry = "main";
@@ -633,7 +654,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
     rs_desc.push_constant_names = &push_constants_name;
-    rs_desc.shader_count = 2;
+    rs_desc.shader_count = 3;
     rs_desc.shaders = ppl_shaders;
     rs_desc.pool = render_device->get_root_signature_pool();
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
@@ -645,6 +666,15 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 3;
 
+    CGPUVertexLayout skin_vertex_layout = {};
+    skin_vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    skin_vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    skin_vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    skin_vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    skin_vertex_layout.attributes[4] = { "JOINTS", 1, CGPU_FORMAT_R32G32B32A32_UINT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    skin_vertex_layout.attributes[5] = { "WEIGHTS", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 5, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+
+    const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     auto rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();
     rp_desc.root_signature = root_sig;
     rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
@@ -652,9 +682,18 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     rp_desc.vertex_shader = &vs;
     rp_desc.fragment_shader = &ps;
     rp_desc.render_target_count = 1;
-    const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     rp_desc.color_formats = &fmt;
     rp_desc.depth_stencil_format = depth_format;
+
+    auto skin_rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();
+    skin_rp_desc.root_signature = root_sig;
+    skin_rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
+    skin_rp_desc.vertex_layout = &skin_vertex_layout;
+    skin_rp_desc.vertex_shader = &skin_vs;
+    skin_rp_desc.fragment_shader = &ps;
+    skin_rp_desc.render_target_count = 1;
+    skin_rp_desc.color_formats = &fmt;
+    skin_rp_desc.depth_stencil_format = depth_format;
 
     auto raster_desc = make_zeroed<CGPURasterizerStateDescriptor>();
     raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
@@ -669,7 +708,10 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 
     rp_desc.rasterizer_state = &raster_desc;
     rp_desc.depth_state = &ds_desc;
+    skin_rp_desc.rasterizer_state = &raster_desc;
+    skin_rp_desc.depth_state = &ds_desc;
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+    skin_pipeline = cgpu_create_render_pipeline(device, &skin_rp_desc);
 
     cgpu_free_shader_library(_vs);
     cgpu_free_shader_library(_fs);
@@ -678,6 +720,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 void RenderEffectForward::free_pipeline(SRendererId renderer)
 {
     auto sig_to_free = pipeline->root_signature;
+    cgpu_free_render_pipeline(skin_pipeline);
     cgpu_free_render_pipeline(pipeline);
     cgpu_free_root_signature(sig_to_free);
 }
