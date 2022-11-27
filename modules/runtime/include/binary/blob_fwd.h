@@ -1,9 +1,7 @@
 
 #pragma once
 #include "platform/configure.h"
-#include "eastl/vector.h"
-#include "containers/span.hpp"
-#include "containers/string.hpp"
+#include <type_traits>
 
 struct RUNTIME_API skr_blob_arena_t
 {
@@ -51,18 +49,12 @@ struct BlobHelper;
 template <class T, class = void>
 struct BlobBuilderType
 {
-    using type = T;
+    static_assert(sizeof(T), "BlobBuilderType not implemented for this type");
 };
-template<>
-struct BlobBuilderType<skr::string_view>
-{
-    using type = skr::string;
-};
-
 template <class T>
-struct BlobBuilderType<skr::span<T>>
+struct BlobBuilderType<T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>>>
 {
-    using type = eastl::vector<typename BlobBuilderType<T>::type>;
+    using type = T;
 };
 template<class T>
 auto make_blob_builder()
@@ -80,3 +72,5 @@ using binary::make_blob_builder;
 #else
 #define GENERATED_BLOB_BUILDER(type) CONBINE_GEMERATED_NAME(SKR_FILE_ID, type)
 #endif
+
+#define BLOB_POD(t) template<> struct BlobBuilderType<t> {using type = t;};
