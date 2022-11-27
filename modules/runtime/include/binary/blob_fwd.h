@@ -32,7 +32,8 @@ struct RUNTIME_API skr_blob_arena_builder_t
     skr_blob_arena_builder_t(size_t align);
     ~skr_blob_arena_builder_t();
     skr_blob_arena_t build();
-    void* allocate(size_t size, size_t align);
+    size_t allocate(size_t size, size_t align);
+    void* get_buffer() const { return buffer; }
 private:
     void* buffer;
     size_t bufferAlign;
@@ -60,6 +61,14 @@ template<class T>
 auto make_blob_builder()
 {
     return typename binary::BlobBuilderType<T>::type{};
+}
+template<class T>
+skr_blob_arena_t make_arena(T& dst, const typename BlobBuilderType<T>::type& src, size_t align = 32)
+{
+    skr_blob_arena_builder_t arena(align);
+    BlobHelper<T>::BuildArena(arena, dst, src);
+    BlobHelper<T>::FillView(arena, dst);
+    return arena.build();
 }
 }
 using binary::make_blob_builder;

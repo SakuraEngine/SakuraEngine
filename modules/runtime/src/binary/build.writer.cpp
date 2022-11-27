@@ -88,7 +88,7 @@ int WriteHelper<const skr::string_view&>::Write(skr_binary_writer_t* writer, skr
 {
     auto ptr = (char*)str.data();
     auto buffer = (char*)arena.get_buffer();
-    SKR_ASSERT(ptr > buffer);
+    SKR_ASSERT(ptr >= buffer);
     auto offset = (uint32_t)(ptr - buffer);
     SKR_ASSERT(offset < arena.get_size());
     int ret = skr::binary::Write(writer, offset);
@@ -126,7 +126,7 @@ int WriteHelper<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, con
     int ret = WriteHelper<const uint32_t&>::Write(writer, (uint32_t)blob.get_size());
     if (ret != 0)
         return ret;
-    ret = WriteValue(writer, nullptr, (uint32_t)blob.get_align());
+    ret = WriteHelper<const uint32_t&>::Write(writer, (uint32_t)blob.get_align());
     if (ret != 0)
         return ret;
     return WriteValue(writer, blob.get_buffer(), (uint32_t)blob.get_size());
@@ -134,9 +134,15 @@ int WriteHelper<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, con
 
 void BlobHelper<skr::string_view>::BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src)
 {
-    auto buffer = arena.allocate(src.size(), alignof(skr::string::value_type));
+    auto offset = arena.allocate((src.size() + 1) * sizeof(skr::string::value_type), alignof(skr::string::value_type));
+    auto buffer = (char*)arena.get_buffer() + offset;
     memcpy(buffer, src.data(), (src.size() + 1) * sizeof(skr::string::value_type));
-    memset((char*)buffer + src.size(), 0, sizeof(skr::string::value_type)); //tailing zero
-    dst = skr::string_view((const skr::string::value_type*)buffer, src.size());
+    memset(buffer + src.size(), 0, sizeof(skr::string::value_type)); //tailing zero
+    dst = skr::string_view((const skr::string::value_type*)offset, src.size());
+}
+
+void BlobHelper<skr::string_view>::FillView(skr_blob_arena_builder_t& arena, skr::string_view& dst)
+{
+    dst = skr::string_view((const skr::string::value_type*)((char*)arena.get_buffer() + (size_t)dst.data()), dst.size());
 }
 } // namespace skr::binary

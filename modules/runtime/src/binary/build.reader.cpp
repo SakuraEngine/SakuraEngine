@@ -64,7 +64,7 @@ skr_blob_arena_t skr_blob_arena_builder_t::build()
     return arena;
 }
 
-void* skr_blob_arena_builder_t::allocate(size_t size, size_t align)
+size_t skr_blob_arena_builder_t::allocate(size_t size, size_t align)
 {
     if(offset + size > capacity)
     {
@@ -84,8 +84,9 @@ void* skr_blob_arena_builder_t::allocate(size_t size, size_t align)
     void* ptr = (char*)buffer + offset;
     // alignup ptr
     ptr = (void*)(((size_t)ptr + align - 1) & ~(align - 1));
-    offset = (char*)ptr - (char*)buffer + size;
-    return ptr;
+    uint32_t retOffset = (uint32_t)((char*)ptr - (char*)buffer);
+    offset = retOffset + size;
+    return retOffset;
 }
 
 namespace skr::binary

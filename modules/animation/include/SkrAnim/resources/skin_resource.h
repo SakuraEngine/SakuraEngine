@@ -10,6 +10,7 @@ sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941")
 sattr("blob" : true)
 skr_skin_blob_view_t
 {
+    eastl::string_view name;
     gsl::span<eastl::string_view> joint_remaps;
     gsl::span<skr_float4x4_t> inverse_bind_poses;
 };
@@ -21,7 +22,6 @@ sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_skin_resource_t
 {
-    skr::resource::TResourceHandle<skr_skeleton_resource_t> skeleton;
     spush_attr("no-rtti" : true)
     skr_blob_arena_t arena;
     spush_attr("arena" : "arena")

@@ -11,11 +11,11 @@
 struct sreflect sattr(
     "guid" : "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A"
 )
-game_scene_t
+skr_scene_t
 {
     dual_storage_t* world;
 };
-typedef struct game_scene_t game_scene_t;
+typedef struct skr_scene_t game_scene_t;
 
 struct sreflect sattr(
     "guid" : "82CDDC11-3D94-4552-8FD4-237A053F35C0",
