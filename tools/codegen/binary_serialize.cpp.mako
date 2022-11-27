@@ -62,10 +62,10 @@ int __Archive(S* archive, ${record.name}& record)
 %endif
 
 %if generator.filter_blob_type(record):
-void BlobHelper<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Owned& src)
+void BlobHelper<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src)
 {
 %for base in record.bases:
-    BlobHelper<${base}>::BuildArena(arena, (${base}&)dst, (${base}Owned&) src);
+    BlobHelper<${base}>::BuildArena(arena, (${base}&)dst, (${base}Builder&) src);
 %endfor
 %for name, field in generator.filter_fields(record.fields):
 %if field.arraySize > 0:

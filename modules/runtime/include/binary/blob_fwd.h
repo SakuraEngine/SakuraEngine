@@ -49,20 +49,34 @@ namespace binary
 template <class T, class = void>
 struct BlobHelper;
 template <class T, class = void>
-struct BlobOwnedType
+struct BlobBuilderType
 {
     using type = T;
 };
 template<>
-struct BlobOwnedType<skr::string_view>
+struct BlobBuilderType<skr::string_view>
 {
     using type = skr::string;
 };
 
 template <class T>
-struct BlobOwnedType<skr::span<T>>
+struct BlobBuilderType<skr::span<T>>
 {
-    using type = eastl::vector<typename BlobOwnedType<T>::type>;
+    using type = eastl::vector<typename BlobBuilderType<T>::type>;
 };
+template<class T>
+auto make_blob_builder()
+{
+    return typename binary::BlobBuilderType<T>::type{};
 }
 }
+using binary::make_blob_builder;
+}
+
+#define CONBINE_GEMERATED_NAME(file, type) CONBINE_GEMERATED_NAME_IMPL(file, type)
+#define CONBINE_GEMERATED_NAME_IMPL(file, type) GENERATED_BLOB_BUILDER_##file##_##type
+#ifdef __meta__
+#define GENERATED_BLOB_BUILDER(type)
+#else
+#define GENERATED_BLOB_BUILDER(type) CONBINE_GEMERATED_NAME(SKR_FILE_ID, type)
+#endif

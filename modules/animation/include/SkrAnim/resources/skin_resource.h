@@ -13,6 +13,8 @@ skr_skin_bin_t
     gsl::span<eastl::string_view> joint_remaps;
     gsl::span<skr_float4x4_t> inverse_bind_poses;
 };
+    
+GENERATED_BLOB_BUILDER(skr_skin_bin_t)
 
 sreflect_struct("guid" : "332C6133-7222-4B88-9B2F-E4336A46DF2C")
 sattr("rtti" : true)
@@ -20,28 +22,19 @@ sattr("serialize" : "bin")
 skr_skin_resource_t
 {
     skr::resource::TResourceHandle<skr_skeleton_resource_t> skeleton;
-    sattr("no-rtti" : true)
+    spush_attr("no-rtti" : true)
     skr_blob_arena_t arena;
-    sattr("arena" : "arena")
-    sattr("no-rtti" : true)
+    spush_attr("arena" : "arena")
     skr_skin_bin_t bin;
 };
 
 namespace skr::resource
 {
-struct SKR_ANIM_API SSkinFactory : public SResourceFactory {
+struct SKR_ANIM_API SSkinFactory : public SResourceFactory 
+{
     virtual ~SSkinFactory() = default;
-
-    struct Root {
-        skr_vfs_t* vfs = nullptr;
-        skr::filesystem::path dstorage_root;
-        skr_io_ram_service_t* ram_service = nullptr;
-        skr::io::VRAMService* vram_service = nullptr;
-        SRenderDeviceId render_device = nullptr;
-    };
-
-    float AsyncSerdeLoadFactor() override { return 2.5f; }
-    [[nodiscard]] static SSkinFactory* Create(const Root& root);
-    static void Destroy(SSkinFactory* factory);
+    skr_type_id_t GetResourceType() override;
+    bool AsyncIO() override { return true; }
+    float AsyncSerdeLoadFactor() override { return 1.0f; }
 };
 } // namespace skr::resource
