@@ -673,6 +673,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     skin_vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     skin_vertex_layout.attributes[4] = { "JOINTS", 1, CGPU_FORMAT_R32G32B32A32_UINT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     skin_vertex_layout.attributes[5] = { "WEIGHTS", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 5, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    skin_vertex_layout.attribute_count = 6;
 
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     auto rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();
@@ -711,7 +712,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     skin_rp_desc.rasterizer_state = &raster_desc;
     skin_rp_desc.depth_state = &ds_desc;
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
-    skin_pipeline = cgpu_create_render_pipeline(device, &skin_rp_desc);
+    // skin_pipeline = cgpu_create_render_pipeline(device, &skin_rp_desc);
 
     cgpu_free_shader_library(_vs);
     cgpu_free_shader_library(_fs);
@@ -720,7 +721,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 void RenderEffectForward::free_pipeline(SRendererId renderer)
 {
     auto sig_to_free = pipeline->root_signature;
-    cgpu_free_render_pipeline(skin_pipeline);
+    // cgpu_free_render_pipeline(skin_pipeline);
     cgpu_free_render_pipeline(pipeline);
     cgpu_free_root_signature(sig_to_free);
 }

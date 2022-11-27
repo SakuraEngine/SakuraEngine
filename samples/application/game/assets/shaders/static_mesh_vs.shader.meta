@@ -6,7 +6,8 @@
         "sourcePath": "static_mesh_vs.hlsl",
         "entry": "main",
         "target": "vs_6_0",
-        "option_assets": [ "a2bf8869-6805-4f3e-a9a3-d5eeda48fcbd" ]
+        "option_assets": [ "a2bf8869-6805-4f3e-a9a3-d5eeda48fcbd" ],
+        "features_assets": [ "da7a1556-e2b6-4fac-b7c7-f3eca43c7d89" ]
     },
     "cooker": {
         "binarization": true
