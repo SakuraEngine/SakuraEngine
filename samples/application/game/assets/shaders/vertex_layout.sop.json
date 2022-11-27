@@ -3,6 +3,10 @@
         {
             "key": "VERTEX_HAS_TANGENT",
             "value_selections": ["on", "off"]
+        },
+        {
+            "key": "VERTEX_HAS_SKIN",
+            "value_selections": ["on", "off"]
         }
     ],
     "nested": []
