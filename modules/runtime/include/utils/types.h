@@ -130,4 +130,17 @@ inline SKR_CONSTEXPR bool operator==(skr_md5_t a, skr_md5_t b)
     result &= (a.d == b.d);
     return result;
 }
+
+#include "binary/blob_fwd.h"
+namespace skr::binary
+{
+BLOB_POD(skr_float2_t);
+BLOB_POD(skr_float3_t);
+BLOB_POD(skr_float4_t);
+BLOB_POD(skr_quaternion_t);
+BLOB_POD(skr_float4x4_t);
+BLOB_POD(skr_rotator_t);
+BLOB_POD(skr_guid_t);
+BLOB_POD(skr_md5_t);
+}
 #endif

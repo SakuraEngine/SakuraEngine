@@ -109,3 +109,13 @@ SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string, 0x214ed643, 0x54bd, 0x4213, 0xbe
 SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string_view, 0xb799ba81, 0x6009, 0x405d, 0x91, 0x31, 0xe4, 0xb6, 0x10, 0x16, 0x60, 0xdc);
 } // namespace type
 } // namespace skr
+
+#include "binary/blob_fwd.h"
+namespace skr::binary
+{
+template<>
+struct BlobBuilderType<skr::string_view>
+{
+    using type = skr::string;
+};
+}
