@@ -57,6 +57,13 @@ void SShaderImporter::Destroy(void *resource)
     SkrDelete(source);
 }
 
+// skr_shader_options_resource_t:
+// LEVEL["level0", "level1", "level2"]: 
+//    same as "key": ["level0", "level1", "level2"] but def(level2) includes def(level1) & def(level0)) 
+// SELECT["selection0", "selection1", "selection2"]: 
+//    same as "key": ["selection0", "selection1", "selection2"]
+// SWITCH["switch"]: 
+//    same as "switch": ["on", "off"]
 bool SShaderCooker::Cook(SCookContext *ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
@@ -65,7 +72,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     SKR_DEFER({ ctx->Destroy(source_code); });
     // Calculate all macro combines (shader variants)
     eastl::vector<skr_shader_options_resource_t*> collections = {};
-    eastl::vector<skr_shader_features_resource_t*> features = {};
+    eastl::vector<skr_shader_options_resource_t*> dyn_collections = {};
     auto importer = static_cast<SShaderImporter*>(ctx->GetImporter());
     for (auto option_asset : importer->option_assets)
     {
@@ -74,12 +81,12 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
         collections.emplace_back(collection);
     }
-    for (auto feature_asset : importer->features_assets)
+    for (auto dynopt_asset : importer->dynamic_option_assets)
     {
-        const auto guid = feature_asset.get_guid();
+        const auto guid = dynopt_asset.get_guid();
         auto idx = ctx->AddStaticDependency(guid, true);
-        auto feature = static_cast<skr_shader_features_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
-        features.emplace_back(feature);
+        auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
+        dyn_collections.emplace_back(collection);
     }
     // flat and well sorted
     // [ x: ["on", "off"], y: ["a", "b", "c"], z: ["1", "2"] ]

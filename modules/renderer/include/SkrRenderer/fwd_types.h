@@ -26,8 +26,6 @@ typedef struct skr_shader_option_instance_t skr_shader_option_instance_t;
 typedef struct skr_shader_option_t skr_shader_option_t;
 typedef struct skr_shader_options_resource_t skr_shader_options_resource_t;
 
-typedef struct skr_shader_features_resource_t skr_shader_features_resource_t;
-
 typedef struct skr_material_type_resource_t skr_material_type_resource_t;
 typedef struct skr_material_resource_t skr_material_resource_t;
 typedef struct skr_material_value_t skr_material_value_t;
