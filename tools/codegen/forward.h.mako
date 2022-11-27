@@ -5,6 +5,8 @@
 #endif
 #include "${config}"
 #include <inttypes.h>
+#undef SKR_FILE_ID
+#define SKR_FILE_ID ${db.file_id}
 
 #ifdef __cplusplus
 %for record in db.records:

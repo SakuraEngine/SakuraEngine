@@ -3,7 +3,6 @@
 #include "binary/writer_fwd.h"
 #include "binary/blob_fwd.h"
 #if defined(__cplusplus)
-
 namespace skr::binary
 {
 %for record in generator.filter_types(db.records):
@@ -42,37 +41,35 @@ ${caller.body()}
 %if generator.filter_blob_type(record):
 
 <%call expr="namespaced(record)">
-struct ${record.short_name}Owned;
+struct ${record.short_name}Builder;
 </%call>
 
 namespace skr::binary
 {
 template<>
-struct BlobOwnedType<${record.name}>
+struct BlobBuilderType<${record.name}>
 {
-    using type = ${record.short_name}Owned;
+    using type = ${record.short_name}Builder;
 };
 template<>
 struct ${api} BlobHelper<${record.name}>
 {
-    static void BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Owned& src);
+    static void BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src);
 };
 }
-
-<%call expr="namespaced(record)">
 <%
     if record.bases:
-        basesOwned = ": " + ", ".join(["public %sOwned"%base for base in record.bases])
+        basesBuilder = ": " + ", ".join(["public %sBuilder"%base for base in record.bases])
     else:
-        basesOwned = ""
+        basesBuilder = ""
 %>
-struct ${record.short_name}Owned ${basesOwned}
-{
+#define GENERATED_BLOB_BUILDER_${db.file_id}_${record.short_name} \
+struct ${record.short_name}Builder ${basesBuilder} \
+{ \
 %for name, field in vars(record.fields).items():
-    typename skr::binary::BlobOwnedType<${field.rawType}>::type ${name};
+    typename skr::binary::BlobBuilderType<${field.rawType}>::type ${name}; \
 %endfor
 };
-</%call>
 %endif
 %endfor
 

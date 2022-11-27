@@ -16,7 +16,7 @@ namespace skr
 
         template<class T>
         struct BlobHelper<skr::span<T>> {
-            static void BuildArena(skr_blob_arena_builder_t& arena, skr::span<T>& dst, const typename BlobOwnedType<skr::span<T>>::type& src)
+            static void BuildArena(skr_blob_arena_builder_t& arena, skr::span<T>& dst, const typename BlobBuilderType<skr::span<T>>::type& src)
             {
                 auto buffer = arena.allocate(src.size() * sizeof(T), alignof(T));
                 memcpy(buffer, src.data(), src.size() * sizeof(T));

@@ -173,6 +173,7 @@ if __name__ == '__main__':
         header_db = MetaDatabase()
         header_db.load_meta_file(meta, True)
         header_db.relative_path = os.path.relpath(meta, args.root)
+        header_db.file_id = "FID_" + re.sub(r'\W+', '_', header_db.relative_path)
         header_dbs.append(header_db)
     
     if args.includes:

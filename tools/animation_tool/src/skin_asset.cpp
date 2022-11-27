@@ -8,7 +8,6 @@ namespace skd::asset
 bool SSkinCooker::Cook(SCookContext* ctx)
 {
     skr_skin_resource_t resource;
-    skr_skin_bin_tOwned bin;
     cgltf_data* rawMesh = ctx->Import<cgltf_data>();
     SKR_DEFER({ctx->Destroy(rawMesh);});
     cgltf_skin* rawSkin = &rawMesh->skins[0];
@@ -16,6 +15,7 @@ bool SSkinCooker::Cook(SCookContext* ctx)
     {
         return false;
     }
+    auto bin = skr::make_blob_builder<skr_skin_bin_t>();
     bin.joint_remaps.reserve(rawSkin->joints_count);
     for (auto i = 0; i < rawSkin->joints_count; ++i)
         bin.joint_remaps.push_back(rawSkin->joints[i]->name);
