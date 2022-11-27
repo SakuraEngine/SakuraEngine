@@ -13,6 +13,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
+#include "SkrRenderer/render_group.h"
 #include "cube.hpp"
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
@@ -171,10 +172,15 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             identity_type = dualT_register_type(&desc);
             type_builder.with(identity_type);
             type_builder.with<skr_render_mesh_comp_t>();
+            type_builder.with<skr_render_group_t>();
             typeset = type_builder.build();
         }
         // initialize queries
-        effect_query = dualQ_from_literal(storage, "[in]forward_render_identity");
+        mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
+        draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
+        draw_skin_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t"
+                                                        ", [in]skr_skeleton_component_t, [in]skr_skin_component_t"
+                                                        ", [in]skr_anim_component_t, [out]skr_render_group_t");
         camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
         // prepare render resources
         prepare_pipeline(renderer);
@@ -202,7 +208,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 }
             }
         };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(sweepFunction));
+        dualQ_get_views(mesh_query, DUAL_LAMBDA(sweepFunction));
         free_pipeline(renderer);
         free_geometry_resources(renderer);
     }
@@ -253,7 +259,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 }
             }
         };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+        dualQ_get_views(mesh_query, DUAL_LAMBDA(counterF));
         push_constants.clear();
         mesh_drawcalls.clear();
         push_constants.reserve(c);
@@ -287,6 +293,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         };
         dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
 
+        {
         auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
             uint32_t r_idx = 0;
             uint32_t dc_idx = 0;
@@ -358,7 +365,84 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                 dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
             }
         };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
+        dualQ_get_views(draw_mesh_query, DUAL_LAMBDA(r_effect_callback));
+        }
+
+        {
+        auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
+            uint32_t r_idx = 0;
+            uint32_t dc_idx = 0;
+
+            auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
+            auto unbatched_g_ents = (dual_entity_t*)identities;
+            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            if (unbatched_g_ents)
+            {
+                auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
+                    //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
+                    auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
+                    auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
+                    auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
+                    for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
+                    {
+                        const auto quaternion = skr::math::quaternion_from_euler(
+                            rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll);
+                        auto world = skr::math::make_transform(
+                            translations[g_idx].value,
+                            scales[g_idx].value,
+                            quaternion);
+                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, translations[g_idx].value.x, translations[g_idx].value.y, translations[g_idx].value.z);
+                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, quaternion.x, quaternion.y, quaternion.z);
+                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, scales[g_idx].value.x, scales[g_idx].value.y, scales[g_idx].value.z);
+                        // drawcall
+                        auto status = meshes[r_idx].mesh_resource.get_status();
+                        if (status == SKR_LOADING_STATUS_INSTALLED)
+                        {
+                            auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
+                            auto renderMesh = resourcePtr->render_mesh;
+                
+                            const auto& cmds = renderMesh->primitive_commands;
+                            for (auto&& cmd : cmds)
+                            {
+                                // resources may be ready after produce_drawcall, so we need to check it here
+                                if (push_constants.capacity() <= dc_idx) return;
+
+                                auto& push_const = push_constants.emplace_back();
+                                push_const.world = world;
+                                auto& drawcall = mesh_drawcalls.emplace_back();
+                                drawcall.pipeline = pipeline;
+                                drawcall.push_const_name = push_constants_name;
+                                drawcall.push_const = (const uint8_t*)(&push_const);
+                                drawcall.index_buffer = *cmd.ibv;
+                                drawcall.vertex_buffers = cmd.vbvs.data();
+                                drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
+                                dc_idx++;
+                            }
+                        }
+                        else
+                        {
+                            // resources may be ready after produce_drawcall, so we need to check it here
+                            if (push_constants.capacity() <= dc_idx) return;
+
+                            auto& push_const = push_constants.emplace_back();
+                            push_const.world = world;
+                            auto& drawcall = mesh_drawcalls.emplace_back();
+                            drawcall.pipeline = pipeline;
+                            drawcall.push_const_name = push_constants_name;
+                            drawcall.push_const = (const uint8_t*)(&push_const);
+                            drawcall.index_buffer = ibv;
+                            drawcall.vertex_buffers = vbvs;
+                            drawcall.vertex_buffer_count = 4;
+                            dc_idx++;
+                        }
+                    }
+                };
+                dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
+            }
+        };
+        dualQ_get_views(draw_skin_query, DUAL_LAMBDA(r_effect_callback));
+        }
+
         mesh_draw_list.drawcalls = mesh_drawcalls.data();
         mesh_draw_list.count = (uint32_t)mesh_drawcalls.size();
         mesh_draw_list.user_data = &forward_pass_data;
@@ -381,7 +465,9 @@ protected:
     CGPURenderPipelineId pipeline;
     // effect processor data
     const char* push_constants_name = "push_constants";
-    dual_query_t* effect_query = nullptr;
+    dual_query_t* mesh_query = nullptr;
+    dual_query_t* draw_mesh_query = nullptr;
+    dual_query_t* draw_skin_query = nullptr;
     dual_query_t* camera_query = nullptr;
     dual_type_index_t identity_type = {};
     struct PushConstants {
