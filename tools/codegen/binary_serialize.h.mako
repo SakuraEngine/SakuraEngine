@@ -55,6 +55,7 @@ template<>
 struct ${api} BlobHelper<${record.name}>
 {
     static void BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src);
+    static void FillView(skr_blob_arena_builder_t& arena, ${record.name}& dst);
 };
 }
 <%
