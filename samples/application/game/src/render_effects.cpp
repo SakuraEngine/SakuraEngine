@@ -233,111 +233,94 @@ struct RenderEffectForward : public IRenderEffectProcessor {
     {
         skr_primitive_draw_packet_t packet = {};
         // query from identity component
-        if (strcmp(pass->identity(), forward_pass_name) == 0)
-        {
-            uint32_t c = 0;
-            auto counterF = [&](dual_chunk_view_t* r_cv) {
-                auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
-                for (uint32_t i = 0; i < r_cv->count; i++)
+        if (strcmp(pass->identity(), forward_pass_name) != 0)
+            return {};
+        uint32_t c = 0;
+        auto counterF = [&](dual_chunk_view_t* r_cv) {
+            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            for (uint32_t i = 0; i < r_cv->count; i++)
+            {
+                auto status = meshes[i].mesh_resource.get_status();
+                if (status == SKR_LOADING_STATUS_INSTALLED)
                 {
-                    auto status = meshes[i].mesh_resource.get_status();
-                    if (status == SKR_LOADING_STATUS_INSTALLED)
-                    {
-                        auto resourcePtr = (skr_mesh_resource_t*)meshes[i].mesh_resource.get_ptr();
-                        auto renderMesh = resourcePtr->render_mesh;
-                        c += (uint32_t)renderMesh->primitive_commands.size();
-                    }
-                    else
-                    {
-                        c++;
-                    }
+                    auto resourcePtr = (skr_mesh_resource_t*)meshes[i].mesh_resource.get_ptr();
+                    auto renderMesh = resourcePtr->render_mesh;
+                    c += (uint32_t)renderMesh->primitive_commands.size();
                 }
-            };
-            dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
-            push_constants.clear();
-            mesh_drawcalls.clear();
-            push_constants.reserve(c);
-            mesh_drawcalls.reserve(c);
-            auto view = skr::math::look_at_matrix(
-                { 0.f, -135.f, 55.f } /*eye*/, 
-                { 0.f, 0.f, 50.f } /*at*/,
-                { 0.f, 0.f, 1.f } /*up*/
-            );
-            auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
-                auto cameras = (skr_camera_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_camera_t>::get());
-                auto camera_transforms = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
-                auto camera_forward = skr::math::Vector3f(0.f, 1.f, 0.f);
-                SKR_ASSERT(g_cv->count <= 1);
-                if (cameras)
+                else
                 {
-                    forward_pass_data.viewport_width = cameras->viewport_width;
-                    forward_pass_data.viewport_height = cameras->viewport_height;
-
-                    view = skr::math::look_at_matrix(
-                        camera_transforms->value /*eye*/, 
-                        camera_forward + camera_transforms->value /*at*/,
-                        { 0.f, 0.f, 1.f } /*up*/
-                    );
-                    auto proj = skr::math::perspective_fov(
-                        3.1415926f / 2.f, 
-                        (float)forward_pass_data.viewport_width / (float)forward_pass_data.viewport_height, 
-                        1.f, 1000.f);
-                    forward_pass_data.view_projection = skr::math::multiply(view, proj);
+                    c++;
                 }
-            };
-            dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
+            }
+        };
+        dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+        push_constants.clear();
+        mesh_drawcalls.clear();
+        push_constants.reserve(c);
+        mesh_drawcalls.reserve(c);
+        auto view = skr::math::look_at_matrix(
+            { 0.f, -135.f, 55.f } /*eye*/, 
+            { 0.f, 0.f, 50.f } /*at*/,
+            { 0.f, 0.f, 1.f } /*up*/
+        );
+        auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
+            auto cameras = (skr_camera_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_camera_t>::get());
+            auto camera_transforms = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
+            auto camera_forward = skr::math::Vector3f(0.f, 1.f, 0.f);
+            SKR_ASSERT(g_cv->count <= 1);
+            if (cameras)
+            {
+                forward_pass_data.viewport_width = cameras->viewport_width;
+                forward_pass_data.viewport_height = cameras->viewport_height;
 
-            auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
-                uint32_t r_idx = 0;
-                uint32_t dc_idx = 0;
+                view = skr::math::look_at_matrix(
+                    camera_transforms->value /*eye*/, 
+                    camera_forward + camera_transforms->value /*at*/,
+                    { 0.f, 0.f, 1.f } /*up*/
+                );
+                auto proj = skr::math::perspective_fov(
+                    3.1415926f / 2.f, 
+                    (float)forward_pass_data.viewport_width / (float)forward_pass_data.viewport_height, 
+                    1.f, 1000.f);
+                forward_pass_data.view_projection = skr::math::multiply(view, proj);
+            }
+        };
+        dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
 
-                auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
-                auto unbatched_g_ents = (dual_entity_t*)identities;
-                auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
-                if (unbatched_g_ents)
-                {
-                    auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
-                        //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
-                        auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
-                        auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
-                        auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
-                        for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
+        auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
+            uint32_t r_idx = 0;
+            uint32_t dc_idx = 0;
+
+            auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
+            auto unbatched_g_ents = (dual_entity_t*)identities;
+            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            if (unbatched_g_ents)
+            {
+                auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
+                    //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
+                    auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
+                    auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
+                    auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
+                    for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
+                    {
+                        const auto quaternion = skr::math::quaternion_from_euler(
+                            rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll);
+                        auto world = skr::math::make_transform(
+                            translations[g_idx].value,
+                            scales[g_idx].value,
+                            quaternion);
+                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, translations[g_idx].value.x, translations[g_idx].value.y, translations[g_idx].value.z);
+                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, quaternion.x, quaternion.y, quaternion.z);
+                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, scales[g_idx].value.x, scales[g_idx].value.y, scales[g_idx].value.z);
+                        // drawcall
+                        auto status = meshes[r_idx].mesh_resource.get_status();
+                        if (status == SKR_LOADING_STATUS_INSTALLED)
                         {
-                            const auto quaternion = skr::math::quaternion_from_euler(
-                                rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll);
-                            auto world = skr::math::make_transform(
-                                translations[g_idx].value,
-                                scales[g_idx].value,
-                                quaternion);
-                            //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, translations[g_idx].value.x, translations[g_idx].value.y, translations[g_idx].value.z);
-                            //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, quaternion.x, quaternion.y, quaternion.z);
-                            //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, scales[g_idx].value.x, scales[g_idx].value.y, scales[g_idx].value.z);
-                            // drawcall
-                            auto status = meshes[r_idx].mesh_resource.get_status();
-                            if (status == SKR_LOADING_STATUS_INSTALLED)
-                            {
-                                auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
-                                auto renderMesh = resourcePtr->render_mesh;
-                    
-                                const auto& cmds = renderMesh->primitive_commands;
-                                for (auto&& cmd : cmds)
-                                {
-                                    // resources may be ready after produce_drawcall, so we need to check it here
-                                    if (push_constants.capacity() <= dc_idx) return;
-
-                                    auto& push_const = push_constants.emplace_back();
-                                    push_const.world = world;
-                                    auto& drawcall = mesh_drawcalls.emplace_back();
-                                    drawcall.pipeline = pipeline;
-                                    drawcall.push_const_name = push_constants_name;
-                                    drawcall.push_const = (const uint8_t*)(&push_const);
-                                    drawcall.index_buffer = *cmd.ibv;
-                                    drawcall.vertex_buffers = cmd.vbvs.data();
-                                    drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
-                                    dc_idx++;
-                                }
-                            }
-                            else
+                            auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
+                            auto renderMesh = resourcePtr->render_mesh;
+                
+                            const auto& cmds = renderMesh->primitive_commands;
+                            for (auto&& cmd : cmds)
                             {
                                 // resources may be ready after produce_drawcall, so we need to check it here
                                 if (push_constants.capacity() <= dc_idx) return;
@@ -348,23 +331,39 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 drawcall.pipeline = pipeline;
                                 drawcall.push_const_name = push_constants_name;
                                 drawcall.push_const = (const uint8_t*)(&push_const);
-                                drawcall.index_buffer = ibv;
-                                drawcall.vertex_buffers = vbvs;
-                                drawcall.vertex_buffer_count = 4;
+                                drawcall.index_buffer = *cmd.ibv;
+                                drawcall.vertex_buffers = cmd.vbvs.data();
+                                drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                 dc_idx++;
                             }
                         }
-                    };
-                    dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
-                }
-            };
-            dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
-            mesh_draw_list.drawcalls = mesh_drawcalls.data();
-            mesh_draw_list.count = (uint32_t)mesh_drawcalls.size();
-            mesh_draw_list.user_data = &forward_pass_data;
-            packet.count = 1;
-            packet.lists = &mesh_draw_list;
-        }
+                        else
+                        {
+                            // resources may be ready after produce_drawcall, so we need to check it here
+                            if (push_constants.capacity() <= dc_idx) return;
+
+                            auto& push_const = push_constants.emplace_back();
+                            push_const.world = world;
+                            auto& drawcall = mesh_drawcalls.emplace_back();
+                            drawcall.pipeline = pipeline;
+                            drawcall.push_const_name = push_constants_name;
+                            drawcall.push_const = (const uint8_t*)(&push_const);
+                            drawcall.index_buffer = ibv;
+                            drawcall.vertex_buffers = vbvs;
+                            drawcall.vertex_buffer_count = 4;
+                            dc_idx++;
+                        }
+                    }
+                };
+                dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
+            }
+        };
+        dualQ_get_views(effect_query, DUAL_LAMBDA(r_effect_callback));
+        mesh_draw_list.drawcalls = mesh_drawcalls.data();
+        mesh_draw_list.count = (uint32_t)mesh_drawcalls.size();
+        mesh_draw_list.user_data = &forward_pass_data;
+        packet.count = 1;
+        packet.lists = &mesh_draw_list;
         return packet;
     }
 

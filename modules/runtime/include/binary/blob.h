@@ -41,7 +41,7 @@ namespace skr
             }
             static void FillView(skr_blob_arena_builder_t& arena, skr::span<T>& dst)
             {
-                dst = skr::span<T>((T*)((char*)arena.get_buffer() + (uint32_t)dst.data()), dst.size());
+                dst = skr::span<T>((T*)((char*)arena.get_buffer() + (size_t)dst.data()), dst.size());
 
                 if constexpr(is_complete_v<BlobHelper<T>>)
                 {
