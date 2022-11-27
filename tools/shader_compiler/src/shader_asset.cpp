@@ -65,6 +65,7 @@ bool SShaderCooker::Cook(SCookContext *ctx)
     SKR_DEFER({ ctx->Destroy(source_code); });
     // Calculate all macro combines (shader variants)
     eastl::vector<skr_shader_options_resource_t*> collections = {};
+    eastl::vector<skr_shader_features_resource_t*> features = {};
     auto importer = static_cast<SShaderImporter*>(ctx->GetImporter());
     for (auto option_asset : importer->option_assets)
     {
@@ -72,6 +73,13 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         auto idx = ctx->AddStaticDependency(guid, true);
         auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
         collections.emplace_back(collection);
+    }
+    for (auto feature_asset : importer->features_assets)
+    {
+        const auto guid = feature_asset.get_guid();
+        auto idx = ctx->AddStaticDependency(guid, true);
+        auto feature = static_cast<skr_shader_features_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
+        features.emplace_back(feature);
     }
     // flat and well sorted
     // [ x: ["on", "off"], y: ["a", "b", "c"], z: ["1", "2"] ]
