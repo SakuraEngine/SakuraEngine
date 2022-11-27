@@ -46,7 +46,6 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     }
 };
 
-
 #define CGPU_DSTORAGE_SINGLETON_NAME "CGPUDStorageSingleton"
 
 struct CGPUDStorageSingleton
@@ -93,7 +92,7 @@ struct CGPUDStorageSingleton
 
     ~CGPUDStorageSingleton()
     {
-        if (pFactory) pFactory->Release();
+        // if (pFactory) pFactory->Release();
         if (dstorage_core.isLoaded()) dstorage_core.unload();
         if (dstorage_library.isLoaded()) dstorage_library.unload();
         
