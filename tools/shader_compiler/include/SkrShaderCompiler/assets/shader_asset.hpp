@@ -30,16 +30,38 @@ SKR_SHADER_COMPILER_API SShaderOptionsCooker final : public SCooker
 }
 sregister_cooker("fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc");
 
+sreflect_struct("guid" : "b3769ad9-4a30-4f7f-8ed7-e6b4be21018b")
+sattr("serialize" : "json")
+SKR_SHADER_COMPILER_API SShaderFeaturesImporter final : public SImporter
+{
+    skr::string jsonPath;
+
+    void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void Destroy(void* resource) override;
+}
+sregister_importer();
+    
+sreflect_struct("guid" : "1ccb0a02-f2d7-4cbd-9439-20991bb499dd")
+SKR_SHADER_COMPILER_API SShaderFeaturesCooker final : public SCooker
+{
+    bool Cook(SCookContext * ctx) override;
+    uint32_t Version() override;
+}
+sregister_cooker("d83f86f4-4e59-4027-95fa-262e0f73d3fb");
+
 sreflect_struct("guid" : "a897c990-abea-4f48-8880-e1ae9a93d777")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter
 {
     using shader_options_handle_t = skr::resource::TResourceHandle<skr_shader_options_resource_t>;
+    using shader_features_handle_t = skr::resource::TResourceHandle<skr_shader_features_resource_t>;
 
     skr::string sourcePath;
     skr::string entry = "main";
     skr::string target;
+    
     eastl::vector<shader_options_handle_t> option_assets;
+    eastl::vector<shader_features_handle_t> features_assets;
 
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;

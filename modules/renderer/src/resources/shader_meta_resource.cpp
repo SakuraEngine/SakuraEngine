@@ -105,3 +105,59 @@ void SShaderOptionsFactory::Destroy(SShaderOptionsFactory *factory)
 }
 } // namespace resource
 } // namespace skr
+
+namespace skr
+{
+namespace resource
+{
+struct SKR_RENDERER_API SShaderFeaturesFactoryImpl : public SShaderFeaturesFactory
+{
+    SShaderFeaturesFactoryImpl(const SShaderFeaturesFactoryImpl::Root& root)
+        : root(root)
+    {
+
+    }
+
+    ~SShaderFeaturesFactoryImpl() noexcept = default;
+
+    bool AsyncIO() override { return false; }
+    skr_type_id_t GetResourceType() override
+    {
+        const auto collection_type = skr::type::type_id<skr_shader_features_resource_t>::get();
+        return collection_type;
+    }
+
+    ESkrInstallStatus Install(skr_resource_record_t* record) override
+    {
+        return ::SKR_INSTALL_STATUS_SUCCEED; // no need to install
+    }
+    ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override
+    {
+        return ::SKR_INSTALL_STATUS_SUCCEED; // no need to install
+    }
+
+    bool Unload(skr_resource_record_t* record) override
+    {
+        auto options = (skr_shader_features_resource_t*)record->resource;
+        SkrDelete(options);
+        return true; 
+    }
+    bool Uninstall(skr_resource_record_t* record) override
+    {
+        return true;
+    }
+    
+    Root root;
+};
+
+SShaderFeaturesFactory* SShaderFeaturesFactory::Create(const Root& root)
+{
+    return SkrNew<SShaderFeaturesFactoryImpl>(root);
+}
+
+void SShaderFeaturesFactory::Destroy(SShaderFeaturesFactory *factory)
+{
+    return SkrDelete(factory);
+}
+} // namespace resource
+} // namespace skr

@@ -25,10 +25,10 @@ size_t skr_stable_shader_hash_t::hasher::operator()(const skr_stable_shader_hash
 skr_stable_shader_hash_t skr_stable_shader_hash_t::from_string(const char* str) SKR_NOEXCEPT
 {
     skr_stable_shader_hash_t result;
-    result.valuea = std::stoull(str);
-    result.valueb = std::stoull(str + 8);
-    result.valuec = std::stoull(str + 16);
-    result.valued = std::stoull(str + 24);
+    result.valuea = std::stoul(str);
+    result.valueb = std::stoul(str + 8);
+    result.valuec = std::stoul(str + 16);
+    result.valued = std::stoul(str + 24);
     return result;
 }
 

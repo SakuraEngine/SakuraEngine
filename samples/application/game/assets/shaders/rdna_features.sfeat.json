@@ -1,0 +1,5 @@
+{
+    "type": "LEVEL",
+    "feature": "ShaderModel",
+    "values": ["SM_5_0", "SM_6_3", "SM_6_6"]
+}
