@@ -354,7 +354,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             auto j = i;
             auto validNameChar = [](char c)
             {
-                return std::isalpha(c) || c =='_' || (c > '0' && c <= '9');
+                return std::isalpha(c) || c =='_' || (c > '0' && c <= '9') || c == ':';
             };
             while (i < part.size() && validNameChar(part[i]))
                 ++i;
