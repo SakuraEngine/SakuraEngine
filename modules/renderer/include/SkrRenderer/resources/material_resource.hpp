@@ -2,7 +2,7 @@
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
 #include <containers/variant.hpp>
-#include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "resource/resource_handle.h"
 
 #ifndef __meta__
@@ -13,12 +13,29 @@ sreflect_enum_class("guid" : "4003703a-dde4-4f11-93a6-6c460bac6357")
 sattr("rtti": true, "serialize": ["json", "bin"])
 ESkrMaterialPropertyType : uint32_t
 {
+    BOOL,
     FLOAT,
     DOUBLE,
     TEXTURE,
     BUFFER,
     SAMPLER,
     COUNT
+};
+
+sreflect_struct("guid": "6cdbf15e-67c1-45c1-a4e9-417c81299dae")
+sattr("rtti": true, "serialize": ["json", "bin"])
+skr_material_property_t
+{
+    using resource_handle = skr_resource_handle_t;
+    skr::string name;
+    skr::string display_name;
+    ESkrMaterialPropertyType prop_type;
+    skr::string description;
+
+    double default_value = 0.0;
+    double min_value = 0.0;
+    double max_value = DBL_MAX;
+    resource_handle default_resource = {};
 };
 
 sreflect_struct("guid": "46de11b4-6beb-4ab9-b9f8-f5c07ceeb8a5")
@@ -28,7 +45,9 @@ skr_material_value_t
     using resource_handle = skr_resource_handle_t;
     ESkrMaterialPropertyType prop_type;
     skr::string slot_name;
-    skr::variant<resource_handle, float, double> value;
+
+    double value = 0.0;
+    resource_handle resource;
 };
 
 sreflect_struct("guid": "7cbbb808-20d9-4bff-b72d-3c23d5b00f2b")

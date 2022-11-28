@@ -469,6 +469,28 @@ skr::filesystem::path SCookContext::AddFileDependency(const skr::filesystem::pat
     return record->path.parent_path() / inPath;
 }
 
+skr::filesystem::path SCookContext::AddFileDependencyAndLoad(skr::io::RAMService* ioService, const skr::filesystem::path& path,
+    skr_async_ram_destination_t& destination)
+{
+    auto outPath = AddFileDependency(path.c_str());
+    auto u8Path = outPath.u8string();
+    const auto assetRecord = GetAssetRecord();
+    // load file
+    skr::task::event_t counter;
+    skr_ram_io_t ramIO = {};
+    ramIO.offset = 0;
+    ramIO.path = u8Path.c_str();
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
+        auto pCounter = (skr::task::event_t*)data;
+        pCounter->signal();
+    };
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
+    skr_async_request_t ioRequest = {};
+    ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &destination);
+    counter.wait(false);
+    return outPath;
+}
+
 void SCookContext::AddRuntimeDependency(skr_guid_t resource)
 {
     auto iter = std::find_if(runtimeDependencies.begin(), runtimeDependencies.end(), [&](const auto &dep) { return dep == resource; });

@@ -12,18 +12,24 @@ namespace skd sreflect
 namespace asset sreflect
 {
 // Importers
+sreflect_struct("guid" : "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5")
+sattr("rtti": true, "serialize" : ["json", "bin"])
+skr_material_type_asset_t
+{
+    uint32_t version;
+    eastl::vector<skr_resource_handle_t> shader_assets;
+    eastl::vector<skr_material_property_t> properties;
+    eastl::vector<skr_shader_option_instance_t> option_values;
+};
 
 sreflect_struct("guid" : "c0fc5581-f644-4752-bb30-0e7f652533b7")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter
 {
-    uint32_t version;
-    eastl::vector<skr_resource_handle_t> shader_assets;
-    eastl::vector<skr_material_value_t> default_values;
-    eastl::vector<skr_shader_option_instance_t> option_values;
+    skr::string jsonPath;
 
-    void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
-    void Destroy(void* resource) override { return; }
+    void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void Destroy(void* resource) override;
 }
 sregister_importer();
 
@@ -48,7 +54,7 @@ sregister_importer();
 sreflect_struct("guid" : "816f9dd4-9a49-47e5-a29a-3bdf7241ad35")
 SKR_SHADER_COMPILER_API SMaterialTypeCooker final : public SCooker
 {
-    bool Cook(SCookContext* ctx) override { return false; }
+    bool Cook(SCookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
 sregister_cooker("83264b35-3fde-4fff-8ee1-89abce2e445b");

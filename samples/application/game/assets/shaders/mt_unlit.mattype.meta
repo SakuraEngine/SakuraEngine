@@ -2,9 +2,7 @@
     "guid": "bdf63849-5a52-4d71-be4a-11d115c4a490",
     "type": "83264b35-3fde-4fff-8ee1-89abce2e445b",
     "importer": {
-        "importerType": "c0fc5581-f644-4752-bb30-0e7f652533b7"
-    },
-    "cooker": {
-        "binarization": true
+        "importerType": "c0fc5581-f644-4752-bb30-0e7f652533b7",
+        "jsonPath": "mt_unlit.mattype"
     }
 }
