@@ -63,6 +63,37 @@ struct CubeGeometry {
         { 1.0f, 0.0f },
         { 0.0f, 1.0f },
     };
+    const skr::math::Vector2f g_TexCoords2[24] = {
+        { 0.0f, 0.0f }, // front face
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 0.0f },
+
+        { 0.0f, 1.0f }, // right side face
+        { 1.0f, 0.0f },
+        { 1.0f, 1.0f },
+        { 0.0f, 0.0f },
+
+        { 0.0f, 0.0f }, // left side face
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 0.0f },
+
+        { 0.0f, 0.0f }, // back face
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 0.0f },
+
+        { 0.0f, 1.0f }, // top face
+        { 1.0f, 0.0f },
+        { 1.0f, 1.0f },
+        { 0.0f, 0.0f },
+
+        { 1.0f, 1.0f }, // bottom face
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
+        { 0.0f, 1.0f },
+    };
     const skr::math::Vector3f g_Normals[24] = {
         skr::math::Vector3f(0.0f, 0.0f, -1.0f), // front face
         skr::math::Vector3f(0.0f, 0.0f, -1.0f),
