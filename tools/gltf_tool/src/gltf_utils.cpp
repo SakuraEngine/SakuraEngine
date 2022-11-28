@@ -102,14 +102,15 @@ skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* pr
     return {};
 }
 
-skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, const char* semantics, uint32_t& stride)
+skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, const char* semantics, uint32_t& stride, cgltf_attribute_type& out_type)
 {
     for (uint32_t type = 0; type < cgltf_attribute_type_custom + 1; type++)
     {
-        const auto refStr = kGLTFAttributeTypeLUT[type];
+        const auto refStr = kGLTFAttributeTypeNameLUT[type];
         eastl::string_view semantics_sv = semantics;
         if (semantics_sv.starts_with(refStr))
         {
+            out_type = static_cast<cgltf_attribute_type>(type);
             return GetGLTFPrimitiveAttributeView(primitve, (cgltf_attribute_type)type, stride);
         }
     }
@@ -135,6 +136,9 @@ void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, 
     uint32_t attribute_stride = 0;
     vertex_attribtue_slice = GetGLTFPrimitiveAttributeView(primitve, type, attribute_stride);
 
+    out_vbv.attribute = kGLTFAttributeTypeLUT[type];
+    out_vbv.attribute_index = 0; // TODO: ?
+
     out_vbv.buffer_index = 0;
     out_vbv.stride = attribute_stride;
     out_vbv.offset = (uint32_t)buffer.size();
@@ -145,7 +149,11 @@ void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, 
 {
     skr::span<const uint8_t> vertex_attribtue_slice = {};
     uint32_t attribute_stride = 0;
-    vertex_attribtue_slice = GetGLTFPrimitiveAttributeView(primitve, semantics, attribute_stride);
+    cgltf_attribute_type type;
+    vertex_attribtue_slice = GetGLTFPrimitiveAttributeView(primitve, semantics, attribute_stride, type);
+
+    out_vbv.attribute = kGLTFAttributeTypeLUT[type];
+    out_vbv.attribute_index = 0; // TODO: ?
 
     out_vbv.buffer_index = 0;
     out_vbv.stride = attribute_stride;
