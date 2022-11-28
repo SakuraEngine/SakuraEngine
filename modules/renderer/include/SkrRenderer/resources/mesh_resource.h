@@ -6,8 +6,7 @@
 #endif
 
 sreflect_enum("guid" : "01f05eb7-6d5d-46d8-945e-ce1259d22c8f")
-sattr("rtti" : true)
-sattr("serialize" : ["bin", "json"])
+sattr("rtti" : true, "serialize" : ["bin", "json"])
 ESkrVertexAttribute SKR_IF_CPP(: uint32_t)
 {
     SKR_VERT_ATTRIB_NONE,
@@ -25,8 +24,7 @@ ESkrVertexAttribute SKR_IF_CPP(: uint32_t)
 typedef enum ESkrVertexAttribute ESkrVertexAttribute;
 
 sreflect_struct("guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca")
-sattr("rtti" : true)
-sattr("serialize" : "bin")
+sattr("rtti" : true, "serialize" : "bin")
 skr_vertex_buffer_entry_t
 {
     ESkrVertexAttribute attribute;
@@ -38,8 +36,7 @@ skr_vertex_buffer_entry_t
 typedef struct skr_vertex_buffer_entry_t skr_vertex_buffer_entry_t;
 
 sreflect_struct("guid" : "6ac5f946-dd65-4710-8725-ab4273fe13e6")
-sattr("rtti" : true)
-sattr("serialize" : "bin")
+sattr("rtti" : true, "serialize" : "bin")
 skr_index_buffer_entry_t
 {
     uint32_t buffer_index;
@@ -55,8 +52,7 @@ typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
 #include <containers/string.hpp>
 
 sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
-sattr("rtti" : true)
-sattr("serialize" : "bin")
+sattr("rtti" : true, "serialize" : "bin")
 skr_mesh_primitive_t 
 {
     skr_vertex_layout_id vertex_layout_id;
@@ -66,8 +62,7 @@ skr_mesh_primitive_t
 };
 
 sreflect_struct("guid" : "d3b04ea5-415d-44d5-995a-5c77c64fe1de")
-sattr("rtti" : true)
-sattr("serialize" : "bin")
+sattr("rtti" : true, "serialize" : "bin")
 skr_mesh_section_t 
 {
     int32_t parent_index;
@@ -78,8 +73,7 @@ skr_mesh_section_t
 };
 
 sreflect_struct("guid" : "03104e51-c998-410b-9d3c-d76535933440")
-sattr("rtti" : true)
-sattr("serialize" : "bin")
+sattr("rtti" : true, "serialize" : "bin")
 skr_mesh_buffer_t
 {
     uint32_t index;
@@ -92,14 +86,17 @@ skr_mesh_buffer_t
 };
 
 sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 
-sattr("rtti" : true)
-sattr("serialize" : "bin")
+sattr("rtti" : true, "serialize" : "bin")
 skr_mesh_resource_t
 {
     skr::string name;
     eastl::vector<skr_mesh_section_t> sections;
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_mesh_buffer_t> bins;
+
+    bool install_to_vram SKR_IF_CPP(= true);
+    bool install_to_ram SKR_IF_CPP(= true); // TODO: configure this in asset
+
     sattr("transient": true)
     struct skr_render_mesh_t* render_mesh SKR_IF_CPP(= nullptr);
 };

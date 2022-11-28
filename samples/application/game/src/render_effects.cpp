@@ -12,8 +12,11 @@
 #include "SkrScene/scene.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
+#include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/render_group.h"
+#include "SkrAnim/components/skin_component.h"
+#include "SkrAnim/components/skeleton_component.h"
 #include "cube.hpp"
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
@@ -26,9 +29,96 @@ const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
-    void on_update(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
+    dual_query_t* skin_query = nullptr;
+    void on_update(SRendererId renderer, skr::render_graph::RenderGraph* render_graph) override
     {
+        namespace rg = skr::render_graph;
 
+        auto storage = renderer->get_dual_storage();
+        if (!skin_query)
+        {
+            auto sig = "[in]skr_render_mesh_comp_t, [in]skr_anim_component_t, [in]skr_skeleton_component_t, [in]skr_skin_component_t";
+            skin_query = dualQ_from_literal(storage, sig);
+        }
+        auto uploadVertices = [&](dual_chunk_view_t* g_cv) {
+            const auto cgpu_device = renderer->get_render_device()->get_cgpu_device();
+            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            auto anims = (skr_anim_component_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_anim_component_t>::get());
+            auto skins = (skr_skin_component_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_skin_component_t>::get());
+
+            for (uint32_t i = 0; i < g_cv->count; i++)
+            {
+                auto mesh_resource = (skr_mesh_resource_id)meshes[i].mesh_resource.get_ptr();
+                if (mesh_resource)
+                {
+                    skr_cpu_skin(skins + i, anims + i, mesh_resource);
+                }
+            }
+
+            for (uint32_t i = 0; i < g_cv->count; i++)
+            {
+                const auto* mesh = meshes + i;
+                auto mesh_resource = (skr_mesh_resource_id)mesh->mesh_resource.get_ptr();
+                auto* anim = anims + i;
+                for (size_t j = 0u; j < anim->primitive_buffers.size(); j++)
+                {
+                    const bool use_dynamic_buffer = anim->use_dynamic_buffer;
+                    if (!anim->primitive_vbs[j])
+                    {
+                        skr::string name = mesh_resource->name;
+                        auto vb_name = name + skr::to_string(i);
+
+                        auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
+                        vb_desc.name = vb_name.c_str();
+                        vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
+                        vb_desc.flags = anim->use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE;
+                        vb_desc.memory_usage = anim->use_dynamic_buffer ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY;
+                        vb_desc.prefer_on_device = true;
+                        vb_desc.size = anim->primitive_buffers.size();
+                        anim->primitive_vbs[j] = cgpu_create_buffer(cgpu_device, &vb_desc);
+                    }
+                    const auto vertex_size = -1;// TODO: fix this
+                    if (!use_dynamic_buffer)
+                    {
+                        auto vb_name = mesh_resource->name + skr::to_string(j);
+                        auto ub_name = "upload-" + vb_name;
+                        auto pass_name = "skin_copy-" + vb_name;
+                        // use copy pass
+                        auto upload_buffer_handle = render_graph->create_buffer(
+                            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                            builder.set_name(vb_name.c_str())
+                                .size(vertex_size)
+                                .memory_usage(use_dynamic_buffer ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+                                .with_flags(use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+                                .with_tags(use_dynamic_buffer ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+                                .prefer_on_device()
+                                .as_index_buffer();
+                        });
+                        auto vertex_buffer_handle = render_graph->create_buffer(
+                        [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                            builder.set_name(vb_name.c_str())
+                                .import(anim->primitive_vbs[j], CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                        });
+                        render_graph->add_copy_pass(
+                        [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+                            builder.set_name(pass_name.c_str())
+                                .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size));
+                        },
+                        [=](rg::RenderGraph& g, rg::CopyPassContext& context){
+                            auto upload_buffer = context.resolve(upload_buffer_handle);
+                            void* vtx_dst = upload_buffer->cpu_mapped_address;
+                            memcpy(vtx_dst, anim->primitive_buffers[j], vertex_size);
+                        });
+                    }
+                    else
+                    {
+                        void* vtx_dst = anim->primitive_vbs[j]->cpu_mapped_address;
+                        memcpy(vtx_dst, anim->primitive_buffers[j], vertex_size);
+                    }
+                }
+            }
+        };
+        dualQ_get_views(skin_query, DUAL_LAMBDA(uploadVertices));
     }
 
     void post_update(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
@@ -292,7 +382,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             }
         };
         dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
-
+        // draw static meshess
         {
         auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
             uint32_t r_idx = 0;
@@ -316,9 +406,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             translations[g_idx].value,
                             scales[g_idx].value,
                             quaternion);
-                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, translations[g_idx].value.x, translations[g_idx].value.y, translations[g_idx].value.z);
-                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, quaternion.x, quaternion.y, quaternion.z);
-                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, scales[g_idx].value.x, scales[g_idx].value.y, scales[g_idx].value.z);
                         // drawcall
                         auto status = meshes[r_idx].mesh_resource.get_status();
                         if (status == SKR_LOADING_STATUS_INSTALLED)
@@ -367,7 +454,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         };
         dualQ_get_views(draw_mesh_query, DUAL_LAMBDA(r_effect_callback));
         }
-
+        // draw static mesh
         {
         auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
             uint32_t r_idx = 0;
@@ -383,6 +470,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                     auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
                     auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
                     auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
+                    auto animations = (skr_anim_component_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_anim_component_t>::get());
                     for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                     {
                         const auto quaternion = skr::math::quaternion_from_euler(
@@ -391,9 +479,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             translations[g_idx].value,
                             scales[g_idx].value,
                             quaternion);
-                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, translations[g_idx].value.x, translations[g_idx].value.y, translations[g_idx].value.z);
-                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, quaternion.x, quaternion.y, quaternion.z);
-                        //SKR_LOG_DEBUG("primitives: %d (%f, %f, %f)", dc_idx, scales[g_idx].value.x, scales[g_idx].value.y, scales[g_idx].value.z);
                         // drawcall
                         auto status = meshes[r_idx].mesh_resource.get_status();
                         if (status == SKR_LOADING_STATUS_INSTALLED)
@@ -418,22 +503,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                 drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                 dc_idx++;
                             }
-                        }
-                        else
-                        {
-                            // resources may be ready after produce_drawcall, so we need to check it here
-                            if (push_constants.capacity() <= dc_idx) return;
-
-                            auto& push_const = push_constants.emplace_back();
-                            push_const.world = world;
-                            auto& drawcall = mesh_drawcalls.emplace_back();
-                            drawcall.pipeline = pipeline;
-                            drawcall.push_const_name = push_constants_name;
-                            drawcall.push_const = (const uint8_t*)(&push_const);
-                            drawcall.index_buffer = ibv;
-                            drawcall.vertex_buffers = vbvs;
-                            drawcall.vertex_buffer_count = 4;
-                            dc_idx++;
                         }
                     }
                 };
@@ -623,18 +692,20 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = _vs_bytes;
     vs_desc.code_size = _vs_length;
+    /*
     CGPUShaderLibraryDescriptor skin_vs_desc = {};
     skin_vs_desc.name = "gbuffer_skin_vertex_shader";
     skin_vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     skin_vs_desc.code = _skin_vs_bytes;
     skin_vs_desc.code_size = _skin_vs_length;
+    */
     CGPUShaderLibraryDescriptor fs_desc = {};
     fs_desc.name = "gbuffer_pixel_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = _fs_bytes;
     fs_desc.code_size = _fs_length;
     CGPUShaderLibraryId _vs = cgpu_create_shader_library(device, &vs_desc);
-    CGPUShaderLibraryId _skin_vs = cgpu_create_shader_library(device, &skin_vs_desc);
+    // CGPUShaderLibraryId _skin_vs = cgpu_create_shader_library(device, &skin_vs_desc);
     CGPUShaderLibraryId _fs = cgpu_create_shader_library(device, &fs_desc);
     sakura_free(_vs_bytes);
     sakura_free(_skin_vs_bytes);

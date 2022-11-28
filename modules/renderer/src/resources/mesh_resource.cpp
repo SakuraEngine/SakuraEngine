@@ -257,16 +257,26 @@ skr_type_id_t SMeshFactoryImpl::GetResourceType()
 
 ESkrInstallStatus SMeshFactoryImpl::Install(skr_resource_record_t* record)
 {
+    auto mesh_resource = (skr_mesh_resource_t*)record->resource;
+    if (!mesh_resource) return ESkrInstallStatus::SKR_INSTALL_STATUS_FAILED;
     if (auto render_device = root.render_device)
     {
-        // direct storage
-        if (auto file_dstorage_queue = render_device->get_file_dstorage_queue())
+        if (mesh_resource->install_to_vram)
         {
-            return InstallWithDStorage(record);
+            // direct storage
+            if (auto file_dstorage_queue = render_device->get_file_dstorage_queue() && !mesh_resource->install_to_ram)
+            {
+                return InstallWithDStorage(record);
+            }
+            else
+            {
+                return InstallWithUpload(record);
+            }
         }
         else
         {
-            return InstallWithUpload(record);
+            // TODO: install to RAM only
+            SKR_UNIMPLEMENTED_FUNCTION();
         }
     }
     else
@@ -380,7 +390,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                     vram_buffer_io.device = render_device->get_cgpu_device();
                     vram_buffer_io.transfer_queue = render_device->get_cpy_queue();
 
-                    const auto& thisBin = mesh_resource->bins[i];
+                    auto& thisBin = mesh_resource->bins[i];
                     CGPUResourceTypes flags = CGPU_RESOURCE_TYPE_NONE;
                     flags |= thisBin.used_with_index ? CGPU_RESOURCE_TYPE_INDEX_BUFFER : 0;
                     flags |= thisBin.used_with_vertex ? CGPU_RESOURCE_TYPE_VERTEX_BUFFER : 0;
@@ -389,9 +399,11 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                     vram_buffer_io.vbuffer.flags = CGPU_BCF_NO_DESCRIPTOR_VIEW_CREATION;
                     vram_buffer_io.vbuffer.buffer_size = thisBin.byte_length;
                     vram_buffer_io.vbuffer.buffer_name = nullptr; // TODO: set name
+                    thisBin.bin.bytes = uRequest->ram_destinations[i].bytes;
+                    thisBin.bin.size = uRequest->ram_destinations[i].size;
 
                     vram_buffer_io.src_memory.size = thisBin.byte_length;
-                    vram_buffer_io.src_memory.bytes = uRequest->ram_destinations[i].bytes;
+                    vram_buffer_io.src_memory.bytes = thisBin.bin.bytes;
                     vram_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data){};
                     vram_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = nullptr;
 
@@ -472,6 +484,13 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
                     render_mesh->buffers[i] = uRequest->second->buffer_destinations[i].buffer;
                 }
                 skr_render_mesh_initialize(render_mesh, mesh_resource);
+                if (!mesh_resource->install_to_ram)
+                {
+                    for (auto&& bin : mesh_resource->bins)
+                    {
+                        sakura_free(bin.bin.bytes);
+                    }
+                }
 
                 mDStorageRequests.erase(mesh_resource);
                 mInstallTypes.erase(mesh_resource);
