@@ -9,9 +9,9 @@ scheudler_config_t::scheudler_config_t()
     numThreads = ftl::GetNumHardwareThreads();
 }
 
-counter_t::counter_t()
+counter_t::counter_t(bool inverse)
 {
-    internal = eastl::make_shared<ftl::TaskCounter>(nullptr);
+    internal = eastl::make_shared<ftl::TaskCounter>(nullptr, inverse);
 }
 
 event_t::event_t()

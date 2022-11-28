@@ -141,6 +141,8 @@ public:
     virtual bool IsInitialized() = 0;
     virtual void Shutdown() = 0;
     virtual void Update() = 0;
+    virtual bool WaitRequest() = 0;
+    virtual void Quit() = 0;
 
     virtual void LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) = 0;
     virtual void UnloadResource(skr_resource_handle_t& handle) = 0;

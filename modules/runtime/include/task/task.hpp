@@ -32,7 +32,7 @@ namespace skr::task
     {
     public:
         using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
-        counter_t();
+        counter_t(bool inverse = false);
         counter_t(std::nullptr_t) {}
 
         bool operator==(const counter_t& other) const { return internal == other.internal; }
@@ -189,7 +189,7 @@ namespace skr::task
     {
     public:
         using internal_t = marl::WaitGroup;
-        counter_t() = default;
+        counter_t(bool inverse = false) : internal(0, inverse) {}
         counter_t(std::nullptr_t) : internal(nullptr) {}
 
         bool operator==(const counter_t& other) const { return internal == other.internal; }

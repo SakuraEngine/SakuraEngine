@@ -22,6 +22,8 @@ public:
     bool IsInitialized() final override;
     void Shutdown() final override;
     void Update() final override;
+    bool WaitRequest() final override;
+    void Quit() final override;
 
     void LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) final override;
     void UnloadResource(skr_resource_handle_t& handle) final override;
@@ -45,8 +47,11 @@ protected:
     SResourceRegistry* resourceRegistry = nullptr;
     skr::io::RAMService* ioService = nullptr; 
     eastl::vector<SResourceRequest*> requests;
+    eastl::vector<SResourceRequest*> failedRequests;
     dual::entity_registry_t resourceIds;
     SMutex recordMutex;
+    task::counter_t counter;
+    bool quit = false;
     eastl::vector<SResourceRequest*> serdeBatch;
     skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
     skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
@@ -54,6 +59,7 @@ protected:
 };
 
 SResourceSystemImpl::SResourceSystemImpl()
+    : counter(true)
 {
     skr_init_mutex(&recordMutex);
 }
@@ -163,6 +169,7 @@ void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requi
         request->vfs = nullptr;
         record->activeRequest = request;
         record->loadingStatus = SKR_LOADING_STATUS_LOADING;
+        counter.add(1);
         requests.push_back(request);
     }
 }
@@ -210,6 +217,7 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
                 SKR_UNREACHABLE_CODE();
             request->factory = this->FindFactory(record->header.type);
             record->activeRequest = request;
+            counter.add(1);
             requests.push_back(request);
         }
     }
@@ -248,11 +256,12 @@ void SResourceSystemImpl::Shutdown()
 
 void SResourceSystemImpl::Update()
 {
+    SKR_ASSERT(!quit);
     eastl::vector<SResourceRequest*> to_update_requests;
     {
         SMutexLock lock(recordMutex);
         requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
-            if (request->Okay() || !request->resourceRecord)
+            if (request->Okay())
             {
                 if (request->resourceRecord)
                 {
@@ -264,11 +273,26 @@ void SResourceSystemImpl::Update()
                     }
                 }
                 SkrDelete(request);
+                counter.decrement();
+                return true;
+            }
+            if (request->Failed())
+            {
+                failedRequests.push_back(request);
+                counter.decrement();
                 return true;
             }
             return false;
         }),
         requests.end());
+        failedRequests.erase(std::remove_if(failedRequests.begin(), failedRequests.end(), [&](SResourceRequest* request) {
+            if(!request->resourceRecord)
+            {
+                SkrDelete(request);
+                return true;
+            }
+            return false;
+        }), failedRequests.end());
         to_update_requests = requests;
     }
     // TODO: time limit
@@ -276,7 +300,7 @@ void SResourceSystemImpl::Update()
     {
         uint32_t spinCounter = 0;
         ESkrLoadingPhase LastPhase;
-        while(!request->Failed() && !request->Okay() && !request->AsyncSerde() && spinCounter < 16)
+        while(!request->Okay() && !request->AsyncSerde() && spinCounter < 16)
         {
             LastPhase = request->currentPhase;
             request->Update();
@@ -287,6 +311,21 @@ void SResourceSystemImpl::Update()
         };
     }
     _UpdateAsyncSerde();
+}
+
+
+bool SResourceSystemImpl::WaitRequest()
+{
+    if(quit)
+        return false;
+    counter.wait(true);
+    return !quit;
+}
+
+void SResourceSystemImpl::Quit()
+{
+    quit = true;
+    counter.add(1);
 }
 
 void SResourceSystemImpl::_UpdateAsyncSerde()
