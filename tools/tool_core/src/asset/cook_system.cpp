@@ -109,11 +109,12 @@ skr::task::event_t SCookSystem::AddCookTask(skr_guid_t guid)
         auto iter = system->cookers.find(metaAsset->type);
         // Trace
         ZoneScoped;
-        const auto type = type::GetTypeRegistry()->get_type(metaAsset->type);
-        const auto cookerTypeName = type ? type->Name() : "UnknownResource";
+        const auto rtti_type = type::GetTypeRegistry()->get_type(metaAsset->type);
+        const auto type_name = skr_get_type_name(&metaAsset->type);
+        const auto cookerTypeName = rtti_type ? rtti_type->Name() : type_name ? type_name : "UnknownResource";
         const auto guidString = skr::format("Guid: {}", metaAsset->guid);
         const auto assetTypeGuidString = skr::format("TypeGuid: {}", metaAsset->type);
-        const auto scopeName = skr::format("Cooker[{}].Cook", cookerTypeName);
+        const auto scopeName = skr::format("Cook.[{}]", cookerTypeName);
         const auto assetString = skr::format("Asset: {}", metaAsset->path.u8string().c_str());
         ZoneName(scopeName.c_str(), scopeName.size());
         TracyMessage(guidString.c_str(), guidString.size());
