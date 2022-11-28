@@ -54,6 +54,7 @@ sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_identifier_t 
 {
     skr::TEnumAsByte<ECGPUShaderBytecodeType> bytecode_type;
+    skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
     skr_platform_shader_hash_t hash;
     skr::string entry;
 };
@@ -62,8 +63,27 @@ sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_resource_t
 {
-    eastl::vector<skr_platform_shader_identifier_t> identifiers;
+    using stable_hash_t = skr_stable_shader_hash_t;
+    using stable_hasher_t = skr_stable_shader_hash_t::hasher;
+
+    stable_hash_t stable_hash;
     skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
+
+    sattr("no-rtti" : true)
+    inline eastl::vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT{
+        auto found = option_variants.find(kZeroStableShaderHash);
+        SKR_ASSERT(found != option_variants.end());
+        return found->second;
+    }
+    sattr("no-rtti" : true)
+    inline eastl::vector<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT{
+        auto found = option_variants.find(hash);
+        SKR_ASSERT(found != option_variants.end());
+        return found->second;
+    }
+
+    sattr("no-rtti" : true)
+    skr::flat_hash_map<stable_hash_t, eastl::vector<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
 
     sattr("transient": true, "no-rtti" : true)
     CGPUShaderLibraryId shader = nullptr;
@@ -75,13 +95,20 @@ sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_collection_resource_t
 {
-    using stable_hash = skr_stable_shader_hash_t;
-    using stable_hasher = skr_stable_shader_hash_t::hasher;
+    using stable_hash_t = skr_stable_shader_hash_t;
+    using stable_hasher_t = skr_stable_shader_hash_t::hasher;
+
+    sattr("no-rtti" : true)
+    inline skr_platform_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
+        auto found = switch_variants.find(kZeroStableShaderHash);
+        SKR_ASSERT(found != switch_variants.end());
+        return found->second;
+    }
 
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
     sattr("no-rtti" : true)
-    skr::flat_hash_map<stable_hash, skr_platform_shader_resource_t, stable_hasher> variants;
+    skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
 };
 
 namespace skr sreflect

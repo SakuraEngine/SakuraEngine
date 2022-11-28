@@ -185,8 +185,8 @@ void SGameModule::installResourceFactories()
         if (final_status != SKR_LOADING_STATUS_ERROR)
         {
             auto shader_collection = (skr_platform_shader_collection_resource_t*)shaderHdl.get_ptr();
-            auto&& root_variant_iter = shader_collection->variants.find(kZeroStableShaderHash);
-            SKR_ASSERT(root_variant_iter != shader_collection->variants.end() && "Root shader variant missing!");
+            auto&& root_variant_iter = shader_collection->switch_variants.find(kZeroStableShaderHash);
+            SKR_ASSERT(root_variant_iter != shader_collection->switch_variants.end() && "Root shader variant missing!");
             auto* root_variant = &root_variant_iter->second;
             SKR_ASSERT(root_variant->shader->entrys_count && "Root shader variant entry missing!");
             SKR_LOG_TRACE("Shader Loaded: entry name - %s", root_variant->shader->entry_reflections[0].entry_name);

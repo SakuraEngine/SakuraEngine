@@ -27,5 +27,5 @@ executable_module("Game", "GAME", engine_version)
     add_files("shaders/**.hlsl")
     add_files("assets/**.bin", "assets/**.gltf", "assets/**.png")
     if (is_os("windows")) then 
-        add_files("/../../resources/windows/sakura.rc")
+        add_files("/../../../resources/windows/sakura.rc")
     end

@@ -6,7 +6,7 @@
         "sourcePath": "unlit_ps.hlsl",
         "entry": "main",
         "target": "ps_6_0",
-        "option_assets": [ "a2bf8869-6805-4f3e-a9a3-d5eeda48fcbd" ],
-        "dynamic_option_assets": [ "da7a1556-e2b6-4fac-b7c7-f3eca43c7d89" ]
+        "switch_assets": [ "a2bf8869-6805-4f3e-a9a3-d5eeda48fcbd" ],
+        "option_assets": [ "da7a1556-e2b6-4fac-b7c7-f3eca43c7d89" ]
     }
 }
