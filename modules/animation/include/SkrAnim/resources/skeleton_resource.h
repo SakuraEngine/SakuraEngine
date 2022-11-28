@@ -11,7 +11,6 @@ typedef struct skr_skeleton_resource_t skr_skeleton_resource_t;
     #include "SkrAnim/ozz/skeleton.h"
     #include "binary/reader_fwd.h"
     #include "binary/writer_fwd.h"
-    #include "platform/debug.h"
 
 sreflect_struct("guid": "1876BF35-E4DC-450B-B9D4-09259397F4BA")
 sattr("rtti" : true)

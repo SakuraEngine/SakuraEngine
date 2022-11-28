@@ -24,6 +24,10 @@ void skr_initialize_skin_component(skr_skin_component_t* component, skr_skeleton
 
 void skr_initialize_anim_component(skr_anim_component_t* component, skr_mesh_resource_t* mesh, skr_skeleton_component_t* skeleton)
 {
+    component->buffer_size = 0;
+    component->position_offset = 0;
+    component->normal_offset = 0;
+    component->tangent_offset = 0;
     component->primitive_buffers.resize(mesh->primitives.size());
     component->primitive_vbs.resize(mesh->primitives.size());
     for (size_t i = 0; i < mesh->primitives.size(); ++i)
