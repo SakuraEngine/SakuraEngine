@@ -114,16 +114,16 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                             ZoneScopedN("BindGeometry");
                             cgpu_render_encoder_bind_index_buffer(stack.encoder, 
                                 dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                            CGPUBufferId vertex_buffers[3] = {
-                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer
+                            CGPUBufferId vertex_buffers[4] = {
+                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer, dc.vertex_buffers[3].buffer
                             };
-                            const uint32_t strides[3] = {
-                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride
+                            const uint32_t strides[4] = {
+                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride, dc.vertex_buffers[3].stride
                             };
-                            const uint32_t offsets[3] = {
-                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset
+                            const uint32_t offsets[4] = {
+                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset, dc.vertex_buffers[3].offset
                             };
-                            cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 3, vertex_buffers, strides, offsets);
+                            cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 4, vertex_buffers, strides, offsets);
                         }
                         {
                             ZoneScopedN("PushConstants");
@@ -357,7 +357,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             drawcall.push_const = (const uint8_t*)(&push_const);
                             drawcall.index_buffer = ibv;
                             drawcall.vertex_buffers = vbvs;
-                            drawcall.vertex_buffer_count = 4;
+                            drawcall.vertex_buffer_count = 5;
                             dc_idx++;
                         }
                     }
@@ -458,7 +458,7 @@ protected:
     void prepare_pipeline(SRendererId renderer);
     void free_pipeline(SRendererId renderer);
     // render resources
-    skr_vertex_buffer_view_t vbvs[4];
+    skr_vertex_buffer_view_t vbvs[5];
     skr_index_buffer_view_t ibv;
     CGPUBufferId vertex_buffer;
     CGPUBufferId index_buffer;
@@ -564,11 +564,14 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     vbvs[1].stride = sizeof(skr::math::Vector2f);
     vbvs[1].offset = offsetof(CubeGeometry, g_TexCoords);
     vbvs[2].buffer = vertex_buffer;
-    vbvs[2].stride = sizeof(skr::math::Vector3f);
-    vbvs[2].offset = offsetof(CubeGeometry, g_Normals);
+    vbvs[2].stride = sizeof(skr::math::Vector2f);
+    vbvs[2].offset = offsetof(CubeGeometry, g_TexCoords2);
     vbvs[3].buffer = vertex_buffer;
-    vbvs[3].stride = sizeof(skr::math::Vector4f);
-    vbvs[3].offset = offsetof(CubeGeometry, g_Tangents);
+    vbvs[3].stride = sizeof(skr::math::Vector3f);
+    vbvs[3].offset = offsetof(CubeGeometry, g_Normals);
+    vbvs[4].buffer = vertex_buffer;
+    vbvs[4].stride = sizeof(skr::math::Vector4f);
+    vbvs[4].offset = offsetof(CubeGeometry, g_Tangents);
     ibv.buffer = index_buffer;
     ibv.index_count = 36;
     ibv.first_index = 0;
@@ -637,24 +640,24 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     sakura_free(_skin_vs_bytes);
     sakura_free(_fs_bytes);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[3];
+    CGPUPipelineShaderDescriptor ppl_shaders[2];
     CGPUPipelineShaderDescriptor& vs = ppl_shaders[0];
     vs.library = _vs;
     vs.stage = CGPU_SHADER_STAGE_VERT;
     vs.entry = "main";
-    CGPUPipelineShaderDescriptor& skin_vs = ppl_shaders[1];
-    skin_vs.library = _skin_vs;
-    skin_vs.stage = CGPU_SHADER_STAGE_VERT;
-    skin_vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ps = ppl_shaders[2];
+    CGPUPipelineShaderDescriptor& ps = ppl_shaders[1];
     ps.library = _fs;
     ps.stage = CGPU_SHADER_STAGE_FRAG;
     ps.entry = "main";
+    //CGPUPipelineShaderDescriptor& skin_vs = ppl_shaders[2];
+    //skin_vs.library = _skin_vs;
+    //skin_vs.stage = CGPU_SHADER_STAGE_VERT;
+    //skin_vs.entry = "main";
 
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
     rs_desc.push_constant_names = &push_constants_name;
-    rs_desc.shader_count = 3;
+    rs_desc.shader_count = 2;
     rs_desc.shaders = ppl_shaders;
     rs_desc.pool = render_device->get_root_signature_pool();
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
@@ -662,9 +665,10 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     CGPUVertexLayout vertex_layout = {};
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attribute_count = 3;
+    vertex_layout.attributes[2] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[3] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[4] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attribute_count = 4;
 
     CGPUVertexLayout skin_vertex_layout = {};
     skin_vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
@@ -686,6 +690,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     rp_desc.color_formats = &fmt;
     rp_desc.depth_stencil_format = depth_format;
 
+    /*
     auto skin_rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();
     skin_rp_desc.root_signature = root_sig;
     skin_rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
@@ -695,6 +700,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     skin_rp_desc.render_target_count = 1;
     skin_rp_desc.color_formats = &fmt;
     skin_rp_desc.depth_stencil_format = depth_format;
+    */
 
     auto raster_desc = make_zeroed<CGPURasterizerStateDescriptor>();
     raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
@@ -709,10 +715,10 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 
     rp_desc.rasterizer_state = &raster_desc;
     rp_desc.depth_state = &ds_desc;
-    skin_rp_desc.rasterizer_state = &raster_desc;
-    skin_rp_desc.depth_state = &ds_desc;
-    pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+    //skin_rp_desc.rasterizer_state = &raster_desc;
+    //skin_rp_desc.depth_state = &ds_desc;
     // skin_pipeline = cgpu_create_render_pipeline(device, &skin_rp_desc);
+    pipeline = cgpu_create_render_pipeline(device, &rp_desc);
 
     cgpu_free_shader_library(_vs);
     cgpu_free_shader_library(_fs);

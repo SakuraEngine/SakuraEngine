@@ -818,13 +818,22 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     uint32_t elem_count = 0;
     if (desc->vertex_layout != nullptr)
     {
+        eastl::string_hash_map<uint32_t> semanticIndexMap = {};
         for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
         {
             const CGPUVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
             for (uint32_t arr_index = 0; arr_index < attrib->array_size; arr_index++)
             {
-                input_elements[elem_count].SemanticIndex = arr_index;
                 input_elements[elem_count].SemanticName = attrib->semantic_name;
+                if (semanticIndexMap.find(attrib->semantic_name) != semanticIndexMap.end())
+                {
+                    semanticIndexMap[attrib->semantic_name]++;
+                }
+                else
+                {
+                    semanticIndexMap[attrib->semantic_name] = 0;
+                }
+                input_elements[elem_count].SemanticIndex = semanticIndexMap[attrib->semantic_name];
                 input_elements[elem_count].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
                 input_elements[elem_count].InputSlot = attrib->binding;
                 input_elements[elem_count].AlignedByteOffset = attrib->offset + arr_index * FormatUtil_BitSizeOfBlock(attrib->format) / 8;

@@ -4,6 +4,7 @@ struct VSIn
 {
     float3 position : POSITION;
     float2 uv : TEXCOORD0;
+    float2 uv1 : TEXCOORD1;
     centroid float3 normal : NORMAL;
     // centroid float4 tangent : TANGENT;
 };
