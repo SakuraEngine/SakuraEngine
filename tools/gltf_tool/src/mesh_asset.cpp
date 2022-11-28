@@ -7,11 +7,6 @@
 #include "SkrGLTFTool/gltf_utils.hpp"
 #include "SkrToolCore/project/project.hpp"
 
-namespace 
-{
-
-}
-
 void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
 {
     skr::filesystem::path relPath = assetPath.data();
@@ -49,7 +44,15 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     SKR_DEFER({ ctx->Destroy(gltf_data); });
     skr_mesh_resource_t mesh;
     eastl::vector<eastl::vector<uint8_t>> blobs;
-    CookGLTFStaticMeshData(gltf_data, &cfg, mesh, blobs);
+    auto importer = static_cast<SGltfMeshImporter*>(ctx->GetImporter());
+    if (importer->invariant_vertices)
+    {
+        CookGLTFMeshData(gltf_data, &cfg, mesh, blobs);
+    }
+    else
+    {
+        CookGLTFMeshData_SplitSkin(gltf_data, &cfg, mesh, blobs);
+    }
 
     //----- write resource object
     if(!ctx->Save(mesh)) return false;

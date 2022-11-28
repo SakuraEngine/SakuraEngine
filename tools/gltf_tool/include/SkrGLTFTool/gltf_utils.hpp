@@ -48,7 +48,18 @@ GLTFTOOL_API
 void EmplaceAllGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, eastl::vector<skr_mesh_primitive_t>& out_primitives);
 
 GLTFTOOL_API
-void CookGLTFStaticMeshData(const cgltf_data* data, SMeshCookConfig* config, skr_mesh_resource_t& out_resource, eastl::vector<eastl::vector<uint8_t>>& out_bins);
+void EmplaceSkinGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, 
+    uint32_t buffer_idx, eastl::vector<skr_mesh_primitive_t>& out_primitives);
+
+GLTFTOOL_API
+void EmplaceStaticGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, 
+    uint32_t buffer_idx, eastl::vector<skr_mesh_primitive_t>& out_primitives);
+
+GLTFTOOL_API
+void CookGLTFMeshData(const cgltf_data* data, SMeshCookConfig* config, skr_mesh_resource_t& out_resource, eastl::vector<eastl::vector<uint8_t>>& out_bins);
+
+GLTFTOOL_API
+void CookGLTFMeshData_SplitSkin(const cgltf_data* data, SMeshCookConfig* config, skr_mesh_resource_t& out_resource, eastl::vector<eastl::vector<uint8_t>>& out_bins);
 
 // LUT for gltf attributes to semantic names
 static const char* kGLTFAttributeTypeNameLUT[9] = {
@@ -61,6 +72,21 @@ static const char* kGLTFAttributeTypeNameLUT[9] = {
     "JOINTS",
     "WEIGHTS",
     "CUSTOM"
+}; 
+
+static const ESkrVertexAttribute kGLTFSkinAttributes[5] = {
+    SKR_VERT_ATTRIB_POSITION,
+    SKR_VERT_ATTRIB_NORMAL,
+    SKR_VERT_ATTRIB_TANGENT,
+    SKR_VERT_ATTRIB_JOINTS,
+    SKR_VERT_ATTRIB_WEIGHTS
+}; 
+
+static const ESkrVertexAttribute kGLTFStaticAttributes[4] = {
+    SKR_VERT_ATTRIB_NONE,
+    SKR_VERT_ATTRIB_TEXCOORD,
+    SKR_VERT_ATTRIB_COLOR,
+    SKR_VERT_ATTRIB_CUSTOM
 }; 
 
 static const ESkrVertexAttribute kGLTFAttributeTypeLUT[9] = {

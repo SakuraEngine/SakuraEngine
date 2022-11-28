@@ -172,7 +172,8 @@ void EmplaceAllGLTFMeshIndices(const cgltf_mesh* mesh, eastl::vector<uint8_t>& b
     }
 }
 
-void EmplaceAllGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, eastl::vector<skr_mesh_primitive_t>& out_primitives)
+void EmplaceGLTFMeshVerticesWithRange(skr::span<const ESkrVertexAttribute> range, uint32_t buffer_idx,  const cgltf_mesh* mesh, 
+    const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, eastl::vector<skr_mesh_primitive_t>& out_primitives)
 {
     if (layout != nullptr)
     {
@@ -190,7 +191,21 @@ void EmplaceAllGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* 
             const auto& shuffle_attrib = shuffle_layout.attributes[i];
             for (uint32_t k = 0u; k < shuffle_attrib.array_size; k++)
             {
-                EmplaceGLTFPrimitiveVertexBufferAttribute(gltf_prim, shuffle_attrib.semantic_name, k, buffer, prim.vertex_buffers[i]);
+                bool within = false;
+                for (auto type : range)
+                {
+                    const eastl::string semantic = kGLTFAttributeTypeNameLUT[type];
+                    if (semantic == shuffle_attrib.semantic_name)
+                    {
+                        within = true;
+                        break;
+                    }
+                }
+                if (within) 
+                {
+                    EmplaceGLTFPrimitiveVertexBufferAttribute(gltf_prim, shuffle_attrib.semantic_name, k, buffer, prim.vertex_buffers[i]);
+                    prim.vertex_buffers[i].buffer_index = buffer_idx;
+                }
             }
         }
     }
@@ -201,9 +216,24 @@ void EmplaceAllGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* 
     }
 }
 
-void CookGLTFStaticMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mesh_resource_t& out_resource, eastl::vector<eastl::vector<uint8_t>>& out_bins)
+void EmplaceAllGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, eastl::vector<skr_mesh_primitive_t>& out_primitives)
 {
-    eastl::vector<uint8_t> shuffled_buffer = {};
+    EmplaceGLTFMeshVerticesWithRange(kGLTFAttributeTypeLUT, 0, mesh, layout, buffer, out_primitives);
+}
+
+void EmplaceSkinGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, uint32_t buffer_idx, eastl::vector<skr_mesh_primitive_t>& out_primitives)
+{
+    EmplaceGLTFMeshVerticesWithRange(kGLTFSkinAttributes, buffer_idx, mesh, layout, buffer, out_primitives);
+}
+
+void EmplaceStaticGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* layout, eastl::vector<uint8_t>& buffer, uint32_t buffer_idx, eastl::vector<skr_mesh_primitive_t>& out_primitives)
+{
+    EmplaceGLTFMeshVerticesWithRange(kGLTFStaticAttributes, buffer_idx, mesh, layout, buffer, out_primitives);
+}
+
+void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mesh_resource_t& out_resource, eastl::vector<eastl::vector<uint8_t>>& out_bins)
+{
+    eastl::vector<uint8_t> buffer0 = {};
     
     skr_guid_t shuffle_layout_id = cfg->vertexType;
     CGPUVertexLayout shuffle_layout = {};
@@ -226,8 +256,8 @@ void CookGLTFStaticMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, s
         {
             eastl::vector<skr_mesh_primitive_t> new_primitives;
             // record all indices
-            EmplaceAllGLTFMeshIndices(node_->mesh, shuffled_buffer, new_primitives);
-            EmplaceAllGLTFMeshVertices(node_->mesh, shuffle_layout_name ? &shuffle_layout : nullptr, shuffled_buffer, new_primitives);
+            EmplaceAllGLTFMeshIndices(node_->mesh, buffer0, new_primitives);
+            EmplaceAllGLTFMeshVertices(node_->mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, new_primitives);
             for (uint32_t j = 0; j < node_->mesh->primitives_count; j++)
             {
                 auto& prim = new_primitives[j];
@@ -241,15 +271,72 @@ void CookGLTFStaticMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, s
     }
     {
         // record buffer bins
-        auto& output_bin = out_resource.bins.emplace_back();
-        output_bin.index = 0;
-        output_bin.byte_length = shuffled_buffer.size();
-        output_bin.used_with_index = true;
-        output_bin.used_with_vertex = true;
+        auto& out_buffer0 = out_resource.bins.emplace_back();
+        out_buffer0.index = 0;
+        out_buffer0.byte_length = buffer0.size();
+        out_buffer0.used_with_index = true;
+        out_buffer0.used_with_vertex = true;
+    }
+    // output one buffer contains vertices & indices
+    out_bins.emplace_back(buffer0);
+}
+
+void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mesh_resource_t& out_resource, eastl::vector<eastl::vector<uint8_t>>& out_bins)
+{
+    eastl::vector<uint8_t> buffer0 = {};
+    eastl::vector<uint8_t> buffer1 = {};
+    
+    skr_guid_t shuffle_layout_id = cfg->vertexType;
+    CGPUVertexLayout shuffle_layout = {};
+    const char* shuffle_layout_name = nullptr;
+    if (!shuffle_layout_id.isZero()) 
+    {
+        shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
     }
 
+    out_resource.name = gltf_data->meshes[0].name;
+    if (out_resource.name.empty()) out_resource.name = "gltfMesh";
+    // record primitvies
+    for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
+    {
+        const auto node_ = gltf_data->nodes + i;
+        auto& mesh_section = out_resource.sections.emplace_back();
+        mesh_section.parent_index = node_->parent ? (int32_t)(node_->parent - gltf_data->nodes) : -1;
+        GetGLTFNodeTransform(node_, mesh_section.translation, mesh_section.scale, mesh_section.rotation);
+        if (node_->mesh != nullptr)
+        {
+            eastl::vector<skr_mesh_primitive_t> new_primitives;
+            // record all indices
+            EmplaceAllGLTFMeshIndices(node_->mesh, buffer0, new_primitives);
+            EmplaceStaticGLTFMeshVertices(node_->mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, 0, new_primitives);
+            EmplaceSkinGLTFMeshVertices(node_->mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer1, 1, new_primitives);
+            for (uint32_t j = 0; j < node_->mesh->primitives_count; j++)
+            {
+                auto& prim = new_primitives[j];
+                prim.vertex_layout_id = shuffle_layout_id;
+                prim.material_inst = make_zeroed<skr_guid_t>(); // TODO: Material assignment
+                mesh_section.primive_indices.emplace_back(out_resource.primitives.size() + j);
+            }
+            out_resource.primitives.reserve(out_resource.primitives.size() + new_primitives.size());
+            out_resource.primitives.insert(out_resource.primitives.end(), new_primitives.begin(), new_primitives.end());
+        }
+    }
+    {
+        // record buffer bins
+        auto& out_buffer0 = out_resource.bins.emplace_back();
+        out_buffer0.index = 0;
+        out_buffer0.byte_length = buffer0.size();
+        out_buffer0.used_with_index = true;
+        out_buffer0.used_with_vertex = true;
+        auto& out_buffer1 = out_resource.bins.emplace_back();
+        out_buffer1.index = 1;
+        out_buffer1.byte_length = buffer1.size();
+        out_buffer1.used_with_index = false;
+        out_buffer1.used_with_vertex = true;
+    }
     // output one buffer contains vertices & indices
-    out_bins.emplace_back(shuffled_buffer);
+    out_bins.emplace_back(buffer0);
+    out_bins.emplace_back(buffer1);
 }
 
 } // namespace asset

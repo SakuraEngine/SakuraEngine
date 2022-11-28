@@ -16,6 +16,8 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
     sattr("no-default" : true)
     skr::string assetPath;
+    bool invariant_vertices = false;
+
     void* Import(skr::io::RAMService*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
