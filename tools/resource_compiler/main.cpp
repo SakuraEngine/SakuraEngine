@@ -262,8 +262,5 @@ int main(int argc, char** argv)
         ZoneScopedN("ThreadExit");
         moduleManager->destroy_module_graph();
     }
-#ifdef TRACY_ENABLE
-    skr_thread_sleep(800);
-#endif
     return 0;
 }
