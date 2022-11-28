@@ -3,6 +3,12 @@
 #include "SkrAnim/ozz/geometry/skinning_job.h"
 #include "SkrAnim/ozz/base/span.h"
 
+skr_anim_component_t::~skr_anim_component_t()
+{
+    for(auto buffer : primitive_buffers)
+        sakura_free_aligned(buffer, 16);
+}
+
 void skr_initialize_skin_component(skr_skin_component_t* component, skr_skeleton_component_t* skelComponent)
 {
     auto skin = component->skin.get_resolved();
@@ -68,6 +74,7 @@ void skr_initialize_anim_component(skr_anim_component_t* component, skr_mesh_res
 
 void skr_cpu_skin(skr_skin_component_t* skin, skr_anim_component_t* anim, skr_mesh_resource_t* mesh)
 {
+    auto skin_resource = skin->skin.get_resolved();
     for (size_t i = 0; i < mesh->primitives.size(); ++i)
     {
         ozz::geometry::SkinningJob job;
@@ -95,7 +102,14 @@ void skr_cpu_skin(skr_skin_component_t* skin, skr_anim_component_t* anim, skr_me
             auto offset = mesh->bins[buffer->buffer_index].bin.bytes + buffer->offset;
             return ozz::span<const T>{ (T*)offset, vertex_count };
         };
-        job.joint_matrices = { anim->skin_matrices.data(), anim->skin_matrices.size() };
+        eastl::vector<ozz::math::Float4x4> skin_matrices;
+        skin_matrices.resize(anim->joint_matrices.size());
+        for(size_t i = 0; i < anim->joint_matrices.size(); ++i)
+        {
+            auto inverse = skin_resource->blob.inverse_bind_poses[i];
+            skin_matrices[i] = anim->joint_matrices[i] * (ozz::math::Float4x4&)inverse;
+        }
+        job.joint_matrices = { anim->joint_matrices.data(), anim->joint_matrices.size() };
         job.joint_weights = buffer_span(weights_buffer, skr::type_t<float>());
         job.joint_indices = { skin->joint_remaps.data(), skin->joint_remaps.size() };
         if (normals_buffer)
@@ -109,6 +123,7 @@ void skr_cpu_skin(skr_skin_component_t* skin, skr_anim_component_t* anim, skr_me
             job.out_normals = { (float*)(buffer + anim->normal_offset), vertex_count * 3 };
         if (tangents_buffer)
             job.out_tangents = { (float*)(buffer + anim->tangent_offset), vertex_count * 3 };
-        SKR_ASSERT(job.Run());
+        auto result = job.Run();
+        SKR_ASSERT(result);
     }
 }
