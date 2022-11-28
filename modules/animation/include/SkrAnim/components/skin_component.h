@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrAnim/resources/skin_resource.h"
+#include "cgpu/api.h"
 #ifndef __meta__
     #include "SkrAnim/components/skin_component.generated.h"
 #endif
@@ -23,7 +24,14 @@ sattr("component" :
 skr_anim_component_t
 {
     eastl::vector<ozz::math::Float4x4> skin_matrices;
+    
+    size_t buffer_size = 0, position_offset = 0, normal_offset = 0, tangent_offset = 0;
+    std::vector<uint8_t*> primitive_buffers;
+    std::vector<CGPUBufferId> primitive_vbs;
 };
 
 struct skr_skeleton_component_t;
 SKR_ANIM_API void skr_initialize_skin_component(skr_skin_component_t* component, skr_skeleton_component_t* skeleton);
+SKR_ANIM_API void skr_initialize_anim_component(skr_anim_component_t* component, skr_mesh_resource_t* mesh, skr_skeleton_component_t* skeleton);
+
+SKR_ANIM_API void skr_cpu_skin(skr_skin_component_t* skin, skr_anim_component_t* anim, skr_mesh_resource_t* mesh);
