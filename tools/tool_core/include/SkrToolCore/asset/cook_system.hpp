@@ -10,6 +10,8 @@
 #include "json/reader.h"
 #include "utils/log.hpp"
 
+struct skr_async_ram_destination_t;
+
 namespace skd sreflect
 {
 namespace asset sreflect
@@ -43,6 +45,8 @@ public:
     skr::string GetAssetPath() const;
 
     skr::filesystem::path AddFileDependency(const skr::filesystem::path& path);
+    skr::filesystem::path AddFileDependencyAndLoad(skr::io::RAMService* ioService, const skr::filesystem::path& path, skr_async_ram_destination_t& destination);
+
     void AddRuntimeDependency(skr_guid_t resource);
     void AddSoftRuntimeDependency(skr_guid_t resource);
     uint32_t AddStaticDependency(skr_guid_t resource, bool install);

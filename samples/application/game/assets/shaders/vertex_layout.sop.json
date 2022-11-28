@@ -3,12 +3,12 @@
         {
             "type": "VALUE",
             "key": "VERTEX_HAS_TANGENT",
-            "value_selections": ["on", "off"]
+            "value_selections": ["off", "on"]
         },
         {
             "type": "VALUE",
             "key": "VERTEX_HAS_SKIN",
-            "value_selections": ["on", "off"]
+            "value_selections": ["off", "on"]
         }
     ]
 }

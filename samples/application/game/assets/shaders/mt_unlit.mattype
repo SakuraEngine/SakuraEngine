@@ -1,0 +1,19 @@
+{
+    "version": 0,
+    "shader_assets": ["cf42657b-e2ee-4c3a-b520-d81b95f0ada4", "0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"],
+    "properties": [
+        {
+            "name": "ColorTexture",
+            "display_name": "BaseColor",
+            "prop_type": "TEXTURE",
+            "description": "base color texture for unlit material to render",
+            "default_resource": "cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"
+        }
+    ],
+    "option_values": [
+        {
+            "key": "VERTEX_HAS_SKIN",
+            "value": "off"
+        }
+    ]
+}

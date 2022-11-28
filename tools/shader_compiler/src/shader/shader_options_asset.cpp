@@ -16,27 +16,12 @@ namespace asset
 {
 void* SShaderOptionsImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
 {
-    auto path = context->AddFileDependency(jsonPath.c_str());
-    auto u8Path = path.u8string();
-
     const auto assetRecord = context->GetAssetRecord();
-    // load file
-    skr::task::event_t counter;
-    skr_ram_io_t ramIO = {};
-    ramIO.offset = 0;
-    ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request,void* data) noexcept {
-        auto pCounter = (skr::task::event_t*)data;
-        pCounter->signal();
-    };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
-    skr_async_request_t ioRequest = {};
     skr_async_ram_destination_t ioDestination = {};
-    ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &ioDestination);
-    counter.wait(false);
-    auto jsonString = simdjson::padded_string((char8_t*)ioDestination.bytes, ioDestination.size);
-    sakura_free(ioDestination.bytes);
+    context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), ioDestination);
+    SKR_DEFER({sakura_free(ioDestination.bytes);});
 
+    auto jsonString = simdjson::padded_string((char8_t*)ioDestination.bytes, ioDestination.size);
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     if(doc.error())
