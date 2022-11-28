@@ -5,11 +5,32 @@
     #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
 
+sreflect_enum("guid" : "01f05eb7-6d5d-46d8-945e-ce1259d22c8f")
+sattr("rtti" : true)
+sattr("serialize" : ["bin", "json"])
+ESkrVertexAttribute
+{
+    SKR_VERT_ATTRIB_NONE,
+    SKR_VERT_ATTRIB_POSITION,
+    SKR_VERT_ATTRIB_NORMAL,
+    SKR_VERT_ATTRIB_TANGENT,
+    SKR_VERT_ATTRIB_TEXCOORD,
+    SKR_VERT_ATTRIB_COLOR,
+    SKR_VERT_ATTRIB_JOINTS,
+    SKR_VERT_ATTRIB_WEIGHTS,
+    SKR_VERT_ATTRIB_CUSTOM,
+    SKR_VERT_ATTRIB_SIZE,
+    SKR_VERT_ATTRIB_MAX_ENUM_BIT = 0x7FFFFFFF,
+};
+typedef enum ESkrVertexAttribute ESkrVertexAttribute;
+
 sreflect_struct("guid" : "3f01f94e-bd88-44a0-95e8-94ff74d18fca")
 sattr("rtti" : true)
 sattr("serialize" : "bin")
 skr_vertex_buffer_entry_t
 {
+    ESkrVertexAttribute attribute;
+    uint32_t attribute_index;
     uint32_t buffer_index;
     uint32_t stride;
     uint32_t offset;

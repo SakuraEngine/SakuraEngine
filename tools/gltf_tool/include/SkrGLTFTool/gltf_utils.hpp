@@ -28,7 +28,7 @@ GLTFTOOL_API
 skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, cgltf_attribute_type type, uint32_t& stride);
 
 GLTFTOOL_API
-skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, const char* semantics, uint32_t& stride);
+skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, const char* semantics, uint32_t& stride, cgltf_attribute_type& out_type);
 
 GLTFTOOL_API
 void EmplaceGLTFPrimitiveIndexBuffer(const cgltf_primitive* primitve, eastl::vector<uint8_t>& buffer, skr_index_buffer_entry_t& out_ibv);
@@ -51,7 +51,7 @@ GLTFTOOL_API
 void CookGLTFStaticMeshData(const cgltf_data* data, SMeshCookConfig* config, skr_mesh_resource_t& out_resource, eastl::vector<eastl::vector<uint8_t>>& out_bins);
 
 // LUT for gltf attributes to semantic names
-static const char* kGLTFAttributeTypeLUT[9] = {
+static const char* kGLTFAttributeTypeNameLUT[9] = {
     "NONE",
     "POSITION",
     "NORMAL",
@@ -61,6 +61,18 @@ static const char* kGLTFAttributeTypeLUT[9] = {
     "JOINTS",
     "WEIGHTS",
     "CUSTOM"
+}; 
+
+static const ESkrVertexAttribute kGLTFAttributeTypeLUT[9] = {
+    SKR_VERT_ATTRIB_NONE,
+    SKR_VERT_ATTRIB_POSITION,
+    SKR_VERT_ATTRIB_NORMAL,
+    SKR_VERT_ATTRIB_TANGENT,
+    SKR_VERT_ATTRIB_TEXCOORD,
+    SKR_VERT_ATTRIB_COLOR,
+    SKR_VERT_ATTRIB_JOINTS,
+    SKR_VERT_ATTRIB_WEIGHTS,
+    SKR_VERT_ATTRIB_CUSTOM
 }; 
 
 } // namespace asset
