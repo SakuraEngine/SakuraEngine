@@ -37,6 +37,9 @@
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrAnim/resources/animation_resource.h"
 #include "SkrAnim/resources/skeleton_resource.h"
+#include "SkrAnim/components/skin_component.h"
+#include "SkrAnim/components/skeleton_component.h"
+#include "GameRuntime/game_animation.h"
 
 #include "tracy/Tracy.hpp"
 #include "utils/types.h"
@@ -483,10 +486,13 @@ int SGameModule::main_module_exec(int argc, char** argv)
     bool quit = false;
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
+    dual_query_t* animQuery;
     moveQuery = dualQ_from_literal(game_world, 
         "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_component_t, !skr_camera_t");
     cameraQuery = dualQ_from_literal(game_world, 
         "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
+    animQuery = dualQ_from_literal(game_world, 
+        "[inout]skr_anim_component_t, [in]game::anim_state_t, [in]skr_skeleton_component_t");
     while (!quit)
     {
         FrameMark;
@@ -625,6 +631,28 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 }
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
+        }
+        // [inout]skr_anim_component_t, [in]game::anim_state_t, [in]skr_skeleton_component_t
+        {
+            ZoneScopedN("AnimSystem");
+            auto animJob = SkrNewLambda([=]
+                (dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                ZoneScopedN("AnimJob");
+                auto anims = (skr_anim_component_t*)dualV_get_owned_rw_local(view, localTypes[0]);
+                auto states = (game::anim_state_t*)dualV_get_owned_ro_local(view, localTypes[1]);
+                auto skeletons = (skr_skeleton_component_t*)dualV_get_owned_ro_local(view, localTypes[2]);
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    auto& anim = anims[i];
+                    auto& state = states[i];
+                    auto& skeleton = skeletons[i];
+                    auto skeleton_resource = skeleton.skeleton.get_resolved();
+                    if(!skeleton_resource)
+                        continue;
+                    game::UpdateAnimState(&state, skeleton_resource, deltaTime, &anim);
+                }
+            });
+            dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }
         // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_camera_t
         if (bUseJob)
