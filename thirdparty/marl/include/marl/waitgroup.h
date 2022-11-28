@@ -51,7 +51,7 @@ namespace marl {
 class WaitGroup {
  public:
   // Constructs the WaitGroup with the specified initial count.
-  MARL_NO_EXPORT inline WaitGroup(unsigned int initialCount = 0,
+  MARL_NO_EXPORT inline WaitGroup(unsigned int initialCount = 0, bool reverse = false,
                                   Allocator* allocator = Allocator::Default);
 
   // add() increments the internal counter by count.
@@ -80,6 +80,7 @@ class WaitGroup {
     MARL_NO_EXPORT inline Data(Allocator* allocator);
 
     std::atomic<unsigned int> count = {0};
+    bool inverse = false;
     ConditionVariable cv;
     marl::mutex mutex;
   };
@@ -107,10 +108,11 @@ class WeakWaitGroup
 
 WaitGroup::Data::Data(Allocator* allocator) : cv(allocator) {}
 
-WaitGroup::WaitGroup(unsigned int initialCount /* = 0 */,
+WaitGroup::WaitGroup(unsigned int initialCount /* = 0 */, bool reverse /* = 0*/,
                      Allocator* allocator /* = Allocator::Default */)
     : data(marl::make_shared<Data>(allocator)) {
   data->count = initialCount;
+  data->inverse = reverse;
 }
 
 void WaitGroup::add(unsigned int count /* = 1 */) const {
@@ -120,7 +122,8 @@ void WaitGroup::add(unsigned int count /* = 1 */) const {
 bool WaitGroup::done() const {
   MARL_ASSERT(data->count > 0, "marl::WaitGroup::done() called too many times");
   auto count = --data->count;
-  if (count == 0) {
+  bool satisfied = (!data->inverse) == (count == 0);
+  if (satisfied) {
     marl::lock lock(data->mutex);
     data->cv.notify_all();
     return true;
@@ -130,11 +133,11 @@ bool WaitGroup::done() const {
 
 void WaitGroup::wait() const {
   marl::lock lock(data->mutex);
-  data->cv.wait(lock, [this] { return data->count == 0; });
+  data->cv.wait(lock, [this] { return test(); });
 }
 
 bool WaitGroup::test() const {
-  return data->count == 0;
+  return (!data->inverse) == (data->count == 0);
 }
 
 }  // namespace marl

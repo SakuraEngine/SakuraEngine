@@ -249,9 +249,14 @@ int main(int argc, char** argv)
     }
     SKR_LOG_INFO("Project asset import finished.");
     auto resource_system = skr::resource::GetResourceSystem();
+    skr::task::schedule([&]
+    {
+        system.WaitForAll();
+        resource_system->Quit();
+    }, nullptr);
     resource_system->Update();
     //----- wait
-    while (!system.AllCompleted())
+    while (!system.AllCompleted() && resource_system->WaitRequest())
     {
         resource_system->Update();
     }

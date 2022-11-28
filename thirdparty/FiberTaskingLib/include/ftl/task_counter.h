@@ -38,7 +38,7 @@ class TaskScheduler;
  */
 class RUNTIME_API TaskCounter : public BaseCounter
 {
-
+    bool inverse;
 public:
     /**
      * Creates a TaskCounter
@@ -48,8 +48,8 @@ public:
      * @param fiberSlots       This defines how many fibers can wait on this counter.
      *                         If fiberSlots == NUM_WAITING_FIBER_SLOTS, this constructor will *not* allocate memory
      */
-    explicit TaskCounter(TaskScheduler* taskScheduler, unsigned const initialValue = 0, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
-        : BaseCounter(taskScheduler, initialValue, fiberSlots)
+    explicit TaskCounter(TaskScheduler* taskScheduler, unsigned const initialValue = 0, bool inverse = false, unsigned const fiberSlots = NUM_WAITING_FIBER_SLOTS)
+        : BaseCounter(taskScheduler, initialValue, fiberSlots), inverse(inverse)
     {
     }
 
@@ -78,7 +78,7 @@ public:
 
     bool Done()
     {
-        return m_value.load(std::memory_order_relaxed) == 0;
+        return (!inverse) == (m_value.load(std::memory_order_relaxed) == 0);
     }
 
     /**
@@ -92,9 +92,9 @@ public:
         const unsigned newValue = prev - 1;
 
         // TaskCounters are only allowed to wait on 0, so we only need to check when newValue would be zero
-        if (newValue == 0)
+        if (!inverse == (newValue == 0))
         {
-            CheckWaitingFibers(newValue);
+            CheckWaitingFibers(0);
         }
 
         m_lock.fetch_sub(1U, std::memory_order_seq_cst);
