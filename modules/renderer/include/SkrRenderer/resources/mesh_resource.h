@@ -8,7 +8,7 @@
 sreflect_enum("guid" : "01f05eb7-6d5d-46d8-945e-ce1259d22c8f")
 sattr("rtti" : true)
 sattr("serialize" : ["bin", "json"])
-ESkrVertexAttribute : uint32_t
+ESkrVertexAttribute SKR_IF_CPP(: uint32_t)
 {
     SKR_VERT_ATTRIB_NONE,
     SKR_VERT_ATTRIB_POSITION,
@@ -20,7 +20,7 @@ ESkrVertexAttribute : uint32_t
     SKR_VERT_ATTRIB_WEIGHTS,
     SKR_VERT_ATTRIB_CUSTOM,
     SKR_VERT_ATTRIB_SIZE,
-    SKR_VERT_ATTRIB_MAX_ENUM_BIT = 0xFFFFFFFF,
+    SKR_VERT_ATTRIB_MAX_ENUM_BIT = UINT32_MAX,
 };
 typedef enum ESkrVertexAttribute ESkrVertexAttribute;
 

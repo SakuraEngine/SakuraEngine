@@ -84,12 +84,12 @@ skr::span<const uint8_t> GetGLTFPrimitiveIndicesView(const cgltf_primitive* prim
     return skr::span<const uint8_t>(view_data + primitve->indices->offset, index_stride * indices_count);
 }
 
-skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, cgltf_attribute_type type, uint32_t& stride)
+skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, cgltf_attribute_type type, uint32_t idx, uint32_t& stride)
 {
     for (uint32_t i = 0; i < primitve->attributes_count; i++)
     {
         const auto& attribute = primitve->attributes[i];
-        if (attribute.type == type)
+        if (attribute.type == type && attribute.index == idx)
         {
             stride = (uint32_t)attribute.data->stride;
             
@@ -102,7 +102,7 @@ skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* pr
     return {};
 }
 
-skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, const char* semantics, uint32_t& stride, cgltf_attribute_type& out_type)
+skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* primitve, const char* semantics, uint32_t idx, uint32_t& stride, cgltf_attribute_type& out_type)
 {
     for (uint32_t type = 0; type < cgltf_attribute_type_custom + 1; type++)
     {
@@ -111,7 +111,7 @@ skr::span<const uint8_t> GetGLTFPrimitiveAttributeView(const cgltf_primitive* pr
         if (semantics_sv.starts_with(refStr))
         {
             out_type = static_cast<cgltf_attribute_type>(type);
-            return GetGLTFPrimitiveAttributeView(primitve, (cgltf_attribute_type)type, stride);
+            return GetGLTFPrimitiveAttributeView(primitve, (cgltf_attribute_type)type, idx, stride);
         }
     }
     return {};
@@ -130,14 +130,14 @@ void EmplaceGLTFPrimitiveIndexBuffer(const cgltf_primitive* primitve, eastl::vec
     buffer.insert(buffer.end(), ib_view.data(), ib_view.data() + ib_view.size());
 }
 
-void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, cgltf_attribute_type type, eastl::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
+void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, cgltf_attribute_type type, uint32_t idx, eastl::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
 {
     skr::span<const uint8_t> vertex_attribtue_slice = {};
     uint32_t attribute_stride = 0;
-    vertex_attribtue_slice = GetGLTFPrimitiveAttributeView(primitve, type, attribute_stride);
+    vertex_attribtue_slice = GetGLTFPrimitiveAttributeView(primitve, type, idx, attribute_stride);
 
     out_vbv.attribute = kGLTFAttributeTypeLUT[type];
-    out_vbv.attribute_index = 0; // TODO: ?
+    out_vbv.attribute_index = idx;
 
     out_vbv.buffer_index = 0;
     out_vbv.stride = attribute_stride;
@@ -145,15 +145,15 @@ void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, 
     buffer.insert(buffer.end(), vertex_attribtue_slice.data(), vertex_attribtue_slice.data() + vertex_attribtue_slice.size());
 }
 
-void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, const char* semantics, eastl::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
+void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, const char* semantics, uint32_t idx, eastl::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
 {
     skr::span<const uint8_t> vertex_attribtue_slice = {};
     uint32_t attribute_stride = 0;
     cgltf_attribute_type type;
-    vertex_attribtue_slice = GetGLTFPrimitiveAttributeView(primitve, semantics, attribute_stride, type);
+    vertex_attribtue_slice = GetGLTFPrimitiveAttributeView(primitve, semantics, idx, attribute_stride, type);
 
     out_vbv.attribute = kGLTFAttributeTypeLUT[type];
-    out_vbv.attribute_index = 0; // TODO: ?
+    out_vbv.attribute_index = idx;
 
     out_vbv.buffer_index = 0;
     out_vbv.stride = attribute_stride;
@@ -177,7 +177,7 @@ void EmplaceAllGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* 
     if (layout != nullptr)
     {
     const auto& shuffle_layout = *layout;
-    for (uint32_t k = 0; k < shuffle_layout.attribute_count; k++)
+    for (uint32_t i = 0; i < shuffle_layout.attribute_count; i++)
     {
         // geometry cache friendly layout
         // | prim0-pos | prim1-pos | prim0-tangent | prim1-tangent | ...
@@ -187,8 +187,11 @@ void EmplaceAllGLTFMeshVertices(const cgltf_mesh* mesh, const CGPUVertexLayout* 
             prim.vertex_buffers.resize(shuffle_layout.attribute_count);
 
             const auto gltf_prim = mesh->primitives + j;
-            const auto& shuffle_attrib = shuffle_layout.attributes[k];
-            EmplaceGLTFPrimitiveVertexBufferAttribute(gltf_prim, shuffle_attrib.semantic_name, buffer, prim.vertex_buffers[k]);
+            const auto& shuffle_attrib = shuffle_layout.attributes[i];
+            for (uint32_t k = 0u; k < shuffle_attrib.array_size; k++)
+            {
+                EmplaceGLTFPrimitiveVertexBufferAttribute(gltf_prim, shuffle_attrib.semantic_name, k, buffer, prim.vertex_buffers[i]);
+            }
         }
     }
     }

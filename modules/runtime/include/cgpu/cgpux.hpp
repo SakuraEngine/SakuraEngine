@@ -21,12 +21,14 @@ struct equal_to<CGPUVertexLayout> {
         if (a.attribute_count != b.attribute_count) return false;
         for (uint32_t i = 0; i < a.attribute_count; i++)
         {
-            const bool equal = (a.attributes[i].binding == b.attributes[i].binding) &&
-                               (a.attributes[i].format == b.attributes[i].format) &&
-                               (a.attributes[i].offset == b.attributes[i].offset) &&
-                               (a.attributes[i].rate == b.attributes[i].rate) &&
-                               (0 == strcmp(a.attributes[i].semantic_name, b.attributes[i].semantic_name));
-            if (!equal) return false;
+            const bool vequal = (a.attributes[i].array_size == b.attributes[i].array_size) &&
+                                (a.attributes[i].format == b.attributes[i].format) &&
+                                (a.attributes[i].binding == b.attributes[i].binding) &&
+                                (a.attributes[i].offset == b.attributes[i].offset) &&
+                                (a.attributes[i].elem_stride == b.attributes[i].elem_stride) &&
+                                (a.attributes[i].rate == b.attributes[i].rate) &&
+                                (0 == strcmp(a.attributes[i].semantic_name, b.attributes[i].semantic_name));
+            if (!vequal) return false;
         }
         return true;
     }
