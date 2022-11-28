@@ -290,6 +290,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         }
         ++groupIndex;
     }
+    if(!job->entityCount)
+        return {nullptr};
 
     DependencySet dependencySet;
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
