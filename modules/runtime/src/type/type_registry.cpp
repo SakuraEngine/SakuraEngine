@@ -1185,7 +1185,7 @@ void skr_type_t::Destruct(void* address) const
 void* skr_type_t::Malloc() const
 {
     using namespace skr::type;
-    return sakura_malloc_aligned(Size(), Align());
+    return sakura_calloc_aligned(1, Size(), Align());
 }
 
 void skr_type_t::Free(void* address) const

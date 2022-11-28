@@ -24,7 +24,7 @@ void* pool_t::allocate()
     void* block;
     if (blocks.try_dequeue(block))
         return block;
-    return ::dual_malloc(blockSize);
+    return ::dual_calloc(1, blockSize);
 }
 
 void pool_t::free(void* block)

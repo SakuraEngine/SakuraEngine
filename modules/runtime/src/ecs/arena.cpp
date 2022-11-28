@@ -5,7 +5,7 @@
 namespace dual
 {
 fixed_arena_t::fixed_arena_t(size_t capacity)
-    : buffer(::dual_malloc(capacity))
+    : buffer(::dual_calloc(1, capacity))
     , size()
     , capacity(capacity)
 {
@@ -41,7 +41,7 @@ void* struct_arena_base_t::allocate(size_t s, size_t a)
 }
 void struct_arena_base_t::initialize(size_t a)
 {
-    buffer = ::dual_malloc_aligned(capacity, a);
+    buffer = ::dual_calloc_aligned(1, capacity, a);
 }
 void struct_arena_base_t::record(size_t s, size_t a)
 {
