@@ -3,6 +3,6 @@
     "type": "fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc",
     "importer": {
         "importerType": "067d4b86-f888-4bd7-841c-bc831043e50c",
-        "jsonPath": "rdna_features.sop.json",
+        "jsonPath": "shader_model.sop.json",
     }
 }

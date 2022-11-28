@@ -9,6 +9,7 @@
 #include "SkrShaderCompiler/shader_compiler.generated.h"
 #endif
 
+struct skr_shader_option_t;
 struct skr_shader_option_instance_t;
 struct skr_stable_shader_hash_t;
 
@@ -55,7 +56,8 @@ struct SKR_SHADER_COMPILER_API IShaderCompiler
 
     virtual EShaderSourceType GetSourceType() const SKR_NOEXCEPT = 0;
     virtual bool IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const SKR_NOEXCEPT = 0;
-    virtual void SetShaderOptions(skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& md5) SKR_NOEXCEPT= 0;
+    virtual void SetShaderSwitches(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT = 0;
+    virtual void SetShaderOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT = 0;
     virtual ICompiledShader* Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT = 0;
     virtual void FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT = 0;
 };

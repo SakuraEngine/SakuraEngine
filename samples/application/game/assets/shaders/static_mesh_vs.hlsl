@@ -45,5 +45,14 @@ VSOut main(const VSIn input)
 #ifdef VERTEX_HAS_TANGENT // if (VERTEX_HAS_TANGENT.on)
     output.tangent = input.tangent;
 #endif
+#ifdef SM_5_0
+    output.uv = input.uv.yx;
+#endif
+#ifdef SM_6_3
+    output.uv = output.uv.yx;
+#endif
+#ifdef SM_6_6
+    output.uv = output.uv.yx;
+#endif
     return output;
 }

@@ -217,10 +217,80 @@ inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target
     return CGPU_SHADER_STAGE_NONE;
 }
 
-void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
+void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
+    option_defs = eastl::vector<skr_shader_option_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
     options = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
     options_hash = option_hash;
+}
+
+void SDXCCompiler::SetShaderSwitches(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
+{
+    switch_defs = eastl::vector<skr_shader_option_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
+    switches = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
+    switches_hash = option_hash;
+}
+
+void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<skr::wstring>& outArgs) SKR_NOEXCEPT
+{
+    using utf8_to_utf16 = fmt::detail::utf8_to_utf16;
+    skr_shader_option_t* optdef = nullptr;
+    for (auto&& option : options)
+    {
+        for (auto& opt_def : opt_defs)
+        {
+            if (opt_def.key == option.key)
+            {
+                optdef = &opt_def;
+                break;
+            }
+        }
+        if (!optdef)
+        {
+            SKR_LOG_ERROR("option not found: %s", option.key.c_str());
+            continue;
+        }
+
+        const auto opt_type = optdef->type;
+        if (opt_type == ESkrShaderOptionType::VALUE)
+        {
+            auto prefix = eastl::wstring(L"-D") + utf8_to_utf16(option.key.c_str()).c_str();
+            if (option.value == "on") outArgs.emplace_back(prefix);
+            else if (option.value == "off") continue;//allArgs.emplace_back(prefix);
+            else
+            {
+                auto wvalue =  eastl::wstring(utf8_to_utf16(option.value.c_str()).c_str());
+                auto defination = prefix + L"=" + wvalue; 
+                outArgs.emplace_back(defination);  
+            }
+        }
+        else if (opt_type == ESkrShaderOptionType::SELECT)
+        {
+            auto defination = eastl::wstring(L"-D") + utf8_to_utf16(option.value.c_str()).c_str();
+            outArgs.emplace_back(defination);
+        }
+        else if (opt_type == ESkrShaderOptionType::LEVEL)
+        {
+            size_t lv = 0;
+            for (size_t level = 0u; level < optdef->value_selections.size(); ++level)
+            {
+                if (optdef->value_selections[level] == option.value)
+                {
+                    lv = level;
+                    break;
+                }
+            }
+            for (size_t i = 0u; i <= lv; ++i)
+            {
+                auto defination = eastl::wstring(L"-D") + utf8_to_utf16(optdef->value_selections[i].c_str()).c_str();
+                outArgs.emplace_back(defination);
+            }
+        }
+        else
+        {
+            SKR_UNREACHABLE_CODE();
+        }
+    }
 }
 
 ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT
@@ -269,18 +339,8 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
 #endif
     allArgs.emplace_back(L"-Qstrip_debug"); 
 
-    for (auto&& option : options)
-    {
-        auto prefix = eastl::wstring(L"-D") + utf8_to_utf16(option.key.c_str()).c_str();
-        if (option.value == "on") allArgs.emplace_back(prefix);
-        else if (option.value == "off") continue;//allArgs.emplace_back(prefix);
-        else
-        {
-            auto wvalue =  eastl::wstring(utf8_to_utf16(option.value.c_str()).c_str());
-            auto defination = prefix + L"=" + wvalue; 
-            allArgs.emplace_back(prefix);  
-        }
-    }
+    createDefArgsFromOptions(switch_defs, switches, allArgs);
+    createDefArgsFromOptions(option_defs, options, allArgs);
 
     // do compile
     {

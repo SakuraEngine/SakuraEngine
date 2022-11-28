@@ -65,17 +65,26 @@ public:
     EShaderSourceType GetSourceType() const SKR_NOEXCEPT override;
     bool IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const SKR_NOEXCEPT override;
 
-    void SetShaderOptions(skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& md5) SKR_NOEXCEPT override;
+    void SetShaderSwitches(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT override;
+    void SetShaderOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT override;
+    
     ICompiledShader* Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT override;
     void FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT override;
 
     void SetIncludeHandler(IDxcIncludeHandler* includeHandler) SKR_NOEXCEPT;
 
 protected:
+    void createDefArgsFromOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<skr::wstring>& def_args) SKR_NOEXCEPT;
+
     IDxcUtils* utils = nullptr;
     IDxcCompiler3* compiler = nullptr;
     IDxcIncludeHandler* includeHandler = nullptr;
 
+    eastl::vector<skr_shader_option_t> switch_defs;
+    eastl::vector<skr_shader_option_instance_t> switches;
+    skr_stable_shader_hash_t switches_hash = {};
+
+    eastl::vector<skr_shader_option_t> option_defs;
     eastl::vector<skr_shader_option_instance_t> options;
     skr_stable_shader_hash_t options_hash = {};
 };
