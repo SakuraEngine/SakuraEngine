@@ -342,6 +342,17 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     createDefArgsFromOptions(switch_defs, switches, allArgs);
     createDefArgsFromOptions(option_defs, options, allArgs);
 
+#ifdef TRACY_ENABLE
+    eastl::wstring wArgsString;
+    for (auto&& arg : allArgs)
+    {
+        wArgsString += arg + L" ";
+    }
+    eastl::string msg;
+    for(char x : wArgsString) msg += x;
+    TracyMessage(msg.c_str(), msg.size());
+#endif
+
     // do compile
     {
         eastl::vector<LPCWSTR> pszArgs;
