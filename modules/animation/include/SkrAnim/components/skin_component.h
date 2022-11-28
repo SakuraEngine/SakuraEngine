@@ -23,8 +23,8 @@ sattr("component" :
 }) 
 skr_anim_component_t
 {
-    eastl::vector<ozz::math::Float4x4> skin_matrices;
-    
+    eastl::vector<ozz::math::Float4x4> joint_matrices;
+    ~skr_anim_component_t();
     size_t buffer_size = 0, position_offset = 0, normal_offset = 0, tangent_offset = 0;
     eastl::vector<uint8_t*> primitive_buffers;
     eastl::vector<CGPUBufferId> primitive_vbs;
