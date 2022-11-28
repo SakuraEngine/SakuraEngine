@@ -10,7 +10,7 @@ struct skr_value_t;
 namespace skr
 {
     template<class T>
-    struct type_t{};
+    struct type_t{ using type = T; };
 
     template<class T, class = void>
     struct is_complete : std::false_type {};
