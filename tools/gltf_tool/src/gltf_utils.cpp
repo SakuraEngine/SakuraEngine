@@ -14,32 +14,41 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr::io::RAMService* 
 {
     // prepare callback
     skr::task::event_t counter;
+    skr_async_ram_destination_t destination;
+    skr::string u8Path = assetPath.data();
     struct CallbackData
     {
-        skr_async_ram_destination_t destination;
         skr::task::event_t* pCounter;   
-        skr::string u8Path;
     } callbackData;
     callbackData.pCounter = &counter;
-    callbackData.u8Path = assetPath.data();
     // prepare io
     skr_ram_io_t ramIO = {};
     ramIO.offset = 0;
-    ramIO.path = callbackData.u8Path.c_str();
+    ramIO.path = u8Path.c_str();
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
+        cbData->pCounter->signal();
+    };
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
+    skr_async_request_t ioRequest = {};
+    ioService->request(vfs, &ramIO, &ioRequest, &destination);
+    counter.wait(false);
+    struct cgltf_data* gltf_data_ = nullptr;
+    {
+        ZoneScopedN("ParseGLTF");
         cgltf_options options = {};
-        struct cgltf_data* gltf_data_ = nullptr;
-        if (cbData->destination.bytes)
+        if (destination.bytes)
         {
-            cgltf_result result = cgltf_parse(&options, cbData->destination.bytes, cbData->destination.size, &gltf_data_);
+            cgltf_result result = cgltf_parse(&options, destination.bytes, destination.size, &gltf_data_);
             if (result != cgltf_result_success)
             {
                 gltf_data_ = nullptr;
             }
             else
             {
-                result = cgltf_load_buffers(&options, gltf_data_, cbData->u8Path.c_str());
+                ZoneScopedN("LoadGLTFBuffer");
+
+                result = cgltf_load_buffers(&options, gltf_data_, u8Path.c_str());
                 result = cgltf_validate(gltf_data_);
                 if (result != cgltf_result_success)
                 {
@@ -47,22 +56,9 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr::io::RAMService* 
                 }
             }
         }
-        sakura_free(cbData->destination.bytes);
-        cbData->destination.bytes = (uint8_t*)gltf_data_;
-        cbData->destination.size = MAGIC_SIZE_GLTF_PARSE_READY;
-        cbData->pCounter->signal();
-    };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
-    skr_async_request_t ioRequest = {};
-    ioService->request(vfs, &ramIO, &ioRequest, &callbackData.destination);
-    counter.wait(false);
-    // parse
-    if (callbackData.destination.size == MAGIC_SIZE_GLTF_PARSE_READY)
-    {
-        cgltf_data* gltf_data = (cgltf_data*)callbackData.destination.bytes;
-        return gltf_data;
+        sakura_free(destination.bytes);
     }
-    return nullptr;
+    return gltf_data_;
 }
 
 void GetGLTFNodeTransform(const cgltf_node* node, skr_float3_t& translation, skr_float3_t& scale, skr_float4_t& rotation)
