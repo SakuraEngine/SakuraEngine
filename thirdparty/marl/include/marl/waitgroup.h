@@ -116,14 +116,21 @@ WaitGroup::WaitGroup(unsigned int initialCount /* = 0 */, bool reverse /* = 0*/,
 }
 
 void WaitGroup::add(unsigned int count /* = 1 */) const {
+  MARL_ASSERT(count > 0, "WaitGroup::add() count must be > 0");
   data->count += count;
+  if(data->inverse)
+  {
+    marl::lock lock(data->mutex);
+    data->cv.notify_all();
+  }
 }
 
 bool WaitGroup::done() const {
   MARL_ASSERT(data->count > 0, "marl::WaitGroup::done() called too many times");
   auto count = --data->count;
-  bool satisfied = (!data->inverse) == (count == 0);
-  if (satisfied) {
+  if(data->inverse)
+    return false;
+  if (count == 0) {
     marl::lock lock(data->mutex);
     data->cv.notify_all();
     return true;

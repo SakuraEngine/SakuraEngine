@@ -74,6 +74,12 @@ public:
     void Add(unsigned const x)
     {
         m_value.fetch_add(x, std::memory_order_seq_cst);
+        if(inverse)
+        {
+            m_lock.fetch_add(1U, std::memory_order_seq_cst);
+            CheckWaitingFibers(0);
+            m_lock.fetch_sub(1U, std::memory_order_seq_cst);
+        }
     }
 
     bool Done()
@@ -86,6 +92,11 @@ public:
      */
     void Decrement()
     {
+        if(inverse)
+        {
+            m_value.fetch_sub(1U, std::memory_order_seq_cst);
+            return;
+        }
         m_lock.fetch_add(1U, std::memory_order_seq_cst);
 
         const unsigned prev = m_value.fetch_sub(1U, std::memory_order_seq_cst);
