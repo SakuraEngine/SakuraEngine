@@ -5,8 +5,14 @@
 
 skr_render_anim_comp_t::~skr_render_anim_comp_t()
 {
+    for(auto vb : vbs)
+    {
+       if (vb) cgpu_free_buffer(vb);
+    }
     for(auto buffer : buffers)
+    {
         sakura_free_aligned(buffer.bytes, 16);
+    }
 }
 
 void skr_init_skin_component(skr_render_skin_comp_t* component, skr_skeleton_resource_t* skeleton)

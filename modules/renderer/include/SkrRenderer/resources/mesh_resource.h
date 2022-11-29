@@ -94,7 +94,7 @@ skr_mesh_resource_t
     eastl::vector<skr_mesh_section_t> sections;
     eastl::vector<skr_mesh_primitive_t> primitives;
     eastl::vector<skr_mesh_buffer_t> bins;
-
+    
     bool install_to_vram SKR_IF_CPP(= true);
     bool install_to_ram SKR_IF_CPP(= true); // TODO: configure this in asset
 

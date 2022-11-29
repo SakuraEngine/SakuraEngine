@@ -4,7 +4,8 @@
     "importer": {
         "importerType": "D72E2056-3C12-402A-A8B8-148CB8EAB922",
         "assetPath": "scene.gltf",
-        "invariant_vertices": true
+        "invariant_vertices": true,
+        "install_to_ram": false
     },
     "vertexType": "1b357a40-83ff-471c-8903-23e99d95b273"
 }
