@@ -143,4 +143,16 @@ BLOB_POD(skr_rotator_t);
 BLOB_POD(skr_guid_t);
 BLOB_POD(skr_md5_t);
 }
+
+namespace skr
+{
+struct SInterface
+{
+    virtual ~SInterface() = default;
+    virtual uint32_t add_refcount() = 0;
+    virtual uint32_t release() = 0;
+    virtual skr_guid_t get_type() { return {}; }
+};
+}
+#define sobject_cast static_cast
 #endif

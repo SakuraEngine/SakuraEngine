@@ -485,16 +485,6 @@ typedef int64_t host_ptr_t;
 #endif
 
 #ifdef __cplusplus
-namespace skr
-{
-struct SInterface
-{
-    virtual ~SInterface() = default;
-    virtual uint32_t add_refcount() = 0;
-    virtual uint32_t release() = 0;
-};
-}
-#define sobject_cast static_cast
 
 namespace skr
 {
