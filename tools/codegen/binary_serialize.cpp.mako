@@ -78,19 +78,19 @@ void BlobHelper<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${r
 %endif
 %endfor
 }
-void BlobHelper<${record.name}>::FillView(skr_blob_arena_builder_t& arena, ${record.name}& dst)
+void BlobHelper<${record.name}>::Remap(skr_blob_arena_t& arena, ${record.name}& dst)
 {
 %for base in record.bases:
-    BlobHelper<${base}>::FillView(arena, (${base}&)dst);
+    BlobHelper<${base}>::Remap(arena, (${base}&)dst);
 %endfor
 %for name, field in generator.filter_fields(record.fields):
 %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
-        BlobHelper<${field.rawType}>::FillView(arena, dst.${name}[i]);
+        BlobHelper<${field.rawType}>::Remap(arena, dst.${name}[i]);
     }
 %else:
-    BlobHelper<${field.rawType}>::FillView(arena, dst.${name});
+    BlobHelper<${field.rawType}>::Remap(arena, dst.${name});
 %endif
 %endfor
 }

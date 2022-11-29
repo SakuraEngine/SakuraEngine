@@ -12,7 +12,7 @@ namespace skr
         template <>
         struct RUNTIME_API BlobHelper<skr::string_view> {
             static void BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src);
-            static void FillView(skr_blob_arena_builder_t& arena, skr::string_view& dst);
+            static void Remap(skr_blob_arena_t& arena, skr::string_view& dst);
         };
 
         template<class T>
@@ -39,15 +39,15 @@ namespace skr
                 //store offset inplace
                 dst = skr::span<T>((T*)(offset), src.size());
             }
-            static void FillView(skr_blob_arena_builder_t& arena, skr::span<T>& dst)
+            static void Remap(skr_blob_arena_t& arena, skr::span<T>& dst)
             {
-                dst = skr::span<T>((T*)((char*)arena.get_buffer() + (size_t)dst.data()), dst.size());
+                dst = skr::span<T>((T*)((char*)arena.get_buffer() + ((size_t)dst.data() - arena.base())), dst.size());
 
                 if constexpr(is_complete_v<BlobHelper<T>>)
                 {
                     for(auto& dstV : dst)
                     {
-                        BlobHelper<T>::FillView(arena, dstV);
+                        BlobHelper<T>::Remap(arena, dstV);
                     }
                 }
             }
