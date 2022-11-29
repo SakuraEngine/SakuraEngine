@@ -212,13 +212,17 @@ void SGameModule::installResourceFactories()
 
 void SGameModule::uninstallResourceFactories()
 {
+    dualS_release(game_world);
+    auto resource_system = skr::resource::GetResourceSystem();
+    resource_system->Shutdown();
+
     skr::resource::STextureFactory::Destroy(textureFactory);
     skr::resource::SMeshFactory::Destroy(meshFactory);
     skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
     SkrDelete(animFactory);
     SkrDelete(skeletonFactory);
+    SkrDelete(skinFactory);
 
-    dualS_release(game_world);
     skr_free_renderer(game_renderer);
     
     skr::resource::GetResourceSystem()->Shutdown();
