@@ -41,7 +41,7 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, skr_mesh_resourc
     for (size_t i = 0; i < mesh->primitives.size(); ++i)
     {
         auto& prim = mesh->primitives[i];
-        auto vertex_count = prim.index_buffer.index_count / 3;
+        auto vertex_count = prim.vertex_count;
         skr_vertex_buffer_entry_t *joints_buffer = nullptr, *weights_buffer = nullptr, *positions_buffer = nullptr, *normals_buffer = nullptr, *tangents_buffer = nullptr;
         for (auto& view : prim.vertex_buffers)
         {
