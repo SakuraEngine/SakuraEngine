@@ -45,13 +45,21 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     skr_mesh_resource_t mesh;
     eastl::vector<eastl::vector<uint8_t>> blobs;
     auto importer = static_cast<SGltfMeshImporter*>(ctx->GetImporter());
+    mesh.install_to_ram = importer->install_to_ram;
+    mesh.install_to_vram = importer->install_to_vram;
     if (importer->invariant_vertices)
     {
         CookGLTFMeshData(gltf_data, &cfg, mesh, blobs);
+        // TODO: support ram-only mode install
+        mesh.install_to_vram = true;
     }
     else
     {
         CookGLTFMeshData_SplitSkin(gltf_data, &cfg, mesh, blobs);
+        // TODO: install only pos/norm/tangent vertices
+        mesh.install_to_ram = true;
+        // TODO: support ram-only mode install
+        mesh.install_to_vram = true;
     }
 
     //----- write resource object
