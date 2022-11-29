@@ -27,6 +27,7 @@ public:
 
     void LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) final override;
     void UnloadResource(skr_resource_handle_t& handle) final override;
+    void _UnloadResource(skr_resource_record_t* record);
     void FlushResource(skr_resource_handle_t& handle) final override;
     ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) final override;
 
@@ -41,7 +42,7 @@ protected:
     skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid) final override;
     skr_resource_record_t* _GetRecord(const skr_guid_t& guid) final override;
     skr_resource_record_t* _GetRecord(void* resource) final override;
-    void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record) final override;
+    void _DestroyRecord(skr_resource_record_t* record) final override;
     void _UpdateAsyncSerde();
 
     SResourceRegistry* resourceRegistry = nullptr;
@@ -95,13 +96,13 @@ skr_resource_record_t* SResourceSystemImpl::_GetRecord(void* resource)
     return iter == resourceToRecord.end() ? nullptr : iter->second;
 }
 
-void SResourceSystemImpl::_DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record)
+void SResourceSystemImpl::_DestroyRecord(skr_resource_record_t* record)
 {
     //SMutexLock lock(recordMutex);
     auto request = record->activeRequest;
     if (request)
         request->resourceRecord = nullptr;
-    resourceRecords.erase(guid);
+    resourceRecords.erase(record->header.guid);
     if (record->resource)
         resourceToRecord.erase(record->resource);
     resourceIds.free_entities(&record->id, 1);
@@ -183,11 +184,17 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
     record->RemoveReference(handle.get_requester_id(), handle.get_requester_type());
     auto guid = handle.guid = record->header.guid; // force flush handle to guid
 
+    _UnloadResource(record);
+}
+
+
+void SResourceSystemImpl::_UnloadResource(skr_resource_record_t* record)
+{
     if (!record->IsReferenced()) // unload
     {
         if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
         {
-            _DestroyRecord(guid, record);
+            _DestroyRecord(record);
             return;
         }
         auto request = record->activeRequest;
@@ -251,6 +258,28 @@ bool SResourceSystemImpl::IsInitialized()
 
 void SResourceSystemImpl::Shutdown()
 {
+    for(auto& pair : resourceRecords)
+    {
+        auto record = pair.second;
+        if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
+            continue;
+        if(!pair.second->activeRequest)
+        {
+            _UnloadResource(record);
+        }
+    }
+    while(!requests.empty())
+    {
+        Update();
+    }
+    for(auto pair : resourceRecords)
+    {
+        auto record = pair.second;
+        SKR_ASSERT(record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED);
+        SkrDelete(record);
+    }
+    resourceRecords.clear();
+
     resourceRegistry = nullptr;
 }
 
@@ -269,7 +298,7 @@ void SResourceSystemImpl::Update()
                     if (!request->isLoading)
                     {
                         auto guid = request->resourceRecord->header.guid;
-                        _DestroyRecord(guid, request->resourceRecord);
+                        _DestroyRecord(request->resourceRecord);
                     }
                 }
                 SkrDelete(request);
