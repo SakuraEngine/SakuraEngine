@@ -121,7 +121,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
             auto render_device = renderer->get_render_device();
             auto file_dstorage_queue = render_device->get_file_dstorage_queue();
             auto memory_dstorage_queue = render_device->get_memory_dstorage_queue();
-            auto mesh_comps = (skr_live2d_render_model_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_live2d_render_model_comp_t>::get());
+            auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& vram_request = mesh_comps[i].vram_request;
@@ -148,7 +148,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                     skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
             }
         };
-        skr_render_effect_access(renderer, ents, view->count, "Live2DEffect", DUAL_LAMBDA(modelSetup));
+        skr_render_effect_access(renderer, view, "Live2DEffect", DUAL_LAMBDA(modelSetup));
     };
     dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
 }

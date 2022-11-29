@@ -113,6 +113,7 @@ protected:
     bool serdeScheduled;
     int serdeResult; 
 
+    SMutexObject updateMutex;
     bool dependenciesLoaded = false;
 };
 

@@ -282,9 +282,12 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             auto idx = group->index(params.types[i]);
             job->localTypes[groupIndex * params.length + i] = idx;
             auto& op = params.accesses[i];
-            job->readonly[groupIndex].set(idx, op.readonly);
-            job->randomAccess[groupIndex].set(idx, op.randomAccess == DOS_GLOBAL);
-            job->atomic[groupIndex].set(idx, op.atomic);
+            if(idx != kInvalidTypeIndex)
+            {
+                job->readonly[groupIndex].set(idx, op.readonly);
+                job->randomAccess[groupIndex].set(idx, op.randomAccess == DOS_GLOBAL);
+                job->atomic[groupIndex].set(idx, op.atomic);
+            }
             job->hasRandomWrite |= op.randomAccess == DOS_GLOBAL;
             job->hasWriteChunkComponent = t.is_chunk() && !op.readonly && !op.atomic;
         }

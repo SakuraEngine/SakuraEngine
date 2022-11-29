@@ -222,7 +222,7 @@ struct ReadHelper<skr::span<T>> {
         SKR_ARCHIVE(offset);
         uint32_t count = 0;
         SKR_ARCHIVE(count);
-        span = skr::span<T>((T*)arena.get_buffer() + offset, count);
+        span = skr::span<T>((T*)((char*)arena.get_buffer() + offset), count);
         int ret;
         if constexpr(is_complete_v<BlobHelper<T>>)
         {

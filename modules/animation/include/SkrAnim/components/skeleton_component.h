@@ -7,7 +7,7 @@
 sreflect_struct("guid"
                 : "05622CB2-9D73-402B-B6C5-8075E13D5063")
 sattr("component" : true)
-skr_skeleton_component_t
+skr_render_skel_comp_t
 {
     SKR_RESOURCE_FIELD(skr_skeleton_resource_t, skeleton);
 };

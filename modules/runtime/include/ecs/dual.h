@@ -840,6 +840,24 @@ namespace dual
                 };
         }
     }
+
+    template<class T>
+    T* get_component_ro(dual_chunk_view_t* view)
+    {
+        return (T*)dualV_get_component_ro(view, dual_id_of<T>::get());
+    }
+
+    template<class T>
+    T* get_owned_rw(dual_chunk_view_t* view)
+    {
+        return (T*)dualV_get_owned_rw(view, dual_id_of<T>::get());
+    }
+    
+    template<class T, class V>
+    V* get_owned_rw(dual_chunk_view_t* view)
+    {
+        return (V*)dualV_get_owned_rw(view, dual_id_of<T>::get());
+    }
 }
 
 #endif

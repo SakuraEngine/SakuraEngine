@@ -18,6 +18,7 @@ namespace
 using namespace skr::guid::literals;
 const auto kGLTFVertexLayoutWithoutTangentId = "1b357a40-83ff-471c-8903-23e99d95b273"_guid;
 const auto kGLTFVertexLayoutWithTangentId = "1b11e007-7cc2-4941-bc91-82d992c4b489"_guid;
+const auto kGLTFVertexLayoutWithJointId = "C35BD99A-B0A8-4602-AFCC-6BBEACC90321"_guid;
 }
 
 void SkrRendererModule::on_load(int argc, char** argv)
@@ -58,20 +59,20 @@ void SkrRendererModule::on_load(int argc, char** argv)
     render_device->initialize(builder);
 
     // register vertex layout
-    CGPUVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[3] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[4] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attribute_count = 4;
     {
-        using namespace skr::guid::literals;
+        CGPUVertexLayout vertex_layout = {};
+        vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[2] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[3] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[4] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[5] = { "JOINTS", 1, CGPU_FORMAT_R32G32B32A32_UINT, 5, 0, sizeof(uint32_t) * 4, CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[6] = { "WEIGHTS", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 6, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attribute_count = 7;
+        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithJointId, "SkinnedMesh", &vertex_layout);
+        vertex_layout.attribute_count = 4;
         skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithoutTangentId, "StaticMeshWithoutTangent", &vertex_layout);
-    }
-    vertex_layout.attribute_count = 4;
-    {
-        using namespace skr::guid::literals;
+        vertex_layout.attribute_count = 5;
         skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithTangentId, "StaticMeshWithTangent", &vertex_layout);
     }
 }

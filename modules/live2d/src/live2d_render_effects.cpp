@@ -98,7 +98,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     void finalize(SRendererId renderer)
     {
         auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
-        auto meshes = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
+        auto meshes = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 while (!meshes[i].vram_request.is_ready()) {}
@@ -163,7 +163,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
         model_drawcalls.resize(0);
         auto counterF = [&](dual_chunk_view_t* r_cv) {
-            auto models = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
+            auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 if (models[i].vram_request.is_ready())
@@ -244,7 +244,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         mask_drawcalls.resize(0);
         sorted_mask_drawable_lists.resize(0);
         auto counterF = [&](dual_chunk_view_t* r_cv) {
-            auto models = (skr_live2d_render_model_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_live2d_render_model_comp_t>::get());
+            auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 if (models[i].vram_request.is_ready())

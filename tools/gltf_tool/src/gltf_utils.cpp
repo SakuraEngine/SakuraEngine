@@ -188,6 +188,7 @@ void EmplaceGLTFMeshVerticesWithRange(skr::span<const ESkrVertexAttribute> range
             prim.vertex_buffers.resize(shuffle_layout.attribute_count);
 
             const auto gltf_prim = mesh->primitives + j;
+            prim.vertex_count = gltf_prim->attributes[0].data->count;
             const auto& shuffle_attrib = shuffle_layout.attributes[i];
             for (uint32_t k = 0u; k < shuffle_attrib.array_size; k++)
             {

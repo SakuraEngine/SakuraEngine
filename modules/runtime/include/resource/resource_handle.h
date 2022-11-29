@@ -48,6 +48,14 @@ typedef struct skr_resource_handle_t {
     RUNTIME_API void* get_ptr() const;
     RUNTIME_API bool is_null() const;
     RUNTIME_API void reset();
+    skr_resource_handle_t clone(uint64_t requester, ESkrRequesterType requesterType) 
+    {
+        return { *this, requester, requesterType };
+    }
+    skr_resource_handle_t clone(struct dual_storage_t* requester) 
+    {
+        return { *this, (uint64_t)requester, SKR_REQUESTER_ENTITY };
+    }
     RUNTIME_API uint32_t get_requester_id() const;
     RUNTIME_API ESkrRequesterType get_requester_type() const;
     //if resolve is false, then unresolve handle will always return SKR_LOADING_STATUS_UNLOADED
@@ -63,6 +71,7 @@ namespace skr::resource
 {
 template <class T>
 struct TResourceHandle : skr_resource_handle_t {
+    using skr_resource_handle_t::skr_resource_handle_t;
     T* get_resolved(bool requireInstalled = true) const
     {
         return (T*)skr_resource_handle_t::get_resolved(requireInstalled);
@@ -70,6 +79,14 @@ struct TResourceHandle : skr_resource_handle_t {
     T* get_ptr() const
     {
         return (T*)skr_resource_handle_t::get_ptr();
+    }
+    TResourceHandle clone(uint64_t requester, ESkrRequesterType requesterType)
+    {
+        return { *this, requester, requesterType };
+    }
+    TResourceHandle clone(struct dual_storage_t* requester)
+    {
+        return { *this, (uint64_t)requester, SKR_REQUESTER_ENTITY };
     }
 };
 } // namespace skr::resource
