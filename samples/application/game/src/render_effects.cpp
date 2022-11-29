@@ -34,6 +34,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     void on_update(SRendererId renderer, skr::render_graph::RenderGraph* render_graph) override
     {
         namespace rg = skr::render_graph;
+        ZoneScopedN("ForwardPass Update");
 
         auto storage = renderer->get_dual_storage();
         if (!skin_query)
@@ -68,6 +69,8 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 }
                 if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
                 {
+                    ZoneScopedN("CPU Skin");
+
                     skr_cpu_skin(skins + i, anims + i, mesh_resource);
                 }
             }
