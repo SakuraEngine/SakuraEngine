@@ -133,7 +133,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                             prim.views = gsl::span(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
                         }
                     }
-                    const auto vertex_size = -1;// TODO: fix this
+                    const auto vertex_size = anim->buffers[j].size;
                     if (!use_dynamic_buffer)
                     {
                         auto vb_name = mesh_resource->name + skr::to_string(j);
@@ -142,13 +142,10 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         // use copy pass
                         auto upload_buffer_handle = render_graph->create_buffer(
                             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                            builder.set_name(vb_name.c_str())
-                                .size(vertex_size)
-                                .memory_usage(use_dynamic_buffer ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-                                .with_flags(use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-                                .with_tags(use_dynamic_buffer ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
-                                .prefer_on_device()
-                                .as_vertex_buffer();
+                                builder.set_name(ub_name.c_str())
+                                    .size(vertex_size)
+                                    .with_tags(kRenderGraphDefaultResourceTag)
+                                    .as_upload_buffer();
                         });
                         auto vertex_buffer_handle = render_graph->create_buffer(
                         [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
@@ -169,7 +166,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     else
                     {
                         void* vtx_dst = anim->vbs[j]->cpu_mapped_address;
-                        memcpy(vtx_dst, anim->buffers[j].bytes, anim->buffers[j].size);
+                        memcpy(vtx_dst, anim->buffers[j].bytes, vertex_size);
                     }
                 }
             }

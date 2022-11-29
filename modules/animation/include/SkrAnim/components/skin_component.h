@@ -38,7 +38,7 @@ skr_render_anim_comp_t
     eastl::vector<skr_blob_t> buffers;
     eastl::vector<CGPUBufferId> vbs;
     eastl::vector<skr_vertex_buffer_view_t> views;
-    bool use_dynamic_buffer = true;
+    bool use_dynamic_buffer = false;
 };
 
 struct skr_render_skel_comp_t;
