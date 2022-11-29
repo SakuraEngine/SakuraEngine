@@ -34,6 +34,46 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 
 </div>
 
+## 模块列表
+
+| 模块 | 核心库 | 描述 |
+| --- | :---: | --- |
+| `runtime` | - | 核心模块 |
+| `runtime/cgpu` | - | 核心子模块，面向现代 GPU 平台的跨平台 Graphics API |
+| `runtime/dual` | - | 核心子模块，真正面向数据驱动编程的 ECS 对象模型 |
+| `runtime/math` | [DirectXMath] | 核心子模块, 数学库 |
+| `runtime/io` | - | 核心子模块，同步/异步 I/O 服务 |
+| `runtime/task` | - | 核心子模块，基于协程的计算密集任务系统 |
+| `runtime/binary` | - | 核心子模块, 二进制序列化 |
+| `runtime/platform` | - | 核心子模块, 系统接口 |
+| `runtime/resource` | - | 核心子模块, 异步资源管理 |
+| `runtime/type` | - | 核心子模块, 提供 rtti 相关功能 |
+| `SkrScene` | - | 场景模块，场景资源管理 |
+| `SkrRenderer` | - | 渲染器模块，渲染资源管理，驱动渲染管线 |
+| `SkrImgui` | [imgui] | 用于调试的运行时UI |
+| `SkrRenderGraph` | - | RHI 的上层封装 |
+| `SkrLive2d` | [live2d] | Live2d 的渲染后端 |
+| `SkrInputSystem` | [gaininput] | 输入的上层封装 |
+| `SkrAnim` | [ozz-animation] | 动画资源管理，动画计算的基础功能 |
+| `SkrToolCore` | - | 管理并驱动资源烘焙流程 |
+| `SkrAnimTool` | [ozz-animation] | 导入并烘焙动画相关资源 |
+| `SkrGLTFTool` | [cgltf] | 导入gltf模型并烘焙 |
+| `SkrTextureCompiler` | [ISPCTextureCompressor] | 导入并烘焙贴图 |
+| `SkrShaderCompiler` | - | 导入并烘焙材质相关资源 |
+| `codegen` | [libtooling] [mako-template] | 提供代码生成 |
+| `UsdTool` | [usd] | USD相关资源的导入与烘焙 |
+
+[DirectXMath]: https://github.com/microsoft/DirectXMath
+[imgui]: https://github.com/ocornut/imgui
+[live2d]: https://www.live2d.com/en/
+[gaininput]: https://github.com/jkuhlmann/gainput
+[ozz-animation]: https://github.com/guillaumeblanc/ozz-animation
+[cgltf]: https://github.com/jkuhlmann/cgltf
+[ISPCTextureCompressor]: https://github.com/GameTechDev/ISPCTextureCompressor
+[libtooling]: https://clang.llvm.org/docs/LibTooling.html
+[mako-template]: https://www.makotemplates.org/
+[usd]: https://github.com/PixarAnimationStudios/USD
+
 ## 组件支持矩阵
 
 ### [构建](https://github.com/SakuraEngine/Sakura.Runtime/actions)
