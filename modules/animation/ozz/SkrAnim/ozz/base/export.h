@@ -27,8 +27,8 @@
 
 #ifndef OZZ_OZZ_BASE_EXPORT_H_
 #define OZZ_OZZ_BASE_EXPORT_H_
-#include "SkrAnim/module.configure.h"
+#include "SkrOzz/module.configure.h"
 
-#define OZZ_BASE_DLL SKR_ANIM_API
+#define OZZ_BASE_DLL SKR_OZZ_API
 
 #endif  // OZZ_OZZ_BASE_EXPORT_H_
