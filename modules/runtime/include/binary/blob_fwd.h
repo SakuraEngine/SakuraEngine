@@ -6,7 +6,7 @@
 struct RUNTIME_API skr_blob_arena_t
 {
     skr_blob_arena_t();
-    skr_blob_arena_t(void* buffer, size_t base, size_t size, size_t align);
+    skr_blob_arena_t(void* buffer, uint64_t base, size_t size, size_t align);
     skr_blob_arena_t(skr_blob_arena_t&& other);
     skr_blob_arena_t& operator=(skr_blob_arena_t&& other);
 
