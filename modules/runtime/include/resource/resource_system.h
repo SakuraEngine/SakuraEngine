@@ -161,7 +161,7 @@ protected:
     virtual skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid) = 0;
     virtual skr_resource_record_t* _GetRecord(const skr_guid_t& guid) = 0;
     virtual skr_resource_record_t* _GetRecord(void* resource) = 0;
-    virtual void _DestroyRecord(const skr_guid_t& guid, skr_resource_record_t* record) = 0;
+    virtual void _DestroyRecord(skr_resource_record_t* record) = 0;
 };
 RUNTIME_API SResourceSystem* GetResourceSystem();
 } // namespace resource
