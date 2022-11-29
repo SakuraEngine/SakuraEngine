@@ -37,7 +37,7 @@ static struct RegisterComponent${type.id}Helper
         desc.entityFields = 0;
     %endif
     <%
-        resourceFields = filter_fileds(type.fields, lambda name, field: field.rawType == "skr_resource_handle_t" or field.rawType.startswith("TResourceHandle"))
+        resourceFields = filter_fileds(type.fields, lambda name, field: field.type == "skr_resource_handle_t" or field.type.startswith("skr::resource::TResourceHandle"))
     %>
     %if resourceFields:
         desc.resourceFieldsCount = ${len(resourceFields)};
