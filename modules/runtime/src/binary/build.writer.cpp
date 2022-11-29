@@ -123,7 +123,10 @@ int WriteHelper<const skr_blob_t&>::Write(skr_binary_writer_t* writer, const skr
 
 int WriteHelper<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob)
 {
-    int ret = WriteHelper<const uint32_t&>::Write(writer, (uint32_t)blob.get_size());
+    int ret = WriteHelper<const uint64_t&>::Write(writer, (uint64_t)blob.get_buffer());
+    if (ret != 0)
+        return ret;
+    ret = WriteHelper<const uint32_t&>::Write(writer, (uint32_t)blob.get_size());
     if (ret != 0)
         return ret;
     ret = WriteHelper<const uint32_t&>::Write(writer, (uint32_t)blob.get_align());
@@ -141,8 +144,8 @@ void BlobHelper<skr::string_view>::BuildArena(skr_blob_arena_builder_t& arena, s
     dst = skr::string_view((const skr::string::value_type*)offset, src.size());
 }
 
-void BlobHelper<skr::string_view>::FillView(skr_blob_arena_builder_t& arena, skr::string_view& dst)
+void BlobHelper<skr::string_view>::Remap(skr_blob_arena_t& arena, skr::string_view& dst)
 {
-    dst = skr::string_view((const skr::string::value_type*)((char*)arena.get_buffer() + (size_t)dst.data()), dst.size());
+    dst = skr::string_view((const skr::string::value_type*)((char*)arena.get_buffer() + ((size_t)dst.data() - arena.base())), dst.size());
 }
 } // namespace skr::binary

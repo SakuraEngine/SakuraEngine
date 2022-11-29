@@ -182,16 +182,17 @@ struct WriteHelper<const skr::span<T>&> {
         if (ret != 0) {
             return ret;
         }
-        if constexpr(is_complete_v<BlobHelper<T>>)
-        {
-            for(int i = 0; i < span.size(); ++i)
-            {
-                ret = WriteHelper<const T&>::Write(writer, arena, span[i]);
-                if (ret != 0) {
-                    return ret;
-                }
-            }
-        }
+        // inner data is contained in blob arena, no need to write
+        // if constexpr(is_complete_v<BlobHelper<T>>)
+        // {
+        //     for(int i = 0; i < span.size(); ++i)
+        //     {
+        //         ret = WriteHelper<const T&>::Write(writer, arena, span[i]);
+        //         if (ret != 0) {
+        //             return ret;
+        //         }
+        //     }
+        // }
         return 0;
     }
 };

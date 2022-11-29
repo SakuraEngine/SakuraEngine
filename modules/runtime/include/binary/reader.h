@@ -223,16 +223,12 @@ struct ReadHelper<skr::span<T>> {
         uint32_t count = 0;
         SKR_ARCHIVE(count);
         span = skr::span<T>((T*)((char*)arena.get_buffer() + offset), count);
-        int ret;
         if constexpr(is_complete_v<BlobHelper<T>>)
         {
             for(uint32_t i = 0; i < count; ++i)
             {
-                ret = ReadHelper<T>::Read(archive, arena, span[i]);
-                if(ret != 0)
-                {
-                    return ret;
-                }
+                //inner data is contained in the arena, so we don't need to archive it
+                BlobHelper<T>::Remap(arena, span[i]);
             }
         }
         return 0;

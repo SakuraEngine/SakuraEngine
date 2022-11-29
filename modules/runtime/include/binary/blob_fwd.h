@@ -6,22 +6,21 @@
 struct RUNTIME_API skr_blob_arena_t
 {
     skr_blob_arena_t();
-    skr_blob_arena_t(size_t size, size_t align);
-    skr_blob_arena_t(void* buffer, size_t size, size_t align);
+    skr_blob_arena_t(void* buffer, size_t base, size_t size, size_t align);
     skr_blob_arena_t(skr_blob_arena_t&& other);
     skr_blob_arena_t& operator=(skr_blob_arena_t&& other);
 
     ~skr_blob_arena_t();
     void* get_buffer() const { return buffer; }
-    void* allocate(size_t size, size_t align);
-    bool filled() const { return offset == capacity; }
     size_t get_size() const { return offset; }
     size_t get_align() const { return align; }
 #ifdef SKR_BLOB_ARENA_CHECK
     void release(size_t);
 #endif
+    uint64_t base() const { return _base; }
 private:
     void* buffer;
+    uint64_t _base;
     size_t align;
     size_t offset;
     size_t capacity;
@@ -65,10 +64,11 @@ auto make_blob_builder()
 template<class T>
 skr_blob_arena_t make_arena(T& dst, const typename BlobBuilderType<T>::type& src, size_t align = 32)
 {
-    skr_blob_arena_builder_t arena(align);
-    BlobHelper<T>::BuildArena(arena, dst, src);
-    BlobHelper<T>::FillView(arena, dst);
-    return arena.build();
+    skr_blob_arena_builder_t builder(align);
+    BlobHelper<T>::BuildArena(builder, dst, src);
+    auto arena = builder.build();
+    BlobHelper<T>::Remap(arena, dst);
+    return arena;
 }
 }
 using binary::make_blob_builder;
