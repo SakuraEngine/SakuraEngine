@@ -59,6 +59,7 @@ skr_mesh_primitive_t
     skr_guid_t material_inst;
     eastl::vector<skr_vertex_buffer_entry_t> vertex_buffers;
     struct skr_index_buffer_entry_t index_buffer;
+    uint32_t vertex_count;
 };
 
 sreflect_struct("guid" : "d3b04ea5-415d-44d5-995a-5c77c64fe1de")

@@ -276,11 +276,18 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             }
             i++;
         }
-        if (part[i] == '[') // attr: [rand] [seq]
+        if (i == part.size())
+        {
+            errorPos = partBegin + i;
+            error = skr::format("unexpected end of part, loc {}.", errorPos);
+            SKR_ASSERT(false);
+            return nullptr;
+        }
+        if (part[i] == '<') // attr: <rand> <seq>
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i] != ']')
+            while (i < part.size() && part[i] != '>')
                 ++i;
             if (i == part.size())
             {
@@ -288,7 +295,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            auto attr = part.substr(j, j - i);
+            auto attr = part.substr(j, i - j);
             errorPos = partBegin + j;
             if (attr.compare("rand") == 0)
                 operation.randomAccess = DOS_GLOBAL;
@@ -466,7 +473,7 @@ void dual_storage_t::destroy_query(dual_query_t* query)
 {
     auto iter = eastl::find(queries.begin(), queries.end(), query);
     SKR_ASSERT(iter != queries.end());
-    delete query;
+    SkrDelete(query);
     queries.erase(iter);
     queriesBuilt = false;
 }

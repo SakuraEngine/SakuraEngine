@@ -61,10 +61,10 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
         {
             auto self = *dualV_get_entities(view);
             auto ctransform = (skr_float4x4_t*)dualV_get_owned_ro(view, transformType);
-            auto cname = (skr_name_t*)dualV_get_owned_ro(view, dual_id_of<skr_name_t>::get());
+            auto cname = dual::get_owned_rw<skr_name_t>(view);
             if(!ecsChildren.empty())
             {
-                auto cchildren = (skr_children_t*)dualV_get_owned_ro(view, dual_id_of<skr_child_t>::get());
+                auto cchildren = dual::get_owned_rw<skr_child_t, children_t>(view);
                 cchildren->resize(ecsChildren.size());
                 std::memcpy(cchildren->data(), ecsChildren.data(), ecsChildren.size() * sizeof(dual_entity_t));
                 for(auto ent : ecsChildren)

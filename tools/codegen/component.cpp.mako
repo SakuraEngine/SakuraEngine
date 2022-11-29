@@ -23,7 +23,7 @@ static struct RegisterComponent${type.id}Helper
     %if hasattr(type.attrs.component, "buffer"):
         desc.size = sizeof(dual::array_component_T<${type.name}, ${type.attrs.component.buffer}>);
     %else:
-        desc.size = sizeof(${type.name});
+        desc.size = std::is_empty_v<${type.name}> ? 0 : sizeof(${type.name});
     %endif
     <%
         entityFields = filter_fileds(type.fields, lambda name, field: field.rawType == "dual_entity_t")

@@ -11,7 +11,7 @@ namespace game
         state->local_transforms.resize(skeleton->skeleton.num_soa_joints());
     }
 
-    void UpdateAnimState(anim_state_t *state, skr_skeleton_resource_t* skeleton, float dt, skr_anim_component_t *output)
+    void UpdateAnimState(anim_state_t *state, skr_skeleton_resource_t* skeleton, float dt, skr_render_anim_comp_t *output)
     {
         auto anim = state->animation_resource.get_resolved();
         if(!anim)
@@ -19,7 +19,6 @@ namespace game
         float newTime = state->currtime + dt;
         if(newTime > anim->animation.duration())
             newTime = std::fmodf(newTime, anim->animation.duration());
-        newTime = 0.0f;
         ozz::animation::SamplingJob sampling_job;
         sampling_job.animation = &anim->animation;
         sampling_job.context = &state->sampling_context;
@@ -29,15 +28,17 @@ namespace game
             SKR_LOG_ERROR("Failed to sample animation %s.", anim->animation.name());
             return;
         }
-
+        
         // Converts from local space to model space matrices.
         ozz::animation::LocalToModelJob ltm_job;
         ltm_job.skeleton = &skeleton->skeleton;
         ltm_job.input = ozz::span{state->local_transforms.data(), state->local_transforms.size()};
+        output->joint_matrices.resize(skeleton->skeleton.num_joints());
         ltm_job.output = ozz::span{output->joint_matrices.data(), output->joint_matrices.size()};
         if (!ltm_job.Run()) {
             SKR_LOG_ERROR("Failed to convert local space to model space %s.", anim->animation.name());
             return;
         }
+        state->currtime = newTime;
     }
 }

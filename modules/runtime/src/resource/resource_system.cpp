@@ -223,10 +223,10 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
     }
 }
 
-thread_local eastl::vector<SResourceRequest*> flushRequests;
 void SResourceSystemImpl::FlushResource(skr_resource_handle_t& handle)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    // flush load handle
+    SKR_UNIMPLEMENTED_FUNCTION()
 }
 
 ESkrLoadingStatus SResourceSystemImpl::GetResourceStatus(const skr_guid_t& handle)
@@ -296,19 +296,21 @@ void SResourceSystemImpl::Update()
         to_update_requests = requests;
     }
     // TODO: time limit
-    for (auto request : to_update_requests)
     {
-        uint32_t spinCounter = 0;
-        ESkrLoadingPhase LastPhase;
-        while(!request->Okay() && !request->AsyncSerde() && spinCounter < 16)
+        for (auto request : to_update_requests)
         {
-            LastPhase = request->currentPhase;
-            request->Update();
-            if(LastPhase == request->currentPhase)
-                spinCounter++;
-            else
-                spinCounter = 0;
-        };
+            uint32_t spinCounter = 0;
+            ESkrLoadingPhase LastPhase;
+            while(!request->Okay() && !request->AsyncSerde() && spinCounter < 16)
+            {
+                LastPhase = request->currentPhase;
+                request->Update();
+                if(LastPhase == request->currentPhase)
+                    spinCounter++;
+                else
+                    spinCounter = 0;
+            };
+        }
     }
     _UpdateAsyncSerde();
 }

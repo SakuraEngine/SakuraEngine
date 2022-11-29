@@ -37,6 +37,7 @@
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrAnim/resources/animation_resource.h"
 #include "SkrAnim/resources/skeleton_resource.h"
+#include "SkrAnim/resources/skin_resource.h"
 #include "SkrAnim/components/skin_component.h"
 #include "SkrAnim/components/skeleton_component.h"
 #include "GameRuntime/game_animation.h"
@@ -72,6 +73,7 @@ class SGameModule : public skr::IDynamicModule
     skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
     skr::resource::SAnimFactory* animFactory = nullptr;
     skr::resource::SSkelFactory* skeletonFactory = nullptr;
+    skr::resource::SSkinFactory* skinFactory = nullptr;
 
     skr_vfs_t* resource_vfs = nullptr;
     skr_vfs_t* tex_resource_vfs = nullptr;
@@ -174,6 +176,11 @@ void SGameModule::installResourceFactories()
         skeletonFactory = SkrNew<skr::resource::SSkelFactory>();
         resource_system->RegisterFactory(skeletonFactory);
     }
+    // skeleton factory
+    {
+        skinFactory = SkrNew<skr::resource::SSkinFactory>();
+        resource_system->RegisterFactory(skinFactory);
+    }
 
     skr_resource_handle_t shaderHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
     shaderHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
@@ -196,30 +203,6 @@ void SGameModule::installResourceFactories()
             resource_system->UnloadResource(shaderHdl);
             resource_system->Update();
             while (shaderHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
-            {
-                resource_system->Update();
-            }
-        }
-    }
-
-    //anim
-    skr_resource_handle_t animHdl("FBF4CC70-8B1D-4C30-B788-245C5CCE7EE6"_guid);
-
-    animHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
-    {
-        while (animHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && animHdl.get_status() != SKR_LOADING_STATUS_ERROR)
-        {
-            auto status = animHdl.get_status();(void)status;
-            resource_system->Update();
-        }
-        auto final_status = animHdl.get_status();
-        if (final_status != SKR_LOADING_STATUS_ERROR)
-        {
-            auto anim = (skr_anim_resource_t*)animHdl.get_ptr();
-            SKR_LOG_TRACE("Anim Loaded: anim name - %s", anim->animation.name());
-            resource_system->UnloadResource(animHdl);
-            resource_system->Update();
-            while (animHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
             {
                 resource_system->Update();
             }
@@ -278,11 +261,12 @@ void create_test_scene(SRendererId renderer)
     renderableT.type = renderableT_builder.build();
     uint32_t init_idx = 0;
     auto primSetup = [&](dual_chunk_view_t* view) {
-        auto translations = (skr_translation_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_t>::get());
-        auto rotations = (skr_rotation_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_t>::get());
-        auto scales = (skr_scale_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_t>::get());
-        auto indices = (skr_index_component_t*)dualV_get_owned_ro(view, dual_id_of<skr_index_component_t>::get());
-        auto movements = (skr_movement_t*)dualV_get_owned_ro(view, dual_id_of<skr_movement_t>::get());
+        auto translations = dual::get_owned_rw<skr_translation_t>(view);
+        auto rotations = dual::get_owned_rw<skr_rotation_t>(view);
+        auto scales = dual::get_owned_rw<skr_scale_t>(view);
+        auto indices = dual::get_owned_rw<skr_index_component_t>(view);
+        auto movements = dual::get_owned_rw<skr_movement_t>(view);
+        auto states = dual::get_owned_rw<game::anim_state_t>(view);
         for (uint32_t i = 0; i < view->count; i++)
         {
             if (movements)
@@ -295,13 +279,22 @@ void create_test_scene(SRendererId renderer)
             else
             {
                 translations[i].value = { 0.f, 30.f, -10.f };
-                rotations[i].euler = { 0.f, 0.f, 0.f };
+                rotations[i].euler = { 90.f, 0.f, 0.f };
                 scales[i].value = { .25f, .25f, .25f };
+            }
+            if(states)
+            {
+                using namespace skr::guid::literals;
+                states[i].animation_resource = "FBF4CC70-8B1D-4C30-B788-245C5CCE7EE6"_guid;
+                states[i].animation_resource.resolve(true, renderer->get_dual_storage());
             }
         }
         if(auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get()))
         {
-            skr_render_effect_attach(renderer, view, "ForwardEffect");
+            if (movements)
+                skr_render_effect_attach(renderer, view, "ForwardEffect");
+            else
+                skr_render_effect_attach(renderer, view, "ForwardEffectSkin");
         }
     };
     dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
@@ -324,7 +317,7 @@ void create_test_scene(SRendererId renderer)
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
     static_renderableT_builderT
         .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
-        .with<skr_render_effect_t>();
+        .with<skr_render_effect_t, game::anim_state_t>();
     auto static_renderableT = make_zeroed<dual_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
     dualS_allocate_type(renderer->get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
@@ -343,15 +336,28 @@ void async_attach_render_mesh(SRendererId renderer)
     filter.all = renderable_type.build();
     filter.none = static_type.build();
     auto attchFunc = [=](dual_chunk_view_t* view) {
-        auto ents = (dual_entity_t*)dualV_get_entities(view);
         auto requestSetup = [=](dual_chunk_view_t* view) {
             using namespace skr::guid::literals;
-
-            auto mesh_comps = (skr_render_mesh_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_mesh_comp_t>::get());
-            mesh_comps->mesh_resource = "2f9a3ffa-fa79-48d7-b95d-104ef03740f7"_guid;
-            mesh_comps->mesh_resource.resolve(true, renderer->get_dual_storage());
+            auto mesh_comps = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
+            auto skin_comps = dual::get_owned_rw<skr_render_skin_comp_t>(view);
+            auto skel_comps = dual::get_owned_rw<skr_render_skel_comp_t>(view);
+            auto anim_comps = dual::get_owned_rw<skr_render_anim_comp_t>(view);
+            
+            for(uint32_t i = 0; i < view->count; i++)
+            {
+                auto& mesh_comp = mesh_comps[i];
+                auto& skin_comp = skin_comps[i];
+                auto& skel_comp = skel_comps[i];
+                auto& anim_comp = anim_comps[i];
+                mesh_comp.mesh_resource = "2f9a3ffa-fa79-48d7-b95d-104ef03740f7"_guid;
+                mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
+                skin_comp.skin_resource = "D1E4F32C-7C43-486E-87AB-EDF565A43E80"_guid;
+                skin_comp.skin_resource.resolve(true, renderer->get_dual_storage());
+                skel_comp.skeleton = "23F44FD5-6F87-4E6D-A232-1A99D015E21A"_guid;
+                skel_comp.skeleton.resolve(true, renderer->get_dual_storage());
+            }
         };
-        skr_render_effect_access(renderer, ents, view->count, "ForwardEffect", DUAL_LAMBDA(requestSetup));
+        skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
     };
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
@@ -492,7 +498,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     cameraQuery = dualQ_from_literal(game_world, 
         "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
     animQuery = dualQ_from_literal(game_world, 
-        "[inout]skr_anim_component_t, [in]game::anim_state_t, [in]skr_skeleton_component_t");
+        "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
     while (!quit)
     {
         FrameMark;
@@ -572,7 +578,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         resource_system->Update();
         // Update camera
         auto cameraUpdate = [=](dual_chunk_view_t* view){
-            auto cameras = (skr_camera_t*)dualV_get_owned_rw(view, dual_id_of<skr_camera_t>::get());
+            auto cameras = dual::get_owned_rw<skr_camera_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 cameras[i].viewport_width = swapchain->back_buffers[0]->width;
@@ -632,25 +638,35 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
         }
-        // [inout]skr_anim_component_t, [in]game::anim_state_t, [in]skr_skeleton_component_t
+        // [inout]skr_render_anim_comp_t, [in]game::anim_state_t, [in]skr_render_skel_comp_t
         {
             ZoneScopedN("AnimSystem");
             auto animJob = SkrNewLambda([=]
                 (dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("AnimJob");
-                auto anims = (skr_anim_component_t*)dualV_get_owned_rw_local(view, localTypes[0]);
                 auto states = (game::anim_state_t*)dualV_get_owned_ro_local(view, localTypes[1]);
-                auto skeletons = (skr_skeleton_component_t*)dualV_get_owned_ro_local(view, localTypes[2]);
-                for (uint32_t i = 0; i < view->count; i++)
-                {
-                    auto& anim = anims[i];
-                    auto& state = states[i];
-                    auto& skeleton = skeletons[i];
-                    auto skeleton_resource = skeleton.skeleton.get_resolved();
-                    if(!skeleton_resource)
-                        continue;
-                    game::UpdateAnimState(&state, skeleton_resource, deltaTime, &anim);
-                }
+                uint32_t g_id = 0;
+                auto syncEffect = [&](dual_chunk_view_t* view) {
+                    auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
+                    auto skels = dual::get_component_ro<skr_render_skel_comp_t>(view);
+                    for(uint32_t i = 0; i < view->count; ++i, ++g_id)
+                    {
+                        auto& anim = anims[i];
+                        auto& skel = skels[i];
+                        auto& state = states[g_id];
+                        auto skeleton_resource = skel.skeleton.get_resolved();
+                        if(!skeleton_resource)
+                            continue;
+                        if(anim.buffers.empty())
+                            continue;
+                        if(state.sampling_context.max_tracks() == 0)
+                        {
+                            game::InitializeAnimState(&state, skeleton_resource);
+                        }
+                        game::UpdateAnimState(&state, skeleton_resource, deltaTime, &anim);
+                    }
+                };
+                skr_render_effect_access(game_renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(syncEffect));
             });
             dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }

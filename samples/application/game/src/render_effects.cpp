@@ -22,6 +22,7 @@
 #include <platform/filesystem.hpp>
 
 #include "resource/resource_system.h"
+#include "GameRuntime/game_animation.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -37,33 +38,51 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         auto storage = renderer->get_dual_storage();
         if (!skin_query)
         {
-            auto sig = "[in]skr_render_mesh_comp_t, [in]skr_anim_component_t, [in]skr_skeleton_component_t, [in]skr_skin_component_t";
+            auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t";
             skin_query = dualQ_from_literal(storage, sig);
         }
-        auto uploadVertices = [&](dual_chunk_view_t* g_cv) {
+        auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
             const auto cgpu_device = renderer->get_render_device()->get_cgpu_device();
-            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_render_mesh_comp_t>::get());
-            auto anims = (skr_anim_component_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_anim_component_t>::get());
-            auto skins = (skr_skin_component_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_skin_component_t>::get());
-
-            for (uint32_t i = 0; i < g_cv->count; i++)
+            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
+            auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+            auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(r_cv);
+            auto skels = dual::get_owned_rw<skr_render_skel_comp_t>(r_cv);
+            
+            for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                auto mesh_resource = (skr_mesh_resource_id)meshes[i].mesh_resource.get_ptr();
-                if (mesh_resource)
+                auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                if(!mesh_resource)
+                    continue;
+                if(skins[i].joint_remaps.empty())
+                {
+                    auto skin_resource = skins[i].skin_resource.get_resolved();
+                    auto skel_resource = skels[i].skeleton.get_resolved();
+                    if(skel_resource && skin_resource)
+                        skr_init_skin_component(&skins[i], skel_resource);
+                }
+                if(anims[i].buffers.empty())
+                {
+                    auto skel_resource = skels[i].skeleton.get_resolved();
+                    if(skel_resource)
+                        skr_init_anim_component(&anims[i], mesh_resource, skel_resource);
+                }
+                if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
                 {
                     skr_cpu_skin(skins + i, anims + i, mesh_resource);
                 }
             }
 
-            for (uint32_t i = 0; i < g_cv->count; i++)
+            for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 const auto* mesh = meshes + i;
-                auto mesh_resource = (skr_mesh_resource_id)mesh->mesh_resource.get_ptr();
+                auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                if(!mesh_resource)
+                    continue;
                 auto* anim = anims + i;
-                for (size_t j = 0u; j < anim->primitive_buffers.size(); j++)
+                for (size_t j = 0u; j < anim->buffers.size(); j++)
                 {
                     const bool use_dynamic_buffer = anim->use_dynamic_buffer;
-                    if (!anim->primitive_vbs[j])
+                    if (!anim->vbs[j])
                     {
                         skr::string name = mesh_resource->name;
                         auto vb_name = name + skr::to_string(i);
@@ -74,8 +93,45 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         vb_desc.flags = anim->use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE;
                         vb_desc.memory_usage = anim->use_dynamic_buffer ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY;
                         vb_desc.prefer_on_device = true;
-                        vb_desc.size = anim->primitive_buffers.size();
-                        anim->primitive_vbs[j] = cgpu_create_buffer(cgpu_device, &vb_desc);
+                        vb_desc.size = anim->buffers[j].size;
+                        SKR_ASSERT(vb_desc.size > 0);
+                        anim->vbs[j] = cgpu_create_buffer(cgpu_device, &vb_desc);
+                        auto renderMesh = mesh_resource->render_mesh;
+                        anim->views.reserve(renderMesh->vertex_buffer_views.size());
+                        for(size_t k=0; k < anim->primitives.size(); ++k)
+                        {
+                            auto& prim = anim->primitives[k];
+                            auto vbv_start = anim->views.size();
+                            for(size_t z=0; z < renderMesh->primitive_commands[k].vbvs.size(); ++z)
+                            {
+                                auto& vbv = renderMesh->primitive_commands[k].vbvs[z];
+                                auto attr = mesh_resource->primitives[k].vertex_buffers[z].attribute;
+                                if(attr == SKR_VERT_ATTRIB_POSITION)
+                                {
+                                    auto& view = anim->views.emplace_back();
+                                    view.buffer = anim->vbs[j];
+                                    view.offset = prim.position.offset;
+                                    view.stride = prim.position.stride;
+                                }
+                                else if(attr == SKR_VERT_ATTRIB_NORMAL)
+                                {
+                                    auto& view = anim->views.emplace_back();
+                                    view.buffer = anim->vbs[j];
+                                    view.offset = prim.normal.offset;
+                                    view.stride = prim.normal.stride;
+                                }
+                                else if(attr == SKR_VERT_ATTRIB_TANGENT)
+                                {
+                                    auto& view = anim->views.emplace_back();
+                                    view.buffer = anim->vbs[j];
+                                    view.offset = prim.tangent.offset;
+                                    view.stride = prim.tangent.stride;
+                                }
+                                else
+                                    anim->views.push_back(vbv);
+                            }
+                            prim.views = gsl::span(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
+                        }
                     }
                     const auto vertex_size = -1;// TODO: fix this
                     if (!use_dynamic_buffer)
@@ -92,12 +148,12 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                                 .with_flags(use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
                                 .with_tags(use_dynamic_buffer ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
                                 .prefer_on_device()
-                                .as_index_buffer();
+                                .as_vertex_buffer();
                         });
                         auto vertex_buffer_handle = render_graph->create_buffer(
                         [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
                             builder.set_name(vb_name.c_str())
-                                .import(anim->primitive_vbs[j], CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                                .import(anim->vbs[j], CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                         });
                         render_graph->add_copy_pass(
                         [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
@@ -107,13 +163,13 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         [=](rg::RenderGraph& g, rg::CopyPassContext& context){
                             auto upload_buffer = context.resolve(upload_buffer_handle);
                             void* vtx_dst = upload_buffer->cpu_mapped_address;
-                            memcpy(vtx_dst, anim->primitive_buffers[j], vertex_size);
+                            memcpy(vtx_dst, anim->buffers[j].bytes, vertex_size);
                         });
                     }
                     else
                     {
-                        void* vtx_dst = anim->primitive_vbs[j]->cpu_mapped_address;
-                        memcpy(vtx_dst, anim->primitive_buffers[j], vertex_size);
+                        void* vtx_dst = anim->vbs[j]->cpu_mapped_address;
+                        memcpy(vtx_dst, anim->buffers[j].bytes, anim->buffers[j].size);
                     }
                 }
             }
@@ -265,23 +321,32 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             type_builder.with<skr_render_group_t>();
             typeset = type_builder.build();
         }
-        // initialize queries
-        mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
-        draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
-        draw_skin_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t"
-                                                        ", [in]skr_skeleton_component_t, [in]skr_skin_component_t"
-                                                        ", [in]skr_anim_component_t, [out]skr_render_group_t");
-        camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
+        initialize_queries(storage);
         // prepare render resources
         prepare_pipeline(renderer);
         prepare_geometry_resources(renderer);
+    }
+
+    void initialize_queries(dual_storage_t* storage)
+    {
+        // initialize queries
+        mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
+        draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
+        camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
+    }
+
+    void release_queries()
+    {
+        dualQ_release(mesh_query);
+        dualQ_release(draw_mesh_query);
+        dualQ_release(camera_query);
     }
 
     void on_unregister(SRendererId renderer, dual_storage_t* storage) override
     {
         auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
             auto resource_system = skr::resource::GetResourceSystem();
-            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 auto status = meshes[i].mesh_resource.get_status();
@@ -299,6 +364,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             }
         };
         dualQ_get_views(mesh_query, DUAL_LAMBDA(sweepFunction));
+        release_queries();
         free_pipeline(renderer);
         free_geometry_resources(renderer);
     }
@@ -333,7 +399,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             return {};
         uint32_t c = 0;
         auto counterF = [&](dual_chunk_view_t* r_cv) {
-            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 auto status = meshes[i].mesh_resource.get_status();
@@ -360,8 +426,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             { 0.f, 0.f, 1.f } /*up*/
         );
         auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
-            auto cameras = (skr_camera_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_camera_t>::get());
-            auto camera_transforms = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
+            auto cameras = dual::get_owned_rw<skr_camera_t>(g_cv);
+            auto camera_transforms = dual::get_owned_rw<skr_translation_t>(g_cv);
             auto camera_forward = skr::math::Vector3f(0.f, 1.f, 0.f);
             SKR_ASSERT(g_cv->count <= 1);
             if (cameras)
@@ -390,14 +456,15 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
             auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
             auto unbatched_g_ents = (dual_entity_t*)identities;
-            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
+            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
+            auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
             if (unbatched_g_ents)
             {
                 auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
                     //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
-                    auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
-                    auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
-                    auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
+                    auto translations = dual::get_owned_rw<skr_translation_t>(g_cv);
+                    auto rotations = dual::get_owned_rw<skr_rotation_t>(g_cv);(void)rotations;
+                    auto scales = dual::get_owned_rw<skr_scale_t>(g_cv);
                     for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                     {
                         const auto quaternion = skr::math::quaternion_from_euler(
@@ -411,24 +478,45 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                         if (status == SKR_LOADING_STATUS_INSTALLED)
                         {
                             auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
+                            
                             auto renderMesh = resourcePtr->render_mesh;
                 
                             const auto& cmds = renderMesh->primitive_commands;
-                            for (auto&& cmd : cmds)
+                            if(anims && !anims->vbs.empty())
                             {
-                                // resources may be ready after produce_drawcall, so we need to check it here
-                                if (push_constants.capacity() <= dc_idx) return;
+                                for (size_t i=0; i < resourcePtr->primitives.size(); ++i)
+                                {
+                                    auto& cmd = cmds[i];
+                                    auto& push_const = push_constants.emplace_back();
+                                    push_const.world = world;
+                                    auto& drawcall = mesh_drawcalls.emplace_back();
+                                    drawcall.pipeline = pipeline;
+                                    drawcall.push_const_name = push_constants_name;
+                                    drawcall.push_const = (const uint8_t*)(&push_const);
+                                    drawcall.index_buffer = *cmd.ibv;
+                                    drawcall.vertex_buffers = anims[r_idx].primitives[i].views.data();
+                                    drawcall.vertex_buffer_count = (uint32_t)anims[r_idx].primitives[i].views.size();
+                                    dc_idx++;
+                                }
+                            }
+                            else 
+                            {
+                                for (auto&& cmd : cmds)
+                                {
+                                    // resources may be ready after produce_drawcall, so we need to check it here
+                                    if (push_constants.capacity() <= dc_idx) return;
 
-                                auto& push_const = push_constants.emplace_back();
-                                push_const.world = world;
-                                auto& drawcall = mesh_drawcalls.emplace_back();
-                                drawcall.pipeline = pipeline;
-                                drawcall.push_const_name = push_constants_name;
-                                drawcall.push_const = (const uint8_t*)(&push_const);
-                                drawcall.index_buffer = *cmd.ibv;
-                                drawcall.vertex_buffers = cmd.vbvs.data();
-                                drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
-                                dc_idx++;
+                                    auto& push_const = push_constants.emplace_back();
+                                    push_const.world = world;
+                                    auto& drawcall = mesh_drawcalls.emplace_back();
+                                    drawcall.pipeline = pipeline;
+                                    drawcall.push_const_name = push_constants_name;
+                                    drawcall.push_const = (const uint8_t*)(&push_const);
+                                    drawcall.index_buffer = *cmd.ibv;
+                                    drawcall.vertex_buffers = cmd.vbvs.data();
+                                    drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
+                                    dc_idx++;
+                                }
                             }
                         }
                         else
@@ -453,63 +541,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             }
         };
         dualQ_get_views(draw_mesh_query, DUAL_LAMBDA(r_effect_callback));
-        }
-        // draw static mesh
-        {
-        auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
-            uint32_t r_idx = 0;
-            uint32_t dc_idx = 0;
-
-            auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
-            auto unbatched_g_ents = (dual_entity_t*)identities;
-            auto meshes = (skr_render_mesh_comp_t*)dualV_get_owned_ro(r_cv, dual_id_of<skr_render_mesh_comp_t>::get());
-            if (unbatched_g_ents)
-            {
-                auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
-                    //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
-                    auto translations = (skr_translation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_translation_t>::get());
-                    auto rotations = (skr_rotation_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_rotation_t>::get());(void)rotations;
-                    auto scales = (skr_scale_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_scale_t>::get());
-                    auto animations = (skr_anim_component_t*)dualV_get_owned_ro(g_cv, dual_id_of<skr_anim_component_t>::get());
-                    for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
-                    {
-                        const auto quaternion = skr::math::quaternion_from_euler(
-                            rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll);
-                        auto world = skr::math::make_transform(
-                            translations[g_idx].value,
-                            scales[g_idx].value,
-                            quaternion);
-                        // drawcall
-                        auto status = meshes[r_idx].mesh_resource.get_status();
-                        if (status == SKR_LOADING_STATUS_INSTALLED)
-                        {
-                            auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
-                            auto renderMesh = resourcePtr->render_mesh;
-                
-                            const auto& cmds = renderMesh->primitive_commands;
-                            for (auto&& cmd : cmds)
-                            {
-                                // resources may be ready after produce_drawcall, so we need to check it here
-                                if (push_constants.capacity() <= dc_idx) return;
-
-                                auto& push_const = push_constants.emplace_back();
-                                push_const.world = world;
-                                auto& drawcall = mesh_drawcalls.emplace_back();
-                                drawcall.pipeline = pipeline;
-                                drawcall.push_const_name = push_constants_name;
-                                drawcall.push_const = (const uint8_t*)(&push_const);
-                                drawcall.index_buffer = *cmd.ibv;
-                                drawcall.vertex_buffers = cmd.vbvs.data();
-                                drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
-                                dc_idx++;
-                            }
-                        }
-                    }
-                };
-                dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
-            }
-        };
-        dualQ_get_views(draw_skin_query, DUAL_LAMBDA(r_effect_callback));
         }
 
         mesh_draw_list.drawcalls = mesh_drawcalls.data();
@@ -669,15 +700,6 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
     skr_vfs_fclose(vsfile);
 
-    
-    skr::string skin_vsname = u8"shaders/Game/gbuffer_vs";
-    skin_vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto skin_vsfile = skr_vfs_fopen(resource_vfs, skin_vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    uint32_t _skin_vs_length = (uint32_t)skr_vfs_fsize(skin_vsfile);
-    uint32_t* _skin_vs_bytes = (uint32_t*)sakura_malloc(_skin_vs_length);
-    skr_vfs_fread(skin_vsfile, _skin_vs_bytes, 0, _skin_vs_length);
-    skr_vfs_fclose(skin_vsfile);
-
     skr::string fsname = u8"shaders/Game/gbuffer_fs";
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     auto fsfile = skr_vfs_fopen(resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
@@ -692,23 +714,14 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = _vs_bytes;
     vs_desc.code_size = _vs_length;
-    /*
-    CGPUShaderLibraryDescriptor skin_vs_desc = {};
-    skin_vs_desc.name = "gbuffer_skin_vertex_shader";
-    skin_vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    skin_vs_desc.code = _skin_vs_bytes;
-    skin_vs_desc.code_size = _skin_vs_length;
-    */
     CGPUShaderLibraryDescriptor fs_desc = {};
     fs_desc.name = "gbuffer_pixel_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = _fs_bytes;
     fs_desc.code_size = _fs_length;
     CGPUShaderLibraryId _vs = cgpu_create_shader_library(device, &vs_desc);
-    // CGPUShaderLibraryId _skin_vs = cgpu_create_shader_library(device, &skin_vs_desc);
     CGPUShaderLibraryId _fs = cgpu_create_shader_library(device, &fs_desc);
     sakura_free(_vs_bytes);
-    sakura_free(_skin_vs_bytes);
     sakura_free(_fs_bytes);
 
     CGPUPipelineShaderDescriptor ppl_shaders[2];
@@ -720,10 +733,6 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     ps.library = _fs;
     ps.stage = CGPU_SHADER_STAGE_FRAG;
     ps.entry = "main";
-    //CGPUPipelineShaderDescriptor& skin_vs = ppl_shaders[2];
-    //skin_vs.library = _skin_vs;
-    //skin_vs.stage = CGPU_SHADER_STAGE_VERT;
-    //skin_vs.entry = "main";
 
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
@@ -741,14 +750,6 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     vertex_layout.attributes[4] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 4;
 
-    CGPUVertexLayout skin_vertex_layout = {};
-    skin_vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    skin_vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    skin_vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    skin_vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    skin_vertex_layout.attributes[4] = { "JOINTS", 1, CGPU_FORMAT_R32G32B32A32_UINT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    skin_vertex_layout.attributes[5] = { "WEIGHTS", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 5, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    skin_vertex_layout.attribute_count = 6;
 
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     auto rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();
@@ -760,18 +761,6 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     rp_desc.render_target_count = 1;
     rp_desc.color_formats = &fmt;
     rp_desc.depth_stencil_format = depth_format;
-
-    /*
-    auto skin_rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();
-    skin_rp_desc.root_signature = root_sig;
-    skin_rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
-    skin_rp_desc.vertex_layout = &skin_vertex_layout;
-    skin_rp_desc.vertex_shader = &skin_vs;
-    skin_rp_desc.fragment_shader = &ps;
-    skin_rp_desc.render_target_count = 1;
-    skin_rp_desc.color_formats = &fmt;
-    skin_rp_desc.depth_stencil_format = depth_format;
-    */
 
     auto raster_desc = make_zeroed<CGPURasterizerStateDescriptor>();
     raster_desc.cull_mode = CGPU_CULL_MODE_BACK;
@@ -786,9 +775,6 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 
     rp_desc.rasterizer_state = &raster_desc;
     rp_desc.depth_state = &ds_desc;
-    //skin_rp_desc.rasterizer_state = &raster_desc;
-    //skin_rp_desc.depth_state = &ds_desc;
-    // skin_pipeline = cgpu_create_render_pipeline(device, &skin_rp_desc);
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
 
     cgpu_free_shader_library(_vs);
@@ -803,11 +789,73 @@ void RenderEffectForward::free_pipeline(SRendererId renderer)
     cgpu_free_root_signature(sig_to_free);
 }
 
+skr_render_effect_name_t forward_effect_skin_name = "ForwardEffectSkin";
+struct RenderEffectForwardSkin : public RenderEffectForward
+{
+    RenderEffectForwardSkin(skr_vfs_t* resource_vfs)
+        : RenderEffectForward(resource_vfs) {}
+
+    void on_register(SRendererId renderer, dual_storage_t* storage) override
+    {
+        // make identity component type
+        {
+            auto guid = make_zeroed<skr_guid_t>();
+            dual_make_guid(&guid);
+            auto desc = make_zeroed<dual_type_description_t>();
+            desc.name = "forward_skin_render_identity";
+            desc.size = sizeof(forward_effect_identity_t);
+            desc.guid = guid;
+            desc.alignment = alignof(forward_effect_identity_t);
+            identity_type = dualT_register_type(&desc);
+            type_builder.with(identity_type);
+            type_builder.with<skr_render_mesh_comp_t>();
+            type_builder.with<skr_render_group_t>();
+            type_builder.with<skr_render_anim_comp_t>();
+            type_builder.with<skr_render_skel_comp_t>();
+            type_builder.with<skr_render_skin_comp_t>();
+            typeset = type_builder.build();
+        }
+        initialize_queries(storage);
+        // prepare render resources
+        prepare_pipeline(renderer);
+        prepare_geometry_resources(renderer);
+    }
+
+    void initialize_queries(dual_storage_t* storage)
+    {
+        mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t");
+        draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
+        camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
+        install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t");
+    }
+
+    void release_queries()
+    {
+        dualQ_release(mesh_query);
+        dualQ_release(draw_mesh_query);
+        dualQ_release(camera_query);
+        dualQ_release(install_query);
+    }
+
+    void on_unregister(SRendererId renderer, dual_storage_t* storage) override
+    {
+        free_pipeline(renderer);
+        free_geometry_resources(renderer);
+        release_queries();
+    }
+
+    
+    dual_query_t* install_query = nullptr;
+};
+RenderEffectForwardSkin* forward_effect_skin = nullptr;
+
 void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* resource_vfs)
 {
     forward_effect = new RenderEffectForward(resource_vfs);
+    forward_effect_skin = new RenderEffectForwardSkin(resource_vfs);
     forward_pass = new RenderPassForward();
     skr_renderer_register_render_effect(renderer, forward_effect_name, forward_effect);
+    skr_renderer_register_render_effect(renderer, forward_effect_skin_name, forward_effect_skin);
 }
 
 void game_register_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph)
@@ -819,6 +867,8 @@ void game_finalize_render_effects(SRendererId renderer, skr::render_graph::Rende
 {
     skr_renderer_remove_render_pass(renderer, forward_pass_name);
     skr_renderer_remove_render_effect(renderer, forward_effect_name);
+    skr_renderer_remove_render_effect(renderer, forward_effect_skin_name);
     delete forward_effect;
+    delete forward_effect_skin;
     delete forward_pass;
 }

@@ -233,6 +233,7 @@ void SResourceRequest::_InstallFinished()
 
 void SResourceRequest::Update()
 {
+    SMutexLock lock(updateMutex.mMutex);
     if (requireLoading != isLoading)
     {
         if (requireLoading)

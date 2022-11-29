@@ -26,7 +26,7 @@ struct sreflect sattr(
     "guid" : "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c",
     "component" : true
 ) skr_render_mesh_comp_t {
-    skr_resource_handle_t mesh_resource;
+    SKR_RESOURCE_FIELD(skr_mesh_resource_t, mesh_resource);
 };
 typedef struct skr_render_mesh_comp_t skr_render_mesh_comp_t;
 

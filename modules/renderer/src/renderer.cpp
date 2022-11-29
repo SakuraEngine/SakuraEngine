@@ -318,7 +318,7 @@ void skr_render_effect_add_delta(SRendererId r, const SGameEntity* entities, uin
         render_effects.reserve(count);
         // batch game ents to collect render effects
         auto game_batch_callback = [&](dual_chunk_view_t* view) {
-            auto feature_arrs = (render_effects_t*)dualV_get_owned_ro(view, dual_id_of<skr_render_effect_t>::get());
+            auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get());
             if (feature_arrs)
             {
                 for (uint32_t i = 0; i < view->count; i++)
@@ -343,34 +343,31 @@ void skr_render_effect_add_delta(SRendererId r, const SGameEntity* entities, uin
     }
 }
 
-void skr_render_effect_access(SRendererId r, const SGameEntity* entities, uint32_t count, skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u)
+void skr_render_effect_access(SRendererId r, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u)
 {
-    if (count)
+    if (cv && cv->count)
     {
         auto storage = r->get_dual_storage();
         SKR_ASSERT(storage && "No dual storage");
         eastl::vector<dual_entity_t> batch_render_effects;
-        batch_render_effects.reserve(count);
+        batch_render_effects.reserve(cv->count);
         // batch game ents to collect render effects
-        auto game_batch_callback = [&](dual_chunk_view_t* view) {
-            auto effects_chunk = (render_effects_t*)dualV_get_owned_ro(view, dual_id_of<skr_render_effect_t>::get());
-            if (effects_chunk)
+        auto effects_chunk = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
+        if (effects_chunk)
+        {
+            for (uint32_t i = 0; i < cv->count; i++)
             {
-                for (uint32_t i = 0; i < view->count; i++)
+                auto& effects = effects_chunk[i];
+                for (auto& effect : effects)
                 {
-                    auto& effects = effects_chunk[i];
-                    for (auto& effect : effects)
+                    if (strcmp(effect.name, effect_name) == 0)
                     {
-                        if (strcmp(effect.name, effect_name) == 0)
-                        {
-                            batch_render_effects.emplace_back(effect.effect_entity);
-                        }
+                        batch_render_effects.emplace_back(effect.effect_entity);
                     }
                 }
             }
-        };
-        dualS_batch(storage, entities, count, DUAL_LAMBDA(game_batch_callback));
-        // do cast for render effects
+        }
+        // access render effects
         if (batch_render_effects.size())
         {
             dualS_batch(storage, batch_render_effects.data(), (EIndex)batch_render_effects.size(), view, u);
