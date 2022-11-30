@@ -44,6 +44,7 @@ protected:
     skr_resource_record_t* _GetRecord(void* resource) final override;
     void _DestroyRecord(skr_resource_record_t* record) final override;
     void _UpdateAsyncSerde();
+    void _ClearFinishedRequests();
 
     SResourceRegistry* resourceRegistry = nullptr;
     skr::io::RAMService* ioService = nullptr; 
@@ -267,10 +268,14 @@ void SResourceSystemImpl::Shutdown()
             _UnloadResource(record);
         }
     }
+    _ClearFinishedRequests();
+    bool _quit = quit;
+    quit = false;
     while(!requests.empty())
     {
         Update();
     }
+    quit = _quit;
     for(auto pair : resourceRecords)
     {
         auto record = pair.second;
@@ -282,45 +287,50 @@ void SResourceSystemImpl::Shutdown()
     resourceRegistry = nullptr;
 }
 
+void SResourceSystemImpl::_ClearFinishedRequests()
+{
+    requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
+        if (request->Okay())
+        {
+            if (request->resourceRecord)
+            {
+                request->resourceRecord->activeRequest = nullptr;
+                if (!request->isLoading)
+                {
+                    auto guid = request->resourceRecord->header.guid; (void)guid;
+                    _DestroyRecord(request->resourceRecord);
+                }
+            }
+            SkrDelete(request);
+            counter.decrement();
+            return true;
+        }
+        if (request->Failed())
+        {
+            failedRequests.push_back(request);
+            counter.decrement();
+            return true;
+        }
+        return false;
+    }),
+    requests.end());
+    failedRequests.erase(std::remove_if(failedRequests.begin(), failedRequests.end(), [&](SResourceRequest* request) {
+        if(!request->resourceRecord)
+        {
+            SkrDelete(request);
+            return true;
+        }
+        return false;
+    }), failedRequests.end());
+}
+
 void SResourceSystemImpl::Update()
 {
     SKR_ASSERT(!quit);
     eastl::vector<SResourceRequest*> to_update_requests;
     {
         SMutexLock lock(recordMutex);
-        requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
-            if (request->Okay())
-            {
-                if (request->resourceRecord)
-                {
-                    request->resourceRecord->activeRequest = nullptr;
-                    if (!request->isLoading)
-                    {
-                        auto guid = request->resourceRecord->header.guid; (void)guid;
-                        _DestroyRecord(request->resourceRecord);
-                    }
-                }
-                SkrDelete(request);
-                counter.decrement();
-                return true;
-            }
-            if (request->Failed())
-            {
-                failedRequests.push_back(request);
-                counter.decrement();
-                return true;
-            }
-            return false;
-        }),
-        requests.end());
-        failedRequests.erase(std::remove_if(failedRequests.begin(), failedRequests.end(), [&](SResourceRequest* request) {
-            if(!request->resourceRecord)
-            {
-                SkrDelete(request);
-                return true;
-            }
-            return false;
-        }), failedRequests.end());
+        _ClearFinishedRequests();
         to_update_requests = requests;
     }
     // TODO: time limit
