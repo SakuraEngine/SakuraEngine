@@ -90,7 +90,7 @@ sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1")
 sattr("rtti" : true, "serialize" : "bin")
 skr_mesh_resource_t
 {
-    ~skr_mesh_resource_t() SKR_NOEXCEPT;
+    SKR_RENDERER_API ~skr_mesh_resource_t() SKR_NOEXCEPT;
     
     skr::string name;
     eastl::vector<skr_mesh_section_t> sections;
