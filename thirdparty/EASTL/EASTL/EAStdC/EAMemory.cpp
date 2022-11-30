@@ -4,7 +4,7 @@
 // Copyright (c) Electronic Arts. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "../EABase/eabase.h"
+#include "EABase/eabase.h"
 #include "EAMemory.h"
 
 

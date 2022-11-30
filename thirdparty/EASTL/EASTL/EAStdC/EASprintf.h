@@ -9,8 +9,8 @@
 
 #include <stdio.h>
 
-#include "../EABase/eabase.h"
-#include "../EABase/eastdarg.h"
+#include "EABase/eabase.h"
+#include "EABase/eastdarg.h"
 #include "../internal/config.h"
 
 

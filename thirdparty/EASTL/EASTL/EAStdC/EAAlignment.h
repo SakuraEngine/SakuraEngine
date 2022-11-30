@@ -7,7 +7,7 @@
 #ifndef EASTDC_EAALIGNMENT_H
 #define EASTDC_EAALIGNMENT_H
 
-#include "../EABase/eabase.h"
+#include "EABase/eabase.h"
 #include "../internal/config.h"
 
 #define EASTDC_API EASTL_EASTDC_API

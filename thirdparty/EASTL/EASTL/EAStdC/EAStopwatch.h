@@ -13,7 +13,7 @@
 
 #include <chrono>
 
-#include "../EABase/eabase.h"
+#include "EABase/eabase.h"
 
 
 namespace EA
