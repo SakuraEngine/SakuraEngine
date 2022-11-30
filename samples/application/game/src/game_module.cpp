@@ -345,14 +345,14 @@ void async_attach_render_mesh(SRendererId renderer)
             auto mesh_comps = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
             auto skin_comps = dual::get_owned_rw<skr_render_skin_comp_t>(view);
             auto skel_comps = dual::get_owned_rw<skr_render_skel_comp_t>(view);
-            auto anim_comps = dual::get_owned_rw<skr_render_anim_comp_t>(view);
+            // auto anim_comps = dual::get_owned_rw<skr_render_anim_comp_t>(view);
             
             for(uint32_t i = 0; i < view->count; i++)
             {
                 auto& mesh_comp = mesh_comps[i];
                 auto& skin_comp = skin_comps[i];
                 auto& skel_comp = skel_comps[i];
-                auto& anim_comp = anim_comps[i];
+                // auto& anim_comp = anim_comps[i];
                 mesh_comp.mesh_resource = "2f9a3ffa-fa79-48d7-b95d-104ef03740f7"_guid;
                 mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
                 skin_comp.skin_resource = "D1E4F32C-7C43-486E-87AB-EDF565A43E80"_guid;
@@ -386,7 +386,7 @@ void imgui_button_spawn_girl(SRendererId renderer)
 int SGameModule::main_module_exec(int argc, char** argv)
 {
     ZoneScopedN("GameExecution");
-    auto moduleManager = skr_get_module_manager();
+    // auto moduleManager = skr_get_module_manager();
     SKR_LOG_INFO("game executed as main module!");
     
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 

@@ -61,10 +61,10 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
             auto bytes = bytecode->GetBufferPointer();
             auto byte_size = (uint32_t)bytecode->GetBufferSize();
             skr_make_md5((const char*)bytes, byte_size, &md5);
-            spv_hash[0] = (uint32_t)md5.digest[0] || ((uint32_t)md5.digest[1] << 8) || ((uint32_t)md5.digest[2] << 16) || ((uint32_t)md5.digest[3] << 24);
-            spv_hash[1] = (uint32_t)md5.digest[4] || ((uint32_t)md5.digest[5] << 8) || ((uint32_t)md5.digest[6] << 16) || ((uint32_t)md5.digest[7] << 24);
-            spv_hash[2] = (uint32_t)md5.digest[8] || ((uint32_t)md5.digest[9] << 8) || ((uint32_t)md5.digest[10] << 16) || ((uint32_t)md5.digest[11] << 24);
-            spv_hash[3] = (uint32_t)md5.digest[12] || ((uint32_t)md5.digest[13] << 8) || ((uint32_t)md5.digest[14] << 16) || ((uint32_t)md5.digest[15] << 24);
+            spv_hash[0] = (uint32_t)md5.digest[0] | ((uint32_t)md5.digest[1] << 8) | ((uint32_t)md5.digest[2] << 16) | ((uint32_t)md5.digest[3] << 24);
+            spv_hash[1] = (uint32_t)md5.digest[4] | ((uint32_t)md5.digest[5] << 8) | ((uint32_t)md5.digest[6] << 16) | ((uint32_t)md5.digest[7] << 24);
+            spv_hash[2] = (uint32_t)md5.digest[8] | ((uint32_t)md5.digest[9] << 8) | ((uint32_t)md5.digest[10] << 16) | ((uint32_t)md5.digest[11] << 24);
+            spv_hash[3] = (uint32_t)md5.digest[12] | ((uint32_t)md5.digest[13] << 8) | ((uint32_t)md5.digest[14] << 16) | ((uint32_t)md5.digest[15] << 24);
         }
         else
         {
