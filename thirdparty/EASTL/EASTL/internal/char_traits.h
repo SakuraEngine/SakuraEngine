@@ -18,8 +18,8 @@
 	#pragma once
 #endif
 
-#include "config.h"
-#include "../type_traits.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/type_traits.h>
 
 EA_DISABLE_ALL_VC_WARNINGS()
 #include <ctype.h>              // toupper, etc.
@@ -33,114 +33,183 @@ namespace eastl
 	///
 	/// These implement UTF8/UCS2/UCS4 encoding/decoding.
 	///
-	EASTL_API bool DecodePart(const char8_t*&  pSrc, const char8_t*  pSrcEnd, char8_t*&  pDest, char8_t*  pDestEnd);
-	EASTL_API bool DecodePart(const char8_t*&  pSrc, const char8_t*  pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
-	EASTL_API bool DecodePart(const char8_t*&  pSrc, const char8_t*  pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
+	EASTL_API bool DecodePart(const char*& pSrc, const char* pSrcEnd, char*&     pDest, char*     pDestEnd);
+	EASTL_API bool DecodePart(const char*& pSrc, const char* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
+	EASTL_API bool DecodePart(const char*& pSrc, const char* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
 
-	EASTL_API bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, char8_t*&  pDest, char8_t*  pDestEnd);
+	EASTL_API bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, char*&     pDest, char*     pDestEnd);
 	EASTL_API bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
 	EASTL_API bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
 
-	EASTL_API bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, char8_t*&  pDest, char8_t*  pDestEnd);
+	EASTL_API bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, char*&     pDest, char*     pDestEnd);
 	EASTL_API bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
 	EASTL_API bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
 
-	EASTL_API bool DecodePart(const int*&      pSrc, const int*      pSrcEnd, char8_t*&  pDest, char8_t*  pDestEnd);
-	EASTL_API bool DecodePart(const int*&      pSrc, const int*      pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
-	EASTL_API bool DecodePart(const int*&      pSrc, const int*      pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
+	EASTL_API bool DecodePart(const int*& pSrc, const int* pSrcEnd, char*&     pDest, char*     pDestEnd);
+	EASTL_API bool DecodePart(const int*& pSrc, const int* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
+	EASTL_API bool DecodePart(const int*& pSrc, const int* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
+
+	#if EA_CHAR8_UNIQUE
+		bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char8_t*&  pDest, char8_t*  pDestEnd);
+
+		bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char*&     pDest, char*     pDestEnd);
+		bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
+		bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
+
+		bool DecodePart(const char*&     pSrc, const char*     pSrcEnd, char8_t*& pDest, char8_t* pDestEnd);
+		bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd);
+		bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd);
+	#endif
 
 	#if EA_WCHAR_UNIQUE
-	bool DecodePart(const wchar_t*& pSrc, const wchar_t*   pSrcEnd, char8_t*&  pDest, char8_t*  pDestEnd);
-	bool DecodePart(const wchar_t*& pSrc, const wchar_t*   pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
-	bool DecodePart(const wchar_t*& pSrc, const wchar_t*   pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
+		bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, wchar_t*&  pDest, wchar_t*  pDestEnd);
 
-	bool DecodePart(const char8_t*&  pSrc, const char8_t*  pSrcEnd, wchar_t*&  pDest, wchar_t*  pDestEnd);
-	bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, wchar_t*&  pDest, wchar_t*  pDestEnd);
-	bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, wchar_t*&  pDest, wchar_t*  pDestEnd);
+		bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char*&     pDest, char*     pDestEnd);
+		bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd);
+		bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd);
+
+		bool DecodePart(const char*&     pSrc, const char*     pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd);
+		bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd);
+		bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd);
+	#endif
+
+	#if EA_CHAR8_UNIQUE && EA_WCHAR_UNIQUE
+		bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd);
+		bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd);
 	#endif
 
 
 	#if EA_WCHAR_UNIQUE
-		inline bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd)
+		inline bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd)
 		{
-			EA_DISABLE_SN_WARNING(1785)
-			#if (EA_WCHAR_SIZE == 2)
-				return DecodePart(reinterpret_cast<const char16_t*&>(pSrc), reinterpret_cast<const char16_t*>(pSrcEnd), pDest, pDestEnd);
-			#elif (EA_WCHAR_SIZE == 4)
-				return DecodePart(reinterpret_cast<const char32_t*&>(pSrc), reinterpret_cast<const char32_t*>(pSrcEnd), pDest, pDestEnd);
-			#endif
-			EA_RESTORE_SN_WARNING()
+			return DecodePart(reinterpret_cast<const char*&>(pSrc), reinterpret_cast<const char*>(pSrcEnd), reinterpret_cast<char*&>(pDest), reinterpret_cast<char*&>(pDestEnd));
+		}
+
+		inline bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char*& pDest, char* pDestEnd)
+		{
+		#if (EA_WCHAR_SIZE == 2)
+			return DecodePart(reinterpret_cast<const char16_t*&>(pSrc), reinterpret_cast<const char16_t*>(pSrcEnd), pDest, pDestEnd);
+		#elif (EA_WCHAR_SIZE == 4)
+			return DecodePart(reinterpret_cast<const char32_t*&>(pSrc), reinterpret_cast<const char32_t*>(pSrcEnd), pDest, pDestEnd);
+		#endif
 		}
 
 		inline bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd)
 		{
-			EA_DISABLE_SN_WARNING(1785)
-			#if (EA_WCHAR_SIZE == 2)
-				return DecodePart(reinterpret_cast<const char16_t*&>(pSrc), reinterpret_cast<const char16_t*>(pSrcEnd), pDest, pDestEnd);
-			#elif (EA_WCHAR_SIZE == 4)
-				return DecodePart(reinterpret_cast<const char32_t*&>(pSrc), reinterpret_cast<const char32_t*>(pSrcEnd), pDest, pDestEnd);
-			#endif
-			EA_RESTORE_SN_WARNING()
+		#if (EA_WCHAR_SIZE == 2)
+			return DecodePart(reinterpret_cast<const char16_t*&>(pSrc), reinterpret_cast<const char16_t*>(pSrcEnd), pDest, pDestEnd);
+		#elif (EA_WCHAR_SIZE == 4)
+			return DecodePart(reinterpret_cast<const char32_t*&>(pSrc), reinterpret_cast<const char32_t*>(pSrcEnd), pDest, pDestEnd);
+		#endif
 		}
 
 		inline bool DecodePart(const wchar_t*& pSrc, const wchar_t* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd)
 		{
-			EA_DISABLE_SN_WARNING(1785)
-			#if (EA_WCHAR_SIZE == 2)
-				return DecodePart(reinterpret_cast<const char16_t*&>(pSrc), reinterpret_cast<const char16_t*>(pSrcEnd), pDest, pDestEnd);
-			#elif (EA_WCHAR_SIZE == 4)
-				return DecodePart(reinterpret_cast<const char32_t*&>(pSrc), reinterpret_cast<const char32_t*>(pSrcEnd), pDest, pDestEnd);
-			#endif
-			EA_RESTORE_SN_WARNING()
+		#if (EA_WCHAR_SIZE == 2)
+			return DecodePart(reinterpret_cast<const char16_t*&>(pSrc), reinterpret_cast<const char16_t*>(pSrcEnd), pDest, pDestEnd);
+		#elif (EA_WCHAR_SIZE == 4)
+			return DecodePart(reinterpret_cast<const char32_t*&>(pSrc), reinterpret_cast<const char32_t*>(pSrcEnd), pDest, pDestEnd);
+		#endif
 		}
 
-		inline bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd)
+		inline bool DecodePart(const char*& pSrc, const char* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd)
 		{
-			EA_DISABLE_SN_WARNING(1785)
-			#if (EA_WCHAR_SIZE == 2)
-				return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char16_t*&>(pDest), reinterpret_cast<char16_t*>(pDestEnd));
-			#elif (EA_WCHAR_SIZE == 4)
-				return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char32_t*&>(pDest), reinterpret_cast<char32_t*>(pDestEnd));
-			#endif
-			EA_RESTORE_SN_WARNING()
+		#if (EA_WCHAR_SIZE == 2)
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char16_t*&>(pDest), reinterpret_cast<char16_t*>(pDestEnd));
+		#elif (EA_WCHAR_SIZE == 4)
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char32_t*&>(pDest), reinterpret_cast<char32_t*>(pDestEnd));
+		#endif
 		}
 
 		inline bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd)
 		{
-			EA_DISABLE_SN_WARNING(1785)
-			#if (EA_WCHAR_SIZE == 2)
-				return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char16_t*&>(pDest), reinterpret_cast<char16_t*>(pDestEnd));
-			#elif (EA_WCHAR_SIZE == 4)
-				return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char32_t*&>(pDest), reinterpret_cast<char32_t*>(pDestEnd));
-			#endif
-			EA_RESTORE_SN_WARNING()
+		#if (EA_WCHAR_SIZE == 2)
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char16_t*&>(pDest), reinterpret_cast<char16_t*>(pDestEnd));
+		#elif (EA_WCHAR_SIZE == 4)
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char32_t*&>(pDest), reinterpret_cast<char32_t*>(pDestEnd));
+		#endif
 		}
 
 		inline bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, wchar_t*& pDest, wchar_t* pDestEnd)
 		{
-			EA_DISABLE_SN_WARNING(1785)
-			#if (EA_WCHAR_SIZE == 2)
-				return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char16_t*&>(pDest), reinterpret_cast<char16_t*>(pDestEnd));
-			#elif (EA_WCHAR_SIZE == 4)
-				return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char32_t*&>(pDest), reinterpret_cast<char32_t*>(pDestEnd));
-			#endif
-			EA_RESTORE_SN_WARNING()
+		#if (EA_WCHAR_SIZE == 2)
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char16_t*&>(pDest), reinterpret_cast<char16_t*>(pDestEnd));
+		#elif (EA_WCHAR_SIZE == 4)
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char32_t*&>(pDest), reinterpret_cast<char32_t*>(pDestEnd));
+		#endif
+		}
+	#endif
+
+	#if EA_CHAR8_UNIQUE
+	    inline bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd)
+	    {
+		    return DecodePart(reinterpret_cast<const char*&>(pSrc), reinterpret_cast<const char*>(pSrcEnd), reinterpret_cast<char*&>(pDest), reinterpret_cast<char*&>(pDestEnd));
+	    }
+
+	    inline bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char*& pDest, char* pDestEnd)
+	    {
+		    return DecodePart(reinterpret_cast<const char*&>(pSrc), reinterpret_cast<const char*>(pSrcEnd), pDest, pDestEnd);
+	    }
+
+	    inline bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char16_t*& pDest, char16_t* pDestEnd)
+	    {
+		    return DecodePart(reinterpret_cast<const char*&>(pSrc), reinterpret_cast<const char*>(pSrcEnd), pDest, pDestEnd);
+	    }
+
+	    inline bool DecodePart(const char8_t*& pSrc, const char8_t* pSrcEnd, char32_t*& pDest, char32_t* pDestEnd)
+	    {
+		    return DecodePart(reinterpret_cast<const char*&>(pSrc), reinterpret_cast<const char*>(pSrcEnd), pDest, pDestEnd);
+	    }
+
+		inline bool DecodePart(const char*& pSrc, const char* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd)
+		{
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char*&>(pDest), reinterpret_cast<char*&>(pDestEnd));
+		}
+
+		inline bool DecodePart(const char16_t*& pSrc, const char16_t* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd)
+		{
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char*&>(pDest), reinterpret_cast<char*&>(pDestEnd));
+		}
+
+		inline bool DecodePart(const char32_t*& pSrc, const char32_t* pSrcEnd, char8_t*& pDest, char8_t* pDestEnd)
+		{
+			return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char*&>(pDest), reinterpret_cast<char*&>(pDestEnd));
+		}
+    #endif
+
+	#if EA_CHAR8_UNIQUE && EA_WCHAR_UNIQUE
+		inline bool DecodePart(const char8_t*&  pSrc, const char8_t*  pSrcEnd, wchar_t*&  pDest, wchar_t*  pDestEnd)
+		{
+		#if (EA_WCHAR_SIZE == 2)
+		    return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char16_t*&>(pDest), reinterpret_cast<char16_t*>(pDestEnd));
+		#elif (EA_WCHAR_SIZE == 4)
+		    return DecodePart(pSrc, pSrcEnd, reinterpret_cast<char32_t*&>(pDest), reinterpret_cast<char32_t*>(pDestEnd));
+		#endif
+		}
+
+		inline bool DecodePart(const wchar_t*&  pSrc, const wchar_t*  pSrcEnd, char8_t*&  pDest, char8_t*  pDestEnd)
+		{
+		#if (EA_WCHAR_SIZE == 2)
+			return DecodePart(reinterpret_cast<const char16_t*&>(pSrc), reinterpret_cast<const char16_t*>(pSrcEnd), reinterpret_cast<char*&>(pDest), reinterpret_cast<char*>(pDestEnd));
+		#elif (EA_WCHAR_SIZE == 4)
+			return DecodePart(reinterpret_cast<const char32_t*&>(pSrc), reinterpret_cast<const char32_t*>(pSrcEnd), reinterpret_cast<char*&>(pDest), reinterpret_cast<char*>(pDestEnd));
+		#endif
 		}
 	#endif
 
 	///////////////////////////////////////////////////////////////////////////////
 	// 'char traits' functionality
 	//
-	inline char8_t CharToLower(char8_t c)
-		{ return (char8_t)tolower((uint8_t)c); }
+	inline char CharToLower(char c)
+		{ return (char)tolower((uint8_t)c); }
 
 	template<typename T>
 	inline T CharToLower(T c)
 		{ if((unsigned)c <= 0xff) return (T)tolower((uint8_t)c); return c; }
 
 
-	inline char8_t CharToUpper(char8_t c)
-		{ return (char8_t)toupper((uint8_t)c); }
+	inline char CharToUpper(char c)
+		{ return (char)toupper((uint8_t)c); }
 
 	template<typename T>
 	inline T CharToUpper(T c)
@@ -159,7 +228,7 @@ namespace eastl
 		return 0;
 	}
 
-	inline int Compare(const char8_t* p1, const char8_t* p2, size_t n)
+	inline int Compare(const char* p1, const char* p2, size_t n)
 	{
 		return memcmp(p1, p2, n);
 	}
@@ -193,9 +262,9 @@ namespace eastl
 		return NULL;
 	}
 
-	inline const char8_t* Find(const char8_t* p, char8_t c, size_t n)
+	inline const char* Find(const char* p, char c, size_t n)
 	{
-		return (const char8_t*)memchr(p, c, n);
+		return (const char*)memchr(p, c, n);
 	}
 
 
@@ -203,7 +272,7 @@ namespace eastl
 	inline EA_CPP14_CONSTEXPR size_t CharStrlen(const T* p)
 	{
 		const auto* pCurrent = p;
-		while(pCurrent && *pCurrent)
+		while(*pCurrent)
 			++pCurrent;
 		return (size_t)(pCurrent - p);
 	}
@@ -356,7 +425,7 @@ namespace eastl
 	}
 
 
-	inline char8_t* CharStringUninitializedFillN(char8_t* pDestination, size_t n, const char8_t c)
+	inline char* CharStringUninitializedFillN(char* pDestination, size_t n, const char c)
 	{
 		if(n) // Some compilers (e.g. GCC 4.3+) generate a warning (which can't be disabled) if you call memset with a size of 0.
 			memset(pDestination, (uint8_t)c, (size_t)n);
@@ -374,10 +443,10 @@ namespace eastl
 	}
 
 
-	inline char8_t* CharTypeAssignN(char8_t* pDestination, size_t n, char8_t c)
+	inline char* CharTypeAssignN(char* pDestination, size_t n, char c)
 	{
 		if(n) // Some compilers (e.g. GCC 4.3+) generate a warning (which can't be disabled) if you call memset with a size of 0.
-			return (char8_t*)memset(pDestination, c, (size_t)n);
+			return (char*)memset(pDestination, c, (size_t)n);
 		return pDestination;
 	}
 

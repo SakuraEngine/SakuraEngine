@@ -6,13 +6,12 @@
 #define EASTL_FUNCTIONAL_H
 
 
-#include "EABase/eabase.h"
-#include "internal/config.h"
-#include "internal/allocator_traits_fwd_decls.h"
-#include "internal/move_help.h"
-#include "type_traits.h"
-#include "internal/functional_base.h"
-#include "internal/mem_fn.h"
+#include <EABase/eabase.h>
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/move_help.h>
+#include <EASTL/type_traits.h>
+#include <EASTL/internal/functional_base.h>
+#include <EASTL/internal/mem_fn.h>
 
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
@@ -390,33 +389,27 @@ namespace eastl
 	// Dual type functions
 	///////////////////////////////////////////////////////////////////////
 
+
 	template <typename T, typename U>
 	struct equal_to_2 : public binary_function<T, U, bool>
 	{
 		EA_CPP14_CONSTEXPR bool operator()(const T& a, const U& b) const
 			{ return a == b; }
-		EA_CPP14_CONSTEXPR bool operator()(const U& b, const T& a) const   // If you are getting a 'operator() already defined' error related to on this line while compiling a 
-			{ return b == a; }                                             // hashtable class (e.g. hash_map), it's likely that you are using hashtable::find_as when you should
-	};                                                                     // be using hashtable::find instead. The problem is that (const T, U) collide. To do: make this work.
 
-	template <typename T>
-	struct equal_to_2<T, T> : public equal_to<T>
-	{
+		template <typename T_ = T, typename U_ = U, typename = eastl::enable_if_t<!eastl::is_same_v<eastl::remove_const_t<T_>, eastl::remove_const_t<U_>>>>
+		EA_CPP14_CONSTEXPR bool operator()(const U& b, const T& a) const
+			{ return b == a; }
 	};
-
 
 	template <typename T, typename U>
 	struct not_equal_to_2 : public binary_function<T, U, bool>
 	{
 		EA_CPP14_CONSTEXPR bool operator()(const T& a, const U& b) const
 			{ return a != b; }
+
+		template <typename T_ = T, typename U_ = U, typename = eastl::enable_if_t<!eastl::is_same_v<eastl::remove_const_t<T_>, eastl::remove_const_t<U_>>>>
 		EA_CPP14_CONSTEXPR bool operator()(const U& b, const T& a) const
 			{ return b != a; }
-	};
-
-	template <typename T>
-	struct not_equal_to_2<T, T> : public not_equal_to<T>
-	{
 	};
 
 
@@ -425,16 +418,11 @@ namespace eastl
 	{
 		EA_CPP14_CONSTEXPR bool operator()(const T& a, const U& b) const
 			{ return a < b; }
+
+		template <typename T_ = T, typename U_ = U, typename = eastl::enable_if_t<!eastl::is_same_v<eastl::remove_const_t<T_>, eastl::remove_const_t<U_>>>>
 		EA_CPP14_CONSTEXPR bool operator()(const U& b, const T& a) const
 			{ return b < a; }
 	};
-
-	template <typename T>
-	struct less_2<T, T> : public less<T>
-	{
-	};
-
-
 
 
 	/// unary_negate
@@ -1011,14 +999,12 @@ namespace eastl
 		// utility to disable the generic template specialization that is
 		// used for enum types only.
 		template <typename T, bool Enabled>
-		struct EnableHashIf
-		{
-		};
+		struct EnableHashIf {};
 
 		template <typename T>
 		struct EnableHashIf<T, true>
 		{
-			size_t operator()(const T& p) const { return size_t(p); }
+			size_t operator()(T p) const { return size_t(p); }
 		};
 	} // namespace Internal
 
@@ -1026,10 +1012,7 @@ namespace eastl
 	template <typename T> struct hash;
 
 	template <typename T>
-	struct hash : Internal::EnableHashIf<T, is_enum_v<T>>
-	{
-		size_t operator()(T p) const { return size_t(p); }
-	};
+	struct hash : Internal::EnableHashIf<T, is_enum_v<T>> {};
 
 	template <typename T> struct hash<T*> // Note that we use the pointer as-is and don't divide by sizeof(T*). This is because the table is of a prime size and this division doesn't benefit distribution.
 		{ size_t operator()(T* p) const { return size_t(uintptr_t(p)); } };
@@ -1046,14 +1029,19 @@ namespace eastl
 	template <> struct hash<unsigned char>
 		{ size_t operator()(unsigned char val) const { return static_cast<size_t>(val); } };
 
+	#if defined(EA_CHAR8_UNIQUE) && EA_CHAR8_UNIQUE
+		template <> struct hash<char8_t>
+			{ size_t operator()(char8_t val) const { return static_cast<size_t>(val); } };
+	#endif
+
 	#if defined(EA_CHAR16_NATIVE) && EA_CHAR16_NATIVE
 		template <> struct hash<char16_t>
-		{ size_t operator()(char16_t val) const { return static_cast<size_t>(val); } };
+			{ size_t operator()(char16_t val) const { return static_cast<size_t>(val); } };
 	#endif
 
 	#if defined(EA_CHAR32_NATIVE) && EA_CHAR32_NATIVE
 		template <> struct hash<char32_t>
-		{ size_t operator()(char32_t val) const { return static_cast<size_t>(val); } };
+			{ size_t operator()(char32_t val) const { return static_cast<size_t>(val); } };
 	#endif
 
 	// If wchar_t is a native type instead of simply a define to an existing type...
@@ -1095,6 +1083,11 @@ namespace eastl
 	template <> struct hash<long double>
 		{ size_t operator()(long double val) const { return static_cast<size_t>(val); } };
 
+	#if defined(EA_HAVE_INT128) && EA_HAVE_INT128
+	template <> struct hash<uint128_t>
+		{ size_t operator()(uint128_t val) const { return static_cast<size_t>(val); } };
+	#endif
+
 
 	///////////////////////////////////////////////////////////////////////////
 	// string hashes
@@ -1108,6 +1101,29 @@ namespace eastl
 	//      special hash customized for such strings that's better than what we provide.
 	///////////////////////////////////////////////////////////////////////////
 
+	template <> struct hash<char*>
+	{
+		size_t operator()(const char* p) const
+		{
+			uint32_t c, result = 2166136261U;   // FNV1 hash. Perhaps the best string hash. Intentionally uint32_t instead of size_t, so the behavior is the same regardless of size.
+			while((c = (uint8_t)*p++) != 0)     // Using '!=' disables compiler warnings.
+				result = (result * 16777619) ^ c;
+			return (size_t)result;
+		}
+	};
+
+	template <> struct hash<const char*>
+	{
+		size_t operator()(const char* p) const
+		{
+			uint32_t c, result = 2166136261U;   // Intentionally uint32_t instead of size_t, so the behavior is the same regardless of size.
+			while((c = (uint8_t)*p++) != 0)     // cast to unsigned 8 bit.
+				result = (result * 16777619) ^ c;
+			return (size_t)result;
+		}
+	};
+
+#if EA_CHAR8_UNIQUE
 	template <> struct hash<char8_t*>
 	{
 		size_t operator()(const char8_t* p) const
@@ -1129,6 +1145,8 @@ namespace eastl
 			return (size_t)result;
 		}
 	};
+#endif
+
 
 	template <> struct hash<char16_t*>
 	{
@@ -1222,30 +1240,10 @@ namespace eastl
 		}
 	};
 
-	template <typename T>
-	struct mem_hash
-	{
-		size_t operator()(const T* mem, size_t size, size_t prev = 2166136261U) const
-		{
-			uint32_t result = (uint32_t)prev; // Intentionally uint32_t instead of size_t, so the behavior is the same
-			                                  // regardless of size.
-			while (size--)
-				result = (result * 16777619) ^ *mem++;
-			return (size_t)result;
-		}
-	};
 
-	template <>
-	struct mem_hash<uint64_t>
-	{
-		size_t operator()(const uint64_t* mem, size_t size, size_t prev = 2166136261U) const
-		{
-			return mem_hash<uint32_t>()((const uint32_t*)mem, size * 2, prev);
-		}
-	};
 } // namespace eastl
 
-#include "internal/function.h"
+#include <EASTL/internal/function.h>
 
 #endif // Header include guard
 

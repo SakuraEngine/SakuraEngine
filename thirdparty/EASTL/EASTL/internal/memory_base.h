@@ -5,7 +5,7 @@
 #ifndef EASTL_INTERNAL_MEMORY_BASE_H
 #define EASTL_INTERNAL_MEMORY_BASE_H
 
-#include "config.h"
+#include <EASTL/internal/config.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.

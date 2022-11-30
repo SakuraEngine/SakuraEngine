@@ -16,10 +16,10 @@
 #define EASTL_ARRAY_H
 
 
-#include "internal/config.h"
-#include "iterator.h"
-#include "algorithm.h"
-#include "utility.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/iterator.h>
+#include <EASTL/algorithm.h>
+#include <EASTL/utility.h>
 #include <stddef.h>
 
 #if EASTL_EXCEPTIONS_ENABLED
@@ -43,9 +43,9 @@ namespace eastl
 	/// Implements a templated array class as per the C++ standard TR1.
 	/// This class allows you to use a built-in C style array like an STL vector.
 	/// It does not let you change its size, as it is just like a C built-in array.
-	/// Our implementation here strives to remove function call nesting, as that 
+	/// Our implementation here strives to remove function call nesting, as that
 	/// makes it hard for us to profile debug builds due to function call overhead.
-	/// Note that this is intentionally a struct with public data, as per the 
+	/// Note that this is intentionally a struct with public data, as per the
 	/// C++ standard update proposal requirements.
 	///
 	/// Example usage:
@@ -75,9 +75,9 @@ namespace eastl
 			count = N
 		};
 
-		// Note that the member data is intentionally public. 
-		// This allows for aggregate initialization of the 
-		// object (e.g. array<int, 5> a = { 0, 3, 2, 4 }; ) 
+		// Note that the member data is intentionally public.
+		// This allows for aggregate initialization of the
+		// object (e.g. array<int, 5> a = { 0, 3, 2, 4 }; )
 		value_type mValue[N ? N : 1];
 
 	public:
@@ -85,9 +85,9 @@ namespace eastl
 
 		void fill(const value_type& value);
 
-		// Unlike the swap function for other containers, array::swap takes linear time, 
+		// Unlike the swap function for other containers, array::swap takes linear time,
 		// may exit via an exception, and does not cause iterators to become associated with the other container.
-		void swap(this_type& x) EA_NOEXCEPT_IF(eastl::is_nothrow_swappable<value_type>::value); 
+		void swap(this_type& x) EA_NOEXCEPT_IF(eastl::is_nothrow_swappable<value_type>::value);
 
 		EA_CPP14_CONSTEXPR iterator       begin() EA_NOEXCEPT;
 		EA_CPP14_CONSTEXPR const_iterator begin() const EA_NOEXCEPT;
@@ -129,6 +129,12 @@ namespace eastl
 	}; // class array
 
 
+	///////////////////////////////////////////////////////////////////////////
+	// template deduction guides
+	///////////////////////////////////////////////////////////////////////////
+	#ifdef __cpp_deduction_guides
+		template <class T, class... U> array(T, U...) -> array<T, 1 + sizeof...(U)>;
+	#endif
 
 
 	///////////////////////////////////////////////////////////////////////
@@ -273,12 +279,6 @@ namespace eastl
 	EA_CPP14_CONSTEXPR inline typename array<T, N>::reference
 	array<T, N>::operator[](size_type i)
 	{
-		#if EASTL_ASSERT_ENABLED
-			if(EASTL_UNLIKELY(i >= N))
-				EASTL_FAIL_MSG("array::operator[] -- out of range");
-		#endif
-
-		EA_ANALYSIS_ASSUME(i < N);
 		return mValue[i];
 	}
 
@@ -287,13 +287,6 @@ namespace eastl
 	EA_CPP14_CONSTEXPR inline typename array<T, N>::const_reference
 	array<T, N>::operator[](size_type i) const
 	{
-		#if EASTL_ASSERT_ENABLED
-			if(EASTL_UNLIKELY(i >= N))
-				EASTL_FAIL_MSG("array::operator[] -- out of range");
-
-		#endif
-
-		EA_ANALYSIS_ASSUME(i < N);
 		return mValue[i];
 	}
 
@@ -302,24 +295,14 @@ namespace eastl
 	EA_CPP14_CONSTEXPR inline typename array<T, N>::reference
 	array<T, N>::front()
 	{
-		#if EASTL_ASSERT_ENABLED
-			if(EASTL_UNLIKELY(empty())) // We don't allow the user to reference an empty container.
-				EASTL_FAIL_MSG("array::front -- empty array");
-		#endif
-
 		return mValue[0];
 	}
 
 
 	template <typename T, size_t N>
-	EA_CPP14_CONSTEXPR inline typename array<T, N>::const_reference  
+	EA_CPP14_CONSTEXPR inline typename array<T, N>::const_reference
 	array<T, N>::front() const
 	{
-		#if EASTL_ASSERT_ENABLED
-			if(EASTL_UNLIKELY(empty())) // We don't allow the user to reference an empty container.
-				EASTL_FAIL_MSG("array::front -- empty array");
-		#endif
-
 		return mValue[0];
 	}
 
@@ -328,11 +311,6 @@ namespace eastl
 	EA_CPP14_CONSTEXPR inline typename array<T, N>::reference
 	array<T, N>::back()
 	{
-		#if EASTL_ASSERT_ENABLED
-			if(EASTL_UNLIKELY(empty())) // We don't allow the user to reference an empty container.
-				EASTL_FAIL_MSG("array::back -- empty array");
-		#endif
-
 		return mValue[N - 1];
 	}
 
@@ -341,11 +319,6 @@ namespace eastl
 	EA_CPP14_CONSTEXPR inline typename array<T, N>::const_reference
 	array<T, N>::back() const
 	{
-		#if EASTL_ASSERT_ENABLED
-			if(EASTL_UNLIKELY(empty())) // We don't allow the user to reference an empty container.
-				EASTL_FAIL_MSG("array::back -- empty array");
-		#endif
-
 		return mValue[N - 1];
 	}
 
@@ -375,8 +348,7 @@ namespace eastl
 				EASTL_FAIL_MSG("array::at -- out of range");
 		#endif
 
-		EA_ANALYSIS_ASSUME(i < N);
-		return static_cast<const_reference>(mValue[i]); 
+		return static_cast<const_reference>(mValue[i]);
 	}
 
 
@@ -391,7 +363,6 @@ namespace eastl
 				EASTL_FAIL_MSG("array::at -- out of range");
 		#endif
 
-		EA_ANALYSIS_ASSUME(i < N);
 		return static_cast<reference>(mValue[i]);
 	}
 
@@ -430,6 +401,13 @@ namespace eastl
 		return eastl::equal(&a.mValue[0], &a.mValue[N], &b.mValue[0]);
 	}
 
+#if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
+	template <typename T, size_t N>
+	inline synth_three_way_result<T> operator<=>(const array<T, N>& a, const array<T,N>& b)
+	{
+	    return eastl::lexicographical_compare_three_way(&a.mValue[0], &a.mValue[N], &b.mValue[0], &b.mValue[N], synth_three_way{});
+	}
+#else
 
 	template <typename T, size_t N>
 	EA_CPP14_CONSTEXPR inline bool operator<(const array<T, N>& a, const array<T, N>& b)
@@ -464,7 +442,7 @@ namespace eastl
 	{
 		return !eastl::lexicographical_compare(&a.mValue[0], &a.mValue[N], &b.mValue[0], &b.mValue[N]);
 	}
-
+#endif
 
 	template <typename T, size_t N>
 	inline void swap(array<T, N>& a, array<T, N>& b)
@@ -473,7 +451,129 @@ namespace eastl
 	}
 
 
+	///////////////////////////////////////////////////////////////////////
+	// to_array
+	///////////////////////////////////////////////////////////////////////
+	namespace internal
+	{
+		template<class T, size_t N, size_t... I>
+		EA_CONSTEXPR auto to_array(T (&a)[N], index_sequence<I...>)
+		{
+			return eastl::array<eastl::remove_cv_t<T>, N>{{a[I]...}};
+		}
+
+		template<class T, size_t N, size_t... I>
+		EA_CONSTEXPR auto to_array(T (&&a)[N], index_sequence<I...>)
+		{
+			return eastl::array<eastl::remove_cv_t<T>, N>{{eastl::move(a[I])...}};
+		}
+	}
+
+	template<class T, size_t N>
+	EA_CONSTEXPR eastl::array<eastl::remove_cv_t<T>, N> to_array(T (&a)[N])
+	{
+		static_assert(eastl::is_constructible_v<T, T&>, "element type T must be copy-initializable");
+		static_assert(!eastl::is_array_v<T>, "passing multidimensional arrays to to_array is ill-formed");
+		return internal::to_array(a, eastl::make_index_sequence<N>{});
+	}
+
+	template<class T, size_t N>
+	EA_CONSTEXPR eastl::array<eastl::remove_cv_t<T>, N> to_array(T (&&a)[N])
+	{
+		static_assert(eastl::is_move_constructible_v<T>, "element type T must be move-constructible");
+		static_assert(!eastl::is_array_v<T>, "passing multidimensional arrays to to_array is ill-formed");
+		return internal::to_array(eastl::move(a), eastl::make_index_sequence<N>{});
+	}
+
+#if EASTL_TUPLE_ENABLED
+
+	template <typename T, size_t N>
+	class tuple_size<array<T, N>> : public integral_constant<size_t, N>
+	{
+	};
+
+	template <typename T, size_t N>
+	class tuple_size<const array<T, N>> : public integral_constant<size_t, N>
+	{
+	};
+
+	template <size_t I, typename T, size_t N>
+	class tuple_element<I, array<T, N>>
+	{
+	public:
+		using type = T;
+	};
+
+	template <size_t I, typename T, size_t N>
+	class tuple_element<I, const array<T, N>>
+	{
+	public:
+		using type = const T;
+	};
+
+	template <size_t I>
+	struct GetArray
+	{
+		template <typename T, size_t N>
+		static EA_CONSTEXPR T& getInternal(array<T, N>& a)
+		{
+			return a[I];
+		}
+
+		template <typename T, size_t N>
+		static EA_CONSTEXPR const T& getInternal(const array<T, N>& a)
+		{
+			return a[I];
+		}
+
+		template <typename T, size_t N>
+		static EA_CONSTEXPR T&& getInternal(array<T, N>&& a)
+		{
+			return eastl::forward<T>(a[I]);
+		}
+	};
+
+	template <size_t I, typename T, size_t N>
+	EA_CONSTEXPR tuple_element_t<I, array<T, N>>& get(array<T, N>& p)
+	{
+		return GetArray<I>::getInternal(p);
+	}
+
+	template <size_t I, typename T, size_t N>
+	EA_CONSTEXPR const tuple_element_t<I, array<T, N>>& get(const array<T, N>& p)
+	{
+		return GetArray<I>::getInternal(p);
+	}
+
+	template <size_t I, typename T, size_t N>
+	EA_CONSTEXPR tuple_element_t<I, array<T, N>>&& get(array<T, N>&& p)
+	{
+		return GetArray<I>::getInternal(eastl::move(p));
+	}
+
+#endif  // EASTL_TUPLE_ENABLED
+
+
 } // namespace eastl
+
+///////////////////////////////////////////////////////////////
+// C++17 structured binding support for eastl::array
+//
+#ifndef EA_COMPILER_NO_STRUCTURED_BINDING
+	#include <tuple>
+
+	template <typename T, size_t N>
+	class std::tuple_size<::eastl::array<T, N>> : public ::eastl::integral_constant<size_t, N>
+	{
+	};
+
+	template <size_t I, typename T, size_t N>
+	struct std::tuple_element<I, ::eastl::array<T, N>>
+	{
+		static_assert(I < N, "index is out of bounds");
+		using type = T;
+	};
+#endif // EA_COMPILER_NO_STRUCTURED_BINDING
 
 
 #endif // Header include guard

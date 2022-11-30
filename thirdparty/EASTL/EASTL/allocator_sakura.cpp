@@ -1,6 +1,6 @@
 /* clang-format off */
 #include "internal/config.h"
-#include "allocator_forge.h"
+#include "allocator_sakura.h"
 #include <stdlib.h>
 
 #include "tracy/TracyC.h"
@@ -18,17 +18,16 @@ extern "C"
 #define core_free ::sakura_free
 #define core_free_aligned ::sakura_free_aligned
 
-#if EASTL_ALLOCATOR_FORGE
 	namespace eastl
 	{
-		void* allocator_forge::allocate(size_t n, int /*flags*/)
+		void* allocator_sakura::allocate(size_t n, int /*flags*/)
 		{ 
 			void* p = core_memalign(n, 1);
 			TracyCAllocN(p, n, "EASTL");
 			return p;
 		}
 
-		void* allocator_forge::allocate(size_t n, size_t alignment, size_t alignmentOffset, int /*flags*/)
+		void* allocator_sakura::allocate(size_t n, size_t alignment, size_t alignmentOffset, int /*flags*/)
 		{
 		    if ((alignmentOffset % alignment) == 0) // We check for (offset % alignmnent == 0) instead of (offset == 0) because any block which is
 													// aligned on e.g. 64 also is aligned at an offset of 64 by definition.
@@ -41,32 +40,30 @@ extern "C"
 		    return NULL;
 		}
 
-		void allocator_forge::deallocate(void* p, size_t /*n*/)
+		void allocator_sakura::deallocate(void* p, size_t /*n*/)
 		{ 
 			TracyCFree(p);
 			core_free_aligned(p, 1);
 		}
 
 		/// gDefaultAllocator
-		/// Default global allocator_forge instance. 
-		EASTL_API allocator_forge  gDefaultAllocatorForge;
-		EASTL_API allocator_forge* gpDefaultAllocatorForge = &gDefaultAllocatorForge;
+		/// Default global allocator_sakura instance. 
+		EASTL_API allocator_sakura  gDefaultAllocatorsakura;
+		EASTL_API allocator_sakura* gpDefaultAllocatorsakura = &gDefaultAllocatorsakura;
 
-		EASTL_API allocator_forge* GetDefaultAllocatorForge()
+		EASTL_API allocator_sakura* GetDefaultAllocatorSakura()
 		{
-			return gpDefaultAllocatorForge;
+			return gpDefaultAllocatorsakura;
 		}
 
-		EASTL_API allocator_forge* SetDefaultAllocatorForge(allocator_forge* pAllocator)
+		EASTL_API allocator_sakura* SetDefaultAllocatorSakura(allocator_sakura* pAllocator)
 		{
-			allocator_forge* const pPrevAllocator = gpDefaultAllocatorForge;
-			gpDefaultAllocatorForge = pAllocator;
+			allocator_sakura* const pPrevAllocator = gpDefaultAllocatorsakura;
+			gpDefaultAllocatorsakura = pAllocator;
 			return pPrevAllocator;
 		}
 
 	} // namespace eastl
 
-
-#endif // EASTL_USER_DEFINED_ALLOCATOR
 
 /* clang-format on */

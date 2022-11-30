@@ -7,19 +7,19 @@
 #define EASTL_RED_BLACK_TREE_H
 
 
-#include "../EABase/eabase.h"
+#include <EABase/eabase.h>
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once
 #endif
 
-#include "config.h"
-#include "../type_traits.h"
-#include "../allocator.h"
-#include "../iterator.h"
-#include "../utility.h"
-#include "../algorithm.h"
-#include "../initializer_list.h"
-#include "../tuple.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/type_traits.h>
+#include <EASTL/allocator.h>
+#include <EASTL/iterator.h>
+#include <EASTL/utility.h>
+#include <EASTL/algorithm.h>
+#include <EASTL/initializer_list.h>
+#include <EASTL/tuple.h>
 
 EA_DISABLE_ALL_VC_WARNINGS()
 #include <new>
@@ -27,12 +27,10 @@ EA_DISABLE_ALL_VC_WARNINGS()
 EA_RESTORE_ALL_VC_WARNINGS()
 
 
-#ifdef _MSC_VER
-	#pragma warning(push)
-	#pragma warning(disable: 4512)  // 'class' : assignment operator could not be generated
-	#pragma warning(disable: 4530)  // C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
-	#pragma warning(disable: 4571)  // catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught.
-#endif
+// 4512 - 'class' : assignment operator could not be generated
+// 4530 - C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+// 4571 - catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught.
+EA_DISABLE_VC_WARNING(4512 4530 4571);
 
 
 namespace eastl
@@ -115,7 +113,7 @@ namespace eastl
 		// Potentially we could provide a constructor that would satisfy the compiler and change the code to use this constructor
 		// instead of constructing mValue in place within an unconstructed rbtree_node.
 		#if defined(_MSC_VER)
-			rbtree_node(const rbtree_node&);
+			rbtree_node(const rbtree_node&) = delete;
 		#endif
 	};
 
@@ -171,6 +169,7 @@ namespace eastl
 		rbtree_iterator();
 		explicit rbtree_iterator(const node_type* pNode);
 		rbtree_iterator(const iterator& x);
+		rbtree_iterator& operator=(const iterator& x);
 
 		reference operator*() const;
 		pointer   operator->() const;
@@ -184,23 +183,78 @@ namespace eastl
 	}; // rbtree_iterator
 
 
+	///////////////////////////////////////////////////////////////////////////////
+	// rb_base_compare_ebo
+	//
+	// Utilizes the "empty base-class optimization" to reduce the size of the rbtree
+	// when its Compare template argument is an empty class.
+	///////////////////////////////////////////////////////////////////////////////
+
+	template <typename Compare, bool /*isEmpty*/ = is_empty<Compare>::value>
+	struct rb_base_compare_ebo
+	{
+	protected:
+		rb_base_compare_ebo() : mCompare() {}
+		rb_base_compare_ebo(const Compare& compare) : mCompare(compare) {}
+
+		Compare& get_compare() { return mCompare; }
+		const Compare& get_compare() const { return mCompare; }
+
+		template <typename T>
+		bool compare(const T& lhs, const T& rhs) 
+		{
+			return mCompare(lhs, rhs);
+		}
+
+		template <typename T>
+		bool compare(const T& lhs, const T& rhs) const
+		{
+			return mCompare(lhs, rhs);
+		}
+
+	private:
+		Compare mCompare;
+	};
+
+	template <typename Compare>
+	struct rb_base_compare_ebo<Compare, true> : private Compare
+	{
+	protected:
+		rb_base_compare_ebo() {}
+		rb_base_compare_ebo(const Compare& compare) : Compare(compare) {}
+
+		Compare& get_compare() { return *this; }
+		const Compare& get_compare() const { return *this; }
+
+		template <typename T>
+		bool compare(const T& lhs, const T& rhs) 
+		{
+			return Compare::operator()(lhs, rhs);
+		}
+
+		template <typename T>
+		bool compare(const T& lhs, const T& rhs) const
+		{
+			return Compare::operator()(lhs, rhs);
+		}
+	};
 
 
 
 	///////////////////////////////////////////////////////////////////////////////
-	// rb_base
-	//
-	// This class allows us to use a generic rbtree as the basis of map, multimap,
-	// set, and multiset transparently. The vital template parameters for this are 
-	// the ExtractKey and the bUniqueKeys parameters.
-	//
-	// If the rbtree has a value type of the form pair<T1, T2> (i.e. it is a map or
-	// multimap and not a set or multiset) and a key extraction policy that returns 
-	// the first part of the pair, the rbtree gets a mapped_type typedef. 
-	// If it satisfies those criteria and also has unique keys, then it also gets an 
-	// operator[] (which only map and set have and multimap and multiset don't have).
-	//
-	///////////////////////////////////////////////////////////////////////////////
+    // rb_base
+    //
+    // This class allows us to use a generic rbtree as the basis of map, multimap,
+    // set, and multiset transparently. The vital template parameters for this are 
+    // the ExtractKey and the bUniqueKeys parameters.
+    //
+    // If the rbtree has a value type of the form pair<T1, T2> (i.e. it is a map or
+    // multimap and not a set or multiset) and a key extraction policy that returns 
+    // the first part of the pair, the rbtree gets a mapped_type typedef. 
+    // If it satisfies those criteria and also has unique keys, then it also gets an 
+    // operator[] (which only map and set have and multimap and multiset don't have).
+    //
+    ///////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -209,16 +263,17 @@ namespace eastl
 	/// will be the same as each other and ExtractKey will be eastl::use_self.
 	///
 	template <typename Key, typename Value, typename Compare, typename ExtractKey, bool bUniqueKeys, typename RBTree>
-	struct rb_base
+	struct rb_base : public rb_base_compare_ebo<Compare>
 	{
 		typedef ExtractKey extract_key;
 
-	public:
-		Compare mCompare; // To do: Make sure that empty Compare classes go away via empty base optimizations.
+	protected:
+		using rb_base_compare_ebo<Compare>::compare;
+		using rb_base_compare_ebo<Compare>::get_compare;
 
 	public:
-		rb_base() : mCompare() {}
-		rb_base(const Compare& compare) : mCompare(compare) {}
+		rb_base() {}
+		rb_base(const Compare& compare) : rb_base_compare_ebo<Compare>(compare) {}
 	};
 
 
@@ -228,16 +283,17 @@ namespace eastl
 	/// other and ExtractKey will be eastl::use_self.
 	///
 	template <typename Key, typename Value, typename Compare, typename ExtractKey, typename RBTree>
-	struct rb_base<Key, Value, Compare, ExtractKey, false, RBTree>
+	struct rb_base<Key, Value, Compare, ExtractKey, false, RBTree> : public rb_base_compare_ebo<Compare>
 	{
 		typedef ExtractKey extract_key;
 
-	public:
-		Compare mCompare; // To do: Make sure that empty Compare classes go away via empty base optimizations.
+	protected:
+		using rb_base_compare_ebo<Compare>::compare;
+		using rb_base_compare_ebo<Compare>::get_compare;
 
 	public:
-		rb_base() : mCompare() {}
-		rb_base(const Compare& compare) : mCompare(compare) {}
+		rb_base() {}
+		rb_base(const Compare& compare) : rb_base_compare_ebo<Compare>(compare) {}
 	};
 
 
@@ -245,16 +301,16 @@ namespace eastl
 	/// This specialization is used for 'map'.
 	///
 	template <typename Key, typename Pair, typename Compare, typename RBTree>
-	struct rb_base<Key, Pair, Compare, eastl::use_first<Pair>, true, RBTree>
+	struct rb_base<Key, Pair, Compare, eastl::use_first<Pair>, true, RBTree> : public rb_base_compare_ebo<Compare>
 	{
 		typedef eastl::use_first<Pair> extract_key;
 
-	public:
-		Compare mCompare; // To do: Make sure that empty Compare classes go away via empty base optimizations.
+		using rb_base_compare_ebo<Compare>::compare;
+		using rb_base_compare_ebo<Compare>::get_compare;
 
 	public:
-		rb_base() : mCompare() {}
-		rb_base(const Compare& compare) : mCompare(compare) {}
+		rb_base() {}
+		rb_base(const Compare& compare) : rb_base_compare_ebo<Compare>(compare) {}
 	};
 
 
@@ -262,20 +318,17 @@ namespace eastl
 	/// This specialization is used for 'multimap'.
 	///
 	template <typename Key, typename Pair, typename Compare, typename RBTree>
-	struct rb_base<Key, Pair, Compare, eastl::use_first<Pair>, false, RBTree>
+	struct rb_base<Key, Pair, Compare, eastl::use_first<Pair>, false, RBTree> : public rb_base_compare_ebo<Compare>
 	{
 		typedef eastl::use_first<Pair> extract_key;
 
-	public:
-		Compare mCompare; // To do: Make sure that empty Compare classes go away via empty base optimizations.
+		using rb_base_compare_ebo<Compare>::compare;
+		using rb_base_compare_ebo<Compare>::get_compare;
 
 	public:
-		rb_base() : mCompare() {}
-		rb_base(const Compare& compare) : mCompare(compare) {}
+		rb_base() {}
+		rb_base(const Compare& compare) : rb_base_compare_ebo<Compare>(compare) {}
 	};
-
-
-
 
 
 	/// rbtree
@@ -359,7 +412,9 @@ namespace eastl
 		typedef integral_constant<bool, bUniqueKeys>                                            has_unique_keys_type;
 		typedef typename base_type::extract_key                                                 extract_key;
 
-		using base_type::mCompare;
+	protected:
+		using base_type::compare;
+		using base_type::get_compare;
 
 	public:
 		rbtree_node_base  mAnchor;      /// This node acts as end() and its mpLeft points to begin(), and mpRight points to rbegin() (the last node on the right).
@@ -386,8 +441,8 @@ namespace eastl
 		allocator_type&       get_allocator() EA_NOEXCEPT;
 		void                  set_allocator(const allocator_type& allocator);
 
-		const key_compare& key_comp() const { return mCompare; }
-		key_compare&       key_comp()       { return mCompare; }
+		const key_compare& key_comp() const { return get_compare(); }
+		key_compare&       key_comp()       { return get_compare(); }
 
 		this_type& operator=(const this_type& x);
 		this_type& operator=(std::initializer_list<value_type> ilist);
@@ -422,11 +477,6 @@ namespace eastl
 
 		template <class... Args> 
 		iterator emplace_hint(const_iterator position, Args&&... args);
-
-		template <class... Args> eastl::pair<iterator, bool> try_emplace(const key_type& k, Args&&... args);
-		template <class... Args> eastl::pair<iterator, bool> try_emplace(key_type&& k, Args&&... args);
-		template <class... Args> iterator                    try_emplace(const_iterator position, const key_type& k, Args&&... args);
-		template <class... Args> iterator                    try_emplace(const_iterator position, key_type&& k, Args&&... args);
 
 		// Standard conversion overload to avoid the overhead of mismatched 'pair<const Key, Value>' types.
 		template <class P, class = typename eastl::enable_if<eastl::is_constructible<value_type, P&&>::value>::type> 
@@ -542,8 +592,14 @@ namespace eastl
 		eastl::pair<iterator, bool> DoInsertKey(true_type, const key_type& key);
 		iterator                    DoInsertKey(false_type, const key_type& key);
 
-		iterator DoInsertValueHint(true_type, const_iterator position, const value_type& value);
-		iterator DoInsertValueHint(false_type, const_iterator position, const value_type& value);
+		template <class... Args>
+		iterator DoInsertValueHint(true_type, const_iterator position, Args&&... args);
+
+		template <class... Args>
+		iterator DoInsertValueHint(false_type, const_iterator position, Args&&... args);
+
+		iterator DoInsertValueHint(true_type, const_iterator position, value_type&& value);
+		iterator DoInsertValueHint(false_type, const_iterator position, value_type&& value);
 
 		iterator DoInsertKey(true_type, const_iterator position, const key_type& key);  // By design we return iterator and not a pair.
 		iterator DoInsertKey(false_type, const_iterator position, const key_type& key);
@@ -602,6 +658,13 @@ namespace eastl
 	rbtree_iterator<T, Pointer, Reference>::rbtree_iterator(const iterator& x)
 		: mpNode(x.mpNode) { }
 
+	template <typename T, typename Pointer, typename Reference>
+	typename rbtree_iterator<T, Pointer, Reference>::this_type&
+	rbtree_iterator<T, Pointer, Reference>::operator=(const iterator& x)
+	{
+		mpNode = x.mpNode;
+		return *this;
+	}
 
 	template <typename T, typename Pointer, typename Reference>
 	typename rbtree_iterator<T, Pointer, Reference>::reference
@@ -721,7 +784,7 @@ namespace eastl
 
 	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
 	inline rbtree<K, V, C, A, E, bM, bU>::rbtree(const this_type& x)
-		: base_type(x.mCompare),
+		: base_type(x.get_compare()),
 		  mAnchor(),
 		  mnSize(0),
 		  mAllocator(x.mAllocator)
@@ -740,7 +803,7 @@ namespace eastl
 
 	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
 	inline rbtree<K, V, C, A, E, bM, bU>::rbtree(this_type&& x)
-		: base_type(x.mCompare),
+		: base_type(x.get_compare()),
 		  mAnchor(),
 		  mnSize(0),
 		  mAllocator(x.mAllocator)
@@ -751,7 +814,7 @@ namespace eastl
 
 	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
 	inline rbtree<K, V, C, A, E, bM, bU>::rbtree(this_type&& x, const allocator_type& allocator)
-		: base_type(x.mCompare),
+		: base_type(x.get_compare()),
 		  mAnchor(),
 		  mnSize(0),
 		  mAllocator(allocator)
@@ -776,7 +839,7 @@ namespace eastl
 			{
 		#endif
 				for(; first != last; ++first)
-					insert(eastl::move(*first));
+					insert(*first);
 		#if EASTL_EXCEPTIONS_ENABLED
 			}
 			catch(...)
@@ -915,7 +978,7 @@ namespace eastl
 				mAllocator = x.mAllocator;
 			#endif
 
-			base_type::mCompare = x.mCompare;
+			get_compare() = x.get_compare();
 
 			if(x.mAnchor.mpNodeParent) // mAnchor.mpNodeParent is the rb_tree root node.
 			{
@@ -964,8 +1027,8 @@ namespace eastl
 		{
 			// Most of our members can be exchaged by a basic swap:
 			// We leave mAllocator as-is.
-			eastl::swap(mnSize,              x.mnSize);
-			eastl::swap(base_type::mCompare, x.mCompare);
+			eastl::swap(mnSize,        x.mnSize);
+			eastl::swap(get_compare(), x.get_compare());
 		#if !EASTL_RBTREE_LEGACY_SWAP_BEHAVIOUR_REQUIRES_COPY_CTOR
 			eastl::swap(mAllocator,          x.mAllocator);
 		#endif
@@ -1041,43 +1104,6 @@ namespace eastl
 	}
 
 	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
-	template <class... Args>
-	inline eastl::pair<typename rbtree<K, V, C, A, E, bM, bU>::iterator, bool>
-	rbtree<K, V, C, A, E, bM, bU>::try_emplace(const key_type& key, Args&&... args)
-	{
-		return DoInsertValue(has_unique_keys_type(), piecewise_construct, forward_as_tuple(key), forward_as_tuple(forward<Args>(args)...));
-	}
-
-	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
-	template <class... Args>
-	inline eastl::pair<typename rbtree<K, V, C, A, E, bM, bU>::iterator, bool>
-	rbtree<K, V, C, A, E, bM, bU>::try_emplace(key_type&& key, Args&&... args)
-	{
-		return DoInsertValue(has_unique_keys_type(), piecewise_construct, forward_as_tuple(eastl::move(key)), forward_as_tuple(forward<Args>(args)...));
-	}
-
-	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
-	template <class... Args>
-	inline typename rbtree<K, V, C, A, E, bM, bU>::iterator
-	rbtree<K, V, C, A, E, bM, bU>::try_emplace(const_iterator position, const key_type& key, Args&&... args)
-	{
-		return DoInsertValueHint(
-		    has_unique_keys_type(), position,
-		    value_type(piecewise_construct, forward_as_tuple(key), forward_as_tuple(forward<Args>(args)...)));
-	}
-
-	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
-	template <class... Args>
-	inline typename rbtree<K, V, C, A, E, bM, bU>::iterator
-	rbtree<K, V, C, A, E, bM, bU>::try_emplace(const_iterator position, key_type&& key, Args&&... args)
-	{
-		return DoInsertValueHint(
-		    has_unique_keys_type(), position,
-		    value_type(piecewise_construct, forward_as_tuple(key), forward_as_tuple(forward<Args>(args)...)));
-	}
-
-
-	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
 	template <class P, class>
 	inline typename rbtree<K, V, C, A, E, bM, bU>::insert_return_type // map/set::insert return a pair, multimap/multiset::iterator return an iterator.
 	rbtree<K, V, C, A, E, bM, bU>::insert(P&& otherValue)
@@ -1091,7 +1117,7 @@ namespace eastl
 	inline typename rbtree<K, V, C, A, E, bM, bU>::iterator 
 	rbtree<K, V, C, A, E, bM, bU>::insert(const_iterator position, value_type&& value)
 	{
-		return DoInsertValueHint(has_unique_keys_type(), position, value_type(eastl::move(value)));
+		return DoInsertValueHint(has_unique_keys_type(), position, eastl::move(value));
 	}
 
 
@@ -1120,7 +1146,7 @@ namespace eastl
 
 		if(iter == end())
 		{
-			return insert(value_type(piecewise_construct, forward_as_tuple(k), forward_as_tuple(eastl::forward<M>(obj))));
+			return insert(value_type(piecewise_construct, eastl::forward_as_tuple(k), eastl::forward_as_tuple(eastl::forward<M>(obj))));
 		}
 		else
 		{
@@ -1138,7 +1164,7 @@ namespace eastl
 
 		if(iter == end())
 		{
-			return insert(value_type(piecewise_construct, forward_as_tuple(eastl::move(k)), forward_as_tuple(eastl::forward<M>(obj))));
+			return insert(value_type(piecewise_construct, eastl::forward_as_tuple(eastl::move(k)), eastl::forward_as_tuple(eastl::forward<M>(obj))));
 		}
 		else
 		{
@@ -1156,7 +1182,7 @@ namespace eastl
 
 		if(iter == end())
 		{
-			return insert(hint, value_type(piecewise_construct, forward_as_tuple(k), forward_as_tuple(eastl::forward<M>(obj))));
+			return insert(hint, value_type(piecewise_construct, eastl::forward_as_tuple(k), eastl::forward_as_tuple(eastl::forward<M>(obj))));
 		}
 		else
 		{
@@ -1174,7 +1200,7 @@ namespace eastl
 
 		if(iter == end())
 		{
-			return insert(hint, value_type(piecewise_construct, forward_as_tuple(eastl::move(k)), forward_as_tuple(eastl::forward<M>(obj))));
+			return insert(hint, value_type(piecewise_construct, eastl::forward_as_tuple(eastl::move(k)), eastl::forward_as_tuple(eastl::forward<M>(obj))));
 		}
 		else
 		{
@@ -1202,12 +1228,12 @@ namespace eastl
 		// end(), which we treat like a position which is greater than the value.
 		while(EASTL_LIKELY(pCurrent)) // Do a walk down the tree.
 		{
-			bValueLessThanNode = mCompare(key, extractKey(pCurrent->mValue));
+			bValueLessThanNode = compare(key, extractKey(pCurrent->mValue));
 			pLowerBound        = pCurrent;
 
 			if(bValueLessThanNode)
 			{
-				EASTL_VALIDATE_COMPARE(!mCompare(extractKey(pCurrent->mValue), key)); // Validate that the compare function is sane.
+				EASTL_VALIDATE_COMPARE(!compare(extractKey(pCurrent->mValue), key)); // Validate that the compare function is sane.
 				pCurrent = (node_type*)pCurrent->mpNodeLeft;
 			}
 			else
@@ -1232,9 +1258,9 @@ namespace eastl
 		}
 
 		// Since here we require values to be unique, we will do nothing if the value already exists.
-		if(mCompare(extractKey(pLowerBound->mValue), key)) // If the node is < the value (i.e. if value is >= the node)...
+		if(compare(extractKey(pLowerBound->mValue), key)) // If the node is < the value (i.e. if value is >= the node)...
 		{
-			EASTL_VALIDATE_COMPARE(!mCompare(key, extractKey(pLowerBound->mValue))); // Validate that the compare function is sane.
+			EASTL_VALIDATE_COMPARE(!compare(key, extractKey(pLowerBound->mValue))); // Validate that the compare function is sane.
 			canInsert = true;
 			return pParent;
 		}
@@ -1258,9 +1284,9 @@ namespace eastl
 		{
 			pRangeEnd = pCurrent;
 
-			if(mCompare(key, extractKey(pCurrent->mValue)))
+			if(compare(key, extractKey(pCurrent->mValue)))
 			{
-				EASTL_VALIDATE_COMPARE(!mCompare(extractKey(pCurrent->mValue), key)); // Validate that the compare function is sane.
+				EASTL_VALIDATE_COMPARE(!compare(extractKey(pCurrent->mValue), key)); // Validate that the compare function is sane.
 				pCurrent = (node_type*)pCurrent->mpNodeLeft;
 			}
 			else
@@ -1369,7 +1395,7 @@ namespace eastl
 		// The reason we may want to have bForceToLeft == true is that pNodeParent->mValue and value may be equal.
 		// In that case it doesn't matter what side we insert on, except that the C++ LWG #233 improvement report
 		// suggests that we should use the insert hint position to force an ordering. So that's what we do.
-		if(bForceToLeft || (pNodeParent == &mAnchor) || mCompare(key, extractKey(pNodeParent->mValue)))
+		if(bForceToLeft || (pNodeParent == &mAnchor) || compare(key, extractKey(pNodeParent->mValue)))
 			side = kRBTreeSideLeft;
 		else
 			side = kRBTreeSideRight;
@@ -1426,17 +1452,17 @@ namespace eastl
 			// To consider: Change this so that 'position' specifies the position after 
 			// where the insertion goes and not the position before where the insertion goes.
 			// Doing so would make this more in line with user expectations and with LWG #233.
-			const bool bPositionLessThanValue = mCompare(extractKey(position.mpNode->mValue), key);
+			const bool bPositionLessThanValue = compare(extractKey(position.mpNode->mValue), key);
 
 			if(bPositionLessThanValue) // If (value > *position)...
 			{
-				EASTL_VALIDATE_COMPARE(!mCompare(key, extractKey(position.mpNode->mValue))); // Validate that the compare function is sane.
+				EASTL_VALIDATE_COMPARE(!compare(key, extractKey(position.mpNode->mValue))); // Validate that the compare function is sane.
 
-				const bool bValueLessThanNext = mCompare(key, extractKey(itNext.mpNode->mValue));
+				const bool bValueLessThanNext = compare(key, extractKey(itNext.mpNode->mValue));
 
 				if(bValueLessThanNext) // If value < *itNext...
 				{
-					EASTL_VALIDATE_COMPARE(!mCompare(extractKey(itNext.mpNode->mValue), key)); // Validate that the compare function is sane.
+					EASTL_VALIDATE_COMPARE(!compare(extractKey(itNext.mpNode->mValue), key)); // Validate that the compare function is sane.
 
 					if(position.mpNode->mpNodeRight)
 					{
@@ -1453,9 +1479,9 @@ namespace eastl
 			return NULL;  // The above specified hint was not useful, then we do a regular insertion.
 		}
 
-		if(mnSize && mCompare(extractKey(((node_type*)mAnchor.mpNodeRight)->mValue), key))
+		if(mnSize && compare(extractKey(((node_type*)mAnchor.mpNodeRight)->mValue), key))
 		{
-			EASTL_VALIDATE_COMPARE(!mCompare(key, extractKey(((node_type*)mAnchor.mpNodeRight)->mValue))); // Validate that the compare function is sane.
+			EASTL_VALIDATE_COMPARE(!compare(key, extractKey(((node_type*)mAnchor.mpNodeRight)->mValue))); // Validate that the compare function is sane.
 			bForceToLeft = false;
 			return (node_type*)mAnchor.mpNodeRight;
 		}
@@ -1479,8 +1505,8 @@ namespace eastl
 			// To consider: Change this so that 'position' specifies the position after 
 			// where the insertion goes and not the position before where the insertion goes.
 			// Doing so would make this more in line with user expectations and with LWG #233.
-			if(!mCompare(key, extractKey(position.mpNode->mValue)) && // If value >= *position && 
-			   !mCompare(extractKey(itNext.mpNode->mValue), key))     // if value <= *itNext...
+			if(!compare(key, extractKey(position.mpNode->mValue)) && // If value >= *position && 
+			   !compare(extractKey(itNext.mpNode->mValue), key))     // if value <= *itNext...
 			{
 				if(position.mpNode->mpNodeRight) // If there are any nodes to the right... [this expression will always be true as long as we aren't at the end()]
 				{
@@ -1498,7 +1524,7 @@ namespace eastl
 
 		// This pathway shouldn't be commonly executed, as the user shouldn't be calling 
 		// this hinted version of insert if the user isn't providing a useful hint.
-		if(mnSize && !mCompare(key, extractKey(((node_type*)mAnchor.mpNodeRight)->mValue))) // If we are non-empty and the value is >= the last node...
+		if(mnSize && !compare(key, extractKey(((node_type*)mAnchor.mpNodeRight)->mValue))) // If we are non-empty and the value is >= the last node...
 		{
 			bForceToLeft =false;
 			return (node_type*)mAnchor.mpNodeRight;
@@ -1508,10 +1534,69 @@ namespace eastl
 		return NULL;
 	}
 
+	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
+	template <class... Args>
+	typename rbtree<K, V, C, A, E, bM, bU>::iterator
+	rbtree<K, V, C, A, E, bM, bU>::DoInsertValueHint(true_type, const_iterator position, Args&&... args) // true_type means keys are unique.
+	{
+		// This is the pathway for insertion of unique keys (map and set, but not multimap and multiset).
+		//
+		// We follow the same approach as SGI STL/STLPort and use the position as
+		// a forced insertion position for the value when possible.
+
+		node_type* pNodeNew = DoCreateNode(eastl::forward<Args>(args)...); // Note that pNodeNew->mpLeft, mpRight, mpParent, will be uninitialized.
+		const key_type& key(extract_key{}(pNodeNew->mValue));
+
+		bool       bForceToLeft;
+		node_type* pPosition = DoGetKeyInsertionPositionUniqueKeysHint(position, bForceToLeft, key);
+
+		if (!pPosition)
+		{
+			bool        canInsert;
+			pPosition = DoGetKeyInsertionPositionUniqueKeys(canInsert, key);
+
+			if (!canInsert)
+			{
+				DoFreeNode(pNodeNew);
+				return iterator(pPosition);
+			}
+
+			bForceToLeft = false;
+		}
+
+		return DoInsertValueImpl(pPosition, bForceToLeft, key, pNodeNew);
+	}
+
+
+	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
+	template <class... Args>
+	typename rbtree<K, V, C, A, E, bM, bU>::iterator
+	rbtree<K, V, C, A, E, bM, bU>::DoInsertValueHint(false_type, const_iterator position, Args&&... args) // false_type means keys are not unique.
+	{
+		// This is the pathway for insertion of non-unique keys (multimap and multiset, but not map and set).
+		//
+		// We follow the same approach as SGI STL/STLPort and use the position as
+		// a forced insertion position for the value when possible.
+
+		node_type* pNodeNew = DoCreateNode(eastl::forward<Args>(args)...); // Note that pNodeNew->mpLeft, mpRight, mpParent, will be uninitialized.
+		const key_type& key(extract_key{}(pNodeNew->mValue));
+
+		bool        bForceToLeft;
+		node_type*  pPosition = DoGetKeyInsertionPositionNonuniqueKeysHint(position, bForceToLeft, key);
+
+		if (!pPosition)
+		{
+			pPosition = DoGetKeyInsertionPositionNonuniqueKeys(key);
+			bForceToLeft = false;
+		}
+
+		return DoInsertValueImpl(pPosition, bForceToLeft, key, pNodeNew);
+	}
+
 
 	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
 	typename rbtree<K, V, C, A, E, bM, bU>::iterator
-	rbtree<K, V, C, A, E, bM, bU>::DoInsertValueHint(true_type, const_iterator position, const value_type& value) // true_type means keys are unique.
+	rbtree<K, V, C, A, E, bM, bU>::DoInsertValueHint(true_type, const_iterator position, value_type&& value) // true_type means keys are unique.
 	{
 		// This is the pathway for insertion of unique keys (map and set, but not multimap and multiset).
 		//
@@ -1524,15 +1609,15 @@ namespace eastl
 		node_type*  pPosition = DoGetKeyInsertionPositionUniqueKeysHint(position, bForceToLeft, key);
 
 		if(pPosition)
-			return DoInsertValueImpl(pPosition, bForceToLeft, key, value);
+			return DoInsertValueImpl(pPosition, bForceToLeft, key, eastl::move(value));
 		else
-			return DoInsertValue(has_unique_keys_type(), value).first;
+			return DoInsertValue(has_unique_keys_type(), eastl::move(value)).first;
 	}
 
 
 	template <typename K, typename V, typename C, typename A, typename E, bool bM, bool bU>
 	typename rbtree<K, V, C, A, E, bM, bU>::iterator
-	rbtree<K, V, C, A, E, bM, bU>::DoInsertValueHint(false_type, const_iterator position, const value_type& value) // false_type means keys are not unique.
+	rbtree<K, V, C, A, E, bM, bU>::DoInsertValueHint(false_type, const_iterator position, value_type&& value) // false_type means keys are not unique.
 	{
 		// This is the pathway for insertion of non-unique keys (multimap and multiset, but not map and set).
 		//
@@ -1544,9 +1629,9 @@ namespace eastl
 		node_type*  pPosition = DoGetKeyInsertionPositionNonuniqueKeysHint(position, bForceToLeft, key);
 
 		if(pPosition)
-			return DoInsertValueImpl(pPosition, bForceToLeft, key, value);
+			return DoInsertValueImpl(pPosition, bForceToLeft, key, eastl::move(value));
 		else
-			return DoInsertValue(has_unique_keys_type(), value);
+			return DoInsertValue(has_unique_keys_type(), eastl::move(value));
 	}
 
 
@@ -1592,7 +1677,7 @@ namespace eastl
 		// The reason we may want to have bForceToLeft == true is that pNodeParent->mValue and value may be equal.
 		// In that case it doesn't matter what side we insert on, except that the C++ LWG #233 improvement report
 		// suggests that we should use the insert hint position to force an ordering. So that's what we do.
-		if(bForceToLeft || (pNodeParent == &mAnchor) || mCompare(key, extractKey(pNodeParent->mValue)))
+		if(bForceToLeft || (pNodeParent == &mAnchor) || compare(key, extractKey(pNodeParent->mValue)))
 			side = kRBTreeSideLeft;
 		else
 			side = kRBTreeSideRight;
@@ -1732,7 +1817,7 @@ namespace eastl
 		// To consider: Implement this instead via calling lower_bound and 
 		// inspecting the result. The following is an implementation of this:
 		//    const iterator it(lower_bound(key));
-		//    return ((it.mpNode == &mAnchor) || mCompare(key, extractKey(it.mpNode->mValue))) ? iterator(&mAnchor) : it;
+		//    return ((it.mpNode == &mAnchor) || compare(key, extractKey(it.mpNode->mValue))) ? iterator(&mAnchor) : it;
 		// We don't currently implement the above because in practice people tend to call 
 		// find a lot with trees, but very uncommonly call lower_bound.
 		extract_key extractKey;
@@ -1742,19 +1827,19 @@ namespace eastl
 
 		while(EASTL_LIKELY(pCurrent)) // Do a walk down the tree.
 		{
-			if(EASTL_LIKELY(!mCompare(extractKey(pCurrent->mValue), key))) // If pCurrent is >= key...
+			if(EASTL_LIKELY(!compare(extractKey(pCurrent->mValue), key))) // If pCurrent is >= key...
 			{
 				pRangeEnd = pCurrent;
 				pCurrent  = (node_type*)pCurrent->mpNodeLeft;
 			}
 			else
 			{
-				EASTL_VALIDATE_COMPARE(!mCompare(key, extractKey(pCurrent->mValue))); // Validate that the compare function is sane.
+				EASTL_VALIDATE_COMPARE(!compare(key, extractKey(pCurrent->mValue))); // Validate that the compare function is sane.
 				pCurrent  = (node_type*)pCurrent->mpNodeRight;
 			}
 		}
 
-		if(EASTL_LIKELY((pRangeEnd != &mAnchor) && !mCompare(key, extractKey(pRangeEnd->mValue))))
+		if(EASTL_LIKELY((pRangeEnd != &mAnchor) && !compare(key, extractKey(pRangeEnd->mValue))))
 			return iterator(pRangeEnd);
 		return iterator((node_type*)&mAnchor);
 	}
@@ -1820,14 +1905,14 @@ namespace eastl
 
 		while(EASTL_LIKELY(pCurrent)) // Do a walk down the tree.
 		{
-			if(EASTL_LIKELY(!mCompare(extractKey(pCurrent->mValue), key))) // If pCurrent is >= key...
+			if(EASTL_LIKELY(!compare(extractKey(pCurrent->mValue), key))) // If pCurrent is >= key...
 			{
 				pRangeEnd = pCurrent;
 				pCurrent  = (node_type*)pCurrent->mpNodeLeft;
 			}
 			else
 			{
-				EASTL_VALIDATE_COMPARE(!mCompare(key, extractKey(pCurrent->mValue))); // Validate that the compare function is sane.
+				EASTL_VALIDATE_COMPARE(!compare(key, extractKey(pCurrent->mValue))); // Validate that the compare function is sane.
 				pCurrent  = (node_type*)pCurrent->mpNodeRight;
 			}
 		}
@@ -1856,9 +1941,9 @@ namespace eastl
 
 		while(EASTL_LIKELY(pCurrent)) // Do a walk down the tree.
 		{
-			if(EASTL_LIKELY(mCompare(key, extractKey(pCurrent->mValue)))) // If key is < pCurrent...
+			if(EASTL_LIKELY(compare(key, extractKey(pCurrent->mValue)))) // If key is < pCurrent...
 			{
-				EASTL_VALIDATE_COMPARE(!mCompare(extractKey(pCurrent->mValue), key)); // Validate that the compare function is sane.
+				EASTL_VALIDATE_COMPARE(!compare(extractKey(pCurrent->mValue), key)); // Validate that the compare function is sane.
 				pRangeEnd = pCurrent;
 				pCurrent  = (node_type*)pCurrent->mpNodeLeft;
 			}
@@ -1891,7 +1976,7 @@ namespace eastl
 		//   4 Every simple path from a node to a descendant leaf contains the same number of black nodes.
 		//   5 The mnSize member of the tree must equal the number of nodes in the tree.
 		//   6 The tree is sorted as per a conventional binary tree.
-		//   7 The comparison function is sane; it obeys strict weak ordering. If mCompare(a,b) is true, then mCompare(b,a) must be false. Both cannot be true.
+		//   7 The comparison function is sane; it obeys strict weak ordering. If compare(a,b) is true, then compare(b,a) must be false. Both cannot be true.
 
 		extract_key extractKey;
 
@@ -1917,11 +2002,11 @@ namespace eastl
 				const node_type* const pNodeLeft  = (const node_type*)pNode->mpNodeLeft;
 
 				// Verify #7 above.
-				if(pNodeRight && mCompare(extractKey(pNodeRight->mValue), extractKey(pNode->mValue)) && mCompare(extractKey(pNode->mValue), extractKey(pNodeRight->mValue))) // Validate that the compare function is sane.
+				if(pNodeRight && compare(extractKey(pNodeRight->mValue), extractKey(pNode->mValue)) && compare(extractKey(pNode->mValue), extractKey(pNodeRight->mValue))) // Validate that the compare function is sane.
 					return false;
 
 				// Verify #7 above.
-				if(pNodeLeft && mCompare(extractKey(pNodeLeft->mValue), extractKey(pNode->mValue)) && mCompare(extractKey(pNode->mValue), extractKey(pNodeLeft->mValue))) // Validate that the compare function is sane.
+				if(pNodeLeft && compare(extractKey(pNodeLeft->mValue), extractKey(pNode->mValue)) && compare(extractKey(pNode->mValue), extractKey(pNodeLeft->mValue))) // Validate that the compare function is sane.
 					return false;
 
 				// Verify item #1 above.
@@ -1937,10 +2022,10 @@ namespace eastl
 				}
 
 				// Verify item #6 above.
-				if(pNodeRight && mCompare(extractKey(pNodeRight->mValue), extractKey(pNode->mValue)))
+				if(pNodeRight && compare(extractKey(pNodeRight->mValue), extractKey(pNode->mValue)))
 					return false;
 
-				if(pNodeLeft && mCompare(extractKey(pNode->mValue), extractKey(pNodeLeft->mValue)))
+				if(pNodeLeft && compare(extractKey(pNode->mValue), extractKey(pNodeLeft->mValue)))
 					return false;
 
 				if(!pNodeRight && !pNodeLeft) // If we are at a bottom node of the tree...
@@ -1989,7 +2074,7 @@ namespace eastl
 	inline typename rbtree<K, V, C, A, E, bM, bU>::node_type*
 	rbtree<K, V, C, A, E, bM, bU>::DoAllocateNode()
 	{
-		auto* pNode = (node_type*)allocate_memory(mAllocator, sizeof(node_type), EASTL_ALIGN_OF(value_type), 0);
+		auto* pNode = (node_type*)allocate_memory(mAllocator, sizeof(node_type), EASTL_ALIGN_OF(node_type), 0);
 		EASTL_ASSERT_MSG(pNode != nullptr, "the behaviour of eastl::allocators that return nullptr is not defined.");
 
 		return pNode;
@@ -2275,22 +2360,7 @@ namespace eastl
 } // namespace eastl
 
 
-#ifdef _MSC_VER
-	#pragma warning(pop)
-#endif
+EA_RESTORE_VC_WARNING();
 
 
 #endif // Header include guard
-
-
-
-
-
-
-
-
-
-
-
-
-

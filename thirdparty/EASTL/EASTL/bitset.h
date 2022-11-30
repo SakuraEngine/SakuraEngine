@@ -24,32 +24,25 @@
 #define EASTL_BITSET_H
 
 
-#include "internal/config.h"
-#include "algorithm.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/algorithm.h>
 
-#ifdef _MSC_VER
-	#pragma warning(push, 0)
-#endif
+EA_DISABLE_ALL_VC_WARNINGS();
+
 #include <stddef.h>
 #include <string.h>
-#ifdef _MSC_VER
-	#pragma warning(pop)
-#endif
+
+EA_RESTORE_ALL_VC_WARNINGS();
 
 #if EASTL_EXCEPTIONS_ENABLED
-	#ifdef _MSC_VER
-		#pragma warning(push, 0)
-	#endif
+	EA_DISABLE_ALL_VC_WARNINGS();
+
 	#include <stdexcept> // std::out_of_range, std::length_error.
-	#ifdef _MSC_VER
-		#pragma warning(pop)
-	#endif
+
+	EA_RESTORE_ALL_VC_WARNINGS();
 #endif
 
-#if defined(_MSC_VER)
-	#pragma warning(push)
-	#pragma warning(disable: 4127)  // Conditional expression is constant
-#endif
+EA_DISABLE_VC_WARNING(4127); // Conditional expression is constant
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -412,7 +405,9 @@ namespace eastl
 		size_type size() const;
 
 		bool operator==(const this_type& x) const;
+#if !defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
 		bool operator!=(const this_type& x) const;
+#endif
 
 		bool test(size_type i) const;
 	  //bool any() const;                   // We inherit this from the base class.
@@ -1512,7 +1507,7 @@ EA_RESTORE_GCC_WARNING()
 	inline typename BitsetBase<2, WordType>::size_type
 	BitsetBase<2, WordType>::count() const
 	{
-		#if defined(__GNUC__) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 304) // GCC 3.4 or later
+		#if (defined(__GNUC__) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 304)) || defined(__clang__) // GCC 3.4 or later
 			#if(EA_PLATFORM_WORD_SIZE == 4)
 				return (size_type)__builtin_popcountl(mWord[0])  + (size_type)__builtin_popcountl(mWord[1]);
 			#else
@@ -2085,13 +2080,13 @@ EA_RESTORE_GCC_WARNING()
 		return base_type::operator==(x);
 	}
 
-
+#if !defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
 	template <size_t N, typename WordType>
 	inline bool bitset<N, WordType>::operator!=(const this_type& x) const
 	{
 		return !base_type::operator==(x);
 	}
-
+#endif
 
 	template <size_t N, typename WordType>
 	inline bool bitset<N, WordType>::test(size_type i) const
@@ -2234,21 +2229,6 @@ EA_RESTORE_GCC_WARNING()
 } // namespace eastl
 
 
-#if defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
-
+EA_RESTORE_VC_WARNING();
 
 #endif // Header include guard
-
-
-
-
-
-
-
-
-
-
-
-

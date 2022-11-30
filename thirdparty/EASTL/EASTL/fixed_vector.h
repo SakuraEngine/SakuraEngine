@@ -1,4 +1,4 @@
-﻿///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) Electronic Arts Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -13,8 +13,8 @@
 #define EASTL_FIXED_VECTOR_H
 
 
-#include "vector.h"
-#include "internal/fixed_pool.h"
+#include <EASTL/vector.h>
+#include <EASTL/internal/fixed_pool.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -356,7 +356,7 @@ namespace eastl
 				get_allocator() = x.get_allocator(); // The primary effect of this is to copy the overflow allocator.
 			#endif
 
-			base_type::template DoAssign<move_iterator<iterator>, true>(make_move_iterator(x.begin()), make_move_iterator(x.end()), false_type()); // Shorter route.
+			base_type::template DoAssign<move_iterator<iterator>, true>(eastl::make_move_iterator(x.begin()), eastl::make_move_iterator(x.end()), false_type()); // Shorter route.
 		}
 		return *this;
 	}

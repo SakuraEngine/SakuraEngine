@@ -12,8 +12,8 @@
 #define EASTL_FIXED_MAP_H
 
 
-#include "map.h"
-#include "fixed_set.h" // Included because fixed_rbtree_base resides here.
+#include <EASTL/map.h>
+#include <EASTL/fixed_set.h> // Included because fixed_rbtree_base resides here.
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -150,6 +150,7 @@ namespace eastl
 		char mBuffer[fixed_allocator_type::kBufferSize]; // kBufferSize will take into account alignment requirements.
 
 		using base_type::mAllocator;
+		using base_type::get_compare;
 
 	public:
 		fixed_multimap();
@@ -218,7 +219,7 @@ namespace eastl
 
 	template <typename Key, typename T, size_t nodeCount, bool bEnableOverflow, typename Compare, typename OverflowAllocator>
 	inline fixed_map<Key, T, nodeCount, bEnableOverflow, Compare, OverflowAllocator>::fixed_map(const this_type& x)
-		: base_type(x.mCompare, fixed_allocator_type(mBuffer))
+		: base_type(x.get_compare(), fixed_allocator_type(mBuffer))
 	{
 		mAllocator.copy_overflow_allocator(x.mAllocator);
 
@@ -232,7 +233,7 @@ namespace eastl
 
 	template <typename Key, typename T, size_t nodeCount, bool bEnableOverflow, typename Compare, typename OverflowAllocator>
 	inline fixed_map<Key, T, nodeCount, bEnableOverflow, Compare, OverflowAllocator>::fixed_map(this_type&& x)
-		: base_type(x.mCompare, fixed_allocator_type(mBuffer))
+		: base_type(x.get_compare(), fixed_allocator_type(mBuffer))
 	{
 		mAllocator.copy_overflow_allocator(x.mAllocator);
 
@@ -246,7 +247,7 @@ namespace eastl
 
 	template <typename Key, typename T, size_t nodeCount, bool bEnableOverflow, typename Compare, typename OverflowAllocator>
 	inline fixed_map<Key, T, nodeCount, bEnableOverflow, Compare, OverflowAllocator>::fixed_map(this_type&& x, const overflow_allocator_type& overflowAllocator)
-		: base_type(x.mCompare, fixed_allocator_type(mBuffer, overflowAllocator))
+		: base_type(x.get_compare(), fixed_allocator_type(mBuffer, overflowAllocator))
 	{
 		mAllocator.copy_overflow_allocator(x.mAllocator);
 
@@ -409,7 +410,7 @@ namespace eastl
 
 	template <typename Key, typename T, size_t nodeCount, bool bEnableOverflow, typename Compare, typename OverflowAllocator>
 	inline fixed_multimap<Key, T, nodeCount, bEnableOverflow, Compare, OverflowAllocator>::fixed_multimap(const this_type& x)
-		: base_type(x.mCompare, fixed_allocator_type(mBuffer))
+		: base_type(x.get_compare(), fixed_allocator_type(mBuffer))
 	{
 		mAllocator.copy_overflow_allocator(x.mAllocator);
 
@@ -423,7 +424,7 @@ namespace eastl
 
 	template <typename Key, typename T, size_t nodeCount, bool bEnableOverflow, typename Compare, typename OverflowAllocator>
 	inline fixed_multimap<Key, T, nodeCount, bEnableOverflow, Compare, OverflowAllocator>::fixed_multimap(this_type&& x)
-		: base_type(x.mCompare, fixed_allocator_type(mBuffer))
+		: base_type(x.get_compare(), fixed_allocator_type(mBuffer))
 	{
 		mAllocator.copy_overflow_allocator(x.mAllocator);
 
@@ -437,7 +438,7 @@ namespace eastl
 
 	template <typename Key, typename T, size_t nodeCount, bool bEnableOverflow, typename Compare, typename OverflowAllocator>
 	inline fixed_multimap<Key, T, nodeCount, bEnableOverflow, Compare, OverflowAllocator>::fixed_multimap(this_type&& x, const overflow_allocator_type& overflowAllocator)
-		: base_type(x.mCompare, fixed_allocator_type(mBuffer, overflowAllocator))
+		: base_type(x.get_compare(), fixed_allocator_type(mBuffer, overflowAllocator))
 	{
 		mAllocator.copy_overflow_allocator(x.mAllocator);
 

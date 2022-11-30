@@ -9,8 +9,8 @@
 	#pragma once 
 #endif
 
-#include "map.h"
-#include "string.h"
+#include <EASTL/map.h>
+#include <EASTL/string.h>
 
 namespace eastl
 {

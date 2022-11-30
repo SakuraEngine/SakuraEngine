@@ -3,18 +3,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include "internal/config.h"
-#include "internal/thread_support.h"
-#include "type_traits.h"
-#include "memory.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/thread_support.h>
+#include <EASTL/type_traits.h>
+#include <EASTL/memory.h>
 
 #if defined(EA_PLATFORM_MICROSOFT)
-	#pragma warning(push, 0)
+	EA_DISABLE_ALL_VC_WARNINGS();
 	#ifndef WIN32_LEAN_AND_MEAN
 		#define WIN32_LEAN_AND_MEAN
 	#endif
 	#include <Windows.h>
-	#pragma warning(pop)    
+	EA_RESTORE_ALL_VC_WARNINGS();
 #endif
 
 
@@ -49,7 +49,11 @@ namespace eastl
 					pthread_mutexattr_t attr;
 
 					pthread_mutexattr_init(&attr);
-					pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_PRIVATE); 
+
+					#if defined(EA_HAVE_pthread_mutexattr_setpshared_DECL)
+						pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_PRIVATE);
+					#endif
+
 					pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 					pthread_mutex_init(&mMutex, &attr);
 					pthread_mutexattr_destroy(&attr);

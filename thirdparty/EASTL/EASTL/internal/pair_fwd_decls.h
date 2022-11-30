@@ -5,7 +5,7 @@
 #ifndef EASTL_PAIR_FWD_DECLS_H
 #define EASTL_PAIR_FWD_DECLS_H
 
-#include "config.h"
+#include <EASTL/internal/config.h>
 
 namespace eastl
 {

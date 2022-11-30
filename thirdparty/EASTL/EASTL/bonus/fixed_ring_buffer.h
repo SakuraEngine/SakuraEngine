@@ -5,9 +5,9 @@
 #ifndef EASTL_FIXED_RING_BUFFER_H
 #define EASTL_FIXED_RING_BUFFER_H
 
-#include "../internal/config.h"
-#include "../fixed_vector.h"
-#include "../bonus/ring_buffer.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/fixed_vector.h>
+#include <EASTL/bonus/ring_buffer.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.

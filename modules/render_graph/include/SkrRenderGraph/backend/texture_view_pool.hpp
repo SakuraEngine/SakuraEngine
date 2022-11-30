@@ -40,6 +40,8 @@ public:
         int64_t unique_id = 0;
         
         operator size_t() const;
+        struct hasher { inline size_t operator()(const Key& val) const { return (size_t)val; } };
+
         friend class TextureViewPool;
 
         Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& desc);
@@ -51,7 +53,7 @@ public:
     CGPUTextureViewId allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index);
 protected:
     CGPUDeviceId device;
-    eastl::unordered_map<Key, PooledTextureView> views;
+    eastl::unordered_map<Key, PooledTextureView, Key::hasher> views;
 };
 } // namespace render_graph
 } // namespace skr

@@ -13,25 +13,20 @@
 #define EASTL_FIXED_ALLOCATOR_H
 
 
-#include "internal/config.h"
-#include "internal/fixed_pool.h"
-#include "functional.h"
-#include "memory.h"
-#include "allocator.h"
-#include "type_traits.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/fixed_pool.h>
+#include <EASTL/functional.h>
+#include <EASTL/memory.h>
+#include <EASTL/allocator.h>
+#include <EASTL/type_traits.h>
 
-#ifdef _MSC_VER
-	#pragma warning(push, 0)
-	#include <new>
-	#pragma warning(pop)
-#else
-	#include <new>
-#endif
+EA_DISABLE_ALL_VC_WARNINGS();
 
-#if defined(_MSC_VER)
-	#pragma warning(push)
-	#pragma warning(disable: 4275) // non dll-interface class used as base for DLL-interface classkey 'identifier'
-#endif
+#include <new>
+
+EA_RESTORE_ALL_VC_WARNINGS();
+
+EA_DISABLE_VC_WARNING(4275); // non dll-interface class used as base for DLL-interface classkey 'identifier'
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -162,7 +157,7 @@ namespace eastl
 				{
 					pLink = mpNext;
 					
-					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char8_t*>(mpNext) + n);
+					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char*>(mpNext) + n);
 
 					#if EASTL_FIXED_SIZE_TRACKING_ENABLED
 						if(++mnCurrentSize > mnPeakSize)
@@ -272,8 +267,11 @@ namespace eastl
 		/// constructing via this constructor. 
 		///
 		fixed_allocator_with_overflow(const char* pName = EASTL_FIXED_POOL_DEFAULT_NAME)
-			: fixed_pool_base(NULL),
-			  mOverflowAllocator(pName)
+			: fixed_pool_base(NULL)
+			, mOverflowAllocator(pName)
+			, mpPoolBegin(nullptr)
+			, mpPoolEnd(nullptr)
+			, mnNodeSize(0)
 		{
 		}
 
@@ -287,6 +285,9 @@ namespace eastl
 		///
 		fixed_allocator_with_overflow(const fixed_allocator_with_overflow&)
 			: fixed_pool_base(NULL)
+			, mpPoolBegin(nullptr)
+			, mpPoolEnd(nullptr)
+			, mnNodeSize(0)
 		{
 		}
 
@@ -346,7 +347,7 @@ namespace eastl
 				if (mpNext != mpCapacity)
 				{
 					p = mpNext;
-					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char8_t*>(mpNext) + mnNodeSize);
+					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char*>(mpNext) + mnNodeSize);
 				}
 				else
 					p = mOverflowAllocator.allocate(mnNodeSize);
@@ -449,12 +450,6 @@ namespace eastl
 } // namespace eastl
 
 
-#if defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
-
+EA_RESTORE_VC_WARNING();
 
 #endif // Header include guard
-
-
-

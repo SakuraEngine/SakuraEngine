@@ -5,11 +5,13 @@
 #ifndef EASTL_FUNCTION_H
 #define EASTL_FUNCTION_H
 
+#include <EASTL/internal/config.h>
+
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once
 #endif
 
-#include "function_detail.h"
+#include <EASTL/internal/function_detail.h>
 
 namespace eastl
 {
@@ -131,7 +133,7 @@ namespace eastl
 	{
 		return !f;
 	}
-
+#if !defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
 	template <typename R, typename... Args>
 	bool operator==(std::nullptr_t, const function<R(Args...)>& f) EA_NOEXCEPT
 	{
@@ -149,7 +151,7 @@ namespace eastl
 	{
 		return !!f;
 	}
-
+#endif
 	template <typename R, typename... Args>
 	void swap(function<R(Args...)>& lhs, function<R(Args...)>& rhs)
 	{
