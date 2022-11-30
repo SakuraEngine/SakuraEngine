@@ -18,7 +18,7 @@ pool_t::~pool_t()
 {
     void* block;
     while (blocks.try_dequeue(block))
-        delete (char*)block;
+       ::dual_free(block);
 }
 
 void* pool_t::allocate()
