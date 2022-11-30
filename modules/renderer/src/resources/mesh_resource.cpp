@@ -13,6 +13,14 @@
 
 #include "tracy/Tracy.hpp"
 
+skr_mesh_resource_t::~skr_mesh_resource_t() SKR_NOEXCEPT
+{
+    for (auto&& bin : bins)
+    {
+        if (bin.bin.bytes) sakura_free(bin.bin.bytes);
+    }
+    skr_mesh_resource_free(this);
+}
 
 static struct SkrMeshResourceUtil
 {
@@ -491,7 +499,6 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
                         sakura_free(bin.bin.bytes);
                     }
                 }
-
                 mDStorageRequests.erase(mesh_resource);
                 mInstallTypes.erase(mesh_resource);
             }
@@ -509,15 +516,14 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 bool SMeshFactoryImpl::Unload(skr_resource_record_t* record)
 { 
     auto mesh_resource = (skr_mesh_resource_id)record->resource;
-    skr_mesh_resource_free(mesh_resource);
+    SkrDelete(mesh_resource);
     return true; 
 }
 
 bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
 {
     auto mesh_resource = (skr_mesh_resource_id)record->resource;
-    auto render_mesh_resource = mesh_resource->render_mesh;
-    if(render_mesh_resource) skr_render_mesh_free(render_mesh_resource);
+    SkrDelete(mesh_resource);
     return true; 
 }
 

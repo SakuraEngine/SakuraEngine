@@ -177,20 +177,17 @@ struct TaskContainer
         SKR_DEFER({ optionalUnlockTasks(); });
         if (isLockless)
         {
+            ZoneScopedN("ioServiceDequeueRequests");
             Task tsk;
             while (task_requests.try_dequeue(tsk))
             {
-                TracyCZone(dequeueZone, 1);
-                TracyCZoneName(dequeueZone, "ioServiceDequeueRequests", strlen("ioServiceDequeueRequests"));
                 tasks.emplace_back(tsk);
-                TracyCZoneEnd(dequeueZone);
             }
         }
         // 1.defer cancel tasks
         if (tasks.size())
         {
-            TracyCZone(cancelZone, 1);
-            TracyCZoneName(cancelZone, "ioServiceCancels", strlen("ioServiceCancels"));
+            ZoneScopedN("ioServiceCancels");
             tasks.erase(
                 eastl::remove_if(tasks.begin(), tasks.end(),
                     [](Task& t) {
@@ -200,7 +197,6 @@ struct TaskContainer
                             t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
                         return cancelled;
                     }), tasks.end());
-            TracyCZoneEnd(cancelZone);
         }
         // 2.try fetch a new task
         {
@@ -211,8 +207,7 @@ struct TaskContainer
             }
             else // do sort
             {
-                TracyCZone(sortZone, 1);
-                TracyCZoneName(sortZone, "ioServiceSort", strlen("ioServiceSort"));
+                ZoneScopedN("ioServiceSort");
                 service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
                 switch (service->sortMethod)
                 {
@@ -228,7 +223,6 @@ struct TaskContainer
                     default:
                         break;
                 }
-                TracyCZoneEnd(sortZone);
             }
         }
     }

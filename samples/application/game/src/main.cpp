@@ -3,8 +3,12 @@
 #include "utils/log.h"
 #include "task/task.hpp"
 
+#include "tracy/Tracy.hpp"
+
 int main(int argc, char** argv)
 {
+    ZoneScopedN("Main");
+
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);

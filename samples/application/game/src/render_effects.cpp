@@ -42,13 +42,33 @@ struct RenderPassForward : public IPrimitiveRenderPass {
             auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t";
             skin_query = dualQ_from_literal(storage, sig);
         }
+        auto updateSkinJob = SkrNewLambda(
+            [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
+            auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
+            auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
+            
+            for (uint32_t i = 0; i < view->count; i++)
+            {
+                auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                if(!mesh_resource)
+                    continue;
+                if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
+                {
+                    ZoneScopedN("CPU Skin");
+
+                    skr_cpu_skin(skins + i, anims + i, mesh_resource);
+                }
+            }
+        });
+
         auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
             const auto cgpu_device = renderer->get_render_device()->get_cgpu_device();
             auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
             auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
             auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(r_cv);
             auto skels = dual::get_owned_rw<skr_render_skel_comp_t>(r_cv);
-            
+
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 auto mesh_resource = meshes[i].mesh_resource.get_resolved();
@@ -67,17 +87,10 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     if(skel_resource)
                         skr_init_anim_component(&anims[i], mesh_resource, skel_resource);
                 }
-                if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
-                {
-                    ZoneScopedN("CPU Skin");
-
-                    skr_cpu_skin(skins + i, anims + i, mesh_resource);
-                }
             }
 
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                const auto* mesh = meshes + i;
                 auto mesh_resource = meshes[i].mesh_resource.get_resolved();
                 if(!mesh_resource)
                     continue;
@@ -161,6 +174,8 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                                 .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size));
                         },
                         [=](rg::RenderGraph& g, rg::CopyPassContext& context){
+                            ZoneScopedN("Copy SkinMesh");
+
                             auto upload_buffer = context.resolve(upload_buffer_handle);
                             void* vtx_dst = upload_buffer->cpu_mapped_address;
                             memcpy(vtx_dst, anim->buffers[j].bytes, vertex_size);
@@ -174,8 +189,14 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 }
             }
         };
+        // prepare skin mesh resources for rendering
         dualQ_get_views(skin_query, DUAL_LAMBDA(uploadVertices));
+        // wait last skin dispatch
+        if (pSkinCounter) dualJ_wait_counter(pSkinCounter, true);
+        // late skin dispatch for next frame
+        dualJ_schedule_ecs(skin_query, 4, DUAL_LAMBDA_POINTER(updateSkinJob), nullptr, &pSkinCounter);
     }
+    dual_counter_t* pSkinCounter = nullptr;
 
     void post_update(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
     {

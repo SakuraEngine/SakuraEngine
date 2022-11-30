@@ -385,6 +385,7 @@ void imgui_button_spawn_girl(SRendererId renderer)
 
 int SGameModule::main_module_exec(int argc, char** argv)
 {
+    ZoneScopedN("GameExecution");
     auto moduleManager = skr_get_module_manager();
     SKR_LOG_INFO("game executed as main module!");
     
@@ -667,7 +668,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         {
                             game::InitializeAnimState(&state, skeleton_resource);
                         }
-                        game::UpdateAnimState(&state, skeleton_resource, deltaTime, &anim);
+                        game::UpdateAnimState(&state, skeleton_resource, (float)deltaTime, &anim);
                     }
                 };
                 skr_render_effect_access(game_renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(syncEffect));

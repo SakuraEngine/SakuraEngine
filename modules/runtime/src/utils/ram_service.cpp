@@ -62,7 +62,8 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
             }
             if (task->destination->bytes == nullptr)
             {
-                ZoneScopedNC("Allocate", tracy::Color::LightBlue);
+                ZoneScopedNC("FileMemoryAllocate", tracy::Color::LightBlue);
+                TracyMessage(task->path.c_str(), task->path.size());
                 // allocate
                 auto fsize = skr_vfs_fsize(vf);
                 task->destination->size = fsize;
