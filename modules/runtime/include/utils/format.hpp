@@ -52,7 +52,13 @@ struct formatter<skr_md5_t> {
     auto format(skr_md5_t const& md5, FormatContext& ctx) const
     -> decltype(ctx.out())
     {
-        return format_to(ctx.out(), "{:08X}{:08X}{:08X}{:08X}", md5.a, md5.b, md5.c, md5.d);
+        return format_to(ctx.out(), 
+            "{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", 
+            md5.digest[0], md5.digest[1], md5.digest[2], md5.digest[3],
+            md5.digest[4], md5.digest[5], md5.digest[6], md5.digest[7],
+            md5.digest[8], md5.digest[9], md5.digest[10], md5.digest[11],
+            md5.digest[12], md5.digest[13], md5.digest[14], md5.digest[15]
+        );
     }
 };
 } // namespace fmt

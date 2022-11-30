@@ -45,12 +45,18 @@ typedef struct skr_guid_t {
     uint32_t Storage3 SKR_IF_CPP( = 0);
 } skr_guid_t;
 
+
+#define SKR_MD5_DIGEST_LENGTH 128 / sizeof(uint8_t)
 typedef struct skr_md5_t {
-    uint32_t a SKR_IF_CPP( = 0);
-    uint32_t b SKR_IF_CPP( = 0);
-    uint32_t c SKR_IF_CPP( = 0);
-    uint32_t d SKR_IF_CPP( = 0);
+    uint8_t digest[SKR_MD5_DIGEST_LENGTH];
 } skr_md5_t;
+
+typedef struct skr_md5_u32x4_view_t {
+    uint32_t a;
+    uint32_t b;
+    uint32_t c;
+    uint32_t d;
+} skr_md5_u32x4_view_t;
 
 RUNTIME_EXTERN_C RUNTIME_API bool skr_parse_md5(const char* str32, skr_md5_t* out_md5);
 RUNTIME_EXTERN_C RUNTIME_API void skr_make_md5(const char* str, uint32_t str_size, skr_md5_t* out_md5);
@@ -121,13 +127,15 @@ inline static SKR_CONSTEXPR bool operator!=(skr_float2_t l, skr_float2_t r)
 {
     return (l.x != r.x) || (l.y != r.y);
 }
-inline SKR_CONSTEXPR bool operator==(skr_md5_t a, skr_md5_t b)
+inline bool operator==(skr_md5_t a, skr_md5_t b)
 {
+    const skr_md5_u32x4_view_t* va = (skr_md5_u32x4_view_t*)&a;
+    const skr_md5_u32x4_view_t* vb = (skr_md5_u32x4_view_t*)&b;
     int result = true;
-    result &= (a.a == b.a);
-    result &= (a.b == b.b);
-    result &= (a.c == b.c);
-    result &= (a.d == b.d);
+    result &= (va->a == vb->a);
+    result &= (va->b == vb->b);
+    result &= (va->c == vb->c);
+    result &= (va->d == vb->d);
     return result;
 }
 

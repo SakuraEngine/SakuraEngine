@@ -261,7 +261,7 @@ void WriteHelper<const skr_guid_t&>::Write(skr_json_writer_t* writer, const skr_
 
 void WriteHelper<const skr_md5_t&>::Write(skr_json_writer_t* writer, const skr_md5_t& md5)
 {
-    auto str = skr::format("{}{}{}{}", md5.a, md5.b, md5.c, md5.d);
+    auto str = skr::format("{}", md5);
     writer->String(str.data(), (skr_json_writer_size_t)str.size());
 }
 
