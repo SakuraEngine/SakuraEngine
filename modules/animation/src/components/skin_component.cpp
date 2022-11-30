@@ -130,14 +130,13 @@ void skr_cpu_skin(skr_render_skin_comp_t* skin, skr_render_anim_comp_t* anim, sk
             auto offset = mesh->bins[buffer->buffer_index].bin.bytes + buffer->offset;
             return ozz::span<const T>{ (T*)offset, vertex_count * comps };
         };
-        eastl::vector<ozz::math::Float4x4> skin_matrices;
-        skin_matrices.resize(anim->joint_matrices.size());
+        skin->skin_matrices.resize(anim->joint_matrices.size());
         for(size_t i = 0; i < skin->joint_remaps.size(); ++i)
         {
             auto inverse = skin_resource->blob.inverse_bind_poses[i];
-            skin_matrices[i] = anim->joint_matrices[skin->joint_remaps[i]] * (ozz::math::Float4x4&)inverse;
+            skin->skin_matrices[i] = anim->joint_matrices[skin->joint_remaps[i]] * (ozz::math::Float4x4&)inverse;
         }
-        job.joint_matrices = { skin_matrices.data(), skin_matrices.size() };
+        job.joint_matrices = { skin->skin_matrices.data(), skin->skin_matrices.size() };
         job.influences_count = 4;
         job.vertex_count = vertex_count;
         job.joint_weights = buffer_span(weights_buffer, skr::type_t<float>(), 4);
