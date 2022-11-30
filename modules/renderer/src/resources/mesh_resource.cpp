@@ -10,6 +10,7 @@
 #include <EASTL/hash_set.h>
 #include <platform/filesystem.hpp>
 #include "containers/hashmap.hpp"
+#include "SkrRenderer/render_mesh.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -19,7 +20,6 @@ skr_mesh_resource_t::~skr_mesh_resource_t() SKR_NOEXCEPT
     {
         if (bin.bin.bytes) sakura_free(bin.bin.bytes);
     }
-    skr_mesh_resource_free(this);
 }
 
 static struct SkrMeshResourceUtil
@@ -161,7 +161,6 @@ const char* skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struc
 
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
-#include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_device.h"
 #include "utils/log.h"
 #include "cgpu/io.hpp"
@@ -523,7 +522,8 @@ bool SMeshFactoryImpl::Unload(skr_resource_record_t* record)
 bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
 {
     auto mesh_resource = (skr_mesh_resource_id)record->resource;
-    SkrDelete(mesh_resource);
+    skr_render_mesh_free(mesh_resource->render_mesh);
+    mesh_resource->render_mesh = nullptr;
     return true; 
 }
 

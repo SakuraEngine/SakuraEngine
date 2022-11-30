@@ -2,6 +2,8 @@
 #include "platform/memory.h"
 #include "SkrRenderGraph/frontend/base_types.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace skr
 {
 namespace render_graph
@@ -15,9 +17,14 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactory
     template<typename T, typename... Args>
     T* Allocate(Args&&... args) SKR_NOEXCEPT
     {
-        if (auto allocated = InternalRealloc<T>())
+#ifdef TRACY_ENABLE
+        ZoneScopedN("RennderGraph::AllocateObject");
+#endif
+        if (auto allocated = InternalAlloc<T>())
         {
             new (allocated) T(std::forward<Args>(args)...);
+            auto& pooled_size = const_cast<uint32_t&>(allocated->pooled_size);
+            pooled_size = (uint32_t)sizeof(T);
             return allocated;
         }
         return SkrNew<T>(std::forward<Args>(args)...);
@@ -31,20 +38,25 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactory
     }
 
     template<typename T>
-    T* InternalRealloc() SKR_NOEXCEPT
+    T* InternalAlloc() SKR_NOEXCEPT
     {
-        // 1.fetch object from pool
-        // 2.memzero
-        return nullptr;
+        return (T*)internalAllocateMemory(sizeof(T));
     }
     
     template<typename T>
     bool InternalFree(T* object) SKR_NOEXCEPT
     {
-        // 1.dtor
-        // 2.return to pool
-        return false;
+        if (object->pooled_size)
+        {
+            object->~T();
+            return internalFreeMemory(object, object->pooled_size);
+        }
+        SkrDelete(object);
+        return true;
     }
+
+    virtual bool internalFreeMemory(void* memory, size_t size) = 0;
+    virtual void* internalAllocateMemory(size_t size) = 0;
 }; 
 } // namespace render_graph
 } // namespace skr

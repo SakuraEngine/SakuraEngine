@@ -2,7 +2,9 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
+#include <containers/hashmap.hpp>
 #include "utils/log.h"
+#include "utils/concurrent_queue.h"
 
 namespace skr
 {
@@ -10,7 +12,71 @@ namespace render_graph
 {
 struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFactory
 {
-    ~NodeAndEdgeFactoryImpl() SKR_NOEXCEPT = default;
+    NodeAndEdgeFactoryImpl() SKR_NOEXCEPT
+    {
+
+    }
+    ~NodeAndEdgeFactoryImpl() SKR_NOEXCEPT
+    {
+        for (auto pool : pools)
+        {
+            SkrDelete(pool.second);
+        }
+    }
+
+    struct factory_pool_t 
+    {
+        size_t blockSize;
+        moodycamel::ConcurrentQueue<void*> blocks;
+
+        factory_pool_t(size_t blockSize, size_t blockCount) SKR_NOEXCEPT
+            : blockSize(blockSize)
+            , blocks(blockCount)
+        {
+            
+        }
+        ~factory_pool_t() SKR_NOEXCEPT
+        {
+            void* block;
+            while (blocks.try_dequeue(block))
+                ::sakura_free(block);
+        }
+        void* allocate()
+        {
+            void* block;
+            if (blocks.try_dequeue(block))
+                return block;
+            {
+                ZoneScopedN("DualPoolAllocation");
+                return ::sakura_calloc(1, blockSize);
+            }
+        }
+        void free(void* block)
+        {
+            if (blocks.try_enqueue(block))
+                return;
+            ::sakura_free(block);
+        }
+    };
+
+    bool internalFreeMemory(void* memory, size_t size) override
+    {
+        auto pool = pools.find(size);
+        SKR_ASSERT(pool != pools.end());
+        pool->second->free(memory);
+        return true;
+    }
+
+    void* internalAllocateMemory(size_t size) override
+    {
+        auto pool = pools.find(size);
+        if (pool == pools.end())
+        {
+            pool = pools.emplace(size, SkrNew<factory_pool_t>(size, 256u)).first;
+        }
+        return pool->second->allocate();
+    }
+    skr::flat_hash_map<size_t, factory_pool_t*> pools;
 };
 
 NodeAndEdgeFactory* NodeAndEdgeFactory::Create()

@@ -289,6 +289,7 @@ struct RenderGraphNode : public DependencyGraphNode {
     SKR_RENDER_GRAPH_API void set_name(const char* n);
     SKR_RENDER_GRAPH_API const char* get_name() const;
     const EObjectType type;
+    const uint32_t pooled_size = 0;
 protected:
     skr::string name;
 };
@@ -296,6 +297,7 @@ protected:
 struct RenderGraphEdge : public DependencyGraphEdge {
     RenderGraphEdge(ERelationshipType type);
     const ERelationshipType type;
+    const uint32_t pooled_size = 0;
 };
 
 struct SKR_RENDER_GRAPH_API PassContext {

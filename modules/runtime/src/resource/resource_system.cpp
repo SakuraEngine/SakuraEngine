@@ -182,8 +182,7 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
     auto record = handle.get_record();
     SKR_ASSERT(record->loadingStatus != SKR_LOADING_STATUS_UNLOADED);
     record->RemoveReference(handle.get_requester_id(), handle.get_requester_type());
-    auto guid = handle.guid = record->header.guid; // force flush handle to guid
-
+    auto guid = handle.guid = record->header.guid; (void)guid;// force flush handle to guid
     _UnloadResource(record);
 }
 
@@ -297,7 +296,7 @@ void SResourceSystemImpl::Update()
                     request->resourceRecord->activeRequest = nullptr;
                     if (!request->isLoading)
                     {
-                        auto guid = request->resourceRecord->header.guid;
+                        auto guid = request->resourceRecord->header.guid; (void)guid;
                         _DestroyRecord(request->resourceRecord);
                     }
                 }
