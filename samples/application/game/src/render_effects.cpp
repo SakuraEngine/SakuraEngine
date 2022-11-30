@@ -281,16 +281,16 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                             ZoneScopedN("BindGeometry");
                             cgpu_render_encoder_bind_index_buffer(stack.encoder, 
                                 dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                            CGPUBufferId vertex_buffers[4] = {
-                                dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer, dc.vertex_buffers[2].buffer, dc.vertex_buffers[3].buffer
-                            };
-                            const uint32_t strides[4] = {
-                                dc.vertex_buffers[0].stride, dc.vertex_buffers[1].stride, dc.vertex_buffers[2].stride, dc.vertex_buffers[3].stride
-                            };
-                            const uint32_t offsets[4] = {
-                                dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset, dc.vertex_buffers[2].offset, dc.vertex_buffers[3].offset
-                            };
-                            cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 4, vertex_buffers, strides, offsets);
+                            CGPUBufferId vertex_buffers[10] = { 0 };
+                            uint32_t strides[10] = { 0 };
+                            uint32_t offsets[10] = { 0 };
+                            for (size_t i = 0; i < dc.vertex_buffer_count; i++)
+                            {
+                                vertex_buffers[i] = dc.vertex_buffers[i].buffer;
+                                strides[i] = dc.vertex_buffers[i].stride;
+                                offsets[i] = dc.vertex_buffers[i].offset;
+                            }
+                            cgpu_render_encoder_bind_vertex_buffers(stack.encoder, dc.vertex_buffer_count, vertex_buffers, strides, offsets);
                         }
                         {
                             ZoneScopedN("PushConstants");

@@ -301,7 +301,7 @@ void create_test_scene(SRendererId renderer)
                 skr_render_effect_attach(renderer, view, "ForwardEffectSkin");
         }
     };
-    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
+    // dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG("Create Scene 0!");
 
@@ -353,12 +353,12 @@ void async_attach_render_mesh(SRendererId renderer)
                 auto& skin_comp = skin_comps[i];
                 auto& skel_comp = skel_comps[i];
                 // auto& anim_comp = anim_comps[i];
-                mesh_comp.mesh_resource = "2f9a3ffa-fa79-48d7-b95d-104ef03740f7"_guid;
+                mesh_comp.mesh_resource = "79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid;
                 mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
-                skin_comp.skin_resource = "D1E4F32C-7C43-486E-87AB-EDF565A43E80"_guid;
-                skin_comp.skin_resource.resolve(true, renderer->get_dual_storage());
-                skel_comp.skeleton = "23F44FD5-6F87-4E6D-A232-1A99D015E21A"_guid;
-                skel_comp.skeleton.resolve(true, renderer->get_dual_storage());
+                //skin_comp.skin_resource = "D1E4F32C-7C43-486E-87AB-EDF565A43E80"_guid;
+                //skin_comp.skin_resource.resolve(true, renderer->get_dual_storage());
+                //skel_comp.skeleton = "23F44FD5-6F87-4E6D-A232-1A99D015E21A"_guid;
+                //skel_comp.skeleton.resolve(true, renderer->get_dual_storage());
             }
         };
         skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));

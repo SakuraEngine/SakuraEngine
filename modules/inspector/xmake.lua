@@ -7,4 +7,4 @@
     -- })
     public_dependency("SkrImGui", engine_version)
     add_includedirs("include", {public=true})
-    add_files("src/**.c", "src/**.cpp")
+    add_files("src/**.cpp")
