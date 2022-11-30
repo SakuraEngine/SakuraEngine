@@ -13,6 +13,7 @@ sattr("component" :
 skr_render_skin_comp_t
 {
     SKR_RESOURCE_FIELD(skr_skin_resource_t, skin_resource);
+    sattr("transient": true)
     eastl::vector<uint16_t> joint_remaps;
     
     sattr("no-rtti": true, "transient": true)
@@ -35,13 +36,14 @@ sattr("component" :
 }) 
 skr_render_anim_comp_t
 {
-    eastl::vector<ozz::math::Float4x4> joint_matrices;
     ~skr_render_anim_comp_t();
+    bool use_dynamic_buffer = true;
+    spush_attr("no-rtti": true, "transient": true)
+    eastl::vector<ozz::math::Float4x4> joint_matrices;
     eastl::vector<skr_skin_primitive_t> primitives;
     eastl::vector<skr_blob_t> buffers;
     eastl::vector<CGPUBufferId> vbs;
     eastl::vector<skr_vertex_buffer_view_t> views;
-    bool use_dynamic_buffer = true;
 };
 
 struct skr_render_skel_comp_t;
