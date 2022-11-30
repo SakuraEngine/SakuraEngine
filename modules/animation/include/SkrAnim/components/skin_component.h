@@ -37,7 +37,7 @@ sattr("component" :
 skr_render_anim_comp_t
 {
     ~skr_render_anim_comp_t();
-    bool use_dynamic_buffer = true;
+    bool use_dynamic_buffer = false;
     spush_attr("no-rtti": true, "transient": true)
     eastl::vector<ozz::math::Float4x4> joint_matrices;
     eastl::vector<skr_skin_primitive_t> primitives;
