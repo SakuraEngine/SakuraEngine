@@ -14,6 +14,9 @@ skr_render_skin_comp_t
 {
     SKR_RESOURCE_FIELD(skr_skin_resource_t, skin_resource);
     eastl::vector<uint16_t> joint_remaps;
+    
+    sattr("no-rtti": true, "transient": true)
+    eastl::vector<ozz::math::Float4x4> skin_matrices;
 };
 
 sreflect_struct("guid" : "F9195283-41E4-4BB7-8866-5C1BDC8B51C8")
@@ -38,7 +41,7 @@ skr_render_anim_comp_t
     eastl::vector<skr_blob_t> buffers;
     eastl::vector<CGPUBufferId> vbs;
     eastl::vector<skr_vertex_buffer_view_t> views;
-    bool use_dynamic_buffer = false;
+    bool use_dynamic_buffer = true;
 };
 
 struct skr_render_skel_comp_t;
