@@ -28,8 +28,8 @@ shared_module("SkrRT", "RUNTIME", engine_version)
             local depgraph_lib = project.target("SkrDependencyGraph")
             depgraph_lib:add("defines", "EA_DLL", {public = true})
 
-            target:add("defines", "MI_SHARED_LIB", "EA_DLL", "MARL_DLL", {public = true})
-            target:add("defines", "MI_SHARED_LIB_EXPORT", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT", "MARL_BUILDING_DLL")
+            target:add("defines", "EA_DLL", "MARL_DLL", {public = true})
+            target:add("defines", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT", "MARL_BUILDING_DLL")
         end
     end)
     -- link system libs/frameworks
