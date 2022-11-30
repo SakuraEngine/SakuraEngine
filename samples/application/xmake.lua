@@ -1,5 +1,7 @@
 includes("game/xmake.lua")
 
+if(not has_config("shipping_one_archive")) then
+
 shared_module("GameTool", "GAMETOOL", engine_version)
     set_group("04.examples/application")
     public_dependency("SkrToolCore", "0.1.0")
@@ -21,6 +23,8 @@ shared_module("GameTool", "GAMETOOL", engine_version)
             end
         end
     end)
+
+end
 
 executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
     set_group("04.examples/application")

@@ -22,7 +22,7 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -m release -y -c -v --build_tests=n --build_editors=n --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
+          xmake f -m release -y -c -v --build_tests=n --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
       - name: UploadGeneratedFiles
         if: success() || failure()

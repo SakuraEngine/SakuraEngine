@@ -1,21 +1,20 @@
 #include "SkrTweak/module.h"
 #include "containers/hashmap.hpp"
-#include "utils/hash.h"
-#include "module/module_manager.hpp"
 #include "efsw/efsw.hpp"
 #include "platform/filesystem.hpp"
-#include <string>
-#include <fstream>
-#include "utils/log.h"
 #include "platform/thread.h"
 #include "utils/hash.h"
+#include "utils/log.h"
+#include <EASTL/vector.h>
+#include <string>
+#include <fstream>
 
 struct skr_tweak_value_t
 {
     std::variant<float, int, bool, eastl::string> value;
 };
 
-class SkrTweakModule  : public skr::IDynamicModule, public efsw::FileWatchListener
+class SkrTweakModule : public skr::IDynamicModule, public efsw::FileWatchListener
 {
 public:
     static SkrTweakModule* instance;
@@ -31,7 +30,7 @@ public:
     struct TweakLine
     {
         int line_number;
-        std::vector<skr_tweak_value_t*> tweaks;
+        eastl::vector<skr_tweak_value_t*> tweaks;
     };
 
     void handleFileAction(efsw::WatchID watchid, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename = "" ) override

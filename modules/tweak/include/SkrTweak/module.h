@@ -16,7 +16,7 @@ SKR_TWEAK_API bool skr_get_tweak(skr_tweak_bool_t* tweak);
 SKR_TWEAK_API skr_tweak_string_t* skr_tweak_value(const char* value, const char* str, const char* fileName, int lineNumber);
 SKR_TWEAK_API const char* skr_get_tweak(skr_tweak_string_t* tweak);
 
-#ifndef SKR_SHIPPING
+#if !defined(SKR_SHIPPING) && !defined(SHIPPING_ONE_ARCHIVE)
 #define SKR_TWEAK(value) []() { static auto tweak = skr_tweak_value(value, #value, __FILE__, __LINE__); return skr_get_tweak(tweak); }()
 #else
 #define SKR_TWEAK(value) value
