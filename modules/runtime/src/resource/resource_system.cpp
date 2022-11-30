@@ -144,6 +144,7 @@ void SResourceSystemImpl::UnregisterFactory(skr_type_id_t type)
 
 void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType)
 {
+    SKR_ASSERT(!quit);
     SMutexLock lock(recordMutex);
     SKR_ASSERT(!handle.is_resolved());
     auto record = _GetOrCreateRecord(handle.get_guid());
@@ -190,6 +191,7 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
 
 void SResourceSystemImpl::_UnloadResource(skr_resource_record_t* record)
 {
+    SKR_ASSERT(!quit);
     if (!record->IsReferenced()) // unload
     {
         if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
@@ -269,13 +271,12 @@ void SResourceSystemImpl::Shutdown()
         }
     }
     _ClearFinishedRequests();
-    bool _quit = quit;
     quit = false;
     while(!requests.empty())
     {
         Update();
     }
-    quit = _quit;
+    quit = true;
     for(auto pair : resourceRecords)
     {
         auto record = pair.second;
