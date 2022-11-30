@@ -8,9 +8,9 @@ sreflect_enum_class("guid": "c289eaaf-ace9-4a86-8072-b173377f7d19")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
 ESkrShaderOptionType : uint32_t
 {
-    LEVEL = 0,  // [ "SM_5_0", "SM_6_3", "SM_6_6"]
+    LEVEL = 0,  // [ "SM_5_0", "SM_6_3", "SM_6_6" ]
     VALUE = 1, // "ATOMIC_BOOL": ["on", "off"]
-    SELECT = 2, // [ "BRAND_NVIDIA", "BRAND_INTEL", "BRAND_AMD"]
+    SELECT = 2, // [ "BRAND_NVIDIA", "BRAND_INTEL", "BRAND_AMD" ]
     COUNT
 };
 

@@ -22,7 +22,7 @@ void* SMaterialTypeImporter::Import(skr::io::RAMService* ioService, SCookContext
         SKR_LOG_FMT_ERROR("Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
         return nullptr;
     }
-    auto&& json_value = doc.get_value().value_unsafe();
+    auto json_value = doc.get_value().value_unsafe();
 
     // create source code wrapper
     auto type_asset = SkrNew<skr_material_type_asset_t>();
