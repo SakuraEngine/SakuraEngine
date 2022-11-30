@@ -2,6 +2,7 @@
 #include "SkrAnim/ozz/local_to_model_job.h"
 #include "SkrAnim/components/skin_component.h"
 #include "utils/log.h"
+#include "SkrTweak/module.h"
 
 namespace game
 {
@@ -16,7 +17,7 @@ namespace game
         auto anim = state->animation_resource.get_resolved();
         if(!anim)
             return;
-        float newTime = state->currtime + dt;
+        float newTime = state->currtime + TWEAK(1.f) * dt;
         if(newTime > anim->animation.duration())
             newTime = std::fmodf(newTime, anim->animation.duration());
         ozz::animation::SamplingJob sampling_job;
