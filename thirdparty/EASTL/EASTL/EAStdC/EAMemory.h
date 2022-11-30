@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include "../EAAssert/eaassert.h"
-#include "../EABase/eabase.h"
+#include "EABase/eabase.h"
 #include "../internal/config.h"
 
 
