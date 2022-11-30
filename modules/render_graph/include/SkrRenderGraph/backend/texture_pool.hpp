@@ -42,6 +42,8 @@ public:
         operator size_t() const;
         friend class TexturePool;
 
+        struct hasher { inline size_t operator()(const Key& val) const { return (size_t)val; } };
+
         Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc);
     };
     friend class RenderGraphBackend;
@@ -52,7 +54,7 @@ public:
 
 protected:
     CGPUDeviceId device;
-    eastl::unordered_map<Key, eastl::deque<PooledTexture>> textures;
+    eastl::unordered_map<Key, eastl::deque<PooledTexture>, Key::hasher> textures;
 };
 } // namespace render_graph
 } // namespace skr

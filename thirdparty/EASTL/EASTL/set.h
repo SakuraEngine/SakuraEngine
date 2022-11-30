@@ -7,10 +7,10 @@
 #define EASTL_SET_H
 
 
-#include "internal/config.h"
-#include "internal/red_black_tree.h"
-#include "functional.h"
-#include "utility.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/red_black_tree.h>
+#include <EASTL/functional.h>
+#include <EASTL/utility.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -101,7 +101,10 @@ namespace eastl
 		using base_type::find;
 		using base_type::lower_bound;
 		using base_type::upper_bound;
-		using base_type::mCompare;
+
+	protected:
+		using base_type::compare;
+		using base_type::get_compare;
 
 	public:
 		set(const allocator_type& allocator = EASTL_SET_DEFAULT_ALLOCATOR);
@@ -181,7 +184,10 @@ namespace eastl
 		using base_type::find;
 		using base_type::lower_bound;
 		using base_type::upper_bound;
-		using base_type::mCompare;
+
+	protected:
+		using base_type::compare;
+		using base_type::get_compare;
 
 	public:
 		multiset(const allocator_type& allocator = EASTL_MULTISET_DEFAULT_ALLOCATOR);
@@ -283,7 +289,7 @@ namespace eastl
 	inline typename set<Key, Compare, Allocator>::value_compare
 	set<Key, Compare, Allocator>::value_comp() const
 	{
-		return mCompare;
+		return get_compare();
 	}
 
 
@@ -365,7 +371,7 @@ namespace eastl
 		// result is a range of size zero or one.
 		const iterator itLower(lower_bound(k));
 
-		if((itLower == end()) || mCompare(k, *itLower)) // If at the end or if (k is < itLower)...
+		if((itLower == end()) || compare(k, *itLower)) // If at the end or if (k is < itLower)...
 			return eastl::pair<iterator, iterator>(itLower, itLower);
 
 		iterator itUpper(itLower);
@@ -381,7 +387,7 @@ namespace eastl
 		// See equal_range above for comments.
 		const const_iterator itLower(lower_bound(k));
 
-		if((itLower == end()) || mCompare(k, *itLower)) // If at the end or if (k is < itLower)...
+		if((itLower == end()) || compare(k, *itLower)) // If at the end or if (k is < itLower)...
 			return eastl::pair<const_iterator, const_iterator>(itLower, itLower);
 
 		const_iterator itUpper(itLower);
@@ -389,7 +395,36 @@ namespace eastl
 	}
 
 
+	///////////////////////////////////////////////////////////////////////
+	// erase_if 
+	//
+	// https://en.cppreference.com/w/cpp/container/set/erase_if
+	///////////////////////////////////////////////////////////////////////
+	template <class Key, class Compare, class Allocator, class Predicate>
+	typename set<Key, Compare, Allocator>::size_type erase_if(set<Key, Compare, Allocator>& c, Predicate predicate)
+	{
+		auto oldSize = c.size();
+		for (auto i = c.begin(), last = c.end(); i != last;)
+		{
+			if (predicate(*i))
+			{
+				i = c.erase(i);
+			}
+			else
+			{
+				++i;
+			}
+		}
+		return oldSize - c.size();
+	}
 
+#if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
+	template <class Key, class Compare, class Allocator>
+	synth_three_way_result<Key> operator<=>(const set<Key, Compare, Allocator>& a, const set<Key, Compare, Allocator>& b)
+	{
+	    return eastl::lexicographical_compare_three_way(a.begin(), a.end(), b.begin(), b.end(), synth_three_way{});
+	}
+#endif
 
 
 	///////////////////////////////////////////////////////////////////////
@@ -449,7 +484,7 @@ namespace eastl
 	inline typename multiset<Key, Compare, Allocator>::value_compare
 	multiset<Key, Compare, Allocator>::value_comp() const
 	{
-		return mCompare;
+		return get_compare();
 	}
 
 
@@ -556,7 +591,7 @@ namespace eastl
 		const iterator itLower(lower_bound(k));
 		iterator       itUpper(itLower);
 
-		while((itUpper != end()) && !mCompare(k, itUpper.mpNode->mValue))
+		while((itUpper != end()) && !compare(k, itUpper.mpNode->mValue))
 			++itUpper;
 
 		return eastl::pair<iterator, iterator>(itLower, itUpper);
@@ -573,12 +608,44 @@ namespace eastl
 		const const_iterator itLower(lower_bound(k));
 		const_iterator       itUpper(itLower);
 
-		while((itUpper != end()) && !mCompare(k, *itUpper))
+		while((itUpper != end()) && !compare(k, *itUpper))
 			++itUpper;
 
 		return eastl::pair<const_iterator, const_iterator>(itLower, itUpper);
 	}
 
+
+	///////////////////////////////////////////////////////////////////////
+	// erase_if
+	//
+	// https://en.cppreference.com/w/cpp/container/multiset/erase_if
+	///////////////////////////////////////////////////////////////////////
+	template <class Key, class Compare, class Allocator, class Predicate>
+	typename multiset<Key, Compare, Allocator>::size_type erase_if(multiset<Key, Compare, Allocator>& c, Predicate predicate)
+	{
+		auto oldSize = c.size();
+		// Erases all elements that satisfy the predicate pred from the container.
+		for (auto i = c.begin(), last = c.end(); i != last;)
+		{
+			if (predicate(*i))
+			{
+				i = c.erase(i);
+			}
+			else
+			{
+				++i;
+			}
+		}
+		return oldSize - c.size();
+	}
+
+#if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
+	template <class Key, class Compare, class Allocator>
+	synth_three_way_result<Key> operator<=>(const multiset<Key, Compare, Allocator>& a, const multiset<Key, Compare, Allocator>& b)
+	{
+	    return eastl::lexicographical_compare_three_way(a.begin(), a.end(), b.begin(), b.end(), synth_three_way{});
+	}
+#endif
 
 
 } // namespace eastl

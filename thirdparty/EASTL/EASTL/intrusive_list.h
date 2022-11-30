@@ -81,9 +81,9 @@
 #define EASTL_INTRUSIVE_LIST_H
 
 
-#include "internal/config.h"
-#include "iterator.h"
-#include "algorithm.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/iterator.h>
+#include <EASTL/algorithm.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -146,6 +146,7 @@ namespace eastl
 		intrusive_list_iterator();
 		explicit intrusive_list_iterator(pointer pNode);  // Note that you can also construct an iterator from T via this, since value_type == node_type.
 		intrusive_list_iterator(const iterator& x);
+		intrusive_list_iterator& operator=(const iterator& x);
 
 		reference operator*() const;
 		pointer   operator->() const;
@@ -368,6 +369,13 @@ namespace eastl
 		// Empty
 	}
 
+	template <typename T, typename Pointer, typename Reference>
+	inline typename intrusive_list_iterator<T, Pointer, Reference>::this_type&
+	intrusive_list_iterator<T, Pointer, Reference>::operator=(const iterator& x)
+	{
+	    mpNode = x.mpNode;
+	    return *this;
+	}
 
 	template <typename T, typename Pointer, typename Reference>
 	inline typename intrusive_list_iterator<T, Pointer, Reference>::reference

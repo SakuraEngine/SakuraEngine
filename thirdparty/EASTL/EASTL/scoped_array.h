@@ -14,8 +14,8 @@
 #define EASTL_SCOPED_ARRAY_H
 
 
-#include "internal/config.h"
-#include "internal/smart_ptr.h"   // Defines smart_array_deleter
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/smart_ptr.h>   // Defines smart_array_deleter
 #include <stddef.h>                     // Definition of ptrdiff_t
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)

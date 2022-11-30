@@ -33,8 +33,8 @@
 #define EASTL_NUMERIC_LIMITS_H
 
 
-#include "internal/config.h"
-#include "type_traits.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/type_traits.h>
 #include <limits.h>                 // C limits.h header
 #include <float.h>
 #if defined(_CPPLIB_VER)            // Dinkumware.
@@ -47,7 +47,8 @@
 
 
 // Disable Warnings:
-//   cast truncates constant value / expression is always false
+//   4310 - cast truncates constant value
+//   4296 - expression is always false
 EA_DISABLE_VC_WARNING(4310 4296)
 
 // EASTL_CUSTOM_FLOAT_CONSTANTS_REQUIRED
@@ -56,7 +57,7 @@ EA_DISABLE_VC_WARNING(4310 4296)
 // Indicates whether we need to define our own implementations of inf, nan, snan, denorm floating point constants. 
 //
 #if !defined(EASTL_CUSTOM_FLOAT_CONSTANTS_REQUIRED)
-	#if (defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_CLANG) || defined(EA_COMPILER_CLANG_CL) && defined(__FLT_MIN__)) || defined(_CPPLIB_VER) // __FLT_MIN__ detects if it's really GCC/clang and not a mimic. _CPPLIB_VER (Dinkumware) covers VC++, and Microsoft platforms.
+	#if (defined(EA_COMPILER_GNUC) || defined(__clang__) && defined(__FLT_MIN__)) || defined(_CPPLIB_VER) // __FLT_MIN__ detects if it's really GCC/clang and not a mimic. _CPPLIB_VER (Dinkumware) covers VC++, and Microsoft platforms.
 		#define EASTL_CUSTOM_FLOAT_CONSTANTS_REQUIRED 0
 	#else
 		#define EASTL_CUSTOM_FLOAT_CONSTANTS_REQUIRED 1
@@ -612,6 +613,65 @@ namespace eastl
 			{ return (value_type)0; }
 	};
 
+
+	#if defined(EA_CHAR8_UNIQUE) && EA_CHAR8_UNIQUE
+	template<>
+	struct numeric_limits<char8_t>
+	{
+		typedef char8_t value_type;
+
+		static EA_CONSTEXPR_OR_CONST bool               is_specialized    = true;
+		static EA_CONSTEXPR_OR_CONST int                digits            = EASTL_LIMITS_DIGITS(value_type);
+		static EA_CONSTEXPR_OR_CONST int                digits10          = EASTL_LIMITS_DIGITS10(value_type);
+		static EA_CONSTEXPR_OR_CONST int                max_digits10      = 0;
+		static EA_CONSTEXPR_OR_CONST bool               is_signed         = EASTL_LIMITS_IS_SIGNED(value_type);
+		static EA_CONSTEXPR_OR_CONST bool               is_integer        = true;
+		static EA_CONSTEXPR_OR_CONST bool               is_exact          = true;
+		static EA_CONSTEXPR_OR_CONST int                radix             = 2;
+		static EA_CONSTEXPR_OR_CONST int                min_exponent      = 0;
+		static EA_CONSTEXPR_OR_CONST int                min_exponent10    = 0;
+		static EA_CONSTEXPR_OR_CONST int                max_exponent      = 0;
+		static EA_CONSTEXPR_OR_CONST int                max_exponent10    = 0;
+ 		static EA_CONSTEXPR_OR_CONST bool               is_bounded        = true;
+		static EA_CONSTEXPR_OR_CONST bool               is_modulo         = true;
+		static EA_CONSTEXPR_OR_CONST bool               traps             = true;
+		static EA_CONSTEXPR_OR_CONST bool               tinyness_before   = false;
+		static EA_CONSTEXPR_OR_CONST float_round_style  round_style       = round_toward_zero;
+		static EA_CONSTEXPR_OR_CONST bool               has_infinity      = false;
+		static EA_CONSTEXPR_OR_CONST bool               has_quiet_NaN     = false;
+		static EA_CONSTEXPR_OR_CONST bool               has_signaling_NaN = false;
+		static EA_CONSTEXPR_OR_CONST float_denorm_style has_denorm        = denorm_absent;
+		static EA_CONSTEXPR_OR_CONST bool               has_denorm_loss   = false;
+		static EA_CONSTEXPR_OR_CONST bool               is_iec559         = false;
+
+		static EA_CONSTEXPR value_type min()
+			{ return EASTL_LIMITS_MIN(value_type); }
+
+		static EA_CONSTEXPR value_type max()
+			{ return EASTL_LIMITS_MAX(value_type); }
+
+		static EA_CONSTEXPR value_type lowest()
+			{ return EASTL_LIMITS_MIN(value_type); }
+
+		static EA_CONSTEXPR value_type epsilon()
+			{ return 0; }
+
+		static EA_CONSTEXPR value_type round_error()
+			{ return 0; }
+
+		static EA_CONSTEXPR value_type infinity()
+			{ return 0; }
+
+		static EA_CONSTEXPR value_type quiet_NaN()
+			{ return 0; }
+
+		static EA_CONSTEXPR value_type signaling_NaN()
+			{ return 0; }
+
+		static EA_CONSTEXPR value_type denorm_min()
+			{ return (value_type)0; }
+	};
+	#endif
 
 	#if EA_CHAR16_NATIVE // If char16_t is a true unique type (as called for by the C++11 Standard)...
 
@@ -1212,7 +1272,7 @@ namespace eastl
 	};
 
 
-	#if (EA_COMPILER_INTMAX_SIZE >= 16) && (defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_CLANG)) // If __int128_t/__uint128_t is supported...
+	#if (EA_COMPILER_INTMAX_SIZE >= 16) && (defined(EA_COMPILER_GNUC) || defined(__clang__)) // If __int128_t/__uint128_t is supported...
 		// numeric_limits<__uint128_t>
 		template<>
 		struct numeric_limits<__uint128_t>
@@ -1390,7 +1450,7 @@ namespace eastl
 			static value_type denorm_min() 
 				{ return Internal::gFloatDenorm; }
 
-		#elif (defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_CLANG)) && defined(__FLT_MIN__)
+		#elif (defined(EA_COMPILER_GNUC) || defined(__clang__)) && defined(__FLT_MIN__)
 			static EA_CONSTEXPR value_type min()
 				{ return __FLT_MIN__; }
 
@@ -1418,34 +1478,6 @@ namespace eastl
 			static EA_CONSTEXPR value_type denorm_min() 
 				{ return __FLT_DENORM_MIN__; }
 
-		#elif defined(_MSC_VER)
-			static value_type min()
-				{ return FLT_MIN; }
-
-			static value_type max()
-				{ return FLT_MAX; }
-
-			static value_type lowest() 
-				{ return -FLT_MAX; }
-
-			static value_type epsilon() 
-				{ return FLT_EPSILON; }
-
-			static value_type round_error() 
-				{ return 0.5f; }
-
-			static value_type infinity() 
-				{ return __builtin_huge_valf(); }
-
-			static value_type quiet_NaN() 
-				{ return __builtin_nanf("0"); }
-
-			static value_type signaling_NaN()
-				{ return  __builtin_nansf("1"); } 
-
-			static value_type denorm_min() 
-				{ return FLT_TRUE_MIN; }
-
 		#elif defined(_CPPLIB_VER) // If using the Dinkumware Standard library...
 			static value_type min()
 				{ return FLT_MIN; }
@@ -1462,6 +1494,19 @@ namespace eastl
 			static value_type round_error() 
 				{ return 0.5f; }
 
+			#if defined(_MSVC_STL_UPDATE) && _MSVC_STL_UPDATE >= 202206L // If using a recent version of MSVC's STL...
+			static value_type infinity()
+				{ return __builtin_huge_valf(); }
+
+			static value_type quiet_NaN()
+				{ return __builtin_nanf("0"); }
+
+			static value_type signaling_NaN()
+				{ return __builtin_nansf("1"); }
+
+			static value_type denorm_min()
+				{ return FLT_TRUE_MIN; }
+			#else
 			static value_type infinity() 
 				{ return _CSTD _FInf._Float; }
 
@@ -1473,6 +1518,7 @@ namespace eastl
 
 			static value_type denorm_min() 
 				{ return _CSTD _FDenorm._Float; }
+			#endif
 
 		#endif
 	};
@@ -1536,7 +1582,7 @@ namespace eastl
 			static value_type denorm_min() 
 				{ return Internal::gDoubleDenorm; }
 
-		#elif (defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_CLANG)) && defined(__DBL_MIN__)
+		#elif (defined(EA_COMPILER_GNUC) || defined(__clang__)) && defined(__DBL_MIN__)
 			static EA_CONSTEXPR value_type min()
 				{ return __DBL_MIN__; }
 
@@ -1563,33 +1609,7 @@ namespace eastl
 
 			static EA_CONSTEXPR value_type denorm_min() 
 				{ return __DBL_DENORM_MIN__; }
-		#elif defined(_MSC_VER)
-			static value_type min()
-				{ return LDBL_MIN; }
 
-			static value_type max()
-				{ return LDBL_MAX; }
-
-			static value_type lowest() 
-				{ return -LDBL_MAX; }
-
-			static value_type epsilon() 
-				{ return LDBL_EPSILON; }
-
-			static value_type round_error() 
-				{ return 0.5f; }
-
-			static value_type infinity() 
-				{ return __builtin_huge_val(); }
-
-			static value_type quiet_NaN() 
-				{ return __builtin_nan("0"); }
-
-			static value_type signaling_NaN()
-				{ return  __builtin_nans("1"); } 
-
-			static value_type denorm_min() 
-				{ return DBL_TRUE_MIN; }
 		#elif defined(_CPPLIB_VER) // If using the Dinkumware Standard library...
 			static value_type min()
 				{ return DBL_MIN; }
@@ -1606,6 +1626,19 @@ namespace eastl
 			static value_type round_error() 
 				{ return 0.5f; }
 
+			#if defined(_MSVC_STL_UPDATE) && _MSVC_STL_UPDATE >= 202206L // If using a recent version of MSVC's STL...
+			static value_type infinity()
+				{ return __builtin_huge_val(); }
+
+			static value_type quiet_NaN()
+				{ return __builtin_nan("0"); }
+
+			static value_type signaling_NaN()
+				{ return __builtin_nans("1"); }
+
+			static value_type denorm_min()
+				{ return DBL_TRUE_MIN; }
+			#else
 			static value_type infinity() 
 				{ return _CSTD _Inf._Double; }
 
@@ -1617,6 +1650,7 @@ namespace eastl
 
 			static value_type denorm_min() 
 				{ return _CSTD _Denorm._Double; }
+			#endif
 
 		#endif
 	};
@@ -1680,7 +1714,7 @@ namespace eastl
 			static value_type denorm_min() 
 				{ return Internal::gLongDoubleDenorm; }
 
-		#elif (defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_CLANG)) && defined(__LDBL_MIN__)
+		#elif (defined(EA_COMPILER_GNUC) || defined(__clang__)) && defined(__LDBL_MIN__)
 			static EA_CONSTEXPR value_type min()
 				{ return __LDBL_MIN__; }
 
@@ -1708,34 +1742,6 @@ namespace eastl
 			static EA_CONSTEXPR value_type denorm_min() 
 				{ return __LDBL_DENORM_MIN__; }
 
-		#elif defined(_MSC_VER)
-			static value_type min()
-				{ return LDBL_MIN; }
-
-			static value_type max()
-				{ return LDBL_MAX; }
-
-			static value_type lowest() 
-				{ return -LDBL_MAX; }
-
-			static value_type epsilon() 
-				{ return LDBL_EPSILON; }
-
-			static value_type round_error() 
-				{ return 0.5f; }
-
-			static value_type infinity() 
-				{ return __builtin_huge_val(); }
-
-			static value_type quiet_NaN() 
-				{ return __builtin_nan("0"); }
-
-			static value_type signaling_NaN()
-				{ return  __builtin_nans("1"); } 
-
-			static value_type denorm_min() 
-				{ return DBL_TRUE_MIN; }
-
 		#elif defined(_CPPLIB_VER) // If using the Dinkumware Standard library...
 			static value_type min()
 				{ return LDBL_MIN; }
@@ -1752,6 +1758,19 @@ namespace eastl
 			static value_type round_error() 
 				{ return 0.5f; }
 
+			#if defined(_MSVC_STL_UPDATE) && _MSVC_STL_UPDATE >= 202206L // If using a recent version of MSVC's STL...
+			static value_type infinity()
+				{ return __builtin_huge_val(); }
+
+			static value_type quiet_NaN()
+				{ return __builtin_nan("0"); }
+
+			static value_type signaling_NaN()
+				{ return __builtin_nans("1"); }
+
+			static value_type denorm_min()
+				{ return LDBL_TRUE_MIN; }
+			#else
 			static value_type infinity() 
 				{ return _CSTD _LInf._Long_double; }
 
@@ -1763,6 +1782,7 @@ namespace eastl
 
 			static value_type denorm_min() 
 				{ return _CSTD _LDenorm._Long_double; }
+			#endif
 
 		#endif
 	};

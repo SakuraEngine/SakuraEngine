@@ -2,7 +2,7 @@
 // Copyright (c) Electronic Arts Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "intrusive_list.h"
+#include <EASTL/intrusive_list.h>
 
 
 namespace eastl

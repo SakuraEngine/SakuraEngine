@@ -7,7 +7,7 @@
 #define EASTL_FIXED_SUBSTRING_H
 
 
-#include "string.h"
+#include <EASTL/string.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -108,6 +108,10 @@ namespace eastl
 		{
 		}
 
+		fixed_substring(const fixed_substring& x)
+			: fixed_substring(static_cast<const base_type&>(x))
+		{}
+
 		fixed_substring(const base_type& x)
 			: base_type()
 		{
@@ -154,6 +158,12 @@ namespace eastl
 			// We need to reset, as otherwise the parent destructor will
 			// attempt to free our memory.
 			AllocateSelf();
+		}
+
+		this_type& operator=(const this_type& x)
+		{
+			assign(x);
+			return *this;
 		}
 
 		this_type& operator=(const base_type& x)

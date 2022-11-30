@@ -3,20 +3,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include "internal/config.h"
-#include "string.h"
-#include "EABase/eabase.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/string.h>
+#include <EABase/eabase.h>
 
-#if defined(EA_PLATFORM_MICROSOFT)
-	#pragma warning(push, 0)
-	#if defined _MSC_VER
+#if defined(EA_PLATFORM_WINDOWS_KERNEL)
+	#include <Wdm.h>
+#elif defined(EA_PLATFORM_MICROSOFT)
+	EA_DISABLE_ALL_VC_WARNINGS();
+	#if defined(EA_COMPILER_MSVC)
 		#include <crtdbg.h>
 	#endif
 	#ifndef WIN32_LEAN_AND_MEAN
 		#define WIN32_LEAN_AND_MEAN
 	#endif
 	#include <Windows.h>
-	#pragma warning(pop)
+	EA_RESTORE_ALL_VC_WARNINGS();
 #elif defined(EA_PLATFORM_ANDROID)
 	#include <android/log.h>
 #else
@@ -62,7 +64,9 @@ namespace eastl
 	EASTL_API void AssertionFailureFunctionDefault(const char* pExpression, void* /*pContext*/)
 	{
 		#if EASTL_ASSERT_ENABLED
-			#if defined(EA_PLATFORM_MICROSOFT)
+			#if defined(EA_PLATFORM_WINDOWS_KERNEL)
+				DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "%s", pExpression);
+			#elif defined(EA_PLATFORM_MICROSOFT)
 				printf("%s\n", pExpression); // Write the message to stdout
 				if( ::IsDebuggerPresent())
 				{

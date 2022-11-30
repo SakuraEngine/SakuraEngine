@@ -9,7 +9,7 @@
 //
 // eastl::any is a type-safe container for single values of any type.  Our
 // implementation makes use of the "small local buffer" optimization to avoid
-// unnecessary dynamic memory allocation if the specified type is a eligible to
+// unnecessary dynamic memory allocation if the specified type is eligible to
 // be stored in its local buffer.  The user type must satisfy the size
 // requirements and must be no-throw move-constructible to qualify for the local
 // buffer optimization.
@@ -28,8 +28,8 @@
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
 #endif
 
-#include "internal/config.h"
-#include "internal/in_place_t.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/in_place_t.h>
 #if EASTL_RTTI_ENABLED
 	#include <typeinfo>
 #endif
@@ -501,16 +501,20 @@ namespace eastl
 				m_handler = tmp.m_handler;
 				tmp.m_handler(storage_operation::MOVE, &tmp, this);
 			}
-			else if (m_handler == nullptr)
+			else if (m_handler == nullptr && other.m_handler)
 			{
 				eastl::swap(m_handler, other.m_handler);
 				m_handler(storage_operation::MOVE, &other, this);
 			}
-			else if(other.m_handler == nullptr)
+			else if(m_handler && other.m_handler == nullptr)
 			{
 				eastl::swap(m_handler, other.m_handler);
 				other.m_handler(storage_operation::MOVE, this, &other);
 			}
+			//else if (m_handler == nullptr && other.m_handler == nullptr)
+			//{
+			//     // nothing to swap 
+			//}
 		}
 
 	    // 20.7.3.4, observers
@@ -587,12 +591,12 @@ namespace eastl
 
 	// NOTE(rparolin): The runtime type check was commented out because in DLL builds the templated function pointer
 	// value will be different -- completely breaking the validation mechanism.  Due to the fact that eastl::any uses
-	// type erasure we can't refesh (on copy/move) the cached function pointer to the internal handler function because
+	// type erasure we can't refresh (on copy/move) the cached function pointer to the internal handler function because
 	// we don't statically know the type.
 	template <class ValueType>
 	inline const ValueType* any_cast(const any* pAny) EA_NOEXCEPT
 	{
-		return (pAny && pAny->m_handler //== &any::storage_handler<decay_t<ValueType>>::handler_func
+		return (pAny && pAny->m_handler EASTL_IF_NOT_DLL(== &any::storage_handler<decay_t<ValueType>>::handler_func)
 				#if EASTL_RTTI_ENABLED
 					&& pAny->type() == typeid(typename remove_reference<ValueType>::type)
 				#endif
@@ -604,7 +608,7 @@ namespace eastl
 	template <class ValueType>
 	inline ValueType* any_cast(any* pAny) EA_NOEXCEPT
 	{
-		return (pAny && pAny->m_handler //== &any::storage_handler<decay_t<ValueType>>::handler_func
+		return (pAny && pAny->m_handler EASTL_IF_NOT_DLL(== &any::storage_handler<decay_t<ValueType>>::handler_func)
 				#if EASTL_RTTI_ENABLED
 					&& pAny->type() == typeid(typename remove_reference<ValueType>::type)
 				#endif

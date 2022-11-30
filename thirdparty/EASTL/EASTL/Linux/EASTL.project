@@ -13,7 +13,7 @@
     <File Name="../hashtable.cpp"/>
     <File Name="../fixed_pool.cpp"/>
     <File Name="../assert.cpp"/>
-    <File Name="../allocator_forge.cpp"/>
+    <File Name="../allocator_sakura.cpp"/>
     <File Name="../allocator_eastl.cpp"/>
   </VirtualDirectory>
   <Description/>

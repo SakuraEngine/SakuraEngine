@@ -15,8 +15,8 @@
 #endif
 
 
-#include "internal/config.h"
-#include "numeric_limits.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/numeric_limits.h>
 
 
 

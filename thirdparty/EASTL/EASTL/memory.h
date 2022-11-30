@@ -67,30 +67,29 @@
 #define EASTL_MEMORY_H
 
 
-#include "internal/config.h"
-#include "internal/memory_base.h"
-#include "internal/generic_iterator.h"
-#include "internal/pair_fwd_decls.h"
-#include "internal/functional_base.h"
-#include "internal/allocator_traits_fwd_decls.h"
-#include "algorithm.h"
-#include "type_traits.h"
-#include "allocator.h"
-#include "iterator.h"
-#include "utility.h"
-#include "numeric_limits.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/memory_base.h>
+#include <EASTL/internal/generic_iterator.h>
+#include <EASTL/internal/pair_fwd_decls.h>
+#include <EASTL/internal/functional_base.h>
+#include <EASTL/algorithm.h>
+#include <EASTL/type_traits.h>
+#include <EASTL/allocator.h>
+#include <EASTL/iterator.h>
+#include <EASTL/utility.h>
+#include <EASTL/numeric_limits.h>
 
 EA_DISABLE_ALL_VC_WARNINGS()
 #include <stdlib.h>
 #include <new>
 EA_RESTORE_ALL_VC_WARNINGS()
 
-#ifdef _MSC_VER
-	#pragma warning(push)
-	#pragma warning(disable: 4530)  // C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
-	#pragma warning(disable: 4146)  // unary minus operator applied to unsigned type, result still unsigned
-	#pragma warning(disable: 4571)  // catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught.
-#endif
+
+// 4530 - C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+// 4146 - unary minus operator applied to unsigned type, result still unsigned
+// 4571 - catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught.
+EA_DISABLE_VC_WARNING(4530 4146 4571);
+
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -169,6 +168,10 @@ namespace eastl
 	/// operator * or ->. autoConstruct is convenient but it causes * and -> to be slightly slower
 	/// and may result in construction at an inconvenient time. 
 	///
+	/// The autoDestruct template parameter controls whether the object, if constructed, is automatically
+	/// destructed when ~late_constructed() is called or must be manually destructed via a call to
+	/// destruct().
+	///
 	/// While construction can be automatic or manual, automatic destruction support is always present.
 	/// Thus you aren't required in any case to manually call destruct. However, you may safely manually
 	/// destruct the object at any time before the late_constructed destructor is executed. 
@@ -199,29 +202,29 @@ namespace eastl
 	///         // You may want to call destruct here, but aren't required to do so unless the Widget type requires it.
 	///     }
 	/// 
-	template <typename T, bool autoConstruct = true>
+	template <typename T, bool autoConstruct = true, bool autoDestruct = true>
 	class late_constructed
 	{
 	public:
-		using this_type    = late_constructed<T, autoConstruct>;
+		using this_type    = late_constructed<T, autoConstruct, autoDestruct>;
 		using value_type   = T;
 		using storage_type = eastl::aligned_storage_t<sizeof(value_type), eastl::alignment_of_v<value_type>>;
 
-		late_constructed() EA_NOEXCEPT  // In the case of the late_constructed instance being at global scope, we rely on the 
-		  : mpValue(nullptr) {}            // compiler executing this constructor or placing the instance in auto-zeroed-at-startup memory.
+		late_constructed() EA_NOEXCEPT       // In the case of the late_constructed instance being at global scope, we rely on the 
+		  : mStorage(), mpValue(nullptr) {}  // compiler executing this constructor or placing the instance in auto-zeroed-at-startup memory.
 
 		~late_constructed()
 		{
-			if(mpValue)
+			if (autoDestruct && mpValue)
 				(*mpValue).~value_type();
-		} 
+		}
 
 		template <typename... Args>
 		void construct(Args&&... args)
 		{
 			if(!mpValue)
-				mpValue = new(&mStorage) value_type(eastl::forward<Args>(args)...);
-		} 
+				mpValue = new (&mStorage) value_type(eastl::forward<Args>(args)...);
+		}
 
 		bool is_constructed() const EA_NOEXCEPT
 			{ return mpValue != nullptr; }
@@ -288,11 +291,11 @@ namespace eastl
 
 
 	// Specialization that doesn't auto-construct on demand.
-	template <typename T>
-	class late_constructed<T, false> : public late_constructed<T, true>
+	template <typename T, bool autoDestruct>
+	class late_constructed<T, false, autoDestruct> : public late_constructed<T, true, autoDestruct>
 	{
 	public:
-		typedef late_constructed<T, true> base_type;
+		typedef late_constructed<T, true, autoDestruct> base_type;
 
 		typename base_type::value_type& operator*() EA_NOEXCEPT
 			{ EASTL_ASSERT(base_type::mpValue); return *base_type::mpValue; }
@@ -436,6 +439,9 @@ namespace eastl
 			template <typename T>
 			static T* do_move_start(T* first, T* last, T* dest)
 			{
+				if (EASTL_UNLIKELY(first == last))
+					return dest;
+
 				return (T*)memcpy(dest, first, (size_t)((uintptr_t)last - (uintptr_t)first)) + (last - first);
 			}
 
@@ -879,6 +885,9 @@ namespace eastl
 		template <typename ForwardIterator, typename Count>
 		inline void uninitialized_default_fill_n_impl(ForwardIterator first, Count n, true_type)
 		{
+			if (EASTL_UNLIKELY(n == 0))
+				return;
+
 			typedef typename eastl::iterator_traits<ForwardIterator>::value_type value_type;
 			memset(first, 0, sizeof(value_type) * n);
 		}
@@ -1387,7 +1396,7 @@ namespace eastl
 	inline void destroy(ForwardIterator first, ForwardIterator last)
 	{
 		for (; first != last; ++first)
-			destroy_at(addressof(*first));
+			eastl::destroy_at(eastl::addressof(*first));
 	}
 
 
@@ -1401,7 +1410,7 @@ namespace eastl
 	ForwardIterator destroy_n(ForwardIterator first, Size n)
 	{
 		for (; n > 0; ++first, --n)
-			destroy_at(addressof(*first));
+			eastl::destroy_at(eastl::addressof(*first));
 
 		return first;
 	}
@@ -1583,19 +1592,18 @@ namespace eastl
 		};
 
 		template <typename Pointer, bool = has_element_type<Pointer>::value>
-		struct pointer_element_type;
+		struct pointer_element_type 
+		{
+			using type = Pointer;
+		};
 
 		template <typename Pointer>
 		struct pointer_element_type<Pointer, true>
 			{ typedef typename Pointer::element_type type; };
 
-		#if EASTL_VARIADIC_TEMPLATES_ENABLED // See 20.6.3.1 p3 for why we need to support this. Pointer may be a template with various arguments as opposed to a non-templated class.
-			template <template <typename, typename...> class Pointer, typename T, typename... Args>
-			struct pointer_element_type<Pointer<T, Args...>, false>
-				{ typedef T type; };
-		#else
-			// To consider: solve this via multiple declarations. For our uses this may not matter a lot, as this is an uncommon use-case.
-		#endif
+		template <template <typename, typename...> class Pointer, typename T, typename... Args>
+		struct pointer_element_type<Pointer<T, Args...>, false>
+			{ typedef T type; };
 
 
 		// pointer_difference_type
@@ -1674,25 +1682,45 @@ namespace eastl
 			{ return eastl::addressof(r); } // 20.6.3.2: if element_type is (possibly cv-qualified) void, the type of r is unspecified; otherwise, it is T&.
 	};
 
+	///////////////////////////////////////////////////////////////////////
+	// to_address
+	//
+	// Helper that call the customization point in pointer_traits<T>::to_address for retrieving the address of a pointer.
+	// This is useful if you are using fancy-pointers.
+	///////////////////////////////////////////////////////////////////////
+
+	namespace Internal
+	{
+		template <class T>
+		using detect_pointer_traits_to_address = decltype(eastl::pointer_traits<T>::to_address(eastl::declval<const T&>()));
+
+		template <class T>
+		using result_detect_pointer_traits_to_address = eastl::is_detected<detect_pointer_traits_to_address, T>;
+	}
+
+	template<class T>
+	EA_CPP14_CONSTEXPR T* to_address(T* p) noexcept
+	{
+		static_assert(!eastl::is_function<T>::value, "Cannot call to_address with a function pointer. C++20 20.2.4.1 - Pointer conversion.");
+		return p;
+	}
+
+	template <class Ptr, typename eastl::enable_if<Internal::result_detect_pointer_traits_to_address<Ptr>::value, int>::type = 0>
+	EA_CPP14_CONSTEXPR auto to_address(const Ptr& ptr) noexcept -> decltype(eastl::pointer_traits<Ptr>::to_address(ptr))
+	{
+		return eastl::pointer_traits<Ptr>::to_address(ptr);
+	}
+
+	template <class Ptr, typename eastl::enable_if<!Internal::result_detect_pointer_traits_to_address<Ptr>::value, int>::type = 0>
+	EA_CPP14_CONSTEXPR auto to_address(const Ptr& ptr) noexcept -> decltype(to_address(ptr.operator->()))
+	{
+		return to_address(ptr.operator->());
+	}
+
 } // namespace eastl
 
-#include "internal/allocator_traits.h"
 
-
-#ifdef _MSC_VER
-	#pragma warning(pop)
-#endif
+EA_RESTORE_VC_WARNING();
 
 
 #endif // Header include guard
-
-
-
-
-
-
-
-
-
-
-

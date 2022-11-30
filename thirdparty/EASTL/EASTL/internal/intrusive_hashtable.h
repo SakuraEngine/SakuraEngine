@@ -16,31 +16,24 @@
 #define EASTL_INTERNAL_INTRUSIVE_HASHTABLE_H
 
 
-#include "../EABase/eabase.h"
+#include <EABase/eabase.h>
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once
 #endif
 
-#include "config.h"
-#include "hashtable.h"
-#include "../type_traits.h"
-#include "../iterator.h"
-#include "../functional.h"
-#include "../utility.h"
-#include "../algorithm.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/hashtable.h>
+#include <EASTL/type_traits.h>
+#include <EASTL/iterator.h>
+#include <EASTL/functional.h>
+#include <EASTL/utility.h>
+#include <EASTL/algorithm.h>
 
-#ifdef _MSC_VER
-	#pragma warning(push, 0)
-	#include <new>
-	#include <stddef.h>
-	#include <string.h>
-	#pragma warning(pop)
-#else
-	#include <new>
-	#include <stddef.h>
-	#include <string.h>
-#endif
-
+EA_DISABLE_ALL_VC_WARNINGS();
+#include <new>
+#include <stddef.h>
+#include <string.h>
+EA_RESTORE_ALL_VC_WARNINGS();
 
 
 namespace eastl
@@ -994,12 +987,3 @@ namespace eastl
 
 
 #endif // Header include guard
-
-
-
-
-
-
-
-
-

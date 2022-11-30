@@ -9,8 +9,8 @@
 	#pragma once
 #endif
 
-#include "config.h"
-#include "../type_traits.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/type_traits.h>
 
 namespace eastl
 {

@@ -8,7 +8,7 @@
 
 
 // This header file is deprecated. The implementation has moved:
-#include "shared_ptr.h"
+#include <EASTL/shared_ptr.h>
 
 
 #endif

@@ -16,13 +16,13 @@
 #define EASTL_SORT_EXTRA_H
 
 
-#include "../internal/config.h"
-#include "../iterator.h"
-#include "../algorithm.h"
-#include "../functional.h"
-#include "../heap.h"
-#include "../sort.h"             // For backwards compatibility due to sorts moved from here to sort.h
-#include "../allocator.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/iterator.h>
+#include <EASTL/algorithm.h>
+#include <EASTL/functional.h>
+#include <EASTL/heap.h>
+#include <EASTL/sort.h>             // For backwards compatibility due to sorts moved from here to sort.h.
+#include <EASTL/allocator.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.

@@ -11,8 +11,8 @@
 #define EASTL_INITIALIZER_LIST_H
 
 
-#include "internal/config.h"
-#include "EABase/eahave.h"
+#include <EASTL/internal/config.h>
+#include <EABase/eahave.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.

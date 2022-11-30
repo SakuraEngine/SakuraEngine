@@ -1,5 +1,6 @@
 #include "d3d12_utils.h"
 #include "utils/make_zeroed.hpp"
+#include "containers/string.hpp"
 #include "containers/span.hpp"
 #include <EASTL/vector_map.h>
 
@@ -178,7 +179,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
     {
         cgpu_error("DRED: Last tracked GPU operations:");
 
-        eastl::wstring ContextStr;
+        skr::wstring ContextStr;
         eastl::vector_map<int32_t, const wchar_t*> ContextStrings;
 
         uint32_t TracedCommandLists = 0;
@@ -199,7 +200,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
                 ContextStrings.clear();
                 for (const D3D12_DRED_BREADCRUMB_CONTEXT& Context : GetDREDBreadcrumbContexts(Node))
                 {
-                    ContextStrings.emplace_back(Context.BreadcrumbIndex, Context.pContextString);
+                    ContextStrings.emplace(Context.BreadcrumbIndex, Context.pContextString);
                 }
 
                 for (int32_t Op = FirstOp; Op <= LastOp; ++Op)

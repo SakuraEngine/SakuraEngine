@@ -6,10 +6,10 @@
 #define EASTL_INTRUSIVE_HASH_MAP_H
 
 
-#include "internal/config.h"
-#include "internal/intrusive_hashtable.h"
-#include "functional.h"
-#include "utility.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/intrusive_hashtable.h>
+#include <EASTL/functional.h>
+#include <EASTL/utility.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.

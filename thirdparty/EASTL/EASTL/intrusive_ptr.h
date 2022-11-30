@@ -7,7 +7,7 @@
 #define EASTL_INTRUSIVE_PTR_H
 
 
-#include "internal/config.h"
+#include <EASTL/internal/config.h>
 #include <stddef.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)

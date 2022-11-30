@@ -9,7 +9,7 @@
 	#pragma once 
 #endif
 
-#include "internal/config.h"
+#include <EASTL/internal/config.h>
 
 namespace eastl
 {
@@ -213,7 +213,8 @@ namespace eastl
 	segmented_vector_iterator<T, Count, Allocator>::operator++(int)
 	{
 		this_type i(*this);
-		return ++i;
+		operator++();
+		return i;
 	}
 
 

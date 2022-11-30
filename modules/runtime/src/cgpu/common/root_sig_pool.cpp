@@ -20,6 +20,7 @@ struct RSCharacteristic
     {
         return cgpu_hash(this, sizeof(RSCharacteristic), (size_t)pipeline_type);
     }
+    struct hasher { inline size_t operator()(const RSCharacteristic& val) const { return (size_t)val; } };
     struct RSTResource
     {
         ECGPUResourceType type;
@@ -176,7 +177,7 @@ public:
 protected:
     const skr::string name;
     // TODO: replace with skr::hash_map
-    eastl::unordered_map<RSCharacteristic, CGPURootSignatureId> characterMap;
+    eastl::unordered_map<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
     eastl::unordered_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
     eastl::unordered_map<CGPURootSignatureId, uint32_t> counterMap;
 };

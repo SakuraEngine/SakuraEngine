@@ -3,15 +3,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include "internal/hashtable.h"
-#include "utility.h"
+#include <EASTL/internal/hashtable.h>
+#include <EASTL/utility.h>
 #include <math.h>  // Not all compilers support <cmath> and std::ceilf(), which we need below.
 #include <stddef.h>
 
 
-#ifdef _MSC_VER
-	#pragma warning(disable: 4267)  // 'argument' : conversion from 'size_t' to 'const uint32_t', possible loss of data. This is a bogus warning resulting from a bug in VC++.
-#endif
+EA_DISABLE_VC_WARNING(4267); // 'argument' : conversion from 'size_t' to 'const uint32_t', possible loss of data. This is a bogus warning resulting from a bug in VC++.
 
 
 namespace eastl
@@ -176,26 +174,4 @@ namespace eastl
 
 } // namespace eastl
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+EA_RESTORE_VC_WARNING();

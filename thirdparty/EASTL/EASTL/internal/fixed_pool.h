@@ -19,29 +19,24 @@
 #define EASTL_INTERNAL_FIXED_POOL_H
 
 
-#include "../EABase/eabase.h"
+#include <EABase/eabase.h>
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once
 #endif
 
-#include "config.h"
-#include "../functional.h"
-#include "../memory.h"
-#include "../allocator.h"
-#include "../type_traits.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/functional.h>
+#include <EASTL/memory.h>
+#include <EASTL/allocator.h>
+#include <EASTL/type_traits.h>
 
-#ifdef _MSC_VER
-	#pragma warning(push, 0)
-	#include <new>
-	#pragma warning(pop)
-#else
-	#include <new>
-#endif
 
-#if defined(_MSC_VER)
-	#pragma warning(push)
-	#pragma warning(disable: 4275) // non dll-interface class used as base for DLL-interface classkey 'identifier'
-#endif
+EA_DISABLE_ALL_VC_WARNINGS();
+#include <new>
+EA_RESTORE_ALL_VC_WARNINGS();
+
+// 4275 - non dll-interface class used as base for DLL-interface classkey 'identifier'
+EA_DISABLE_VC_WARNING(4275);
 
 
 namespace eastl
@@ -317,7 +312,7 @@ namespace eastl
 				{
 					pLink = mpNext;
 					
-					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char8_t*>(mpNext) + mnNodeSize);
+					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char*>(mpNext) + mnNodeSize);
 
 					#if EASTL_FIXED_SIZE_TRACKING_ENABLED
 						if(++mnCurrentSize > mnPeakSize)
@@ -472,7 +467,7 @@ namespace eastl
 				if(mpNext != mpCapacity)
 				{
 					p      = pLink = mpNext;
-					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char8_t*>(mpNext) + mnNodeSize);
+					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char*>(mpNext) + mnNodeSize);
 				}
 				else
 					p = mOverflowAllocator.allocate(mnNodeSize);
@@ -506,7 +501,7 @@ namespace eastl
 				if (mpNext != mpCapacity)
 				{
 					p = pLink = mpNext;
-					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char8_t*>(mpNext)+mnNodeSize);
+					mpNext = reinterpret_cast<Link*>(reinterpret_cast<char*>(mpNext)+mnNodeSize);
 				}
 				else
 				{
@@ -1367,12 +1362,11 @@ namespace eastl
 		{
 		}
 
-		// Disabled because the default is sufficient.
-		//fixed_vector_allocator(const fixed_vector_allocator& x)
-		//{
-		//    mpPoolBegin        = x.mpPoolBegin;
-		//    mOverflowAllocator = x.mOverflowAllocator;
-		//}
+		fixed_vector_allocator(const fixed_vector_allocator& x)
+		{
+		   mpPoolBegin        = x.mpPoolBegin;
+		   mOverflowAllocator = x.mOverflowAllocator;
+		}
 
 		fixed_vector_allocator& operator=(const fixed_vector_allocator& x)
 		{
@@ -1486,12 +1480,14 @@ namespace eastl
 		void* allocate(size_t /*n*/, int /*flags*/ = 0)
 		{
 			EASTL_ASSERT(false); // A fixed_vector should not reallocate, else the user has exhausted its space.
+			EASTL_CRASH();		 // We choose to crash here since the owning vector can't handle an allocator returning null. Better to crash earlier.
 			return NULL;
 		}
 
 		void* allocate(size_t /*n*/, size_t /*alignment*/, size_t /*offset*/, int /*flags*/ = 0)
 		{
-			EASTL_ASSERT(false);
+			EASTL_ASSERT(false); // A fixed_vector should not reallocate, else the user has exhausted its space.
+			EASTL_CRASH();		 // We choose to crash here since the owning vector can't handle an allocator returning null. Better to crash earlier.
 			return NULL;
 		}
 
@@ -1630,10 +1626,7 @@ namespace eastl
 } // namespace eastl
 
 
-#if defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
+EA_RESTORE_VC_WARNING();
 
 
 #endif // Header include guard
-

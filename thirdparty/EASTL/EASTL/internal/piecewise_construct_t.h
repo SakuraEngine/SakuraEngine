@@ -7,7 +7,7 @@
 #define EASTL_INTERNAL_PIECEWISE_CONSTRUCT_T_H
 
 
-#include "../EABase/eabase.h"
+#include <EABase/eabase.h>
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once
 #endif

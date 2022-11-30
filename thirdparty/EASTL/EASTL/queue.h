@@ -13,9 +13,9 @@
 #define EASTL_QUEUE_H
 
 
-#include "internal/config.h"
-#include "deque.h"
-#include "initializer_list.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/deque.h>
+#include <EASTL/initializer_list.h>
 #include <stddef.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
@@ -122,7 +122,10 @@ namespace eastl
 		void push(value_type&& x);
 
 		template <class... Args>
-		void emplace_back(Args&&... args);
+		EA_DEPRECATED void emplace_back(Args&&... args); // backwards compatibility
+
+		template <class... Args>
+		decltype(auto) emplace(Args&&... args);
 
 		void pop();
 
@@ -247,7 +250,14 @@ namespace eastl
 	template <class... Args> 
 	inline void queue<T, Container>::emplace_back(Args&&... args)
 	{
-		c.emplace_back(eastl::forward<Args>(args)...);
+		emplace(eastl::forward<Args>(args)...);
+	}
+
+	template <typename T, typename Container>
+	template <class... Args> 
+	inline decltype(auto) queue<T, Container>::emplace(Args&&... args)
+	{
+		return c.emplace_back(eastl::forward<Args>(args)...);
 	}
 
 
@@ -298,6 +308,14 @@ namespace eastl
 	{
 		return (a.c == b.c);
 	}
+#if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
+	template <typename T, typename Container> requires std::three_way_comparable<Container>
+	
+	inline synth_three_way_result<T> operator<=>(const queue<T, Container>& a, const queue<T, Container>& b)
+	{
+		return a.c <=> b.c;
+	}
+#endif
 
 	template <typename T, typename Container>
 	inline bool operator!=(const queue<T, Container>& a, const queue<T, Container>& b)
@@ -328,7 +346,6 @@ namespace eastl
 	{
 		return !(a.c < b.c);
 	}
-
 
 	template <typename T, typename Container>
 	inline void swap(queue<T, Container>& a, queue<T, Container>& b) EA_NOEXCEPT_IF((eastl::is_nothrow_swappable<typename queue<T, Container>::container_type>::value)) // EDG has a bug and won't let us use Container in this noexcept statement

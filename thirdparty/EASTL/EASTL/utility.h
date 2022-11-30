@@ -7,24 +7,26 @@
 #define EASTL_UTILITY_H
 
 
-#include "internal/config.h"
-#include "type_traits.h"
-#include "iterator.h"
-#include "functional.h"
-#include "internal/move_help.h"
-#include "EABase/eahave.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/type_traits.h>
+#include <EASTL/iterator.h>
+#include <EASTL/numeric_limits.h>
+#include <EASTL/compare.h>
+#include <EASTL/internal/functional_base.h>
+#include <EASTL/internal/move_help.h>
+#include <EABase/eahave.h>
 
-#include "internal/integer_sequence.h"
-#include "internal/tuple_fwd_decls.h"
-#include "internal/in_place_t.h"
-#include "internal/piecewise_construct_t.h"
+#include <EASTL/internal/integer_sequence.h>
+#include <EASTL/internal/tuple_fwd_decls.h>
+#include <EASTL/internal/in_place_t.h>
+#include <EASTL/internal/piecewise_construct_t.h>
 
-#ifdef _MSC_VER
-	#pragma warning(push)           // VC++ generates a bogus warning that you cannot code away.
-	#pragma warning(disable: 4619)  // There is no warning number 'number'.
-	#pragma warning(disable: 4217)  // Member template functions cannot be used for copy-assignment or copy-construction.
-	#pragma warning(disable: 4512)  // 'class' : assignment operator could not be generated.  // This disabling would best be put elsewhere.
-#endif
+
+// 4619 - There is no warning number 'number'.
+// 4217 - Member template functions cannot be used for copy-assignment or copy-construction.
+// 4512 - 'class' : assignment operator could not be generated.  // This disabling would best be put elsewhere.
+EA_DISABLE_VC_WARNING(4619 4217 4512);
+
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -352,6 +354,90 @@ namespace eastl
 	}
 
 
+	#if defined(EA_COMPILER_CPP20_ENABLED)
+	///////////////////////////////////////////////////////////////////////
+	/// Safe Integral Comparisons
+	///
+	template <typename T, typename U>
+	EA_CONSTEXPR bool cmp_equal(const T x, const U y) EA_NOEXCEPT
+	{
+		// Assert types are not chars, bools, etc.
+		static_assert(eastl::is_integral_v<T> && !eastl::is_same_v<eastl::remove_cv_t<T>, bool> && !eastl::is_same_v<eastl::remove_cv_t<T>, char>);
+		static_assert(eastl::is_integral_v<U> && !eastl::is_same_v<eastl::remove_cv_t<U>, bool> && !eastl::is_same_v<eastl::remove_cv_t<U>, char>);
+
+		using UT = eastl::make_unsigned_t<T>;
+		using UU = eastl::make_unsigned_t<U>;
+
+		if constexpr (eastl::is_signed_v<T> == eastl::is_signed_v<U>)
+		{
+			return x == y;
+		}
+		else if (eastl::is_signed_v<T>)
+		{
+			return (x < 0) ? false : UT(x) == y;
+		}
+		else
+		{
+			return (y < 0) ? false : x == UU(y);
+		}
+	}
+
+
+	template <typename T, typename U>
+	EA_CONSTEXPR bool cmp_not_equal(const T x, const U y) EA_NOEXCEPT
+		{ return !eastl::cmp_equal(x, y); }
+
+
+	template <typename T, typename U>
+	EA_CONSTEXPR bool cmp_less(const T x, const U y) EA_NOEXCEPT
+	{
+		static_assert(eastl::is_integral_v<T> && !eastl::is_same_v<eastl::remove_cv_t<T>, bool> && !eastl::is_same_v<eastl::remove_cv_t<T>, char>);
+		static_assert(eastl::is_integral_v<U> && !eastl::is_same_v<eastl::remove_cv_t<U>, bool> && !eastl::is_same_v<eastl::remove_cv_t<U>, char>);
+
+		using UT = eastl::make_unsigned_t<T>;
+		using UU = eastl::make_unsigned_t<U>;
+
+		if constexpr (eastl::is_signed_v<T> == eastl::is_signed_v<U>)
+		{
+			return x < y;
+		}
+		else if (eastl::is_signed_v<T>)
+		{
+			return (x < 0) ? true : UT(x) < y;
+		}
+		else
+		{
+			return (y < 0) ? false : x < UU(y);
+		}
+	}
+
+
+	template <typename T, typename U>
+	EA_CONSTEXPR bool cmp_greater(const T x, const U y) EA_NOEXCEPT
+		{ return eastl::cmp_less(y, x); }
+
+
+	template <typename T, typename U>
+	EA_CONSTEXPR bool cmp_less_equal(const T x, const U y) EA_NOEXCEPT
+		{ return !eastl::cmp_greater(x, y); }
+
+
+	template <typename T, typename U>
+	EA_CONSTEXPR bool cmp_greater_equal(const T x, const U y) EA_NOEXCEPT
+		{ return !eastl::cmp_less(x, y); }
+
+
+	template <typename T, typename U>
+	EA_CONSTEXPR bool in_range(const U x) EA_NOEXCEPT
+	{
+		static_assert(eastl::is_integral_v<T> && !eastl::is_same_v<eastl::remove_cv_t<T>, bool> && !eastl::is_same_v<eastl::remove_cv_t<T>, char>);
+		static_assert(eastl::is_integral_v<U> && !eastl::is_same_v<eastl::remove_cv_t<U>, bool> && !eastl::is_same_v<eastl::remove_cv_t<U>, char>);
+
+		return eastl::cmp_greater_equal(x, eastl::numeric_limits<T>::min()) && eastl::cmp_less_equal(x, eastl::numeric_limits<T>::max());
+	}
+	#endif
+
+
 	///////////////////////////////////////////////////////////////////////
 	/// pair_first_construct
 	///
@@ -360,7 +446,7 @@ namespace eastl
 	struct pair_first_construct_t {};
 	EA_CONSTEXPR pair_first_construct_t pair_first_construct = pair_first_construct_t();
 
-
+	
 	///////////////////////////////////////////////////////////////////////
 	/// pair
 	///
@@ -386,8 +472,8 @@ namespace eastl
 		}
 
 	#if EASTL_ENABLE_PAIR_FIRST_ELEMENT_CONSTRUCTOR
-		template <typename TT2 = T2, typename = eastl::enable_if_t<eastl::is_default_constructible_v<TT2>>>
-		EA_CPP14_CONSTEXPR pair(const T1& x)
+		template <typename TT1 = T1, typename TT2 = T2, typename = eastl::enable_if_t<eastl::is_default_constructible_v<TT2>>>
+		EA_CPP14_CONSTEXPR pair(const TT1& x)
 		    : first(x), second()
 		{
 		}
@@ -413,7 +499,7 @@ namespace eastl
 	//
 	// See bug submitted to LLVM for more details.
 	// https://bugs.llvm.org/show_bug.cgi?id=38374
-	#if !defined(EA_COMPILER_CLANG)
+	#if !defined(__clang__)
 		template<typename T>
 		using single_pair_ctor_sfinae = eastl::enable_if_t<eastl::is_default_constructible_v<T>>;
 	#else
@@ -421,8 +507,8 @@ namespace eastl
 		using single_pair_ctor_sfinae = void;
 	#endif
 
-		template <typename TT2 = T2, typename = single_pair_ctor_sfinae<TT2>>
-		EA_CPP14_CONSTEXPR pair(pair_first_construct_t, const T1& x)
+		template <typename TT1 = T1, typename TT2 = T2, typename = single_pair_ctor_sfinae<TT2>>
+		EA_CPP14_CONSTEXPR pair(pair_first_construct_t, const TT1& x)
 		    : first(x), second()
 		{
 		}
@@ -630,7 +716,17 @@ namespace eastl
 		return ((a.first == b.first) && (a.second == b.second));
 	}
 
-
+	#if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
+	template <typename T1, typename T2>
+	EA_CONSTEXPR inline std::common_comparison_category_t<synth_three_way_result<T1>, synth_three_way_result<T2>> operator<=>(const pair<T1, T2>& a, const pair<T1, T2>& b)
+	{
+		if (auto result = synth_three_way{}(a.first, b.first); result != 0)
+		{
+			return result;
+		}
+		return synth_three_way{}(a.second, b.second);
+	}
+	#else
 	template <typename T1, typename T2>
 	EA_CPP14_CONSTEXPR inline bool operator<(const pair<T1, T2>& a, const pair<T1, T2>& b)
 	{
@@ -668,7 +764,7 @@ namespace eastl
 	{
 		return !(b < a);
 	}
-
+	#endif
 
 
 
@@ -789,7 +885,7 @@ namespace eastl
 			template <typename T1, typename T2>
 			static EA_CONSTEXPR T1&& getInternal(pair<T1, T2>&& p)
 			{
-				return forward<T1>(p.first);
+				return eastl::forward<T1>(p.first);
 			}
 		};
 
@@ -811,7 +907,7 @@ namespace eastl
 			template <typename T1, typename T2>
 			static EA_CONSTEXPR T2&& getInternal(pair<T1, T2>&& p)
 			{
-				return forward<T2>(p.second);
+				return eastl::forward<T2>(p.second);
 			}
 		};
 
@@ -830,7 +926,7 @@ namespace eastl
 		template <size_t I, typename T1, typename T2>
 		tuple_element_t<I, pair<T1, T2>>&& get(pair<T1, T2>&& p)
 		{
-			return GetPair<I>::getInternal(move(p));
+			return GetPair<I>::getInternal(eastl::move(p));
 		}
 
 #endif  // EASTL_TUPLE_ENABLED
@@ -838,24 +934,35 @@ namespace eastl
 
 }  // namespace eastl
 
-#ifdef _MSC_VER
-	#pragma warning(pop)
+///////////////////////////////////////////////////////////////
+// C++17 structured bindings support for eastl::pair
+//
+#ifndef EA_COMPILER_NO_STRUCTURED_BINDING
+	#include <tuple>
+	namespace std
+	{
+		// NOTE(rparolin): Some platform implementations didn't check the standard specification and implemented the
+		// "tuple_size" and "tuple_element" primary template with as a struct.  The standard specifies they are
+		// implemented with the class keyword so we provide the template specializations as a class and disable the
+		// generated warning.
+		EA_DISABLE_CLANG_WARNING(-Wmismatched-tags)
+
+		template <class... Ts>
+		class tuple_size<::eastl::pair<Ts...>> : public ::eastl::integral_constant<size_t, sizeof...(Ts)>
+		{
+		};
+
+		template <size_t I, class... Ts>
+		class tuple_element<I, ::eastl::pair<Ts...>> : public ::eastl::tuple_element<I, ::eastl::pair<Ts...>>
+		{
+		};
+
+		EA_RESTORE_CLANG_WARNING()
+	}
 #endif
 
 
+EA_RESTORE_VC_WARNING();
+
+
 #endif // Header include guard
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

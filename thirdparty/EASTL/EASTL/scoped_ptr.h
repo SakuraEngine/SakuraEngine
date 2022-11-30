@@ -14,8 +14,8 @@
 #define EASTL_SCOPED_PTR_H
 
 
-#include "internal/config.h"
-#include "internal/smart_ptr.h"   // Defines smart_ptr_deleter
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/smart_ptr.h>   // Defines smart_ptr_deleter
 #include <stddef.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)

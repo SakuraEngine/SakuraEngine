@@ -39,6 +39,8 @@ public:
         uint64_t padding = 0;
         uint64_t padding1 = 0;
         operator size_t() const;
+        struct hasher { inline size_t operator()(const Key& val) const { return (size_t)val; } };
+
         friend class BufferPool;
 
         Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc);
@@ -51,7 +53,7 @@ public:
 
 protected:
     CGPUDeviceId device;
-    eastl::unordered_map<Key, eastl::deque<PooledBuffer>> buffers;
+    eastl::unordered_map<Key, eastl::deque<PooledBuffer>, Key::hasher> buffers;
 };
 } // namespace render_graph
 } // namespace skr

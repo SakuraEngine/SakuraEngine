@@ -42,12 +42,13 @@
 #define EASTL_SHARED_PTR_H
 
 
-#include "internal/config.h"
-#include "internal/smart_ptr.h"
-#include "internal/thread_support.h"
-#include "unique_ptr.h"
-#include "functional.h"
-#include "allocator.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/smart_ptr.h>
+#include <EASTL/internal/thread_support.h>
+#include <EASTL/unique_ptr.h>
+#include <EASTL/functional.h>
+#include <EASTL/allocator.h>
+#include <EASTL/atomic.h>
 #if EASTL_RTTI_ENABLED
 	#include <typeinfo>
 #endif
@@ -60,11 +61,8 @@ EA_DISABLE_ALL_VC_WARNINGS()
 #include <stddef.h>
 EA_RESTORE_ALL_VC_WARNINGS()
 
-#ifdef _MSC_VER
-	#pragma warning(push)
-	#pragma warning(disable: 4530)  // C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
-	#pragma warning(disable: 4571)  // catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught.
-#endif
+EA_DISABLE_VC_WARNING(4530); // C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+EA_DISABLE_VC_WARNING(4571); // catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught.
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
@@ -120,8 +118,8 @@ namespace eastl
 	/// This is a small utility class used by shared_ptr and weak_ptr.
 	struct ref_count_sp
 	{
-		int32_t mRefCount;            /// Reference count on the contained pointer. Starts as 1 by default.
-		int32_t mWeakRefCount;        /// Reference count on contained pointer plus this ref_count_sp object itself. Starts as 1 by default.
+		atomic<int32_t> mRefCount;            /// Reference count on the contained pointer. Starts as 1 by default.
+		atomic<int32_t> mWeakRefCount;        /// Reference count on contained pointer plus this ref_count_sp object itself. Starts as 1 by default.
 
 	public:
 		ref_count_sp(int32_t refCount = 1, int32_t weakRefCount = 1) EA_NOEXCEPT;
@@ -150,53 +148,54 @@ namespace eastl
 
 	inline int32_t ref_count_sp::use_count() const EA_NOEXCEPT
 	{
-		return mRefCount;   // To figure out: is this right?
+		return mRefCount.load(memory_order_relaxed);   // To figure out: is this right?
 	}
 
 	inline void ref_count_sp::addref() EA_NOEXCEPT
 	{
-		Internal::atomic_increment(&mRefCount);
-		Internal::atomic_increment(&mWeakRefCount);
+		mRefCount.fetch_add(1, memory_order_relaxed);
+		mWeakRefCount.fetch_add(1, memory_order_relaxed);
 	}
 
 	inline void ref_count_sp::release()
 	{
-		EASTL_ASSERT((mRefCount > 0) && (mWeakRefCount > 0));
-		if(Internal::atomic_decrement(&mRefCount) > 0)
-			Internal::atomic_decrement(&mWeakRefCount);
-		else
+		EASTL_ASSERT((mRefCount.load(memory_order_relaxed) > 0));
+		if(mRefCount.fetch_sub(1, memory_order_release) == 1)
 		{
+			atomic_thread_fence(memory_order_acquire);
 			free_value();
-
-			if(Internal::atomic_decrement(&mWeakRefCount) == 0)
-				free_ref_count_sp();
 		}
+
+		weak_release();
 	}
 
 	inline void ref_count_sp::weak_addref() EA_NOEXCEPT
 	{
-		Internal::atomic_increment(&mWeakRefCount);
+		mWeakRefCount.fetch_add(1, memory_order_relaxed);
 	}
 
 	inline void ref_count_sp::weak_release()
 	{
-		EASTL_ASSERT(mWeakRefCount > 0);
-		if(Internal::atomic_decrement(&mWeakRefCount) == 0)
+		EASTL_ASSERT(mWeakRefCount.load(memory_order_relaxed) > 0);
+		if(mWeakRefCount.fetch_sub(1, memory_order_release) == 1)
+		{
+			atomic_thread_fence(memory_order_acquire);
 			free_ref_count_sp();
+		}
 	}
 
 	inline ref_count_sp* ref_count_sp::lock() EA_NOEXCEPT
 	{
-		for(int32_t refCountTemp = mRefCount; refCountTemp != 0; refCountTemp = mRefCount)
+		for(int32_t refCountTemp = mRefCount.load(memory_order_relaxed); refCountTemp != 0; )
 		{
-			if(Internal::atomic_compare_and_swap(&mRefCount, refCountTemp + 1, refCountTemp))
+			if(mRefCount.compare_exchange_weak(refCountTemp, refCountTemp + 1, memory_order_relaxed))
 			{
-				Internal::atomic_increment(&mWeakRefCount);
+				mWeakRefCount.fetch_add(1, memory_order_relaxed);
 				return this;
 			}
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 
@@ -224,7 +223,7 @@ namespace eastl
 		void free_value() EA_NOEXCEPT
 		{
 			mDeleter(mValue);
-			mValue = NULL;
+			mValue = nullptr;
 		}
 
 		void free_ref_count_sp() EA_NOEXCEPT
@@ -237,7 +236,7 @@ namespace eastl
 		#if EASTL_RTTI_ENABLED
 			void* get_deleter(const std::type_info& type) const EA_NOEXCEPT
 			{
-				return (type == typeid(deleter_type)) ? (void*)&mDeleter : NULL;
+				return (type == typeid(deleter_type)) ? (void*)&mDeleter : nullptr;
 			}
 		#else
 			void* get_deleter() const EA_NOEXCEPT
@@ -288,12 +287,12 @@ namespace eastl
 		#if EASTL_RTTI_ENABLED
 			void* get_deleter(const std::type_info&) const EA_NOEXCEPT
 			{
-				return NULL; // Default base implementation.
+				return nullptr; // Default base implementation.
 			}
 		#else
 			void* get_deleter() const EA_NOEXCEPT
 			{
-				return NULL;
+				return nullptr;
 			}
 		#endif
 	};
@@ -380,8 +379,8 @@ namespace eastl
 		/// Initializes and "empty" shared_ptr.
 		/// Postcondition: use_count() == zero and get() == 0
 		shared_ptr() EA_NOEXCEPT
-			: mpValue(NULL),
-			  mpRefCount(NULL)
+			: mpValue(nullptr),
+			  mpRefCount(nullptr)
 		{
 			// Intentionally leaving mpRefCount as NULL. Can't allocate here due to noexcept.
 		}
@@ -397,7 +396,7 @@ namespace eastl
 		template <typename U>
 		explicit shared_ptr(U* pValue,
 		                    typename eastl::enable_if<eastl::is_convertible<U*, element_type*>::value>::type* = 0)
-		    : mpValue(NULL), mpRefCount(NULL) // alloc_internal will set this.
+		    : mpValue(nullptr), mpRefCount(nullptr) // alloc_internal will set this.
 		{
 			// We explicitly use default_delete<U>. You can use the other version of this constructor to provide a
 			// custom version.
@@ -411,8 +410,8 @@ namespace eastl
 
 
 		shared_ptr(std::nullptr_t) EA_NOEXCEPT
-			: mpValue(NULL),
-			  mpRefCount(NULL)
+			: mpValue(nullptr),
+			  mpRefCount(nullptr)
 		{
 			// Intentionally leaving mpRefCount as NULL. Can't allocate here due to noexcept.
 		}
@@ -431,16 +430,16 @@ namespace eastl
 		shared_ptr(U* pValue,
 		           Deleter deleter,
 		           typename eastl::enable_if<eastl::is_convertible<U*, element_type*>::value>::type* = 0)
-		    : mpValue(NULL), mpRefCount(NULL)
+		    : mpValue(nullptr), mpRefCount(nullptr)
 		{
 			alloc_internal(pValue, default_allocator_type(), eastl::move(deleter));
 		}
 
 		template <typename Deleter>
 		shared_ptr(std::nullptr_t, Deleter deleter)
-		    : mpValue(NULL), mpRefCount(NULL) // alloc_internal will set this.
+		    : mpValue(nullptr), mpRefCount(nullptr) // alloc_internal will set this.
 		{
-			alloc_internal(NULL, default_allocator_type(), eastl::move(deleter));
+			alloc_internal(nullptr, default_allocator_type(), eastl::move(deleter));
 		}
 
 
@@ -458,17 +457,17 @@ namespace eastl
 		                    Deleter deleter,
 		                    const Allocator& allocator,
 		                    typename eastl::enable_if<eastl::is_convertible<U*, element_type*>::value>::type* = 0)
-		    : mpValue(NULL), mpRefCount(NULL) // alloc_internal will set this.
+		    : mpValue(nullptr), mpRefCount(nullptr) // alloc_internal will set this.
 		{
 			alloc_internal(pValue, eastl::move(allocator), eastl::move(deleter));
 		}
 
 		template <typename Deleter, typename Allocator>
 		shared_ptr(std::nullptr_t, Deleter deleter, Allocator allocator)
-			: mpValue(NULL),
-			  mpRefCount(NULL) // alloc_internal will set this.
+			: mpValue(nullptr),
+			  mpRefCount(nullptr) // alloc_internal will set this.
 		{
-			alloc_internal(NULL, eastl::move(allocator), eastl::move(deleter));
+			alloc_internal(nullptr, eastl::move(allocator), eastl::move(deleter));
 		}
 
 
@@ -532,8 +531,8 @@ namespace eastl
 			: mpValue(sharedPtr.mpValue),
 			  mpRefCount(sharedPtr.mpRefCount)
 		{
-			sharedPtr.mpValue = NULL;
-			sharedPtr.mpRefCount = NULL;
+			sharedPtr.mpValue = nullptr;
+			sharedPtr.mpRefCount = nullptr;
 		}
 
 
@@ -543,8 +542,8 @@ namespace eastl
 		    : mpValue(sharedPtr.mpValue),
 		      mpRefCount(sharedPtr.mpRefCount)
 		{
-			sharedPtr.mpValue = NULL;
-			sharedPtr.mpRefCount = NULL;
+			sharedPtr.mpValue = nullptr;
+			sharedPtr.mpRefCount = nullptr;
 		}
 
 		// unique_ptr constructor
@@ -552,7 +551,7 @@ namespace eastl
 		shared_ptr(unique_ptr<U, Deleter>&& uniquePtr,
 		           typename eastl::enable_if<!eastl::is_array<U>::value && !is_lvalue_reference<Deleter>::value &&
 		                                     eastl::is_convertible<U*, element_type*>::value>::type* = 0)
-		    : mpValue(NULL), mpRefCount(NULL)
+		    : mpValue(nullptr), mpRefCount(nullptr)
 		{
 			alloc_internal(uniquePtr.release(), default_allocator_type(), uniquePtr.get_deleter());
 		}
@@ -564,7 +563,7 @@ namespace eastl
 		           const Allocator& allocator,
 		           typename eastl::enable_if<!eastl::is_array<U>::value && !is_lvalue_reference<Deleter>::value &&
 		                                     eastl::is_convertible<U*, element_type*>::value>::type* = 0)
-		    : mpValue(NULL), mpRefCount(NULL)
+		    : mpValue(nullptr), mpRefCount(nullptr)
 		{
 			alloc_internal(uniquePtr.release(), allocator, uniquePtr.get_deleter());
 		}
@@ -583,7 +582,7 @@ namespace eastl
 		{
 			if (!mpRefCount)
 			{
-				mpValue = NULL; // Question: Is it right for us to NULL this or not?
+				mpValue = nullptr; // Question: Is it right for us to NULL this or not?
 
 			#if EASTL_EXCEPTIONS_ENABLED
 				throw eastl::bad_weak_ptr();
@@ -600,14 +599,16 @@ namespace eastl
 		/// the shared reference count is deleted.
 		~shared_ptr()
 		{
-			if(mpRefCount)
+			if (mpRefCount)
+			{
 				mpRefCount->release();
+			}
 			// else if mpValue is non-NULL then we just lose it because it wasn't actually shared (can happen with
 			// shared_ptr(const shared_ptr<U>& sharedPtr, element_type* pValue) constructor).
 
 			#if EASTL_DEBUG
-				mpValue = NULL;
-				mpRefCount = NULL;
+				mpValue = nullptr;
+				mpRefCount = nullptr;
 			#endif
 		}
 
@@ -815,14 +816,14 @@ namespace eastl
 		/// Returns: the number of shared_ptr objects, *this included, that share ownership with *this, or 0 when *this is empty.
 		int use_count() const EA_NOEXCEPT
 		{
-			return mpRefCount ? mpRefCount->mRefCount : 0;
+			return mpRefCount ? mpRefCount->use_count() : 0;
 		}
 
 		/// unique
 		/// Returns: use_count() == 1.
 		bool unique() const EA_NOEXCEPT
 		{
-			return (mpRefCount && (mpRefCount->mRefCount == 1));
+			return (mpRefCount && (mpRefCount->use_count() == 1));
 		}
 
 
@@ -845,14 +846,14 @@ namespace eastl
 		Deleter* get_deleter() const EA_NOEXCEPT
 		{
 			#if EASTL_RTTI_ENABLED
-				return mpRefCount ? static_cast<Deleter*>(mpRefCount->get_deleter(typeid(typename remove_cv<Deleter>::type))) : NULL;
+				return mpRefCount ? static_cast<Deleter*>(mpRefCount->get_deleter(typeid(typename remove_cv<Deleter>::type))) : nullptr;
 			#else
 				// This is probably unsafe but without typeid there is no way to ensure that the
 				// stored deleter is actually of the templated Deleter type.
-				return NULL;
+				return nullptr;
 
 				// Alternatively:
-				// return mpRefCount ? static_cast<Deleter*>(mpRefCount->get_deleter()) : NULL;
+				// return mpRefCount ? static_cast<Deleter*>(mpRefCount->get_deleter()) : nullptr;
 			#endif
 		}
 
@@ -865,12 +866,12 @@ namespace eastl
 			{
 				if(mpValue)
 					return &this_type::get;
-				return NULL;
+				return nullptr;
 			}
 
 			bool operator!() const EA_NOEXCEPT
 			{
-				return (mpValue == NULL);
+				return (mpValue == nullptr);
 			}
 		#else
 			/// Explicit operator bool
@@ -881,7 +882,7 @@ namespace eastl
 			///        ++*ptr;
 			explicit operator bool() const EA_NOEXCEPT
 			{
-				return (mpValue != NULL);
+				return (mpValue != nullptr);
 			}
 		#endif
 
@@ -903,9 +904,9 @@ namespace eastl
 		// Handles the allocating of mpRefCount, while assigning mpValue.
 		// The provided pValue may be NULL, as with constructing with a deleter and allocator but NULL pointer.
 		template <typename U, typename Allocator, typename Deleter>
-		void alloc_internal(U* pValue, Allocator allocator, Deleter deleter)
+		void alloc_internal(U pValue, Allocator allocator, Deleter deleter)
 		{
-			typedef ref_count_sp_t<U*, Allocator, Deleter> ref_count_type;
+			typedef ref_count_sp_t<U, Allocator, Deleter> ref_count_type;
 
 			#if EASTL_EXCEPTIONS_ENABLED
 				try
@@ -975,6 +976,13 @@ namespace eastl
 		return (a.get() == b.get());
 	}
 
+#if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
+	template <typename T, typename U>
+	std::strong_ordering operator<=>(const shared_ptr<T>& a, const shared_ptr<U>& b) EA_NOEXCEPT
+	{
+		return a.get() <=> b.get();
+	}
+#else
 	template <typename T, typename U> 
 	inline bool operator!=(const shared_ptr<T>& a, const shared_ptr<U>& b) EA_NOEXCEPT
 	{
@@ -1011,6 +1019,7 @@ namespace eastl
 	{
 		return !(a < b);
 	}
+#endif
 
 	template <typename T>
 	inline bool operator==(const shared_ptr<T>& a, std::nullptr_t) EA_NOEXCEPT
@@ -1018,6 +1027,13 @@ namespace eastl
 		return !a;
 	}
 
+	#if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
+	template <typename T>
+	inline std::strong_ordering operator<=>(const shared_ptr<T>& a, std::nullptr_t) EA_NOEXCEPT
+	{
+		return a.get() <=> nullptr;
+	}
+	#else
 	template <typename T>
 	inline bool operator==(std::nullptr_t, const shared_ptr<T>& b) EA_NOEXCEPT
 	{
@@ -1083,7 +1099,7 @@ namespace eastl
 	{
 		return !(nullptr < b);
 	}
-
+#endif
 
 
 
@@ -1284,7 +1300,7 @@ namespace eastl
 	template <typename T>
 	inline shared_ptr<T> atomic_exchange_explicit(shared_ptr<T>* pSharedPtrA, shared_ptr<T> sharedPtrB, ... /*std::memory_order memoryOrder*/)
 	{
-		atomic_exchange(pSharedPtrA, sharedPtrB);
+		return atomic_exchange(pSharedPtrA, sharedPtrB);
 	}
 
 	// Compares the shared pointers pointed-to by p and expected. If they are equivalent (share ownership of the 
@@ -1371,8 +1387,8 @@ namespace eastl
 	public:
 		/// weak_ptr
 		weak_ptr() EA_NOEXCEPT
-			: mpValue(NULL),
-			  mpRefCount(NULL)
+			: mpValue(nullptr),
+			  mpRefCount(nullptr)
 		{
 		}
 
@@ -1394,8 +1410,8 @@ namespace eastl
 			: mpValue(weakPtr.mpValue),
 			  mpRefCount(weakPtr.mpRefCount)
 		{
-			weakPtr.mpValue = NULL;
-			weakPtr.mpRefCount = NULL;
+			weakPtr.mpValue = nullptr;
+			weakPtr.mpRefCount = nullptr;
 		}
 
 
@@ -1419,8 +1435,8 @@ namespace eastl
 		    : mpValue(weakPtr.mpValue),
 		      mpRefCount(weakPtr.mpRefCount)
 		{
-			weakPtr.mpValue = NULL;
-			weakPtr.mpRefCount = NULL;
+			weakPtr.mpValue = nullptr;
+			weakPtr.mpRefCount = nullptr;
 		}
 
 
@@ -1513,13 +1529,13 @@ namespace eastl
 		// Returns: 0 if *this is empty ; otherwise, the number of shared_ptr instances that share ownership with *this.
 		int use_count() const EA_NOEXCEPT
 		{
-			return mpRefCount ? mpRefCount->mRefCount : 0;
+			return mpRefCount ? mpRefCount->use_count() : 0;
 		}
 
 		// Returns: use_count() == 0
 		bool expired() const EA_NOEXCEPT
 		{
-			return (!mpRefCount || (mpRefCount->mRefCount == 0));
+			return (!mpRefCount || (mpRefCount->use_count() == 0));
 		}
 
 		void reset()
@@ -1527,8 +1543,8 @@ namespace eastl
 			if(mpRefCount)
 				mpRefCount->weak_release();
 
-			mpValue    = NULL;
-			mpRefCount = NULL;
+			mpValue    = nullptr;
+			mpRefCount = nullptr;
 		}
 
 		void swap(this_type& weakPtr)
@@ -1690,17 +1706,12 @@ namespace eastl
 } // namespace eastl
 
 
-#ifdef _MSC_VER
-	#pragma warning(pop)
-#endif
+EA_RESTORE_VC_WARNING();
+EA_RESTORE_VC_WARNING();
 
 
 // We have to either #include enable_shared.h here or we need to move the enable_shared source code to here.
-#include "internal/enable_shared.h"
+#include <EASTL/internal/enable_shared.h>
 
 
 #endif // Header include guard
-
-
-
-

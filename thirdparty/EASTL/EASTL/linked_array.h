@@ -12,9 +12,9 @@
 #define EASTL_LINKED_ARRAY_H
 
 
-#include "internal/config.h"
-#include "internal/smart_ptr.h"   // Defines smart_array_deleter
-#include "linked_ptr.h"           // Defines linked_ptr_base 
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/smart_ptr.h>   // Defines smart_array_deleter
+#include <EASTL/linked_ptr.h>           // Defines linked_ptr_base 
 #include <stddef.h>                     // Definition of ptrdiff_t
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)

@@ -8,9 +8,9 @@
 
 
 
-#include "internal/config.h"
-#include "internal/smart_ptr.h"   // Defines smart_ptr_deleter
-#include "allocator.h"
+#include <EASTL/internal/config.h>
+#include <EASTL/internal/smart_ptr.h>   // Defines smart_ptr_deleter
+#include <EASTL/allocator.h>
 #include <stddef.h>
 
 #if defined(EA_PRAGMA_ONCE_SUPPORTED)

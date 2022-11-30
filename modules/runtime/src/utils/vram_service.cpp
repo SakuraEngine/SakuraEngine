@@ -213,7 +213,7 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         const auto& buffer_io = buffer_task->buffer_io;
         const auto& destination = buffer_task->destination;
         CGPUUploadTask* upload = allocateCGPUUploadTask(buffer_io.device, buffer_io.transfer_queue, buffer_io.opt_semaphore);
-        skr::string name = buffer_io.vbuffer.buffer_name;
+        skr::string name = buffer_io.vbuffer.buffer_name ? buffer_io.vbuffer.buffer_name : "";
         name += "-upload";
         upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.src_memory.size, name.c_str());
 
@@ -781,7 +781,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, 
         io_task.callbacks[i] = buffer_info->callbacks[i];
         io_task.callback_datas[i] = buffer_info->callback_datas[i];
     }
-    io_task.path = buffer_info->dstorage.path;
+    io_task.path = buffer_info->dstorage.path ? buffer_info->dstorage.path : "";
     if (buffer_info->dstorage.queue)
     {
         io_task.resource_task = make_zeroed<DStorageBufferTask>();
@@ -812,7 +812,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info
         io_task.callbacks[i] = texture_info->callbacks[i];
         io_task.callback_datas[i] = texture_info->callback_datas[i];
     }
-    io_task.path = texture_info->dstorage.path;
+    io_task.path = texture_info->dstorage.path ? texture_info->dstorage.path : "";
     if (texture_info->dstorage.queue)
     {
         io_task.resource_task = make_zeroed<DStorageTextureTask>();
