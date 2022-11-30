@@ -69,23 +69,26 @@ struct RenderPassForward : public IPrimitiveRenderPass {
             auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(r_cv);
             auto skels = dual::get_owned_rw<skr_render_skel_comp_t>(r_cv);
 
-            for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                auto mesh_resource = meshes[i].mesh_resource.get_resolved();
-                if(!mesh_resource)
-                    continue;
-                if(skins[i].joint_remaps.empty())
+                ZoneScopedN("InitializeComponents");
+                for (uint32_t i = 0; i < r_cv->count; i++)
                 {
-                    auto skin_resource = skins[i].skin_resource.get_resolved();
-                    auto skel_resource = skels[i].skeleton.get_resolved();
-                    if(skel_resource && skin_resource)
-                        skr_init_skin_component(&skins[i], skel_resource);
-                }
-                if(anims[i].buffers.empty())
-                {
-                    auto skel_resource = skels[i].skeleton.get_resolved();
-                    if(skel_resource)
-                        skr_init_anim_component(&anims[i], mesh_resource, skel_resource);
+                    auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                    if(!mesh_resource)
+                        continue;
+                    if(skins[i].joint_remaps.empty())
+                    {
+                        auto skin_resource = skins[i].skin_resource.get_resolved();
+                        auto skel_resource = skels[i].skeleton.get_resolved();
+                        if(skel_resource && skin_resource)
+                            skr_init_skin_component(&skins[i], skel_resource);
+                    }
+                    if(anims[i].buffers.empty())
+                    {
+                        auto skel_resource = skels[i].skeleton.get_resolved();
+                        if(skel_resource)
+                            skr_init_anim_component(&anims[i], mesh_resource, skel_resource);
+                    }
                 }
             }
 
@@ -100,6 +103,8 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     const bool use_dynamic_buffer = anim->use_dynamic_buffer;
                     if (!anim->vbs[j])
                     {
+                        ZoneScopedN("CreateVB");
+
                         skr::string name = mesh_resource->name;
                         auto vb_name = name + skr::to_string(i);
 
@@ -152,6 +157,8 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     const auto vertex_size = anim->buffers[j].size;
                     if (!use_dynamic_buffer)
                     {
+                        ZoneScopedN("UploadVB");
+
                         auto vb_name = mesh_resource->name + skr::to_string(j);
                         auto ub_name = "upload-" + vb_name;
                         auto pass_name = "skin_copy-" + vb_name;
@@ -183,14 +190,19 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     }
                     else
                     {
+                        ZoneScopedN("CVVUpdateVB");
+
                         void* vtx_dst = anim->vbs[j]->cpu_mapped_address;
                         memcpy(vtx_dst, anim->buffers[j].bytes, vertex_size);
                     }
                 }
             }
         };
-        // prepare skin mesh resources for rendering
-        dualQ_get_views(skin_query, DUAL_LAMBDA(uploadVertices));
+        {
+            ZoneScopedN("PrepareMeshResource");
+            // prepare skin mesh resources for rendering
+            dualQ_get_views(skin_query, DUAL_LAMBDA(uploadVertices));
+        }
         // wait last skin dispatch
         if (pSkinCounter) dualJ_wait_counter(pSkinCounter, true);
         // late skin dispatch for next frame
