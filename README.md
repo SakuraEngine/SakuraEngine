@@ -51,7 +51,7 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 | `SkrScene` | - | 场景模块，场景资源管理 |
 | `SkrRenderer` | - | 渲染器模块，渲染资源管理，驱动渲染管线 |
 | `SkrImgui` | [imgui] | 用于调试的运行时UI |
-| `SkrRenderGraph` | - | RHI 的上层封装 |
+| `SkrRenderGraph` | - | 基于 CGPU 的 Render Graph |
 | `SkrLive2d` | [live2d] | Live2d 的渲染后端 |
 | `SkrInputSystem` | [gaininput] | 输入的上层封装 |
 | `SkrAnim` | [ozz-animation] | 动画资源管理，动画计算的基础功能 |
