@@ -50,6 +50,8 @@ namespace eastl
 	/// the eastl containers are compatible with such allocators (i.e. nothing unexpected
 	/// will happen).
 	///
+	// --[SAKURA]
+	/*
 	class EASTL_API allocator
 	{
 	public:
@@ -76,6 +78,8 @@ namespace eastl
 #if !defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
 	bool operator!=(const allocator& a, const allocator& b);
 #endif
+	*/
+	// --[SAKURA]
 
 
 	/// dummy_allocator
@@ -111,9 +115,10 @@ namespace eastl
 	/// Currently this Default Allocator applies only to CoreAllocatorAdapter.
 	/// To consider: This naming of this function is too similar to get_default_allocator
 	/// and instead should be named something like GetStaticDefaultAllocator.
-	EASTL_API allocator* GetDefaultAllocator();
-	EASTL_API allocator* SetDefaultAllocator(allocator* pAllocator);
-
+	// --[SAKURA]
+	// EASTL_API allocator* GetDefaultAllocator();
+	// EASTL_API allocator* SetDefaultAllocator(allocator* pAllocator);
+	// --[SAKURA]
 
 	/// get_default_allocator
 	///
