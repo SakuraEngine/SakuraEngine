@@ -28,7 +28,7 @@ void skr_init_skin_component(skr_render_skin_comp_t* component, skr_skeleton_res
         {
             if (std::strcmp(skeleton->skeleton.joint_names()[j], skin->blob.joint_remaps[i].data()) == 0)
             {
-                component->joint_remaps[i] = j;
+                component->joint_remaps[i] = static_cast<uint32_t>(j);
                 break;
             }
         }
@@ -76,7 +76,7 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, skr_mesh_resourc
             primitive.position.buffer_index = 0;
             primitive.position.attribute = positions_buffer->attribute;
             primitive.position.attribute_index = positions_buffer->attribute_index;
-            primitive.position.offset = position_offset;
+            primitive.position.offset = static_cast<uint32_t>(position_offset);
             primitive.position.stride = positions_buffer->stride;
         }
         if(normals_buffer)
@@ -84,7 +84,7 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, skr_mesh_resourc
             primitive.normal.buffer_index = 0;
             primitive.normal.attribute = normals_buffer->attribute;
             primitive.normal.attribute_index = normals_buffer->attribute_index;
-            primitive.normal.offset = normal_offset;
+            primitive.normal.offset = static_cast<uint32_t>(normal_offset);
             primitive.normal.stride = normals_buffer->stride;
         }
         if(tangents_buffer)
@@ -92,7 +92,7 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, skr_mesh_resourc
             primitive.tangent.buffer_index = 0;
             primitive.tangent.attribute = tangents_buffer->attribute;
             primitive.tangent.attribute_index = tangents_buffer->attribute_index;
-            primitive.tangent.offset = tangent_offset;
+            primitive.tangent.offset = static_cast<uint32_t>(tangent_offset);
             primitive.tangent.stride = tangents_buffer->stride;
         }
     }

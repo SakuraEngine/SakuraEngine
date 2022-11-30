@@ -2,13 +2,17 @@
 #include "pool.hpp"
 #include "ecs/dual_config.h"
 
+#include "tracy/Tracy.hpp"
+
 namespace dual
 {
 fixed_arena_t::fixed_arena_t(size_t capacity)
-    : buffer(::dual_calloc(1, capacity))
-    , size()
+    : size()
     , capacity(capacity)
 {
+    ZoneScopedN("DualFixedArenaAllocation");
+    
+    buffer = ::dual_calloc(1, capacity);
 }
 
 fixed_arena_t::~fixed_arena_t()
@@ -31,7 +35,6 @@ void* fixed_arena_t::allocate(size_t s, size_t a)
     return (char*)buffer + offset;
 }
 
-
 void* struct_arena_base_t::allocate(size_t s, size_t a)
 {
     size = ((size + a - 1) / a) * a;
@@ -41,6 +44,8 @@ void* struct_arena_base_t::allocate(size_t s, size_t a)
 }
 void struct_arena_base_t::initialize(size_t a)
 {
+    ZoneScopedN("DualArenaAllocation");
+
     buffer = ::dual_calloc_aligned(1, capacity, a);
 }
 void struct_arena_base_t::record(size_t s, size_t a)

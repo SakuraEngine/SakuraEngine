@@ -209,6 +209,7 @@ ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_
         auto status = okay ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
         if (okay)
         {
+            sakura_free(sRequest->second->bytes_destination.bytes);
             mShaderRequests.erase(root_variant);
         }
         return status;

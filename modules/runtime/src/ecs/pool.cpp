@@ -4,6 +4,8 @@
 #include <EASTL/numeric.h>
 #include "ecs/dual_config.h"
 
+#include "tracy/Tracy.hpp"
+
 namespace dual
 {
 pool_t::pool_t(size_t blockSize, size_t blockCount)
@@ -24,7 +26,10 @@ void* pool_t::allocate()
     void* block;
     if (blocks.try_dequeue(block))
         return block;
-    return ::dual_calloc(1, blockSize);
+    {
+        ZoneScopedN("DualPoolAllocation");
+        return ::dual_calloc(1, blockSize);
+    }
 }
 
 void pool_t::free(void* block)
