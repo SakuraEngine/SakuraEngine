@@ -17,8 +17,8 @@ SKR_TWEAK_API skr_tweak_string_t* skr_tweak_value(const char* value, const char*
 SKR_TWEAK_API const char* skr_get_tweak(skr_tweak_string_t* tweak);
 
 #ifndef SKR_SHIPPING
-#define TWEAK(value) []() { static auto tweak = skr_tweak_value(value, #value, __FILE__, __LINE__); return skr_get_tweak(tweak); }()
+#define SKR_TWEAK(value) []() { static auto tweak = skr_tweak_value(value, #value, __FILE__, __LINE__); return skr_get_tweak(tweak); }()
 #else
-#define TWEAK(value) value
+#define SKR_TWEAK(value) value
 #endif
 #endif

@@ -17,7 +17,7 @@ namespace game
         auto anim = state->animation_resource.get_resolved();
         if(!anim)
             return;
-        float newTime = state->currtime + TWEAK(1.f) * dt;
+        float newTime = state->currtime + SKR_TWEAK(1.f) * dt;
         if(newTime > anim->animation.duration())
             newTime = std::fmodf(newTime, anim->animation.duration());
         ozz::animation::SamplingJob sampling_job;
