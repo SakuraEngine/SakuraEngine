@@ -1674,7 +1674,7 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             const auto size = element->Size();
             auto jarray = reader.get_array();
             const auto jarray_size = static_cast<uint32_t>(jarray.count_elements().value_unsafe());
-            auto len = std::min<uint32_t>(jarray_size, arr.num);
+            auto len = std::min<uint32_t>(jarray_size, (uint32_t)arr.num);
             for (uint32_t i = 0u; i < len; i++)
             {
                 if (auto ret = element->DeserializeText(data + i * size, jarray.at(i).value_unsafe()); ret != 0)

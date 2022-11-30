@@ -42,22 +42,37 @@ bool make_md5(const skr::string_view& str, skr_md5_t& value)
         SKR_LOG_ERROR("String MD5 of the form XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
-
     const auto begin = str.data();
-    if (!parse_hex(begin, value.a))
-        return false;
-    if (!parse_hex(begin + 8, value.b))
-        return false;
-    if (!parse_hex(begin + 16, value.c))
-        return false;
-    if (!parse_hex(begin + 24, value.d))
-        return false;
+    if (!parse_hex(begin, value.digest[0])) return false;
+    if (!parse_hex(begin + 2, value.digest[1])) return false;
+    if (!parse_hex(begin + 4, value.digest[2])) return false;
+    if (!parse_hex(begin + 6, value.digest[3])) return false;
+    if (!parse_hex(begin + 8, value.digest[4])) return false;
+    if (!parse_hex(begin + 10, value.digest[5])) return false;
+    if (!parse_hex(begin + 12, value.digest[6])) return false;
+    if (!parse_hex(begin + 14, value.digest[7])) return false;
+    if (!parse_hex(begin + 16, value.digest[8])) return false;
+    if (!parse_hex(begin + 18, value.digest[9])) return false;
+    if (!parse_hex(begin + 20, value.digest[10])) return false;
+    if (!parse_hex(begin + 22, value.digest[11])) return false;
+    if (!parse_hex(begin + 24, value.digest[12])) return false;
+    if (!parse_hex(begin + 26, value.digest[13])) return false;
+    if (!parse_hex(begin + 28, value.digest[14])) return false;
+    if (!parse_hex(begin + 30, value.digest[15])) return false;    
     return true;
 }
+
+// exports
+#include "./../crypt/md5.h"
 
 bool skr_parse_md5(const char* str32, skr_md5_t* out_md5)
 {
     skr::string_view sv(str32, 32);
     if (!out_md5) return false;
     return make_md5(sv, *out_md5);
+}
+
+void skr_make_md5(const char* str, uint32_t str_size, skr_md5_t* out_md5)
+{
+    return skr_crypt_make_md5(str, str_size, out_md5);
 }
