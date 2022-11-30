@@ -137,7 +137,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
     {
         func = processSymbolTable.get<IModule*()>(initName.c_str());
     }
-#ifndef MODULE_AS_OBJECTS
+#ifndef SHIPPING_ONE_ARCHIVE
     if (func == nullptr)
     {
         // try load dll

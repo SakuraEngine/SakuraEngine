@@ -1,3 +1,5 @@
+if(not has_config("shipping_one_archive")) then
+
 add_requires("efsw")
  
  shared_module("SkrTweak", "SKR_TWEAK", engine_version)
@@ -12,3 +14,5 @@ add_requires("efsw")
     add_files("src/**.cpp")
     add_defines("SKR_SOURCE_ROOT=R\"($(projectdir))\"", {public=false})
     add_packages("efsw")
+   
+end

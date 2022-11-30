@@ -4,7 +4,7 @@ imgui_includes_dir = "$(projectdir)/thirdparty/imgui/include"
 target("imgui")
     set_group("00.thirdparty")
     set_kind("static")
-    if(has_config("module_as_objects")) then
+    if(has_config("shipping_one_archive")) then
         add_defines("RUNTIME_ALL_STATIC")
     else
         add_defines("RUNTIME_SHARED")

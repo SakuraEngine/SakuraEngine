@@ -21,7 +21,7 @@ jobs:
       - name: Shipping
         if: success() || failure()
         run: |
-          xmake f -m release -y --build_tests=n --build_editors=n -c --module_as_objects=y --use_tracy=disable --policies=build.ccache:n
+          xmake f -m release -y --build_tests=n --build_editors=n -c --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
       - name: UploadGeneratedFiles
         if: success() || failure()

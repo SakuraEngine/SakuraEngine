@@ -1,11 +1,11 @@
-option("module_as_objects")
+option("shipping_one_archive")
     set_default(false)
     set_showmenu(true)
     set_description("Toggle to build modules in one executable file.")
 option_end()
 
-if(has_config("module_as_objects")) then
-    add_defines("MODULE_AS_OBJECTS")
+if(has_config("shipping_one_archive")) then
+    add_defines("SHIPPING_ONE_ARCHIVE")
 end
 
 rule("skr.shared")
@@ -23,8 +23,8 @@ rule("skr.module")
         local api = target:extraconf("rules", "skr.module", "api")
         local version = target:extraconf("rules", "skr.module", "version")
         target:add("values", "skr.module.version", version)
-        if(has_config("module_as_objects")) then
-            target:add("defines","MODULE_AS_OBJECTS")
+        if(has_config("shipping_one_archive")) then
+            target:add("defines","SHIPPING_ONE_ARCHIVE")
         else
             target:add("defines", api.."_SHARED", {public=true})
             target:add("defines", api.."_IMPL")
@@ -90,7 +90,7 @@ rule_end()
 rule("skr.static_module")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.static_module", "api")
-        if(has_config("module_as_objects")) then
+        if(has_config("shipping_one_archive")) then
             target:set("kind", "object")
         else
             target:set("kind", "static")
@@ -109,7 +109,7 @@ end
 function shared_module(name, api, version, opt)
     target(name)
     on_load(function (target, opt)
-        if(has_config("module_as_objects")) then
+        if(has_config("shipping_one_archive")) then
             target:set("kind", "object")
         else
             target:set("kind", "shared")
