@@ -17,15 +17,11 @@ executable_module("Game", "GAME", engine_version)
     set_group("04.examples/application")
     set_exceptions("no-cxx")
     public_dependency("GameRuntime", engine_version)
-    add_rules("utils.install-resources", {
-        extensions = {".gltf", ".bin", ".png"},
-        outdir = "/../resources", _png_outdir = "/../resources/textures"})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Game",
         dxil_outdir = "/../resources/shaders/Game"})
     add_files("src/main.cpp", "src/render_resources.cpp", "src/render_effects.cpp",  "src/game_module.cpp")
     add_files("shaders/**.hlsl")
-    add_files("assets/**.bin", "assets/**.gltf", "assets/**.png")
     if (is_os("windows")) then 
         add_files("/../../../resources/windows/sakura.rc")
     end

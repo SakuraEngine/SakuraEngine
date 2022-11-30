@@ -141,7 +141,7 @@ void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, 
 
     out_vbv.buffer_index = 0;
     out_vbv.stride = attribute_stride;
-    out_vbv.offset = (uint32_t)buffer.size();
+    out_vbv.offset = attribute_stride ? (uint32_t)buffer.size() : 0u;
     buffer.insert(buffer.end(), vertex_attribtue_slice.data(), vertex_attribtue_slice.data() + vertex_attribtue_slice.size());
 }
 
@@ -157,7 +157,7 @@ void EmplaceGLTFPrimitiveVertexBufferAttribute(const cgltf_primitive* primitve, 
 
     out_vbv.buffer_index = 0;
     out_vbv.stride = attribute_stride;
-    out_vbv.offset = (uint32_t)buffer.size();
+    out_vbv.offset = attribute_stride ? (uint32_t)buffer.size() : 0u;
     buffer.insert(buffer.end(), vertex_attribtue_slice.data(), vertex_attribtue_slice.data() + vertex_attribtue_slice.size());
 }
 
