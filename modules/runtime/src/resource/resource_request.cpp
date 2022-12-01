@@ -18,21 +18,21 @@ skr_guid_t SResourceRequest::GetGuid() const
     return resourceRecord->header.guid;
 }
 
-gsl::span<const uint8_t> SResourceRequest::GetData() const
+skr::span<const uint8_t> SResourceRequest::GetData() const
 {
-    return gsl::span<const uint8_t>(data, size);
+    return skr::span<const uint8_t>(data, size);
 }
 
 #ifdef SKR_RESOURCE_DEV_MODE
-gsl::span<const uint8_t> SResourceRequest::GetArtifactsData() const
+skr::span<const uint8_t> SResourceRequest::GetArtifactsData() const
 {
-    return gsl::span<const uint8_t>(artifactsData, artifactsSize);
+    return skr::span<const uint8_t>(artifactsData, artifactsSize);
 }
 #endif
 
-gsl::span<const skr_guid_t> SResourceRequest::GetDependencies() const
+skr::span<const skr_guid_t> SResourceRequest::GetDependencies() const
 {
-    return gsl::span<const skr_guid_t>(dependencies.data(), dependencies.size());
+    return skr::span<const skr_guid_t>(dependencies.data(), dependencies.size());
 }
 
 void SResourceRequest::UpdateLoad(bool requestInstall)

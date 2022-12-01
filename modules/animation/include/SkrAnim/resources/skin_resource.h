@@ -10,8 +10,8 @@ sattr("blob" : true)
 skr_skin_blob_view_t
 {
     eastl::string_view name;
-    gsl::span<eastl::string_view> joint_remaps;
-    gsl::span<skr_float4x4_t> inverse_bind_poses;
+    skr::span<eastl::string_view> joint_remaps;
+    skr::span<skr_float4x4_t> inverse_bind_poses;
 };
     
 GENERATED_BLOB_BUILDER(skr_skin_blob_view_t)

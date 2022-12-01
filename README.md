@@ -197,7 +197,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - SPIRV-Reflect b68b5a8 (Apache-2.0)
 - wasm3 a3abb3f, org.fork (MIT)
 - DirectXMath 596aa5d (MIT)
-- GSL 4.0.0 Release (MIT)
 - FiberTaskingLib 9d7b27d (Apache-2.0)
 - sole 1.0.1 (zlib License)
 - parallel-hashmap 1.3.4 (Apache-2.0)

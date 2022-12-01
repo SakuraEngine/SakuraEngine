@@ -62,7 +62,7 @@ namespace skr::type
             %endfor
             };
         %else:
-            static gsl::span<skr_field_t> fields;
+            static skr::span<skr_field_t> fields;
         %endif
         
         %for i, method in enumerate(methods):
@@ -73,7 +73,7 @@ namespace skr::type
                 %endfor
                 };
             %else:
-                static gsl::span<skr_field_t> params${i};
+                static skr::span<skr_field_t> params${i};
             %endif
         %endfor
         
@@ -114,7 +114,7 @@ namespace skr::type
         %endfor
             };
         %else:
-            static gsl::span<skr_method_t> methods;
+            static skr::span<skr_method_t> methods;
         %endif
             constexpr skr_guid_t guid = {${db.guid_constant(record)}};
             static RecordType type(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);

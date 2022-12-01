@@ -27,7 +27,7 @@ skr_skin_primitive_t
     skr_vertex_buffer_entry_t position;
     skr_vertex_buffer_entry_t normal;
     skr_vertex_buffer_entry_t tangent;
-    gsl::span<skr_vertex_buffer_view_t> views;
+    skr::span<skr_vertex_buffer_view_t> views;
 };
 
 sreflect_struct("guid" : "02753B87-0D94-4C35-B768-DE3BFE3E0DEB")

@@ -9600,7 +9600,7 @@ extern SIMDJSON_DLLIMPORTEXPORT const uint64_t thintable_epi8[256];
 
 // By default, we allow AVX512.
 #ifndef SIMDJSON_AVX512_ALLOWED
-#define SIMDJSON_AVX512_ALLOWED 1
+#define SIMDJSON_AVX512_ALLOWED 0
 #endif
 
 // Default Icelake to on if this is x86-64. Even if we're not compiled for it, it could be selected

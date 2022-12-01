@@ -159,15 +159,15 @@ void D3D12Util_LogDREDPageFault1(const D3D12_DRED_PAGE_FAULT_OUTPUT1* pageFault)
     D3D12Util_LogDREDPageFaultImpl(pageFault);
 }
 
-inline static gsl::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE* Node)
+inline static skr::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE* Node)
 {
 	return {};
 }
 
 #ifdef __ID3D12DeviceRemovedExtendedData1_INTERFACE_DEFINED__
-inline static gsl::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE1* Node)
+inline static skr::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE1* Node)
 {
-	return gsl::span<D3D12_DRED_BREADCRUMB_CONTEXT>(Node->pBreadcrumbContexts, Node->BreadcrumbContextsCount);
+	return skr::span<D3D12_DRED_BREADCRUMB_CONTEXT>(Node->pBreadcrumbContexts, Node->BreadcrumbContextsCount);
 }
 #endif
 

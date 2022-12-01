@@ -308,7 +308,7 @@ int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value)
 }
 
 struct SpanReader {
-    gsl::span<const uint8_t> data;
+    skr::span<const uint8_t> data;
     size_t offset = 0;
     int read(void* dst, size_t size)
     {

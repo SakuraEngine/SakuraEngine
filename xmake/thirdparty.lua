@@ -3,7 +3,6 @@
 includes("thirdparty/EASTL.lua") 
 includes("thirdparty/lmdb.lua")
 includes("thirdparty/boost.lua")
-includes("thirdparty/gsl.lua")
 includes("thirdparty/DirectXMath.lua")
 includes("thirdparty/SDL2.lua")
 includes("thirdparty/cgltf.lua")
