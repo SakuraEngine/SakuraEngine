@@ -7,7 +7,6 @@
 #include "stack.hpp"
 #include "type.hpp"
 #include "query.hpp"
-#include "type_registry.hpp"
 
 #include "arena.hpp"
 #include "pool.hpp"

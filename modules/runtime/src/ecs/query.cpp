@@ -1,11 +1,9 @@
+#include "type_registry.hpp"
 #include "utils/format.hpp"
 #include "ecs/SmallVector.h"
 #include "archetype.hpp"
-#include "chunk_view.hpp"
 #include "arena.hpp"
 #include "ecs/dual.h"
-#include "mask.hpp"
-#include "pool.hpp"
 #include "query.hpp"
 #include "stack.hpp"
 #include "storage.hpp"
@@ -16,7 +14,6 @@
 #include <EASTL/sort.h>
 #include <EASTL/algorithm.h>
 #include <EASTL/numeric.h>
-#include "utils/format.hpp"
 #include <containers/string.hpp>
 #if __SSE2__
     #include <emmintrin.h>

@@ -1,13 +1,18 @@
 #include <string.h>
 #include "ecs/dual.h"
 #include "pool.hpp"
-#include "entity.hpp"
 #include "type.hpp"
 #include "ecs/constants.hpp"
 #include "type_registry.hpp"
-#include "guid.hpp"
-#include "sole.hpp"
 #include "utils/make_zeroed.hpp"
+
+#ifdef SKR_OS_WINDOWS
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+#endif
+#include "sole.hpp"
+
 #if __SSE2__
     #include <emmintrin.h>
     #define DUAL_MASK_ALIGN alignof(__m128i)

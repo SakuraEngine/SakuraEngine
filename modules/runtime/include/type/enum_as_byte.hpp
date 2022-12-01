@@ -41,3 +41,41 @@ namespace skr
         UT value;
     };
 }
+
+// binary reader
+#include "binary/reader_fwd.h"
+
+namespace skr
+{
+namespace binary
+{
+template <class T>
+struct ReadHelper<TEnumAsByte<T>>
+{
+    static int Read(skr_binary_reader_t* reader, TEnumAsByte<T>& value)
+    {
+        return skr::binary::Archive(reader, value.as_byte());
+    }
+};
+} // namespace binary
+} // namespace skr
+
+
+// binary writer
+#include "binary/writer_fwd.h"
+
+namespace skr
+{
+namespace binary
+{
+
+template <class T>
+struct WriteHelper<const TEnumAsByte<T>&> {
+    static int Write(skr_binary_writer_t* writer, const TEnumAsByte<T>& value)
+    {
+        return skr::binary::Archive(writer, value.as_byte());
+    }
+};
+
+} // namespace binary
+} // namespace skr

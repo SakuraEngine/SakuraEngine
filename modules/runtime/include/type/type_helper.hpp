@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/traits.hpp"
 #include "platform/memory.h"
 #include "binary/writer_fwd.h"
 #include "binary/reader_fwd.h"
@@ -9,18 +10,6 @@ struct skr_value_t;
 
 namespace skr
 {
-    template<class T>
-    struct type_t{ using type = T; };
-
-    template<class T, class = void>
-    struct is_complete : std::false_type {};
-
-    template<class T>
-    struct is_complete<T, std::enable_if_t<sizeof(T)>> : std::true_type {};
-
-    template<class T>
-    constexpr bool is_complete_v = is_complete<T>::value;
-
     template<class T>
     constexpr auto GetDefaultCtor() -> void(*)(void*, skr_value_t*, size_t)
     {

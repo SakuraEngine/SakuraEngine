@@ -81,3 +81,74 @@ struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Alloca
 
 }
 }
+
+// binary reader
+#include "utils/traits.hpp"
+#include "binary/reader_fwd.h"
+
+namespace skr
+{
+namespace binary
+{
+template <class V, class Allocator>
+struct ReadHelper<skr::vector<V, Allocator>> {
+    static int Read(skr_binary_reader_t* archive, skr::vector<V, Allocator>& vec)
+    {
+        skr::vector<V, Allocator> temp;
+        uint32_t size;
+        SKR_ARCHIVE(size);
+
+        temp.reserve(size);
+        for (uint32_t i = 0; i < size; ++i)
+        {
+            V value;
+            SKR_ARCHIVE(value);
+            temp.push_back(std::move(value));
+        }
+        vec = std::move(temp);
+        return 0;
+    }
+};
+}
+template <typename V, typename Allocator>
+struct SerdeCompleteChecker<binary::ReadHelper<skr::vector<V, Allocator>>>
+    : std::bool_constant<is_complete_serde_v<binary::ReadHelper<V>>> {
+};
+}
+
+// binary writer
+#include "binary/reader_fwd.h"
+
+namespace skr
+{
+namespace binary
+{
+template <class V, class Allocator>
+struct WriteHelper<const skr::vector<V, Allocator>&> {
+    static int Write(skr_binary_writer_t* archive, const skr::vector<V, Allocator>& vec)
+    {
+        SKR_ARCHIVE((uint32_t)vec.size());
+        for (auto& value : vec)
+        {
+            SKR_ARCHIVE(value);
+        }
+        return 0;
+    }
+};
+
+struct VectorWriter
+{
+    eastl::vector<uint8_t>* buffer;
+    int write(const void* data, size_t size)
+    {
+        buffer->insert(buffer->end(), (uint8_t*)data, (uint8_t*)data + size);
+        return 0;
+    }
+};
+} // namespace binary
+
+template <class V, class Allocator>
+struct SerdeCompleteChecker<binary::WriteHelper<const skr::vector<V, Allocator>&>>
+    : std::bool_constant<is_complete_serde_v<json::WriteHelper<V>>> {
+};
+} // namespace skr

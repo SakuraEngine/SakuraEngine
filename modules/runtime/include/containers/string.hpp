@@ -119,3 +119,44 @@ struct BlobBuilderType<skr::string_view>
     using type = skr::string;
 };
 }
+
+// binary reader
+#include "binary/reader_fwd.h"
+
+namespace skr
+{
+namespace binary
+{
+template <>
+struct RUNTIME_API ReadHelper<skr::string> {
+    static int Read(skr_binary_reader_t* reader, skr::string& str);
+};
+
+template <>
+struct RUNTIME_API ReadHelper<skr::string_view> {
+    static int Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::string_view& str);
+};
+} // namespace binary
+} // namespace skr
+
+// binary writer
+#include "binary/writer_fwd.h"
+
+namespace skr
+{
+namespace binary
+{
+	
+template <>
+struct RUNTIME_API WriteHelper<const skr::string&> {
+    static int Write(skr_binary_writer_t* writer, const skr::string& str);
+};
+
+template <>
+struct RUNTIME_API WriteHelper<const skr::string_view&> {
+    static int Write(skr_binary_writer_t* writer, const skr::string_view& str);
+    static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::string_view& str);
+};
+
+} // namespace binary
+} // namespace skr
