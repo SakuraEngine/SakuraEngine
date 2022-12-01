@@ -4,7 +4,7 @@
 #include "platform/memory.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/log.h"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "platform/vfs.h"
 
 #include "live2d_helpers.hpp"

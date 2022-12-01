@@ -1,5 +1,5 @@
 #include <EASTL/array.h>
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "utils/log.hpp"
 #include "utils/make_zeroed.hpp"
 
@@ -14,7 +14,7 @@ namespace skd
 {
 namespace asset
 {
-void* SShaderOptionsImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
+void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     const auto assetRecord = context->GetAssetRecord();
     skr_async_ram_destination_t ioDestination = {};

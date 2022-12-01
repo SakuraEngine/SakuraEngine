@@ -9,11 +9,12 @@
 #include "platform/thread.h"
 #include "platform/time.h"
 
-#include "utils/log.hpp"
-#include "utils/io.hpp"
+#include "utils/format.hpp"
+#include "utils/log.h"
+#include "cgpu/io.h"
+
 #include "utils/make_zeroed.hpp"
 
-#include "cgpu/io.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
@@ -43,7 +44,7 @@ public:
     struct dual_storage_t* l2d_world = nullptr;
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
-    skr::io::RAMService* ram_service = nullptr;
+    skr_io_ram_service_t* ram_service = nullptr;
 
 };
 #include "platform/filesystem.hpp"
@@ -79,7 +80,7 @@ void SLive2DViewerModule::on_load(int argc, char** argv)
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-    ram_service = skr::io::RAMService::create(&ioServiceDesc);
+    ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
 
 #ifdef _WIN32
     auto decompress_service = skr_render_device_get_win_dstorage_decompress_service(render_device);
@@ -93,7 +94,7 @@ void SLive2DViewerModule::on_unload()
 {
     SKR_LOG_INFO("live2d viewer unloaded!");
 
-    skr::io::RAMService::destroy(ram_service);
+    skr_io_ram_service_t::destroy(ram_service);
     skr_free_vfs(resource_vfs);
 
     dualS_release(l2d_world);
@@ -168,7 +169,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     window_desc.height = 1500;
     window_desc.width = 1500;
     window = skr_create_window(
-        fmt::format("Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
+        skr::format("Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
         &window_desc);
 
     auto ram_service = SLive2DViewerModule::Get()->ram_service;

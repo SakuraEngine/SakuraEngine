@@ -1,5 +1,5 @@
 #include "SkrShaderCompiler/assets/material_asset.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "SkrToolCore/project/project.hpp"
 
 namespace skd
@@ -7,7 +7,7 @@ namespace skd
 namespace asset
 {
 
-void* SMaterialTypeImporter::Import(skr::io::RAMService* ioService, SCookContext *context)
+void* SMaterialTypeImporter::Import(skr_io_ram_service_t* ioService, SCookContext *context)
 {
     const auto assetRecord = context->GetAssetRecord();
     skr_async_ram_destination_t destination = {};

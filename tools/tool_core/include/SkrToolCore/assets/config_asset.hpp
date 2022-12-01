@@ -28,7 +28,7 @@ TOOL_CORE_API SJsonConfigImporter final : public SImporter
 {
     skr::string assetPath;
     skr_guid_t configType;
-    void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
 sattr("serialize" : "json")

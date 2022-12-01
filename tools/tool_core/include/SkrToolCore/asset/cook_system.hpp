@@ -45,7 +45,7 @@ public:
     skr::string GetAssetPath() const;
 
     skr::filesystem::path AddFileDependency(const skr::filesystem::path& path);
-    skr::filesystem::path AddFileDependencyAndLoad(skr::io::RAMService* ioService, const skr::filesystem::path& path, skr_async_ram_destination_t& destination);
+    skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr_async_ram_destination_t& destination);
 
     void AddRuntimeDependency(skr_guid_t resource);
     void AddSoftRuntimeDependency(skr_guid_t resource);
@@ -126,7 +126,7 @@ protected:
 
     SAssetRecord* record = nullptr;
     SImporter* importer = nullptr;
-    class skr::io::RAMService* ioService = nullptr;
+    skr_io_ram_service_t* ioService = nullptr;
 
     skr::filesystem::path outputPath;
     eastl::vector<skr_resource_handle_t> staticDependencies;
@@ -160,9 +160,9 @@ public:
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
 
-    class skr::io::RAMService* getIOService();
+    class skr_io_ram_service_t* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 4;
-    class skr::io::RAMService* ioServices[ioServicesMaxCount];
+    class skr_io_ram_service_t* ioServices[ioServicesMaxCount];
     skr::task::counter_t mainCounter;
 
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);

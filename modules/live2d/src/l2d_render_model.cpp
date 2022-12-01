@@ -1,12 +1,12 @@
-#include "platform/vfs.h"
-
-#include "utils/io.hpp"
-#include "utils/log.h"
-#include "cgpu/io.hpp"
-
 #include "utils/make_zeroed.hpp"
+#include "utils/log.h"
+#include "utils/io.h"
+#include "cgpu/io.h"
+
 #include "platform/memory.h"
 #include "platform/debug.h"
+#include "platform/vfs.h"
+
 #include "SkrLive2D/l2d_render_model.h"
 #include "live2d_clipping.hpp"
 #include "live2d_helpers.hpp"

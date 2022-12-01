@@ -28,7 +28,7 @@ SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter
     eastl::string animationName;
     float samplingRate = 30.f;
     virtual ~SAnimGltfImporter() = default;
-    virtual void* Import(skr::io::RAMService*, SCookContext * context) override;
+    virtual void* Import(skr_io_ram_service_t*, SCookContext * context) override;
     virtual void Destroy(void*) override;
     static uint32_t Version() { return kDevelopmentVersion; }
 }

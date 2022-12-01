@@ -21,7 +21,7 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter
     bool install_to_ram = false;
     bool install_to_vram = true;
 
-    void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
 sregister_importer();

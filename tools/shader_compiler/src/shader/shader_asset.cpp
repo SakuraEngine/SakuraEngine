@@ -1,5 +1,5 @@
 #include <EASTL/array.h>
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "utils/log.hpp"
 #include "utils/make_zeroed.hpp"
 
@@ -23,7 +23,7 @@ ShaderSourceCode::~ShaderSourceCode() SKR_NOEXCEPT
     sakura_free(bytes);    
 }
 
-void* SShaderImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
+void* SShaderImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     skr_async_ram_destination_t ioDestination = {};
     const auto path = context->AddFileDependencyAndLoad(ioService, sourcePath.c_str(), ioDestination);

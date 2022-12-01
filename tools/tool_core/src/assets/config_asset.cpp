@@ -10,7 +10,7 @@
 #include "type/type_registry.h"
 #include "utils/log.hpp"
 #include "utils/defer.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "SkrToolCore/assets/config_asset.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -48,7 +48,7 @@ namespace skd
 {
 namespace asset
 {
-void* SJsonConfigImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
+void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     auto registry = GetConfigRegistry();
     const auto assetRecord = context->GetAssetRecord();

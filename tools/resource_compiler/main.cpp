@@ -16,7 +16,7 @@
 #include "platform/vfs.h"
 #include "utils/log.h"
 #include "utils/log.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "resource/resource_system.h"
 #include "resource/local_resource_registry.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-    project->ram_service = skr::io::RAMService::create(&ioServiceDesc);
+    project->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     InitializeResourceSystem(*project);
 
     skr::filesystem::recursive_directory_iterator iter(project->assetPath, ec);

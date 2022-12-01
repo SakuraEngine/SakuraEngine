@@ -31,7 +31,7 @@ SKR_ANIMTOOL_API SSkelGltfImporter : public skd::asset::SImporter
     sattr("no-default" : true)
     skr::string assetPath;
     virtual ~SSkelGltfImporter() = default;
-    virtual void* Import(skr::io::RAMService*, SCookContext * context) override;
+    virtual void* Import(skr_io_ram_service_t*, SCookContext * context) override;
     virtual void Destroy(void*) override;
     static uint32_t Version() { return kDevelopmentVersion; }
 }

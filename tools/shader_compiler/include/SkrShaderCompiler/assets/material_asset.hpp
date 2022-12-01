@@ -28,7 +28,7 @@ SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter
 {
     skr::string jsonPath;
 
-    void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
 sregister_importer();
@@ -44,7 +44,7 @@ SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter
     // stable hash for material paramters, can be used by PSO cache or other places.
     uint64_t identity[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    void* Import(skr::io::RAMService*, SCookContext* context) override { return nullptr; }
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override { return nullptr; }
     void Destroy(void* resource) override { return; }
 }
 sregister_importer();

@@ -2,7 +2,7 @@
 #include "utils/make_zeroed.hpp"
 #include "utils/threaded_service.h"
 #include "platform/memory.h"
-#include "cgpu/io.hpp"
+#include "cgpu/io.h"
 #include <EASTL/vector_map.h>
 #include <EASTL/string.h>
 #ifdef _WIN32
@@ -134,7 +134,7 @@ void RendererDeviceImpl::initialize(const Builder& builder)
     vram_service_desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     vram_service_desc.sleep_time = 1000 / 60;
     vram_service_desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-    vram_service = skr::io::VRAMService::create(&vram_service_desc);
+    vram_service = skr_io_vram_service_t::create(&vram_service_desc);
 
     aux_services.resize(builder.aux_thread_count);
     for (uint32_t i = 0; i < aux_services.size(); i++)
@@ -150,7 +150,7 @@ void RendererDeviceImpl::initialize(const Builder& builder)
 
 void RendererDeviceImpl::finalize()
 {
-    skr::io::VRAMService::destroy(vram_service);
+    skr_io_vram_service_t::destroy(vram_service);
 
     for (auto& swapchain : swapchains)
     {

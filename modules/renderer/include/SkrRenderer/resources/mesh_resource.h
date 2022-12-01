@@ -116,7 +116,9 @@ typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 #include "resource/resource_factory.h"
 #include "utils/io.h"
 
-namespace skr { namespace io { class VRAMService; } }
+struct skr_io_ram_service_t;
+struct skr_io_vram_service_t;
+struct skr_threaded_service_t;
 namespace skr sreflect
 {
 namespace resource sreflect
@@ -128,7 +130,7 @@ struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
         skr_vfs_t* vfs = nullptr;
         skr::filesystem::path dstorage_root;
         skr_io_ram_service_t* ram_service = nullptr;
-        skr::io::VRAMService* vram_service = nullptr;
+        skr_io_vram_service_t* vram_service = nullptr;
         SRenderDeviceId render_device = nullptr;
     };
 

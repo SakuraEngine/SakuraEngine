@@ -1,6 +1,6 @@
 #include <containers/string.hpp>
 #include "platform/vfs.h"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "io_service_util.hpp"
 
 // RAM Service
@@ -8,7 +8,7 @@ namespace skr
 {
 namespace io
 {
-class RAMServiceImpl final : public RAMService
+class RAMServiceImpl final : public skr_io_ram_service_t
 {
 public:
     struct Task : public TaskBase {
@@ -136,26 +136,6 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info,
     threaded_service.request_();
 }
 
-skr::io::RAMService* skr::io::RAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-{
-    auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time, desc->lockless);
-    service->threaded_service.create_(desc->sleep_mode);
-    service->threaded_service.sortMethod = desc->sort_method;
-    service->threaded_service.threadItem.pData = service;
-    service->threaded_service.threadItem.pFunc = &__ioThreadTask_RAM;
-    skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
-    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
-    return service;
-}
-
-void RAMService::destroy(RAMService* s) SKR_NOEXCEPT
-{
-    auto service = static_cast<skr::io::RAMServiceImpl*>(s);
-    s->drain();
-    service->threaded_service.destroy_();
-    SkrDelete(service);
-}
-
 bool skr::io::RAMServiceImpl::try_cancel(skr_async_request_t* request) SKR_NOEXCEPT
 {
     return tasks.try_cancel_(request);
@@ -188,3 +168,24 @@ void skr::io::RAMServiceImpl::run() SKR_NOEXCEPT
 
 } // namespace io
 } // namespace skr
+
+
+skr_io_ram_service_t* skr_io_ram_service_t::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+{
+    auto service = SkrNew<skr::io::RAMServiceImpl>(desc->sleep_time, desc->lockless);
+    service->threaded_service.create_(desc->sleep_mode);
+    service->threaded_service.sortMethod = desc->sort_method;
+    service->threaded_service.threadItem.pData = service;
+    service->threaded_service.threadItem.pFunc = &skr::io::__ioThreadTask_RAM;
+    skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
+    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    return service;
+}
+
+void skr_io_ram_service_t::destroy(skr_io_ram_service_t* s) SKR_NOEXCEPT
+{
+    auto service = static_cast<skr::io::RAMServiceImpl*>(s);
+    s->drain();
+    service->threaded_service.destroy_();
+    SkrDelete(service);
+}

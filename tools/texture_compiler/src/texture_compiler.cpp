@@ -1,6 +1,6 @@
 #include "SkrToolCore/project/project.hpp"
 #include "dxt_utils.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "utils/log.hpp"
 
 namespace skd
@@ -21,7 +21,7 @@ struct skr_uncompressed_render_texture_t
     skr_image_coder_id image_coder = nullptr;
 };
 
-void* STextureImporter::Import(skr::io::RAMService* ioService, SCookContext* context)
+void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     skr_async_ram_destination_t ioDestination = {};
     context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), ioDestination);

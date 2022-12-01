@@ -98,7 +98,7 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
     }
 }
 
-void* SSceneImporter::Import(skr::io::RAMService*, SCookContext* context)
+void* SSceneImporter::Import(skr_io_ram_service_t*, SCookContext* context)
 {
     dual_storage_t* world = nullptr;
     auto u8Path = context->AddFileDependency(assetPath.c_str()).u8string();

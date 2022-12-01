@@ -4,7 +4,8 @@
 
 struct skr_vfs_t;
 struct SkrToolCoreModule;
-namespace skr::io { class RAMService; }
+struct skr_io_ram_service_t;
+struct skr_io_vram_service_t;
 
 namespace skd sreflect
 {

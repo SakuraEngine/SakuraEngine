@@ -1,7 +1,7 @@
 #include "resource/resource_system.h"
 #include "platform/debug.h"
 #include "utils/defer.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "utils/log.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
