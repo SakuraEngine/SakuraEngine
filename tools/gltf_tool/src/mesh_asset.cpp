@@ -1,3 +1,4 @@
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "platform/guid.hpp"
 #include "utils/make_zeroed.hpp"
 #include "utils/defer.hpp"

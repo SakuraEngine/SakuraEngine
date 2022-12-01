@@ -1,3 +1,4 @@
+#include "task/task.hpp"
 #include "SkrGLTFTool/gltf_utils.hpp"
 #include "utils/make_zeroed.hpp"
 #include "SkrGLTFTool/mesh_asset.hpp"

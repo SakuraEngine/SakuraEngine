@@ -4,7 +4,7 @@
 #include "containers/hashmap.hpp"
 #include "SkrUsdTool/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrToolCore/asset/cook_system.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
 #ifndef __meta__
     #include "SkrUsdTool/scene_asset.generated.h"
 #endif

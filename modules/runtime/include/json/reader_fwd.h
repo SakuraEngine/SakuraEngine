@@ -67,6 +67,9 @@ enum error_code
 template <class T, class = void>
 struct ReadHelper;
 
+template <class T>
+error_code Read(skr::json::value_t&& json, T& value);
+
 } // namespace json
 } // namespace skr
 

@@ -1,3 +1,4 @@
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/animation_asset.h"
 #include "SkrAnim/ozz/animation.h"
 #include "SkrAnimTool/ozz/raw_animation.h"

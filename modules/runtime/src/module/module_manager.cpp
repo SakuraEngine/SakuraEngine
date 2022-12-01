@@ -1,9 +1,9 @@
 #include "module/module_manager.hpp"
 #include "module/subsystem.hpp"
 #include "platform/memory.h"
-#include "containers/hashmap.hpp"
 #include "platform/shared_library.hpp"
 #include "utils/log.h"
+#include "containers/hashmap.hpp"
 #include "json/reader.h"
 #include "platform/filesystem.hpp"
 

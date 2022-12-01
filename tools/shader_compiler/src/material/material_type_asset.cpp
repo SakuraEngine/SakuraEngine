@@ -1,3 +1,4 @@
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrShaderCompiler/assets/material_asset.hpp"
 #include "utils/io.h"
 #include "SkrToolCore/project/project.hpp"

@@ -1,7 +1,8 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
 #include "resource/resource_header.hpp"
-#include "SkrToolCore/asset/cook_system.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
+#include "json/reader_fwd.h"
 #ifndef __meta__
     #include "SkrToolCore/asset/importer.generated.h"
 #endif
@@ -28,12 +29,12 @@ TOOL_CORE_API SImporter
 };
 
 struct TOOL_CORE_API SImporterTypeInfo {
-    SImporter* (*Load)(const SAssetRecord* record, class simdjson::ondemand::value&& object);
+    SImporter* (*Load)(const SAssetRecord* record, skr::json::value_t&& object);
     uint32_t (*Version)();
 };
 
 struct SImporterRegistry {
-    virtual SImporter* LoadImporter(const SAssetRecord* record, class simdjson::ondemand::value&& object, skr_guid_t* pGuid = nullptr) = 0;
+    virtual SImporter* LoadImporter(const SAssetRecord* record, skr::json::value_t&& object, skr_guid_t* pGuid = nullptr) = 0;
     virtual uint32_t GetImporterVersion(skr_guid_t type) = 0;
     virtual void RegisterImporter(skr_guid_t type, SImporterTypeInfo info) = 0;
 };
@@ -51,7 +52,7 @@ void RegisterImporter(skr_guid_t guid)
 {
     auto registry = GetImporterRegistry();
     auto loader = 
-        +[](const SAssetRecord* record, class simdjson::ondemand::value&& object) -> SImporter*
+        +[](const SAssetRecord* record, skr::json::value_t&& object) -> SImporter*
         {
             auto importer = SkrNew<T>();
             skr::json::Read(std::move(object), *importer);

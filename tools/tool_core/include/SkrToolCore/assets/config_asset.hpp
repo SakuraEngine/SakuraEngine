@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrToolCore/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
+#include "utils/types.h"
 #ifndef __meta__
 #include "SkrToolCore/assets/config_asset.generated.h"
 #endif
@@ -10,7 +11,7 @@ namespace skd sreflect
 namespace asset sreflect
 {
 struct TOOL_CORE_API SConfigTypeInfo {
-    void (*Import)(simdjson::ondemand::value&& json, void* address);
+    void (*Import)(skr::json::value_t&& json, void* address);
 };
 
 struct TOOL_CORE_API SConfigRegistry {
@@ -48,7 +49,7 @@ template<class T>
 inline static void RegisterConfig(skr_guid_t guid)
 {
     SConfigTypeInfo typeInfo {
-        +[](simdjson::ondemand::value&& json, void* address)
+        +[](skr::json::value_t&& json, void* address)
         {
             skr::json::Read(std::move(json), *static_cast<T*>(address));
         }

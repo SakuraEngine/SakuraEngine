@@ -1,3 +1,4 @@
+// TODO: virtualize this file
 #pragma once
 #include <EASTL/fixed_vector.h>
 #include "ecs/entities.hpp"

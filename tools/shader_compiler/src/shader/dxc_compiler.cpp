@@ -15,6 +15,8 @@
 #endif
 #include "dxc/dxcapi.h"
 
+#include "tracy/Tracy.hpp"
+
 // helper
 namespace skd
 {

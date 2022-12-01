@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrAnim/resources/skin_resource.h"
 #include "SkrRenderer/primitive_draw.h"
+#include "SkrAnim/ozz/base/maths/simd_math.h"
 #ifndef __meta__
     #include "SkrAnim/components/skin_component.generated.h"
 #endif

@@ -1,3 +1,4 @@
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/skin_asset.h"
 #include "SkrGLTFTool/gltf_utils.hpp"
 #include "SkrAnim/resources/skin_resource.h"
