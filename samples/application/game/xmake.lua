@@ -9,9 +9,7 @@ shared_module("GameRuntime", "GAME_RUNTIME", engine_version)
     public_dependency("SkrImGui", engine_version)
     public_dependency("SkrInputSystem", engine_version)
     public_dependency("SkrAnim", engine_version)
-if(not has_config("shipping_one_archive")) then
     public_dependency("SkrTweak", engine_version)
-end
     add_includedirs("modules/game_runtime/include/", { public=true })
     add_files("modules/game_runtime/src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
