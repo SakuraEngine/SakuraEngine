@@ -2,16 +2,16 @@
 #include "platform/shared_library.hpp"
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
-    #include "cgpu/backend/vulkan/cgpu_vulkan.h"
+    //#include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #endif
 #ifdef CGPU_USE_D3D12
-    #include "cgpu/backend/d3d12/cgpu_d3d12.h"
+    // #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #endif
 #ifdef CGPU_USE_METAL
-    #include "cgpu/backend/metal/cgpu_metal.h"
+    //#include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #include "common_utils.h"
-#include <EASTL/string_map.h>
+#include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
 
 // Runtime Table
@@ -78,9 +78,9 @@ struct CGPURuntimeTable {
     }
     eastl::vector<CreatedQueue> created_queues;
     // TODO: replace with skr::hash_map
-    eastl::string_map<void*> custom_data_map;
-    eastl::string_map<eastl::function<void()>> custom_sweep_callbacks;
-    eastl::string_map<eastl::function<void()>> custom_early_sweep_callbacks;
+    skr::flat_hash_map<skr::string, void*, skr::hash<skr::string>> custom_data_map;
+    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::hash<skr::string>> custom_sweep_callbacks;
+    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::hash<skr::string>> custom_early_sweep_callbacks;
 };
 
 struct CGPURuntimeTable* cgpu_create_runtime_table()

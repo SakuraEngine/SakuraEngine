@@ -1,8 +1,13 @@
 #pragma once
+#ifdef _WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+#endif
 #include "cgpu/api.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
-#include "cgpu/backend/vulkan/vk_mem_alloc.h"
+#include "internal/vk_mem_alloc.h"
 #include "../common/common_utils.h"
 #include "cgpu/flags.h"
 

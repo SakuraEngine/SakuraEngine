@@ -7,7 +7,6 @@
 #include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "platform/thread.h"
-#include <EASTL/hash_set.h>
 #include <platform/filesystem.hpp>
 #include "containers/hashmap.hpp"
 #include "SkrRenderer/render_mesh.h"

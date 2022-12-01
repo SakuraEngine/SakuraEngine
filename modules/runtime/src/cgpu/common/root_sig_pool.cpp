@@ -1,8 +1,7 @@
 #include "common_utils.h"
-#include <EASTL/unordered_map.h>
-#include <EASTL/unordered_set.h>
 #include <EASTL/vector.h>
 #include <containers/string.hpp>
+#include <containers/hashmap.hpp>
 #include "platform/atomic.h"
 
 struct RSCharacteristic
@@ -177,9 +176,9 @@ public:
 protected:
     const skr::string name;
     // TODO: replace with skr::hash_map
-    eastl::unordered_map<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
-    eastl::unordered_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
-    eastl::unordered_map<CGPURootSignatureId, uint32_t> counterMap;
+    skr::flat_hash_map<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
+    skr::flat_hash_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
+    skr::flat_hash_map<CGPURootSignatureId, uint32_t> counterMap;
 };
 
 CGPURootSignaturePoolId CGPUUtil_CreateRootSignaturePool(const CGPURootSignaturePoolDescriptor* desc)

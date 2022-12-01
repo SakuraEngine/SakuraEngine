@@ -1,9 +1,9 @@
 ﻿#include "cgpu/api.h"
 #include "cgpu/flags.h"
 #include "common_utils.h"
-#include <EASTL/vector.h>
-#include <EASTL/set.h>
 #include <EASTL/sort.h>
+#include <EASTL/vector.h>
+#include <containers/btree.hpp>
 
 extern "C" {
 bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)
@@ -133,7 +133,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
             RS->pipeline_type = CGPU_PIPELINE_TYPE_GRAPHICS;
     }
     // Merge
-    eastl::set<uint32_t> valid_sets;
+    skr::btree_set<uint32_t> valid_sets;
     eastl::vector<CGPUShaderResource> RST_resources;
     RST_resources.reserve(all_resources.size());
     for (auto&& shader_resource : all_resources)
