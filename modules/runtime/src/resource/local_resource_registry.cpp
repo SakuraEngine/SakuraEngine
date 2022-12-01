@@ -22,8 +22,8 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     auto headerUri = headerPath.u8string();
     // TODO: 检查文件存在？
     auto file = skr_vfs_fopen(vfs, headerUri.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    SKR_DEFER({ skr_vfs_fclose(file); });
     if (!file) return false;
+    SKR_DEFER({ skr_vfs_fclose(file); });
     uint8_t buffer[sizeof(skr_resource_header_t)];
     uint32_t _fs_length = (uint32_t)skr_vfs_fsize(file);
     if(skr_vfs_fread(file, buffer, 0, _fs_length) != _fs_length)
