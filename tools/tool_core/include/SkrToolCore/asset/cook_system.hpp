@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrToolCore/fwd_types.hpp"
+#include "cooker.hpp"
 #include "containers/vector.hpp"
 #include "containers/span.hpp"
 #include "containers/hashmap.hpp"
@@ -20,14 +20,6 @@ struct SAssetRecord {
     skr_guid_t type;
     skr::filesystem::path path;
     simdjson::padded_string meta;
-};
-
-struct TOOL_CORE_API SCooker {
-    static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
-    virtual ~SCooker() {}
-    virtual uint32_t Version() = 0;
-    virtual bool Cook(SCookContext* ctx) = 0;
-    SCookSystem* system;
 };
 
 struct TOOL_CORE_API SCookContext { // context per job
@@ -182,14 +174,5 @@ protected:
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     SMutex assetMutex;
 };
-TOOL_CORE_API SCookSystem* GetCookSystem();
-#define sregister_cooker(literal) sstatic_ctor(skd::asset::RegisterCooker<$T>(skr::guid::make_guid_unsafe(literal)))
-
-template<class T>
-void RegisterCooker(skr_guid_t guid)
-{
-    static T instance;
-    GetCookSystem()->RegisterCooker(guid, &instance);
-}
 }
 }

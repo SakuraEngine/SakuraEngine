@@ -1,3 +1,4 @@
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "dxt_utils.hpp"
 #include "utils/io.h"

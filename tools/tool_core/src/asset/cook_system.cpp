@@ -63,6 +63,11 @@ SCookSystem* GetCookSystem()
     return &SkrToolCoreModule::cook_system;
 }
 
+void RegisterCookerToSystem(SCookSystem* system, skr_guid_t type, SCooker* cooker)
+{
+    system->RegisterCooker(type, cooker);
+}
+
 void SCookSystem::WaitForAll()
 {
     mainCounter.wait(true);

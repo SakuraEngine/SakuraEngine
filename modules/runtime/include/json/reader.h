@@ -31,8 +31,6 @@ struct error_code_info {
 RUNTIME_API const char* error_message(error_code err) noexcept;
 RUNTIME_API void set_error_message(error_code err) noexcept;
 
-template <class T>
-error_code Read(simdjson::ondemand::value&& json, T& value);
 template <>
 struct RUNTIME_API ReadHelper<bool> {
     static error_code Read(simdjson::ondemand::value&& json, bool& value);

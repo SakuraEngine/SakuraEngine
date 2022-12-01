@@ -3,6 +3,26 @@
 #include "platform/guid.hpp"
 #include "platform/memory.h"
 #include "type/type.hpp"
+#if defined __has_include
+    #if  __has_include ("binary/reader_fwd.h")
+    #include "binary/reader.h"
+    #endif
+    #if  __has_include ("binary/writer_fwd.h")
+    #include "binary/writer.h"
+    #endif
+    #if  __has_include ("json/reader_fwd.h")
+    #include "json/reader.h"
+    #endif
+    #if  __has_include ("json/writer_fwd.h")
+    #include "json/writer.h"
+    #endif
+#else
+    #include "binary/reader.h"
+    #include "binary/writer.h"
+    #include "json/reader.h"
+    #include "json/writer.h"
+#endif
+
 
 %for record in generator.filter_records(db.records):
 static struct StaticConstructor${record.id}Helper
