@@ -59,11 +59,11 @@ struct RUNTIME_API SResourceRequest {
     friend struct SResourceSystemImpl;
 public:
     skr_guid_t GetGuid() const;
-    gsl::span<const uint8_t> GetData() const;
+    skr::span<const uint8_t> GetData() const;
 #ifdef SKR_RESOURCE_DEV_MODE
-    gsl::span<const uint8_t> GetArtifactsData() const;
+    skr::span<const uint8_t> GetArtifactsData() const;
 #endif
-    gsl::span<const skr_guid_t> GetDependencies() const;
+    skr::span<const skr_guid_t> GetDependencies() const;
 
     void UpdateLoad(bool requestInstall);
     void UpdateUnload();

@@ -2,11 +2,12 @@
 #include "json/reader_fwd.h"
 
 #if defined(__cplusplus)
-    #include <containers/vector.hpp>
+    #define SIMDJSON_AVX512_ALLOWED 0
     #include "simdjson.h"
     #include "containers/hashmap.hpp"
     #include "containers/variant.hpp"
     #include "containers/string.hpp"
+    #include "containers/vector.hpp"
     #include "type/type_id.hpp"
     #include "platform/guid.hpp"
     #include "type/type_helper.hpp"

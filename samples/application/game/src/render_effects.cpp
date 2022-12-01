@@ -151,7 +151,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                                 else
                                     anim->views.push_back(vbv);
                             }
-                            prim.views = gsl::span(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
+                            prim.views = skr::span(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
                         }
                     }
                     const auto vertex_size = anim->buffers[j].size;

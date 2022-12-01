@@ -109,7 +109,7 @@ size_t skr_type_t::Size() const
         case SKR_TYPE_CATEGORY_DYNARR:
             return sizeof(eastl::vector<char>);
         case SKR_TYPE_CATEGORY_ARRV:
-            return sizeof(gsl::span<char>);
+            return sizeof(skr::span<char>);
         case SKR_TYPE_CATEGORY_OBJ:
             return ((RecordType*)this)->size;
         case SKR_TYPE_CATEGORY_ENUM:
@@ -147,7 +147,7 @@ size_t skr_type_t::Align() const
         case SKR_TYPE_CATEGORY_DYNARR:
             return alignof(eastl::vector<char>);
         case SKR_TYPE_CATEGORY_ARRV:
-            return alignof(gsl::span<char>);
+            return alignof(skr::span<char>);
         case SKR_TYPE_CATEGORY_OBJ:
             return ((RecordType*)this)->align;
         case SKR_TYPE_CATEGORY_ENUM:
@@ -214,7 +214,7 @@ const char* skr_type_t::Name() const
         case SKR_TYPE_CATEGORY_ARRV: {
             auto& arr = (ArrayViewType&)(*this);
             if (arr.name.empty())
-                arr.name = skr::format("gsl::span<{}>", arr.elementType->Name());
+                arr.name = skr::format("skr::span<{}>", arr.elementType->Name());
             return arr.name.c_str();
         }
         case SKR_TYPE_CATEGORY_OBJ:
@@ -308,7 +308,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
 {
     using namespace skr::type;
     auto stype = srcType->type;
-    gsl::span<size_t> acceptIndices;
+    skr::span<size_t> acceptIndices;
     if (Same(srcType))
         return true;
     if (srcType->type == SKR_TYPE_CATEGORY_REF)
@@ -812,7 +812,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     auto& sarr = (const ArrayViewType&)(*srcType);
                     auto& selement = sarr.elementType;
                     auto ssize = selement->Size();
-                    auto sv = *(gsl::span<char>*)src;
+                    auto sv = *(skr::span<char>*)src;
                     auto snum = sv.size();
                     if (num != snum)
                         arr.operations.resize(dst, snum);
@@ -829,7 +829,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_ARRV: {
-            auto& dstV = *(gsl::span<char>*)dst;
+            auto& dstV = *(skr::span<char>*)dst;
             switch (srcType->type)
             {
                 case SKR_TYPE_CATEGORY_ARR:
@@ -843,7 +843,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     break;
                 }
                 case SKR_TYPE_CATEGORY_ARRV:
-                    dstV = *(gsl::span<char>*)src;
+                    dstV = *(skr::span<char>*)src;
                     break;
                 default:
                     break;
@@ -1099,7 +1099,7 @@ size_t skr_type_t::Hash(const void* dst, size_t base) const
             auto& arr = (const ArrayViewType&)(*this);
             auto& element = arr.elementType;
             auto size = element->Size();
-            auto v = *(gsl::span<char>*)dst;
+            auto v = *(skr::span<char>*)dst;
             auto n = v.size();
             auto d = v.data();
             for (int i = 0; i < n; ++i)
@@ -1228,7 +1228,7 @@ void skr_type_t::Copy(void* dst, const void* src) const
             arr.operations.copy(dst, src);
         }
         case SKR_TYPE_CATEGORY_ARRV:
-            CopyImpl<gsl::span<char>>(dst, src);
+            CopyImpl<skr::span<char>>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
@@ -1295,7 +1295,7 @@ void skr_type_t::Move(void* dst, void* src) const
             break;
         }
         case SKR_TYPE_CATEGORY_ARRV:
-            MoveImpl<gsl::span<char>>(dst, src);
+            MoveImpl<skr::span<char>>(dst, src);
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
@@ -1592,7 +1592,7 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
             break;
         }
         case SKR_TYPE_CATEGORY_ARRV:
-            // DeserializeImpl<gsl::span<char>>(dst, reader);
+            // DeserializeImpl<skr::span<char>>(dst, reader);
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
@@ -1691,7 +1691,7 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             return arr.operations.DeserializeText(dst, std::move(reader));
         }
         case SKR_TYPE_CATEGORY_ARRV:
-            // DeserializeTextImpl<gsl::span<char>>(dst, std::move(reader));
+            // DeserializeTextImpl<skr::span<char>>(dst, std::move(reader));
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);

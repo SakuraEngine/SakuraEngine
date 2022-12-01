@@ -8,7 +8,7 @@
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
 #include "utils/log.hpp"
-#include "simdjson.h"
+#include "json/reader.h"
 #include "SkrAnim/resources/skeleton_resource.h"
 
 namespace skd::asset

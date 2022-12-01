@@ -295,7 +295,7 @@ eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURoot
     return { UINT32_MAX, UINT32_MAX };
 }
 
-gsl::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
+skr::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
     RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
 {
     ZoneScopedN("UpdateBindings");

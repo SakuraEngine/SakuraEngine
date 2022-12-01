@@ -1,9 +1,9 @@
 #pragma once
-#include <gsl/span>
+#include <EASTL/span.h>
 
 namespace skr
 {
-using gsl::span;
+using eastl::span;
 }
 
 #include "EASTL/vector.h"

@@ -53,7 +53,7 @@ target("SkrRoot")
     end
     add_rules("utils.install-libs", { libnames =libs_to_install })
     -- core deps
-    add_deps("simdjson", "gsl", "fmt", "boost", "gsl", {public = true})
+    add_deps("simdjson", "fmt", "boost", {public = true})
     -- unzip & link sdks
     before_build(function(target)
         import("core.base.option")
