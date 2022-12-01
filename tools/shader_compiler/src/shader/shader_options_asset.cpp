@@ -8,6 +8,7 @@
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
+#include "json/reader.h"
 
 #include "tracy/Tracy.hpp"
 

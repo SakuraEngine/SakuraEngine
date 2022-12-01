@@ -12,46 +12,17 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 
-namespace skd::asset
-{
-struct SConfigRegistryImpl : public SConfigRegistry
-{
-    void RegisterConfigType(skr_guid_t type, const SConfigTypeInfo& info) override
-    {
-        typeInfos.insert({type, info});
-    }
-    const SConfigTypeInfo* FindConfigType(skr_guid_t type) override
-    {
-        auto it = typeInfos.find(type);
-        if (it != typeInfos.end())
-        {
-            return &it->second;
-        }
-        return nullptr;
-    }
-
-    skr::flat_hash_map<skr_guid_t, SConfigTypeInfo, skr::guid::hash> typeInfos;
-};
-
-TOOL_CORE_API SConfigRegistry* GetConfigRegistry()
-{
-    static SConfigRegistryImpl registry;
-    return &registry;
-}
-} // namespace skd::asset
-
 namespace skd
 {
 namespace asset
 {
 void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
-    auto registry = GetConfigRegistry();
     const auto assetRecord = context->GetAssetRecord();
-    const auto typeInfo = registry->FindConfigType(configType);
-    if (typeInfo == nullptr)
+    auto type = skr_get_type(&configType);
+    if (type == nullptr)
     {
-        SKR_LOG_ERROR("import resource %s failed, type is not registered as config", assetRecord->path.u8string().c_str());
+        SKR_LOG_ERROR("import resource %s failed, rtti is not load", assetRecord->path.u8string().c_str());
         return nullptr;
     }
 
@@ -71,7 +42,7 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     //skr::resource::SConfigFactory::NewConfig(configType);
     skr_config_resource_t* resource = SkrNew<skr_config_resource_t>();
     resource->SetType(configType);
-    typeInfo->Import(doc.get_value().value_unsafe(), resource->configData);
+    type->DeserializeText(resource->configData, doc.get_value().value_unsafe());
     return resource; //导入具体数据
 }
 

@@ -7,6 +7,8 @@
 #include "SkrGLTFTool/mesh_asset.hpp"
 #include "SkrGLTFTool/gltf_utils.hpp"
 #include "SkrToolCore/project/project.hpp"
+#include "SkrToolCore/asset/json_utils.hpp"
+#include "SkrToolCore/asset/json_utils.hpp"
 
 void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context) 
 {
@@ -31,7 +33,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
 { 
     const auto outputPath = ctx->GetOutputPath();
     const auto assetRecord = ctx->GetAssetRecord();
-    auto cfg = ctx->Config<SMeshCookConfig>();
+    auto cfg = LoadConfig<SMeshCookConfig>(ctx);
     if(cfg.vertexType == skr_guid_t{})
     {
         SKR_LOG_ERROR("MeshCooker: VertexType is not specified for asset %s!", ctx->GetAssetPath().c_str());

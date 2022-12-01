@@ -2,6 +2,7 @@
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
+#include "platform/guid.hpp"
 
 #ifndef __meta__
 #include "SkrShaderCompiler/assets/material_asset.generated.h"

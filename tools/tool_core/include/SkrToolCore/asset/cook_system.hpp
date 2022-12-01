@@ -7,8 +7,10 @@
 #include "utils/parallel_for.hpp"
 #include "utils/lazy.hpp"
 #include "platform/filesystem.hpp"
-#include "json/reader.h"
+#include "json/reader_fwd.h"
+#include "simdjson/padded_string.h"
 #include "utils/log.hpp"
+#include "platform/guid.hpp"
 
 namespace skd sreflect
 {
@@ -49,18 +51,6 @@ public:
 
     template <class T>
     void Destroy(T* ptr) { if (ptr) _Destroy(ptr); }
-
-    template <class T>
-    T Config()
-    {
-        simdjson::ondemand::parser parser;
-        auto doc = parser.iterate(GetAssetRecord()->meta);
-        auto doc_value = doc.get_value().value_unsafe();
-        
-        T settings;
-        skr::json::Read(std::move(doc_value), settings);
-        return settings;
-    }
 
     template <class T>
     bool Save(T& resource) 

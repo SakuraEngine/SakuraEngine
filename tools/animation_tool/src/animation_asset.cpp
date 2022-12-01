@@ -11,9 +11,9 @@
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
 #include "utils/log.hpp"
-#include "simdjson.h"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
+#include "SkrToolCore/asset/json_utils.hpp"
 
 namespace skd::asset
 {
@@ -21,7 +21,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
 {
     using namespace ozz::animation::offline;
     //-----load config
-    auto settings = ctx->Config<SAnimCookSettings>();
+    auto settings = LoadConfig<SAnimCookSettings>(ctx);
     //-----emit static dependencies
     if(settings.skeletonAsset.get_serialized() == skr_guid_t{})
     {
