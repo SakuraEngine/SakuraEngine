@@ -85,7 +85,7 @@ struct WriteHelper<const skr::span<T>&> {
     static int Write(skr_binary_writer_t* writer, const skr::span<T>& span)
     {
         for (const T& value : span) {
-            if(auto result = skr::binary::Archive()(writer, value); result != 0) {
+            if(auto result = skr::binary::Archive(writer, value); result != 0) {
                 return result;
             }
         }
