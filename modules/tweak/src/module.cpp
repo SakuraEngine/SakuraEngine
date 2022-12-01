@@ -80,7 +80,7 @@ public:
                 eastl::string_view sv = {line.c_str(), line.size()};
                 
                 auto pos = sv.find("TWEAK");
-                while(pos != eastl::string_view::npos)
+                while(pos != eastl::string_view::npos && tweak_index < tweak_file[tweak_line_index].tweaks.size())
                 {
                     auto end = sv.find(')', pos);
                     SKR_ASSERT(end != eastl::string_view::npos);
