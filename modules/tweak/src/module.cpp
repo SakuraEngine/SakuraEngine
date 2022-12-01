@@ -1,20 +1,21 @@
 #include "SkrTweak/module.h"
-#include "containers/hashmap.hpp"
+#include <containers/variant.hpp>
+#include <containers/string.hpp>
+
+struct skr_tweak_value_t
+{
+    skr::variant<float, int, bool, skr::string> value;
+};
+
+#ifdef TWEAK_USABLE
+#include <fstream>
 #include "efsw/efsw.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/thread.h"
 #include "utils/hash.h"
 #include "utils/log.h"
+#include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
-#include <string>
-#include <fstream>
-
-struct skr_tweak_value_t
-{
-    std::variant<float, int, bool, eastl::string> value;
-};
-
-#ifdef TWEAK_USABLE
 
 class SkrTweakModule : public skr::IDynamicModule, public efsw::FileWatchListener
 {
