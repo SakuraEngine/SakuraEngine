@@ -14,6 +14,8 @@ struct skr_tweak_value_t
     std::variant<float, int, bool, eastl::string> value;
 };
 
+#ifdef TWEAK_USABLE
+
 class SkrTweakModule : public skr::IDynamicModule, public efsw::FileWatchListener
 {
 public:
@@ -191,3 +193,37 @@ const char* skr_get_tweak(skr_tweak_string_t* tweak)
 {
     return std::get<eastl::string>(((skr_tweak_value_t*)tweak)->value).c_str();
 }
+#else
+SKR_TWEAK_API skr_tweak_int_t* skr_tweak_value(int value, const char* str, const char* fileName, int lineNumber)
+{
+    return nullptr;
+}
+SKR_TWEAK_API int skr_get_tweak(skr_tweak_int_t* tweak)
+{
+    return INT_MAX;
+}
+SKR_TWEAK_API skr_tweak_float_t* skr_tweak_value(float value, const char* str, const char* fileName, int lineNumber)
+{
+    return nullptr;
+}
+SKR_TWEAK_API float skr_get_tweak(skr_tweak_float_t* tweak)
+{
+    return FLT_MAX;
+}
+SKR_TWEAK_API skr_tweak_bool_t* skr_tweak_value(bool value, const char* str, const char* fileName, int lineNumber)
+{
+    return nullptr;
+}
+SKR_TWEAK_API bool skr_get_tweak(skr_tweak_bool_t* tweak)
+{
+    return false;
+}
+SKR_TWEAK_API skr_tweak_string_t* skr_tweak_value(const char* value, const char* str, const char* fileName, int lineNumber)
+{
+    return nullptr
+}
+SKR_TWEAK_API const char* skr_get_tweak(skr_tweak_string_t* tweak)
+{
+    return nullptr;
+}
+#endif
