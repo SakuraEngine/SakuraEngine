@@ -7,7 +7,7 @@
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
 #include "containers/hashmap.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 
 #include "tracy/Tracy.hpp"
 

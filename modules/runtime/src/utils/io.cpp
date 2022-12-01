@@ -1,6 +1,4 @@
 #include "utils/io.h"
-#include "utils/io.hpp"
-
 
 bool skr_async_request_t::is_ready() const SKR_NOEXCEPT
 {

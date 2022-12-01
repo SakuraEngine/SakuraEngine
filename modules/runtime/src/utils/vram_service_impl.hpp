@@ -1,5 +1,5 @@
 #pragma once
-#include "cgpu/io.hpp"
+#include "cgpu/io.h"
 #include "utils/make_zeroed.hpp"
 #include "io_service_util.hpp"
 #include <containers/string.hpp>
@@ -20,7 +20,7 @@ enum EVramTaskStep
     kStepFinished
 };
 
-class VRAMServiceImpl final : public VRAMService
+class VRAMServiceImpl final : public skr_io_vram_service_t
 {
 public:
     struct TaskBatch;

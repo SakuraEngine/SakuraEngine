@@ -6,8 +6,8 @@
 #ifdef __cplusplus
     #include "module/module_manager.hpp"
     #include "SkrRenderGraph/frontend/render_graph.hpp"
-    #include "utils/io.hpp"
-    #include "cgpu/io.hpp"
+    #include "utils/io.h"
+    #include "cgpu/io.h"
 
 struct dual_storage_t;
 namespace skr::resource

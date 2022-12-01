@@ -8,7 +8,7 @@ void SAnimGltfImporter::Destroy(void* data)
     SkrDelete((RawAnimation*)data);
 }
 
-void* SAnimGltfImporter::Import(skr::io::RAMService*, SCookContext* context)
+void* SAnimGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)
 {
     GltfImporter impl;
     ozz::animation::offline::OzzImporter& impoter = impl;

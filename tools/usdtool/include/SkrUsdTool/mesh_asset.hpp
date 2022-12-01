@@ -15,7 +15,7 @@ SKRUSDTOOL_API SUSDMeshImporter final : public SImporter
 {
     // the SDF path of Mesh asset
     skr::string path;
-    void* Import(skr::io::RAMService*, SCookContext* context) override { SKR_UNIMPLEMENTED_FUNCTION(); return nullptr; }
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override { SKR_UNIMPLEMENTED_FUNCTION(); return nullptr; }
     void Destroy(void *) override { SKR_UNIMPLEMENTED_FUNCTION(); }
 }
 sregister_importer();

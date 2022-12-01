@@ -10,7 +10,7 @@
 #include "platform/thread.h"
 #include "utils/defer.hpp"
 #include "utils/log.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 
 #include "json/reader.h"
 #include "json/writer.h"
@@ -34,7 +34,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
                 desc.lockless = true;
                 desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_NEVER;
                 desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
-                ioService = skr::io::RAMService::create(&desc);
+                ioService = skr_io_ram_service_t::create(&desc);
             }
         }
     }
@@ -45,7 +45,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
         for (auto ioService : cook_system.ioServices)
         {
             if (ioService)
-                skr::io::RAMService::destroy(ioService);
+                skr_io_ram_service_t::destroy(ioService);
         }
 
         skr_destroy_mutex(&cook_system.assetMutex);
@@ -75,7 +75,7 @@ bool SCookSystem::AllCompleted() const
 }
 
 #include <atomic>
-skr::io::RAMService* SCookSystem::getIOService()
+skr_io_ram_service_t* SCookSystem::getIOService()
 {
     SMutexLock lock(ioMutex);
     static std::atomic_uint32_t cursor = 0;
@@ -469,7 +469,7 @@ skr::filesystem::path SCookContext::AddFileDependency(const skr::filesystem::pat
     return record->path.parent_path() / inPath;
 }
 
-skr::filesystem::path SCookContext::AddFileDependencyAndLoad(skr::io::RAMService* ioService, const skr::filesystem::path& path,
+skr::filesystem::path SCookContext::AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path,
     skr_async_ram_destination_t& destination)
 {
     auto outPath = AddFileDependency(path.c_str());

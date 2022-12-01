@@ -100,8 +100,44 @@ typedef struct skr_ram_io_t {
 } skr_ram_io_t;
 
 #ifdef __cplusplus
-namespace skr { namespace io { class RAMService; } }
-using skr_io_ram_service_t = skr::io::RAMService;
+struct skr_vfs_t;
+struct RUNTIME_API skr_io_ram_service_t
+{
+public:
+    [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
+
+    // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
+    // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
+    virtual void request(skr_vfs_t*, const skr_ram_io_t* info, skr_async_request_t* async_request, skr_async_ram_destination_t* dst) SKR_NOEXCEPT = 0;
+
+    // try to cancel an enqueued request at **this** thread
+    // not available (returns always false) under lockless mode
+    // returns false if the request is under LOADING status
+    virtual bool try_cancel(skr_async_request_t* request) SKR_NOEXCEPT = 0;
+
+    // emplace a cancel **command** to ioService thread
+    // it's recommended to use this under lockless mode
+    virtual void defer_cancel(skr_async_request_t* request) SKR_NOEXCEPT = 0;
+
+    // stop service and hang up underground thread
+    virtual void stop(bool wait_drain = false) SKR_NOEXCEPT = 0;
+
+    // start & run service
+    virtual void run() SKR_NOEXCEPT = 0;
+
+    // block & finish up all requests
+    virtual void drain() SKR_NOEXCEPT = 0;
+
+    // set sleep time when io queue is detected to be idle
+    virtual void set_sleep_time(uint32_t time) SKR_NOEXCEPT = 0;
+
+    // get service status (sleeping or running)
+    virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
+
+    virtual ~skr_io_ram_service_t() SKR_NOEXCEPT = default;
+    skr_io_ram_service_t() SKR_NOEXCEPT = default;
+};
 #else
 typedef struct skr_io_ram_service_t skr_io_ram_service_t;
 #endif

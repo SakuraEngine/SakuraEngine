@@ -831,7 +831,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info
     threaded_service.request_();
 }
 
-skr::io::VRAMService* skr::io::VRAMService::create(const skr_vram_io_service_desc_t* desc) SKR_NOEXCEPT
+skr_io_vram_service_t* skr_io_vram_service_t::create(const skr_vram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
     auto service = SkrNew<skr::io::VRAMServiceImpl>(desc->sleep_time, desc->lockless);
     service->threaded_service.create_(desc->sleep_mode);
@@ -844,7 +844,7 @@ skr::io::VRAMService* skr::io::VRAMService::create(const skr_vram_io_service_des
     return service;
 }
 
-void skr::io::VRAMService::destroy(VRAMService* s) SKR_NOEXCEPT
+void skr_io_vram_service_t::destroy(skr_io_vram_service_t* s) SKR_NOEXCEPT
 {
     auto service = static_cast<skr::io::VRAMServiceImpl*>(s);
     s->drain();

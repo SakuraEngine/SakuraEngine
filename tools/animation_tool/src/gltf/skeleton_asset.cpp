@@ -8,7 +8,7 @@ void SSkelGltfImporter::Destroy(void* data)
     SkrDelete((RawSkeleton*)data);
 }
 
-void* SSkelGltfImporter::Import(skr::io::RAMService*, SCookContext* context)
+void* SSkelGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)
 {
     using namespace ozz::animation::offline;
     GltfImporter impl;

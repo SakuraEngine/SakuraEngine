@@ -78,7 +78,7 @@ class SGameModule : public skr::IDynamicModule
     skr_vfs_t* resource_vfs = nullptr;
     skr_vfs_t* tex_resource_vfs = nullptr;
     skr_vfs_t* shader_bytes_vfs = nullptr;
-    skr::io::RAMService* ram_service = nullptr;
+    skr_io_ram_service_t* ram_service = nullptr;
     skr::resource::SLocalResourceRegistry* registry;
 
     struct dual_storage_t* game_world = nullptr;
@@ -106,7 +106,7 @@ void SGameModule::installResourceFactories()
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-    ram_service = skr::io::RAMService::create(&ioServiceDesc);
+    ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
@@ -228,7 +228,7 @@ void SGameModule::uninstallResourceFactories()
     skr::resource::GetResourceSystem()->Shutdown();
     SkrDelete(registry);
 
-    skr::io::RAMService::destroy(ram_service);
+    skr_io_ram_service_t::destroy(ram_service);
     skr_free_vfs(resource_vfs);
     skr_free_vfs(tex_resource_vfs);
     skr_free_vfs(shader_bytes_vfs);

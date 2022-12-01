@@ -7,7 +7,7 @@
 #include "SkrGLTFTool/gltf_utils.hpp"
 #include "SkrToolCore/project/project.hpp"
 
-void* skd::asset::SGltfMeshImporter::Import(skr::io::RAMService* ioService, SCookContext* context) 
+void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context) 
 {
     skr::filesystem::path relPath = assetPath.data();
     auto ext = relPath.extension();

@@ -12,7 +12,7 @@ namespace skd
 {
 namespace asset
 {
-cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr::io::RAMService* ioService, struct skr_vfs_t* vfs) SKR_NOEXCEPT
+cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t* ioService, struct skr_vfs_t* vfs) SKR_NOEXCEPT
 {
     // prepare callback
     skr::task::event_t counter;

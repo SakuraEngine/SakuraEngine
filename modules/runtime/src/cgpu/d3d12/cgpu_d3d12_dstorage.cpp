@@ -381,7 +381,7 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 #include "platform/memory.h"
 #include "platform/thread.h"
 #include "cgpu/extensions/dstorage_windows.h"
-#include "cgpu/io.hpp"
+#include "cgpu/io.h"
 
 static void CALLBACK __decompressThreadPoolTask_DirectStorage(
     TP_CALLBACK_INSTANCE*,

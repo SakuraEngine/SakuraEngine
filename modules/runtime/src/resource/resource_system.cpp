@@ -2,7 +2,7 @@
 #include "platform/thread.h"
 #include "containers/hashmap.hpp"
 #include "utils/defer.hpp"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "utils/log.hpp"
 #include "resource/resource_system.h"
 #include "resource/resource_handle.h"
@@ -18,7 +18,7 @@ struct RUNTIME_API SResourceSystemImpl : public SResourceSystem
 public:
     SResourceSystemImpl();
     ~SResourceSystemImpl();
-    void Initialize(SResourceRegistry* provider, skr::io::RAMService* ioService) final override;
+    void Initialize(SResourceRegistry* provider, skr_io_ram_service_t* ioService) final override;
     bool IsInitialized() final override;
     void Shutdown() final override;
     void Update() final override;
@@ -36,7 +36,7 @@ public:
     void UnregisterFactory(skr_type_id_t type) final override;
 
     SResourceRegistry* GetRegistry() const final override;
-    skr::io::RAMService* GetRAMService() const final override;
+    skr_io_ram_service_t* GetRAMService() const final override;
 
 protected:
     skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid) final override;
@@ -47,7 +47,7 @@ protected:
     void _ClearFinishedRequests();
 
     SResourceRegistry* resourceRegistry = nullptr;
-    skr::io::RAMService* ioService = nullptr; 
+    skr_io_ram_service_t* ioService = nullptr; 
     eastl::vector<SResourceRequest*> requests;
     eastl::vector<SResourceRequest*> failedRequests;
     dual::entity_registry_t resourceIds;
@@ -130,7 +130,7 @@ SResourceRegistry* SResourceSystemImpl::GetRegistry() const
     return resourceRegistry;
 }
 
-skr::io::RAMService* SResourceSystemImpl::GetRAMService() const
+skr_io_ram_service_t* SResourceSystemImpl::GetRAMService() const
 {
     return ioService;
 }
@@ -246,7 +246,7 @@ ESkrLoadingStatus SResourceSystemImpl::GetResourceStatus(const skr_guid_t& handl
     return record->loadingStatus;
 }
 
-void SResourceSystemImpl::Initialize(SResourceRegistry* provider, skr::io::RAMService* service)
+void SResourceSystemImpl::Initialize(SResourceRegistry* provider, skr_io_ram_service_t* service)
 {
     SKR_ASSERT(provider);
     resourceRegistry = provider;

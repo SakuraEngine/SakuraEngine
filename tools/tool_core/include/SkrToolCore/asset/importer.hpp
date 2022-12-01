@@ -6,8 +6,6 @@
     #include "SkrToolCore/asset/importer.generated.h"
 #endif
 
-namespace skr::io { class RAMService; }
-
 namespace skd sreflect
 {
 using namespace skr;
@@ -24,7 +22,7 @@ TOOL_CORE_API SImporter
     static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
 
     virtual ~SImporter() = default;
-    virtual void* Import(skr::io::RAMService*, SCookContext* context) = 0;
+    virtual void* Import(skr_io_ram_service_t*, SCookContext* context) = 0;
     virtual void Destroy(void*) = 0;
     static uint32_t Version() { return kDevelopmentVersion; }
 };

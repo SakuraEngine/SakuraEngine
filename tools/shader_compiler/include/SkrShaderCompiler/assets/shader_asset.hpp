@@ -17,7 +17,7 @@ SKR_SHADER_COMPILER_API SShaderOptionsImporter final : public SImporter
 {
     skr::string jsonPath;
 
-    void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
 sregister_importer();
@@ -43,7 +43,7 @@ SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter
     eastl::vector<shader_options_handle_t> switch_assets;
     eastl::vector<shader_options_handle_t> option_assets;
 
-    void* Import(skr::io::RAMService*, SCookContext* context) override;
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void Destroy(void* resource) override;
 }
 sregister_importer();

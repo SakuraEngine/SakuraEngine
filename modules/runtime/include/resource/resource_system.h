@@ -10,7 +10,7 @@
 #include "utils/types.h"
 #include "task/task.hpp"
 
-namespace skr::io { class RAMService; }
+struct skr_io_ram_service_t;
 
 typedef enum ESkrLoadingPhase
 {
@@ -138,7 +138,7 @@ struct RUNTIME_API SResourceSystem {
     friend struct ::skr_resource_handle_t;
 public:
     virtual ~SResourceSystem() = default;
-    virtual void Initialize(SResourceRegistry* provider, skr::io::RAMService* ioService) = 0;
+    virtual void Initialize(SResourceRegistry* provider, skr_io_ram_service_t* ioService) = 0;
     virtual bool IsInitialized() = 0;
     virtual void Shutdown() = 0;
     virtual void Update() = 0;
@@ -155,7 +155,7 @@ public:
     virtual void UnregisterFactory(skr_type_id_t type) = 0;
 
     virtual SResourceRegistry* GetRegistry() const = 0;
-    virtual skr::io::RAMService* GetRAMService() const = 0;
+    virtual skr_io_ram_service_t* GetRAMService() const = 0;
 
 protected:
     virtual skr_resource_record_t* _GetOrCreateRecord(const skr_guid_t& guid) = 0;

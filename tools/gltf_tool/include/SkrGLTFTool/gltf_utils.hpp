@@ -2,7 +2,7 @@
 #include "platform/configure.h"
 #include "SkrGLTFTool/module.configure.h"
 #include "cgltf/cgltf.h"
-#include "utils/io.hpp"
+#include "utils/io.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include <containers/string.hpp>
 #include <containers/span.hpp>
@@ -16,7 +16,7 @@ struct SMeshCookConfig;
 
 // returned cgltf_data* needs to be freed by cgltf_free
 GLTFTOOL_API
-cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr::io::RAMService* ioService, struct skr_vfs_t* vfs) SKR_NOEXCEPT;
+cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t* ioService, struct skr_vfs_t* vfs) SKR_NOEXCEPT;
 
 GLTFTOOL_API
 void GetGLTFNodeTransform(const cgltf_node* node, skr_float3_t& translation, skr_float3_t& scale, skr_float4_t& rotation);
