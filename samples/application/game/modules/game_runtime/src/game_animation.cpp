@@ -3,6 +3,7 @@
 #include "SkrAnim/components/skin_component.h"
 #include "utils/log.h"
 #include "SkrTweak/module.h"
+#include "SkrInspector/inspect_value.h"
 
 namespace game
 {
@@ -17,7 +18,7 @@ namespace game
         auto anim = state->animation_resource.get_resolved();
         if(!anim) return;
         
-        float newTime = state->currtime + SKR_TWEAK(1.f) * dt;
+        float newTime = SKR_INSPECT(state->currtime) + SKR_TWEAK(1.f) * dt;
         if(newTime > anim->animation.duration())
             newTime = std::fmodf(newTime, anim->animation.duration());
         ozz::animation::SamplingJob sampling_job;

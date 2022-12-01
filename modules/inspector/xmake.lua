@@ -5,6 +5,6 @@
     --     rootdir = "include/SkrInspector",
     --     api = "SKR_INSPECT"
     -- })
-    public_dependency("SkrImGui", engine_version)
+    public_dependency("SkrDevCore", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")

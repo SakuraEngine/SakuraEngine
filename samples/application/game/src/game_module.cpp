@@ -44,6 +44,7 @@
 
 #include "tracy/Tracy.hpp"
 #include "utils/types.h"
+#include "SkrInspector/inspect_value.h"
 
 SWindowHandle window;
 uint32_t backbuffer_index;
@@ -608,6 +609,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ImGui::End();
             }
             imgui_button_spawn_girl(game_renderer);
+            skr::inspect::update_value_inspector();
             // quit |= skg::GameLoop(ctx);
         }
         // move
