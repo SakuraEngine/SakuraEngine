@@ -55,7 +55,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
             if is_config("pointer-size", "8") then 
                 platform = "x86_64"
             else 
-            platform = "i386"
+                platform = "i386"
             end
         end
         if is_arch("i386") then 

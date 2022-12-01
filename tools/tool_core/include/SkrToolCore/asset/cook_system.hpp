@@ -160,9 +160,9 @@ public:
     void RegisterCooker(skr_guid_t type, SCooker* cooker);
     void UnregisterCooker(skr_guid_t type);
 
-    class skr_io_ram_service_t* getIOService();
+    struct skr_io_ram_service_t* getIOService();
     static constexpr uint32_t ioServicesMaxCount = 4;
-    class skr_io_ram_service_t* ioServices[ioServicesMaxCount];
+    struct skr_io_ram_service_t* ioServices[ioServicesMaxCount];
     skr::task::counter_t mainCounter;
 
     SAssetRecord* GetAssetRecord(const skr_guid_t& guid);

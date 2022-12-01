@@ -1,5 +1,5 @@
 #include "utils/hash.h"
-#include "type/type_registry.h"
+#include "type/type.hpp"
 
 namespace skr {
 namespace type {

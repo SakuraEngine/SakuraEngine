@@ -3,7 +3,7 @@
 #include <EASTL/bitset.h>
 #include "ecs/dual.h"
 #include "ecs/dual_config.h"
-#include "type_registry.hpp"
+#include "type.hpp"
 #include "mask.hpp"
 #include "ecs/constants.hpp"
 #include "type.hpp"

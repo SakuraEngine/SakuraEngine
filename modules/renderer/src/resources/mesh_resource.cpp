@@ -1,4 +1,5 @@
 #include "SkrRenderer/resources/mesh_resource.h"
+#include "containers/sptr.hpp"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/guid.hpp"

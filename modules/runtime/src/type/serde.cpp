@@ -1,5 +1,5 @@
 #include "platform/guid.hpp"
-#include "type/type_registry.h"
+#include "type/type_serde.h"
 #include "utils/fast_float.h"
 #include <charconv>
 

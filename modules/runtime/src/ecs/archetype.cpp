@@ -7,7 +7,7 @@
 
 #include "ecs/constants.hpp"
 #include "set.hpp"
-#include "type_registry.hpp"
+#include "type.hpp"
 #include "stack.hpp"
 #include "storage.hpp"
 #include "utils/make_zeroed.hpp"

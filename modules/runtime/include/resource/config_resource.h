@@ -3,7 +3,6 @@
 #include "platform/configure.h"
 #include "platform/guid.hpp"
 #include "resource/resource_factory.h"
-#include "type/type_registry.h"
 #include "binary/reader_fwd.h"
 #include "binary/writer_fwd.h"
 

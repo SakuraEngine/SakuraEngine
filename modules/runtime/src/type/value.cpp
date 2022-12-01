@@ -1,4 +1,4 @@
-#include "type/type_registry.h"
+#include "type/type.hpp"
 
 skr_value_t::skr_value_t(const skr_value_t& other)
 {
@@ -53,7 +53,7 @@ void skr_value_t::Reset()
     else
     {
         type->Destruct(_ptr);
-        free(_ptr);
+        sakura_free(_ptr);
     }
     type = nullptr;
 }
@@ -80,7 +80,7 @@ void* skr_value_t::_Alloc()
     if (size < smallSize)
         return &_smallObj[0];
     else
-        return _ptr = malloc(size);
+        return _ptr = sakura_malloc(size);
 }
 
 void skr_value_t::_Copy(const skr_value_t& other)

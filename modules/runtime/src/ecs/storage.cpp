@@ -10,7 +10,6 @@
 #include "pool.hpp"
 #include "mask.hpp"
 #include "iterator_ref.hpp"
-#include "type_registry.hpp"
 #include "scheduler.hpp"
 
 dual_storage_t::dual_storage_t()

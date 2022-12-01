@@ -5,7 +5,7 @@
 #include "utils/log.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
-#include "type/type_registry.h"
+#include "type/type.hpp"
 
 namespace skr
 {
