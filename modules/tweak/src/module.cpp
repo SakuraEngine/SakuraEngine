@@ -221,7 +221,7 @@ SKR_TWEAK_API bool skr_get_tweak(skr_tweak_bool_t* tweak)
 }
 SKR_TWEAK_API skr_tweak_string_t* skr_tweak_value(const char* value, const char* str, const char* fileName, int lineNumber)
 {
-    return nullptr
+    return nullptr;
 }
 SKR_TWEAK_API const char* skr_get_tweak(skr_tweak_string_t* tweak)
 {
