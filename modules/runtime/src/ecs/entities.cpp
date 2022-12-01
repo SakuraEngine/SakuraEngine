@@ -2,7 +2,6 @@
 #include "chunk_view.hpp"
 #include "chunk.hpp"
 #include "entity.hpp"
-#include <cstring>
 #include "internal/utils.hpp"
 
 dual_entity_debug_proxy_t dummy;

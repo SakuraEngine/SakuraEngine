@@ -1,7 +1,5 @@
 #pragma once
-#include "EASTL/vector.h"
 #include "platform/configure.h"
-#include "platform/guid.hpp"
 #include "resource/resource_factory.h"
 #include "binary/reader_fwd.h"
 #include "binary/writer_fwd.h"
@@ -20,6 +18,7 @@ RUNTIME_API skr_config_resource_t
     void SetType(skr_type_id_t type);
     ~skr_config_resource_t();
 };
+
 namespace skr::binary
 {
     template<>

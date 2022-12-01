@@ -154,7 +154,7 @@ public:
 		return InputDevice::DV_STANDARD;
 	}
 
-	void Update(InputDeltaState* delta)
+	void Update(InputDeltaState* delta) override
 	{
 		delta_ = delta;
 		*state_ = nextState_;
@@ -162,9 +162,9 @@ public:
 		memset(textBuffer_, 0, sizeof(textBuffer_));
 	}
 
-	bool IsTextInputEnabled() const { return textInputEnabled_; }
-	void SetTextInputEnabled(bool enabled) { textInputEnabled_ = enabled; }
-	wchar_t* GetTextInput(uint32_t* count)
+	bool IsTextInputEnabled() const override { return textInputEnabled_; }
+	void SetTextInputEnabled(bool enabled) override { textInputEnabled_ = enabled; }
+	wchar_t* GetTextInput(uint32_t* count) 
 	{
 		*count = textCount_;
 		return textBuffer_;

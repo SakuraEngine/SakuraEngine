@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace dual
 {
     struct fixed_stack_t

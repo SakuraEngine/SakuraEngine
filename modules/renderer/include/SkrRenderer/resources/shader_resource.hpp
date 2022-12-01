@@ -1,13 +1,10 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
+#include "utils/io.h"
 #include "cgpu/api.h"
 #include "resource/resource_factory.h"
-#include "utils/io.h"
-#include <containers/span.hpp>
 #include <containers/string.hpp>
 #include <containers/hashmap.hpp>
-#include <EASTL/vector.h>
 #ifndef __meta__
 #include "SkrRenderer/resources/shader_resource.generated.h"
 #endif
@@ -70,20 +67,20 @@ skr_platform_shader_resource_t
     skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
 
     sattr("no-rtti" : true)
-    inline eastl::vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT{
+    inline skr::vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT{
         auto found = option_variants.find(kZeroStableShaderHash);
         SKR_ASSERT(found != option_variants.end());
         return found->second;
     }
     sattr("no-rtti" : true)
-    inline eastl::vector<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT{
+    inline skr::vector<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT{
         auto found = option_variants.find(hash);
         SKR_ASSERT(found != option_variants.end());
         return found->second;
     }
 
     sattr("no-rtti" : true)
-    skr::flat_hash_map<stable_hash_t, eastl::vector<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
+    skr::flat_hash_map<stable_hash_t, skr::vector<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
 
     sattr("transient": true, "no-rtti" : true)
     CGPUShaderLibraryId shader = nullptr;

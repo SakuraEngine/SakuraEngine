@@ -1,6 +1,10 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
+#include <containers/string.hpp>
+#include <containers/vector.hpp>
+#include "platform/filesystem.hpp"
+#include "resource/resource_factory.h"
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
@@ -48,8 +52,6 @@ skr_index_buffer_entry_t
 typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
 
 #ifdef __cplusplus
-#include <EASTL/vector.h>
-#include <containers/string.hpp>
 
 sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
 sattr("rtti" : true, "serialize" : "bin")
@@ -57,7 +59,7 @@ skr_mesh_primitive_t
 {
     skr_vertex_layout_id vertex_layout_id;
     skr_guid_t material_inst;
-    eastl::vector<skr_vertex_buffer_entry_t> vertex_buffers;
+    skr::vector<skr_vertex_buffer_entry_t> vertex_buffers;
     struct skr_index_buffer_entry_t index_buffer;
     uint32_t vertex_count;
 };
@@ -70,7 +72,7 @@ skr_mesh_section_t
     skr_float3_t translation;
     skr_float3_t scale;
     skr_float4_t rotation;
-    eastl::vector<uint32_t> primive_indices;
+    skr::vector<uint32_t> primive_indices;
 };
 
 sreflect_struct("guid" : "03104e51-c998-410b-9d3c-d76535933440")
@@ -93,9 +95,9 @@ skr_mesh_resource_t
     SKR_RENDERER_API ~skr_mesh_resource_t() SKR_NOEXCEPT;
     
     skr::string name;
-    eastl::vector<skr_mesh_section_t> sections;
-    eastl::vector<skr_mesh_primitive_t> primitives;
-    eastl::vector<skr_mesh_buffer_t> bins;
+    skr::vector<skr_mesh_section_t> sections;
+    skr::vector<skr_mesh_primitive_t> primitives;
+    skr::vector<skr_mesh_buffer_t> bins;
     
     bool install_to_vram SKR_IF_CPP(= true);
     bool install_to_ram SKR_IF_CPP(= true); // TODO: configure this in asset
@@ -103,22 +105,7 @@ skr_mesh_resource_t
     sattr("transient": true)
     struct skr_render_mesh_t* render_mesh SKR_IF_CPP(= nullptr);
 };
-#endif
-typedef struct skr_mesh_buffer_t skr_mesh_buffer_t;
-typedef struct skr_mesh_primitive_t skr_mesh_primitive_t;
-typedef struct skr_mesh_section_t skr_mesh_section_t;
-typedef struct skr_mesh_resource_t skr_mesh_resource_t;
-typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
-#ifdef __cplusplus
-#include "SkrRenderer/fwd_types.h"
-#include "platform/filesystem.hpp"
-#include "resource/resource_factory.h"
-#include "utils/io.h"
-
-struct skr_io_ram_service_t;
-struct skr_io_vram_service_t;
-struct skr_threaded_service_t;
 namespace skr sreflect
 {
 namespace resource sreflect

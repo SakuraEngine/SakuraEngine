@@ -18,7 +18,7 @@
 #include "../hid/GainputHIDWhitelist.h"
 #include "GainputControllerDb.h"
 
-const GUID FAR    USB_DEVICE = { 0xA5DCBF10L, 0x6530, 0x11D2, 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED };
+const GUID FAR    USB_DEVICE = { 0xA5DCBF10L, 0x6530, 0x11D2, { 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED } };
 static HDEVNOTIFY hDeviceNotify;
 /*DirectInput implementation : methods/helper functionalities derived from SDL(Thank You SDL)*/
 namespace gainput {
@@ -301,7 +301,7 @@ typedef struct ControllerMapping
 
 		//NEED TO CHECK THIS
 		GameControllerAxis currentaxis = GetAxisFromString(name);
-		if (currentaxis != CONTROLLER_BUTTON_INVALID)
+		if (currentaxis != (uint32_t)CONTROLLER_BUTTON_INVALID)
 		{
 			sscanf(originalId, "a%d", &index);
 			axis[currentaxis] = index;
@@ -467,7 +467,7 @@ typedef struct GamePad
 	{
 		naxes = 0;
 		nbuttons = 0;
-		attached;
+		(void)attached;
 		is_game_controller = false;
 		delayed_guide_button = false;
 		force_recentering = false;
@@ -878,7 +878,8 @@ static void PrintControllerInfo(const DIDEVICEINSTANCE* pdidInstance)
 	//https://chromium.googlesource.com/breakpad/breakpad/+/master/src/common/windows/guid_string.cc
 	char guid_string[37];
 	snprintf(
-		guid_string, sizeof(guid_string), "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", pdidInstance->guidProduct.Data1,
+		guid_string, sizeof(guid_string), "%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", 
+		pdidInstance->guidProduct.Data1,
 		pdidInstance->guidProduct.Data2, pdidInstance->guidProduct.Data3, pdidInstance->guidProduct.Data4[0],
 		pdidInstance->guidProduct.Data4[1], pdidInstance->guidProduct.Data4[2], pdidInstance->guidProduct.Data4[3],
 		pdidInstance->guidProduct.Data4[4], pdidInstance->guidProduct.Data4[5], pdidInstance->guidProduct.Data4[6],
@@ -1147,6 +1148,7 @@ class DirectInputInitializer
 		NotificationFilter.dbcc_reserved = 0;
 		NotificationFilter.dbcc_classguid = USB_DEVICE;
 		HDEVNOTIFY hDevNotify = RegisterDeviceNotification(_hwnd, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
+		(void)hDevNotify;
 
 		HINSTANCE instance = GetModuleHandle(NULL);
 		//create instance
@@ -1244,7 +1246,7 @@ class DirectInputInitializer
 		size_t len = strlen(guidStr);
 		if (len == 32 && memcmp(&guidStr[20], "504944564944", 12) == 0)
 		{
-			guidStr[20];
+			(void)guidStr[20];
 			memcpy(&name[20], "000000000000", 12);
 			memcpy(&name[16], &name[4], 4);
 			memcpy(&name[8], &name[0], 4);
@@ -1413,7 +1415,7 @@ class GainputInputDirectInputPadWin
 	{
 		if (created)
 		{
-			HRESULT re;
+			HRESULT re; (void)re;
 			if (gamepadInfo.interfacePtr)
 			{
 				re = gamepadInfo.interfacePtr->Release();

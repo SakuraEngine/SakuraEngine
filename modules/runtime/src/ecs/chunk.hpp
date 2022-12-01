@@ -1,5 +1,4 @@
 #pragma once
-
 #include "ecs/constants.hpp"
 #include "entity.hpp"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "ftl/coqueue.h"
+#include "utils/concurrent_queue.h"
 
 namespace dual
 {

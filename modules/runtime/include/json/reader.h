@@ -2,7 +2,7 @@
 #include "json/reader_fwd.h"
 
 #if defined(__cplusplus)
-    #include <EASTL/vector.h>
+    #include <containers/vector.hpp>
     #include "simdjson.h"
     #include "containers/hashmap.hpp"
     #include "containers/variant.hpp"
@@ -153,8 +153,8 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
 };
 
 template <class V, class Allocator>
-struct ReadHelper<eastl::vector<V, Allocator>> {
-    static error_code Read(simdjson::ondemand::value&& json, eastl::vector<V, Allocator>& vec)
+struct ReadHelper<skr::vector<V, Allocator>> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::vector<V, Allocator>& vec)
     {
         auto array = json.get_array();
         if (array.error() != simdjson::SUCCESS)

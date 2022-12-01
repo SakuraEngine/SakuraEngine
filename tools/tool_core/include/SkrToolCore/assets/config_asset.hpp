@@ -1,9 +1,6 @@
 #pragma once
 #include "SkrToolCore/module.configure.h"
-#include "platform/configure.h"
-#include "utils/types.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrToolCore/asset/cook_system.hpp"
 #ifndef __meta__
 #include "SkrToolCore/assets/config_asset.generated.h"
 #endif

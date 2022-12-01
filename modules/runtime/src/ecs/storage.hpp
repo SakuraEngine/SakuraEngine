@@ -12,8 +12,6 @@
 #include "arena.hpp"
 #include "pool.hpp"
 #include "ecs/entities.hpp"
-#include <phmap.h>
-#include <stdint.h>
 #include "cache.hpp"
 #include "type.hpp"
 #include "set.hpp"

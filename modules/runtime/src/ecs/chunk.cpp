@@ -2,7 +2,6 @@
 #include "chunk.hpp"
 #include "pool.hpp"
 #include "ecs/constants.hpp"
-#include <stdint.h>
 #include "pool.hpp"
 #include "archetype.hpp"
 

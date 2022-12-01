@@ -1,11 +1,10 @@
 #pragma once
 #include "arena.hpp"
 #include "type.hpp"
-#include <assert.h>
-#include <EASTL/map.h>
 #include <EASTL/vector.h>
 #include <EASTL/array.h>
 #include <containers/hashmap.hpp>
+#include "platform/guid.hpp"
 
 namespace dual
 {
@@ -35,7 +34,7 @@ struct type_registry_t {
     eastl::vector<intptr_t> entityFields;
     block_arena_t nameArena;
     skr::flat_hash_map<skr::string_view, type_index_t, skr::hash<skr::string_view>> name2type;
-    eastl::map<guid_t, type_index_t, guid_compare_t> guid2type;
+    skr::flat_hash_map<guid_t, type_index_t, skr::guid::hash> guid2type;
     guid_func_t guid_func = nullptr;
     type_index_t register_type(const type_description_t& desc);
     type_index_t get_type(const guid_t& guid);

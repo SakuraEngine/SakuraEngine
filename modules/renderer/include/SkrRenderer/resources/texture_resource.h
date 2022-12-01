@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
 #include "platform/filesystem.hpp"
 #include "utils/io.h"

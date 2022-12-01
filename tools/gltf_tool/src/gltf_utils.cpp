@@ -4,7 +4,7 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
 
-#include "Tracy/Tracy.hpp"
+#include "tracy/Tracy.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 

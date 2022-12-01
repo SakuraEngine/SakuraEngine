@@ -2,10 +2,11 @@
 #include "SkrRenderer/module.configure.h"
 #include "utils/types.h"
 
+struct skr_io_ram_service_t;
+struct skr_io_vram_service_t;
+struct skr_threaded_service_t;
 #ifdef __cplusplus
 namespace skr { struct RendererDevice; }
-struct skr_io_ram_service_t;
-struct skr_threaded_service_t;
 typedef struct skr::RendererDevice SRenderDevice;
 namespace skr::resource { template <class T> struct TResourceHandle; }
 class SkrRendererModule;
@@ -29,6 +30,12 @@ typedef struct skr_shader_options_resource_t skr_shader_options_resource_t;
 typedef struct skr_material_type_resource_t skr_material_type_resource_t;
 typedef struct skr_material_resource_t skr_material_resource_t;
 typedef struct skr_material_value_t skr_material_value_t;
+
+typedef struct skr_mesh_buffer_t skr_mesh_buffer_t;
+typedef struct skr_mesh_primitive_t skr_mesh_primitive_t;
+typedef struct skr_mesh_section_t skr_mesh_section_t;
+typedef struct skr_mesh_resource_t skr_mesh_resource_t;
+typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
 #ifdef __cplusplus
     using skr_shader_resource_handle_t = skr::resource::TResourceHandle<skr_platform_shader_resource_t>;

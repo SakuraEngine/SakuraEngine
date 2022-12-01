@@ -1,5 +1,4 @@
 #include <type_traits>
-#include <EASTL/tuple.h>
 #include <EASTL/bitset.h>
 #include "ecs/dual.h"
 #include "ecs/dual_config.h"
