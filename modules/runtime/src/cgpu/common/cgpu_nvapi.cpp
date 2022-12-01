@@ -2,7 +2,6 @@
 #ifdef CGPU_USE_D3D12
     #include <d3d12.h>
 #endif
-#include "EASTL/unordered_map.h"
 #include "platform/shared_library.hpp"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "common_utils.h"

@@ -1,6 +1,10 @@
 #pragma once
 #ifdef __cplusplus
     #if defined(_WIN32) && !defined(DURANGO)
+        #ifndef WIN32_LEAN_AND_MEAN
+            #define WIN32_LEAN_AND_MEAN
+        #endif
+        #include "windows.h"
         #include "ags/amd_ags.h"
         #define AMDAGS
     #endif

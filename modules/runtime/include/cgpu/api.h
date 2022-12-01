@@ -1,5 +1,4 @@
 #pragma once
-#include <stdint.h>
 #include "cgpu_config.h"
 #include "flags.h"
 
