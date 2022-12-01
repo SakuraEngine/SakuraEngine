@@ -12,10 +12,8 @@ namespace skd sreflect
 using namespace skr;
 namespace asset sreflect
 {
-
 template<class T>
 void RegisterImporter(skr_guid_t guid);
-#define sregister_importer() sstatic_ctor(skd::asset::RegisterImporter<$T>($guid));
 
 sreflect_struct("guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", "serialize" : "json")
 TOOL_CORE_API SImporter
@@ -46,9 +44,15 @@ struct SImporterFactory {
     virtual skr_guid_t GetResourceType() = 0;
     virtual void CreateImporter(const SAssetRecord* record) = 0;
 };
+} // namespace asset
+} // namespace skd
+
+namespace skr::json { 
+    template <class T> error_code Read(skr::json::value_t&& json, T& value);
+} // namespace skr::json
 
 template<class T>
-void RegisterImporter(skr_guid_t guid)
+void skd::asset::RegisterImporter(skr_guid_t guid)
 {
     auto registry = GetImporterRegistry();
     auto loader = 
@@ -61,5 +65,4 @@ void RegisterImporter(skr_guid_t guid)
     SImporterTypeInfo info { loader, T::Version };
     registry->RegisterImporter(guid, info);
 }
-} // namespace asset
-} // namespace skd
+#define sregister_importer() sstatic_ctor(skd::asset::RegisterImporter<$T>($guid));
