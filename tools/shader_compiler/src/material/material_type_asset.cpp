@@ -2,6 +2,7 @@
 #include "SkrShaderCompiler/assets/material_asset.hpp"
 #include "utils/io.h"
 #include "SkrToolCore/project/project.hpp"
+#include "json/reader.h"
 
 namespace skd
 {
