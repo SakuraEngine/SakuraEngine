@@ -1,15 +1,11 @@
 #pragma once
-#include "arena.hpp"
 #include "ecs/dual.h"
 #include "task/task.hpp"
-#include "mask.hpp"
 #include "archetype.hpp"
 #include "ecs/entities.hpp"
 #include "platform/thread.h"
 #include "containers/hashmap.hpp"
-#include "EASTL/shared_ptr.h"
 #include "EASTL/vector.h"
-#include "utils/lazy.hpp"
 
 namespace dual
 {

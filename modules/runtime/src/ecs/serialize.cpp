@@ -1,18 +1,13 @@
-
-
+#include "storage.hpp"
 #include "archetype.hpp"
 #include "chunk_view.hpp"
 #include "ecs/dual.h"
-#include "ecs/entities.hpp"
 #include "pool.hpp"
 #include "stack.hpp"
-#include "storage.hpp"
 #include "type.hpp"
 #include "ecs/constants.hpp"
 #include "iterator_ref.hpp"
 #include "ecs/array.hpp"
-#include "containers/hashmap.hpp"
-#include <atomic>
 #include "set.hpp"
 #include "scheduler.hpp"
 #include "internal/utils.hpp"

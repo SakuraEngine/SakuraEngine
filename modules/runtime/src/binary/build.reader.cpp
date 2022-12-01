@@ -1,3 +1,4 @@
+#include "resource/resource_handle.h"
 #include "binary/reader.h"
 #include "platform/memory.h"
 

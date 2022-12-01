@@ -11,6 +11,18 @@ namespace binary
 {
 template <class T, class = void>
 struct ReadHelper;
+
+template <class T>
+int Archive(skr_binary_reader_t* writer, T&& value)
+{
+    return ReadHelper<std::decay_t<T>>::Read(writer, value);
+}
+
+template <class T>
+int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value)
+{
+    return ReadHelper<std::decay_t<T>>::Read(reader, arena, value);
+}
 }
 }
 

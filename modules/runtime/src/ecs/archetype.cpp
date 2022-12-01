@@ -1,3 +1,4 @@
+#include "type_registry.hpp"
 #include "entity.hpp"
 #include "ecs/dual.h"
 #include "mask.hpp"

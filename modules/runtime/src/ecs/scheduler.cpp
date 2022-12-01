@@ -1,19 +1,14 @@
 #include "scheduler.hpp"
 #include "ecs/SmallVector.h"
-#include "archetype.hpp"
-#include "arena.hpp"
 
 #include "ecs/constants.hpp"
 #include "ecs/dual.h"
-#include "mask.hpp"
-#include "phmap.h"
 #include "query.hpp"
 #include "storage.hpp"
 #include "ecs/callback.hpp"
-#include "tracy/Tracy.hpp"
 #include "type.hpp"
-#include "set.hpp"
-#include "utils/hash.h"
+
+#include "tracy/Tracy.hpp"
 
 dual::scheduler_t::scheduler_t()
 {

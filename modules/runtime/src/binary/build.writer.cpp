@@ -1,3 +1,4 @@
+#include "resource/resource_handle.h"
 #include "binary/writer.h"
 #include "binary/blob.h"
 
