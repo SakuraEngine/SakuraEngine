@@ -1,6 +1,6 @@
 #include "context.hpp"
 #include "ecs/dual.h"
-#include "type_registry.hpp"
+#include "type.hpp"
 
 dual_context_t* g_dual_ctx;
 

@@ -10,7 +10,6 @@
 #include "stack.hpp"
 #include "storage.hpp"
 #include "type.hpp"
-#include "type_registry.hpp"
 #include "set.hpp"
 #include "ecs/constants.hpp"
 #include "ecs/callback.hpp"

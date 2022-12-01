@@ -1,5 +1,5 @@
 // BEGIN RTTI GENERATED
-#include "type/type_registry.h"
+#include "type/type.hpp"
 #include "platform/debug.h"
 #include "utils/hash.h"
 #include "utils/log.h"

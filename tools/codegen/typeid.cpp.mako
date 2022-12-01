@@ -1,5 +1,5 @@
 //BEGIN TYPEID GENERATED
-#include "type/type_registry.h"
+#include "type/type.hpp"
 
 <%
 types = generator.filter_types(db.records)

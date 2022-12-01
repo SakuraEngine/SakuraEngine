@@ -1,8 +1,7 @@
 #pragma once
 #include "resource/resource_handle.h"
-#include "type/type_registry.h"
 #include <EASTL/fixed_vector.h>
-#include <EASTL/vector.h>
+#include <containers/vector.hpp>
 #include "platform/thread.h"
 
 #include "binary/reader_fwd.h"

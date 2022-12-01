@@ -7,7 +7,7 @@
 #include <mutex>
 #include "platform/debug.h"
 #include "json/reader.h"
-#include "type/type_registry.h"
+#include "type/type.hpp"
 #include "utils/log.hpp"
 #include "utils/defer.hpp"
 #include "utils/io.h"

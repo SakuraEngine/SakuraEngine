@@ -2,7 +2,7 @@
 #include "platform/debug.h"
 #include "platform/guid.hpp"
 #include "platform/memory.h"
-#include "type/type_registry.h"
+#include "type/type.hpp"
 
 %for record in generator.filter_records(db.records):
 static struct StaticConstructor${record.id}Helper

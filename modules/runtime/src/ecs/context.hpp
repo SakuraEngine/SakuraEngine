@@ -1,6 +1,6 @@
 #pragma once
 #include "ecs/dual.h"
-#include "type_registry.hpp"
+#include "type.hpp"
 #include "pool.hpp"
 #include "scheduler.hpp"
 

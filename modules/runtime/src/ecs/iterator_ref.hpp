@@ -1,8 +1,7 @@
 #pragma once
 #include "chunk_view.hpp"
 #include "ecs/array.hpp"
-
-#include "type_registry.hpp"
+#include "type.hpp"
 #include "entity.hpp"
 #include "type.hpp"
 #include "chunk.hpp"

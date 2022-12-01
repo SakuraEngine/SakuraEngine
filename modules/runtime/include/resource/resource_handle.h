@@ -103,3 +103,22 @@ struct TResourceHandle : skr_resource_handle_t {
 RUNTIME_API int skr_is_resource_resolved(skr_resource_handle_t* handle);
 RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_guid_t* guid);
 RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
+
+#include "type/type.hpp"
+
+namespace skr
+{
+namespace type
+{
+// resource
+template <class T>
+struct type_of<resource::TResourceHandle<T>> {
+    static const skr_type_t* get()
+    {
+        const auto inner_type = type_of<std::decay_t<T>>::get();
+        static const auto type = HandleType(inner_type);
+        return &type;
+    }
+};
+} // namespace type
+} // namespace skr

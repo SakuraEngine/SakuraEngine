@@ -8,7 +8,7 @@
 #include "resource/resource_header.hpp"
 #include <mutex>
 #include "SkrToolCore/assets/config_asset.hpp"
-#include "type/type_registry.h"
+#include "type/type.hpp"
 #include "utils/defer.hpp"
 #include "resource/resource_header.hpp"
 #include "utils/format.hpp"

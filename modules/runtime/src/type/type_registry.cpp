@@ -1,14 +1,17 @@
 #include "fmt/core.h"
+#include "containers/sptr.hpp"
+#include "containers/vector.hpp"
 #include "utils/format.hpp"
 #include "platform/memory.h"
 #include "platform/guid.hpp"
 #include "resource/resource_handle.h"
-#include "type/type_registry.h"
 #include "containers/hashmap.hpp"
 #include "binary/reader.h"
 #include "binary/writer.h"
 #include "json/reader.h"
 #include "json/writer.h"
+#include "type/type.hpp"
+#include "type/type_serde.h"
 
 static auto& skr_get_type_name_map()
 {

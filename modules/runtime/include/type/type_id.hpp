@@ -1,9 +1,27 @@
 #pragma once
+#include "platform/configure.h"
 #include "utils/types.h"
 #include "enum_as_byte.hpp"
 
-struct skr_type_t;
+// fwd declares
+typedef struct skr_type_t skr_type_t;
+typedef struct skr_value_t skr_value_t;
+typedef struct skr_value_ref_t skr_value_ref_t;
+typedef struct skr_field_t skr_field_t;
+typedef struct skr_method_t skr_method_t;
+typedef skr_guid_t skr_type_id_t;
 struct skr_resource_handle_t;
+struct skr_binary_writer_t;
+struct skr_binary_reader_t;
+namespace skr
+{
+namespace type
+{
+struct ValueSerializePolicy;
+using Value = skr_value_t;
+using ValueRef = skr_value_ref_t;
+} // namespace type
+} // namespace skr
 
 namespace skr {
 namespace type {
