@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
-#include <EASTL/vector.h>
+#include "containers/vector.hpp"
 #include "containers/span.hpp"
 #include "containers/hashmap.hpp"
 #include "resource/resource_header.hpp"
@@ -9,8 +9,6 @@
 #include "platform/filesystem.hpp"
 #include "json/reader.h"
 #include "utils/log.hpp"
-
-struct skr_async_ram_destination_t;
 
 namespace skd sreflect
 {
@@ -85,7 +83,7 @@ public:
         }
         SKR_DEFER({ fclose(file); });
         //------write resource object
-        eastl::vector<uint8_t> buffer;
+        skr::vector<uint8_t> buffer;
         skr::binary::VectorWriter writer{&buffer};
         skr_binary_writer_t archive(writer);
         if(int result = skr::binary::Archive(&archive, resource); result != 0)
@@ -129,9 +127,9 @@ protected:
     skr_io_ram_service_t* ioService = nullptr;
 
     skr::filesystem::path outputPath;
-    eastl::vector<skr_resource_handle_t> staticDependencies;
-    eastl::vector<skr_guid_t> runtimeDependencies;
-    eastl::vector<skr::filesystem::path> fileDependencies;
+    skr::vector<skr_resource_handle_t> staticDependencies;
+    skr::vector<skr_guid_t> runtimeDependencies;
+    skr::vector<skr::filesystem::path> fileDependencies;
 };
 } // namespace asset
 } // namespace skd

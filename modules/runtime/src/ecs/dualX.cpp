@@ -4,7 +4,6 @@
 #include "stack.hpp"
 #include "ecs/callback.hpp"
 #include "utils/hash.h"
-#include <iostream>
 
 namespace dual
 {

@@ -1,6 +1,6 @@
 #include "ecs/type_builder.hpp"
 #include "set.hpp"
-#include <algorithm>
+#include <EASTL/algorithm.h>
 
 namespace dual
 {
@@ -13,7 +13,7 @@ type_builder_t& type_builder_t::with(const dual_type_index_t* types, uint32_t in
 dual_type_set_t type_builder_t::build()
 {
     std::sort(indices.begin(), indices.end());
-    auto end = std::unique(indices.begin(), indices.end());
+    auto end = eastl::unique(indices.begin(), indices.end());
     return { indices.data(), (SIndex)(end - indices.begin()) };
 }
 } // namespace dual

@@ -17,7 +17,7 @@
 #include <EASTL/algorithm.h>
 #include <EASTL/numeric.h>
 #include "utils/format.hpp"
-#include <EASTL/string.h>
+#include <containers/string.hpp>
 #if __SSE2__
     #include <emmintrin.h>
 #endif

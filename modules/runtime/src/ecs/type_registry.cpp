@@ -1,14 +1,11 @@
-#include <string_view>
-
+#include <string.h>
 #include "ecs/dual.h"
 #include "pool.hpp"
 #include "entity.hpp"
-#include <utility>
 #include "type.hpp"
 #include "ecs/constants.hpp"
 #include "type_registry.hpp"
 #include "guid.hpp"
-#include "platform/guid.hpp"
 #include "sole.hpp"
 #include "utils/make_zeroed.hpp"
 #if __SSE2__
@@ -34,7 +31,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
-        guid2type.insert(eastl::make_pair(desc.guid, kDisableComponent));
+        guid2type.emplace(desc.guid, kDisableComponent);
         name2type.emplace(desc.name, kDisableComponent);
     }
     {
@@ -48,7 +45,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
-        guid2type.insert(eastl::make_pair(desc.guid, kDeadComponent));
+        guid2type.emplace(desc.guid, kDeadComponent);
         name2type.emplace(desc.name, kDeadComponent);
     }
     {
@@ -64,7 +61,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFields = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
-        guid2type.insert(eastl::make_pair(desc.guid, kLinkComponent));
+        guid2type.emplace(desc.guid, kLinkComponent);
         name2type.emplace(desc.name, kLinkComponent);
     }
     {
@@ -78,7 +75,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
-        guid2type.insert(eastl::make_pair(desc.guid, kMaskComponent));
+        guid2type.emplace(desc.guid, kMaskComponent);
         name2type.emplace(desc.name, kMaskComponent);
     }
     {
@@ -92,7 +89,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
-        guid2type.insert(eastl::make_pair(desc.guid, kGuidComponent));
+        guid2type.emplace(desc.guid, kGuidComponent);
         name2type.emplace(desc.name, kGuidComponent);
     }
     {
@@ -106,7 +103,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.push_back(desc);
-        guid2type.insert(eastl::make_pair(desc.guid, kDirtyComponent));
+        guid2type.emplace(desc.guid, kDirtyComponent);
         name2type.emplace(desc.name, kDirtyComponent);
     }
 }
@@ -124,9 +121,9 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     {
         if (name2type.count(desc.name))
             return kInvalidTypeIndex;
-        auto len = std::strlen(desc.name);
+        auto len = strlen(desc.name);
         auto name = (char*)nameArena.allocate(len + 1, 1);
-        std::memcpy(name, desc.name, len + 1);
+        memcpy(name, desc.name, len + 1);
         desc.name = name;
     }
     if (desc.entityFields != 0)
@@ -150,7 +147,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     SKR_ASSERT(!(chunk && tag));
     type_index_t index{ (TIndex)descriptions.size(), pin, buffer, tag, chunk };
     descriptions.push_back(desc);
-    guid2type.insert(eastl::make_pair(desc.guid, index));
+    guid2type.emplace(desc.guid, index);
     name2type.emplace(desc.name, index);
     return index;
 }

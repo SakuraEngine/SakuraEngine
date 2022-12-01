@@ -1,9 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "SkrRenderer/fwd_types.h"
-#include <containers/variant.hpp>
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
-#include "resource/resource_handle.h"
+#include <containers/variant.hpp>
 
 #ifndef __meta__
 #include "SkrRenderer/resources/material_resource.generated.h"
