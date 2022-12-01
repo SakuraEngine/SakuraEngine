@@ -125,7 +125,7 @@ void SGameModule::installResourceFactories()
         tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
 
         skr::resource::STextureFactory::Root factoryRoot = {};
-        factoryRoot.dstorage_root = gameResourceRoot;
+        factoryRoot.dstorage_root = gameResourceRoot.u8string().c_str();
         factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
@@ -136,7 +136,7 @@ void SGameModule::installResourceFactories()
     // mesh factory
     {
         skr::resource::SMeshFactory::Root factoryRoot = {};
-        factoryRoot.dstorage_root = gameResourceRoot;
+        factoryRoot.dstorage_root = gameResourceRoot.u8string().c_str();
         factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();

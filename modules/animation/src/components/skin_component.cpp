@@ -1,3 +1,4 @@
+#include "string.h"
 #include "SkrAnim/components/skin_component.h"
 #include "SkrAnim/components/skeleton_component.h"
 #include "SkrAnim/ozz/geometry/skinning_job.h"
@@ -26,7 +27,7 @@ void skr_init_skin_component(skr_render_skin_comp_t* component, skr_skeleton_res
     {
         for (size_t j = 0; j < skeleton->skeleton.num_joints(); ++j)
         {
-            if (std::strcmp(skeleton->skeleton.joint_names()[j], skin->blob.joint_remaps[i].data()) == 0)
+            if (strcmp(skeleton->skeleton.joint_names()[j], skin->blob.joint_remaps[i].data()) == 0)
             {
                 component->joint_remaps[i] = static_cast<uint32_t>(j);
                 break;

@@ -3,7 +3,6 @@
 #include "SkrRenderer/fwd_types.h"
 #include <containers/string.hpp>
 #include <containers/vector.hpp>
-#include "platform/filesystem.hpp"
 #include "resource/resource_factory.h"
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h"
@@ -115,7 +114,7 @@ struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
 
     struct Root {
         skr_vfs_t* vfs = nullptr;
-        skr::filesystem::path dstorage_root;
+        skr::string dstorage_root;
         skr_io_ram_service_t* ram_service = nullptr;
         skr_io_vram_service_t* vram_service = nullptr;
         SRenderDeviceId render_device = nullptr;

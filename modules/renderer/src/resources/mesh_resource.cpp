@@ -312,7 +312,8 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithDStorage(skr_resource_record_t* r
                 for (auto i = 0u; i < mesh_resource->bins.size(); i++)
                 {
                     auto binPath = skr::format("{}.buffer{}", guid, i);
-                    auto fullBinPath = root.dstorage_root / binPath.c_str();
+                    // TODO: REFACTOR THIS WITH VFS PATH
+                    auto fullBinPath = skr::filesystem::path(root.dstorage_root.c_str()) / binPath.c_str();
                     const auto& thisBin = mesh_resource->bins[i];
                     auto&& thisRequest = dRequest->dRequests[i];
                     auto&& thisDestination = dRequest->dDestinations[i];
@@ -373,7 +374,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)
             {
                 auto binPath = skr::format("{}.buffer{}", guid, i);
-                auto fullBinPath = root.dstorage_root / binPath.c_str();
+                auto fullBinPath = skr::filesystem::path(root.dstorage_root.c_str()) / binPath.c_str();
                 auto&& ramRequest = uRequest->ram_requests[i];
                 auto&& ramDestination = uRequest->ram_destinations[i];
                 auto&& ramPath = uRequest->resource_uris[i];

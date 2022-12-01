@@ -165,7 +165,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
             if (gpuCompressOnly)
             {
                 auto compressedBin = skr::format("{}.bc1", guid); //TODO: choose compression format
-                auto compressedPath = root.dstorage_root / compressedBin.c_str();
+                auto compressedPath = skr::filesystem::path(root.dstorage_root.c_str()) / compressedBin.c_str();
                 auto dRequest = SPtr<DStorageRequest>::Create();
                 InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::BC_OR_ASTC};
                 auto found = mDStorageRequests.find(texture_resource);
