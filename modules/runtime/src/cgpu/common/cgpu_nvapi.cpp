@@ -7,14 +7,6 @@
 #include "common_utils.h"
 
 // NVAPI
-#if defined(CGPU_USE_NVAPI)
-    #if defined(_WIN64)
-        #pragma comment(lib, "nvapi_x64.lib")
-    #elif defined(_WIN32)
-        #pragma comment(lib, "nvapi_x86.lib")
-    #endif
-#endif
-
 ECGPUNvAPI_Status cgpu_nvapi_init(CGPUInstanceId Inst)
 {
 #if defined(CGPU_USE_NVAPI)
