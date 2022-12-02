@@ -274,9 +274,9 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
         simdjson::ondemand::parser metaParser;
         auto metaDoc = metaParser.iterate(metaAsset->meta);
         SKR_CHECK_RESULT(metaDoc, "meta")
-        auto importer = metaDoc["importer"];
+        auto importer = metaDoc.at_pointer("importer");
         SKR_CHECK_RESULT(importer, "meta")
-        auto importerType = importer["importerType"];
+        auto importerType = importer.at_pointer("importerType");
         SKR_CHECK_RESULT(importerType, "meta")
         skr_guid_t importerTypeGuid;
         if(skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
@@ -284,7 +284,7 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
             SKR_LOG_INFO("[SCookSystem::EnsureCooked] meta file parse failed! asset path: %s", metaAsset->path.u8string().c_str());
             return false;
         }
-        auto importerVersion = doc["importerVersion"].get_uint64();
+        auto importerVersion = doc.at_pointer("importerVersion").get_uint64();
         SKR_CHECK_RESULT(importerVersion, "dependency")
         auto currentImporterVersion = GetImporterRegistry()->GetImporterVersion(importerTypeGuid);
         if(importerVersion.value_unsafe() != currentImporterVersion)
@@ -325,7 +325,7 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
                 return false;
             }
         }
-        auto files = doc["files"].get_array();
+        auto files = doc.at_pointer("files").get_array();
         if (files.error() != simdjson::SUCCESS)
         {
             SKR_LOG_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! asset path: %s", metaAsset->path.u8string().c_str());
@@ -349,7 +349,7 @@ skr::task::event_t SCookSystem::EnsureCooked(skr_guid_t guid)
                 return false;
             }
         }
-        auto deps = doc["dependencies"].get_array();
+        auto deps = doc.at_pointer("dependencies").get_array();
         if (deps.error() != simdjson::SUCCESS)
         {
             SKR_LOG_INFO("[SCookSystem::EnsureCooked] dependency file parse failed! asset path: %s", metaAsset->path.u8string().c_str());
@@ -403,7 +403,7 @@ void* SCookContext::_Import()
     //-----load importer
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
-    auto importerJson = doc["importer"]; // import from asset
+    auto importerJson = doc.at_pointer("importer"); // import from asset
     if (importerJson.error() == simdjson::SUCCESS)
     {
         skr_guid_t importerTypeGuid = {};
@@ -420,7 +420,7 @@ void* SCookContext::_Import()
         SKR_LOG_INFO("[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());
         return rawData;
     }
-    // auto parentJson = doc["parent"]; // derived from resource
+    // auto parentJson = doc.at_pointer("parent"); // derived from resource
     // if (parentJson.error() == simdjson::SUCCESS)
     // {
     //     skr_guid_t parentGuid;
@@ -560,8 +560,8 @@ SAssetRecord* SCookSystem::ImportAsset(SProject* project, skr::filesystem::path 
     record->meta = simdjson::padded_string::load(path.u8string()).value_unsafe();
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
-    skr::json::Read(doc["guid"].value_unsafe(), record->guid);
-    auto otype = doc["type"];
+    skr::json::Read(doc.at_pointer("guid").value_unsafe(), record->guid);
+    auto otype = doc.at_pointer("type");
     if (otype.error() == simdjson::SUCCESS)
         skr::json::Read(std::move(otype).value_unsafe(), record->type);
     else

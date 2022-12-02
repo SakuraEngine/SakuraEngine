@@ -51,7 +51,7 @@ error_code ReadHelper<${record.name}>::Read(value_t&& json, ${record.name}& reco
     %endfor
     %for name, field in generator.filter_fields(record.fields):
     {
-        auto field = json["${name}"];
+        auto field = json.at_pointer("${name}");
         if (field.error() == simdjson::NO_SUCH_FIELD)
         {
         %if hasattr(field.attrs, "no-default"):
