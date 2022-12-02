@@ -86,6 +86,22 @@ uint32_t skr_resource_record_t::AddReference(uint64_t requester, ESkrRequesterTy
             return iter->id;
         }
     }
+    else if(requesterType == SKR_REQUESTER_SCRIPT)
+    {
+        scriptRefCount++;
+        auto iter = eastl::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& id) { return id.state == (void*)requester; });
+        if (iter == scriptReferences.end())
+        {
+            auto id = requesterCounter++;
+            scriptReferences.push_back(script_requester{ id, (lua_State*)requester, 1 });
+            return id;
+        }
+        else
+        {
+            iter->scriptRefCount++;
+            return iter->id;
+        }
+    }
     else
     {
         auto id = requesterCounter++;
@@ -103,8 +119,20 @@ void skr_resource_record_t::RemoveReference(uint32_t id, ESkrRequesterType reque
         if(--iter->entityRefCount == 0)
             entityReferences.erase_unsorted(iter);
     }
+    else if(requesterType == SKR_REQUESTER_SCRIPT)
+    {
+        scriptRefCount--;
+        auto iter = eastl::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& re) { return re.id == id; });
+        SKR_ASSERT(iter != scriptReferences.end());
+        if (--iter->scriptRefCount == 0)
+            scriptReferences.erase_unsorted(iter);
+    }
     else
-        objectReferences.erase_first_unsorted(object_requester{ id, 0, requesterType });
+    {
+        auto iter = eastl::find_if(objectReferences.begin(), objectReferences.end(), [&](const object_requester& re) { return re.id == id; });
+        SKR_ASSERT(iter != objectReferences.end());
+        objectReferences.erase_unsorted(iter);
+    }
 }
 bool skr_resource_record_t::IsReferenced() const
 {
