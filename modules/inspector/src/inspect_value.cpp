@@ -19,9 +19,8 @@ struct tweak_value_t
 {
     std::chrono::time_point<std::chrono::milliseconds> last_modified;
     //TODO: scriptable override & assert
-    skr::optional<skr::variant<float, int, bool, skr::string>> override;
-    skr::optional<skr::variant<float, int, bool, skr::string>> condition;
-    skr::variant<float, int, bool, skr::string> value;
+    skr_value_t value;
+    skr_value_t override;
     uint32_t ident;
     const char* expr;
     SMutexObject _mutex;
@@ -56,41 +55,57 @@ struct inspect_system : public skr::ModuleSubsystem
         return result;
     }
 
-    template<class T>
-    T UpdateInspect(tweak_value_t* tweak, const T& value)
+    void UpdateInspect(tweak_value_t* tweak, void* value)
     {
         SMutexLock lock(tweak->_mutex.mMutex);
-        tweak->value = value;
-        if(tweak->condition)
-        {
-            SKR_ASSERT(value != skr::get<T>(tweak->condition.value()));
-            tweak->condition = skr::nullopt;
-        }
+        tweak->value = skr_value_ref_t{value, tweak->value.type};
         if(tweak->override)
         {
-            return skr::get<T>(tweak->override.value());
+            tweak->override.type->Copy(value, tweak->override.Ptr());
         }
-        return value;
     }
 
-    void DrawInspect(tweak_value_t* value, int& data)
+    void DrawInspect(tweak_value_t& tweak, skr_value_t& value)
     {
-        ImGui::DragInt(skr::format("value##{}", value->ident).c_str(), &data, 1.0f, 0, 0, "%d", ImGuiSliderFlags_AlwaysClamp);
-    }
-
-    void DrawInspect(tweak_value_t* value, float& data)
-    {
-        ImGui::DragFloat(skr::format("value##{}", value->ident).c_str(), &data, 0.01f, 0, 0, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-    }
-
-    void DrawInspect(tweak_value_t* value, bool& data)
-    {
-        ImGui::Checkbox(skr::format("value##{}", value->ident).c_str(), &data);
-    }
-
-    void DrawInspect(tweak_value_t* value, skr::string& data)
-    {
-        ImGui::InputText(skr::format("value##{}", value->ident).c_str(), data.data(), data.size());
+        switch(value.type->type)
+        {
+            case SKR_TYPE_CATEGORY_BOOL:
+            {
+                ImGui::Checkbox(skr::format("##Value{}", tweak.ident).c_str(), &value.As<bool>());
+            }
+            break;
+            case SKR_TYPE_CATEGORY_F32:
+            {
+                ImGui::DragFloat(skr::format("##Value{}", tweak.ident).c_str(), &value.As<float>());
+            }
+            break;
+            case SKR_TYPE_CATEGORY_I32:
+            case SKR_TYPE_CATEGORY_I64:
+            case SKR_TYPE_CATEGORY_U32:
+            case SKR_TYPE_CATEGORY_U64:
+            case SKR_TYPE_CATEGORY_F64:
+            case SKR_TYPE_CATEGORY_F32_2:
+            case SKR_TYPE_CATEGORY_F32_3:
+            case SKR_TYPE_CATEGORY_F32_4:
+            case SKR_TYPE_CATEGORY_F32_4x4:
+            case SKR_TYPE_CATEGORY_ROT:
+            case SKR_TYPE_CATEGORY_QUAT:
+            case SKR_TYPE_CATEGORY_GUID:
+            case SKR_TYPE_CATEGORY_MD5:
+            case SKR_TYPE_CATEGORY_HANDLE:
+            case SKR_TYPE_CATEGORY_STR:
+            case SKR_TYPE_CATEGORY_STRV:
+            case SKR_TYPE_CATEGORY_ARR:
+            case SKR_TYPE_CATEGORY_DYNARR:
+            case SKR_TYPE_CATEGORY_ARRV:
+            case SKR_TYPE_CATEGORY_OBJ:
+            case SKR_TYPE_CATEGORY_ENUM:
+            case SKR_TYPE_CATEGORY_REF:
+            case SKR_TYPE_CATEGORY_VARIANT:
+            case SKR_TYPE_CATEGORY_INVALID:
+                SKR_UNIMPLEMENTED_FUNCTION();
+            break;
+        }
     }
 
     void DrawInspects()
@@ -100,25 +115,39 @@ struct inspect_system : public skr::ModuleSubsystem
         {
             if(ImGui::CollapsingHeader(pair.first.c_str()))
             {
-                for(auto& p : pair.second)
+                if(ImGui::BeginTable(skr::format("##{}", pair.first).c_str(), 3))
                 {
-                    auto& value = p.second;
-                    bool override = value.override.has_value();
-                    ImGui::Checkbox(skr::format("Line {}: \"{}\"##{}", p.first, value.expr, value.ident).c_str(), &override);
-                    ImGui::SameLine();
-                    if(override)
+                    ImGui::TableSetupScrollFreeze(0, 1);
+                    ImGui::TableSetupColumn("Override", ImGuiTableColumnFlags_WidthFixed, 100);
+                    ImGui::TableSetupColumn("Expr", ImGuiTableColumnFlags_NoClip);
+                    ImGui::TableSetupColumn("Value");
+                    ImGui::TableHeadersRow();
+                    ImGui::TableNextColumn();
+
+                    for(auto& p : pair.second)
                     {
-                        if(!value.override.has_value())
-                            value.override = value.value;
-                        std::visit([&](auto& arg) { DrawInspect(&value, arg); }, value.override.value());
+                        auto& value = p.second;
+                        bool override = value.override.HasValue();
+                        ImGui::Checkbox(skr::format("##Override{}", value.ident).c_str(), &override);
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%d: \"%s\"", p.first, value.expr);
+                        ImGui::TableNextColumn();
+                        if(override)
+                        {
+                            if(!value.override)
+                                value.override = value.value;
+                            DrawInspect(value, value.override);
+                        }
+                        else
+                        {
+                            value.override.Reset();
+                            ImGui::BeginDisabled(true);
+                            DrawInspect(value, value.value);
+                            ImGui::EndDisabled();
+                        }
+                        ImGui::TableNextColumn();
                     }
-                    else
-                    {
-                        value.override = skr::nullopt;
-                        ImGui::BeginDisabled(true);
-                        std::visit([&](auto& arg) { DrawInspect(&value, arg); }, value.value);
-                        ImGui::EndDisabled();
-                    }
+                    ImGui::EndTable();
                 }
             }
         }
@@ -127,37 +156,14 @@ struct inspect_system : public skr::ModuleSubsystem
     
     SMutexObject _mutex;
 };
-inspected_int* add_inspected_value(int value, const char* name, const char* file, int line)
+
+inspected_object* add_inspected_object(void* value, const skr_type_t* type, const char* name, const char* file, int line)
 {
-    return (inspected_int*)_system->AddInspect(value, name, file, line);
+    return (inspected_object*)_system->AddInspect(skr_value_ref_t{value, type}, name, file, line);
 }
-inspected_float* add_inspected_value(float value, const char* name, const char* file, int line)
-{
-    return (inspected_float*)_system->AddInspect(value, name, file, line);
-}
-inspected_bool* add_inspected_value(bool value, const char* name, const char* file, int line)
-{
-    return (inspected_bool*)_system->AddInspect(value, name, file, line);
-}
-inspected_string* add_inspected_value(const char* value, const char* name, const char* file, int line)
-{
-    return (inspected_string*)_system->AddInspect(value, name, file, line);
-}
-int update_inspected_value(inspected_int* tweak, int value)
+void update_inspected_value(inspected_object* tweak, void* value)
 {
     return _system->UpdateInspect((tweak_value_t*)tweak, value);
-}
-float update_inspected_value(inspected_float* tweak, float value)
-{
-    return _system->UpdateInspect((tweak_value_t*)tweak, value);
-}
-bool update_inspected_value(inspected_bool* tweak, bool value)
-{
-    return _system->UpdateInspect((tweak_value_t*)tweak, value);
-}
-const char* update_inspected_value(inspected_string* tweak, const char* value)
-{
-    return _system->UpdateInspect((tweak_value_t*)tweak, skr::string(value)).c_str();
 }
 void update_value_inspector()
 {

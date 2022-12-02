@@ -159,10 +159,12 @@ struct SKR_ALIGNAS(16) RUNTIME_API skr_value_t {
     static constexpr size_t smallSize = sizeof(_smallObj);
 
     skr_value_t() = default;
+    skr_value_t(const skr_value_ref_t& ref);
     skr_value_t(skr_value_t&& other);
     skr_value_t(const skr_value_t& other);
     skr_value_t& operator=(skr_value_t&& other);
     skr_value_t& operator=(const skr_value_t& other);
+    skr_value_t& operator=(const skr_value_ref_t& other);
 
     ~skr_value_t() { Reset(); }
 
@@ -198,6 +200,7 @@ struct SKR_ALIGNAS(16) RUNTIME_API skr_value_t {
 private:
     void* _Alloc();
     void _Copy(const skr_value_t& other);
+    void _Copy(const skr_value_ref_t& other);
     void _Move(skr_value_t&& other);
 #endif
 };
@@ -219,6 +222,7 @@ struct RUNTIME_API skr_value_ref_t {
     ~skr_value_ref_t();
     template <class T>
     skr_value_ref_t(T& t);
+    skr_value_ref_t(void* address, const skr_type_t* type);
     skr_value_ref_t(skr_value_t& v);
     skr_value_ref_t(skr_value_ref_t&& other) = default;
     skr_value_ref_t(skr_value_ref_t& other);
