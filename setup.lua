@@ -20,6 +20,16 @@ else
 end
 
 if (os.host() == "windows") then
+    find_sdk.sdk_lib_from_github("lmdb", "lmdb-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("cgltf", "cgltf-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("fmt", "fmt-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("fmt_d", "fmt_d-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("imgui", "imgui-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("imgui_d", "imgui_d-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("simdjson", "simdjson-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("simdjson_d", "simdjson_d-windows-x64.zip")
+    find_sdk.sdk_lib_from_github("ISPCTextureCompressor", "ISPCTextureCompressor-windows-x64.zip")
+
     -- gfx
     find_sdk.lib_from_github("WinPixEventRuntime", "WinPixEventRuntime-windows-x64.zip")
     find_sdk.lib_from_github("amdags", "amdags-windows-x64.zip")

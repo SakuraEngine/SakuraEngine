@@ -4,6 +4,10 @@ function tooldir()
     return vformat("SDKs/tools/$(host)")
 end
 
+function sdk_libdir()
+    return vformat("SDKs/libs")
+end
+
 function binarydir()
     return vformat("$(buildir)/$(os)/$(arch)/$(mode)")
 end
@@ -49,6 +53,25 @@ end
 function tool_from_github(name, zip)
     file_from_github(zip)
     install_tool(name)
+end
+
+function install_sdk_lib(tool_name)
+    import("utils.archive")
+    import("lib.detect.find_file")
+
+    local zip_file = find_tool_zip(tool_name)
+
+    if(zip_file.dir ~= nil) then
+        print("install: "..zip_file.name)
+        archive.extract(zip_file.dir, sdk_libdir())
+    else
+        print("failed to install "..tool_name..", file "..zip_file.name.." not found!")
+    end
+end
+
+function sdk_lib_from_github(name, zip)
+    file_from_github(zip)
+    install_sdk_lib(name)
 end
 
 -- lib

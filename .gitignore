@@ -25,6 +25,7 @@ _deps
 /SDKs/grpc
 /SDKs/reflector-win
 /SDKs/tools
+/SDKs/libs
 /SDKs/python
 /SDKs/*.zip
 /SDKs/*.ttf
