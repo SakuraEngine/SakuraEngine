@@ -1174,6 +1174,7 @@ void skr_type_t::Destruct(void* address) const
                 else
                     ((skr::SPtr<void>*)address)->~SPtrHelper();
             }
+            break;
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
             auto& variant = (const VariantType&)(*this);

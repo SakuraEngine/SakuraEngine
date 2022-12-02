@@ -5,6 +5,11 @@ skr_value_t::skr_value_t(const skr_value_t& other)
     _Copy(other);
 }
 
+skr_value_t::skr_value_t(const skr_value_ref_t& ref)
+{
+    _Copy(ref);
+}
+
 skr_value_t::skr_value_t(skr_value_t&& other)
 {
     _Move(std::move(other));
@@ -21,6 +26,13 @@ skr_value_t& skr_value_t::operator=(skr_value_t&& other)
 {
     Reset();
     _Move(std::move(other));
+    return *this;
+}
+
+skr_value_t& skr_value_t::operator=(const skr_value_ref_t& other)
+{
+    Reset();
+    _Copy(other);
     return *this;
 }
 
@@ -92,6 +104,15 @@ void skr_value_t::_Copy(const skr_value_t& other)
     type->Copy(ptr, other.Ptr());
 }
 
+void skr_value_t::_Copy(const skr_value_ref_t& other)
+{
+    type = other.type;
+    if (!type)
+        return;
+    auto ptr = _Alloc();
+    type->Copy(ptr, other.ptr);
+}
+
 void skr_value_t::_Move(skr_value_t&& other)
 {
     type = other.type;
@@ -103,6 +124,11 @@ void skr_value_t::_Move(skr_value_t&& other)
 }
 
 // value ref
+skr_value_ref_t::skr_value_ref_t(void* address, const skr_type_t* inType)
+{
+    ptr = address;
+    type = inType;
+}
 
 skr_value_ref_t::skr_value_ref_t(skr_value_t& v)
 {
