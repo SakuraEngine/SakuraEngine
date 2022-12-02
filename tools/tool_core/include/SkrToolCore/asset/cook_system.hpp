@@ -1,17 +1,16 @@
 #pragma once
+#include <EASTL/functional.h>
 #include "cooker.hpp"
-#include "containers/vector.hpp"
 #include "containers/span.hpp"
-#include "containers/hashmap.hpp"
 #include "resource/resource_header.hpp"
-#include "utils/parallel_for.hpp"
-#include "utils/lazy.hpp"
 #include "platform/filesystem.hpp"
-#include "json/reader_fwd.h"
 #include "simdjson/padded_string.h"
 #include "utils/log.hpp"
-#include "platform/guid.hpp"
+#include "utils/defer.hpp"
+#include "binary/writer.h"
 
+struct skr_io_ram_service_t;
+namespace skr {namespace task { class event_t; }}
 namespace skd sreflect
 {
 namespace asset sreflect
@@ -26,25 +25,30 @@ struct SAssetRecord {
 
 struct TOOL_CORE_API SCookContext { // context per job
     friend struct SCookSystem;
+    friend struct SCookSystemImpl;
 public:
-    skr::filesystem::path GetOutputPath() const;
+    virtual ~SCookContext() = default;
+    virtual skr::filesystem::path GetOutputPath() const = 0;
     
-    SImporter* GetImporter() const;
-    skr_guid_t GetImporterType() const;
-    uint32_t GetImporterVersion() const;
-    uint32_t GetCookerVersion() const;
-    const SAssetRecord* GetAssetRecord() const;
-    skr::string GetAssetPath() const;
+    virtual SImporter* GetImporter() const = 0;
+    virtual skr_guid_t GetImporterType() const = 0;
+    virtual uint32_t GetImporterVersion() const = 0;
+    virtual uint32_t GetCookerVersion() const = 0;
+    virtual const SAssetRecord* GetAssetRecord() const = 0;
+    virtual skr::string GetAssetPath() const = 0;
 
-    skr::filesystem::path AddFileDependency(const skr::filesystem::path& path);
-    skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr_async_ram_destination_t& destination);
+    virtual skr::filesystem::path AddFileDependency(const skr::filesystem::path& path) = 0;
+    virtual skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr_async_ram_destination_t& destination) = 0;
 
-    void AddRuntimeDependency(skr_guid_t resource);
-    void AddSoftRuntimeDependency(skr_guid_t resource);
-    uint32_t AddStaticDependency(skr_guid_t resource, bool install);
-    skr::span<const skr_guid_t> GetRuntimeDependencies() const;
-    skr::span<const skr_resource_handle_t> GetStaticDependencies() const;
-    const skr_resource_handle_t& GetStaticDependency(uint32_t index) const;
+    virtual void AddRuntimeDependency(skr_guid_t resource) = 0;
+    virtual void AddSoftRuntimeDependency(skr_guid_t resource) = 0;
+    virtual uint32_t AddStaticDependency(skr_guid_t resource, bool install) = 0;
+    virtual skr::span<const skr_guid_t> GetRuntimeDependencies() const = 0;
+    virtual skr::span<const skr_resource_handle_t> GetStaticDependencies() const = 0;
+    virtual const skr_resource_handle_t& GetStaticDependency(uint32_t index) const = 0;
+    virtual skr::span<const skr::filesystem::path> GetFileDependencies() const = 0;
+
+    virtual const skr::task::event_t& GetCounter() = 0;
 
     template <class T>
     T* Import() { return (T*)_Import(); }
@@ -56,7 +60,8 @@ public:
     bool Save(T& resource) 
     {
         //------save resource to disk
-        auto file = fopen(outputPath.u8string().c_str(), "wb");
+        auto outputPath = GetOutputPath().u8string();
+        auto file = fopen(outputPath.c_str(), "wb");
         if (!file)
         {
             SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
@@ -84,8 +89,16 @@ public:
     }
 
 protected:
-    void* _Import();
-    void _Destroy(void*);
+    static SCookContext* Create(skr_io_ram_service_t* service);
+    static void Destroy(SCookContext* ctx);
+
+    virtual void SetCounter(skr::task::event_t&) = 0;
+    virtual void SetCookerVersion(uint32_t version) = 0;
+    virtual void SetOutputPath(const skr::filesystem::path& path) = 0;
+
+    virtual void* _Import() = 0;
+    virtual void _Destroy(void*) = 0;
+
     template <class S>
     void WriteHeader(S& s, SCooker* cooker)
     {
@@ -93,25 +106,12 @@ protected:
         header.guid = record->guid;
         header.type = record->type;
         header.version = cooker->Version();
-        header.dependencies.insert(header.dependencies.end(), runtimeDependencies.begin(), runtimeDependencies.end());
+        auto runtime_deps = GetRuntimeDependencies();
+        header.dependencies.insert(header.dependencies.end(), runtime_deps.begin(), runtime_deps.end());
         skr::binary::Archive(&s, header);
     }
 
-    // Job system wait counter
-    skr::task::event_t counter;
-
-    skr_guid_t importerType;
-    uint32_t importerVersion = 0;
-    uint32_t cookerVersion = 0;
-
     SAssetRecord* record = nullptr;
-    SImporter* importer = nullptr;
-    skr_io_ram_service_t* ioService = nullptr;
-
-    skr::filesystem::path outputPath;
-    skr::vector<skr_resource_handle_t> staticDependencies;
-    skr::vector<skr_guid_t> runtimeDependencies;
-    skr::vector<skr::filesystem::path> fileDependencies;
 };
 } // namespace asset
 } // namespace skd
@@ -121,48 +121,33 @@ namespace skd sreflect
 namespace asset sreflect
 {
 struct TOOL_CORE_API SCookSystem { // system
-    friend struct ::SkrToolCoreModule;
 public:
-    using AssetMap = skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash>;
-    using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
-
     SCookSystem() SKR_NOEXCEPT = default;
     virtual ~SCookSystem() SKR_NOEXCEPT = default;
 
-    void Initialize() {}
-    void Shutdown() {}
+    virtual void Initialize() {}
+    virtual void Shutdown() {}
 
-    skr::task::event_t AddCookTask(skr_guid_t resource);
-    skr::task::event_t EnsureCooked(skr_guid_t resource);
-    void WaitForAll();
-    bool AllCompleted() const;
+    virtual skr::task::event_t AddCookTask(skr_guid_t resource) = 0;
+    virtual skr::task::event_t EnsureCooked(skr_guid_t resource) = 0;
+    virtual void WaitForAll() = 0;
+    virtual bool AllCompleted() const = 0;
 
-    void RegisterCooker(skr_guid_t type, SCooker* cooker);
-    void UnregisterCooker(skr_guid_t type);
+    virtual void RegisterCooker(skr_guid_t type, SCooker* cooker) = 0;
+    virtual void UnregisterCooker(skr_guid_t type) = 0;
 
-    struct skr_io_ram_service_t* getIOService();
+    virtual SCooker* GetCooker(skr_guid_t type) const = 0;
+    virtual SAssetRecord* GetAssetRecord(skr_guid_t type) const = 0;
+
+    virtual SAssetRecord* GetAssetRecord(const skr_guid_t& guid) = 0;
+    virtual SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path) = 0;
+
+    virtual void ParallelForEachAsset(uint32_t batch, eastl::function<void(skr::span<SAssetRecord*>)> f) = 0;
+    virtual void ParallelForEachCooker(uint32_t batch, eastl::function<void(skr::span<SCooker*>)> f) = 0;
+
+    virtual skr_io_ram_service_t* getIOService() = 0;
+
     static constexpr uint32_t ioServicesMaxCount = 4;
-    struct skr_io_ram_service_t* ioServices[ioServicesMaxCount];
-    skr::task::counter_t mainCounter;
-
-    SAssetRecord* GetAssetRecord(const skr_guid_t& guid);
-    SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path);
-
-    template <class F, class Iter>
-    void ParallelFor(Iter begin, Iter end, size_t batch, F f)
-    {
-        skr::parallel_for(std::move(begin), std::move(end), batch, std::move(f));
-    }
-
-    const AssetMap& GetAssetMap() const { return assets; }
-    const CookingMap& GetCookingMap() const { return cooking; }
-protected:
-    AssetMap assets;
-    CookingMap cooking;
-    SMutex ioMutex;
-
-    skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
-    SMutex assetMutex;
 };
 }
 }

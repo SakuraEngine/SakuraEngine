@@ -4,7 +4,6 @@
     #pragma clang diagnostic ignored "-Wunknown-pragmas"
     #pragma clang diagnostic ignored "-Wuninitialized-const-reference"
 #endif
-
 #include "utils/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
 #include "SkrRenderGraph/frontend/render_graph.hpp"

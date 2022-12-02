@@ -6,6 +6,9 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 #elif defined(GAINPUT_PLATFORM_WIN) || defined(GAINPUT_PLATFORM_XBOX_ONE)
+#ifndef WIN32_LEAN_AND_MEAN
+	#define WIN32_LEAN_AND_MEAN
+#endif
 #include <Winsock2.h>
 typedef unsigned __int16 uint16_t;
 typedef __int16 int16_t;

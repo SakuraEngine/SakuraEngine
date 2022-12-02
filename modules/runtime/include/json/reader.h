@@ -2,6 +2,7 @@
 #include "json/reader_fwd.h"
 
 #if defined(__cplusplus)
+    #define SIMDJSON_IMPLEMENTATION_HASWELL 0
     #define SIMDJSON_AVX512_ALLOWED 0
     #include "simdjson.h"
     #include "containers/hashmap.hpp"

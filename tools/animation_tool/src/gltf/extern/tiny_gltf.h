@@ -41,6 +41,8 @@
 #ifndef TINY_GLTF_H_
 #define TINY_GLTF_H_
 
+#include "platform/debug.h"
+
 #include <array>
 #include <cassert>
 #include <cstdint>

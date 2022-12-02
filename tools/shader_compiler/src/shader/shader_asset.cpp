@@ -1,3 +1,4 @@
+#include "utils/parallel_for.hpp"
 #include <EASTL/array.h>
 #include "utils/io.h"
 #include "utils/log.hpp"
@@ -141,11 +142,10 @@ bool SShaderCooker::Cook(SCookContext *ctx)
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_SPIRV
     };
     // begin compile
-    auto system = skd::asset::GetCookSystem();
+    // auto system = skd::asset::GetCookSystem();
     eastl::vector<skr_platform_shader_resource_t> allOutResources(static_variants.size());
-    
     // foreach variants
-    system->ParallelFor(static_variants.begin(), static_variants.end(), 1,
+    skr::parallel_for(static_variants.begin(), static_variants.end(), 1,
         [&] (const auto* pVariant, const auto* _) -> void
         {
             const uint64_t static_varidx = pVariant - static_variants.begin();
@@ -158,14 +158,14 @@ bool SShaderCooker::Cook(SCookContext *ctx)
             }
 
     // foreach dynamic variants
-    system->ParallelFor(dynamic_variants.begin(), dynamic_variants.end(), 1,
+    skr::parallel_for(dynamic_variants.begin(), dynamic_variants.end(), 1,
         [&] (const auto* pDynamicVariant, const auto* __) -> void
     {
         const uint64_t dynamic_varidx = pDynamicVariant - dynamic_variants.begin();
         const auto dyn_hash = dynamic_stable_hashes[dynamic_varidx];
 
     // foreach target profiles
-    system->ParallelFor(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
+    skr::parallel_for(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
         [&] (const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* ___) -> void
         {
             ZoneScopedN("Shader Compile Task");

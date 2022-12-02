@@ -1,10 +1,6 @@
 #pragma once
+#include "platform/configure.h"
 #include "utils/defer.hpp"
-#include "EASTL/shared_ptr.h"
-#include "runtime_module.h"
-#include "EASTL/functional.h"
-#include "platform/thread.h"
-#include <chrono>
 
 namespace skr::task
 {
@@ -22,10 +18,15 @@ namespace skr::task
     template<class F>
     void wait(bool pin, F&& pred);
 }
+
 #define SKR_TASK_MARL
+
 #if !defined(SKR_TASK_MARL)
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
+#include "EASTL/shared_ptr.h"
+#include "platform/debug.h"
+
 namespace skr::task
 {
     class RUNTIME_API counter_t
@@ -179,7 +180,6 @@ namespace skr::task
     }
 }
 #else
-#include "marl/scheduler.h"
 #include "marl/event.h"
 #include "marl/waitgroup.h"
 
@@ -313,15 +313,9 @@ namespace skr::task
         SKR_ASSERT(fiber);
         marl::mutex mutex;
         marl::lock lock(mutex);
-        const std::chrono::time_point<std::chrono::system_clock> now =
-        std::chrono::system_clock::now();
+        const std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         fiber->wait(lock, now + 0.01ms, lambda);
     }
 }
 
 #endif
-
-namespace skr::task
-{
-    
-}

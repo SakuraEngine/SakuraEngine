@@ -1,3 +1,4 @@
+#include "utils/parallel_for.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -137,7 +138,7 @@ int main(int argc, char** argv)
     //----- import project assets (guid & type & path)
     {
         using iter_t = typename decltype(paths)::iterator;
-        system.ParallelFor(paths.begin(), paths.end(), 20,
+        skr::parallel_for(paths.begin(), paths.end(), 20,
         [&](iter_t begin, iter_t end) {
             ZoneScopedN("Import");
             for (auto i = begin; i != end; ++i)
@@ -149,15 +150,13 @@ int main(int argc, char** argv)
     skr::filesystem::create_directories(project->dependencyPath, ec);
     //----- schedule cook tasks (checking dependencies)
     {
-        const auto& assetMap = system.GetAssetMap();
-        using iter_t = typename std::decay_t<decltype(assetMap)>::const_iterator;
-        system.ParallelFor(assetMap.begin(), assetMap.end(), 1,
-        [](iter_t begin, iter_t end) {
-            ZoneScopedN("EnsureCooked");
-            auto& system = *skd::asset::GetCookSystem();
-            for (auto i = begin; i != end; ++i)
-                if (!(i->second->type == skr_guid_t{}))
-                    system.EnsureCooked(i->second->guid);
+        system.ParallelForEachAsset(1,
+        [&](skr::span<skd::asset::SAssetRecord*> assets) {
+            ZoneScopedN("Cook");
+            for (auto asset : assets)
+            {
+                system.EnsureCooked(asset->guid);
+            }
         });
     }
     SKR_LOG_INFO("Project asset import finished.");
