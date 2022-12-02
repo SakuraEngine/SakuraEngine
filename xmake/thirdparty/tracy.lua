@@ -1,6 +1,6 @@
 tracy_includes_dir = "$(projectdir)/thirdparty/tracy"
 table.insert(include_dir_list, tracy_includes_dir)
-table.insert(links_list, "$(buildir)/$(os)/$(arch)/$(mode)/TracyClient")
+table.insert(links_list, "TracyClient")
 
 if (is_config("use_tracy", "enable")) then
     table.insert(defs_list, "TRACY_OVERRIDE_ENABLE")
