@@ -1,6 +1,7 @@
 #pragma once
 #include "platform/configure.h"
 #include "utils/defer.hpp"
+#include "platform/debug.h"
 
 namespace skr::task
 {
@@ -25,7 +26,6 @@ namespace skr::task
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
 #include "EASTL/shared_ptr.h"
-#include "platform/debug.h"
 
 namespace skr::task
 {
