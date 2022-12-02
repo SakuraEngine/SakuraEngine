@@ -5,9 +5,18 @@ table.insert(include_dir_list, simdjson_include_dir)
 
 target("simdjson")
     set_group("00.thirdparty")
-    set_kind("static")    
     add_defines("SIMDJSON_IMPLEMENTATION_HASWELL=0")
     add_defines("SIMDJSON_AVX512_ALLOWED=0")
-    add_files(simdjson_source_dir.."/simdjson.cpp")
     add_includedirs(simdjson_include_dir)
     add_cxflags(project_cxflags, {public = true})
+    if (is_os("windows")) then 
+        set_kind("headeronly")    
+        if (is_mode("release")) then
+            add_links(sdk_libs_dir.."simdjson", {public=true} )
+        else
+            add_links(sdk_libs_dir.."simdjsond", {public=true} )
+        end
+    else
+        set_kind("static")    
+        add_files(simdjson_source_dir.."/simdjson.cpp")
+    end
