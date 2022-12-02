@@ -183,22 +183,22 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char* metadata)
     auto meta = simdjson::padded_string(metadata, strlen(metadata));
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(meta);
-    skr::json::Read(doc["api"].value_unsafe(), info.core_version);
-    skr::json::Read(doc["name"].value_unsafe(), info.name);
-    skr::json::Read(doc["prettyname"].value_unsafe(), info.prettyname);
-    skr::json::Read(doc["url"].value_unsafe(), info.url);
-    skr::json::Read(doc["copyright"].value_unsafe(), info.copyright);
-    skr::json::Read(doc["license"].value_unsafe(), info.license);
-    skr::json::Read(doc["version"].value_unsafe(), info.version);
-    skr::json::Read(doc["linking"].value_unsafe(), info.linking);
-    auto deps_doc = doc["dependencies"];
+    skr::json::Read(doc.find_field("api").value_unsafe(), info.core_version);
+    skr::json::Read(doc.find_field("name").value_unsafe(), info.name);
+    skr::json::Read(doc.find_field("prettyname").value_unsafe(), info.prettyname);
+    skr::json::Read(doc.find_field("version").value_unsafe(), info.version);
+    skr::json::Read(doc.find_field("linking").value_unsafe(), info.linking);
+    skr::json::Read(doc.find_field("url").value_unsafe(), info.url);
+    skr::json::Read(doc.find_field("license").value_unsafe(), info.license);
+    skr::json::Read(doc.find_field("copyright").value_unsafe(), info.copyright);
+    auto deps_doc = doc.find_field("dependencies");
     if (deps_doc.error() == simdjson::SUCCESS)
     {
         for (auto&& jdep : deps_doc)
         {
             ModuleDependency dep;
-            skr::json::Read(jdep["name"].value_unsafe(), dep.name);
-            skr::json::Read(jdep["version"].value_unsafe(), dep.version);
+            skr::json::Read(jdep.find_field("name").value_unsafe(), dep.name);
+            skr::json::Read(jdep.find_field("version").value_unsafe(), dep.version);
             info.dependencies.emplace_back(dep);
         }
     }
