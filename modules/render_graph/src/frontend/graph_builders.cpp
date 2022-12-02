@@ -445,6 +445,7 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_upload_buffer() SKR_N
     node.descriptor.flags |= CGPU_BCF_PERSISTENT_MAP_BIT;
     node.descriptor.start_state = CGPU_RESOURCE_STATE_COPY_SOURCE;
     node.descriptor.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
+    node.tags |= kRenderGraphDynamicResourceTag;
     return *this;
 }
 
