@@ -23,6 +23,7 @@ struct tweak_value_t
     skr::optional<skr::variant<float, int, bool, skr::string>> condition;
     skr::variant<float, int, bool, skr::string> value;
     uint32_t ident;
+    const char* expr;
     SMutexObject _mutex;
 };
 static struct inspect_system* _system = nullptr;
@@ -51,6 +52,7 @@ struct inspect_system : public skr::ModuleSubsystem
         auto result = &tweak_file.emplace(lineNumber, tweak_value_t{})->second;
         result->value = value;
         result->ident = counter++;
+        result->expr = str;
         return result;
     }
 
@@ -73,22 +75,22 @@ struct inspect_system : public skr::ModuleSubsystem
 
     void DrawInspect(tweak_value_t* value, int& data)
     {
-        ImGui::DragInt(skr::format("value#{}", value->ident).c_str(), &data, 1.0f, 0, 0, "%d", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::DragInt(skr::format("value##{}", value->ident).c_str(), &data, 1.0f, 0, 0, "%d", ImGuiSliderFlags_AlwaysClamp);
     }
 
     void DrawInspect(tweak_value_t* value, float& data)
     {
-        ImGui::DragFloat(skr::format("value#{}", value->ident).c_str(), &data, 0.01f, 0, 0, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::DragFloat(skr::format("value##{}", value->ident).c_str(), &data, 0.01f, 0, 0, "%.3f", ImGuiSliderFlags_AlwaysClamp);
     }
 
     void DrawInspect(tweak_value_t* value, bool& data)
     {
-        ImGui::Checkbox(skr::format("value#{}", value->ident).c_str(), &data);
+        ImGui::Checkbox(skr::format("value##{}", value->ident).c_str(), &data);
     }
 
     void DrawInspect(tweak_value_t* value, skr::string& data)
     {
-        ImGui::InputText(skr::format("value#{}", value->ident).c_str(), data.data(), data.size());
+        ImGui::InputText(skr::format("value##{}", value->ident).c_str(), data.data(), data.size());
     }
 
     void DrawInspects()
@@ -102,7 +104,7 @@ struct inspect_system : public skr::ModuleSubsystem
                 {
                     auto& value = p.second;
                     bool override = value.override.has_value();
-                    ImGui::Checkbox(skr::format("Line: {}#{}", p.first, value.ident).c_str(), &override);
+                    ImGui::Checkbox(skr::format("Line {}: \"{}\"##{}", p.first, value.expr, value.ident).c_str(), &override);
                     ImGui::SameLine();
                     if(override)
                     {

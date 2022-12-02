@@ -28,5 +28,7 @@ SKR_INSPECT_API bool update_inspected_value(inspected_bool* tweak, bool value);
 SKR_INSPECT_API const char* update_inspected_value(inspected_string* tweak, const char* value);
 
 SKR_INSPECT_API void update_value_inspector();
+#else
+void update_value_inspector() {}    
 #endif
 } // namespace skr::inspect
