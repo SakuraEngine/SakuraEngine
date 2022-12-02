@@ -43,6 +43,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_files("src/**/build.*.m", "src/**/build.*.mm")
     end
 
+    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
     add_links(links_list, {public = true})
     -- boost ctx
     do
