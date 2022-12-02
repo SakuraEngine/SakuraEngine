@@ -128,6 +128,10 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     -- install dxc on windows platform
     if (is_os("windows")) then 
         add_rules("utils.install-libs", { libnames = {"dxc"} })
+        add_links("$(buildir)/$(os)/$(arch)/$(mode)/nvapi_x64", {public = true})
+        add_links("$(buildir)/$(os)/$(arch)/$(mode)/WinPixEventRuntime", {public = true})
+        -- we do not support x86 windows
+        -- add_links("$(buildir)/$(os)/$(arch)/$(mode)/nvapi_x86")
     end
 
     -- cpu info private include dir

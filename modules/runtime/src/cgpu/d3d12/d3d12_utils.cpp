@@ -12,7 +12,6 @@
 #define USE_PIX
 #ifdef USE_PIX
 #include "cgpu/drivers/WinPixEventRuntime/pix3.h"
-#pragma comment(lib, "WinPixEventRuntime.lib")
 #endif
 
 #if !defined(XBOX) && defined(_WIN32)
