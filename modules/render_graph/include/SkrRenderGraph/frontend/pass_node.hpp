@@ -39,6 +39,7 @@ public:
     const EPassType pass_type = EPassType::None;
     const uint32_t order;
 protected:
+    bool can_be_lone = false;
     PassNode(EPassType pass_type, uint32_t order);
     eastl::vector<TextureReadEdge*> in_texture_edges;
     eastl::vector<TextureRenderEdge*> out_texture_edges;

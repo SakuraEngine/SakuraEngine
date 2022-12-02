@@ -113,6 +113,7 @@ public:
     public:
         friend class RenderGraph;
         CopyPassBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        CopyPassBuilder& can_be_lone() SKR_NOEXCEPT;
         CopyPassBuilder& texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst) SKR_NOEXCEPT;
         CopyPassBuilder& buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst) SKR_NOEXCEPT;
 

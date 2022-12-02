@@ -231,11 +231,13 @@ bool RenderGraph::compile() SKR_NOEXCEPT
         [this](PassNode* pass) {
             ZoneScopedN("Pass");
             const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
+            const bool can_be_lone = pass->can_be_lone;
+            const bool culled = lone && !can_be_lone;
             {
                 ZoneScopedN("RecordDealloc");
-                if (lone) culled_passes.emplace_back(pass);
+                if (culled) culled_passes.emplace_back(pass);
             }
-            return lone;
+            return culled;
         }),
         passes.end());
     }
