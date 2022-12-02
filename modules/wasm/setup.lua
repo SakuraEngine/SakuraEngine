@@ -1,3 +1,5 @@
+import("core.project.project")
+module_root = path.join(project.directory(), "xmake/modules")
 import("find_sdk", {rootdir = module_root})
 
 if (os.host() == "windows") then
