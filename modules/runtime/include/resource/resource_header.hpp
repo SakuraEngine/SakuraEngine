@@ -44,6 +44,7 @@ typedef enum ESkrLoadingStatus : uint32_t
 } ESkrLoadingStatus;
 
 typedef struct skr_resource_record_t skr_resource_record_t;
+struct lua_State;
 
 namespace skr::resource
 {
@@ -77,11 +78,19 @@ struct RUNTIME_API skr_resource_record_t {
         uint32_t entityRefCount = 0;
         bool operator==(const entity_requester& other) const { return id == other.id; };
     };
+    struct script_requester {
+        uint32_t id;
+        struct lua_State* state = nullptr;
+        uint32_t scriptRefCount = 0;
+        bool operator==(const entity_requester& other) const { return id == other.id; };
+    };
     uint32_t id = 0;
     uint32_t requesterCounter = 0;
     eastl::vector<object_requester> objectReferences;
     eastl::vector<entity_requester> entityReferences;
+    eastl::vector<script_requester> scriptReferences;
     uint32_t entityRefCount = 0;
+    uint32_t scriptRefCount = 0;
     skr_resource_header_t header;
     skr::resource::SResourceRequest* activeRequest;
 

@@ -18,7 +18,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     -- add deps & links
-    add_deps("SkrDependencyGraph", {public = false})
+    add_deps("SkrDependencyGraph", "lua", {public = false})
     add_deps("DirectXMath", "vulkan", {public = true})
     add_packages(packages_list, {public = true})
     -- runtime compile definitions

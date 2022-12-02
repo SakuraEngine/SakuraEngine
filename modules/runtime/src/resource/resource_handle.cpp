@@ -102,6 +102,13 @@ skr_guid_t skr_resource_handle_t::get_guid() const
     return guid;
 }
 
+skr_guid_t skr_resource_handle_t::get_type() const
+{
+    SKR_ASSERT(padding == 0);
+    const auto record = get_record();
+    return record != nullptr ? record->header.type : skr_guid_t();
+}
+
 void* skr_resource_handle_t::get_resolved(bool requireInstalled) const
 {
     if (is_null())

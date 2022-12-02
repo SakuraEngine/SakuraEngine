@@ -8,8 +8,10 @@ enum ESkrRequesterType
     SKR_REQUESTER_ENTITY = 0,
     SKR_REQUESTER_DEPENDENCY = 1,
     SKR_REQUESTER_SYSTEM = 2,
-    SKR_REQUESTER_UNKNOWN = 3
+    SKR_REQUESTER_SCRIPT = 3,
+    SKR_REQUESTER_UNKNOWN = 4
 };
+struct lua_State;
 typedef struct skr_resource_handle_t {
     union
     {
@@ -45,6 +47,7 @@ typedef struct skr_resource_handle_t {
     }
     RUNTIME_API void unload();
     RUNTIME_API skr_guid_t get_guid() const;
+    RUNTIME_API skr_guid_t get_type() const;
     RUNTIME_API void* get_ptr() const;
     RUNTIME_API bool is_null() const;
     RUNTIME_API void reset();
