@@ -261,6 +261,39 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         .prefer_on_device()
                         .as_uniform_buffer();
                 });
+            // barrier skin vbs
+            renderGraph->add_copy_pass(
+                [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassBuilder& builder) {
+                    builder.set_name("BarrierSkinVertexBuffers")
+                        .can_be_lone();
+                },
+                [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
+                    ZoneScopedN("BarrierSkinMesh");
+                    CGPUResourceBarrierDescriptor barrier_desc = {};
+                    eastl::vector<CGPUBufferBarrier> barriers;
+                    auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
+                    auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                    for (uint32_t i = 0; i < r_cv->count; i++)
+                    {
+                        auto* anim = anims + i;
+                        for (size_t j = 0u; j < anim->buffers.size(); j++)
+                        {
+                            const bool use_dynamic_buffer = anim->use_dynamic_buffer;
+                            if (anim->vbs[j] && !use_dynamic_buffer)
+                            {
+                                CGPUBufferBarrier& barrier = barriers.emplace_back();
+                                barrier.buffer = anim->vbs[j];
+                                barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+                                barrier.dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+                            }
+                        }
+                    }
+                    barrier_desc.buffer_barriers = barriers.data();
+                    barrier_desc.buffer_barriers_count = (uint32_t)barriers.size();
+                    cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
+                    };
+                    dualQ_get_views(skin_query, DUAL_LAMBDA(barrierVertices));
+                });
             renderGraph->add_render_pass(
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
                     const auto out_color = renderGraph->get_texture("backbuffer");
@@ -293,9 +326,9 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                             ZoneScopedN("BindGeometry");
                             cgpu_render_encoder_bind_index_buffer(stack.encoder, 
                                 dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
-                            CGPUBufferId vertex_buffers[10] = { 0 };
-                            uint32_t strides[10] = { 0 };
-                            uint32_t offsets[10] = { 0 };
+                            CGPUBufferId vertex_buffers[16] = { 0 };
+                            uint32_t strides[16] = { 0 };
+                            uint32_t offsets[16] = { 0 };
                             for (size_t i = 0; i < dc.vertex_buffer_count; i++)
                             {
                                 vertex_buffers[i] = dc.vertex_buffers[i].buffer;

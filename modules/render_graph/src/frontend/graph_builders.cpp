@@ -271,6 +271,12 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char*
     return *this;
 }
 
+RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::can_be_lone() SKR_NOEXCEPT
+{
+    node.can_be_lone = true;
+    return *this;
+}
+
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst) SKR_NOEXCEPT
 {
     auto allocated_in = graph.object_factory->Allocate<BufferReadEdge>("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
