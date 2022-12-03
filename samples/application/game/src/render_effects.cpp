@@ -358,7 +358,6 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 };
 RenderPassForward* forward_pass = nullptr;
 
-#pragma clang optimize off
 #include "rtm/quatf.h"
 #include "rtm/scalarf.h"
 #include "rtm/qvvf.h"

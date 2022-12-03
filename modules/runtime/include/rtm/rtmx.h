@@ -7,7 +7,7 @@ namespace rtm
 {
 constexpr uint32_t RTM_SELECT_0 = 0x00000000;
 constexpr uint32_t RTM_SELECT_1 = ~RTM_SELECT_0;
-static const rtm::mask4i RTM_SELECT_1110 = rtm::mask_set(RTM_SELECT_1, RTM_SELECT_1, RTM_SELECT_1, RTM_SELECT_0);
+static const rtm::mask4f RTM_SELECT_1110F = rtm::mask_set(RTM_SELECT_1, RTM_SELECT_1, RTM_SELECT_1, RTM_SELECT_0);
 
 RTM_DISABLE_SECURITY_COOKIE_CHECK inline 
 rtm::matrix4x4f RTM_SIMD_CALL perspective_fov(float FovAngleY, float AspectRatio, float NearZ, float FarZ) RTM_NO_EXCEPT
@@ -41,10 +41,11 @@ rtm::matrix4x4f RTM_SIMD_CALL look_to_matrix_lh(rtm::vector4f_arg0 EyePosition, 
     const rtm::vector4f D1 = ( rtm::vector_dot3(R1, NegEyePosition) );
     const rtm::vector4f D2 = ( rtm::vector_dot3(R2, NegEyePosition) );
 
-    const auto col0 = rtm::vector_select(RTM_SELECT_1110, R0, D0);
-    const auto col1 = rtm::vector_select(RTM_SELECT_1110, R1, D1);
-    const auto col2 = rtm::vector_select(RTM_SELECT_1110, R2, D2);
-    const auto col3 = rtm::vector_set(0.f, 0.f, 0.f, 1.f);
+    const rtm::vector4f col0 = rtm::vector_select(RTM_SELECT_1110F, R0, D0);
+    const rtm::vector4f col1 = rtm::vector_select(RTM_SELECT_1110F, R1, D1);
+    const rtm::vector4f col2 = rtm::vector_select(RTM_SELECT_1110F, R2, D2);
+    const rtm::vector4f col3 = rtm::vector_set(0.f, 0.f, 0.f, 1.f);
+    
     const matrix4x4f mat4x4 = rtm::matrix_set(col0, col1, col2, col3);
     const matrix4x4f result = rtm::matrix_transpose(mat4x4);
     return result;
