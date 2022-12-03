@@ -26,7 +26,7 @@ if(has_config("is_clang")) then
     table.insert(project_cxflags, "-Wno-tautological-undefined-compare")
     table.insert(project_cxflags, "-Werror=return-type")
     -- enable time trace with clang compiler
-    -- table.insert(project_cxflags, "-ftime-trace")
+    table.insert(project_cxflags, "-ftime-trace")
     if(has_config("is_msvc")) then
         table.insert(project_cxflags, "-Wno-microsoft-cast")
     end

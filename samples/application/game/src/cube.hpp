@@ -1,7 +1,7 @@
-#include "math/vectormath.hpp"
+#include "utils/types.h"
 
 struct CubeGeometry {
-    const skr::math::Vector3f g_Positions[24] = {
+    const skr_float3_t g_Positions[24] = {
         { -0.5f, 0.5f, -0.5f }, // front face
         { 0.5f, -0.5f, -0.5f },
         { -0.5f, -0.5f, -0.5f },
@@ -32,7 +32,7 @@ struct CubeGeometry {
         { 0.5f, -0.5f, -0.5f },
         { -0.5f, -0.5f, 0.5f },
     };
-    const skr::math::Vector2f g_TexCoords[24] = {
+    const skr_float2_t g_TexCoords[24] = {
         { 0.0f, 0.0f }, // front face
         { 1.0f, 1.0f },
         { 0.0f, 1.0f },
@@ -63,7 +63,7 @@ struct CubeGeometry {
         { 1.0f, 0.0f },
         { 0.0f, 1.0f },
     };
-    const skr::math::Vector2f g_TexCoords2[24] = {
+    const skr_float2_t g_TexCoords2[24] = {
         { 0.0f, 0.0f }, // front face
         { 1.0f, 1.0f },
         { 0.0f, 1.0f },
@@ -94,38 +94,38 @@ struct CubeGeometry {
         { 1.0f, 0.0f },
         { 0.0f, 1.0f },
     };
-    const skr::math::Vector3f g_Normals[24] = {
-        skr::math::Vector3f(0.0f, 0.0f, -1.0f), // front face
-        skr::math::Vector3f(0.0f, 0.0f, -1.0f),
-        skr::math::Vector3f(0.0f, 0.0f, -1.0f),
-        skr::math::Vector3f(0.0f, 0.0f, -1.0f),
+    const skr_float3_t g_Normals[24] = {
+        { 0.0f, 0.0f, -1.0f }, // front face
+        { 0.0f, 0.0f, -1.0f },
+        { 0.0f, 0.0f, -1.0f },
+        { 0.0f, 0.0f, -1.0f },
 
-        skr::math::Vector3f(1.0f, 0.0f, 0.0f), // right side face
-        skr::math::Vector3f(1.0f, 0.0f, 0.0f),
-        skr::math::Vector3f(1.0f, 0.0f, 0.0f),
-        skr::math::Vector3f(1.0f, 0.0f, 0.0f),
+        { 1.0f, 0.0f, 0.0f }, // right side face
+        { 1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
 
-        skr::math::Vector3f(-1.0f, 0.0f, 0.0f), // left side face
-        skr::math::Vector3f(-1.0f, 0.0f, 0.0f),
-        skr::math::Vector3f(-1.0f, 0.0f, 0.0f),
-        skr::math::Vector3f(-1.0f, 0.0f, 0.0f),
+        { -1.0f, 0.0f, 0.0f }, // left side face
+        { -1.0f, 0.0f, 0.0f },
+        { -1.0f, 0.0f, 0.0f },
+        { -1.0f, 0.0f, 0.0f },
 
-        skr::math::Vector3f(0.0f, 0.0f, 1.0f), // back face
-        skr::math::Vector3f(0.0f, 0.0f, 1.0f),
-        skr::math::Vector3f(0.0f, 0.0f, 1.0f),
-        skr::math::Vector3f(0.0f, 0.0f, 1.0f),
+        { 0.0f, 0.0f, 1.0f }, // back face
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
 
-        skr::math::Vector3f(0.0f, 1.0f, 0.0f), // top face
-        skr::math::Vector3f(0.0f, 1.0f, 0.0f),
-        skr::math::Vector3f(0.0f, 1.0f, 0.0f),
-        skr::math::Vector3f(0.0f, 1.0f, 0.0f),
+        { 0.0f, 1.0f, 0.0f }, // top face
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
 
-        skr::math::Vector3f(0.0f, -1.0f, 0.0f), // bottom face
-        skr::math::Vector3f(0.0f, -1.0f, 0.0f),
-        skr::math::Vector3f(0.0f, -1.0f, 0.0f),
-        skr::math::Vector3f(0.0f, -1.0f, 0.0f),
+        { 0.0f, -1.0f, 0.0f }, // bottom face
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
     };
-    const skr::math::Vector4f g_Tangents[24] = {
+    const skr_float4_t g_Tangents[24] = {
 
     };
     static constexpr uint32_t g_Indices[] = {

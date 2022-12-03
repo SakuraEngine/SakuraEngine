@@ -104,10 +104,12 @@ extern const char* $name;
     #define SKR_OS_WINDOWS
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
     #define FORCEINLINE __forceinline
+    #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
 #else
     #define FORCEINLINE inline __attribute__((always_inline))
+    #define DEFINE_ALIGNED(def, a) __attribute__((aligned(a))) def
 #endif
 
 #if defined(__cplusplus)

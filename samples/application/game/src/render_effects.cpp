@@ -217,7 +217,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 
     struct DrawCallListData
     {
-        skr::math::float4x4 view_projection;
+        skr_float4x4_t view_projection;
         uint32_t viewport_width;
         uint32_t viewport_height;
     };
@@ -358,6 +358,12 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 };
 RenderPassForward* forward_pass = nullptr;
 
+#pragma clang optimize off
+#include "rtm/quatf.h"
+#include "rtm/scalarf.h"
+#include "rtm/qvvf.h"
+#include "rtm/rtmx.h"
+
 typedef struct forward_effect_identity_t {
     dual_entity_t game_entity;
 } forward_effect_identity_t;
@@ -486,31 +492,35 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         mesh_drawcalls.clear();
         push_constants.reserve(c);
         mesh_drawcalls.reserve(c);
-        auto view = skr::math::look_at_matrix(
-            { 0.f, -135.f, 55.f } /*eye*/, 
-            { 0.f, 0.f, 50.f } /*at*/,
-            { 0.f, 0.f, 1.f } /*up*/
+        auto view = rtm::look_at_matrix(
+            { 0.f, -135.f, 55.f, 1.f } /*eye*/, 
+            { 0.f, 0.f, 50.f, 1.f } /*at*/,
+            { 0.f, 0.f, 1.f, 0.f } /*up*/
         );
         auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
             auto cameras = dual::get_owned_rw<skr_camera_t>(g_cv);
             auto camera_transforms = dual::get_owned_rw<skr_translation_t>(g_cv);
-            auto camera_forward = skr::math::Vector3f(0.f, 1.f, 0.f);
             SKR_ASSERT(g_cv->count <= 1);
             if (cameras)
             {
                 forward_pass_data.viewport_width = cameras->viewport_width;
                 forward_pass_data.viewport_height = cameras->viewport_height;
 
-                view = skr::math::look_at_matrix(
-                    camera_transforms->value /*eye*/, 
-                    camera_forward + camera_transforms->value /*at*/,
+                const rtm::vector4f eye = rtm::vector_load3((const uint8_t*)&camera_transforms->value);
+                const rtm::vector4f camera_dir = rtm::vector_set(0.f, 1.f, 0.f, 0.f);
+                const rtm::vector4f focus_pos = rtm::vector_add(eye, camera_dir);
+                view = rtm::look_at_matrix(
+                    eye /*eye*/, 
+                    focus_pos /*at*/,
                     { 0.f, 0.f, 1.f } /*up*/
                 );
-                auto proj = skr::math::perspective_fov(
+                auto proj = rtm::perspective_fov(                    
                     3.1415926f / 2.f, 
                     (float)forward_pass_data.viewport_width / (float)forward_pass_data.viewport_height, 
                     1.f, 1000.f);
-                forward_pass_data.view_projection = skr::math::multiply(view, proj);
+
+                auto result2 = rtm::matrix_mul(view, proj);
+                forward_pass_data.view_projection = *(skr_float4x4_t*)&result2;
             }
         };
         dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
@@ -533,12 +543,20 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                     auto scales = dual::get_owned_rw<skr_scale_t>(g_cv);
                     for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                     {
-                        const auto quaternion = skr::math::quaternion_from_euler(
-                            rotations[g_idx].euler.pitch, rotations[g_idx].euler.yaw, rotations[g_idx].euler.roll);
-                        auto world = skr::math::make_transform(
-                            translations[g_idx].value,
-                            scales[g_idx].value,
-                            quaternion);
+                        const auto quat = rtm::quat_from_euler_rh(
+                            rtm::scalar_deg_to_rad(-rotations[g_idx].euler.pitch),
+                            rtm::scalar_deg_to_rad(rotations[g_idx].euler.yaw),
+                            rtm::scalar_deg_to_rad(rotations[g_idx].euler.roll));
+                        const rtm::vector4f translation = rtm::vector_set(
+                            translations[g_idx].value.x, translations[g_idx].value.y,
+                            translations[g_idx].value.z, 0.f);
+                        const rtm::vector4f scale = rtm::vector_set(
+                            scales[g_idx].value.x, scales[g_idx].value.y,
+                            scales[g_idx].value.z, 0.f
+                        );
+		                const rtm::qvvf transform = rtm::qvv_set(quat, translation, scale);
+                        const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
+                        skr_float4x4_t world = *(skr_float4x4_t*)&matrix;
                         // drawcall
                         auto status = meshes[r_idx].mesh_resource.get_status();
                         if (status == SKR_LOADING_STATUS_INSTALLED)
@@ -638,7 +656,7 @@ protected:
     dual_query_t* camera_query = nullptr;
     dual_type_index_t identity_type = {};
     struct PushConstants {
-        skr::math::float4x4 world;
+        skr_float4x4_t world;
     };
     eastl::vector<PushConstants> push_constants;
     RenderPassForward::DrawCallListData forward_pass_data;
@@ -724,19 +742,19 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     cgpu_free_command_pool(cmd_pool);
     // init vbvs & ibvs
     vbvs[0].buffer = vertex_buffer;
-    vbvs[0].stride = sizeof(skr::math::Vector3f);
+    vbvs[0].stride = sizeof(skr_float3_t);
     vbvs[0].offset = offsetof(CubeGeometry, g_Positions);
     vbvs[1].buffer = vertex_buffer;
-    vbvs[1].stride = sizeof(skr::math::Vector2f);
+    vbvs[1].stride = sizeof(skr_float2_t);
     vbvs[1].offset = offsetof(CubeGeometry, g_TexCoords);
     vbvs[2].buffer = vertex_buffer;
-    vbvs[2].stride = sizeof(skr::math::Vector2f);
+    vbvs[2].stride = sizeof(skr_float2_t);
     vbvs[2].offset = offsetof(CubeGeometry, g_TexCoords2);
     vbvs[3].buffer = vertex_buffer;
-    vbvs[3].stride = sizeof(skr::math::Vector3f);
+    vbvs[3].stride = sizeof(skr_float3_t);
     vbvs[3].offset = offsetof(CubeGeometry, g_Normals);
     vbvs[4].buffer = vertex_buffer;
-    vbvs[4].stride = sizeof(skr::math::Vector4f);
+    vbvs[4].stride = sizeof(skr_float4_t);
     vbvs[4].offset = offsetof(CubeGeometry, g_Tangents);
     ibv.buffer = index_buffer;
     ibv.index_count = 36;

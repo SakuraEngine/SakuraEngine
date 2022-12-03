@@ -5,7 +5,6 @@ sdk_libs_dir = "$(projectdir)/SDKs/libs/"
 includes("thirdparty/EASTL.lua") 
 includes("thirdparty/lmdb.lua")
 includes("thirdparty/boost.lua")
-includes("thirdparty/DirectXMath.lua")
 includes("thirdparty/SDL2.lua")
 includes("thirdparty/cgltf.lua")
 includes("thirdparty/tracy.lua")

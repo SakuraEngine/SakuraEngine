@@ -30,6 +30,9 @@ bool CGPUUtil_AddSignature(CGPURootSignaturePoolId pool, CGPURootSignature* sig,
 bool CGPUUtil_PoolFreeSignature(CGPURootSignaturePoolId pool, CGPURootSignatureId sig);
 void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool);
 
+#define cgpu_round_up(value, multiple) ((((value) + (multiple)-1) / (multiple)) * (multiple))
+#define cgpu_round_down(value, multiple) ((value) - (value) % (multiple))
+
 #ifdef __cplusplus
 } // end extern "C"
 #endif

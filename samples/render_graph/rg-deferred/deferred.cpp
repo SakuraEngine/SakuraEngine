@@ -152,9 +152,9 @@ void create_resources()
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
     // wvp
     auto world = smath::make_transform(
-    { 0.f, 0.f, 0.f },                     // translation
-    2 * skr::math::Vector3f::vector_one(), // scale
-    skr::math::Quaternion::identity()      // quat
+        { 0.f, 0.f, 0.f },                     // translation
+        2 * skr::math::Vector3f::vector_one(), // scale
+        skr::math::Quaternion::identity()      // quat
     );
     CubeGeometry::instance_data.world = world;
     {

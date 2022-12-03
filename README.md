@@ -41,7 +41,7 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 | `runtime` | - | 核心模块 |
 | `runtime/cgpu` | - | 核心子模块，面向现代 GPU 平台的跨平台 Graphics API |
 | `runtime/dual` | - | 核心子模块，真正面向数据驱动编程的 ECS 对象模型 |
-| `runtime/math` | [DirectXMath] | 核心子模块, 数学库 |
+| `runtime/math` | [RealtimeMath] | 核心子模块, 数学库 |
 | `runtime/io` | - | 核心子模块，同步/异步 I/O 服务 |
 | `runtime/task` | - | 核心子模块，基于协程的计算密集任务系统 |
 | `runtime/binary` | - | 核心子模块, 二进制序列化 |
@@ -63,7 +63,7 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 | `codegen` | [libtooling] [mako-template] | 提供代码生成 |
 | `UsdTool` | [usd] | USD相关资源的导入与烘焙 |
 
-[DirectXMath]: https://github.com/microsoft/DirectXMath
+[RealtimeMath]: https://github.com/nfrechette/rtm
 [imgui]: https://github.com/ocornut/imgui
 [live2d]: https://www.live2d.com/en/
 [gaininput]: https://github.com/jkuhlmann/gainput
@@ -196,7 +196,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - D3D12MemoryAllocator 2.0.1 release
 - SPIRV-Reflect b68b5a8 (Apache-2.0)
 - wasm3 a3abb3f, org.fork (MIT)
-- DirectXMath 596aa5d (MIT)
+- RealtimeMath 80d08a8 (MIT)
 - FiberTaskingLib 9d7b27d (Apache-2.0)
 - sole 1.0.1 (zlib License)
 - parallel-hashmap 1.3.4 (Apache-2.0)
