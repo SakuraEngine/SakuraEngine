@@ -67,10 +67,10 @@ namespace skr
     template<class T>
     constexpr auto GetSerialize() -> int(*)(const void*, skr_binary_writer_t* writer)
     {
-        if constexpr(is_complete_serde_v<skr::binary::WriteHelper<const T&>>)
+        if constexpr(is_complete_serde_v<skr::binary::WriteTrait<const T&>>)
             return [](const void* address, skr_binary_writer_t* archive) { 
                 T* ptr = (T*)address;
-                return skr::binary::WriteHelper<const T&>::Write(archive, *ptr);
+                return skr::binary::WriteTrait<const T&>::Write(archive, *ptr);
             };
         return nullptr;
     }
@@ -78,10 +78,10 @@ namespace skr
     template<class T>
     constexpr auto GetDeserialize() -> int(*)(void*, skr_binary_reader_t* reader)
     {
-        if constexpr(is_complete_serde_v<skr::binary::ReadHelper<T>>)
+        if constexpr(is_complete_serde_v<skr::binary::ReadTrait<T>>)
             return [](void* address, skr_binary_reader_t* archive) {
                 T* ptr = (T*)address;
-                return skr::binary::ReadHelper<T>::Read(archive, *ptr);
+                return skr::binary::ReadTrait<T>::Read(archive, *ptr);
             };
         return nullptr;
     }
@@ -89,10 +89,10 @@ namespace skr
     template<class T>
     constexpr auto GetTextSerialize() -> void(*)(const void*, skr_json_writer_t* writer)
     {
-        if constexpr(is_complete_serde_v<skr::json::WriteHelper<const T&>>)
+        if constexpr(is_complete_serde_v<skr::json::WriteTrait<const T&>>)
             return [](const void* address, skr_json_writer_t* archive) {
                 T* ptr = (T*)address;
-                return skr::json::WriteHelper<const T&>::Write(archive, *ptr);
+                return skr::json::WriteTrait<const T&>::Write(archive, *ptr);
             };
         return nullptr;
     }
@@ -100,10 +100,10 @@ namespace skr
     template<class T>
     constexpr auto GetTextDeserialize() -> json::error_code(*)(void*, json::value_t&& reader)
     {
-        if constexpr(is_complete_serde_v<skr::json::ReadHelper<T>>)
+        if constexpr(is_complete_serde_v<skr::json::ReadTrait<T>>)
             return [](void* address, json::value_t&& archive) {
                 T* ptr = (T*)address;
-                return skr::json::ReadHelper<T>::Read(std::move(archive), *ptr);
+                return skr::json::ReadTrait<T>::Read(std::move(archive), *ptr);
             };
         return nullptr;
     }

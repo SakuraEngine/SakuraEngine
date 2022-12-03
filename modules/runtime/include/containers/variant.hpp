@@ -134,7 +134,7 @@ namespace skr
 namespace binary
 {
 template<class ...Ts>
-struct ReadHelper<skr::variant<Ts...>>
+struct ReadTrait<skr::variant<Ts...>>
 {
     template<size_t I, class T>
     static int ReadByIndex(skr_binary_reader_t* archive, skr::variant<Ts...>& value, size_t index)
@@ -170,8 +170,8 @@ struct ReadHelper<skr::variant<Ts...>>
 } // namespace binary
 
 template <class ...Ts>
-struct SerdeCompleteChecker<binary::ReadHelper<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<binary::ReadHelper<Ts>> && ...)> {
+struct SerdeCompleteChecker<binary::ReadTrait<skr::variant<Ts...>>>
+    : std::bool_constant<(is_complete_serde_v<binary::ReadTrait<Ts>> && ...)> {
 };
 } // namespace skr
 
@@ -183,7 +183,7 @@ namespace skr
 namespace binary
 {
 template <class... Ts>
-struct WriteHelper<const skr::variant<Ts...>&> {
+struct WriteTrait<const skr::variant<Ts...>&> {
     static int Write(skr_binary_writer_t* archive, const skr::variant<Ts...>& variant)
     {
         SKR_ARCHIVE((uint32_t)variant.index());
@@ -197,7 +197,7 @@ struct WriteHelper<const skr::variant<Ts...>&> {
 };
 } // namespace binary
 template <class... Ts>
-struct SerdeCompleteChecker<binary::WriteHelper<const skr::variant<Ts...>&>>
-    : std::bool_constant<(is_complete_serde_v<json::WriteHelper<Ts>> && ...)> {
+struct SerdeCompleteChecker<binary::WriteTrait<const skr::variant<Ts...>&>>
+    : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
 };
 } // namespace skr

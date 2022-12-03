@@ -91,7 +91,7 @@ namespace skr
 namespace binary
 {
 template <class V, class Allocator>
-struct ReadHelper<skr::vector<V, Allocator>> {
+struct ReadTrait<skr::vector<V, Allocator>> {
     static int Read(skr_binary_reader_t* archive, skr::vector<V, Allocator>& vec)
     {
         skr::vector<V, Allocator> temp;
@@ -111,8 +111,8 @@ struct ReadHelper<skr::vector<V, Allocator>> {
 };
 }
 template <typename V, typename Allocator>
-struct SerdeCompleteChecker<binary::ReadHelper<skr::vector<V, Allocator>>>
-    : std::bool_constant<is_complete_serde_v<binary::ReadHelper<V>>> {
+struct SerdeCompleteChecker<binary::ReadTrait<skr::vector<V, Allocator>>>
+    : std::bool_constant<is_complete_serde_v<binary::ReadTrait<V>>> {
 };
 }
 
@@ -124,7 +124,7 @@ namespace skr
 namespace binary
 {
 template <class V, class Allocator>
-struct WriteHelper<const skr::vector<V, Allocator>&> {
+struct WriteTrait<const skr::vector<V, Allocator>&> {
     static int Write(skr_binary_writer_t* archive, const skr::vector<V, Allocator>& vec)
     {
         SKR_ARCHIVE((uint32_t)vec.size());
@@ -148,7 +148,7 @@ struct VectorWriter
 } // namespace binary
 
 template <class V, class Allocator>
-struct SerdeCompleteChecker<binary::WriteHelper<const skr::vector<V, Allocator>&>>
-    : std::bool_constant<is_complete_serde_v<json::WriteHelper<V>>> {
+struct SerdeCompleteChecker<binary::WriteTrait<const skr::vector<V, Allocator>&>>
+    : std::bool_constant<is_complete_serde_v<json::WriteTrait<V>>> {
 };
 } // namespace skr

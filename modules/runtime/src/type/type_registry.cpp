@@ -1479,7 +1479,7 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
 template <class T>
 void SerializeTextImpl(const void* dst, skr_json_writer_t* writer)
 {
-    if constexpr (skr::is_complete_v<skr::json::WriteHelper<T>>)
+    if constexpr (skr::is_complete_v<skr::json::WriteTrait<T>>)
         return skr::json::Write(writer, *(T*)dst);
     SKR_UNIMPLEMENTED_FUNCTION();
 }
@@ -1648,7 +1648,7 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
 template <class T>
 skr::json::error_code DeserializeTextImpl(void* dst, skr::json::value_t&& reader)
 {
-    if constexpr (skr::is_complete_v<skr::json::ReadHelper<T>>)
+    if constexpr (skr::is_complete_v<skr::json::ReadTrait<T>>)
         return skr::json::Read(std::move(reader), *(T*)dst);
     SKR_UNIMPLEMENTED_FUNCTION();
     return skr::json::error_code::INCORRECT_TYPE;

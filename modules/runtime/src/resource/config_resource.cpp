@@ -36,7 +36,7 @@ void skr_config_resource_t::SetType(skr_type_id_t type)
 
 namespace skr::binary
 {
-    int WriteHelper<const skr_config_resource_t&>::Write(skr_binary_writer_t *archive, const skr_config_resource_t &value)
+    int WriteTrait<const skr_config_resource_t&>::Write(skr_binary_writer_t *archive, const skr_config_resource_t &value)
     {
         if(auto result = skr::binary::Write(archive, value.configType); result != 0)
             return result;
@@ -46,7 +46,7 @@ namespace skr::binary
         return type->Serialize(value.configData, archive);
     }
 
-    int ReadHelper<skr_config_resource_t>::Read(skr_binary_reader_t *archive, skr_config_resource_t &value)
+    int ReadTrait<skr_config_resource_t>::Read(skr_binary_reader_t *archive, skr_config_resource_t &value)
     {
         if(auto result = skr::binary::Read(archive, value.configType); result != 0)
             return result;

@@ -812,11 +812,11 @@ namespace dual
                 };
         }
         if constexpr ((flags & DCF_SERDE) != 0) {
-            if constexpr(skr::is_complete_serde_v<skr::binary::WriteHelper<C>>)
+            if constexpr(skr::is_complete_serde_v<skr::binary::WriteTrait<C>>)
                 desc.callback.serialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
                     skr::binary::Write<const C&>(writer, *(C*)data);
                 };
-            if constexpr(skr::is_complete_serde_v<skr::binary::ReadHelper<C>>)
+            if constexpr(skr::is_complete_serde_v<skr::binary::ReadTrait<C>>)
                 desc.callback.deserialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
                     skr::binary::Read(reader, *(C*)data);
                 };

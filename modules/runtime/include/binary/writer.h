@@ -35,102 +35,102 @@ template <class T>
 int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value);
 
 template <class T>
-struct WriteHelper<const T&, std::enable_if_t<std::is_enum_v<T>>> {
+struct WriteTrait<const T&, std::enable_if_t<std::is_enum_v<T>>> {
     static int Write(skr_binary_writer_t* writer, const T& value)
     {
         using UT = std::underlying_type_t<T>;
-        return WriteHelper<const UT&>::Write(writer, static_cast<UT>(value));
+        return WriteTrait<const UT&>::Write(writer, static_cast<UT>(value));
     }
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const bool&> {
+struct RUNTIME_API WriteTrait<const bool&> {
     static int Write(skr_binary_writer_t* writer, bool value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const uint32_t&> {
+struct RUNTIME_API WriteTrait<const uint32_t&> {
     static int Write(skr_binary_writer_t* writer, uint32_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const uint64_t&> {
+struct RUNTIME_API WriteTrait<const uint64_t&> {
     static int Write(skr_binary_writer_t* writer, uint64_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const int32_t&> {
+struct RUNTIME_API WriteTrait<const int32_t&> {
     static int Write(skr_binary_writer_t* writer, int32_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const int64_t&> {
+struct RUNTIME_API WriteTrait<const int64_t&> {
     static int Write(skr_binary_writer_t* writer, int64_t value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const float&> {
+struct RUNTIME_API WriteTrait<const float&> {
     static int Write(skr_binary_writer_t* writer, float value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const double&> {
+struct RUNTIME_API WriteTrait<const double&> {
     static int Write(skr_binary_writer_t* writer, double value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float2_t&> {
+struct RUNTIME_API WriteTrait<const skr_float2_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float2_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float3_t&> {
+struct RUNTIME_API WriteTrait<const skr_float3_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float3_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_rotator_t&> {
+struct RUNTIME_API WriteTrait<const skr_rotator_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_rotator_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float4_t&> {
+struct RUNTIME_API WriteTrait<const skr_float4_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float4_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_quaternion_t&> {
+struct RUNTIME_API WriteTrait<const skr_quaternion_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_quaternion_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float4x4_t&> {
+struct RUNTIME_API WriteTrait<const skr_float4x4_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float4x4_t& value);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_guid_t&> {
+struct RUNTIME_API WriteTrait<const skr_guid_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_guid_t& guid);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_md5_t&> {
+struct RUNTIME_API WriteTrait<const skr_md5_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_md5_t& MD5);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_blob_t&> {
+struct RUNTIME_API WriteTrait<const skr_blob_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_blob_t& blob);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_blob_arena_t&> {
+struct RUNTIME_API WriteTrait<const skr_blob_arena_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob);
 };
 
 template <class T>
 int Write(skr_binary_writer_t* writer, const T& value)
 {
-    return WriteHelper<const T&>::Write(writer, value);
+    return WriteTrait<const T&>::Write(writer, value);
 }
 } // namespace skr::binary

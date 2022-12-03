@@ -65,7 +65,7 @@ enum error_code
 };
 
 template <class T, class = void>
-struct ReadHelper;
+struct ReadTrait;
 } // namespace json
 } // namespace skr
 

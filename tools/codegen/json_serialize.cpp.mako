@@ -7,7 +7,7 @@
 
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):
-error_code ReadHelper<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
+error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
 {
     auto value = json.get_string();
     if (value.error() != simdjson::SUCCESS)
@@ -26,7 +26,7 @@ error_code ReadHelper<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
     SKR_UNREACHABLE_CODE();
 } 
 
-void WriteHelper<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.name} e)
+void WriteTrait<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.name} e)
 {
     switch(e)
     {
@@ -41,7 +41,7 @@ void WriteHelper<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.n
 %endfor
 
 %for record in generator.filter_types(db.records):
-error_code ReadHelper<${record.name}>::Read(value_t&& json, ${record.name}& record)
+error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& record)
 {
     %for base in record.bases:
     {
@@ -115,10 +115,10 @@ error_code ReadHelper<${record.name}>::Read(value_t&& json, ${record.name}& reco
     %endfor
     return error_code::SUCCESS;
 } 
-void WriteHelper<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
+void WriteTrait<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
 {
     %for base in record.bases:
-    WriteHelper<const ${base}&>::WriteFields(writer, record);
+    WriteTrait<const ${base}&>::WriteFields(writer, record);
     %endfor
     %for name, field in generator.filter_fields(record.fields):
     writer->Key("${name}", ${len(name)});
@@ -132,7 +132,7 @@ void WriteHelper<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, 
     %endif
     %endfor
 } 
-void WriteHelper<const ${record.name}&>::Write(skr_json_writer_t* writer, const ${record.name}& record)
+void WriteTrait<const ${record.name}&>::Write(skr_json_writer_t* writer, const ${record.name}& record)
 {
     writer->StartObject();
     WriteFields(writer, record);

@@ -50,7 +50,7 @@ namespace skr
 namespace binary
 {
 template <class T>
-struct ReadHelper<TEnumAsByte<T>>
+struct ReadTrait<TEnumAsByte<T>>
 {
     static int Read(skr_binary_reader_t* reader, TEnumAsByte<T>& value)
     {
@@ -70,7 +70,7 @@ namespace binary
 {
 
 template <class T>
-struct WriteHelper<const TEnumAsByte<T>&> {
+struct WriteTrait<const TEnumAsByte<T>&> {
     static int Write(skr_binary_writer_t* writer, const TEnumAsByte<T>& value)
     {
         return skr::binary::Archive(writer, value.as_byte());

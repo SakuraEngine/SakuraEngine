@@ -135,7 +135,7 @@ namespace skr
 namespace binary
 {
 template <class T>
-struct ReadHelper<skr::resource::TResourceHandle<T>> {
+struct ReadTrait<skr::resource::TResourceHandle<T>> {
     static int Read(skr_binary_reader_t* archive, skr::resource::TResourceHandle<T>& handle)
     {
         skr_guid_t guid;
@@ -146,7 +146,7 @@ struct ReadHelper<skr::resource::TResourceHandle<T>> {
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
+struct RUNTIME_API ReadTrait<skr_resource_handle_t> {
     static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
 };
 }
@@ -160,7 +160,7 @@ namespace skr
 namespace binary
 {
 template <class T>
-struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
+struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
     static int Write(skr_binary_writer_t* binary, const skr::resource::TResourceHandle<T>& handle)
     {
         const auto& hdl = static_cast<const skr_resource_handle_t&>(handle);
@@ -169,7 +169,7 @@ struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_resource_handle_t&> {
+struct RUNTIME_API WriteTrait<const skr_resource_handle_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 };
 

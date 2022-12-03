@@ -22,14 +22,14 @@ RUNTIME_API skr_config_resource_t
 namespace skr::binary
 {
     template<>
-    struct RUNTIME_API ReadHelper<skr_config_resource_t>
+    struct RUNTIME_API ReadTrait<skr_config_resource_t>
     {
     public:
         static int Read(skr_binary_reader_t* reader, skr_config_resource_t& config);
     };
 
     template<>
-    struct RUNTIME_API WriteHelper<const skr_config_resource_t&>
+    struct RUNTIME_API WriteTrait<const skr_config_resource_t&>
     {
     public:
         static int Write(skr_binary_writer_t* writer, const skr_config_resource_t& config);

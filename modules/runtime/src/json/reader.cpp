@@ -107,7 +107,7 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
 
 
 
-error_code ReadHelper<bool>::Read(simdjson::ondemand::value&& json, bool& value)
+error_code ReadTrait<bool>::Read(simdjson::ondemand::value&& json, bool& value)
 {
     auto result = json.get_bool();
     if (result.error() == simdjson::SUCCESS)
@@ -115,7 +115,7 @@ error_code ReadHelper<bool>::Read(simdjson::ondemand::value&& json, bool& value)
     return (error_code)result.error();
 }
 
-error_code ReadHelper<int32_t>::Read(simdjson::ondemand::value&& json, int32_t& value)
+error_code ReadTrait<int32_t>::Read(simdjson::ondemand::value&& json, int32_t& value)
 {
     auto result = json.get_int64();
     if (result.error() == simdjson::SUCCESS)
@@ -123,7 +123,7 @@ error_code ReadHelper<int32_t>::Read(simdjson::ondemand::value&& json, int32_t& 
     return (error_code)result.error();
 }
 
-error_code ReadHelper<uint32_t>::Read(simdjson::ondemand::value&& json, uint32_t& value)
+error_code ReadTrait<uint32_t>::Read(simdjson::ondemand::value&& json, uint32_t& value)
 {
     auto result = json.get_uint64();
     if (result.error() == simdjson::SUCCESS)
@@ -131,7 +131,7 @@ error_code ReadHelper<uint32_t>::Read(simdjson::ondemand::value&& json, uint32_t
     return (error_code)result.error();
 }
 
-error_code ReadHelper<int64_t>::Read(simdjson::ondemand::value&& json, int64_t& value)
+error_code ReadTrait<int64_t>::Read(simdjson::ondemand::value&& json, int64_t& value)
 {
     auto result = json.get_int64();
     if (result.error() == simdjson::SUCCESS)
@@ -139,7 +139,7 @@ error_code ReadHelper<int64_t>::Read(simdjson::ondemand::value&& json, int64_t& 
     return (error_code)result.error();
 }
 
-error_code ReadHelper<uint64_t>::Read(simdjson::ondemand::value&& json, uint64_t& value)
+error_code ReadTrait<uint64_t>::Read(simdjson::ondemand::value&& json, uint64_t& value)
 {
     auto result = json.get_uint64();
     if (result.error() == simdjson::SUCCESS)
@@ -147,7 +147,7 @@ error_code ReadHelper<uint64_t>::Read(simdjson::ondemand::value&& json, uint64_t
     return (error_code)result.error();
 }
 
-error_code ReadHelper<float>::Read(simdjson::ondemand::value&& json, float& value)
+error_code ReadTrait<float>::Read(simdjson::ondemand::value&& json, float& value)
 {
     auto result = json.get_double();
     if (result.error() == simdjson::SUCCESS)
@@ -155,7 +155,7 @@ error_code ReadHelper<float>::Read(simdjson::ondemand::value&& json, float& valu
     return (error_code)result.error();
 }
 
-error_code ReadHelper<double>::Read(simdjson::ondemand::value&& json, double& value)
+error_code ReadTrait<double>::Read(simdjson::ondemand::value&& json, double& value)
 {
     auto result = json.get_double();
     if (result.error() == simdjson::SUCCESS)
@@ -163,7 +163,7 @@ error_code ReadHelper<double>::Read(simdjson::ondemand::value&& json, double& va
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr::string>::Read(simdjson::ondemand::value&& json, skr::string& value)
+error_code ReadTrait<skr::string>::Read(simdjson::ondemand::value&& json, skr::string& value)
 {
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
@@ -174,7 +174,7 @@ error_code ReadHelper<skr::string>::Read(simdjson::ondemand::value&& json, skr::
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_md5_t>::Read(simdjson::ondemand::value&& json, skr_md5_t& value)
+error_code ReadTrait<skr_md5_t>::Read(simdjson::ondemand::value&& json, skr_md5_t& value)
 {
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
@@ -188,7 +188,7 @@ error_code ReadHelper<skr_md5_t>::Read(simdjson::ondemand::value&& json, skr_md5
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_float2_t>::Read(simdjson::ondemand::value&& json, skr_float2_t& value)
+error_code ReadTrait<skr_float2_t>::Read(simdjson::ondemand::value&& json, skr_float2_t& value)
 {
     auto result = json.get_array();
     if (result.error() == simdjson::SUCCESS)
@@ -217,7 +217,7 @@ error_code ReadHelper<skr_float2_t>::Read(simdjson::ondemand::value&& json, skr_
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_float3_t>::Read(simdjson::ondemand::value&& json, skr_float3_t& value)
+error_code ReadTrait<skr_float3_t>::Read(simdjson::ondemand::value&& json, skr_float3_t& value)
 {
     auto result = json.get_array();
     if (result.error() == simdjson::SUCCESS)
@@ -253,7 +253,7 @@ error_code ReadHelper<skr_float3_t>::Read(simdjson::ondemand::value&& json, skr_
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_float4_t>::Read(simdjson::ondemand::value&& json, skr_float4_t& value)
+error_code ReadTrait<skr_float4_t>::Read(simdjson::ondemand::value&& json, skr_float4_t& value)
 {
     auto result = json.get_array();
     if (result.error() == simdjson::SUCCESS)
@@ -296,7 +296,7 @@ error_code ReadHelper<skr_float4_t>::Read(simdjson::ondemand::value&& json, skr_
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_rotator_t>::Read(simdjson::ondemand::value &&json, skr_rotator_t &value)
+error_code ReadTrait<skr_rotator_t>::Read(simdjson::ondemand::value &&json, skr_rotator_t &value)
 {
     auto result = json.get_array();
     if (result.error() == simdjson::SUCCESS)
@@ -332,7 +332,7 @@ error_code ReadHelper<skr_rotator_t>::Read(simdjson::ondemand::value &&json, skr
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_quaternion_t>::Read(simdjson::ondemand::value &&json, skr_quaternion_t &value)
+error_code ReadTrait<skr_quaternion_t>::Read(simdjson::ondemand::value &&json, skr_quaternion_t &value)
 {
     auto result = json.get_array();
     if (result.error() == simdjson::SUCCESS)
@@ -375,7 +375,7 @@ error_code ReadHelper<skr_quaternion_t>::Read(simdjson::ondemand::value &&json, 
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_float4x4_t>::Read(simdjson::ondemand::value &&json, skr_float4x4_t &value)
+error_code ReadTrait<skr_float4x4_t>::Read(simdjson::ondemand::value &&json, skr_float4x4_t &value)
 {
     auto result = json.get_array();
     if (result.error() == simdjson::SUCCESS)
@@ -400,7 +400,7 @@ error_code ReadHelper<skr_float4x4_t>::Read(simdjson::ondemand::value &&json, sk
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_guid_t>::Read(simdjson::ondemand::value&& json, skr_guid_t& value)
+error_code ReadTrait<skr_guid_t>::Read(simdjson::ondemand::value&& json, skr_guid_t& value)
 {
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
@@ -414,7 +414,7 @@ error_code ReadHelper<skr_guid_t>::Read(simdjson::ondemand::value&& json, skr_gu
     return (error_code)result.error();
 }
 
-error_code ReadHelper<skr_resource_handle_t>::Read(simdjson::ondemand::value&& json, skr_resource_handle_t& handle)
+error_code ReadTrait<skr_resource_handle_t>::Read(simdjson::ondemand::value&& json, skr_resource_handle_t& handle)
 {
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)

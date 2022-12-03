@@ -62,58 +62,58 @@ int __Archive(S* archive, ${record.name}& record)
 %endif
 
 %if generator.filter_blob_type(record):
-void BlobHelper<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src)
+void BlobTrait<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src)
 {
 %for base in record.bases:
-    BlobHelper<${base}>::BuildArena(arena, (${base}&)dst, (${base}Builder&) src);
+    BlobTrait<${base}>::BuildArena(arena, (${base}&)dst, (${base}Builder&) src);
 %endfor
 %for name, field in generator.filter_fields(record.fields):
 %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
-        BlobHelper<${field.rawType}>::BuildArena(arena, dst.${name}[i], src.${name}[i]);
+        BlobTrait<${field.rawType}>::BuildArena(arena, dst.${name}[i], src.${name}[i]);
     }
 %else:
-    BlobHelper<${field.rawType}>::BuildArena(arena, dst.${name}, src.${name});
+    BlobTrait<${field.rawType}>::BuildArena(arena, dst.${name}, src.${name});
 %endif
 %endfor
 }
-void BlobHelper<${record.name}>::Remap(skr_blob_arena_t& arena, ${record.name}& dst)
+void BlobTrait<${record.name}>::Remap(skr_blob_arena_t& arena, ${record.name}& dst)
 {
 %for base in record.bases:
-    BlobHelper<${base}>::Remap(arena, (${base}&)dst);
+    BlobTrait<${base}>::Remap(arena, (${base}&)dst);
 %endfor
 %for name, field in generator.filter_fields(record.fields):
 %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
-        BlobHelper<${field.rawType}>::Remap(arena, dst.${name}[i]);
+        BlobTrait<${field.rawType}>::Remap(arena, dst.${name}[i]);
     }
 %else:
-    BlobHelper<${field.rawType}>::Remap(arena, dst.${name});
+    BlobTrait<${field.rawType}>::Remap(arena, dst.${name});
 %endif
 %endfor
 }
-int ReadHelper<${record.name}>::Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, ${record.name}& record)
+int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, ${record.name}& record)
 {
 %for base in record.bases:
-    int ret = ReadHelper<const ${base}&>::Read(archive, arena, (${base}&)record);
+    int ret = ReadTrait<const ${base}&>::Read(archive, arena, (${base}&)record);
     if(ret != 0)
         return ret;
 %endfor
     return __Archive(archive, arena, record);
 }
-int WriteHelper<const ${record.name}&>::Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& record)
+int WriteTrait<const ${record.name}&>::Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& record)
 {
 %for base in record.bases:
-    int ret = WriteHelper<const ${base}&>::Write(archive, arena, (${base}&)record);
+    int ret = WriteTrait<const ${base}&>::Write(archive, arena, (${base}&)record);
     if(ret != 0)
         return ret;
 %endfor
     return __Archive(archive, arena, (${record.name}&)record);
 } 
 %else:
-int ReadHelper<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name}& record)
+int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name}& record)
 {
 %for base in record.bases:
     int ret = skr::binary::Read(archive, (${base}&)record);
@@ -122,7 +122,7 @@ int ReadHelper<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name
 %endfor
     return __Archive(archive, record);
 }
-int WriteHelper<const ${record.name}&>::Write(skr_binary_writer_t* archive, const ${record.name}& record)
+int WriteTrait<const ${record.name}&>::Write(skr_binary_writer_t* archive, const ${record.name}& record)
 {
 %for base in record.bases:
     int ret = skr::binary::Write<const ${base}&>(archive, record);

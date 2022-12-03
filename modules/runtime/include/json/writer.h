@@ -97,7 +97,7 @@ template <class T>
 void Write(skr_json_writer_t* writer, const T& value);
 
 template <>
-struct WriteHelper<const bool&> {
+struct WriteTrait<const bool&> {
     static void Write(skr_json_writer_t* writer, bool b)
     {
         writer->Bool(b);
@@ -105,7 +105,7 @@ struct WriteHelper<const bool&> {
 };
 
 template <>
-struct WriteHelper<const int32_t&> {
+struct WriteTrait<const int32_t&> {
     static void Write(skr_json_writer_t* writer, int32_t i)
     {
         writer->Int(i);
@@ -113,7 +113,7 @@ struct WriteHelper<const int32_t&> {
 };
 
 template <>
-struct WriteHelper<const uint32_t&> {
+struct WriteTrait<const uint32_t&> {
     static void Write(skr_json_writer_t* writer, uint32_t i)
     {
         writer->UInt(i);
@@ -121,7 +121,7 @@ struct WriteHelper<const uint32_t&> {
 };
 
 template <>
-struct WriteHelper<const int64_t&> {
+struct WriteTrait<const int64_t&> {
     static void Write(skr_json_writer_t* writer, int64_t i)
     {
         writer->Int64(i);
@@ -129,7 +129,7 @@ struct WriteHelper<const int64_t&> {
 };
 
 template <>
-struct WriteHelper<const uint64_t&> {
+struct WriteTrait<const uint64_t&> {
     static void Write(skr_json_writer_t* writer, uint64_t i)
     {
         writer->UInt64(i);
@@ -137,7 +137,7 @@ struct WriteHelper<const uint64_t&> {
 };
 
 template <>
-struct WriteHelper<const float&> {
+struct WriteTrait<const float&> {
     static void Write(skr_json_writer_t* writer, float f)
     {
         writer->Float(f);
@@ -145,7 +145,7 @@ struct WriteHelper<const float&> {
 };
 
 template <>
-struct WriteHelper<const double&> {
+struct WriteTrait<const double&> {
     static void Write(skr_json_writer_t* writer, double d)
     {
         writer->Double(d);
@@ -153,7 +153,7 @@ struct WriteHelper<const double&> {
 };
 
 template <>
-struct WriteHelper<const skr::string_view&> {
+struct WriteTrait<const skr::string_view&> {
     static void Write(skr_json_writer_t* writer, const skr::string_view& str)
     {
         writer->String(str.data(), str.size());
@@ -161,7 +161,7 @@ struct WriteHelper<const skr::string_view&> {
 };
 
 template <>
-struct WriteHelper<const skr::string&> {
+struct WriteTrait<const skr::string&> {
     static void Write(skr_json_writer_t* writer, const skr::string& str)
     {
         writer->String(str.data(), str.size());
@@ -169,52 +169,52 @@ struct WriteHelper<const skr::string&> {
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_guid_t&> {
+struct RUNTIME_API WriteTrait<const skr_guid_t&> {
     static void Write(skr_json_writer_t* writer, const skr_guid_t& guid);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_md5_t&> {
+struct RUNTIME_API WriteTrait<const skr_md5_t&> {
     static void Write(skr_json_writer_t* writer, const skr_md5_t& md5);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float2_t&> {
+struct RUNTIME_API WriteTrait<const skr_float2_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float2_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float3_t&> {
+struct RUNTIME_API WriteTrait<const skr_float3_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float3_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float4_t&> {
+struct RUNTIME_API WriteTrait<const skr_float4_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float4_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_rotator_t&> {
+struct RUNTIME_API WriteTrait<const skr_rotator_t&> {
     static void Write(skr_json_writer_t* writer, const skr_rotator_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_float4x4_t&> {
+struct RUNTIME_API WriteTrait<const skr_float4x4_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float4x4_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_quaternion_t&> {
+struct RUNTIME_API WriteTrait<const skr_quaternion_t&> {
     static void Write(skr_json_writer_t* writer, const skr_quaternion_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteHelper<const skr_resource_handle_t&> {
+struct RUNTIME_API WriteTrait<const skr_resource_handle_t&> {
     static void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
 };
 
 template <class K, class V, class Hash, class Eq>
-struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
+struct WriteTrait<const skr::flat_hash_map<K, V, Hash, Eq>&> {
     static void Write(skr_json_writer_t* json, const skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
         json->StartObject();
@@ -235,7 +235,7 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
 };
 
 template <class T>
-struct WriteHelper<const TEnumAsByte<T>&> {
+struct WriteTrait<const TEnumAsByte<T>&> {
     static void Write(skr_json_writer_t* writer, const TEnumAsByte<T>& value)
     {
         skr::json::Write(writer, value.as_byte());
@@ -243,7 +243,7 @@ struct WriteHelper<const TEnumAsByte<T>&> {
 };
 
 template <class T>
-struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
+struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
     static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
     {
         skr::json::Write<const skr_resource_handle_t&>(json, (const skr_resource_handle_t&)handle);
@@ -251,7 +251,7 @@ struct WriteHelper<const skr::resource::TResourceHandle<T>&> {
 };
 
 template <class V, class Allocator>
-struct WriteHelper<const eastl::vector<V, Allocator>&> {
+struct WriteTrait<const eastl::vector<V, Allocator>&> {
     static void Write(skr_json_writer_t* json, const eastl::vector<V, Allocator>& vec)
     {
         json->StartArray();
@@ -264,7 +264,7 @@ struct WriteHelper<const eastl::vector<V, Allocator>&> {
 };
 
 template <class... Ts>
-struct WriteHelper<const skr::variant<Ts...>&> {
+struct WriteTrait<const skr::variant<Ts...>&> {
     static void Write(skr_json_writer_t* json, const skr::variant<Ts...>& v)
     {
         std::visit([&](auto&& value) {
@@ -283,23 +283,23 @@ struct WriteHelper<const skr::variant<Ts...>&> {
 template <class T>
 void Write(skr_json_writer_t* writer, const T& value)
 {
-    WriteHelper<const T&>::Write(writer, value);
+    WriteTrait<const T&>::Write(writer, value);
 }
 } // namespace json
 
 template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&>>
-    : std::bool_constant<is_complete_serde_v<json::WriteHelper<K>> && is_complete_serde_v<json::WriteHelper<V>>> {
+struct SerdeCompleteChecker<json::WriteTrait<const skr::flat_hash_map<K, V, Hash, Eq>&>>
+    : std::bool_constant<is_complete_serde_v<json::WriteTrait<K>> && is_complete_serde_v<json::WriteTrait<V>>> {
 };
 
 template <class V, class Allocator>
-struct SerdeCompleteChecker<json::WriteHelper<const eastl::vector<V, Allocator>&>>
-    : std::bool_constant<is_complete_serde_v<json::WriteHelper<V>>> {
+struct SerdeCompleteChecker<json::WriteTrait<const eastl::vector<V, Allocator>&>>
+    : std::bool_constant<is_complete_serde_v<json::WriteTrait<V>>> {
 };
 
 template <class... Ts>
-struct SerdeCompleteChecker<json::WriteHelper<const skr::variant<Ts...>&>>
-    : std::bool_constant<(is_complete_serde_v<json::WriteHelper<Ts>> && ...)> {
+struct SerdeCompleteChecker<json::WriteTrait<const skr::variant<Ts...>&>>
+    : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
 };
 
 } // namespace skr

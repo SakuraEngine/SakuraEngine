@@ -18,13 +18,13 @@ typedef struct skr_resource_header_t {
 namespace skr::binary
 {
     template <>
-    struct RUNTIME_API ReadHelper<skr_resource_header_t>
+    struct RUNTIME_API ReadTrait<skr_resource_header_t>
     {
         static int Read(skr_binary_reader_t* reader, skr_resource_header_t& header);
     };
 
     template <>
-    struct RUNTIME_API WriteHelper<const skr_resource_header_t&>
+    struct RUNTIME_API WriteTrait<const skr_resource_header_t&>
     {
         static int Write(skr_binary_writer_t* writer, const skr_resource_header_t& header);
     };

@@ -80,20 +80,20 @@ size_t skr_blob_arena_builder_t::allocate(size_t size, size_t align)
 
 namespace skr::binary
 {
-int ReadHelper<bool>::Read(skr_binary_reader_t* reader, bool& value)
+int ReadTrait<bool>::Read(skr_binary_reader_t* reader, bool& value)
 {
     uint32_t v;
-    int ret = ReadHelper<uint32_t>::Read(reader, v);
+    int ret = ReadTrait<uint32_t>::Read(reader, v);
     if (ret != 0)
         return ret;
     value = v != 0;
     return ret;
 }
 
-int ReadHelper<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
+int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
 {
     uint32_t size;
-    int ret = ReadHelper<uint32_t>::Read(reader, size);
+    int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
     skr::string temp;
@@ -105,41 +105,41 @@ int ReadHelper<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     return ret;
 }
 
-int ReadHelper<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::string_view& str)
+int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::string_view& str)
 {
     uint32_t offset;
-    int ret = ReadHelper<uint32_t>::Read(reader, offset);
+    int ret = ReadTrait<uint32_t>::Read(reader, offset);
     if (ret != 0)
         return ret;
     uint32_t size;
-    ret = ReadHelper<uint32_t>::Read(reader, size);
+    ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
     str = skr::string_view((const char*)arena.get_buffer() + offset, size);
     return ret;
 }
 
-int ReadHelper<skr_md5_t>::Read(skr_binary_reader_t* reader, skr_md5_t& md5)
+int ReadTrait<skr_md5_t>::Read(skr_binary_reader_t* reader, skr_md5_t& md5)
 {
     return ReadValue(reader, &md5, sizeof(md5));
 }
 
-int ReadHelper<skr_guid_t>::Read(skr_binary_reader_t* reader, skr_guid_t& guid)
+int ReadTrait<skr_guid_t>::Read(skr_binary_reader_t* reader, skr_guid_t& guid)
 {
     return ReadValue(reader, &guid, sizeof(guid));
 }
 
-int ReadHelper<skr_resource_handle_t>::Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle)
+int ReadTrait<skr_resource_handle_t>::Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle)
 {
     skr_guid_t guid;
-    int ret = ReadHelper<skr_guid_t>::Read(reader, guid);
+    int ret = ReadTrait<skr_guid_t>::Read(reader, guid);
     if (ret != 0)
         return ret;
     handle.set_guid(guid);
     return ret;
 }
 
-int ReadHelper<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
+int ReadTrait<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
 {
     // TODO: blob 应该特别处理
     skr_blob_t temp;
@@ -154,18 +154,18 @@ int ReadHelper<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
     return ret;
 }
 
-int ReadHelper<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena)
+int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena)
 {
     uint64_t base;
-    int ret = ReadHelper<uint64_t>::Read(reader, base);
+    int ret = ReadTrait<uint64_t>::Read(reader, base);
     if (ret != 0)
         return ret;
     uint32_t size;
-    ret = ReadHelper<uint32_t>::Read(reader, size);
+    ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
     uint32_t align;
-    ret = ReadHelper<uint32_t>::Read(reader, align);
+    ret = ReadTrait<uint32_t>::Read(reader, align);
     if (ret != 0)
         return ret;
     void* buffer = sakura_malloc_aligned(size, align);
