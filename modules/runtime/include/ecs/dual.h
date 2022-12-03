@@ -1,23 +1,10 @@
 #pragma once
-#include "dual_config.h"
+#include "dual_types.h"
 #include "utils/types.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
-
-// objects
-#define DUAL_DECLARE(name) typedef struct dual_##name dual_##name
-DUAL_DECLARE(context_t);
-DUAL_DECLARE(storage_t);
-DUAL_DECLARE(group_t);
-DUAL_DECLARE(chunk_t);
-DUAL_DECLARE(query_t);
-DUAL_DECLARE(storage_delta_t);
-DUAL_DECLARE(counter_t);
-#undef DUAL_DECLARE
-
-constexpr uint32_t dead = 2 + (1 << 29);
 
 #define DUAL_COMPONENT_DISABLE 0x80000000
 #define DUAL_COMPONENT_DEAD 0x80000001
@@ -25,11 +12,6 @@ constexpr uint32_t dead = 2 + (1 << 29);
 #define DUAL_COMPONENT_MASK 0x3
 #define DUAL_COMPONENT_GUID 0x4
 #define DUAL_COMPONENT_DIRTY 0x5
-
-// structs
-typedef TIndex dual_type_index_t;
-
-typedef skr_guid_t dual_guid_t;
 
 /**
  * @brief guid generation function

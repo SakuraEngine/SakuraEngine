@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrScene/module.configure.h"
 #include "utils/types.h"
-#include "ecs/dual.h"
+#include "ecs/dual_types.h"
 #ifndef __meta__
     #include "SkrScene/scene.generated.h"
 #endif
@@ -13,7 +13,7 @@ struct sreflect sattr(
 )
 skr_scene_t
 {
-    dual_storage_t* world;
+    struct dual_storage_t* world;
 };
 typedef struct skr_scene_t game_scene_t;
 
@@ -30,7 +30,6 @@ struct sreflect sattr(
 typedef struct skr_child_t skr_child_t;
 
 #ifdef __cplusplus
-#include "ecs/array.hpp"
 using skr_children_t = dual::array_component_T<skr_child_t, 4>;
 #endif
 
