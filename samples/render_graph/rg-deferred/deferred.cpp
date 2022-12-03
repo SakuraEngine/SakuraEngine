@@ -10,6 +10,7 @@
 #include "tracy/Tracy.hpp"
 #include "pass_profiler.h"
 #include "platform/thread.h"
+#include "rtm/qvvf.h"
 
 thread_local SWindowHandle window;
 thread_local CGPUSurfaceId surface;
@@ -151,12 +152,15 @@ void create_resources()
     ib_cpy.size = sizeof(CubeGeometry::g_Indices);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
     // wvp
-    auto world = smath::make_transform(
-        { 0.f, 0.f, 0.f },                     // translation
-        2 * skr::math::Vector3f::vector_one(), // scale
-        skr::math::Quaternion::identity()      // quat
-    );
-    CubeGeometry::instance_data.world = world;
+    const auto quat = rtm::quat_from_euler_rh(
+        rtm::scalar_deg_to_rad(0.f),
+        rtm::scalar_deg_to_rad(0.f),
+        rtm::scalar_deg_to_rad(0.f));
+    const rtm::vector4f translation = rtm::vector_set(0.f, 0.f, 0.f, 0.f);
+    const rtm::vector4f scale = rtm::vector_set(2.f, 2.f, 2.f, 0.f);
+    const rtm::qvvf transform = rtm::qvv_set(quat, translation, scale);
+    const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
+    CubeGeometry::instance_data.world = *(skr_float4x4_t*)&matrix;
     {
         memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices),
         &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
@@ -232,8 +236,8 @@ struct LightingPushConstants {
 };
 static LightingPushConstants lighting_data = {};
 struct LightingCSPushConstants {
-    smath::Vector2f viewportSize = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT };
-    smath::Vector2f viewportOrigin = { 0, 0 };
+    skr_float2_t viewportSize = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT };
+    skr_float2_t viewportOrigin = { 0, 0 };
 };
 static LightingCSPushConstants lighting_cs_data = {};
 bool fragmentLightingPass = true;
@@ -491,14 +495,15 @@ int main(int argc, char* argv[])
                 .allow_readwrite();
             });
             // camera
-            auto view = smath::look_at_matrix(
-            { 0.f, 2.5f, 2.5f } /*eye*/,
-            { 0.f, 0.f, 0.f } /*at*/);
-            auto proj = smath::perspective_fov(
+            auto view = rtm::look_at_matrix(
+                { 0.f, 2.5f, 2.5f } /*eye*/,
+                { 0.f, 0.f, 0.f } /*at*/,
+                { 0.f, 1.f, 0.f } /*up*/);
+            auto proj = rtm::perspective_fov(
                 3.1415926f / 2.f,
                 (float)BACK_BUFFER_WIDTH / (float)BACK_BUFFER_HEIGHT,
                 1.f, 1000.f);
-            auto view_proj = smath::multiply(view, proj);
+            auto view_proj = rtm::matrix_mul(view, proj);
             graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                 builder.set_name("gbuffer_pass")
@@ -518,7 +523,7 @@ int main(int argc, char* argv[])
                     vertex_buffer, instance_buffer
                 };
                 const uint32_t strides[5] = {
-                    sizeof(skr::math::Vector3f), sizeof(skr::math::Vector2f),
+                    sizeof(skr_float3_t), sizeof(skr_float2_t),
                     sizeof(uint32_t), sizeof(uint32_t),
                     sizeof(CubeGeometry::InstanceData::world)
                 };
