@@ -139,7 +139,8 @@ namespace ImGui
 struct ImGuiContext;
 namespace skr::imgui
 {
-IMGUI_IMPORT ImGuiContext*& imgui_context();
+extern IMGUI_IMPORT ImGuiContext* GImGuiContext;
+IMGUI_IMPORT ImGuiContext* imgui_context();
 }
 
-#define GImGui skr::imgui::imgui_context()
+#define GImGui skr::imgui::GImGuiContext
