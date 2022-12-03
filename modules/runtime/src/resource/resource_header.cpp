@@ -23,7 +23,7 @@ int skr_resource_header_t::ReadWithoutDeps(skr_binary_reader_t* reader)
 
 namespace skr::binary
 {
-int ReadHelper<skr_resource_header_t>::Read(skr_binary_reader_t *reader, skr_resource_header_t &header)
+int ReadTrait<skr_resource_header_t>::Read(skr_binary_reader_t *reader, skr_resource_header_t &header)
 {
     namespace bin = skr::binary;
     int ret = header.ReadWithoutDeps(reader);
@@ -41,7 +41,7 @@ int ReadHelper<skr_resource_header_t>::Read(skr_binary_reader_t *reader, skr_res
     return ret;
 }
 
-int WriteHelper<const skr_resource_header_t&>::Write(skr_binary_writer_t *writer, const skr_resource_header_t &header)
+int WriteTrait<const skr_resource_header_t&>::Write(skr_binary_writer_t *writer, const skr_resource_header_t &header)
 {
     namespace bin = skr::binary;
     uint32_t function = 1;

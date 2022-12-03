@@ -253,24 +253,24 @@ bool skr_json_writer_t::_Prefix(ESkrJsonType type)
 
 namespace skr::json
 {
-void WriteHelper<const skr_guid_t&>::Write(skr_json_writer_t* writer, const skr_guid_t& guid)
+void WriteTrait<const skr_guid_t&>::Write(skr_json_writer_t* writer, const skr_guid_t& guid)
 {
     auto str = skr::format("{}", guid);
     writer->String(str.data(), (skr_json_writer_size_t)str.size());
 }
 
-void WriteHelper<const skr_md5_t&>::Write(skr_json_writer_t* writer, const skr_md5_t& md5)
+void WriteTrait<const skr_md5_t&>::Write(skr_json_writer_t* writer, const skr_md5_t& md5)
 {
     auto str = skr::format("{}", md5);
     writer->String(str.data(), (skr_json_writer_size_t)str.size());
 }
 
-void WriteHelper<const skr_resource_handle_t&>::Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle)
+void WriteTrait<const skr_resource_handle_t&>::Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle)
 {
-    WriteHelper<const skr_guid_t&>::Write(writer, handle.get_serialized());
+    WriteTrait<const skr_guid_t&>::Write(writer, handle.get_serialized());
 }
 
-void WriteHelper<const skr_float2_t&>::Write(skr_json_writer_t* writer, const skr_float2_t& v)
+void WriteTrait<const skr_float2_t&>::Write(skr_json_writer_t* writer, const skr_float2_t& v)
 {
     writer->StartArray();
     writer->Float(v.x);
@@ -278,7 +278,7 @@ void WriteHelper<const skr_float2_t&>::Write(skr_json_writer_t* writer, const sk
     writer->EndArray();
 };
 
-void WriteHelper<const skr_float3_t&>::Write(skr_json_writer_t* writer, const skr_float3_t& v)
+void WriteTrait<const skr_float3_t&>::Write(skr_json_writer_t* writer, const skr_float3_t& v)
 {
     writer->StartArray();
     writer->Float(v.x);
@@ -287,7 +287,7 @@ void WriteHelper<const skr_float3_t&>::Write(skr_json_writer_t* writer, const sk
     writer->EndArray();
 };
 
-void WriteHelper<const skr_float4_t&>::Write(skr_json_writer_t* writer, const skr_float4_t& v)
+void WriteTrait<const skr_float4_t&>::Write(skr_json_writer_t* writer, const skr_float4_t& v)
 {
     writer->StartArray();
     writer->Float(v.x);
@@ -297,7 +297,7 @@ void WriteHelper<const skr_float4_t&>::Write(skr_json_writer_t* writer, const sk
     writer->EndArray();
 };
 
-void WriteHelper<const skr_rotator_t&>::Write(skr_json_writer_t *writer, const skr_rotator_t &v)
+void WriteTrait<const skr_rotator_t&>::Write(skr_json_writer_t *writer, const skr_rotator_t &v)
 {
     writer->StartArray();
     writer->Float(v.pitch);
@@ -306,7 +306,7 @@ void WriteHelper<const skr_rotator_t&>::Write(skr_json_writer_t *writer, const s
     writer->EndArray();
 };
 
-void WriteHelper<const skr_quaternion_t&>::Write(skr_json_writer_t* writer, const skr_quaternion_t& v)
+void WriteTrait<const skr_quaternion_t&>::Write(skr_json_writer_t* writer, const skr_quaternion_t& v)
 {
     writer->StartArray();
     writer->Float(v.x);
@@ -316,7 +316,7 @@ void WriteHelper<const skr_quaternion_t&>::Write(skr_json_writer_t* writer, cons
     writer->EndArray();
 };
 
-void WriteHelper<const skr_float4x4_t&>::Write(skr_json_writer_t* writer, const skr_float4x4_t& v)
+void WriteTrait<const skr_float4x4_t&>::Write(skr_json_writer_t* writer, const skr_float4x4_t& v)
 {
     writer->StartArray();
     writer->Float(v.M[0][0]);

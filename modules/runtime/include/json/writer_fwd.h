@@ -13,7 +13,7 @@ namespace skr
 namespace json
 {
 template <class T, class = void>
-struct WriteHelper;
+struct WriteTrait;
 } // namespace json
 } // namespace skr
 

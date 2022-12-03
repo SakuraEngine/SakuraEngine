@@ -31,7 +31,7 @@ namespace skr
 namespace binary
 {
 template <class K, class V, class Hash, class Eq>
-struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
+struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
     static int Read(skr_binary_reader_t* archive, skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
         skr::flat_hash_map<K, V, Hash, Eq> temp;
@@ -52,7 +52,7 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
 };
 
 template <class K, class V, class Hash, class Eq>
-struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
+struct WriteTrait<const skr::flat_hash_map<K, V, Hash, Eq>&> {
     static int Write(skr_binary_writer_t* archive, const skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
         SKR_ARCHIVE((uint32_t)map.size());
@@ -66,13 +66,13 @@ struct WriteHelper<const skr::flat_hash_map<K, V, Hash, Eq>&> {
 };
 } // namespace binary
 template<class K, class V, class Eq>
-struct SerdeCompleteChecker<binary::ReadHelper<skr::flat_hash_map<K, V, Eq>>>
-    : std::bool_constant<is_complete_serde_v<binary::ReadHelper<K>> && is_complete_serde_v<binary::ReadHelper<V>>> {
+struct SerdeCompleteChecker<binary::ReadTrait<skr::flat_hash_map<K, V, Eq>>>
+    : std::bool_constant<is_complete_serde_v<binary::ReadTrait<K>> && is_complete_serde_v<binary::ReadTrait<V>>> {
 };
 
 template<class K, class V, class Eq>
-struct SerdeCompleteChecker<binary::WriteHelper<const skr::flat_hash_map<K, V, Eq>&>>
-    : std::bool_constant<is_complete_serde_v<binary::WriteHelper<const K&>> && is_complete_serde_v<binary::WriteHelper<const V&>>> {
+struct SerdeCompleteChecker<binary::WriteTrait<const skr::flat_hash_map<K, V, Eq>&>>
+    : std::bool_constant<is_complete_serde_v<binary::WriteTrait<const K&>> && is_complete_serde_v<binary::WriteTrait<const V&>>> {
 };
 
 } // namespace skr

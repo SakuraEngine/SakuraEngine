@@ -7,7 +7,7 @@ namespace skr::binary
 {
 %for record in generator.filter_types(db.records):
 template<>
-struct ${api} ReadHelper<${record.name}>
+struct ${api} ReadTrait<${record.name}>
 {
 %if generator.filter_blob_type(record):
     static int Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, ${record.name}& value);
@@ -16,7 +16,7 @@ struct ${api} ReadHelper<${record.name}>
 %endif
 };
 template<>
-struct ${api} WriteHelper<const ${record.name}&>
+struct ${api} WriteTrait<const ${record.name}&>
 {
 %if generator.filter_blob_type(record):
     static int Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& value);
@@ -52,7 +52,7 @@ struct BlobBuilderType<${record.name}>
     using type = ${record.short_name}Builder;
 };
 template<>
-struct ${api} BlobHelper<${record.name}>
+struct ${api} BlobTrait<${record.name}>
 {
     static void BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src);
     static void Remap(skr_blob_arena_t& arena, ${record.name}& dst);

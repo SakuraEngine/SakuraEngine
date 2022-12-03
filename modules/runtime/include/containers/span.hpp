@@ -27,7 +27,7 @@ namespace skr
 namespace binary
 {
 template<class T>
-struct ReadHelper<skr::span<T>> {
+struct ReadTrait<skr::span<T>> {
     static int Read(skr_binary_reader_t* archive, skr::span<T> span)
     {
         for(auto& v : span)
@@ -45,12 +45,12 @@ struct ReadHelper<skr::span<T>> {
         uint32_t count = 0;
         SKR_ARCHIVE(count);
         span = skr::span<T>((T*)((char*)arena.get_buffer() + offset), count);
-        if constexpr(is_complete_v<BlobHelper<T>>)
+        if constexpr(is_complete_v<BlobTrait<T>>)
         {
             for(uint32_t i = 0; i < count; ++i)
             {
                 //inner data is contained in the arena, so we don't need to archive it
-                BlobHelper<T>::Remap(arena, span[i]);
+                BlobTrait<T>::Remap(arena, span[i]);
             }
         }
         return 0;
@@ -81,7 +81,7 @@ namespace skr
 namespace binary
 {
 template <class T>
-struct WriteHelper<const skr::span<T>&> {
+struct WriteTrait<const skr::span<T>&> {
     static int Write(skr_binary_writer_t* writer, const skr::span<T>& span)
     {
         for (const T& value : span) {
@@ -107,11 +107,11 @@ struct WriteHelper<const skr::span<T>&> {
             return ret;
         }
         // inner data is contained in blob arena, no need to write
-        // if constexpr(is_complete_v<BlobHelper<T>>)
+        // if constexpr(is_complete_v<BlobTrait<T>>)
         // {
         //     for(int i = 0; i < span.size(); ++i)
         //     {
-        //         ret = WriteHelper<const T&>::Write(writer, arena, span[i]);
+        //         ret = WriteTrait<const T&>::Write(writer, arena, span[i]);
         //         if (ret != 0) {
         //             return ret;
         //         }

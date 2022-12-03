@@ -45,7 +45,7 @@ namespace skr
 namespace binary
 {
 template <class T, class = void>
-struct BlobHelper;
+struct BlobTrait;
 template <class T, class = void>
 struct BlobBuilderType
 {
@@ -65,9 +65,9 @@ template<class T>
 skr_blob_arena_t make_arena(T& dst, const typename BlobBuilderType<T>::type& src, size_t align = 32)
 {
     skr_blob_arena_builder_t builder(align);
-    BlobHelper<T>::BuildArena(builder, dst, src);
+    BlobTrait<T>::BuildArena(builder, dst, src);
     auto arena = builder.build();
-    BlobHelper<T>::Remap(arena, dst);
+    BlobTrait<T>::Remap(arena, dst);
     return arena;
 }
 }

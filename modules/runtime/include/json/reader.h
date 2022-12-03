@@ -36,92 +36,92 @@ template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value);
 
 template <>
-struct RUNTIME_API ReadHelper<bool> {
+struct RUNTIME_API ReadTrait<bool> {
     static error_code Read(simdjson::ondemand::value&& json, bool& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<uint32_t> {
+struct RUNTIME_API ReadTrait<uint32_t> {
     static error_code Read(simdjson::ondemand::value&& json, uint32_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<uint64_t> {
+struct RUNTIME_API ReadTrait<uint64_t> {
     static error_code Read(simdjson::ondemand::value&& json, uint64_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<int32_t> {
+struct RUNTIME_API ReadTrait<int32_t> {
     static error_code Read(simdjson::ondemand::value&& json, int32_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<int64_t> {
+struct RUNTIME_API ReadTrait<int64_t> {
     static error_code Read(simdjson::ondemand::value&& json, int64_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<float> {
+struct RUNTIME_API ReadTrait<float> {
     static error_code Read(simdjson::ondemand::value&& json, float& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<double> {
+struct RUNTIME_API ReadTrait<double> {
     static error_code Read(simdjson::ondemand::value&& json, double& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr::string> {
+struct RUNTIME_API ReadTrait<skr::string> {
     static error_code Read(simdjson::ondemand::value&& json, skr::string& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_guid_t> {
+struct RUNTIME_API ReadTrait<skr_guid_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_guid_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_md5_t> {
+struct RUNTIME_API ReadTrait<skr_md5_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_md5_t& md5);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_float2_t> {
+struct RUNTIME_API ReadTrait<skr_float2_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float2_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_float3_t> {
+struct RUNTIME_API ReadTrait<skr_float3_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float3_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_float4_t> {
+struct RUNTIME_API ReadTrait<skr_float4_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float4_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_float4x4_t> {
+struct RUNTIME_API ReadTrait<skr_float4x4_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float4x4_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_rotator_t> {
+struct RUNTIME_API ReadTrait<skr_rotator_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_rotator_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_quaternion_t> {
+struct RUNTIME_API ReadTrait<skr_quaternion_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_quaternion_t& value);
 };
 
 template <>
-struct RUNTIME_API ReadHelper<skr_resource_handle_t> {
+struct RUNTIME_API ReadTrait<skr_resource_handle_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
 };
 
 template <class K, class V, class Hash, class Eq>
-struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
+struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
     static error_code Read(simdjson::ondemand::value&& json, skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
         auto object = json.get_object();
@@ -155,7 +155,7 @@ struct ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>> {
 };
 
 template <class V, class Allocator>
-struct ReadHelper<skr::vector<V, Allocator>> {
+struct ReadTrait<skr::vector<V, Allocator>> {
     static error_code Read(simdjson::ondemand::value&& json, skr::vector<V, Allocator>& vec)
     {
         auto array = json.get_array();
@@ -177,7 +177,7 @@ struct ReadHelper<skr::vector<V, Allocator>> {
 };
 
 template <class... Ts>
-struct ReadHelper<skr::variant<Ts...>> {
+struct ReadTrait<skr::variant<Ts...>> {
     template <class T>
     static error_code ReadByIndex(simdjson::ondemand::value&& json, skr::variant<Ts...>& value, skr_guid_t index)
     {
@@ -214,7 +214,7 @@ struct ReadHelper<skr::variant<Ts...>> {
 };
 
 template <class T>
-struct ReadHelper<TEnumAsByte<T>>
+struct ReadTrait<TEnumAsByte<T>>
 {
     static error_code Read(simdjson::ondemand::value&& json, TEnumAsByte<T>& value)
     {
@@ -223,7 +223,7 @@ struct ReadHelper<TEnumAsByte<T>>
 };
 
 template <class T>
-struct ReadHelper<skr::resource::TResourceHandle<T>> {
+struct ReadTrait<skr::resource::TResourceHandle<T>> {
     static error_code Read(simdjson::ondemand::value&& json, skr::resource::TResourceHandle<T>& handle)
     {
         return skr::json::Read<skr_resource_handle_t>(std::move(json), (skr_resource_handle_t&)handle);
@@ -233,21 +233,21 @@ struct ReadHelper<skr::resource::TResourceHandle<T>> {
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value)
 {
-    return ReadHelper<T>::Read(std::move(json), value);
+    return ReadTrait<T>::Read(std::move(json), value);
 }
 } // namespace json
 
 template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::ReadHelper<skr::flat_hash_map<K, V, Hash, Eq>>> 
-: std::bool_constant<is_complete_serde_v<json::ReadHelper<K>> && is_complete_serde_v<json::ReadHelper<V>>> {};
+struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>> 
+: std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {};
 
 template <class V, class Allocator>
-struct SerdeCompleteChecker<json::ReadHelper<eastl::vector<V, Allocator>>>
-: std::bool_constant<is_complete_serde_v<json::ReadHelper<V>>> {};
+struct SerdeCompleteChecker<json::ReadTrait<eastl::vector<V, Allocator>>>
+: std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {};
 
 template <class... Ts>
-struct SerdeCompleteChecker<json::ReadHelper<skr::variant<Ts...>>>
-: std::bool_constant<(is_complete_serde_v<json::ReadHelper<Ts>> && ...)> {};
+struct SerdeCompleteChecker<json::ReadTrait<skr::variant<Ts...>>>
+: std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {};
 
 } // namespace skr
 #else
