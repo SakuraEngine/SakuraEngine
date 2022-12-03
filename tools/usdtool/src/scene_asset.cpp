@@ -2,7 +2,6 @@
 #include "ecs/SmallVector.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
-#include "math/matrix.hpp"
 #include "platform/debug.h"
 #include "ecs/dual.h"
 #include "resource/resource_factory.h"

@@ -1,15 +1,11 @@
-#include "math/matrix.hpp"
-#include "math/vector.hpp"
-#include "math/rotator.hpp"
 #include "ecs/array.hpp"
 #include "ecs/dual.h"
 #include "ecs/callback.hpp"
 #include "ecs/dual_config.h"
 #include "utils/parallel_for.hpp"
-#include "math/vector.hpp"
-#include "math/vectormath.hpp"
 #include "SkrScene/scene.h"
 
+/*
 static_assert(alignof(decltype(skr_l2r_t::matrix)) == 16, "Alignment of matrix must be 16");
 static_assert(sizeof(skr_l2w_t::matrix) == sizeof(skr_float4x4_t), "Size of matrix must equal to skr_float4x4_t");
 
@@ -27,48 +23,49 @@ static void skr_local_to_x(void* u, dual_storage_t* storage, dual_chunk_view_t* 
 {
     static_assert(alignof(decltype(T::matrix)) == 16, "Alignment of matrix must be 16");
     static_assert(sizeof(T::matrix) == sizeof(skr_float4x4_t), "Size of matrix must equal to skr_float4x4_t");
-    using namespace skr::math;
-    auto translation = (Vector3f*)dualV_get_owned_ro_local(view, localTypes[0]);
-    auto rotation = (Rotator*)dualV_get_owned_ro_local(view, localTypes[1]);
-    auto scale = (Vector3f*)dualV_get_owned_ro_local(view, localTypes[2]);
-    auto transform = (float4x4*)dualV_get_owned_ro_local(view, localTypes[3]);
+    auto translation = (skr_float3_t*)dualV_get_owned_ro_local(view, localTypes[0]);
+    auto rotation = (skr_rotator_t*)dualV_get_owned_ro_local(view, localTypes[1]);
+    auto scale = (skr_float3_t*)dualV_get_owned_ro_local(view, localTypes[2]);
+    auto transform = (skr_float4x4_t*)dualV_get_owned_ro_local(view, localTypes[3]);
+    const auto default_translation = skr_float3_t {0.f, 0.f, 0.f};
+    const auto default_scale = skr_float3_t {1.f, 1.f, 1.f};
     if (translation)
         forloop (i, 0, view->count)
-            *transform = make_transform(translation[i], Vector3f::vector_one());
+            *transform = make_transform(translation[i], default_scale);
     if (translation && scale)
         forloop (i, 0, view->count)
             *transform = make_transform(translation[i], scale[i]);
     if (translation && rotation)
         forloop (i, 0, view->count)
-            *transform = make_transform(translation[i], Vector3f::vector_one(), quaternion_from_rotator(rotation[i]));
+            *transform = make_transform(translation[i], default_scale, quaternion_from_rotator(rotation[i]));
     if (translation && scale && rotation)
         forloop (i, 0, view->count)
             *transform = make_transform(translation[i], scale[i], quaternion_from_rotator(rotation[i]));
     if (scale && rotation)
         forloop (i, 0, view->count)
-            *transform = make_transform(Vector3f::vector_zero(), scale[i], quaternion_from_rotator(rotation[i]));
+            *transform = make_transform(default_translation, scale[i], quaternion_from_rotator(rotation[i]));
     if (scale)
         forloop (i, 0, view->count)
-            *transform = make_transform(Vector3f::vector_zero(), scale[i]);
+            *transform = make_transform(default_translation, scale[i]);
     if (rotation)
         forloop (i, 0, view->count)
-            *transform = make_transform(Vector3f::vector_zero(), Vector3f::vector_one(), quaternion_from_rotator(rotation[i]));
+            *transform = make_transform(default_translation, default_scale, quaternion_from_rotator(rotation[i]));
 }
 
 static void skr_relative_to_world_children(skr_children_t* children, skr_l2w_t* parent, dual_storage_t* storage)
 {
-    using namespace skr::math;
     auto process = [&](skr_child_t child) {
         dual_chunk_view_t view;
         //TODO: consider dualS_batch?
         dualS_access(storage, child.entity, &view);
-        auto relative = (float4x4*)dualV_get_owned_ro(&view, dual_id_of<skr_l2r_t>::get());
+        auto relative = (skr_float4x4_t*)dualV_get_owned_ro(&view, dual_id_of<skr_l2r_t>::get());
         if (!relative) 
             return;
-        auto transform = (float4x4*)dualV_get_owned_ro(&view, dual_id_of<skr_l2w_t>::get());
+        auto transform = (skr_float4x4_t*)dualV_get_owned_ro(&view, dual_id_of<skr_l2w_t>::get());
         if (!transform) 
             return;
-        *transform = multiply(*relative, *(float4x4*)&parent->matrix);
+
+        *transform = multiply(*relative, *(skr_float4x4_t*)&parent->matrix);
         auto children = (skr_children_t*)dualV_get_owned_ro(&view, dual_id_of<skr_child_t>::get());
         if (!children) 
             return;
@@ -116,3 +113,4 @@ void skr_transform_update(skr_transform_system* query)
     dualJ_schedule_ecs(query->localToRelative, 256, &skr_local_to_x<skr_l2r_t>, nullptr, nullptr, nullptr, nullptr, nullptr);
     dualJ_schedule_ecs(query->relativeToWorld, 128, &skr_relative_to_world_root, nullptr, nullptr, nullptr, nullptr, nullptr);
 }
+*/

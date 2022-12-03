@@ -3,7 +3,6 @@
 #include "GameRuntime/gamert.h"
 #include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
-#include "math/vector.hpp"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "platform/time.h"
@@ -686,8 +685,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ZoneScopedN("PlayerJob");
                 
                 auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
-                auto forward = skr::math::Vector3f(0.f, 1.f, 0.f);
-                auto right = skr::math::Vector3f(1.f, 0.f, 0.f);
+                auto forward = skr_float3_t{0.f, 1.f, 0.f};
+                auto right = skr_float3_t{1.f, 0.f, 0.f};
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     const auto kSpeed = 15.f;
@@ -697,8 +696,11 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     auto sdown = skr_key_down(EKeyCode::KEY_CODE_S);
                     auto adown = skr_key_down(EKeyCode::KEY_CODE_A);
                     auto ddown = skr_key_down(EKeyCode::KEY_CODE_D);
+
                     if (edown) translations[i].value.z += (float)deltaTime * kSpeed;
                     if (qdown) translations[i].value.z -= (float)deltaTime * kSpeed;
+
+                    using namespace skr::scalar_math;
                     if (wdown) translations[i].value = forward * (float)deltaTime * kSpeed + translations[i].value;
                     if (sdown) translations[i].value = -1.f * forward * (float)deltaTime * kSpeed + translations[i].value;
                     if (adown) translations[i].value = -1.f * right * (float)deltaTime * kSpeed + translations[i].value;

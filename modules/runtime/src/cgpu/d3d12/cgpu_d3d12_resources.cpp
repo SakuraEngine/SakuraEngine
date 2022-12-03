@@ -1,4 +1,3 @@
-#include "math/scalarmath.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
@@ -1299,7 +1298,7 @@ inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPU
     if (desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
     {
         uint64_t minAlignment = A->adapter_detail.uniform_buffer_alignment;
-        allocationSize = smath_round_up(allocationSize, minAlignment);
+        allocationSize = cgpu_round_up(allocationSize, minAlignment);
     }
     bufDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     // Alignment must be 64KB (D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT) or 0, which is effectively 64KB.
@@ -1445,7 +1444,7 @@ const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDes
     pHeap->pDevice = pDevice;
 
     // Keep 32 aligned for easy remove
-    numDescriptors = smath_round_up(numDescriptors, 32);
+    numDescriptors = cgpu_round_up(numDescriptors, 32);
 
     D3D12_DESCRIPTOR_HEAP_DESC Desc = *pDesc;
     Desc.NumDescriptors = numDescriptors;

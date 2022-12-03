@@ -1,4 +1,3 @@
-#include "math/vectormath.hpp"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/time.h"
@@ -25,6 +24,8 @@
 #include "live2d_model_pass.hpp"
 #include "live2d_mask_pass.hpp"
 #include "live2d_clipping.hpp"
+
+#include "rtm/matrix4x4f.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -189,20 +190,24 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                             push_const.use_mask = clipping_context && clipping_context->_isUsing;
                             if (push_const.use_mask)
                             {
-                                for (uint32_t k = 0; k < 16; k++)
-                                {
-                                    push_const.clip_matrix.M16[k] = clipping_context->_matrixForDraw.GetArray()[k];
-                                }
-                                push_const.clip_matrix = skr::math::transpose(push_const.clip_matrix);
+                                const auto clip_mat = rtm::matrix_set(
+                                    rtm::vector_load( &clipping_context->_matrixForDraw.GetArray()[4 * 0] ),
+                                    rtm::vector_load( &clipping_context->_matrixForDraw.GetArray()[4 * 1] ),
+                                    rtm::vector_load( &clipping_context->_matrixForDraw.GetArray()[4 * 2] ),
+                                    rtm::vector_load( &clipping_context->_matrixForDraw.GetArray()[4 * 3] )
+                                );
+                                push_const.clip_matrix = rtm::matrix_transpose(clip_mat);
                                 const csmInt32 channelNo = clipping_context->_layoutChannelNo;
                                 CubismRenderer::CubismTextureColor* colorChannel = clipping_context->GetClippingManager()->GetChannelFlagAsColor(channelNo);
                                 push_const.channel_flag = { colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A };
                             }
-                            for (uint32_t i = 0; i < 16; i++)
-                            {
-                                push_const.projection_matrix.M16[i] = projection.GetArray()[i];
-                            }
-                            push_const.projection_matrix = skr::math::transpose(push_const.projection_matrix);
+                            const auto proj_mat = rtm::matrix_set(
+                                rtm::vector_load( &projection.GetArray()[4 * 0] ),
+                                rtm::vector_load( &projection.GetArray()[4 * 1] ),
+                                rtm::vector_load( &projection.GetArray()[4 * 2] ),
+                                rtm::vector_load( &projection.GetArray()[4 * 3] )
+                            );
+                            push_const.projection_matrix = rtm::matrix_transpose(proj_mat);
                             skr_live2d_model_get_drawable_colors(render_model->model_resource_id, drawable,
                                 &push_const.multiply_color,
                                 &push_const.screen_color);
@@ -302,11 +307,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                     }
                                     sorted_mask_drawable_lists[render_model].emplace_back(clipDrawIndex);
                                     auto&& push_const = mask_push_constants[render_model].emplace_back();
-                                    for (uint32_t k = 0; k < 16; k++)
-                                    {
-                                        push_const.projection_matrix.M16[k] = clipping_context->_matrixForMask.GetArray()[k];
-                                    }
-                                    push_const.projection_matrix = skr::math::transpose(push_const.projection_matrix);
+                                    const auto proj_mat = rtm::matrix_set(
+                                        rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 0] ),
+                                        rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 1] ),
+                                        rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 2] ),
+                                        rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 3] )
+                                    );
+                                    push_const.projection_matrix = rtm::matrix_transpose(proj_mat);
                                     const csmInt32 channelNo = clipping_context->_layoutChannelNo;
                                     CubismRenderer::CubismTextureColor* colorChannel = clipping_context->GetClippingManager()->GetChannelFlagAsColor(channelNo);
                                     push_const.channel_flag = { colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A };
@@ -466,8 +473,8 @@ protected:
     CGPUShaderLibraryId create_shader_library(SRendererId renderer, const char* name, ECGPUShaderStage stage);
 
     struct PushConstants {
-        skr::math::float4x4 projection_matrix;
-        skr::math::float4x4 clip_matrix;
+        rtm::matrix4x4f projection_matrix;
+        rtm::matrix4x4f clip_matrix;
         skr_float4_t base_color;
         skr_float4_t multiply_color;
         skr_float4_t screen_color;

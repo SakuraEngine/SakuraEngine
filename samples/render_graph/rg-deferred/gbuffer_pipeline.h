@@ -1,5 +1,6 @@
 #pragma once
 #include "../../cgpu/common/utils.h"
+#include "utils/types.h"
 
 const ECGPUFormat gbuffer_formats[] = {
     CGPU_FORMAT_R8G8B8A8_UNORM, CGPU_FORMAT_R16G16B16A16_SNORM
@@ -42,13 +43,12 @@ inline CGPURenderPipelineId create_gbuffer_render_pipeline(CGPUDeviceId device)
     const char* root_const_name = "push_constants";
     rs_desc.push_constant_names = &root_const_name;
     auto gbuffer_root_sig = cgpu_create_root_signature(device, &rs_desc);
-    namespace smath = skr::math;
     CGPUVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(smath::Vector3f), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(smath::Vector2f), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[2] = { "NORMAL", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 2, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[3] = { "TANGENT", 1, CGPU_FORMAT_R8G8B8A8_SNORM, 3, 0, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[4] = { "MODEL", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(smath::float4x4), CGPU_INPUT_RATE_INSTANCE };
+    vertex_layout.attributes[4] = { "MODEL", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attribute_count = 5;
     CGPURenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = gbuffer_root_sig;

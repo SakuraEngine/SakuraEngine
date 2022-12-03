@@ -80,6 +80,18 @@ typedef struct skr_float3_t {
     };
 } skr_float3_t;
 
+#ifdef __cplusplus
+namespace skr
+{
+namespace scalar_math
+{
+    inline skr_float3_t operator* (float s, skr_float3_t v) { return skr_float3_t{ s * v.x, s * v.y, s * v.z }; }
+    inline skr_float3_t operator* (skr_float3_t v, float s) { return skr_float3_t{ s * v.x, s * v.y, s * v.z }; }
+    inline skr_float3_t operator+ (skr_float3_t a, skr_float3_t b) { return skr_float3_t{ a.x + b.x, a.y + b.y, a.z + b.z }; }
+}
+}
+#endif
+
 typedef struct skr_rotator_t {
     struct
     {
