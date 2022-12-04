@@ -43,5 +43,5 @@ if __name__ == '__main__':
     meta = json.load(open(os.path.join(BASE, "../../thirdparty/dear_bindings/cimgui.json")), object_hook=lambda d: SimpleNamespace(**d))
     binding = render(os.path.join(BASE, "luabind_imgui.cpp.mako"), meta=meta)
     write(os.path.join(BASE, "../../modules/imgui/src/build.luabind.cpp"), binding)
-    intelligence = render(os.path.join(BASE, "luabind_imgui_intelli.mako"), meta=meta)
+    intelligence = render(os.path.join(BASE, "luabind_imgui_intelli.lua.mako"), meta=meta)
     write(os.path.join(BASE, "../../modules/imgui/script/luabind_intelli.lua"), intelligence)

@@ -173,6 +173,8 @@ struct SInterface
     virtual uint32_t release() = 0;
     virtual skr_guid_t get_type() { return {}; }
 };
+template <class T>
+constexpr bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
 }
 #define sobject_cast static_cast
 #endif

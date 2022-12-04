@@ -12,6 +12,8 @@
 void bind_skr_guid(lua_State* L);
 void bind_skr_resource_handle(lua_State* L);
 void bind_skr_log(lua_State* L);
+void bind_unknown(lua_State* L);
+void bind_ecs(lua_State* L);
 
 struct skr_lua_state_extra_t
 {
@@ -122,6 +124,10 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
     lua_pop(L, 1);
 
     // bind skr types
+    {
+        
+    }
+
     bind_skr_guid(L);
     bind_skr_resource_handle(L);
 
@@ -129,6 +135,66 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
     bind_skr_log(L);
 
     return L;
+}
+
+void bind_unknown(lua_State* L)
+{
+    luaL_Reg metamethods[] = {
+        { "__eq", [](lua_State* L) -> int {
+            void* a = *(void**)lua_touserdata(L, 1);
+            void* b = *(void**)lua_touserdata(L, 2);
+            lua_pushboolean(L, a == b);
+            return 1;
+        } },
+        { "__tostring", [](lua_State* L) -> int {
+            void* a = *(void**)lua_touserdata(L, 1);
+            lua_pushfstring(L, "skr_unknown %p", a);
+            return 1;
+        } },
+        { nullptr, nullptr }
+    };
+    luaL_newmetatable(L, "skr_unknown_t");
+    luaL_setfuncs(L, metamethods, 0);
+    lua_pop(L, 1);
+    luaL_Reg uniquemetamethods[] = {
+        { "_gc", [](lua_State* L) -> int {
+            void* p = lua_touserdata(L, 1);
+            ((skr::lua::destructor_t)((char*)p + sizeof(void*)))(*(void**)p);
+            return 0;
+        }},
+        metamethods[0],
+        metamethods[1],
+        { nullptr, nullptr }
+    };
+    luaL_newmetatable(L, "[unique]skr_unknown_t");
+    luaL_setfuncs(L, uniquemetamethods, 0);
+    lua_pop(L, 1);
+    luaL_Reg sharedmetamethods[] = {
+        { "_gc", [](lua_State* L) -> int {
+            void* p = lua_touserdata(L, 1);
+            ((skr::SPtr<void>*)((char*)p + sizeof(void*)))->reset();
+            return 0;
+        }},
+        metamethods[0],
+        metamethods[1],
+        { nullptr, nullptr }
+    };
+    luaL_newmetatable(L, "[shared]skr_unknown_t");
+    luaL_setfuncs(L, sharedmetamethods, 0);
+    lua_pop(L, 1);
+    luaL_Reg objectmetamethods[] = {
+        { "_gc", [](lua_State* L) -> int {
+            void* p = lua_touserdata(L, 1);
+            ((skr::SObjectPtr<skr::SInterface>*)((char*)p + sizeof(void*)))->reset();
+            return 0;
+        }},
+        metamethods[0],
+        metamethods[1],
+        { nullptr, nullptr }
+    };
+    luaL_newmetatable(L, "[object]skr_unknown_t");
+    luaL_setfuncs(L, objectmetamethods, 0);
+    lua_pop(L, 1);
 }
 
 void skr_lua_close(lua_State* L)
@@ -157,6 +223,7 @@ void bind_skr_guid(lua_State* L)
     };
     luaL_newmetatable(L, "skr_guid_t");
     luaL_setfuncs(L, metamethods, 0);
+    lua_pop(L, 1);
 }
 
 void bind_skr_resource_handle(lua_State* L)
@@ -291,6 +358,7 @@ void bind_skr_resource_handle(lua_State* L)
         { nullptr, nullptr }
     };
     luaL_setfuncs(L, metamethods, 0);
+    lua_pop(L, 1);
 }
 
 
@@ -426,7 +494,138 @@ const skr_resource_handle_t* check_resource(lua_State* L, int index)
 {
     return (skr_resource_handle_t*)luaL_checkudata(L, index, "skr_resource_handle_t");
 }
-} // namespace skr::lua
+
+int push_unknown(lua_State *L, void *value, std::string_view tid)
+{
+    lua_pushlightuserdata(L, value);
+    luaL_getmetatable(L, tid.data());
+    if (lua_isnil(L, -1))
+    {
+        lua_pop(L, 1);
+        luaL_getmetatable(L, "skr_unknown_t");
+        lua_setmetatable(L, -2);
+        return 0;
+    }
+    else 
+    {
+        lua_setmetatable(L, -2);
+        return 1;
+    }
+}
+
+void* skr_check_unknown(lua_State *L, int index, std::string_view tid, std::string_view unknown)
+{
+    void *p = lua_touserdata(L, index);
+    if (p != NULL) {  /* value is a userdata? */
+        if (lua_getmetatable(L, index)) {  /* does it have a metatable? */
+            luaL_getmetatable(L, tid.data());  /* get correct metatable */
+            if (!lua_rawequal(L, -1, -2))  /* not the same? */
+            {
+                if(!unknown.empty()) /* check again */
+                {
+                    luaL_getmetatable(L, unknown.data());
+                    if (!lua_rawequal(L, -1, -3))  /* not the same? */
+                        p = NULL;  /* value is a userdata with wrong metatable */
+                    lua_pop(L, 1);
+                }
+                else if(!lua_isnil(L, -1))
+                {
+                    p = NULL;
+                }
+            }
+            lua_pop(L, 2);  /* remove both metatables */
+        }
+    }
+    luaL_argexpected(L, p != 0, index, tid.data());
+    return p;
+}
+
+void* check_unknown(lua_State *L, int index, std::string_view tid)
+{
+    return *(void**)skr_check_unknown(L, index, tid, "");
+} 
+
+int push_unknown_value(lua_State *L, const void *value, std::string_view tid, size_t size, copy_constructor_t copy_constructor, destructor_t destructor)
+{
+    void *p = lua_newuserdata(L, sizeof(void*) * 2+ size);
+    void *obj = (char*)p + sizeof(void*) * 2;
+    copy_constructor(obj, value);
+    *(void**)p = obj;
+    *(destructor_t*)((char*)p + sizeof(void*)) = destructor;
+    luaL_getmetatable(L, tid.data());
+    if (lua_isnil(L, -1))
+    {
+        SKR_UNREACHABLE_CODE();
+        lua_pop(L, 1);
+        luaL_getmetatable(L, "[unique]skr_unknown_t");
+        lua_setmetatable(L, -2);
+        return 0;
+    }
+    else 
+    {
+        lua_setmetatable(L, -2);
+        return 1;
+    }
+}
+
+int push_sptr(lua_State *L, const skr::SPtr<void> &value, std::string_view tid)
+{
+    void* p = lua_newuserdata(L, sizeof(void*) + sizeof(skr::SPtr<void>));
+    void* obj = (char*)p + sizeof(void*);
+    auto ptr = new (obj) skr::SPtr<void>(value);
+    *(void**)p = ptr->get();
+    luaL_getmetatable(L, tid.data());
+    if (lua_isnil(L, -1))
+    {
+        SKR_UNREACHABLE_CODE();
+        lua_pop(L, 1);
+        luaL_getmetatable(L, "[shared]skr_unknown_t");
+        lua_setmetatable(L, -2);
+        return 0;
+    }
+    else 
+    {
+        lua_setmetatable(L, -2);
+        return 1;
+    }
+}
+
+skr::SPtr<void> check_sptr(lua_State *L, int index, std::string_view tid)
+{
+    void*  p = skr_check_unknown(L, index, tid, "[shared]skr_unknown_t");
+    return *(skr::SPtr<void>*)((char*)p + sizeof(void*));
+}
+
+int push_sobjectptr(lua_State *L, const skr::SObjectPtr<SInterface> &value, std::string_view tid)
+{
+    void* p = lua_newuserdata(L, sizeof(void*) + sizeof(skr::SObjectPtr<SInterface>));
+    void* obj = (char*)p + sizeof(void*);
+    auto ptr = new (obj) skr::SObjectPtr<SInterface>(value);
+    *(void**)p = ptr->get();
+    luaL_getmetatable(L, tid.data());
+    if (lua_isnil(L, -1))
+    {
+        SKR_UNREACHABLE_CODE();
+        lua_pop(L, 1);
+        luaL_getmetatable(L, "[object]skr_unknown_t");
+        lua_setmetatable(L, -2);
+        return 0;
+    }
+    else 
+    {
+        lua_setmetatable(L, -2);
+        return 1;
+    }
+}
+
+skr::SObjectPtr<SInterface> check_sobjectptr(lua_State *L, int index, std::string_view tid)
+{
+    void*  p = skr_check_unknown(L, index, tid, "[object]skr_unknown_t");
+    return *(skr::SObjectPtr<SInterface>*)((char*)p + sizeof(void*));
+
+}
+
+}// namespace skr::lua
 
 // from https://github.com/cloudwu/luareload/blob/proto/clonefunc.c
 extern "C"

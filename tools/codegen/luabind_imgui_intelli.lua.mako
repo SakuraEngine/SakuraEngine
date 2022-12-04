@@ -12,6 +12,19 @@ def escape(name):
     if name == "in":
         return "in_"
     return name
+def lua_type(t):
+    name = t.declaration
+    if hasattr(t, "type_details") and t.type_details.flavour == "function_pointer":
+        return "callback"
+    if name == "bool":
+        return "boolean"
+    elif name == "int":
+        return "integer"
+    elif name == "float":
+        return "number"
+    elif name == "const char*":
+        return "string"
+    return name
 %>
 
 ---@class IMGUI
@@ -34,11 +47,11 @@ if hasattr(function, "comments"):
 ${comments}
 %for arg in function.arguments:
 %if not arg.is_varargs:
----@param ${escape(arg.name)} ${arg.type.declaration}
+---@param ${escape(arg.name)} ${lua_type(arg.type)}
 %endif
 %endfor
 %if function.return_type != "void":
----@return ${function.return_type.declaration}
+---@return ${lua_type(function.return_type)}
 %endif
 function _imgui.${rm_prefix(function.name)}(${", ".join(escape(arg.name) if not arg.is_varargs else "..." for arg in function.arguments)}) end
 %endfor
